@@ -18,6 +18,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
+from decouple import config, Csv, UndefinedValueError
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+DEBUG = config('DEBUG', default=False, cast=bool) 
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+
+try:
+    SECRET_KEY = config("SECRET_KEY")
+except UndefinedValueError:
+    SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/", 
+                          credential = DefaultAzureCredential()).get_secret('djangosecret')
 
 # Application definition
 
