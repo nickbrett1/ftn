@@ -4,21 +4,6 @@
   </head>
   <body>
     <h1>Login to British Empire Management!</h1>
-
-    {% if secret %}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Password</th>
-        </tr>
-        <tr>
-            <td>{{ secret.name }}</td>
-            <td>{{ secret.value }}</td>
-        </tr>
-    </table>
-    {% else %}
-    <p>No Secret....</p>
-    {% endif %}
   </body>
 
 </html>
