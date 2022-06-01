@@ -45,7 +45,7 @@ jobs:
         run: npm run build --prefix webapp/main
         
       - name: Compress Artifacts
-        run: tar --exclude='./venv' -cvzf artifact.tar.gz *
+        run: tar --exclude='venv' -cvzf artifact.tar.gz *
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v2
