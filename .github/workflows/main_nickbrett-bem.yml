@@ -39,13 +39,13 @@ jobs:
           node-version: 18.x
       
       - name: Install NPM packages
-        run: npm i
+        run: npm i --prefix webapp/main
 
       - name: Build project
-        run: npm run build
+        run: npm run build --prefix webapp/main
 
       - name: Run tests
-        run: npm run test
+        run: npm run test --prefix webapp/main
       
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v2
