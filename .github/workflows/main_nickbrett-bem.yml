@@ -32,6 +32,21 @@ jobs:
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.2.0
+        with:
+          # Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.
+          node-version: 18.x
+      
+      - name: Client install NPM packages
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
+      
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v2
         with:
