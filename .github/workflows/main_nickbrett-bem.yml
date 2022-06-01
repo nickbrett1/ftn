@@ -46,8 +46,7 @@ jobs:
         
       - name: Compress Artifacts
         run: tar -cvzf artifact.tar.gz |
-            . 
-            !venv/
+            .
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v2
