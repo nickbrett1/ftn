@@ -64,6 +64,7 @@ db.sqlite3-journal
 # Project stuff:
 webapp/main/static/
 node_modules
+webapp/staticfiles
 
 # Flask stuff:
 instance/
