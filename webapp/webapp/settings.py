@@ -28,8 +28,11 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
 try:
     SECRET_KEY = config("SECRET_KEY")
 except UndefinedValueError:
-    SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/", 
-                          credential = DefaultAzureCredential()).get_secret('djangosecret')
+    try:
+        SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/", 
+                              credential = DefaultAzureCredential()).get_secret('djangosecret')
+    except Exception:
+        print(Exception)
 
 # Application definition
 
