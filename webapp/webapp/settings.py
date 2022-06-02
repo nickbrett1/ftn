@@ -23,7 +23,7 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
 DEBUG = config('DEBUG', default=False, cast=bool) 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
 
 try:
     SECRET_KEY = config("SECRET_KEY")
