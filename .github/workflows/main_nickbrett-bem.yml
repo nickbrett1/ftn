@@ -31,6 +31,8 @@ jobs:
         run: pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      - name: Collect static files for Django
+        run: python manage.py collectstatic
       
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.2.0
@@ -38,22 +40,20 @@ jobs:
           # Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.
           node-version: 18.x
       
-      - name: Client install NPM packages
-        run: npm ci
+      - name: Install NPM packages
+        run: npm i --prefix webapp/main
 
       - name: Build project
-        run: npm run build
+        run: npm run build --prefix webapp/main
+        
+      - name: Compress Artifacts
+        run: tar --exclude='venv' --exclude='node_modules' -cvzf artifact.tar.gz *
 
-      - name: Run tests
-        run: npm run test
-      
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v2
         with:
           name: python-app
-          path: |
-            . 
-            !venv/
+          path: artifact.tar.gz
 
   deploy:
     runs-on: ubuntu-latest
@@ -68,6 +68,9 @@ jobs:
         with:
           name: python-app
           path: .
+          
+      - name: Uncompress artifact
+        run: tar -xvf artifact.tar.gz
           
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
