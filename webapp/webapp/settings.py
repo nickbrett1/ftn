@@ -34,8 +34,6 @@ except UndefinedValueError:
     except Exception:
         print(Exception)
 
-# Application definition
-
 LOGGING = {
     'version' : 1,
     'disable_existing_loggers' : False,
