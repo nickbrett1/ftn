@@ -36,6 +36,24 @@ except UndefinedValueError:
 
 # Application definition
 
+LOGGING = {
+    'version' : 1,
+    'disable_existing_loggers' : False,
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': False,
+        }
+    }
+}
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
