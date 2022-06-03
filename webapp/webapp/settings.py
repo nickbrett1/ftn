@@ -37,6 +37,10 @@ except UndefinedValueError:
 LOGGING = {
     'version' : 1,
     'disable_existing_loggers' : False,
+    'filters': {
+        'require_debug_false': {
+        '()': 'django.utils.log.RequireDebugFalse'
+    },
     'handlers': {
         'file': {
             'class': 'logging.FileHandler',
