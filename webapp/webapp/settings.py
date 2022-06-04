@@ -24,15 +24,15 @@ from azure.keyvault.secrets import SecretClient
 
 DEBUG = config('DEBUG', default=False, cast=bool) 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
-
-try:
-    SECRET_KEY = config("SECRET_KEY")
-except UndefinedValueError:
+ 
+if config('USE_AZURE_VALUT', default=False, cast=bool):
     try:
         SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/", 
                               credential = DefaultAzureCredential()).get_secret('djangosecret')
     except Exception:
         print(Exception)
+else:
+    SECRET_KEY = config("SECRET_KEY", default='')
 
 LOGGING = {
     'version' : 1,
