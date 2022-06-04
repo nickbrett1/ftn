@@ -37,23 +37,23 @@ except UndefinedValueError:
 LOGGING = {
     'version' : 1,
     'disable_existing_loggers' : False,
+    'formatters': {
+        'file' : {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        }
+    },
     'filters': [],
     'handlers': {
         'file': {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'general.log',
+            'formatter' : 'file'
         },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propogate' : True
-        },
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
-            'propogate' : True
+            'level': 'INFO'
         }
     }
 }
