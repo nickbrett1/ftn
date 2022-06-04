@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,19 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-from decouple import config, Csv, UndefinedValueError
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-
-DEBUG = config('DEBUG', default=False, cast=bool) 
+DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
- 
+
 if config('USE_AZURE_VALUT', default=False, cast=bool):
-    try:
-        SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/", 
-                              credential = DefaultAzureCredential()).get_secret('djangosecret')
-    except Exception:
-        print(Exception)
+    SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/",
+                            credential = DefaultAzureCredential()).get_secret('djangosecret')
 else:
     SECRET_KEY = config("SECRET_KEY", default='')
 
