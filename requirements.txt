@@ -9,6 +9,7 @@ cffi==1.15.0
 charset-normalizer==2.0.12
 cryptography==37.0.2
 Django==4.0.4
+django-request-logging==0.7.5
 idna==3.3
 isodate==0.6.1
 msal==1.17.0
