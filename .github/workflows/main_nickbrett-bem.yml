@@ -31,9 +31,7 @@ jobs:
         run: pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-      - name: Collect static files for Django
-        run: python webapp/manage.py collectstatic
-      
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.2.0
         with:
@@ -45,7 +43,10 @@ jobs:
 
       - name: Build project
         run: npm run build --prefix webapp/main
-        
+      
+      - name: Collect static files for Django
+        run: python webapp/manage.py collectstatic
+      
       - name: Compress Artifacts
         run: tar --exclude='venv' --exclude='node_modules' -cvzf artifact.tar.gz *
 
