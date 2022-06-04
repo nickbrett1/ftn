@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
 
-if config('USE_AZURE_VALUT', default=False, cast=bool):
+if config('USE_AZURE_VAULT', default=False, cast=bool):
     SECRET_KEY = SecretClient(vault_url = "https://nickbrett-bem-azvault.vault.azure.net/",
                             credential = DefaultAzureCredential()).get_secret('djangosecret')
 else:
