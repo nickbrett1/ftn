@@ -67,6 +67,7 @@ node_modules
 webapp/staticfiles
 webapp/assets/
 webapp/webpack-stats.json
+.DS_Store
 
 # Flask stuff:
 instance/
