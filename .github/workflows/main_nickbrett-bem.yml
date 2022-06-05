@@ -39,13 +39,13 @@ jobs:
           node-version: 18.x
       
       - name: Install NPM packages
-        run: npm i --prefix webapp/main
+        run: npm i --prefix webapp
 
       - name: Build project
-        run: npm run build --prefix webapp/main
+        run: npm run build --prefix webapp
       
       - name: Collect static files for Django
-        run: python webapp/manage.py collectstatic
+        run: python webapp/manage.py collectstatic --noinput
       
       - name: Compress Artifacts
         run: tar --exclude='venv' --exclude='node_modules' -cvzf artifact.tar.gz *
