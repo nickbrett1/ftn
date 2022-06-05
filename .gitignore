@@ -65,6 +65,8 @@ db.sqlite3-journal
 webapp/main/static/
 node_modules
 webapp/staticfiles
+webapp/assets/
+webapp/webpack-stats.json
 
 # Flask stuff:
 instance/
