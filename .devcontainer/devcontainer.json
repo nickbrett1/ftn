@@ -12,7 +12,7 @@
 			"VARIANT": "3.8",
 			// Options
 			"NODE_VERSION": "16"
-		},
+		}
 	},
 	"remoteEnv": {
 		"DEBUG": "True"
