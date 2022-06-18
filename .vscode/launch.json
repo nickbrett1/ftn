@@ -10,7 +10,12 @@
       "request": "launch",
       "program": "${workspaceFolder}/webapp/manage.py",
       "args": [
-        "runserver"
+        "runsslserver",
+        "--certificate",
+        "${workspaceFolder}/localhost+2.pem",
+        "--key",
+        "${workspaceFolder}/localhost+2-key.pem",
+        "--nostatic"
       ],
       "django": true,
       "justMyCode": true
