@@ -62,7 +62,7 @@ db.sqlite3
 db.sqlite3-journal
 
 # Project stuff:
-webapp/main/static/
+webapp/static
 node_modules
 webapp/staticfiles
 webapp/assets/
