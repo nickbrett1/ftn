@@ -1,5 +1,6 @@
 const BundleTracker = require('webpack-bundle-tracker');
 const path = require('path');
+const fs = require('fs');
 
 module.exports = {
   context: __dirname,
@@ -9,13 +10,19 @@ module.exports = {
   mode: 'development',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
-    filename: '[name]-[hash].js',
-    chunkFilename: '[name]-[hash].js',
+    filename: '[name]-[contenthash].js'
   },
   plugins: [
     new BundleTracker({ filename: './webpack-stats.json' }),
   ],
   devServer: {
+    server: {
+      type: 'https',
+      options: {
+        key: fs.readFileSync('../localhost+2-key.pem'),
+        cert: fs.readFileSync('../localhost+2.pem')
+      }
+    },
     devMiddleware: {
       index: true,
       mimeTypes: { phtml: 'text/html' },
