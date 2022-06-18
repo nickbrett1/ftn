@@ -81,8 +81,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://nickbrett-bem.azurewebsites.net']
-
 ROOT_URLCONF = 'webapp.urls'
 
 TEMPLATES = [
