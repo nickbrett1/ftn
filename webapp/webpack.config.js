@@ -19,8 +19,8 @@ module.exports = {
     server: {
       type: 'https',
       options: {
-        key: fs.readFileSync('../localhost+2-key.pem'),
-        cert: fs.readFileSync('../localhost+2.pem')
+        key: '../localhost+2-key.pem',
+        cert: '../localhost+2.pem'
       }
     },
     devMiddleware: {
