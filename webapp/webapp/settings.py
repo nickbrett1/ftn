@@ -54,6 +54,11 @@ LOGGING = {
             'level': 'DEBUG',  # change debug level as appropiate
             'propagate': False,
         },
+        'django.security.csrf': {
+            'handlers': ['file'],
+            'level': 'INFO',  # change debug level as appropiate
+            'propagate': False,
+        }
     }
 }
 
