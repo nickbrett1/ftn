@@ -4,6 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ('main', '0004_activity_time_bills_date_bills_namount_bills_tamount_and_more'),

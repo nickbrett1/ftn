@@ -1,7 +1,7 @@
 """
 Models aka core data structures (db backed) for project
 """
-from datetime import datetime
+from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -32,7 +32,7 @@ class Action(models.Model):
     event = models.IntegerField(
         choices=EventType.choices
     )
-    time = models.DateTimeField(default=datetime.now)
+    time = models.DateTimeField(default=timezone.now)
     args = models.JSONField(null=True)
 
 class InfoCategory(models.Model):
@@ -55,13 +55,13 @@ class Info(models.Model):
 
 class Bill(models.Model):
     '''Paid bills'''
-    date = models.DateField(default=datetime.now)
+    date = models.DateField(default=timezone.now)
     tamount = models.FloatField(default=0)
     namount = models.FloatField(default=0)
 
 class Charge(models.Model):
     '''Individual credit card charges'''
-    time = models.DateTimeField(default=datetime.now)
+    time = models.DateTimeField(default=timezone.now)
 
     class CreditCard(models.IntegerChoices):
         '''Types of Card'''
