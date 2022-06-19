@@ -73,9 +73,6 @@ jobs:
       - name: Uncompress artifact
         run: tar -xvf artifact.tar.gz
 
-      - name: Run database migrations
-        run: python webapp/manage.py migrate
-
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
