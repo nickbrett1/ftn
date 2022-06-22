@@ -31,6 +31,17 @@
       ],
       "django": true,
       "justMyCode": true
+    },
+    {
+      "name": "Python: Django (No SSL)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/webapp/manage.py",
+      "args": [
+        "runserver",
+     ],
+      "django": true,
+      "justMyCode": true
     }
   ]
 }
