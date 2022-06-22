@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Django",
+      "name": "Python: Django (Personal Key)",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/webapp/manage.py",
@@ -15,6 +15,18 @@
         "${workspaceFolder}/localhost+2.pem",
         "--key",
         "${workspaceFolder}/localhost+2-key.pem",
+        "--nostatic"
+      ],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Django (Default Key)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/webapp/manage.py",
+      "args": [
+        "runsslserver",
         "--nostatic"
       ],
       "django": true,
