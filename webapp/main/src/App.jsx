@@ -10,5 +10,5 @@ function App() {
 export default App;
 
 const container = document.getElementById('app');
-const root = createRoot(container)
+const root = createRoot(container);
 root.render(<App />);
