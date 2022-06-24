@@ -19,8 +19,10 @@ module.exports = {
     server: {
       type: 'https',
       options: {
-        key: '../localhost+2-key.pem',
-        cert: '../localhost+2.pem'
+        key: fs.existsSync('../localhost+2-key.pem') ? 
+          '../localhost+2-key.pem' : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.key',
+        cert: fs.existsSync('../localhost+2.pem') ?
+          '../localhost+2.pem' : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.crt'
       }
     },
     devMiddleware: {
