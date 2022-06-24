@@ -10,7 +10,7 @@ module.exports = {
   mode: 'development',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
-    filename: '[name]-[contenthash].js'
+    filename: '[name]-[contenthash].js',
   },
   plugins: [
     new BundleTracker({ filename: './webpack-stats.json' }),
