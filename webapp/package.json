@@ -12,9 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@react-oauth/google": "^0.2.6",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "react-google-login": "^5.2.2"
+    "react-dom": "^18.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
