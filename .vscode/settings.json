@@ -1,4 +1,9 @@
 {
   "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true
+  "python.linting.enabled": true,
+  "[jsx]": {
+    "editor.tabSize": 2
+  },
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false
 }
