@@ -4,10 +4,11 @@ import { createRoot } from 'react-dom/client';
 import Login from './Login';
 
 function App() {
-  return (<GoogleOAuthProvider>
-    <h1>Login to British Empire Management!!!</h1>,
-    <Login />
-  </GoogleOAuthProvider>
+  return (
+    <GoogleOAuthProvider>
+      <h1>Login to British Empire Management!!!</h1>
+      <Login />
+    </GoogleOAuthProvider>
   );
 }
 
