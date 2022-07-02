@@ -6,7 +6,7 @@ import Login from './Login';
 function App() {
   return (
     <GoogleOAuthProvider>
-      <h1>Login to British Empire Management!!!</h1>
+      <h1>Login to British Empire Management!!</h1>
       <Login />
     </GoogleOAuthProvider>
   );
