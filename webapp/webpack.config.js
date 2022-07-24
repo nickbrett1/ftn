@@ -40,10 +40,13 @@ module.exports = {
           { loader: 'babel-loader' },
         ],
       },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource'
+      },
     ],
   },
   resolve: {
-    modules: ['node_modules'],
-    extensions: ['.js', '.jsx'],
+    extensions: ['.jsx', '...'],
   },
 };
