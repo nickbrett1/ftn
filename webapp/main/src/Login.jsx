@@ -11,17 +11,10 @@ function Login() {
   };
 
   return (
-    <div>
       <GoogleLogin
-        clientId={clientId}
-        buttonText="Login"
         onSuccess={onSuccess}
         onFailure={onFailure}
-        cookiePolicy="single_host_origin"
-        style={{ marginTop: '100px' }}
-        isSignedIn
       />
-    </div>
   );
 }
 

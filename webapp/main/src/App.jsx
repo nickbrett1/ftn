@@ -5,19 +5,19 @@ import Login from './Login';
 
 function LandingFrameMessage() {
   const style = {
-    margin: "auto",
-    padding: "10% 35% 10% 15%",
-    color: "white"
+    margin: 'auto',
+    padding: '10% 10% 10% 10%',
+    color: 'white'
   }
 
   return <div style={style}>
-    <div style={{"fontSize": "96px"}}>
+    <div style={{'fontSize': '96px'}}>
       British Empire Management
     </div>
-    <div style={{"fontSize": "36px"}}>
+    <div style={{'fontSize': '32px'}}>
       The sun never sets
     </div>
-    <br />
+    
     <GoogleOAuthProvider>
       <Login />
     </GoogleOAuthProvider>
@@ -32,7 +32,7 @@ function LandingFrame() {
     'backgroundSize': 'cover',
     'position': 'absolute',
     'height': '100%',
-    'width': '100%'
+    'width': '100%',
   }
 
   return <div style={style}>
