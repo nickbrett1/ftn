@@ -11,10 +11,10 @@ function LandingFrameMessage() {
   }
 
   return <div style={style}>
-    <div style={{'fontSize': '96px'}}>
+    <div style={{'fontSize': '6em'}}>
       British Empire Management
     </div>
-    <div style={{'fontSize': '32px'}}>
+    <div style={{'fontSize': '2em'}}>
       The sun never sets
     </div>
     
