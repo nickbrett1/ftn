@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import Button from '@mui/material/Button';
+import GoogleIcon from '@mui/icons-material/Google';
 
 function Login() {
 
@@ -12,7 +13,8 @@ function Login() {
       <Button 
         variant='contained' 
         color='primary'
-        size='large'>
+        size='large'
+        startIcon={<GoogleIcon/>}>
           Login
       </Button>
   );
