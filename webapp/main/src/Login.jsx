@@ -9,7 +9,12 @@ function Login() {
   })
 
   return (
-      <Button variant='contained' size='large'>Log in</Button>
+      <Button 
+        variant='contained' 
+        color='primary'
+        size='large'>
+          Login
+      </Button>
   );
 }
 
