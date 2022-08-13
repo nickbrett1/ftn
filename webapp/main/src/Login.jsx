@@ -1,20 +1,15 @@
 import React from 'react';
-import { GoogleLogin } from '@react-oauth/google';
-
-const clientId = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+import { useGoogleLogin } from '@react-oauth/google';
+import Button from '@mui/material/Button';
 
 function Login() {
-  const onSuccess = () => {
-  };
 
-  const onFailure = () => {
-  };
+  const login = useGoogleLogin({
+    onSuccess: tokenResponse => console.log(tokenResponse)
+  })
 
   return (
-      <GoogleLogin
-        onSuccess={onSuccess}
-        onFailure={onFailure}
-      />
+      <Button variant='contained'>Login</Button>
   );
 }
 
