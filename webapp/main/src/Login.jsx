@@ -14,7 +14,8 @@ function Login() {
         variant='contained' 
         color='primary'
         size='large'
-        startIcon={<GoogleIcon/>}>
+        startIcon={<GoogleIcon/>}
+        onClick={() => login()}>
           Login
       </Button>
   );
