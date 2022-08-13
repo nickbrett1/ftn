@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Login from './Login';
+import { Typography, Box } from '@mui/material';
 
 function LandingFrameMessage() {
   const style = {
@@ -17,25 +18,23 @@ function LandingFrameMessage() {
     color: 'white'
   }
 
-  return <div style={style}>
-    <div style={{'fontSize': '6em'}}>
-      British Empire Management
-    </div>
-    <div style={{'fontSize': '3em', 'marginBottom' : '15px'}}>
-      The Sun Never Sets
-    </div>
-    
-    <GoogleOAuthProvider clientId='263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'>
-      <Login />
-    </GoogleOAuthProvider>
-  </div>
+  return (
+    <Box maxWidth='sm' padding='30px'>
+      <Typography variant='h1'>
+        British Empire Management
+      </Typography>
+      <Typography variant='h3'>
+        The Sun Never Sets
+      </Typography>
+      
+      <GoogleOAuthProvider clientId='263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'>
+        <Login />
+      </GoogleOAuthProvider>
+    </Box>
+  )
 }
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+
 
 function LandingFrame() {
   const style = {
@@ -46,6 +45,12 @@ function LandingFrame() {
     'height': '100%',
     'width': '100%',
   }
+
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+    },
+  });
 
   return (
     <ThemeProvider theme={darkTheme}>
