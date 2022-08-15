@@ -9,29 +9,7 @@ import { createRoot } from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Login from './Login';
-import { Typography, Grid } from '@mui/material';
-
-function LandingFrameMessage() {
-  return (
-    <Grid container padding='30px' spacing={1}>
-      <Grid item xs={12}>
-        <Typography variant='h1'>
-          British Empire Management
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant='h3'>
-          The Sun Never Sets
-        </Typography>
-      </Grid>
-      <Grid item xs={2}>
-        <GoogleOAuthProvider clientId='263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'>
-          <Login />
-        </GoogleOAuthProvider>
-      </Grid>
-    </Grid>
-  )
-}
+import { Typography, Grid, AppBar, Toolbar } from '@mui/material';
 
 function LandingFrame() {
   const style = {
@@ -56,14 +34,22 @@ function LandingFrame() {
     typography: {
       useNextVariants: true
     }
-  }
-  );
+  });
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline/>
       <div style={style}>
-      <LandingFrameMessage />
+        <AppBar position='static'>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              British Empire Management
+            </Typography>
+            <GoogleOAuthProvider clientId='263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'>
+              <Login />
+            </GoogleOAuthProvider>
+          </Toolbar>
+        </AppBar>
       </div>
     </ThemeProvider>)
 }
