@@ -8,6 +8,7 @@ module.exports = {
     main: './main/src/App.jsx',
   },
   mode: 'development',
+  devtool: 'eval-source-map',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
     filename: '[name]-[contenthash].js',
