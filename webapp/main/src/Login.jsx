@@ -17,6 +17,8 @@ function Login() {
       text: 'signin',
       logo_alignment: 'left',
     });
+
+    google.accounts.id.prompt();
   }, []);
 
   return <div id="signInDiv" />;
