@@ -92,6 +92,7 @@ MIDDLEWARE = [
 ]
 
 CSRF_TRUSTED_ORIGINS = ['https://nickbrett-bem.azurewebsites.net']
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
 ROOT_URLCONF = 'webapp.urls'
 

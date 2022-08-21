@@ -1,24 +1,25 @@
-import React from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
-import Button from '@mui/material/Button';
-import GoogleIcon from '@mui/icons-material/Google';
+import React, { useEffect } from 'react';
 
 function Login() {
+  function handleCallbackResponse() {}
 
-  const login = useGoogleLogin({
-    onSuccess: tokenResponse => console.log(tokenResponse)
-  })
+  useEffect(() => {
+    /* global google */
+    google.accounts.id.initialize({
+      client_id:
+        '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
+      callback: handleCallbackResponse,
+    });
 
-  return (
-      <Button 
-        variant='contained' 
-        color='primary'
-        size='large'
-        startIcon={<GoogleIcon/>}
-        onClick={() => login()}>
-          Login
-      </Button>
-  );
+    google.accounts.id.renderButton(document.getElementById('signInDiv'), {
+      theme: 'filled_black',
+      size: 'large',
+      text: 'signin',
+      logo_alignment: 'left',
+    });
+  }, []);
+
+  return <div id="signInDiv" />;
 }
 
 export default Login;
