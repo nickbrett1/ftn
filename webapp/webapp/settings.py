@@ -16,7 +16,6 @@ from decouple import config, Csv
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -89,9 +88,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_referrer_policy.middleware.ReferrerPolicyMiddleware'
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://nickbrett-bem.azurewebsites.net']
+REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
 ROOT_URLCONF = 'webapp.urls'
