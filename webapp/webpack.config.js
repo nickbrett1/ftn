@@ -13,15 +13,17 @@ module.exports = {
     path: path.resolve('./assets/webpack_bundles/'),
     filename: '[name]-[contenthash].js',
   },
-  plugins: [
-    new BundleTracker({ filename: './webpack-stats.json' }),
-  ],
+  plugins: [new BundleTracker({ filename: './webpack-stats.json' })],
   devServer: {
     server: {
       type: 'https',
       options: {
-        key: fs.existsSync('../localhost+2-key.pem') ? '../localhost+2-key.pem' : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.key',
-        cert: fs.existsSync('../localhost+2.pem') ? '../localhost+2.pem' : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.crt',
+        key: fs.existsSync('../localhost+2-key.pem')
+          ? '../localhost+2-key.pem'
+          : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.key',
+        cert: fs.existsSync('../localhost+2.pem')
+          ? '../localhost+2.pem'
+          : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.crt',
       },
     },
     devMiddleware: {
@@ -37,18 +39,23 @@ module.exports = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        use: [
-          { loader: 'babel-loader' },
-        ],
+        use: [{ loader: 'babel-loader' }],
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        type: 'asset/resource'
+        type: 'asset/resource',
       },
       {
         test: /\.css$/,
-        use: 'css-loader'
-      }
+        use: 'css-loader',
+      },
+      {
+        test: /\.ico$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[name][ext][query]',
+        },
+      },
     ],
   },
   resolve: {
