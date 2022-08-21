@@ -6,5 +6,6 @@
   },
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
-  "remote.localPortHost": "allInterfaces"
+  "remote.localPortHost": "allInterfaces",
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

@@ -3,23 +3,25 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Typography, AppBar, Toolbar } from '@mui/material';
 import Login from './Login';
-import { Typography, Grid, AppBar, Toolbar } from '@mui/material';
+
+const UNION_JACK_URL = require('./images/unionjack.jpg');
 
 function LandingFrame() {
   const style = {
-    'backgroundImage': 'url(' + require('./images/unionjack.jpg') + ')',
-    'backgroundRepeat': 'no-repeat',
-    'backgroundSize': 'cover',
-    'position': 'absolute',
-    'height': '100%',
-    'width': '100%',
-  }
+    // eslint-disable-next-line global-require
+    backgroundImage: `url(${UNION_JACK_URL})`,
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    position: 'absolute',
+    height: '100%',
+    width: '100%',
+  };
 
   const darkTheme = createTheme({
     palette: {
@@ -32,26 +34,25 @@ function LandingFrame() {
       },
     },
     typography: {
-      useNextVariants: true
-    }
+      useNextVariants: true,
+    },
   });
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <CssBaseline/>
+      <CssBaseline />
       <div style={style}>
-        <AppBar position='static'>
+        <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               British Empire Management
             </Typography>
-            <GoogleOAuthProvider clientId='263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'>
-              <Login />
-            </GoogleOAuthProvider>
+            <Login />
           </Toolbar>
         </AppBar>
       </div>
-    </ThemeProvider>)
+    </ThemeProvider>
+  );
 }
 
 export default LandingFrame;
