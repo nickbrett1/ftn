@@ -9,6 +9,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Typography, AppBar, Toolbar } from '@mui/material';
 import Login from './Login';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const UNION_JACK_URL = require('./images/unionjack.jpg');
 
@@ -39,19 +40,21 @@ function LandingFrame() {
   });
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <div style={style}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              British Empire Management
-            </Typography>
-            <Login />
-          </Toolbar>
-        </AppBar>
-      </div>
-    </ThemeProvider>
+    <GoogleOAuthProvider clientId="263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com">
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <div style={style}>
+          <AppBar position="static">
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                British Empire Management
+              </Typography>
+              <Login />
+            </Toolbar>
+          </AppBar>
+        </div>
+      </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 }
 

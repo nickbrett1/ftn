@@ -1,27 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 function Login() {
-  function handleCallbackResponse() {}
-
-  useEffect(() => {
-    /* global google */
-    google.accounts.id.initialize({
-      client_id:
-        '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
-      callback: handleCallbackResponse,
-    });
-
-    google.accounts.id.renderButton(document.getElementById('signInDiv'), {
-      theme: 'filled_black',
-      size: 'large',
-      text: 'signin',
-      logo_alignment: 'left',
-    });
-
-    // google.accounts.id.prompt();
-  }, []);
-
-  return <div id="signInDiv" />;
+  return (
+    <GoogleLogin
+      theme="filled_black"
+      size="large"
+      text="signin"
+      onSuccess={(credentialResponse) => {
+        console.log(credentialResponse);
+      }}
+      onError={() => {
+        console.log('Login Failed');
+      }}
+      useOneTap
+    />
+  );
 }
 
 export default Login;
