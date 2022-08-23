@@ -1,21 +1,18 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import jwtDecode from 'jwt-decode';
 
-function Login() {
+export default function Login() {
   return (
     <GoogleLogin
       theme="filled_black"
       size="large"
       text="signin"
       onSuccess={(credentialResponse) => {
-        console.log(credentialResponse);
+        console.log(jwtDecode(credentialResponse.credential));
       }}
-      onError={() => {
-        console.log('Login Failed');
-      }}
+      onError={() => {}}
       useOneTap
     />
   );
 }
-
-export default Login;
