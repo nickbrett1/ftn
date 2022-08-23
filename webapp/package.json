@@ -19,7 +19,8 @@
     "@mui/material": "^5.10.0",
     "@react-oauth/google": "^0.2.6",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "react-favicon": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
