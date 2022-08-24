@@ -25,10 +25,7 @@
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/webapp/manage.py",
-      "args": [
-        "runsslserver",
-        "--nostatic"
-      ],
+      "args": ["runsslserver", "--nostatic"],
       "django": true,
       "justMyCode": true
     },
@@ -37,11 +34,16 @@
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/webapp/manage.py",
-      "args": [
-        "runserver",
-     ],
+      "args": ["runserver"],
       "django": true,
       "justMyCode": true
+    },
+    {
+      "type": "chrome",
+      "request": "attach",
+      "name": "Attach to browser",
+      "urlFilter": "http://localhost:8000/*",
+      "port": 9222
     }
   ]
 }
