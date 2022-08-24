@@ -8,9 +8,7 @@ export default function Login() {
       theme="filled_black"
       size="large"
       text="signin"
-      onSuccess={(credentialResponse) => {
-        console.log(jwtDecode(credentialResponse.credential));
-      }}
+      onSuccess={(credentialResponse) => {}}
       onError={() => {}}
       useOneTap
     />
