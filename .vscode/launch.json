@@ -43,6 +43,7 @@
       "request": "attach",
       "name": "Attach to browser",
       "urlFilter": "http://localhost:8000/*",
+      "webRoot": "${workspaceFolder}/webapp",
       "port": 9222
     }
   ]
