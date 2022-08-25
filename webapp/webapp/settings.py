@@ -99,7 +99,9 @@ ROOT_URLCONF = 'webapp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            str(BASE_DIR / 'assets/webpack_bundles'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
