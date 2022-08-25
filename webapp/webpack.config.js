@@ -1,4 +1,6 @@
 const BundleTracker = require('webpack-bundle-tracker');
+const WebpackFavicons = require('webpack-favicons');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,7 +15,25 @@ module.exports = {
     path: path.resolve('./assets/webpack_bundles/'),
     filename: '[name]-[contenthash].js',
   },
-  plugins: [new BundleTracker({ filename: './webpack-stats.json' })],
+  plugins: [
+    new BundleTracker({ filename: './webpack-stats.json' }),
+    new WebpackFavicons({
+      src: './main/src/images/flag.svg',
+      path: '/static/webpack_bundles',
+      icons: {
+        android: true,
+        appleIcon: true,
+        appleStartup: true,
+        favicons: true,
+        windows: true,
+        yandex: true,
+      },
+    }),
+    new HtmlWebpackPlugin({
+      template: './main/templates/main/index.html',
+      inject: 'head',
+    }),
+  ],
   devServer: {
     server: {
       type: 'https',
@@ -54,6 +74,13 @@ module.exports = {
         type: 'asset/resource',
         generator: {
           filename: '[name][ext][query]',
+        },
+      },
+      {
+        test: /\.html$/,
+        loader: 'html-loader',
+        options: {
+          sources: true,
         },
       },
     ],

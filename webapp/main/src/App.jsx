@@ -9,11 +9,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import Favicon from 'react-favicon';
 import Login from './Login';
 
 const UNION_JACK_URL = require('./images/unionjack.jpg');
-const FAVICON_URL = require('./images/favicon.ico');
 
 function LandingFrame() {
   const style = {
@@ -46,7 +44,6 @@ function LandingFrame() {
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
         <div style={style}>
-          <Favicon url={`${FAVICON_URL}`} />
           <AppBar position="static">
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
