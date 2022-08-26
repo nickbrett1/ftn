@@ -54,6 +54,9 @@ module.exports = {
           : '/home/vscode/.local/lib/python3.8/site-packages/sslserver/certs/development.crt',
       },
     },
+    client: {
+      overlay: true,
+    },
     devMiddleware: {
       index: true,
       mimeTypes: { phtml: 'text/html' },
