@@ -6,20 +6,22 @@ const fs = require('fs');
 
 module.exports = {
   context: __dirname,
-  entry: {
-    main: './main/src/App.jsx',
-  },
+  entry: './main/src/App.jsx',
   mode: 'development',
   devtool: 'source-map',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
+    publicPath: '/static/webpack_bundles/',
     filename: '[name]-[contenthash].js',
   },
   plugins: [
     new BundleTracker({ filename: './webpack-stats.json' }),
     new WebpackFavicons({
       src: './main/src/images/flag.svg',
-      path: '/static/webpack_bundles',
+      appName: 'British Empire Management',
+      appShortName: 'BEM',
+      appDescription: 'British Empire Management',
+      scope: '/',
       icons: {
         android: true,
         appleIcon: true,
@@ -31,7 +33,13 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       template: './main/templates/main/index.html',
-      inject: 'head',
+      title: 'British Empire Management',
+      filename: 'index.html',
+      publicPath: '/static/webpack_bundles',
+      meta: {
+        charset: 'utf-8',
+        viewport: 'width=device-width, initial-scale=1',
+      },
     }),
   ],
   devServer: {
@@ -74,13 +82,6 @@ module.exports = {
         type: 'asset/resource',
         generator: {
           filename: '[name][ext][query]',
-        },
-      },
-      {
-        test: /\.html$/,
-        loader: 'html-loader',
-        options: {
-          sources: true,
         },
       },
     ],
