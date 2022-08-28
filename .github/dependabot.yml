@@ -8,12 +8,12 @@ updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/webapp" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
     
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
       
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
