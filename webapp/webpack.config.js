@@ -46,6 +46,7 @@ module.exports = {
       },
     }),
     new SentryWebpackPlugin({
+      organization: 'nick-brett',
       include: path.resolve('./assets/webpack_bundles/'),
       ignoreFile: '.sentrycliignore',
       ignore: ['node_modules', 'webpack.config.js'],
