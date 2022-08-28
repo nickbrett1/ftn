@@ -69,6 +69,7 @@ webapp/assets/
 webapp/webpack-stats.json
 .DS_Store
 *.pem
+.sentryclirc
 
 # Flask stuff:
 instance/
