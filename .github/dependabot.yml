@@ -5,7 +5,19 @@
 
 version: 2
 updates:
-    package-ecosystem: "npm" # See documentation for possible values
+  - package-ecosystem: "npm" # See documentation for possible values
     directory: "/webapp" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
+    
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      
+  - package-ecosystem: "github-actions"
+    # Workflow files stored in the
+    # default location of `.github/workflows`
+    directory: "/"
+    schedule:
+      interval: "daily"
