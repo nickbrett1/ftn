@@ -1,13 +1,15 @@
 const BundleTracker = require('webpack-bundle-tracker');
 const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const SentryWebpackPlugin = require('@sentry/webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const ProgressPlugin = require('progress-webpack-plugin');
 const path = require('path');
 const fs = require('fs');
 
 module.exports = {
   context: __dirname,
   entry: './main/src/App.jsx',
-  mode: 'development',
   devtool: 'source-map',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
@@ -15,6 +17,8 @@ module.exports = {
     filename: '[name]-[contenthash].js',
   },
   plugins: [
+    new CleanWebpackPlugin(),
+    new ProgressPlugin(true),
     new BundleTracker({ filename: './webpack-stats.json' }),
     new WebpackFavicons({
       src: './main/src/images/flag.svg',
@@ -40,6 +44,14 @@ module.exports = {
         charset: 'utf-8',
         viewport: 'width=device-width, initial-scale=1',
       },
+    }),
+    new SentryWebpackPlugin({
+      include: path.resolve('./assets/webpack_bundles/'),
+      ignoreFile: '.sentrycliignore',
+      ignore: ['node_modules', 'webpack.config.js'],
+      configFile: 'sentry.properties',
+      project: 'bem-frontend',
+      urlPrefix: '~/static/webpack_bundles',
     }),
   ],
   devServer: {
