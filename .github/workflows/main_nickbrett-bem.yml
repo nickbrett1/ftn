@@ -51,7 +51,7 @@ jobs:
         run: tar --exclude='venv' --exclude='node_modules' -cvzf artifact.tar.gz *
 
       - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: python-app
           path: artifact.tar.gz
