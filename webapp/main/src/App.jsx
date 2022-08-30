@@ -10,7 +10,6 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 import Login from './Login';
 
 const UNION_JACK_URL = require('./images/unionjack.jpg');
@@ -53,9 +52,10 @@ function LandingFrame() {
             <AppBar position="static">
               <Toolbar>
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  British Empire Management!!
+                  British Empire Management
                 </Typography>
                 <Login />
+                <BrokenFoo />
               </Toolbar>
             </AppBar>
           </div>
@@ -66,14 +66,6 @@ function LandingFrame() {
 }
 
 export default LandingFrame;
-
-Sentry.init({
-  dsn: 'https://2becbe2880ce41ed8198fd63c2cd490f@o1381755.ingest.sentry.io/6695436',
-  integrations: [new BrowserTracing()],
-  environment: process.env.NODE_ENV,
-  tracesSampleRate: 1.0,
-  attachStacktrace: true,
-});
 
 const container = document.getElementById('app');
 const root = createRoot(container);
