@@ -15,7 +15,7 @@ Django==4.1
 django-referrer-policy==1.0
 django-request-logging==0.7.5
 django-sslserver==0.22
-django-webpack-loader==1.5.0
+django-webpack-loader==1.6.0
 graphene==2.1.9
 graphene-django==2.15.0
 graphql-core==2.3.2
