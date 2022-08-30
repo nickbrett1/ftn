@@ -2,11 +2,6 @@
 <html>
   <head>
     <script
-      src="https://browser.sentry-cdn.com/7.11.1/bundle.tracing.min.js"
-      integrity="sha384-5F8vDugSosqp2pI8vH9s7r4bXF9PXJ4arHm4awTj6BJofevrz+3ixbAkhnm9TJ5q"
-      crossorigin="anonymous"
-    ></script>
-    <script
       src="https://js.sentry-cdn.com/2becbe2880ce41ed8198fd63c2cd490f.min.js"
       crossorigin="anonymous"
       data-lazy="no"
@@ -15,7 +10,6 @@
       Sentry.onLoad(function () {
         Sentry.init({
           environment: '<%= debug %>' === 'True' ? 'development' : 'production',
-          integrations: [new Sentry.Integrations.BrowserTracing()],
           tracesSampleRate: 1.0,
           attachStacktrace: true,
         });
