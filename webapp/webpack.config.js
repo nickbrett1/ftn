@@ -22,7 +22,7 @@ module.exports = {
     new CleanWebpackPlugin(),
     new ProgressPlugin(true),
     new BundleTracker({ filename: './webpack-stats.json' }),
-    new BundleAnalyzerPlugin(),
+    // new BundleAnalyzerPlugin(),
     new WebpackFavicons({
       src: './main/src/images/flag.svg',
       appName: 'British Empire Management',
