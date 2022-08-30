@@ -4,6 +4,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ProgressPlugin = require('progress-webpack-plugin');
+const BundleAnalyzerPlugin =
+  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const path = require('path');
 const fs = require('fs');
 
@@ -20,6 +22,7 @@ module.exports = {
     new CleanWebpackPlugin(),
     new ProgressPlugin(true),
     new BundleTracker({ filename: './webpack-stats.json' }),
+    new BundleAnalyzerPlugin(),
     new WebpackFavicons({
       src: './main/src/images/flag.svg',
       appName: 'British Empire Management',
@@ -40,6 +43,9 @@ module.exports = {
       title: 'British Empire Management',
       filename: 'index.html',
       publicPath: '/static/webpack_bundles',
+      templateParameters: {
+        debug: process.env.DEBUG,
+      },
       meta: {
         charset: 'utf-8',
         viewport: 'width=device-width, initial-scale=1',
