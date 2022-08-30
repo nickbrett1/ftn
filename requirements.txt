@@ -4,14 +4,14 @@ astroid==2.11.5
 azure-common==1.1.28
 azure-core==1.24.0
 azure-identity==1.10.0
-azure-keyvault-secrets==4.4.0
+azure-keyvault-secrets==4.5.1
 backports.zoneinfo==0.2.1
 certifi==2022.5.18.1
 cffi==1.15.0
 charset-normalizer==2.0.12
 cryptography==37.0.4
 dill==0.3.5.1
-Django==4.0.7
+Django==4.1
 django-referrer-policy==1.0
 django-request-logging==0.7.5
 django-sslserver==0.22
@@ -36,7 +36,7 @@ portalocker==2.4.0
 promise==2.3
 pycparser==2.21
 PyJWT==2.4.0
-pylint==2.14.0
+pylint==2.15.0
 pylint-django==2.5.3
 pylint-plugin-utils==0.7
 pyparsing==3.0.9
