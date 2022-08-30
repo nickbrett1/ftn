@@ -6,7 +6,7 @@ azure-core==1.24.0
 azure-identity==1.10.0
 azure-keyvault-secrets==4.5.1
 backports.zoneinfo==0.2.1
-certifi==2022.5.18.1
+certifi==2022.6.15
 cffi==1.15.0
 charset-normalizer==2.0.12
 cryptography==37.0.4
