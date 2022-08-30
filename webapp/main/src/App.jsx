@@ -55,7 +55,6 @@ function LandingFrame() {
                   British Empire Management
                 </Typography>
                 <Login />
-                <BrokenFoo />
               </Toolbar>
             </AppBar>
           </div>
