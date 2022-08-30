@@ -6,8 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx webpack serve --mode=development",
+    "webpack-prod": "npx webpack serve --mode=production",
     "build": "webpack --mode=production"
   },
+  "sideEffects": "false",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -29,6 +31,8 @@
     "@babel/preset-react": "^7.17.12",
     "@sentry/webpack-plugin": "^1.19.0",
     "babel-loader": "^8.2.5",
+    "babel-plugin-transform-imports": "^2.0.0",
+    "babel-plugin-transform-mui-imports": "^0.2.0",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.7.1",
     "eslint": "^8.17.0",
