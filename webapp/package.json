@@ -9,7 +9,6 @@
     "webpack-prod": "npx webpack serve --mode=production",
     "build": "webpack --mode=production"
   },
-  "sideEffects": "false",
   "keywords": [],
   "author": "",
   "license": "ISC",
