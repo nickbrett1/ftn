@@ -1,7 +1,7 @@
 asgiref==3.5.2
 astroid==2.12.5
 azure-common==1.1.28
-azure-core==1.24.0
+azure-core==1.25.0
 azure-identity==1.10.0
 azure-keyvault-secrets==4.5.1
 backports.zoneinfo==0.2.1
