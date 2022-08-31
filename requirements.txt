@@ -36,7 +36,7 @@ oauthlib==3.2.0
 packaging==21.3
 pip-review==1.2.0
 platformdirs==2.5.2
-portalocker==2.4.0
+portalocker==2.5.1
 promise==2.3
 pycparser==2.21
 Pygments==2.13.0
