@@ -70,13 +70,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sslserver',
     'webpack_loader',
-    'graphene_django',
     'main'
 ]
-
-GRAPHENE= {
-    'SCHEMA': 'webapp.schema.schema'
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
