@@ -2,6 +2,7 @@ const { resolve } = require('path');
 const { merge } = require('webpack-merge');
 const { existsSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const common = require('./webpack.common');
 
@@ -31,5 +32,5 @@ module.exports = merge(common, {
       writeToDisk: true,
     },
   },
-  plugins: [new BundleAnalyzerPlugin()],
+  plugins: [new CleanWebpackPlugin(), new BundleAnalyzerPlugin()],
 });

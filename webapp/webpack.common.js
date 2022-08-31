@@ -2,7 +2,6 @@ const BundleTracker = require('webpack-bundle-tracker');
 const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ProgressPlugin = require('progress-webpack-plugin');
 
 const path = require('path');
@@ -16,7 +15,6 @@ module.exports = {
     filename: '[name]-[contenthash].js',
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new ProgressPlugin(true),
     new BundleTracker({ filename: './webpack-stats.json' }),
 

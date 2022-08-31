@@ -1,29 +1,4 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-    {
-      "type": "npm",
-      "script": "dev",
-      "path": "webapp",
-      "problemMatcher": [],
-      "label": "npm: dev - webapp",
-      "detail": "npx webpack serve",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "type": "npm",
-      "script": "dev",
-      "path": "webapp",
-      "problemMatcher": [],
-      "label": "npm: dev - webapp",
-      "detail": "npx webpack serve",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    }
-  ]
+  "version": "2.0.0",
+  "tasks": []
 }
