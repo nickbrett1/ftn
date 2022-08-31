@@ -25,7 +25,7 @@ isodate==0.6.1
 isort==5.10.1
 lazy-object-proxy==1.7.1
 mccabe==0.7.0
-msal==1.17.0
+msal==1.18.0
 msal-extensions==1.0.0
 msrest==0.7.1
 oauthlib==3.2.0
