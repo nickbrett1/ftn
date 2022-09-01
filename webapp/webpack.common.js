@@ -1,7 +1,6 @@
 const BundleTracker = require('webpack-bundle-tracker');
 const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 const ProgressPlugin = require('progress-webpack-plugin');
 
 const path = require('path');
@@ -45,15 +44,6 @@ module.exports = {
         charset: 'utf-8',
         viewport: 'width=device-width, initial-scale=1',
       },
-    }),
-    new SentryWebpackPlugin({
-      org: 'nick-brett',
-      include: path.resolve('./assets/webpack_bundles/'),
-      ignoreFile: '.sentrycliignore',
-      ignore: ['node_modules', 'webpack.config.js'],
-      configFile: 'sentry.properties',
-      project: 'bem-frontend',
-      urlPrefix: '~/static/webpack_bundles',
     }),
   ],
   module: {
