@@ -8,7 +8,7 @@ const common = require('./webpack.common');
 
 module.exports = merge(common, {
   mode: 'development',
-  devtool: 'cheap-source-map',
+  devtool: 'eval-source-map',
   devServer: {
     server: {
       type: 'https',
