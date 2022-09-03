@@ -6,7 +6,7 @@ const common = require('./webpack.common');
 
 module.exports = merge(common, {
   mode: 'production',
-  devtool: 'hidden-source-map',
+  devtool: 'source-map',
   plugins: [
     new SentryWebpackPlugin({
       org: 'nick-brett',
