@@ -16,6 +16,7 @@ module.exports = merge(common, {
       configFile: 'sentry.properties',
       project: 'bem-frontend',
       urlPrefix: '~/static/webpack_bundles',
+      release: process.env.GIT_SHA
     }),
   ],
 });
