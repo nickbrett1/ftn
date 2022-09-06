@@ -1,5 +1,5 @@
 asgiref==3.5.2
-astroid==2.12.5
+astroid==2.12.6
 azure-common==1.1.28
 azure-core==1.25.1
 azure-identity==1.10.0
