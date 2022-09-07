@@ -10,7 +10,6 @@ module.exports = {
   entry: './main/src/App.jsx',
   output: {
     path: path.resolve('./assets/webpack_bundles/'),
-    publicPath: '/static/webpack_bundles/',
     filename: '[name]-[contenthash].js',
   },
   plugins: [
