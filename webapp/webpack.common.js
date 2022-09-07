@@ -35,7 +35,6 @@ module.exports = {
       template: './main/templates/main/index.html',
       title: 'British Empire Management',
       filename: 'index.html',
-      publicPath: '/static/webpack_bundles',
       templateParameters: {
         debug: process.env.DEBUG,
       },
