@@ -35,6 +35,7 @@ module.exports = {
       filename: 'index.html',
       templateParameters: {
         debug: process.env.DEBUG,
+        release: process.env.CF_PAGES_COMMIT_SHA,
       },
       meta: {
         charset: 'utf-8',

@@ -26,6 +26,7 @@
     "@babel/core": "^7.19.0",
     "@babel/preset-env": "^7.19.0",
     "@babel/preset-react": "^7.17.12",
+    "@sentry/cli": "^2.5.2",
     "@sentry/webpack-plugin": "^1.19.0",
     "babel-loader": "^8.2.5",
     "babel-plugin-transform-imports": "^2.0.0",
