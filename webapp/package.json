@@ -30,6 +30,7 @@
     "babel-loader": "^8.2.5",
     "babel-plugin-transform-imports": "^2.0.0",
     "babel-plugin-transform-mui-imports": "^0.2.0",
+    "bitbar-webpack-progress-plugin": "^1.0.0",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.7.1",
     "eslint": "^8.17.0",
