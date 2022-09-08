@@ -53,7 +53,7 @@ function LandingFrame() {
               <Toolbar>
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   British Empire Management
-                  <Error2 />
+                  <Error3 />
                 </Typography>
                 <Login />
               </Toolbar>
