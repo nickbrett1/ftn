@@ -12,7 +12,7 @@
           environment: '<%= debug %>' === 'True' ? 'development' : 'production',
           tracesSampleRate: 1.0,
           attachStacktrace: true,
-          release: '<% release %>'
+          release: '<%= release %>',
         });
       });
     </script>
