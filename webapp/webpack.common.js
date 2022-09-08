@@ -1,7 +1,6 @@
 const BundleTracker = require('webpack-bundle-tracker');
 const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ProgressPlugin = require('progress-webpack-plugin');
 
 const path = require('path');
 
