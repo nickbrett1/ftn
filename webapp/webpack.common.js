@@ -13,7 +13,6 @@ module.exports = {
     filename: '[name]-[contenthash].js',
   },
   plugins: [
-    new ProgressPlugin(true),
     new BundleTracker({ filename: './webpack-stats.json' }),
 
     new WebpackFavicons({
