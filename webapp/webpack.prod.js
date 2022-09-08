@@ -14,7 +14,6 @@ module.exports = merge(common, {
       ignoreFile: '.sentrycliignore',
       ignore: ['node_modules', 'webpack.config.js'],
       project: 'bem-frontend',
-      urlPrefix: '~/assets/webpack_bundles',
       release: process.env.CF_PAGES_COMMIT_SHA,
     }),
   ],
