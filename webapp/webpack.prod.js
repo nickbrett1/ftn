@@ -9,6 +9,9 @@ module.exports = (env) =>
   merge(common, {
     mode: 'production',
     devtool: 'source-map',
+    optimization: {
+      concatenateModules: !env.ANALYZE,
+    },
     plugins: [
       new SentryWebpackPlugin({
         org: 'nick-brett',
