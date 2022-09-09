@@ -14,5 +14,6 @@ module.exports = {
   plugins: ['react'],
   rules: {
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    'implicit-arrow-linebreak': ['error', 'below'],
   },
 };

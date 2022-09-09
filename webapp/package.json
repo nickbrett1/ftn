@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "npx webpack serve --config webpack.dev.js",
-    "webpack-prod": "npx webpack serve --config webpack.dev.js --mode production",
+    "analyze": "npx webpack --env ANALYZE --config webpack.prod.js",
     "build": "webpack --config webpack.prod.js",
     "serve": "serve -n --ssl-cert ../localhost+2.pem --ssl-key ../localhost+2-key.pem assets/webpack_bundles/"
   },
