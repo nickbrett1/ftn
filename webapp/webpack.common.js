@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const path = require('path');
 
-module.exports = {
+module.exports = (env) => ({
   context: __dirname,
   entry: './main/src/App.jsx',
   output: {
@@ -34,7 +34,7 @@ module.exports = {
       title: 'British Empire Management',
       filename: 'index.html',
       templateParameters: {
-        debug: process.env.DEBUG,
+        debug: env.DEBUG,
         release: process.env.CF_PAGES_COMMIT_SHA,
       },
       meta: {
@@ -74,4 +74,4 @@ module.exports = {
   resolve: {
     extensions: ['.jsx', '...'],
   },
-};
+});
