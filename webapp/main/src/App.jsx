@@ -9,7 +9,6 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import * as Sentry from '@sentry/react';
 import Login from './Login';
 
 const UNION_JACK_URL = require('./images/unionjack.jpg');
@@ -41,26 +40,26 @@ function LandingFrame() {
   });
 
   return (
-    <Sentry.ErrorBoundary showDialog>
-      <GoogleOAuthProvider
-        clientId="263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com"
-        onScriptLoadError={() => {}}
-      >
-        <ThemeProvider theme={darkTheme}>
-          <CssBaseline />
-          <div style={style}>
-            <AppBar position="static">
-              <Toolbar>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  British Empire Management
-                </Typography>
-                <Login />
-              </Toolbar>
-            </AppBar>
-          </div>
-        </ThemeProvider>
-      </GoogleOAuthProvider>
-    </Sentry.ErrorBoundary>
+    <GoogleOAuthProvider
+      clientId="263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com"
+      onScriptLoadError={() => {
+        throw new Error('Failed to load GoogleOAuthProvider');
+      }}
+    >
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <div style={style}>
+          <AppBar position="static">
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                British Empire Management
+              </Typography>
+              <Login />
+            </Toolbar>
+          </AppBar>
+        </div>
+      </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 }
 

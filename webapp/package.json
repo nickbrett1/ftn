@@ -47,6 +47,7 @@
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-webpack-plugin": "^3.2.0",
     "html-webpack-plugin": "^5.5.0",
+    "imagemin": "^8.0.1",
     "progress-webpack-plugin": "^1.0.16",
     "serve": "^14.0.1",
     "webpack": "^5.73.0",
