@@ -39,9 +39,6 @@ function LandingFrame() {
     },
   });
 
-  // eslint-disable-next-line no-constant-condition, no-self-compare
-  if (true === true) throw new Error('Failed to load GoogleOAuthProvider!');
-
   return (
     <GoogleOAuthProvider
       clientId="263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com"
