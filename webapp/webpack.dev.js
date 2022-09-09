@@ -1,7 +1,6 @@
 const { resolve } = require('path');
 const { merge } = require('webpack-merge');
 const { existsSync } = require('fs');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
@@ -35,7 +34,6 @@ module.exports = merge(common, {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new BundleAnalyzerPlugin(),
     new ESLintPlugin({ extensions: ['js', 'jsx'] }),
   ],
 });
