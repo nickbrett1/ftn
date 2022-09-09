@@ -3,7 +3,6 @@ const { merge } = require('webpack-merge');
 const { existsSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const BitBarWebpackProgressPlugin = require('bitbar-webpack-progress-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
 const common = require('./webpack.common');
@@ -36,7 +35,6 @@ module.exports = merge(common, {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new BitBarWebpackProgressPlugin(),
     new BundleAnalyzerPlugin(),
     new ESLintPlugin({ extensions: ['js', 'jsx'] }),
   ],
