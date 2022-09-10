@@ -1,6 +1,6 @@
 const BundleTracker = require('webpack-bundle-tracker');
-const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 const path = require('path');
 
@@ -13,24 +13,16 @@ module.exports = (env) => ({
   },
   plugins: [
     new BundleTracker({ filename: './webpack-stats.json' }),
-
-    new WebpackFavicons({
-      src: './main/src/images/flag.svg',
-      appName: 'British Empire Management',
-      appShortName: 'BEM',
-      appDescription: 'British Empire Management',
-      scope: '/',
-      icons: {
-        android: true,
-        appleIcon: true,
-        appleStartup: true,
-        favicons: true,
-        windows: true,
-        yandex: true,
-      },
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve('./main/src/icons/favicon.ico'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+      ],
     }),
     new HtmlWebpackPlugin({
-      template: './main/templates/main/index.html',
+      template: './main/templates/main/index.ejs',
       title: 'British Empire Management',
       filename: 'index.html',
       templateParameters: {
@@ -61,13 +53,6 @@ module.exports = (env) => ({
       {
         test: /\.css$/,
         use: 'css-loader',
-      },
-      {
-        test: /\.ico$/,
-        type: 'asset/resource',
-        generator: {
-          filename: '[name][ext][query]',
-        },
       },
     ],
   },
