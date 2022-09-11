@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/node:18.8.0 
+      - image: cimg/node:18.8.0
     steps:
       - checkout
       - restore_cache:
@@ -25,7 +25,10 @@ jobs:
           name: Build app
           command: |
             cd webapp && npm run build
-      - run: 
+      - run:
+          name: Check size limit
+          command: |
+            size-limit
+      - run:
           name: Deploying to Cloudflare
-          command:
-            cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
+          command: cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
