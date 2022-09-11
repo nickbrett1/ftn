@@ -9,7 +9,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: List files
+          name: Change directory
           command: |
+            chdir webapp
             ls -al
             echo '^^^The files in your repo^^^'
