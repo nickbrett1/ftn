@@ -9,5 +9,6 @@ jobs:
        
     steps:
       - checkout
-      - run: npm install && npm run build
-      - run: npx wrangler pages publish /assets/webpack_bundles --project-name=bem
+      - command: |
+            ls -al
+            echo '^^^The files in your repo^^^'
