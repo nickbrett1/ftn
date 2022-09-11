@@ -10,7 +10,7 @@
   "size-limit": [
     {
       "path": "assets/webpack_bundles/main-*.js",
-      "limit": "1.2 s"
+      "limit": "2.2 s"
     }
   ],
   "scripts": {
