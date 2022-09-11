@@ -38,4 +38,4 @@ jobs:
       - run: 
           name: Deploying to Cloudflare
           command:
-            npx wrangler pages publish webapp/assets/webpack_bundles --project-name=bem
+            cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
