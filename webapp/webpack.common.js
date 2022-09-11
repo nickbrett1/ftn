@@ -19,6 +19,18 @@ module.exports = (env) => ({
           from: path.resolve('./main/src/icons/favicon.ico'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
+        {
+          from: path.resolve('./main/src/icons/icon-192.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/src/icons/icon-512.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/src/icons/manifest.webmanifest'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
