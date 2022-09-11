@@ -8,19 +8,10 @@ jobs:
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
     steps:
       - checkout
-      - run:
-          name: Change directory
-          command: |
-            cd webapp
-            ls -al
       - run: 
-          name: Installing modules
+          name: Install and Build modules
           command: |
-            npm install
-      - run: 
-          name: Building site
-          command: |
-            npm build
+            cd webapp && npm install && npm build
       - run: 
           name: Deploying to Cloudflare
           command:
