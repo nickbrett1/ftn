@@ -9,10 +9,14 @@ jobs:
     steps:
       - checkout
       - run: 
-          name: Install and Build modules
+          name: Install modules
           command: |
-            cd webapp && npm install && npm run build
+            cd webapp && npm install
+      - run:
+          name: Build modules
+          command: |
+            cd webapp && npm build
       - run: 
           name: Deploying to Cloudflare
           command:
-            ls -al; npx wrangler pages publish webapp/assets/webpack_bundles --project-name=bem
+            npx wrangler pages publish webapp/assets/webpack_bundles --project-name=bem
