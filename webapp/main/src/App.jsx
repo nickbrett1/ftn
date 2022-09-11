@@ -11,7 +11,7 @@ import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './Login';
 
-const UNION_JACK_URL = require('./images/unionjack.jpg');
+const UNION_JACK_URL = require('../images/unionjack.jpg');
 
 function LandingFrame() {
   const style = {
