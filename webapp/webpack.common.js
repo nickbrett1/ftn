@@ -16,25 +16,25 @@ module.exports = (env) => ({
     new CopyPlugin({
       patterns: [
         {
-          from: path.resolve('./main/src/icons/favicon.ico'),
+          from: path.resolve('./main/icons/favicon.ico'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
         {
-          from: path.resolve('./main/src/icons/icon-192.png'),
+          from: path.resolve('./main/icons/icon-192.png'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
         {
-          from: path.resolve('./main/src/icons/icon-512.png'),
+          from: path.resolve('./main/icons/icon-512.png'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
         {
-          from: path.resolve('./main/src/icons/manifest.webmanifest'),
+          from: path.resolve('./main/icons/manifest.webmanifest'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
       ],
     }),
     new HtmlWebpackPlugin({
-      template: './main/templates/main/index.ejs',
+      template: './main/templates/index.ejs',
       title: 'British Empire Management',
       filename: 'index.html',
       templateParameters: {
