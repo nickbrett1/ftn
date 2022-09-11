@@ -13,7 +13,7 @@ jobs:
           command: |
             cd webapp && npm install
       - run:
-          name: Build modules
+          name: Build app
           command: |
             cd webapp && npm run build
       - run: 
