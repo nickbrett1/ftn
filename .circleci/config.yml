@@ -13,9 +13,6 @@ jobs:
           command: |
             cd webapp
             ls -al
-          name: Install 
-            npm install
-          name: Build
-            npm build
-          name: Publish
-            npx wrangler pages publish /assets/webpack_bundles --project-name=bem
+       - run: npm install
+       - run: npm build
+       - run: npx wrangler pages publish /assets/webpack_bundles --project-name=bem
