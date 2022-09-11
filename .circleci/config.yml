@@ -20,9 +20,9 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
+            - node-v2-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v2-{{ .Branch }}-
+            - node-v2-
       - run:
           name: Install modules
           command: |
@@ -30,7 +30,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: node-v1-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+          key: node-v2-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - run:
           name: Build app
           command: |
