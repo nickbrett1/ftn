@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Build modules
           command: |
-            cd webapp && npm build
+            cd webapp && npm run build
       - run: 
           name: Deploying to Cloudflare
           command:
