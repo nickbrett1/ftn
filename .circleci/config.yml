@@ -3,9 +3,6 @@ jobs:
   build:
     docker:
       - image: cimg/node:18.8.0 
-        auth:
-          username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
     steps:
       - checkout
       - restore_cache:
