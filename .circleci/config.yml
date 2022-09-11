@@ -1,9 +1,15 @@
 version: 2.1
+
+orbs:
+  browser-tools: circleci/browser-tools@1.4.0
+
 jobs:
   build:
     docker:
-      - image: cimg/node:18.8.0
+      - image: cimg/node:18.8.0-browsers
     steps:
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
       - checkout
       - restore_cache:
           name: Restore node_modules cache
