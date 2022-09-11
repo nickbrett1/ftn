@@ -13,4 +13,9 @@ jobs:
           command: |
             cd webapp
             ls -al
-            echo '^^^The files in your repo^^^'
+          name: Install 
+            npm install
+          name: Build
+            npm build
+          name: Publish
+            npx wrangler pages publish /assets/webpack_bundles --project-name=bem
