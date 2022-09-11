@@ -8,6 +8,7 @@ jobs:
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
     steps:
       - checkout
-      - command: |
-            ls -al
-            echo '^^^The files in your repo^^^'
+      - run:
+        command: |
+           ls -al
+           echo '^^^The files in your repo^^^'
