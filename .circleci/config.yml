@@ -13,6 +13,15 @@ jobs:
           command: |
             cd webapp
             ls -al
-       - run: npm install
-       - run: npm build
-       - run: npx wrangler pages publish /assets/webpack_bundles --project-name=bem
+       - run: 
+           name: Installing modules
+           command: |
+             npm install
+       - run: 
+           name: Building site
+           command: |
+             npm build
+       - run: 
+           name: Deploying to Cloudflare
+           command:
+             npx wrangler pages publish /assets/webpack_bundles --project-name=bem
