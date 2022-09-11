@@ -1,12 +1,11 @@
 version: 2.1
 jobs:
   build:
-    build-and-deploy:
+    docker:
       - image: cimg/base:2021.04 
         auth:
           username: mydockerhub-user
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
-       
     steps:
       - checkout
       - command: |
