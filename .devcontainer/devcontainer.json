@@ -29,7 +29,8 @@
 		"actboy168.tasks",
 		"jeremyrajan.webpack",
 		"DigitalBrainstem.javascript-ejs-support",
-		"jodyh.circleci-vscode"
+		"jodyh.circleci-vscode",
+		"redhat.vscode-yaml"
 	]
     }
   },
