@@ -16,20 +16,20 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-		"dbaeumer.vscode-eslint",
-		"pejmannikram.vscode-auto-scroll",
-		"mgmcdermott.vscode-language-babel",
-		"naumovs.color-highlight",
-		"GitHub.vscode-pull-request-github",
-		"ecmel.vscode-html-css",
-		"oderwat.indent-rainbow",
-		"esbenp.prettier-vscode",
-		"matteopieroni.refresh-npm-packages",
-		"humao.rest-client",
-		"actboy168.tasks",
-		"jeremyrajan.webpack",
-		"DigitalBrainstem.javascript-ejs-support"
-	]
+        "dbaeumer.vscode-eslint",
+        "pejmannikram.vscode-auto-scroll",
+        "mgmcdermott.vscode-language-babel",
+        "naumovs.color-highlight",
+        "GitHub.vscode-pull-request-github",
+        "ecmel.vscode-html-css",
+        "oderwat.indent-rainbow",
+        "esbenp.prettier-vscode",
+        "matteopieroni.refresh-npm-packages",
+        "humao.rest-client",
+        "actboy168.tasks",
+        "jeremyrajan.webpack",
+        "DigitalBrainstem.javascript-ejs-support"
+      ]
     }
   },
 
@@ -37,7 +37,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
+  // "postCreateCommand": "npm install -g wrangler svgo source-map",
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "node"
