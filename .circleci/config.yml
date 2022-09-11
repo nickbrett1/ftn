@@ -26,10 +26,10 @@ jobs:
       - run:
           name: Install modules
           command: |
-            cd webapp && npm install
+            cd webapp && npm install && npm install -g wrangler
       - save_cache:
           paths:
-            - ~/usr/local/lib/node_modules
+            - ~/webapp/node_modules
           key: node-v1-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - run:
           name: Build app
