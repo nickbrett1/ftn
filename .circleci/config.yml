@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - run:
-        name: List files
-        command: |
-           ls -al
-           echo '^^^The files in your repo^^^'
+          name: List files
+          command: |
+            ls -al
+            echo '^^^The files in your repo^^^'
