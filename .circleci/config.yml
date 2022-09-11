@@ -11,6 +11,6 @@ jobs:
       - run:
           name: Change directory
           command: |
-            chdir webapp
+            cd webapp
             ls -al
             echo '^^^The files in your repo^^^'
