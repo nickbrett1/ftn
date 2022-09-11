@@ -1,7 +1,6 @@
 const { resolve } = require('path');
 const { merge } = require('webpack-merge');
 const { existsSync } = require('fs');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
 const common = require('./webpack.common');
@@ -33,8 +32,5 @@ module.exports = (env) =>
         writeToDisk: true,
       },
     },
-    plugins: [
-      new CleanWebpackPlugin(),
-      new ESLintPlugin({ extensions: ['js', 'jsx'] }),
-    ],
+    plugins: [new ESLintPlugin({ extensions: ['js', 'jsx'] })],
   });

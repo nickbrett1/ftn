@@ -1,6 +1,7 @@
 const BundleTracker = require('webpack-bundle-tracker');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const path = require('path');
 
@@ -12,6 +13,7 @@ module.exports = (env) => ({
     filename: '[name]-[contenthash].js',
   },
   plugins: [
+    new CleanWebpackPlugin(),
     new BundleTracker({ filename: './webpack-stats.json' }),
     new CopyPlugin({
       patterns: [
