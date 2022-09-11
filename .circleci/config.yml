@@ -28,7 +28,7 @@ jobs:
       - run:
           name: Check size limit
           command: |
-            size-limit
+            cd webapp && npx size-limit
       - run:
           name: Deploying to Cloudflare
           command: cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
