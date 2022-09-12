@@ -14,7 +14,7 @@
     }
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --passWithNoTests",
     "build-dev": "npx webpack serve --env DEBUG --config webpack.dev.js",
     "analyze": "npx webpack --env ANALYZE DEBUG --config webpack.prod.js",
     "build": "webpack --config webpack.prod.js",
