@@ -32,7 +32,8 @@
 		"jodyh.circleci-vscode",
 		"redhat.vscode-yaml",
 		"leonzalion.vscode-ejs",
-		"ritwickdey.LiveServer"
+		"ritwickdey.LiveServer",
+		"mkxml.vscode-filesize"
 	]
     }
   },
