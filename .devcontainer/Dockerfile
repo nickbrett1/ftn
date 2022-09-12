@@ -11,4 +11,4 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm install ${EXTRA_NODE_VERSION}"
 
 # [Optional] Uncomment if you want to install more global node modules
-RUN su node -c "npm install -g wrangler svgo source-map"
+RUN su node -c "npm install -g wrangler svgo source-map jest"
