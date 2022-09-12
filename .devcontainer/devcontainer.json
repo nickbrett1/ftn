@@ -30,7 +30,8 @@
 		"jeremyrajan.webpack",
 		"DigitalBrainstem.javascript-ejs-support",
 		"jodyh.circleci-vscode",
-		"redhat.vscode-yaml"
+		"redhat.vscode-yaml",
+		"leonzalion.vscode-ejs"
 	]
     }
   },

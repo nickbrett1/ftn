@@ -25,4 +25,7 @@ module.exports = (env) =>
         analyzerMode: env.ANALYZE ? 'server' : 'none',
       }),
     ],
+    performance: {
+      hints: 'error',
+    },
   });
