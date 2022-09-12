@@ -9,11 +9,11 @@
     <script>
       Sentry.onLoad(function () {
         Sentry.init({
-          environment: '<%= debug %>' === 'true' ? 'development' : 'production',
+          environment: '<%= debug ? "development" : "production" %>',
           tracesSampleRate: 1.0,
           attachStacktrace: true,
           release: '<%= release %>',
-          enabled: '<%= debug %>' !== 'true',
+          enabled: <%= debug == false %>,
         });
       });
     </script>
