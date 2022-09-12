@@ -31,7 +31,8 @@
 		"DigitalBrainstem.javascript-ejs-support",
 		"jodyh.circleci-vscode",
 		"redhat.vscode-yaml",
-		"leonzalion.vscode-ejs"
+		"leonzalion.vscode-ejs",
+		"ritwickdey.LiveServer"
 	]
     }
   },
