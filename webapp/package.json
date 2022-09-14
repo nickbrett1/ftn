@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.19.0",
-    "@babel/preset-env": "^7.19.0",
+    "@babel/preset-env": "^7.19.1",
     "@babel/preset-react": "^7.17.12",
     "@emotion/babel-preset-css-prop": "^11.10.0",
     "@emotion/eslint-plugin": "^11.10.0",
