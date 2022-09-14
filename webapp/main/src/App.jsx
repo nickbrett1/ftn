@@ -11,19 +11,9 @@ import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './Login';
 
-const UNION_JACK_URL = require('./images/unionjack.jpg');
+const UNION_JACK_URL = require('../images/unionjack.webp');
 
 function LandingFrame() {
-  const style = {
-    // eslint-disable-next-line global-require
-    backgroundImage: `url(${UNION_JACK_URL})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-  };
-
   const darkTheme = createTheme({
     palette: {
       mode: 'dark',
@@ -48,7 +38,16 @@ function LandingFrame() {
     >
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
-        <div style={style}>
+        <div
+          css={{
+            backgroundImage: `url(${UNION_JACK_URL})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+          }}
+        >
           <AppBar position="static">
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>

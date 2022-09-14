@@ -7,7 +7,7 @@
     // Update 'VARIANT' to pick a Node version: 18, 16, 14.
     // Append -bullseye or -buster to pin to an OS version.
     // Use -bullseye variants on local arm64/Apple Silicon.
-    "args": { "VARIANT": "16-bullseye" }
+    "args": { "VARIANT": "18-bullseye" }
   },
 
   // Configure tool-specific properties.
@@ -16,19 +16,25 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-        "dbaeumer.vscode-eslint",
-        "pejmannikram.vscode-auto-scroll",
-        "mgmcdermott.vscode-language-babel",
-        "naumovs.color-highlight",
-        "GitHub.vscode-pull-request-github",
-        "ecmel.vscode-html-css",
-        "oderwat.indent-rainbow",
-        "esbenp.prettier-vscode",
-        "matteopieroni.refresh-npm-packages",
-        "humao.rest-client",
-        "actboy168.tasks",
-        "jeremyrajan.webpack"
-      ]
+		"dbaeumer.vscode-eslint",
+		"pejmannikram.vscode-auto-scroll",
+		"mgmcdermott.vscode-language-babel",
+		"naumovs.color-highlight",
+		"GitHub.vscode-pull-request-github",
+		"ecmel.vscode-html-css",
+		"oderwat.indent-rainbow",
+		"esbenp.prettier-vscode",
+		"matteopieroni.refresh-npm-packages",
+		"humao.rest-client",
+		"actboy168.tasks",
+		"jeremyrajan.webpack",
+		"DigitalBrainstem.javascript-ejs-support",
+		"jodyh.circleci-vscode",
+		"redhat.vscode-yaml",
+		"leonzalion.vscode-ejs",
+		"ritwickdey.LiveServer",
+		"mkxml.vscode-filesize"
+	]
     }
   },
 
@@ -36,7 +42,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
+  // "postCreateCommand": "npm install -g wrangler svgo source-map",
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "node"

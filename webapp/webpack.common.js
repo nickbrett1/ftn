@@ -1,6 +1,7 @@
 const BundleTracker = require('webpack-bundle-tracker');
-const WebpackFavicons = require('webpack-favicons');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const path = require('path');
 
@@ -12,25 +13,30 @@ module.exports = (env) => ({
     filename: '[name]-[contenthash].js',
   },
   plugins: [
+    new CleanWebpackPlugin(),
     new BundleTracker({ filename: './webpack-stats.json' }),
-
-    new WebpackFavicons({
-      src: './main/src/images/flag.svg',
-      appName: 'British Empire Management',
-      appShortName: 'BEM',
-      appDescription: 'British Empire Management',
-      scope: '/',
-      icons: {
-        android: true,
-        appleIcon: true,
-        appleStartup: true,
-        favicons: true,
-        windows: true,
-        yandex: true,
-      },
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve('./main/icons/favicon.ico'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/icons/icon-192.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/icons/icon-512.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/icons/manifest.webmanifest'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+      ],
     }),
     new HtmlWebpackPlugin({
-      template: './main/templates/main/index.html',
+      template: './main/templates/index.ejs',
       title: 'British Empire Management',
       filename: 'index.html',
       templateParameters: {
@@ -55,19 +61,12 @@ module.exports = (env) => ({
         ],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif|ico|webp)$/i,
         type: 'asset/resource',
       },
       {
         test: /\.css$/,
         use: 'css-loader',
-      },
-      {
-        test: /\.ico$/,
-        type: 'asset/resource',
-        generator: {
-          filename: '[name][ext][query]',
-        },
       },
     ],
   },

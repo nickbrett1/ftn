@@ -11,9 +11,10 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react'],
+  plugins: ['react', 'ejs', '@emotion'],
   rules: {
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'implicit-arrow-linebreak': 'off',
+    'react/no-unknown-property': ['error', { ignore: ['css'] }],
   },
 };

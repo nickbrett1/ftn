@@ -24,3 +24,48 @@ workflows:
   say-hello-workflow:
     jobs:
       - say-hello
+=======
+version: 2.1
+
+orbs:
+  browser-tools: circleci/browser-tools@1.4.0
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:18.8.0-browsers
+    steps:
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - checkout
+      - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v3-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v3-{{ .Branch }}-
+            - node-v3-
+      - run:
+          name: Install modules
+          command: |
+            cd webapp && npm install
+      - save_cache:
+          name: Update node_modules cache
+          paths:
+            - webapp/node_modules
+          key: node-v3-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - run:
+          name: Build app
+          command: |
+            cd webapp && npm run build
+      - run:
+          name: Check processing time limit
+          command: |
+            cd webapp && npx size-limit
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun
+      - run:
+          name: Deploying to Cloudflare
+          command: cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
