@@ -1,0 +1,48 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "presentation": {
+    "echo": true,
+    "reveal": "always",
+    "focus": false,
+    "panel": "dedicated",
+    "showReuseMessage": false
+  },
+  "tasks": [
+    {
+      "label": "Run all build tasks",
+      "dependsOn": ["build-dev", "serve"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "serve",
+      "path": "webapp",
+      "problemMatcher": [],
+      "label": "serve",
+      "detail": "serve -n --ssl-cert ../localhost+2.pem --ssl-key ../localhost+2-key.pem assets/webpack_bundles/",
+      "presentation": {
+        "group": "build-group"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "build-dev",
+      "path": "webapp",
+      "problemMatcher": [],
+      "label": "build-dev",
+      "detail": "npx webpack serve --env DEBUG --config webpack.dev.js",
+      "presentation": {
+        "group": "build-group"
+      }
+    }
+  ]
+}
