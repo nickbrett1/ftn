@@ -16,5 +16,14 @@ module.exports = {
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'implicit-arrow-linebreak': 'off',
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
+    'object-curly-newline': [
+      'error',
+      {
+        ObjectExpression: { consistent: true, multiline: true },
+        ObjectPattern: { consistent: true, multiline: true },
+        ImportDeclaration: 'never',
+        ExportDeclaration: { multiline: true, minProperties: 3 },
+      },
+    ],
   },
 };
