@@ -6,12 +6,16 @@ import '@fontsource/roboto/700.css';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Typography, AppBar, Toolbar, Box } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Typography, AppBar, Toolbar } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './Login';
 
-const UNION_JACK_URL = require('../images/unionjack.webp');
+const UJ_EXTRA_LARGE_URL = require('../images/unionjack-extra-large.webp');
+const UJ_LARGE_URL = require('../images/unionjack-large.webp');
+const UJ_MEDIUM_URL = require('../images/unionjack-medium.webp');
+const UJ_SMALL_URL = require('../images/unionjack-small.webp');
+const UJ_EXTRA_SMALL_URL = require('../images/unionjack-extra-small.webp');
 
 function LandingFrame() {
   const darkTheme = createTheme({
@@ -38,9 +42,15 @@ function LandingFrame() {
     >
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
-        <div
-          css={{
-            backgroundImage: `url(${UNION_JACK_URL})`,
+        <Box
+          sx={{
+            backgroundImage: {
+              xs: `url(${UJ_EXTRA_SMALL_URL})`,
+              sm: `url(${UJ_SMALL_URL})`,
+              md: `url(${UJ_MEDIUM_URL})`,
+              lg: `url(${UJ_LARGE_URL})`,
+              xl: `url(${UJ_EXTRA_LARGE_URL})`,
+            },
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'cover',
             position: 'absolute',
@@ -56,7 +66,7 @@ function LandingFrame() {
               <Login />
             </Toolbar>
           </AppBar>
-        </div>
+        </Box>
       </ThemeProvider>
     </GoogleOAuthProvider>
   );
