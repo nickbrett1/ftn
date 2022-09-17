@@ -1,18 +1,27 @@
 import React from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
+import { Button } from '@mui/material';
 import jwtDecode from 'jwt-decode';
+import GoogleIcon from '@mui/icons-material/Google';
 
 export default function Login() {
+  const login = useGoogleLogin({
+    onSuccess: (codeResponse) => {
+      jwtDecode(codeResponse);
+    },
+    onError: () => {},
+    flow: 'auth-code',
+  });
+
   return (
-    <GoogleLogin
-      theme="filled_black"
+    <Button
+      variant="contained"
+      color="primary"
       size="large"
-      text="signin"
-      onSuccess={(credentialResponse) => {
-        jwtDecode(credentialResponse.credential);
-      }}
-      onError={() => {}}
-      useOneTap
-    />
+      startIcon={<GoogleIcon />}
+      onClick={() => login()}
+    >
+      Login
+    </Button>
   );
 }
