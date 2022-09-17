@@ -28,7 +28,6 @@ module.exports = (env) =>
         index: true,
         mimeTypes: { phtml: 'text/html' },
         publicPath: resolve('./assets/webpack_bundles/'),
-        serverSideRender: true,
         writeToDisk: true,
       },
     },

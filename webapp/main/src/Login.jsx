@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Button } from '@mui/material';
 import SvgIcon from '@mui/material/SvgIcon';
+import Button from '@mui/material/Button';
 import jwtDecode from 'jwt-decode';
 
 export default function Login() {
