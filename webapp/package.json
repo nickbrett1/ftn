@@ -28,6 +28,7 @@
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@fontsource/roboto": "^4.5.8",
+    "@mui/icons-material": "^5.10.3",
     "@mui/material": "^5.10.5",
     "@react-oauth/google": "^0.2.6",
     "@sentry/react": "^7.13.0",
