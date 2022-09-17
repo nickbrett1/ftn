@@ -10,6 +10,7 @@ module.exports = {
       preset: 'lighthouse:recommended',
       assertions: {
         'uses-long-cache-ttl': 'off',
+        'service-worker': 'off',
       },
     },
   },
