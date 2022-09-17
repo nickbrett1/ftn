@@ -25,5 +25,9 @@ module.exports = {
         ExportDeclaration: { multiline: true, minProperties: 3 },
       },
     ],
+    'react/jsx-wrap-multilines': [
+      'error',
+      { declaration: false, assignment: false },
+    ],
   },
 };
