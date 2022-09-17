@@ -30,6 +30,14 @@ module.exports = (env) => ({
           to: path.resolve('./assets/webpack_bundles/'),
         },
         {
+          from: path.resolve('./main/icons/icon-192-maskable.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
+          from: path.resolve('./main/icons/icon-512-maskable.png'),
+          to: path.resolve('./assets/webpack_bundles/'),
+        },
+        {
           from: path.resolve('./main/icons/manifest.webmanifest'),
           to: path.resolve('./assets/webpack_bundles/'),
         },
