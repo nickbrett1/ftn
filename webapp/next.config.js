@@ -20,6 +20,10 @@ const moduleExports = {
     emotion: true,
   },
   swcMinify: true,
+  experimental: {
+    browsersListForSwc: true,
+    legacyBrowsers: false,
+  },
 };
 
 const sentryWebpackPluginOptions = {
