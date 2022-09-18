@@ -21,6 +21,7 @@ const moduleExports = {
   },
   images: {
     domains: ['http.cat'],
+    unoptimized: true,
   },
   swcMinify: true,
   experimental: {
