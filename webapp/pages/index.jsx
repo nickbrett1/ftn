@@ -1,6 +1,5 @@
 import React from 'react';
 import { Typography, AppBar, Toolbar, Box } from '@mui/material';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import Head from 'next/head';
 import Login from '../components/Login';
 
@@ -14,12 +13,6 @@ export default function LandingFrame() {
         />
         <title>British Empire Management</title>
       </Head>
-      <GoogleOAuthProvider
-        clientId="263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com"
-        onScriptLoadError={() => {
-          throw new Error('Failed to load GoogleOAuthProvider');
-        }}
-      >
         <Box
           sx={{
             backgroundImage: {
@@ -45,7 +38,6 @@ export default function LandingFrame() {
             </Toolbar>
           </AppBar>
         </Box>
-      </GoogleOAuthProvider>
     </>
   );
 }

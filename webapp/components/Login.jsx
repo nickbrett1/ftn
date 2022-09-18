@@ -1,17 +1,9 @@
 import React from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
 import SvgIcon from '@mui/material/SvgIcon';
 import Button from '@mui/material/Button';
-import jwtDecode from 'jwt-decode';
 
 export default function Login() {
-  const login = useGoogleLogin({
-    onSuccess: (codeResponse) => {
-      jwtDecode(codeResponse);
-    },
-    onError: () => {},
-    flow: 'auth-code',
-  });
+  const login = () => {};
 
   return (
     <Button
