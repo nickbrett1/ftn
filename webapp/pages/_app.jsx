@@ -1,40 +1,29 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/prop-types */
 import { ThemeProvider } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
 import { CacheProvider } from '@emotion/react';
+import Head from 'next/head';
 import React from 'react';
-import { createTheme } from '@mui/material/styles';
-import createEmotionCache from '../utils/createEmotionCache';
+import createEmotionCache from '../mui/createEmotionCache';
+import theme from '../mui/theme';
 
 const clientSideEmotionCache = createEmotionCache();
 
-function MyApp({
+export default function MyApp({
   Component,
-  emotionCache = clientSideEmotionCache,
   pageProps,
+  emotionCache = clientSideEmotionCache,
 }) {
-  const darkTheme = createTheme({
-    palette: {
-      mode: 'dark',
-      primary: {
-        main: '#3f51b5',
-      },
-      secondary: {
-        main: '#f50057',
-      },
-    },
-    typography: {
-      useNextVariants: true,
-    },
-  });
-
   return (
     <CacheProvider value={emotionCache}>
-      <ThemeProvider theme={darkTheme}>
+      <Head>
+        <meta name="viewport" content="initial-scale=1, width=device-width" />
+      </Head>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Component {...pageProps} />
       </ThemeProvider>
     </CacheProvider>
   );
 }
-
-export default MyApp;
