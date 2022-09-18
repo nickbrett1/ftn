@@ -19,6 +19,9 @@ const moduleExports = {
   compiler: {
     emotion: true,
   },
+  images: {
+    domains: ['http.cat'],
+  },
   swcMinify: true,
   experimental: {
     browsersListForSwc: true,
