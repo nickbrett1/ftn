@@ -1,8 +1,7 @@
 // 404.js
-import Image from 'next/image';
 import React from 'react';
 import Head from 'next/head';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 export default function FourOhFour() {
   return (
@@ -19,7 +18,7 @@ export default function FourOhFour() {
           minHeight: '100vh',
         }}
       >
-        <Image src="https://http.cat/404" alt="" width="750" height="600" />
+        <Typography variant="h1">Page Not Found</Typography>
       </Box>
     </>
   );
