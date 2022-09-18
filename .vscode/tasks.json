@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["build-dev", "serve"],
+      "dependsOn": ["next dev", "test jest"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -24,22 +24,24 @@
     },
     {
       "type": "npm",
-      "script": "serve",
+      "script": "dev",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "serve",
-      "detail": "serve -n --ssl-cert ../localhost+2.pem --ssl-key ../localhost+2-key.pem assets/webpack_bundles/",
+      "label": "next dev",
+      "detail": "next dev",
+      "group": "build",
       "presentation": {
         "group": "build-group"
       }
     },
     {
       "type": "npm",
-      "script": "build-dev",
+      "script": "test",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "build-dev",
-      "detail": "npx webpack serve --env DEBUG --config webpack.dev.js",
+      "label": "test jest",
+      "detail": "test jest",
+      "group": "build",
       "presentation": {
         "group": "build-group"
       }

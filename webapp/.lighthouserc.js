@@ -1,7 +1,8 @@
 module.exports = {
   ci: {
     collect: {
-      staticDistDir: './assets/webpack_bundles',
+      startServerCommand: 'npm run start',
+      startServerReadyPattern: 'ready on',
     },
     upload: {
       target: 'temporary-public-storage',

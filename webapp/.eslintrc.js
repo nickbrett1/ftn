@@ -3,7 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: ['plugin:react/recommended', 'airbnb'],
+  extends: ['plugin:@next/next/recommended', 'airbnb', 'prettier'],
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
@@ -11,7 +11,7 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', 'ejs', '@emotion'],
+  plugins: ['react'],
   rules: {
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'implicit-arrow-linebreak': 'off',

@@ -33,7 +33,8 @@
 		"redhat.vscode-yaml",
 		"leonzalion.vscode-ejs",
 		"ritwickdey.LiveServer",
-		"mkxml.vscode-filesize"
+		"mkxml.vscode-filesize",
+		"wix.vscode-import-cost"
 	]
     }
   },
