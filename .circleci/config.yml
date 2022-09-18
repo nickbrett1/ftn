@@ -12,7 +12,7 @@ jobs:
       - browser-tools/install-chromedriver
       - checkout
       - restore_cache:
-          name: Restore node_modules cache
+          name: Restore node_modules and next cache
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
             - node-v3-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
@@ -26,6 +26,7 @@ jobs:
           name: Update node_modules cache
           paths:
             - webapp/node_modules
+            - webapp/.next/cache
           key: node-v3-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - run:
           name: Build app and export
