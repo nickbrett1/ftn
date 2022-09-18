@@ -35,7 +35,7 @@ jobs:
       - run:
           name: Run Lighthouse checks
           command: |
-            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun
+            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci --throttling.cpuSlowdownMultiplier=2.4 autorun
       - run:
           name: Deploying to Cloudflare
           command: cd webapp && npx wrangler pages publish out --project-name=bem
