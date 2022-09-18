@@ -70,6 +70,8 @@ webapp/webpack-stats.json
 .DS_Store
 *.pem
 .sentryclirc
+.next
+webapp/out
 
 # Flask stuff:
 instance/
