@@ -15,23 +15,23 @@ jobs:
           name: Restore node_modules and next cache
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v4-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v4-{{ .Branch }}-
-            - node-v4-
+            - node-v5-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v5-{{ .Branch }}-
+            - node-v5-
       - run:
           name: Install modules
           command: |
             cd webapp && npm install
+      - run:
+          name: Build app and export
+          command: |
+            cd webapp && npm run build && npm run export
       - save_cache:
           name: Update node_modules cache
           paths:
             - webapp/node_modules
             - webapp/.next/cache
-          key: node-v4-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-      - run:
-          name: Build app and export
-          command: |
-            cd webapp && npm run build && npm run export
+          key: node-v5-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - run:
           name: Run Lighthouse checks
           command: |
