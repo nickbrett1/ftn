@@ -5,44 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Django (Personal Key)",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/webapp/manage.py",
-      "args": [
-        "runsslserver",
-        "--certificate",
-        "${workspaceFolder}/localhost+2.pem",
-        "--key",
-        "${workspaceFolder}/localhost+2-key.pem",
-        "--nostatic"
-      ],
-      "django": true,
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Django (Default Key)",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/webapp/manage.py",
-      "args": ["runsslserver", "--nostatic"],
-      "django": true,
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Django (No SSL)",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/webapp/manage.py",
-      "args": ["runserver"],
-      "django": true,
-      "justMyCode": true
-    },
-    {
       "type": "chrome",
       "request": "attach",
       "name": "Attach to browser",
-      "urlFilter": "http://localhost:8000/*",
+      "urlFilter": "http://localhost:3000/*",
       "webRoot": "${workspaceFolder}/webapp",
       "port": 9222
     }

@@ -28,17 +28,13 @@ jobs:
             - webapp/node_modules
           key: node-v3-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - run:
-          name: Build app
+          name: Build app and export
           command: |
-            cd webapp && npm run build
-      - run:
-          name: Check processing time limit
-          command: |
-            cd webapp && npx size-limit
+            cd webapp && npm run build && npm run export
       - run:
           name: Run Lighthouse checks
           command: |
             cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun
       - run:
           name: Deploying to Cloudflare
-          command: cd webapp && npx wrangler pages publish assets/webpack_bundles --project-name=bem
+          command: cd webapp && npx wrangler pages publish out --project-name=bem
