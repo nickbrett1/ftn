@@ -72,6 +72,7 @@ webapp/webpack-stats.json
 .sentryclirc
 .next
 webapp/out
+.lighthouseci
 
 # Flask stuff:
 instance/
