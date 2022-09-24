@@ -12,6 +12,7 @@ module.exports = {
       preset: 'lighthouse:recommended',
       assertions: {
         'service-worker': 'off',
+        'csp-xss': 'off',
       },
     },
   },
