@@ -16,26 +16,26 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-		"dbaeumer.vscode-eslint",
-		"pejmannikram.vscode-auto-scroll",
-		"mgmcdermott.vscode-language-babel",
-		"naumovs.color-highlight",
-		"GitHub.vscode-pull-request-github",
-		"ecmel.vscode-html-css",
-		"oderwat.indent-rainbow",
-		"esbenp.prettier-vscode",
-		"matteopieroni.refresh-npm-packages",
-		"humao.rest-client",
-		"actboy168.tasks",
-		"jeremyrajan.webpack",
-		"DigitalBrainstem.javascript-ejs-support",
-		"jodyh.circleci-vscode",
-		"redhat.vscode-yaml",
-		"leonzalion.vscode-ejs",
-		"ritwickdey.LiveServer",
-		"mkxml.vscode-filesize",
-		"wix.vscode-import-cost"
-	]
+        "dbaeumer.vscode-eslint",
+        "pejmannikram.vscode-auto-scroll",
+        "mgmcdermott.vscode-language-babel",
+        "naumovs.color-highlight",
+        "GitHub.vscode-pull-request-github",
+        "ecmel.vscode-html-css",
+        "oderwat.indent-rainbow",
+        "esbenp.prettier-vscode",
+        "matteopieroni.refresh-npm-packages",
+        "humao.rest-client",
+        "actboy168.tasks",
+        "jeremyrajan.webpack",
+        "DigitalBrainstem.javascript-ejs-support",
+        "jodyh.circleci-vscode",
+        "redhat.vscode-yaml",
+        "leonzalion.vscode-ejs",
+        "ritwickdey.LiveServer",
+        "mkxml.vscode-filesize",
+        "wix.vscode-import-cost"
+      ]
     }
   },
 
