@@ -2,7 +2,6 @@ import Document, { Html, Head, Main, NextScript } from 'next/document';
 import React from 'react';
 import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '../mui/createEmotionCache';
-import generateCSP from '../security/generateCSP';
 import theme from '../mui/theme';
 
 export default class MyDocument extends Document {
@@ -10,8 +9,6 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          <meta httpEquiv="Content-Security-Policy" content={generateCSP()} />
-          
           <meta name="theme-color" content={theme.palette.primary.main} />
           <link rel="manifest" href="/icons/manifest.webmanifest" />
           <link rel="icon" href="/icons/favicon.ico" sizes="any" />
