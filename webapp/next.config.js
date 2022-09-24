@@ -38,6 +38,8 @@ const sentryWebpackPluginOptions = {
   silent: true, // Suppresses all logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
+
+  ignore: [],
 };
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
