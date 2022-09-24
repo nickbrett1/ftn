@@ -52,7 +52,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "css-loader": "^6.7.1",
-    "eslint": "^8.23.1",
+    "eslint": "^8.24.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-next": "^12.3.0",
     "eslint-config-prettier": "^8.5.0",
@@ -74,6 +74,6 @@
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.0",
     "webpack-merge": "^5.8.0",
-    "wrangler": "^2.1.4"
+    "wrangler": "^2.1.6"
   }
 }
