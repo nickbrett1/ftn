@@ -71,6 +71,7 @@ webapp/webpack-stats.json
 *.pem
 .sentryclirc
 .next
+.swc
 webapp/out
 .lighthouseci
 _routes.generated.json
