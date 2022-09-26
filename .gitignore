@@ -73,6 +73,7 @@ webapp/webpack-stats.json
 .next
 webapp/out
 .lighthouseci
+_routes.generated.json
 
 # Flask stuff:
 instance/
