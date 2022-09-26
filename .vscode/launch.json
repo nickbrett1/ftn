@@ -8,7 +8,7 @@
       "type": "chrome",
       "request": "attach",
       "name": "Attach to browser",
-      "urlFilter": "http://localhost:3000/*",
+      "urlFilter": "http://localhost:8788/*",
       "webRoot": "${workspaceFolder}/webapp",
       "port": 9222
     }
