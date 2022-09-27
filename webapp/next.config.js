@@ -45,6 +45,7 @@ const sentryWebpackPluginOptions = {
 const shouldAnalyzeBundles = process.env.ANALYZE === true;
 
 if (shouldAnalyzeBundles) {
+  // eslint-disable-next-line global-require
   const withBundleAnalyzer = require('@next/bundle-analyzer');
 
   module.exports = withBundleAnalyzer(
