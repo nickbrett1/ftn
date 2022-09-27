@@ -5,7 +5,6 @@ import sentryPlugin from '@cloudflare/pages-plugin-sentry';
 const hello = async ({ next }) => {
   const response = await next();
   response.headers.set('X-Hello', 'Hello from functions Middleware!');
-  throw new Error('Broken on Prod!');
   return response;
 };
 
