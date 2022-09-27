@@ -46,7 +46,7 @@
     "@emotion/eslint-plugin": "^11.10.0",
     "@next/bundle-analyzer": "^12.3.1",
     "@next/eslint-plugin-next": "^12.3.1",
-    "@sentry/cli": "^2.5.2",
+    "@sentry/cli": "^2.6.0",
     "@sentry/webpack-plugin": "^1.19.0",
     "@size-limit/preset-app": "^8.1.0",
     "@size-limit/webpack": "^8.1.0",
@@ -75,6 +75,6 @@
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.1",
     "webpack-merge": "^5.8.0",
-    "wrangler": "^2.1.6"
+    "wrangler": "^2.1.7"
   }
 }
