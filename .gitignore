@@ -76,6 +76,9 @@ webapp/out
 .lighthouseci
 _routes.generated.json
 
+# Cloudflare workers stuff
+_worker-bundle.js*
+
 # Flask stuff:
 instance/
 .webassets-cache
