@@ -16,9 +16,9 @@
   ],
   "scripts": {
     "analyze": "ANALYZE=true next build",
-    "build": "next build && cp ./workers/_worker.js ./out",
+    "build": "next build",
     "dev": "wrangler pages dev --proxy 3000 --script-path './workers/_worker.js' -- npx next dev",
-    "export": "next export",
+    "export": "next export && cp ./workers/_worker.js ./out",
     "lint": "next lint",
     "start": "next start",
     "test": "jest --watch --passWithNoTests",
