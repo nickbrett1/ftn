@@ -6,5 +6,11 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, './workers'),
     filename: '_worker-bundle.js',
+    library: {
+      type: 'module',
+    },
+  },
+  experiments: {
+    outputModule: true,
   },
 };
