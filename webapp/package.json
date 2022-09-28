@@ -16,19 +16,19 @@
   ],
   "scripts": {
     "analyze": "ANALYZE=true next build",
-    "build": "next build",
-    "dev": "wrangler pages dev --proxy 3000 -- npx next dev",
+    "build": "next build && cp ./workers/_worker.js ./out",
+    "dev": "wrangler pages dev --proxy 3000 --script-path './workers/_worker.js' -- npx next dev",
     "export": "next export",
     "lint": "next lint",
     "start": "next start",
     "test": "jest --watch --passWithNoTests",
-    "lighthouse": "npm run build && npm run export && lhci collect --collect.settings.chromeFlags='--headless --no-sandbox' && lhci assert"
+    "lighthouse": "npm run build && npm run export && lhci collect --collect.settings.chromeFlags='--headless --no-sandbox' && lhci assert",
+    "deploy": "npx wrangler pages publish out --project-name=bem"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cloudflare/pages-plugin-sentry": "^1.0.0",
     "@emotion/cache": "^11.10.3",
     "@emotion/react": "^11.10.0",
     "@emotion/server": "^11.10.0",
@@ -40,7 +40,8 @@
     "next": "^12.3.1",
     "prop-types": "^15.8.1",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "toucan-js": "^2.7.0"
   },
   "devDependencies": {
     "@emotion/eslint-plugin": "^11.10.0",
