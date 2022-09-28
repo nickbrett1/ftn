@@ -5,6 +5,10 @@ orbs:
 
 jobs:
   build:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: production
     docker:
       - image: cimg/node:18.8.0-browsers
     steps:
@@ -37,5 +41,16 @@ jobs:
           command: |
             cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
       - run:
+          name: Create release and notify Sentry of worker deploy
+          command: |
+            curl -sL https://sentry.io/get-cli/ | bash
+            export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+            sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+            sentry-cli releases set-commits $SENTRY_RELEASE --auto
+            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps ./workers/_worker.js --url-prefix '/'
+            sentry-cli releases finalize $SENTRY_RELEASE
+            sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+      - run:
           name: Deploying to Cloudflare
-          command: cd webapp && npm deploy
+          command: cd webapp && npx wrangler pages publish out --project-name=bem
+      
