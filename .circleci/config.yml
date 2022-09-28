@@ -38,4 +38,4 @@ jobs:
             cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
       - run:
           name: Deploying to Cloudflare
-          command: cd webapp && npx wrangler pages publish out --project-name=bem
+          command: cd webapp && npm deploy
