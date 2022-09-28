@@ -18,7 +18,7 @@
     "analyze": "ANALYZE=true next build",
     "build": "next build && npx webpack-cli --config ./webpack.workers.config.js",
     "dev": "wrangler pages dev --proxy 3000 --script-path './workers/_worker.js' -- npx next dev",
-    "export": "next export && cp ./workers/_worker-bundle.js ./out/_worker.js && cp ./workers/wrangler.toml ./out",
+    "export": "next export && cp ./workers/_worker-bundle.js ./out/_worker.js",
     "lint": "next lint",
     "start": "next start",
     "test": "jest --watch --passWithNoTests",
