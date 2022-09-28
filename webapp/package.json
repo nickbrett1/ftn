@@ -16,9 +16,9 @@
   ],
   "scripts": {
     "analyze": "ANALYZE=true next build",
-    "build": "next build",
+    "build": "next build && npx webpack-cli --config ./webpack.workers.config.js",
     "dev": "wrangler pages dev --proxy 3000 --script-path './workers/_worker.js' -- npx next dev",
-    "export": "next export ./out && npx webpack-cli --config ./webpack.workers.config.js",
+    "export": "next export ./out",
     "lint": "next lint",
     "start": "next start",
     "test": "jest --watch --passWithNoTests",
