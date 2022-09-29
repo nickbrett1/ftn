@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Install modules
           command: |
-            cd webapp && npm install --omit=dev
+            cd webapp && npm install
       - run:
           name: Build app and export
           command: |
@@ -53,4 +53,3 @@ jobs:
       - run:
           name: Deploying to Cloudflare
           command: cd webapp && npx wrangler pages publish out --project-name=bem
-      
