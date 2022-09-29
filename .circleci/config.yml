@@ -45,6 +45,8 @@ jobs:
           command: |
             curl -sL https://sentry.io/get-cli/ | bash
             export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+            mv ./workers/out/_worker-bundle.js _worker.mjs
+            mv ./workers/out/_worker-bundle.js.map _worker.mjs.map
             sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
             sentry-cli releases set-commits $SENTRY_RELEASE --auto
             sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps ./workers/out --url-prefix '/'
