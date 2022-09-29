@@ -77,7 +77,7 @@ webapp/out
 _routes.generated.json
 
 # Cloudflare workers stuff
-_worker-bundle.js*
+webapp/workers/out
 
 # Flask stuff:
 instance/
