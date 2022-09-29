@@ -34,7 +34,7 @@ const sentryWebpackPluginOptions = {
   //   release, url, org, project, authToken, configFile, stripPrefix,
   //   urlPrefix, include, ignore
 
-  silent: false, // Suppresses all logs
+  silent: false, // Show logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
 };
@@ -43,10 +43,13 @@ const shouldAnalyzeBundles = process.env.ANALYZE === true;
 
 if (shouldAnalyzeBundles) {
   // eslint-disable-next-line global-require
-  const withBundleAnalyzer = require('@next/bundle-analyzer');
+  const withBundleAnalyzer = require('@next/bundle-analyzer')({
+    enabled: true,
+  });
 
-  module.exports = withBundleAnalyzer(
-    withSentryConfig(moduleExports, sentryWebpackPluginOptions)
+  module.exports = withSentryConfig(
+    withBundleAnalyzer(moduleExports),
+    sentryWebpackPluginOptions
   );
 } else {
   // Make sure adding Sentry options is the last code to run before exporting, to
