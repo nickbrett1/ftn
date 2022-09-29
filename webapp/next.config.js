@@ -14,7 +14,6 @@ const moduleExports = {
     // https://webpack.js.org/configuration/devtool/ and
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#use-hidden-source-map
     // for more information.
-    hideSourceMaps: true,
     widenClientFileUpload: true,
   },
   compiler: {
@@ -38,8 +37,6 @@ const sentryWebpackPluginOptions = {
   silent: true, // Suppresses all logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
-
-  ignore: [],
 };
 
 const shouldAnalyzeBundles = process.env.ANALYZE === true;
