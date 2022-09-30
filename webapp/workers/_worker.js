@@ -10,7 +10,7 @@ export default {
       allowedSearchParams: /(.*)/,
       release: process.env.SENTRY_RELEASE,
       rewriteFrames: {
-        root: 'https://bemstudios.uk/workers',
+        root: 'https://bemstudios.uk/workers/',
       },
     });
 
