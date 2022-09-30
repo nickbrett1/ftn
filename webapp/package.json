@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "analyze": "ANALYZE=true next build",
-    "build": "next build && npx webpack-cli --config ./webpack.workers.config.js",
+    "build": "next build && npx webpack-cli --config ./webpack.workers.config.js --env SENTRY_RELEASE=$SENTRY_RELEASE",
     "dev": "wrangler pages dev --proxy 3000 --script-path './workers/_worker.js' -- npx next dev",
     "export": "next export && cp ./workers/out/_worker-bundle.js ./out/_worker.js",
     "lint": "next lint",

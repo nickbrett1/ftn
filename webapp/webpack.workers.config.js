@@ -1,6 +1,7 @@
 const path = require('path');
+const webpack = require('webpack');
 
-module.exports = {
+module.exports = (env) => ({
   entry: './workers/_worker.js',
   devtool: 'source-map',
   mode: 'production',
@@ -14,4 +15,9 @@ module.exports = {
   experiments: {
     outputModule: true,
   },
-};
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.SENTRY_RELEASE': JSON.stringify(env.SENTRY_RELEASE),
+    }),
+  ],
+});
