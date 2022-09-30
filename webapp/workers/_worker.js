@@ -23,8 +23,6 @@ export default {
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
-      throw new Error('Something went really wrong in worker!');
-
       return response;
     } catch (err) {
       sentry.captureException(err);
