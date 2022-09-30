@@ -11,6 +11,7 @@ export default {
       rewriteFrames: {
         root: '/',
       },
+      release: process.env.SENTRY_RELEASE,
     });
 
     try {
