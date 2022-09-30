@@ -45,10 +45,12 @@ jobs:
           name: Create release and notify Sentry of worker deploy
           command: |
             cd webapp
+            curl -sL https://sentry.io/get-cli/ | bash
             sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
             sentry-cli releases set-commits $SENTRY_RELEASE --auto
             sentry-cli releases finalize $SENTRY_RELEASE
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
       - run:
           name: Deploying to Cloudflare
+
           command: cd webapp && npx wrangler pages publish out --project-name=bem
