@@ -30,7 +30,6 @@ jobs:
       - run:
           name: Build app and export
           command: |
-            curl -sL https://sentry.io/get-cli/ | bash
             cd webapp && npm run build && npm run export
       - save_cache:
           name: Update node_modules cache
@@ -46,10 +45,8 @@ jobs:
           name: Create release and notify Sentry of worker deploy
           command: |
             cd webapp
-            mv ./workers/out/_worker-bundle.js ./workers/out/worker.mjs
             sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
             sentry-cli releases set-commits $SENTRY_RELEASE --auto
-            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps ./workers/out --url-prefix '/'
             sentry-cli releases finalize $SENTRY_RELEASE
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
       - run:
