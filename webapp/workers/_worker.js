@@ -8,9 +8,6 @@ export default {
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
-      rewriteFrames: {
-        root: '/',
-      },
       release: process.env.SENTRY_RELEASE,
     });
 
