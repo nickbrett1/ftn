@@ -9,9 +9,6 @@ export default {
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
       release: process.env.SENTRY_RELEASE,
-      rewriteFrames: {
-        root: 'webpack:/',
-      },
     });
 
     try {
