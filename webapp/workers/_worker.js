@@ -4,7 +4,7 @@ export default {
   async fetch(request, environment, context) {
     const sentry = new Toucan({
       dsn: 'https://09dfa4a627e04814b584374fe183c61d@o1381755.ingest.sentry.io/6778159',
-      context, // Includes 'waitUntil', which is essential for Sentry logs to be delivered. Modules workers do not include 'request' in context -- you'll need to set it separately.
+      context, // Includes 'waitUntil', which is essential for Sentry logs to  be delivered. Modules workers do not include 'request' in context -- you'll need to set it separately.
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
@@ -23,7 +23,7 @@ export default {
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
-      throw new Error('Wrong Wrong');
+      // throw new Error('Wrong Wrong');
 
       return response;
     } catch (err) {
