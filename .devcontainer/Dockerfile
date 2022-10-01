@@ -12,3 +12,4 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 # [Optional] Uncomment if you want to install more global node modules
 RUN su node -c "npm install -g wrangler svgo source-map jest @lhci/cli@0.9.x"
+RUN curl -sL https://sentry.io/get-cli/ | bash
