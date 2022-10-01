@@ -10,7 +10,7 @@ export default {
       allowedSearchParams: /(.*)/,
       release: process.env.SENTRY_RELEASE,
       rewriteFrames: {
-        root: 'https://bemstudios.uk/workers/',
+        root: '~/workers/',
       },
     });
 
@@ -22,6 +22,8 @@ export default {
 
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
+
+      throw new Exception('Broken in worker file');
 
       return response;
     } catch (err) {
