@@ -48,7 +48,7 @@ jobs:
             curl -sL https://sentry.io/get-cli/ | bash
             sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
             sentry-cli releases set-commits $SENTRY_RELEASE --auto
-            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps --validate --ext mjs --ext map --url-prefix https://bemstudios.uk/workers ./workers/out 
+            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps --ext mjs --ext map ./workers/out --url-prefix https://bemstudios.uk/workers --validate
             sentry-cli releases finalize $SENTRY_RELEASE
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
       - run:
