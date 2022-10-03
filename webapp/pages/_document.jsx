@@ -9,6 +9,9 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          <noscript>
+            <meta httpEquiv="refresh" content="0; url=./nojs" />
+          </noscript>
           <meta name="theme-color" content={theme.palette.primary.main} />
           <link rel="manifest" href="/icons/manifest.webmanifest" />
           <link rel="icon" href="/icons/favicon.ico" sizes="any" />

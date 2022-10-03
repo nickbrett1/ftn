@@ -8,7 +8,7 @@ export default {
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
-      release: process.env.SENTRY_RELEASE,
+      release: environment.production ? process.env.SENTRY_RELEASE : '',
       rewriteFrames: {
         root: 'https://bemstudios.uk/workers/',
       },
@@ -23,7 +23,7 @@ export default {
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
-      // throw new Error('Wrong Wrong');
+      throw new Error('Wrong Wrong Wrong');
 
       return response;
     } catch (err) {
