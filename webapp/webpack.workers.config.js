@@ -8,6 +8,7 @@ module.exports = (env) => ({
   output: {
     path: path.resolve(__dirname, './workers/out'),
     filename: 'worker.mjs',
+    sourceMapFilename: 'worker.mjs.map',
     library: {
       type: 'module',
     },
