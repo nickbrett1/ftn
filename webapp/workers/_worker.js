@@ -8,7 +8,7 @@ export default {
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
-      release: environment.production ? process.env.SENTRY_RELEASE : '',
+      release: environment.PRODUCTION ? process.env.SENTRY_RELEASE : '',
       rewriteFrames: {
         root: 'https://bemstudios.uk/workers/',
       },
