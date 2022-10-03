@@ -8,12 +8,6 @@
     "url": "https://github.com/nickbrett1/bem",
     "directory": "webapp"
   },
-  "size-limit": [
-    {
-      "path": "assets/webpack_bundles/main-*.js",
-      "limit": "2.4 s"
-    }
-  ],
   "scripts": {
     "analyze": "ANALYZE=true next build",
     "build": "next build && npx webpack-cli --config ./webpack.workers.config.js --env SENTRY_RELEASE=$SENTRY_RELEASE",
