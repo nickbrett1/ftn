@@ -9,9 +9,6 @@ export default {
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
       release: !environment.DEV ? process.env.SENTRY_RELEASE : '',
-      rewriteFrames: {
-        root: 'https://bemstudios.uk/workers/',
-      },
     });
 
     try {
