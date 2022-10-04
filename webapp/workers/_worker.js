@@ -10,7 +10,11 @@ export default {
       allowedSearchParams: /(.*)/,
       release: !environment.DEV ? process.env.SENTRY_RELEASE : '',
       rewriteFrames: {
-        root: 'https://bemstudios.uk/workers/',
+        iteratee: (frame) => ({
+          ...frame,
+          filename: '.'.concat(frame.filename.substring(1)),
+        }),
+        root: 'https://bemstudios.uk/',
       },
     });
 
