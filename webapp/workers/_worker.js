@@ -12,7 +12,6 @@ export default {
       rewriteFrames: {
         iteratee: (frame) => ({
           ...frame,
-          filename: '.'.concat(frame.filename.substring(1)),
           abs_path: 'https://bemstudios.uk/workers/'.concat(frame.filename),
         }),
       },
