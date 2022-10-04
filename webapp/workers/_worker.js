@@ -31,7 +31,6 @@ export default {
 
       return response;
     } catch (err) {
-      sentry.captureMessage(err);
       sentry.captureException(err);
       throw err;
 
