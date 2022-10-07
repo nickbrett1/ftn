@@ -2,7 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = (env) => ({
-  entry: './workers/_worker.js',
+  entry: './worker/src/index.js',
   devtool: 'hidden-source-map',
   mode: 'production',
   output: {
