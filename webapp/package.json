@@ -10,14 +10,16 @@
   },
   "scripts": {
     "analyze": "ANALYZE=true next build",
-    "build": "next build && npx webpack-cli --config ./webpack.workers.config.js --env SENTRY_RELEASE=$SENTRY_RELEASE",
-    "dev": "wrangler pages dev --proxy 3000 --binding DEV=1 --script-path './workers/_worker.js'  -- npx next dev",
-    "export": "next export && cp ./workers/out/worker.mjs ./out/_worker.js",
+    "build": "next build",
+    "dev": "npx next dev",
+    "wrangler": "wrangler dev --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:0",
+    "export": "next export",
     "lint": "next lint",
     "start": "next start",
     "test": "jest --watch --passWithNoTests",
     "lighthouse": "npm run build && npm run export && lhci collect --collect.settings.chromeFlags='--headless --no-sandbox' && lhci assert",
-    "deploy": "npx wrangler pages publish out --project-name=bem"
+    "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker",
+    "deploy": "npx wrangler pages publish out --project-name=bem && npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:$SENTRY_RELEASE"
   },
   "keywords": [],
   "author": "",
@@ -71,6 +73,7 @@
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.1",
     "webpack-merge": "^5.8.0",
+    "webpack-sentry-plugin": "^2.0.3",
     "wrangler": "^2.1.10"
   }
 }

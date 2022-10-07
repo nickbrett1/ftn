@@ -1,3 +1,12 @@
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run `npx wrangler dev src/index.js` in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run `npx wrangler publish src/index.js --name my-worker` to publish your worker
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
 import Toucan from 'toucan-js';
 
 export default {
@@ -8,7 +17,8 @@ export default {
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
-      release: !environment.DEV ? process.env.SENTRY_RELEASE : '',
+      // eslint-disable-next-line no-undef
+      release: SENTRY_RELEASE,
       rewriteFrames: {
         iteratee: (frame) => ({
           ...frame,
@@ -19,7 +29,7 @@ export default {
     });
 
     try {
-      let response = await environment.ASSETS.fetch(request);
+      let response = await fetch(request);
 
       // Clone the response so that it's no longer immutable
       response = new Response(response.body, response);
