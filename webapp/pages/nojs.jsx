@@ -17,7 +17,7 @@ export default function NoJs() {
           minHeight: '100vh',
         }}
       >
-        <Typography variant="h1">Javascript Not Enabled</Typography>
+        <Typography variant="h2">Javascript Not Enabled</Typography>
       </Box>
     </>
   );
