@@ -38,7 +38,12 @@ export default {
       return response;
     } catch (err) {
       sentry.captureException(err);
-      return Response.redirect('https://bemstudios.uk/500.html', 301);
+
+      const HTML_TEMPORARY_REDIRECT = 307;
+      return Response.redirect(
+        'https://bemstudios.uk/500.html',
+        HTML_TEMPORARY_REDIRECT
+      );
     }
   },
 };
