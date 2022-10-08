@@ -42,7 +42,7 @@ jobs:
       #           command: |
       #           cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
       - run:
-          name: Create release and notify Sentry of worker deploy
+          name: Create release and send sourcemaps to Sentry
           command: |
             cd webapp
             npm run wrangler-sourcemaps
