@@ -19,6 +19,8 @@ export default {
       allowedSearchParams: /(.*)/,
       // eslint-disable-next-line no-undef
       release: SENTRY_RELEASE,
+      // eslint-disable-next-line no-undef
+      environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
         iteratee: (frame) => ({
           ...frame,

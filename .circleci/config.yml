@@ -54,5 +54,5 @@ jobs:
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
       - run:
           name: Deploying to Cloudflare
-
-          command: cd webapp && npx wrangler pages publish out --project-name=bem
+          command: |
+            cd webapp && npm run deploy
