@@ -19,6 +19,7 @@ export default {
       allowedSearchParams: /(.*)/,
       // eslint-disable-next-line no-undef
       release: SENTRY_RELEASE,
+      // eslint-disable-next-line no-undef
       environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
         iteratee: (frame) => ({
@@ -42,7 +43,7 @@ export default {
 
       return response;
     } catch (err) {
-      sentry.captureMessage(err);
+      sentry.captureException(err);
 
       // TODO - redirect to 500.html
       return new Response('Something went wrong', {
