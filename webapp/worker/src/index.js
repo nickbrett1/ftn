@@ -22,11 +22,7 @@ export default {
       // eslint-disable-next-line no-undef
       environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
-        iteratee: (frame) => ({
-          ...frame,
-          filename: './workers/'.concat(frame.filename),
-          abs_path: 'https://bemstudios.uk/workers/'.concat(frame.filename),
-        }),
+        root: '/',
       },
     });
 
