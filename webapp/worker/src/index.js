@@ -19,7 +19,6 @@ export default {
       allowedSearchParams: /(.*)/,
       // eslint-disable-next-line no-undef
       release: SENTRY_RELEASE,
-      // eslint-disable-next-line no-undef
       environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
         iteratee: (frame) => ({
@@ -30,27 +29,26 @@ export default {
       },
     });
 
-    // try {
-    let response = await fetch(request);
+    try {
+      let response = await fetch(request);
 
-    // Clone the response so that it's no longer immutable
-    response = new Response(response.body, response);
+      // Clone the response so that it's no longer immutable
+      response = new Response(response.body, response);
 
-    // Add a custom header with a value
-    response.headers.append('x-workers-hello', 'I HAVE THE POWER');
+      // Add a custom header with a value
+      response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
-    throw new Error('Wrong from a worker!');
+      throw new Error('Wrong from a worker!');
 
-    //    return response;
-    //   } catch (err) {
-    //     sentry.captureException(err);
-    //     throw err;
+      return response;
+    } catch (err) {
+      sentry.captureMessage(err);
 
-    // TODO - redirect to 500.html
-    //     return new Response('Something went wrong', {
-    //      status: 500,
-    //     statusText: 'Internal Server Error',
-    //    });
-    //   }
+      // TODO - redirect to 500.html
+      return new Response('Something went wrong', {
+        status: 500,
+        statusText: 'Internal Server Error',
+      });
+    }
   },
 };
