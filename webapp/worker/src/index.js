@@ -37,7 +37,7 @@ export default {
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
-      //   throw new Error('Wrong Wrong Wrong');
+      throw new Error('Wrong from a worker!');
 
       return response;
     } catch (err) {
