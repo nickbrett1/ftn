@@ -17,7 +17,7 @@ export default function FiveHundred() {
           minHeight: '100vh',
         }}
       >
-        <Typography variant="h1">Something Went Wrong</Typography>
+        <Typography variant="h2">Something Went Wrong</Typography>
       </Box>
     </>
   );
