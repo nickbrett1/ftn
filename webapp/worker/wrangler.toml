@@ -1,3 +1,4 @@
 name = "worker"
 main = "src/index.js"
 compatibility_date = "2022-10-05"
+send_metrics = true

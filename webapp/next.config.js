@@ -35,7 +35,7 @@ const sentryWebpackPluginOptions = {
   //   release, url, org, project, authToken, configFile, stripPrefix,
   //   urlPrefix, include, ignore
 
-  silent: false, // Show logs
+  silent: true, // Don't show logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
 };
