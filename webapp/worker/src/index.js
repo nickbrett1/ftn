@@ -35,15 +35,12 @@ export default {
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
 
+      throw new Error('Disaster Strikes');
+
       return response;
     } catch (err) {
       sentry.captureException(err);
-
-      // TODO - redirect to 500.html
-      return new Response('Something went wrong', {
-        status: 500,
-        statusText: 'Internal Server Error',
-      });
+      return Response.redirect('https://bemstudios.uk/500.html', 301);
     }
   },
 };
