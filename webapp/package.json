@@ -19,7 +19,7 @@
     "test": "jest --watch --passWithNoTests",
     "lighthouse": "npm run build && npm run export && lhci collect --collect.settings.chromeFlags='--headless --no-sandbox' && lhci assert",
     "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker",
-    "deploy": "npx wrangler pages publish out --project-name=bem && npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:$SENTRY_RELEASE"
+    "deploy": "npx wrangler pages publish out --project-name=bem && npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:$SENTRY_RELEASE --define SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT"
   },
   "keywords": [],
   "author": "",
