@@ -17,7 +17,7 @@ export default function Login() {
       }
       onClick={() => {
         login();
-        throw new Error('Sentry Frontend Error');
+        throw new Error('New Sentry Frontend Error');
       }}
     >
       Login
