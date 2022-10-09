@@ -24,7 +24,7 @@ export default {
       rewriteFrames: {
         root: '/',
       },
-      autoSessionTracking: true,
+      autoSessionTracking: false,
     });
 
     sentry.setUser({ id: '1234' });
