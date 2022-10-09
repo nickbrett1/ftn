@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["next dev", "test jest", "wrangler-dev"],
+      "dependsOn": ["next dev", "test jest", "wrangler-local"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -45,11 +45,11 @@
     },
     {
       "type": "npm",
-      "script": "wrangler-dev",
+      "script": "wrangler-local",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "wrangler-dev",
-      "detail": "wrangler-dev",
+      "label": "wrangler-local",
+      "detail": "wrangler-local",
       "group": "build",
       "presentation": {
         "group": "build-group"
