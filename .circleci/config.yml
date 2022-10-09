@@ -9,7 +9,7 @@ jobs:
       SENTRY_ORG: nick-brett
       SENTRY_PROJECT: bem-backend
       SENTRY_ENVIRONMENT: production
-      SENTRY_RELEASE: pipeline.git.revision
+      SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
       - image: cimg/node:18.8.0-browsers
     steps:
@@ -37,10 +37,10 @@ jobs:
             - webapp/node_modules
             - webapp/.next/cache
           key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-      #- run:
-      #    name: Run Lighthouse checks
-      #    command: |
-      #            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
