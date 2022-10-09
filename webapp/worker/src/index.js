@@ -24,6 +24,7 @@ export default {
       rewriteFrames: {
         root: '/',
       },
+      autoSessionTracking: true,
     });
 
     try {
@@ -34,6 +35,8 @@ export default {
 
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
+
+      throw new Error('Release Management Working?');
 
       return response;
     } catch (err) {

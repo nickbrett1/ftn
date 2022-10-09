@@ -12,7 +12,7 @@
     "analyze": "ANALYZE=true next build",
     "build": "next build",
     "dev": "npx next dev",
-    "wrangler-dev": "wrangler dev --local --port 8787  --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:\\'\\' --define SENTRY_ENVIRONMENT:\\'development\\'",
+    "wrangler-dev": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:\\'\\' --define SENTRY_ENVIRONMENT:\\'development\\' ",
     "export": "next export",
     "lint": "next lint",
     "start": "next start",
