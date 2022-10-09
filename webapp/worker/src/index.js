@@ -8,6 +8,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 import Toucan from 'toucan-js';
+import generateCSP from './generate-csp';
 
 export default {
   async fetch(request, environment, context) {
@@ -28,12 +29,8 @@ export default {
 
     try {
       let response = await fetch(request);
-
-      // Clone the response so that it's no longer immutable
       response = new Response(response.body, response);
-
-      // Add a custom header with a value
-      response.headers.append('x-workers-hello', 'I HAVE THE POWER');
+      response.headers.append('Content-Security-Policy', generateCSP());
 
       return response;
     } catch (err) {
