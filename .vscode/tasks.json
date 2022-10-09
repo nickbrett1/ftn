@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["next dev", "test jest", "wrangler"],
+      "dependsOn": ["next dev", "test jest", "wrangler-dev"],
       "group": {
         "kind": "build",
         "isDefault": true
