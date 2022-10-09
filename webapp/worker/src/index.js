@@ -18,7 +18,7 @@ export default {
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
       // eslint-disable-next-line no-undef
-      release: 'bem-backend-'.concat(SENTRY_RELEASE),
+      release: SENTRY_RELEASE,
       // eslint-disable-next-line no-undef
       environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
@@ -26,6 +26,8 @@ export default {
       },
       autoSessionTracking: true,
     });
+
+    sentry.setUser({ id: '1234' });
 
     try {
       let response = await fetch(request);
