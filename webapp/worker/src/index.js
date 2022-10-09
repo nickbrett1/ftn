@@ -24,6 +24,9 @@ export default {
       rewriteFrames: {
         root: '/',
       },
+      initialScope: {
+        user: { id: 1234 },
+      },
     });
 
     try {
@@ -34,6 +37,8 @@ export default {
 
       // Add a custom header with a value
       response.headers.append('x-workers-hello', 'I HAVE THE POWER');
+
+      throw new Error('User on initial scope');
 
       return response;
     } catch (err) {
