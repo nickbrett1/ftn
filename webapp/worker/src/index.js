@@ -18,7 +18,7 @@ export default {
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
       // eslint-disable-next-line no-undef
-      release: SENTRY_RELEASE,
+      release: 'bem-backend-'.concat(SENTRY_RELEASE),
       // eslint-disable-next-line no-undef
       environment: SENTRY_ENVIRONMENT,
       rewriteFrames: {
