@@ -40,7 +40,10 @@ jobs:
       - run:
           name: Run Lighthouse checks
           command: |
-            cd webapp && sudo npm install -g @lhci/cli@0.9.x && lhci autorun --throttling.cpuSlowdownMultiplier=2.4
+            cd webapp && sudo npm install -g @lhci/cli@0.9.x
+            lhci collect --throttling.cpuSlowdownMultiplier=2.4
+            lhci assert
+            lhci upload
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
