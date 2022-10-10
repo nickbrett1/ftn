@@ -3,12 +3,7 @@ module.exports = {
     collect: {
       startServerCommand: 'npm run wrangler-local && npm run start',
       startServerReadyPattern: 'Starting a local server...',
-      url: [
-        'http://localhost:8787',
-        'http://localhost:8787/404',
-        'http://localhost:8787/500',
-        'http://localhost:8787/nojs',
-      ],
+      url: ['http://localhost:8787'],
       settings: {
         cpuSlowdownMultiplier: 2.4,
       },
