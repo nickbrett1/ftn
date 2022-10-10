@@ -1,7 +1,7 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'npm run wrangler-local && npm run start',
+      startServerCommand: 'npm run wrangler-staging && npm run start',
       startServerReadyPattern: 'Starting a local server...',
       url: ['http://localhost:8787'],
       settings: {
