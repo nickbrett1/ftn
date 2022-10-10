@@ -41,7 +41,7 @@ jobs:
           name: Run Lighthouse checks
           command: |
             cd webapp && sudo npm install -g @lhci/cli@0.9.x
-            lhci autorun --config=./.lighthouse.js
+            lhci autorun --config=./.lighthouserc.js
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
