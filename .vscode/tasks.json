@@ -45,11 +45,11 @@
     },
     {
       "type": "npm",
-      "script": "wrangler-local",
+      "script": "wrangler-dev",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "wrangler-local",
-      "detail": "wrangler-local",
+      "label": "wrangler-dev",
+      "detail": "wrangler-dev",
       "group": "build",
       "presentation": {
         "group": "build-group"
