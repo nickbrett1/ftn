@@ -32,8 +32,6 @@ export default {
       response = new Response(response.body, response);
       response.headers.append('Content-Security-Policy', generateCSP());
 
-      console.log(generateCSP());
-
       return response;
     } catch (err) {
       sentry.captureException(err);

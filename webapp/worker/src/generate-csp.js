@@ -12,6 +12,7 @@ const generateCSP = () => {
   add('connect-src', `'self'`, { devOnly: true });
   add('connect-src', 'https://*.ingest.sentry.io');
   add('connect-src', 'https://fonts.googleapis.com');
+  add('connect-src', 'https://fonts.gstatic.com');
   add('script-src-elem', `'self'`);
   add('script-src-elem', 'https://static.cloudflareinsights.com');
   add('style-src', `'unsafe-inline'`);
