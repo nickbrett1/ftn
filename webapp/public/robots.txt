@@ -1,4 +1,4 @@
 # robots.txt
 
-User-agent: * 
-Disallow: 
+user-agent: * 
+disallow: 
