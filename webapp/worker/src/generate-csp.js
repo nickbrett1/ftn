@@ -9,7 +9,7 @@ const generateCSP = () => {
   };
 
   add('default-src', `'none'`);
-  add('connect-src', `'self'`, { devOnly: true });
+  add('connect-src', `'self'`);
   add('connect-src', 'https://*.ingest.sentry.io');
   add('connect-src', 'https://fonts.googleapis.com');
   add('connect-src', 'https://fonts.gstatic.com');
