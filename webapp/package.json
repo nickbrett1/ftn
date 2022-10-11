@@ -31,7 +31,7 @@
     "@emotion/react": "^11.10.0",
     "@emotion/server": "^11.10.0",
     "@emotion/styled": "^11.10.0",
-    "@mui/material": "^5.10.8",
+    "@mui/material": "^5.10.9",
     "@react-oauth/google": "^0.2.8",
     "@sentry/nextjs": "^7.15.0",
     "jwt-decode": "^3.1.2",
