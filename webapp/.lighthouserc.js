@@ -14,6 +14,9 @@ module.exports = {
     },
     assert: {
       preset: 'lighthouse:recommended',
+      assertions: {
+        'service-worker': 'off',
+      },
     },
   },
 };
