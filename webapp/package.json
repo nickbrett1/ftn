@@ -2,7 +2,7 @@
   "name": "main",
   "main": "pages/index.js",
   "version": "1.0.0",
-  "description": "Front-end for bemstudios.uk",
+  "description": "Front-end and cloudworkers for bemstudios.uk",
   "repository": {
     "type": "git",
     "url": "https://github.com/nickbrett1/bem",
