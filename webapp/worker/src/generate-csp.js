@@ -10,6 +10,7 @@ const generateCSP = () => {
 
   add('default-src', `'none'`);
   add('script-src-elem', `'self'`);
+  add('script-src-elem', 'https://static.cloudflareinsights.com');
   add('style-src', `'unsafe-inline'`);
   add('style-src', 'https://fonts.googleapis.com');
   add('font-src', 'https://fonts.gstatic.com');
