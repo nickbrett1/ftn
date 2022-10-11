@@ -13,7 +13,7 @@ export default class MyDocument extends Document {
             <meta httpEquiv="refresh" content="0; url=./nojs" />
           </noscript>
           <meta name="theme-color" content={theme.palette.primary.main} />
-          <link rel="manifest" href="/icons/manifest.webmanifest" />
+          <link rel="manifest" href="/manifest.webmanifest" />
           <link rel="icon" href="/icons/favicon.ico" sizes="any" />
           <link rel="icon" type="image/svg+xml" href="/icons/square-flag.svg" />
           <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />

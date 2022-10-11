@@ -9,6 +9,9 @@ const generateCSP = () => {
   };
 
   add('default-src', `'none'`);
+  add('connect-src', `'self'`, { devOnly: true });
+  add('connect-src', 'https://*.ingest.sentry.io');
+  add('connect-src', 'https://fonts.googleapis.com');
   add('script-src-elem', `'self'`);
   add('script-src-elem', 'https://static.cloudflareinsights.com');
   add('style-src', `'unsafe-inline'`);
@@ -17,8 +20,7 @@ const generateCSP = () => {
   add('manifest-src', `'self'`);
   add('img-src', `'self'`);
   add('script-src', `'unsafe-eval'`, { devOnly: true });
-  add('connect-src', `'self'`, { devOnly: true });
-  add('connect-src', 'https://*.ingest.sentry.io');
+  add('worker-src', `'self'`);
 
   return Object.entries(policy)
     .map(([key, value]) => `${key} ${value.join(' ')}`)
