@@ -38,7 +38,8 @@
 		"tonybaloney.vscode-pets",
 		"marvinhagemeister.theme-afterglow-remastered",
 		"naumovs.theme-oceanicnext",
-		"GitHub.copilot"
+		"GitHub.copilot",
+		"eamodio.gitlens"
 	]
     }
   },
