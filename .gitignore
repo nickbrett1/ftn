@@ -67,6 +67,8 @@ node_modules
 webapp/staticfiles
 webapp/assets/
 webapp/webpack-stats.json
+webapp/public/workbox-*.js*
+webapp/public/sw.js*
 .DS_Store
 *.pem
 .sentryclirc
@@ -75,6 +77,7 @@ webapp/webpack-stats.json
 webapp/out
 .lighthouseci
 _routes.generated.json
+
 
 # Cloudflare workers stuff
 webapp/workers/out
