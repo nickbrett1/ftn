@@ -4,8 +4,11 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 const { withSentryConfig } = require('@sentry/nextjs');
+const withPWA = require('next-pwa')({
+  dest: 'public',
+});
 
-const moduleExports = {
+const moduleExports = withPWA({
   // Your existing module.exports
   sentry: {
     // Use `hidden-source-map` rather than `source-map` as the Webpack `devtool`
@@ -25,7 +28,7 @@ const moduleExports = {
     browsersListForSwc: true,
     legacyBrowsers: false,
   },
-};
+});
 
 const sentryWebpackPluginOptions = {
   // Additional config options for the Sentry Webpack plugin. Keep in mind that
