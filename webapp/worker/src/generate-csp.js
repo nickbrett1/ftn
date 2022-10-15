@@ -20,7 +20,6 @@ const generateCSP = () => {
   add('img-src', `'self'`);
   add('manifest-src', `'self'`);
   add('script-src', `'unsafe-eval'`, { devOnly: true });
-  add('script-src', 'https://accounts.google.com/gsi/client');
   add('script-src-elem', `'self'`);
   add('script-src-elem', 'https://static.cloudflareinsights.com');
   add('script-src-elem', 'https://accounts.google.com/gsi/client');
