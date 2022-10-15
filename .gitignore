@@ -77,6 +77,8 @@ webapp/public/sw.js*
 webapp/out
 .lighthouseci
 _routes.generated.json
+junit.xml
+webapp/reports
 
 
 # Cloudflare workers stuff

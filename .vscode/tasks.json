@@ -33,7 +33,7 @@
     },
     {
       "type": "npm",
-      "script": "test",
+      "script": "test-dev",
       "path": "webapp",
       "problemMatcher": [],
       "label": "test jest",
