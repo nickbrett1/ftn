@@ -44,7 +44,7 @@ jobs:
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
-          path: ./reports/
+          path: ./webapp/reports/
       - run:
           name: Run Lighthouse checks
           command: |
