@@ -19,7 +19,7 @@
     "start": "next start",
     "staging": "concurrently --kill-others \"npm run wrangler-staging\" \"next start\"",
     "test-staging": "jest --passWithNoTests --runInBand --ci --reporters=jest-junit --reporters=default",
-    "test-dev": "jest --watch --passWithNoTests --coverage",
+    "test-dev": "jest --watchAll --passWithNoTests --coverage",
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
     "lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.js",
     "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\'",
