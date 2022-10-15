@@ -23,6 +23,7 @@ const generateCSP = () => {
   add('script-src', 'https://accounts.google.com/gsi/client');
   add('script-src-elem', `'self'`);
   add('script-src-elem', 'https://static.cloudflareinsights.com');
+  add('script-src-elem', 'https://accounts.google.com/gsi/client');
   add('style-src', `'unsafe-inline'`);
   add('style-src', 'https://fonts.googleapis.com');
   add('style-src', 'https://accounts.google.com/gsi/style');
