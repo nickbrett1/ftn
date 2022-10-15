@@ -10,6 +10,7 @@ jobs:
       SENTRY_PROJECT: bem-backend
       SENTRY_ENVIRONMENT: production
       SENTRY_RELEASE: << pipeline.git.revision >>
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     docker:
       - image: cimg/node:18.8.0-browsers
     steps:
