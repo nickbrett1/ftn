@@ -39,7 +39,8 @@
 		"marvinhagemeister.theme-afterglow-remastered",
 		"naumovs.theme-oceanicnext",
 		"GitHub.copilot",
-		"eamodio.gitlens"
+		"eamodio.gitlens",
+		"SonarSource.sonarlint-vscode"
 	]
     }
   },
