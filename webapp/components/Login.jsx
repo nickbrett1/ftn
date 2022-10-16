@@ -1,14 +1,14 @@
 import React from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
 import Button from '@mui/material/Button';
-import { useGoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
-  const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log(tokenResponse),
-    onError: (error) => console.log(error),
-    flow: 'auth-code',
-  });
+  const login = () => {
+    const script = document.createElement('script');
+
+    script.src = 'https://accounts.google.com/gsi/client';
+    document.body.appendChild(script);
+  };
 
   return (
     <Button
