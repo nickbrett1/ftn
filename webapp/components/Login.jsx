@@ -6,6 +6,8 @@ import { useGoogleLogin } from '@react-oauth/google';
 export default function Login() {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => console.log(tokenResponse),
+    onError: (error) => console.log(error),
+    flow: 'auth-code',
   });
 
   return (
