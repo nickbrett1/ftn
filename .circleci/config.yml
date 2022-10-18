@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  ggshield: gitguardian/ggshield@1.1.4
+  ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.4.0
 
 jobs:
@@ -51,8 +51,6 @@ jobs:
           name: gitguardian
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
-          context:
-            - gitguardian
       - run:
           name: Run Lighthouse checks
           command: |
