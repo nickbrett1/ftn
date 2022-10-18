@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   browser-tools: circleci/browser-tools@1.4.0
+  ggshield: gitguardian/ggshield@volatile
 
 jobs:
   build:
@@ -46,6 +47,10 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
       - run:
           name: Run Lighthouse checks
           command: |
