@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  ggshield: gitguardian/ggshield@1.1.4
+  gg-shield: gitguardian/ggshield@1.1.4
   browser-tools: circleci/browser-tools@1.4.0
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
-      - ggshield/scan:
+      - gg-shield/scan:
           name: ggshield-scan
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
