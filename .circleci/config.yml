@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   browser-tools: circleci/browser-tools@1.4.0
-  ggshield: gitguardian/ggshield@volatile
+  ggshield: gitguardian/ggshield@1.1.4
 
 jobs:
   build:
