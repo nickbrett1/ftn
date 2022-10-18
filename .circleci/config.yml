@@ -47,10 +47,7 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
-      - ggshield/scan:
-          name: gitguardian
-          base_revision: << pipeline.git.base_revision >>
-          revision: <<pipeline.git.revision>>
+
       - run:
           name: Run Lighthouse checks
           command: |
@@ -75,3 +72,14 @@ jobs:
           name: Deploying to Cloudflare
           command: |
             cd webapp && npm run deploy
+
+workflows:
+  build_and_test:
+    jobs:
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
+      - build:
+          requires:
+            - ggshield-scan
