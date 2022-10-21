@@ -5,12 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch Chrome",
+      "request": "launch",
       "type": "chrome",
-      "request": "attach",
-      "name": "Attach to browser",
-      "urlFilter": "http://localhost:8788/*",
-      "webRoot": "${workspaceFolder}/webapp",
-      "port": 9222
+      "url": "http://localhost:8787",
+      "webRoot": "${workspaceFolder}/webapp"
     }
   ]
 }
