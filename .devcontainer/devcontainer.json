@@ -40,7 +40,9 @@
 		"naumovs.theme-oceanicnext",
 		"GitHub.copilot",
 		"eamodio.gitlens",
-		"SonarSource.sonarlint-vscode"
+		"SonarSource.sonarlint-vscode",
+		"christian-kohler.npm-intellisense",
+		"donjayamanne.githistory"
 	]
     }
   },
