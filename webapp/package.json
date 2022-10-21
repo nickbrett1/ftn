@@ -72,7 +72,6 @@
     "jest-environment-jsdom": "^29.2.1",
     "jest-junit": "^14.0.1",
     "progress-webpack-plugin": "^1.0.16",
-    "serve": "^14.0.1",
     "typescript": "^4.8.4",
     "webpack": "^5.73.0",
     "webpack-bundle-analyzer": "^4.6.1",
