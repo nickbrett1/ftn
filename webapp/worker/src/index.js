@@ -9,6 +9,7 @@
  */
 import Toucan from 'toucan-js';
 import generateCSP from './generate-csp';
+import auth from './auth';
 
 export default {
   async fetch(request, environment, context) {
@@ -28,13 +29,25 @@ export default {
     });
 
     try {
-      let response = await fetch(request);
-      response = new Response(response.body, response);
-      response.headers.append('Content-Security-Policy', generateCSP());
+      const url = new URL(request.url);
 
+      let response;
+      if (url.pathname === '/auth') {
+        response = await auth(url, environment);
+      } else {
+        response = await fetch(request);
+        response = new Response(response.body, response);
+      }
+
+      response.headers.append('Content-Security-Policy', generateCSP());
       return response;
     } catch (err) {
       sentry.captureException(err);
+
+      // eslint-disable-next-line no-undef
+      if (SENTRY_ENVIRONMENT === 'development') {
+        throw err;
+      }
 
       const HTML_TEMPORARY_REDIRECT = 307;
       return Response.redirect(

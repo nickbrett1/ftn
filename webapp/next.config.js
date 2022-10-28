@@ -6,6 +6,7 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 const withPWA = require('next-pwa')({
   dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
 });
 
 const moduleExports = withPWA({
@@ -25,7 +26,6 @@ const moduleExports = withPWA({
   images: {},
   swcMinify: true,
   experimental: {
-    browsersListForSwc: true,
     legacyBrowsers: false,
   },
 });

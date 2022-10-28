@@ -2,3 +2,7 @@ name = "worker"
 main = "src/index.js"
 compatibility_date = "2022-10-05"
 send_metrics = true
+
+# The necessary secrets are:
+# - GOOGLE_CLIENT_SECRET
+# Run `wrangler secret put <NAME>` for each of these
