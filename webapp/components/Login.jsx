@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
 import Button from '@mui/material/Button';
+import { nanoid } from 'nanoid';
 
 export default function Login() {
   const [client, setClient] = useState(null);
 
   const login = () => {
     if (client) {
-      client.requestAccessToken();
+      client.requestCode();
       return;
     }
 
@@ -27,18 +28,27 @@ export default function Login() {
         },
       });
 
-      const clientRef = window.google.accounts.oauth2.initTokenClient({
+      const state = nanoid();
+      sessionStorage.setItem('state', state);
+
+      const clientRef = window.google.accounts.oauth2.initCodeClient({
         client_id: CLIENT_ID,
-        scope: `openid profile email`,
+        scope: 'openid profile email',
+        ux_mode: 'redirect',
+        state,
+        redirect_uri:
+          process.env.NODE_ENV === 'development'
+            ? 'http://localhost:8787/auth'
+            : 'https://bemstudios.uk/auth',
         callback: (response) => {
           if (response.error) {
-            throw new Error('Failed to initTokenClient', response.error);
+            throw new Error('Failed to initCodeClient', response.error);
           }
         },
       });
 
       setClient(clientRef);
-      clientRef.requestAccessToken();
+      clientRef.requestCode();
     };
 
     script.onerror = () => {
