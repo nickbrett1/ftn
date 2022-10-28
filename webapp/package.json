@@ -23,7 +23,7 @@
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
     "lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.js",
     "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\'",
-    "deploy": "concurrently \"npx wrangler pages publish out --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\'\" --commit-dirty=true"
+    "deploy": "concurrently \"npx wrangler pages publish out --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\' --commit-dirty=true\""
   },
   "keywords": [],
   "author": "",
