@@ -42,7 +42,8 @@
 		"eamodio.gitlens",
 		"SonarSource.sonarlint-vscode",
 		"christian-kohler.npm-intellisense",
-		"donjayamanne.githistory"
+		"donjayamanne.githistory",
+		"ChakrounAnas.turbo-console-log"
 	]
     }
   },
