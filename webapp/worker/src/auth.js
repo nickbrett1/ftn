@@ -6,10 +6,14 @@ const tokenExchange = async (url, environment, code) => {
     redirectURI = 'http://localhost:8787/auth';
   }
 
+  if (!environment.GOOGLE_CLIENT_SECRET)
+    throw new Error('Must set GOOGLE_CLIENT_SECRET');
+
   const params = {
     client_id:
       '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
     client_secret: environment.GOOGLE_CLIENT_SECRET,
+
     code,
     grant_type: 'authorization_code',
     redirect_uri: redirectURI,
