@@ -4,9 +4,11 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends chromium default-jre zsh-syntax-highlighting \
+    && apt-get -y install --no-install-recommends chromium default-jre zsh-syntax-highlighting curl gnupg \
     && su node -c "npm install -g wrangler svgo source-map jest @lhci/cli@0.9.x" \
     && curl -sL https://sentry.io/get-cli/ | bash
+
+RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
 
 ADD .zshrc /home/node
 ADD .p10k.zsh /home/node
