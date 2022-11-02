@@ -8,5 +8,6 @@
   "editor.detectIndentation": false,
   "remote.localPortHost": "allInterfaces",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "task.allowAutomaticTasks": "on"
+  "task.allowAutomaticTasks": "on",
+  "git.requireGitUserConfig": true
 }
