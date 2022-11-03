@@ -12,7 +12,7 @@
     "analyze": "ANALYZE=true next build",
     "build": "next build",
     "dev": "concurrently --kill-others \"npm run wrangler-dev\" \"npx next dev\"",
-    "wrangler-dev": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:\\'\\' --define SENTRY_ENVIRONMENT:\\'development\\' ",
+    "wrangler-dev": "doppler run --command='wrangler dev --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:$SENTRY_RELEASE --define SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT '",
     "wrangler-staging": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'staging\\' ",
     "export": "next export",
     "lint": "next lint",

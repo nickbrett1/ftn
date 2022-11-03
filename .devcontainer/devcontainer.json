@@ -44,16 +44,21 @@
 		"christian-kohler.npm-intellisense",
 		"donjayamanne.githistory",
 		"ChakrounAnas.turbo-console-log",
-		"shyykoserhiy.git-autoconfig"
+		"shyykoserhiy.git-autoconfig",
+		"THEARC.doppler"
 	]
     }
+  },
+
+  "containerEnv": {
+    "JDK_HOME": "/usr"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k; git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting; git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions; cd webapp; npm ci",
+  "postCreateCommand": "doppler login --yes; doppler setup --no-interactive; git config --global --add safe.directory ${containerWorkspaceFolder}; git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k; git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting; git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions; cd webapp; npm ci",
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "node"
