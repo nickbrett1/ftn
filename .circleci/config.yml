@@ -31,8 +31,8 @@ jobs:
           name: Sync secrets from Doppler to Cloudflare
           command: |
             cd webapp/worker
-            source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret delete {{$key}} && npx wrangler secret delete {{$key}}; {{end}}'))
-            source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret delete {{$key}} && npx wrangler secret put {{$key}}; {{end}}'))
+            source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret delete {{$key}}; {{end}}'))
+            source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret put {{$key}}; {{end}}'))
       - run:
           name: Install modules
           command: |
