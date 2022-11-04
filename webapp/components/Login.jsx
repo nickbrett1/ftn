@@ -14,13 +14,13 @@ export default function Login() {
 
     const script = document.createElement('script');
 
+    const GOOGLE_CLIENT_ID =
+      '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com';
+
     script.src = 'https://accounts.google.com/gsi/client';
     script.onload = () => {
-      const CLIENT_ID =
-        '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com';
-
       window.google.accounts.id.initialize({
-        client_id: CLIENT_ID,
+        client_id: GOOGLE_CLIENT_ID,
         callback: (response) => {
           if (!response.credential || !response.clientId) {
             throw new Error('Failed to initialize google sign in');
@@ -32,7 +32,7 @@ export default function Login() {
       sessionStorage.setItem('state', state);
 
       const clientRef = window.google.accounts.oauth2.initCodeClient({
-        client_id: CLIENT_ID,
+        client_id: GOOGLE_CLIENT_ID,
         scope: 'openid profile email',
         ux_mode: 'redirect',
         state,
