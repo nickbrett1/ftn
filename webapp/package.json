@@ -11,9 +11,9 @@
   "scripts": {
     "analyze": "ANALYZE=true next build",
     "build": "next build",
-    "dev": "concurrently --kill-others \"npm run wrangler-dev\" \"npx next dev\"",
-    "wrangler-dev": "doppler run --command='wrangler dev --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:$SENTRY_RELEASE --define SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT '",
-    "wrangler-staging": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'staging\\' ",
+    "dev": "concurrently --kill-others \"npm run wrangler-dev\" \"doppler run --command='npx next dev'\"",
+    "wrangler-dev": "doppler run --command='wrangler dev --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT --port 8787 --local --host localhost:3000 ./worker/src/index.js'",
+    "wrangler-staging": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET   --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:staging ",
     "export": "next export",
     "lint": "next lint",
     "start": "next start",
@@ -22,8 +22,8 @@
     "test-dev": "jest --watchAll --passWithNoTests --coverage",
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
     "lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.js",
-    "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\'",
-    "deploy": "concurrently \"npx wrangler pages publish out --commit-dirty=true --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --route bemstudios.uk --define SENTRY_RELEASE:\\'$SENTRY_RELEASE\\' --define SENTRY_ENVIRONMENT:\\'$SENTRY_ENVIRONMENT\\' \""
+    "wrangler-sourcemaps": "doppler run --command='npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker --route bemstudios.uk --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT'",
+    "deploy": "concurrently \"npx wrangler pages publish out --commit-dirty=true --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --route bemstudios.uk --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT \""
   },
   "keywords": [],
   "author": "",

@@ -12,17 +12,15 @@ import generateCSP from './generate-csp';
 import auth from './auth';
 
 export default {
-  async fetch(request, environment, context) {
+  async fetch(request, env, context) {
     const sentry = new Toucan({
-      dsn: 'https://09dfa4a627e04814b584374fe183c61d@o1381755.ingest.sentry.io/6778159',
+      dsn: env.SENTRY_BACKEND_DSN,
       context, // Includes 'waitUntil', which is essential for Sentry logs to  be delivered. Modules workers do not include 'request' in context -- you'll need to set it separately.
       request, // request is not included in 'context', so we set it here.
       allowedHeaders: ['user-agent'],
       allowedSearchParams: /(.*)/,
-      // eslint-disable-next-line no-undef
-      release: SENTRY_RELEASE,
-      // eslint-disable-next-line no-undef
-      environment: SENTRY_ENVIRONMENT,
+      release: env.SENTRY_RELEASE,
+      environment: env.SENTRY_ENVIRONMENT,
       rewriteFrames: {
         root: '/',
       },
@@ -33,19 +31,18 @@ export default {
 
       let response;
       if (url.pathname === '/auth') {
-        response = await auth(url, environment);
+        response = await auth(url, env);
       } else {
         response = await fetch(request);
         response = new Response(response.body, response);
       }
 
-      response.headers.append('Content-Security-Policy', generateCSP());
+      response.headers.append('Content-Security-Policy', generateCSP(env));
       return response;
     } catch (err) {
       sentry.captureException(err);
 
-      // eslint-disable-next-line no-undef
-      if (SENTRY_ENVIRONMENT === 'development') {
+      if (env.SENTRY_ENVIRONMENT === 'development') {
         throw err;
       }
 

@@ -1,9 +1,8 @@
-const generateCSP = () => {
+const generateCSP = (env) => {
   const policy = {};
 
   const add = (directive, value, options = {}) => {
-    // eslint-disable-next-line no-undef
-    if (options.devOnly && SENTRY_ENVIRONMENT !== 'development') return;
+    if (options.devOnly && env.SENTRY_ENVIRONMENT !== 'development') return;
     const curr = policy[directive];
     policy[directive] = curr ? [...curr, value] : [value];
   };
