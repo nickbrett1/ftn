@@ -61,7 +61,8 @@ jobs:
       - run:
           name: Sync secrets from Doppler to Cloudflare
           command: |
-            cd webapp/worker && source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret put {{$key}}; {{end}}'))
+            cd webapp/worker && source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret delete {{$key}} && npx wrangler secret delete {{$key}}; {{end}}'))
+            cd webapp/worker && source <( ../../doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | npx wrangler secret delete {{$key}} && npx wrangler secret put {{$key}}; {{end}}'))
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
