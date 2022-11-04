@@ -16,6 +16,9 @@ jobs:
     steps:
       - browser-tools/install-chrome
       - browser-tools/install-chromedriver
+      - run:
+          name: Install Doppler CLI to current directory
+          command: (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh -s -- --no-install --no-package-manager
       - checkout
       - restore_cache:
           name: Restore node_modules and next cache
@@ -57,7 +60,7 @@ jobs:
           command: |
             cd webapp && npm run export
       - run:
-          name: Create release and send sourcemaps to Sentry
+          name: Create release, sync secrets and send sourcemaps to Sentry
           command: |
             cd webapp
             npm run wrangler-sourcemaps
