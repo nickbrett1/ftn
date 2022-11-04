@@ -16,10 +16,10 @@ jobs:
     steps:
       - browser-tools/install-chrome
       - browser-tools/install-chromedriver
+      - checkout
       - run:
           name: Install Doppler CLI to current directory
           command: (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh -s -- --no-install --no-package-manager
-      - checkout
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
@@ -49,7 +49,6 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
-
       - run:
           name: Run Lighthouse checks
           command: |
@@ -60,7 +59,11 @@ jobs:
           command: |
             cd webapp && npm run export
       - run:
-          name: Create release, sync secrets and send sourcemaps to Sentry
+          name: Sync secrets from doppler to Cloudflare
+          command: |
+            cd webapp/worker && source <( doppler secrets -c prd substitute <(echo -e '{{ range $key, $val := . }} echo "{{$val}}" | wrangler secret put {{$key}}; {{end}}'))
+      - run:
+          name: Create release and send sourcemaps to Sentry
           command: |
             cd webapp
             npm run wrangler-sourcemaps
