@@ -37,8 +37,13 @@ jobs:
             - .next
             - worker/dist
             - public
-        
+
   test:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
       - image: cimg/node:18.8.0-browsers
     steps:
