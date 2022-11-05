@@ -31,6 +31,10 @@ jobs:
             - webapp/node_modules
             - webapp/.next/cache
           key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - persist_to_workspace:
+          root: webapp
+          paths:
+            - .next
         
   test:
     docker:
@@ -46,6 +50,8 @@ jobs:
             - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v6-{{ .Branch }}-
             - node-v6-
+      - attach_workspace:
+          at: webapp
       - run:
           name: Install Doppler CLI to current directory
           command: (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh -s -- --no-install --no-package-manager
@@ -72,10 +78,12 @@ jobs:
     docker:
       - image: cimg/node:18.8.0
     steps:
+      - attach_workspace:
+          at: webapp
       - run:
-            name: Export site
-            command: |
-              cd webapp && npm run export
+          name: Export site
+          command: |
+            cd webapp && npm run export
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
