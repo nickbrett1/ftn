@@ -80,6 +80,7 @@ jobs:
     docker:
       - image: cimg/node:18.8.0
     steps:
+      - checkout
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
