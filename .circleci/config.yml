@@ -6,20 +6,10 @@ orbs:
 
 jobs:
   build:
-    environment:
-      SENTRY_ORG: nick-brett
-      SENTRY_PROJECT: bem-backend
-      SENTRY_ENVIRONMENT: production
-      SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
-      - image: cimg/node:18.8.0-browsers
+      - image: cimg/node:18.8.0
     steps:
-      - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
       - checkout
-      - run:
-          name: Install Doppler CLI to current directory
-          command: (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh -s -- --no-install --no-package-manager
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
@@ -41,6 +31,32 @@ jobs:
             - webapp/node_modules
             - webapp/.next/cache
           key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - persist_to_workspace:
+          root: webapp
+          paths:
+            - .next
+            - worker/dist
+            - public
+        
+  test:
+    docker:
+      - image: cimg/node:18.8.0-browsers
+    steps:
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
+      - run:
+          name: Install Doppler CLI to current directory
+          command: (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh -s -- --no-install --no-package-manager
       - run:
           name: Run tests
           command: |
@@ -54,6 +70,26 @@ jobs:
           command: |
             cd webapp && sudo npm install -g @lhci/cli@0.9.x
             npm run lighthouse-staging
+
+  deploy:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:18.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
       - run:
           name: Export site
           command: |
@@ -75,7 +111,7 @@ jobs:
             cd webapp && npm run deploy
 
 workflows:
-  build_and_test:
+  build_test_deploy:
     jobs:
       - ggshield/scan:
           name: ggshield-scan
@@ -84,3 +120,12 @@ workflows:
       - build:
           requires:
             - ggshield-scan
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
