@@ -130,7 +130,7 @@ workflows:
       - test:
           requires:
             - build
-          context: sonarcloud
+          context: SonarCloud
       - deploy:
           requires:
             - test
