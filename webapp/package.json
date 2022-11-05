@@ -47,7 +47,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^3.18.0",
     "@emotion/eslint-plugin": "^11.10.0",
-    "@next/bundle-analyzer": "^13.0.1",
+    "@next/bundle-analyzer": "^13.0.2",
     "@next/eslint-plugin-next": "^13.0.2",
     "@sentry/cli": "^2.8.1",
     "@size-limit/preset-app": "^8.1.0",
