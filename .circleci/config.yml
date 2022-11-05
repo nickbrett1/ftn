@@ -80,6 +80,13 @@ jobs:
     docker:
       - image: cimg/node:18.8.0
     steps:
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
       - attach_workspace:
           at: webapp
       - run:
