@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.4.0
+  sonarcloud: sonarsource/sonarcloud@1.1.1
 
 jobs:
   build:
@@ -70,6 +71,7 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
+      - sonarcloud/scan
       - run:
           name: Run Lighthouse checks
           command: |
@@ -128,6 +130,7 @@ workflows:
       - test:
           requires:
             - build
+          context: sonarcloud
       - deploy:
           requires:
             - test
