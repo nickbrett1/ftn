@@ -36,6 +36,7 @@ jobs:
           paths:
             - .next
             - worker/dist
+            - public
         
   test:
     docker:
