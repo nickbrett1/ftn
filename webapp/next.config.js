@@ -23,11 +23,8 @@ const moduleExports = withPWA({
   compiler: {
     emotion: true,
   },
+  reactStrictMode: true,
   images: {},
-  swcMinify: true,
-  experimental: {
-    legacyBrowsers: false,
-  },
 });
 
 const sentryWebpackPluginOptions = {
