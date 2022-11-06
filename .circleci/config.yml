@@ -139,9 +139,7 @@ workflows:
           name: ggshield-scan
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
-      - build:
-          requires:
-            - ggshield-scan
+      - build
       - code_test:
           requires:
             - build
