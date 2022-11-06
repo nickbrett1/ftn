@@ -28,6 +28,7 @@ export default {
 
     try {
       const url = new URL(request.url);
+      console.log('🚀 ~ file: index.js ~ line 31 ~ fetch ~ url', url);
 
       let response;
       if (url.pathname === '/auth') {
