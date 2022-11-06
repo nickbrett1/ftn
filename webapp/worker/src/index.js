@@ -34,9 +34,9 @@ export default {
         response = await auth(url, env);
       } else {
         response = await fetch(request);
-        response = new Response(response.body, response);
       }
 
+      response = new Response(response.body, response);
       response.headers.append('Content-Security-Policy', generateCSP(env));
       return response;
     } catch (err) {
