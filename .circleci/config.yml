@@ -38,18 +38,11 @@ jobs:
             - .next
             - worker/dist
             - public
-
-  test:
-    environment:
-      SENTRY_ORG: nick-brett
-      SENTRY_PROJECT: bem-backend
-      SENTRY_ENVIRONMENT: staging
-      SENTRY_RELEASE: << pipeline.git.revision >>
+  
+  code_test:
     docker:
-      - image: cimg/node:18.8.0-browsers
+      - image: cimg/node:18.8.0
     steps:
-      - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
       - checkout
       - restore_cache:
           name: Restore node_modules and next cache
@@ -72,6 +65,28 @@ jobs:
       - store_test_results:
           path: ./webapp/reports/
       - sonarcloud/scan
+
+  browser_test:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:18.8.0-browsers
+    steps:
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
       - run:
           name: Run Lighthouse checks
           command: |
@@ -124,16 +139,18 @@ workflows:
           name: ggshield-scan
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
-      - build:
-          requires:
-            - ggshield-scan
-      - test:
+      - build
+      - code_test:
           requires:
             - build
           context: SonarCloud
+      - browser_test:
+          requires:
+            - build
       - deploy:
           requires:
-            - test
+            - browser_test
+            - code_test
           filters:
             branches:
               only: main
