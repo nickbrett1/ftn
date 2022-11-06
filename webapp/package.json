@@ -18,7 +18,7 @@
     "lint": "next lint",
     "start": "next start",
     "staging": "concurrently --kill-others \"npm run wrangler-staging\" \"next start\"",
-    "test-staging": "jest --passWithNoTests --runInBand --ci --reporters=jest-junit --reporters=default",
+    "test-staging": "jest --coverage --passWithNoTests --runInBand --ci --reporters=jest-junit --reporters=default",
     "test-dev": "jest --watchAll --passWithNoTests --coverage",
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
     "lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.js",
