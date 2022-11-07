@@ -10,6 +10,7 @@
 import Toucan from 'toucan-js';
 import generateCSP from './generate-csp';
 import auth from './auth';
+import generateUriBase from './uri';
 
 export default {
   async fetch(request, env, context) {
@@ -26,14 +27,37 @@ export default {
       },
     });
 
+    const HTML_TEMPORARY_REDIRECT = 307;
+    const url = new URL(request.url);
     try {
-      const url = new URL(request.url);
-
       let response;
-      if (url.pathname === '/auth') {
-        response = await auth(url, env);
-      } else {
-        response = await fetch(request);
+
+      switch (url.pathname) {
+        case '/auth': {
+          response = await auth(url, env);
+          break;
+        }
+        case '/home': {
+          console.log('Checking cookies');
+          const cookies = request.headers.get('cookie');
+          if (!cookies || !cookies.includes('auth')) {
+            console.log('No token found in cookies');
+            response = Response.redirect(
+              generateUriBase(url, env),
+              HTML_TEMPORARY_REDIRECT
+            );
+          } else {
+            console.log('Token found in cookies');
+            response = await fetch(request);
+          }
+          break;
+        }
+        case '/logout': {
+          response = new Response('Logged out');
+          break;
+        }
+        default:
+          response = await fetch(request);
       }
 
       response = new Response(response.body, response);
@@ -46,11 +70,8 @@ export default {
         throw err;
       }
 
-      const HTML_TEMPORARY_REDIRECT = 307;
-      return Response.redirect(
-        'https://bemstudios.uk/500.html',
-        HTML_TEMPORARY_REDIRECT
-      );
+      const redirectURI = `${url.origin}/500`;
+      return Response.redirect(redirectURI, HTML_TEMPORARY_REDIRECT);
     }
   },
 };
