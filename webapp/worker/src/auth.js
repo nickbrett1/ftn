@@ -53,6 +53,7 @@ const auth = async (url, env) => {
   );
 
   // Check if user is allowed - call userInfo API for email address
+  // https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
 
   const newAuth = generateAuth();
   const expiration = new Date(Date.now() + tokenResponse.expires_in * 1000);

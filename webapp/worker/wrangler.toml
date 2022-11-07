@@ -2,6 +2,7 @@ name = "worker"
 main = "src/index.js"
 compatibility_date = "2022-10-05"
 send_metrics = true
+routes = [{pattern = "*bemstudios.uk/*", zone_name = "bemstudios.uk"}]
 
 # The necessary secrets are:
 # - GOOGLE_CLIENT_SECRET
