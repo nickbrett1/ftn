@@ -17,4 +17,28 @@ Sentry.init({
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
   // that it will also get attached to your source maps
+  beforeSend: (event) => {
+    // Check if it is an exception, and if so, show the report dialog
+    if (event.exception) {
+      Sentry.showReportDialog({ eventId: event.event_id });
+    }
+    return event;
+  },
+  denyUrls: [
+    // Chrome extensions
+    /extensions\//i,
+    /^chrome:\/\//i,
+    // Firefox extensions
+    /^resource:\/\//i,
+    // Safari extensions
+    /^safari-extension:\/\//i,
+    // Webpack dev server
+    /webpack:\/\//i,
+    // Sentry SDK internal calls
+    /https:\/\/o1381755.ingest.sentry.io\/api\/6695436\/store\//i,
+    // Next.js build loader
+    /_next\/webpack-hmr/i,
+    // Next.js dev server
+    /http:\/\/localhost:3000\/_next\/webpack-hmr/i,
+  ],
 });
