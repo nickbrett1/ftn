@@ -17,7 +17,7 @@
     "export": "next export",
     "lint": "next lint",
     "start": "next start",
-    "staging": "concurrentlyß \"npm run wrangler-staging\" \"next start\"",
+    "staging": "concurrently \"npm run wrangler-staging\" \"next start\"",
     "test-staging": "jest --coverage --passWithNoTests --runInBand --ci --reporters=jest-junit --reporters=default",
     "test-dev": "jest --watchAll --passWithNoTests --coverage",
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
