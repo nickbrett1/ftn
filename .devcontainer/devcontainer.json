@@ -46,7 +46,11 @@
 		"ChakrounAnas.turbo-console-log",
 		"shyykoserhiy.git-autoconfig",
 		"THEARC.doppler",
-		"nicollasr.vscode-streamdeck"
+		"nicollasr.vscode-streamdeck",
+		"mhutchie.git-graph",
+		"fudd.toggle-zen-mode",
+		"yatki.vscode-surround",
+		"mutantdino.resourcemonitor"
 	]
     }
   },
