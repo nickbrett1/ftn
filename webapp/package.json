@@ -37,7 +37,7 @@
     "@sentry/nextjs": "^7.20.0",
     "jwt-decode": "^3.1.2",
     "nanoid": "^4.0.0",
-    "next": "^13.0.3",
+    "next": "^13.0.4",
     "next-pwa": "^5.6.0",
     "prop-types": "^15.8.1",
     "react": "^18.1.0",
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@emotion/eslint-plugin": "^11.10.0",
-    "@next/bundle-analyzer": "^13.0.3",
+    "@next/bundle-analyzer": "^13.0.4",
     "@next/eslint-plugin-next": "^13.0.2",
     "@sentry/cli": "^2.9.0",
     "@size-limit/preset-app": "^8.1.0",
@@ -55,14 +55,14 @@
     "@testing-library/react": "^13.4.0",
     "concurrently": "^7.5.0",
     "css-loader": "^6.7.2",
-    "eslint": "^8.27.0",
+    "eslint": "^8.28.0",
     "eslint-config-airbnb": "^19.0.4",
-    "eslint-config-next": "^13.0.3",
+    "eslint-config-next": "^13.0.4",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-ejs": "^0.0.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsx-a11y": "^6.5.1",
-    "eslint-plugin-react": "^7.31.10",
+    "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-webpack-plugin": "^3.2.0",
     "html-webpack-plugin": "^5.5.0",
@@ -78,6 +78,6 @@
     "webpack-dev-server": "^4.11.1",
     "webpack-merge": "^5.8.0",
     "webpack-sentry-plugin": "^2.0.3",
-    "wrangler": "^2.4.0"
+    "wrangler": "^2.4.2"
   }
 }
