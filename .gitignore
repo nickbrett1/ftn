@@ -82,7 +82,8 @@ webapp/reports
 webapp/coverage
 .dev.vars
 .env
-
+webapp/worker/.wrangler/state/kv/KV/*
+!webapp/worker/.wrangler/state/kv/KV/nick.brett1@gmail.com
 
 # Cloudflare workers stuff
 webapp/workers/out

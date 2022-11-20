@@ -1,15 +1,10 @@
 /**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npx wrangler dev src/index.js` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npx wrangler publish src/index.js --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
+ * British Empire Management Cloudflare Worker entry point
+ * Lots taken from https://apiumhub.com/tech-blog-barcelona/implementing-google-oauth-google-api-cloudflare-workers/
  */
 import Toucan from 'toucan-js';
 import generateCSP from './generate-csp';
-import auth from './auth';
+import { processAuth, processLogout } from './auth';
 import generateUriBase from './uri';
 
 export default {
@@ -34,26 +29,51 @@ export default {
 
       switch (url.pathname) {
         case '/auth': {
-          response = await auth(url, env);
+          response = await processAuth(url, env);
           break;
         }
-        case '/home': {
-          console.log('Checking cookies');
+        case '/home':
+        case '/logout': {
           const cookies = request.headers.get('cookie');
-          if (!cookies || !cookies.includes('auth')) {
-            console.log('No token found in cookies');
+          if (!cookies) {
             response = Response.redirect(
-              generateUriBase(url, env),
+              `${generateUriBase(url, env)}/preview`,
               HTML_TEMPORARY_REDIRECT
             );
-          } else {
-            console.log('Token found in cookies');
-            response = await fetch(request);
+            break;
           }
-          break;
-        }
-        case '/logout': {
-          response = new Response('Logged out');
+
+          const authCookie = cookies.match(/auth=([^;]+)/);
+          if (!authCookie) {
+            response = Response.redirect(
+              `${generateUriBase(url, env)}/preview`,
+              HTML_TEMPORARY_REDIRECT
+            );
+            break;
+          }
+          const authCookieKey = authCookie[1];
+
+          const accessToken = await env.KV.get(authCookieKey);
+          if (accessToken === null) {
+            response = Response.redirect(
+              `${generateUriBase(url, env)}/preview`,
+              HTML_TEMPORARY_REDIRECT
+            );
+            break;
+          }
+
+          if (url.pathname === '/logout') {
+            response = await processLogout(
+              url,
+              env,
+              context,
+              accessToken,
+              authCookieKey
+            );
+            break;
+          }
+
+          response = await fetch(request);
           break;
         }
         default:

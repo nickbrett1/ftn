@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
 import Button from '@mui/material/Button';
 import { nanoid } from 'nanoid';
+import { useRouter } from 'next/router';
 
 export default function Login() {
   const [client, setClient] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const router = useRouter();
 
   const login = () => {
     if (client) {
@@ -58,6 +61,12 @@ export default function Login() {
     document.body.appendChild(script);
   };
 
+  useEffect(() => {
+    const match = document.cookie.match(/(^| )auth=([^;]+)/);
+    const hasValidAuth = match !== null && match[2] !== 'deleted';
+    setLoggedIn(hasValidAuth);
+  });
+
   return (
     <Button
       variant="contained"
@@ -69,10 +78,14 @@ export default function Login() {
         </SvgIcon>
       }
       onClick={() => {
-        login();
+        if (loggedIn) {
+          router.push('/home');
+        } else {
+          login();
+        }
       }}
     >
-      Login
+      {loggedIn ? 'Home' : 'Login'}
     </Button>
   );
 }

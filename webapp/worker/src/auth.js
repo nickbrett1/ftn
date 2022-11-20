@@ -33,13 +33,47 @@ const tokenExchange = async (url, env, code) => {
   return resp;
 };
 
+const revokeGoogleToken = async (token) => {
+  const body = new URLSearchParams();
+  body.append('token', token);
+
+  const response = await fetch('https://oauth2.googleapis.com/revoke', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  });
+
+  if (response.status !== 200) {
+    const resp = await response.text();
+    throw new Error(resp);
+  }
+};
+
+const isUserAllowed = async (token, env) => {
+  const url = new URL('https://www.googleapis.com/oauth2/v2/userinfo');
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const userInfo = await response.json();
+  if (userInfo.error) throw new Error(userInfo.error);
+  if (!userInfo.verified_email) return false;
+
+  return (await env.KV.get(userInfo.email)) === 'allowed';
+};
+
 // Convert each uint8 (range 0 to 255) to string in base 36 (0 to 9, a to z)
 const generateAuth = () =>
   [...crypto.getRandomValues(new Uint8Array(20))]
     .map((m) => m.toString(36).padStart(2, '0'))
     .join('');
 
-const auth = async (url, env) => {
+const HTML_TEMPORARY_REDIRECT = 302;
+export const processAuth = async (url, env) => {
   const error = url.searchParams.get('error');
   if (error !== null) throw new Error(error);
 
@@ -47,27 +81,47 @@ const auth = async (url, env) => {
   if (code === null) throw new Error('No code found in auth response');
 
   const tokenResponse = await tokenExchange(url, env, code);
-  console.log(
-    '🚀 ~ file: auth.js ~ line 50 ~ auth ~ tokenResponse',
-    tokenResponse
-  );
 
-  // Check if user is allowed - call userInfo API for email address
-  // https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
+  const allowed = await isUserAllowed(tokenResponse.access_token, env);
+  if (!allowed) {
+    return Response.redirect(
+      `${generateUriBase(url, env)}/preview`,
+      HTML_TEMPORARY_REDIRECT
+    );
+  }
 
   const newAuth = generateAuth();
   const expiration = new Date(Date.now() + tokenResponse.expires_in * 1000);
 
-  // save NewUath, tokenResponse.access_token, Math.floor(expiration / 1000) to KV
-  // store refresh token in KV
+  await env.KV.put(newAuth, tokenResponse.access_token, {
+    expiration: Math.floor(expiration / 1000),
+  });
 
-  const HTML_TEMPORARY_REDIRECT = 302;
   return new Response('', {
     status: HTML_TEMPORARY_REDIRECT,
     headers: {
       Location: `${generateUriBase(url, env)}/home`,
-      'Set-Cookie': `auth=${newAuth}; expires=${expiration.toUTCString()}; secure; HttpOnly;`,
+      'Set-Cookie': `auth=${newAuth}; expires=${expiration.toUTCString()}; secure;`,
     },
   });
 };
-export default auth;
+
+export const processLogout = async (
+  url,
+  env,
+  context,
+  token,
+  authCookieKey
+) => {
+  context.waitUntil(
+    Promise.allSettled([revokeGoogleToken(token), env.KV.delete(authCookieKey)])
+  );
+
+  return new Response('', {
+    status: HTML_TEMPORARY_REDIRECT,
+    headers: {
+      Location: `${generateUriBase(url, env)}`,
+      'Set-Cookie': `auth=deleted; secure;`,
+    },
+  });
+};
