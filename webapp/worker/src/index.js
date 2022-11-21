@@ -1,6 +1,6 @@
 /**
  * British Empire Management Cloudflare Worker entry point
- * Lots taken from https://apiumhub.com/tech-blog-barcelona/implementing-google-oauth-google-api-cloudflare-workers/
+ * Lots copied from https://apiumhub.com/tech-blog-barcelona/implementing-google-oauth-google-api-cloudflare-workers/
  */
 import Toucan from 'toucan-js';
 import generateCSP from './generate-csp';
