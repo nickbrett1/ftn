@@ -72,7 +72,7 @@ const generateAuth = () =>
     .map((m) => m.toString(36).padStart(2, '0'))
     .join('');
 
-const HTML_TEMPORARY_REDIRECT = 302;
+const HTML_TEMPORARY_REDIRECT = 307;
 export const processAuth = async (url, env) => {
   const error = url.searchParams.get('error');
   if (error !== null) throw new Error(error);
