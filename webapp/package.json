@@ -47,7 +47,7 @@
   "devDependencies": {
     "@emotion/eslint-plugin": "^11.10.0",
     "@next/bundle-analyzer": "^13.0.6",
-    "@next/eslint-plugin-next": "^13.0.5",
+    "@next/eslint-plugin-next": "^13.0.6",
     "@sentry/browser": "^7.22.0",
     "@sentry/cli": "^2.10.0",
     "@size-limit/preset-app": "^8.1.0",
