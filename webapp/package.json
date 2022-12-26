@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@emotion/eslint-plugin": "^11.10.0",
-    "@next/bundle-analyzer": "^13.1.0",
+    "@next/bundle-analyzer": "^13.1.1",
     "@next/eslint-plugin-next": "^13.1.0",
     "@sentry/browser": "^7.28.0",
     "@sentry/cli": "^2.11.0",
