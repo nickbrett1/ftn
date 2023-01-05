@@ -1,4 +1,3 @@
-import testkit from 'sentry-testkit/dist/jestMock';
 import { createServer } from 'miragejs';
 import index from '../worker/src/index';
 
