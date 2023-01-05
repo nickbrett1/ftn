@@ -132,7 +132,6 @@ describe('Worker routing', () => {
         {}
       )
     ).rejects.toThrow(Error);
-    console.log('testkit.reports()', testkit.reports());
   });
 
   it('redirect to preview on no access token', async () => {});
