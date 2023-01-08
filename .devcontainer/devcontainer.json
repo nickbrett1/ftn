@@ -50,7 +50,8 @@
 		"mhutchie.git-graph",
 		"fudd.toggle-zen-mode",
 		"yatki.vscode-surround",
-		"mutantdino.resourcemonitor"
+		"mutantdino.resourcemonitor",
+		"CircleCI.circleci"
 	]
     }
   },
