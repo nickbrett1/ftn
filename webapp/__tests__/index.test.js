@@ -1,7 +1,15 @@
 import { createServer } from 'miragejs';
+import { Toucan } from 'toucan-js';
+import * as Sentry from '@sentry/browser';
 import index from '../worker/src/index';
 
+const sentryTestkit = require('sentry-testkit');
+
+const { testkit, sentryTransport } = sentryTestkit();
+
+jest.genMockFromModule('toucan-js');
 jest.mock('toucan-js');
+Toucan.mockImplementation(() => Sentry);
 
 const DEFAULT_ENV = {
   SENTRY_ENVIRONMENT: 'development',
@@ -10,27 +18,37 @@ const DEFAULT_ENV = {
   KV: { get: () => 'allowed', put: () => {}, delete: () => {} },
 };
 
-let server;
-beforeEach(() => {
-  server = createServer({
-    routes() {
-      this.get('https://bemstudios.uk', () => ({}));
-      this.get('https://bemstudios.uk/home', (x) => x);
-      this.post('https://oauth2.googleapis.com/token', () => ({ json: '' }));
-      this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => ({
-        verified_email: true,
-      }));
-      this.post('https://oauth2.googleapis.com/revoke');
-    },
-  });
-
-  global.Response.redirect = jest.fn(() => ({ body: '' }));
-});
-afterEach(() => {
-  server.shutdown();
-});
+const DUMMY_DSN = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
 describe('Worker routing', () => {
+  beforeAll(() => {
+    Sentry.init({
+      dsn: DUMMY_DSN,
+      transport: sentryTransport,
+    });
+  });
+
+  let server;
+  beforeEach(() => {
+    testkit.reset();
+    server = createServer({
+      routes() {
+        this.get('https://bemstudios.uk', () => ({}));
+        this.get('https://bemstudios.uk/home', (x) => x);
+        this.post('https://oauth2.googleapis.com/token', () => ({ json: '' }));
+        this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => ({
+          verified_email: true,
+        }));
+        this.post('https://oauth2.googleapis.com/revoke');
+      },
+    });
+
+    global.Response.redirect = jest.fn(() => ({ body: '' }));
+  });
+  afterEach(() => {
+    server.shutdown();
+  });
+
   it('creates CSP', async () => {
     const response = await index.fetch(
       new Request('https://bemstudios.uk'),
@@ -131,6 +149,8 @@ describe('Worker routing', () => {
         {}
       )
     ).rejects.toThrow(Error);
+
+    expect(testkit.reports()).toHaveLength(1);
   });
 
   it('redirect to preview on no access token', async () => {});
