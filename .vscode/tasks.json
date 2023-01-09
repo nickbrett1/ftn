@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["next dev", "test jest"],
+      "dependsOn": ["next dev", "test jest", "live-server"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -54,6 +54,18 @@
       "presentation": {
         "group": "build-group"
       }
+    },
+    {
+      "label": "live-server",
+      "type": "process",
+      "command": "${input:startServer}"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "startServer",
+      "type": "command",
+      "command": "extension.liveServer.goOnline"
     }
   ]
 }
