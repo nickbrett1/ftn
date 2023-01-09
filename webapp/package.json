@@ -9,7 +9,7 @@
     "directory": "webapp"
   },
   "scripts": {
-    "analyze": "ANALYZE=true next build",
+    "analyze": "ANALYZE=true doppler run --command='next build'",
     "build": "next build",
     "dev": "concurrently \"npm run wrangler-dev\" \"doppler run --command='npx next dev'\"",
     "wrangler-dev": "doppler run --command='wrangler dev --config ./worker/wrangler.toml  --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT --port 8787 --local --host localhost:3000 --persist ./worker/src/index.js'",
@@ -71,16 +71,8 @@
     "jest-junit": "^15.0.0",
     "miragejs": "^0.1.46",
     "next-router-mock": "^0.8.0",
-    "progress-webpack-plugin": "^1.0.16",
     "sentry-testkit": "^5.0.5",
     "typescript": "^4.9.4",
-    "webpack": "^5.75.0",
-    "webpack-bundle-analyzer": "^4.7.0",
-    "webpack-bundle-tracker": "^1.8.0",
-    "webpack-cli": "^5.0.1",
-    "webpack-dev-server": "^4.11.1",
-    "webpack-merge": "^5.8.0",
-    "webpack-sentry-plugin": "^2.0.3",
     "wrangler": "^2.6.2"
   }
 }

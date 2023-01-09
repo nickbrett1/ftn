@@ -45,6 +45,8 @@ if (process.env.ANALYZE) {
     enabled: true,
   });
 
+  sentryWebpackPluginOptions.dryRun = true;
+
   module.exports = withSentryConfig(
     withBundleAnalyzer(moduleExports),
     sentryWebpackPluginOptions
