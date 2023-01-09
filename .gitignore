@@ -68,6 +68,7 @@ webapp/staticfiles
 webapp/assets/
 webapp/webpack-stats.json
 webapp/public/workbox-*.js*
+webapp/public/worker*.js*
 webapp/public/sw.js*
 .DS_Store
 *.pem
