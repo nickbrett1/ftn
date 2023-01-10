@@ -13,18 +13,28 @@ const generateCSP = (env) => {
   add('connect-src', 'https://fonts.googleapis.com');
   add('connect-src', 'https://fonts.gstatic.com');
   add('connect-src', 'https://cloudflareinsights.com');
+  add('connect-src', 'https://static.cloudflareinsights.com');
   add('connect-src', 'https://accounts.google.com/gsi/');
   add('font-src', 'https://fonts.gstatic.com');
+  add('font-src', 'data:');
   add('frame-src', 'https://accounts.google.com/gsi/');
   add('img-src', `'self'`);
+  add(
+    'img-src',
+    'https://raw.githubusercontent.com/dotansimha/graphql-yoga/main/website/public/favicon.ico'
+  );
   add('manifest-src', `'self'`);
   add('script-src', `'unsafe-eval'`, { devOnly: true });
+  add('script-src', 'https://unpkg.com/@graphql-yoga', { devOnly: true });
   add('script-src-elem', `'self'`);
   add('script-src-elem', 'https://static.cloudflareinsights.com');
   add('script-src-elem', 'https://accounts.google.com/gsi/client');
+  add('script-src-elem', 'https://unpkg.com/@graphql-yoga/', { devOnly: true });
+  add('script-src-elem', `'unsafe-inline'`, { devOnly: true });
   add('style-src', `'unsafe-inline'`);
   add('style-src', 'https://fonts.googleapis.com');
   add('style-src', 'https://accounts.google.com/gsi/style');
+  add('style-src', 'https://unpkg.com/@graphql-yoga/');
   add('worker-src', `'self'`);
 
   return Object.entries(policy)
