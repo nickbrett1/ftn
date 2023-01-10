@@ -12,7 +12,7 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react'],
+  plugins: ['react', 'react-hooks'],
   rules: {
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'implicit-arrow-linebreak': 'off',
@@ -30,5 +30,7 @@ module.exports = {
       'error',
       { declaration: false, assignment: false },
     ],
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
   },
 };
