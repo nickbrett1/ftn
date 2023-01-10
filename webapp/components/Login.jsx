@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
 import Button from '@mui/material/Button';
 import { nanoid } from 'nanoid';
@@ -61,6 +61,14 @@ export default function Login() {
     document.body.appendChild(script);
   };
 
+  const onClick = useCallback(() => {
+    if (loggedIn) {
+      router.push('/home');
+    } else {
+      login();
+    }
+  }, [loggedIn]);
+
   useEffect(() => {
     const match = document.cookie.match(/(^| )auth=([^;]+)/);
     const hasValidAuth = match !== null && match[2] !== 'deleted';
@@ -77,13 +85,7 @@ export default function Login() {
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
         </SvgIcon>
       }
-      onClick={() => {
-        if (loggedIn) {
-          router.push('/home');
-        } else {
-          login();
-        }
-      }}
+      onClick={onClick}
     >
       {loggedIn ? 'Home' : 'Login'}
     </Button>
