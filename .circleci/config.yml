@@ -38,7 +38,7 @@ jobs:
             - .next
             - worker/dist
             - public
-  
+
   code_test:
     docker:
       - image: cimg/node:18.8.0
@@ -77,6 +77,9 @@ jobs:
     steps:
       - browser-tools/install-chrome
       - browser-tools/install-chromedriver
+      - run:
+          name: Remove chromedriver license file to ensure directory is empty for checkout
+          command: rm LICENSE.chromedriver
       - checkout
       - restore_cache:
           name: Restore node_modules and next cache
