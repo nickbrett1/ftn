@@ -4,17 +4,24 @@
  */
 import { Toucan } from 'toucan-js';
 import { createYoga } from 'graphql-yoga';
+import { GraphQLSchema, GraphQLString, GraphQLObjectType } from 'graphql';
 import generateCSP from './generate-csp';
 import { processAuth, processLogout } from './auth';
 import generateUriBase from './uri';
 
-const { buildSchema } = require('graphql');
-
-const schema = buildSchema(`
-		type Query {
-			hello: String
-		}
-	`);
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve() {
+          return 'world';
+        },
+      },
+    },
+  }),
+});
 
 const yoga = createYoga({
   schema,
