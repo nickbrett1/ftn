@@ -4,19 +4,64 @@
  */
 import { Toucan } from 'toucan-js';
 import { createYoga } from 'graphql-yoga';
-import { GraphQLSchema, GraphQLString, GraphQLObjectType } from 'graphql';
+import {
+  GraphQLSchema,
+  GraphQLString,
+  GraphQLObjectType,
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLInputObjectType,
+  GraphQLList,
+  GraphQLInt,
+} from 'graphql';
 import generateCSP from './generate-csp';
 import { processAuth, processLogout } from './auth';
 import generateUriBase from './uri';
+
+const graphQLItem = new GraphQLNonNull(
+  new GraphQLObjectType({
+    name: 'items',
+    fields: {
+      id: { type: new GraphQLNonNull(GraphQLID) },
+      name: { type: new GraphQLNonNull(GraphQLString) },
+      value: { type: new GraphQLNonNull(GraphQLString) },
+    },
+  })
+);
+
+const graphQLCategory = new GraphQLNonNull(
+  new GraphQLObjectType({
+    name: 'Category',
+    fields: {
+      id: { type: new GraphQLNonNull(GraphQLID) },
+      name: { type: new GraphQLNonNull(GraphQLString) },
+      items: { type: new GraphQLList(graphQLItem) },
+    },
+  })
+);
+
+const graphQLInfo = new GraphQLObjectType({
+  name: 'Info',
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    owner: { type: new GraphQLNonNull(GraphQLString) },
+    categories: { type: new GraphQLList(graphQLCategory) },
+  },
+});
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
-      hello: {
-        type: GraphQLString,
+      info: {
+        type: graphQLInfo,
+        inputFields: { owner: { type: GraphQLString } },
         resolve() {
-          return 'world';
+          return {
+            id: 1,
+            owner: 'me',
+            categories: [],
+          };
         },
       },
     },
