@@ -9,5 +9,19 @@
   "remote.localPortHost": "allInterfaces",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "task.allowAutomaticTasks": "on",
-  "git.requireGitUserConfig": true
+  "git.requireGitUserConfig": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.options": {
+    "extensions": [".js", ".jsx", ".md", ".mdx", ".ts", ".tsx"]
+  },
+  "eslint.validate": [
+    "markdown",
+    "mdx",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }
