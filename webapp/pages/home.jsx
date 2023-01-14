@@ -1,7 +1,14 @@
 import React from 'react';
 import { Typography, AppBar, Toolbar } from '@mui/material';
 import Head from 'next/head';
-import { useQuery } from 'urql';
+import { createClient, Provider, useQuery } from 'urql';
+
+const client = createClient({
+  url:
+    process.env.NODE_ENV === 'development'
+      ? 'http://localhost:8787/graphql'
+      : 'https://bemstudios.uk/graphql',
+});
 
 const InfoQuery = `
 	query {
@@ -29,7 +36,7 @@ export default function Home() {
   const { data, fetching, error } = result;
 
   return (
-    <>
+    <Provider value={client}>
       <Head>
         <meta
           name="description"
@@ -47,6 +54,6 @@ export default function Home() {
       {fetching && <div>Loading...</div>}
       {error && <div>Error: {error.message}</div>}
       {data && <div>Info: {JSON.stringify(data)}</div>}
-    </>
+    </Provider>
   );
 }
