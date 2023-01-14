@@ -16,14 +16,6 @@ const client = createClient({
     process.env.NODE_ENV === 'development'
       ? 'http://localhost:8787/graphql'
       : 'https://bemstudios.uk/graphql',
-  fetchOptions: () => {
-    const token = document.cookie.match(/(^| )auth=([^;]+)/);
-    console.log('🚀 ~ file: _app.jsx:20 ~ token', token);
-
-    return {
-      headers: { authorization: token ? `Bearer ${token}` : '' },
-    };
-  },
 });
 
 export default function MyApp({
