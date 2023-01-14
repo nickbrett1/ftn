@@ -2,7 +2,6 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 
 const typeDefinitions = `
 	type Query {
-		hello: String!
 		info(owner: String): Info!
 	}
 
@@ -28,10 +27,48 @@ const typeDefinitions = `
 const resolvers = {
   Query: {
     info: (parent, args, context, info) => {
-      console.log('args.owners', args.owner);
       return {
         id: 1,
         owner: 'nick.brett1@gmail.com',
+        categories: [
+          {
+            id: 2,
+            name: 'Travel',
+            items: [
+              {
+                id: 3,
+                name: 'Passport',
+                value: '123456789',
+              },
+              {
+                id: 4,
+                name: 'BA Executive Club',
+                value: '123456789',
+              },
+              {
+                id: 5,
+                name: 'Known Traveler Number',
+                value: '123456789',
+              },
+            ],
+          },
+          {
+            id: 6,
+            name: 'Personal',
+            items: [
+              {
+                id: 7,
+                name: 'National Insurance Number',
+                value: '123456789',
+              },
+              {
+                id: 8,
+                name: 'Social Security Number',
+                value: '123456789',
+              },
+            ],
+          },
+        ],
       };
     },
   },
