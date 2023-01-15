@@ -17,8 +17,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 
 import { useQuery } from 'urql';
-// eslint-disable-next-line import/no-absolute-path, import/no-unresolved, import/no-useless-path-segments
-import unionjack from './/../public/images/unionjack-small.webp';
+import unionjack from '../public/images/unionjack-small.webp';
 
 const InfoQuery = `
 	query {
