@@ -23,7 +23,6 @@ export default function Login() {
     });
 
     const state = nanoid();
-    sessionStorage.setItem('state', state);
 
     const clientRef = window.google.accounts.oauth2.initCodeClient({
       client_id: GOOGLE_CLIENT_ID,
@@ -37,6 +36,9 @@ export default function Login() {
       callback: (response) => {
         if (response.error) {
           throw new Error('Failed to initCodeClient', response.error);
+        }
+        if (response.state !== state) {
+          throw new Error('State mismatch');
         }
       },
     });
