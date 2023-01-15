@@ -1,5 +1,12 @@
 import React from 'react';
-import { Typography, AppBar, Toolbar } from '@mui/material';
+import {
+  Typography,
+  AppBar,
+  Toolbar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 import Head from 'next/head';
 import { createClient, Provider, useQuery } from 'urql';
 
@@ -28,12 +35,29 @@ const InfoQuery = `
 	}
 `;
 
+const render = () => (
+  <div>
+    <Accordion>
+      <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
+        <Typography>Accordion 1</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Typography>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+          malesuada lacus ex, sit amet blandit leo lobortis eget.
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
+  </div>
+);
+
 export default function Home() {
   const [result] = useQuery({
     query: InfoQuery,
   });
 
   const { data, fetching, error } = result;
+  if (error) throw new Error(error.message);
 
   return (
     <Provider value={client}>
@@ -52,8 +76,7 @@ export default function Home() {
         </Toolbar>
       </AppBar>
       {fetching && <div>Loading...</div>}
-      {error && <div>Error: {error.message}</div>}
-      {data && <div>Info: {JSON.stringify(data)}</div>}
+      {data && render()}
     </Provider>
   );
 }
