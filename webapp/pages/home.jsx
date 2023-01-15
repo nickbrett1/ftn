@@ -11,6 +11,8 @@ import {
   CardActionArea,
   CardMedia,
 } from '@mui/material';
+import SvgIcon from '@mui/material/SvgIcon';
+
 import Head from 'next/head';
 import { createClient, Provider, useQuery } from 'urql';
 
@@ -42,9 +44,21 @@ const InfoQuery = `
 const render = (data) => (
   <div>
     {data.info.categories.map((category) => (
-      <Accordion key={category.id}>
-        <AccordionSummary>
-          <Typography>{category.name}</Typography>
+      <Accordion key={category.id} defaultExpanded="true">
+        <AccordionSummary
+          expandIcon={
+            <SvgIcon
+              height="48"
+              viewBox="0 0 48 48"
+              width="48"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M33.17 17.17l-9.17 9.17-9.17-9.17-2.83 2.83 12 12 12-12z" />
+              <path d="M0 0h48v48h-48z" fill="none" />
+            </SvgIcon>
+          }
+        >
+          <Typography variant="h4">{category.name}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Card sx={{ maxWidth: 345 }}>
