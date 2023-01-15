@@ -14,14 +14,11 @@ import {
 import SvgIcon from '@mui/material/SvgIcon';
 
 import Head from 'next/head';
-import { createClient, Provider, useQuery } from 'urql';
+import Image from 'next/image';
 
-const client = createClient({
-  url:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8787/graphql'
-      : 'https://bemstudios.uk/graphql',
-});
+import { useQuery } from 'urql';
+// eslint-disable-next-line import/no-absolute-path, import/no-unresolved, import/no-useless-path-segments
+import unionjack from './/../public/images/unionjack-small.webp';
 
 const InfoQuery = `
 	query {
@@ -44,7 +41,7 @@ const InfoQuery = `
 const render = (data) => (
   <div>
     {data.info.categories.map((category) => (
-      <Accordion key={category.id} defaultExpanded="true">
+      <Accordion key={category.id} defaultExpanded>
         <AccordionSummary
           expandIcon={
             <SvgIcon
@@ -64,12 +61,23 @@ const render = (data) => (
           {category.items.map((item) => (
             <Card sx={{ maxWidth: 345 }} key={item.id}>
               <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="/images/unionjack-extra-small.webp"
-                  alt="green iguana"
-                />
+                <CardMedia>
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  >
+                    <Image
+                      src={unionjack}
+                      alt="Union Jack"
+                      width={500}
+                      height={500}
+                      priority
+                    />
+                  </div>
+                </CardMedia>
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="div">
                     {item.name}
@@ -96,7 +104,7 @@ export default function Home() {
   if (error) throw new Error(error.message);
 
   return (
-    <Provider value={client}>
+    <>
       <Head>
         <meta
           name="description"
@@ -113,6 +121,6 @@ export default function Home() {
       </AppBar>
       {fetching && <div>Loading...</div>}
       {data && render(data)}
-    </Provider>
+    </>
   );
 }
