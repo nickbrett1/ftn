@@ -44,6 +44,11 @@ export default {
         }
         case '/home':
         case '/logout': {
+          if (env.SENTRY_ENVIRONMENT === 'staging') {
+            // Skip auth for staging
+            response = await fetch(request);
+            break;
+          }
           const cookies = request.headers.get('cookie');
           if (!cookies) {
             response = Response.redirect(
