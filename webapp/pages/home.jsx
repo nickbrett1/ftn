@@ -6,6 +6,10 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Card,
+  CardContent,
+  CardActionArea,
+  CardMedia,
 } from '@mui/material';
 import Head from 'next/head';
 import { createClient, Provider, useQuery } from 'urql';
@@ -35,19 +39,36 @@ const InfoQuery = `
 	}
 `;
 
-const render = () => (
+const render = (data) => (
   <div>
-    <Accordion>
-      <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
-        <Typography>Accordion 1</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Typography>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-          malesuada lacus ex, sit amet blandit leo lobortis eget.
-        </Typography>
-      </AccordionDetails>
-    </Accordion>
+    {data.info.categories.map((category) => (
+      <Accordion key={category.id}>
+        <AccordionSummary>
+          <Typography>{category.name}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Card sx={{ maxWidth: 345 }}>
+            <CardActionArea>
+              <CardMedia
+                component="img"
+                height="140"
+                image="/images/unionjack-extra-small.webp"
+                alt="green iguana"
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  Lizard
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lizards are a widespread group of squamate reptiles, with over
+                  6,000 species, ranging
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </AccordionDetails>
+      </Accordion>
+    ))}
   </div>
 );
 
@@ -76,7 +97,7 @@ export default function Home() {
         </Toolbar>
       </AppBar>
       {fetching && <div>Loading...</div>}
-      {data && render()}
+      {data && render(data)}
     </Provider>
   );
 }
