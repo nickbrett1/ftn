@@ -23,5 +23,6 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "mdx.experimentalLanguageServer": true
 }
