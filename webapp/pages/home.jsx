@@ -61,25 +61,26 @@ const render = (data) => (
           <Typography variant="h4">{category.name}</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Card sx={{ maxWidth: 345 }}>
-            <CardActionArea>
-              <CardMedia
-                component="img"
-                height="140"
-                image="/images/unionjack-extra-small.webp"
-                alt="green iguana"
-              />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  Lizard
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Lizards are a widespread group of squamate reptiles, with over
-                  6,000 species, ranging
-                </Typography>
-              </CardContent>
-            </CardActionArea>
-          </Card>
+          {category.items.map((item) => (
+            <Card sx={{ maxWidth: 345 }} key={item.id}>
+              <CardActionArea>
+                <CardMedia
+                  component="img"
+                  height="140"
+                  image="/images/unionjack-extra-small.webp"
+                  alt="green iguana"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {item.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.value}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          ))}
         </AccordionDetails>
       </Accordion>
     ))}
