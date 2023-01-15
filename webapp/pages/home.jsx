@@ -41,8 +41,6 @@ const InfoQuery = `
 	}
 `;
 
-const deadcode = 0;
-
 const render = (data) => (
   <div>
     {data.info.categories.map((category) => (
