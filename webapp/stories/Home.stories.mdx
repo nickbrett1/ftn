@@ -4,8 +4,10 @@ import Home from '../pages/home';
 
 <Meta title="Home" component={Home} />
 
-export const Template = (args) => <Home {...args} />;
+export function Template() {
+  return <Home />;
+}
 
-<Story name="Default" args={{}}>
+<Story name="FirstStory" args={{}}>
   {Template.bind({})}
 </Story>
