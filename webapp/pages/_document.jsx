@@ -22,13 +22,6 @@ export default class MyDocument extends Document {
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
           />
-          <link
-            rel="preload"
-            as="image"
-            href="../images/unionjack-extra-small.webp"
-            type="image/webp"
-          />
-
           <meta name="emotion-insertion-point" content="" />
           {this.props.emotionStyleTags}
         </Head>
