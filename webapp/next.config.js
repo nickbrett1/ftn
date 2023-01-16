@@ -26,6 +26,8 @@ const moduleExports = withPWA({
   reactStrictMode: true,
   experimental: {
     runtime: 'experimental-edge',
+    legacyBrowsers: false,
+    browsersListForSwc: true,
   },
 });
 
