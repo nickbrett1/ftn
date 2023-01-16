@@ -5,18 +5,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { CacheProvider } from '@emotion/react';
 import Head from 'next/head';
 import React from 'react';
-import { createClient, Provider } from 'urql';
 
 import createEmotionCache from '../mui/createEmotionCache';
 import theme from '../mui/theme';
 
 const clientSideEmotionCache = createEmotionCache();
-const client = createClient({
-  url:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8787/graphql'
-      : 'https://bemstudios.uk/graphql',
-});
 
 export default function MyApp({
   Component,
@@ -30,9 +23,7 @@ export default function MyApp({
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Provider value={client}>
-          <Component {...pageProps} />
-        </Provider>
+        <Component {...pageProps} />
       </ThemeProvider>
     </CacheProvider>
   );
