@@ -17,7 +17,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useQuery } from 'urql';
 
-import unionjack from '../public/images/unionjack-small.webp';
+import unionjack from '../public/images/unionjack-extra-small.webp';
 
 const InfoQuery = `
 	query {
@@ -71,8 +71,8 @@ const render = (data) => (
                     <Image
                       src={unionjack}
                       alt="Union Jack"
-                      width={500}
-                      height={500}
+                      width={600}
+                      height={800}
                       priority
                     />
                   </div>
