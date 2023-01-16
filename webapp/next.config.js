@@ -24,7 +24,6 @@ const moduleExports = withPWA({
     emotion: true,
   },
   reactStrictMode: true,
-  images: { unoptimized: true },
 });
 
 const sentryWebpackPluginOptions = {
