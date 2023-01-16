@@ -66,6 +66,7 @@ const render = (data) => (
                     alt="Union Jack"
                     width={600}
                     height={800}
+                    layout="responsive"
                     priority
                     loading="eager"
                   />
