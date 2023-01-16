@@ -74,7 +74,6 @@ const render = (data) => (
                       width={600}
                       height={800}
                       priority
-                      placeholder="blur"
                       loading="eager"
                     />
                   </div>
@@ -125,3 +124,7 @@ export default function Home() {
     </>
   );
 }
+
+export const config = {
+  runtime: 'experimental-edge',
+};

@@ -22,3 +22,7 @@ export default function FiveHundred() {
     </>
   );
 }
+
+export const config = {
+  runtime: 'experimental-edge',
+};
