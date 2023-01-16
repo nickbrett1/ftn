@@ -25,7 +25,7 @@ export default class MyDocument extends Document {
           <link
             rel="preload"
             as="image"
-            href="../public/images/unionjack-extra-small.webp"
+            href="../images/unionjack-extra-small.webp"
             type="image/webp"
           />
 
