@@ -24,6 +24,9 @@ const moduleExports = withPWA({
     emotion: true,
   },
   reactStrictMode: true,
+  experimental: {
+    runtime: 'experimental-edge',
+  },
 });
 
 const sentryWebpackPluginOptions = {

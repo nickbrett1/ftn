@@ -124,7 +124,3 @@ export default function Home() {
     </>
   );
 }
-
-export const config = {
-  runtime: 'experimental-edge',
-};

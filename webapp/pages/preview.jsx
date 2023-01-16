@@ -22,7 +22,3 @@ export default function NoJs() {
     </>
   );
 }
-
-export const config = {
-  runtime: 'experimental-edge',
-};
