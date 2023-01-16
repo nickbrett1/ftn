@@ -23,6 +23,7 @@ const generateCSP = (env) => {
     'img-src',
     'https://raw.githubusercontent.com/dotansimha/graphql-yoga/main/website/public/favicon.ico'
   );
+  add('img-src', 'data:');
   add('manifest-src', `'self'`);
   add('script-src', `'unsafe-eval'`, { devOnly: true });
   add('script-src', 'https://unpkg.com/@graphql-yoga', { devOnly: true });
