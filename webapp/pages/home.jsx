@@ -74,6 +74,8 @@ const render = (data) => (
                       width={600}
                       height={800}
                       priority
+                      placeholder="blur"
+                      loading="eager"
                     />
                   </div>
                 </CardMedia>
