@@ -116,10 +116,6 @@ jobs:
       - attach_workspace:
           at: webapp
       - run:
-          name: Export site
-          command: |
-            cd webapp && npm run export
-      - run:
           name: Create release and send sourcemaps to Sentry
           command: |
             cd webapp
@@ -133,7 +129,7 @@ jobs:
       - run:
           name: Deploying to Cloudflare
           command: |
-            cd webapp && npm run deploy
+            cd webapp && npx @cloudflare/next-on-pages --experimental-minify
 
 workflows:
   build_test_deploy:
