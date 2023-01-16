@@ -41,7 +41,3 @@ export default function LandingFrame() {
     </>
   );
 }
-
-export const config = {
-  runtime: 'experimental-edge',
-};

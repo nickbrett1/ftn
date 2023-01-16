@@ -23,7 +23,3 @@ export default function FourOhFour() {
     </>
   );
 }
-
-export const config = {
-  runtime: 'experimental-edge',
-};
