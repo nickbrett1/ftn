@@ -61,22 +61,14 @@ const render = (data) => (
             <Card sx={{ maxWidth: 345 }} key={item.id}>
               <CardActionArea>
                 <CardMedia>
-                  <div
-                    style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  >
-                    <Image
-                      src={unionjack}
-                      alt="Union Jack"
-                      width={600}
-                      height={800}
-                      priority
-                      loading="eager"
-                    />
-                  </div>
+                  <Image
+                    src={unionjack}
+                    alt="Union Jack"
+                    width={600}
+                    height={800}
+                    priority
+                    loading="eager"
+                  />
                 </CardMedia>
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="div">
