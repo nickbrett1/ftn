@@ -57,7 +57,7 @@
     "@emotion/eslint-plugin": "^11.10.0",
     "@next/bundle-analyzer": "^13.1.2",
     "@next/eslint-plugin-next": "^13.1.2",
-    "@sentry/browser": "^7.31.0",
+    "@sentry/browser": "^7.31.1",
     "@storybook/addon-actions": "^6.5.15",
     "@storybook/addon-docs": "^6.5.15",
     "@storybook/addon-essentials": "^6.5.15",
