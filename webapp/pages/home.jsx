@@ -69,7 +69,6 @@ const render = (data) => (
                     layout="responsive"
                     priority
                     loading="eager"
-                    placeholder="blur"
                   />
                 </CardMedia>
                 <CardContent>
