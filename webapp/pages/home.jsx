@@ -16,6 +16,7 @@ import SvgIcon from '@mui/material/SvgIcon';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useQuery } from 'urql';
+import { withUrqlClient } from 'next-urql';
 
 import unionjack from '../public/images/unionjack-extra-small.webp';
 
@@ -89,7 +90,7 @@ const render = (data) => (
   </div>
 );
 
-export default function Home() {
+function Home() {
   const [result] = useQuery({
     query: InfoQuery,
   });
@@ -118,3 +119,14 @@ export default function Home() {
     </>
   );
 }
+
+export default withUrqlClient(
+  () => ({
+    url:
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'staging'
+        ? 'http://localhost:8787/graphql'
+        : 'https://bemstudios.uk/graphql',
+  }),
+  { ssr: true }
+)(Home);
