@@ -4,7 +4,7 @@ import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '../mui/createEmotionCache';
 import theme from '../mui/theme';
 
-export default class MyDocument extends Document {
+class MyDocument extends Document {
   render() {
     return (
       <Html lang="en">
@@ -91,3 +91,5 @@ MyDocument.getInitialProps = async (ctx) => {
     emotionStyleTags,
   };
 };
+
+export default MyDocument;
