@@ -29,6 +29,17 @@ const moduleExports = withPWA({
     legacyBrowsers: false,
     browsersListForSwc: true,
   },
+  webpack: (config, { webpack }) => {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        __SENTRY_DEBUG__: false,
+        __SENTRY_TRACING__: false,
+      })
+    );
+
+    // return the modified config
+    return config;
+  },
 });
 
 const sentryWebpackPluginOptions = {
