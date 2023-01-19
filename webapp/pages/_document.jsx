@@ -1,6 +1,9 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 import React from 'react';
-import '@fontsource/roboto';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '../mui/createEmotionCache';
 import theme from '../mui/theme';
