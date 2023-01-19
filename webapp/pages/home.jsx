@@ -68,8 +68,7 @@ const render = (data) => (
                     width={600}
                     height={800}
                     layout="responsive"
-                    priority
-                    loading="eager"
+                    loading="lazy"
                     placeholder="blur"
                   />
                 </CardMedia>
