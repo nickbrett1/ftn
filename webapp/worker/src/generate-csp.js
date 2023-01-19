@@ -18,6 +18,7 @@ const generateCSP = (env) => {
   add('connect-src', 'https://accounts.google.com/gsi/');
   add('font-src', 'https://fonts.gstatic.com');
   add('font-src', 'data:');
+  add('font-src', `'self'`);
   add('frame-src', 'https://accounts.google.com/gsi/');
   add('img-src', `'self'`);
   add(
