@@ -1,5 +1,6 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 import React from 'react';
+import '@fontsource/roboto';
 import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '../mui/createEmotionCache';
 import theme from '../mui/theme';
@@ -18,10 +19,6 @@ class MyDocument extends Document {
           <link rel="icon" type="image/svg+xml" href="/icons/square-flag.svg" />
           <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="stylesheet preconnect"
-            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-          />
           <meta name="emotion-insertion-point" content="" />
           {this.props.emotionStyleTags}
         </Head>
