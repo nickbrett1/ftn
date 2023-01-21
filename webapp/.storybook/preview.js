@@ -33,6 +33,7 @@ export const decorators = [
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
   controls: {
+    expanders: true, // Adds the description and default columns to the controls table
     matchers: {
       color: /(background|color)$/i,
       date: /Date$/,
