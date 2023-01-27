@@ -38,7 +38,7 @@
     "@fontsource/roboto": "^4.5.8",
     "@graphql-tools/schema": "^9.0.14",
     "@mui/material": "^5.11.6",
-    "@sentry/nextjs": "^7.33.0",
+    "@sentry/nextjs": "^7.34.0",
     "graphql": "^16.6.0",
     "graphql-tools": "^8.3.16",
     "graphql-yoga": "^3.4.0",
