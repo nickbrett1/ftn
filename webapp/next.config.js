@@ -24,6 +24,7 @@ const moduleExports = withPWA({
   experimental: {
     runtime: 'experimental-edge',
     legacyBrowsers: false,
+    browsersListForSwc: true,
   },
   webpack: (config, { webpack }) => {
     config.plugins.push(
