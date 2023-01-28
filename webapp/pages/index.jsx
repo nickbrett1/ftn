@@ -5,7 +5,7 @@ import Login from '../components/Login';
 
 const Background = styled.div`
   width: 100vw;
-  height: 100vh;
+  height: 100%;
   background-image: url(/images/unionjack-extra-large.webp);
   position: absolute;
   background-repeat: no-repeat;
