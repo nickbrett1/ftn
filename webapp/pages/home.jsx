@@ -40,6 +40,7 @@ const render = (data) => (
         <Image
           width={600}
           height={800}
+          layout="fixed"
           src={unionjack}
           alt="Sunset in the mountains"
         />
