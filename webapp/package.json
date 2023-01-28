@@ -31,7 +31,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@emotion/react": "^11.10.5",
     "@graphql-tools/schema": "^9.0.13",
     "@sentry/nextjs": "^7.31.1",
     "graphql": "^16.6.0",
