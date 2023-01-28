@@ -67,11 +67,9 @@ function Home() {
         <title>British Empire Management</title>
       </Head>
       <nav className="flex flex-wrap items-center justify-between bg-stone-800 p-4">
-        <div className="mr-6 flex flex-shrink-0 items-center text-white">
-          <span className="text-xl font-semibold tracking-tight">
-            British Empire Management : Home
-          </span>
-        </div>
+        <p className="text-xl font-semibold tracking-tight text-white">
+          British Empire Management : Home
+        </p>
       </nav>
       {fetching && <div>Loading...</div>}
       {data && render(data)}
