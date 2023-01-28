@@ -37,7 +37,8 @@ const render = (data) => (
         </div>
         <Image
           class="w-full"
-          width="600px"
+          width="100%"
+          height="100%"
           src={unionjack}
           alt="Sunset in the mountains"
         />
