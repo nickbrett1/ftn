@@ -35,7 +35,12 @@ const render = (data) => (
         <div className="px-6 py-4">
           <div className="mb-2 text-xl font-bold">{category.name}</div>
         </div>
-        <Image class="w-full" src={unionjack} alt="Sunset in the mountains" />
+        <Image
+          class="w-full"
+          width="600px"
+          src={unionjack}
+          alt="Sunset in the mountains"
+        />
       </div>
     ))}
   </div>
