@@ -20,9 +20,6 @@ const moduleExports = withPWA({
     // for more information.
     hideSourceMaps: true,
   },
-  compiler: {
-    emotion: true,
-  },
   reactStrictMode: true,
   experimental: {
     runtime: 'experimental-edge',
