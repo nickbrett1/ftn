@@ -118,7 +118,7 @@ jobs:
       - run:
           name: Convert Next.js to Cloudflare Pages
           command: |
-            cd webapp npx @cloudflare/next-on-pages --experimental-minify
+            cd webapp && npx @cloudflare/next-on-pages --experimental-minify
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
