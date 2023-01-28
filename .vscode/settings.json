@@ -23,5 +23,10 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "css.customData": [".vscode/tailwindcss.json"],
+  "sonarlint.connectedMode.project": {
+    "connectionId": "bem",
+    "projectKey": "nickbrett1_bem"
+  }
 }

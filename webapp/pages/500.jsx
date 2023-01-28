@@ -1,6 +1,5 @@
 import React from 'react';
 import Head from 'next/head';
-import { Box, Typography } from '@mui/material';
 
 export default function FiveHundred() {
   return (
@@ -9,16 +8,11 @@ export default function FiveHundred() {
         <meta name="description" content="Internal Error" />
         <title>Something Went Wrong</title>
       </Head>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <Typography variant="h2">Something Went Wrong</Typography>
-      </Box>
+      <div className="flex h-screen bg-black text-8xl text-white">
+        <div className="m-auto">
+          <h1>Something Went Wrong</h1>
+        </div>
+      </div>
     </>
   );
 }

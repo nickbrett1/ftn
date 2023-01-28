@@ -1,6 +1,5 @@
 import React from 'react';
 import Head from 'next/head';
-import { Box, Typography } from '@mui/material';
 
 export default function NoJs() {
   return (
@@ -9,16 +8,11 @@ export default function NoJs() {
         <meta name="description" content="Preview of Site" />
         <title>Preview</title>
       </Head>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <Typography variant="h2">Preview</Typography>
-      </Box>
+      <div className="flex h-screen bg-black text-8xl text-white">
+        <div className="m-auto">
+          <h1>Preview</h1>
+        </div>
+      </div>
     </>
   );
 }

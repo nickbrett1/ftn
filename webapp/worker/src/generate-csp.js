@@ -10,7 +10,7 @@ const generateCSP = (env) => {
   add('default-src', `'none'`);
   add('connect-src', `'self'`);
   add('connect-src', 'https://*.ingest.sentry.io');
-  add('connect-src', 'https://sentry.io');
+  add('connect-src', 'https://sentry.io/');
   add('connect-src', 'https://fonts.googleapis.com');
   add('connect-src', 'https://fonts.gstatic.com');
   add('connect-src', 'https://cloudflareinsights.com');
@@ -27,6 +27,8 @@ const generateCSP = (env) => {
   );
   add('img-src', 'data:');
   add('manifest-src', `'self'`);
+  add('media-src', `'self'`);
+  add('media-src', 'https://ssl.gstatic.com');
   add('script-src', `'unsafe-eval'`, { devOnly: true });
   add('script-src', 'https://unpkg.com/@graphql-yoga', { devOnly: true });
   add('script-src-elem', `'self'`);
