@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Login from '../components/Login';
 
 const Background = styled.div`
-  width: 100%;
+  width: 2914px;
   height: 100%;
   background-image: url(/images/unionjack-extra-large.webp);
   background-size: cover;
@@ -13,15 +13,19 @@ const Background = styled.div`
 
   @media screen and (max-width: 1536px) {
     background-image: url(/images/unionjack-large.webp);
+    width: 1536px;
   }
   @media screen and (max-width: 1200px) {
     background-image: url(/images/unionjack-medium.webp);
+    width: 1200px;
   }
   @media screen and (max-width: 900px) {
     background-image: url(/images/unionjack-small.webp);
+    width: 900px;
   }
   @media screen and (max-width: 600px) {
     background-image: url(/images/unionjack-extra-small.webp);
+    width: 600px;
   }
 `;
 
