@@ -17,7 +17,7 @@ class MyDocument extends Document {
           <meta name="emotion-insertion-point" content="" />
           {this.props.emotionStyleTags}
         </Head>
-        <body>
+        <body className="bg-black">
           <Main />
           <NextScript />
         </body>
