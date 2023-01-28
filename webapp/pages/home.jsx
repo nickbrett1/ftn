@@ -36,7 +36,6 @@ const render = (data) => (
           <div className="mb-2 text-xl font-bold">{category.name}</div>
         </div>
         <Image
-          class="w-full"
           width="600px"
           height="800px"
           src={unionjack}
