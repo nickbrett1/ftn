@@ -22,7 +22,12 @@ export default function LandingFrame() {
           <Login />
         </div>
       </nav>
-      <Image src={background} layout="responsive" priority />
+      <Image
+        src={background}
+        alt="Union Jack Background"
+        layout="responsive"
+        priority
+      />
     </div>
   );
 }

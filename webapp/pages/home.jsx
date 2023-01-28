@@ -33,11 +33,13 @@ const render = (data) => (
         className="max-w-sm overflow-hidden rounded shadow-lg"
       >
         <div className="px-6 py-4">
-          <div className="mb-2 text-xl font-bold">{category.name}</div>
+          <div className="mb-2 text-xl font-bold text-white">
+            {category.name}
+          </div>
         </div>
         <Image
-          width="600px"
-          height="800px"
+          width={600}
+          height={800}
           src={unionjack}
           alt="Sunset in the mountains"
         />
