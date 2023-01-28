@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import Login from '../components/Login';
 
 const Background = styled.div`
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-image: url(/images/unionjack-extra-large.webp);
   position: absolute;
   background-repeat: no-repeat;
