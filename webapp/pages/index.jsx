@@ -9,6 +9,7 @@ const Background = styled.div`
   background-image: url(/images/unionjack-extra-large.webp);
   position: absolute;
   background-repeat: no-repeat;
+  object-fit: cover;
 
   @media screen and (max-width: 1536px) {
     background-image: url(/images/unionjack-large.webp);
