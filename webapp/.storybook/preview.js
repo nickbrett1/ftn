@@ -1,12 +1,6 @@
-import { ThemeProvider } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
-import theme from '../mui/theme';
 import { createClient, Provider } from 'urql';
 import * as NextImage from 'next/image';
+import '../app/globals.css';
 
 const client = createClient({ url: 'http://localhost:8787/graphql' });
 
@@ -21,22 +15,21 @@ Object.defineProperty(NextImage, 'default', {
 
 export const decorators = [
   (Story) => (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Provider value={client}>
-        <Story />
-      </Provider>
-    </ThemeProvider>
+    <Provider value={client}>
+      <Story />
+    </Provider>
   ),
 ];
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
   controls: {
-    expanders: true, // Adds the description and default columns to the controls table
     matchers: {
       color: /(background|color)$/i,
       date: /Date$/,
     },
+  },
+  previewTabs: {
+    'storybook/docs/panel': { index: -1 },
   },
 };
