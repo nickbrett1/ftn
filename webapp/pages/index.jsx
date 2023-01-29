@@ -28,6 +28,7 @@ export default function LandingFrame() {
         layout="responsive"
         fill="true"
         priority
+        unoptimized
       />
     </div>
   );
