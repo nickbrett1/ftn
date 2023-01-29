@@ -76,13 +76,9 @@ function Home() {
   );
 }
 
-export default withUrqlClient(
-  () => ({
-    url:
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'staging'
-        ? 'http://localhost:8787/graphql'
-        : 'https://bemstudios.uk/graphql',
-  }),
-  { ssr: true }
-)(Home);
+export default withUrqlClient(() => ({
+  url:
+    process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'staging'
+      ? 'http://localhost:8787/graphql'
+      : 'https://bemstudios.uk/graphql',
+}))(Home);
