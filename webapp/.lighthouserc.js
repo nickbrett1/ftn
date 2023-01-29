@@ -14,9 +14,6 @@ module.exports = {
     },
     assert: {
       preset: 'lighthouse:recommended',
-      assertions: {
-        'uses-responsive-images': 'off',
-      },
     },
   },
 };
