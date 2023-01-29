@@ -14,7 +14,7 @@ export default function LandingFrame() {
         <title>British Empire Management</title>
       </Head>
       <nav className="flex flex-wrap items-center bg-stone-800 p-3">
-        <p className="whitespace-nowrap pr-3 text-2xl tracking-tight text-white">
+        <p className="whitespace-nowrap py-1 pr-3 text-2xl tracking-tight text-white">
           British Empire Management
         </p>
         <div className="mr-0 ml-auto">
