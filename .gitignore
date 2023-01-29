@@ -85,6 +85,7 @@ webapp/coverage
 .env
 webapp/worker/.wrangler/state/kv/KV/*
 !webapp/worker/.wrangler/state/kv/KV/nick.brett1@gmail.com
+webapp/.vercel
 
 # Cloudflare workers stuff
 webapp/workers/out
