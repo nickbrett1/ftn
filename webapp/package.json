@@ -16,7 +16,7 @@
     "wrangler-staging": "wrangler dev --port 8787 --local --host localhost:3000 ./worker/src/index.js --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:staging ",
     "export": "next export",
     "start": "next start",
-    "staging": "doppler run --command='concurrently \"npm run wrangler-staging\" \"next start\"'",
+    "staging": "NODE_ENV=test doppler run --command='concurrently \"npm run wrangler-staging\" \"next start\"'",
     "test-staging": "doppler run --command='jest --coverage --passWithNoTests --runInBand --ci --reporters=jest-junit --reporters=default'",
     "test-dev": "doppler run --command='jest --watchAll --passWithNoTests --coverage'",
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
