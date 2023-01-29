@@ -7,7 +7,7 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
-  buildExcludes: [/\.next/],
+  buildExcludes: [/\.next/, /pages/],
 });
 
 const moduleExports = withPWA({
