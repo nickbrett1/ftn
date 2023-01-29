@@ -1,11 +1,9 @@
 import React from 'react';
 
 import Head from 'next/head';
-import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
 import { useQuery } from 'urql';
 import { withUrqlClient } from 'next-urql';
-
-import unionjack from '../public/images/unionjack-extra-small.webp';
 
 const InfoQuery = `
 	query {
@@ -37,12 +35,11 @@ const render = (data) => (
             {category.name}
           </div>
         </div>
-        <Image
+        <CldImage
           width={600}
           height={800}
-          layout="responsive"
-          src={unionjack}
-          alt="Sunset in the mountains"
+          src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
+          alt="Test Image"
         />
       </div>
     ))}

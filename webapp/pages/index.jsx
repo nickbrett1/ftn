@@ -1,8 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
 import Login from '../components/Login';
-import background from '../public/images/unionjack-extra-large.webp';
 
 export default function LandingFrame() {
   return (
@@ -22,13 +21,14 @@ export default function LandingFrame() {
           <Login />
         </div>
       </nav>
-      <Image
-        src={background}
+      <CldImage
+        width="1536"
+        height="2048"
+        src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
         alt="Union Jack Background"
         layout="responsive"
         fill="true"
         priority
-        unoptimized
       />
     </div>
   );

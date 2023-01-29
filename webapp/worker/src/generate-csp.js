@@ -16,6 +16,7 @@ const generateCSP = (env) => {
   add('connect-src', 'https://cloudflareinsights.com');
   add('connect-src', 'https://static.cloudflareinsights.com');
   add('connect-src', 'https://accounts.google.com/gsi/');
+  add('connect-src', 'https://res.cloudinary.com');
   add('font-src', 'https://fonts.gstatic.com');
   add('font-src', 'data:');
   add('font-src', `'self'`);
@@ -26,6 +27,7 @@ const generateCSP = (env) => {
     'https://raw.githubusercontent.com/dotansimha/graphql-yoga/main/website/public/favicon.ico'
   );
   add('img-src', 'data:');
+  add('img-src', 'https://res.cloudinary.com');
   add('manifest-src', `'self'`);
   add('media-src', `'self'`);
   add('media-src', 'https://ssl.gstatic.com');
