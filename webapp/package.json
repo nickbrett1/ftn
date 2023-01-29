@@ -22,7 +22,7 @@
     "lighthouse-staging": "lhci autorun --config=./.lighthouserc.js",
     "lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.js",
     "wrangler-sourcemaps": "npx wrangler publish ./worker/src/index.js --dry-run --outdir out/worker --route bemstudios.uk",
-    "deploy": "concurrently \"npx wrangler pages publish .vercel/output --commit-dirty=true --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --config ./worker/wrangler.toml --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT \"",
+    "deploy": "concurrently \"npx wrangler pages publish .vercel/output/static --commit-dirty=true --project-name=bem\" \"npx wrangler publish ./worker/src/index.js --config ./worker/wrangler.toml --var GOOGLE_CLIENT_ID:$GOOGLE_CLIENT_ID --var GOOGLE_CLIENT_SECRET:$GOOGLE_CLIENT_SECRET --var SENTRY_BACKEND_DSN:$SENTRY_BACKEND_DSN --var SENTRY_RELEASE:$SENTRY_RELEASE --var SENTRY_ENVIRONMENT:$SENTRY_ENVIRONMENT \"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "next lint"
