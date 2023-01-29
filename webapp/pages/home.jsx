@@ -38,6 +38,7 @@ const render = (data) => (
         <CldImage
           width={600}
           height={800}
+          layout="responsive"
           src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
           alt="Test Image"
         />
