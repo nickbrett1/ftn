@@ -76,7 +76,7 @@ export default function Login() {
     <button
       type="button"
       onClick={onClick}
-      className="flex rounded border border-blue-900 bg-blue-800 px-3 py-2 uppercase text-white hover:border-white hover:bg-blue-900"
+      className="flex rounded border border-blue-900 bg-blue-800 px-2 py-2 uppercase text-white hover:border-white hover:bg-blue-900"
     >
       <svg
         className="align-vertical mr-3 h-5 w-5 fill-current"
