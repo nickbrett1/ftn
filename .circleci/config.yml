@@ -89,6 +89,7 @@ jobs:
             - node-v6-
       - attach_workspace:
           at: webapp
+      - doppler/install
       - run:
           name: Run Lighthouse checks
           command: |
