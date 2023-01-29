@@ -78,7 +78,7 @@ function Home() {
 
 export default withUrqlClient(() => ({
   url:
-    process.env.NODE_ENV === 'development' || process.env.APP_ENV === 'staging'
+    process.env.NODE_ENV === 'development' || process.env.STAGING === 'true'
       ? 'http://localhost:8787/graphql'
       : 'https://bemstudios.uk/graphql',
 }))(Home);
