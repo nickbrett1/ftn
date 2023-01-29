@@ -26,9 +26,6 @@ const moduleExports = withPWA({
     legacyBrowsers: false,
     browsersListForSwc: true,
   },
-  images: {
-    unoptimized: true,
-  },
   webpack: (config, { webpack }) => {
     config.plugins.push(
       new webpack.DefinePlugin({
