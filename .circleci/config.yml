@@ -119,6 +119,9 @@ jobs:
           name: Convert Next.js to Cloudflare Pages
           command: |
             cd webapp && npx @cloudflare/next-on-pages --experimental-minify
+            mkdir public 
+            mv .vercel/output/static/* public
+            mv public .vercel/output/static
       - run:
           name: Create release and send sourcemaps to Sentry
           command: |
