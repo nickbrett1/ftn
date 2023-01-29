@@ -65,8 +65,8 @@ function Home() {
         />
         <title>British Empire Management</title>
       </Head>
-      <nav className="flex flex-wrap items-center justify-between bg-stone-800 p-4">
-        <p className="text-xl font-semibold tracking-tight text-white">
+      <nav className="flex flex-wrap items-center bg-stone-800 p-3">
+        <p className="py-1 pr-3 text-2xl tracking-tight text-white">
           British Empire Management : Home
         </p>
       </nav>
