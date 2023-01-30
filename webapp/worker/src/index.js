@@ -97,6 +97,10 @@ export default {
 
       response = new Response(response.body, response);
       response.headers.append('Content-Security-Policy', generateCSP(env));
+      response.headers.append(
+        'Link',
+        '<https://res.cloudinary.com>; rel=preconnect;'
+      );
       return response;
     } catch (err) {
       sentry.captureException(err);
