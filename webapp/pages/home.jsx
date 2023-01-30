@@ -41,7 +41,7 @@ const render = (data) => (
           layout="responsive"
           src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
           alt="Test Image"
-          loading="lazy"
+          priority
         />
       </div>
     ))}
