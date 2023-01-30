@@ -78,4 +78,5 @@ function Home() {
 
 export default withUrqlClient(() => ({
   url: '/graphql',
+  ssr: true,
 }))(Home);

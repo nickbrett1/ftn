@@ -17,7 +17,7 @@ class MyDocument extends Document {
           <link
             rel="preconnect"
             href="https://res.cloudinary.com"
-            crossOrigin
+            crossOrigin="true"
           />
           <meta name="emotion-insertion-point" content="" />
           {this.props.emotionStyleTags}
