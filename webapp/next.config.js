@@ -19,12 +19,15 @@ const moduleExports = withPWA({
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#use-hidden-source-map
     // for more information.
     hideSourceMaps: true,
+    autoInstrumentServerFunctions: false,
   },
   reactStrictMode: true,
   experimental: {
     runtime: 'experimental-edge',
     legacyBrowsers: false,
-    browsersListForSwc: true,
+  },
+  images: {
+    domains: ['res.cloudinary.com'],
   },
   webpack: (config, { webpack }) => {
     config.plugins.push(

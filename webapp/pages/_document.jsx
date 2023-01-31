@@ -20,9 +20,8 @@ class MyDocument extends Document {
             crossOrigin="true"
           />
           <meta name="emotion-insertion-point" content="" />
-          {this.props.emotionStyleTags}
         </Head>
-        <body className="bg-black">
+        <body>
           <Main />
           <NextScript />
         </body>
