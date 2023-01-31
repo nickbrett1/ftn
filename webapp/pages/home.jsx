@@ -40,8 +40,9 @@ const render = (data) => (
           height="800"
           src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
           alt="Test Image"
-          rel="preload"
           loading="eager"
+          layout="responsive"
+          priority
         />
       </div>
     ))}
@@ -64,6 +65,11 @@ function Home() {
           content="Home automation and collaborative family household management"
         />
         <title>British Empire Management</title>
+        <link
+          rel="preload"
+          as="image"
+          href="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
+        />
       </Head>
       <nav className="flex flex-wrap items-center bg-stone-800 p-3">
         <p className="py-1 pr-3 text-2xl tracking-tight text-white">
