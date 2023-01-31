@@ -21,6 +21,7 @@ const moduleExports = withPWA({
     hideSourceMaps: true,
     autoInstrumentServerFunctions: false,
   },
+  compress: true,
   reactStrictMode: true,
   experimental: {
     runtime: 'experimental-edge',
