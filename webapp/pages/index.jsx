@@ -28,6 +28,8 @@ export default function LandingFrame() {
         alt="Union Jack Background"
         rel="preload"
         loading="eager"
+        layout="responsive"
+        priority
       />
     </div>
   );
