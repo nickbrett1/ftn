@@ -27,9 +27,6 @@ const moduleExports = withPWA({
     runtime: 'experimental-edge',
     legacyBrowsers: false,
   },
-  images: {
-    domains: ['res.cloudinary.com'],
-  },
   webpack: (config, { webpack }) => {
     config.plugins.push(
       new webpack.DefinePlugin({
