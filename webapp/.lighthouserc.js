@@ -14,6 +14,9 @@ module.exports = {
     },
     assert: {
       preset: 'lighthouse:recommended',
+      assertions: {
+        'uses-text-compression': 'off', // Disabled until this is fixed: https://github.com/vercel/next.js/issues/43106
+      },
     },
   },
 };
