@@ -77,6 +77,9 @@ function Home() {
 }
 
 export default withUrqlClient(() => ({
-  url: '/graphql',
+  url:
+    process.env.NODE_ENV === 'development'
+      ? 'http://localhost:8787/graphql' // Required to force storybook to correct URL
+      : '/graphql',
   ssr: true,
 }))(Home);
