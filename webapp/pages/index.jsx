@@ -26,8 +26,8 @@ export default function LandingFrame() {
         height="2048"
         src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
         alt="Union Jack Background"
-        layout="responsive"
         rel="preload"
+        loading="eager"
       />
     </div>
   );
