@@ -38,7 +38,7 @@ const render = (data) => (
         <CldImage
           width="600"
           height="800"
-          src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1675011729/unionjack.webp"
+          src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1674964539/cld-sample-4.jpg"
           alt="Test Image"
           loading="eager"
           layout="responsive"
