@@ -36,8 +36,8 @@ const render = (data) => (
           </div>
         </div>
         <CldImage
-          width="600"
-          height="800"
+          width="800"
+          height="600"
           src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1674964539/cld-sample-4.jpg"
           alt="Test Image"
           loading="eager"
