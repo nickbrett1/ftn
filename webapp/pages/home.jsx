@@ -35,15 +35,6 @@ const render = (data) => (
             {category.name}
           </div>
         </div>
-        <CldImage
-          width="800"
-          height="600"
-          src="https://res.cloudinary.com/dnwdr35zg/image/upload/v1674964539/cld-sample-4.jpg"
-          alt="Test Image"
-          loading="eager"
-          layout="responsive"
-          priority
-        />
       </div>
     ))}
   </div>

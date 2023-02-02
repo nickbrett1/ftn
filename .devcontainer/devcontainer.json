@@ -54,7 +54,8 @@
 		"CircleCI.circleci",
 		"bungcip.better-toml",
 		"unifiedjs.vscode-mdx",
-		"bradlc.vscode-tailwindcss"
+		"bradlc.vscode-tailwindcss",
+		"moalamri.inline-fold"
 	]
     }
   },
