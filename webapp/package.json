@@ -32,7 +32,7 @@
   "license": "ISC",
   "dependencies": {
     "@graphql-tools/schema": "^9.0.15",
-    "@sentry/nextjs": "^7.35.0",
+    "@sentry/nextjs": "^7.36.0",
     "graphql": "^16.6.0",
     "graphql-tools": "^8.3.17",
     "graphql-yoga": "^3.5.1",
