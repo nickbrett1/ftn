@@ -1,13 +1,23 @@
 import { Meta, Story } from '@storybook/addon-docs';
 
-import Home from '../pages/home';
+import Preview from '../app/preview/page';
 
-<Meta title="Home" component={Home} />
+<Meta title="Preview" component={Preview} />
 
-export function Template() {
-  return <Home />;
+export function Template(args) {
+  // eslint-disable-next-line react/jsx-props-no-spreading
+  return <Preview {...args} />;
 }
 
-<Story name="FirstStory" args={{}}>
+<Story name="Default" args={{}}>
   {Template.bind({})}
 </Story>
+
+export default {
+  title: 'Preview',
+  component: Preview,
+};
+
+export const Default = {
+  args: {},
+};

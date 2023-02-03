@@ -1,8 +1,14 @@
 import React from 'react';
 
 import Head from 'next/head';
-import { useQuery } from 'urql';
-import { withUrqlClient } from 'next-urql';
+import { createClient } from '@urql/core';
+
+const client = createClient({
+  url:
+    process.env.NODE_ENV === 'development'
+      ? 'http://localhost:8787/graphql' // Required to force storybook to correct URL
+      : '/graphql',
+});
 
 const InfoQuery = `
 	query {
@@ -39,10 +45,8 @@ const render = (data) => (
   </div>
 );
 
-function Home() {
-  const [result] = useQuery({
-    query: InfoQuery,
-  });
+const Home = async () => {
+  const result = await client.query(InfoQuery).toPromise();
 
   const { data, fetching, error } = result;
   if (error) throw new Error(error.message);
@@ -70,12 +74,6 @@ function Home() {
       {data && render(data)}
     </>
   );
-}
+};
 
-export default withUrqlClient(() => ({
-  url:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8787/graphql' // Required to force storybook to correct URL
-      : '/graphql',
-  ssr: true,
-}))(Home);
+export default Home;
