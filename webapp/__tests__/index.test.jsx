@@ -1,11 +1,13 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import LandingFrame from '../pages';
+import App from '../app/page';
 
-describe('LandingFrame', () => {
-  it('renders the landing frame', () => {
-    render(<LandingFrame />);
+
+
+describe('App', () => {
+  it('renders the app', () => {
+    render(<App />);
 
     expect(screen.getByText('British Empire Management')).toBeInTheDocument();
   });

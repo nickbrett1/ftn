@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { nanoid } from 'nanoid';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [client, setClient] = useState(null);

@@ -1,2 +1,3 @@
-// eslint-disable-next-line global-require
-jest.mock('next/router', () => require('next-router-mock'));
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn().mockReturnValue({ push: jest.fn() }),
+}));

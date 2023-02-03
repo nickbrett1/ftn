@@ -8,8 +8,8 @@ export default function NoJs() {
         <meta name="description" content="No JavaScript enabled" />
         <title>JavaScript Not Enabled</title>
       </Head>
-      <div className="flex h-screen bg-black text-8xl text-white">
-        <div className="m-auto">
+      <div className="m-auto flex h-screen bg-black text-8xl text-white">
+        <div className="m-auto text-center">
           <h1>Javascript Not Enabled</h1>
         </div>
       </div>
