@@ -1,37 +1,9 @@
 import React from 'react';
-
 import Head from 'next/head';
-import { createClient } from '@urql/core';
-
-const client = createClient({
-  url:
-    process.env.NODE_ENV === 'development' ||
-    process.env.NEXT_PUBLIC_APP_ENV === 'staging'
-      ? 'http://localhost:8787/graphql'
-      : 'https://bemstudios.uk/graphql',
-});
-
-const InfoQuery = `
-	query {
-		info {
-			id
-			owner
-			categories {
-				id
-				name
-				items {
-					id
-					name
-					value
-				}
-			}
-		}
-	}
-`;
 
 const render = (data) => (
   <div>
-    {data.info.categories.map((category) => (
+    {data.categories.map((category) => (
       <div
         key={category.id}
         className="max-w-sm overflow-hidden rounded shadow-lg"
@@ -47,10 +19,49 @@ const render = (data) => (
 );
 
 const Home = async () => {
-  const result = await client.query(InfoQuery).toPromise();
-
-  const { data, fetching, error } = result;
-  if (error) throw new Error(error.message);
+  const data = {
+    id: 1,
+    owner: 'nick.brett1@gmail.com',
+    categories: [
+      {
+        id: 2,
+        name: 'Travel',
+        items: [
+          {
+            id: 3,
+            name: 'Passport',
+            value: '123456789',
+          },
+          {
+            id: 4,
+            name: 'BA Executive Club',
+            value: '123456789',
+          },
+          {
+            id: 5,
+            name: 'Known Traveler Number',
+            value: '123456789',
+          },
+        ],
+      },
+      {
+        id: 6,
+        name: 'Personal',
+        items: [
+          {
+            id: 7,
+            name: 'National Insurance Number',
+            value: '123456789',
+          },
+          {
+            id: 8,
+            name: 'Social Security Number',
+            value: '123456789',
+          },
+        ],
+      },
+    ],
+  };
 
   return (
     <>
@@ -71,7 +82,6 @@ const Home = async () => {
           British Empire Management : Home
         </p>
       </nav>
-      {fetching && <div>Loading...</div>}
       {data && render(data)}
     </>
   );

@@ -3,15 +3,9 @@
  * Lots copied from https://apiumhub.com/tech-blog-barcelona/implementing-google-oauth-google-api-cloudflare-workers/
  */
 import { Toucan } from 'toucan-js';
-import { createYoga } from 'graphql-yoga';
 import generateCSP from './generate-csp';
 import { processAuth, processLogout } from './auth';
 import generateUriBase from './uri';
-import schema from './schema';
-
-const yoga = createYoga({
-  schema,
-});
 
 export default {
   async fetch(request, env, context) {
@@ -34,10 +28,6 @@ export default {
       let response;
 
       switch (url.pathname) {
-        case '/graphql': {
-          response = await yoga.handleRequest(request, env);
-          break;
-        }
         case '/auth': {
           response = await processAuth(url, env);
           break;
