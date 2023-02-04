@@ -3,7 +3,6 @@
  * Lots copied from https://apiumhub.com/tech-blog-barcelona/implementing-google-oauth-google-api-cloudflare-workers/
  */
 import { Toucan } from 'toucan-js';
-import generateCSP from './generate-csp';
 import { processAuth, processLogout } from './auth';
 import generateUriBase from './uri';
 
@@ -86,7 +85,6 @@ export default {
       }
 
       response = new Response(response.body, response);
-      response.headers.append('Content-Security-Policy', generateCSP(env));
       response.headers.append(
         'Link',
         '<https://res.cloudinary.com>; rel=preconnect;'
