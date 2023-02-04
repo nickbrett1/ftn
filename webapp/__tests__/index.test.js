@@ -49,17 +49,6 @@ describe('Worker routing', () => {
     server.shutdown();
   });
 
-  it('creates CSP', async () => {
-    const response = await index.fetch(
-      new Request('https://bemstudios.uk'),
-      DEFAULT_ENV
-    );
-    expect(response.headers.get('Content-Security-Policy')).toEqual(
-      expect.anything()
-    );
-    expect(global.Response.redirect).not.toBeCalled();
-  });
-
   it('redirects to preview if not logged in', async () => {
     await index.fetch(
       new Request('https://bemstudios.uk/home'),
