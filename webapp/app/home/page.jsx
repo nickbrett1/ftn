@@ -5,9 +5,10 @@ import { createClient } from '@urql/core';
 
 const client = createClient({
   url:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8787/graphql' // Required to force storybook to correct URL
-      : '/graphql',
+    process.env.NODE_ENV === 'development' ||
+    process.env.NEXT_PUBLIC_APP_ENV === 'staging'
+      ? 'http://localhost:8787/graphql'
+      : 'https://bemstudios/graphql',
 });
 
 const InfoQuery = `
