@@ -16,8 +16,8 @@ export default function Page() {
       <Image
         src="/v1675011729/unionjack.webp"
         alt="Union Jack Background"
-        width={1536}
-        height={2048}
+        width="1536"
+        height="2048"
       />
     </div>
   );
