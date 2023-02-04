@@ -1,6 +1,6 @@
 {
   "name": "main",
-  "main": "pages/index.js",
+  "main": "app/pages.jsx",
   "version": "1.0.0",
   "description": "Front-end and cloudworkers for bemstudios.uk",
   "repository": {

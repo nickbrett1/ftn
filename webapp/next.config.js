@@ -24,10 +24,11 @@ const moduleExports = withPWA({
   compress: true,
   reactStrictMode: true,
   experimental: {
-    runtime: 'experimental-edge',
     legacyBrowsers: false,
     appDir: true,
+    runtime: 'experimental-edge',
   },
+
   images: {
     loader: 'cloudinary',
     path: 'https://res.cloudinary.com/dnwdr35zg/image/upload/',
