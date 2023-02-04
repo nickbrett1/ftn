@@ -84,11 +84,6 @@ export default {
           response = await fetch(request);
       }
 
-      response = new Response(response.body, response);
-      response.headers.append(
-        'Link',
-        '<https://res.cloudinary.com>; rel=preconnect;'
-      );
       return response;
     } catch (err) {
       sentry.captureException(err);
