@@ -16,6 +16,7 @@ module.exports = {
       preset: 'lighthouse:recommended',
       assertions: {
         'uses-text-compression': 'off', // Disabled until this is fixed: https://github.com/vercel/next.js/issues/43106
+        'service-worker': 'off', // Disabled until this is fixed: https://github.com/shadowwalker/next-pwa/pull/427
       },
     },
   },
