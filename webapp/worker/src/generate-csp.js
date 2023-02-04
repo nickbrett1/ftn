@@ -39,7 +39,7 @@ const generateCSP = (env) => {
   add('script-src-elem', 'https://sentry.io/api/');
   add('script-src-elem', 'https://accounts.google.com/gsi/client');
   add('script-src-elem', 'https://unpkg.com/@graphql-yoga/', { devOnly: true });
-  add('script-src-elem', `'unsafe-inline'`, { devOnly: true });
+  add('script-src-elem', `'unsafe-inline'`);
   add('style-src', `'unsafe-inline'`);
   add('style-src', `'self'`);
   add('style-src', 'https://fonts.googleapis.com');
