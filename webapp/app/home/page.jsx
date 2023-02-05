@@ -18,7 +18,7 @@ const render = (data) => (
   </div>
 );
 
-const Home = async (req) => {
+const Home = async () => {
   const data = {
     id: 1,
     owner: 'nick.brett1@gmail.com',
@@ -42,11 +42,11 @@ const Home = async (req) => {
             name: 'Known Traveler Number',
             value: '123456789',
           },
-					{ 
-						id: 6,
-						name: 'Jet Blue TrueBlue',
-						value: '123456789'
-					}
+          {
+            id: 6,
+            name: 'Jet Blue TrueBlue',
+            value: '123456789',
+          },
         ],
       },
       {
