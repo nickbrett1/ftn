@@ -18,7 +18,7 @@ const render = (data) => (
   </div>
 );
 
-const Home = async () => {
+const Home = async (req) => {
   const data = {
     id: 1,
     owner: 'nick.brett1@gmail.com',
@@ -42,11 +42,16 @@ const Home = async () => {
             name: 'Known Traveler Number',
             value: '123456789',
           },
+					{ 
+						id: 6,
+						name: 'Jet Blue TrueBlue',
+						value: '123456789'
+					}
         ],
       },
       {
         id: 6,
-        name: 'Personal',
+        name: 'Identification',
         items: [
           {
             id: 7,
@@ -56,6 +61,17 @@ const Home = async () => {
           {
             id: 8,
             name: 'Social Security Number',
+            value: '123456789',
+          },
+        ],
+      },
+      {
+        id: 9,
+        name: 'Healthcare',
+        items: [
+          {
+            id: 10,
+            name: 'Two Sigma Dental Group Number',
             value: '123456789',
           },
         ],
