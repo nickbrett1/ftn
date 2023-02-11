@@ -56,7 +56,7 @@
     "@storybook/addon-docs": "^7.0.0-beta.45",
     "@storybook/addon-essentials": "^7.0.0-beta.44",
     "@storybook/addon-interactions": "^7.0.0-beta.45",
-    "@storybook/addon-links": "^7.0.0-beta.45",
+    "@storybook/addon-links": "^7.0.0-beta.46",
     "@storybook/addon-postcss": "^2.0.0",
     "@storybook/blocks": "^7.0.0-beta.46",
     "@storybook/builder-webpack5": "^7.0.0-beta.45",
