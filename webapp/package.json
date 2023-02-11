@@ -61,7 +61,7 @@
     "@storybook/blocks": "^7.0.0-beta.46",
     "@storybook/builder-webpack5": "^7.0.0-beta.45",
     "@storybook/manager-webpack5": "^7.0.0-alpha.10",
-    "@storybook/nextjs": "^7.0.0-beta.45",
+    "@storybook/nextjs": "^7.0.0-beta.46",
     "@storybook/react": "^7.0.0-beta.45",
     "@storybook/testing-library": "^0.0.14--canary.30.5f44d14.0",
     "@testing-library/jest-dom": "^5.16.5",
