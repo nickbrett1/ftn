@@ -91,7 +91,7 @@
     "prettier": "^2.8.4",
     "prettier-plugin-tailwindcss": "^0.2.2",
     "sentry-testkit": "^5.0.5",
-    "storybook": "^7.0.0-beta.46",
+    "storybook": "^7.0.0-beta.47",
     "tailwindcss": "^3.2.6",
     "typescript": "^4.9.5",
     "vercel": "^28.15.3",
