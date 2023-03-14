@@ -50,7 +50,7 @@
     "@cloudflare/next-on-pages": "^0.3.0",
     "@next/bundle-analyzer": "^13.2.3",
     "@next/eslint-plugin-next": "^13.2.4",
-    "@sentry/browser": "^7.42.0",
+    "@sentry/browser": "^7.43.0",
     "@storybook/addon-actions": "^7.0.0-beta.63",
     "@storybook/addon-backgrounds": "^7.0.0-rc.0",
     "@storybook/addon-docs": "^7.0.0-rc.3",
