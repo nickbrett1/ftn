@@ -2,7 +2,7 @@ module.exports = {
 	ci: {
 		collect: {
 			startServerCommand: 'npm run preview',
-			startServerReadyPattern: 'Local:',
+			startServerReadyPattern: 'preview',
 			url: ['http://localhost:4173', 'http://localhost:4173/home'],
 			settings: {
 				cpuSlowdownMultiplier: 2.4,
