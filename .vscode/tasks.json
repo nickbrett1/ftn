@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["next dev", "test jest", "live-server"],
+      "dependsOn": ["svelte dev", "test vitest", "live-server"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -24,8 +24,8 @@
       "script": "dev",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "next dev",
-      "detail": "next dev",
+      "label": "svelte dev",
+      "detail": "svelte dev",
       "group": "build",
       "presentation": {
         "group": "build-group"
@@ -33,23 +33,11 @@
     },
     {
       "type": "npm",
-      "script": "test-dev",
+      "script": "test",
       "path": "webapp",
       "problemMatcher": [],
-      "label": "test jest",
-      "detail": "test jest",
-      "group": "build",
-      "presentation": {
-        "group": "build-group"
-      }
-    },
-    {
-      "type": "npm",
-      "script": "wrangler-dev",
-      "path": "webapp",
-      "problemMatcher": [],
-      "label": "wrangler-dev",
-      "detail": "wrangler-dev",
+      "label": "test vitest",
+      "detail": "test vitest",
       "group": "build",
       "presentation": {
         "group": "build-group"
