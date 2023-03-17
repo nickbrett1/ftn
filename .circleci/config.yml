@@ -23,6 +23,7 @@ jobs:
           name: Install modules
           command: |
             cd webapp && npm install
+      - doppler/install
       - run:
           name: Build app
           command: |
