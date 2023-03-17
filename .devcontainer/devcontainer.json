@@ -50,11 +50,14 @@
         "fudd.toggle-zen-mode",
         "yatki.vscode-surround",
         "mutantdino.resourcemonitor",
-        "CircleCI.circleci",
         "bungcip.better-toml",
         "unifiedjs.vscode-mdx",
         "bradlc.vscode-tailwindcss",
-        "moalamri.inline-fold"
+        "moalamri.inline-fold",
+        "svelte.svelte-vscode",
+        "ms-playwright.playwright",
+        "GraphQL.vscode-graphql-syntax",
+        "alefragnani.project-manager"
       ]
     }
   },

@@ -1,4 +1,0 @@
-# robots.txt
-
-user-agent: * 
-disallow: 

@@ -31,14 +31,11 @@ jobs:
           name: Update node_modules cache
           paths:
             - webapp/node_modules
-            - webapp/.next/cache
           key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - persist_to_workspace:
           root: webapp
           paths:
-            - .next
-            - worker/dist
-            - public
+            - .svelte-kit
 
   code_test:
     docker:
@@ -46,7 +43,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          name: Restore node_modules and next cache
+          name: Restore node_modules
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
             - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
@@ -107,7 +104,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          name: Restore node_modules and next cache
+          name: Restore node_modules
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
             - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
@@ -115,21 +112,6 @@ jobs:
             - node-v6-
       - attach_workspace:
           at: webapp
-      - run:
-          name: Convert Next.js to Cloudflare Pages
-          command: |
-            cd webapp && npx @cloudflare/next-on-pages --experimental-minify
-      - run:
-          name: Create release and send sourcemaps to Sentry
-          command: |
-            cd webapp
-            npm run wrangler-sourcemaps
-            curl -sL https://sentry.io/get-cli/ | bash
-            sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-            sentry-cli releases set-commits --auto $SENTRY_RELEASE 
-            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps --ext map --ext js ./out/worker --url-prefix '/'
-            sentry-cli releases finalize $SENTRY_RELEASE
-            sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
       - run:
           name: Deploying to Cloudflare
           command: |
