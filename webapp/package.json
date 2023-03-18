@@ -6,7 +6,7 @@
 		"dev": "doppler run --command='vite dev'",
 		"build": "doppler run --command='vite build'",
 		"preview": "doppler run --command='vite preview'",
-		"lighthouse-preview": "doppler run --command='LIGHTHOUSE_ENABLED=true && vite preview'",
+		"lighthouse": "doppler run --command='LIGHTHOUSE_ENABLED=true && vite preview'",
 		"test": "vitest --coverage",
 		"test-staging": "vitest --coverage --reporter=junit --outputFile=./reports/junit.xml",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",

@@ -1,7 +1,7 @@
 module.exports = {
 	ci: {
 		collect: {
-			startServerCommand: 'npm run lighthouse-preview',
+			startServerCommand: 'npm run lighthouse',
 			startServerReadyPattern: 'preview',
 			url: ['http://localhost:4173', 'http://localhost:4173/home'],
 			settings: {
