@@ -30,7 +30,9 @@ const config = {
 					'https://*.ingest.sentry.io',
 					'https://sentry.io/api/',
 					'https://accounts.google.com/gsi/client',
-					'ajax.cloudflare.com'
+					'ajax.cloudflare.com',
+					'unsafe-inline',
+					'strict-dynamic'
 				],
 				'worker-src': ['self']
 			}

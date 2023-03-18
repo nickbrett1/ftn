@@ -38,9 +38,6 @@ export default defineConfig({
 				display: 'standalone',
 				background_color: '#FFFFFF',
 				start_url: '/'
-			},
-			workbox: {
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
 			}
 		})
 	],
