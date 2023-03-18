@@ -38,6 +38,10 @@ export default defineConfig({
 				display: 'standalone',
 				background_color: '#FFFFFF',
 				start_url: '/'
+			},
+			workbox: {
+				// Only precache these files - html should be excluded
+				globPatterns: ['**/*.{js,css}']
 			}
 		})
 	],
