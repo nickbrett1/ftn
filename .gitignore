@@ -41,7 +41,6 @@ db.sqlite3
 db.sqlite3-journal
 
 # Project stuff:
-webapp/static
 webapp/staticfiles
 webapp/assets/
 webapp/webpack-stats.json
