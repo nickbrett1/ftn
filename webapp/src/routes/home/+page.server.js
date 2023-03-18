@@ -1,10 +1,10 @@
 import { redirect } from '@sveltejs/kit';
-import { SENTRY_ENVIRONMENT } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 const HTML_TEMPORARY_REDIRECT = 307;
 
 export async function load({ cookies, platform }) {
-	if (SENTRY_ENVIRONMENT === 'staging') {
+	if (env.LIGHTHOUSE_ENABLED === 'true') {
 		// Skip auth for staging so we can perf test the page
 		return {};
 	}
