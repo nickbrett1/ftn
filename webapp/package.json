@@ -33,7 +33,7 @@
 		"@sveltejs/kit": "^1.12.0",
 		"@testing-library/svelte": "^3.2.2",
 		"@vite-pwa/sveltekit": "^0.1.3",
-		"@vitest/coverage-c8": "^0.29.2",
+		"@vitest/coverage-c8": "^0.29.7",
 		"@zerodevx/svelte-img": "^1.2.10",
 		"autoprefixer": "^10.4.14",
 		"c8": "^7.13.0",
