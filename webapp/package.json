@@ -60,7 +60,7 @@
 	"type": "module",
 	"dependencies": {
 		"@sentry/svelte": "^7.41.0",
-		"@sentry/tracing": "^7.44.1",
+		"@sentry/tracing": "^7.44.2",
 		"graphql": "^16.6.0",
 		"nanoid": "^4.0.1"
 	}
