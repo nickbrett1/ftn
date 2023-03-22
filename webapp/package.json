@@ -45,7 +45,7 @@
 		"jsdom": "^21.1.1",
 		"miragejs": "^0.1.47",
 		"postcss": "^8.4.21",
-		"prettier": "^2.8.4",
+		"prettier": "^2.8.6",
 		"prettier-plugin-svelte": "^2.9.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
