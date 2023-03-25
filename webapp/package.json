@@ -30,7 +30,7 @@
 		"@storybook/testing-library": "^0.0.14--canary.30.5f44d14.0",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/adapter-cloudflare": "^2.2.0",
-		"@sveltejs/kit": "^1.13.0",
+		"@sveltejs/kit": "^1.14.0",
 		"@testing-library/svelte": "^3.2.2",
 		"@vite-pwa/sveltekit": "^0.2.0",
 		"@vitest/coverage-c8": "^0.29.7",
@@ -45,11 +45,11 @@
 		"jsdom": "^21.1.1",
 		"miragejs": "^0.1.47",
 		"postcss": "^8.4.21",
-		"prettier": "^2.8.6",
+		"prettier": "^2.8.7",
 		"prettier-plugin-svelte": "^2.10.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"sharp": "^0.31.3",
+		"sharp": "^0.32.0",
 		"storybook": "^7.0.0-rc.7",
 		"svelte": "^3.57.0",
 		"tailwindcss": "^3.2.7",
@@ -60,7 +60,7 @@
 	"type": "module",
 	"dependencies": {
 		"@sentry/svelte": "^7.41.0",
-		"@sentry/tracing": "^7.44.2",
+		"@sentry/tracing": "^7.45.0",
 		"graphql": "^16.6.0",
 		"nanoid": "^4.0.1"
 	}
