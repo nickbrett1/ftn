@@ -15,7 +15,7 @@
 		"build-storybook": "storybook build",
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
-		"deploy": "npx wrangler pages publish .svelte-kit/cloudflare --commit-dirty=true --project-name=bem"
+		"deploy": "npx wrangler pages publish .svelte-kit/cloudflare --commit-dirty=true --project-name=ftn"
 	},
 	"devDependencies": {
 		"@graphql-mocks/network-nock": "^0.5.0",
