@@ -7,8 +7,7 @@ export default defineConfig({
 	plugins: [
 		sveltekit(),
 		imagetools({
-			defaultDirectives: () =>
-				new URLSearchParams(`?width=120;240;360;480;720;960;1080;1920&format=avif;webp;jpg`)
+			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
 		SvelteKitPWA({
 			manifest: {
