@@ -52,6 +52,7 @@
 			Contact
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
+			aria-label="LinkedIn"
 			class="bg-white hover:bg-sky-600" target="_blank" rel="noopener noreferrer">
 			<svelte:component this={LinkedIn} />
 	</a>
