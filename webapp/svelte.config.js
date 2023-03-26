@@ -31,7 +31,8 @@ const config = {
 					'https://sentry.io/api/',
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
-					'unsafe-inline'
+					'unsafe-inline',
+					'strict-dynamic'
 				],
 				'worker-src': ['self']
 			}
