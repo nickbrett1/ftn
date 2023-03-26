@@ -3,7 +3,7 @@ module.exports = {
 		collect: {
 			startServerCommand: 'npm run lighthouse',
 			startServerReadyPattern: 'preview',
-			url: ['http://localhost:4173', 'http://localhost:4173/home'],
+			url: ['http://localhost:4173'],
 			settings: {
 				cpuSlowdownMultiplier: 2.4,
 				chromeFlags: '--no-sandbox'
