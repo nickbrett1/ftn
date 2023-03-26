@@ -26,14 +26,12 @@ const config = {
 				'object-src': ['none'],
 				'script-src': [
 					'self',
-					'https://fintechnick.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/',
 					'https://static.cloudflareinsights.com',
 					'https://*.ingest.sentry.io',
 					'https://sentry.io/api/',
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
-					'unsafe-inline',
-					'strict-dynamic'
+					'unsafe-inline'
 				],
 				'worker-src': ['self']
 			}
