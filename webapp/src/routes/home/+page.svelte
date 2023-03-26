@@ -1,17 +1,3 @@
-<head>
-	<meta
-		name="description"
-		content="Home automation and collaborative family household management"
-	/>
-	<title>British Empire Management</title>
-</head>
-
-<nav class="flex flex-wrap items-center bg-stone-800 p-3">
-	<p class="py-1 pr-3 text-2xl tracking-tight text-white">
-		British Empire Management : Home
-	</p>
-</nav>
-
 <script>
 	const data = {
     id: 1,

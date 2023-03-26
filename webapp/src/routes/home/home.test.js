@@ -9,7 +9,7 @@ describe('Home', () => {
 	it('renders', () => {
 		render(Home);
 
-		expect(screen.getByText('British Empire Management'));
+		expect(screen.getByText('Galactic Unicorn'));
 	});
 
 	it('redirects to preview if not logged in', async () => {

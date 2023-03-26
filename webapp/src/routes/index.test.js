@@ -10,6 +10,6 @@ describe('App', () => {
 	it('renders the app', () => {
 		render(App);
 
-		expect(screen.getByText('British Empire Management'));
+		expect(screen.getByText('Fintech Nick'));
 	});
 });

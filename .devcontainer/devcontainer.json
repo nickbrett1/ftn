@@ -53,7 +53,6 @@
         "bungcip.better-toml",
         "unifiedjs.vscode-mdx",
         "bradlc.vscode-tailwindcss",
-        "moalamri.inline-fold",
         "svelte.svelte-vscode",
         "ms-playwright.playwright",
         "GraphQL.vscode-graphql-syntax",
