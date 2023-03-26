@@ -40,9 +40,11 @@
 						<a href="/projects/galactic" class="block px-4 py-2">Galactic Unicorn</a>
 						<Img src={galacticunicorn} alt="Galactic Unicorn Hardward Project" class="block w-64 h-64" />
 					</div>
+					<a href="/projects/makingof" class="block px-4 py-2 hover:bg-green-800">Making Of</a>
 					<a href="/projects/chase" class="block px-4 py-2 hover:bg-green-800">Chase Monthly</a>
 					<a href="/projects/product" class="block px-4 py-2 hover:bg-green-800">Product Ideas</a>
 					<a href="/projects/driftdb" class="block px-4 py-2  hover:bg-green-800">driftdb</a>
+					<a href="/projects/blog" class="block px-4 py-2 hover:bg-green-800">Blog</a>
 					<a href="/projects/hyatt" class="block px-4 py-2  hover:bg-green-800">Hyatt Suite Checker</a>
 				</div>
 				{/if}
