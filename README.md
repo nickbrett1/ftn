@@ -1,4 +1,5 @@
 # bem
-British Empire Management Site
 
-A work in progress website to provide home automation and collaboration tools.
+Fintech Nick
+
+A work in progress developer portfolio website focused on financial technology
