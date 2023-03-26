@@ -6,7 +6,10 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		imagetools(),
+		imagetools({
+			defaultDirectives: () =>
+				new URLSearchParams(`?width=240;480;720;1024;1920&format=avif;webp;jpg`)
+		}),
 		SvelteKitPWA({
 			manifest: {
 				name: 'Fintech Nick',
