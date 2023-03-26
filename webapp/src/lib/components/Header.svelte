@@ -51,7 +51,7 @@
 		<a href="mailto:nick@fintechnick.com" class="text-white px-2 hover:text-green-300">		
 			Contact
 		</a>
-		<a href="https://www.linkedin.com/in/nick-brett-0b0b2b1b/" 
+		<a href="https://www.linkedin.com/in/nick-brett/" 
 			class="bg-white hover:bg-sky-600" target="_blank" rel="noopener noreferrer">
 			<svelte:component this={LinkedIn} />
 	</a>
