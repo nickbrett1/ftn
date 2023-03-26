@@ -7,5 +7,5 @@
 
 <div class="block">
 	<Header/>
-	<Img src={fintechgreen} alt="background" /> 
+	<Img src={fintechgreen} loading="eager" alt="background" /> 
 </div>
