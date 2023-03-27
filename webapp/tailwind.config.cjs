@@ -5,13 +5,13 @@ module.exports = {
 		extend: {
 			keyframes: {
 				example: {
-					from: { 'background-color': 'red' },
-					to: { 'background-color': 'blue' }
+					from: { opacity: 1 },
+					to: { opacity: 0 }
 				}
 			}
 		},
 		animation: {
-			example: 'example 1s ease-in-out infinite'
+			fromto: 'example 5s ease-in infinite'
 		}
 	},
 	plugins: []
