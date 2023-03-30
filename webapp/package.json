@@ -50,7 +50,7 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"sharp": "^0.32.0",
-		"storybook": "^7.0.0-rc.8",
+		"storybook": "^7.0.0-rc.10",
 		"svelte": "^3.57.0",
 		"tailwindcss": "^3.3.0",
 		"vite": "^4.2.1",
