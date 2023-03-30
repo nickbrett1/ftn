@@ -22,7 +22,7 @@
 		"@playwright/test": "^1.32.1",
 		"@sentry/vite-plugin": "^0.4.0",
 		"@storybook/addon-essentials": "^7.0.0-rc.8",
-		"@storybook/addon-interactions": "^7.0.0-rc.8",
+		"@storybook/addon-interactions": "^7.0.0-rc.10",
 		"@storybook/addon-links": "^7.0.0-rc.8",
 		"@storybook/blocks": "^7.0.0-rc.8",
 		"@storybook/svelte": "^7.0.0-rc.6",
