@@ -52,7 +52,7 @@
 		"sharp": "^0.32.0",
 		"storybook": "^7.0.0-rc.10",
 		"svelte": "^3.57.0",
-		"tailwindcss": "^3.3.0",
+		"tailwindcss": "^3.3.1",
 		"vite": "^4.2.1",
 		"vite-imagetools": "^4.0.18",
 		"vitest": "^0.29.8"
