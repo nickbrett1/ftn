@@ -7,6 +7,13 @@
 	let loggedIn = false;
 	let client = null;
 
+	let clazz;
+	export { clazz as class };
+
+	let loggedInText;
+	let loggedOutText;
+	export { loggedInText, loggedOutText };
+
 	onMount(async () => {
 		const match = document.cookie.match(/(^| )auth=([^;]+)/);
     const hasValidAuth = match !== null && match[2] !== 'deleted';
@@ -73,4 +80,4 @@
 	}
  </script>
  
- <LoginButton label={ loggedIn ? 'Home' : 'Login' } on:click={onClick} />
+ <LoginButton label={ loggedIn ? loggedInText : loggedOutText } on:click={onClick} class="${clazz}" />

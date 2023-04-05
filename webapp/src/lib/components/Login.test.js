@@ -25,7 +25,7 @@ describe('Login correctly', () => {
 			}
 		});
 
-		render(Login);
+		render(Login, { loggedInText: 'Home', loggedOutText: 'Login', class: '' });
 		const button = screen.getByText('Login');
 		button.onclick = loginSpy;
 
@@ -52,7 +52,7 @@ describe('Login correctly', () => {
 
 	it('goes to home after login', () => {
 		document.cookie = 'auth=123';
-		render(Login);
+		render(Login, { loggedInText: 'Home', loggedOutText: 'Login', class: '' });
 		act(() => {
 			fireEvent.click(screen.getByText('Home'));
 		});
