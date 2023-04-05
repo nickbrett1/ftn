@@ -39,7 +39,7 @@ describe('Login correctly', () => {
 		expect(mockedInitialize).toBeCalled();
 		expect(() => mockedInitialize.mock.calls[0][0].callback({ credential: {} })).toThrow();
 		expect(() => mockedInitCodeClient.mock.calls[0][0].callback({ error: 'error' })).toThrow();
-		expect(mockedInitCodeClient.mock.calls[0][0].redirect_uri).toBe('https://bemstudios.uk/auth');
+		expect(mockedInitCodeClient.mock.calls[0][0].redirect_uri).toBe('https://fintechnick.com/auth');
 
 		expect(mockedRequestCode).toBeCalled();
 		expect(() => screen.querySelector('script').onerror()).toThrow();
