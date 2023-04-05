@@ -1,6 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 import * as cookie from 'cookie';
-import { construct_svelte_component_dev } from 'svelte/internal';
 
 const revokeGoogleToken = async (token) => {
 	const body = new URLSearchParams();
