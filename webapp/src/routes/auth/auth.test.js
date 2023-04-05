@@ -20,8 +20,8 @@ describe('Auth', () => {
 
 		server = createServer({
 			routes() {
-				this.get('https://bemstudios.uk', () => ({}));
-				this.get('https://bemstudios.uk/home', (x) => x);
+				this.get('https://fintechnick.com', () => ({}));
+				this.get('https://fintechnick.com/home', (x) => x);
 				this.post('https://oauth2.googleapis.com/token', () => ({ json: '' }));
 				this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => ({
 					verified_email: true,
@@ -41,20 +41,20 @@ describe('Auth', () => {
 
 	it('auth allows access if in KV', async () => {
 		const res = await GET({
-			request: new Request('https://bemstudios.uk/auth?code=123'),
+			request: new Request('https://fintechnick.com/auth?code=123'),
 			platform: { env: { KV: { put: () => {} } } }
 		});
 
-		expect(res.headers.get('Location')).toEqual('https://bemstudios.uk/home');
+		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/home');
 	});
 
 	it('redirect to preview if not in database', async () => {
 		disableFauna = true;
 		const res = await GET({
-			request: new Request('https://bemstudios.uk/auth?code=123'),
+			request: new Request('https://fintechnick.com/auth?code=123'),
 			platform: { env: { KV: { put: () => {} } } }
 		});
 
-		expect(res.headers.get('Location')).toEqual('https://bemstudios.uk/preview');
+		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
 	});
 });

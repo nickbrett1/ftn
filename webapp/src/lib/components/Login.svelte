@@ -43,7 +43,7 @@
       redirect_uri:
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:5173/auth'
-          : 'https://bemstudios.uk/auth',
+          : 'https://fintechnick.com/auth',
       callback: (response) => {
         if (response.error) {
           throw new Error('Failed to initCodeClient', response.error);
