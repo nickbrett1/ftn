@@ -4,7 +4,6 @@
 	import ChevronUp from './svg/ChevronUp.svelte';
 	import LinkedIn from './svg/LinkedIn.svelte';
 	import galacticunicorn from '$lib/assets/images/galacticunicorn.png?run&width=480';
-	import Login from './Login.svelte';
 
 	let isOpen = false;
 
@@ -47,7 +46,9 @@
 					<a href="/projects/driftdb" class="block px-4 py-2  hover:bg-green-800">driftdb</a>
 					<a href="/projects/blog" class="block px-4 py-2 hover:bg-green-800">Blog</a>
 					<a href="/projects/hyatt" class="block px-4 py-2  hover:bg-green-800">Hyatt Suite Checker</a>
-					<Login class="block px-4 py-2  hover:bg-green-800 w-full text-left" loggedInText="Configure" loggedOutText="Admin"/>
+					{#await import('./Login.svelte') then Login }
+						<Login.default class="block px-4 py-2  hover:bg-green-800 w-full text-left" loggedInText="Configure" loggedOutText="Admin"/>
+					{/await}
 				</div>
 				{/if}
 			</div>	
