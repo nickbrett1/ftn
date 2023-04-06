@@ -20,7 +20,7 @@
 	"devDependencies": {
 		"@graphql-mocks/network-nock": "^0.5.0",
 		"@playwright/test": "^1.32.2",
-		"@sentry/vite-plugin": "^0.4.0",
+		"@sentry/vite-plugin": "^0.5.0",
 		"@storybook/addon-essentials": "^7.0.2",
 		"@storybook/addon-interactions": "^7.0.2",
 		"@storybook/addon-links": "^7.0.2",
@@ -59,8 +59,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@sentry/svelte": "^7.46.0",
-		"@sentry/tracing": "^7.46.0",
+		"@sentry/svelte": "^7.47.0",
+		"@sentry/tracing": "^7.47.0",
 		"graphql": "^16.6.0",
 		"nanoid": "^4.0.2",
 		"svelte-particles": "^2.9.3",
