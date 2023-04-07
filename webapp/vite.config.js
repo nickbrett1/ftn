@@ -10,7 +10,6 @@ export default defineConfig({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
 		SvelteKitPWA({
-			outDir: '.svelte-kit/generated',
 			manifest: {
 				name: 'Fintech Nick',
 				icons: [
