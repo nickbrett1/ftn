@@ -1,7 +1,4 @@
 <script>
-	import fintechgreen from '$lib/assets/images/fintechgreen.png?run';
-	import Img from '@zerodevx/svelte-img';
-  import { random } from 'nanoid';
 	import { onMount } from "svelte";
 	import { loadFull } from 'tsparticles';
 
