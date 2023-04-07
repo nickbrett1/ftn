@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from "svelte";
-	import { loadFull } from 'tsparticles';
 
 	let particlesConfig =
 {
@@ -108,7 +107,8 @@
 	};
 
 	let particlesInit = async main => {
-		await loadFull(main);
+		const module = await import("tsparticles");
+		await module.loadFull(main);
 	};
 
 </script>
