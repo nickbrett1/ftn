@@ -36,7 +36,6 @@
 		"@threlte/preprocess": "^0.0.2",
 		"@vite-pwa/sveltekit": "^0.2.1",
 		"@vitest/coverage-c8": "^0.29.8",
-		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^1.2.10",
 		"autoprefixer": "^10.4.14",
 		"c8": "^7.13.0",
