@@ -13,7 +13,10 @@ module.exports = {
 			target: 'temporary-public-storage'
 		},
 		assert: {
-			preset: 'lighthouse:recommended'
+			preset: 'lighthouse:recommended',
+			assertions: {
+				'unused-javascript': 'off' // Three.JS pulls in a lot of unused JS
+			}
 		}
 	}
 };
