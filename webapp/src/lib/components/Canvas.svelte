@@ -1,4 +1,5 @@
 <script>
+
 	import { Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
 	import { spring } from 'svelte/motion'
 	import { degToRad } from 'three/src/math/MathUtils'
