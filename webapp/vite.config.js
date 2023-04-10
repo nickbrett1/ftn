@@ -8,7 +8,7 @@ export default defineConfig({
 	plugins: [
 		sveltekit(),
 		viteCompression({
-			filter: /\.(js|css|html|svg|obj)$/
+			filter: /\.(js|mjs|json|css|html|obj)$/i
 		}),
 		imagetools({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
