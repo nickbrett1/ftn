@@ -7,7 +7,9 @@ import viteCompression from 'vite-plugin-compression';
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		viteCompression(),
+		viteCompression({
+			extensions: ['obj']
+		}),
 		imagetools({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
