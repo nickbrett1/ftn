@@ -2,6 +2,7 @@
 	import { useLoader, Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
 	import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 	import { onMount } from 'svelte'
+	import model from '$lib/assets/models/monitors.obj'
 
 	import { spring } from 'svelte/motion'
 	import { degToRad } from 'three/src/math/MathUtils'
@@ -10,7 +11,7 @@
 
 	const loader = useLoader(OBJLoader, () => new OBJLoader())
   onMount(() => {
-    loader.load('/src/lib/assets/models/monitors.obj', obj => {
+    loader.load(model, obj => {
       console.log(obj)
     })
   })
