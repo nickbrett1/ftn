@@ -2,14 +2,10 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { imagetools } from '@zerodevx/svelte-img/vite';
 import { defineConfig } from 'vitest/config';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import viteCompression from 'vite-plugin-compression2';
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		viteCompression({
-			include: /\.(js|mjs|json|css|html|obj)$/i
-		}),
 		imagetools({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
