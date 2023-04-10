@@ -1,9 +1,20 @@
 <script>
-	import { Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
+	import { useLoader, Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
+	import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+	import { onMount } from 'svelte'
+
 	import { spring } from 'svelte/motion'
 	import { degToRad } from 'three/src/math/MathUtils'
 
-	const scale = spring(1)
+	const scale = spring(1);
+
+	const loader = useLoader(OBJLoader, () => new OBJLoader())
+  onMount(() => {
+    loader.load('/src/lib/assets/models/monitors.obj', obj => {
+      console.log(obj)
+    })
+  })
+
 </script>
 
 <div class="w-full h-full">

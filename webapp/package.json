@@ -32,8 +32,6 @@
 		"@sveltejs/adapter-cloudflare": "^2.2.0",
 		"@sveltejs/kit": "^1.15.2",
 		"@testing-library/svelte": "^3.2.2",
-		"@threlte/core": "^5.0.9",
-		"@threlte/preprocess": "^0.0.2",
 		"@vite-pwa/sveltekit": "^0.2.1",
 		"@vitest/coverage-c8": "^0.29.8",
 		"@zerodevx/svelte-img": "^1.2.10",
@@ -55,19 +53,23 @@
 		"sharp": "^0.32.0",
 		"storybook": "^7.0.2",
 		"svelte": "^3.58.0",
-		"svelte-sequential-preprocessor": "^1.0.0",
+		"svelte-preprocess": "^5.0.3",
 		"tailwindcss": "^3.3.1",
-		"three": "^0.151.3",
 		"vite": "^4.2.1",
 		"vite-imagetools": "^4.0.18",
 		"vitest": "^0.29.8"
 	},
 	"type": "module",
 	"dependencies": {
+		"@threlte/core": "^5.0.9",
+		"@threlte/extras": "^4.9.3",
+		"@threlte/preprocess": "^0.0.2",
 		"cookie": "^0.5.0",
 		"graphql": "^16.6.0",
 		"nanoid": "^4.0.2",
 		"svelte-particles": "^2.9.3",
+		"svelte-sequential-preprocessor": "^1.0.0",
+		"three": "^0.151.3",
 		"tsparticles": "^2.9.3"
 	}
 }

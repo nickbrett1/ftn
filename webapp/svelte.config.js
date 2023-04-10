@@ -1,5 +1,5 @@
 import adapter from '@sveltejs/adapter-cloudflare';
-import { vitePreprocess } from '@sveltejs/kit/vite';
+import preprocess from 'svelte-preprocess';
 import seqPreprocessor from 'svelte-sequential-preprocessor';
 import { preprocessThrelte } from '@threlte/preprocess';
 
@@ -40,7 +40,7 @@ const config = {
 			}
 		}
 	},
-	preprocess: seqPreprocessor([vitePreprocess(), preprocessThrelte()])
+	preprocess: seqPreprocessor([preprocess(), preprocessThrelte()])
 };
 
 export default config;
