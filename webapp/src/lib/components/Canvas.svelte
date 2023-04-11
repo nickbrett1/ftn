@@ -13,7 +13,7 @@
 	const loader = useLoader(GLTFLoader, () => new GLTFLoader())
   onMount(() => {
 		const dracoLoader = new DRACOLoader();
-		dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/v1/decoders/' );
+		dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.6/' );
 
 		loader.setDRACOLoader( dracoLoader );
 
