@@ -1,6 +1,7 @@
 <script>
 	import { useLoader, Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+	import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 	import { onMount } from 'svelte'
 	import model from '$lib/assets/models/monitors.glb'
 
@@ -11,6 +12,11 @@
 
 	const loader = useLoader(GLTFLoader, () => new GLTFLoader())
   onMount(() => {
+		const dracoLoader = new DRACOLoader();
+		dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/v1/decoders/' );
+
+		loader.setDRACOLoader( dracoLoader );
+
     loader.load(model, obj => {
       console.log(obj)
     })
