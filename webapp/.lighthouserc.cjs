@@ -4,9 +4,11 @@ module.exports = {
 			startServerCommand: 'npm run lighthouse',
 			startServerReadyPattern: 'preview',
 			url: ['http://localhost:4173'],
+			extends: 'lighthouse:default',
 			settings: {
 				cpuSlowdownMultiplier: 2.4,
 				chromeFlags: '--no-sandbox',
+				formFactor: 'desktop',
 				screenEmulation: {
 					mobile: false, // Mobile doesn't detect binary files for compression: https://github.com/GoogleChrome/lighthouse/issues/9826
 					width: 1350,
