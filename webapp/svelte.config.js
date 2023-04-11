@@ -18,7 +18,8 @@ const config = {
 					'https://fonts.gstatic.com',
 					'https://cloudflareinsights.com',
 					'https://static.cloudflareinsights.com',
-					'https://accounts.google.com/gsi/'
+					'https://accounts.google.com/gsi/',
+					'https://www.gstatic.com'
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
 				'frame-src': ['self', 'https://accounts.google.com/gsi/'],
@@ -34,9 +35,10 @@ const config = {
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
 					'unsafe-inline',
-					'strict-dynamic'
+					'strict-dynamic',
+					'unsafe-eval'
 				],
-				'worker-src': ['self']
+				'worker-src': ['self', 'blob:']
 			}
 		}
 	},
