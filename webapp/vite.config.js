@@ -46,5 +46,8 @@ export default defineConfig({
 	ssr: {
 		noExternal: ['three', 'troika-three-text']
 	},
-	assetsInclude: ['**/*.glb']
+	assetsInclude: ['**/*.glb'],
+	build: {
+		sourcemap: true
+	}
 });
