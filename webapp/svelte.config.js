@@ -42,7 +42,14 @@ const config = {
 			}
 		}
 	},
-	preprocess: seqPreprocessor([preprocess(), preprocessThrelte()])
+	preprocess: seqPreprocessor([
+		preprocess(),
+		preprocessThrelte({
+			extensions: {
+				'three/examples/jsm/objects/GroundProjectedEnv': ['GroundProjectedEnv']
+			}
+		})
+	])
 };
 
 export default config;

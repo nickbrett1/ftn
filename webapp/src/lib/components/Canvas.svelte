@@ -1,59 +1,32 @@
 <script>
-	import { useLoader, Canvas, InteractiveObject, OrbitControls, T } from '@threlte/core'
-	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-	import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
-	import { onMount } from 'svelte'
+	import { 
+		Canvas, 
+		OrbitControls, 
+		PerspectiveCamera, 
+		AmbientLight, 
+	} from '@threlte/core'
+	import { GLTF } from '@threlte/extras'
 	import model from '$lib/assets/models/monitors.glb'
-
-	import { spring } from 'svelte/motion'
-	import { degToRad } from 'three/src/math/MathUtils'
-
-	const scale = spring(1);
-
-	const loader = useLoader(GLTFLoader, () => new GLTFLoader())
-  onMount(() => {
-		const dracoLoader = new DRACOLoader();
-		dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.6/' );
-
-		loader.setDRACOLoader( dracoLoader );
-
-    loader.load(model, obj => {
-      console.log(obj)
-    })
-  })
-
+	
 </script>
 
 <div class="w-full h-full">
 	<Canvas>
-		<T.PerspectiveCamera makeDefault position={[10, 10, 10]} fov={24}>
-			<OrbitControls maxPolarAngle={degToRad(80)} enableZoom={false} target={{ y: 0.5 }} />
-		</T.PerspectiveCamera>
 
-		<T.DirectionalLight castShadow position={[3, 10, 10]} />
-		<T.DirectionalLight position={[-3, 10, -10]} intensity={0.2} />
-		<T.AmbientLight intensity={0.2} />
+		<PerspectiveCamera position={{ x: -1500, y: 0, z: 0 }} lookAt= {{x:0, y:0, z:0 }}  fov={45}>
+			<OrbitControls autoRotate enableDamping/>
+		</PerspectiveCamera>
 
-		<!-- Cube -->
-		<T.Group scale={$scale}>
-			<T.Mesh position.y={0.5} castShadow let:ref>
-				<!-- Add interaction -->
-				<InteractiveObject
-					object={ref}
-					interactive
-					on:pointerenter={() => ($scale = 2)}
-					on:pointerleave={() => ($scale = 1)}
-				/>
+		<AmbientLight />
+		<GLTF 
+			position={{x: 0, y: 0, z:0 }} 
+			url={model} 
+			useDraco={true} 
+			interactive 
+			on:click={() => {
+				console.log('user clicked')
+			}} 
+		/>
 
-				<T.BoxGeometry />
-				<T.MeshStandardMaterial color="#333333" />
-			</T.Mesh>
-		</T.Group>
-
-		<!-- Floor -->
-		<T.Mesh receiveShadow rotation.x={degToRad(-90)}>
-			<T.CircleGeometry args={[3, 72]} />
-			<T.MeshStandardMaterial color="white" />
-		</T.Mesh>
 	</Canvas>
 </div>
