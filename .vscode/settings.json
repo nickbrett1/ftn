@@ -28,5 +28,6 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "bem",
     "projectKey": "nickbrett1_bem"
-  }
+  },
+  "terminal.integrated.defaultProfile.linux": "zsh"
 }
