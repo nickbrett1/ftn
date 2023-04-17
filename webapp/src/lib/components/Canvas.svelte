@@ -7,7 +7,7 @@
 	} from '@threlte/core'
 	import { GLTF } from '@threlte/extras'
 	import model from '$lib/assets/models/monitors.glb'
-	
+
 </script>
 
 <div class="w-full h-full">
