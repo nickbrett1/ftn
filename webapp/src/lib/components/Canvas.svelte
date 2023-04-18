@@ -18,7 +18,9 @@
 			<OrbitControls enableDamping/>
 		</PerspectiveCamera>
 
-		<DirectionalLight position={{ x: -100, y: 500, z: 0 }} intensity={0.7} />
+		<DirectionalLight position={{ x: -100, y: 500, z: 0 }} 
+			color={0x39FF14}
+			intensity={0.7} />
 		<AmbientLight intensity={0.2} />
 		<GLTF 
 			position={{x: 0, y: 0, z:60 }} 
