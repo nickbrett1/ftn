@@ -8,7 +8,7 @@
 	<Header/>
 	<Background/>
 	
-	<div class="aspect-square fixed top-[10%] left-[10%] right-[10%] -z-10">
+	<div class="aspect-square fixed top-[10%] left-[10%] right-[10%] z-10">
 		<Canvas/>
 	</div>
 </div>

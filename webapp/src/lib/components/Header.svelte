@@ -9,7 +9,7 @@
 
 </script>
 
-<div class="w-full fixed bg-black/90 p-3 flex flex-row items-center">
+<div class="w-full fixed bg-black/90 p-3 flex flex-row items-center z-20">
 	<p class="whitespace-nowrap py-1 pr-3 text-2xl tracking-wide float-left"
 	style="color: #fff;
 	text-shadow: 
