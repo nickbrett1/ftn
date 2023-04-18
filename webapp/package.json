@@ -61,7 +61,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@threlte/core": "^5.0.8",
+		"@threlte/core": "^5.0.9",
 		"@threlte/extras": "^4.9.3",
 		"@threlte/preprocess": "^0.0.2",
 		"cookie": "^0.5.0",
