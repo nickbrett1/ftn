@@ -9,7 +9,7 @@
       "request": "launch",
       "type": "chrome",
       "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/webapp"
+      "webRoot": "${workspaceFolder}/webapp/src"
     }
   ]
 }

@@ -56,7 +56,8 @@
 		"ms-playwright.playwright",
 		"GraphQL.vscode-graphql-syntax",
 		"alefragnani.project-manager",
-		"cesium.gltf-vscode"
+		"cesium.gltf-vscode",
+		"AmazonWebServices.aws-toolkit-vscode"
 	]
     }
   },
