@@ -20,8 +20,6 @@
 
 </script>
 
-
-
 <PerspectiveCamera position={{ x: -1400, y: 0, z: 0 }} lookAt= {{x:0, y:0, z:0 }}  fov={45}>
 	<OrbitControls enableDamping/>
 </PerspectiveCamera>
