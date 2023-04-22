@@ -16,6 +16,7 @@ module.exports = {
 		assert: {
 			preset: 'lighthouse:recommended',
 			assertions: {
+				'unused-javascript': 'off', // Three.JS pulls in a lot of unused JS
 				'uses-text-compression': 'off' // Doesn't detect binary files when considering compression: https://github.com/GoogleChrome/lighthouse/issues/9826
 			}
 		}
