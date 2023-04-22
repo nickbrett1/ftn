@@ -41,17 +41,20 @@
   rotationSpeed={[0.5, 0.5, 0.5]}>
 	<T is={$gltf.nodes['Left'] }  
 		position={[-95, 115, -10] }   
-		on:click={() => {
+		on:click={(e) => {
+			e.stopPropagation()
     console.log('left clicked')
   }}/>
 	<T is={$gltf.nodes['Middle'] } 
 		position={[-95, 115, -10] } 
-		on:click={() => {
+		on:click={(e) => {
+			e.stopPropagation()
     console.log('middle clicked')
   }} />
 	<T is={$gltf.nodes['Right'] } 
 		position={[-95, 115, -10] } 
-		on:click={() => {
+		on:click={(e) => {
+			e.stopPropagation()
     console.log('right clicked')
   }} />
 	<T is={$gltf.nodes['Stand'] } position={[-95, 115, -10] } />
