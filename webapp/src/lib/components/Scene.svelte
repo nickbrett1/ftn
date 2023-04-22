@@ -1,42 +1,60 @@
 <script>
-	import { 
-		OrbitControls, 
-		PerspectiveCamera, 
-		AmbientLight, 
-		DirectionalLight,
-		Object3DInstance,
-		useFrame,
-	} from '@threlte/core'
-	import { GLTF, Float, useGltf } from '@threlte/extras'
+	import { T, useFrame } from '@threlte/core'
+	import { Float, OrbitControls, useGltf, interactivity } from '@threlte/extras'
 	import model from '$lib/assets/models/monitors.glb'
 
-	const { gltf } = useGltf(model, {
+	interactivity()
+
+	const gltf  = useGltf(model, {
 		useDraco: true
 	});
 
 	let rotation = 0
-		useFrame(() => {
+	useFrame(() => {
 	})
 
 </script>
 
-<PerspectiveCamera position={{ x: -1400, y: 0, z: 0 }} lookAt= {{x:0, y:0, z:0 }}  fov={45}>
-	<OrbitControls enableDamping/>
-</PerspectiveCamera>
+<T.PerspectiveCamera 
+	position={[-1400, 0, 0]} 
+	rotation={[0, 0, 0]} 
+	fov={50} 
+	aspect={window.innerWidth / window.innerHeight} 
+	near={0.1} 
+	far={10000}
+	makeDefault>
+	<OrbitControls enableDamping enableZoom={false}/>
+</T.PerspectiveCamera>
 
-<DirectionalLight position={{ x: -1000, y: 100, z: 200 }} target={{ x: 0, y: 0, z: 0 }} 
-	color={0x50C878}
+<T.DirectionalLight 
+	position={[-1000, 100, 200 ]} 
+	color="#50C878"
 	intensity={0.6}
 />
 
-<AmbientLight intensity={0.2} />
+<T.AmbientLight intensity={0.2} />
 
 {#if $gltf}
-<Float>
-  <Object3DInstance object={$gltf.nodes['Left']} position={{x: -95, y: 115, z:-10 }}    />
-  <Object3DInstance object={$gltf.nodes['Middle']} position={{x: -95, y: 115, z:-10 }} />
-  <Object3DInstance object={$gltf.nodes['Right']} position={{x: -95, y: 115, z:-10 }} />
-  <Object3DInstance object={$gltf.nodes['Stand']} position={{x: -95, y: 115, z:-10 }} />
+<Float f
+	floatIntensity={5}   
+	rotationIntensity={1}
+  rotationSpeed={[0.5, 0.5, 0.5]}>
+	<T is={$gltf.nodes['Left'] }  
+		position={[-95, 115, -10] }   
+		on:click={() => {
+    console.log('left clicked')
+  }}/>
+	<T is={$gltf.nodes['Middle'] } 
+		position={[-95, 115, -10] } 
+		on:click={() => {
+    console.log('middle clicked')
+  }} />
+	<T is={$gltf.nodes['Right'] } 
+		position={[-95, 115, -10] } 
+		on:click={() => {
+    console.log('right clicked')
+  }} />
+	<T is={$gltf.nodes['Stand'] } position={[-95, 115, -10] } />
 </Float>
 {/if}
 

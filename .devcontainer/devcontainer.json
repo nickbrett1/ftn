@@ -57,7 +57,8 @@
 		"GraphQL.vscode-graphql-syntax",
 		"alefragnani.project-manager",
 		"cesium.gltf-vscode",
-		"AmazonWebServices.aws-toolkit-vscode"
+		"ms-azuretools.vscode-docker",
+		"Anjali.clipboard-history"
 	]
     }
   },

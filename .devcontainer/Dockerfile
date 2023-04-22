@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends chromium default-jre zsh-syntax-highlighting curl gnupg \
     && su node -c "npm install -g gltf-pipeline gltfjsx source-map @lhci/cli@0.9.x npm-check-updates" \
-    && curl -sL https://sentry.io/get-cli/ | bash
+    && curl -sL https://sentry.io/get-cli/ | sh
 
 RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
 
