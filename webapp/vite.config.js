@@ -48,7 +48,7 @@ export default defineConfig({
 	ssr: {
 		noExternal: ['three']
 	},
-	assetsInclude: ['**/*.glb'],
+	assetsInclude: ['**/*.glb', '**/*.fbx'],
 	build: {
 		sourcemap: true
 	}
