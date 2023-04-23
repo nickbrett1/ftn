@@ -10,6 +10,7 @@ const config = {
 				'base-uri': ['none'],
 				'connect-src': [
 					'self',
+					'blob:',
 					'https://*.ingest.sentry.io',
 					'https://sentry.io/',
 					'https://fonts.googleapis.com',
