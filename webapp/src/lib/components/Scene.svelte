@@ -1,7 +1,7 @@
 <script>
 	import { T, useFrame } from '@threlte/core'
-	import { Float, GLTF, OrbitControls, useGltf, interactivity } from '@threlte/extras'
-	import model from '$lib/assets/models/office.glb'
+	import { GLTF, OrbitControls, useGltf, interactivity } from '@threlte/extras'
+	import model from '$lib/assets/models/office2.glb'
 
 	interactivity()
 
