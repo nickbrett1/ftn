@@ -1,13 +1,9 @@
 <script>
 	import { T, useFrame } from '@threlte/core'
-	import { GLTF, OrbitControls, useGltf, interactivity } from '@threlte/extras'
-	import model from '$lib/assets/models/office2.glb'
+	import { GLTF, OrbitControls, interactivity } from '@threlte/extras'
+	import model from '$lib/assets/models/office.glb'
 
 	interactivity()
-
-	const gltf  = useGltf(model, {
-		useDraco: true
-	});
 
 	let rotation = 0
 	useFrame(() => {
@@ -34,6 +30,7 @@
 <T.AmbientLight intensity={0.2} />
 
 <GLTF url={model}
+	useDraco={true}
 	on:load={({materials, nodes}) => { 
 		console.log('nodes', nodes)
 		console.log('materials', materials)

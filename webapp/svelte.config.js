@@ -22,7 +22,7 @@ const config = {
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
 				'frame-src': ['self', 'https://accounts.google.com/gsi/'],
-				'img-src': ['self', 'data:'],
+				'img-src': ['self', 'data:', 'blob:'],
 				'manifest-src': ['self'],
 				'media-src': ['self', 'https://ssl.gstatic.com'],
 				'object-src': ['none'],
