@@ -97,7 +97,7 @@
       "distance": 400,
       "enable": true,
       "frequency": 1,
-      "opacity": 0.4,
+      "opacity": 0.2,
       "width": 1,
       "warp": false
     },
