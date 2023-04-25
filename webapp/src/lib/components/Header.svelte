@@ -57,7 +57,7 @@
 
 		<a href="mailto:nick@fintechnick.com" 
 			aria-label="Email"
-			class="px-3 text-white hover:text-green-300">		
+			class="px-2 text-white hover:text-green-300">		
 			<svelte:component this={Email} />
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
