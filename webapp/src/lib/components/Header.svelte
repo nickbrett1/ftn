@@ -11,8 +11,10 @@
 </script>
 
 <div class="w-full relative bg-black/90 p-2 flex flex-row items-center z-20">
-	<p class="whitespace-nowrap py-1 pr-1 text-2xl tracking-wide float-left"
-	style="color: #fff;
+	<a href="https://fintechnick.com" 
+		aria-label="Home" 
+		class="whitespace-nowrap py-1 pr-1 text-2xl tracking-wide float-left"
+		style="color: #fff;
 	text-shadow: 
 		0 0 15px #fff,
 		0 0 20px #0fa,
@@ -24,7 +26,7 @@
 		0 0 150px #0fa;
 		">
 	Fintech Nick
-	</p> 
+	</a> 
 
 	<nav class="flex flex-row-reverse grow">
 		<div class="text-white px-2 hover:text-green-300 fill-white hover:fill-green-300 flex flex-row">
@@ -39,7 +41,7 @@
 				<div class="absolute right-0 top-10 w-64 bg-black text-white rounded ">
 					<div class=" hover:bg-green-800">
 						<a href="/projects/galactic" class="block px-4 py-2">Galactic Unicorn</a>
-						<Img src={galacticunicorn} alt="Galactic Unicorn Hardward Project" class="block w-64 h-64" />
+						<Img src={galacticunicorn} alt="Galactic Unicorn Hardware Project" class="block w-64 h-64" />
 					</div>
 					<a href="/projects/makingof" class="block px-4 py-2 hover:bg-green-800">Making Of</a>
 					<a href="/projects/chase" class="block px-4 py-2 hover:bg-green-800">Chase Monthly</a>
@@ -62,7 +64,7 @@
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
 			aria-label="LinkedIn"
-			class="bg-white hover:bg-sky-600 mx-2" target="_blank" rel="noopener noreferrer">
+			class=" bg-black text-white hover:text-sky-600 mx-2" target="_blank" rel="noopener noreferrer">
 			<svelte:component this={LinkedIn} />
 	</a>
 	</nav>
