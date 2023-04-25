@@ -11,7 +11,7 @@
 </script>
 
 <div class="w-full relative bg-black/90 p-2 flex flex-row items-center z-20">
-	<p class="whitespace-nowrap py-1 pr-3 text-2xl tracking-wide float-left"
+	<p class="whitespace-nowrap py-1 pr-1 text-2xl tracking-wide float-left"
 	style="color: #fff;
 	text-shadow: 
 		0 0 15px #fff,
