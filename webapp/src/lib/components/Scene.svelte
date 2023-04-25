@@ -12,13 +12,28 @@
 </script>
 
 <T.PerspectiveCamera 
-	position={[6, 8, 9]} 
+	position={[6, 8, 7]} 
 	fov={50} 
 	aspect={window.innerWidth / window.innerHeight} 
 	near={0.1} 
 	far={10000}
-	makeDefault>
-	<OrbitControls enableDamping autoRotate autoRotateSpeed={0.2} />
+	makeDefault
+>
+	<OrbitControls enableDamping 
+		enablePan={false} 
+		autoRotate 
+		autoRotateSpeed={0.2} 
+		maxAzimuthAngle={Math.PI / 2}
+		minAzimuthAngle={0}
+		on:change={({target}) => {
+			if(target.getAzimuthalAngle() >= Math.PI / 2) {
+				target.autoRotateSpeed = -target.autoRotateSpeed 
+			}
+			else if(target.getAzimuthalAngle() <= 0) {
+				target.autoRotateSpeed = -target.autoRotateSpeed 
+			}
+		}}
+	/>
 </T.PerspectiveCamera>
 
 <T.DirectionalLight 
