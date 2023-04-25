@@ -10,7 +10,7 @@
 
 </script>
 
-<div class="w-full relative bg-black/90 p-3 flex flex-row items-center z-20">
+<div class="w-full relative bg-black/90 p-2 flex flex-row items-center z-20">
 	<p class="whitespace-nowrap py-1 pr-3 text-2xl tracking-wide float-left"
 	style="color: #fff;
 	text-shadow: 
@@ -55,7 +55,9 @@
 			</div>	
 		</div>
 
-		<a href="mailto:nick@fintechnick.com" class="px-4 text-white hover:text-green-300">		
+		<a href="mailto:nick@fintechnick.com" 
+			aria-label="Email"
+			class="px-3 text-white hover:text-green-300">		
 			<svelte:component this={Email} />
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
