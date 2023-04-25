@@ -3,6 +3,7 @@
 	import ChevronDown from './svg/ChevronDown.svelte';
 	import ChevronUp from './svg/ChevronUp.svelte';
 	import LinkedIn from './svg/LinkedIn.svelte';
+	import Email from './svg/Email.svelte';
 	import galacticunicorn from '$lib/assets/images/galacticunicorn.png?run&width=480';
 
 	let isOpen = false;
@@ -53,8 +54,9 @@
 				{/if}
 			</div>	
 		</div>
-		<a href="mailto:nick@fintechnick.com" class="text-white px-4 hover:text-green-300">		
-			Contact
+
+		<a href="mailto:nick@fintechnick.com" class="px-4 text-white hover:text-green-300">		
+			<svelte:component this={Email} />
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
 			aria-label="LinkedIn"
