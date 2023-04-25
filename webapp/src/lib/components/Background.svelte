@@ -13,7 +13,7 @@
     events: {
       onclick: { enable: false, mode: "push" },
       onhover: {
-        enable: true,
+        enable: false,
         mode: "connect",
         parallax: { enable: false, force: 60, smooth: 10 }
       },
@@ -36,6 +36,7 @@
       opacity: 0.4,
       width: 1
     },
+
     move: {
       attract: { enable: false, rotateX: 600, rotateY: 1200 },
       bounce: true,
@@ -91,6 +92,15 @@
 			},
       type: "char"
     },
+		"links": {
+      "blink": false,
+      "distance": 400,
+      "enable": true,
+      "frequency": 1,
+      "opacity": 0.4,
+      "width": 1,
+      "warp": false
+    },
   },
   detectRetina: true
 	};
@@ -114,8 +124,11 @@
 </script>
 
 <svelte:component
+	id="tsparticles"
 	this="{ParticlesComponent}"
 	options="{particlesConfig}"
 	on:particlesLoaded="{onParticlesLoaded}"
 	particlesInit="{particlesInit}"
 />
+
+
