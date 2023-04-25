@@ -4,11 +4,11 @@
 	import Canvas from '$lib/components/Canvas.svelte';
 </script>
 
-<div class="block">
+<div>
 	<Header/>
 	<Background/>
 	
-	<div class="aspect-square fixed left-[5%] right-[5%] z-10">
+	<div class="aspect-square relative z-10">
 		<Canvas/>
 	</div>
 </div>
