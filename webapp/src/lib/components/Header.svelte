@@ -53,12 +53,12 @@
 				{/if}
 			</div>	
 		</div>
-		<a href="mailto:nick@fintechnick.com" class="text-white px-2 hover:text-green-300">		
+		<a href="mailto:nick@fintechnick.com" class="text-white px-4 hover:text-green-300">		
 			Contact
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
 			aria-label="LinkedIn"
-			class="bg-white hover:bg-sky-600" target="_blank" rel="noopener noreferrer">
+			class="bg-white hover:bg-sky-600 mx-2" target="_blank" rel="noopener noreferrer">
 			<svelte:component this={LinkedIn} />
 	</a>
 	</nav>
