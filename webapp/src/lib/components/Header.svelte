@@ -13,7 +13,7 @@
 <div class="w-full relative bg-black/90 p-2 flex flex-row items-center z-20">
 	<a href="https://fintechnick.com" 
 		aria-label="Home" 
-		class="whitespace-nowrap py-1 pr-1 text-2xl tracking-wide float-left"
+		class="whitespace-nowrap py-1 text-2xl tracking-wide float-left"
 		style="color: #fff;
 	text-shadow: 
 		0 0 15px #fff,
@@ -64,7 +64,7 @@
 		</a>
 		<a href="https://www.linkedin.com/in/nick-brett/" 
 			aria-label="LinkedIn"
-			class=" bg-black text-white hover:text-sky-600 mx-2" target="_blank" rel="noopener noreferrer">
+			class=" bg-black text-white hover:text-sky-600 mr-2" target="_blank" rel="noopener noreferrer">
 			<svelte:component this={LinkedIn} />
 	</a>
 	</nav>
