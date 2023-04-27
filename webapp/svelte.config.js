@@ -1,5 +1,4 @@
 import adapter from '@sveltejs/adapter-cloudflare';
-import { SourceMap } from 'magic-string';
 import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -41,6 +40,9 @@ const config = {
 				'worker-src': ['self', 'blob:']
 			}
 		}
+	},
+	compilerOptions: {
+		enableSourcemap: true
 	},
 	preprocess: preprocess({ sourceMap: true })
 };
