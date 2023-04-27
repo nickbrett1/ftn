@@ -50,6 +50,6 @@ export default defineConfig({
 	},
 	assetsInclude: ['**/*.glb', '**/*.fbx'],
 	build: {
-		sourcemap: 'inline'
+		sourcemap: 'hidden'
 	}
 });
