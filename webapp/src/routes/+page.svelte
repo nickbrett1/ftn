@@ -7,8 +7,5 @@
 <div>
 	<Header/>
 	<Background/>
-	
-	<div class="aspect-square relative z-10">
-		<Canvas/>
-	</div>
+	<Canvas/>
 </div>
