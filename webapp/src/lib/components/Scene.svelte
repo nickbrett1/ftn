@@ -29,7 +29,8 @@
 		maxAzimuthAngle={Math.PI / 2}
 		minAzimuthAngle={0}
 		on:change={({target}) => {
-			if(target.getAzimuthalAngle() >= (Math.PI / 2)) {
+			let angle = target.getAzimuthalAngle()
+			if(target.getAzimuthalAngle() >= (Math.PI / 2 - Number.EPSILON)) {
 				target.autoRotateSpeed = -target.autoRotateSpeed 
 			}
 			else if(target.getAzimuthalAngle() <= Number.EPSILON) {
