@@ -12,12 +12,15 @@
 </script>
 
 <T.PerspectiveCamera 
-	position={[6, 8, 7]} 
+	position={[10, 5, 10]} 
 	fov={50} 
 	aspect={window.innerWidth / window.innerHeight} 
 	near={0.1} 
 	far={10000}
 	makeDefault
+	on:create={({ ref }) => {
+		ref.lookAt(0,0,0)
+	}}
 >
 	<OrbitControls enableDamping 
 		enablePan={false} 
