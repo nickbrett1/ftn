@@ -68,7 +68,7 @@
 		"graphql": "^16.6.0",
 		"nanoid": "^4.0.2",
 		"svelte-particles": "^2.9.3",
-		"three": "^0.151.3",
+		"three": "^0.152.0",
 		"tsparticles": "^2.9.3"
 	}
 }
