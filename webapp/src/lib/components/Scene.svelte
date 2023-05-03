@@ -1,12 +1,28 @@
 <script>
+	import { onMount } from 'svelte'
 	import { T, useFrame } from '@threlte/core'
 	import { GLTF, OrbitControls, interactivity } from '@threlte/extras'
 	import model from '$lib/assets/models/office.glb'
+	import gsap from 'gsap'
 
 	interactivity()
 
-	let rotation = 0
-	useFrame(() => {
+	let camera
+	let tl 
+
+	onMount(() => {
+		tl = gsap.timeline({repeat: -1, yoyo: true})
+		tl.to(camera.position, {x: 5, 
+			y: 5, 
+			z: 15, 
+			duration: 10, 
+			ease: 'power1.inOut'})
+		
+		tl.to(camera.position, {x: 15, 
+			y: 5, 
+			z: 5, 
+			duration: 10, 
+			ease: 'power1.inOut'})
 	})
 
 </script>
@@ -19,25 +35,11 @@
 	far={10000}
 	makeDefault
 	on:create={({ ref }) => {
+		camera = ref
 		ref.lookAt(0,0,0)
 	}}
 >
-	<OrbitControls enableDamping 
-		enablePan={false} 
-		autoRotate 
-		autoRotateSpeed={0.2} 
-		maxAzimuthAngle={Math.PI / 2}
-		minAzimuthAngle={0}
-		on:change={({target}) => {
-			let angle = target.getAzimuthalAngle()
-			if(target.getAzimuthalAngle() >= (Math.PI / 2 - Number.EPSILON)) {
-				target.autoRotateSpeed = -target.autoRotateSpeed 
-			}
-			else if(target.getAzimuthalAngle() <= Number.EPSILON) {
-				target.autoRotateSpeed = -target.autoRotateSpeed 
-			}
-		}}
-	/>
+	<OrbitControls enableDamping/>
 </T.PerspectiveCamera>
 
 <T.DirectionalLight 
@@ -53,7 +55,10 @@
 	on:load={({materials, nodes}) => { 
 		console.log('nodes', nodes)
 		console.log('materials', materials)
-	}} />
+	}} 
+	on:click={() => {
+		tl.pause()
+	}}/>
 
 
 
