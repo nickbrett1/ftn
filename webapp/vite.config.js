@@ -12,6 +12,10 @@ export default defineConfig({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
 		SvelteKitPWA({
+			workbox: {
+				globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,avif}'],
+				sourcemap: true
+			},
 			manifest: {
 				name: 'Fintech Nick',
 				icons: [
