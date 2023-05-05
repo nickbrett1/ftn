@@ -52,13 +52,21 @@
 
 <GLTF url={model}
 	useDraco={true}
-	on:load={({materials, nodes}) => { 
-		console.log('nodes', nodes)
-		console.log('materials', materials)
-	}} 
-	on:click={() => {
+	on:click={(e) => {
 		tl.pause()
-	}}/>
+		if(e.object.name == 'Office2_decoration1') {
+			console.log('clicked on good day!')
+			e.stopPropagation()
+		}
+	}}
+	on:pointermove={(e) => {
+		if(e.object.name == 'Office2_decoration1') {
+			console.log('hovered on good day!')
+			e.stopPropagation()
+		}
+	}}
+/>
+
 
 
 
