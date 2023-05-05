@@ -13,6 +13,9 @@ export default defineConfig({
 		}),
 		SvelteKitPWA({
 			strategies: 'generateSW',
+			injectManifest: {
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
+			},
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,avif}'],
 				sourcemap: true
