@@ -49,6 +49,7 @@ webapp/public/worker*.js*
 webapp/public/sw.js*
 webapp/worker/dist
 node_modules
+dev-dist
 .DS_Store
 *.pem
 .sentryclirc
