@@ -12,12 +12,16 @@ export default defineConfig({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),
 		SvelteKitPWA({
+			scope: '/',
+			base: '/',
+			srcDir: './src',
 			strategies: 'generateSW',
 			injectManifest: {
 				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
 			},
+			selfDestroying: process.env.SELF_DESTROYING_SW === 'true',
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,avif}'],
+				globPatterns: ['client/**/*.{js,css,html,svg,png,jpg,jpeg,webp,avif}'],
 				sourcemap: true
 			},
 			manifest: {
@@ -41,7 +45,13 @@ export default defineConfig({
 				theme_color: '#FFFFFF',
 				display: 'standalone',
 				background_color: '#FFFFFF',
-				start_url: '/'
+				start_url: '/',
+				scope: '/'
+			},
+			devOptions: {
+				enabled: true,
+				type: 'module',
+				navigateFallback: '/'
 			}
 		})
 	],
