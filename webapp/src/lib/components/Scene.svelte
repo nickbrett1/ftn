@@ -62,11 +62,12 @@
 	on:pointermove={(e) => {
 		if(e.object.name == 'Office2_decoration1') {
 			console.log('hovered on good day!')
+			console.log(e.object)
+//			e.object.material.color.set(0x00ff00)
 			e.stopPropagation()
+		}
+		else {
+			e.object.material.color.set(0xffffff)
 		}
 	}}
 />
-
-
-
-
