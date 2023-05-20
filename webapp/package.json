@@ -32,7 +32,7 @@
 		"@sveltejs/adapter-cloudflare": "^2.2.4",
 		"@sveltejs/kit": "^1.18.0",
 		"@testing-library/svelte": "^3.2.2",
-		"@vite-pwa/sveltekit": "^0.2.1",
+		"@vite-pwa/sveltekit": "^0.2.2",
 		"@vitest/coverage-c8": "^0.31.1",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^1.2.10",
