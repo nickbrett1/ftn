@@ -28,7 +28,7 @@
 		"@storybook/svelte": "^7.0.13",
 		"@storybook/sveltekit": "^7.0.17",
 		"@storybook/testing-library": "^0.1.0",
-		"@sveltejs/adapter-auto": "^2.0.1",
+		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/adapter-cloudflare": "^2.2.4",
 		"@sveltejs/kit": "^1.18.0",
 		"@testing-library/svelte": "^3.2.2",
