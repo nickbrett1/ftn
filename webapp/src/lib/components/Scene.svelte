@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte'
 	import { T, useFrame } from '@threlte/core'
+	import Office from './Office.svelte'
 	import { GLTF, OrbitControls, interactivity } from '@threlte/extras'
 	import model from '$lib/assets/models/office.glb'
 	import gsap from 'gsap'
@@ -50,6 +51,9 @@
 
 <T.AmbientLight intensity={0.2} />
 
+<Office />
+
+<!-- 
 <GLTF url={model}
 	useDraco={true}
 	on:click={(e) => {
@@ -63,7 +67,9 @@
 		if(e.object.name == 'Office2_decoration1') {
 			console.log('hovered on good day!')
 			console.log(e.object)
-//			e.object.material.color.set(0x00ff00)
+	//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+
+			e.object.geometry.material.color.set(0x00ff00)
 			e.stopPropagation()
 		}
 		else {
@@ -71,3 +77,4 @@
 		}
 	}}
 />
+-->
