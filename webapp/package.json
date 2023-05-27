@@ -30,7 +30,7 @@
 		"@storybook/testing-library": "^0.1.0",
 		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/adapter-cloudflare": "^2.2.4",
-		"@sveltejs/kit": "^1.18.0",
+		"@sveltejs/kit": "^1.19.0",
 		"@testing-library/svelte": "^3.2.2",
 		"@vite-pwa/sveltekit": "^0.2.2",
 		"@vitest/coverage-c8": "^0.31.1",
