@@ -43,7 +43,7 @@
 		"eslint-config-prettier": "^8.8.0",
 		"eslint-plugin-storybook": "^0.6.12",
 		"eslint-plugin-svelte3": "^4.0.0",
-		"jest-environment-jsdom": "^29.5.0",
+		"jest-environment-jsdom": "^29.6.0",
 		"jsdom": "^22.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.1",
