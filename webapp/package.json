@@ -72,6 +72,6 @@
 		"nanoid": "^4.0.2",
 		"svelte-particles": "^2.10.1",
 		"three": "^0.154.0",
-		"tsparticles": "^2.10.1"
+		"tsparticles": "^2.11.0"
 	}
 }
