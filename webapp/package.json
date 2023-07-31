@@ -65,7 +65,7 @@
 	"type": "module",
 	"dependencies": {
 		"@threlte/core": "^6.0.0-next.11",
-		"@threlte/extras": "^5.0.0-next.16",
+		"@threlte/extras": "^5.0.0",
 		"cookie": "^0.5.0",
 		"graphql": "^16.7.1",
 		"gsap": "^3.12.2",
