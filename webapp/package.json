@@ -15,7 +15,7 @@
 		"build-storybook": "storybook build",
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
-		"deploy": "npx wrangler pages publish .svelte-kit/cloudflare --commit-dirty=true --project-name=ftn"
+		"deploy": "npx wrangler pages deploy .svelte-kit/cloudflare --commit-dirty=true --project-name=ftn"
 	},
 	"devDependencies": {
 		"@dimforge/rapier3d-compat": "^0.11.2",
