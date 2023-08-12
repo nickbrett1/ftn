@@ -4,7 +4,7 @@
 	import ChevronUp from './svg/ChevronUp.svelte';
 	import LinkedIn from './svg/LinkedIn.svelte';
 	import Email from './svg/Email.svelte';
-	import galacticunicorn from '$lib/assets/images/galacticunicorn.png?run&width=480';
+	import galacticunicorn from '$lib/assets/images/galacticunicorn.png?as=run&w=480';
 
 	let isOpen = false;
 
