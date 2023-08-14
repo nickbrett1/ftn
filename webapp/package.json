@@ -70,7 +70,7 @@
 		"@threlte/core": "^6.0.2",
 		"@threlte/extras": "^5.0.4",
 		"cookie": "^0.5.0",
-		"graphql": "^16.7.1",
+		"graphql": "^16.8.0",
 		"gsap": "^3.12.2",
 		"nanoid": "^4.0.2",
 		"svelte-particles": "^2.12.0",
