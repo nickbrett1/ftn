@@ -39,7 +39,7 @@
 		"@zerodevx/svelte-img": "^2.0.2",
 		"autoprefixer": "^10.4.15",
 		"c8": "^8.0.1",
-		"eslint": "^8.47.0",
+		"eslint": "^8.48.0",
 		"eslint-config-prettier": "^9.0.0",
 		"eslint-plugin-storybook": "^0.6.13",
 		"eslint-plugin-svelte3": "^4.0.0",
