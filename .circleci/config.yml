@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   ggshield: gitguardian/ggshield@volatile
-  browser-tools: circleci/browser-tools@1.4.3
+  browser-tools: circleci/browser-tools@1.4.4
   sonarcloud: sonarsource/sonarcloud@1.1.1
   doppler: conpago/doppler@1.3.5
 
