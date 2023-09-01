@@ -72,7 +72,9 @@ jobs:
     docker:
       - image: cimg/node:18.8.0-browsers
     steps:
-      - browser-tools/install-chrome
+      - browser-tools/install-chrome:
+          chrome-version: 116.0.5845.96 # TODO: remove when chromedriver downloads are fixed (https://github.com/CircleCI-Public/browser-tools-orb/issues/90)
+          replace-existing: true
       - browser-tools/install-chromedriver
       - checkout
       - restore_cache:
