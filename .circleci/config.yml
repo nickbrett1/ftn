@@ -9,7 +9,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/node:18.8.0
+      - image: cimg/node:current
     steps:
       - checkout
       - restore_cache:
@@ -70,7 +70,7 @@ jobs:
       SENTRY_ENVIRONMENT: staging
       SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
-      - image: cimg/node:18.8.0-browsers
+      - image: cimg/node:current-browsers
     steps:
       - run: sudo apt-get update
       - browser-tools/install-chrome:
@@ -101,7 +101,7 @@ jobs:
       SENTRY_ENVIRONMENT: production
       SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
-      - image: cimg/node:18.8.0
+      - image: cimg/node:current
     steps:
       - checkout
       - restore_cache:
