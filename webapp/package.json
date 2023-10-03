@@ -26,7 +26,7 @@
 		"@storybook/addon-links": "^7.4.5",
 		"@storybook/blocks": "^7.4.6",
 		"@storybook/svelte": "^7.4.4",
-		"@storybook/sveltekit": "^7.4.5",
+		"@storybook/sveltekit": "^7.4.6",
 		"@storybook/testing-library": "^0.2.2",
 		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/adapter-cloudflare": "^2.3.3",
