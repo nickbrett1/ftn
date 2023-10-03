@@ -23,7 +23,7 @@
 		"@playwright/test": "^1.38.1",
 		"@storybook/addon-essentials": "^7.4.6",
 		"@storybook/addon-interactions": "^7.4.5",
-		"@storybook/addon-links": "^7.4.5",
+		"@storybook/addon-links": "^7.4.6",
 		"@storybook/blocks": "^7.4.6",
 		"@storybook/svelte": "^7.4.4",
 		"@storybook/sveltekit": "^7.4.6",
