@@ -7,6 +7,117 @@ orbs:
   doppler: conpago/doppler@1.3.5
 
 jobs:
+  build:
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - run:
+          name: Install modules
+          command: |
+            cd webapp && npm install
+      - doppler/install
+      - run:
+          name: Build app
+          command: |
+            cd webapp && npm run build
+      - save_cache:
+          name: Update node_modules cache
+          paths:
+            - webapp/node_modules
+          key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - persist_to_workspace:
+          root: webapp
+          paths:
+            - .svelte-kit
+
+  code_test:
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Run tests
+          command: |
+            cd webapp && npm run test-staging
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+      - store_test_results:
+          path: ./webapp/reports/
+      - sonarcloud/scan
+
+  browser_test:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current-browsers
+    steps:
+      - run: sudo apt-get update
+      - browser-tools/install-chrome:
+          chrome-version: 116.0.5845.96 # TODO: remove when chromedriver downloads are fixed (https://github.com/CircleCI-Public/browser-tools-orb/issues/90)
+          replace-existing: true
+      - browser-tools/install-chromedriver
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            cd webapp && sudo npm install -g @lhci/cli@0.9.x
+            npm run lighthouse-staging
+
+  deploy:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-{{ .Branch }}-
+            - node-v6-
+      - attach_workspace:
+          at: webapp
+      - run:
+          name: Deploying to Cloudflare
+          command: |
+            cd webapp && npm run deploy
+
   say-hello:
     docker:
       - image: cimg/base:stable
@@ -28,10 +139,27 @@ jobs:
 
 
 workflows:
-  say-hello-workflow:
+  build_test_deploy:
     jobs:
       - ggshield/scan:
-        name: ggshield-scan
+          name: ggshield-scan
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
+      - build
+      - code_test:
+          requires:
+            - build
+          context: SonarCloud
+      - browser_test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - browser_test
+            - code_test
+          filters:
+            branches:
+              only: main
+  say-hello-workflow:
+    jobs:
       - say-hello
