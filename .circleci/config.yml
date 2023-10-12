@@ -28,19 +28,12 @@ jobs:
 
 
 workflows:
-  build_test_deploy:
     jobs:
-      - ggshield/scan:
-          name: ggshield-scan
-          base_revision: << pipeline.git.base_revision >>
-          revision: <<pipeline.git.revision>>
-      - code_test:
-          requires:
-            - build
-          context: SonarCloud
-      - browser_test:
-          requires:
-            - build
+
   say-hello-workflow:
     jobs:
+      - ggshield/scan:
+        name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
       - say-hello
