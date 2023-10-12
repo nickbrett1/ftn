@@ -28,8 +28,6 @@ jobs:
 
 
 workflows:
-    jobs:
-
   say-hello-workflow:
     jobs:
       - ggshield/scan:
