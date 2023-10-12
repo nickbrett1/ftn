@@ -118,6 +118,26 @@ jobs:
           command: |
             cd webapp && npm run deploy
 
+  say-hello:
+    docker:
+      - image: cimg/base:stable
+    environment:
+      TRIGGER_SOURCE: <<pipeline.trigger_source>>
+      CIRCLE_RANGE: <<pipeline.git.base_revision>>...<<pipeline.git.revision>>
+      TRIGGER_TYPE: <<pipeline.trigger_parameters.circleci.trigger_type>>
+      EVENT_TYPE: <<pipeline.trigger_parameters.circleci.event_type>>
+      GITHUB_APP_CHECKOUT_SHA: <<pipeline.trigger_parameters.github_app.checkout_sha>>
+      GITHUB_APP_REF: <<pipeline.trigger_parameters.github_app.ref>>
+      GITHUB_APP_COMMIT_SHA: <<pipeline.trigger_parameters.github_app.commit_sha>>
+      GITHUB_APP_BRANCH: <<pipeline.trigger_parameters.github_app.branch>>
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+    steps:
+      - checkout
+      - run:
+          name: "Say hello"
+          command: "env"
+
+
 workflows:
   build_test_deploy:
     jobs:
@@ -140,3 +160,6 @@ workflows:
           filters:
             branches:
               only: main
+  say-hello-workflow:
+    jobs:
+      - say-hello
