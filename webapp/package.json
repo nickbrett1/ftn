@@ -24,7 +24,7 @@
 		"@storybook/addon-essentials": "^7.4.6",
 		"@storybook/addon-interactions": "^7.4.5",
 		"@storybook/addon-links": "^7.4.6",
-		"@storybook/blocks": "^7.4.6",
+		"@storybook/blocks": "^7.5.0",
 		"@storybook/svelte": "^7.4.4",
 		"@storybook/sveltekit": "^7.5.0",
 		"@storybook/testing-library": "^0.2.2",
