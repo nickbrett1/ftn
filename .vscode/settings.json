@@ -11,8 +11,8 @@
   "task.allowAutomaticTasks": "on",
   "git.requireGitUserConfig": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
+		"source.fixAll.eslint": "explicit"
+	},
   "eslint.options": {
     "extensions": [".js", ".jsx", ".md", ".mdx", ".ts", ".tsx"]
   },
