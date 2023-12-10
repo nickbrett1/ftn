@@ -61,6 +61,7 @@
       value: { min: 0.1, max: 0.8 }
     },
     shape: {
+			type: "char",
 			options: {
 				character: [
 					{
@@ -90,7 +91,7 @@
 					},
       	],
 			},
-      type: "char"
+
     },
 		"links": {
       "blink": false,
