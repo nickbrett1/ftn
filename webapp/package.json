@@ -56,7 +56,7 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"resize-observer-polyfill": "^1.5.1",
-		"sharp": "^0.33.0",
+		"sharp": "^0.33.1",
 		"storybook": "^7.6.5",
 		"svelte": "^3.59.2",
 		"svelte-preprocess": "^5.1.3",
