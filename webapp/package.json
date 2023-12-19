@@ -22,7 +22,7 @@
 		"@graphql-mocks/network-nock": "^0.5.0",
 		"@playwright/test": "^1.40.1",
 		"@storybook/addon-essentials": "^7.6.6",
-		"@storybook/addon-interactions": "^7.6.5",
+		"@storybook/addon-interactions": "^7.6.6",
 		"@storybook/addon-links": "^7.6.5",
 		"@storybook/blocks": "^7.6.5",
 		"@storybook/svelte": "^7.6.1",
