@@ -17,7 +17,13 @@ describe('Home', () => {
 		try {
 			await load({ cookies: { get: () => null }, platform: {} });
 		} catch (e) {
-			expect(e).toEqual(redirect(307, '/preview'));
+			let expected;
+			try {
+				redirect(307, '/preview');
+			} catch (redirect) {
+				expected = redirect;
+			}
+			expect(e).toEqual(expected);
 		}
 	});
 
@@ -43,7 +49,13 @@ describe('Home', () => {
 				}
 			});
 		} catch (e) {
-			expect(e).toEqual(redirect(307, '/preview'));
+			let expected;
+			try {
+				redirect(307, '/preview');
+			} catch (redirect) {
+				expected = redirect;
+			}
+			expect(e).toEqual(expected);
 		}
 	});
 });
