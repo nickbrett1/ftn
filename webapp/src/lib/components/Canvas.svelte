@@ -1,16 +1,14 @@
 <script>
-	import Scene from '$lib/components/Scene.svelte'
-	import { useProgress } from '@threlte/extras'
-	import { tweened } from 'svelte/motion'
-	import { fade } from 'svelte/transition'
-	import { 
-		Canvas, 
-	} from '@threlte/core'
+	import Scene from '$lib/components/Scene.svelte';
+	import { useProgress } from '@threlte/extras';
+	import { tweened } from 'svelte/motion';
+	import { fade } from 'svelte/transition';
+	import { Canvas } from '@threlte/core';
 
-	const { progress } = useProgress()
+	const { progress } = useProgress();
 
-	const tweenedProgress = tweened($progress)
-	$: tweenedProgress.set($progress)
+	const tweenedProgress = tweened($progress);
+	$: tweenedProgress.set($progress);
 </script>
 
 <div class="w-full h-full fixed aspect-square z-10">
