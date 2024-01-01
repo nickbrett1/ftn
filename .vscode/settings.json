@@ -22,7 +22,8 @@
     "javascript",
     "javascriptreact",
     "typescript",
-    "typescriptreact"
+    "typescriptreact",
+    "svelte"
   ],
   "css.customData": [".vscode/tailwindcss.json"],
   "sonarlint.connectedMode.project": {
