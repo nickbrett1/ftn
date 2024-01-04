@@ -44,7 +44,7 @@
 		"magic-string": "^0.30.5",
 		"miragejs": "^0.1.48",
 		"npm": "^10.2.5",
-		"postcss": "^8.4.32",
+		"postcss": "^8.4.33",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"react": "^18.2.0",
