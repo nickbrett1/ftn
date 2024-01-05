@@ -39,7 +39,7 @@
 		"eslint-plugin-svelte": "^2.35.1",
 		"i": "^0.3.7",
 		"jest-environment-jsdom": "^29.7.0",
-		"jsdom": "^23.0.1",
+		"jsdom": "^23.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.5",
 		"miragejs": "^0.1.48",
