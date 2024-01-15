@@ -73,6 +73,6 @@
 		"gsap": "^3.12.4",
 		"nanoid": "^5.0.4",
 		"three": "^0.160.0",
-		"tsparticles": "^3.0.3"
+		"tsparticles": "^3.1.0"
 	}
 }
