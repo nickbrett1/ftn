@@ -64,7 +64,7 @@
 	"dependencies": {
 		"@threlte/core": "^6.0.2",
 		"@threlte/extras": "^5.0.4",
-		"@tsparticles/engine": "^3.0.3",
+		"@tsparticles/engine": "^3.2.1",
 		"@tsparticles/shape-text": "^3.0.3",
 		"@tsparticles/slim": "^3.1.0",
 		"@tsparticles/svelte": "^3.0.0",
