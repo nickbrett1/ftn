@@ -65,7 +65,7 @@
 		"@threlte/core": "^6.0.2",
 		"@threlte/extras": "^5.0.4",
 		"@tsparticles/engine": "^3.2.1",
-		"@tsparticles/shape-text": "^3.0.3",
+		"@tsparticles/shape-text": "^3.2.1",
 		"@tsparticles/slim": "^3.2.1",
 		"@tsparticles/svelte": "^3.0.0",
 		"cookie": "^0.6.0",
