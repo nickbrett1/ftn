@@ -49,7 +49,7 @@ export default defineConfig({
 				scope: '/'
 			},
 			devOptions: {
-				enabled: false,
+				enabled: true,
 				type: 'module',
 				navigateFallback: '/'
 			}
