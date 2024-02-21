@@ -59,7 +59,7 @@
 	"type": "module",
 	"dependencies": {
 		"@threlte/core": "^6.0.2",
-		"@threlte/extras": "^5.0.4",
+		"@threlte/extras": "^8.8.0",
 		"@tsparticles/engine": "^3.2.1",
 		"@tsparticles/shape-text": "^3.2.2",
 		"@tsparticles/slim": "^3.2.1",
