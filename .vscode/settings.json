@@ -33,5 +33,6 @@
   "terminal.integrated.defaultProfile.linux": "zsh",
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode"
-  }
+  },
+  "liveServer.settings.port": 5501
 }
