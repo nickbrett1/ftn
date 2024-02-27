@@ -62,7 +62,7 @@
 		"@threlte/extras": "^5.0.4",
 		"@tsparticles/engine": "^3.2.1",
 		"@tsparticles/shape-text": "^3.3.0",
-		"@tsparticles/slim": "^3.2.1",
+		"@tsparticles/slim": "^3.3.0",
 		"@tsparticles/svelte": "^3.0.0",
 		"cookie": "^0.6.0",
 		"graphql": "^16.8.1",
