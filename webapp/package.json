@@ -58,7 +58,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@threlte/core": "^6.0.2",
+		"@threlte/core": "^7.1.2",
 		"@threlte/extras": "^5.0.4",
 		"@tsparticles/engine": "^3.2.1",
 		"@tsparticles/shape-text": "^3.3.0",
