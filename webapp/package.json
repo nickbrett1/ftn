@@ -47,7 +47,7 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"resize-observer-polyfill": "^1.5.1",
-		"sharp": "^0.33.2",
+		"sharp": "^0.33.3",
 		"svelte": "^4.2.12",
 		"svelte-grid": "^5.1.2",
 		"svelte-preprocess": "^5.1.3",
