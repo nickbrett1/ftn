@@ -34,7 +34,7 @@
 		"c8": "^8.0.1",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.35.1",
+		"eslint-plugin-svelte": "^2.36.0",
 		"jest-environment-jsdom": "^29.7.0",
 		"jsdom": "^23.2.0",
 		"kolorist": "^1.8.0",
