@@ -40,7 +40,7 @@
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.9",
 		"miragejs": "^0.1.48",
-		"npm": "^10.5.1",
+		"npm": "^10.5.2",
 		"postcss": "^8.4.38",
 		"prettier": "^3.2.5",
 		"prettier-plugin-svelte": "^3.2.2",
