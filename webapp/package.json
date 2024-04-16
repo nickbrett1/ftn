@@ -22,7 +22,7 @@
 		"@graphql-mocks/network-nock": "^0.5.0",
 		"@sveltejs/adapter-auto": "^3.1.1",
 		"@sveltejs/adapter-cloudflare": "^4.4.0",
-		"@sveltejs/kit": "^2.5.5",
+		"@sveltejs/kit": "^2.5.6",
 		"@sveltejs/vite-plugin-svelte": "^3.1.0",
 		"@testing-library/svelte": "^4.1.0",
 		"@vite-pwa/sveltekit": "^0.4.0",
