@@ -38,7 +38,7 @@
 		"jest-environment-jsdom": "^29.7.0",
 		"jsdom": "^23.2.0",
 		"kolorist": "^1.8.0",
-		"magic-string": "^0.30.9",
+		"magic-string": "^0.30.10",
 		"miragejs": "^0.1.48",
 		"npm": "^10.5.2",
 		"postcss": "^8.4.38",
