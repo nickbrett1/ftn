@@ -18,7 +18,7 @@
 		"deploy": "npx wrangler pages deploy .svelte-kit/cloudflare --commit-dirty=true --project-name=ftn"
 	},
 	"devDependencies": {
-		"@dimforge/rapier3d-compat": "^0.13.0",
+		"@dimforge/rapier3d-compat": "^0.13.1",
 		"@graphql-mocks/network-nock": "^0.5.0",
 		"@sveltejs/adapter-auto": "^3.1.1",
 		"@sveltejs/adapter-cloudflare": "^4.4.0",
