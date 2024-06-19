@@ -36,7 +36,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.39.3",
 		"jest-environment-jsdom": "^29.7.0",
-		"jsdom": "^23.2.0",
+		"jsdom": "^24.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.10",
 		"miragejs": "^0.1.48",
