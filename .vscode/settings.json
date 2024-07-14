@@ -34,5 +34,6 @@
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode"
   },
-  "liveServer.settings.port": 5501
+  "liveServer.settings.port": 5501,
+  "editor.fontSize": 16
 }
