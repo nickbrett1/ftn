@@ -1,33 +1,45 @@
 <script>
-	import { Gallery } from 'flowbite-svelte';
-	const images1 = [
-		{ alt: 'erbology', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg' },
-		{ alt: 'shoes', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-1.jpg' },
-		{ alt: 'small bag', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-2.jpg' }
-	];
-	const images2 = [
-		{ alt: 'plants', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-3.jpg' },
-		{ alt: 'watch', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-4.jpg' },
-		{ alt: 'shoe', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-5.jpg' }
-	];
-	const images3 = [
-		{ alt: 'cream', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-6.jpg' },
-		{ alt: 'small bag', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-7.jpg' },
-		{ alt: 'lamp', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-8.jpg' }
-	];
-	const images4 = [
-		{ alt: 'toiletbag', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-9.jpg' },
+	import { Section, Portfolio, PortfolioItem } from 'flowbite-svelte-blocks';
+
+	const portfolios = [
 		{
-			alt: 'playstation',
-			src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-10.jpg'
+			customer: 'Alphabet Inc.',
+			title: 'Official website',
+			description:
+				'Flowbite helps you connect with friends, family and communities of people who share your interests.',
+			href: '/',
+			linkTitle: 'View case study'
 		},
-		{ alt: 'bag', src: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image-11.jpg' }
+		{
+			customer: 'Microsoft Corp.',
+			title: 'Management system',
+			description:
+				'Flowbite helps you connect with friends, family and communities of people who share your interests.',
+			href: '/',
+			linkTitle: 'View case study'
+		},
+		{
+			customer: 'Adobe Inc.',
+			title: 'Logo design',
+			description:
+				'Flowbite helps you connect with friends, family and communities of people who share your interests.',
+			href: '/',
+			linkTitle: 'View case study'
+		}
 	];
 </script>
 
-<Gallery class="gap-4 grid-cols-2 md:grid-cols-4">
-	<Gallery items={images1} />
-	<Gallery items={images2} />
-	<Gallery items={images3} />
-	<Gallery items={images4} />
-</Gallery>
+<Section name="portfolio">
+	<Portfolio
+		title="Our work"
+		subtitle="Crafted with skill and care to help our clients grow their business!"
+		h2Class="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl dark:text-white"
+	>
+		{#each portfolios as item}
+			<PortfolioItem
+				titleClass="text-2xl font-bold leading-tight text-white dark:text-white"
+				{item}
+			/>
+		{/each}
+	</Portfolio>
+</Section>
