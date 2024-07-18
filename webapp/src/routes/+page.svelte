@@ -7,5 +7,5 @@
 <div>
 	<Header />
 	<Background />
-	<Canvas />
+	<!-- <Canvas /> -->
 </div>
