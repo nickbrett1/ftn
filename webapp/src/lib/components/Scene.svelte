@@ -13,14 +13,14 @@
 
 	onMount(() => {
 		tl = gsap.timeline({ repeat: -1, yoyo: true });
-		tl.to(camera.position, { x: 5, y: 5, z: 15, duration: 10, ease: 'power1.inOut' });
+		tl.to(camera.position, { x: 0, y: 0, z: 5, duration: 10, ease: 'power1.inOut' });
 
-		tl.to(camera.position, { x: 15, y: 5, z: 5, duration: 10, ease: 'power1.inOut' });
+		tl.to(camera.position, { x: 5, y: 0, z: 0, duration: 10, ease: 'power1.inOut' });
 	});
 </script>
 
 <T.PerspectiveCamera
-	position={[10, 5, 10]}
+	position={[0, 0, 5]}
 	fov={50}
 	aspect={window.innerWidth / window.innerHeight}
 	near={0.1}
@@ -37,11 +37,6 @@
 <T.DirectionalLight position={[6, 8, 9]} color="white" intensity={0.6} />
 
 <T.AmbientLight intensity={0.2} />
-
-<!-- 
-<Office />
-
--->
 
 <GLTF
 	url={model}
