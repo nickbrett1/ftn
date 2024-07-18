@@ -1,5 +1,3 @@
-import flowbitePlugin from 'flowbite/plugin';
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
 	content: [
@@ -33,6 +31,5 @@ module.exports = {
 		animation: {
 			fromto: 'example 5s ease-in infinite'
 		}
-	},
-	plugins: [flowbitePlugin]
+	}
 };
