@@ -3,7 +3,7 @@
 	import { T, useFrame } from '@threlte/core';
 	import Office from './Office.svelte';
 	import { GLTF, OrbitControls, interactivity } from '@threlte/extras';
-	import model from '$lib/assets/models/office.glb';
+	import model from '$lib/assets/models/charging_bull.glb';
 	import gsap from 'gsap';
 
 	interactivity();
@@ -38,30 +38,31 @@
 
 <T.AmbientLight intensity={0.2} />
 
+<!-- 
 <Office />
 
-<!-- 
-<GLTF url={model}
+-->
+
+<GLTF
+	url={model}
 	useDraco={true}
 	on:click={(e) => {
-		tl.pause()
-		if(e.object.name == 'Office2_decoration1') {
-			console.log('clicked on good day!')
-			e.stopPropagation()
+		tl.pause();
+		if (e.object.name == 'Office2_decoration1') {
+			console.log('clicked on good day!');
+			e.stopPropagation();
 		}
 	}}
 	on:pointermove={(e) => {
-		if(e.object.name == 'Office2_decoration1') {
-			console.log('hovered on good day!')
-			console.log(e.object)
-	//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+		if (e.object.name == 'Office2_decoration1') {
+			console.log('hovered on good day!');
+			console.log(e.object);
+			//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 
-			e.object.geometry.material.color.set(0x00ff00)
-			e.stopPropagation()
-		}
-		else {
-			e.object.material.color.set(0xffffff)
+			e.object.geometry.material.color.set(0x00ff00);
+			e.stopPropagation();
+		} else {
+			e.object.material.color.set(0xffffff);
 		}
 	}}
 />
--->
