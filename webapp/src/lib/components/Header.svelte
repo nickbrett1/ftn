@@ -41,13 +41,10 @@
 							<a href="/projects/galactic" class="block px-4 py-2">Galactic Unicorn</a>
 						</div>
 						<a href="/projects/makingof" class="block px-4 py-2 hover:bg-green-800">Making Of</a>
+						<a href="/projects/3d" class="block px-4 py-2 hover:bg-green-800">3D</a>
 						<a href="/projects/chase" class="block px-4 py-2 hover:bg-green-800">Chase Monthly</a>
 						<a href="/projects/product" class="block px-4 py-2 hover:bg-green-800">Product Ideas</a>
-						<a href="/projects/driftdb" class="block px-4 py-2 hover:bg-green-800">driftdb</a>
 						<a href="/projects/blog" class="block px-4 py-2 hover:bg-green-800">Blog</a>
-						<a href="/projects/hyatt" class="block px-4 py-2 hover:bg-green-800"
-							>Hyatt Suite Checker</a
-						>
 						{#await import('./Login.svelte') then Login}
 							<Login.default
 								class="block px-4 py-2  hover:bg-green-800 w-full text-left"
