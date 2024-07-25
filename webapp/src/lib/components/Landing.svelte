@@ -15,7 +15,9 @@
 	<div class="text-white">
 		{#each lines as line, i}
 			{#if animate}
-				<div class="max-w-4xl sm:text-6xl text-4xl font-black text-center">
+				<div
+					class="max-w-4xl text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+				>
 					<div class="inline-block overflow-hidden align-bottom">
 						<span
 							class="inline-block m-1 uppercase drop-shadow-xl"
