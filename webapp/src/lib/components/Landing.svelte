@@ -11,11 +11,11 @@
 	});
 </script>
 
-<div class="flex h-screen">
-	<div class="text-white m-auto">
+<div class="flex flex-row min-h-screen justify-center items-center">
+	<div class="text-white">
 		{#each lines as line, i}
 			{#if animate}
-				<div class="max-w-4xl text-5xl font-black text-center">
+				<div class="max-w-4xl sm:text-5xl text-4xl font-black text-center">
 					<div class="inline-block overflow-hidden align-bottom">
 						<span
 							class="inline-block m-1 uppercase drop-shadow-xl"
