@@ -16,7 +16,7 @@
 		{#each lines as line, i}
 			{#if animate}
 				<div
-					class="max-w-4xl text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
 					<div class="inline-block overflow-hidden align-bottom">
 						<span
