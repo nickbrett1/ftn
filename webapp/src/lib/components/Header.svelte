@@ -8,7 +8,7 @@
 	let isOpen = false;
 </script>
 
-<div class="w-full relative bg-black/90 p-2 flex flex-row items-center z-20">
+<div class="w-full bg-black/90 p-2 items-center z-20">
 	<a
 		href="https://fintechnick.com"
 		aria-label="Home"

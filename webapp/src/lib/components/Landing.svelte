@@ -11,7 +11,7 @@
 	});
 </script>
 
-<div class="flex flex-row min-h-screen justify-center items-center">
+<div class="flex flex-row grow justify-center items-center">
 	<div class="text-white">
 		{#each lines as line, i}
 			{#if animate}
