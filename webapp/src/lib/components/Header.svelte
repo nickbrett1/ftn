@@ -8,7 +8,7 @@
 	let isOpen = false;
 </script>
 
-<div class="w-full bg-black/90 p-2 items-center z-20">
+<div class="w-full bg-black/90 p-2 flex flex-row">
 	<a
 		href="https://fintechnick.com"
 		aria-label="Home"
@@ -29,9 +29,9 @@
 	</a>
 
 	<nav class="flex flex-row-reverse grow">
-		<div class="text-white px-2 hover:text-green-300 fill-white hover:fill-green-300 flex flex-row">
-			<div class="relative inline-block">
-				<button class="flex flex-row" on:click={() => (isOpen = !isOpen)}>
+		<div class="text-white px-2 hover:text-green-300 fill-white hover:fill-green-300 flex">
+			<div class="flex items-center">
+				<button class="flex" on:click={() => (isOpen = !isOpen)}>
 					<div class="px-1">Projects</div>
 					<svelte:component this={isOpen ? ChevronUp : ChevronDown} />
 				</button>
@@ -60,14 +60,14 @@
 		<a
 			href="mailto:nick@fintechnick.com"
 			aria-label="Email"
-			class=" text-white hover:text-green-300"
+			class=" text-white hover:text-green-300 flex items-center"
 		>
 			<svelte:component this={Email} />
 		</a>
 		<a
 			href="https://www.linkedin.com/in/nick-brett/"
 			aria-label="LinkedIn"
-			class=" bg-black text-white hover:text-sky-600 mr-2"
+			class=" bg-black text-white hover:text-sky-600 mr-2 flex items-center"
 			target="_blank"
 			rel="noopener noreferrer"
 		>
