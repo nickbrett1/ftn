@@ -4,7 +4,7 @@
 	import Landing from '$lib/components/Landing.svelte';
 </script>
 
-<div class="flex flex-col h-screen overflow-hidden">
+<div class="flex flex-col h-dvh">
 	<Header />
 	<Background />
 	<Landing />
