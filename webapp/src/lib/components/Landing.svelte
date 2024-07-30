@@ -3,7 +3,7 @@
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
-	const lines = ['Engineering', '', 'Product', '', 'Data'];
+	const lines = ['Do you love?', '', 'Engineering', '', 'Product', '', 'Data', '', '?'];
 
 	let animate = false;
 	onMount(async () => {
