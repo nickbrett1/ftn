@@ -3,7 +3,7 @@
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
-	const lines = ['Do you grok', '', 'Engineering', '', 'Product', '', 'Data', '', '?'];
+	const lines = ['TITLE', '', 'Engineering', '', 'Product', '', 'Data', '', '?'];
 
 	let animate = false;
 	onMount(async () => {
@@ -27,7 +27,15 @@
 								easing: backOut
 							}}
 						>
-							{line}
+							{#if i == 0}
+								Do you <span
+									class="bg-gradient-to-r from-orange-700 via-blue-500 to-green-400 text-transparent bg-clip-text animate-gradient"
+								>
+									grok
+								</span>
+							{:else}
+								{line}
+							{/if}
 						</span>
 					</div>
 				</div>
