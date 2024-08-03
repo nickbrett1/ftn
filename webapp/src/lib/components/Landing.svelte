@@ -29,7 +29,8 @@
 						>
 							{#if i == 0}
 								Do you <span
-									class="bg-gradient-to-r from-emerald-100 via-green-400 to-emerald-500 text-transparent bg-clip-text animate-gradient"
+									class="glitch relative font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
+									data-text="grok"
 								>
 									grok
 								</span>
@@ -43,3 +44,48 @@
 		{/each}
 	</div>
 </div>
+
+<style>
+	.glitch:before,
+	.glitch:after {
+		display: block;
+		content: attr(data-text);
+		position: absolute;
+		top: 0;
+		left: 0;
+		opacity: 0.8;
+	}
+
+	.glitch:before {
+		animation: glitch-it 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+		color: #ff0061;
+		z-index: -1;
+	}
+
+	.glitch:after {
+		animation: glitch-it 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+		color: #ff0061;
+		z-index: -2;
+	}
+
+	@keyframes glitch-it {
+		0% {
+			transform: translate(0);
+		}
+		20% {
+			transform: translate(-2px, 2px);
+		}
+		40% {
+			transform: translate(-2px, -2px);
+		}
+		60% {
+			transform: translate(2px, 2px);
+		}
+		80% {
+			transform: translate(2px, -2px);
+		}
+		to {
+			transform: translate(0);
+		}
+	}
+</style>
