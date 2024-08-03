@@ -1,5 +1,4 @@
 <script>
-	import Img from '@zerodevx/svelte-img';
 	import ChevronDown from './svg/ChevronDown.svelte';
 	import ChevronUp from './svg/ChevronUp.svelte';
 	import LinkedIn from './svg/LinkedIn.svelte';
