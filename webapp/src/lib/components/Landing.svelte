@@ -2,6 +2,7 @@
 	import { fly } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	import gsap from 'gsap';
 
 	const lines = ['TITLE', '', 'Engineering', '', 'Product', '', 'Data', '', '?'];
 
@@ -9,6 +10,17 @@
 	onMount(async () => {
 		animate = true;
 	});
+
+	const range = 64;
+
+	function handleMousemove(event) {
+		const x = Math.round((event.pageX * range) / window.innerWidth) - range / 2;
+		const y = Math.round((event.pageY * range) / window.innerHeight) - range / 2;
+		gsap.to(document.getElementById('grok'), {
+			'--x': x,
+			'--y': y
+		});
+	}
 </script>
 
 <div class="flex justify-center items-center grow">
@@ -29,6 +41,10 @@
 						>
 							{#if i == 0}
 								Do you <span
+									role="button"
+									tabindex={0}
+									on:mousemove={handleMousemove}
+									id="grok"
 									class="bg-gradient-to-r from-emerald-100 via-green-400 to-emerald-500 text-transparent bg-clip-text animate-gradient"
 								>
 									grok
@@ -43,3 +59,19 @@
 		{/each}
 	</div>
 </div>
+
+<style>
+	:root {
+		--x: -8px;
+		--y: -8px;
+	}
+
+	#grok {
+		color: #fff;
+		font-weight: 800;
+		text-shadow:
+			calc(var(--x) * -1) calc(var(--y) * -1) 0px #10b981,
+			calc(var(--x) * -2) calc(var(--y) * -2) 0px #4ade80,
+			calc(var(--x) * -3) calc(var(--y) * -3) 0px #d1fae5;
+	}
+</style>
