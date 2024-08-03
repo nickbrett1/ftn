@@ -21,26 +21,16 @@ module.exports = {
 					900: '#A5371B'
 				}
 			},
-			keyframes: {
-				example: {
-					from: { opacity: 1 },
-					to: { opacity: 0 }
-				},
-				animatedgradient: {
-					'0%': { backgroundPosition: '0% 50%' },
-					'50%': { backgroundPosition: '100% 50%' },
-					'100%': { backgroundPosition: '0% 50%' }
-				}
-			},
-			backgroundSize: {
-				'300%': '300%'
-			},
 			animation: {
-				gradient: 'animatedgradient 6s ease infinite alternate'
+				'text-gradient': 'text-gradient 1.5s linear infinite'
+			},
+			keyframes: {
+				'text-gradient': {
+					to: {
+						backgroundPosition: '200% center'
+					}
+				}
 			}
-		},
-		animation: {
-			fromto: 'example 5s ease-in infinite'
 		}
 	}
 };

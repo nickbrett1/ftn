@@ -29,7 +29,7 @@
 						>
 							{#if i == 0}
 								Do you <span
-									class="bg-gradient-to-r from-emerald-100 via-green-400 to-emerald-500 text-transparent bg-clip-text bg-300% animate-gradient will-change-transform"
+									class="inline-flex animate-text-gradient bg-gradient-to-r from-[#b2a8fd] via-[#8678f9] to-[#c7d2fe] bg-[200%_auto] bg-clip-text text-xl4 text-transparent"
 								>
 									grok
 								</span>
