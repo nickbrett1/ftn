@@ -1,5 +1,7 @@
 <script>
 	import { fly } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
@@ -9,6 +11,13 @@
 	onMount(async () => {
 		animate = true;
 	});
+
+	let hovering = false;
+	const enter = () => {
+		hovering = true;
+	};
+
+	const leave = () => (hovering = false);
 </script>
 
 <div class="flex justify-center items-center grow">
@@ -30,9 +39,21 @@
 							{#if i == 0}
 								Do you <span
 									class="glitch relative font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
+									on:mouseenter={enter}
+									on:mouseleave={leave}
 									data-text="grok"
+									role="button"
+									tabindex={0}
 								>
 									grok
+									{#if hovering}
+										<div
+											in:scale={{ duration: 150, easing: quintOut, opacity: 0 }}
+											class="absolute border shadow-xl top-4 left-8 bg-white rounded-lg p-2 w-48"
+										>
+											<h3 class="text-lg text-black font-semibold">grok definition here</h3>
+										</div>
+									{/if}
 								</span>
 							{:else}
 								{line}
