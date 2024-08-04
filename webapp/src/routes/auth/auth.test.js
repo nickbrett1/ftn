@@ -1,6 +1,21 @@
-import { expect, describe, it, vi, beforeEach } from 'vitest';
+import { expect, describe, it, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 import { createServer } from 'miragejs';
+import { Client, fql } from 'fauna';
+
+const mocks = vi.hoisted(() => {
+	return {
+		Client: vi.fn(),
+		fql: vi.fn()
+	};
+});
+
+vi.mock('fauna', () => {
+	return {
+		Client: mocks.Client,
+		fql: mocks.fql
+	};
+});
 
 const TEST_USER = 'test@test.com';
 
@@ -14,10 +29,8 @@ vi.mock('$env/static/private', async () => {
 
 describe('Auth', () => {
 	let server;
-	let disableFauna;
-	beforeEach(async () => {
-		disableFauna = false;
 
+	beforeEach(async () => {
 		server = createServer({
 			routes() {
 				this.get('https://fintechnick.com', () => ({}));
@@ -28,9 +41,6 @@ describe('Auth', () => {
 					email: TEST_USER
 				}));
 				this.post('https://oauth2.googleapis.com/revoke');
-				this.post('https://graphql.us.fauna.com/graphql', () =>
-					disableFauna ? { data: { user: null } } : { data: { user: { email: TEST_USER } } }
-				);
 			}
 		});
 
@@ -40,21 +50,38 @@ describe('Auth', () => {
 	});
 
 	it('auth allows access if in KV', async () => {
+		mocks.Client.mockImplementation(() => {
+			return {
+				query: vi.fn().mockImplementation(() => ({
+					data: { data: [{ user: { email: TEST_USER } }] }
+				}))
+			};
+		});
+
 		const res = await GET({
 			request: new Request('https://fintechnick.com/auth?code=123'),
 			platform: { env: { KV: { put: () => {} } } }
 		});
 
 		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/home');
+		mocks.Client.mockRestore();
 	});
 
 	it('redirect to preview if not in database', async () => {
-		disableFauna = true;
+		mocks.Client.mockImplementation(() => {
+			return {
+				query: vi.fn().mockImplementation(() => ({
+					data: { data: [] }
+				}))
+			};
+		});
+
 		const res = await GET({
 			request: new Request('https://fintechnick.com/auth?code=123'),
 			platform: { env: { KV: { put: () => {} } } }
 		});
 
 		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
+		mocks.Client.mockRestore();
 	});
 });
