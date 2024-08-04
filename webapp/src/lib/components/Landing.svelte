@@ -27,7 +27,7 @@
 				<div
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
-					<div class="inline-block overflow-hidden align-bottom">
+					<div class="inline-block overflow-visible align-bottom">
 						<span
 							class="inline-block m-1 uppercase drop-shadow-xl"
 							in:fly={{
@@ -38,7 +38,7 @@
 						>
 							{#if i == 0}
 								Do you <span
-									class="glitch relative font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
+									class="relative glitch text-nowrap font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
 									on:mouseenter={enter}
 									on:mouseleave={leave}
 									data-text="grok"
@@ -49,7 +49,7 @@
 									{#if hovering}
 										<div
 											in:scale={{ duration: 150, easing: quintOut, opacity: 0 }}
-											class="absolute border shadow-xl top-4 left-8 bg-white rounded-lg p-2 w-48"
+											class="absolute text-wrap border shadow-xl top-4 left-8 bg-white rounded-lg p-2 w-48"
 										>
 											<h3 class="text-lg text-black font-semibold">grok definition here</h3>
 										</div>
@@ -69,7 +69,7 @@
 <style>
 	.glitch:before,
 	.glitch:after {
-		display: block;
+		display: inline-block;
 		content: attr(data-text);
 		position: absolute;
 		top: 0;
