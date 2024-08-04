@@ -1,4 +1,4 @@
-import { expect, describe, it, vi, beforeEach, afterEach } from 'vitest';
+import { expect, describe, it, vi, beforeEach } from 'vitest';
 import { GET } from './+server.js';
 import { createServer } from 'miragejs';
 
