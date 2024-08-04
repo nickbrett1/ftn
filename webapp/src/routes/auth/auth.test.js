@@ -1,7 +1,6 @@
 import { expect, describe, it, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 import { createServer } from 'miragejs';
-import { Client, fql } from 'fauna';
 
 const mocks = vi.hoisted(() => {
 	return {
