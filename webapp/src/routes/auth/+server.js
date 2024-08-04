@@ -1,4 +1,5 @@
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, FAUNA_AUTH } from '$env/static/private';
+import { Client, fql } from 'fauna';
 
 const tokenExchange = async (url, code) => {
 	const body = new URLSearchParams();
@@ -43,28 +44,16 @@ const isUserAllowed = async (token) => {
 	if (userInfo.error) throw new Error(userInfo.error);
 	if (!userInfo.verified_email) return false;
 
-	const result = await fetch('https://graphql.us.fauna.com/graphql', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: FAUNA_AUTH ? `Bearer ${FAUNA_AUTH}` : ''
-		},
-		body: JSON.stringify({
-			query: `
-				query FindAUser($email: String!) {
-					user(email: $email) {
-						email
-					}
-				}
-			`,
-			variables: {
-				email: userInfo.email
-			}
-		})
+	const client = new Client({
+		secret: FAUNA_AUTH
 	});
 
-	const data = await result.json();
-	return data.data.user !== null;
+	const query = fql`
+		User.where(.email == ${userInfo.email})
+	`;
+
+	const data = await client.query(query);
+	return data.data.data.length === 1;
 };
 
 // Convert each uint8 (range 0 to 255) to string in base 36 (0 to 9, a to z)

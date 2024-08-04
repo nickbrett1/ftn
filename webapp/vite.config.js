@@ -61,6 +61,11 @@ export default defineConfig({
 		environment: 'jsdom',
 		coverage: {
 			reporter: ['text', 'lcov']
+		},
+		server: {
+			deps: {
+				inline: ['fauna']
+			}
 		}
 	},
 	ssr: {
