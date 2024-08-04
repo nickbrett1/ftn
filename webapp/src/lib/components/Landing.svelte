@@ -49,9 +49,14 @@
 									{#if hovering}
 										<div
 											in:scale={{ duration: 150, easing: quintOut, opacity: 0 }}
-											class="absolute text-wrap border shadow-xl top-4 left-8 bg-white rounded-lg p-2 w-48"
+											class="absolute flex max-w-screen-md h-max text-wrap border shadow-xl bottom-0 left-0 bg-white rounded-lg"
 										>
-											<h3 class="text-lg text-black font-semibold">grok definition here</h3>
+											<h3 class="text-lg normal-case text-black font-semibold">
+												grok verb
+												<i>transitive verb</i>
+												: to understand profoundly and intutively
+												<a href="https://www.merriam-webster.com/dictionary/grok">definition</a>
+											</h3>
 										</div>
 									{/if}
 								</span>
