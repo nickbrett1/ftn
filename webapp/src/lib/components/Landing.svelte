@@ -13,11 +13,13 @@
 	});
 
 	let hovering = false;
-	const enter = () => {
-		hovering = true;
+	let x, y;
+	const mouseOver = () => (hovering = true);
+	const mouseMove = (event) => {
+		x = event.offsetX + 5;
+		y = event.offsetY + 5;
 	};
-
-	const leave = () => (hovering = false);
+	const mouseLeave = () => (hovering = false);
 </script>
 
 <div class="flex justify-center items-center grow">
@@ -39,20 +41,23 @@
 							{#if i == 0}
 								Do you <span
 									class="relative glitch text-nowrap font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
-									on:mouseenter={enter}
-									on:mouseleave={leave}
+									on:mouseover={mouseOver}
+									on:mouseleave={mouseLeave}
+									on:mousemove={mouseMove}
+									on:focus={() => {}}
 									data-text="grok"
-									role="button"
-									tabindex={0}
+									role="note"
 								>
 									grok
 									{#if hovering}
 										<div
 											in:scale={{ duration: 150, easing: quintOut, opacity: 0 }}
-											class="absolute flex max-w-screen-md h-max text-wrap border shadow-xl bottom-0 left-0 bg-white rounded-lg"
+											style="top: {y}px; left: {x}px"
+											class="border-2 border-solid border-white shadow-sm
+													bg-white rounded p-1 fixed text-wrap z-50"
 										>
-											<h3 class="text-lg normal-case text-black font-semibold">
-												grok verb
+											<h3 class="text-base normal-case text-black font-semibold">
+												grok verb<br />
 												<i>transitive verb</i>
 												: to understand profoundly and intutively
 												<a href="https://www.merriam-webster.com/dictionary/grok">definition</a>
