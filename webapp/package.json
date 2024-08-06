@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"@dimforge/rapier3d-compat": "^0.14.0",
-		"@graphql-mocks/network-nock": "^0.6.0",
+		"@graphql-mocks/network-nock": "^0.6.1",
 		"@sveltejs/adapter-auto": "^3.2.2",
 		"@sveltejs/adapter-cloudflare": "^4.7.0",
 		"@sveltejs/kit": "^2.5.20",
