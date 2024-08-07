@@ -57,7 +57,7 @@
 													bg-white rounded p-1 fixed text-wrap opacity-100 z-10"
 										>
 											<h3 class="text-base normal-case text-black font-semibold relative">
-												grok verb<br />
+												grok<br />
 												<i>transitive verb</i>
 												: to understand profoundly and intutively
 											</h3>
