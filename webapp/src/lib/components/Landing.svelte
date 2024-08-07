@@ -5,7 +5,7 @@
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
-	const lines = ['TITLE', '', 'Engineering', '', 'Product', '', 'Data', '', '?'];
+	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?'];
 
 	let animate = false;
 	onMount(async () => {
@@ -16,8 +16,8 @@
 	let x, y;
 	const mouseOver = () => (hovering = true);
 	const mouseMove = (event) => {
-		x = event.offsetX + 5;
-		y = event.offsetY + 5;
+		x = event.clientX + 5;
+		y = event.clientY + 5;
 	};
 	const mouseLeave = () => (hovering = false);
 </script>
@@ -29,9 +29,9 @@
 				<div
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
-					<div class="inline-block overflow-visible align-bottom">
+					<div class="inline-block overflow-visible">
 						<span
-							class="inline-block m-1 uppercase drop-shadow-xl"
+							class="inline-block m-1"
 							in:fly={{
 								y: 100,
 								delay: 300 * i,
@@ -39,28 +39,27 @@
 							}}
 						>
 							{#if i == 0}
-								Do you <span
+								DO YOU <span
 									class="relative glitch text-nowrap font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
 									on:mouseover={mouseOver}
 									on:mouseleave={mouseLeave}
 									on:mousemove={mouseMove}
 									on:focus={() => {}}
-									data-text="grok"
+									data-text="GROK"
 									role="note"
 								>
-									grok
+									GROK
 									{#if hovering}
 										<div
-											in:scale={{ duration: 150, easing: quintOut, opacity: 0 }}
+											in:scale={{ duration: 150, easing: quintOut }}
 											style="top: {y}px; left: {x}px"
 											class="border-2 border-solid border-white shadow-sm
-													bg-white rounded p-1 fixed text-wrap z-50"
+													bg-white rounded p-1 fixed text-wrap opacity-100 z-10"
 										>
-											<h3 class="text-base normal-case text-black font-semibold">
+											<h3 class="text-base normal-case text-black font-semibold relative">
 												grok verb<br />
 												<i>transitive verb</i>
 												: to understand profoundly and intutively
-												<a href="https://www.merriam-webster.com/dictionary/grok">definition</a>
 											</h3>
 										</div>
 									{/if}
