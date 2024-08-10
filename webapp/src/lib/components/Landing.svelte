@@ -1,7 +1,6 @@
 <script>
 	import { fly } from 'svelte/transition';
 	import { scale } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 	import { backOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
@@ -20,6 +19,19 @@
 		y = event.clientY + 5;
 	};
 	const mouseLeave = () => (hovering = false);
+
+	let flipped = false;
+
+	let flip = (node, { delay = 0, duration = 1500 }) => {
+		return {
+			delay,
+			duration,
+			css: (t, u) => `
+				transform: rotateY(${1 - u * 180}deg);
+				opacity: ${1 - u};
+			`
+		};
+	};
 </script>
 
 <div class="flex justify-center items-center grow">
@@ -29,7 +41,7 @@
 				<div
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
-					<div class="inline-block overflow-visible">
+					<div class="inline-block overflow-visible relative">
 						<span
 							class="inline-block m-1"
 							in:fly={{
@@ -64,6 +76,12 @@
 										</div>
 									{/if}
 								</span>
+							{:else if i == lines.length - 1}
+								{#if flipped}
+									<div class="absolute top-0 left-0" role="note" transition:flip>&darr;</div>
+								{:else}
+									<div class="absolute top-0 left-0" role="note" transition:flip>?</div>
+								{/if}
 							{:else}
 								{line}
 							{/if}
