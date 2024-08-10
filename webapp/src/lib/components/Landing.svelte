@@ -1,14 +1,25 @@
 <script>
-	import { fly } from 'svelte/transition';
-	import { scale } from 'svelte/transition';
-	import { backOut } from 'svelte/easing';
-	import { onMount } from 'svelte';
+	import { fly, scale, slide } from 'svelte/transition';
+	import { backOut, quintOut } from 'svelte/easing';
+	import { onDestroy, onMount } from 'svelte';
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?'];
 
+	const finalLine = ['?', '\u2193'];
+	let index = 0;
+
+	let roller;
 	let animate = false;
 	onMount(async () => {
 		animate = true;
+		roller = setInterval(() => {
+			if (index === finalLine.length - 1) index = 0;
+			else index++;
+		}, 2500);
+	});
+
+	onDestroy(() => {
+		clearInterval(roller);
 	});
 
 	let hovering = false;
@@ -19,19 +30,6 @@
 		y = event.clientY + 5;
 	};
 	const mouseLeave = () => (hovering = false);
-
-	let flipped = false;
-
-	let flip = (node, { delay = 0, duration = 1500 }) => {
-		return {
-			delay,
-			duration,
-			css: (t, u) => `
-				transform: rotateY(${1 - u * 180}deg);
-				opacity: ${1 - u};
-			`
-		};
-	};
 </script>
 
 <div class="flex justify-center items-center grow">
@@ -77,11 +75,14 @@
 									{/if}
 								</span>
 							{:else if i == lines.length - 1}
-								{#if flipped}
-									<div class="absolute top-0 left-0" role="note" transition:flip>&darr;</div>
-								{:else}
-									<div class="absolute top-0 left-0" role="note" transition:flip>?</div>
-								{/if}
+								{#key index}
+									<p
+										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
+										transition:slide={{ delay: 300 * (i + 3) }}
+									>
+										{finalLine[index]}
+									</p>
+								{/key}
 							{:else}
 								{line}
 							{/if}
