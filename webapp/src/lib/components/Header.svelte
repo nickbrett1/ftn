@@ -36,14 +36,20 @@
 				</button>
 				{#if isOpen}
 					<div class="absolute right-0 top-10 w-64 bg-black text-white rounded z-10">
-						<div class=" hover:bg-green-800">
-							<a href="/projects/galactic" class="block px-4 py-2">Galactic Unicorn</a>
-						</div>
-						<a href="/projects/makingof" class="block px-4 py-2 hover:bg-green-800">Making Of</a>
-						<a href="/projects/3d" class="block px-4 py-2 hover:bg-green-800">3D</a>
-						<a href="/projects/chase" class="block px-4 py-2 hover:bg-green-800">Chase Monthly</a>
-						<a href="/projects/product" class="block px-4 py-2 hover:bg-green-800">Product Ideas</a>
-						<a href="/projects/blog" class="block px-4 py-2 hover:bg-green-800">Blog</a>
+						{#if false}
+							<a href="/projects/galactic" class="block px-4 py-2 hover:bg-green-800"
+								>Galactic Unicorn</a
+							>
+							<a href="/projects/makingof" class="block px-4 py-2 hover:bg-green-800">Making Of</a>
+							<a href="/projects/3d" class="block px-4 py-2 hover:bg-green-800">3D</a>
+							<a href="/projects/chase" class="block px-4 py-2 hover:bg-green-800">Chase Monthly</a>
+							<a href="/projects/product" class="block px-4 py-2 hover:bg-green-800"
+								>Product Ideas</a
+							>
+							<a href="/projects/blog" class="block px-4 py-2 hover:bg-green-800">Blog</a>
+						{/if}
+
+						<a href="/projects" class="block px-4 py-2 hover:bg-green-800">Coming Soon...</a>
 						{#await import('./Login.svelte') then Login}
 							<Login.default
 								class="block px-4 py-2  hover:bg-green-800 w-full text-left"
