@@ -78,7 +78,7 @@
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
-										transition:slide={{ delay: 300 * (i + 3) }}
+										transition:slide={{ delay: 300 * (i + 1) }}
 									>
 										{finalLine[index]}
 									</p>
