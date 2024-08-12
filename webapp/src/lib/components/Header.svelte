@@ -35,7 +35,7 @@
 					<svelte:component this={isOpen ? ChevronUp : ChevronDown} />
 				</button>
 				{#if isOpen}
-					<div class="absolute right-0 top-10 w-64 bg-black text-white rounded z-10">
+					<div class="absolute right-0 top-10 w-fit bg-black text-white rounded z-10">
 						{#if false}
 							<a href="/projects/galactic" class="block px-4 py-2 hover:bg-green-800"
 								>Galactic Unicorn</a
