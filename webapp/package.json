@@ -24,7 +24,7 @@
 		"@sveltejs/kit": "^2.5.24",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@testing-library/svelte": "^5.2.1",
-		"@vite-pwa/sveltekit": "^0.6.0",
+		"@vite-pwa/sveltekit": "^0.6.1",
 		"@vitest/coverage-c8": "^0.33.0",
 		"@vitest/coverage-v8": "^0.34.6",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
