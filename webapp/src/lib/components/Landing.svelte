@@ -4,7 +4,6 @@
 	import { onDestroy, onMount } from 'svelte';
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?'];
-
 	const finalLine = ['?', '\u2193'];
 	let index = 0;
 
@@ -50,7 +49,7 @@
 						>
 							{#if i == 0}
 								DO YOU <span
-									class="relative glitch text-nowrap font-bold bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
+									class="relative glitch text-nowrap bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
 									on:mouseover={mouseOver}
 									on:mouseleave={mouseLeave}
 									on:mousemove={mouseMove}
