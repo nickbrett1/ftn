@@ -12,7 +12,7 @@
 	<Landing />
 </div>
 
-<div class="h-dvh flex flex-col">
+<div class="h-max flex flex-col">
 	<div
 		class="text-white z-10 py-10 text-center sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-bold"
 	>
