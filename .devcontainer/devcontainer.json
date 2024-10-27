@@ -24,7 +24,6 @@
         "ecmel.vscode-html-css",
         "oderwat.indent-rainbow",
         "esbenp.prettier-vscode",
-        "matteopieroni.refresh-npm-packages",
         "humao.rest-client",
         "actboy168.tasks",
         "jeremyrajan.webpack",
@@ -48,7 +47,6 @@
         "fudd.toggle-zen-mode",
         "yatki.vscode-surround",
         "mutantdino.resourcemonitor",
-        "bungcip.better-toml",
         "unifiedjs.vscode-mdx",
         "bradlc.vscode-tailwindcss",
         "svelte.svelte-vscode",
@@ -57,7 +55,8 @@
         "alefragnani.project-manager",
         "cesium.gltf-vscode",
         "ms-azuretools.vscode-docker",
-        "GitHub.copilot-nightly"
+        "GitHub.copilot-nightly",
+        "tamasfe.even-better-toml"
       ]
     }
   },
