@@ -69,6 +69,6 @@
 		"nanoid": "^5.0.8",
 		"svelte-vertical-timeline": "^1.0.2",
 		"three": "^0.170.0",
-		"tsparticles": "^3.5.0"
+		"tsparticles": "^3.6.0"
 	}
 }
