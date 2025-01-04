@@ -58,6 +58,7 @@
 
 	function onClick() {
 		if (loggedIn) {
+			// Changed from using @app/navigation svelte module as use caused tests to fail
 			window.location = '/home';
 			return;
 		}
