@@ -12,9 +12,9 @@
 	<Landing />
 </div>
 
-<div class="h-max flex flex-col">
+<div class="flex flex-col justify-center items-center grow">
 	<div
-		class="text-white z-10 py-10 text-center sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-bold"
+		class="text-white z-10 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 	>
 		Let Me Introduce Myself
 	</div>
