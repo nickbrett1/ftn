@@ -3,7 +3,21 @@
 	import Background from '$lib/components/Background.svelte';
 	import Landing from '$lib/components/Landing.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
-	import Saos from 'saos';
+
+	import { inview } from 'svelte-inview';
+	import { fade } from 'svelte/transition';
+
+	let isInView;
+	let scrollDirection;
+	const options = {
+		rootMargin: '-50px',
+		unobserveOnEnter: true
+	};
+
+	const handleChange = ({ detail }) => {
+		isInView = detail.inView;
+		scrollDirection = detail.scrollDirection.vertical;
+	};
 </script>
 
 <Background />
@@ -14,33 +28,29 @@
 </div>
 
 <div class="flex flex-col justify-center items-center grow">
-	<Saos
-		animation={'puff-in-center 0.7s cubic-bezier(0.470, 0.000, 0.745, 0.715) both'}
-		top={250}
-		bottom={250}
-	>
+	<div use:inview={options} on:inview_change={handleChange}>
 		<div
-			class="text-white z-10 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+			class:animate={isInView}
+			class:animateFromBottom={scrollDirection === 'down'}
+			class:animateFromTop={scrollDirection === 'up'}
 		>
-			Let Me Introduce Myself
+			{#if isInView}
+				<div
+					in:fade={{ duration: 5000 }}
+					class="text-white z-10 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+				>
+					Let Me Introduce Myself
+				</div>
+			{:else}
+				<div
+					class="text-white text-opacity-0 z-10 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+				>
+					Let Me Introduce Myself
+				</div>
+			{/if}
 		</div>
-	</Saos>
+	</div>
 	<div class="flex grow items-center">
 		<!-- <Timeline /> -->
 	</div>
 </div>
-
-<style>
-	@keyframes -global-puff-in-center {
-		0% {
-			transform: scale(2);
-			filter: blur(4px);
-			opacity: 0;
-		}
-		100% {
-			transform: scale(1);
-			filter: blur(0px);
-			opacity: 1;
-		}
-	}
-</style>
