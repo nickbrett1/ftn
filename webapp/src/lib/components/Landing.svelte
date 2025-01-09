@@ -80,6 +80,9 @@
 										transition:slide={{ delay: 300 * (i + 1) }}
 									>
 										{finalLine[index]}
+										{#if index === 1}
+											<p class="text-sm font-normal">Scroll for more</p>
+										{/if}
 									</p>
 								{/key}
 							{:else}
