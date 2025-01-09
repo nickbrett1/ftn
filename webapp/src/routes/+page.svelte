@@ -10,7 +10,7 @@
 	let isInView;
 	let scrollDirection;
 	const options = {
-		rootMargin: '-50px',
+		rootMargin: '-20%',
 		unobserveOnEnter: true
 	};
 
@@ -36,7 +36,7 @@
 		>
 			{#if isInView}
 				<div
-					in:fade={{ duration: 5000 }}
+					in:fade={{ duration: 2000 }}
 					class="text-white z-10 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
 					Let Me Introduce Myself
