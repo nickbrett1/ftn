@@ -42,7 +42,7 @@
 		"npm": "^11.0.0",
 		"postcss": "^8.4.49",
 		"prettier": "^3.4.2",
-		"prettier-plugin-svelte": "^3.3.2",
+		"prettier-plugin-svelte": "^3.3.3",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"resize-observer-polyfill": "^1.5.1",
