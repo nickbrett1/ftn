@@ -57,6 +57,7 @@
 		rounded-lg
 		relative
 		overflow-hidden
+		transition-all
 	`}
 >
 	<div
