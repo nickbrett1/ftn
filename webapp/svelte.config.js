@@ -1,5 +1,5 @@
 import adapter from '@sveltejs/adapter-cloudflare';
-import preprocess from 'svelte-preprocess';
+import { sveltePreprocess } from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -43,7 +43,7 @@ const config = {
 	compilerOptions: {
 		enableSourcemap: true
 	},
-	preprocess: preprocess({ sourceMap: true })
+	preprocess: sveltePreprocess({ sourceMap: true })
 };
 
 export default config;
