@@ -54,6 +54,7 @@
 	class={`
 		bg-green-800/20
 		p-1
+		m-0
 		rounded-lg
 		relative
 		overflow-hidden
