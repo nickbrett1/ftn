@@ -4,6 +4,8 @@
 	import Landing from '$lib/components/Landing.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
+	import GithubBrand from 'svelte-awesome-icons/GithubBrand.svelte';
+	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
 
 	import { inview } from 'svelte-inview';
 	import { fade } from 'svelte/transition';
@@ -93,9 +95,16 @@
 			flex-wrap 
 			justify-center`}
 	>
-		<Card on:click={() => (window.location.href = '/github')}>
-			<h1 class="text-xl mb-4 leading-none">Github</h1>
-			<p class="text-left">Github</p>
+		<Card
+			on:click={() =>
+				window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
+		>
+			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
+				<div class="relative isolate justify-center items-center">
+					<GithubBrand aria-label="Github" class="size-20 w-full" />
+					<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+				</div>
+			</div>
 		</Card>
 
 		<Card
@@ -104,15 +113,22 @@
 		>
 			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
 				<div class="relative isolate hover:text-sky-600 justify-center items-center">
-					<LinkedinInBrand aria-label="LinkedIn" class="size-12 w-full" />
+					<LinkedinInBrand aria-label="LinkedIn" class="size-20 w-full" />
 					<h1 class="text-xl leading-none py-2 w-full">LinkedIn</h1>
 				</div>
 			</div>
 		</Card>
 
-		<Card on:click={() => (window.location.href = '/email')}>
-			<h1 class="text-xl mb-4 leading-none">Email</h1>
-			<p class="text-left">Email</p>
+		<Card
+			on:click={() =>
+				window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
+		>
+			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
+				<div class="relative isolate justify-center items-center">
+					<EnvelopeRegular aria-label="Github" class="size-20 w-full" />
+					<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+				</div>
+			</div>
 		</Card>
 	</div>
 </div>
