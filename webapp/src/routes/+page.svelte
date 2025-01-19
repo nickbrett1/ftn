@@ -98,7 +98,10 @@
 			<p class="text-left">Github</p>
 		</Card>
 
-		<Card on:click={() => (window.location.href = '/linkedin')}>
+		<Card
+			on:click={() =>
+				window.open('https://www.linkedin.com/in/nick-brett/', '_blank', 'noopener', 'noreferrer')}
+		>
 			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
 				<div class="relative isolate hover:text-sky-600 justify-center items-center">
 					<LinkedinInBrand aria-label="LinkedIn" class="size-12 w-full" />
