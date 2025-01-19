@@ -1,8 +1,9 @@
 <script>
-	import ChevronDown from './svg/ChevronDown.svelte';
-	import ChevronUp from './svg/ChevronUp.svelte';
-	import LinkedIn from './svg/LinkedIn.svelte';
-	import Email from './svg/Email.svelte';
+	import ChevronDownSolid from 'svelte-awesome-icons/ChevronDownSolid.svelte';
+	import ChevronUpSolid from 'svelte-awesome-icons/ChevronUpSolid.svelte';
+
+	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
+	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
 
 	let isOpen = false;
 </script>
@@ -22,7 +23,11 @@
 			<div class="flex items-center">
 				<button class="flex" on:click={() => (isOpen = !isOpen)}>
 					<div class="px-1">Projects</div>
-					<svelte:component this={isOpen ? ChevronUp : ChevronDown} />
+					{#if isOpen}
+						<ChevronUpSolid />
+					{:else}
+						<ChevronDownSolid />
+					{/if}
 				</button>
 				{#if isOpen}
 					<div class="absolute right-0 top-10 w-fit bg-black text-white rounded z-10">
@@ -54,19 +59,17 @@
 
 		<a
 			href="mailto:nick@fintechnick.com"
-			aria-label="Email"
 			class=" text-white hover:text-green-300 flex items-center"
 		>
-			<svelte:component this={Email} />
+			<EnvelopeRegular aria-label="Email" />
 		</a>
 		<a
 			href="https://www.linkedin.com/in/nick-brett/"
-			aria-label="LinkedIn"
 			class=" bg-black text-white hover:text-sky-600 mr-2 flex items-center"
 			target="_blank"
 			rel="noopener noreferrer"
 		>
-			<svelte:component this={LinkedIn} />
+			<LinkedinInBrand aria-label="LinkedIn" />
 		</a>
 	</nav>
 </div>
