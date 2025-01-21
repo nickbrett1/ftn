@@ -3,9 +3,12 @@
 	import Background from '$lib/components/Background.svelte';
 	import Landing from '$lib/components/Landing.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import HoverFadeCard from '$lib/components/HoverFadeCard.svelte';
 	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
-	import GithubBrand from 'svelte-awesome-icons/GithubBrand.svelte';
 	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
+	import EnvelopeOpenRegular from 'svelte-awesome-icons/EnvelopeOpenRegular.svelte';
+	import GithubBrand from 'svelte-awesome-icons/GithubBrand.svelte';
+	import FileCodeRegular from 'svelte-awesome-icons/FileCodeRegular.svelte';
 
 	import { inview } from 'svelte-inview';
 	import { fade } from 'svelte/transition';
@@ -95,18 +98,19 @@
 			flex-wrap 
 			justify-center`}
 	>
-		<Card
+		<HoverFadeCard
 			on:click={() =>
 				window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
 		>
-			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
-				<div class="relative isolate justify-center items-center">
-					<GithubBrand aria-label="Github" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Github</h1>
-				</div>
+			<div slot="initial">
+				<GithubBrand aria-label="Github" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Github</h1>
 			</div>
-		</Card>
-
+			<div slot="onHover">
+				<FileCodeRegular aria-label="Github" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+			</div>
+		</HoverFadeCard>
 		<Card
 			on:click={() =>
 				window.open('https://www.linkedin.com/in/nick-brett/', '_blank', 'noopener', 'noreferrer')}
@@ -119,17 +123,19 @@
 			</div>
 		</Card>
 
-		<Card
+		<HoverFadeCard
 			on:click={() =>
 				window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
 		>
-			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
-				<div class="relative isolate justify-center items-center">
-					<EnvelopeRegular aria-label="Github" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Email</h1>
-				</div>
+			<div slot="initial">
+				<EnvelopeRegular aria-label="Email" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Email</h1>
 			</div>
-		</Card>
+			<div slot="onHover">
+				<EnvelopeOpenRegular aria-label="Email" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+			</div>
+		</HoverFadeCard>
 	</div>
 </div>
 
