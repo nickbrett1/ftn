@@ -69,7 +69,6 @@
 		"graphql": "^16.10.0",
 		"gsap": "^3.12.7",
 		"nanoid": "^5.0.9",
-		"svelte-vertical-timeline": "^1.0.2",
 		"three": "^0.172.0",
 		"tsparticles": "^3.7.1"
 	}
