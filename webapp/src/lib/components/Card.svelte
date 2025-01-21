@@ -53,7 +53,6 @@
 	on:click
 	class={`
 		bg-green-800/20
-		p-1
 		m-0
 		rounded-lg
 		relative
@@ -68,8 +67,7 @@
 			p-5
 			w-52
 			h-40
-			bg-gray-900
-			hover:bg-gray-900/60
+			hover:bg-green-950/60
 			overflow-hidden 
 			relative
 			transition-all`}
