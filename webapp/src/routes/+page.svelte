@@ -9,6 +9,10 @@
 	import EnvelopeOpenRegular from 'svelte-awesome-icons/EnvelopeOpenRegular.svelte';
 	import GithubBrand from 'svelte-awesome-icons/GithubBrand.svelte';
 	import FileCodeRegular from 'svelte-awesome-icons/FileCodeRegular.svelte';
+	import PenToSquareRegular from 'svelte-awesome-icons/PenToSquareRegular.svelte';
+	import ToolboxSolid from 'svelte-awesome-icons/ToolboxSolid.svelte';
+	import PlaneDepartureSolid from 'svelte-awesome-icons/PlaneDepartureSolid.svelte';
+	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
 
 	import { inview } from 'svelte-inview';
 	import { fade } from 'svelte/transition';
@@ -72,23 +76,45 @@
 		justify-center
 		`}
 	>
-		<Card on:click={() => (window.location.href = '/projects')}>
-			<h1 class="text-xl mb-4 leading-none">Making of FinTechNick</h1>
-			<p class="text-left">How this site was made</p>
-		</Card>
-		<Card on:click={() => (window.location.href = '/projects')}>
-			<h1 class="text-xl mb-4 leading-none">Machine Learnings on GCP</h1>
-			<p class="text-left">A project about machine learning on GCP</p>
-		</Card>
-		<Card on:click={() => (window.location.href = '/techstack')}>
-			<h1 class="text-xl mb-4 leading-none">Tools & Technologies</h1>
-			<p class="text-left">Links to useful tools and technologies</p>
-		</Card>
-		<Card on:click={() => (window.location.href = '/blog')}>
-			<h1 class="text-xl mb-4 leading-none">Blog</h1>
-			<p class="text-left">Blog posts on software engineering topics</p>
+		<HoverFadeCard>
+			<div slot="initial">
+				<SitemapSolid aria-label="Making of FinTechNick" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Making of FinTechNick</h1>
+			</div>
+			<div slot="onHover">
+				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+			</div>
+		</HoverFadeCard>
+		<HoverFadeCard>
+			<div slot="initial">
+				<PlaneDepartureSolid
+					aria-label="Machine Learning for Flight Delays"
+					class="size-20 w-full"
+				/>
+				<h1 class="text-xl leading-none py-2 w-full">Machine Learning for Flight Delays</h1>
+			</div>
+			<div slot="onHover">
+				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+			</div>
+		</HoverFadeCard>
+		<HoverFadeCard>
+			<div slot="initial">
+				<ToolboxSolid aria-label="Tools" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">My Tools</h1>
+			</div>
+			<div slot="onHover">
+				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+			</div>
+		</HoverFadeCard>
+		<Card
+			on:click={() =>
+				window.open('https://medium.com/the-management-code', '_blank', 'noopener', 'noreferrer')}
+		>
+			<PenToSquareRegular aria-label="Blog" class="size-20 w-full" />
+			<h1 class="text-xl leading-none py-2 w-full">Blog</h1>
 		</Card>
 	</div>
+
 	<div
 		class={`m-0 
 			gap-2 
