@@ -9,14 +9,16 @@
 </script>
 
 <div class="w-full bg-black/90 p-2 flex flex-row">
-	<a
-		href="https://fintechnick.com"
+	<button
+		on:click={() => {
+			window.location.reload();
+		}}
 		aria-label="Home"
 		class="text-white whitespace-nowrap py-1 text-2xl tracking-wide float-left
 			[text-shadow:_0_0_15px_#fff,_0_0_20px_#0fa,_0_0_30px_#0fa,_0_0_40px_#0fa,_0_0_80px_#0fa,_0_0_90px_#0fa,_0_0_100px_#0fa,_0_0_150px_#0fa]"
 	>
 		Fintech Nick
-	</a>
+	</button>
 
 	<nav class="flex flex-row-reverse grow">
 		<div class="text-white px-2 hover:text-green-300 fill-white hover:fill-green-300 flex">
