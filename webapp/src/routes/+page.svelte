@@ -15,7 +15,7 @@
 	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
 
 	import { inview } from 'svelte-inview';
-	import { fade } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 
 	let isInView;
 	let scrollDirection;
@@ -45,7 +45,7 @@
 		>
 			{#if isInView}
 				<div
-					transition:fade={{ duration: 2000 }}
+					transition:scale={{ duration: 2000 }}
 					class="text-white z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
 					Let Me Introduce Myself
