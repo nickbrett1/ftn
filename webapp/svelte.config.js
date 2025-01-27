@@ -27,12 +27,14 @@ const config = {
 				'media-src': ['self', 'https://ssl.gstatic.com'],
 				'object-src': ['none'],
 				'script-src': [
+					'self',
 					'https://static.cloudflareinsights.com',
 					'https://*.ingest.sentry.io',
 					'https://sentry.io/api/',
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
-					'strict-dynamic'
+					'strict-dynamic',
+					'unsafe-eval'
 				],
 				'worker-src': ['self', 'blob:']
 			}
