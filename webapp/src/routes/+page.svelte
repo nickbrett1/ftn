@@ -14,20 +14,28 @@
 	import PlaneDepartureSolid from 'svelte-awesome-icons/PlaneDepartureSolid.svelte';
 	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
 
-	import { inview } from 'svelte-inview';
+	import { gsap } from 'gsap';
+	import { Flip } from 'gsap/Flip';
+	gsap.registerPlugin(Flip);
+
 	import { scale } from 'svelte/transition';
+	import { tick } from 'svelte';
 
-	let isInView;
-	let scrollDirection;
-	const options = {
-		rootMargin: '-30%'
-	};
+	function getScrollPercent() {
+		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+		let scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+		let clientHeight = document.documentElement.clientHeight;
 
-	const handleChange = ({ detail }) => {
-		isInView = detail.inView;
-		scrollDirection = detail.scrollDirection.vertical;
-	};
+		return scrollTop / (scrollHeight - clientHeight);
+	}
+	let percentageScroll = 0;
 </script>
+
+<svelte:window
+	on:scroll={() => {
+		percentageScroll = getScrollPercent();
+	}}
+/>
 
 <Background />
 
@@ -37,21 +45,10 @@
 </div>
 
 <div class="flex flex-col justify-center items-center grow">
-	<div use:inview={options} on:inview_change={handleChange}>
-		<div
-			class:animate={isInView}
-			class:animateFromBottom={scrollDirection === 'down'}
-			class:animateFromTop={scrollDirection === 'up'}
-		>
-			{#if isInView}
-				<div
-					transition:scale={{ duration: 2000 }}
-					class="text-white z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
-				>
-					Let Me Introduce Myself
-				</div>
-			{/if}
-		</div>
+	<div
+		class="intro text-white z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+	>
+		Let Me Introduce Myself
 	</div>
 </div>
 
