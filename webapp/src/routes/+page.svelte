@@ -46,8 +46,8 @@
 
 <div class="flex flex-col justify-center items-center grow">
 	<div
-		scroll-btween="intro"
-		data-color="oklch(|1 to 0.871| |0 to 0.15| |0 to 154.449|)"
+		scroll-btween="basic"
+		data-transform="scale(|0.5 to 1|) skew(|-20 to 20|deg)"
 		class=" text-white z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 	>
 		Let Me Introduce Myself
