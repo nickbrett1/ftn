@@ -46,9 +46,9 @@
 
 <div class="flex flex-col justify-center items-center grow">
 	<div
-		scroll-btween="basic"
-		data-transform="scale(|0.5 to 1|) skew(|-20 to 20|deg)"
-		class=" text-white z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+		scroll-btween="intro"
+		data-opacity="|0:0 to 50:1 to 100:1|"
+		class=" text-white opacity-0 z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 	>
 		Let Me Introduce Myself
 	</div>
