@@ -62,7 +62,7 @@
 		"@tsparticles/engine": "^3.6.0",
 		"@tsparticles/interaction-external-trail": "3.6",
 		"@tsparticles/shape-text": "^3.6.0",
-		"@tsparticles/slim": "^3.6.0",
+		"@tsparticles/slim": "^3.8.1",
 		"@tsparticles/svelte": "^3.1.1",
 		"cookie": "^1.0.2",
 		"fauna": "^2.4.1",
