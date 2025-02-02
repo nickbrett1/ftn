@@ -13,13 +13,7 @@
 	import ToolboxSolid from 'svelte-awesome-icons/ToolboxSolid.svelte';
 	import PlaneDepartureSolid from 'svelte-awesome-icons/PlaneDepartureSolid.svelte';
 	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
-
-	import { gsap } from 'gsap';
-	import { Flip } from 'gsap/Flip';
-	gsap.registerPlugin(Flip);
-
-	import { scale } from 'svelte/transition';
-	import { tick } from 'svelte';
+	import IntroButton from '../lib/components/IntroButton.svelte';
 
 	function getScrollPercent() {
 		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -34,6 +28,7 @@
 <svelte:window
 	on:scroll={() => {
 		percentageScroll = getScrollPercent();
+		console.log('percentageScroll:', percentageScroll);
 	}}
 />
 
@@ -44,16 +39,34 @@
 	<Landing />
 </div>
 
-<div class="flex flex-col justify-center items-center grow">
+<!-- 
+<div
+	class=" text-white px-8 py-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black"
+>
+	Let Me Introduce Myself
+</div>
+-->
+
+<!-- Can we do a click event here, that animates to a nice full-screen ?? 
+ 	https://codepen.io/sashatran/pen/KaLqKR -->
+<!-- Reveal cards about my experience in different places, perhaps with company logos -->
+<!-- And reveal underneath the links to different sections -->
+
+<!-- Can we add fluid text effect to this - some nice green and red flow background?
+ https://flo-bit.dev/projects/fluid-text-effect/ -->
+
+<div class="flex flex-col justify-center items-center grow min-h-dvh">
 	<div
 		scroll-btween="intro"
 		data-opacity="|0:0 to 50:1 to 100:1|"
 		class=" text-white opacity-0 z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 	>
 		Let Me Introduce Myself
+		<IntroButton />
 	</div>
 </div>
 
+<!-- 
 <div
 	class={`w-full 
 		min-h-dvh 
@@ -164,3 +177,4 @@
 </div>
 
 <div class="flex justify-center mt-8 gap-8 items-center flex-wrap"></div>
+-->

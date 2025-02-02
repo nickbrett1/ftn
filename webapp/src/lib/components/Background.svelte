@@ -21,9 +21,9 @@
 		interactivity: {
 			detect_on: 'canvas',
 			events: {
-				onclick: { enable: false, mode: 'push' },
-				onhover: {
-					enable: false,
+				onClick: { enable: true, mode: 'push' },
+				onHover: {
+					enable: true,
 					mode: 'connect',
 					parallax: { enable: false, force: 60, smooth: 10 }
 				},
