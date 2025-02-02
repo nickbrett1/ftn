@@ -218,9 +218,15 @@
 	});
 </script>
 
-<svelte:component
-	this={ParticlesComponent}
-	id="introparticles"
-	options={particlesConfig}
-	on:particlesLoaded={onParticlesLoaded}
-/>
+<div class="relative">
+	<div class="z-20">Let Me Introduce Myself</div>
+
+	<div class="absolute inset-0 z-10">
+		<svelte:component
+			this={ParticlesComponent}
+			id="introparticles"
+			options={particlesConfig}
+			on:particlesLoaded={onParticlesLoaded}
+		/>
+	</div>
+</div>

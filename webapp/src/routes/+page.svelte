@@ -61,7 +61,6 @@
 		data-opacity="|0:0 to 50:1 to 100:1|"
 		class=" text-white opacity-0 z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 	>
-		Let Me Introduce Myself
 		<IntroButton />
 	</div>
 </div>
