@@ -3,7 +3,7 @@
 <script>
 </script>
 
-<button class="relative glowing-btn text-green-300"
+<button class="glowing-btn text-green-300"
 	><span class="glowing-txt">HEL<span class="faulty-letter">L</span>O</span></button
 >
 
