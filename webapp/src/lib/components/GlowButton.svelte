@@ -8,8 +8,6 @@
 >
 
 <style>
-	@import url('https://fonts.googleapis.com/css?family=Raleway');
-
 	/* Same as text-green-300 */
 	:root {
 		--glow-color: oklch(0.871 0.15 154.449);
@@ -28,9 +26,7 @@
 		border-radius: 0.45em;
 		background: none;
 		perspective: 2em;
-		font-family: 'Raleway', sans-serif;
 		font-size: 2em;
-		font-weight: 900;
 		letter-spacing: 1em;
 
 		-webkit-box-shadow:

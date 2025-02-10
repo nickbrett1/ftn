@@ -84,7 +84,7 @@
 									</p>
 								{/key}
 							{:else if i == lines.length - 1}
-								<div class="text-base">
+								<div class="text-base font-normal">
 									<GlowButton />
 								</div>
 							{:else}
