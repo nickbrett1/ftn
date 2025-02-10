@@ -59,7 +59,7 @@
 						},
 						move: {
 							outModes: {
-								default: 'destroy'
+								default: 'bounce'
 							},
 							speed: 2
 						},
@@ -119,13 +119,7 @@
 					enable: false,
 					options: {}
 				},
-				outModes: {
-					default: 'out',
-					bottom: 'out',
-					left: 'out',
-					right: 'out',
-					top: 'out'
-				},
+
 				random: false,
 				size: false,
 				speed: 2,
@@ -221,7 +215,7 @@
 <button class="relative">
 	<div class="z-20">Let Me Introduce Myself</div>
 
-	<div class="absolute inset-0 z-10">
+	<div class="absolute inset-0 z-10 overflow-visible">
 		<svelte:component
 			this={ParticlesComponent}
 			id="introparticles"
