@@ -2,9 +2,10 @@
 	import { fly, scale, slide } from 'svelte/transition';
 	import { backOut, quintOut } from 'svelte/easing';
 	import { onDestroy, onMount } from 'svelte';
+	import GlowButton from './GlowButton.svelte';
 
-	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?'];
-	const finalLine = ['?', '\u2193'];
+	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', '', 'BUTTON'];
+	const questionLine = ['?', '\u2193'];
 	let index = 0;
 
 	let roller;
@@ -12,7 +13,7 @@
 	onMount(async () => {
 		animate = true;
 		roller = setInterval(() => {
-			if (index === finalLine.length - 1) index = 0;
+			if (index === questionLine.length - 1) index = 0;
 			else index++;
 		}, 2500);
 	});
@@ -73,18 +74,19 @@
 										</div>
 									{/if}
 								</span>
-							{:else if i == lines.length - 1}
+							{:else if i == lines.length - 3}
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
 										transition:slide={{ delay: 300 * (i + 1) }}
 									>
-										{finalLine[index]}
-										{#if index === 1}
-											<p class="text-sm font-normal">Scroll for more</p>
-										{/if}
+										{questionLine[index]}
 									</p>
 								{/key}
+							{:else if i == lines.length - 1}
+								<div class="text-base">
+									<GlowButton />
+								</div>
 							{:else}
 								{line}
 							{/if}

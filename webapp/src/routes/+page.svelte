@@ -55,6 +55,7 @@
 <!-- Can we add fluid text effect to this - some nice green and red flow background?
  https://flo-bit.dev/projects/fluid-text-effect/ -->
 
+<!-- 
 <div class="flex flex-col justify-center items-center grow min-h-dvh">
 	<div
 		scroll-btween="intro"
@@ -64,6 +65,7 @@
 		<IntroButton />
 	</div>
 </div>
+-->
 
 <!-- 
 <div
