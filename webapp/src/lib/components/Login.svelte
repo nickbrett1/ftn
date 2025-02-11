@@ -57,6 +57,7 @@
 	}
 
 	function onClick() {
+		console.log('Login, clicked!');
 		if (loggedIn) {
 			// Changed from using @app/navigation svelte module as use caused tests to fail
 			window.location = '/home';
