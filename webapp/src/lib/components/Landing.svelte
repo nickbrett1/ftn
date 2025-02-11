@@ -85,7 +85,11 @@
 								{/key}
 							{:else if i == lines.length - 1}
 								<div class="flex text-base font-normal">
-									<GlowButton />
+									<GlowButton
+										on:click={() => {
+											console.log('clicked!');
+										}}
+									/>
 								</div>
 							{:else}
 								{line}
