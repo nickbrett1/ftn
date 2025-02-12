@@ -53,7 +53,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@threlte/core": "^7.3.1",
+		"@threlte/core": "^8.0.1",
 		"@threlte/extras": "^8.12.2",
 		"@tsparticles/engine": "^3.6.0",
 		"@tsparticles/interaction-external-trail": "3.8",
