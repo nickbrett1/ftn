@@ -3,9 +3,6 @@ import { render, act } from '@testing-library/svelte';
 import { screen, fireEvent } from '@testing-library/dom';
 import Login from './Login.svelte';
 
-/**
- * @vitest-environment jsdom
- */
 describe('Login correctly', () => {
 	it('logs in', () => {
 		const loginSpy = vi.fn();

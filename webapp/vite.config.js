@@ -1,13 +1,16 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import { svelteTesting } from '@testing-library/svelte/vite';
 import { imagetools } from '@zerodevx/svelte-img/vite';
 import { defineConfig } from 'vitest/config';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
+import path from 'path';
 
 export default defineConfig({
 	plugins: [
 		{ ...threeMinifier(), enforce: 'pre' },
 		sveltekit(),
+		svelteTesting(),
 		imagetools({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		}),

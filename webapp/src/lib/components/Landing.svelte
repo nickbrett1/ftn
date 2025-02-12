@@ -2,6 +2,7 @@
 	import { fly, scale, slide } from 'svelte/transition';
 	import { backOut, quintOut } from 'svelte/easing';
 	import { onDestroy, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import GlowButton from './GlowButton.svelte';
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', '', 'BUTTON'];
@@ -87,7 +88,10 @@
 								<div class="flex text-base font-normal">
 									<GlowButton
 										on:click={() => {
-											console.log('clicked!');
+											// For now, let's just get to the next page.
+											// Worry about a fancy transition later
+											// https://joyofcode.xyz/sveltekit-view-transitions
+											goto('/projects/3d');
 										}}
 									/>
 								</div>
