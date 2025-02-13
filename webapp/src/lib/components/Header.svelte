@@ -1,4 +1,6 @@
 <script>
+	import { goto } from '$app/navigation';
+
 	import ChevronDownSolid from 'svelte-awesome-icons/ChevronDownSolid.svelte';
 	import ChevronUpSolid from 'svelte-awesome-icons/ChevronUpSolid.svelte';
 
@@ -11,7 +13,7 @@
 <div class="w-full bg-black/90 p-2 flex flex-row">
 	<button
 		on:click={() => {
-			window.location.reload();
+			goto('/');
 		}}
 		aria-label="Home"
 		class="text-white whitespace-nowrap py-1 text-2xl tracking-wide float-left
