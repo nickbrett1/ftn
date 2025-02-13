@@ -1,11 +1,11 @@
 <script>
-	import { fly, scale, slide } from 'svelte/transition';
-	import { backOut, quintOut } from 'svelte/easing';
+	import { fly, scale, slide, fade } from 'svelte/transition';
+	import { backOut, quintOut, bounceInOut } from 'svelte/easing';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import GlowButton from './GlowButton.svelte';
 
-	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', '', 'BUTTON'];
+	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
 	const questionLine = ['?', '\u2193'];
 	let index = 0;
 
@@ -75,7 +75,7 @@
 										</div>
 									{/if}
 								</span>
-							{:else if i == lines.length - 3}
+							{:else if i == lines.length - 2}
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
@@ -84,17 +84,6 @@
 										{questionLine[index]}
 									</p>
 								{/key}
-							{:else if i == lines.length - 1}
-								<div class="flex text-base font-normal">
-									<GlowButton
-										on:click={() => {
-											// For now, let's just get to the next page.
-											// Worry about a fancy transition later
-											// https://joyofcode.xyz/sveltekit-view-transitions
-											goto('/projects/3d');
-										}}
-									/>
-								</div>
 							{:else}
 								{line}
 							{/if}
@@ -103,6 +92,25 @@
 				</div>
 			{/if}
 		{/each}
+		{#if animate}
+			<span
+				class="flex font-normal justify-center m-1"
+				in:fade={{
+					delay: 300 * lines.length,
+					duration: 400,
+					easing: bounceInOut
+				}}
+			>
+				<GlowButton
+					on:click={() => {
+						// For now, let's just get to the next page.
+						// Worry about a fancy transition later
+						// https://joyofcode.xyz/sveltekit-view-transitions
+						goto('/projects/3d');
+					}}
+				/>
+			</span>
+		{/if}
 	</div>
 </div>
 
