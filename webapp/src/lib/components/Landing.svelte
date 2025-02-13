@@ -106,7 +106,7 @@
 						// For now, let's just get to the next page.
 						// Worry about a fancy transition later
 						// https://joyofcode.xyz/sveltekit-view-transitions
-						goto('/projects/3d');
+						goto('/projects');
 					}}
 				/>
 			</span>
