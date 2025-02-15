@@ -59,7 +59,6 @@
 		"@tsparticles/interaction-external-trail": "3.8",
 		"@tsparticles/shape-text": "^3.6.0",
 		"@tsparticles/slim": "^3.6.0",
-		"@tsparticles/svelte": "^3.1.1",
 		"cookie": "^1.0.2",
 		"fauna": "^2.5.0",
 		"graphql": "^16.10.0",
