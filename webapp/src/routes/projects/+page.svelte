@@ -13,7 +13,7 @@
 	import ToolboxSolid from 'svelte-awesome-icons/ToolboxSolid.svelte';
 	import PlaneDepartureSolid from 'svelte-awesome-icons/PlaneDepartureSolid.svelte';
 	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
-	import IntroButton from '$lib/components/IntroButton.svelte';
+	import About from '$lib/components/About.svelte';
 
 	function getScrollPercent() {
 		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -35,6 +35,7 @@
 
 <div class="flex flex-col grow h-dvh min-h-max overflow-visible">
 	<Header />
+	<About />
 
 	<!-- Reveal cards about my experience in different places, perhaps with company logos -->
 	<!-- And reveal underneath the links to different sections -->

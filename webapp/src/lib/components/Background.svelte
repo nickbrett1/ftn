@@ -1,16 +1,10 @@
 <script>
-	import { particlesInit } from '@tsparticles/svelte';
 	import { onMount } from 'svelte';
+	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
 
 	let ParticlesComponent;
-
-	onMount(async () => {
-		const module = await import('@tsparticles/svelte');
-
-		ParticlesComponent = module.default;
-	});
 
 	let particlesConfig = {
 		fullScreen: {
@@ -121,19 +115,15 @@
 		detectRetina: true
 	};
 
-	let onParticlesLoaded = (event) => {
-		const particlesContainer = event.detail.particles;
-	};
+	onMount(async () => {
+		loadSlim(tsParticles);
+		loadTextShape(tsParticles);
 
-	void particlesInit(async (engine) => {
-		await loadSlim(engine);
-		await loadTextShape(engine);
+		tsParticles.load({
+			id: 'tsparticles',
+			options: particlesConfig
+		});
 	});
 </script>
 
-<svelte:component
-	this={ParticlesComponent}
-	id="tsparticles"
-	options={particlesConfig}
-	on:particlesLoaded={onParticlesLoaded}
-/>
+<div id="tsparticles" />
