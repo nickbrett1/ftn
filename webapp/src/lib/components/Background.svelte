@@ -126,4 +126,4 @@
 	});
 </script>
 
-<div id="tsparticles" />
+<div id="tsparticles"></div>
