@@ -19,7 +19,7 @@
 		>
 			<p class="text-sm leading-5 text-white">Loading</p>
 			<div class="w-1/3 h-10 border border-white border-solid relative">
-				<div class="h-full bg-green-800" style="width: {$tweenedProgress * 100}%" />
+				<div class="h-full bg-green-800" style="width: {$tweenedProgress * 100}%"></div>
 			</div>
 		</div>
 	{/if}
