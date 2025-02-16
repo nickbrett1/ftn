@@ -1,10 +1,20 @@
 <!-- Border wraps the inner card element -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 
 <!-- Thanks to Yash Verma, and his blog on animating a card hover for this: 
  https://yashverma.me/blog/cards -->
 
 <script>
+	import { createBubbler } from 'svelte/legacy';
+
+	const bubble = createBubbler();
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [children]
+	 */
+
+	/** @type {Props} */
+	let { children } = $props();
 	let rect = null;
 
 	function createClientRectTracker() {
@@ -28,7 +38,7 @@
 
 	const clientRectTracker = createClientRectTracker();
 
-	let blob;
+	let blob = $state();
 
 	function handleMouseMove(ev) {
 		blob.style.opacity = '1';
@@ -47,10 +57,10 @@
 	}
 </script>
 
-<svelte:window on:mousemove={handleMouseMove} />
+<svelte:window onmousemove={handleMouseMove} />
 
 <button
-	on:click
+	onclick={bubble('click')}
 	class={`
 		bg-green-800/20
 		m-0
@@ -72,7 +82,7 @@
 			relative
 			transition-all`}
 	>
-		<slot />
+		{@render children?.()}
 	</div>
 	<div
 		class={`

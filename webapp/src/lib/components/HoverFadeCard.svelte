@@ -1,27 +1,35 @@
 <script>
 	import Card from '$lib/components/Card.svelte';
 	import { fade } from 'svelte/transition';
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [onHover]
+	 * @property {import('svelte').Snippet} [initial]
+	 */
 
-	let isHovering = false;
+	/** @type {Props} */
+	let { onHover, initial } = $props();
+
+	let isHovering = $state(false);
 </script>
 
 <Card on:click>
 	<div
-		on:mouseenter={() => {
+		onmouseenter={() => {
 			isHovering = true;
 		}}
-		on:mouseleave={() => {
+		onmouseleave={() => {
 			isHovering = false;
 		}}
 		role="note"
 	>
 		{#if isHovering}
 			<div transition:fade={{ delay: 250, duration: 300 }} class="absolute inset-0 content-center">
-				<slot name="onHover" />
+				{@render onHover?.()}
 			</div>
 		{:else}
 			<div transition:fade={{ delay: 250, duration: 300 }} class="absolute inset-0 content-center">
-				<slot name="initial" />
+				{@render initial?.()}
 			</div>
 		{/if}
 	</div>

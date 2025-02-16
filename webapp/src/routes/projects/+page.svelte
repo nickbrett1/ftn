@@ -22,11 +22,11 @@
 
 		return scrollTop / (scrollHeight - clientHeight);
 	}
-	let percentageScroll = 0;
+	let percentageScroll = $state(0);
 </script>
 
 <svelte:window
-	on:scroll={() => {
+	onscroll={() => {
 		percentageScroll = getScrollPercent();
 		console.log('percentageScroll:', percentageScroll);
 	}}
@@ -75,34 +75,46 @@
 		`}
 		>
 			<HoverFadeCard>
-				<div slot="initial">
-					<SitemapSolid aria-label="Making of FinTechNick" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Making of FinTechNick</h1>
-				</div>
-				<div slot="onHover">
-					<h1 class="text-2xl font-bold">Coming Soon!</h1>
-				</div>
+				{#snippet initial()}
+								<div >
+						<SitemapSolid aria-label="Making of FinTechNick" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">Making of FinTechNick</h1>
+					</div>
+							{/snippet}
+				{#snippet onHover()}
+								<div >
+						<h1 class="text-2xl font-bold">Coming Soon!</h1>
+					</div>
+							{/snippet}
 			</HoverFadeCard>
 			<HoverFadeCard>
-				<div slot="initial">
-					<PlaneDepartureSolid
-						aria-label="Machine Learning for Flight Delays"
-						class="size-20 w-full"
-					/>
-					<h1 class="text-xl leading-none py-2 w-full">Machine Learning for Flight Delays</h1>
-				</div>
-				<div slot="onHover">
-					<h1 class="text-2xl font-bold">Coming Soon!</h1>
-				</div>
+				{#snippet initial()}
+								<div >
+						<PlaneDepartureSolid
+							aria-label="Machine Learning for Flight Delays"
+							class="size-20 w-full"
+						/>
+						<h1 class="text-xl leading-none py-2 w-full">Machine Learning for Flight Delays</h1>
+					</div>
+							{/snippet}
+				{#snippet onHover()}
+								<div >
+						<h1 class="text-2xl font-bold">Coming Soon!</h1>
+					</div>
+							{/snippet}
 			</HoverFadeCard>
 			<HoverFadeCard>
-				<div slot="initial">
-					<ToolboxSolid aria-label="Tools" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">My Tools</h1>
-				</div>
-				<div slot="onHover">
-					<h1 class="text-2xl font-bold">Coming Soon!</h1>
-				</div>
+				{#snippet initial()}
+								<div >
+						<ToolboxSolid aria-label="Tools" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">My Tools</h1>
+					</div>
+							{/snippet}
+				{#snippet onHover()}
+								<div >
+						<h1 class="text-2xl font-bold">Coming Soon!</h1>
+					</div>
+							{/snippet}
 			</HoverFadeCard>
 			<Card
 				on:click={() =>
@@ -126,14 +138,18 @@
 				on:click={() =>
 					window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
 			>
-				<div slot="initial">
-					<GithubBrand aria-label="Github" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Github</h1>
-				</div>
-				<div slot="onHover">
-					<FileCodeRegular aria-label="Github" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Github</h1>
-				</div>
+				{#snippet initial()}
+								<div >
+						<GithubBrand aria-label="Github" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+					</div>
+							{/snippet}
+				{#snippet onHover()}
+								<div >
+						<FileCodeRegular aria-label="Github" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+					</div>
+							{/snippet}
 			</HoverFadeCard>
 			<Card
 				on:click={() =>
@@ -156,14 +172,18 @@
 				on:click={() =>
 					window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
 			>
-				<div slot="initial">
-					<EnvelopeRegular aria-label="Email" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Email</h1>
-				</div>
-				<div slot="onHover">
-					<EnvelopeOpenRegular aria-label="Email" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Email</h1>
-				</div>
+				{#snippet initial()}
+								<div >
+						<EnvelopeRegular aria-label="Email" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+					</div>
+							{/snippet}
+				{#snippet onHover()}
+								<div >
+						<EnvelopeOpenRegular aria-label="Email" class="size-20 w-full" />
+						<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+					</div>
+							{/snippet}
 			</HoverFadeCard>
 		</div>
 	</div>

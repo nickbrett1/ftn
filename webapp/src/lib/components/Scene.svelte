@@ -8,8 +8,8 @@
 
 	interactivity();
 
-	let camera;
-	let tl;
+	let camera = $state();
+	let tl = $state();
 
 	onMount(() => {
 		tl = gsap.timeline({ repeat: -1, yoyo: true });

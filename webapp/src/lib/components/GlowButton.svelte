@@ -1,9 +1,12 @@
 <!-- With credit to @Ks145: https://codepen.io/Ks145/pen/MWGxbYr -->
 
 <script>
+	import { createBubbler } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 </script>
 
-<button on:click class="glowing-btn text-green-300"
+<button onclick={bubble('click')} class="glowing-btn text-green-300"
 	><span class="glowing-txt">HEL<span class="faulty-letter">L</span>O</span></button
 >
 

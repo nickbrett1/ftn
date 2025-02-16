@@ -1,4 +1,6 @@
 <script>
+	import { run } from 'svelte/legacy';
+
 	import Scene from '$lib/components/Scene.svelte';
 	import { useProgress } from '@threlte/extras';
 	import { tweened } from 'svelte/motion';
@@ -8,7 +10,9 @@
 	const { progress } = useProgress();
 
 	const tweenedProgress = tweened($progress);
-	$: tweenedProgress.set($progress);
+	run(() => {
+		tweenedProgress.set($progress);
+	});
 </script>
 
 <div class="w-full h-full fixed aspect-square z-10">

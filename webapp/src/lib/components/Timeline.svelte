@@ -177,14 +177,15 @@
 	>
 		{#each positions as position}
 			<TimelineItem>
-				<TimelineOppositeContent slot="opposite-content">
+				<!-- @migration-task: migrate this slot by hand, `opposite-content` is an invalid identifier -->
+	<TimelineOppositeContent slot="opposite-content">
 					<p>{position.dateRange}</p>
 				</TimelineOppositeContent>
 				<TimelineSeparator>
 					<TimelineDot
 						style={'width: 45px; height: 45px; background-color: #fff; display: flex; justify-content: center; border-color: transparent; '}
 					>
-						<button type="button" on:click={position.onClick}>
+						<button type="button" onclick={position.onClick}>
 							<img src={position.icon} alt="" />
 						</button>
 					</TimelineDot>

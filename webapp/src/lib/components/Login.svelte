@@ -1,18 +1,13 @@
 <script>
-	import { onMount } from 'svelte/internal';
+	import { onMount } from 'svelte';
 	import { nanoid } from 'nanoid';
 	import { goto } from '$app/navigation';
 	import LoginButton from './LoginButton.svelte';
 
-	let loggedIn = false;
+	let loggedIn = $state(false);
 	let client = null;
 
-	let clazz;
-	export { clazz as class };
-
-	let loggedInText;
-	let loggedOutText;
-	export { loggedInText, loggedOutText };
+	let { class: clazz, loggedInText, loggedOutText } = $props();
 
 	onMount(async () => {
 		const match = document.cookie.match(/(^| )auth=([^;]+)/);

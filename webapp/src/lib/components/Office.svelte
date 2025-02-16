@@ -7,6 +7,13 @@ Command: npx @threlte/gltf@0.0.5 office.glb
   import { Group } from 'three'
   import { T } from '@threlte/core'
   import { useGltf, interactivity } from '@threlte/extras'
+  /**
+   * @typedef {Object} Props
+   * @property {import('svelte').Snippet<[any]>} [children]
+   */
+
+  /** @type {Props & { [key: string]: any }} */
+  let { children, ...rest } = $props();
 
   export const ref = new Group()
 
@@ -18,7 +25,7 @@ Command: npx @threlte/gltf@0.0.5 office.glb
 </script>
 
 {#if $gltf}
-  <T is={ref} {...$$restProps}>
+  <T is={ref} {...rest}>
     <T.Group rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
       <T.Mesh geometry={$gltf.nodes.Office2_base.geometry} material={$gltf.materials['LP_Rooms.001']} />
       <T.Mesh geometry={$gltf.nodes.Office2_Books1.geometry} material={$gltf.materials['LP_Rooms.001']} />
@@ -96,6 +103,6 @@ Command: npx @threlte/gltf@0.0.5 office.glb
 	
 	
 	
-    <slot {ref} />
+    {@render children?.({ ref, })}
   </T>
 {/if}

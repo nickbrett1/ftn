@@ -4,7 +4,13 @@
 
   import { createEventDispatcher } from 'svelte';
 
-  export let user = null;
+  /**
+   * @typedef {Object} Props
+   * @property {any} [user]
+   */
+
+  /** @type {Props} */
+  let { user = null } = $props();
 
   const dispatch = createEventDispatcher();
 

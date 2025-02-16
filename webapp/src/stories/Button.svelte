@@ -1,36 +1,42 @@
 <script>
+  import { createBubbler } from 'svelte/legacy';
+
+  const bubble = createBubbler();
   import './button.css';
 
+  
+
+  
+
+  
+
+  
   /**
-   * Is this the principal call to action on the page?
+   * @typedef {Object} Props
+   * @property {boolean} [primary] - Is this the principal call to action on the page?
+   * @property {string} [backgroundColor]
+   * @property {'small' | 'medium' | 'large'} [size]
+   * @property {string} label
    */
-  export let primary = false;
 
-  /**
-   * @type {string} What background color to use
-   */
-  export let backgroundColor = undefined;
+  /** @type {Props} */
+  let {
+    primary = false,
+    backgroundColor = undefined,
+    size = 'medium',
+    label
+  } = $props();
 
-  /**
-   * @type {'small' | 'medium' | 'large'} How large should the button be?
-   */
-  export let size = 'medium';
+  let mode = $derived(primary ? 'storybook-button--primary' : 'storybook-button--secondary');
 
-  /**
-   * @type {string} Button contents
-   */
-  export let label;
-
-  $: mode = primary ? 'storybook-button--primary' : 'storybook-button--secondary';
-
-  $: style = backgroundColor ? `background-color: ${backgroundColor}` : '';
+  let style = $derived(backgroundColor ? `background-color: ${backgroundColor}` : '');
 </script>
 
 <button
   type="button"
   class={['storybook-button', `storybook-button--${size}`, mode].join(' ')}
   {style}
-  on:click
+  onclick={bubble('click')}
 >
   {label}
 </button>
