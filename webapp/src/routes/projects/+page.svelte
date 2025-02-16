@@ -4,15 +4,18 @@
 
 	import Card from '$lib/components/Card.svelte';
 	import HoverFadeCard from '$lib/components/HoverFadeCard.svelte';
-	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
-	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
-	import EnvelopeOpenRegular from 'svelte-awesome-icons/EnvelopeOpenRegular.svelte';
-	import GithubBrand from 'svelte-awesome-icons/GithubBrand.svelte';
-	import FileCodeRegular from 'svelte-awesome-icons/FileCodeRegular.svelte';
-	import PenToSquareRegular from 'svelte-awesome-icons/PenToSquareRegular.svelte';
-	import ToolboxSolid from 'svelte-awesome-icons/ToolboxSolid.svelte';
-	import PlaneDepartureSolid from 'svelte-awesome-icons/PlaneDepartureSolid.svelte';
-	import SitemapSolid from 'svelte-awesome-icons/SitemapSolid.svelte';
+	import {
+		LinkedinInBrands,
+		EnvelopeRegular,
+		EnvelopeOpenRegular,
+		GithubBrands,
+		FileCodeRegular,
+		PenToSquareRegular,
+		ToolboxSolid,
+		PlaneDepartureSolid,
+		SitemapSolid
+	} from 'svelte-awesome-icons';
+
 	import About from '$lib/components/About.svelte';
 
 	function getScrollPercent() {
@@ -76,45 +79,45 @@
 		>
 			<HoverFadeCard>
 				{#snippet initial()}
-								<div >
+					<div>
 						<SitemapSolid aria-label="Making of FinTechNick" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">Making of FinTechNick</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 				{#snippet onHover()}
-								<div >
+					<div>
 						<h1 class="text-2xl font-bold">Coming Soon!</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 			</HoverFadeCard>
 			<HoverFadeCard>
 				{#snippet initial()}
-								<div >
+					<div>
 						<PlaneDepartureSolid
 							aria-label="Machine Learning for Flight Delays"
 							class="size-20 w-full"
 						/>
 						<h1 class="text-xl leading-none py-2 w-full">Machine Learning for Flight Delays</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 				{#snippet onHover()}
-								<div >
+					<div>
 						<h1 class="text-2xl font-bold">Coming Soon!</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 			</HoverFadeCard>
 			<HoverFadeCard>
 				{#snippet initial()}
-								<div >
+					<div>
 						<ToolboxSolid aria-label="Tools" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">My Tools</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 				{#snippet onHover()}
-								<div >
+					<div>
 						<h1 class="text-2xl font-bold">Coming Soon!</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 			</HoverFadeCard>
 			<Card
 				on:click={() =>
@@ -139,17 +142,17 @@
 					window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
 			>
 				{#snippet initial()}
-								<div >
-						<GithubBrand aria-label="Github" class="size-20 w-full" />
+					<div>
+						<GithubBrands aria-label="Github" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">Github</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 				{#snippet onHover()}
-								<div >
+					<div>
 						<FileCodeRegular aria-label="Github" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">Github</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 			</HoverFadeCard>
 			<Card
 				on:click={() =>
@@ -162,7 +165,7 @@
 			>
 				<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
 					<div class="relative isolate hover:text-sky-600 justify-center items-center">
-						<LinkedinInBrand aria-label="LinkedIn" class="size-20 w-full" />
+						<LinkedinInBrands aria-label="LinkedIn" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">LinkedIn</h1>
 					</div>
 				</div>
@@ -173,17 +176,17 @@
 					window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
 			>
 				{#snippet initial()}
-								<div >
+					<div>
 						<EnvelopeRegular aria-label="Email" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">Email</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 				{#snippet onHover()}
-								<div >
+					<div>
 						<EnvelopeOpenRegular aria-label="Email" class="size-20 w-full" />
 						<h1 class="text-xl leading-none py-2 w-full">Email</h1>
 					</div>
-							{/snippet}
+				{/snippet}
 			</HoverFadeCard>
 		</div>
 	</div>
