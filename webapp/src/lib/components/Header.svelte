@@ -1,11 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 
-	import ChevronDownSolid from 'svelte-awesome-icons/ChevronDownSolid.svelte';
-	import ChevronUpSolid from 'svelte-awesome-icons/ChevronUpSolid.svelte';
-
-	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
-	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
+	import { ChevronDownSolid, ChevronUpSolid, LinkedinInBrands, EnvelopeRegular } from 'svelte-awesome-icons';
 
 	let isOpen = $state(false);
 </script>
@@ -73,7 +69,7 @@
 			target="_blank"
 			rel="noopener noreferrer"
 		>
-			<LinkedinInBrand aria-label="LinkedIn" />
+			<LinkedinInBrands aria-label="LinkedIn" />
 		</a>
 	</nav>
 </div>
