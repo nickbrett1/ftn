@@ -2,6 +2,13 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [children]
+	 */
+
+	/** @type {Props} */
+	let { children } = $props();
 
 	onMount(async () => {
 		if (pwaInfo) {
@@ -23,7 +30,7 @@
 		}
 	});
 
-	$: webManifest = pwaInfo ? pwaInfo.webManifest.linkTag : '';
+	let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
 
 <svelte:head>
@@ -32,4 +39,4 @@
 	{@html webManifest}
 </svelte:head>
 
-<slot />
+{@render children?.()}

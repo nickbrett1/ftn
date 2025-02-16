@@ -7,10 +7,11 @@
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
 	const questionLine = ['?', '\u2193'];
-	let index = 0;
+	let animate = $state(false);
+	let index = $state(0);
 
 	let roller;
-	let animate = false;
+
 	onMount(async () => {
 		animate = true;
 		roller = setInterval(() => {
@@ -23,8 +24,9 @@
 		clearInterval(roller);
 	});
 
-	let hovering = false;
-	let x, y;
+	let hovering = $state(false);
+	let x = $state(),
+		y = $state();
 	const mouseOver = () => (hovering = true);
 	const mouseMove = (event) => {
 		x = event.clientX + 5;
@@ -52,10 +54,10 @@
 							{#if i == 0}
 								DO YOU <span
 									class="relative glitch text-nowrap bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
-									on:mouseover={mouseOver}
-									on:mouseleave={mouseLeave}
-									on:mousemove={mouseMove}
-									on:focus={() => {}}
+									onmouseover={mouseOver}
+									onmouseleave={mouseLeave}
+									onmousemove={mouseMove}
+									onfocus={() => {}}
 									data-text="GROK"
 									role="note"
 								>

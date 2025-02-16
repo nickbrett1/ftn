@@ -4,6 +4,8 @@ import { screen, fireEvent } from '@testing-library/dom';
 import Login from './Login.svelte';
 
 describe('Login correctly', () => {
+	vi.mock('@tsparticles/engine');
+
 	it('logs in', () => {
 		const loginSpy = vi.fn();
 		const mockedInitialize = vi.fn();

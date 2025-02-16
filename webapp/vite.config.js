@@ -4,7 +4,6 @@ import { imagetools } from '@zerodevx/svelte-img/vite';
 import { defineConfig } from 'vitest/config';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
-import path from 'path';
 
 export default defineConfig({
 	plugins: [

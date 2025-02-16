@@ -6,7 +6,7 @@
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadExternalTrailInteraction } from '@tsparticles/interaction-external-trail';
 
-	let ParticlesComponent;
+	let ParticlesComponent = $state();
 
 	onMount(async () => {
 		const module = await import('@tsparticles/svelte');
@@ -216,8 +216,7 @@
 	<div class="z-20">Let Me Introduce Myself</div>
 
 	<div class="absolute inset-0 z-10 overflow-visible">
-		<svelte:component
-			this={ParticlesComponent}
+		<ParticlesComponent
 			id="introparticles"
 			options={particlesConfig}
 			on:particlesLoaded={onParticlesLoaded}

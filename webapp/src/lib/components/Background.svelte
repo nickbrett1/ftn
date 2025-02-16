@@ -4,8 +4,6 @@
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
 
-	let ParticlesComponent;
-
 	let particlesConfig = {
 		fullScreen: {
 			enable: true,

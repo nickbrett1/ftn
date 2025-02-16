@@ -1,10 +1,12 @@
 <script>
-	export let label;
+	import { createBubbler } from 'svelte/legacy';
 
-	let clazz;
-	export { clazz as class };
+	const bubble = createBubbler();
+
+	let { label, class: clazz } = $props();
+	
 </script>
 
-<button on:click type="button" class="${clazz}">
+<button onclick={bubble('click')} type="button" class="${clazz}">
 	<span>{label}</span>
 </button>

@@ -7,12 +7,12 @@
 	import LinkedinInBrand from 'svelte-awesome-icons/LinkedinInBrand.svelte';
 	import EnvelopeRegular from 'svelte-awesome-icons/EnvelopeRegular.svelte';
 
-	let isOpen = false;
+	let isOpen = $state(false);
 </script>
 
 <div class="w-full bg-black/90 p-2 flex flex-row">
 	<button
-		on:click={() => {
+		onclick={() => {
 			goto('/');
 		}}
 		aria-label="Home"
@@ -25,7 +25,7 @@
 	<nav class="flex flex-row-reverse grow">
 		<div class="text-white px-2 hover:text-green-300 fill-white hover:fill-green-300 flex">
 			<div class="flex items-center">
-				<button class="flex" on:click={() => (isOpen = !isOpen)}>
+				<button class="flex" onclick={() => (isOpen = !isOpen)}>
 					<div class="px-1">Projects</div>
 					{#if isOpen}
 						<ChevronUpSolid />
