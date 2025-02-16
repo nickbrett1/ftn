@@ -53,7 +53,7 @@
 						>
 							{#if i == 0}
 								DO YOU <span
-									class="relative glitch text-nowrap bg-gradient-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
+									class="relative glitch text-nowrap bg-linear-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
 									onmouseover={mouseOver}
 									onmouseleave={mouseLeave}
 									onmousemove={mouseMove}
