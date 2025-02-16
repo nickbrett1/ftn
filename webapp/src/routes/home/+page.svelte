@@ -72,7 +72,7 @@
 	{#each data.categories as category}
 		<div
 			key={category.id}
-			class="max-w-sm overflow-hidden rounded shadow-lg"
+			class="max-w-sm overflow-hidden rounded-sm shadow-lg"
 		>
 			<div class="px-6 py-4">
 				<div class="mb-2 text-xl font-bold text-white">
