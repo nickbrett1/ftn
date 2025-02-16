@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { T, useFrame } from '@threlte/core';
-	import Office from './Office.svelte';
+	import { T } from '@threlte/core';
 	import { GLTF, OrbitControls, interactivity } from '@threlte/extras';
 	import model from '$lib/assets/models/charging_bull.glb';
 	import gsap from 'gsap';
