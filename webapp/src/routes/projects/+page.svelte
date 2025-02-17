@@ -17,6 +17,7 @@
 	} from 'svelte-awesome-icons';
 
 	import About from '$lib/components/About.svelte';
+	import Projects from '$lib/components/Projects.svelte';
 
 	function getScrollPercent() {
 		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -39,6 +40,7 @@
 <div class="flex flex-col grow h-dvh min-h-max overflow-visible">
 	<Header />
 	<About />
+	<Projects />
 
 	<!-- Reveal cards about my experience in different places, perhaps with company logos -->
 	<!-- And reveal underneath the links to different sections -->
@@ -59,7 +61,7 @@
  -->
 	<div
 		class={`w-full 
-		h-dvh min-h-max
+		min-h-max
 		justify-center
 		content-center
 		items-center
