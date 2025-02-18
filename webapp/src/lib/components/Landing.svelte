@@ -2,11 +2,11 @@
 	import { fly, scale, slide, fade } from 'svelte/transition';
 	import { backOut, quintOut, bounceInOut } from 'svelte/easing';
 	import { onDestroy, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import GlowButton from './GlowButton.svelte';
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
 	const questionLine = ['?', '\u2193'];
+	const LINE_DELAY = 200; // Delay between each line in ms
+
 	let animate = $state(false);
 	let index = $state(0);
 
@@ -17,7 +17,7 @@
 		roller = setInterval(() => {
 			if (index === questionLine.length - 1) index = 0;
 			else index++;
-		}, 2500);
+		}, 1500);
 	});
 
 	onDestroy(() => {
@@ -35,7 +35,7 @@
 	const mouseLeave = () => (hovering = false);
 </script>
 
-<div class="flex justify-center items-center grow">
+<div class="flex justify-center items-center grow h-full">
 	<div class="text-white">
 		{#each lines as line, i}
 			{#if animate}
@@ -47,7 +47,7 @@
 							class="inline-block m-1"
 							in:fly={{
 								y: 100,
-								delay: 300 * i,
+								delay: LINE_DELAY * i,
 								easing: backOut
 							}}
 						>
@@ -64,7 +64,7 @@
 									GROK
 									{#if hovering}
 										<div
-											in:scale={{ duration: 150, easing: quintOut }}
+											in:scale={{ duration: 300, easing: quintOut }}
 											style="top: {y}px; left: {x}px"
 											class="border-2 border-solid border-white shadow-sm
 													bg-white rounded p-1 fixed text-wrap opacity-100 z-10"
@@ -81,7 +81,7 @@
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
-										transition:slide={{ delay: 300 * (i + 1) }}
+										transition:slide={{ delay: LINE_DELAY * (i + 1) }}
 									>
 										{questionLine[index]}
 									</p>
@@ -94,25 +94,6 @@
 				</div>
 			{/if}
 		{/each}
-		{#if animate}
-			<span
-				class="flex font-normal justify-center m-1"
-				in:fade={{
-					delay: 300 * lines.length,
-					duration: 400,
-					easing: bounceInOut
-				}}
-			>
-				<GlowButton
-					on:click={() => {
-						// For now, let's just get to the next page.
-						// Worry about a fancy transition later
-						// https://joyofcode.xyz/sveltekit-view-transitions
-						goto('/projects');
-					}}
-				/>
-			</span>
-		{/if}
 	</div>
 </div>
 
