@@ -5,7 +5,7 @@
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
 	const questionLine = ['?', '\u2193'];
-	const LINE_DELAY = 200; // Delay between each line in ms
+	const LINE_DELAY = 0; // Delay between each line in ms
 
 	let animate = $state(false);
 	let index = $state(0);
