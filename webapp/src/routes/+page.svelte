@@ -4,6 +4,7 @@
 	import Landing from '$lib/components/Landing.svelte';
 	import About from '$lib/components/About.svelte';
 	import Projects from '$lib/components/Projects.svelte';
+	import Experience from '$lib/components/Experience.svelte';
 
 	function getScrollPercent() {
 		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -29,4 +30,5 @@
 	<Landing />
 	<About />
 	<Projects />
+	<Experience />
 </div>
