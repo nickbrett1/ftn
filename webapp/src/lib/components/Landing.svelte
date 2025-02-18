@@ -5,7 +5,7 @@
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
 	const questionLine = ['?', '\u2193'];
-	const LINE_DELAY = 0; // Delay between each line in ms
+	const LINE_DELAY = 200; // Delay between each line in ms
 
 	let animate = $state(false);
 	let index = $state(0);
@@ -43,14 +43,7 @@
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
 				>
 					<div class="inline-block overflow-visible relative">
-						<span
-							class="inline-block m-1"
-							in:fly={{
-								y: 100,
-								delay: LINE_DELAY * i,
-								easing: backOut
-							}}
-						>
+						<span class="inline-block m-1">
 							{#if i == 0}
 								DO YOU <span
 									class="relative glitch text-nowrap bg-linear-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
