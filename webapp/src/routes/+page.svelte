@@ -28,7 +28,7 @@
 <div class="flex flex-col grow h-dvh min-h-max overflow-visible">
 	<Header />
 	<Landing />
-	<About />
-	<Projects />
-	<Experience />
 </div>
+<About />
+<Projects />
+<Experience />
