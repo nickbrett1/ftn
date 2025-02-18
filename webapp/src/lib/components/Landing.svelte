@@ -35,7 +35,7 @@
 	const mouseLeave = () => (hovering = false);
 </script>
 
-<div class="flex justify-center items-center grow h-full">
+<div class="flex justify-center items-center grow">
 	<div class="text-white">
 		{#each lines as line, i}
 			{#if animate}
