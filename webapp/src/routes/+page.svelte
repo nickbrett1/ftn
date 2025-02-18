@@ -20,7 +20,7 @@
 		percentageScroll = getScrollPercent();
 		console.log('percentageScroll:', percentageScroll);
 	}}
-/>;
+/>
 
 <Background />
 
