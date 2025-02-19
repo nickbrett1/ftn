@@ -68,6 +68,8 @@
 		relative
 		overflow-hidden
 		transition-all
+		h-32 md:h-72 lg:h-96
+		w-32 md:w-72 lg:w-96
 	`}
 >
 	<div
@@ -75,8 +77,8 @@
 			cursor-pointer
 			rounded-lg
 			p-5
-			w-52
-			h-40
+			h-32 md:h-72 lg:h-96
+		w-32 md:w-72 lg:w-96
 			hover:bg-green-950/60
 			overflow-hidden 
 			relative
@@ -91,8 +93,8 @@
 			-z-10
 			top-0
 			left-0
-			w-64
-			h-64
+			h-32 md:h-72 lg:h-96
+		w-32 md:w-72 lg:w-96
 			rounded-full
 			opacity-0
 			bg-white/50
@@ -108,8 +110,8 @@
 			-z-10
 			top-0
 			left-0
-			w-64
-			h-64
+			h-32 md:h-72 lg:h-96
+		w-32 md:w-72 lg:w-96
 			rounded-full
 		`}
 		use:clientRectTracker
