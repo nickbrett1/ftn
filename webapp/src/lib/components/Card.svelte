@@ -63,7 +63,6 @@
 	onclick={bubble('click')}
 	class={`
 		bg-green-800/20
-		m-0
 		rounded-lg
 		relative
 		overflow-hidden
@@ -77,8 +76,9 @@
 			cursor-pointer
 			rounded-lg
 			p-5
-			h-32 md:h-72 lg:h-96
-		w-32 md:w-72 lg:w-96
+			h-full
+			
+			w-32 md:w-72 lg:w-96
 			hover:bg-green-950/60
 			overflow-hidden 
 			relative
