@@ -23,7 +23,7 @@
 				<p
 					class="mb-2 text-pretty text-2xl font-bold leading-tight tracking-tight md:text-3xl text-white"
 				>
-					These are some of my side projects
+					These are some of my personal projects
 				</p>
 			</div>
 			<!-- Reveal cards about my experience in different places, perhaps with company logos -->
