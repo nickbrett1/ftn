@@ -20,28 +20,9 @@
 	<div
 		class="grid gap-12 items-stretch auto-rows-fr grid-cols-[repeat(auto-fill,minmax(312px,1fr))] text-white"
 	>
-		<div
-			class="md:p-6 text-pretty md:text-right text-2xl md:text-3xl font-bold leading-tight tracking-tight"
-		>
+		<div class="md:p-6 text-pretty md:text-right text-2xl md:text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code, blog and contact information.
 		</div>
-		<!-- Reveal cards about my experience in different places, perhaps with company logos -->
-		<!-- And reveal underneath the links to different sections -->
-
-		<!-- Can we add fluid text effect to this - some nice green and red flow background?
- https://flo-bit.dev/projects/fluid-text-effect/ -->
-
-		<!--
-	<div class="flex flex-col justify-center items-center grow">
-		<div
-			scroll-btween="intro"
-			data-opacity="|0:0 to 50:1 to 100:1|"
-			class=" text-white opacity-0 z-10 px-8 py-5 max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
-		>
-			<IntroButton />
-		</div>
-	</div>
-	 -->
 
 		<HoverFadeCard>
 			{#snippet initial()}
