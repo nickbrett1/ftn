@@ -81,7 +81,7 @@
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
-										transition:slide={{ delay: LINE_DELAY * (i + 1) }}
+										transition:slide={{ delay: LINE_DELAY * i }}
 									>
 										{questionLine[index]}
 									</p>
