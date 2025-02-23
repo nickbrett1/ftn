@@ -5,6 +5,7 @@
 	import About from '$lib/components/About.svelte';
 	import Projects from '$lib/components/Projects.svelte';
 	import Experience from '$lib/components/Experience.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 
 	function getScrollPercent() {
 		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -33,4 +34,5 @@
 	<About />
 	<Projects />
 	<Experience />
+	<Footer />
 </div>
