@@ -6,23 +6,7 @@
 	import Projects from '$lib/components/Projects.svelte';
 	import Experience from '$lib/components/Experience.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-
-	function getScrollPercent() {
-		let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-		let scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-		let clientHeight = document.documentElement.clientHeight;
-
-		return scrollTop / (scrollHeight - clientHeight);
-	}
-	let percentageScroll = $state(0);
 </script>
-
-<svelte:window
-	onscroll={() => {
-		percentageScroll = getScrollPercent();
-		console.log('percentageScroll:', percentageScroll);
-	}}
-/>
 
 <Background />
 
