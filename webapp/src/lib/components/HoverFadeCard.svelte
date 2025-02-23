@@ -8,12 +8,12 @@
 	 */
 
 	/** @type {Props} */
-	let { onHover, initial } = $props();
+	let { onHover, initial, onclick } = $props();
 
 	let isHovering = $state(false);
 </script>
 
-<Card on:click>
+<Card {onclick}>
 	<div
 		onmouseenter={() => {
 			isHovering = true;

@@ -25,10 +25,12 @@
 
 <Background />
 
-<div class="flex flex-col grow h-dvh min-h-max overflow-visible">
+<div class="flex flex-col h-dvh min-h-max">
 	<Header />
 	<Landing />
 </div>
-<About />
-<Projects />
-<Experience />
+<div class="flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl">
+	<About />
+	<Projects />
+	<Experience />
+</div>
