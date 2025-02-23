@@ -5,16 +5,13 @@
  https://yashverma.me/blog/cards -->
 
 <script>
-	import { createBubbler } from 'svelte/legacy';
-
-	const bubble = createBubbler();
 	/**
 	 * @typedef {Object} Props
 	 * @property {import('svelte').Snippet} [children]
 	 */
 
 	/** @type {Props} */
-	let { children } = $props();
+	let { children, onclick } = $props();
 	let rect = null;
 
 	function createClientRectTracker() {
@@ -60,60 +57,61 @@
 <svelte:window onmousemove={handleMouseMove} />
 
 <button
-	onclick={bubble('click')}
+	{onclick}
 	class={`
 		bg-green-800/20
 		rounded-lg
 		relative
-		overflow-hidden
 		transition-all
-		h-32 md:h-72 lg:h-96
-		w-32 md:w-72 lg:w-96
+		overflow-hidden
+		flex
 	`}
 >
-	<div
-		class={`
+	<div class="grid grid-cols-[1fr] grow">
+		<div
+			class={`
+			row-start-1
+			col-start-1
+			grow
 			cursor-pointer
 			rounded-lg
 			p-5
-			h-full
-			
-			w-32 md:w-72 lg:w-96
 			hover:bg-green-950/60
-			overflow-hidden 
 			relative
 			transition-all`}
-	>
-		{@render children?.()}
-	</div>
-	<div
-		class={`
+		>
+			{@render children?.()}
+		</div>
+		<div
+			class={`
+			row-start-1
+			col-start-1
+			grow
 			blur-2xl
-			absolute
 			-z-10
 			top-0
 			left-0
-			h-32 md:h-72 lg:h-96
-		w-32 md:w-72 lg:w-96
 			rounded-full
 			opacity-0
 			bg-white/50
 			transition-all
+			
 		`}
-		bind:this={blob}
-	></div>
+			bind:this={blob}
+		></div>
 
-	<div
-		class={`
+		<div
+			class={`
+			row-start-1
+			col-start-1
+			grow
 			invisible
-			absolute
 			-z-10
 			top-0
 			left-0
-			h-32 md:h-72 lg:h-96
-		w-32 md:w-72 lg:w-96
 			rounded-full
 		`}
-		use:clientRectTracker
-	></div>
+			use:clientRectTracker
+		></div>
+	</div>
 </button>
