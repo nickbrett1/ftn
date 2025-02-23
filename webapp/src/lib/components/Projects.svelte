@@ -23,7 +23,7 @@
 		<div
 			class="md:p-6 text-pretty md:text-right text-2xl md:text-3xl font-bold leading-tight tracking-tight"
 		>
-			These are some of my personal projects
+			These are some of my personal projects, tools, code, blog and contact information.
 		</div>
 		<!-- Reveal cards about my experience in different places, perhaps with company logos -->
 		<!-- And reveal underneath the links to different sections -->
@@ -73,16 +73,6 @@
 				<h1 class="text-2xl font-bold">Coming Soon!</h1>
 			{/snippet}
 		</HoverFadeCard>
-		<Card
-			onclick={() =>
-				window.open('https://medium.com/the-management-code', '_blank', 'noopener', 'noreferrer')}
-		>
-			<div class="absolute inset-0 content-center">
-				<PenToSquareRegular aria-label="Blog" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">Blog</h1>
-			</div>
-		</Card>
-
 		<HoverFadeCard
 			onclick={() =>
 				window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
@@ -98,6 +88,16 @@
 				<h1 class="text-xl leading-none py-2 w-full">Github</h1>
 			{/snippet}
 		</HoverFadeCard>
+		<Card
+			onclick={() =>
+				window.open('https://medium.com/the-management-code', '_blank', 'noopener', 'noreferrer')}
+		>
+			<div class="absolute inset-0 content-center">
+				<PenToSquareRegular aria-label="Blog" class="size-20 w-full" />
+				<h1 class="text-xl leading-none py-2 w-full">Blog</h1>
+			</div>
+		</Card>
+
 		<Card
 			onclick={() =>
 				window.open('https://www.linkedin.com/in/nick-brett/', '_blank', 'noopener', 'noreferrer')}
