@@ -56,7 +56,11 @@
 
 <svelte:window onmousemove={handleMouseMove} />
 
-<button
+<div
+	role="button"
+	tabindex="0"
+	onkeydown={() => {}}
+	onkeyup={onclick}
 	{onclick}
 	class={`
 		bg-green-800/20
@@ -73,6 +77,7 @@
 			row-start-1
 			col-start-1
 			grow
+			flex
 			cursor-pointer
 			rounded-lg
 			p-5
@@ -95,7 +100,6 @@
 			opacity-0
 			bg-white/50
 			transition-all
-			
 		`}
 			bind:this={blob}
 		></div>
@@ -114,4 +118,4 @@
 			use:clientRectTracker
 		></div>
 	</div>
-</button>
+</div>

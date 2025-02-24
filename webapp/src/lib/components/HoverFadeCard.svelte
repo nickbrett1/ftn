@@ -22,13 +22,20 @@
 			isHovering = false;
 		}}
 		role="note"
+		class="grid grid-cols-[1fr] grow"
 	>
 		{#if isHovering}
-			<div transition:fade={{ delay: 250, duration: 300 }} class="absolute inset-0 content-center">
+			<div
+				transition:fade={{ delay: 250, duration: 300 }}
+				class="row-start-1 col-start-1 grow flex"
+			>
 				{@render onHover?.()}
 			</div>
 		{:else}
-			<div transition:fade={{ delay: 250, duration: 300 }} class="absolute inset-0 content-center">
+			<div
+				transition:fade={{ delay: 250, duration: 300 }}
+				class="row-start-1 col-start-1 grow flex"
+			>
 				{@render initial?.()}
 			</div>
 		{/if}
