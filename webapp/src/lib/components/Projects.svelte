@@ -26,32 +26,46 @@
 
 		<HoverFadeCard>
 			{#snippet initial()}
-				<SitemapSolid class="size-20 w-full" aria-label="Making of FinTechNick" />
-				<h1 class="text-xl leading-none py-2 w-full">Making of FinTechNick</h1>
+				<div class="flex flex-col items-center grow">
+					<SitemapSolid class="size-20 grow" aria-label="Making of FinTechNick" />
+					<span class="text-xl text-center leading-none pt-2 grow">Making of FinTechNick</span>
+				</div>
 			{/snippet}
 			{#snippet onHover()}
-				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+				<div class="flex flex-col items-center grow">
+					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
+				</div>
 			{/snippet}
 		</HoverFadeCard>
 		<HoverFadeCard>
 			{#snippet initial()}
-				<PlaneDepartureSolid
-					aria-label="Machine Learning for Flight Delays"
-					class="size-20 w-full"
-				/>
-				<h1 class="text-xl leading-none py-2 w-full">Machine Learning for Flight Delays</h1>
+				<div class="flex flex-col items-center grow">
+					<PlaneDepartureSolid
+						aria-label="Machine Learning for Flight Delays"
+						class="size-20 grow"
+					/>
+					<span class="text-xl leading-none text-center pt-2 grow">
+						Machine Learning for Flight Delays
+					</span>
+				</div>
 			{/snippet}
 			{#snippet onHover()}
-				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+				<div class="flex flex-col items-center grow">
+					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
+				</div>
 			{/snippet}
 		</HoverFadeCard>
 		<HoverFadeCard>
 			{#snippet initial()}
-				<ToolboxSolid aria-label="Tools" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">My Tools</h1>
+				<div class="flex flex-col items-center grow">
+					<ToolboxSolid aria-label="Tools" class="size-20 grow" />
+					<span class="text-xl leading-none content-center pt-2 grow">My Tools</span>
+				</div>
 			{/snippet}
 			{#snippet onHover()}
-				<h1 class="text-2xl font-bold">Coming Soon!</h1>
+				<div class="flex flex-col items-center grow">
+					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
+				</div>
 			{/snippet}
 		</HoverFadeCard>
 		<HoverFadeCard
@@ -59,35 +73,34 @@
 				window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
 		>
 			{#snippet initial()}
-				<div>
-					<GithubBrands aria-label="Github" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+				<div class="flex flex-col items-center grow">
+					<GithubBrands aria-label="Github" class="size-20 grow" />
+					<span class="text-xl leading-none content-center pt-2 grow">Github</span>
 				</div>
 			{/snippet}
 			{#snippet onHover()}
-				<FileCodeRegular aria-label="Github" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">Github</h1>
+				<div class="flex flex-col items-center grow">
+					<FileCodeRegular aria-label="Github" class="size-20 grow" />
+					<span class="text-xl leading-none content-center pt-2 grow">Github</span>
+				</div>
 			{/snippet}
 		</HoverFadeCard>
 		<Card
 			onclick={() =>
 				window.open('https://medium.com/the-management-code', '_blank', 'noopener', 'noreferrer')}
 		>
-			<div class="absolute inset-0 content-center">
-				<PenToSquareRegular aria-label="Blog" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">Blog</h1>
+			<div class="flex flex-col items-center grow">
+				<PenToSquareRegular aria-label="Blog" class="size-20 grow" />
+				<span class="text-xl leading-none content-center pt-2 grow">Blog</span>
 			</div>
 		</Card>
-
 		<Card
 			onclick={() =>
 				window.open('https://www.linkedin.com/in/nick-brett/', '_blank', 'noopener', 'noreferrer')}
 		>
-			<div class="flex justify-center content-center items-center gap-3 flex-col h-full w-full">
-				<div class="relative isolate hover:text-sky-600 justify-center items-center">
-					<LinkedinInBrands aria-label="LinkedIn" class="size-20 w-full" />
-					<h1 class="text-xl leading-none py-2 w-full">LinkedIn</h1>
-				</div>
+			<div class="flex flex-col items-center grow hover:text-sky-600">
+				<LinkedinInBrands aria-label="LinkedIn" class="size-20 grow" />
+				<span class="text-xl leading-none content-center pt-2 grow">LinkedIn</span>
 			</div>
 		</Card>
 
@@ -95,12 +108,16 @@
 			onclick={() => window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
 		>
 			{#snippet initial()}
-				<EnvelopeRegular aria-label="Email" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+				<div class="flex flex-col items-center grow">
+					<EnvelopeRegular aria-label="Email" class="size-20 grow" />
+					<span class="text-xl leading-none content-center pt-2 grow">Email</span>
+				</div>
 			{/snippet}
 			{#snippet onHover()}
-				<EnvelopeOpenRegular aria-label="Email" class="size-20 w-full" />
-				<h1 class="text-xl leading-none py-2 w-full">Email</h1>
+				<div class="flex flex-col items-center grow">
+					<EnvelopeOpenRegular aria-label="Email" class="size-20 grow" />
+					<span class="text-xl leading-none content-center pt-2 grow">Email</span>
+				</div>
 			{/snippet}
 		</HoverFadeCard>
 	</div>
