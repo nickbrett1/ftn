@@ -14,7 +14,7 @@
 	<Header />
 	<Landing />
 </div>
-<div class="flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl">
+<div class="overflow-hidden flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl">
 	<About />
 	<Projects />
 	<Experience />

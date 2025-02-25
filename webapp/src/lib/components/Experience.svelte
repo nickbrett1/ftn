@@ -1,7 +1,21 @@
 <script>
 	import Milestone from '$lib/components/Milestone.svelte';
 
-	const work = [];
+	const work = [
+		{
+			from: 'Feb, 2025',
+			to: 'Present',
+			title: 'Data Engineering: Strategic Initatives',
+			workPlace: '@Two Sigma',
+			body: [
+				'I am currently focused on various strategic initiatives across the Two Sigma Data Engineering department.',
+				'This includes work to build systems that can provide full reproducability of data over time, new data storage architectures to unlock research opportunities and driving complex external partnerships.',
+				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
+			],
+			keywords: [],
+			icons: []
+		}
+	];
 </script>
 
 <div>
@@ -13,7 +27,20 @@
 		Where I've worked, what I've built, and the impact I've had.
 	</p>
 	<div
-		class="relative mx-auto space-y-12 overflow-hidden via-90% pb-4 sm:pt-8 sm:before:absolute sm:before:inset-0 sm:before:left-[1px] sm:before:h-full sm:before:w-[1px] sm:before:-translate-x-px sm:before:bg-gradient-to-b sm:before:from-white/25 sm:before:via-white/25 sm:before:to-transparent"
+		class="relative
+			space-y-12
+			pb-4
+			sm:pt-8
+			sm:before:absolute
+			sm:before:inset-0
+			sm:before:left-[1px]
+			sm:before:h-full
+			sm:before:w-[1px]
+			sm:before:-translate-x-px
+			sm:before:bg-gradient-to-b
+			sm:before:from-white/25
+			sm:before:via-white/25
+			sm:before:to-transparent"
 	>
 		{#each work as w, i}
 			<Milestone
