@@ -8,7 +8,7 @@
 			title: 'Senior Vice President: Strategic Initatives',
 			workPlace: 'Data Engineering @ Two Sigma',
 			body: [
-				'I am currently focused on various strategic initiatives across the Two Sigma Data Engineering department.',
+				"I'm currently focused on various strategic initiatives across the Two Sigma Data Engineering department.",
 				'This includes work to build systems that can provide full reproducability of data over time, new data storage architectures to unlock research opportunities and driving complex external partnerships.',
 				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
 			],
