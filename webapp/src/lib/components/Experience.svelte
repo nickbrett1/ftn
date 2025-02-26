@@ -22,7 +22,7 @@
 	<div class="mb-20 text-xl leading-none text-green-400">&rarr; EXPERIENCE</div>
 
 	<p
-		class="mb-24 text-pretty pr-24 text-2xl leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
+		class="mb-12 text-pretty pr-24 text-2xl leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
 	>
 		Where I've worked, what I've built, and the impact I've had.
 	</p>
