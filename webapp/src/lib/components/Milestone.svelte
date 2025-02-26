@@ -34,6 +34,7 @@
 	<!-- Date -->
 	<time
 		class="
+			hidden
 			h-15
 			w-48
 			shrink-0
@@ -72,6 +73,7 @@
 			sm:p-6"
 	>
 		<div>
+			<h3 class="flex sm:hidden text-white pb-2">{from} - {to}</h3>
 			<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
 			<h3 class="tracking-tight text-green-400/80 lg:text-lg">
 				{subheading}
