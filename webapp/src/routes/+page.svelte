@@ -18,5 +18,5 @@
 	<About />
 	<Projects />
 	<Experience />
-	<Footer />
 </div>
+<Footer />
