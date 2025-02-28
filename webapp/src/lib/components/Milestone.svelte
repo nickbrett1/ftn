@@ -18,7 +18,6 @@
 		relative
 		mx-auto
 		flex
-		max-w-3xl
 		items-start
 		justify-center
 		sm:pl-8

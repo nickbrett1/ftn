@@ -98,7 +98,7 @@
 			title: 'Engineering Manager',
 			workplace: 'Equity Sales Applications @ Bloomberg LP',
 			body: [
-				'Engineering manager for 5 teams (30 reports) in London and New York building a new product (DASH), for equity salespeople. Developed in C++ / JavaScript, the software offers a matching algorithm to combine data and find opportunities to save users time; achieved over 3000+ daily active users over 18 months. Secured funding for 10 developers after pitching to Bloomberg LP CEO a new business intelligence platform for sales managers based around a personally coded C++ prototype.'
+				'Engineering manager for 5 teams (30 reports) in London and New York building a new product (DASH), for equity salespeople. Developed in C++ and JavaScript, the software offers a matching algorithm to combine data and find opportunities to save users time; achieved over 3000+ daily active users over 18 months. Secured funding for 10 developers after pitching to Bloomberg LP CEO a new business intelligence platform for sales managers based around a personally coded C++ prototype.'
 			]
 		},
 		{
