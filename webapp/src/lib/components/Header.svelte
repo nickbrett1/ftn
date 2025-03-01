@@ -18,18 +18,18 @@
 	<nav class="flex flex-row-reverse grow">
 		<a
 			href="https://www.linkedin.com/in/nick-brett/"
-			class="p-1 text-white hover:text-sky-600 flex items-center"
+			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
 			target="_blank"
 			rel="noopener noreferrer"
 		>
 			<LinkedinInBrands aria-label="LinkedIn" />
 		</a>
-		<a href="https://github.com/nickbrett1/" class="p-1 text-white flex items-center">
+		<a href="https://github.com/nickbrett1/" class="p-1 text-white flex items-center size-[48px]">
 			<GithubBrands />
 		</a>
 		<a
 			href="mailto:nick@fintechnick.com"
-			class="p-1 text-white hover:text-green-300 flex items-center"
+			class="p-1 text-white hover:text-green-400 flex items-center size-[48px]"
 		>
 			<EnvelopeRegular aria-label="Email" />
 		</a>
