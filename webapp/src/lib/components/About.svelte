@@ -7,7 +7,7 @@
 		class="mb-16 pr-24 text-2xl font-medium leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
 	>
 		Then let me introduce myself. My name is <span class="text-green-400 font-bold">Nick Brett</span
-		>. I'm a builder, a product manager and an expert in leading teams to harness the data that
+		>. Based in New York, I'm a builder, a product manager and an expert in leading teams to harness the data that
 		drives markets.
 	</p>
 	<div class="gap-24 text-pretty md:columns-2">
