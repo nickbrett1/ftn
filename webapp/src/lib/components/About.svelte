@@ -14,11 +14,11 @@
 		<p class="text-sm leading-normal text-white sm:text-base">
 			Over nearly 20 years, I've worked in most of the key functions for fintech data, from managing
 			global data partner relationships at Bloomberg LP, to building the data systems to deliver
-			massive scale analytics at Meta. I've managed large global organizations, with teams from
-			Tokyo to New York, Dubai to Sydney. But also taken high impact individual contributor roles to
-			be the hands-on leader for new initiatives. For most of my career I've worked in Engineering
-			roles, but for 3-years ran a Product Management team, and have a passion for marrying the
-			skills to <strong class="font-extrabold text-white"
+			massive scale analytics at Meta. I've managed worldwide organizations, with teams from Tokyo
+			to New York, Dubai to Sydney. And taken high impact individual contributor roles to be the
+			hands-on leader for new initiatives. For most of my career I've worked as an Engineer, but for
+			3-years I ran a Product Management team, and have a passion for marrying the skills to <strong
+				class="font-extrabold text-white"
 				>build the right solutions with those needed to solve the right problems.</strong
 			>
 		</p>
