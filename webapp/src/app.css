@@ -9,15 +9,20 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
 }
 
 html {
 	background-color: black;
+}
+
+@theme {
+	--inset-shadow-neon-green: inset 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
+	--shadow-neon-green: 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 }
