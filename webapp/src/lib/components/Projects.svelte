@@ -21,7 +21,7 @@
 	<div
 		class="grid gap-4 items-stretch auto-rows-fr grid-cols-[repeat(auto-fill,minmax(312px,1fr))] text-white"
 	>
-		<div class="md:p-6 text-pretty md:text-right text-2xl md:text-3xl leading-tight tracking-tight">
+		<div class="md:p-6 text-pretty md:text-right text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code, blog and contact information.
 		</div>
 
