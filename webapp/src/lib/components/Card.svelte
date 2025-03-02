@@ -65,6 +65,10 @@
 	class={`
 		bg-green-800/20
 		rounded-lg
+		border-3
+		border-green-400
+		inset-shadow-neon-green
+		shadow-neon-green
 		relative
 		transition-all
 		overflow-hidden

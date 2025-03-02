@@ -1,6 +1,7 @@
 <script>
 	import Card from '$lib/components/Card.svelte';
 	import HoverFadeCard from '$lib/components/HoverFadeCard.svelte';
+	import GlowButton from '$lib/components/GlowButton.svelte';
 	import {
 		LinkedinInBrands,
 		EnvelopeRegular,
@@ -26,9 +27,15 @@
 
 		<HoverFadeCard>
 			{#snippet initial()}
-				<div class="flex flex-col items-center grow">
-					<SitemapSolid class="size-20 grow" aria-label="Making of FinTechNick" />
-					<span class="text-xl text-center leading-none pt-2 grow">Making of FinTechNick</span>
+				<div class="flex flex-col grow">
+					<div class="flex flex-row">
+						<span class="text-xl font-bold leading-none pt-2 grow">Making of fintechnick.com</span>
+						<SitemapSolid class="size-10 " aria-label="Making of FinTechNick" />
+					</div>
+					<p class="grow pt-5">
+						As a 'data person', building a website using modern front-end technologies and patterns
+						was a challenge. Here I share my approach and lessons learned.
+					</p>
 				</div>
 			{/snippet}
 			{#snippet onHover()}
