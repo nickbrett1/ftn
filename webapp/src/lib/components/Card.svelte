@@ -38,7 +38,9 @@
 	let blob = $state();
 
 	function handleMouseMove(ev) {
-		blob.style.opacity = '1';
+		const isTouch = matchMedia('(hover: none)').matches;
+
+		blob.style.opacity = isTouch ? '0' : '1';
 
 		blob.animate(
 			[
@@ -73,6 +75,7 @@
 		transition-all
 		overflow-hidden
 		flex
+		backdrop-blur-sm
 	`}
 >
 	<div class="grid grid-cols-[1fr] grow">
