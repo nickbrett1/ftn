@@ -39,7 +39,7 @@
 		"miragejs": "^0.1.48",
 		"npm": "^11.1.0",
 		"postcss": "^8.5.3",
-		"prettier": "^3.5.2",
+		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.3.3",
 		"resize-observer-polyfill": "^1.5.1",
 		"sharp": "^0.33.5",
