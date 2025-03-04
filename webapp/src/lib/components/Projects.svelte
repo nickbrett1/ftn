@@ -69,7 +69,7 @@
 						<LightbulbSolid class="size-10 " aria-label="Tips and Tricks for Product Management" />
 					</div>
 					<p class="grow pt-5">
-						Pieces of insights, and lessons learned, from my learnings on Product Management
+						Pieces of insights, and lessons learned, from my adventures in Product Management
 					</p>
 				</div>
 			{/snippet}
