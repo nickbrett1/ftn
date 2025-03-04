@@ -6,6 +6,7 @@
 	import Projects from '$lib/components/Projects.svelte';
 	import Experience from '$lib/components/Experience.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import Contact from '$lib/components/Contact.svelte';
 </script>
 
 <Background />
@@ -18,5 +19,6 @@
 	<About />
 	<Projects />
 	<Experience />
+	<Contact />
 </div>
 <Footer />
