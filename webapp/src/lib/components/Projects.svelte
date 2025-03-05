@@ -97,10 +97,7 @@
 				</div>
 			{/snippet}
 		</HoverFadeCard>
-		<Card
-			onclick={() =>
-				window.open('https://github.com/nickbrett1/', '_blank', 'noopener', 'noreferrer')}
-		>
+		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow">My Code</span>
@@ -109,10 +106,7 @@
 				<p class="grow pt-5">Here you'll find all of my code. Feel free to embrace and extend.</p>
 			</div>
 		</Card>
-		<Card
-			onclick={() =>
-				window.open('https://medium.com/the-management-code', '_blank', 'noopener', 'noreferrer')}
-		>
+		<Card onclick={() => (window.location = 'https://medium.com/the-management-code')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow">My Writings</span>

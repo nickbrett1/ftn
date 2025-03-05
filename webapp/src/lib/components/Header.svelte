@@ -19,7 +19,6 @@
 		<a
 			href="https://www.linkedin.com/in/nick-brett/"
 			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
-			target="_blank"
 			rel="noopener noreferrer"
 		>
 			<LinkedinInBrands aria-label="LinkedIn" />
