@@ -7,10 +7,12 @@
 	import Experience from '$lib/components/Experience.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Contact from '$lib/components/Contact.svelte';
+	import Navbar from '$lib/components/Navbar.svelte';
 </script>
 
 <Background />
 
+<Navbar />
 <div class="flex flex-col h-dvh min-h-max">
 	<Header />
 	<Landing />
