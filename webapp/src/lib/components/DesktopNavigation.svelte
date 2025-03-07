@@ -6,10 +6,21 @@
 
 <nav class={classes}>
 	<ul
-		class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-base-800 shadow-lg shadow-base-800/5 ring-1 ring-base-900/5 backdrop-blur dark:bg-white/5 dark:text-base-200 dark:ring-white/10"
+		class="flex
+			rounded-full
+			text-white
+			px-3
+			backdrop-blur
+ 			border
+			border-transparent
+			[background:linear-gradient(45deg,#172033,theme(colors.black)_50%,#172033)_padding-box,conic-gradient(from_var(--border-angle),theme(colors.black)_10%,_theme(colors.green.600)_40%,_theme(colors.green.500)_70%,_theme(colors.green.700)_95%,_theme(colors.black))_border-box]
+			animate-border"
 	>
 		{#each items as item}
 			<NavigationItem href={`/#${item}`} isActive={active == item}>{item}</NavigationItem>
 		{/each}
 	</ul>
 </nav>
+
+<style>
+</style>
