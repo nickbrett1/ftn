@@ -1,7 +1,7 @@
+import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
-
-/** @type {import('@sveltejs/kit').Config} */
+/** @type {import('@sveltejs/kit').Config}*/
 const config = {
 	kit: {
 		adapter: adapter(),
@@ -43,7 +43,11 @@ const config = {
 	compilerOptions: {
 		enableSourcemap: true
 	},
-	preprocess: sveltePreprocess({ sourceMap: true })
+	preprocess: sequence([
+		sveltePreprocess({
+			sourceMap: true
+		}),
+		preprocessMeltUI()
+	])
 };
-
 export default config;

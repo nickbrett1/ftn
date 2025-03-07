@@ -26,3 +26,19 @@ html {
 	--inset-shadow-neon-green: inset 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 	--shadow-neon-green: 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 }
+
+@property --border-angle {
+	inherits: false;
+	initial-value: 0deg;
+	syntax: '<angle>';
+}
+
+@theme {
+	--animate-border: border 4s linear infinite;
+
+	@keyframes border {
+		to {
+			--border-angle: 360deg;
+		}
+	}
+}
