@@ -72,7 +72,7 @@
 											<h3 class="text-base normal-case text-black font-semibold relative">
 												grok<br />
 												<i>transitive verb</i>
-												: to understand profoundly and intutively
+												: to understand profoundly and intuitively
 											</h3>
 										</div>
 									{/if}
