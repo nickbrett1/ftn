@@ -8,9 +8,7 @@
 	<a
 		{href}
 		class={'relative block px-3 py-2.5 transition duration-200 ' +
-			(isActive
-				? 'text-accent-500 dark:text-accent-400'
-				: 'hover:text-accent-500 dark:hover:text-accent-400')}
+			(isActive ? 'text-green-400' : 'hover:text-green-400')}
 	>
 		{@render children()}
 		{#if isActive}
