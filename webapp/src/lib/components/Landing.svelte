@@ -40,7 +40,7 @@
 		{#each lines as line, i}
 			{#if animate}
 				<div
-					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center"
+					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center max-h-[8vh]"
 				>
 					<div class="inline-block overflow-visible relative">
 						<span
