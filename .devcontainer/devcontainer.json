@@ -56,7 +56,9 @@
         "cesium.gltf-vscode",
         "ms-azuretools.vscode-docker",
         "GitHub.copilot-nightly",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker"
       ]
     }
   },
