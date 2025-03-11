@@ -5,7 +5,7 @@
 		{
 			from: 'Feb 2025',
 			to: 'Present',
-			title: 'Senior Vice President: Strategic Initatives',
+			title: 'Senior Vice President: Strategic Initiatives',
 			workplace: 'Data Engineering @ Two Sigma',
 			body: [
 				"I'm currently focused on various strategic initiatives across the Two Sigma Data Engineering department.",
@@ -21,7 +21,7 @@
 			title: 'Head of Data Platform & Differentiated Data Engineering',
 			workplace: 'Data Engineering @ Two Sigma',
 			body: [
-				'Expanded scope to lead a second seperate cross-functional team "Differentiated Data Engineering" of Data Engineers, Data Scientists and Program Managers.',
+				'Expanded scope to lead a second separate cross-functional team "Differentiated Data Engineering" of Data Engineers, Data Scientists and Program Managers.',
 				"The team built and leveraged LLM technology to create differentiated proprietary datasets. Responsibilities encompassed three efforts; building tools that leverage LLM technology that can be used to deliver new sources of alpha, establishing systems and processes that allow the scalable validation and tuning of LLM's with human input, and building datasets with the team's LLM tools that themselves deliver alpha."
 			],
 			keywords: [],
