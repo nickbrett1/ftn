@@ -11,7 +11,7 @@
 			text-white
 			px-3
 			backdrop-blur
- 			border
+			border
 			border-transparent
 			[background:linear-gradient(45deg,#172033,theme(colors.black)_50%,#172033)_padding-box,conic-gradient(from_var(--border-angle),theme(colors.black)_10%,_theme(colors.green.600)_40%,_theme(colors.green.500)_70%,_theme(colors.green.700)_95%,_theme(colors.black))_border-box]
 			animate-border"

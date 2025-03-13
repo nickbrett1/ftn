@@ -7,9 +7,9 @@
 
 	async function setActive() {
 		const { default: mostVisible } = await import('most-visible');
-
 		let currentlyActive = mostVisible(document.querySelectorAll('.section'));
 
+		// Doesn't work if two (or more) elements are entirely visible. Only one is returned.
 		if (currentlyActive && currentlyActive.id) {
 			active = currentlyActive.id;
 		}

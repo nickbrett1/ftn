@@ -13,7 +13,7 @@
 <Background />
 
 <Navbar />
-<div class="flex flex-col h-dvh min-h-max">
+<div id="home" class="flex flex-col h-dvh min-h-max section">
 	<Header />
 	<Landing />
 </div>

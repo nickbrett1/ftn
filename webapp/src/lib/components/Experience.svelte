@@ -140,8 +140,8 @@
 	];
 </script>
 
-<div>
-	<div class="mb-20 text-xl leading-none text-green-400">&rarr; EXPERIENCE</div>
+<div id="experience" class="section">
+	<div class="my-20 text-xl leading-none text-green-400">&rarr; EXPERIENCE</div>
 
 	<p
 		class="mb-12 text-pretty pr-24 text-2xl leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"

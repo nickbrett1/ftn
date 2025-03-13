@@ -4,8 +4,8 @@
 	import { LinkedinInBrands, EnvelopeRegular, EnvelopeOpenRegular } from 'svelte-awesome-icons';
 </script>
 
-<div>
-	<div class="mb-20 text-xl leading-none text-green-400">&rarr; CONTACT</div>
+<div id="contact" class="section">
+	<div class="my-20 text-xl leading-none text-green-400">&rarr; CONTACT</div>
 
 	<div
 		class="grid gap-4 items-stretch auto-rows-fr grid-cols-[repeat(auto-fill,minmax(312px,1fr))] text-white"
