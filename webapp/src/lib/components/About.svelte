@@ -1,14 +1,14 @@
 <!-- Inspired by Mario Tiscareno (https://mario.tiscareno.dev/) -->
 
 <!-- spark line instead of right arrow? https://www.chartjs.org/ -->
-<div>
-	<div class="mb-20 text-xl leading-none text-green-400">&rarr; HELLO</div>
+<div id="about" class="section">
+	<div class="my-20 text-xl leading-none text-green-400">&rarr; HELLO</div>
 	<p
 		class="mb-16 pr-24 text-2xl font-medium leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
 	>
 		Then let me introduce myself. My name is <span class="text-green-400 font-bold">Nick Brett</span
-		>. Based in New York, I'm a builder, a product manager and an expert in leading teams to harness the data that
-		drives markets.
+		>. Based in New York, I'm a builder, a product manager and an expert in leading teams to harness
+		the data that drives markets.
 	</p>
 	<div class="gap-24 text-pretty md:columns-2">
 		<p class="text-sm leading-normal text-white sm:text-base">
