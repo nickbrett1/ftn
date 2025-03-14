@@ -27,8 +27,6 @@
 	</div>
 </div>
 
-<!--
 <div class="fixed bottom-6 right-0 z-40">
 	<MobileNavigation {items} bind:active class="pointer-events-auto md:hidden mt-10" />
 </div>
--->
