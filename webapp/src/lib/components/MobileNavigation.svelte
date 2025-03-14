@@ -24,7 +24,6 @@
 		flex
 		items-center rounded-full mr-4 bg-green-400/30 text-white px-4 py-2 text-sm font-medium backdrop-blur-md {classes}"
 	use:melt={$trigger}
-	aria-label="Update dimensions"
 >
 	menu
 	<svg
