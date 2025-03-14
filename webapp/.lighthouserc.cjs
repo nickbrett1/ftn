@@ -20,7 +20,8 @@ module.exports = {
 				'uses-text-compression': 'off', // Doesn't detect binary files when considering compression: https://github.com/GoogleChrome/lighthouse/issues/9826
 				'valid-source-maps': 'off', // Sometimes fails due to timeouts: https://github.com/GoogleChrome/lighthouse/issues/6512
 				'csp-xss': 'off', // Disable because if unsafe-inline is present, nonces aren't generated (https://github.com/sveltejs/kit/pull/11613)
-				'color-contrast': 'off' // Neon flickering triggers this
+				'color-contrast': 'off', // Neon flickering triggers this
+				'aria-valid-attr-value': 'off' // Melt adds some invalid aria tags
 			}
 		}
 	}
