@@ -14,9 +14,7 @@
 			Have a project in mind? Drop me a note and I'll get back to you as soon as I can.
 		</div>
 
-		<HoverFadeCard
-			onclick={() => window.open('mailto:nick@fintechnick.com', '_blank', 'noopener', 'noreferrer')}
-		>
+		<HoverFadeCard onclick={() => (window.location.href = 'mailto:nick@fintechnick.com')}>
 			{#snippet initial()}
 				<div class="flex flex-col items-center grow">
 					<EnvelopeRegular aria-label="Email" class="size-20 grow" />
