@@ -10,8 +10,8 @@
 		class="block py-2 {active == current ? 'text-green-400' : ''}"
 		onclick={(e) => {
 			e.preventDefault();
-			scrollIntoView(e);
 			hide();
+			scrollIntoView(e);
 		}}
 	>
 		{current}
