@@ -52,7 +52,7 @@
 		<div use:melt={$arrow}></div>
 		<div
 			transition:slide={{ duration: 300 }}
-			class="fixed inset-x-4 bottom-8 z-50 origin-top rounded-3xl bg-white p-8 ring-1 backdrop-blur-md ring-base-900/5"
+			class="fixed inset-x-4 bottom-8 z-50 origin-top rounded-3xl bg-green-400/30 text-white p-8 ring-1 backdrop-blur-md"
 		>
 			<div class="flex flex-row-reverse items-center justify-between">
 				<button aria-label="Close menu" class="-m-1 p-1 focus:outline-none" use:melt={$close}>
@@ -63,7 +63,7 @@
 				<h2 class="font-semibold">menu</h2>
 			</div>
 			<nav class="mt-6">
-				<ul class="-my-2 divide-y divide-white/10 text-base text-base-800">
+				<ul class="-my-2 divide-y divide-white/10">
 					{#each items as item}
 						<MobileNavigationItem current={item} {active} {hide} />
 					{/each}
