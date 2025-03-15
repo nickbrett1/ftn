@@ -1,5 +1,5 @@
 <script>
-	import NavigationItem from './NavigationItem.svelte';
+	import DesktopNavigationItem from './DesktopNavigationItem.svelte';
 
 	let { class: classes, active, items } = $props();
 </script>
@@ -17,7 +17,9 @@
 			animate-border"
 	>
 		{#each items as item}
-			<NavigationItem href={`/#${item}`} isActive={active == item}>{item}</NavigationItem>
+			<DesktopNavigationItem href={`/#${item}`} isActive={active == item}
+				>{item}</DesktopNavigationItem
+			>
 		{/each}
 	</ul>
 </nav>

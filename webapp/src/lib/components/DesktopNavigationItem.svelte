@@ -1,6 +1,4 @@
 <script>
-	import { fade } from 'svelte/transition';
-
 	let { children, isActive = false, href = '' } = $props();
 </script>
 
