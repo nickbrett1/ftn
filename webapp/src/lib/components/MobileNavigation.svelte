@@ -56,20 +56,14 @@
 		>
 			<div class="flex flex-row-reverse items-center justify-between">
 				<button aria-label="Close menu" class="-m-1 p-1 focus:outline-none" use:melt={$close}>
-					<svg
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-						class="h-6 w-6 text-base-500 dark:text-base-400"
-					>
+					<svg viewBox="0 0 24 24" aria-hidden="true" class="h-6 w-6 text-base-500">
 						<path d="m17.25 6.75-10.5 10.5M6.75 6.75l10.5 10.5" fill="none" stroke="currentColor" />
 					</svg>
 				</button>
-				<h2 class="text-sm font-medium text-base-600 dark:text-base-400">navigation</h2>
+				<h2 class="font-semibold">menu</h2>
 			</div>
 			<nav class="mt-6">
-				<ul
-					class="-my-2 divide-y divide-white/10 text-base text-base-800 dark:divide-base-100/5 dark:text-base-100"
-				>
+				<ul class="-my-2 divide-y divide-white/10 text-base text-base-800">
 					{#each items as item}
 						<MobileNavigationItem current={item} {active} {hide} />
 					{/each}
