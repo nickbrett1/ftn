@@ -31,7 +31,7 @@
 		sm:before:to-transparent"
 >
 	<!-- Date -->
-	<time
+	<span
 		class="
 			hidden
 			h-15
@@ -52,7 +52,7 @@
 			sm:flex"
 	>
 		{from} - {to}
-	</time>
+	</span>
 
 	<!-- Card -->
 	<div
