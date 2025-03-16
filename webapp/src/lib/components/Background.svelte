@@ -13,7 +13,7 @@
 		interactivity: {
 			detect_on: 'canvas',
 			events: {
-				onClick: { enable: true, mode: 'push' },
+				onClick: { enable: false, mode: 'push' },
 				onHover: {
 					enable: true,
 					mode: 'connect',
