@@ -1,5 +1,6 @@
 <script>
 	import Milestone from '$lib/components/Milestone.svelte';
+	import TwoSigma from '$lib/icons/TwoSigma.svelte';
 
 	const work = [
 		{
@@ -12,8 +13,7 @@
 				'This includes work to build systems that can provide full reproducibility of data over time, new data storage architectures to unlock research opportunities and driving complex external partnerships.',
 				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
 			],
-			keywords: [],
-			icons: []
+			milestoneIcon: null
 		},
 		{
 			from: 'Dec 2023',
@@ -23,9 +23,7 @@
 			body: [
 				'Expanded scope to lead a second separate cross-functional team "Differentiated Data Engineering" of Data Engineers, Data Scientists and Program Managers.',
 				"The team built and leveraged LLM technology to create differentiated proprietary datasets. Responsibilities encompassed three efforts; building tools that leverage LLM technology that can be used to deliver new sources of alpha, establishing systems and processes that allow the scalable validation and tuning of LLM's with human input, and building datasets with the team's LLM tools that themselves deliver alpha."
-			],
-			keywords: [],
-			icons: []
+			]
 		},
 		{
 			from: 'Jan 2023',
@@ -172,8 +170,8 @@
 				subheading={w.workplace}
 				body={w.body}
 				keywords={w.keywords}
-				icons={w.icons}
-				active={i === 0}
+				skillIcons={w.skillIcons}
+				milestoneIcon={w.milestoneIcon}
 			></Milestone>
 		{/each}
 	</div>

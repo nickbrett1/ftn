@@ -6,9 +6,10 @@
 		subheading = '',
 		body = [],
 		keywords = [],
-		icons = [],
+		skillIcons = [],
 		from = '',
-		to = ''
+		to = '',
+		milestoneIcon = null
 	} = $props();
 </script>
 
@@ -71,12 +72,15 @@
 			sm:rounded-tl-none
 			sm:p-6"
 	>
-		<div>
-			<h3 class="flex sm:hidden text-white pb-2">{from} - {to}</h3>
-			<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
-			<h3 class="tracking-tight text-green-400/80 lg:text-lg">
-				{subheading}
-			</h3>
+		<div class="flex">
+			<div>
+				<h3 class="flex sm:hidden text-white pb-2">{from} - {to}</h3>
+				<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
+				<h3 class="tracking-tight text-green-400/80 lg:text-lg">
+					{subheading}
+				</h3>
+			</div>
+			<div class="grow text-white text-right">{@render milestoneIcon?.()}</div>
 		</div>
 		<div class="mt-6 flex flex-col gap-4 text-pretty text-xs text-white sm:text-sm">
 			{#each body as paragraph}
@@ -93,7 +97,7 @@
 			{/if}
 		</div>
 		<div class="flex flex-wrap gap-3.5">
-			{#each icons as icon}
+			{#each skillIcons as icon}
 				<icon></icon>
 			{/each}
 		</div>
