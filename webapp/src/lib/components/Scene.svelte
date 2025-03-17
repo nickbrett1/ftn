@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { T } from '@threlte/core';
 	import { GLTF, OrbitControls, interactivity } from '@threlte/extras';
-	import model from '$lib/assets/models/charging_bull.glb';
 	import gsap from 'gsap';
 
 	interactivity();
@@ -25,7 +24,7 @@
 	near={0.1}
 	far={10000}
 	makeDefault
-	on:create={({ ref }) => {
+	oncreate={(ref) => {
 		camera = ref;
 		ref.lookAt(0, 0, 0);
 	}}
@@ -38,7 +37,7 @@
 <T.AmbientLight intensity={0.2} />
 
 <GLTF
-	url={model}
+	url="/models/charging_bull.glb"
 	useDraco={true}
 	on:click={(e) => {
 		tl.pause();
