@@ -52,7 +52,7 @@
 		"typescript": "^5.8.2",
 		"vite": "^6.2.2",
 		"vite-imagetools": "^7.0.5",
-		"vitest": "^3.0.5"
+		"vitest": "^3.0.9"
 	},
 	"type": "module",
 	"dependencies": {
