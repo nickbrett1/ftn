@@ -67,7 +67,7 @@
 		"graphql": "^16.10.0",
 		"gsap": "^3.12.7",
 		"most-visible": "^2.0.0",
-		"nanoid": "^5.1.4",
+		"nanoid": "^5.1.5",
 		"three": "^0.174.0",
 		"tsparticles": "^3.8.1"
 	}
