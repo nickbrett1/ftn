@@ -72,15 +72,21 @@
 			sm:rounded-tl-none
 			sm:p-6"
 	>
-		<div class="flex">
-			<div>
-				<h3 class="flex sm:hidden text-white pb-2">{from} - {to}</h3>
-				<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
-				<h3 class="tracking-tight text-green-400/80 lg:text-lg">
-					{subheading}
-				</h3>
+		<div>
+			<h3 class="sm:hidden text-white pb-2">
+				{from} - {to}
+			</h3>
+			<div class="flex grow">
+				<div class="grow">
+					<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
+					<h3 class="tracking-tight text-green-400/80 lg:text-lg">
+						{subheading}
+					</h3>
+				</div>
+				<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
+					{@render milestoneIcon?.()}
+				</div>
 			</div>
-			<div class="grow text-white text-right">{@render milestoneIcon?.()}</div>
 		</div>
 		<div class="mt-6 flex flex-col gap-4 text-pretty text-xs text-white sm:text-sm">
 			{#each body as paragraph}
