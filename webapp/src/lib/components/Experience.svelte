@@ -40,11 +40,11 @@
 		},
 		{
 			from: 'Oct 2020',
-			to: 'Present',
+			to: 'Nov 2024',
 			title: 'Advisor',
 			workplace: 'Velma',
 			body: [
-				'Velma is a VC-backed early stage company using AI to make the process of planning and running large software projects more transparent, efficient and agile. Advise the CEO and executive team on company strategy, fundraising, market positioning and as a general sounding board for hard problems.'
+				'Velma was a VC-backed early stage company using AI to make the process of planning and running large software projects more transparent, efficient and agile. Advised the CEO and executive team on company strategy, fundraising, market positioning and as a general sounding board for hard problems.'
 			],
 			milestoneIcon: Velma
 		},
