@@ -1,6 +1,7 @@
 <script>
 	import Milestone from '$lib/components/Milestone.svelte';
 	import TwoSigma from '$lib/icons/TwoSigma.svelte';
+	import Velma from '$lib/icons/Velma.svelte';
 
 	const work = [
 		{
@@ -13,7 +14,7 @@
 				'This includes work to build systems that can provide full reproducibility of data over time, new data storage architectures to unlock research opportunities and driving complex external partnerships.',
 				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
 			],
-			milestoneIcon: null
+			milestoneIcon: TwoSigma
 		},
 		{
 			from: 'Dec 2023',
@@ -23,7 +24,8 @@
 			body: [
 				'Expanded scope to lead a second separate cross-functional team "Differentiated Data Engineering" of Data Engineers, Data Scientists and Program Managers.',
 				"The team built and leveraged LLM technology to create differentiated proprietary datasets. Responsibilities encompassed three efforts; building tools that leverage LLM technology that can be used to deliver new sources of alpha, establishing systems and processes that allow the scalable validation and tuning of LLM's with human input, and building datasets with the team's LLM tools that themselves deliver alpha."
-			]
+			],
+			milestoneIcon: TwoSigma
 		},
 		{
 			from: 'Jan 2023',
@@ -33,7 +35,8 @@
 			body: [
 				"Led a team of Data Engineers responsible for Two Sigma's Data Platform, a suite of tools and services that enable Alpha Modelers and other internal customers to discover, share and seamlessly use Two Sigma's vast catalog of vendor supplied, proprietary and derived datasets. Key products include a 'Feature Catalog', that organizes, indexes and permissions economically valuable time-series data (features), and a data lineage system for tracing all data flows across Two Sigma.",
 				'Key achievements included establishing a process and mechanism to provide data lineage insights that delivered use-cases around risk management, support cost reduction and model attribution in a way that did not disrupt modeler workflow or require a rebuild of the existing architecture. Also developing systems to allow data upgrades to occur seamlessly, with alpha models migrated to new data sets with no disruption and minimal effort.'
-			]
+			],
+			milestoneIcon: TwoSigma
 		},
 		{
 			from: 'Oct 2020',
@@ -42,7 +45,8 @@
 			workplace: 'Velma',
 			body: [
 				'Velma is a VC-backed early stage company using AI to make the process of planning and running large software projects more transparent, efficient and agile. Advise the CEO and executive team on company strategy, fundraising, market positioning and as a general sounding board for hard problems.'
-			]
+			],
+			milestoneIcon: Velma
 		},
 		{
 			from: 'Nov 2020',
