@@ -6,6 +6,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		csp: {
+			mode: 'auto',
 			directives: {
 				'base-uri': ['none'],
 				'connect-src': [
@@ -32,6 +33,11 @@ const config = {
 				'manifest-src': ['self'],
 				'media-src': ['self', 'https://ssl.gstatic.com'],
 				'object-src': ['none'],
+
+				// NOTE: This `unsafe-hashes` with this specific hash (`sha256-7dQ...`) is
+				// necessary to prevent the CSP policy from causing issues with inlined
+				// image event handlers.
+				// See https://github.com/sveltejs/svelte/issues/14014
 				'script-src': [
 					'self',
 					'https://static.cloudflareinsights.com',
@@ -40,7 +46,9 @@ const config = {
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
 					'strict-dynamic',
-					'unsafe-eval'
+					'unsafe-eval',
+					'unsafe-hashes',
+					'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='
 				],
 				'worker-src': ['self', 'blob:']
 			}
