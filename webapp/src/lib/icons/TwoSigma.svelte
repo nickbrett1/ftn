@@ -1,7 +1,19 @@
+<script>
+	import tippy from 'tippy.js';
+	import 'tippy.js/dist/tippy.css';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		tippy('#twosigmalogo', {
+			content: 'Two Sigma'
+		});
+	});
+</script>
+
 <svg
+	id="twosigmalogo"
 	viewBox="0 0 108 108"
 	version="1.1"
-	id="svg3"
 	xmlns="http://www.w3.org/2000/svg"
 	xmlns:svg="http://www.w3.org/2000/svg"
 >
