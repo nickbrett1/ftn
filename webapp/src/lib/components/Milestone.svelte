@@ -1,6 +1,8 @@
 <!-- Inspired by https://mario.tiscareno.dev/ -->
 
 <script>
+	import CompanyLogo from '$lib/components/CompanyLogo.svelte';
+
 	let {
 		heading = '',
 		subheading = '',
@@ -83,9 +85,11 @@
 						{subheading}
 					</h3>
 				</div>
-				<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
-					{@render milestoneIcon?.()}
-				</div>
+				{#if milestoneIcon}
+					<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
+						<CompanyLogo data={milestoneIcon} />
+					</div>
+				{/if}
 			</div>
 		</div>
 		<div class="mt-6 flex flex-col gap-4 text-pretty text-xs text-white sm:text-sm">

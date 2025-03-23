@@ -2,28 +2,26 @@
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
-	import { nanoid } from 'nanoid';
 
-	let { tooltip = '', link = '', icon = null } = $props();
+	let { data } = $props();
 
-	let id = nanoid();
+	let id = $props.id();
 
 	onMount(() => {
 		tippy('#' + id, {
-			content: { tooltip }
+			content: data.tooltip
 		});
 	});
 </script>
 
 <button
+	{id}
 	class="size-full cursor-pointer"
 	type="button"
-	aria-label={tooltip}
+	aria-label={data.tooltip}
 	onclick={() => {
-		window.location = link;
+		window.location = data.link;
 	}}
 >
-	{#if icon}
-		{@render icon()}
-	{/if}
+	<data.Icon />
 </button>
