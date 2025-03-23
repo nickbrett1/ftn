@@ -1,13 +1,7 @@
 <script>
 	import Card from '$lib/components/Card.svelte';
 	import { fade } from 'svelte/transition';
-	/**
-	 * @typedef {Object} Props
-	 * @property {import('svelte').Snippet} [onHover]
-	 * @property {import('svelte').Snippet} [initial]
-	 */
 
-	/** @type {Props} */
 	let { onHover, initial, onclick } = $props();
 
 	let isHovering = $state(false);
