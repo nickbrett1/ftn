@@ -1,7 +1,7 @@
 <!-- Inspired by https://mario.tiscareno.dev/ -->
 
 <script>
-	import CompanyLogo from '$lib/components/CompanyLogo.svelte';
+	import MilestoneLogo from '$lib/components/MilestoneLogo.svelte';
 
 	let {
 		heading = '',
@@ -11,7 +11,7 @@
 		skillIcons = [],
 		from = '',
 		to = '',
-		milestoneIcon = null
+		logo = null
 	} = $props();
 </script>
 
@@ -85,9 +85,9 @@
 						{subheading}
 					</h3>
 				</div>
-				{#if milestoneIcon}
+				{#if logo}
 					<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
-						<CompanyLogo data={milestoneIcon} />
+						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
 			</div>
