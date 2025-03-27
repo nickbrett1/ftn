@@ -1,7 +1,7 @@
 module.exports = {
 	ci: {
 		collect: {
-			url: 'http://localhost:4173',
+			url: 'http://localhost:5173',
 			numberOfRuns: 1,
 			settings: {
 				chromeFlags: '--no-sandbox',
