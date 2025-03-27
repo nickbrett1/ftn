@@ -3,6 +3,8 @@
 <script>
 	import MilestoneLogo from '$lib/components/MilestoneLogo.svelte';
 
+	let id = $props.id();
+
 	let {
 		heading = '',
 		subheading = '',
@@ -15,7 +17,11 @@
 	} = $props();
 </script>
 
+<!--
+	data-background-color="oklch(|0:0 to 40:0.393 to 60:0.393 to 100:0| |0:0 to 40:0.095 to 60:0.095 to 100:0| |0:0 to 40:152.535 to 60:152.535 to 100:0|)"
+-->
 <div
+	scroll-btween={'milestone' + id}
 	class="
 		milestone
 		relative

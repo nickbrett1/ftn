@@ -16,7 +16,8 @@ export default defineConfig({
 		SvelteKitPWA({
 			scope: '/',
 			base: '/',
-			srcDir: './src',
+			srcDir: 'dev-dist',
+			filename: 'sw.js',
 			strategies: 'generateSW',
 			injectManifest: {
 				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
