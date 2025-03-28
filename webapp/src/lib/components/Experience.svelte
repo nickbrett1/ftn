@@ -159,7 +159,7 @@
 			body: [
 				'Grew usage from 3,000 to 40,000 active users over 2 years by leading a team of 8 developers building a suite of applications for realtime market analysis.'
 			],
-			milestoneIcon: {
+			logo: {
 				Icon: Bloomberg,
 				tooltip: 'Bloomberg LP',
 				link: 'https://www.bloomberg.com/'
