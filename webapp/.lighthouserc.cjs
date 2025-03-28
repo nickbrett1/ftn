@@ -21,14 +21,7 @@ module.exports = {
 				'valid-source-maps': 'off', // Sometimes fails due to timeouts: https://github.com/GoogleChrome/lighthouse/issues/6512
 				'csp-xss': 'off', // Disable because if unsafe-inline is present, nonces aren't generated (https://github.com/sveltejs/kit/pull/11613)
 				'color-contrast': 'off', // Neon flickering triggers this
-				'aria-valid-attr-value': 'off', // Melt adds some invalid aria tags
-
-				// Ignore all the PWA service worker checks
-				'installable-manifest': 'off',
-				'maskable-icon': 'off',
-				'service-worker': 'off',
-				'splash-screen': 'off',
-				'themed-omnibox': 'off'
+				'aria-valid-attr-value': 'off' // Melt adds some invalid aria tags
 			}
 		}
 	}
