@@ -17,11 +17,9 @@
 	} = $props();
 </script>
 
-<!--
-	data-background-color="oklch(|0:0 to 40:0.393 to 60:0.393 to 100:0| |0:0 to 40:0.095 to 60:0.095 to 100:0| |0:0 to 40:152.535 to 60:152.535 to 100:0|)"
--->
 <div
 	scroll-btween={'milestone' + id}
+	data-filter="blur(|0:2 to 30:0 to 70:0 to 100:2|px) contrast(|0:0.1 to 30:1 to 70:1 to 100:0.1|)"
 	class="
 		milestone
 		relative
