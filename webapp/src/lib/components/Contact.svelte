@@ -29,10 +29,7 @@
 			{/snippet}
 		</HoverFadeCard>
 
-		<Card
-			onclick={() =>
-				window.open('https://www.linkedin.com/in/nick-brett/', '_blank', 'noopener', 'noreferrer')}
-		>
+		<Card onclick={() => (window.location = 'https://www.linkedin.com/in/nick-brett/')}>
 			<div class="flex flex-col items-center grow hover:text-sky-600">
 				<LinkedinInBrands aria-label="LinkedIn" class="size-20 grow" />
 				<span class="text-xl leading-none content-center pt-2 grow">LinkedIn</span>
