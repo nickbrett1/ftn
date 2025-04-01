@@ -25,7 +25,7 @@
 		"@sveltejs/adapter-cloudflare": "^6.0.1",
 		"@sveltejs/kit": "^2.20.2",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
-		"@tailwindcss/postcss": "^4.0.17",
+		"@tailwindcss/postcss": "^4.1.0",
 		"@testing-library/svelte": "^5.2.7",
 		"@vitest/coverage-v8": "^3.1.1",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
