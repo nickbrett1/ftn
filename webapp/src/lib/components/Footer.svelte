@@ -28,11 +28,13 @@
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
 		<ul class="flex border-t border-white/20 pt-8 text-sm text-white sm:gap-32">
-			<Login loginCallback={loginStateUpdated}>
-				{#if !isLoggedIn}
-					<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer" />
-				{/if}
-			</Login>
+			<li class="flex">
+				<Login loginCallback={loginStateUpdated}>
+					{#if !isLoggedIn}
+						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer" />
+					{/if}
+				</Login>
+			</li>
 
 			<li class="flex-1 block"></li>
 
