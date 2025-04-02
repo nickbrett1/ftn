@@ -2,17 +2,17 @@
 	import { onMount } from 'svelte';
 	import { nanoid } from 'nanoid';
 	import { goto } from '$app/navigation';
-	import LoginButton from './LoginButton.svelte';
 
 	let loggedIn = $state(false);
 	let client = null;
 
-	let { class: clazz, loggedInText, loggedOutText } = $props();
+	let { loginCallback, children } = $props();
 
 	onMount(async () => {
 		const match = document.cookie.match(/(^| )auth=([^;]+)/);
 		const hasValidAuth = match !== null && match[2] !== 'deleted';
 		loggedIn = hasValidAuth;
+		loginCallback?.(loggedIn);
 	});
 
 	function onload() {
@@ -75,4 +75,6 @@
 	}
 </script>
 
-<LoginButton label={loggedIn ? loggedInText : loggedOutText} on:click={onClick} class="${clazz}" />
+<button onclick={onClick}>
+	{@render children?.()}
+</button>

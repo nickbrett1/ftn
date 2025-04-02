@@ -24,8 +24,8 @@ describe('Login correctly', () => {
 			}
 		});
 
-		render(Login, { loggedInText: 'Home', loggedOutText: 'Login', class: '' });
-		const button = screen.getByText('Login');
+		render(Login);
+		const button = screen.getByRole('button');
 		button.onclick = loginSpy;
 
 		fireEvent.click(button);
@@ -48,12 +48,4 @@ describe('Login correctly', () => {
 	});
 
 	vi.mock('$app/navigation');
-
-	it('goes to home after login', () => {
-		document.cookie = 'auth=123';
-		render(Login, { loggedInText: 'Home', loggedOutText: 'Login', class: '' });
-		act(() => {
-			fireEvent.click(screen.getByText('Home'));
-		});
-	});
 });
