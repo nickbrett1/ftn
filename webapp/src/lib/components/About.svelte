@@ -1,3 +1,7 @@
+<script>
+	import { scrollIntoView } from '$lib/utils/utils';
+</script>
+
 <!-- Inspired by Mario Tiscareno (https://mario.tiscareno.dev/) -->
 
 <!-- spark line instead of right arrow? https://www.chartjs.org/ -->
@@ -12,34 +16,51 @@
 	</p>
 	<div class="gap-24 text-pretty md:columns-2">
 		<p class="text-sm leading-normal text-white sm:text-base">
-			Over nearly 20 years, I've worked in most of the key functions for fintech data, from managing
-			global data partner relationships at Bloomberg LP, to building the data systems to deliver
-			massive scale analytics at Meta. I've managed worldwide organizations, with teams from Tokyo
-			to New York, Dubai to Sydney. And taken high impact individual contributor roles to be the
-			hands-on leader for new initiatives. For most of my career I've worked as an Engineer, but for
-			3-years I ran a Product Management team, and have a passion for marrying the skills to <strong
-				class="font-extrabold text-white"
-				>build the right solutions with those needed to solve the right problems.</strong
+			Over nearly 20 years, I've <a
+				onclick={(e) => {
+					e.preventDefault();
+					scrollIntoView(e);
+				}}
+				class="text-[#fce4b8] underline underline-offset-2"
+				href="#experience">worked in most of the key functions for fintech data</a
+			>, from managing global data partner relationships at Bloomberg LP, to building the data
+			systems that power the investment of over $60B AUM at Two Sigma. I've managed worldwide
+			organizations, with teams from Tokyo to New York, Dubai to Sydney; and taken high impact
+			individual contributor roles to be a hands-on leader for new initiatives. For most of my
+			career I've worked as an Engineer, but for several years I ran a Product Management team, and
+			today look to marry all the skills needed to
+			<strong class="font-extrabold text-green-400"
+				>build the right data products in the right way.</strong
 			>
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
-			I've learned a lot over that time about the systems and products, processes and people
-			necessary to build a data factory that can power buy-side and sell-side businesses. From
-			capturing metadata to prevent look-ahead-bias for alpha modeling, to tracing data lineage
-			across heterogenous sytems for data governance and operating a scaled global data onboarding
+			I've learned a lot over that time about the systems, products, processes and people necessary
+			to build a data factory that can power buy-side and sell-side businesses. From capturing
+			metadata to prevent look-ahead-bias for alpha modeling, to tracing data lineage across
+			heterogenous systems for data governance, while operating a scaled global data onboarding
 			operation. I believe many data problems sit at the intersection of technology, product and
 			people, and benefit from the multi-disciplinary approach that I bring.
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
-			Currently I'm working at
+			Currently I'm at
 			<a class="text-[#fce4b8] underline underline-offset-2" href="https://www.twosigma.com"
 				>Two Sigma</a
-			> in the Data Engineering department with a focus on data governance, data lineage and data cataloging
+			> in the Data Engineering department focused on data governance, data lineage and data cataloging
 			solutions for the more than 144 Petabytes of data that the firm stores.
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
-			Here you'll find details on personal projects, including code, a resume and links to my
-			articles. Do reach out if you'd like to talk.
+			Here you'll find details on personal projects, including <a
+				class="text-[#fce4b8] underline underline-offset-2"
+				href="https://github.com/nickbrett1">code</a
+			>, a resume and links to my articles.
+			<a
+				onclick={(e) => {
+					e.preventDefault();
+					scrollIntoView(e);
+				}}
+				class="text-[#fce4b8] underline underline-offset-2"
+				href="#contact">Do reach out if you'd like to talk.</a
+			>
 		</p>
 	</div>
 </div>
