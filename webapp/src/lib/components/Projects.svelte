@@ -50,8 +50,8 @@
 						<PlaneDepartureSolid class="size-10 " aria-label="Machine Learning for Flight Delays" />
 					</div>
 					<p class="grow pt-5">
-						A machine learning system that uses United States flight data to predict whether a delay
-						is likely for upcoming flights.
+						A machine learning system from work by Valliappa Lakshmana that uses USA flight data to
+						predict whether a delay is likely for upcoming flights.
 					</p>
 				</div>
 			{/snippet}
