@@ -40,27 +40,20 @@
 				</div>
 			{/snippet}
 		</HoverFadeCard>
-		<HoverFadeCard>
-			{#snippet initial()}
-				<div class="flex flex-col grow">
-					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow"
-							>Machine Learning for Flight Delays</span
-						>
-						<PlaneDepartureSolid class="size-10 " aria-label="Machine Learning for Flight Delays" />
-					</div>
-					<p class="grow pt-5">
-						A machine learning system from work by Valliappa Lakshmana that uses USA flight data to
-						predict whether a delay is likely for upcoming flights.
-					</p>
+		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/data-science-on-gcp/')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow"
+						>Machine Learning for Flight Delays</span
+					>
+					<PlaneDepartureSolid class="size-10 " aria-label="Machine Learning for Flight Delays" />
 				</div>
-			{/snippet}
-			{#snippet onHover()}
-				<div class="flex flex-col items-center grow">
-					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
-				</div>
-			{/snippet}
-		</HoverFadeCard>
+				<p class="grow pt-5">
+					A machine learning system from work by Valliappa Lakshmana that uses USA flight data to
+					predict whether a delay is likely for upcoming flights.
+				</p>
+			</div>
+		</Card>
 		<HoverFadeCard>
 			{#snippet initial()}
 				<div class="flex flex-col grow">
