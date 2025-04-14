@@ -34,7 +34,7 @@
 		"eslint": "^9.24.0",
 		"eslint-config-prettier": "^10.1.2",
 		"eslint-plugin-svelte": "^3.5.1",
-		"jsdom": "^26.0.0",
+		"jsdom": "^26.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.17",
 		"miragejs": "^0.1.48",
