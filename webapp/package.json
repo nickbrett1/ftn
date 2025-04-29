@@ -63,7 +63,7 @@
 		"@tsparticles/slim": "^3.8.1",
 		"cookie": "^1.0.2",
 		"fauna": "^2.5.0",
-		"graphql": "^16.10.0",
+		"graphql": "^16.11.0",
 		"gsap": "^3.12.7",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.5",
