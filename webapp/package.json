@@ -41,7 +41,7 @@
 		"npm": "^11.3.0",
 		"postcss": "^8.5.3",
 		"prettier": "^3.5.3",
-		"prettier-plugin-svelte": "^3.3.3",
+		"prettier-plugin-svelte": "^3.4.0",
 		"resize-observer-polyfill": "^1.5.1",
 		"sharp": "^0.34.1",
 		"svelte": "^5.28.6",
