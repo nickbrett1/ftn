@@ -74,6 +74,7 @@ vite.config.ts.timestamp-*
 webapp/.svelte-kit
 webapp/build
 webapp/.wrangler
+webapp/.cloudflare
 
 # Cloudflare workers stuff
 webapp/workers/out

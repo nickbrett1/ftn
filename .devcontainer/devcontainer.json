@@ -25,7 +25,7 @@
   },
 
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"], // Moved from build.runArgs
-
+  "forwardPorts": [8788],
   // Configure tool-specific properties.
   "customizations": {
     // Configure properties specific to VS Code.
