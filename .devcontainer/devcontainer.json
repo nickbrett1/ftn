@@ -2,8 +2,8 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/javascript-node
 {
   "name": "Node.js",
-  // Switch from Dockerfile build to a direct image for GLIBC 2.35+ compatibility and simplification
-  "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18-bookworm", // Using Debian Bookworm (GLIBC 2.36)
+  // Updated to Node.js 22
+  "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:22-bookworm", // Using Debian Bookworm (GLIBC 2.36)
 
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -80,12 +80,12 @@
     },
     // Add VS Code settings for the container
     "settings": {
-      "sonarlint.ls.javaHome": "/usr/lib/jvm/msopenjdk-24"
+      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/24.0.1-tem"
     }
   },
 
   "containerEnv": {
-    "JDK_HOME": "/usr/lib/jvm/msopenjdk-24"
+    "JDK_HOME": "/usr/local/sdkman/candidates/java/24.0.1-tem"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.

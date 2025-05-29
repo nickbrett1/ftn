@@ -1,0 +1,59 @@
+# This is the primary configuration file for Cloudflare Wrangler.
+# It's used to configure your SvelteKit application when deploying to Cloudflare Pages/Workers.
+
+name = "ftn"
+compatibility_date = "2025-04-28" # Adjusted to a more recent, valid date
+
+# For a direct Worker deployment, `main` specifies the entry point of your Worker.
+# The SvelteKit adapter for Cloudflare typically outputs to a path like this.
+main = ".svelte-kit/cloudflare/_worker.js"
+
+################################################################################
+# Build configuration for `wrangler deploy` and `wrangler dev`
+################################################################################
+[build]
+command = "npm run build" # Assumes your SvelteKit build command is `npm run build`
+watch_dir = "src"         # Directory to watch for changes during `wrangler dev`
+
+################################################################################
+# Bindings: Make Cloudflare services available to your SvelteKit app
+################################################################################
+
+# KV Namespace binding
+# Your code in /workspaces/ftn/webapp/src/routes/auth/+server.js uses `platform.env.KV`
+[[kv_namespaces]]
+binding = "KV" # This is how you access it in your code (e.g., platform.env.KV)
+id = "b96b6adb766f49b7bd70416cee641fc8" # Get this from your Cloudflare dashboard
+preview_id = "b96b6adb766f49b7bd70416cee641fc8" # `wrangler dev` uses this. Can be same as `id` or a different one for testing.
+
+# D1 Database binding
+# Your code in /workspaces/ftn/webapp/src/routes/projects/wdi/+page.server.js uses `platform.env.DB`
+[[d1_databases]]
+binding = "DB" # This is how you access it in your code (e.g., platform.env.DB)
+database_name = "wdi" # The name of your D1 database in Cloudflare
+database_id = "a2bb16ae-304f-43f0-8cb7-1cb1a2994edf" # Get this from `npx wrangler d1 list` or Cloudflare dashboard
+preview_database_id = "a2bb16ae-304f-43f0-8cb7-1cb1a2994edf" # `wrangler dev` uses this. Can be same as `id` or a different one for testing.
+
+################################################################################
+# Environment Variables: For secrets and configuration
+# These will be available in `platform.env` (for Workers) or directly as
+# For SvelteKit, you access these via $env/static/private.
+################################################################################
+[vars]
+# Unnecessary, using doppler and SvelteKit's $env/static/private
+
+# You can define different configurations for different environments (e.g., staging, production)
+# [env.production]
+# name = "your-project-name-production"
+# [[env.production.kv_namespaces]]
+# binding = "KV"
+# id = "your_PRODUCTION_kv_namespace_id"
+#
+# [[env.production.d1_databases]]
+# binding = "DB"
+# database_name = "your-production-d1-database-name"
+# database_id = "your_PRODUCTION_d1_database_id"
+#
+# [env.production.vars]
+# GOOGLE_CLIENT_ID = "your_PRODUCTION_google_client_id"
+# # ... other production-specific vars
