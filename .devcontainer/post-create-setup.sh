@@ -34,11 +34,16 @@ npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-upd
 echo "INFO: Installing Sentry CLI..."
 curl -sL https://sentry.io/get-cli/ | sh
 
-echo "INFO: Logging into Doppler..."
-doppler login --no-check-version --no-timeout --yes
+if doppler whoami &> /dev/null; then
+  echo "Already logged in to Doppler."
+else
+	echo "INFO: Logging into Doppler..."
+	doppler login --no-check-version --no-timeout --yes
 
-echo "INFO: Setting up Doppler..."
+	echo "INFO: Setting up Doppler..."
 doppler setup --no-interactive
+fi
+
 
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
@@ -71,9 +76,19 @@ fi
 
 WEBAPP_DIR="/workspaces/ftn/webapp"
 if [ -d "$WEBAPP_DIR" ]; then
-    echo "INFO: Webapp directory found at $WEBAPP_DIR. Attempting Wrangler login..."
-    cd "$WEBAPP_DIR" && npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\.0\.0\.0/localhost/g'
-    echo "INFO: Wrangler login process initiated."
+
+    echo "INFO: Webapp directory found at $WEBAPP_DIR. Checking Wrangler login status..."
+    ( # Start a subshell to localize the cd
+        cd "$WEBAPP_DIR"
+        if npx wrangler whoami &> /dev/null; then
+            echo "INFO: Already logged in to Wrangler."
+        else
+            echo "INFO: Not logged in to Wrangler. Attempting login..."
+            # Rather convoluted way to login to wranger due to this bug -> https://github.com/cloudflare/workers-sdk/issues/5937
+            npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\.0\.0\.0/localhost/g'
+            echo "INFO: Wrangler login process initiated."
+        fi
+    ) # End subshell
 else
     echo "INFO: Webapp directory not found at $WEBAPP_DIR, skipping Wrangler login."
 fi
