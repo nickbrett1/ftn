@@ -15,6 +15,10 @@ main = ".svelte-kit/cloudflare/_worker.js"
 command = "npm run build" # Assumes your SvelteKit build command is `npm run build`
 watch_dir = "src"         # Directory to watch for changes during `wrangler dev`
 
+[assets]
+directory = ".cloudflare/public" # Tells Wrangler where to find static assets
+binding = "ASSETS"
+
 ################################################################################
 # Bindings: Make Cloudflare services available to your SvelteKit app
 ################################################################################
