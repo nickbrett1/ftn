@@ -16,6 +16,7 @@ export default defineConfig(({ command }) => {
 		})
 	];
 
+	// Cloudflare plugin doesn't work for production builds. It also is only needed for development to access D1, KV, etc...
 	if (!isBuild) {
 		plugins.push(cloudflare());
 	}
