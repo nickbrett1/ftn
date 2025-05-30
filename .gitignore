@@ -152,3 +152,6 @@ dmypy.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Database migration files to copy prod to dev
+webapp/migrations

@@ -19,11 +19,11 @@ export async function load({ platform }) {
 	try {
 		const db = platform.env.DB;
 
+		console.log('Connected to D1 database:', db);
 		// Query to list all user-defined tables, excluding sqlite system tables and Cloudflare internal tables.
-		const stmt = db.prepare(
-			"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%';"
-		);
+		const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table';");
 		const { results } = await stmt.all();
+		console.log('Fetched tables:', results);
 		return {
 			tables: results ? results.map((row) => row.name) : []
 		};
