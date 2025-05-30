@@ -5,40 +5,47 @@ import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 
-export default defineConfig({
-	plugins: [
+export default defineConfig(({ command }) => {
+	const isBuild = command === 'build';
+	const plugins = [
 		{ ...threeMinifier(), enforce: 'pre' },
 		sveltekit(),
 		svelteTesting(),
 		imagetools({
 			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
-		}),
-		cloudflare()
-	],
-	test: {
-		include: ['src/**/*.{test,spec}.{js,ts}'],
-		globals: true,
-		environment: 'jsdom',
-		coverage: {
-			reporter: ['text', 'lcov']
-		},
-		server: {
-			deps: {
-				inline: ['fauna']
-			}
-		}
-	},
-	ssr: {
-		noExternal: ['three']
-	},
-	assetsInclude: ['**/*.glb', '**/*.fbx'],
-	build: {
-		sourcemap: true
-	},
-	css: {
-		devSourcemap: true
-	},
-	optimizeDeps: {
-		exclude: ['saos']
+		})
+	];
+
+	if (!isBuild) {
+		plugins.push(cloudflare());
 	}
+	return {
+		plugins,
+		test: {
+			include: ['src/**/*.{test,spec}.{js,ts}'],
+			globals: true,
+			environment: 'jsdom',
+			coverage: {
+				reporter: ['text', 'lcov']
+			},
+			server: {
+				deps: {
+					inline: ['fauna']
+				}
+			}
+		},
+		ssr: {
+			noExternal: ['three']
+		},
+		assetsInclude: ['**/*.glb', '**/*.fbx'],
+		build: {
+			sourcemap: true
+		},
+		css: {
+			devSourcemap: true
+		},
+		optimizeDeps: {
+			exclude: ['saos']
+		}
+	};
 });
