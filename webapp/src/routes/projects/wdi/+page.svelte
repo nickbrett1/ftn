@@ -1,6 +1,6 @@
 <script>
 	/** @type {import('./$types').PageData} */
-	let { data } = $props();
+	export let data;
 </script>
 
 <svelte:head>
@@ -12,7 +12,7 @@
 </svelte:head>
 
 <div class="container mx-auto p-4 md:p-8">
-	<h1 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-50">
+	<h1 class="text-3xl font-bold mb-6 text-white dark:text-gray-50">
 		Cloudflare D1 Database Tables (WDI Project)
 	</h1>
 
@@ -23,9 +23,7 @@
 			Error: {data.error}
 		</p>
 	{:else if data.tables && data.tables.length > 0}
-		<p class="mb-4 text-gray-700 dark:text-gray-300">
-			Here is a list of tables in your D1 database:
-		</p>
+		<p class="mb-4 text-white dark:text-gray-300">Here is a list of tables in your D1 database:</p>
 		<ul class="list-disc pl-5 space-y-2">
 			{#each data.tables as table}
 				<li
