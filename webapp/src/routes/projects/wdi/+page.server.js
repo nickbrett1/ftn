@@ -1,42 +1,80 @@
-/**
- * Fetches a list of tables from the Cloudflare D1 database.
- * @param {import('@sveltejs/kit').ServerLoadEvent} event - The SvelteKit load event.
- * @returns {Promise<{tables: string[], error?: string}>} An object containing the list of table names or an error message.
- */
-export async function load(event) {
-	const platform = event.platform;
-	// @ts-ignore
-	console.log('Available bindings:', Object.keys(platform.env));
-
-	// @ts-ignore
-	if (!platform.env.DB) {
-		console.error(
-			'D1 Database binding (DB) not found in platform.env. Make sure it is configured in your wrangler.toml or Cloudflare Pages environment.'
-		);
+export async function load({ platform, url }) {
+	if (!platform?.env?.DB) {
+		console.error('D1 Database (DB) not found in platform environment.');
 		return {
-			error: 'Database service is not configured. Please check server logs.',
-			tables: []
+			error: 'Database connection not available. Please check server configuration.',
+			countries: [],
+			indicators: [],
+			chartData: null
 		};
 	}
+	const db = platform.env.DB;
+	const selectedCountryCode = url.searchParams.get('country');
+	const selectedIndicatorCodes = url.searchParams.getAll('indicator');
 
 	try {
-		// @ts-ignore
-		const db = platform.env.DB;
+		// Fetch all countries for the selector
+		const countriesStmt = db.prepare(`
+			SELECT country_code, country_name
+			FROM dim_country
+			ORDER BY country_name ASC
+		`);
+		const countriesResult = await countriesStmt.all();
 
-		console.log('Connected to D1 database:', db);
-		// Query to list all user-defined tables, excluding sqlite system tables and Cloudflare internal tables.
-		const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table';");
-		const { results } = await stmt.all();
-		console.log('Fetched tables:', results);
+		// Fetch all indicators for the selector
+		const indicatorsStmt = db.prepare(`
+			SELECT indicator_code, indicator_name
+			FROM dim_indicator
+			ORDER BY indicator_name ASC
+		`);
+		const indicatorsResult = await indicatorsStmt.all();
+
+		let seriesData = [];
+		let chartTitle = 'WDI Data';
+
+		if (selectedCountryCode && selectedIndicatorCodes.length > 0) {
+			const countryNameRes = await db
+				.prepare(`SELECT country_name FROM dim_country WHERE country_code = ?1`)
+				.bind(selectedCountryCode)
+				.first('country_name');
+			chartTitle = `WDI Data for ${countryNameRes || selectedCountryCode}`;
+
+			const seriesPromises = selectedIndicatorCodes.map(async (indicatorCode) => {
+				const historyStmt = db.prepare(`
+                    SELECT h.year, h.value, i.indicator_name
+                    FROM fct_wdi_history h
+                    JOIN dim_indicator i ON h.indicator_code = i.indicator_code
+                    WHERE h.country_code = ?1 AND h.indicator_code = ?2 AND h.value IS NOT NULL
+                    ORDER BY h.year ASC
+                `);
+				const historyResult = await historyStmt.bind(selectedCountryCode, indicatorCode).all();
+
+				return {
+					name:
+						historyResult.results.length > 0
+							? historyResult.results[0].indicator_name
+							: indicatorCode,
+					data: historyResult.results.map((row) => ({ x: row.year, y: parseFloat(row.value) }))
+				};
+			});
+			seriesData = await Promise.all(seriesPromises);
+			seriesData = seriesData.filter((series) => series.data.length > 0);
+		}
+
 		return {
-			// @ts-ignore
-			tables: results ? results.map((row) => row.name) : []
+			countries: countriesResult.results || [],
+			indicators: indicatorsResult.results || [],
+			selectedCountry: selectedCountryCode,
+			selectedIndicators: selectedIndicatorCodes,
+			chartData: seriesData.length > 0 ? { title: chartTitle, series: seriesData } : null
 		};
 	} catch (e) {
-		console.error('Failed to fetch tables from D1:', e);
+		console.error('Error fetching WDI data from D1:', e);
 		return {
-			error: 'Failed to load table information from the database.',
-			tables: []
+			error: `Failed to fetch data: ${e.message}`,
+			countries: [],
+			indicators: [],
+			chartData: null
 		};
 	}
 }
