@@ -5,8 +5,8 @@ import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 
-export default defineConfig(({ command }) => {
-	const isBuild = command === 'build';
+export default defineConfig(({ command, mode }) => {
+	const isDev = command === 'serve' && mode === 'development';
 	const plugins = [
 		{ ...threeMinifier(), enforce: 'pre' },
 		sveltekit(),
@@ -17,7 +17,7 @@ export default defineConfig(({ command }) => {
 	];
 
 	// Cloudflare plugin doesn't work for production builds. It also is only needed for development to access D1, KV, etc...
-	if (!isBuild) {
+	if (isDev) {
 		plugins.push(cloudflare());
 	}
 	return {
