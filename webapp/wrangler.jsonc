@@ -6,6 +6,11 @@
 	"site": {
 		"bucket": ".svelte-kit/cloudflare"
 	},
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	},
 	"kv_namespaces": [
 		{
 			"binding": "KV",
