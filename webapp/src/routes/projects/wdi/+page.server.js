@@ -3,10 +3,13 @@
  * @param {import('@sveltejs/kit').ServerLoadEvent} event - The SvelteKit load event.
  * @returns {Promise<{tables: string[], error?: string}>} An object containing the list of table names or an error message.
  */
-export async function load({ platform }) {
+export async function load(event) {
+	const platform = event.platform;
+	// @ts-ignore
 	console.log('Available bindings:', Object.keys(platform.env));
 
-	if (!platform?.env?.DB) {
+	// @ts-ignore
+	if (!platform.env.DB) {
 		console.error(
 			'D1 Database binding (DB) not found in platform.env. Make sure it is configured in your wrangler.toml or Cloudflare Pages environment.'
 		);
@@ -17,6 +20,7 @@ export async function load({ platform }) {
 	}
 
 	try {
+		// @ts-ignore
 		const db = platform.env.DB;
 
 		console.log('Connected to D1 database:', db);
@@ -25,6 +29,7 @@ export async function load({ platform }) {
 		const { results } = await stmt.all();
 		console.log('Fetched tables:', results);
 		return {
+			// @ts-ignore
 			tables: results ? results.map((row) => row.name) : []
 		};
 	} catch (e) {

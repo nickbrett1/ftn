@@ -3,7 +3,7 @@ module.exports = {
 		collect: {
 			startServerCommand: 'npm run lighthouse',
 			startServerReadyPattern: 'preview',
-			url: ['http://localhost:4173'],
+			url: ['http://127.0.0.1:4173'],
 			numberOfRuns: 1,
 			extends: 'lighthouse:default',
 			settings: {

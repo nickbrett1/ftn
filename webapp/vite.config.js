@@ -22,6 +22,9 @@ export default defineConfig(({ command, mode }) => {
 	}
 	return {
 		plugins,
+		server: {
+			host: '127.0.0.1'
+		},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}'],
 			globals: true,
@@ -29,11 +32,7 @@ export default defineConfig(({ command, mode }) => {
 			coverage: {
 				reporter: ['text', 'lcov']
 			},
-			server: {
-				deps: {
-					inline: ['fauna']
-				}
-			}
+			server: {}
 		},
 		ssr: {
 			noExternal: ['three']

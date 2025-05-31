@@ -37,7 +37,7 @@
 			state,
 			redirect_uri:
 				process.env.NODE_ENV === 'development'
-					? 'http://localhost:5173/auth'
+					? 'http://127.0.0.1:5173/auth'
 					: 'https://fintechnick.com/auth',
 			callback: (response) => {
 				if (response.error) {
