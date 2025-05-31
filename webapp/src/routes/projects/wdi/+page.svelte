@@ -90,8 +90,8 @@
 					<label class="flex items-center space-x-2 p-2 hover:bg-gray-600 rounded cursor-pointer">
 						<input
 							type="checkbox"
-							value={indicator.indicator_code}
-							checked={selectedIndicatorCodes.has(indicator.indicator_code)}
+							value={indicator.code}
+							checked={selectedIndicatorCodes.has(indicator.code)}
 							onchange={handleIndicatorChange}
 							class="w-4 h-4 text-green-500 bg-gray-600 border-gray-500 rounded focus:ring-green-600 focus:ring-offset-gray-700 focus:ring-2"
 						/>
