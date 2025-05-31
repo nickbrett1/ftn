@@ -2,10 +2,6 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ftn",
 	"compatibility_date": "2024-05-30", // Use a valid, recent date
-	"assets": {
-		"binding": "ASSETS",
-		"directory": ".svelte-kit/cloudflare"
-	},
 	"kv_namespaces": [
 		{
 			"binding": "KV",
