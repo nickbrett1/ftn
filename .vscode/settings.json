@@ -11,8 +11,8 @@
   "task.allowAutomaticTasks": "on",
   "git.requireGitUserConfig": true,
   "editor.codeActionsOnSave": {
-		"source.fixAll.eslint": "explicit"
-	},
+    "source.fixAll.eslint": "explicit"
+  },
   "eslint.options": {
     "extensions": [".js", ".jsx", ".md", ".mdx", ".ts", ".tsx"]
   },
@@ -36,5 +36,12 @@
   },
   "liveServer.settings.port": 5502,
   "editor.fontSize": 16,
-  "cSpell.words": ["btween", "Fintech", "fintechnick", "zerodevx"]
+  "cSpell.words": [
+    "btween",
+    "Fintech",
+    "fintechnick",
+    "imagetools",
+    "yushijinhun",
+    "zerodevx"
+  ]
 }

@@ -8,17 +8,17 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
 	const plugins = [
-		{ ...threeMinifier(), enforce: 'pre' },
+		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
 		svelteTesting(),
 		imagetools({
-			defaultDirectives: () => new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
+			defaultDirectives: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		})
 	];
 
 	// Cloudflare plugin doesn't work for production builds. It also is only needed for development to access D1, KV, etc...
 	if (isDev) {
-		plugins.push(cloudflare());
+		plugins.push(...cloudflare());
 	}
 	return {
 		plugins,
