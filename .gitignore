@@ -75,6 +75,7 @@ webapp/.svelte-kit
 webapp/build
 webapp/.wrangler
 webapp/.cloudflare
+.wrangler
 
 # Cloudflare workers stuff
 webapp/workers/out

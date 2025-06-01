@@ -37,11 +37,21 @@
   "liveServer.settings.port": 5502,
   "editor.fontSize": 16,
   "cSpell.words": [
+    "apexcharts",
     "btween",
     "Fintech",
     "fintechnick",
     "imagetools",
+    "miragejs",
+    "xaxis",
+    "yaxis",
     "yushijinhun",
-    "zerodevx"
-  ]
+    "zerodevx",
+    "zoomin",
+    "zoomout"
+  ],
+  "cSpell.enabledFileTypes": {
+    "ignore": false,
+    "json": false
+  }
 }
