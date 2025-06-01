@@ -1,7 +1,0 @@
-type User {
-	email: String!
-}
-
-type Query {
-	user(email: String!): User
-}

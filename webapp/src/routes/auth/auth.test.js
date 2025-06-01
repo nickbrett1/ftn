@@ -5,11 +5,9 @@ import { createServer } from 'miragejs';
 const TEST_USER = 'test@test.com';
 
 vi.mock('$env/static/private', async () => {
-	// FAUNA_AUTH is no longer needed here
 	return {
 		GOOGLE_CLIENT_SECRET: '123',
-		GOOGLE_CLIENT_ID: '123',
-		FAUNA_AUTH: '123'
+		GOOGLE_CLIENT_ID: '123'
 	};
 });
 
