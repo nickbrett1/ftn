@@ -79,9 +79,9 @@
 			</div>
 		</div>
 
-		<div class="mb-6">
-			<label class="block mb-2 text-sm font-medium text-green-400"
-				>Select Indicators (up to 5 recommended):</label
+		<fieldset class="mb-6">
+			<legend class="block mb-2 text-sm font-medium text-green-400"
+				>Select Indicators (up to 5 recommended):</legend
 			>
 			<div
 				class="max-h-60 overflow-y-auto p-4 bg-gray-700 border border-gray-600 rounded-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"
@@ -99,7 +99,7 @@
 					</label>
 				{/each}
 			</div>
-		</div>
+		</fieldset>
 
 		<button
 			type="submit"
