@@ -3,6 +3,9 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "INFO: Starting custom container setup script..."
 
+CURRENT_USER=$(whoami)
+USER_HOME_DIR="$HOME"
+
 echo "INFO: Updating package lists and installing Chromium..."
 sudo apt-get update
 # Install Chromium and necessary fonts for headless operation
@@ -10,29 +13,30 @@ sudo apt-get install -y chromium fonts-liberation --no-install-recommends
 echo "INFO: Chromium installation complete."
 
 echo "INFO: Creating Oh My Zsh custom directories..."
-mkdir -p "$HOME/.oh-my-zsh/custom/themes" "$HOME/.oh-my-zsh/custom/plugins"
+mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
 
 if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
-    echo "INFO: Copying .zshrc to /home/node/.zshrc"
-    cp "/workspaces/ftn/.devcontainer/.zshrc" "/home/node/.zshrc"
-    sudo chown node:node "/home/node/.zshrc"
+    echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
+    cp "/workspaces/ftn/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.zshrc"
 else
     echo "INFO: /workspaces/ftn/.devcontainer/.zshrc not found, skipping copy."
 fi
 
 if [ -f "/workspaces/ftn/.devcontainer/.p10k.zsh" ]; then
-    echo "INFO: Copying .p10k.zsh to /home/node/.p10k.zsh"
-    cp "/workspaces/ftn/.devcontainer/.p10k.zsh" "/home/node/.p10k.zsh"
-    sudo chown node:node "/home/node/.p10k.zsh"
+    echo "INFO: Copying .p10k.zsh to $USER_HOME_DIR/.p10k.zsh"
+    cp "/workspaces/ftn/.devcontainer/.p10k.zsh" "$USER_HOME_DIR/.p10k.zsh"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
 else
     echo "INFO: /workspaces/ftn/.devcontainer/.p10k.zsh not found, skipping copy."
 fi
 
-echo "INFO: Installing global npm packages as node user..."
+echo "INFO: Installing global npm packages as $CURRENT_USER user..."
 npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates
 
 echo "INFO: Installing Sentry CLI..."
 curl -sL https://sentry.io/get-cli/ | sh
+
 
 if doppler whoami &> /dev/null; then
   echo "Already logged in to Doppler."
@@ -48,7 +52,7 @@ fi
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
-ZSH_CUSTOM_DIR="/home/node/.oh-my-zsh/custom"
+ZSH_CUSTOM_DIR="$USER_HOME_DIR/.oh-my-zsh/custom"
 POWERLEVEL10K_DIR="$ZSH_CUSTOM_DIR/themes/powerlevel10k"
 ZSH_SYNTAX_HIGHLIGHTING_DIR="$ZSH_CUSTOM_DIR/plugins/zsh-syntax-highlighting"
 ZSH_AUTOSUGGESTIONS_DIR="$ZSH_CUSTOM_DIR/plugins/zsh-autosuggestions"
