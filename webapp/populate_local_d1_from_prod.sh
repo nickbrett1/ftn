@@ -125,8 +125,45 @@ for TABLE_NAME in $TABLE_NAMES; do
 done
 
 echo "Migration file generated successfully: $MIGRATION_FILE"
-echo "Applying migration to local D1 database: $DB_NAME..."
 
-npx wrangler d1 migrations apply "$DB_NAME" --local
+echo "Attempting to clean all existing user tables from local D1 database: $DB_NAME before applying migration..."
+# Attempt to fetch local table names. Suppress stderr for cases like DB not existing or other wrangler errors.
+LOCAL_TABLE_NAMES_JSON_CLEANUP=$(npx wrangler d1 execute "$DB_NAME" --local --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null)
+
+if [ -z "$LOCAL_TABLE_NAMES_JSON_CLEANUP" ]; then
+    echo "Info: Could not fetch local table list (e.g., database '$DB_NAME' might not exist locally, is empty, or the command failed). Skipping pre-migration cleanup of existing tables."
+else
+    # Check if .[0].results is an array and contains items, then extract names.
+    # jq -e exits with 0 if the last output is not null or false.
+    if echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -e '.[0].results | if type == "array" then map(.name) | length > 0 else false end' > /dev/null 2>&1; then
+        LOCAL_TABLE_NAMES_CLEANUP=$(echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -r '.[0].results[].name')
+        
+        echo "Found existing local user tables to drop:"
+        # Print names for clarity, handling potential multi-line output from jq
+        echo "$LOCAL_TABLE_NAMES_CLEANUP" | sed 's/^/  - /'
+        
+        echo "$LOCAL_TABLE_NAMES_CLEANUP" | while IFS= read -r LOCAL_TABLE_NAME_TO_DROP; do
+            if [ -n "$LOCAL_TABLE_NAME_TO_DROP" ]; then # Ensure name is not empty
+                echo "Dropping local table: \"$LOCAL_TABLE_NAME_TO_DROP\"..."
+                if ! npx wrangler d1 execute "$DB_NAME" --local --command "DROP TABLE IF EXISTS \"$LOCAL_TABLE_NAME_TO_DROP\";" --yes; then
+                    echo "Warning: Failed to drop local table \"$LOCAL_TABLE_NAME_TO_DROP\". It might have already been dropped or another issue occurred with wrangler."
+                fi
+            fi
+        done
+        echo "Local table cleanup complete."
+    elif echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -e '.[0].results' > /dev/null 2>&1; then
+        echo "No user tables found in local database '$DB_NAME' to clean up (results array was present but empty)."
+    else
+        echo "Warning: Received unexpected JSON structure or error when fetching local tables for cleanup. Skipping pre-migration cleanup."
+        # For debugging, you could uncomment the next line:
+        # echo "Received JSON: $LOCAL_TABLE_NAMES_JSON_CLEANUP"
+    fi
+fi
+echo "" # Add a newline for better log readability
+
+
+echo "Applying remote data to local D1 database: $DB_NAME..."
+# The --yes flag is to auto-confirm any prompts, similar to how migrations apply might behave.
+npx wrangler d1 execute "$DB_NAME" --local --file="$MIGRATION_FILE" --yes
 
 echo "Local D1 database '$DB_NAME' populated successfully from remote schema and sample data."

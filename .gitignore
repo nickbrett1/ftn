@@ -76,6 +76,7 @@ webapp/build
 webapp/.wrangler
 webapp/.cloudflare
 .wrangler
+migrations/
 
 # Cloudflare workers stuff
 webapp/workers/out
