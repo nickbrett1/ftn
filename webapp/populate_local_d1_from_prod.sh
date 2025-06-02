@@ -3,8 +3,8 @@
 # Configuration
 DB_NAME="wdi"
 # Output migration file (D1 migration naming convention: XXXX_description.sql)
-MIGRATION_DIR="migrations"
-MIGRATION_FILE="$MIGRATION_DIR/0000_bootstrap_schema_and_sample_data.sql"
+BOOTSTRAP_SQL_DIR="migrations" # Keeping the directory name as 'migrations' for now, as D1 might expect it.
+BOOTSTRAP_SQL_FILE="$BOOTSTRAP_SQL_DIR/0000_bootstrap_schema_and_sample_data.sql"
 SAMPLE_SIZE=5 # Number of sample rows to fetch per table
 
 # --- Script Start ---
@@ -12,17 +12,16 @@ SAMPLE_SIZE=5 # Number of sample rows to fetch per table
 set -e # Exit immediately if a command exits with a non-zero status.
 
 # Ensure migrations directory exists
-mkdir -p "$MIGRATION_DIR"
+mkdir -p "$BOOTSTRAP_SQL_DIR"
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
     echo "Error: jq could not be found. Please install jq to run this script."
     exit 1
 fi
-
-echo "-- Migration generated on $(date) for D1 database: $DB_NAME" > "$MIGRATION_FILE"
-echo "-- Fetches schema and $SAMPLE_SIZE sample rows from each table." >> "$MIGRATION_FILE"
-echo "" >> "$MIGRATION_FILE"
+echo "-- Bootstrap SQL generated on $(date) for D1 database: $DB_NAME" > "$BOOTSTRAP_SQL_FILE"
+echo "-- Fetches schema and $SAMPLE_SIZE sample rows from each table from production." >> "$BOOTSTRAP_SQL_FILE"
+echo "" >> "$BOOTSTRAP_SQL_FILE"
 
 echo "Fetching table list from remote D1 database: $DB_NAME..."
 # Get table names, excluding sqlite system tables and Cloudflare internal tables
@@ -46,26 +45,26 @@ echo "$TABLE_NAMES"
 echo ""
 
 # Add DROP TABLE statements first
-echo "-- Drop existing tables (if they exist)" >> "$MIGRATION_FILE"
+echo "-- Drop existing tables (if they exist)" >> "$BOOTSTRAP_SQL_FILE"
 for TABLE_NAME_TO_DROP in $TABLE_NAMES; do
-    echo "DROP TABLE IF EXISTS \"$TABLE_NAME_TO_DROP\";" >> "$MIGRATION_FILE"
+    echo "DROP TABLE IF EXISTS \"$TABLE_NAME_TO_DROP\";" >> "$BOOTSTRAP_SQL_FILE"
 done
-echo "" >> "$MIGRATION_FILE"
+echo "" >> "$BOOTSTRAP_SQL_FILE"
 
 for TABLE_NAME in $TABLE_NAMES; do
     echo "Processing table: $TABLE_NAME"
 
     # 1. Get CREATE TABLE statement
-    echo "-- Schema for table: $TABLE_NAME" >> "$MIGRATION_FILE"
+    echo "-- Schema for table: $TABLE_NAME" >> "$BOOTSTRAP_SQL_FILE"
     # Output is JSON: [{"results":[{"sql":"CREATE TABLE..."}]}]
     CREATE_TABLE_SQL=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT sql FROM sqlite_master WHERE type='table' AND name='$TABLE_NAME';" --json | jq -r '.[0].results[0].sql')
     if [ "$CREATE_TABLE_SQL" == "null" ] || [ -z "$CREATE_TABLE_SQL" ]; then
         echo "Warning: Could not fetch schema for table $TABLE_NAME. Skipping."
-        echo "" >> "$MIGRATION_FILE"
+        echo "" >> "$BOOTSTRAP_SQL_FILE"
         continue
     fi
-    echo "$CREATE_TABLE_SQL;" >> "$MIGRATION_FILE"
-    echo "" >> "$MIGRATION_FILE"
+    echo "$CREATE_TABLE_SQL;" >> "$BOOTSTRAP_SQL_FILE"
+    echo "" >> "$BOOTSTRAP_SQL_FILE"
 
     # 2. Get column names for constructing INSERT statements
     # Output is JSON: [{"results":[{"name":"col1", "type":"TEXT", ...}, ...]}]
@@ -76,18 +75,18 @@ for TABLE_NAME in $TABLE_NAMES; do
 
     if [ ${#COLUMN_NAMES_ARRAY[@]} -eq 0 ]; then
         echo "Warning: Could not retrieve column names for table $TABLE_NAME. Skipping sample data."
-        echo "" >> "$MIGRATION_FILE"
+        echo "" >> "$BOOTSTRAP_SQL_FILE"
         continue
     fi
 
     # 3. Get sample data
-    echo "-- Sample data for table: $TABLE_NAME (limit $SAMPLE_SIZE)" >> "$MIGRATION_FILE"
+    echo "-- Sample data for table: $TABLE_NAME (limit $SAMPLE_SIZE)" >> "$BOOTSTRAP_SQL_FILE"
     # Output is JSON: [{"results":[{"col1":"val1", "col2":123}, ...]}]
     SAMPLE_DATA_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT * FROM \"$TABLE_NAME\" LIMIT $SAMPLE_SIZE;" --json)
 
     if [ -z "$SAMPLE_DATA_JSON" ] || [ "$(echo "$SAMPLE_DATA_JSON" | jq 'length')" == "0" ] || [ "$(echo "$SAMPLE_DATA_JSON" | jq '.[0].results | length')" == "0" ]; then
         echo "No sample data found for table $TABLE_NAME or table is empty."
-        echo "" >> "$MIGRATION_FILE"
+        echo "" >> "$BOOTSTRAP_SQL_FILE"
         continue
     fi
 
@@ -119,14 +118,14 @@ for TABLE_NAME in $TABLE_NAMES; do
                 VALUES_SQL_LIST="$VALUES_SQL_LIST, $VALUE_FORMATTED"
             fi
         done
-        echo "INSERT INTO \"$TABLE_NAME\" ($COLUMN_NAMES_SQL_LIST) VALUES ($VALUES_SQL_LIST);" >> "$MIGRATION_FILE"
+        echo "INSERT INTO \"$TABLE_NAME\" ($COLUMN_NAMES_SQL_LIST) VALUES ($VALUES_SQL_LIST);" >> "$BOOTSTRAP_SQL_FILE"
     done
-    echo "" >> "$MIGRATION_FILE"
+    echo "" >> "$BOOTSTRAP_SQL_FILE"
 done
 
-echo "Migration file generated successfully: $MIGRATION_FILE"
+echo "Bootstrap SQL file generated successfully: $BOOTSTRAP_SQL_FILE"
 
-echo "Attempting to clean all existing user tables from local D1 database: $DB_NAME before applying migration..."
+echo "Attempting to clean all existing user tables from local D1 database: $DB_NAME before applying bootstrap SQL..."
 # Attempt to fetch local table names. Suppress stderr for cases like DB not existing or other wrangler errors.
 LOCAL_TABLE_NAMES_JSON_CLEANUP=$(npx wrangler d1 execute "$DB_NAME" --local --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null)
 
@@ -164,6 +163,6 @@ echo "" # Add a newline for better log readability
 
 echo "Applying remote data to local D1 database: $DB_NAME..."
 # The --yes flag is to auto-confirm any prompts, similar to how migrations apply might behave.
-npx wrangler d1 execute "$DB_NAME" --local --file="$MIGRATION_FILE" --yes
+npx wrangler d1 execute "$DB_NAME" --local --file="$BOOTSTRAP_SQL_FILE" --yes
 
 echo "Local D1 database '$DB_NAME' populated successfully from remote schema and sample data."
