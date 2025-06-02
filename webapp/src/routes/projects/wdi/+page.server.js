@@ -23,9 +23,11 @@ export async function load({ platform, url }) {
 
 		// Fetch all indicators for the selector
 		const indicatorsStmt = db.prepare(`
-			SELECT indicator_code, indicator_name
-			FROM dim_indicator
-			ORDER BY indicator_name ASC
+			SELECT di.indicator_code, di.indicator_name
+			FROM dim_indicator di
+			JOIN fct_indicator_coverage fic ON di.indicator_code = fic.indicator_code
+			WHERE fic.countries_all_years > 200
+			ORDER BY di.indicator_name ASC
 		`);
 		const indicatorsResult = await indicatorsStmt.all();
 

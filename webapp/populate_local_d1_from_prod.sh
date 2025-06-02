@@ -5,7 +5,7 @@ DB_NAME="wdi"
 # Output migration file (D1 migration naming convention: XXXX_description.sql)
 BOOTSTRAP_SQL_DIR="migrations" # Keeping the directory name as 'migrations' for now, as D1 might expect it.
 BOOTSTRAP_SQL_FILE="$BOOTSTRAP_SQL_DIR/0000_bootstrap_schema_and_sample_data.sql"
-SAMPLE_SIZE=5 # Number of sample rows to fetch per table
+SAMPLE_SIZE=500 # Number of sample rows to fetch per table
 
 # --- Script Start ---
 
@@ -101,7 +101,7 @@ for TABLE_NAME in $TABLE_NAMES; do
             if [[ "$VALUE_RAW" == "null" ]]; then
                 VALUE_FORMATTED="NULL"
             elif [[ "$VALUE_RAW" =~ ^[0-9]+(\.[0-9]+)?$ ]] || [[ "$VALUE_RAW" =~ ^\"[0-9]+(\.[0-9]+)?\"$ ]]; then # Numeric (raw or string-quoted)
-                 # Remove quotes if they exist for numbers that jq might stringify
+                # Remove quotes if they exist for numbers that jq might stringify
                 VALUE_UNQUOTED=$(echo "$VALUE_RAW" | sed 's/^"//;s/"$//')
                 VALUE_FORMATTED="$VALUE_UNQUOTED"
             else # String or other type that needs to be quoted
