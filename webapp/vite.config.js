@@ -23,7 +23,7 @@ export default defineConfig(({ command, mode }) => {
 	return {
 		plugins,
 		server: {
-			host: '127.0.0.1'
+			host: 'localhost'
 		},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}'],
