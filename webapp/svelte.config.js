@@ -46,7 +46,6 @@ const config = {
 					'https://accounts.google.com/gsi/client',
 					'ajax.cloudflare.com',
 					'strict-dynamic',
-					'unsafe-eval',
 					'unsafe-hashes',
 					'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='
 				],
