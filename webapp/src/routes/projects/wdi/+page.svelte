@@ -1,120 +1,101 @@
 <script>
-	import { goto, afterNavigate } from '$app/navigation';
+	// import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'; // Assuming you'll use Shadcn or similar
+	// Removed Shadcn Table imports - we'll use basic HTML table elements
+	// import SvelteApexCharts from 'svelte-apexcharts'; // Removed static import
 	import { page } from '$app/stores';
-	import WdiTrendChart from '$lib/components/WdiTrendChart.svelte';
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').PageData} */
-	let { data } = $props();
+	export let data;
 
-	let selectedCountryCode = $state(data.selectedCountry || '');
-	let selectedIndicatorCodes = $state(new Set(data.selectedIndicators || []));
+	$: ({ totalCountries, dataPointsPerYearChart, topCoverageIndicators, error } = data);
 
-	// Update local state if URL changes (e.g., back/forward button)
-	afterNavigate(() => {
-		selectedCountryCode = $page.url.searchParams.get('country') || '';
-		const indicatorsFromURL = $page.url.searchParams.getAll('indicator');
-		selectedIndicatorCodes = new Set(indicatorsFromURL);
+	let SvelteApexCharts = null;
+
+	onMount(async () => {
+		if (browser) {
+			const module = await import('svelte-apexcharts');
+			SvelteApexCharts = module.default; // Or specific named export if not default
+		}
 	});
-
-	function handleIndicatorChange(event) {
-		const { value, checked } = event.target;
-		if (checked) {
-			selectedIndicatorCodes.add(value);
-		} else {
-			selectedIndicatorCodes.delete(value);
-		}
-	}
-
-	function handleSubmit(event) {
-		event.preventDefault();
-		if (!selectedCountryCode) {
-			alert('Please select a country.');
-			return;
-		}
-		if (selectedIndicatorCodes.size === 0) {
-			alert('Please select at least one indicator.');
-			return;
-		}
-		const params = new URLSearchParams();
-		params.set('country', selectedCountryCode);
-		selectedIndicatorCodes.forEach((code) => params.append('indicator', code));
-		goto(`?${params.toString()}`, { keepFocus: true });
-	}
 </script>
 
 <svelte:head>
-	<title>WDI Explorer</title>
-	<meta name="description" content="Explore World Development Indicators data." />
+	<title>WDI Data Coverage</title>
+	<meta name="description" content="Overview of World Development Indicators data coverage." />
 </svelte:head>
 
-<div class="container mx-auto p-4 md:p-8">
-	<h1 class="text-3xl font-bold mb-6 text-white dark:text-gray-50">
-		World Development Indicators Explorer
-	</h1>
+<div class="container mx-auto p-4 space-y-8">
+	<h1 class="text-3xl font-bold text-center mb-8">WDI Data Coverage Overview</h1>
 
 	{#if data.error}
-		<p
-			class="text-red-600 dark:text-red-400 font-semibold p-4 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-md"
-		>
-			Error loading data: {data.error}
-		</p>
-	{/if}
+		<!-- Basic Card structure using Tailwind CSS -->
+		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+			<strong class="font-bold">Error Loading Data</strong>
+			<span class="block sm:inline">{error}</span>
+			<p>Please try refreshing the page or contact support if the issue persists.</p>
+		</div>
+	{:else}
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+			<!-- Basic Card structure using Tailwind CSS -->
+			<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+				<h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Total Countries Tracked</h2>
+				<div>
+					<p class="text-4xl font-semibold text-gray-900 dark:text-white">{totalCountries || 'N/A'}</p>
+				</div>
+			</div>
 
-	<form onsubmit={handleSubmit} class="mb-10 p-6 bg-gray-800 rounded-lg shadow-xl">
-		<div class="grid md:grid-cols-2 gap-6 mb-6">
-			<div>
-				<label for="country-select" class="block mb-2 text-sm font-medium text-green-400"
-					>Select Country:</label
-				>
-				<select
-					id="country-select"
-					bind:value={selectedCountryCode}
-					class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5"
-				>
-					<option value="">-- Select a Country --</option>
-					{#each data.countries || [] as country (country.country_code)}
-						<option value={country.country_code}>{country.country_name}</option>
-					{/each}
-				</select>
+			<!-- Basic Card structure using Tailwind CSS -->
+			<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+				<h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{dataPointsPerYearChart?.title || 'Data Points Per Year'}</h2>
+				<div class="min-h-[350px]">
+					{#if browser && SvelteApexCharts && dataPointsPerYearChart?.series?.[0]?.data?.length > 0}
+						{@const chartOptions = {
+							chart: { type: 'bar', height: 350, toolbar: { show: true } },
+							plotOptions: { bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded' } },
+							dataLabels: { enabled: false },
+							xaxis: { type: 'category', title: { text: 'Year' } },
+							yaxis: { title: { text: 'Number of Data Points' } },
+							theme: { mode: $page.data.colorScheme === 'dark' ? 'dark' : 'light' }
+						}}
+						<svelte:component this={SvelteApexCharts} {options} series={dataPointsPerYearChart.series} />
+					{:else if browser && !SvelteApexCharts && dataPointsPerYearChart?.series?.[0]?.data?.length > 0}
+						<p class="text-gray-600 dark:text-gray-400">Loading chart...</p>
+					{:else}
+						<p class="text-gray-600 dark:text-gray-400">No data available for the data points per year chart.</p>
+					{/if}
+				</div>
 			</div>
 		</div>
 
-		<fieldset class="mb-6">
-			<legend class="block mb-2 text-sm font-medium text-green-400"
-				>Select Indicators (up to 5 recommended):</legend
-			>
-			<div
-				class="max-h-60 overflow-y-auto p-4 bg-gray-700 border border-gray-600 rounded-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"
-			>
-				{#each data.indicators || [] as indicator (indicator.indicator_code)}
-					<label class="flex items-center space-x-2 p-2 hover:bg-gray-600 rounded cursor-pointer">
-						<input
-							type="checkbox"
-							value={indicator.code}
-							checked={selectedIndicatorCodes.has(indicator.code)}
-							onchange={handleIndicatorChange}
-							class="w-4 h-4 text-green-500 bg-gray-600 border-gray-500 rounded focus:ring-green-600 focus:ring-offset-gray-700 focus:ring-2"
-						/>
-						<span class="text-sm text-gray-200 select-none">{indicator.indicator_name}</span>
-					</label>
-				{/each}
+		<!-- Basic Card structure using Tailwind CSS -->
+		<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+			<h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Top 10 Indicators by Data Coverage</h2>
+			<div>
+				<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+					<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+						<tr>
+							<th scope="col" class="px-6 py-3">Indicator Name</th>
+							<th scope="col" class="px-6 py-3 text-right">Countries with All Years Data</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each topCoverageIndicators as indicator (indicator.indicator_code)}
+							<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+								<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{indicator.indicator_name}</td>
+								<td class="px-6 py-4 text-right">{indicator.countries_all_years}</td>
+							</tr>
+						{:else}
+							<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+								<td colspan="2" class="px-6 py-4 text-center text-gray-600 dark:text-gray-400"
+									>No indicator coverage data available.</td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
-		</fieldset>
-
-		<button
-			type="submit"
-			class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50"
-			disabled={!selectedCountryCode || selectedIndicatorCodes.size === 0}>Load Chart</button
-		>
-	</form>
-
-	{#if data.chartData && data.chartData.series.length > 0}
-		<WdiTrendChart seriesData={data.chartData.series} chartTitle={data.chartData.title} />
-	{:else if selectedCountryCode && selectedIndicatorCodes.size > 0 && !data.error}
-		<div
-			class="p-6 bg-gray-800 rounded-lg shadow-xl text-center text-gray-400 min-h-[450px] flex items-center justify-center"
-		>
-			<p>No data available for the selected criteria, or data is still loading.</p>
 		</div>
 	{/if}
 </div>
