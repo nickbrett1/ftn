@@ -8,10 +8,12 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {import('svelte').Snippet} [children]
+	 * @property {boolean} [disableHoverGlow=false]
+	 * @property {string} [class='']
 	 */
 
 	/** @type {Props} */
-	let { children, onclick } = $props();
+	let { children, onclick, disableHoverGlow = false, class: extraClasses = '' } = $props();
 	let rect = null;
 
 	function createClientRectTracker() {
@@ -40,7 +42,7 @@
 	function handleMouseMove(ev) {
 		const isTouch = matchMedia('(hover: none)').matches;
 
-		blob.style.opacity = isTouch ? '0' : '1';
+		blob.style.opacity = isTouch || disableHoverGlow ? '0' : '1';
 
 		blob.animate(
 			[
@@ -64,10 +66,10 @@
 	onkeydown={() => {}}
 	onkeyup={onclick}
 	{onclick}
-	class={`
+	class={`${extraClasses}
 		bg-green-800/20
 		rounded-lg
-		border-3
+		border-3 
 		border-green-400
 		inset-shadow-neon-green
 		shadow-neon-green
@@ -85,10 +87,10 @@
 			col-start-1
 			grow
 			flex
-			cursor-pointer
+			${onclick ? 'cursor-pointer' : ''}
 			rounded-lg
 			p-5
-			hover:bg-green-950/60
+			${!disableHoverGlow ? 'hover:bg-green-950/60' : ''}
 			relative
 			transition-all`}
 		>

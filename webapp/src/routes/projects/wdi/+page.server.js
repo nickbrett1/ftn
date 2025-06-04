@@ -5,7 +5,7 @@ export async function load({ platform }) {
 			error: 'Database connection not available. Please check server configuration.',
 			totalCountries: 0,
 			dataPointsPerYearChart: null,
-			topCoverageIndicators: []
+			totalIndicators: 0
 		};
 	}
 	const db = platform.env.DB;
@@ -28,21 +28,17 @@ export async function load({ platform }) {
 		`);
 		const dataPointsPerYearResult = await dataPointsPerYearStmt.all();
 
-		// 3. Get the top 10 indicators with the best coverage (countries_all_years)
-		const topCoverageIndicatorsStmt = db.prepare(`
-			SELECT di.indicator_code, di.indicator_name, fic.countries_all_years
-			FROM fct_indicator_coverage fic
-			JOIN dim_indicator di ON fic.indicator_code = di.indicator_code
-			ORDER BY fic.countries_all_years DESC
-			LIMIT 10
+		// 3. Get the total number of indicators
+		const totalIndicatorsStmt = db.prepare(`
+			SELECT COUNT(*) as count
+			FROM dim_indicator
 		`);
-		const topCoverageIndicatorsResult = await topCoverageIndicatorsStmt.all();
+		const totalIndicatorsResult = await totalIndicatorsStmt.first('count');
 
 		// Prepare chart data for data points per year
 		let dataPointsChart = null;
 		if (dataPointsPerYearResult.results && dataPointsPerYearResult.results.length > 0) {
 			dataPointsChart = {
-				title: 'WDI Data Points Reported Per Year',
 				series: [
 					{
 						name: 'Data Points',
@@ -55,11 +51,10 @@ export async function load({ platform }) {
 			};
 		}
 
-
 		return {
 			totalCountries: totalCountriesResult || 0,
 			dataPointsPerYearChart: dataPointsChart,
-			topCoverageIndicators: topCoverageIndicatorsResult.results || []
+			totalIndicators: totalIndicatorsResult || 0
 		};
 	} catch (e) {
 		console.error('Error fetching WDI coverage data from D1:', e);
@@ -67,7 +62,7 @@ export async function load({ platform }) {
 			error: `Failed to fetch data: ${e.message}`,
 			totalCountries: 0,
 			dataPointsPerYearChart: null,
-			topCoverageIndicators: []
+			totalIndicators: 0
 		};
 	}
 }
