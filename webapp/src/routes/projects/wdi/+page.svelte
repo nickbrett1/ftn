@@ -1,6 +1,4 @@
 <script>
-	// import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'; // Assuming you'll use Shadcn or similar
-	// import SvelteApexCharts from 'svelte-apexcharts'; // Removed static import
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
@@ -30,7 +28,12 @@
 				if (chartEl) {
 					const options = {
 						series: dataPointsPerYearChart.series,
-						chart: { type: 'bar', height: 350, toolbar: { show: true }, foreColor: '#A0AEC0' /* gray-500 for axis text */ },
+						chart: {
+							type: 'bar',
+							height: 350,
+							toolbar: { show: true },
+							foreColor: '#A0AEC0' /* gray-500 for axis text */
+						},
 						plotOptions: {
 							bar: {
 								horizontal: false,
@@ -40,8 +43,8 @@
 						},
 						colors: ['#166534'], // Set bar color to Tailwind green-800 (hex for #16a34a is green-600, #166534 is green-800)
 						dataLabels: { enabled: false },
-						xaxis: { type: 'category', title: { text: 'Year', style: { color: '#A0AEC0'} } },
-						yaxis: { title: { text: 'Number of Data Points', style: { color: '#A0AEC0'} } },
+						xaxis: { type: 'category', title: { text: 'Year', style: { color: '#A0AEC0' } } },
+						yaxis: { title: { text: 'Number of Data Points', style: { color: '#A0AEC0' } } },
 						theme: { mode: $page.data.colorScheme === 'dark' ? 'dark' : 'light' }
 					};
 					apexChartInstance = new ApexCharts(chartEl, options);
@@ -51,7 +54,7 @@
 
 			// Initialize tippy for the new icon
 			tippy('#dbt-schema-link', {
-				content: 'Database (dbt) schema',
+				content: 'Database (dbt) schema'
 			});
 		}
 	});
@@ -65,7 +68,10 @@
 
 <svelte:head>
 	<title>WDI Data Profile</title>
-	<meta name="description" content="A small data profile of the World Development Indicators data." />
+	<meta
+		name="description"
+		content="A small data profile of the World Development Indicators data."
+	/>
 </svelte:head>
 
 <div class="container mx-auto p-4 space-y-8">
@@ -75,21 +81,23 @@
 			href="/projects/wdi/dbt"
 			id="dbt-schema-link"
 			aria-label="Database (dbt) schema"
-			class="text-white hover:text-green-300 p-2" 
+			class="text-white hover:text-green-300 p-2"
 		>
 			<DatabaseSolid class="w-6 h-6" />
 		</a>
 	</div>
 
 	{#if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+		<div
+			class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+			role="alert"
+		>
 			<strong class="font-bold">Error Loading Data</strong>
 			<span class="block sm:inline">{error}</span>
 			<p>Please try refreshing the page or contact support if the issue persists.</p>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
 			<Card disableHoverGlow={true}>
 				<div class="w-full">
 					<h2 class="text-xl font-semibold mb-2 text-white">Total Countries Tracked</h2>
@@ -110,11 +118,12 @@
 				</div>
 			</Card>
 
-
 			<Card disableHoverGlow={true} class="md:col-span-2">
 				<div class="w-full">
-					<h2 class="text-xl font-semibold mb-2 text-white">{dataPointsPerYearChart?.title || 'Data Points Per Year'}</h2>
-										<div class="min-h-[350px]"> 
+					<h2 class="text-xl font-semibold mb-2 text-white">
+						{dataPointsPerYearChart?.title || 'Data Points Per Year'}
+					</h2>
+					<div class="min-h-[350px]">
 						{#if !browser}
 							<p class="text-white">Chart will render on client.</p>
 						{:else if dataPointsPerYearChart?.series?.[0]?.data?.length > 0}
@@ -127,9 +136,6 @@
 					</div>
 				</div>
 			</Card>
-
-			
 		</div>
 	{/if}
-
 </div>
