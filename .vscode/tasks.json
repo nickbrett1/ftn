@@ -12,7 +12,7 @@
   "tasks": [
     {
       "label": "Run all build tasks",
-      "dependsOn": ["svelte dev", "test vitest"],
+      "dependsOn": ["svelte dev", "Open Terminal", "test vitest"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -41,6 +41,21 @@
       "group": "build",
       "presentation": {
         "group": "build-group"
+      }
+    },
+    {
+      "label": "Open Terminal",
+      "type": "shell",
+      // Launch the default shell (e.g., bash or zsh) to keep the terminal open and interactive.
+      // ${env:SHELL} should pick up the zsh configured in your devcontainer.
+      "command": "${env:SHELL}",
+      "problemMatcher": [],
+      "detail": "Opens a new terminal window",
+      "presentation": {
+        "group": "build-group",
+        "reveal": "always", // Ensure the terminal panel is shown
+        "focus": true, // Give focus to this new terminal
+        "panel": "new" // Crucial: Ensures it opens in a new, dedicated terminal panel
       }
     }
   ]
