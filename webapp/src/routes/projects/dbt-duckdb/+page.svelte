@@ -100,7 +100,7 @@
 			<div class="flex-shrink-0 md:w-64 space-y-4">
 				<!-- View Code Link -->
 				<a
-					href="/projects/wdi/dbt"
+					href="/projects/wdi-duckdb/docs"
 					id="dbt-schema-link"
 					class="block w-full text-center bg-green-800 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
 				>
