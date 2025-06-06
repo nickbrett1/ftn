@@ -75,7 +75,8 @@
         "tamasfe.even-better-toml",
         "usernamehw.errorlens",
         "streetsidesoftware.code-spell-checker",
-        "google.geminicodeassist"
+        "google.geminicodeassist",
+        "saoudrizwan.claude-dev"
       ]
     },
     // Add VS Code settings for the container
