@@ -112,7 +112,7 @@
 - **A3: Leveraging `rclone` for Cloud Storage Agnosticity**
   - **Tool Used:** `rclone` ("rsync for cloud storage").
   - **Benefits:**
-    - Simplified scripting for syncing data to/from various cloud storage providers (like Cloudflare R2, AWS S3, Google Cloud Storage).
+    - Simplified scripting for syncing data to/from various cloud storage providers (like Cloudflare R2, AWS S3, Google Cloud Storage). Note, chase Cloudflare R2 because it was relatively cheap, but more importantly no egress feeds. So data could be pulled elsewhere for analysis.
     - Provides a degree of vendor independence, making it easier to migrate data between cloud storage services if needed.
 
 ---
