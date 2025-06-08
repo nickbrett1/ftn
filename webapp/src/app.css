@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* sonarqube-disable-next-line css:S4662 */
+@plugin "@tailwindcss/typography";
 
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
@@ -22,6 +24,7 @@ html {
 	background-color: black;
 }
 
+/* sonarqube-disable-next-line css:S4662 */
 @theme {
 	--inset-shadow-neon-green: inset 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 	--shadow-neon-green: 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
@@ -33,6 +36,7 @@ html {
 	syntax: '<angle>';
 }
 
+/* sonarqube-disable-next-line css:S4662 */
 @theme {
 	--animate-border: border 4s linear infinite;
 
