@@ -1,6 +1,11 @@
 import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
+import { mdsvex } from 'mdsvex';
+import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
 	kit: {
@@ -60,7 +65,13 @@ const config = {
 		sveltePreprocess({
 			sourceMap: true
 		}),
-		preprocessMeltUI()
-	])
+		preprocessMeltUI(),
+		mdsvex({
+			extensions: ['.md', '.svx'],
+			remarkPlugins: [remarkGfm],
+			rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]
+		})
+	]),
+	extensions: ['.svelte', '.md', '.svx'] // Add .md and .svx to Svelte's recognized extensions
 };
 export default config;
