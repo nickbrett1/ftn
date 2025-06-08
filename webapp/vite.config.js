@@ -4,10 +4,12 @@ import { imagetools } from '@zerodevx/svelte-img/vite';
 import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
 	const plugins = [
+		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
 		svelteTesting(),

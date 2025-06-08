@@ -5,6 +5,7 @@ import { mdsvex } from 'mdsvex';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeMermaid from 'rehype-mermaid';
 
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
@@ -69,7 +70,11 @@ const config = {
 		mdsvex({
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkGfm],
-			rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]
+			rehypePlugins: [
+				rehypeSlug,
+				[rehypeAutolinkHeadings, { behavior: 'wrap' }],
+				[rehypeMermaid, { strategy: 'inline-svg' }] // Add rehype-mermaid
+			]
 		})
 	]),
 	extensions: ['.svelte', '.md', '.svx'] // Add .md and .svx to Svelte's recognized extensions
