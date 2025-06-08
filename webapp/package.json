@@ -36,6 +36,7 @@
 		"eslint": "^9.28.0",
 		"eslint-config-prettier": "^10.1.5",
 		"eslint-plugin-svelte": "^3.9.1",
+		"highlight.js": "^11.11.1",
 		"jsdom": "^26.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.17",

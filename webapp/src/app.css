@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'highlight.js/styles/atom-one-dark.css';
 /* sonarqube-disable-next-line css:S4662 */
 @plugin "@tailwindcss/typography";
 
