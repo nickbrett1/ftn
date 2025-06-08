@@ -34,6 +34,10 @@ fi
 echo "INFO: Installing global npm packages as $CURRENT_USER user..."
 npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates
 
+echo "INFO: Installing Playwright and its Chromium dependencies..."
+npx playwright install --with-deps chromium
+echo "INFO: Playwright Chromium installation complete."
+
 echo "INFO: Installing Sentry CLI..."
 curl -sL https://sentry.io/get-cli/ | sh
 
