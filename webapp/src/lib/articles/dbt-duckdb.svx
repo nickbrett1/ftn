@@ -1,6 +1,15 @@
+<script>
+	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+	import TechnologyPills from '$lib/components/TechnologyPills.svelte';
+
+	const projectUrl = "https://github.com/nickbrett1/dbt-duckdb";
+	const techs = ["dbt", "DuckDB", "Cloudflare"];
+</script>
+
 # Modern Data Transformation without a Data Warehouse: A dbt and DuckDB approach
 
-**Link to code:** [https://github.com/nickbrett1/dbt-duckdb](https://github.com/nickbrett1/dbt-duckdb)
+<TechnologyPills technologies={techs} />
+<ProjectLinkButton href={projectUrl} />
 
 ## 1. Introduction
 
