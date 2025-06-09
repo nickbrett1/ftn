@@ -20,7 +20,8 @@
 }
 
 html {
-	background-color: black;
+	/* Using a dark gray instead of pure black */
+	background-color: #18181b; /* Tailwind zinc-900 */
 }
 
 /* sonarqube-disable-next-line css:S4662 */

@@ -3,7 +3,7 @@
 	import { LinkedinInBrands, EnvelopeRegular, GithubBrands } from 'svelte-awesome-icons';
 </script>
 
-<div class="w-full bg-black/90 p-2 flex flex-row">
+<div class="w-full p-2 flex flex-row">
 	<button
 		onclick={() => {
 			goto('/');

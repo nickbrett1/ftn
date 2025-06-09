@@ -6,20 +6,18 @@
 	const techs = ["dbt", "DuckDB", "Cloudflare"];
 </script>
 
-# Modern Data Transformation without a Data Warehouse: A dbt and DuckDB approach
+<h1 class="!mb-0 no-underline">Modern ETL without a Data Warehouse</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">A dbt and DuckDB approach</p>
 
-<TechnologyPills technologies={techs} />
 <ProjectLinkButton href={projectUrl} />
 
-## 1. Introduction
+## Introduction
 
 Data transformation is a critical step in any data pipeline. For many use cases, cloud data warehouses offer powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, simple scripting with file formats like Parquet offers ease of use but can lack the robust structure needed for managing complex transformations as projects evolve.
 
 This article addresses the gap between these two approaches. We present a solution for scenarios where datasets are manageable in size, yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse. We'll demonstrate how to build such a pipeline locally and deploy with minimal cloud infrastructure by leveraging the combined strengths of dbt-core and DuckDB. This approach offers reduced cloud dependencies for your core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll walk through processing World Development Indicator data (https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how results can be derived directly from our local data stack.
 
-All the code for this project is available on GitHub here: [https://github.com/nickbrett1/dbt-duckdb](https://github.com/nickbrett1/dbt-duckdb)
-
-## 2. The Situation: The Need for Structured Transformation
+## The Need for Structured Transformation
 
 A common requirement in many data-driven projects is the ability to ingest data from various sources, transform it into a usable format, and prepare it for analysis, reporting, or downstream applications. For this article, we'll focus on a project involving the World Development Indicator (WDI) data from the World Bank. While the example is simplified for clarity, the underlying requirements reflect common real-world data transformation complexities.
 
@@ -34,7 +32,7 @@ Our specific goals for the WDI project were:
 
 A crucial overarching constraint was to achieve these goals with a solution that was easy to maintain, could adapt as requirements changed, and avoided the complexity and associated costs of setting up and managing a full-scale cloud data warehouse, which felt like overkill for the scale of this particular task.
 
-## 3. The Complication: Common Hurdles
+## Common Hurdles
 
 Achieving the specific goals outlined above efficiently and sustainably, especially while trying to keep infrastructure lean, presents challenges when considering common approaches. Let's compare two ends of the spectrum: simple scripting versus a full cloud data warehouse and supporting tools.
 
@@ -51,10 +49,12 @@ Achieving the specific goals outlined above efficiently and sustainably, especia
 
 As the table illustrates, neither extreme perfectly aligns with our project's needs:
 
-**Challenge 1: The Cloud Data Warehouse Approach - When Comprehensive Becomes Complex**
+### The Cloud Data Warehouse Approach: When Comprehensive Becomes Complex
+
 For projects like ours, opting for a full **Cloud Data Warehouse (CDW)** solution (e.g., Snowflake, Google BigQuery, Amazon Redshift) presents a significant hurdle: the inherent **complexity and overhead of its comprehensive ecosystem**. While CDWs excel at structured transformations, lineage, and scaling for very large datasets—often integrating with a rich array of tools for ingestion, orchestration, and BI—this power comes at a cost. Setting up, configuring, and managing these interconnected services, even with provider-managed infrastructure, introduces a layer of operational complexity and potential expense that can be disproportionate for smaller to medium-scale data transformation tasks like our WDI project. Furthermore, committing to a specific CDW often involves a degree of vendor lock-in, which can have long-term cost and flexibility implications. This was an overarching problem we aimed to avoid.
 
-**Challenge 2: The Simple Scripting Approach - Trading Robustness for Initial Simplicity**
+### The Simple Scripting Approach: Trading Robustness for Initial Simplicity
+
 Conversely, while a **Simple Scripting & File-based** approach (e.g., using Python or Shell scripts) offers low initial cost and setup effort, it typically sacrifices long-term **robustness, maintainability, and scalability**. The free-form nature of scripts makes it hard to reason about the transformations occurring, especially as the number of data sources, transformation steps, and interdependencies grows—as was the case with our WDI project's multiple goals. This lack of inherent structure leads to difficulties in testing, debugging, and evolving the pipeline, particularly in a team environment.
 
 Specific pain points frequently encountered with script-based transformation approaches include:
@@ -65,21 +65,21 @@ Specific pain points frequently encountered with script-based transformation app
 - **Out-of-sync documentation:** Documentation, if it exists, often lags behind code changes.
 - **Error-prone refactoring:** Modifying existing transformations or adding new ones can easily introduce errors due to hidden dependencies or lack of clarity.
 
-## 4. The Question: Seeking a Better Way
+## Seeking a Better Way
 
 Given these challenges, the central question becomes:
 
 How can we implement a data transformation workflow that is:
 
-- **Well-structured and easy to evolve**, addressing the maintainability issues inherent in ad-hoc scripting?
-- **Low-cost and simple to deploy and manage**, mitigating infrastructure overhead and avoiding unnecessary cloud data warehouse lock-in for the core transformation engine?
-- **Capable of efficiently handling typical analytical transformations** like joins, aggregations, and data cleaning?
+- Well-structured and easy to evolve?
+- Low-cost and simple to deploy and manage?
+- Capable of efficiently handling typical analytical transformations?
 
-## 5. The Answer: dbt-core Meets DuckDB
+## The Solution: dbt-core Meets DuckDB
 
 The solution lies in the powerful combination of **dbt-core** and **DuckDB**.
 
-**Part 1: Introducing dbt (Data Build Tool)**
+### Introducing dbt (Data Build Tool)
 
 dbt is an open-source command-line tool that empowers data analysts and engineers to transform data within their data store more effectively. It brings software engineering best practices to the analytics workflow.
 
@@ -93,7 +93,7 @@ Its core capabilities include:
 
 For this article, we focus on `dbt-core`, the open-source Python package that you can run anywhere. There's also `dbt Cloud`, a managed cloud-based solution offering additional features like a scheduler and UI, but `dbt-core` provides all the essential transformation capabilities.
 
-**Part 2: Introducing DuckDB**
+### Introducing DuckDB
 
 DuckDB is an in-process analytical data management system (OLAP RDBMS). Think of it as SQLite for analytics.
 
@@ -104,7 +104,7 @@ Its key advantages for our use case are:
 - **SQL-centric:** It speaks SQL fluently, making it a perfect partner for dbt's SQL-first approach.
 - **Versatile Data Ingestion:** DuckDB can directly query data from various file formats, including Parquet, CSV, and JSON, often without needing a separate loading step.
 
-**Part 3: The Combined Architecture**
+### The Combined Architecture
 
 When dbt-core and DuckDB are used together, they form a lightweight yet powerful data transformation engine.
 
@@ -132,7 +132,7 @@ graph TD;
 
 This architecture allows you to run your entire dbt transformation pipeline locally or in a simple CI/CD environment, using DuckDB as the ephemeral or persistent engine, without needing a dedicated data warehouse service.
 
-**Part 4: Showcasing the Results (from the `dbt-duckdb` project)**
+### Showcasing the Results
 
 The accompanying GitHub project provides a concrete implementation of this approach using World Development Indicator data. And below are some example visualizations of the transformed data:
 
@@ -140,17 +140,17 @@ The accompanying GitHub project provides a concrete implementation of this appro
   - _(Placeholder: Imagine a line graph generated using a Python library like Matplotlib or Seaborn, plotting a key WDI indicator (e.g., GDP per capita) over time for selected countries. This graph would be generated by querying the final transformed data from the DuckDB instance.)_
   - _(Placeholder: Key summary statistics derived from the transformed data, such as the total number of countries processed, the range of years covered, and the count of unique indicators, could be presented here. For example: "Processed data for 217 countries across 50+ indicators from 1960 to 2022.")_
 
-## 6. Appendix: Additional Considerations & Learnings
+## Appendix: Additional Considerations
 
 Beyond the core setup, a few additional considerations and learnings from the `dbt-duckdb` project are worth noting:
 
-**A1: Development Environment - DuckDB vs. Postgres for Concurrency**
+### Development Environment: DuckDB vs. Postgres for Concurrency
 
 A practical challenge encountered during development was DuckDB's default behavior with file-based databases: typically, only one process can write to a database file at a time. In a development environment, you might have multiple tools needing concurrent access – `dbt` running transformations, a VS Code SQL plugin for querying, a database client like Beekeeper Studio for inspection, and the DuckDB CLI itself.
 
 To address this, a local PostgreSQL database was used for development. dbt's `profiles.yml` makes it straightforward to define multiple target profiles. This allowed for easy switching: using Postgres for interactive development where concurrency was beneficial, and DuckDB for "production-like" runs.
 
-**A2: Leveraging `rclone` for Cloud Storage Agnosticity**
+### Leveraging `rclone` for Cloud Storage Agnosticity
 
 To manage the movement of data to and from cloud storage (like Cloudflare R2 in the example project), `rclone` ("rsync for cloud storage") proved to be an invaluable tool.
 
