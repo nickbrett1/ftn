@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-	<title>Modern Data Transformation: A dbt and DuckDB Approach</title>
+	<title>Modern ETL without a Data Warehouse: A dbt and DuckDB Approach</title>
 	<meta
 		name="description"
 		content="Learn how to build efficient data transformation pipelines using dbt-core and DuckDB, avoiding data warehouse complexities."

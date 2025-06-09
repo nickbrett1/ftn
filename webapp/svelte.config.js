@@ -3,8 +3,6 @@ import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { mdsvex } from 'mdsvex';
 import remarkGfm from 'remark-gfm';
-import rehypeSlug from 'rehype-slug';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeMermaid from 'rehype-mermaid';
 
 /** @type {import('@sveltejs/kit').Config}*/
@@ -71,8 +69,6 @@ const config = {
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkGfm],
 			rehypePlugins: [
-				rehypeSlug,
-				[rehypeAutolinkHeadings, { behavior: 'wrap' }],
 				[rehypeMermaid, { strategy: 'inline-svg' }] // Add rehype-mermaid
 			],
 			highlight: {
