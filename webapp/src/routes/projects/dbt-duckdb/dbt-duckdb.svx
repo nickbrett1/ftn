@@ -1,6 +1,8 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import TechnologyPills from '$lib/components/TechnologyPills.svelte';
+	import Img from '@zerodevx/svelte-img';
+	import twoButtonsMeme from "$lib/images/twobuttonsmeme.jpg?as=run";
 
 	const projectUrl = "https://github.com/nickbrett1/dbt-duckdb";
 	const techs = ["dbt", "DuckDB", "Cloudflare"];
@@ -15,7 +17,12 @@
 
 Data transformation is a critical step in any data pipeline. For many use cases, cloud data warehouses offer powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, simple scripting with file formats like Parquet offers ease of use but can lack the robust structure needed for managing complex transformations as projects evolve.
 
-This article addresses the gap between these two approaches. We present a solution for scenarios where datasets are manageable in size, yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse. We'll demonstrate how to build such a pipeline locally and deploy with minimal cloud infrastructure by leveraging the combined strengths of dbt-core and DuckDB. This approach offers reduced cloud dependencies for your core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll walk through processing World Development Indicator data (https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how results can be derived directly from our local data stack.
+<!-- Use https://imgflip.com/ for memes -->
+<Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
+
+This article addresses the gap between these two approaches. We present a solution for scenarios where datasets are manageable in size, yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
+
+We'll demonstrate how to build such a pipeline locally and deploy with minimal cloud infrastructure by leveraging the combined strengths of [dbt-core](https://github.com/dbt-labs/dbt-core) and [DuckDB](https://duckdb.org/). This approach offers reduced cloud dependencies for your core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll walk through processing World Development Indicator data (https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how results can be derived directly from our local data stack.
 
 ## The Need for Structured Transformation
 
