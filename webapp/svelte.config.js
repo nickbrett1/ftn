@@ -74,7 +74,23 @@ const config = {
 				rehypeSlug,
 				[rehypeAutolinkHeadings, { behavior: 'wrap' }],
 				[rehypeMermaid, { strategy: 'inline-svg' }] // Add rehype-mermaid
-			]
+			],
+			highlight: {
+				highlighter: (code, lang) => {
+					// Intercept the highlighter for mermaid blocks and return an AST node directly.
+					// Further explanation here: https://sunbath.top/playground/integrate-rehype-mermaid-with-mdsvex
+					if (lang === 'mermaid') {
+						return {
+							type: 'element',
+							tagName: 'code',
+							properties: { className: 'language-mermaid' },
+							children: [{ type: 'text', value: code }]
+						};
+					}
+					// Use your chosen highlighter for other languages
+					return highlight(code, lang);
+				}
+			}
 		})
 	]),
 	extensions: ['.svelte', '.md', '.svx'] // Add .md and .svx to Svelte's recognized extensions

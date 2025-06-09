@@ -113,24 +113,14 @@ Here's a conceptual flow of how they interact:
 ```mermaid
 graph TD;
     subgraph "Step 1: Data Ingestion Process"
-        A["Source Data
-        (e.g., WDI CSV, API extracts)"] --> B["Ingestion Scripts
-        (e.g., Python)"];
-        B -- "(writes to)" --> C["Raw Data Storage
-        (e.g., Local Filesystem,
-        Cloud Bucket - Parquet/CSV)"];
+        A["Source Data\n(e.g., WDI CSV, API extracts)"] --> B["Ingestion Scripts\n(e.g., Python)"];
+        B -- "(writes to)" --> C["Raw Data Storage\n(e.g., Local Filesystem,\nCloud Bucket - Parquet/CSV)"];
     end
 
-    C -- "(raw data feeds into)" --> D["Step 2: DuckDB as Engine
-    (reads raw data, acts as dbt's 'warehouse')"];
-    D -- "(dbt-core runs SQL/Python transformations)" --> E["Step 3: DuckDB with Transformed Data
-    (stores intermediate & final results)"];
-    E --> F["Step 4: Processed Data Storage
-    (e.g., Local Filesystem,
-    Cloud Bucket - Parquet,
-    Relational DB like Cloudflare D1)"];
-    F --> G["(consumed by)
-    Analysis / Visualization / Applications"];
+    C -- "(raw data feeds into)" --> D["Step 2: DuckDB as Engine\n(reads raw data, acts as dbt's 'warehouse')"];
+    D -- "(dbt-core runs SQL/Python transformations)" --> E["Step 3: DuckDB with Transformed Data\n(stores intermediate & final results)"];
+    E --> F["Step 4: Processed Data Storage\n(e.g., Local Filesystem,\nCloud Bucket - Parquet,\nRelational DB like Cloudflare D1)"];
+    F --> G["(consumed by)\nAnalysis / Visualization / Applications"];
 ```
 
 **Explanation of the flow:**
