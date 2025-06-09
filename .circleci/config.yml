@@ -23,6 +23,10 @@ jobs:
           name: Install modules
           command: |
             cd webapp && npm install
+      - run:
+          name: Install Playwright Chromium
+          command: |
+            cd webapp && npx playwright install --with-deps chromium
       - doppler/install
       - run:
           name: Build app
