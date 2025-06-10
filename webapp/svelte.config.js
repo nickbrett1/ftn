@@ -1,4 +1,4 @@
-import { preprocessMeltUI, sequence } from '@melt-ui/pp';
+import { preprocessMeltUI } from '@melt-ui/pp';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { mdsvex, escapeSvelte } from 'mdsvex';
