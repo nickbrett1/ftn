@@ -1,9 +1,33 @@
 import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
-import { mdsvex } from 'mdsvex';
+import { mdsvex, escapeSvelte } from 'mdsvex';
 import remarkGfm from 'remark-gfm';
 import rehypeMermaid from 'rehype-mermaid';
+import { createHighlighter } from 'shiki';
+
+let highlighter;
+
+export async function highlight(code, lang) {
+	if (!highlighter) {
+		highlighter = await createHighlighter({
+			themes: ['github-dark'],
+			langs: [
+				'javascript',
+				'svelte',
+				'python',
+				'json',
+				'bash',
+				'html',
+				'css',
+				'markdown',
+				'mermaid',
+				'ts'
+			]
+		});
+	}
+	return escapeSvelte(await highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
+}
 
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
@@ -60,11 +84,7 @@ const config = {
 	compilerOptions: {
 		enableSourcemap: true
 	},
-	preprocess: sequence([
-		sveltePreprocess({
-			sourceMap: true
-		}),
-		preprocessMeltUI(),
+	preprocess: [
 		mdsvex({
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkGfm],
@@ -72,23 +92,34 @@ const config = {
 				[rehypeMermaid, { strategy: 'inline-svg' }] // Add rehype-mermaid
 			],
 			highlight: {
-				highlighter: (code, lang) => {
+				highlighter: async (code, lang) => {
 					// Intercept the highlighter for mermaid blocks and return an AST node directly.
 					// Further explanation here: https://sunbath.top/playground/integrate-rehype-mermaid-with-mdsvex
 					if (lang === 'mermaid') {
 						return {
 							type: 'element',
-							tagName: 'code',
-							properties: { className: 'language-mermaid' },
-							children: [{ type: 'text', value: code }]
+							tagName: 'pre',
+							properties: {},
+							children: [
+								{
+									type: 'element',
+									tagName: 'code',
+									properties: { className: ['language-mermaid'] },
+									children: [{ type: 'text', value: code }]
+								}
+							]
 						};
 					}
-					// Use your chosen highlighter for other languages
-					return highlight(code, lang);
+					// Use Shiki for other languages
+					return await highlight(code, lang);
 				}
 			}
-		})
-	]),
+		}),
+		sveltePreprocess({
+			sourceMap: true
+		}),
+		preprocessMeltUI()
+	],
 	extensions: ['.svelte', '.md', '.svx'] // Add .md and .svx to Svelte's recognized extensions
 };
 export default config;

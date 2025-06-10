@@ -15,23 +15,53 @@
 
 ## Introduction
 
-Data transformation is a critical step in any data pipeline. For many use cases, cloud data warehouses offer powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, simple scripting with file formats like Parquet offers ease of use but can lack the robust structure needed for managing complex transformations as projects evolve.
+Data transformation is a critical step in any data pipeline. For many use cases, a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
 
 <!-- Use https://imgflip.com/ for memes -->
 <Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
 
-This article addresses the gap between these two approaches. We present a solution for scenarios where datasets are manageable in size, yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
+This article describes a middle ground between these two approaches, aimed at scenarios where datasets are manageable in size, somewhat independent, for example for driving trading decisions, and yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
 
-We'll demonstrate how to build such a pipeline locally and deploy with minimal cloud infrastructure by leveraging the combined strengths of [dbt-core](https://github.com/dbt-labs/dbt-core) and [DuckDB](https://duckdb.org/). This approach offers reduced cloud dependencies for your core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll walk through processing World Development Indicator data (https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how results can be derived directly from our local data stack.
+We'll demonstrate how to build such a pipeline and deploy with minimal infrastructure by leveraging the combined strengths of [dbt-core](https://github.com/dbt-labs/dbt-core) and [DuckDB](https://duckdb.org/). This approach offers reduced cloud dependencies for the core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll use the [World Bank World Development Indicators](https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how robust results can be derived from a relatively simple local data stack.
 
-## The Need for Structured Transformation
+## Goals and Constraints
 
-A common requirement in many data-driven projects is the ability to ingest data from various sources, transform it into a usable format, and prepare it for analysis, reporting, or downstream applications. For this article, we'll focus on a project involving the World Development Indicator (WDI) data from the World Bank. While the example is simplified for clarity, the underlying requirements reflect common real-world data transformation complexities.
+Our specific goals for this project were:
 
-Our specific goals for the WDI project were:
+1.  **Integrated Data Model:** Our primary data source was the [WDI CSV download](https://databank.worldbank.org/data/download/WDI_CSV.zip), but we also needed to enrich this by integrating data from the [World Bank's REST API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-overview). A key requirement was to unify these sources into a consistent data model with standardized naming conventions.
+2.  **Data Reshaping for Analysis:** The raw WDI data often presents historical figures in a wide, column-oriented format. To facilitate easier querying and time-series analysis, we aimed to reshape this into a long, row-oriented format.
 
-1.  **Integrated Data Model:** Our primary data source was the WDI CSV download (from `https://databank.worldbank.org/data/download/WDI_CSV.zip`), but we also needed to enrich this by integrating data from the World Bank's REST API (e.g., `http://api.worldbank.org`). A key requirement was to unify these sources into a consistent data model with standardized naming conventions to simplify downstream analysis.
-2.  **Data Reshaping for Analysis:** The raw WDI data often presents historical figures in a wide, column-oriented format (e.g., separate columns for each year). To facilitate easier querying and time-series analysis, we aimed to reshape this into a long, row-oriented format, where each year's data for an indicator and country becomes a distinct row.
+For example:
+
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+
+```text
+// Wide Format (Column-Oriented)
+// Each row represents one country & indicator, with years as columns.
+
+Country Name | Indicator Name | 1960 | 1961 | ...
+-------------|----------------|------|------|----
+Aruba        | GDP per capita | 100  | 102  | ...
+Afghanistan  | Population     | 5000 | 5050 | ...
+```
+
+To a "long" format, more suitable for analysis:
+
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+
+```text
+// Long Format (Row-Oriented)
+// Each row represents one country, indicator, and year observation.
+
+Country Name | Indicator Name | Year | Value
+-------------|----------------|------|-------
+Aruba        | GDP per capita | 1960 | 100
+Aruba        | GDP per capita | 1961 | 102
+Afghanistan  | Population     | 1960 | 5000
+Afghanistan  | Population     | 1961 | 5050
+...          | ...            | ...  | ...
+```
+
 3.  **Clear Data Layering:** We emphasized a clear architectural separation between raw, ingested data (staging layer) and the polished, consumer-ready data (marts layer). This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users.
 4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we planned to pre-calculate and provide frequently used aggregations.
 5.  **Comprehensive Documentation and Lineage:** High-quality documentation was a priority. This included clear definitions for the data interface provided to consumers, as well as transparent lineage explaining how each data point was derived and transformed from its original source.
