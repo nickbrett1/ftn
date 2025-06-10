@@ -45,8 +45,6 @@ Aruba        | GDP per capita | 100  | 102  | ...
 Afghanistan  | Population     | 5000 | 5050 | ...
 ```
 
-To a "long" format, more suitable for analysis:
-
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
 ```text
