@@ -15,6 +15,10 @@
 		word-break: break-all; /* More aggressive word breaking if needed */
 		overflow-x: hidden; /* Explicitly hide horizontal scrollbar if wrapping is effective */
 	}
+	.mermaid-container {
+		display: flex;
+		justify-content: center;
+	}
 </style>
 
 <h1 class="!mb-0 no-underline">Modern ETL without a Data Warehouse</h1>
@@ -75,7 +79,35 @@ Afghanistan  | Population     | 1961 | 5050
 
 </div>
 
-3.  **Clear Data Layering:** We emphasized a clear architectural separation between raw, ingested data (staging layer) and the polished, consumer-ready data (marts layer). This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users.
+3.  **Clear Data Layering:** We emphasized a clear architectural separation between raw data, an intermediate staging layer, and the final marts layer.
+
+        - **Raw Data Layer:** This is the initial landing zone for data as it's ingested from various sources (e.g., CSV files, API extracts). The data here is typically in its original, unaltered format, reflecting the structure and content provided by the source systems.
+        - **Staging Layer:** This layer takes the raw, ingested data and applies initial transformations, such as standardizing column names (e.g., converting "Country Name" to `country_name`), casting data types, and basic cleaning. This ensures a consistent foundation for subsequent transformations.
+        - **Marts Layer:** This layer builds upon the staging layer to create polished, consumer-ready datasets, often aggregated or reshaped for specific analytical purposes.
+
+        This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users. The diagram below illustrates this flow:
+
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<div class="mermaid-container">
+
+```mermaid
+graph TD;
+		A["Raw Data Layer&#10(Original Format)"] --> B["Staging Layer&#10(Standardized & Cleaned)"];
+		B --> C["Marts Layer&#10(Aggregated & Reshaped)"];
+		C --> D["Analytics & Applications"];
+
+		click A "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/staging/_wdi_sources.yml" "View Raw Data Layer dbt sources" _self
+		click B "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/staging/_wdi_raw_models.yml" "View Staging Layer dbt models" _self
+		click C "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" "View Marts Layer dbt models" _self
+
+		classDef default fill:#222,stroke:#cccccc,stroke-width:2px,color:#faf0e6;
+		linkStyle default stroke:#cccccc,stroke-width:2px;
+
+```
+
+</div>
+        <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+
 4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we planned to pre-calculate and provide frequently used aggregations.
 5.  **Comprehensive Documentation and Lineage:** High-quality documentation was a priority. This included clear definitions for the data interface provided to consumers, as well as transparent lineage explaining how each data point was derived and transformed from its original source.
 6.  **Flexible and Cost-Effective Output:** To ensure flexibility for downstream consumers and manage operational costs, our strategy was to primarily deliver final datasets as Parquet files in a cloud object store (Cloudflare R2 in our case, chosen for its cost-effectiveness and lack of egress fees). We also aimed to demonstrate the capability to load this transformed data into a relational database (e.g., Cloudflare's D1 serverless SQLite), offering consumers multiple access patterns.
@@ -160,18 +192,37 @@ When dbt-core and DuckDB are used together, they form a lightweight yet powerful
 
 Here's a conceptual flow of how they interact:
 
+<div class="mermaid-container">
+
 ```mermaid
 graph TD;
-    subgraph "Step 1: Data Ingestion Process"
-        A["Source Data\n(e.g., WDI CSV, API extracts)"] --> B["Ingestion Scripts\n(e.g., Python)"];
-        B -- "(writes to)" --> C["Raw Data Storage\n(e.g., Local Filesystem,\nCloud Bucket - Parquet/CSV)"];
+    %%{init: {'themeVariables': { 'textColor': '#faf0e6', 'lineColor': '#cccccc', 'fontSize': '14px', 'edgeLabelBackground': '#222', 'clusterBkg': 'transparent', 'clusterBorder': '#cccccc'}}}%%
+    subgraph step1Graph [Step 1: Data Ingestion Process]
+        A_ingest["Source Data&#10(e.g., WDI CSV, API extracts)"] --> B_ingest["Ingestion Scripts&#10(e.g., Python)"];
+        B_ingest -- "(writes to)" --> C_raw_storage["Raw Data Storage&#10(e.g., Local Filesystem,&#10Cloud Bucket - Parquet/CSV)"];
     end
 
-    C -- "(raw data feeds into)" --> D["Step 2: DuckDB as Engine\n(reads raw data, acts as dbt's 'warehouse')"];
-    D -- "(dbt-core runs SQL/Python transformations)" --> E["Step 3: DuckDB with Transformed Data\n(stores intermediate & final results)"];
-    E --> F["Step 4: Processed Data Storage\n(e.g., Local Filesystem,\nCloud Bucket - Parquet,\nRelational DB like Cloudflare D1)"];
-    F --> G["(consumed by)\nAnalysis / Visualization / Applications"];
+    C_raw_storage -- "(raw data feeds into)" --> D_duckdb_engine["Step 2: DuckDB as Engine&#10(reads raw data, acts as dbt's 'warehouse')"];
+    D_duckdb_engine -- "(dbt-core runs SQL/Python transformations)" --> E_duckdb_transformed["Step 3: DuckDB with Transformed Data&#10(stores intermediate & final results)"];
+    E_duckdb_transformed --> F_processed_storage["Step 4: Processed Data Storage&#10(e.g., Local Filesystem,&#10Cloud Bucket - Parquet,&#10Relational DB like Cloudflare D1)"];
+    F_processed_storage --> G_consumption["(consumed by)&#10(Analysis / Visualization / Applications)"];
+
+    classDef mainNode fill:#222,stroke:#cccccc,stroke-width:2px;
+
+    class A_ingest mainNode;
+    class B_ingest mainNode;
+    class C_raw_storage mainNode;
+    class D_duckdb_engine mainNode;
+    class E_duckdb_transformed mainNode;
+    class F_processed_storage mainNode;
+    class G_consumption mainNode;
+
+		style step1Graph fill:transparent,stroke:transparent,color:#faf0e6;
+
+
 ```
+
+</div>
 
 **Explanation of the flow:**
 
@@ -208,3 +259,7 @@ The benefits of using `rclone` include:
 
 - **Simplified Scripting:** It provides a unified command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
 - **Vendor Independence:** Using `rclone` offers a degree of vendor independence. For our project we chose to use Cloudflare R2 due to its cost-effectiveness, particularly its absence of egress fees, making it attractive for scenarios where data might be pulled for analysis by various tools or services. However if you decide to switch cloud storage providers in the future, the changes required in your data synchronization scripts are minimal, primarily involving `rclone` configuration updates.
+
+```
+
+```
