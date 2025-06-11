@@ -110,9 +110,9 @@ graph TD;
 
 4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we planned to pre-calculate and provide frequently used aggregations.
 5.  **Comprehensive Documentation and Lineage:** High-quality documentation was a priority. This included clear definitions for the data interface provided to consumers, as well as transparent lineage explaining how each data point was derived and transformed from its original source.
-6.  **Flexible and Cost-Effective Output:** To ensure flexibility for downstream consumers and manage operational costs, our strategy was to primarily deliver final datasets as Parquet files in a cloud object store (Cloudflare R2 in our case, chosen for its cost-effectiveness and lack of egress fees). We also aimed to demonstrate the capability to load this transformed data into a relational database (e.g., Cloudflare's D1 serverless SQLite), offering consumers multiple access patterns.
+6.  **Flexible and Cost-Effective Output:** To ensure flexibility for any downstream consumers, our strategy was to primarily deliver final datasets as Parquet files in a cloud object store ([Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) in our case, chosen for its cost-effectiveness and lack of egress fees). We also aimed to demonstrate the capability to easily load this transformed data into a relational database (e.g., [Cloudflare's D1](https://www.cloudflare.com/developer-platform/d1/) serverless SQLite).
 
-A crucial overarching constraint was to achieve these goals with a solution that was easy to maintain, could adapt as requirements changed, and avoided the complexity and associated costs of setting up and managing a full-scale cloud data warehouse, which felt like overkill for the scale of this particular task.
+A crucial overarching constraint was to achieve these goals with a solution that was easy to maintain, could adapt as requirements changed, and avoided the complexity and associated costs of setting up and managing a full-scale cloud data warehouse, which felt like overkill for the scale of this particular project.
 
 ## Common Hurdles
 
@@ -217,7 +217,7 @@ graph TD;
     class F_processed_storage mainNode;
     class G_consumption mainNode;
 
-		style step1Graph fill:transparent,stroke:transparent,color:#faf0e6;
+		style step1Graph fill:transparent,stroke:#faf0e6,color:#faf0e6;
 
 
 ```
