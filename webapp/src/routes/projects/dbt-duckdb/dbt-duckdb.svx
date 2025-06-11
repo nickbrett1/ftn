@@ -8,6 +8,15 @@
 	const techs = ["dbt", "DuckDB", "Cloudflare"];
 </script>
 
+<style>
+	.responsive-text-table :global(pre.shiki) {
+		white-space: pre-wrap; /* Preserves whitespace, but wraps lines */
+		overflow-wrap: break-word; /* Breaks long words to prevent overflow */
+		word-break: break-all; /* More aggressive word breaking if needed */
+		overflow-x: hidden; /* Explicitly hide horizontal scrollbar if wrapping is effective */
+	}
+</style>
+
 <h1 class="!mb-0 no-underline">Modern ETL without a Data Warehouse</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">A dbt and DuckDB approach</p>
 
@@ -33,6 +42,8 @@ Our specific goals for this project were:
 
 For example:
 
+<div class="responsive-text-table">
+
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
 ```text
@@ -45,6 +56,8 @@ Aruba        | GDP per capita | 100  | 102  | ...
 Afghanistan  | Population     | 5000 | 5050 | ...
 ```
 
+</div>
+<div class="responsive-text-table">
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
 ```text
@@ -59,6 +72,8 @@ Afghanistan  | Population     | 1960 | 5000
 Afghanistan  | Population     | 1961 | 5050
 ...          | ...            | ...  | ...
 ```
+
+</div>
 
 3.  **Clear Data Layering:** We emphasized a clear architectural separation between raw, ingested data (staging layer) and the polished, consumer-ready data (marts layer). This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users.
 4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we planned to pre-calculate and provide frequently used aggregations.
