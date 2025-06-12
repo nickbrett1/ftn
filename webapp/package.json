@@ -44,7 +44,7 @@
 		"mdsvex": "^0.12.6",
 		"mermaid": "^11.6.0",
 		"miragejs": "^0.1.48",
-		"npm": "^11.4.1",
+		"npm": "^11.4.2",
 		"playwright": "^1.53.0",
 		"postcss": "^8.5.5",
 		"prettier": "^3.5.3",
