@@ -6,26 +6,27 @@ import remarkGfm from 'remark-gfm';
 import rehypeMermaid from 'rehype-mermaid';
 import { createHighlighter } from 'shiki';
 
-let highlighter;
+// Initialize Shiki highlighter promise at the top level
+const highlighterPromise = createHighlighter({
+	themes: ['github-dark'],
+	langs: [
+		'javascript',
+		'svelte',
+		'python',
+		'json',
+		'bash',
+		'html',
+		'css',
+		'markdown',
+		'mermaid',
+		'ts',
+		'sql',
+		'yaml'
+	]
+});
 
 export async function highlight(code, lang) {
-	if (!highlighter) {
-		highlighter = await createHighlighter({
-			themes: ['github-dark'],
-			langs: [
-				'javascript',
-				'svelte',
-				'python',
-				'json',
-				'bash',
-				'html',
-				'css',
-				'markdown',
-				'mermaid',
-				'ts'
-			]
-		});
-	}
+	const highlighter = await highlighterPromise; // Await the single promise
 	return escapeSvelte(await highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
 }
 

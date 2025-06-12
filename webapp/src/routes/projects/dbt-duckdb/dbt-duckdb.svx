@@ -6,6 +6,8 @@
 
 	const projectUrl = "https://github.com/nickbrett1/dbt-duckdb";
 	const techs = ["dbt", "DuckDB", "Cloudflare"];
+
+	import { GithubBrands } from 'svelte-awesome-icons';
 </script>
 
 <style>
@@ -37,7 +39,7 @@ This article describes a middle ground between these two approaches, aimed at sc
 
 We'll demonstrate how to build such a pipeline and deploy with minimal infrastructure by leveraging the combined strengths of [dbt-core](https://github.com/dbt-labs/dbt-core) and [DuckDB](https://duckdb.org/). This approach offers reduced cloud dependencies for the core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll use the [World Bank World Development Indicators](https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how robust results can be derived from a relatively simple local data stack.
 
-## Goals and Constraints
+## Goals
 
 Our specific goals for this project were:
 
@@ -108,26 +110,24 @@ graph TD;
 </div>
         <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we planned to pre-calculate and provide frequently used aggregations.
-5.  **Comprehensive Documentation and Lineage:** High-quality documentation was a priority. This included clear definitions for the data interface provided to consumers, as well as transparent lineage explaining how each data point was derived and transformed from its original source.
+4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we wanted to be able to pre-calculate frequently used aggregations.
+5.  **Comprehensive Documentation and Lineage:** We wanted a way to provide documentation on the transformation, a clean way to provide definitions for the data interface, and transparent lineage explaining how each data point was derived from its original source.
 6.  **Flexible and Cost-Effective Output:** To ensure flexibility for any downstream consumers, our strategy was to primarily deliver final datasets as Parquet files in a cloud object store ([Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) in our case, chosen for its cost-effectiveness and lack of egress fees). We also aimed to demonstrate the capability to easily load this transformed data into a relational database (e.g., [Cloudflare's D1](https://www.cloudflare.com/developer-platform/d1/) serverless SQLite).
+7.  **Low-Complexity and Cost-Effective Solution:** We also wanted a solution that was easy to maintain and was relatively low cost given the scale of the project.
 
-A crucial overarching constraint was to achieve these goals with a solution that was easy to maintain, could adapt as requirements changed, and avoided the complexity and associated costs of setting up and managing a full-scale cloud data warehouse, which felt like overkill for the scale of this particular project.
+## Why Standard Solutions Can Fall Short
 
-## Common Hurdles
+Let's compare the two standard solutions: simple scripting versus a full cloud data warehouse and supporting tools.
 
-Achieving the specific goals outlined above efficiently and sustainably, especially while trying to keep infrastructure lean, presents challenges when considering common approaches. Let's compare two ends of the spectrum: simple scripting versus a full cloud data warehouse and supporting tools.
-
-| Feature/Requirement                | Simple Scripting & File-based | Cloud Data Warehouse                      |
-| ---------------------------------- | ----------------------------- | ----------------------------------------- |
-| **Transformation Structure**       | Ad-hoc, low reusability       | Structured, high reusability              |
-| **Maintainability & Evolvability** | Difficult as complexity grows | Good, designed for evolution              |
-| **Data Lineage & Docs**            | Manual, often lacking         | Often automated/integrated                |
-| **Automated Testing**              | Rudimentary or manual         | Well-supported                            |
-| **Analytic Tool Integration**      | Basic (files)                 | Rich (SQL, connectors)                    |
-| **Infrastructure Overhead**        | Minimal                       | Managed by provider; setup can be complex |
-| **Cost (Compute & Storage)**       | Low                           | Potentially High                          |
-| **Scalability (Large Data)**       | Limited                       | Excellent                                 |
+| Goal                                         | Simple Scripting & File-based                                                                   | Cloud Data Warehouse                                                                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Integrated Data Model**                    | 🔴 Difficult to manage consistency as complexity grows. Ad-hoc.                                 | 🟢 Strong. Designed for structured, relational data models.                                                                         |
+| **Data Reshaping for Analysis**              | 🟡 Possible, but complex reshaping (e.g., wide to long) can become unwieldy and error-prone.    | 🟢 Excellent. SQL provides powerful reshaping capabilities.                                                                         |
+| **Clear Data Layering**                      | 🔴 Lacks inherent structure for layering; becomes a tangled web of scripts.                     | 🟢 Good. Supports logical separation (e.g., staging, marts).                                                                        |
+| **Pre-calculated Aggregations**              | 🟡 Can be done, but managing dependencies and updates is manual and complex.                    | 🟢 Strong. Materialized views or summary tables are common.                                                                         |
+| **Comprehensive Documentation & Lineage**    | 🔴 Almost entirely manual and often neglected. Difficult to trace data flow.                    | 🟢 Good. Many tools offer automated documentation and lineage.                                                                      |
+| **Flexible & Cost-Effective Output**         | 🟡 Flexible in output formats (files). Cost-effective for simple outputs.                       | 🟡 Flexible (SQL access, connectors), but storage/egress can be costly.                                                             |
+| **Low-Complexity & Cost-Effective Solution** | 🟡 Low initial complexity & cost. Becomes very complex and costly to maintain as project grows. | 🔴 High initial setup complexity & potentially high ongoing costs. Managed services reduce some operational burden but add to cost. |
 
 As the table illustrates, neither extreme perfectly aligns with our project's needs:
 
@@ -137,15 +137,7 @@ For projects like ours, opting for a full **Cloud Data Warehouse (CDW)** solutio
 
 ### The Simple Scripting Approach: Trading Robustness for Initial Simplicity
 
-Conversely, while a **Simple Scripting & File-based** approach (e.g., using Python or Shell scripts) offers low initial cost and setup effort, it typically sacrifices long-term **robustness, maintainability, and scalability**. The free-form nature of scripts makes it hard to reason about the transformations occurring, especially as the number of data sources, transformation steps, and interdependencies grows—as was the case with our WDI project's multiple goals. This lack of inherent structure leads to difficulties in testing, debugging, and evolving the pipeline, particularly in a team environment.
-
-Specific pain points frequently encountered with script-based transformation approaches include:
-
-- **Lack of a clear structure & hidden side-effects:** The free-form nature means transformations can be opaque. Defining and understanding dependencies between steps is challenging, and there's no inherent guarantee against unintended side-effects within the transformation logic.
-- **Testing difficulties:** The lack of a defined contract for inputs and outputs makes it cumbersome to isolate and test individual transformations. Swapping out data sources or mocking dependencies for testing purposes can be particularly difficult.
-- **Poor data lineage:** It's hard to trace how data is transformed from its source to the final output, making debugging and impact analysis difficult.
-- **Out-of-sync documentation:** Documentation, if it exists, often lags behind code changes.
-- **Error-prone refactoring:** Modifying existing transformations or adding new ones can easily introduce errors due to hidden dependencies or lack of clarity.
+Conversely, while a **Simple Scripting & File-based** approach (e.g., using Python or Shell scripts) offers low initial cost and setup effort, it typically sacrifices long-term **robustness, maintainability, and scalability**. The free-form nature of scripts makes it hard to reason about the transformations occurring, especially as the number of data sources, transformation steps, and interdependencies grows—as was the case with our project's multiple goals. This lack of inherent structure leads to difficulties in testing, debugging, and evolving the pipeline, particularly in a team environment.
 
 ## Seeking a Better Way
 
@@ -153,13 +145,13 @@ Given these challenges, the central question becomes:
 
 How can we implement a data transformation workflow that is:
 
-- Well-structured and easy to evolve?
-- Low-cost and simple to deploy and manage?
-- Capable of efficiently handling typical analytical transformations?
+1. Well-structured and easy to evolve?
+2. Low-cost and simple to deploy and manage?
+3. Capable of efficiently handling typical analytical transformations?
 
 ## The Solution: dbt-core Meets DuckDB
 
-The solution lies in the powerful combination of **dbt-core** and **DuckDB**.
+The solution we use lies in the powerful combination of **dbt-core** and **DuckDB**.
 
 ### Introducing dbt (Data Build Tool)
 
@@ -168,29 +160,76 @@ dbt is an open-source command-line tool that empowers data analysts and engineer
 Its core capabilities include:
 
 - **SQL-centric (and Python):** Define transformations primarily using SQL (with Python model support in newer versions), a language familiar to most data practitioners.
-- **Dependency Management:** dbt automatically understands and manages the dependencies between your transformation steps (called "models").
-- **Automated Testing:** Implement data quality tests to ensure the integrity of your transformations and output data.
-- **Documentation & Lineage:** Automatically generate comprehensive documentation and a visual lineage graph, showing how data flows through your pipeline.
-- **Version Control:** Treat your transformation logic as code, enabling version control with tools like Git.
+  For example, one aggregation transformation from our project looks like this:
+    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-For this article, we focus on `dbt-core`, the open-source Python package that you can run anywhere. There's also `dbt Cloud`, a managed cloud-based solution offering additional features like a scheduler and UI, but `dbt-core` provides all the essential transformation capabilities.
+  ```sql
+  select year, count(value) as data_points_count
+  from {{ ref('fct_wdi_history') }}
+  where value is not null
+  group by year
+  ```
+
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/agg_wdi_data_points_by_year.sql" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  </a>
+
+- **Dependency Management:** dbt automatically understands and manages the dependencies between transformation steps (called "models").
+- **Automated Testing:** Implement data quality tests to ensure the integrity of your transformations and output data.
+  For example, we can test for nulls by providing yaml configuration to dbt:
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+
+  ```yaml
+  - name: indicator_code
+  description: "Indicator code."
+  tests:
+  	- not_null
+  ```
+
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  </a>
+
+- **Documentation & Lineage:** Automatically generate comprehensive documentation and a visual lineage graph, showing how data flows through your pipeline. See [here](./dbt-duckdb/docs) for the generated documentation for the project.
+- **Version Control:** Treats your transformation logic as code, enabling version control.
+
+For this project, we used [dbt-core](https://github.com/dbt-labs/dbt-core), the open-source Python package that you can run anywhere. There's also [dbt Cloud](https://www.getdbt.com/), a managed cloud-based solution offering additional features like a scheduler and UI, but `dbt-core` provides all the essential transformation capabilities we needed.
 
 ### Introducing DuckDB
 
-DuckDB is an in-process analytical data management system (OLAP RDBMS). Think of it as SQLite for analytics.
+[DuckDB](https://duckdb.org/) is an in-process analytical data management system (OLAP RDBMS). Think of it as SQLite for analytics.
 
 Its key advantages for our use case are:
 
-- **Simplicity:** Installation is as easy as `pip install duckdb`. There's no separate server process to manage; it runs within your Python application or CLI session.
+- **Simplicity:** There's no separate server process to manage; it runs within your Python application or CLI session. Installation is as easy as:
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  ```shell
+  pip install duckdb
+  ```
 - **Speed:** DuckDB is highly optimized for analytical queries and transformations, employing techniques like columnar storage and vectorized query execution.
 - **SQL-centric:** It speaks SQL fluently, making it a perfect partner for dbt's SQL-first approach.
-- **Versatile Data Ingestion:** DuckDB can directly query data from various file formats, including Parquet, CSV, and JSON, often without needing a separate loading step.
+- **Versatile Data Ingestion:** DuckDB can directly query data from various file formats, including Parquet, CSV, and JSON, often without needing a separate loading step. For example with Parquet:
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+
+  ```python
+  con = duckdb.connect(DUCKDB_DATABASE)
+  con.execute("CREATE SCHEMA IF NOT EXISTS public")
+  query = f"""
+  CREATE TABLE IF NOT EXISTS public.{table_name} AS
+  SELECT * FROM read_parquet('{parquet_path}');
+  """
+  con.execute(query)
+  ```
+
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/populate.py" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  </a>
 
 ### The Combined Architecture
 
 When dbt-core and DuckDB are used together, they form a lightweight yet powerful data transformation engine.
 
-Here's a conceptual flow of how they interact:
+Here's a conceptual flow of how they interact in this project:
 
 <div class="mermaid-container">
 
@@ -259,7 +298,3 @@ The benefits of using `rclone` include:
 
 - **Simplified Scripting:** It provides a unified command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
 - **Vendor Independence:** Using `rclone` offers a degree of vendor independence. For our project we chose to use Cloudflare R2 due to its cost-effectiveness, particularly its absence of egress fees, making it attractive for scenarios where data might be pulled for analysis by various tools or services. However if you decide to switch cloud storage providers in the future, the changes required in your data synchronization scripts are minimal, primarily involving `rclone` configuration updates.
-
-```
-
-```
