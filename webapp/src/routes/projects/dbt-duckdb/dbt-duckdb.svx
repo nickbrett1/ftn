@@ -88,7 +88,7 @@
 
 ## Introduction
 
-Data transformation is a critical step in any data pipeline. For many use cases,[^1] (www.x.com) (~~stuff~~) a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
+Data transformation is a critical step in any data pipeline. For many use cases[^1], a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
 
 <!-- Use https://imgflip.com/ for memes -->
 <Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
@@ -408,4 +408,4 @@ The benefits of using `rclone` include:
 - **Simplified Scripting:** It provides a unified command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
 - **Vendor Independence:** Using `rclone` offers a degree of vendor independence. For our project we chose to use Cloudflare R2 due to its cost-effectiveness, particularly its absence of egress fees, making it attractive for scenarios where data might be pulled for analysis by various tools or services. However if you decide to switch cloud storage providers in the future, the changes required in your data synchronization scripts are minimal, primarily involving `rclone` configuration updates.
 
-[^1]: For example, the [Machine Learning for Flight Delays](https://github.com/nickbrett1/data-science-on-gcp/) project leverages Google Cloud's comprehensive data and machine learning services.
+[^1]: For example, my [Machine Learning for Flight Delays](https://github.com/nickbrett1/data-science-on-gcp/) project leverages Google Cloud's data and machine learning services.
