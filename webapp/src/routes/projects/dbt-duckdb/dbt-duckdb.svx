@@ -88,7 +88,7 @@
 
 ## Introduction
 
-Data transformation is a critical step in any data pipeline. For many use cases, a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
+Data transformation is a critical step in any data pipeline. For many use cases,[^1] (www.x.com) (~~stuff~~) a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
 
 <!-- Use https://imgflip.com/ for memes -->
 <Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
@@ -391,19 +391,21 @@ The accompanying [GitHub project](https://github.com/nickbrett1/dbt-duckdb/tree/
 
 ## Appendix: Additional Considerations
 
-Beyond the core setup, a few additional considerations and learnings from the `dbt-duckdb` project are worth noting:
+Beyond the core setup, a few additional learnings from the project are worth noting:
 
 ### Development Environment: DuckDB vs. Postgres for Concurrency
 
-A practical challenge encountered during development was DuckDB's default behavior with file-based databases: typically, only one process can write to a database file at a time. In a development environment, you might have multiple tools needing concurrent access – `dbt` running transformations, a VS Code SQL plugin for querying, a database client like Beekeeper Studio for inspection, and the DuckDB CLI itself.
+A practical challenge encountered during development was DuckDB's default behavior with file-based databases: typically, only one process can write to a DuckDB database at a time. In a development environment, you might have multiple tools needing concurrent access – `dbt` running transformations, a VS Code SQL plugin for querying, a database client like Beekeeper Studio for inspection, and the DuckDB CLI itself.
 
-To address this, a local PostgreSQL database was used for development. dbt's `profiles.yml` makes it straightforward to define multiple target profiles. This allowed for easy switching: using Postgres for interactive development where concurrency was beneficial, and DuckDB for "production-like" runs.
+To address this, a local PostgreSQL database was used for development. dbt's [profiles.yml](https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/profiles.yml) file makes it straightforward to define multiple environments. This allowed for easy switching: using Postgres for interactive development where concurrency was beneficial, and DuckDB for "production-like" runs.
 
 ### Leveraging `rclone` for Cloud Storage Agnosticity
 
-To manage the movement of data to and from cloud storage (like Cloudflare R2 in the example project), `rclone` ("rsync for cloud storage") proved to be an invaluable tool.
+To manage the movement of data to and from cloud storage (like Cloudflare R2), [rclone ("rsync for cloud storage")](https://rclone.org/) proved to be an invaluable tool.
 
 The benefits of using `rclone` include:
 
 - **Simplified Scripting:** It provides a unified command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
 - **Vendor Independence:** Using `rclone` offers a degree of vendor independence. For our project we chose to use Cloudflare R2 due to its cost-effectiveness, particularly its absence of egress fees, making it attractive for scenarios where data might be pulled for analysis by various tools or services. However if you decide to switch cloud storage providers in the future, the changes required in your data synchronization scripts are minimal, primarily involving `rclone` configuration updates.
+
+[^1]: For example, the [Machine Learning for Flight Delays](https://github.com/nickbrett1/data-science-on-gcp/) project leverages Google Cloud's comprehensive data and machine learning services.
