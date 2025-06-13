@@ -2,9 +2,10 @@ import { preprocessMeltUI } from '@melt-ui/pp';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { mdsvex, escapeSvelte } from 'mdsvex';
-import remarkGfm from 'remark-gfm';
 import rehypeMermaid from 'rehype-mermaid';
 import { createHighlighter } from 'shiki';
+import remarkGfm from 'remark-gfm';
+import remarkFootnotes from 'remark-footnotes';
 
 // Initialize Shiki highlighter promise at the top level
 const highlighterPromise = createHighlighter({
@@ -88,10 +89,8 @@ const config = {
 	preprocess: [
 		mdsvex({
 			extensions: ['.md', '.svx'],
-			remarkPlugins: [remarkGfm],
-			rehypePlugins: [
-				[rehypeMermaid, { strategy: 'inline-svg' }] // Add rehype-mermaid
-			],
+			remarkPlugins: [remarkFootnotes, remarkGfm],
+			rehypePlugins: [[rehypeMermaid, { strategy: 'inline-svg' }]],
 			highlight: {
 				highlighter: async (code, lang) => {
 					// Intercept the highlighter for mermaid blocks and return an AST node directly.
