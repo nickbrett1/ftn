@@ -3,14 +3,68 @@
 	import TechnologyPills from '$lib/components/TechnologyPills.svelte';
 	import Img from '@zerodevx/svelte-img';
 	import twoButtonsMeme from "$lib/images/twobuttonsmeme.jpg?as=run";
+	import { browser } from '$app/environment';
+	import { onMount, onDestroy } from 'svelte';
+	import Card from '$lib/components/Card.svelte';
 
-	export let data; // To receive data from +page.server.js
+	const {
+		data
+	} = $props();
+
+	const totalCountries = $derived(data.totalCountries);
+	const dataPointsPerYearChart = $derived(data.dataPointsPerYearChart);
+	const totalIndicators = $derived(data.totalIndicators);
+	const error = $derived(data.error);
+
+	let apexChartInstance = $state(null);
+	let chartElementId = 'wdi-data-points-chart'; // Unique ID for the chart element
+
+	onMount(async () => {
+		if (browser) {
+			const module = await import('apexcharts');
+			const ApexCharts = module.default;
+
+			if (dataPointsPerYearChart?.series?.[0]?.data?.length > 0) {
+				const chartEl = document.getElementById(chartElementId);
+				if (chartEl) {
+					const options = {
+						series: dataPointsPerYearChart.series,
+						chart: {
+							type: 'bar',
+							height: 350,
+							toolbar: { show: true },
+							foreColor: '#A0AEC0' /* gray-500 for axis text */
+						},
+						plotOptions: {
+							bar: {
+								horizontal: false,
+								columnWidth: '55%',
+								endingShape: 'rounded'
+							}
+						},
+						colors: ['#166534'], // Set bar color to Tailwind green-800 (hex for #16a34a is green-600, #166534 is green-800)
+						dataLabels: { enabled: false },
+						xaxis: { type: 'category', title: { text: 'Year', style: { color: '#A0AEC0' } } },
+						yaxis: { title: { text: 'Number of Data Points', style: { color: '#A0AEC0' } } },
+						theme: { mode: 'dark' }
+					};
+					apexChartInstance = new ApexCharts(chartEl, options);
+					await apexChartInstance.render();
+				}
+			}
+		}
+	});
+
+	onDestroy(() => {
+		if (apexChartInstance) {
+			apexChartInstance.destroy();
+		}
+	});
 
 	const projectUrl = "https://github.com/nickbrett1/dbt-duckdb";
 	const techs = ["dbt", "DuckDB", "Cloudflare"];
 
 	import { GithubBrands } from 'svelte-awesome-icons';
-	import WdiTrendChart from '$lib/components/WdiTrendChart.svelte';
 
 </script>
 
@@ -54,7 +108,7 @@ For example:
 
 <div class="responsive-text-table">
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```text
 // Wide Format (Column-Oriented)
@@ -68,7 +122,7 @@ Afghanistan  | Population     | 5000 | 5050 | ...
 
 </div>
 <div class="responsive-text-table">
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```text
 // Long Format (Row-Oriented)
@@ -93,7 +147,7 @@ Afghanistan  | Population     | 1961 | 5050
 
         This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users. The diagram below illustrates this flow:
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div class="mermaid-container">
 
 ```mermaid
@@ -112,7 +166,7 @@ graph TD;
 ```
 
 </div>
-        <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we wanted to be able to pre-calculate frequently used aggregations.
 5.  **Comprehensive Documentation and Lineage:** We wanted a way to provide documentation on the transformation, a clean way to provide definitions for the data interface, and transparent lineage explaining how each data point was derived from its original source.
@@ -165,7 +219,7 @@ Its core capabilities include:
 
 - **SQL-centric (and Python):** Define transformations primarily using SQL (with Python model support in newer versions), a language familiar to most data practitioners.
   For example, one aggregation transformation from our project looks like this:
-    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
   ```sql
   select year, count(value) as data_points_count
@@ -181,7 +235,7 @@ Its core capabilities include:
 - **Dependency Management:** dbt automatically understands and manages the dependencies between transformation steps (called "models").
 - **Automated Testing:** Implement data quality tests to ensure the integrity of your transformations and output data.
   For example, we can test for nulls by providing yaml configuration to dbt:
-  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
   ```yaml
   - name: indicator_code
@@ -206,14 +260,14 @@ For this project, we used [dbt-core](https://github.com/dbt-labs/dbt-core), the 
 Its key advantages for our use case are:
 
 - **Simplicity:** There's no separate server process to manage; it runs within your Python application or CLI session. Installation is as easy as:
-  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   ```shell
   pip install duckdb
   ```
 - **Speed:** DuckDB is highly optimized for analytical queries and transformations, employing techniques like columnar storage and vectorized query execution.
 - **SQL-centric:** It speaks SQL fluently, making it a perfect partner for dbt's SQL-first approach.
 - **Versatile Data Ingestion:** DuckDB can directly query data from various file formats, including Parquet, CSV, and JSON, often without needing a separate loading step. For example with Parquet:
-  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
   ```python
   con = duckdb.connect(DUCKDB_DATABASE)
@@ -274,7 +328,7 @@ graph TD;
 1.  **Data Ingestion:** Raw data is acquired from sources (CSVs, APIs, etc.) and stored locally to be available to DuckDB. In our project we also replicate this data to Cloudflare R2 object store so we have a full record. Parquet is often a good choice for the storage format due to its efficiency.
 2.  **DuckDB as the Engine:** DuckDB is configured as the "data warehouse" in dbt's configuration with the database running locally:
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```yaml
 wdi:
@@ -296,37 +350,43 @@ This architecture allows us to run the entire dbt transformation pipeline locall
 
 ### The Results
 
-The accompanying [GitHub project](https://github.com/nickbrett1/dbt-duckdb/tree/main) provides a concrete implementation of this approach using World Development Indicator data. And below are some example visualizations of the transformed data:
+The accompanying [GitHub project](https://github.com/nickbrett1/dbt-duckdb/tree/main) provides a concrete implementation of this approach using World Development Indicator data. And below are some live visualizations of the transformed data:
 
-<div class="my-8 p-6 bg-neutral-800 rounded-lg shadow-lg">
-	<h4 class="text-2xl font-semibold mb-6 text-center text-cream">WDI Data Coverage Overview</h4>
-	{#if data && !data.error}
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-center">
-			<div class="p-4 bg-neutral-700 rounded-md">
-				<p class="text-4xl font-bold text-cream">{data.totalCountries || 'N/A'}</p>
-				<p class="text-sm text-gray-400">Total Countries Represented</p>
-			</div>
-			<div class="p-4 bg-neutral-700 rounded-md">
-				<p class="text-4xl font-bold text-cream">{data.totalIndicators || 'N/A'}</p>
-				<p class="text-sm text-gray-400">Total Unique Indicators</p>
-			</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+
+<Card disableHoverGlow={true} >
+	<div class="w-full">
+		<div class="text-xl font-medium text-gray-300 mt-0 mb-1">Total Countries Tracked</div>
+		<div class="text-4xl font-semibold text-white my-0">{totalCountries || 'N/A'}</div>
+	</div>
+</Card>
+
+<Card disableHoverGlow={true}>
+	<div class="w-full">
+		<div class="text-xl font-medium text-gray-300 mt-0 mb-1">Total Indicators Tracked</div>
+		<div class="text-4xl font-semibold text-white my-0">{totalIndicators || 'N/A'}</div>
+	</div>
+</Card>
+
+<Card disableHoverGlow={true} class="md:col-span-2">
+	<div class="w-full">
+		<div class="text-xl font-medium text-gray-300 mt-0 mb-4">
+			{dataPointsPerYearChart?.title || 'Data Points Per Year'}
 		</div>
-		{#if data.dataPointsPerYearChart && data.dataPointsPerYearChart.series && data.dataPointsPerYearChart.series.length > 0}
-			<WdiTrendChart chartData={data.dataPointsPerYearChart} />
-		{:else if data.dataPointsPerYearChart === null && !data.error} 
-			<!-- This condition handles the case where dataPointsPerYearChart is explicitly null (e.g. from server load) and not an error -->
-			<p class="text-center text-gray-400">Data points per year chart data is not available.</p>
-		{:else if !data.error} <!-- Added this to catch cases where dataPointsPerYearChart might be undefined but not an error -->
-			<p class="text-center text-gray-400">Data points per year chart data is not available.</p>
-		{:else}
-			<!-- This will now only show if data.error is not set, and data.dataPointsPerYearChart is falsy (e.g. undefined before load) -->
-			<p class="text-center text-gray-400">Loading chart data...</p>
-		{/if}
-	{:else if data && data.error}
-		<p class="text-center text-red-400">Error loading data: {data.error}</p>
-	{:else}
-		<p class="text-center text-gray-400">Loading data overview...</p>
-	{/if}
+		<div class="min-h-[350px]">
+			{#if !browser}
+				<p class="text-white">Chart will render on client.</p>
+			{:else if dataPointsPerYearChart?.series?.[0]?.data?.length > 0}
+				<div id={chartElementId}></div>
+			{:else if browser && !dataPointsPerYearChart?.series?.[0]?.data?.length > 0 && apexChartInstance}
+				<p class="text-white">Chart rendered, but no data points.</p>
+			{:else}
+				<p class="text-white">No data available for the data points per year chart.</p>
+			{/if}
+		</div>
+	</div>
+</Card>
+
 </div>
 
 ## Appendix: Additional Considerations

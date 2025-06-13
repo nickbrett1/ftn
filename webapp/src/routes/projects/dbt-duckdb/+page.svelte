@@ -1,6 +1,7 @@
 <script>
 	import Navbar from '$lib/components/Navbar.svelte';
 	import ArticleContent from './dbt-duckdb.svx';
+	export let data;
 </script>
 
 <svelte:head>
@@ -22,5 +23,5 @@
 	</div>
 
 	<!-- Render the article content -->
-	<ArticleContent />
+	<ArticleContent {data} />
 </article>
