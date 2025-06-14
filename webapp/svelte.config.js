@@ -35,6 +35,9 @@ export async function highlight(code, lang) {
 const config = {
 	kit: {
 		adapter: adapter(),
+		serviceWorker: {
+			register: true
+		},
 		csp: {
 			mode: 'auto',
 			directives: {

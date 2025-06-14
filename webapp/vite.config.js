@@ -24,6 +24,7 @@ export default defineConfig(({ command, mode }) => {
 	}
 	return {
 		plugins,
+		logLevel: 'info',
 		server: {
 			host: 'localhost'
 		},
