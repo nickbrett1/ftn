@@ -27,14 +27,12 @@
 				} else {
 					console.log(`Element ${targetId} not found for scrolling from ${source}`);
 				}
-			}, 100); // Adjusted delay, 100ms is often a good starting point.
+			}, 100); // 100ms
 		}
 	};
 
 	onMount(() => {
 		if (browser && window.location.hash) {
-			// Handle initial page load with a hash
-			console.log('onMount: Attempting to scroll to initial hash:', window.location.hash);
 			scrollToHash(window.location.hash, 'onMount');
 		}
 	});
@@ -49,7 +47,10 @@
 
 <svelte:head>
 	<title>Fintech Nick</title>
-	<meta name="description" content="Nick Brett's personal website and portfolio, focused on financial technology." />
+	<meta
+		name="description"
+		content="Nick Brett's personal website and portfolio, focused on financial technology."
+	/>
 </svelte:head>
 
 <Background />

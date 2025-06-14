@@ -12,15 +12,8 @@
 	/>
 </svelte:head>
 
-<article class="container mx-auto p-4 space-y-8 max-w-6xl prose prose-invert lg:prose-xl">
-	<div class="mb-12 mt-2">
-		<!-- Breadcrumbs -->
-		<div class="text-sm text-gray-400 mb-4">
-			<a href="/" class="hover:underline">home</a> / <a href="/#projects" class="hover:underline">projects</a> /
-			<span class="text-white">dbt-duckdb</span>
-		</div>
-	</div>
+<Navbar active="projects" />
 
-	<!-- Render the article content -->
+<article class="container mx-auto p-4 mt-16 space-y-8 max-w-6xl prose prose-invert lg:prose-xl">
 	<ArticleContent {data} />
 </article>
