@@ -14,7 +14,6 @@
 
 <svelte:head>
 	<meta name="theme-color" content="black" />
-	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 </svelte:head>
 
 {@render children?.()}
