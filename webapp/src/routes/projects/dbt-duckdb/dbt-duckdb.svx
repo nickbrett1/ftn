@@ -83,7 +83,7 @@
 
 <h1 class="!mb-0 no-underline">Modern ETL without a Data Warehouse</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">A dbt and DuckDB approach</p>
-
+June 13, 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
