@@ -3,7 +3,7 @@
 	import HoverFadeCard from '$lib/components/HoverFadeCard.svelte';
 	import {
 		GithubBrands,
-		LightbulbSolid,
+		DatabaseSolid,
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
@@ -21,25 +21,20 @@
 			These are some of my personal projects, tools, code and writings.
 		</div>
 
-		<HoverFadeCard>
-			{#snippet initial()}
-				<div class="flex flex-col grow">
-					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">Making of fintechnick.com</span>
-						<SitemapSolid class="size-10" aria-label="Making of FinTechNick" />
-					</div>
-					<p class="grow pt-5">
-						As a 'data person', building a website using modern front-end technologies and patterns
-						was a challenge. Here I share my approach and lessons learned.
-					</p>
+		<Card onclick={() => (window.location.href = '/projects/dbt-duckdb')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow"
+						>Modern ETL without a Data Warehouse</span
+					>
+					<DatabaseSolid class="size-10" aria-label="ETL Project" />
 				</div>
-			{/snippet}
-			{#snippet onHover()}
-				<div class="flex flex-col items-center grow">
-					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
-				</div>
-			{/snippet}
-		</HoverFadeCard>
+				<p class="grow pt-5">
+					A project using DuckDB and dbt to build a flexible, low-cost and manageable ETL solution without a Data
+					Warehouse.
+				</p>
+			</div>
+		</Card>
 		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/data-science-on-gcp/')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
@@ -58,11 +53,12 @@
 			{#snippet initial()}
 				<div class="flex flex-col grow">
 					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">Product Pieces</span>
-						<LightbulbSolid class="size-10 " aria-label="Tips and Tricks for Product Management" />
+						<span class="text-xl font-bold leading-none pt-2 grow">Making of fintechnick.com</span>
+						<SitemapSolid class="size-10" aria-label="Making of FinTechNick" />
 					</div>
 					<p class="grow pt-5">
-						Pieces of insights, and lessons learned, from my adventures in Product Management.
+						As a 'data person', building a website using modern front-end technologies and patterns
+						was a challenge. Here I share my approach and lessons learned.
 					</p>
 				</div>
 			{/snippet}
