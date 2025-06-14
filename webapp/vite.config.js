@@ -14,7 +14,9 @@ export default defineConfig(({ command, mode }) => {
 		sveltekit(),
 		svelteTesting(),
 		imagetools({
-			defaultDirectives: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
+			defaultDirectives: isDev
+				? new URLSearchParams(`?width=480&format=webp`) // Faster for dev
+				: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		})
 	];
 
@@ -26,7 +28,14 @@ export default defineConfig(({ command, mode }) => {
 		plugins,
 		logLevel: 'info',
 		server: {
-			host: 'localhost'
+			host: 'localhost',
+			warmup: {
+				clientFiles: [
+					'./src/routes/+page.svelte',
+					'./src/lib/components/**/*.svelte'
+					// Add other frequently accessed files/patterns
+				]
+			}
 		},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],

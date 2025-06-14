@@ -31,7 +31,12 @@
 		}
 	};
 
-	onMount(() => {
+	let BackgroundComponent;
+
+	onMount(async () => {
+		const module = await import('$lib/components/Background.svelte');
+		BackgroundComponent = module.default;
+
 		if (browser && window.location.hash) {
 			scrollToHash(window.location.hash, 'onMount');
 		}
@@ -53,7 +58,9 @@
 	/>
 </svelte:head>
 
-<Background />
+{#if BackgroundComponent}
+	<svelte:component this={BackgroundComponent} />
+{/if}
 
 <Navbar />
 <div id="home" class="flex flex-col h-dvh min-h-max section">
