@@ -16,7 +16,7 @@
 	<div class="mb-12 mt-2">
 		<!-- Breadcrumbs -->
 		<div class="text-sm text-gray-400 mb-4">
-			<a href="/" class="hover:underline">home</a> / <span class="text-white">projects</span> /
+			<a href="/" class="hover:underline">home</a> / <a href="/#projects" class="hover:underline">projects</a> /
 			<span class="text-white">dbt-duckdb</span>
 		</div>
 	</div>
