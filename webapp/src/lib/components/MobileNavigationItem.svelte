@@ -1,6 +1,4 @@
 <script>
-	import { scrollIntoView } from '$lib/utils/utils';
-
 	let { current = 'home', active = 'home', hide = () => {} } = $props();
 </script>
 
@@ -9,9 +7,7 @@
 		href="#{current}"
 		class="block py-2 {active == current ? 'text-green-400' : ''}"
 		onclick={(e) => {
-			e.preventDefault();
 			hide();
-			scrollIntoView(e);
 		}}
 	>
 		{current}

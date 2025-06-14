@@ -1,7 +1,3 @@
-<script>
-	import { scrollIntoView } from '$lib/utils/utils';
-</script>
-
 <!-- Inspired by Mario Tiscareno (https://mario.tiscareno.dev/) -->
 
 <!-- spark line instead of right arrow? https://www.chartjs.org/ -->
@@ -17,10 +13,6 @@
 	<div class="gap-24 text-pretty md:columns-2">
 		<p class="text-sm leading-normal text-white sm:text-base">
 			Over nearly 20 years, I've <a
-				onclick={(e) => {
-					e.preventDefault();
-					scrollIntoView(e);
-				}}
 				class="text-[#fce4b8] underline underline-offset-2"
 				href="#experience">worked in most of the key functions for fintech data</a
 			>, from managing global data partner relationships at Bloomberg LP, to building the data
@@ -53,12 +45,7 @@
 				class="text-[#fce4b8] underline underline-offset-2"
 				href="https://github.com/nickbrett1">code</a
 			>, a resume and links to my articles.
-			<a
-				onclick={(e) => {
-					e.preventDefault();
-					scrollIntoView(e);
-				}}
-				class="text-[#fce4b8] underline underline-offset-2"
+			<a class="text-[#fce4b8] underline underline-offset-2"
 				href="#contact">Do reach out if you'd like to talk.</a
 			>
 		</p>
