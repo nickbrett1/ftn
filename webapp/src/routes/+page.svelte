@@ -47,6 +47,11 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Fintech Nick</title>
+	<meta name="description" content="Nick Brett's personal website and portfolio, focused on financial technology." />
+</svelte:head>
+
 <Background />
 
 <Navbar />
