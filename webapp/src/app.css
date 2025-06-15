@@ -24,9 +24,10 @@ html {
 	background-color: #18181b; /* Tailwind zinc-900 */
 }
 
-@theme {
+:root {
 	--inset-shadow-neon-green: inset 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 	--shadow-neon-green: 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
+	--animate-border: border 4s linear infinite;
 }
 
 @property --border-angle {
@@ -35,12 +36,12 @@ html {
 	syntax: '<angle>';
 }
 
-@theme {
-	--animate-border: border 4s linear infinite;
-
-	@keyframes border {
-		to {
-			--border-angle: 360deg;
-		}
+@keyframes border {
+	to {
+		--border-angle: 360deg;
 	}
+}
+
+.animate-border {
+	animation: var(--animate-border);
 }
