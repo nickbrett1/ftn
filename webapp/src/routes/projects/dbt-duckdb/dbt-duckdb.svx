@@ -88,12 +88,12 @@ June 13, 2025
 
 ## Introduction
 
-Data transformation is a critical step in any data pipeline. For many use cases[^1], a full-scale cloud data warehouse offers powerful solutions, providing scalability for large datasets and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the robust structure needed for managing complex transformations as projects evolve.
+Data transformation is a critical step in any data pipeline. For many use cases[^1], a full-scale cloud data warehouse offers rich tooling, provides scalability, and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the scalability and robust structure needed for managing complex transformations as projects evolve.
 
 <!-- Use https://imgflip.com/ for memes -->
 <Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
 
-This article describes a middle ground between these two approaches, aimed at scenarios where datasets are manageable in size, somewhat independent, for example for driving trading decisions, and yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
+This article describes a middle ground between these two approaches, aimed at scenarios where datasets are manageable in size, somewhat independent, for example if used by different consumers, and yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
 
 We'll demonstrate how to build such a pipeline and deploy with minimal infrastructure by leveraging the combined strengths of [dbt-core](https://github.com/dbt-labs/dbt-core) and [DuckDB](https://duckdb.org/). This approach offers reduced cloud dependencies for the core transformation engine, lower costs, and a simplified setup and management process. As a practical example, we'll use the [World Bank World Development Indicators](https://databank.worldbank.org/source/world-development-indicators), showing code snippets and illustrating how robust results can be derived from a relatively simple local data stack.
 
@@ -139,13 +139,13 @@ Afghanistan  | Population     | 1961 | 5050
 
 </div>
 
-3.  **Clear Data Layering:** We emphasized a clear architectural separation between raw data, an intermediate staging layer, and the final marts layer.
+3.  **Clear Data Layering:** We wanted to achieve a clear architectural separation between raw data, an intermediate staging layer, and the final marts layer. To explain:
 
         - **Raw Data Layer:** This is the initial landing zone for data as it's ingested from various sources (e.g., CSV files, API extracts). The data here is typically in its original, unaltered format, reflecting the structure and content provided by the source systems.
-        - **Staging Layer:** This layer takes the raw, ingested data and applies initial transformations, such as standardizing column names (e.g., converting "Country Name" to `country_name`), casting data types, and basic cleaning. This ensures a consistent foundation for subsequent transformations.
+        - **Staging Layer:** This layer takes the raw, ingested data and applies initial transformations, such as standardizing column names (e.g., converting a `Country Name` column to `country_name`), casting data types, and basic cleaning. This ensures a consistent foundation for subsequent transformations.
         - **Marts Layer:** This layer builds upon the staging layer to create polished, consumer-ready datasets, often aggregated or reshaped for specific analytical purposes.
 
-        This separation is crucial for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users. The diagram below illustrates this flow:
+        This separation is important in my experience for maintainability, allowing us to evolve ingestion or intermediate transformation logic without immediately impacting downstream users. The diagram below illustrates this flow with each box linked to the respective dbt layer definitions for this project:
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div class="mermaid-container">
@@ -159,6 +159,8 @@ graph TD;
 		click A "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/staging/_wdi_sources.yml" "View Raw Data Layer dbt sources" _self
 		click B "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/staging/_wdi_raw_models.yml" "View Staging Layer dbt models" _self
 		click C "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" "View Marts Layer dbt models" _self
+		click D "https://github.com/nickbrett1/ftn/blob/main/webapp/src/routes/projects/dbt-duckdb/%2Bpage.server.js" "View Data Loading for Analytics" _self
+
 
 		classDef default fill:#222,stroke:#cccccc,stroke-width:2px,color:#faf0e6;
 		linkStyle default stroke:#cccccc,stroke-width:2px;
@@ -168,30 +170,32 @@ graph TD;
 </div>
         <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
-4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we wanted to be able to pre-calculate frequently used aggregations.
+4.  **Pre-calculated Aggregations:** To optimize query performance and reduce computational load for common analytical questions, we wanted to easily be able to define frequently used aggregations for pre-calculation.
 5.  **Comprehensive Documentation and Lineage:** We wanted a way to provide documentation on the transformation, a clean way to provide definitions for the data interface, and transparent lineage explaining how each data point was derived from its original source.
 6.  **Flexible and Cost-Effective Output:** To ensure flexibility for any downstream consumers, our strategy was to primarily deliver final datasets as Parquet files in a cloud object store ([Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) in our case, chosen for its cost-effectiveness and lack of egress fees). We also aimed to demonstrate the capability to easily load this transformed data into a relational database (e.g., [Cloudflare's D1](https://www.cloudflare.com/developer-platform/d1/) serverless SQLite).
-7.  **Low-Complexity and Cost-Effective Solution:** We also wanted a solution that was easy to maintain and was relatively low cost given the scale of the project.
+7.  **Low-Complexity:** We also wanted a solution that was easy to maintain and simple to debug and reason about.
+8.  **Low Cost** Finally, we wanted a solution that had relatively low cost overall given the scale of the project.
 
 ## Why Standard Solutions Can Fall Short
 
 Let's compare the two standard solutions: simple scripting versus a full cloud data warehouse and supporting tools.
 
-| Goal                                         | Simple Scripting & File-based                                                                   | Cloud Data Warehouse                                                                                                                |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Integrated Data Model**                    | 🔴 Difficult to manage consistency as complexity grows. Ad-hoc.                                 | 🟢 Strong. Designed for structured, relational data models.                                                                         |
-| **Data Reshaping for Analysis**              | 🟡 Possible, but complex reshaping (e.g., wide to long) can become unwieldy and error-prone.    | 🟢 Excellent. SQL provides powerful reshaping capabilities.                                                                         |
-| **Clear Data Layering**                      | 🔴 Lacks inherent structure for layering; becomes a tangled web of scripts.                     | 🟢 Good. Supports logical separation (e.g., staging, marts).                                                                        |
-| **Pre-calculated Aggregations**              | 🟡 Can be done, but managing dependencies and updates is manual and complex.                    | 🟢 Strong. Materialized views or summary tables are common.                                                                         |
-| **Comprehensive Documentation & Lineage**    | 🔴 Almost entirely manual and often neglected. Difficult to trace data flow.                    | 🟢 Good. Many tools offer automated documentation and lineage.                                                                      |
-| **Flexible & Cost-Effective Output**         | 🟡 Flexible in output formats (files). Cost-effective for simple outputs.                       | 🟡 Flexible (SQL access, connectors), but storage/egress can be costly.                                                             |
-| **Low-Complexity & Cost-Effective Solution** | 🟡 Low initial complexity & cost. Becomes very complex and costly to maintain as project grows. | 🔴 High initial setup complexity & potentially high ongoing costs. Managed services reduce some operational burden but add to cost. |
+| Goal                                      | Simple Scripting & File-based                                                 | Cloud Data Warehouse                                                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Integrated Data Model**                 | 🔴 Difficult to manage consistency as complexity grows. Ad-hoc.               | 🟢 Strong. Designed for structured, relational data models.                                                                 |
+| **Data Reshaping for Analysis**           | 🟡 Possible, but complex reshaping can become unwieldy and error-prone.       | 🟢 Excellent. SQL provides powerful reshaping capabilities.                                                                 |
+| **Clear Data Layering**                   | 🔴 Lacks inherent structure for layering; becomes a tangled web of scripts.   | 🟢 Good. Supports logical separation (e.g., staging, marts).                                                                |
+| **Pre-calculated Aggregations**           | 🟡 Can be done, but managing dependencies and updates is manual and complex.  | 🟢 Strong. Materialized views or summary tables are common.                                                                 |
+| **Comprehensive Documentation & Lineage** | 🔴 Almost entirely manual and often neglected. Difficult to trace data flow.  | 🟢 Good. Many tools offer automated documentation and lineage.                                                              |
+| **Flexible & Cost-Effective Output**      | 🟢 Flexible in output formats (files).                                        | 🟡 Very flexible (SQL access, connectors), but storage/egress can be costly.                                                |
+| **Low-Complexity**                        | 🟡 Low initial complexity. Becomes very complex to maintain as project grows. | 🔴 High initial setup complexity. Managed services reduce some operational burden.                                          |
+| **Low-Cost Infrastructure**               | 🟢 Very low initial infrastructure cost (often none).                         | 🔴 Can be high due to storage, compute, and egress fees, even for smaller datasets. Managed services add to platform costs. |
 
-As the table illustrates, neither extreme perfectly aligns with our project's needs:
+As the table illustrates, neither option perfectly aligns with our project's needs:
 
 ### The Cloud Data Warehouse Approach: When Comprehensive Becomes Complex
 
-For projects like ours, opting for a full **Cloud Data Warehouse (CDW)** solution (e.g., Snowflake, Google BigQuery, Amazon Redshift) presents a significant hurdle: the inherent **complexity and overhead of its comprehensive ecosystem**. While CDWs excel at structured transformations, lineage, and scaling for very large datasets—often integrating with a rich array of tools for ingestion, orchestration, and BI—this power comes at a cost. Setting up, configuring, and managing these interconnected services, even with provider-managed infrastructure, introduces a layer of operational complexity and potential expense that can be disproportionate for smaller to medium-scale data transformation tasks like our WDI project. Furthermore, committing to a specific CDW often involves a degree of vendor lock-in, which can have long-term cost and flexibility implications. This was an overarching problem we aimed to avoid.
+For projects like ours, opting for a full **Cloud Data Warehouse (CDW)** solution (e.g., Snowflake, Google BigQuery, Amazon Redshift) presents a significant hurdle: the inherent **complexity and overhead of its comprehensive ecosystem**. While CDWs excel at structured transformations, lineage, and scaling for very large datasets—often integrating with a rich array of tools for ingestion, orchestration, and BI—this power comes at a cost. Setting up, configuring, and managing these interconnected services, even with provider-managed infrastructure, introduces a layer of operational complexity and potential expense that can be disproportionate for smaller to medium-scale data transformation tasks like our WDI project. Furthermore, committing to a specific CDW often involves a degree of vendor lock-in, which can have long-term cost and flexibility implications. This was an overarching problem we wanted to see if we could avoid.
 
 ### The Simple Scripting Approach: Trading Robustness for Initial Simplicity
 
@@ -217,7 +221,7 @@ dbt is an open-source command-line tool that empowers data analysts and engineer
 
 Its core capabilities include:
 
-- **SQL-centric (and Python):** Define transformations primarily using SQL (with Python model support in newer versions), a language familiar to most data practitioners.
+- **SQL-centric:** Define transformations primarily using SQL (with Python model support in newer versions), a language familiar to most data practitioners.
   For example, one aggregation transformation from our project looks like this:
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
@@ -228,8 +232,8 @@ Its core capabilities include:
   group by year
   ```
 
-  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/agg_wdi_data_points_by_year.sql" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/agg_wdi_data_points_by_year.sql" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View Code
   </a>
 
 - **Dependency Management:** dbt automatically understands and manages the dependencies between transformation steps (called "models").
@@ -244,8 +248,8 @@ Its core capabilities include:
   	- not_null
   ```
 
-  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View Code
   </a>
 
 - **Documentation & Lineage:** Automatically generate comprehensive documentation and a visual lineage graph, showing how data flows through your pipeline. See [here](./dbt-duckdb/docs) for the generated documentation for the project.
@@ -279,8 +283,8 @@ Its key advantages for our use case are:
   con.execute(query)
   ```
 
-  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/populate.py" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/populate.py" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View Code
   </a>
 
 ### The Combined Architecture
@@ -325,7 +329,7 @@ graph TD;
 
 **Explanation of the flow:**
 
-1.  **Data Ingestion:** Raw data is acquired from sources (CSVs, APIs, etc.) and stored locally to be available to DuckDB. In our project we also replicate this data to Cloudflare R2 object store so we have a full record. Parquet is often a good choice for the storage format due to its efficiency.
+1.  **Data Ingestion:** Raw data is acquired from sources (CSVs, APIs, etc.) and stored locally to be available to DuckDB. In our project we also replicate this data to Cloudflare R2 object store so we have a full record. Parquet is a good choice for the storage format due to its efficiency.
 2.  **DuckDB as the Engine:** DuckDB is configured as the "data warehouse" in dbt's configuration with the database running locally:
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -339,14 +343,14 @@ wdi:
 			threads: 4
 ```
 
-  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/profiles.yml" target="_blank" rel="noopener noreferrer" title="View on GitHub" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View on GitHub
+  <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/profiles.yml" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
+    <GithubBrands size="1.2em" color="white" /> View Code
   </a>
 
-3.  **dbt Orchestration:** `dbt-core` executes the SQL (or Python) models we've defined. These models perform transformations (cleaning, joining, aggregating) on the data within DuckDB. This is represented by the transition from DuckDB acting as a reader of raw data to DuckDB holding transformed data, orchestrated by dbt. dbt manages the order of execution based on dependencies.
-4.  **Output & Consumption:** The transformed data resides within DuckDB. From there, it can be queried directly for analysis, or in our project materialized (written out) to [Parquet stored in Cloudflare R2](https://github.com/nickbrett1/dbt-duc kdb/blob/main/sync_remote_parquet.py) as well as the [relational database Cloudflare D1](https://github.com/nickbrett1/dbt-duckdb/blob/main/update_d1.py).
+3.  **dbt Orchestration:** `dbt-core` executes the SQL models we've defined. These models perform transformations (cleaning, joining, aggregating) on the data within DuckDB. This is represented by the transition from DuckDB acting as a reader of raw data to DuckDB holding transformed data, orchestrated by dbt. dbt manages the order of execution based on dependencies.
+4.  **Output & Consumption:** The transformed data resides within DuckDB. From there, it can be queried directly for analysis, or in our project materialized (written out) to [Parquet stored in Cloudflare R2](https://github.com/nickbrett1/dbt-duckdb/blob/main/sync_remote_parquet.py) as well as the [relational database Cloudflare D1](https://github.com/nickbrett1/dbt-duckdb/blob/main/update_d1.py).
 
-This architecture allows us to run the entire dbt transformation pipeline locally as part of our [CircleCI CI/CD environment](https://github.com/nickbrett1/dbt-duckdb/blob/main/.circleci/config.yml), using DuckDB as the persistent or ephemeral engine, without needing a dedicated data warehouse service.
+This architecture allows us to run the entire dbt transformation pipeline locally as part of our [CircleCI CI/CD environment](https://github.com/nickbrett1/dbt-duckdb/blob/main/.circleci/config.yml), using DuckDB as an ephemeral engine, without needing a dedicated data warehouse service.
 
 ### The Results
 
@@ -391,11 +395,11 @@ The accompanying [GitHub project](https://github.com/nickbrett1/dbt-duckdb/tree/
 
 ## Appendix: Additional Considerations
 
-Beyond the core setup, a few additional learnings from the project are worth noting:
+Beyond the core setup, I learned a few additional things:
 
 ### Development Environment: DuckDB vs. Postgres for Concurrency
 
-A practical challenge encountered during development was DuckDB's default behavior with file-based databases: typically, only one process can write to a DuckDB database at a time. In a development environment, you might have multiple tools needing concurrent access – `dbt` running transformations, a VS Code SQL plugin for querying, a database client like Beekeeper Studio for inspection, and the DuckDB CLI itself.
+A practical challenge encountered during development was DuckDB's default behavior with file-based databases: typically, only one process can write to a DuckDB database at a time. In a development environment, I had multiple tools needing concurrent access – `dbt` running transformations, a VS Code SQL plugin for querying, a [database client](https://www.beekeeperstudio.io/) for inspection, and the DuckDB CLI itself.
 
 To address this, a local PostgreSQL database was used for development. dbt's [profiles.yml](https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/profiles.yml) file makes it straightforward to define multiple environments. This allowed for easy switching: using Postgres for interactive development where concurrency was beneficial, and DuckDB for "production-like" runs.
 
@@ -405,7 +409,7 @@ To manage the movement of data to and from cloud storage (like Cloudflare R2), [
 
 The benefits of using `rclone` include:
 
-- **Simplified Scripting:** It provides a unified command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
+- **Simplified Scripting:** It provides an easy command-line interface for interacting with numerous cloud storage providers (Cloudflare R2, AWS S3, Google Cloud Storage, etc.), simplifying data synchronization scripts.
 - **Vendor Independence:** Using `rclone` offers a degree of vendor independence. For our project we chose to use Cloudflare R2 due to its cost-effectiveness, particularly its absence of egress fees, making it attractive for scenarios where data might be pulled for analysis by various tools or services. However if you decide to switch cloud storage providers in the future, the changes required in your data synchronization scripts are minimal, primarily involving `rclone` configuration updates.
 
 [^1]: For example, my [Machine Learning for Flight Delays](https://github.com/nickbrett1/data-science-on-gcp/) project leverages Google Cloud's data and machine learning services.
