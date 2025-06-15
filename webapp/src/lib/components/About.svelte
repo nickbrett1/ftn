@@ -37,16 +37,17 @@
 			Currently I'm at
 			<a class="text-[#fce4b8] underline underline-offset-2" href="https://www.twosigma.com"
 				>Two Sigma</a
-			> in the Data Engineering department focused on data governance, data lineage and data cataloging
-			solutions for the more than 144 Petabytes of data that the firm stores.
+			> in the Data Engineering department focused on on improving tooling used by quantitative modelers
+			to produce short-term horizon alpha generative forecasts from the more than 144 Petabytes of data
+			that the firm stores.
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
 			Here you'll find details on personal projects, including <a
 				class="text-[#fce4b8] underline underline-offset-2"
 				href="https://github.com/nickbrett1">code</a
 			>, a resume and links to my articles.
-			<a class="text-[#fce4b8] underline underline-offset-2"
-				href="#contact">Do reach out if you'd like to talk.</a
+			<a class="text-[#fce4b8] underline underline-offset-2" href="#contact"
+				>Do reach out if you'd like to talk.</a
 			>
 		</p>
 	</div>

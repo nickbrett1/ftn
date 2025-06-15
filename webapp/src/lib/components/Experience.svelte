@@ -14,8 +14,7 @@
 			title: 'Senior Vice President: Strategic Initiatives',
 			workplace: 'Data Engineering @ Two Sigma',
 			body: [
-				"I'm currently focused on various strategic initiatives across the Two Sigma Data Engineering department.",
-				'This includes work to improve quant modeler workflow for short-term horizon forecasts, new approaches to market data modeling to unlock research opportunities and driving complex external partnerships.',
+				"I'm currently focused on various strategic initiatives across the Two Sigma Data Engineering department.Main effort is centered on improving tooling used by quantitative modelers to produce short-term horizon alpha generative forecasts.",
 				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
 			],
 			logo: { Icon: TwoSigma, tooltip: 'Two Sigma', link: 'https://www.twosigma.com' }
