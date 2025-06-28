@@ -157,3 +157,5 @@ dmypy.json
 
 # Database migration files to copy prod to dev
 webapp/migrations
+
+.cursor/context
