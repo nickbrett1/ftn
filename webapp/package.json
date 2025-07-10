@@ -50,7 +50,7 @@
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
 		"rehype-mermaid": "^3.0.0",
-		"remark-footnotes": "2.0",
+		"remark-footnotes": "4.0",
 		"remark-gfm": "^4.0.1",
 		"resize-observer-polyfill": "^1.5.1",
 		"sharp": "^0.34.3",
