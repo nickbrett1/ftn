@@ -45,7 +45,7 @@
 		"mermaid": "^11.8.1",
 		"miragejs": "^0.1.48",
 		"npm": "^11.4.2",
-		"playwright": "^1.54.0",
+		"playwright": "^1.54.1",
 		"postcss": "^8.5.6",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
