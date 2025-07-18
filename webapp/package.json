@@ -54,7 +54,7 @@
 		"remark-gfm": "^4.0.1",
 		"resize-observer-polyfill": "^1.5.1",
 		"sharp": "^0.34.3",
-		"shiki": "^3.8.0",
+		"shiki": "^3.8.1",
 		"svelte": "^5.36.7",
 		"svelte-awesome-icons": "^2.0.1",
 		"svelte-preprocess": "^6.0.3",
