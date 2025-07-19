@@ -76,7 +76,8 @@
         "usernamehw.errorlens",
         "streetsidesoftware.code-spell-checker",
         "google.geminicodeassist",
-        "saoudrizwan.claude-dev"
+        "saoudrizwan.claude-dev",
+        "anysphere.remote-containers"
       ]
     },
     // Add VS Code settings for the container

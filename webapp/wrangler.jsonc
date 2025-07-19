@@ -25,6 +25,12 @@
 			"database_name": "wdi",
 			"database_id": "a2bb16ae-304f-43f0-8cb7-1cb1a2994edf",
 			"preview_database_id": "a2bb16ae-304f-43f0-8cb7-1cb1a2994edf"
+		},
+		{
+			"binding": "CCBILLING_DB",
+			"database_name": "ccbilling",
+			"database_id": "7afc4c4b-015c-427e-b15e-f336ee89ec24",
+			"preview_database_id": "7afc4c4b-015c-427e-b15e-f336ee89ec24"
 		}
 	],
 	"r2_buckets": [
@@ -49,6 +55,11 @@
 					"binding": "DB",
 					"database_name": "wdi",
 					"database_id": "a2bb16ae-304f-43f0-8cb7-1cb1a2994edf"
+				},
+				{
+					"binding": "CCBILLING_DB",
+					"database_name": "ccbilling",
+					"database_id": "7afc4c4b-015c-427e-b15e-f336ee89ec24"
 				}
 			],
 			"r2_buckets": [
