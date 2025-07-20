@@ -74,24 +74,6 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	color: #fef3c7; /* Slightly lighter yellow on hover */
 }
 
-/* Ensure form elements are styled for dark theme */
-input,
-textarea,
-select {
-	background-color: #27272a; /* zinc-800 */
-	border-color: #52525b; /* zinc-600 */
-	color: #ffffff;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-	border-color: #3b82f6; /* blue-500 */
-	outline: none;
-	ring: 2px;
-	ring-color: #3b82f6;
-}
-
 :root {
 	--inset-shadow-neon-green: inset 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
 	--shadow-neon-green: 0px 0px 0.5em 0px oklch(0.871 0.15 154.449);
