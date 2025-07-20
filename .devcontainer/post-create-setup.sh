@@ -57,3 +57,5 @@ git config --global --add safe.directory /workspaces/ftn
 # fi
 
 echo "INFO: Custom container setup script finished."
+echo "\n⚠️  To complete Cloudflare Wrangler login, run:"
+echo "    cd /workspaces/ftn/webapp && bash wrangler-login.sh"
