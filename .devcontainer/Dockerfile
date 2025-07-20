@@ -13,8 +13,7 @@ RUN npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check
 # Ensure dependencies for sentry-cli
 RUN apt-get update && apt-get install -y curl git
 
-RUN set -ex; \
-  if command -v sentry-cli >/dev/null 2>&1; then \
+RUN if command -v sentry-cli >/dev/null 2>&1; then \
     echo "sentry-cli is already installed. Updating..."; \
     sentry-cli update; \
   else \
