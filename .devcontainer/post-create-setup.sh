@@ -6,12 +6,6 @@ echo "INFO: Starting custom container setup script..."
 CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
 
-echo "INFO: Updating package lists and installing Chromium..."
-sudo apt-get update
-# Install Chromium and necessary fonts for headless operation
-sudo apt-get install -y chromium fonts-liberation --no-install-recommends
-echo "INFO: Chromium installation complete."
-
 echo "INFO: Creating Oh My Zsh custom directories..."
 mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
 
@@ -31,16 +25,9 @@ else
     echo "INFO: /workspaces/ftn/.devcontainer/.p10k.zsh not found, skipping copy."
 fi
 
-echo "INFO: Installing global npm packages as $CURRENT_USER user..."
-npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates
-
 echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."
-
-echo "INFO: Installing Sentry CLI..."
-curl -sL https://sentry.io/get-cli/ | sh
-
 
 if doppler whoami &> /dev/null; then
   echo "Already logged in to Doppler."
@@ -52,35 +39,8 @@ else
 doppler setup --no-interactive
 fi
 
-
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
-
-ZSH_CUSTOM_DIR="$USER_HOME_DIR/.oh-my-zsh/custom"
-POWERLEVEL10K_DIR="$ZSH_CUSTOM_DIR/themes/powerlevel10k"
-ZSH_SYNTAX_HIGHLIGHTING_DIR="$ZSH_CUSTOM_DIR/plugins/zsh-syntax-highlighting"
-ZSH_AUTOSUGGESTIONS_DIR="$ZSH_CUSTOM_DIR/plugins/zsh-autosuggestions"
-
-if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-    echo "INFO: Cloning Powerlevel10k theme..."
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$POWERLEVEL10K_DIR"
-else
-    echo "INFO: Powerlevel10k theme already exists at $POWERLEVEL10K_DIR."
-fi
-
-if [ ! -d "$ZSH_SYNTAX_HIGHLIGHTING_DIR" ]; then
-    echo "INFO: Cloning zsh-syntax-highlighting plugin..."
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_SYNTAX_HIGHLIGHTING_DIR"
-else
-    echo "INFO: zsh-syntax-highlighting plugin already exists at $ZSH_SYNTAX_HIGHLIGHTING_DIR."
-fi
-
-if [ ! -d "$ZSH_AUTOSUGGESTIONS_DIR" ]; then
-    echo "INFO: Cloning zsh-autosuggestions plugin..."
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_AUTOSUGGESTIONS_DIR"
-else
-    echo "INFO: zsh-autosuggestions plugin already exists at $ZSH_AUTOSUGGESTIONS_DIR."
-fi
 
 WEBAPP_DIR="/workspaces/ftn/webapp"
 if [ -d "$WEBAPP_DIR" ]; then
