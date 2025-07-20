@@ -22,6 +22,74 @@
 html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
+	color: #d4d4d8; /* Default text color - zinc-300 */
+}
+
+/* Global text color defaults for dark theme - only for basic content */
+body {
+	color: #d4d4d8; /* zinc-300 */
+}
+
+/* Ensure headings are white by default - but only for content areas */
+article h1,
+article h2,
+article h3,
+article h4,
+article h5,
+article h6,
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6,
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6 {
+	color: #ffffff;
+}
+
+/* Global link color class for consistent styling */
+.link-yellow {
+	color: #fce4b8;
+}
+
+.link-yellow:hover {
+	color: #fef3c7;
+}
+
+/* Only style basic content links, not navigation or styled components */
+article a:not([class*='text-']):not(.not-prose),
+main a:not([class*='text-']):not(.not-prose),
+.content a:not([class*='text-']):not(.not-prose) {
+	color: #fce4b8; /* Your preferred yellow color */
+}
+
+article a:not([class*='text-']):not(.not-prose):hover,
+main a:not([class*='text-']):not(.not-prose):hover,
+.content a:not([class*='text-']):not(.not-prose):hover {
+	color: #fef3c7; /* Slightly lighter yellow on hover */
+}
+
+/* Ensure form elements are styled for dark theme */
+input,
+textarea,
+select {
+	background-color: #27272a; /* zinc-800 */
+	border-color: #52525b; /* zinc-600 */
+	color: #ffffff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	border-color: #3b82f6; /* blue-500 */
+	outline: none;
+	ring: 2px;
+	ring-color: #3b82f6;
 }
 
 :root {
