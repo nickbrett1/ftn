@@ -9,5 +9,16 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true
-	}
+	},
+	"exclude": [
+		"playwright.config.js",
+		"postcss.config.cjs",
+		"svelte.config.js",
+		"vite.config.js",
+		"tests",
+		"src/**/*.test.js",
+		"src/stories",
+		"src/service-worker.js",
+		".svelte-kit"
+	]
 }
