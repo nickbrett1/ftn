@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Run wrangler login after container ports are available
+# Run wrangler login after container ports are available$
+# wrangler login command is used to workaround https://github.com/cloudflare/workers-sdk/issues/5937
 WEBAPP_DIR="/workspaces/ftn/webapp"
 if [ -d "$WEBAPP_DIR" ]; then
 	echo "INFO: Webapp directory found at $WEBAPP_DIR. Checking Wrangler login status..."

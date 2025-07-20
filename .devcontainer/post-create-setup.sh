@@ -42,6 +42,7 @@ fi
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
+# Needed when run under vscode, but does not work right now (July 20th, 2025) in Cursor
 # WEBAPP_DIR="/workspaces/ftn/webapp"
 # if [ -d "$WEBAPP_DIR" ]; then
 
