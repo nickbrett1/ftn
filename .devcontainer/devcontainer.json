@@ -95,8 +95,7 @@
 
   // Use 'postCreateCommand' to run commands after the container is created.
   // wrangler login command is used to workaround https://github.com/cloudflare/workers-sdk/issues/5937
-  "postCreateCommand": "bash /workspaces/ftn/.devcontainer/post-create-setup.sh",
-  "postAttachCommand": "bash /workspaces/ftn/.devcontainer/post-attach-setup.sh"
+  "postCreateCommand": "bash /workspaces/ftn/.devcontainer/post-create-setup.sh"
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "root"
