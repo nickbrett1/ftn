@@ -10,8 +10,13 @@ RUN apt-get update \
 # Install global npm packages
 RUN npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates
 
-# Install Sentry CLI
-RUN curl -sL https://sentry.io/get-cli/ | sh
+RUN if command -v sentry-cli >/dev/null 2>&1; then \
+      echo "sentry-cli is already installed. Updating..."; \
+      sentry-cli update; \
+    else \
+      echo "sentry-cli not found. Installing..."; \
+      curl -sL https://sentry.io/get-cli/ | sh; \
+    fi
 
 # Install Oh My Zsh plugins and themes
 USER node
