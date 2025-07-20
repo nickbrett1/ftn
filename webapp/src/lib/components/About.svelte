@@ -13,7 +13,7 @@
 	<div class="gap-24 text-pretty md:columns-2">
 		<p class="text-sm leading-normal text-white sm:text-base">
 			Over nearly 20 years, I've <a
-				class="text-[#fce4b8] underline underline-offset-2"
+				class="link-yellow underline underline-offset-2"
 				href="#experience">worked in most of the key functions for fintech data</a
 			>, from managing global data partner relationships at Bloomberg LP, to building the data
 			systems that power the investment of over $60B AUM at Two Sigma. I've managed worldwide
@@ -35,7 +35,7 @@
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
 			Currently I'm at
-			<a class="text-[#fce4b8] underline underline-offset-2" href="https://www.twosigma.com"
+			<a class="link-yellow underline underline-offset-2" href="https://www.twosigma.com"
 				>Two Sigma</a
 			> in the Data Engineering department focused on on improving tooling used by quantitative modelers
 			to produce short-term horizon alpha generative forecasts from the more than 144 Petabytes of data
@@ -43,10 +43,10 @@
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
 			Here you'll find details on personal projects, including <a
-				class="text-[#fce4b8] underline underline-offset-2"
+				class="link-yellow underline underline-offset-2"
 				href="https://github.com/nickbrett1">code</a
 			>, a resume and links to my articles.
-			<a class="text-[#fce4b8] underline underline-offset-2" href="#contact"
+			<a class="link-yellow underline underline-offset-2" href="#contact"
 				>Do reach out if you'd like to talk.</a
 			>
 		</p>
