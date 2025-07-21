@@ -225,7 +225,7 @@ Its core capabilities include:
   For example, one aggregation transformation from our project looks like this:
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
-  ```sql
+  ```jinja
   select year, count(value) as data_points_count
   from {{ ref('fct_wdi_history') }}
   where value is not null
