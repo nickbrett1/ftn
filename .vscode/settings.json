@@ -30,7 +30,9 @@
   },
   "terminal.integrated.defaultProfile.linux": "zsh",
   "[svelte]": {
-    "editor.defaultFormatter": "svelte.svelte-vscode"
+    "editor.defaultFormatter": "svelte.svelte-vscode",
+    "javascript.validate.enable": false,
+    "typescript.validate.enable": false
   },
   "liveServer.settings.port": 5502,
   "editor.fontSize": 16,
