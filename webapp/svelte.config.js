@@ -86,9 +86,7 @@ const config = {
 			}
 		}
 	},
-	compilerOptions: {
-		enableSourcemap: true
-	},
+	compilerOptions: {},
 	preprocess: [
 		mdsvex({
 			extensions: ['.md', '.svx'],
