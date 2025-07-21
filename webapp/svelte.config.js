@@ -22,7 +22,8 @@ const highlighterPromise = createHighlighter({
 		'mermaid',
 		'ts',
 		'sql',
-		'yaml'
+		'yaml',
+		'jinja'
 	]
 });
 
