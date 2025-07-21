@@ -56,6 +56,9 @@
       "presentation": {
         "group": "build-group",
         "panel": "shared"
+      },
+      "options": {
+        "cwd": "/workspaces/ftn/webapp"
       }
     }
   ]
