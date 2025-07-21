@@ -115,6 +115,6 @@
     }
   ],
   "files.associations": {
-    "*.svx": "svelte"
+    "*.svx": "markdown"
   }
 }
