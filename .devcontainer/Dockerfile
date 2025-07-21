@@ -32,6 +32,7 @@ RUN rm -rf "$USER_HOME_DIR/.oh-my-zsh/custom/themes/powerlevel10k" \
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" \
     && git clone https://github.com/zsh-users/zsh-autosuggestions.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 
-
-
 USER root 
+
+COPY webapp/package*.json /workspaces/ftn/webapp/
+RUN cd /workspaces/ftn/webapp && npm ci 
