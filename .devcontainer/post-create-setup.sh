@@ -29,16 +29,6 @@ echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."
 
-if doppler whoami &> /dev/null; then
-  echo "Already logged in to Doppler."
-else
-	echo "INFO: Logging into Doppler..."
-	doppler login --no-check-version --no-timeout --yes
-
-	echo "INFO: Setting up Doppler..."
-doppler setup --no-interactive
-fi
-
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
@@ -56,11 +46,6 @@ git config --global --add safe.directory /workspaces/ftn
 #   echo "INFO: Webapp directory not found at $WEBAPP_DIR, skipping Wrangler login."
 # fi
 
-echo "INFO: Installing npm dependencies in webapp..."
-cd /workspaces/ftn/webapp
-ls -al
-npm ci --loglevel=info
-
 echo "INFO: Custom container setup script finished."
-echo "\n⚠️  To complete Cloudflare Wrangler login, run:"
-echo "    cd /workspaces/ftn/webapp && bash wrangler-login.sh"
+echo "\n⚠️  To complete cloud login, run:"
+echo "    cd /workspaces/ftn/webapp && bash cloud-login.sh"
