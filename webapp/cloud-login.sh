@@ -17,11 +17,12 @@ fi
 
 echo
 # Cloudflare Wrangler login
-if command -v wrangler &> /dev/null; then
-  echo "INFO: Starting Cloudflare Wrangler login (interactive)..."
-  wrangler login
-else
-  echo "Wrangler CLI not found. Skipping Cloudflare login."
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+  echo "Wrangler CLI not found. Installing globally with npm..."
+  npm install -g wrangler
 fi
+
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
 
 echo "Cloud login script finished." 
