@@ -28,7 +28,7 @@ const highlighterPromise = createHighlighter({
 
 export async function highlight(code, lang) {
 	const highlighter = await highlighterPromise; // Await the single promise
-	return escapeSvelte(await highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
+	return escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
 }
 
 /** @type {import('@sveltejs/kit').Config}*/
