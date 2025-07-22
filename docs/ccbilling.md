@@ -1,58 +1,51 @@
-# Feature/Project Name: [e.g., Personal Finance Tool for Credit Card Statements]
+# Feature/Project Name: Personal Finance Tool for Reviewing Credit Card Statements (ccbilling)
 
 ## Overview
 
-- Briefly describe the purpose and goals of this feature.
+- The goal of this project is to automate much of the process of reviewing monthly credit card statements.
 
 ## Background / Motivation
 
-- Why is this feature needed?
-- What problem does it solve?
+- Today, this is a manual process, involving opening PDF documents and a Google Sheet and copying charges into running totals against different budgets
+
+- The goal is to automate much of this process to save time, while also providing a history of the budgets and a base for identifying any insights into spending
 
 ## Requirements
 
 ### Functional Requirements
 
-- List the specific user-facing features and behaviors.
-  - e.g., Users can upload credit card statements in CSV format.
-  - e.g., The tool automatically categorizes transactions.
-  - e.g., Users can review, edit, and annotate transactions.
+- Each month, there is a UI that creates a new 'billing cycle'. The billing cycle is defined as occurring between two dates. The start date, which will default to the day that the last billing cycle was closed, and the end date, which defaults to the current date. A billing cycle is considered 'open' while it is being edited, with statements uploaded and charges assigned, and moves to closed once all work is done.
+
+- For a given billing cycle, credit card statements can be uploaded in PDF format. There are example statements in the `docs/ccbillingstatements` directory. We would expect 4-5 statements to be uploaded for each cycle.
+
+- Each statement is parsed and the list of charges presented in a UI for the billing cycle.
+
+- Each charge will show the date, amount and merchant and be grouped by the credit card it is associated with.
+
+- Credit cards are referenced by a user provided name, and keyed by their last 4-digits. The set of credit cards can be entered into the application and exist across billing cycles.
+
+- For each charge the UI enables each to be associated to a 'budget' by name.
+
+- Budgets can also be entered into the application. Each has a name, and can be associated with a list of merchants for which their charges are automatically associated with the given budget.
+
+- It should be possible to quickly associate merchants to budgets when reviewing charges.
+
+- In the screen for editing charges, totals for the respective budgets for the given billing cycle will be shown.
+
+- Once a billing cycle is closed, confetti particles should be displayed to celebrate.
 
 ### Non-Functional Requirements
 
-- Performance, security, scalability, etc.
-  - e.g., Must process statements with up to 10,000 transactions in under 10 seconds.
-  - e.g., All data is stored securely and encrypted at rest.
+- All credit card statements should be stored in blob storage (Cloudflare R2) for historical reference for a given billing cycle
 
-## User Stories / Use Cases
+- For parsing the statements, use the Llama LLM API. The API documentation is available [here](https://llama.developer.meta.com/docs/overview/?team_id=1373601037234179)
 
-- As a [user], I want to [do something], so that [benefit].
-- (Add several user stories or scenarios.)
+## Data Model / API
 
-## Data Model / API (if relevant)
-
-- Describe or diagram the data structures, database schema, or API endpoints.
-
-## UI/UX Design (if relevant)
-
-- Wireframes, mockups, or a description of the user interface.
-
-## Acceptance Criteria
-
-- List the conditions that must be met for the feature to be considered complete.
-
-## Out of Scope
-
-- Clarify what is NOT included in this feature.
-
-## Open Questions / Risks
-
-- List any uncertainties, dependencies, or risks.
+- There is a first-pass schema defined [here](../webapp/ccbilling_schema.sql)
 
 ## References
 
-- Link to related docs, tickets, or external resources.
+- There are some UI routes and stubs already created under webapp/src/routes/ccbilling
 
 ---
-
-_Update this document as the feature evolves. Link to it from `.cursor/context.md` for easy access by Cursor and your team._
