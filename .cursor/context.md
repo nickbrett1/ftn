@@ -58,7 +58,7 @@
 
 ## New Feature: Real-time Collaboration
 
-- See [docs/ccbilling.md](../docs/ccbilling.md.md) for full requirements and design.
+- See [docs/ccbilling.md](../docs/ccbilling.md) for full requirements and design.
 - Summary: Adds a personal finance tool for reviewing credit card statements
 
 ---
