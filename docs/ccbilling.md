@@ -40,6 +40,8 @@
 
 - For parsing the statements, use the Llama LLM API. The API documentation is available [here](https://llama.developer.meta.com/docs/overview/?team_id=1373601037234179)
 
+- Access to the functionality should be restricted to a user who has logged into the website, see the /auth route.
+
 ## Data Model / API
 
 - There is a first-pass schema defined [here](../webapp/ccbilling_schema.sql)
