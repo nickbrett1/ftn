@@ -1,4 +1,5 @@
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
+import { isUserAllowed } from '$lib/server/user-validation.js';
 
 const logPrefix = '[AUTH_HANDLER]';
 
@@ -37,7 +38,7 @@ const tokenExchange = async (url, code) => {
 	return resp;
 };
 
-const isUserAllowed = async (token, platform) => {
+const validateUserFromToken = async (token, platform) => {
 	const url = new URL('https://www.googleapis.com/oauth2/v2/userinfo');
 	const response = await fetch(url.toString(), {
 		headers: {
@@ -48,11 +49,8 @@ const isUserAllowed = async (token, platform) => {
 	if (userInfo.error) throw new Error(userInfo.error); // Keep this error check
 	if (!userInfo.verified_email) return false;
 
-	// Check if the user's email exists as a key in KV
-	const kvEntry = await platform.env.KV.get(userInfo.email);
-	const isAllowed = kvEntry !== null; // If the key exists, the user is allowed
-	console.log(`${logPrefix} User ${userInfo.email} allowed status from KV: ${isAllowed}`);
-	return isAllowed;
+	// Use shared validation function
+	return await isUserAllowed(userInfo.email, platform.env.KV);
 };
 
 // Convert each uint8 (range 0 to 255) to string in base 36 (0 to 9, a to z)
@@ -80,7 +78,7 @@ export async function GET({ request, platform }) {
 
 		const tokenResponse = await tokenExchange(url, code);
 
-		const allowed = await isUserAllowed(tokenResponse.access_token, platform);
+		const allowed = await validateUserFromToken(tokenResponse.access_token, platform);
 		if (!allowed) {
 			return Response.redirect(`${url.origin}/preview`, HTML_TEMPORARY_REDIRECT);
 		}
