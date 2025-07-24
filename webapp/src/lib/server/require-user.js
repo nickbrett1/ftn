@@ -4,7 +4,7 @@
  */
 export async function requireUser(event) {
 	// Development testing bypass - only in dev mode with special header
-	const devTestHeader = event.request.headers.get('x-dev-test');
+	const devTestHeader = event.request?.headers?.get('x-dev-test');
 	if (devTestHeader === 'true' && process.env.NODE_ENV === 'development') {
 		console.log('[AUTH] Development test mode - bypassing authentication');
 		return null; // Allow the request to proceed
