@@ -13,9 +13,8 @@ const revokeGoogleToken = async (token) => {
 		body
 	});
 
-	if (response.status !== 200) {
-		const resp = await response.text();
-		throw new Error(resp);
+	if (!response.ok) {
+		console.error('Failed to revoke Google token:', response.statusText);
 	}
 };
 

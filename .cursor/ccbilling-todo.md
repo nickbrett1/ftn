@@ -6,10 +6,11 @@
 - [x] D1 database setup script (`create_ccbilling_d1.sh`) - works for both dev and prod
 - [x] Basic UI stubs created (`/projects/ccbilling/*` routes)
 - [x] Requirements documented (`docs/ccbilling.md`)
+- [x] Authentication enforcement for ccbilling routes
 
 ## 🔄 In Progress
 
-- [ ] Authentication enforcement for ccbilling routes
+- [ ] Backend API implementation
 
 ## 📋 Backend API Implementation
 
@@ -21,13 +22,15 @@
   - [ ] `PUT /api/ccbilling/cycles/[id]/close` - Close billing cycle
   - [ ] Authentication check on all endpoints
 
-- [ ] **Credit Card API**
+- [x] **Credit Card API** ✅ **TESTED**
 
-  - [ ] `POST /api/ccbilling/cards` - Add credit card
-  - [ ] `GET /api/ccbilling/cards` - List credit cards
-  - [ ] `PUT /api/ccbilling/cards/[id]` - Update credit card
-  - [ ] `DELETE /api/ccbilling/cards/[id]` - Remove credit card
-  - [ ] Authentication check on all endpoints
+  - [x] `POST /api/ccbilling/cards` - Add credit card
+  - [x] `GET /api/ccbilling/cards` - List credit cards
+  - [x] `GET /api/ccbilling/cards/[id]` - Get single credit card
+  - [x] `PUT /api/ccbilling/cards/[id]` - Update credit card
+  - [x] `DELETE /api/ccbilling/cards/[id]` - Remove credit card
+  - [x] Authentication check on all endpoints
+  - [x] **API Testing Complete** - All endpoints tested with local D1 database
 
 - [ ] **Budget API**
 
@@ -183,5 +186,5 @@
 
 ---
 
-**Last Updated:** July 23, 2025
-**Status:** Backend API implementation in progress
+**Last Updated:** July 24, 2025
+**Status:** Credit Card API complete and tested. Ready for next API implementation.

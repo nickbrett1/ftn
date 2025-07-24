@@ -47,6 +47,14 @@
 - Use `npm run test` to run the tests from webapp/ directory
 - Run `webapp/populate_local_d1_from_prod.sh` and `webapp/populate_local_r2_from_prod.sh` to copy production copies of data to read in the dev environment
 
+## API Testing
+
+- **Authentication Bypass for Development**: When testing API endpoints in development, use the `x-dev-test: true` header to bypass authentication
+- **Example**: `curl -X GET http://localhost:5173/projects/ccbilling/cards -H "x-dev-test: true"`
+- **Security**: This bypass only works when `NODE_ENV === 'development'` and the header is present
+- **Production Safe**: Authentication is always enforced in production regardless of headers
+- **Testing Pattern**: Use this header for all API testing to avoid creating temporary test endpoints
+
 ## Environment/Secrets
 
 - All managed through doppler,
