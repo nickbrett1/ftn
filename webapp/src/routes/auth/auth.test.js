@@ -18,7 +18,7 @@ describe('Auth', () => {
 		server = createServer({
 			routes() {
 				this.get('https://fintechnick.com', () => ({}));
-				this.get('https://fintechnick.com/home', (x) => x);
+				this.get('https://fintechnick.com/projects/ccbilling', (x) => x);
 				this.post('https://oauth2.googleapis.com/token', () => ({
 					access_token: 'mock_access_token',
 					expires_in: 3600
@@ -50,7 +50,7 @@ describe('Auth', () => {
 			}
 		});
 
-		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/home');
+		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/projects/ccbilling');
 	});
 
 	it('redirect to preview if not in KV', async () => {
