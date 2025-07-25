@@ -17,8 +17,10 @@ export ZSH=$HOME/.oh-my-zsh
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 # Set Oh My Zsh theme conditionally to avoid Cursor hanging issues
 # See https://forum.cursor.com/t/cursor-agent-mode-when-running-terminal-commands-often-hangs-up-the-terminal-requiring-a-click-to-pop-it-out-in-order-to-continue-commands/59969/15
-if [[ "$TERM_PROGRAM" == "vscode" ]]; then
-  ZSH_THEME=""  # Disable Powerlevel10k for Cursor
+# And https://forum.cursor.com/t/cursor-agent-terminal-doesn-t-work-well-with-powerlevel10k-oh-my-zsh/96808/12
+# Final fix there: https://forum.cursor.com/t/agent-not-detecting-that-a-command-has-completed/65052/19
+if [[ "$PAGER" == "head -n 10000 | cat" ]]; then
+  ZSH_THEME=""  # Disable Powerlevel10k for Cursor chat terminals only
 else
   ZSH_THEME="powerlevel10k/powerlevel10k"
 fi
@@ -80,8 +82,8 @@ fi
 
 source $ZSH/oh-my-zsh.sh
 
-# Use a minimal prompt in Cursor to avoid command detection issues
-if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+# Use a minimal prompt in Cursor chat terminals to avoid command detection issues
+if [[ "$TERM_PROGRAM" == "vscode" && -n "$CURSOR_TRACE_ID" ]]; then
   PROMPT='%n@%m:%~%# '
   RPROMPT=''
 else

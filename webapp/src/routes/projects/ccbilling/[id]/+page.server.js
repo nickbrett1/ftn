@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/require-user.js';
+import { getBillingCycle } from '$lib/server/ccbilling-db.js';
 
 const HTML_TEMPORARY_REDIRECT = 307;
 
@@ -9,9 +10,15 @@ export async function load(event) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
 	}
 
-	// TODO: Fetch billing cycle details from backend
+	const cycleId = event.params.id;
+	const cycle = await getBillingCycle(event, cycleId);
+
+	if (!cycle) {
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/projects/ccbilling');
+	}
+
 	return {
-		cycleId: event.params.id,
-		cycle: null // TODO: Fetch from backend
+		cycleId,
+		cycle
 	};
 }
