@@ -1,13 +1,60 @@
 <script>
 	import Button from '$lib/components/Button.svelte';
+	import { goto } from '$app/navigation';
 
-	// Placeholder: Logic for creating a new billing cycle (to be implemented)
 	let startDate = '';
 	let endDate = '';
+	let isSubmitting = false;
+	let error = '';
 
-	function createBillingCycle() {
-		// To be implemented: Call backend to create billing cycle
-		alert(`Create billing cycle: ${startDate} to ${endDate}`);
+	// Set default dates
+	$: if (!startDate) {
+		// Default to today
+		startDate = new Date().toISOString().split('T')[0];
+	}
+	$: if (!endDate) {
+		// Default to today
+		endDate = new Date().toISOString().split('T')[0];
+	}
+
+	async function createBillingCycle() {
+		if (!startDate || !endDate) {
+			error = 'Please select both start and end dates';
+			return;
+		}
+
+		if (new Date(startDate) > new Date(endDate)) {
+			error = 'Start date must be before end date';
+			return;
+		}
+
+		isSubmitting = true;
+		error = '';
+
+		try {
+			const response = await fetch('/projects/ccbilling/cycles', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					start_date: startDate,
+					end_date: endDate
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to create billing cycle');
+			}
+
+			// Redirect to the main billing cycles page
+			await goto('/projects/ccbilling');
+		} catch (err) {
+			error = err.message;
+		} finally {
+			isSubmitting = false;
+		}
 	}
 </script>
 
@@ -20,6 +67,12 @@
 	<h2 class="text-3xl font-bold text-white mb-8">Create New Billing Cycle</h2>
 
 	<form on:submit|preventDefault={createBillingCycle} class="space-y-6">
+		{#if error}
+			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded">
+				{error}
+			</div>
+		{/if}
+
 		<div>
 			<label class="block text-gray-300 mb-2">
 				Start Date:
@@ -44,7 +97,9 @@
 			</label>
 		</div>
 
-		<Button type="submit" variant="primary">Create</Button>
+		<Button type="submit" variant="primary" disabled={isSubmitting}>
+			{isSubmitting ? 'Creating...' : 'Create Billing Cycle'}
+		</Button>
 	</form>
 
 	<Button href="/projects/ccbilling" variant="secondary">Back to Billing Cycles</Button>
