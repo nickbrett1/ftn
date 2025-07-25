@@ -95,7 +95,7 @@ export async function GET({ request, platform }) {
 			// Changed from empty string to null for clarity
 			status: HTML_TEMPORARY_REDIRECT,
 			headers: {
-				Location: `${url.origin}/home`,
+				Location: `${url.origin}/projects/ccbilling`,
 				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; HttpOnly; SameSite=Lax`
 			}
 		});
