@@ -54,7 +54,7 @@
 
 	function onClick() {
 		if (loggedIn) {
-			goto('/home');
+			goto('/projects/ccbilling');
 			return;
 		}
 		if (client) {
