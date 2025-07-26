@@ -12,7 +12,7 @@ describe('particleConfig utilities', () => {
 			
 			expect(values).toHaveLength(5);
 			values.forEach(value => {
-				expect(value).toMatch(/^\+\d+(\.\d{1,2})?%$/);
+				expect(value).toMatch(/^\+\d+\.\d{2}%$/);
 			});
 		});
 
@@ -21,7 +21,7 @@ describe('particleConfig utilities', () => {
 			
 			expect(values).toHaveLength(5);
 			values.forEach(value => {
-				expect(value).toMatch(/^-\d+(\.\d{1,2})?%$/);
+				expect(value).toMatch(/^-\d+\.\d{2}%$/);
 			});
 		});
 

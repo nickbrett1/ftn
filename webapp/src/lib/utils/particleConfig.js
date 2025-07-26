@@ -1,18 +1,37 @@
 /**
  * Particle configuration utilities for tsParticles
  * Provides reusable, configurable particle effects for the application
+ * 
+ * SECURITY NOTE: This module uses Math.random() for generating visual effects only.
+ * All random values generated here are purely cosmetic and not used for any
+ * security-sensitive operations, authentication, or cryptographic purposes.
  */
 
 /**
  * Generate random percentage values for financial-themed particles
+ * 
+ * NOTE: This function uses Math.random() which is NOT cryptographically secure.
+ * This is intentional and safe for this use case as these values are:
+ * - Purely cosmetic (visual particle effects)
+ * - Not used for any security-sensitive operations
+ * - Not real financial data or user information
+ * - Display-only content for background animations
+ * 
  * @param {number} count - Number of values to generate
  * @param {boolean} positive - Whether to generate positive (+) or negative (-) values
- * @returns {string[]} Array of formatted percentage strings
+ * @returns {string[]} Array of formatted percentage strings for visual display only
  */
 export const generatePercentageValues = (count = 50, positive = true) => {
 	return Array.from(
 		{ length: count },
-		() => (positive ? '+' : '-') + Math.round(Math.random() * 15 * 100) / 100 + '%'
+		() => {
+			// Generate random percentage between 0.01 and 15.00
+			// Math.random() is safe here as this is purely for visual effects
+			const value = Math.random() * 15;
+			const rounded = Math.round(value * 100) / 100;
+			const sign = positive ? '+' : '-';
+			return `${sign}${rounded.toFixed(2)}%`;
+		}
 	);
 };
 
@@ -250,4 +269,8 @@ function deepMerge(target, source) {
  *   
  *   return deepMerge(config, overrides);
  * };
+ * 
+ * SECURITY REMINDER: If you need random values for your custom particle configs,
+ * ensure you use Math.random() only for visual/cosmetic purposes. For any
+ * security-sensitive operations, use crypto.getRandomValues() instead.
  */

@@ -12,11 +12,13 @@ Provides configurable particle effects using tsParticles for creating animated b
 
 Generates random percentage values for financial-themed particles.
 
+**Security Note:** Uses `Math.random()` which is NOT cryptographically secure. This is intentional and safe as these values are purely cosmetic for visual particle effects.
+
 **Parameters:**
 - `count` (number): Number of values to generate (default: 50)
 - `positive` (boolean): Whether to generate positive (+) or negative (-) values (default: true)
 
-**Returns:** Array of formatted percentage strings (e.g., `["+5.23%", "+12.1%"]`)
+**Returns:** Array of formatted percentage strings (e.g., `["+5.23%", "+12.10%"]`) for display only
 
 #### `createFinancialParticleConfig(overrides)`
 
