@@ -328,7 +328,9 @@ export async function createPayment(event, statement_id, merchant, amount, alloc
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
-		.prepare('INSERT INTO payment (statement_id, merchant, amount, allocated_to) VALUES (?, ?, ?, ?)')
+		.prepare(
+			'INSERT INTO payment (statement_id, merchant, amount, allocated_to) VALUES (?, ?, ?, ?)'
+		)
 		.bind(statement_id, merchant, amount, allocated_to)
 		.run();
 }
@@ -343,14 +345,16 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	const { results } = await db
-		.prepare(`
+		.prepare(
+			`
 			SELECT p.*, s.credit_card_id, c.name as card_name, c.last4
 			FROM payment p
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
 			WHERE s.billing_cycle_id = ?
 			ORDER BY p.created_at DESC
-		`)
+		`
+		)
 		.bind(billing_cycle_id)
 		.all();
 	return results;
@@ -366,13 +370,15 @@ export async function getPayment(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	const result = await db
-		.prepare(`
+		.prepare(
+			`
 			SELECT p.*, s.credit_card_id, c.name as card_name, c.last4
 			FROM payment p
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
 			WHERE p.id = ?
-		`)
+		`
+		)
 		.bind(id)
 		.first();
 	return result;
@@ -403,7 +409,7 @@ export async function updatePayment(event, id, merchant, amount, allocated_to) {
 export async function bulkAssignPayments(event, assignments) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	
+
 	// Use a transaction for bulk updates
 	for (const assignment of assignments) {
 		await db

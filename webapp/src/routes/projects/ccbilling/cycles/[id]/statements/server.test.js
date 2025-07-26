@@ -11,10 +11,13 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
-		headers: { 'Content-Type': 'application/json' },
-		...options
-	}))
+	json: vi.fn(
+		(data, options) =>
+			new Response(JSON.stringify(data), {
+				headers: { 'Content-Type': 'application/json' },
+				...options
+			})
+	)
 }));
 
 // Import the mocked functions
@@ -236,7 +239,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(uniqueKeys.size).toBe(5);
 
 			// Keys should follow the expected pattern
-			keys.forEach(key => {
+			keys.forEach((key) => {
 				expect(key).toMatch(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/);
 			});
 		});

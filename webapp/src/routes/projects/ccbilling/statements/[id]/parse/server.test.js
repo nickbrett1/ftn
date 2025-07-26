@@ -9,10 +9,16 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
 
 // Import the mocked functions
-import { getStatement, createPayment, deletePaymentsForStatement } from '$lib/server/ccbilling-db.js';
+import {
+	getStatement,
+	createPayment,
+	deletePaymentsForStatement
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/statements/[id]/parse API', () => {
@@ -57,11 +63,18 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			expect(getStatement).toHaveBeenCalledWith(mockEvent, 1);
 			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, 1);
-			
+
 			// Should create multiple mock payments
 			expect(createPayment).toHaveBeenCalledTimes(3);
 			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Amazon', 85.67, 'Both');
-			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Grocery Store', 124.32, 'Both');
+			expect(createPayment).toHaveBeenNthCalledWith(
+				2,
+				mockEvent,
+				1,
+				'Grocery Store',
+				124.32,
+				'Both'
+			);
 			expect(createPayment).toHaveBeenNthCalledWith(3, mockEvent, 1, 'Gas Station', 45.21, 'Nick');
 
 			expect(result.success).toBe(true);
@@ -178,9 +191,9 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			expect(getStatement).toHaveBeenCalledWith(mockEvent, statementId);
 			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, statementId);
-			
+
 			// All createPayment calls should use the same statement ID
-			createPayment.mock.calls.forEach(call => {
+			createPayment.mock.calls.forEach((call) => {
 				expect(call[1]).toBe(statementId); // statement_id parameter
 			});
 		});

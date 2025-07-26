@@ -228,9 +228,7 @@
 							<div>
 								<h4 class="text-white font-medium">{statement.filename}</h4>
 								<p class="text-gray-400 text-sm">
-									{card?.name} (****{card?.last4}) • Due: {formatLocalDate(
-										statement.due_date
-									)}
+									{card?.name} (****{card?.last4}) • Due: {formatLocalDate(statement.due_date)}
 								</p>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at).toLocaleDateString()}

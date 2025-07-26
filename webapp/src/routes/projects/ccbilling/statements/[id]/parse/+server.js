@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
-import { 
-	getStatement, 
-	createPayment, 
-	deletePaymentsForStatement 
+import {
+	getStatement,
+	createPayment,
+	deletePaymentsForStatement
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -27,7 +27,7 @@ export async function POST(event) {
 
 		// TODO: Implement actual PDF text extraction and Llama API parsing
 		// For now, we'll create a mock implementation that can be replaced later
-		
+
 		// Delete existing payments for this statement (in case of re-parsing)
 		await deletePaymentsForStatement(event, statement_id);
 
@@ -45,12 +45,11 @@ export async function POST(event) {
 			);
 		}
 
-		return json({ 
-			success: true, 
+		return json({
+			success: true,
 			charges_found: mockCharges.length,
 			message: 'Statement parsed successfully (mock implementation)'
 		});
-
 	} catch (error) {
 		console.error('Error parsing statement:', error);
 		return json({ error: 'Failed to parse statement' }, { status: 500 });
@@ -67,7 +66,7 @@ async function mockParseStatement(statement) {
 	// 1. Extract text from PDF using a library like pdf-parse
 	// 2. Send text to Llama API for structured parsing
 	// 3. Return parsed charges with merchant names, amounts, and dates
-	
+
 	// For now, return some mock data based on the credit card
 	const mockCharges = [
 		{
@@ -88,7 +87,7 @@ async function mockParseStatement(statement) {
 	];
 
 	// Simulate some processing time
-	await new Promise(resolve => setTimeout(resolve, 1000));
+	await new Promise((resolve) => setTimeout(resolve, 1000));
 
 	return mockCharges;
 }
@@ -118,7 +117,7 @@ async function parsePDFWithLlama(statement, event) {
 	// TODO: Extract text from PDF using pdf-parse or similar
 	// TODO: Send extracted text to Llama API for parsing
 	// TODO: Parse response into structured charge data
-	
+
 	// Implementation placeholder
 	throw new Error('Llama API integration not yet implemented');
 }

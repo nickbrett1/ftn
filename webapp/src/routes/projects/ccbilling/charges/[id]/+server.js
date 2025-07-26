@@ -42,7 +42,10 @@ export async function PUT(event) {
 		const { merchant, amount, allocated_to } = await request.json();
 
 		if (!merchant || amount === undefined || !allocated_to) {
-			return json({ error: 'Missing required fields: merchant, amount, allocated_to' }, { status: 400 });
+			return json(
+				{ error: 'Missing required fields: merchant, amount, allocated_to' },
+				{ status: 400 }
+			);
 		}
 
 		// Validate allocated_to values

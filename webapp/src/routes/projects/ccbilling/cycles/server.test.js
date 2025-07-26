@@ -11,7 +11,11 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 // Import the mocked functions
-import { listBillingCycles, createBillingCycle, deleteBillingCycle } from '$lib/server/ccbilling-db.js';
+import {
+	listBillingCycles,
+	createBillingCycle,
+	deleteBillingCycle
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/cycles API', () => {

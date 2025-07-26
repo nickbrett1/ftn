@@ -8,7 +8,9 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
 
 // Import the mocked functions
 import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
@@ -198,18 +200,14 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 
 		it('should handle single assignment', async () => {
 			mockEvent.request.json.mockResolvedValue({
-				assignments: [
-					{ id: 1, allocated_to: 'Both' }
-				]
+				assignments: [{ id: 1, allocated_to: 'Both' }]
 			});
 			bulkAssignPayments.mockResolvedValue({});
 
 			const response = await POST(mockEvent);
 			const result = await response.json();
 
-			expect(bulkAssignPayments).toHaveBeenCalledWith(mockEvent, [
-				{ id: 1, allocated_to: 'Both' }
-			]);
+			expect(bulkAssignPayments).toHaveBeenCalledWith(mockEvent, [{ id: 1, allocated_to: 'Both' }]);
 			expect(result.success).toBe(true);
 		});
 

@@ -1,8 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { 
-	listChargesForCycle, 
-	bulkAssignPayments 
-} from '$lib/server/ccbilling-db.js';
+import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
