@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './+server.js';
+import { createAuthTest, setupAuthMock, AUTH_MOCK, SVELTEKIT_MOCK } from '../../../test-utils.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -8,15 +9,13 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	deletePaymentsForStatement: vi.fn()
 }));
 
-vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
-		headers: { 'Content-Type': 'application/json' },
-		...options
-	}))
-}));
+vi.mock('$lib/server/require-user.js', AUTH_MOCK['$lib/server/require-user.js']);
+
+vi.mock('@sveltejs/kit', SVELTEKIT_MOCK['@sveltejs/kit']);
 
 // Import the mocked functions
 import { getStatement, createPayment, deletePaymentsForStatement } from '$lib/server/ccbilling-db.js';
+import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/statements/[id]/parse API', () => {
 	let mockEvent;
@@ -33,6 +32,9 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			fn();
 			return 123; // Mock timer ID
 		});
+
+		// Mock requireUser to return success by default
+		setupAuthMock(requireUser);
 	});
 
 	afterEach(() => {
@@ -184,5 +186,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				expect(call[1]).toBe(statementId); // statement_id parameter
 			});
 		});
+
+		it('should redirect if user not authenticated', createAuthTest(POST, requireUser, () => mockEvent, [getStatement, createPayment, deletePaymentsForStatement]));
 	});
 });

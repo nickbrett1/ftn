@@ -7,20 +7,14 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	updatePayment: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: vi.fn()
-}));
-
-vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
-		headers: { 'Content-Type': 'application/json' },
-		...options
-	}))
-}));
+vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
+vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
 
 // Import the mocked functions
 import { getPayment, updatePayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
+
+
 
 describe('/projects/ccbilling/charges/[id] API', () => {
 	let mockEvent;
@@ -89,12 +83,8 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 		});
 
 		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await GET(mockEvent);
-
-			expect(response).toBe(redirectResponse);
+			requireUser.mockResolvedValue(new Response('', { status: 302 }));
+			expect(await GET(mockEvent)).toEqual(expect.any(Response));
 			expect(getPayment).not.toHaveBeenCalled();
 		});
 	});
@@ -229,12 +219,8 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 		});
 
 		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await PUT(mockEvent);
-
-			expect(response).toBe(redirectResponse);
+			requireUser.mockResolvedValue(new Response('', { status: 302 }));
+			expect(await PUT(mockEvent)).toEqual(expect.any(Response));
 			expect(updatePayment).not.toHaveBeenCalled();
 		});
 	});

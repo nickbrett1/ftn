@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './+server.js';
+import { createAuthTest, setupAuthMock, AUTH_MOCK, SVELTEKIT_MOCK } from '../../../test-utils.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -7,16 +8,9 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	bulkAssignPayments: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: vi.fn()
-}));
+vi.mock('$lib/server/require-user.js', AUTH_MOCK['$lib/server/require-user.js']);
 
-vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
-		headers: { 'Content-Type': 'application/json' },
-		...options
-	}))
-}));
+vi.mock('@sveltejs/kit', SVELTEKIT_MOCK['@sveltejs/kit']);
 
 // Import the mocked functions
 import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
@@ -36,7 +30,7 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 		};
 
 		// Mock requireUser to return success by default
-		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+		setupAuthMock(requireUser);
 	});
 
 	describe('GET endpoint', () => {
@@ -86,15 +80,7 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 			expect(result.charges).toEqual([]);
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await GET(mockEvent);
-
-			expect(response).toBe(redirectResponse);
-			expect(listChargesForCycle).not.toHaveBeenCalled();
-		});
+		it('should redirect if user not authenticated', createAuthTest(GET, requireUser, () => mockEvent, [listChargesForCycle]));
 	});
 
 	describe('POST endpoint (bulk assignment)', () => {
@@ -235,14 +221,6 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 			expect(result.error).toBe('Failed to bulk assign charges');
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await POST(mockEvent);
-
-			expect(response).toBe(redirectResponse);
-			expect(bulkAssignPayments).not.toHaveBeenCalled();
-		});
+		it('should redirect if user not authenticated', createAuthTest(POST, requireUser, () => mockEvent, [bulkAssignPayments]));
 	});
 });
