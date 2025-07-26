@@ -2,15 +2,11 @@
 set -euo pipefail
 
 # Configuration
-PROD_BUCKET_NAME="wdi"
-LOCAL_BUCKET_NAME="wdi" # This must match a bucket_name in wrangler.jsonc r2_buckets for --local to work as expected
-OBJECT_KEY="docs/static_index.html"
+WRANGLER_CONFIG="$(dirname "$0")/wrangler.jsonc"
+TEMP_DIR=$(mktemp -d)
 
-# Create a temporary file for the download/upload operation
-TEMP_FILE_PATH=$(mktemp)
-
-# Ensure the temporary file is cleaned up on script exit (success or failure)
-trap 'rm -f "$TEMP_FILE_PATH"' EXIT
+# Ensure the temporary directory is cleaned up on script exit (success or failure)
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Ensure wrangler is available
 if ! command -v npx wrangler &> /dev/null; then
@@ -18,29 +14,143 @@ if ! command -v npx wrangler &> /dev/null; then
     exit 1
 fi
 
-echo "--- Syncing '$OBJECT_KEY' from production R2 bucket '$PROD_BUCKET_NAME' to local R2 simulation for bucket '$LOCAL_BUCKET_NAME' ---"
-echo ""
-
-# Download the file from the production R2 bucket
-echo "Downloading '$OBJECT_KEY' from production R2 bucket '$PROD_BUCKET_NAME' to '$TEMP_FILE_PATH'..."
-if npx wrangler r2 object get "$PROD_BUCKET_NAME/$OBJECT_KEY" --file="$TEMP_FILE_PATH" --remote; then
-    echo "File '$OBJECT_KEY' downloaded successfully."
-else
-    echo "Error: Failed to download '$OBJECT_KEY' from production R2 bucket '$PROD_BUCKET_NAME'." >&2
+# Ensure jq is available for JSON parsing
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq could not be found. Please install jq for JSON parsing." >&2
     exit 1
 fi
+
+# Function to discover R2 buckets from wrangler.jsonc
+discover_buckets() {
+    local config_file="$1"
+    
+    if [[ ! -f "$config_file" ]]; then
+        echo "Error: wrangler.jsonc not found at $config_file" >&2
+        return 1
+    fi
+    
+    echo "Discovering R2 buckets from $config_file..."
+    
+    # Extract bucket names from both root level and production environment
+    # Using jq to parse JSONC (which jq handles fine despite comments)
+    local bucket_names
+    bucket_names=$(jq -r '
+        [
+            (.r2_buckets[]?.bucket_name // empty),
+            (.env.production.r2_buckets[]?.bucket_name // empty)
+        ] | unique | .[]
+    ' "$config_file" 2>/dev/null)
+    
+    if [[ -z "$bucket_names" ]]; then
+        echo "Warning: No R2 buckets found in $config_file" >&2
+        return 1
+    fi
+    
+    echo "$bucket_names"
+}
+
+# Function to sync a bucket
+sync_bucket() {
+    local bucket_name="$1"
+    echo "--- Syncing R2 bucket '$bucket_name' from production to local simulation ---"
+    echo ""
+    
+    # Create bucket-specific temp directory
+    local bucket_temp_dir="$TEMP_DIR/$bucket_name"
+    mkdir -p "$bucket_temp_dir"
+    
+    # List all objects in the production bucket
+    echo "Listing objects in production R2 bucket '$bucket_name'..."
+    local objects_list="$bucket_temp_dir/objects.txt"
+    
+    if npx wrangler r2 object list "$bucket_name" --remote > "$objects_list" 2>/dev/null; then
+        local object_count=$(wc -l < "$objects_list" 2>/dev/null || echo "0")
+        echo "Found $object_count objects in production bucket '$bucket_name'."
+        
+        if [ "$object_count" -eq 0 ]; then
+            echo "No objects found in production bucket '$bucket_name'. Skipping sync."
+            echo ""
+            return 0
+        fi
+    else
+        echo "Warning: Could not list objects in production bucket '$bucket_name' or bucket is empty. Skipping sync."
+        echo ""
+        return 0
+    fi
+    
+    # Process each object
+    local success_count=0
+    local error_count=0
+    
+    while IFS= read -r line; do
+        # Skip empty lines and header lines
+        if [[ -z "$line" || "$line" == *"Key"* || "$line" == *"---"* ]]; then
+            continue
+        fi
+        
+        # Extract object key (first column, handling spaces in filenames)
+        local object_key=$(echo "$line" | awk '{print $1}')
+        
+        if [[ -z "$object_key" ]]; then
+            continue
+        fi
+        
+        echo "Syncing object: $object_key"
+        
+        # Create local path for the object
+        local temp_file="$bucket_temp_dir/$(basename "$object_key")"
+        
+        # Download the object from production
+        if npx wrangler r2 object get "$bucket_name/$object_key" --file="$temp_file" --remote 2>/dev/null; then
+            # Upload to local simulation
+            if npx wrangler r2 object put "$bucket_name/$object_key" --file="$temp_file" --local 2>/dev/null; then
+                echo "  ✓ Successfully synced: $object_key"
+                ((success_count++))
+            else
+                echo "  ✗ Failed to upload to local: $object_key"
+                ((error_count++))
+            fi
+        else
+            echo "  ✗ Failed to download from production: $object_key"
+            ((error_count++))
+        fi
+        
+        # Clean up temp file
+        rm -f "$temp_file"
+        
+    done < "$objects_list"
+    
+    echo ""
+    echo "Bucket '$bucket_name' sync completed: $success_count successful, $error_count errors"
+    echo ""
+}
+
+# Main execution
+echo "=== Starting R2 bucket synchronization from production to local ==="
 echo ""
 
-# Upload the file to the local R2 bucket simulation
-# This will overwrite if the object already exists in the local simulation.
-# The local bucket is implicitly available based on wrangler.jsonc configuration when --local is used.
-echo "Uploading '$OBJECT_KEY' from '$TEMP_FILE_PATH' to local R2 simulation for bucket '$LOCAL_BUCKET_NAME'..."
-if npx wrangler r2 object put "$LOCAL_BUCKET_NAME/$OBJECT_KEY" --file="$TEMP_FILE_PATH" --local; then
-    echo "File '$OBJECT_KEY' uploaded successfully to local R2 simulation for bucket '$LOCAL_BUCKET_NAME'."
-else
-    echo "Error: Failed to upload '$OBJECT_KEY' to local R2 simulation for bucket '$LOCAL_BUCKET_NAME'." >&2
+# Discover buckets from wrangler.jsonc
+bucket_names=$(discover_buckets "$WRANGLER_CONFIG")
+if [[ $? -ne 0 || -z "$bucket_names" ]]; then
+    echo "Error: Could not discover R2 buckets from configuration. Exiting." >&2
     exit 1
 fi
+
+# Convert bucket names to array
+readarray -t BUCKETS <<< "$bucket_names"
+
+echo "Discovered ${#BUCKETS[@]} R2 bucket(s): ${BUCKETS[*]}"
 echo ""
 
+total_success=0
+total_errors=0
+
+for bucket in "${BUCKETS[@]}"; do
+    sync_bucket "$bucket"
+done
+
+echo "=== All bucket synchronization completed ==="
+echo "Total buckets processed: ${#BUCKETS[@]}"
+echo "Buckets: ${BUCKETS[*]}"
+echo ""
 echo "--- Script finished successfully ---"
