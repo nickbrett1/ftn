@@ -315,3 +315,111 @@ export async function deleteStatement(event, id) {
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db.prepare('DELETE FROM statement WHERE id = ?').bind(id).run();
 }
+
+/**
+ * Create a new payment/charge.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} statement_id
+ * @param {string} merchant
+ * @param {number} amount
+ * @param {string} allocated_to
+ */
+export async function createPayment(event, statement_id, merchant, amount, allocated_to) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db
+		.prepare('INSERT INTO payment (statement_id, merchant, amount, allocated_to) VALUES (?, ?, ?, ?)')
+		.bind(statement_id, merchant, amount, allocated_to)
+		.run();
+}
+
+/**
+ * List all payments/charges for a billing cycle.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} billing_cycle_id
+ * @returns {Promise<Array>}
+ */
+export async function listChargesForCycle(event, billing_cycle_id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const { results } = await db
+		.prepare(`
+			SELECT p.*, s.credit_card_id, c.name as card_name, c.last4
+			FROM payment p
+			JOIN statement s ON p.statement_id = s.id
+			JOIN credit_card c ON s.credit_card_id = c.id
+			WHERE s.billing_cycle_id = ?
+			ORDER BY p.created_at DESC
+		`)
+		.bind(billing_cycle_id)
+		.all();
+	return results;
+}
+
+/**
+ * Get a single payment/charge by id.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @returns {Promise<Object|null>}
+ */
+export async function getPayment(event, id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const result = await db
+		.prepare(`
+			SELECT p.*, s.credit_card_id, c.name as card_name, c.last4
+			FROM payment p
+			JOIN statement s ON p.statement_id = s.id
+			JOIN credit_card c ON s.credit_card_id = c.id
+			WHERE p.id = ?
+		`)
+		.bind(id)
+		.first();
+	return result;
+}
+
+/**
+ * Update a payment/charge (mainly for budget assignment).
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @param {string} merchant
+ * @param {number} amount
+ * @param {string} allocated_to
+ */
+export async function updatePayment(event, id, merchant, amount, allocated_to) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db
+		.prepare('UPDATE payment SET merchant = ?, amount = ?, allocated_to = ? WHERE id = ?')
+		.bind(merchant, amount, allocated_to, id)
+		.run();
+}
+
+/**
+ * Bulk update payments/charges for budget assignment.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {Array<{id: number, allocated_to: string}>} assignments
+ */
+export async function bulkAssignPayments(event, assignments) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Use a transaction for bulk updates
+	for (const assignment of assignments) {
+		await db
+			.prepare('UPDATE payment SET allocated_to = ? WHERE id = ?')
+			.bind(assignment.allocated_to, assignment.id)
+			.run();
+	}
+}
+
+/**
+ * Delete all payments for a statement (useful when re-parsing).
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} statement_id
+ */
+export async function deletePaymentsForStatement(event, statement_id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db.prepare('DELETE FROM payment WHERE statement_id = ?').bind(statement_id).run();
+}
