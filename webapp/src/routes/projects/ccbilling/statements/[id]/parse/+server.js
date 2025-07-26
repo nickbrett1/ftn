@@ -92,13 +92,29 @@ async function mockParseStatement(statement) {
 /**
  * TODO: Implement actual Llama API integration
  * This function should:
- * 1. Download PDF from R2 using statement.r2_key
+ * 1. Download PDF from R2_CCBILLING bucket using statement.r2_key
  * 2. Extract text from PDF
  * 3. Send text to Llama API with proper prompt for charge extraction
  * 4. Parse Llama response into structured charge data
  * 5. Return array of charges with merchant, amount, date info
  */
-async function parsePDFWithLlama(statement) {
+async function parsePDFWithLlama(statement, event) {
+	// Get the ccbilling R2 bucket
+	const bucket = event.platform?.env?.R2_CCBILLING;
+	if (!bucket) {
+		throw new Error('R2_CCBILLING bucket not configured');
+	}
+
+	// Download PDF from R2
+	const pdfObject = await bucket.get(statement.r2_key);
+	if (!pdfObject) {
+		throw new Error(`PDF not found in R2: ${statement.r2_key}`);
+	}
+
+	// TODO: Extract text from PDF using pdf-parse or similar
+	// TODO: Send extracted text to Llama API for parsing
+	// TODO: Parse response into structured charge data
+	
 	// Implementation placeholder
 	throw new Error('Llama API integration not yet implemented');
 }

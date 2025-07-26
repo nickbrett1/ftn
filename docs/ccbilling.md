@@ -36,7 +36,7 @@
 
 ### Non-Functional Requirements
 
-- All credit card statements should be stored in blob storage (Cloudflare R2) for historical reference for a given billing cycle
+- All credit card statements should be stored in blob storage (Cloudflare R2) for historical reference for a given billing cycle. Uses dedicated `ccbilling` R2 bucket for organization.
 
 - For parsing the statements, use the Llama LLM API. The API documentation is available [here](https://llama.developer.meta.com/docs/overview/?team_id=1373601037234179)
 

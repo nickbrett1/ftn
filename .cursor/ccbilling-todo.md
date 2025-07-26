@@ -67,7 +67,7 @@
 
 - [x] **R2 Integration** ✅ **IMPLEMENTED**
 
-  - [x] Configure R2 bucket for statement storage (using existing R2_WDI bucket)
+  - [x] Configure R2 bucket for statement storage (dedicated R2_CCBILLING bucket)
   - [x] Implement upload to R2 with unique keys
   - [x] Handle upload errors and validation (PDF only, 10MB limit)
   - [x] Store R2 key in statement metadata
