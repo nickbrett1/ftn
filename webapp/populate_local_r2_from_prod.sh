@@ -88,8 +88,9 @@ sync_bucket() {
             continue
         fi
         
-        # Extract object key (first column, handling spaces in filenames)
-        local object_key=$(echo "$line" | awk '{print $1}')
+        # Extract object key (first column, properly handling spaces in filenames)
+        # Use tab or multiple spaces as delimiter, take everything up to the first delimiter
+        local object_key=$(echo "$line" | sed 's/[[:space:]]\{2,\}.*//' | sed 's/\t.*//')
         
         if [[ -z "$object_key" ]]; then
             continue
