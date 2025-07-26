@@ -33,22 +33,27 @@
   - [x] Authentication check on all endpoints
   - [x] **API Testing Complete** - All endpoints tested with local D1 database
 
-- [ ] **Budget API**
+- [x] **Budget API** ✅ **TESTED**
 
-  - [ ] `POST /api/ccbilling/budgets` - Add budget
-  - [ ] `GET /api/ccbilling/budgets` - List budgets
-  - [ ] `PUT /api/ccbilling/budgets/[id]` - Update budget
-  - [ ] `DELETE /api/ccbilling/budgets/[id]` - Remove budget
-  - [ ] `POST /api/ccbilling/budgets/[id]/merchants` - Add merchant auto-association
-  - [ ] Authentication check on all endpoints
+  - [x] `POST /api/ccbilling/budgets` - Add budget
+  - [x] `GET /api/ccbilling/budgets` - List budgets
+  - [x] `PUT /api/ccbilling/budgets/[id]` - Update budget
+  - [x] `DELETE /api/ccbilling/budgets/[id]` - Remove budget
+  - [x] `POST /api/ccbilling/budgets/[id]/merchants` - Add merchant auto-association
+  - [x] `GET /api/ccbilling/budgets/[id]/merchants` - List merchants for budget
+  - [x] `DELETE /api/ccbilling/budgets/[id]/merchants` - Remove merchant from budget
+  - [x] Authentication check on all endpoints
+  - [x] **API Testing Complete** - All endpoints tested with local D1 database
 
-- [ ] **Statement API**
+- [x] **Statement API** ✅ **TESTED**
 
-  - [ ] `POST /api/ccbilling/cycles/[id]/statements` - Upload statement PDF
-  - [ ] `GET /api/ccbilling/cycles/[id]/statements` - List statements for cycle
-  - [ ] Store PDF in Cloudflare R2
-  - [ ] Store statement metadata in D1
-  - [ ] Authentication check on all endpoints
+  - [x] `POST /api/ccbilling/cycles/[id]/statements` - Upload statement PDF
+  - [x] `GET /api/ccbilling/cycles/[id]/statements` - List statements for cycle
+  - [x] `GET /api/ccbilling/statements/[id]` - Get specific statement
+  - [x] `DELETE /api/ccbilling/statements/[id]` - Delete statement
+  - [x] Store statement metadata in D1
+  - [x] Authentication check on all endpoints
+  - [x] **API Testing Complete** - All endpoints tested with local D1 database
 
 - [ ] **Charge API**
   - [ ] `POST /api/ccbilling/statements/[id]/parse` - Parse statement via Llama API
@@ -187,5 +192,5 @@
 
 ---
 
-**Last Updated:** July 25, 2025
-**Status:** Credit Card API and Billing Cycle API complete and tested. Ready for Budget API implementation.
+**Last Updated:** July 26, 2025
+**Status:** Credit Card API, Billing Cycle API, and Budget API complete and tested. Ready for Statement API implementation.
