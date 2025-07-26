@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, DELETE } from './+server.js';
+import { createAuthTest, setupAuthMock, AUTH_MOCK } from '../test-utils.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -8,9 +9,7 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	deleteBillingCycle: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: vi.fn()
-}));
+vi.mock('$lib/server/require-user.js', AUTH_MOCK['$lib/server/require-user.js']);
 
 // Import the mocked functions
 import { listBillingCycles, createBillingCycle, deleteBillingCycle } from '$lib/server/ccbilling-db.js';
@@ -29,7 +28,7 @@ describe('/projects/ccbilling/cycles API', () => {
 		};
 
 		// Mock requireUser to return success by default
-		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+		setupAuthMock(requireUser);
 	});
 
 	describe('GET endpoint', () => {
@@ -49,15 +48,7 @@ describe('/projects/ccbilling/cycles API', () => {
 			expect(response.headers.get('Content-Type')).toBe('application/json');
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await GET(mockEvent);
-
-			expect(response).toBe(redirectResponse);
-			expect(listBillingCycles).not.toHaveBeenCalled();
-		});
+		it('should redirect if user not authenticated', createAuthTest(GET, requireUser, () => mockEvent, [listBillingCycles]));
 
 		it('should handle database errors', async () => {
 			listBillingCycles.mockRejectedValue(new Error('Database error'));
@@ -124,15 +115,7 @@ describe('/projects/ccbilling/cycles API', () => {
 			expect(createBillingCycle).not.toHaveBeenCalled();
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await POST(mockEvent);
-
-			expect(response).toBe(redirectResponse);
-			expect(createBillingCycle).not.toHaveBeenCalled();
-		});
+		it('should redirect if user not authenticated', createAuthTest(POST, requireUser, () => mockEvent, [createBillingCycle]));
 
 		it('should handle database errors', async () => {
 			createBillingCycle.mockRejectedValue(new Error('Database error'));
@@ -189,15 +172,7 @@ describe('/projects/ccbilling/cycles API', () => {
 			expect(result.success).toBe(true);
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response('', { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
-
-			const response = await DELETE(mockEvent);
-
-			expect(response).toBe(redirectResponse);
-			expect(deleteBillingCycle).not.toHaveBeenCalled();
-		});
+		it('should redirect if user not authenticated', createAuthTest(DELETE, requireUser, () => mockEvent, [deleteBillingCycle]));
 
 		it('should handle database errors', async () => {
 			deleteBillingCycle.mockRejectedValue(new Error('Database error'));

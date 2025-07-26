@@ -4,9 +4,13 @@ import {
 	createPayment, 
 	deletePaymentsForStatement 
 } from '$lib/server/ccbilling-db.js';
+import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST(event) {
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) return authResult;
+
 	const { params } = event;
 	const statement_id = parseInt(params.id);
 
