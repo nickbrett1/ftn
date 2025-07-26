@@ -183,13 +183,13 @@ describe('ccbilling-db functions', () => {
 		describe('listStatements', () => {
 			it('should return statements for a billing cycle', async () => {
 				const mockStatements = [
-					{ id: 1, billing_cycle_id: 1, credit_card_id: 1, filename: 'statement.pdf' }
+					{ id: 1, billing_cycle_id: 1, credit_card_id: 1, filename: 'statement.pdf', credit_card_name: 'Chase Freedom', credit_card_last4: '1234' }
 				];
 				mockDb.all.mockResolvedValue({ results: mockStatements });
 
 				const result = await listStatements(mockEvent, 1);
 
-				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM statement WHERE billing_cycle_id = ? ORDER BY uploaded_at DESC');
+				expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4'));
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(result).toEqual(mockStatements);
 			});
@@ -209,12 +209,12 @@ describe('ccbilling-db functions', () => {
 
 		describe('getStatement', () => {
 			it('should return a specific statement', async () => {
-				const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'key-123' };
+				const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'key-123', credit_card_name: 'Chase Freedom', credit_card_last4: '1234' };
 				mockDb.first.mockResolvedValue(mockStatement);
 
 				const result = await getStatement(mockEvent, 1);
 
-				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM statement WHERE id = ?');
+				expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4'));
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(result).toEqual(mockStatement);
 			});
