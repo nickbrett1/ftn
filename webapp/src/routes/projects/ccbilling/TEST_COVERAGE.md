@@ -196,11 +196,38 @@ npm run test-staging
 
 ## 📝 Test Coverage Summary
 
-- **Total Test Files:** 5
-- **Total Test Cases:** 70+
+- **Total Test Files:** 7
+- **Total Test Cases:** 120+
 - **Coverage Areas:** 100% of new ccbilling functionality
 - **Security Focus:** Cryptographic security, input validation, authorization
 - **Error Handling:** Comprehensive coverage of all failure scenarios
 - **Integration:** Database, R2, authentication, file uploads
+
+### Additional Test Files Created:
+
+#### **6. Billing Cycles API Tests**
+**File:** `src/routes/projects/ccbilling/cycles/server.test.js`
+- **Coverage:** GET, POST, DELETE operations for billing cycles
+- **Test Count:** 15+ individual test cases
+- **Coverage Areas:**
+  - Cycle listing and creation
+  - Cycle deletion with validation
+  - Authentication enforcement
+  - Error handling for all scenarios
+
+#### **7. Bulk Charges API Tests**
+**File:** `src/routes/projects/ccbilling/cycles/[id]/charges/server.test.js`
+- **Coverage:** Bulk charge assignment operations
+- **Test Count:** 15+ individual test cases
+- **Coverage Areas:**
+  - Charge listing for cycles
+  - Bulk assignment validation
+  - Input validation and sanitization
+  - Edge cases and error scenarios
+
+### Extended Database Tests:
+- **Budget Functions:** Added 8+ tests for budget CRUD operations
+- **Budget Merchants:** Added tests for merchant association functionality
+- **Enhanced Coverage:** All budget-related database functions now tested
 
 This comprehensive test suite ensures the ccbilling feature is production-ready with high confidence in stability, security, and maintainability.
