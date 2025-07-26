@@ -29,6 +29,10 @@ jobs:
             cd webapp && npx playwright install --with-deps chromium
       - doppler/install
       - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && doppler run -- ./setup-wrangler-config.sh
+      - run:
           name: Build app
           command: |
             cd webapp && npm run build
@@ -57,6 +61,10 @@ jobs:
       - attach_workspace:
           at: webapp
       - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && doppler run -- ./setup-wrangler-config.sh
       - run:
           name: Run tests
           command: |
@@ -92,6 +100,10 @@ jobs:
           at: webapp
       - doppler/install
       - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && doppler run -- ./setup-wrangler-config.sh
+      - run:
           name: Run Lighthouse checks
           command: |
             cd webapp && sudo npm install -g @lhci/cli@0.9.x
@@ -116,6 +128,11 @@ jobs:
             - node-v6-
       - attach_workspace:
           at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && doppler run -- ./setup-wrangler-config.sh
       - run:
           name: Deploying to Cloudflare
           command: |

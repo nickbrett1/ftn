@@ -25,4 +25,9 @@ fi
 
 script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
 
+echo
+# Setup Wrangler configuration with environment variables
+echo "Setting up Wrangler configuration..."
+doppler run -- ./setup-wrangler-config.sh
+
 echo "Cloud login script finished." 
