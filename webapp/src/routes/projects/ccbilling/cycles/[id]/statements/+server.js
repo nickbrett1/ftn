@@ -61,12 +61,12 @@ export async function POST(event) {
 		// Generate unique R2 key
 		const timestamp = Date.now();
 		const randomSuffix = Math.random().toString(36).substring(2, 8);
-		const r2_key = `ccbilling/statements/${cycleId}/${timestamp}-${randomSuffix}-${file.name}`;
+		const r2_key = `statements/${cycleId}/${timestamp}-${randomSuffix}-${file.name}`;
 
 		// Upload to R2
-		const bucket = event.platform?.env?.R2_WDI;
+		const bucket = event.platform?.env?.R2_CCBILLING;
 		if (!bucket) {
-			return json({ error: 'R2 bucket not configured' }, { status: 500 });
+			return json({ error: 'R2 ccbilling bucket not configured' }, { status: 500 });
 		}
 
 		// Convert file to ArrayBuffer for R2 upload
