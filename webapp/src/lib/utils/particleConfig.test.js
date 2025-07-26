@@ -9,18 +9,18 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 	describe('generatePercentageValues', () => {
 		it('should generate positive percentage values by default using crypto.getRandomValues', () => {
 			const values = generatePercentageValues(5);
-			
+
 			expect(values).toHaveLength(5);
-			values.forEach(value => {
+			values.forEach((value) => {
 				expect(value).toMatch(/^\+\d+\.\d{2}%$/);
 			});
 		});
 
 		it('should generate negative percentage values when specified using secure random', () => {
 			const values = generatePercentageValues(5, false);
-			
+
 			expect(values).toHaveLength(5);
-			values.forEach(value => {
+			values.forEach((value) => {
 				expect(value).toMatch(/^-\d+\.\d{2}%$/);
 			});
 		});
@@ -32,8 +32,8 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 
 		it('should generate values within the expected range', () => {
 			const values = generatePercentageValues(100);
-			
-			values.forEach(value => {
+
+			values.forEach((value) => {
 				const numericValue = parseFloat(value.replace(/[+\-%]/g, ''));
 				expect(numericValue).toBeGreaterThanOrEqual(0);
 				expect(numericValue).toBeLessThanOrEqual(15);
@@ -43,11 +43,11 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 		it('should use cryptographically secure random generation', () => {
 			// Test that crypto.getRandomValues is available and being used
 			expect(typeof crypto?.getRandomValues).toBe('function');
-			
+
 			// Generate multiple sets and verify they're different (very high probability)
 			const set1 = generatePercentageValues(10);
 			const set2 = generatePercentageValues(10);
-			
+
 			// With secure random, these should be different
 			expect(set1).not.toEqual(set2);
 		});
@@ -56,7 +56,7 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 	describe('createFinancialParticleConfig', () => {
 		it('should return a complete particle configuration', () => {
 			const config = createFinancialParticleConfig();
-			
+
 			// Check basic structure
 			expect(config).toHaveProperty('fullScreen');
 			expect(config).toHaveProperty('fpsLimit', 60);
@@ -67,19 +67,19 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 
 		it('should have the correct particle shape configuration', () => {
 			const config = createFinancialParticleConfig();
-			
+
 			expect(config.particles.shape.type).toBe('text');
 			expect(config.particles.shape.options.text).toHaveLength(2);
-			
+
 			// Check positive percentage configuration
 			const positiveConfig = config.particles.shape.options.text[0];
 			expect(positiveConfig.particles.color).toBe('#00FF9E');
-			expect(positiveConfig.value.every(v => v.startsWith('+'))).toBe(true);
-			
+			expect(positiveConfig.value.every((v) => v.startsWith('+'))).toBe(true);
+
 			// Check negative percentage configuration
 			const negativeConfig = config.particles.shape.options.text[1];
 			expect(negativeConfig.particles.color).toBe('#FF0061');
-			expect(negativeConfig.value.every(v => v.startsWith('-'))).toBe(true);
+			expect(negativeConfig.value.every((v) => v.startsWith('-'))).toBe(true);
 		});
 
 		it('should accept and apply overrides', () => {
@@ -89,9 +89,9 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 					number: { value: 10 }
 				}
 			};
-			
+
 			const config = createFinancialParticleConfig(overrides);
-			
+
 			expect(config.fpsLimit).toBe(30);
 			expect(config.particles.number.value).toBe(10);
 			// Should preserve other settings
@@ -102,7 +102,7 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 	describe('createErrorParticleConfig', () => {
 		it('should return a complete particle configuration', () => {
 			const config = createErrorParticleConfig();
-			
+
 			expect(config).toHaveProperty('fullScreen');
 			expect(config).toHaveProperty('fpsLimit', 60);
 			expect(config).toHaveProperty('interactivity');
@@ -112,16 +112,16 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 
 		it('should have the correct error-specific configuration', () => {
 			const config = createErrorParticleConfig();
-			
+
 			expect(config.particles.shape.type).toBe('text');
 			expect(config.particles.shape.options.text).toHaveLength(2);
 			expect(config.particles.number.value).toBe(15);
-			
+
 			// Check 404 configuration
 			const fourOhFourConfig = config.particles.shape.options.text[0];
 			expect(fourOhFourConfig.value).toEqual(['404', '404', '404']);
 			expect(fourOhFourConfig.particles.color).toBe('#22c55e');
-			
+
 			// Check ERROR configuration
 			const errorConfig = config.particles.shape.options.text[1];
 			expect(errorConfig.value).toEqual(['ERROR', 'ERROR']);
@@ -131,7 +131,7 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 		it('should have different movement direction than financial config', () => {
 			const financialConfig = createFinancialParticleConfig();
 			const errorConfig = createErrorParticleConfig();
-			
+
 			expect(financialConfig.particles.move.direction).toBe('top');
 			expect(errorConfig.particles.move.direction).toBe('none');
 		});
@@ -144,9 +144,9 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 					links: { opacity: 0.5 }
 				}
 			};
-			
+
 			const config = createErrorParticleConfig(overrides);
-			
+
 			expect(config.fpsLimit).toBe(45);
 			expect(config.particles.number.value).toBe(25);
 			expect(config.particles.links.opacity).toBe(0.5);
@@ -167,13 +167,13 @@ describe('particleConfig utilities (cryptographically secure)', () => {
 					}
 				}
 			};
-			
+
 			const config = createFinancialParticleConfig(overrides);
-			
+
 			// Should override specific values
 			expect(config.particles.links.opacity).toBe(0.9);
 			expect(config.particles.move.speed).toBe(2);
-			
+
 			// Should preserve other nested values from baseConfig
 			expect(config.particles.links.distance).toBe(400); // From baseConfig
 			expect(config.particles.move.direction).toBe('top');
