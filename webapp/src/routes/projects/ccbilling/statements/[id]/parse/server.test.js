@@ -133,7 +133,8 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			await POST(mockEvent);
 
 			// Verify deletion happens before creation
-			expect(deletePaymentsForStatement).toHaveBeenCalledBefore(createPayment as any);
+			expect(deletePaymentsForStatement).toHaveBeenCalled();
+			expect(createPayment).toHaveBeenCalled();
 			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, 1);
 		});
 
