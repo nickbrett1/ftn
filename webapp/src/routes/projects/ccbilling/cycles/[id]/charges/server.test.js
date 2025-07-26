@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './+server.js';
-import { createAuthTest, setupAuthMock, AUTH_MOCK, SVELTEKIT_MOCK } from '../../../test-utils.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -8,9 +7,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	bulkAssignPayments: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', AUTH_MOCK['$lib/server/require-user.js']);
-
-vi.mock('@sveltejs/kit', SVELTEKIT_MOCK['@sveltejs/kit']);
+vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
+vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
 
 // Import the mocked functions
 import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
@@ -30,7 +28,7 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 		};
 
 		// Mock requireUser to return success by default
-		setupAuthMock(requireUser);
+		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
 	});
 
 	describe('GET endpoint', () => {
@@ -80,7 +78,11 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 			expect(result.charges).toEqual([]);
 		});
 
-		it('should redirect if user not authenticated', createAuthTest(GET, requireUser, () => mockEvent, [listChargesForCycle]));
+		it('should redirect if user not authenticated', async () => {
+			requireUser.mockResolvedValue(new Response('', { status: 302 }));
+			expect(await GET(mockEvent)).toEqual(expect.any(Response));
+			expect(listChargesForCycle).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('POST endpoint (bulk assignment)', () => {
@@ -221,6 +223,10 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 			expect(result.error).toBe('Failed to bulk assign charges');
 		});
 
-		it('should redirect if user not authenticated', createAuthTest(POST, requireUser, () => mockEvent, [bulkAssignPayments]));
+		it('should redirect if user not authenticated', async () => {
+			requireUser.mockResolvedValue(new Response('', { status: 302 }));
+			expect(await POST(mockEvent)).toEqual(expect.any(Response));
+			expect(bulkAssignPayments).not.toHaveBeenCalled();
+		});
 	});
 });
