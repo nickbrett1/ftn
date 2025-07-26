@@ -9,6 +9,14 @@ import {
 	createBillingCycle,
 	getBillingCycle,
 	closeBillingCycle,
+	listBudgets,
+	getBudget,
+	createBudget,
+	updateBudget,
+	deleteBudget,
+	addBudgetMerchant,
+	removeBudgetMerchant,
+	getBudgetMerchants,
 	listStatements,
 	createStatement,
 	getStatement,
@@ -175,6 +183,112 @@ describe('ccbilling-db functions', () => {
 				expect(mockDb.prepare).toHaveBeenCalledWith('UPDATE billing_cycle SET closed = 1 WHERE id = ?');
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+	});
+
+	describe('Budget Functions', () => {
+		describe('listBudgets', () => {
+			it('should return list of budgets', async () => {
+				const mockBudgets = [
+					{ id: 1, name: 'Groceries', created_at: '2024-01-01' },
+					{ id: 2, name: 'Gas', created_at: '2024-01-02' }
+				];
+				mockDb.all.mockResolvedValue({ results: mockBudgets });
+
+				const result = await listBudgets(mockEvent);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM budget ORDER BY created_at DESC');
+				expect(result).toEqual(mockBudgets);
+			});
+		});
+
+		describe('getBudget', () => {
+			it('should return a specific budget', async () => {
+				const mockBudget = { id: 1, name: 'Groceries', created_at: '2024-01-01' };
+				mockDb.first.mockResolvedValue(mockBudget);
+
+				const result = await getBudget(mockEvent, 1);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM budget WHERE id = ?');
+				expect(mockDb.bind).toHaveBeenCalledWith(1);
+				expect(result).toEqual(mockBudget);
+			});
+		});
+
+		describe('createBudget', () => {
+			it('should create a new budget', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await createBudget(mockEvent, 'Entertainment');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('INSERT INTO budget (name) VALUES (?)');
+				expect(mockDb.bind).toHaveBeenCalledWith('Entertainment');
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('updateBudget', () => {
+			it('should update a budget', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await updateBudget(mockEvent, 1, 'Updated Budget');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('UPDATE budget SET name = ? WHERE id = ?');
+				expect(mockDb.bind).toHaveBeenCalledWith('Updated Budget', 1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('deleteBudget', () => {
+			it('should delete a budget', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await deleteBudget(mockEvent, 1);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM budget WHERE id = ?');
+				expect(mockDb.bind).toHaveBeenCalledWith(1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('addBudgetMerchant', () => {
+			it('should add a merchant to a budget', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await addBudgetMerchant(mockEvent, 1, 'Amazon');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('INSERT INTO budget_merchant (budget_id, merchant) VALUES (?, ?)');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon');
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('removeBudgetMerchant', () => {
+			it('should remove a merchant from a budget', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await removeBudgetMerchant(mockEvent, 1, 'Amazon');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant = ?');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon');
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('getBudgetMerchants', () => {
+			it('should return merchants for a budget', async () => {
+				const mockMerchants = [
+					{ id: 1, budget_id: 1, merchant: 'Amazon' },
+					{ id: 2, budget_id: 1, merchant: 'Target' }
+				];
+				mockDb.all.mockResolvedValue({ results: mockMerchants });
+
+				const result = await getBudgetMerchants(mockEvent, 1);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY created_at DESC');
+				expect(mockDb.bind).toHaveBeenCalledWith(1);
+				expect(result).toEqual(mockMerchants);
 			});
 		});
 	});
