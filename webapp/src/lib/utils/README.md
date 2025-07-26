@@ -80,6 +80,8 @@ Both configurations share a common base configuration and use deep merging to al
 
 The utility eliminates code duplication and provides a consistent API for particle effects across the application.
 
+**Important Note:** The financial particle configuration intentionally uses the baseConfig links properties (distance: 400, opacity: 0.2) to match the original Background.svelte behavior, where duplicate links properties caused the second definition to override the first.
+
 ### Testing
 
 Unit tests are available in `particleConfig.test.js` covering:

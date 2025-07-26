@@ -162,8 +162,8 @@ describe('particleConfig utilities', () => {
 			expect(config.particles.links.opacity).toBe(0.9);
 			expect(config.particles.move.speed).toBe(2);
 			
-			// Should preserve other nested values
-			expect(config.particles.links.color).toBe('random');
+			// Should preserve other nested values from baseConfig
+			expect(config.particles.links.distance).toBe(400); // From baseConfig
 			expect(config.particles.move.direction).toBe('top');
 		});
 	});

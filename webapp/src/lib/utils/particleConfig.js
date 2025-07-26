@@ -103,6 +103,12 @@ const baseConfig = {
 /**
  * Create a financial-themed particle configuration for the main background
  * Features dynamic percentage text particles in green and red
+ * 
+ * IMPLEMENTATION NOTE: This function intentionally uses baseConfig.particles.links
+ * (distance: 400, opacity: 0.2, no color property) to match the original 
+ * Background.svelte behavior where duplicate links definitions caused the 
+ * second one to override the first.
+ * 
  * @param {Object} overrides - Configuration overrides
  * @returns {Object} Complete particle configuration
  */
@@ -111,13 +117,6 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 		...baseConfig,
 		particles: {
 			...baseConfig.particles,
-			links: {
-				color: 'random',
-				distance: 150,
-				enable: true,
-				opacity: 0.4,
-				width: 1
-			},
 			move: {
 				...baseConfig.particles.move,
 				direction: 'top'
@@ -148,13 +147,10 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 						}
 					]
 				}
-			},
-			links: {
-				...baseConfig.particles.links,
-				color: 'random',
-				distance: 150,
-				opacity: 0.4
 			}
+			// Note: Using baseConfig.particles.links (distance: 400, opacity: 0.2)
+			// This matches the original Background.svelte effective behavior where
+			// the second links definition overwrote the first one
 		}
 	};
 
