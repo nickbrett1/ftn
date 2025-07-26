@@ -29,7 +29,7 @@
 		<div class="space-y-4 mb-8">
 			<h2 class="text-2xl font-semibold text-white">Billing Cycles</h2>
 			<div class="grid gap-4">
-				{#each billingCycles as cycle}
+				{#each billingCycles as cycle (cycle.id)}
 					<div
 						class="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors"
 					>

@@ -219,7 +219,7 @@
 			sm:before:via-white/25
 			sm:before:to-transparent"
 	>
-		{#each work as w, i}
+		{#each work as w (w.from + w.to)}
 			<Milestone
 				from={w.from}
 				to={w.to}

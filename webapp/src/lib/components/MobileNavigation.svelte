@@ -65,7 +65,7 @@
 			</div>
 			<nav class="mt-6">
 				<ul class="-my-2 divide-y divide-white/10">
-					{#each items as item}
+					{#each items as item (item)}
 						<MobileNavigationItem current={item} {active} {hide} />
 					{/each}
 				</ul>

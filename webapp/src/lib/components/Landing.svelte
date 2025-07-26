@@ -1,6 +1,6 @@
 <script>
-	import { fly, scale, slide, fade } from 'svelte/transition';
-	import { backOut, quintOut, bounceInOut } from 'svelte/easing';
+	import { fly, scale, slide } from 'svelte/transition';
+	import { backOut, quintOut } from 'svelte/easing';
 	import { onDestroy, onMount } from 'svelte';
 
 	const lines = ['TITLE', '', 'ENGINEERING', '', 'PRODUCT', '', 'DATA', '', '?', ''];
@@ -37,7 +37,7 @@
 
 <div class="flex justify-center items-center grow">
 	<div class="text-white">
-		{#each lines as line, i}
+		{#each lines as line, i (i)}
 			{#if animate}
 				<div
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center max-h-[8vh] text-nowrap"

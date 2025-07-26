@@ -1,6 +1,4 @@
 <script>
-	import { onMount, afterUpdate } from 'svelte';
-	import { browser } from '$app/environment';
 	import { marked } from 'marked';
 	import hljs from 'highlight.js/lib/core';
 	import sql from 'highlight.js/lib/languages/sql';
@@ -11,7 +9,6 @@
 	export let articleMarkdown = '';
 
 	let renderedHtml = '';
-	let mermaidInitialized = false;
 
 	// Register languages for highlight.js
 	hljs.registerLanguage('sql', sql);
