@@ -6,10 +6,14 @@
 # and applies the schema from ccbilling_schema.sql if not already present.
 #
 # Usage:
+#   # First, ensure wrangler config is set up:
+#   doppler run -- ./setup-wrangler-config.sh
+#   # Then run this script:
 #   bash create_ccbilling_d1.sh
 #
 # Requirements:
 #   - Cloudflare Wrangler CLI (npx wrangler)
+#   - Doppler CLI with proper configuration
 #   - ccbilling_schema.sql in the same directory as this script
 #
 # This script is idempotent: it will not overwrite an existing database or schema.
@@ -27,6 +31,12 @@ fi
 
 if ! npx wrangler --version &> /dev/null; then
   echo "ERROR: Cloudflare Wrangler CLI is not installed. Run 'npm install -g wrangler' or use npx."
+  exit 1
+fi
+
+# Check if wrangler.jsonc exists
+if [ ! -f "wrangler.jsonc" ]; then
+  echo "ERROR: wrangler.jsonc not found. Please run 'doppler run -- ./setup-wrangler-config.sh' first."
   exit 1
 fi
 
