@@ -97,13 +97,13 @@
 			</div>
 		</div>
 		<div class="mt-6 flex flex-col gap-4 text-pretty text-xs text-white sm:text-sm">
-			{#each body as paragraph}
+			{#each body as paragraph (paragraph)}
 				<p class="leading-normal tracking-normal">{paragraph}</p>
 			{/each}
 			{#if keywords.length > 0}
 				<div class="my-6">
 					<ul class="flex flex-wrap gap-1 text-[0.7rem] leading-snug tracking-wide text-white/75">
-						{#each keywords as keyword}
+						{#each keywords as keyword (keyword)}
 							<li class="rounded-full bg-white/10 px-2 py-0.5">{keyword}</li>
 						{/each}
 					</ul>
@@ -111,8 +111,8 @@
 			{/if}
 		</div>
 		<div class="flex flex-wrap gap-3.5">
-			{#each skillIcons as icon}
-				<icon></icon>
+			{#each skillIcons as skillIcon (skillIcon)}
+				<skillIcon></skillIcon>
 			{/each}
 		</div>
 	</div>

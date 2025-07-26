@@ -43,6 +43,12 @@ export default [
 		}
 	},
 	{
+		files: ['**/ArticleRenderer.svelte'],
+		rules: {
+			'svelte/no-at-html-tags': 'off'
+		}
+	},
+	{
 		ignores: [
 			'.DS_Store',
 			'node_modules/**',
