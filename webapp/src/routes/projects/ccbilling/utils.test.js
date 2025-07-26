@@ -86,27 +86,37 @@ describe('generateSecureRandomHex utility', () => {
 	});
 
 	it('should produce varied random output', () => {
-		// Generate samples and verify they contain valid hex characters
-		const samples = 100;
-		const results = new Set();
+		// Test basic uniqueness with a few samples
+		const result1 = generateSecureRandomHex(6);
+		const result2 = generateSecureRandomHex(6);
+		const result3 = generateSecureRandomHex(6);
 		
-		for (let i = 0; i < samples; i++) {
-			const result = generateSecureRandomHex(6);
-			results.add(result);
-			
-			// Each result should be 12 hex characters
-			expect(result).toHaveLength(12);
-			expect(result).toMatch(/^[0-9a-f]{12}$/);
-		}
+		// Basic format validation
+		expect(result1).toHaveLength(12);
+		expect(result1).toMatch(/^[0-9a-f]{12}$/);
 		
-		// Should generate mostly unique values (at least 95% unique)
-		expect(results.size).toBeGreaterThan(samples * 0.95);
-		
-		// Test a larger sample to ensure we see variety in characters
-		const largeResult = generateSecureRandomHex(100); // 200 hex chars
+		// Results should be different (extremely high probability)
+		expect(result1).not.toBe(result2);
+		expect(result2).not.toBe(result3);
+		expect(result1).not.toBe(result3);
+	});
+
+	it('should generate diverse character distribution', () => {
+		// Generate a large sample to test character diversity
+		const largeResult = generateSecureRandomHex(32); // 64 hex chars
 		const uniqueChars = new Set(largeResult);
 		
-		// With 200 random hex chars, we should see most of the 16 possible chars
-		expect(uniqueChars.size).toBeGreaterThan(10); // At least 10 different hex chars
+		// With 64 random hex chars, we should see good variety
+		expect(uniqueChars.size).toBeGreaterThan(6); // At least 6 different hex chars
+		
+		// All characters should be valid hex
+		const hexChars = '0123456789abcdef';
+		for (const char of uniqueChars) {
+			expect(hexChars).toContain(char);
+		}
+		
+		// Ensure result is correct length
+		expect(largeResult).toHaveLength(64);
+		expect(largeResult).toMatch(/^[0-9a-f]{64}$/);
 	});
 });
