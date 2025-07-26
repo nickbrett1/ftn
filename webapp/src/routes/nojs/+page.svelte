@@ -1,6 +1,6 @@
 <head>
 	<meta name="description" content="No JavaScript enabled" />
-  <title>JavaScript Not Enabled</title>
+	<title>JavaScript Not Enabled</title>
 </head>
 
 <div class="m-auto flex h-screen bg-black text-8xl text-white">
