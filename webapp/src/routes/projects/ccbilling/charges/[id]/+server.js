@@ -1,8 +1,12 @@
 import { json } from '@sveltejs/kit';
 import { getPayment, updatePayment } from '$lib/server/ccbilling-db.js';
+import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET(event) {
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) return authResult;
+
 	const { params } = event;
 	const charge_id = parseInt(params.id);
 
@@ -24,6 +28,9 @@ export async function GET(event) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function PUT(event) {
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) return authResult;
+
 	const { params, request } = event;
 	const charge_id = parseInt(params.id);
 
