@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './+server.js';
-import { createAuthTest, setupAuthMock, AUTH_MOCK, SVELTEKIT_MOCK } from '../../../test-utils.js';
 import { json } from '@sveltejs/kit';
 
 // Mock the dependencies
@@ -9,7 +8,7 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	createStatement: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', AUTH_MOCK['$lib/server/require-user.js']);
+vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('@sveltejs/kit', () => ({
 	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
@@ -49,7 +48,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 		};
 
 		// Mock requireUser to return success by default
-		setupAuthMock(requireUser);
+		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
 	});
 
 	describe('GET endpoint', () => {
@@ -88,7 +87,11 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(result.error).toBe('Failed to list statements');
 		});
 
-		it('should redirect if user not authenticated', createAuthTest(GET, requireUser, () => mockEvent, [listStatements]));
+		it('should redirect if user not authenticated', async () => {
+			requireUser.mockResolvedValue(new Response('', { status: 302 }));
+			expect(await GET(mockEvent)).toEqual(expect.any(Response));
+			expect(listStatements).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('POST endpoint', () => {
