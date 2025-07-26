@@ -7,6 +7,10 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	bulkAssignPayments: vi.fn()
 }));
 
+vi.mock('$lib/server/require-user.js', () => ({
+	requireUser: vi.fn()
+}));
+
 vi.mock('@sveltejs/kit', () => ({
 	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
 		headers: { 'Content-Type': 'application/json' },
@@ -16,6 +20,7 @@ vi.mock('@sveltejs/kit', () => ({
 
 // Import the mocked functions
 import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
+import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 	let mockEvent;
@@ -29,6 +34,9 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 				json: vi.fn()
 			}
 		};
+
+		// Mock requireUser to return success by default
+		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
 	});
 
 	describe('GET endpoint', () => {
@@ -76,6 +84,16 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 
 			expect(listChargesForCycle).toHaveBeenCalledWith(mockEvent, 0);
 			expect(result.charges).toEqual([]);
+		});
+
+		it('should redirect if user not authenticated', async () => {
+			const redirectResponse = new Response('', { status: 302 });
+			requireUser.mockResolvedValue(redirectResponse);
+
+			const response = await GET(mockEvent);
+
+			expect(response).toBe(redirectResponse);
+			expect(listChargesForCycle).not.toHaveBeenCalled();
 		});
 	});
 
@@ -215,6 +233,16 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 
 			expect(response.status).toBe(500);
 			expect(result.error).toBe('Failed to bulk assign charges');
+		});
+
+		it('should redirect if user not authenticated', async () => {
+			const redirectResponse = new Response('', { status: 302 });
+			requireUser.mockResolvedValue(redirectResponse);
+
+			const response = await POST(mockEvent);
+
+			expect(response).toBe(redirectResponse);
+			expect(bulkAssignPayments).not.toHaveBeenCalled();
 		});
 	});
 });
