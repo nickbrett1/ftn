@@ -5,101 +5,13 @@
 	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
+	import { createErrorParticleConfig } from '$lib/utils/particleConfig.js';
 
 	$: status = $page.status;
 	$: error = $page.error;
 
-	let particlesConfig = {
-		fullScreen: {
-			enable: true,
-			zIndex: -1
-		},
-		fpsLimit: 60,
-		interactivity: {
-			detect_on: 'canvas',
-			events: {
-				onClick: { enable: false, mode: 'push' },
-				onHover: {
-					enable: true,
-					mode: 'connect',
-					parallax: { enable: false, force: 60, smooth: 10 }
-				},
-				resize: true
-			},
-			modes: {
-				bubble: { distance: 400, duration: 2, opacity: 0.8, size: 40, speed: 3 },
-				grab: { distance: 400, lineLinked: { opacity: 1 } },
-				push: { quantity: 4 },
-				remove: { quantity: 2 },
-				repulse: { distance: 200, duration: 0.4 },
-				connect: { distance: 400, links: { opacity: 0.5 }, radius: 150 }
-			}
-		},
-		particles: {
-			links: {
-				color: '#22c55e',
-				distance: 150,
-				enable: true,
-				opacity: 0.3,
-				width: 1
-			},
-			move: {
-				attract: { enable: false, rotateX: 600, rotateY: 1200 },
-				bounce: true,
-				direction: 'none',
-				enable: true,
-				out_mode: 'out',
-				random: false,
-				speed: 1,
-				straight: false
-			},
-			rotate: {
-				animation: {
-					enable: false,
-					speed: 10,
-					sync: false
-				}
-			},
-			number: { density: { enable: true, area: 800 }, value: 15 },
-			opacity: {
-				animation: { enable: true, speed: 0.5, sync: false },
-				random: false,
-				value: { min: 0.3, max: 0.8 }
-			},
-			shape: {
-				type: 'text',
-				options: {
-					text: [
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['404', '404', '404'],
-							weight: '400',
-							particles: {
-								color: '#22c55e',
-								size: {
-									value: 12
-								}
-							}
-						},
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['ERROR', 'ERROR'],
-							weight: '400',
-							particles: {
-								color: '#FF0061',
-								size: {
-									value: 12
-								}
-							}
-						}
-					]
-				}
-			}
-		},
-		detectRetina: true
-	};
+	// Create the particle configuration using the utility
+	const particlesConfig = createErrorParticleConfig();
 
 	onMount(async () => {
 		loadSlim(tsParticles);
