@@ -8,7 +8,12 @@ import { requireUser } from '$lib/server/require-user.js';
 export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
-	const { id } = event.params;
+
+	const id = Number(event.params.id);
+	if (!id) {
+		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
+	}
+
 	const merchants = await getBudgetMerchants(event, id);
 	return new Response(JSON.stringify(merchants), {
 		headers: { 'Content-Type': 'application/json' }
@@ -18,12 +23,19 @@ export async function GET(event) {
 export async function POST(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
-	const { id } = event.params;
+
+	const id = Number(event.params.id);
+	if (!id) {
+		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
+	}
+
 	const data = await event.request.json();
 	const { merchant } = data;
+
 	if (!merchant) {
-		return new Response(JSON.stringify({ error: 'Missing merchant' }), { status: 400 });
+		return new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 });
 	}
+
 	await addBudgetMerchant(event, id, merchant);
 	return new Response(JSON.stringify({ success: true }));
 }
@@ -31,12 +43,19 @@ export async function POST(event) {
 export async function DELETE(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
-	const { id } = event.params;
+
+	const id = Number(event.params.id);
+	if (!id) {
+		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
+	}
+
 	const data = await event.request.json();
 	const { merchant } = data;
+
 	if (!merchant) {
-		return new Response(JSON.stringify({ error: 'Missing merchant' }), { status: 400 });
+		return new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 });
 	}
+
 	await removeBudgetMerchant(event, id, merchant);
 	return new Response(JSON.stringify({ success: true }));
 }

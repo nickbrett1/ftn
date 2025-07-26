@@ -230,3 +230,88 @@ export async function getBudgetMerchants(event, budget_id) {
 		.all();
 	return results;
 }
+
+/**
+ * List all statements for a billing cycle.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} billing_cycle_id
+ * @returns {Promise<Array>}
+ */
+export async function listStatements(event, billing_cycle_id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const { results } = await db
+		.prepare(
+			`
+			SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4
+			FROM statement s
+			JOIN credit_card cc ON s.credit_card_id = cc.id
+			WHERE s.billing_cycle_id = ?
+			ORDER BY s.uploaded_at DESC
+		`
+		)
+		.bind(billing_cycle_id)
+		.all();
+	return results;
+}
+
+/**
+ * Get a single statement by id.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @returns {Promise<Object|null>}
+ */
+export async function getStatement(event, id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const result = await db
+		.prepare(
+			`
+			SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4
+			FROM statement s
+			JOIN credit_card cc ON s.credit_card_id = cc.id
+			WHERE s.id = ?
+		`
+		)
+		.bind(id)
+		.first();
+	return result;
+}
+
+/**
+ * Create a new statement.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} billing_cycle_id
+ * @param {number} credit_card_id
+ * @param {string} filename
+ * @param {string} r2_key
+ * @param {string} due_date
+ */
+export async function createStatement(
+	event,
+	billing_cycle_id,
+	credit_card_id,
+	filename,
+	r2_key,
+	due_date
+) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db
+		.prepare(
+			'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, due_date) VALUES (?, ?, ?, ?, ?)'
+		)
+		.bind(billing_cycle_id, credit_card_id, filename, r2_key, due_date)
+		.run();
+}
+
+/**
+ * Delete a statement by id.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ */
+export async function deleteStatement(event, id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db.prepare('DELETE FROM statement WHERE id = ?').bind(id).run();
+}
