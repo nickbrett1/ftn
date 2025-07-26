@@ -286,7 +286,7 @@ describe('ccbilling-db functions', () => {
 
 				const result = await getBudgetMerchants(mockEvent, 1);
 
-				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY created_at DESC');
+				expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM budget_merchant WHERE budget_id = ?');
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(result).toEqual(mockMerchants);
 			});
