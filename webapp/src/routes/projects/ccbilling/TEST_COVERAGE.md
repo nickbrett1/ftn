@@ -16,7 +16,7 @@ This document outlines the comprehensive test coverage added for the ccbilling f
   - Complex JOIN queries for charges
 
 ### 2. Statement Upload API Tests
-**File:** `src/routes/projects/ccbilling/cycles/[id]/statements/+server.test.js`
+**File:** `src/routes/projects/ccbilling/cycles/[id]/statements/server.test.js`
 - **Coverage:** File upload endpoint with R2 integration
 - **Test Count:** 15+ individual test cases
 - **Coverage Areas:**
@@ -30,7 +30,7 @@ This document outlines the comprehensive test coverage added for the ccbilling f
   - Error handling for all failure scenarios
 
 ### 3. Charge Management API Tests
-**File:** `src/routes/projects/ccbilling/charges/[id]/+server.test.js`
+**File:** `src/routes/projects/ccbilling/charges/[id]/server.test.js`
 - **Coverage:** Individual charge GET and PUT operations
 - **Test Count:** 12+ individual test cases
 - **Coverage Areas:**
@@ -42,7 +42,7 @@ This document outlines the comprehensive test coverage added for the ccbilling f
   - Error handling
 
 ### 4. Statement Parsing API Tests
-**File:** `src/routes/projects/ccbilling/statements/[id]/parse/+server.test.js`
+**File:** `src/routes/projects/ccbilling/statements/[id]/parse/server.test.js`
 - **Coverage:** Statement parsing with mock Llama API
 - **Test Count:** 10+ individual test cases
 - **Coverage Areas:**
@@ -186,8 +186,8 @@ npm test ccbilling
 
 # Run specific test files
 npm test ccbilling-db.test.js
-npm test statements/+server.test.js
-npm test charges/+server.test.js
+npm test statements/server.test.js
+npm test charges/server.test.js
 
 # Run with coverage
 npm run test-staging
