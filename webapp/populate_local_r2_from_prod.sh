@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Configuration
-BUCKETS=("wdi" "ccbilling")
+WRANGLER_CONFIG="$(dirname "$0")/wrangler.jsonc"
 TEMP_DIR=$(mktemp -d)
 
 # Ensure the temporary directory is cleaned up on script exit (success or failure)
@@ -13,6 +13,41 @@ if ! command -v npx wrangler &> /dev/null; then
     echo "Error: wrangler (via npx) could not be found. Please ensure it's installed and in your PATH." >&2
     exit 1
 fi
+
+# Ensure jq is available for JSON parsing
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq could not be found. Please install jq for JSON parsing." >&2
+    exit 1
+fi
+
+# Function to discover R2 buckets from wrangler.jsonc
+discover_buckets() {
+    local config_file="$1"
+    
+    if [[ ! -f "$config_file" ]]; then
+        echo "Error: wrangler.jsonc not found at $config_file" >&2
+        return 1
+    fi
+    
+    echo "Discovering R2 buckets from $config_file..."
+    
+    # Extract bucket names from both root level and production environment
+    # Using jq to parse JSONC (which jq handles fine despite comments)
+    local bucket_names
+    bucket_names=$(jq -r '
+        [
+            (.r2_buckets[]?.bucket_name // empty),
+            (.env.production.r2_buckets[]?.bucket_name // empty)
+        ] | unique | .[]
+    ' "$config_file" 2>/dev/null)
+    
+    if [[ -z "$bucket_names" ]]; then
+        echo "Warning: No R2 buckets found in $config_file" >&2
+        return 1
+    fi
+    
+    echo "$bucket_names"
+}
 
 # Function to sync a bucket
 sync_bucket() {
@@ -92,6 +127,19 @@ sync_bucket() {
 
 # Main execution
 echo "=== Starting R2 bucket synchronization from production to local ==="
+echo ""
+
+# Discover buckets from wrangler.jsonc
+bucket_names=$(discover_buckets "$WRANGLER_CONFIG")
+if [[ $? -ne 0 || -z "$bucket_names" ]]; then
+    echo "Error: Could not discover R2 buckets from configuration. Exiting." >&2
+    exit 1
+fi
+
+# Convert bucket names to array
+readarray -t BUCKETS <<< "$bucket_names"
+
+echo "Discovered ${#BUCKETS[@]} R2 bucket(s): ${BUCKETS[*]}"
 echo ""
 
 total_success=0
