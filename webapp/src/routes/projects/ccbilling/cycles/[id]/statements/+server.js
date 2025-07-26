@@ -2,6 +2,16 @@ import { listStatements, createStatement } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
 
+/**
+ * Generate a cryptographically secure random hex string for file keys
+ * @param {number} byteLength - Number of random bytes to generate
+ * @returns {string} Hex string of the specified length
+ */
+function generateSecureRandomHex(byteLength = 6) {
+	const randomBytes = crypto.getRandomValues(new Uint8Array(byteLength));
+	return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
@@ -58,9 +68,10 @@ export async function POST(event) {
 			}, { status: 400 });
 		}
 
-		// Generate unique R2 key
+		// Generate unique R2 key with cryptographically secure randomness
+		// Using crypto.getRandomValues() instead of Math.random() for security
 		const timestamp = Date.now();
-		const randomSuffix = Math.random().toString(36).substring(2, 8);
+		const randomSuffix = generateSecureRandomHex(6); // 12 hex characters (6 bytes)
 		const r2_key = `statements/${cycleId}/${timestamp}-${randomSuffix}-${file.name}`;
 
 		// Upload to R2
