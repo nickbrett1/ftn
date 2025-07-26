@@ -1,7 +1,7 @@
-<head>
+<svelte:head>
 	<meta name="description" content="Preview of Site" />
 	<title>Preview</title>
-</head>
+</svelte:head>
 
 <div class="flex h-screen bg-black text-8xl text-white">
 	<div class="m-auto">

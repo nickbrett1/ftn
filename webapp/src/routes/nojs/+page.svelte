@@ -1,7 +1,7 @@
-<head>
+<svelte:head>
 	<meta name="description" content="No JavaScript enabled" />
 	<title>JavaScript Not Enabled</title>
-</head>
+</svelte:head>
 
 <div class="m-auto flex h-screen bg-black text-8xl text-white">
 	<div class="m-auto text-center">

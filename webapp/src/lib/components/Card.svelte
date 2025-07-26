@@ -1,5 +1,4 @@
 <!-- Border wraps the inner card element -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 
 <!-- Thanks to Yash Verma, and his blog on animating a card hover for this: 
  https://yashverma.me/blog/cards -->

@@ -1,6 +1,5 @@
 <script>
 	import Header from '$lib/components/Header.svelte';
-	import Background from '$lib/components/Background.svelte';
 	import Landing from '$lib/components/Landing.svelte';
 	import About from '$lib/components/About.svelte';
 	import Projects from '$lib/components/Projects.svelte';
