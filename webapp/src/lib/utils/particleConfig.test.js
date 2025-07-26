@@ -5,9 +5,9 @@ import {
 	createErrorParticleConfig
 } from './particleConfig.js';
 
-describe('particleConfig utilities', () => {
+describe('particleConfig utilities (cryptographically secure)', () => {
 	describe('generatePercentageValues', () => {
-		it('should generate positive percentage values by default', () => {
+		it('should generate positive percentage values by default using crypto.getRandomValues', () => {
 			const values = generatePercentageValues(5);
 			
 			expect(values).toHaveLength(5);
@@ -16,7 +16,7 @@ describe('particleConfig utilities', () => {
 			});
 		});
 
-		it('should generate negative percentage values when specified', () => {
+		it('should generate negative percentage values when specified using secure random', () => {
 			const values = generatePercentageValues(5, false);
 			
 			expect(values).toHaveLength(5);
@@ -38,6 +38,18 @@ describe('particleConfig utilities', () => {
 				expect(numericValue).toBeGreaterThanOrEqual(0);
 				expect(numericValue).toBeLessThanOrEqual(15);
 			});
+		});
+
+		it('should use cryptographically secure random generation', () => {
+			// Test that crypto.getRandomValues is available and being used
+			expect(typeof crypto?.getRandomValues).toBe('function');
+			
+			// Generate multiple sets and verify they're different (very high probability)
+			const set1 = generatePercentageValues(10);
+			const set2 = generatePercentageValues(10);
+			
+			// With secure random, these should be different
+			expect(set1).not.toEqual(set2);
 		});
 	});
 

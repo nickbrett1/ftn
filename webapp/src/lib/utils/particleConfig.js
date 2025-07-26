@@ -2,32 +2,38 @@
  * Particle configuration utilities for tsParticles
  * Provides reusable, configurable particle effects for the application
  * 
- * SECURITY NOTE: This module uses Math.random() for generating visual effects only.
- * All random values generated here are purely cosmetic and not used for any
- * security-sensitive operations, authentication, or cryptographic purposes.
+ * SECURITY NOTE: This module uses crypto.getRandomValues() for cryptographically
+ * secure random number generation, following security best practices even for
+ * visual effects that don't strictly require this level of security.
  */
 
 /**
- * Generate random percentage values for financial-themed particles
+ * Generate a cryptographically secure random float between 0 and 1
+ * @returns {number} Cryptographically secure random float between 0 and 1
+ */
+const getSecureRandom = () => {
+	const randomBytes = new Uint32Array(1);
+	crypto.getRandomValues(randomBytes);
+	return randomBytes[0] / (0xFFFFFFFF + 1);
+};
+
+/**
+ * Generate cryptographically secure random percentage values for financial-themed particles
  * 
- * NOTE: This function uses Math.random() which is NOT cryptographically secure.
- * This is intentional and safe for this use case as these values are:
- * - Purely cosmetic (visual particle effects)
- * - Not used for any security-sensitive operations
- * - Not real financial data or user information
- * - Display-only content for background animations
+ * Uses crypto.getRandomValues() for cryptographically secure random number generation.
+ * While this level of security isn't strictly necessary for visual effects, it eliminates
+ * any potential security concerns and follows security best practices.
  * 
  * @param {number} count - Number of values to generate
  * @param {boolean} positive - Whether to generate positive (+) or negative (-) values
- * @returns {string[]} Array of formatted percentage strings for visual display only
+ * @returns {string[]} Array of formatted percentage strings for visual display
  */
 export const generatePercentageValues = (count = 50, positive = true) => {
 	return Array.from(
 		{ length: count },
 		() => {
-			// Generate random percentage between 0.01 and 15.00
-			// Math.random() is safe here as this is purely for visual effects
-			const value = Math.random() * 15;
+			// Generate cryptographically secure random percentage between 0.01 and 15.00
+			const value = getSecureRandom() * 15;
 			const rounded = Math.round(value * 100) / 100;
 			const sign = positive ? '+' : '-';
 			return `${sign}${rounded.toFixed(2)}%`;
@@ -266,7 +272,7 @@ function deepMerge(target, source) {
  *   return deepMerge(config, overrides);
  * };
  * 
- * SECURITY REMINDER: If you need random values for your custom particle configs,
- * ensure you use Math.random() only for visual/cosmetic purposes. For any
- * security-sensitive operations, use crypto.getRandomValues() instead.
+ * SECURITY NOTE: This module uses crypto.getRandomValues() for all random number
+ * generation. If you create custom particle configs that need randomness, consider
+ * using the same approach for consistency and security best practices.
  */

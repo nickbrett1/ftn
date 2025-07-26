@@ -10,9 +10,9 @@ Provides configurable particle effects using tsParticles for creating animated b
 
 #### `generatePercentageValues(count, positive)`
 
-Generates random percentage values for financial-themed particles.
+Generates cryptographically secure random percentage values for financial-themed particles.
 
-**Security Note:** Uses `Math.random()` which is NOT cryptographically secure. This is intentional and safe as these values are purely cosmetic for visual particle effects.
+**Security Note:** Uses `crypto.getRandomValues()` for cryptographically secure random number generation, following security best practices.
 
 **Parameters:**
 - `count` (number): Number of values to generate (default: 50)
