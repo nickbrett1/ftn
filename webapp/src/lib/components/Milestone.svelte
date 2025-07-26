@@ -111,8 +111,8 @@
 			{/if}
 		</div>
 		<div class="flex flex-wrap gap-3.5">
-			{#each skillIcons as skillIcon (skillIcon)}
-				<svelte:component this={skillIcon} />
+			{#each skillIcons as SkillIcon (SkillIcon)}
+				<SkillIcon />
 			{/each}
 		</div>
 	</div>

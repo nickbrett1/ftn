@@ -32,6 +32,10 @@
 		{
 			"binding": "R2_WDI",
 			"bucket_name": "wdi"
+		},
+		{
+			"binding": "R2_CCBILLING",
+			"bucket_name": "ccbilling"
 		}
 	],
 	"compatibility_flags": ["nodejs_compat_v2"],
@@ -65,6 +69,10 @@
 				{
 					"binding": "R2_WDI",
 					"bucket_name": "wdi"
+				},
+				{
+					"binding": "R2_CCBILLING",
+					"bucket_name": "ccbilling"
 				}
 			]
 		}

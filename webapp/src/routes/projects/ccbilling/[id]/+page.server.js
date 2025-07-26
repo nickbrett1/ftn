@@ -1,6 +1,11 @@
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/require-user.js';
-import { getBillingCycle } from '$lib/server/ccbilling-db.js';
+import { 
+	getBillingCycle, 
+	listStatements, 
+	listChargesForCycle,
+	listCreditCards 
+} from '$lib/server/ccbilling-db.js';
 
 const HTML_TEMPORARY_REDIRECT = 307;
 
@@ -10,15 +15,23 @@ export async function load(event) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
 	}
 
-	const cycleId = event.params.id;
+	const cycleId = parseInt(event.params.id);
 	const cycle = await getBillingCycle(event, cycleId);
 
 	if (!cycle) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/projects/ccbilling');
 	}
 
+	// Fetch related data
+	const statements = await listStatements(event, cycleId);
+	const charges = await listChargesForCycle(event, cycleId);
+	const creditCards = await listCreditCards(event);
+
 	return {
 		cycleId,
-		cycle
+		cycle,
+		statements,
+		charges,
+		creditCards
 	};
 }
