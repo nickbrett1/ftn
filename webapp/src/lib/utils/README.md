@@ -15,6 +15,7 @@ Generates cryptographically secure random percentage values for financial-themed
 **Security Note:** Uses `crypto.getRandomValues()` for cryptographically secure random number generation, following security best practices.
 
 **Parameters:**
+
 - `count` (number): Number of values to generate (default: 50)
 - `positive` (boolean): Whether to generate positive (+) or negative (-) values (default: true)
 
@@ -25,12 +26,14 @@ Generates cryptographically secure random percentage values for financial-themed
 Creates a financial-themed particle configuration with dynamic percentage text particles.
 
 **Features:**
+
 - Green particles for positive percentages
 - Red particles for negative percentages
 - Upward movement direction
 - Random link colors
 
 **Parameters:**
+
 - `overrides` (object): Configuration overrides to merge with base config
 
 **Returns:** Complete tsParticles configuration object
@@ -40,12 +43,14 @@ Creates a financial-themed particle configuration with dynamic percentage text p
 Creates an error page particle configuration with "404" and "ERROR" text particles.
 
 **Features:**
+
 - Green "404" text particles
 - Red "ERROR" text particles
 - No movement direction (stationary drift)
 - Fewer particles for less distraction
 
 **Parameters:**
+
 - `overrides` (object): Configuration overrides to merge with base config
 
 **Returns:** Complete tsParticles configuration object
@@ -53,9 +58,9 @@ Creates an error page particle configuration with "404" and "ERROR" text particl
 ### Usage Examples
 
 ```javascript
-import { 
-  createFinancialParticleConfig, 
-  createErrorParticleConfig 
+import {
+	createFinancialParticleConfig,
+	createErrorParticleConfig
 } from '$lib/utils/particleConfig.js';
 
 // Basic usage
@@ -63,11 +68,11 @@ const config = createFinancialParticleConfig();
 
 // With customizations
 const customConfig = createFinancialParticleConfig({
-  fpsLimit: 30,
-  particles: {
-    number: { value: 10 },
-    move: { speed: 2 }
-  }
+	fpsLimit: 30,
+	particles: {
+		number: { value: 10 },
+		move: { speed: 2 }
+	}
 });
 
 // Error page configuration
@@ -85,6 +90,7 @@ The utility eliminates code duplication and provides a consistent API for partic
 ### Testing
 
 Unit tests are available in `particleConfig.test.js` covering:
+
 - Percentage value generation
 - Configuration structure validation
 - Override functionality

@@ -1,7 +1,7 @@
 /**
  * Particle configuration utilities for tsParticles
  * Provides reusable, configurable particle effects for the application
- * 
+ *
  * SECURITY NOTE: This module uses crypto.getRandomValues() for cryptographically
  * secure random number generation, following security best practices even for
  * visual effects that don't strictly require this level of security.
@@ -14,31 +14,28 @@
 const getSecureRandom = () => {
 	const randomBytes = new Uint32Array(1);
 	crypto.getRandomValues(randomBytes);
-	return randomBytes[0] / (0xFFFFFFFF + 1);
+	return randomBytes[0] / (0xffffffff + 1);
 };
 
 /**
  * Generate cryptographically secure random percentage values for financial-themed particles
- * 
+ *
  * Uses crypto.getRandomValues() for cryptographically secure random number generation.
  * While this level of security isn't strictly necessary for visual effects, it eliminates
  * any potential security concerns and follows security best practices.
- * 
+ *
  * @param {number} count - Number of values to generate
  * @param {boolean} positive - Whether to generate positive (+) or negative (-) values
  * @returns {string[]} Array of formatted percentage strings for visual display
  */
 export const generatePercentageValues = (count = 50, positive = true) => {
-	return Array.from(
-		{ length: count },
-		() => {
-			// Generate cryptographically secure random percentage between 0.01 and 15.00
-			const value = getSecureRandom() * 15;
-			const rounded = Math.round(value * 100) / 100;
-			const sign = positive ? '+' : '-';
-			return `${sign}${rounded.toFixed(2)}%`;
-		}
-	);
+	return Array.from({ length: count }, () => {
+		// Generate cryptographically secure random percentage between 0.01 and 15.00
+		const value = getSecureRandom() * 15;
+		const rounded = Math.round(value * 100) / 100;
+		const sign = positive ? '+' : '-';
+		return `${sign}${rounded.toFixed(2)}%`;
+	});
 };
 
 /**
@@ -109,12 +106,12 @@ const baseConfig = {
 /**
  * Create a financial-themed particle configuration for the main background
  * Features dynamic percentage text particles in green and red
- * 
+ *
  * IMPLEMENTATION NOTE: This function intentionally uses baseConfig.particles.links
- * (distance: 400, opacity: 0.2, no color property) to match the original 
- * Background.svelte behavior where duplicate links definitions caused the 
+ * (distance: 400, opacity: 0.2, no color property) to match the original
+ * Background.svelte behavior where duplicate links definitions caused the
  * second one to override the first.
- * 
+ *
  * @param {Object} overrides - Configuration overrides
  * @returns {Object} Complete particle configuration
  */
@@ -234,7 +231,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
  */
 function deepMerge(target, source) {
 	const result = { ...target };
-	
+
 	for (const key in source) {
 		if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
 			result[key] = deepMerge(result[key] || {}, source[key]);
@@ -242,15 +239,15 @@ function deepMerge(target, source) {
 			result[key] = source[key];
 		}
 	}
-	
+
 	return result;
 }
 
 /*
  * EXAMPLE: Creating custom particle configurations
- * 
+ *
  * To add new particle effects, follow this pattern:
- * 
+ *
  * export const createCustomParticleConfig = (overrides = {}) => {
  *   const config = {
  *     ...baseConfig,
@@ -268,10 +265,10 @@ function deepMerge(target, source) {
  *       }
  *     }
  *   };
- *   
+ *
  *   return deepMerge(config, overrides);
  * };
- * 
+ *
  * SECURITY NOTE: This module uses crypto.getRandomValues() for all random number
  * generation. If you create custom particle configs that need randomness, consider
  * using the same approach for consistency and security best practices.
