@@ -4,105 +4,268 @@ Command: npx @threlte/gltf@0.0.5 office.glb
 -->
 
 <script>
-  import { Group } from 'three'
-  import { T } from '@threlte/core'
-  import { useGltf, interactivity } from '@threlte/extras'
-  /**
-   * @typedef {Object} Props
-   * @property {import('svelte').Snippet<[any]>} [children]
-   */
+	import { Group } from 'three';
+	import { T } from '@threlte/core';
+	import { useGltf, interactivity } from '@threlte/extras';
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet<[any]>} [children]
+	 */
 
-  /** @type {Props & { [key: string]: any }} */
-  let { children, ...rest } = $props();
+	/** @type {Props & { [key: string]: any }} */
+	let { children, ...rest } = $props();
 
-  export const ref = new Group()
+	export const ref = new Group();
 
-	interactivity()
+	interactivity();
 
-  const gltf = useGltf('/office.glb', {
-		useDraco: true,
-	})
+	const gltf = useGltf('/office.glb', {
+		useDraco: true
+	});
 </script>
 
 {#if $gltf}
-  <T is={ref} {...rest}>
-    <T.Group rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
-      <T.Mesh geometry={$gltf.nodes.Office2_base.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books10.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books11.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books12.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books13.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books14.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books15.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books16.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books3.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books4.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books5.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books6.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books7.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books8.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Books9.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_3.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_4.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_5.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_6.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_box_7.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_carpet.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_chair.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_clock_1.geometry} material={$gltf.materials['LP_Rooms.001']} />
+	<T is={ref} {...rest}>
+		<T.Group rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_base.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books10.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books11.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books12.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books13.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books14.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books15.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books16.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books3.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books4.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books5.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books6.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books7.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books8.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Books9.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_3.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_4.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_5.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_6.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_box_7.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_carpet.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_chair.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_clock_1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
 
-
-      <T.Mesh geometry={$gltf.nodes.Office2_decoration1.geometry} material={$gltf.materials['LP_Rooms.001']}
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_decoration1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
 				on:click={(e) => {
-					console.log('clicked on good day!')
-					e.stopPropagation()
+					console.log('clicked on good day!');
+					e.stopPropagation();
 				}}
 				on:pointermove={(e) => {
-					
-					console.log('hovered on good day!')
-					console.log(e.object)
-				//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+					console.log('hovered on good day!');
+					console.log(e.object);
+					//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 
-					e.stopPropagation()
+					e.stopPropagation();
 				}}
 			/>
 
-      <T.Mesh geometry={$gltf.nodes.Office2_decoration2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Flower.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Keyboard.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_little_table.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_magazines1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_magazines2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_magazines3.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_magazines4.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_magazines5.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_monitor1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Mouse.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_parquet1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_parquet2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Pens.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Photoframe1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Photoframe_2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Photoframe_3.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Photoframe_4.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_picture.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Room_Paper.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_shelves.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_sofa.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_stand.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_table.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_vial_1.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_vial_2.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Vinyl_players.geometry} material={$gltf.materials['LP_Rooms.001']} />
-      <T.Mesh geometry={$gltf.nodes.Office2_Vinyls.geometry} material={$gltf.materials['LP_Rooms.001']} />
-    </T.Group>
-	
-	
-	
-    {@render children?.({ ref, })}
-  </T>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_decoration2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Flower.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Keyboard.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_little_table.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_magazines1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_magazines2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_magazines3.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_magazines4.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_magazines5.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_monitor1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Mouse.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_parquet1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_parquet2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Pens.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Photoframe1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Photoframe_2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Photoframe_3.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Photoframe_4.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_picture.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Room_Paper.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_shelves.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_sofa.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_stand.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_table.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_vial_1.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_vial_2.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Vinyl_players.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+			<T.Mesh
+				geometry={$gltf.nodes.Office2_Vinyls.geometry}
+				material={$gltf.materials['LP_Rooms.001']}
+			/>
+		</T.Group>
+
+		{@render children?.({ ref })}
+	</T>
 {/if}

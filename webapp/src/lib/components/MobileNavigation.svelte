@@ -6,7 +6,8 @@
 	const {
 		elements: { trigger, content, arrow, close, overlay },
 		states: { open }
-	} = createPopover({ // Allow page scrolling when popover links are clicked
+	} = createPopover({
+		// Allow page scrolling when popover links are clicked
 		preventScroll: false,
 		forceVisible: true
 	});

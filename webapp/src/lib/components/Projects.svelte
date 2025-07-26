@@ -30,8 +30,8 @@
 					<DatabaseSolid class="size-10" aria-label="ETL Project" />
 				</div>
 				<p class="grow pt-5">
-					A project using DuckDB and dbt to build a flexible, low-cost and manageable ETL solution without a Data
-					Warehouse.
+					A project using DuckDB and dbt to build a flexible, low-cost and manageable ETL solution
+					without a Data Warehouse.
 				</p>
 			</div>
 		</Card>

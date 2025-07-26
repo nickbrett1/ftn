@@ -1,6 +1,6 @@
 <head>
 	<meta name="description" content="Preview of Site" />
-  <title>Preview</title>
+	<title>Preview</title>
 </head>
 
 <div class="flex h-screen bg-black text-8xl text-white">
