@@ -149,14 +149,8 @@
 	title="Credit Card Management"
 	description="Manage your credit cards for billing cycle tracking"
 >
-	<div class="flex justify-between items-center mb-8">
+	<div class="mb-8">
 		<h1 class="text-4xl font-bold">Credit Cards</h1>
-		<button
-			class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-			on:click={() => (showAddForm = !showAddForm)}
-		>
-			{showAddForm ? 'Cancel' : 'Add Credit Card'}
-		</button>
 	</div>
 
 	<!-- Add Card Form -->
@@ -194,109 +188,114 @@
 				</div>
 			</div>
 			<div class="mt-4">
-				<button
-					class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
-					on:click={addCard}
-					disabled={isAdding}
-				>
+				<Button type="button" variant="success" disabled={isAdding} onclick={addCard}>
 					{isAdding ? 'Adding...' : 'Add Card'}
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Credit Cards List -->
-	{#if creditCards.length === 0}
-		<div class="text-center py-8">
-			<p class="text-gray-300 mb-4">No credit cards added yet.</p>
-			<p class="text-gray-400 text-sm">Add your first credit card to start tracking statements.</p>
-		</div>
-	{:else}
-		<div class="space-y-4">
-			{#each creditCards as card (card.id)}
-				<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-					{#if editingCard?.id === card.id}
-						<!-- Edit Form -->
-						<div>
-							<h3 class="text-lg font-semibold text-white mb-3">Edit Credit Card</h3>
-							{#if editError}
-								<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
-									{editError}
-								</div>
-							{/if}
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-								<div>
-									<label class="block text-gray-300 mb-2">
-										Card Name:
-										<input
-											type="text"
-											bind:value={editName}
-											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
-									</label>
-								</div>
-								<div>
-									<label class="block text-gray-300 mb-2">
-										Last 4 Digits:
-										<input
-											type="text"
-											bind:value={editLast4}
-											maxlength="4"
-											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
-									</label>
-								</div>
-							</div>
-							<div class="flex space-x-2">
-								<button
-									class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
-									on:click={saveEdit}
-									disabled={isEditing}
-								>
-									{isEditing ? 'Saving...' : 'Save'}
-								</button>
-								<button
-									class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
-									on:click={cancelEdit}
-									disabled={isEditing}
-								>
-									Cancel
-								</button>
-							</div>
-						</div>
-					{:else}
-						<!-- Display Mode -->
-						<div class="flex justify-between items-center">
+	{#if !showAddForm}
+		{#if creditCards.length === 0}
+			<div class="text-center py-8">
+				<p class="text-gray-300 mb-4">No credit cards added yet.</p>
+				<p class="text-gray-400 text-sm">
+					Add your first credit card to start tracking statements.
+				</p>
+			</div>
+		{:else}
+			<div class="space-y-4">
+				{#each creditCards as card (card.id)}
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+						{#if editingCard?.id === card.id}
+							<!-- Edit Form -->
 							<div>
-								<h3 class="text-lg font-semibold text-white">{card.name}</h3>
-								<p class="text-gray-400">****{card.last4}</p>
-								<p class="text-gray-500 text-sm">
-									Added: {new Date(card.created_at).toLocaleDateString()}
-								</p>
+								<h3 class="text-lg font-semibold text-white mb-3">Edit Credit Card</h3>
+								{#if editError}
+									<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+										{editError}
+									</div>
+								{/if}
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+									<div>
+										<label class="block text-gray-300 mb-2">
+											Card Name:
+											<input
+												type="text"
+												bind:value={editName}
+												class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+											/>
+										</label>
+									</div>
+									<div>
+										<label class="block text-gray-300 mb-2">
+											Last 4 Digits:
+											<input
+												type="text"
+												bind:value={editLast4}
+												maxlength="4"
+												class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+											/>
+										</label>
+									</div>
+								</div>
+								<div class="flex space-x-2">
+									<Button type="button" variant="success" disabled={isEditing} onclick={saveEdit}>
+										{isEditing ? 'Saving...' : 'Save'}
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										disabled={isEditing}
+										onclick={cancelEdit}
+									>
+										Cancel
+									</Button>
+								</div>
 							</div>
-							<div class="flex space-x-2">
-								<button
-									class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm"
-									on:click={() => startEdit(card)}
-								>
-									Edit
-								</button>
-								<button
-									class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-									on:click={() => deleteCard(card)}
-									disabled={deletingCard?.id === card.id && isDeleting}
-								>
-									{deletingCard?.id === card.id && isDeleting ? 'Deleting...' : 'Delete'}
-								</button>
+						{:else}
+							<!-- Display Mode -->
+							<div class="flex justify-between items-center">
+								<div>
+									<h3 class="text-lg font-semibold text-white">{card.name}</h3>
+									<p class="text-gray-400">****{card.last4}</p>
+									<p class="text-gray-500 text-sm">
+										Added: {new Date(card.created_at).toLocaleDateString()}
+									</p>
+								</div>
+								<div class="flex space-x-2">
+									<Button type="button" variant="warning" size="sm" onclick={() => startEdit(card)}>
+										Edit
+									</Button>
+									<Button
+										type="button"
+										variant="danger"
+										size="sm"
+										disabled={deletingCard?.id === card.id && isDeleting}
+										onclick={() => deleteCard(card)}
+									>
+										{deletingCard?.id === card.id && isDeleting ? 'Deleting...' : 'Delete'}
+									</Button>
+								</div>
 							</div>
-						</div>
-					{/if}
-				</div>
-			{/each}
-		</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 
-	<div class="mt-8">
-		<Button href="/projects/ccbilling" variant="secondary">Back to Billing Cycles</Button>
+	<div class="mt-8 flex space-x-4">
+		{#if !editingCard}
+			<Button
+				type="button"
+				variant={showAddForm ? 'secondary' : 'success'}
+				onclick={() => (showAddForm = !showAddForm)}
+			>
+				{showAddForm ? 'Cancel' : 'Add Credit Card'}
+			</Button>
+		{/if}
+		<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
 	</div>
 </PageLayout>

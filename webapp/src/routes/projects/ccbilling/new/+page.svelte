@@ -97,10 +97,10 @@
 			</label>
 		</div>
 
-		<Button type="submit" variant="primary" disabled={isSubmitting}>
+		<Button type="submit" variant="primary" size="lg" disabled={isSubmitting}>
 			{isSubmitting ? 'Creating...' : 'Create Billing Cycle'}
 		</Button>
 	</form>
 
-	<Button href="/projects/ccbilling" variant="secondary">Back to Billing Cycles</Button>
+	<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
 </div>

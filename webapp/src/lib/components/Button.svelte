@@ -5,7 +5,9 @@
 		type = 'button',
 		disabled = false,
 		href = null,
-		children
+		children,
+		onclick = null,
+		...rest
 	} = $props();
 
 	const variants = {
@@ -14,7 +16,8 @@
 		secondary:
 			'bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500',
 		danger: 'bg-red-600 hover:bg-red-700 text-white',
-		success: 'bg-green-600 hover:bg-green-700 text-white'
+		success: 'bg-green-600 hover:bg-green-700 text-white',
+		warning: 'bg-yellow-600 hover:bg-yellow-700 text-white'
 	};
 
 	const sizes = {
@@ -23,15 +26,15 @@
 		lg: 'py-3 px-6 text-lg'
 	};
 
-	const classes = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} no-underline`;
+	const classes = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline ${disabled ? '' : 'hover:cursor-pointer'}`;
 </script>
 
 {#if href}
-	<a {href} class={classes}>
+	<a {href} class={classes} {...rest}>
 		{@render children?.()}
 	</a>
 {:else}
-	<button {type} {disabled} class={classes}>
+	<button {type} {disabled} class={classes} {onclick} {...rest}>
 		{@render children?.()}
 	</button>
 {/if}
