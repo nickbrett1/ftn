@@ -18,10 +18,10 @@ export async function POST(event) {
 	const data = await event.request.json();
 	const { name } = data;
 
-	if (!name) {
+	if (!name || !name.trim()) {
 		return new Response(JSON.stringify({ error: 'Missing budget name' }), { status: 400 });
 	}
 
-	await createBudget(event, name);
+	await createBudget(event, name.trim());
 	return new Response(JSON.stringify({ success: true }));
 }
