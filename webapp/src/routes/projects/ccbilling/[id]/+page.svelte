@@ -1,4 +1,6 @@
 <script>
+	import Button from '$lib/components/Button.svelte';
+
 	export let data;
 	$: ({ cycleId, cycle, statements, charges, creditCards } = data);
 
@@ -10,6 +12,7 @@
 	}
 
 	import { goto } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	let showDeleteDialog = false;
 	let isDeleting = false;
 	let deleteError = '';
@@ -35,6 +38,8 @@
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to delete billing cycle');
 			}
+			// Invalidate the cache to ensure fresh data is loaded
+			await invalidate('/projects/ccbilling');
 			await goto('/projects/ccbilling');
 		} catch (err) {
 			deleteError = err.message;
@@ -156,12 +161,16 @@
 		<div class="flex justify-between items-center mb-4">
 			<h3 class="text-xl font-semibold text-white">Statements</h3>
 			{#if !cycle.closed}
-				<button
-					class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-					on:click={() => (showUploadForm = !showUploadForm)}
+				<Button
+					type="button"
+					variant={showUploadForm ? 'secondary' : 'success'}
+					onclick={() => {
+						console.log('Upload button clicked');
+						showUploadForm = !showUploadForm;
+					}}
 				>
 					{showUploadForm ? 'Cancel' : 'Upload Statement'}
-				</button>
+				</Button>
 			{/if}
 		</div>
 
@@ -203,13 +212,9 @@
 							class="block w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
 						/>
 					</div>
-					<button
-						class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
-						on:click={handleFileUpload}
-						disabled={isUploading}
-					>
+					<Button type="button" variant="primary" disabled={isUploading} onclick={handleFileUpload}>
 						{isUploading ? 'Uploading...' : 'Upload Statement'}
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
@@ -228,21 +233,21 @@
 							<div>
 								<h4 class="text-white font-medium">{statement.filename}</h4>
 								<p class="text-gray-400 text-sm">
-									{card?.name} (****{card?.last4}) • Due: {formatLocalDate(
-										statement.due_date
-									)}
+									{card?.name} (****{card?.last4}) • Due: {formatLocalDate(statement.due_date)}
 								</p>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at).toLocaleDateString()}
 								</p>
 							</div>
 							<div class="space-x-2">
-								<button
-									class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm"
-									on:click={() => parseStatement(statement.id)}
+								<Button
+									type="button"
+									variant="primary"
+									size="sm"
+									onclick={() => parseStatement(statement.id)}
 								>
 									Parse
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -278,17 +283,21 @@
 
 	<div class="flex justify-between items-center">
 		<div>
-			<a href="/projects/ccbilling" class="link-yellow">Back to Billing Cycles</a>
+			<Button href="/projects/ccbilling" variant="secondary" size="lg"
+				>Back to Billing Cycles</Button
+			>
 		</div>
 
-		{#if !cycle.closed}
-			<button
-				class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
-				on:click={() => (showDeleteDialog = true)}
-				disabled={isDeleting}
-			>
-				Delete Billing Cycle
-			</button>
-		{/if}
+		<Button
+			type="button"
+			variant="danger"
+			disabled={isDeleting}
+			onclick={() => {
+				console.log('Delete button clicked');
+				showDeleteDialog = true;
+			}}
+		>
+			Delete Billing Cycle
+		</Button>
 	</div>
 </div>
