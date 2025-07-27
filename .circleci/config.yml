@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && doppler run -- ./setup-wrangler-config.sh
+            cd webapp && ./setup-wrangler-config.sh
       - run:
           name: Build app
           command: |
@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && doppler run -- ./setup-wrangler-config.sh
+            cd webapp && ./setup-wrangler-config.sh
       - run:
           name: Run tests
           command: |
@@ -102,7 +102,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && doppler run -- ./setup-wrangler-config.sh
+            cd webapp && ./setup-wrangler-config.sh
       - run:
           name: Run Lighthouse checks
           command: |
@@ -132,7 +132,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && doppler run -- ./setup-wrangler-config.sh
+            cd webapp && ./setup-wrangler-config.sh
       - run:
           name: Deploying to Cloudflare
           command: |
