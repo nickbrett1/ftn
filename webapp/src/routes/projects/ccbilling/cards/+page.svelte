@@ -288,13 +288,15 @@
 
 	<div class="mt-8 flex space-x-4">
 		{#if !editingCard}
-			<Button
-				type="button"
-				variant={showAddForm ? 'secondary' : 'success'}
-				onclick={() => (showAddForm = !showAddForm)}
-			>
-				{showAddForm ? 'Cancel' : 'Add Credit Card'}
-			</Button>
+			{#if showAddForm}
+				<Button type="button" variant="secondary" onclick={() => (showAddForm = false)}>
+					Cancel
+				</Button>
+			{:else}
+				<Button type="button" variant="success" onclick={() => (showAddForm = true)}>
+					Add Credit Card
+				</Button>
+			{/if}
 		{/if}
 		<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
 	</div>

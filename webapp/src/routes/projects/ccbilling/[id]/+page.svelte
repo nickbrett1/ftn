@@ -139,18 +139,17 @@
 					</div>
 				{/if}
 				<div class="flex justify-end gap-2">
-					<button
-						class="px-4 py-2 rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
-						on:click={() => (showDeleteDialog = false)}
-						disabled={isDeleting}>Cancel</button
-					>
-					<button
-						class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 font-bold"
-						on:click={handleDelete}
+					<Button
+						type="button"
+						variant="secondary"
 						disabled={isDeleting}
+						onclick={() => (showDeleteDialog = false)}
 					>
+						Cancel
+					</Button>
+					<Button type="button" variant="danger" disabled={isDeleting} onclick={handleDelete}>
 						{isDeleting ? 'Deleting...' : 'Delete'}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -161,16 +160,29 @@
 		<div class="flex justify-between items-center mb-4">
 			<h3 class="text-xl font-semibold text-white">Statements</h3>
 			{#if !cycle.closed}
-				<Button
-					type="button"
-					variant={showUploadForm ? 'secondary' : 'success'}
-					onclick={() => {
-						console.log('Upload button clicked');
-						showUploadForm = !showUploadForm;
-					}}
-				>
-					{showUploadForm ? 'Cancel' : 'Upload Statement'}
-				</Button>
+				{#if showUploadForm}
+					<Button
+						type="button"
+						variant="secondary"
+						onclick={() => {
+							console.log('Cancel button clicked');
+							showUploadForm = false;
+						}}
+					>
+						Cancel
+					</Button>
+				{:else}
+					<Button
+						type="button"
+						variant="success"
+						onclick={() => {
+							console.log('Upload button clicked');
+							showUploadForm = true;
+						}}
+					>
+						Upload Statement
+					</Button>
+				{/if}
 			{/if}
 		</div>
 
@@ -212,7 +224,7 @@
 							class="block w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
 						/>
 					</div>
-					<Button type="button" variant="primary" disabled={isUploading} onclick={handleFileUpload}>
+					<Button type="button" variant="success" disabled={isUploading} onclick={handleFileUpload}>
 						{isUploading ? 'Uploading...' : 'Upload Statement'}
 					</Button>
 				</div>
@@ -242,7 +254,7 @@
 							<div class="space-x-2">
 								<Button
 									type="button"
-									variant="primary"
+									variant="success"
 									size="sm"
 									onclick={() => parseStatement(statement.id)}
 								>
@@ -281,23 +293,11 @@
 		</div>
 	{/if}
 
-	<div class="flex justify-between items-center">
+	{#if !showUploadForm}
 		<div>
 			<Button href="/projects/ccbilling" variant="secondary" size="lg"
 				>Back to Billing Cycles</Button
 			>
 		</div>
-
-		<Button
-			type="button"
-			variant="danger"
-			disabled={isDeleting}
-			onclick={() => {
-				console.log('Delete button clicked');
-				showDeleteDialog = true;
-			}}
-		>
-			Delete Billing Cycle
-		</Button>
-	</div>
+	{/if}
 </div>

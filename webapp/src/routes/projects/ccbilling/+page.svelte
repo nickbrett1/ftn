@@ -62,7 +62,9 @@
 	{/if}
 
 	<div class="flex space-x-4">
-		<Button href="/projects/ccbilling/new" size="lg">Create New Billing Cycle</Button>
+		<Button href="/projects/ccbilling/new" variant="success" size="lg"
+			>Create New Billing Cycle</Button
+		>
 		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg"
 			>Manage Credit Cards</Button
 		>
