@@ -1,0 +1,30 @@
+import { redirect } from '@sveltejs/kit';
+import { requireUser } from '$lib/server/require-user.js';
+import { getBudget, getBudgetMerchants } from '$lib/server/ccbilling-db.js';
+
+const HTML_TEMPORARY_REDIRECT = 307;
+
+export async function load(event) {
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) {
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
+	}
+
+	const id = Number(event.params.id);
+	if (!id) {
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/projects/ccbilling/budgets');
+	}
+
+	// Fetch budget and associated merchants
+	const budget = await getBudget(event, id);
+	if (!budget) {
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/projects/ccbilling/budgets');
+	}
+
+	const merchants = await getBudgetMerchants(event, id);
+
+	return {
+		budget,
+		merchants
+	};
+}
