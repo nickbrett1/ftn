@@ -68,5 +68,8 @@
 		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg"
 			>Manage Credit Cards</Button
 		>
+		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg"
+			>Manage Budgets</Button
+		>
 	</div>
 </PageLayout>
