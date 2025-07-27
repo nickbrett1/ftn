@@ -11,7 +11,7 @@ export async function load(event) {
 	}
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/projects/ccbilling/budgets');
 	}
 
