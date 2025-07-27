@@ -97,7 +97,7 @@
 			</label>
 		</div>
 
-		<Button type="submit" variant="primary" size="lg" disabled={isSubmitting}>
+		<Button type="submit" variant="success" size="lg" disabled={isSubmitting}>
 			{isSubmitting ? 'Creating...' : 'Create Billing Cycle'}
 		</Button>
 	</form>
