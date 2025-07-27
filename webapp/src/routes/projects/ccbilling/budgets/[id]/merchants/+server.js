@@ -10,7 +10,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
 	}
 
@@ -25,18 +25,18 @@ export async function POST(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
 	}
 
 	const data = await event.request.json();
 	const { merchant } = data;
 
-	if (!merchant) {
+	if (!merchant || !merchant.trim()) {
 		return new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 });
 	}
 
-	await addBudgetMerchant(event, id, merchant);
+	await addBudgetMerchant(event, id, merchant.trim());
 	return new Response(JSON.stringify({ success: true }));
 }
 
@@ -45,17 +45,17 @@ export async function DELETE(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 });
 	}
 
 	const data = await event.request.json();
 	const { merchant } = data;
 
-	if (!merchant) {
+	if (!merchant || !merchant.trim()) {
 		return new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 });
 	}
 
-	await removeBudgetMerchant(event, id, merchant);
+	await removeBudgetMerchant(event, id, merchant.trim());
 	return new Response(JSON.stringify({ success: true }));
 }

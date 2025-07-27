@@ -295,11 +295,17 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 
 		it('should handle floating point id', async () => {
 			mockEvent.params.id = '1.5';
+			getBudget.mockResolvedValue({ id: 1, name: 'Test Budget' });
+			deleteBudget.mockResolvedValue(); // Reset the mock to not throw
 
 			const response = await DELETE(mockEvent);
 
-			// Number('1.5') converts to 1, so this should work
-			expect(getBudget).toHaveBeenCalledWith(mockEvent, 1);
+			// Number('1.5') converts to 1.5, so this should work
+			expect(getBudget).toHaveBeenCalledWith(mockEvent, 1.5);
+			expect(deleteBudget).toHaveBeenCalledWith(mockEvent, 1.5);
+			
+			const result = JSON.parse(await response.text());
+			expect(result).toEqual({ success: true });
 		});
 	});
 });

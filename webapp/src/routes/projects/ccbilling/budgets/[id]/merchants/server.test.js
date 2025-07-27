@@ -111,6 +111,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 
 		it('should handle negative budget id', async () => {
 			mockEvent.params.id = '-1';
+			getBudgetMerchants.mockResolvedValue([]);  // Reset the mock
 
 			const response = await GET(mockEvent);
 			const result = JSON.parse(await response.text());
