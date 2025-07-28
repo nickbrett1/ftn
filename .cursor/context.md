@@ -37,6 +37,10 @@
 
 - No specific conventions, conform to standard linting and formatting
 
+#$ UI Design Guidelines
+
+- There is a standard Button component in lib/components that should be used for all buttons. It has variants for common use-cases.
+
 ## Special Instructions
 
 - After creating the dev container, the `webapp/cloud-login.sh` needs to run to login to both doppler and Cloudflare services.
@@ -57,7 +61,11 @@
 
 ## Environment/Secrets
 
-- All managed through doppler,
+- All managed through doppler
+
+## Quality Metrics
+
+Sonarqube quality gates are in place for all checkins that expect that <= 3% of new code contains duplication, and that >80% of new code has test coverage
 
 ## Links
 
