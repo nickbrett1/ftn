@@ -150,8 +150,11 @@
 			<h2 class="text-xl font-semibold text-white mb-4">Add New Budget</h2>
 			<div class="space-y-4">
 				<div>
-					<label class="block text-sm font-medium text-gray-300 mb-2">Budget Name</label>
+					<label for="new-budget-name" class="block text-sm font-medium text-gray-300 mb-2"
+						>Budget Name</label
+					>
 					<input
+						id="new-budget-name"
 						bind:value={newBudgetName}
 						type="text"
 						placeholder="e.g., Groceries, Entertainment, Gas"
@@ -196,8 +199,11 @@
 							<!-- Edit form -->
 							<div class="space-y-4">
 								<div>
-									<label class="block text-sm font-medium text-gray-300 mb-2">Budget Name</label>
+									<label for="edit-budget-name" class="block text-sm font-medium text-gray-300 mb-2"
+										>Budget Name</label
+									>
 									<input
+										id="edit-budget-name"
 										bind:value={editName}
 										type="text"
 										class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

@@ -74,27 +74,25 @@
 		{/if}
 
 		<div>
-			<label class="block text-gray-300 mb-2">
-				Start Date:
-				<input
-					type="date"
-					bind:value={startDate}
-					required
-					class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-				/>
-			</label>
+			<label for="start-date-input" class="block text-gray-300 mb-2"> Start Date: </label>
+			<input
+				id="start-date-input"
+				type="date"
+				bind:value={startDate}
+				required
+				class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+			/>
 		</div>
 
 		<div>
-			<label class="block text-gray-300 mb-2">
-				End Date:
-				<input
-					type="date"
-					bind:value={endDate}
-					required
-					class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-				/>
-			</label>
+			<label for="end-date-input" class="block text-gray-300 mb-2"> End Date: </label>
+			<input
+				id="end-date-input"
+				type="date"
+				bind:value={endDate}
+				required
+				class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+			/>
 		</div>
 
 		<Button type="submit" variant="success" size="lg" disabled={isSubmitting}>

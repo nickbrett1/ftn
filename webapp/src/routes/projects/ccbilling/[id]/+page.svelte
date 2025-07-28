@@ -23,7 +23,6 @@
 	let uploadError = '';
 	let selectedFile = null;
 	let selectedCardId = '';
-	let selectedDueDate = '';
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -50,8 +49,8 @@
 	}
 
 	async function handleFileUpload() {
-		if (!selectedFile || !selectedCardId || !selectedDueDate) {
-			uploadError = 'Please select a file, credit card, and due date';
+		if (!selectedFile || !selectedCardId) {
+			uploadError = 'Please select a file and credit card';
 			return;
 		}
 
@@ -62,7 +61,6 @@
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 			formData.append('credit_card_id', selectedCardId);
-			formData.append('due_date', selectedDueDate);
 
 			const response = await fetch(`/projects/ccbilling/cycles/${cycleId}/statements`, {
 				method: 'POST',
@@ -118,11 +116,23 @@
 				Status: {cycle.closed ? 'Closed' : 'Open'}
 			</p>
 		</div>
-		{#if !cycle.closed}
-			<div class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">Active</div>
-		{:else}
-			<div class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm">Closed</div>
-		{/if}
+		<div class="flex items-center space-x-3">
+			{#if !cycle.closed}
+				<div class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">Active</div>
+			{:else}
+				<div class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm">Closed</div>
+			{/if}
+			<Button
+				variant="danger"
+				size="sm"
+				onclick={() => {
+					showDeleteDialog = true;
+					deleteError = '';
+				}}
+			>
+				Delete Cycle
+			</Button>
+		</div>
 	</div>
 
 	<!-- Delete confirmation dialog -->
@@ -196,17 +206,36 @@
 				{/if}
 				<div class="space-y-3">
 					<div>
-						<label class="block text-gray-300 mb-1">PDF File:</label>
-						<input
-							type="file"
-							accept="application/pdf"
-							on:change={(e) => (selectedFile = e.target.files[0])}
-							class="block w-full text-gray-300 bg-gray-800 border border-gray-600 rounded px-3 py-2"
-						/>
+						<label for="pdf-file-input" class="block text-gray-300 mb-1">PDF File:</label>
+						<div class="relative">
+							<input
+								id="pdf-file-input"
+								type="file"
+								accept="application/pdf"
+								on:change={(e) => (selectedFile = e.target.files[0])}
+								class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+							/>
+							<div
+								class="flex items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300"
+							>
+								<span class="truncate">
+									{selectedFile ? selectedFile.name : 'Choose a PDF file...'}
+								</span>
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => document.getElementById('pdf-file-input').click()}
+									class="ml-2"
+								>
+									Browse
+								</Button>
+							</div>
+						</div>
 					</div>
 					<div>
-						<label class="block text-gray-300 mb-1">Credit Card:</label>
+						<label for="credit-card-select" class="block text-gray-300 mb-1">Credit Card:</label>
 						<select
+							id="credit-card-select"
 							bind:value={selectedCardId}
 							class="block w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
 						>
@@ -217,12 +246,9 @@
 						</select>
 					</div>
 					<div>
-						<label class="block text-gray-300 mb-1">Due Date:</label>
-						<input
-							type="date"
-							bind:value={selectedDueDate}
-							class="block w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
-						/>
+						<p class="text-gray-400 text-sm">
+							Statement date will be automatically extracted from the PDF during processing.
+						</p>
 					</div>
 					<Button type="button" variant="success" disabled={isUploading} onclick={handleFileUpload}>
 						{isUploading ? 'Uploading...' : 'Upload Statement'}
@@ -245,7 +271,9 @@
 							<div>
 								<h4 class="text-white font-medium">{statement.filename}</h4>
 								<p class="text-gray-400 text-sm">
-									{card?.name} (****{card?.last4}) • Due: {formatLocalDate(statement.due_date)}
+									{card?.name} (****{card?.last4}) • Statement Date: {formatLocalDate(
+										statement.statement_date
+									)}
 								</p>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at).toLocaleDateString()}
