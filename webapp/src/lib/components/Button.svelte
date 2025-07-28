@@ -26,7 +26,7 @@
 		lg: 'py-3 px-6 text-lg'
 	};
 
-	const classes = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline ${disabled ? '' : 'hover:cursor-pointer'}`;
+	const classes = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline`;
 </script>
 
 {#if href}
