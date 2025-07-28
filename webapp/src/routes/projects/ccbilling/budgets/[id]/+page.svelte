@@ -15,6 +15,17 @@
 	let deletingMerchant = null;
 	let isDeleting = false;
 
+	// Edit budget name state
+	let isEditingName = false;
+	let editName = '';
+	let isSavingName = false;
+	let nameEditError = '';
+
+	// Initialize editName when budget is available
+	$: if (budget && !isEditingName) {
+		editName = budget.name;
+	}
+
 	async function addMerchant() {
 		if (!newMerchantName.trim()) {
 			addError = 'Please enter a merchant name';
@@ -88,6 +99,51 @@
 		newMerchantName = '';
 		addError = '';
 	}
+
+	function startEditName() {
+		isEditingName = true;
+		editName = budget.name;
+		nameEditError = '';
+	}
+
+	function cancelEditName() {
+		isEditingName = false;
+		editName = budget.name;
+		nameEditError = '';
+	}
+
+	async function saveBudgetName() {
+		if (!editName.trim()) {
+			nameEditError = 'Please enter a budget name';
+			return;
+		}
+
+		isSavingName = true;
+		nameEditError = '';
+
+		try {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: editName.trim()
+				})
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				nameEditError = error.error || 'Failed to update budget name';
+				return;
+			}
+
+			// Refresh data to show updated name
+			window.location.reload();
+		} catch (error) {
+			nameEditError = 'Network error occurred';
+		} finally {
+			isSavingName = false;
+		}
+	}
 </script>
 
 <PageLayout
@@ -95,10 +151,42 @@
 	description="Manage merchant associations for {budget.name}"
 >
 	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-4xl font-bold">{budget.name}</h1>
-		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">
-			Back to Budgets
-		</Button>
+		<div>
+			{#if isEditingName}
+				<div class="flex items-center space-x-2">
+					<input
+						bind:value={editName}
+						type="text"
+						class="text-4xl font-bold bg-gray-900 border border-gray-600 rounded-md text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						disabled={isSavingName}
+					/>
+					<Button
+						onclick={saveBudgetName}
+						variant="success"
+						size="sm"
+						disabled={isSavingName}
+						style="cursor: pointer;"
+					>
+						{isSavingName ? 'Saving...' : 'Save'}
+					</Button>
+					<Button onclick={cancelEditName} variant="secondary" size="sm" style="cursor: pointer;">
+						Cancel
+					</Button>
+				</div>
+				{#if nameEditError}
+					<p class="text-red-400 text-sm mt-2">{nameEditError}</p>
+				{/if}
+			{:else}
+				<div class="flex flex-col space-y-2">
+					<h1 class="text-4xl font-bold">{budget.name}</h1>
+					<div class="self-start">
+						<Button onclick={startEditName} variant="warning" size="sm" style="cursor: pointer;">
+							Edit Name
+						</Button>
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Budget Info -->
@@ -120,9 +208,9 @@
 	<div class="mb-8">
 		<h2 class="text-2xl font-semibold text-white mb-4">Merchant Auto-Assignment</h2>
 		<p class="text-gray-400 mb-6">
-			Add merchants to automatically assign charges from these merchants to this budget. When charges
-			are parsed from statements, any charges from these merchants will be automatically categorized
-			under "{budget.name}".
+			Add merchants to automatically assign charges from these merchants to this budget. When
+			charges are parsed from statements, any charges from these merchants will be automatically
+			categorized under "{budget.name}".
 		</p>
 
 		<!-- Add Merchant Form -->
@@ -148,7 +236,7 @@
 					{/if}
 					<div class="flex space-x-2">
 						<Button
-							on:click={addMerchant}
+							onclick={addMerchant}
 							variant="success"
 							size="md"
 							disabled={isAdding}
@@ -156,7 +244,7 @@
 						>
 							{isAdding ? 'Adding...' : 'Add Merchant'}
 						</Button>
-						<Button on:click={cancelAdd} variant="secondary" size="md" style="cursor: pointer;">
+						<Button onclick={cancelAdd} variant="secondary" size="md" style="cursor: pointer;">
 							Cancel
 						</Button>
 					</div>
@@ -187,7 +275,7 @@
 								</p>
 							</div>
 							<Button
-								on:click={() => removeMerchant(merchant.merchant)}
+								onclick={() => removeMerchant(merchant.merchant)}
 								variant="danger"
 								size="sm"
 								disabled={isDeleting && deletingMerchant === merchant.merchant}
@@ -205,7 +293,7 @@
 		{#if !showAddForm}
 			<div class="mt-6">
 				<Button
-					on:click={() => (showAddForm = true)}
+					onclick={() => (showAddForm = true)}
 					variant="success"
 					size="lg"
 					style="cursor: pointer;"
@@ -225,4 +313,5 @@
 			<li>• Monthly budget limits and tracking</li>
 		</ul>
 	</div>
+	<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
 </PageLayout>

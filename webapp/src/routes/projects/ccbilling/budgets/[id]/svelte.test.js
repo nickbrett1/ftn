@@ -14,10 +14,7 @@ vi.mock('$app/navigation', () => ({
 describe('Budget Detail Page - Svelte Coverage', () => {
 	const mockData = {
 		budget: { id: 1, name: 'Groceries', created_at: '2025-01-01T00:00:00Z' },
-		merchants: [
-			{ merchant: 'Walmart' },
-			{ merchant: 'Target' }
-		]
+		merchants: [{ merchant: 'Walmart' }, { merchant: 'Target' }]
 	};
 
 	beforeEach(() => {
@@ -106,15 +103,13 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Add Merchant');
 		expect(container.innerHTML).toContain('Remove');
 		expect(container.innerHTML).toContain('Back to Budgets');
+		expect(container.innerHTML).toContain('Edit Name');
 	});
 
 	it('handles merchant name variations', () => {
 		const specialData = {
 			budget: { id: 1, name: 'Groceries', created_at: '2025-01-01T00:00:00Z' },
-			merchants: [
-				{ merchant: 'H&M Store' },
-				{ merchant: 'Barnes & Noble' }
-			]
+			merchants: [{ merchant: 'H&M Store' }, { merchant: 'Barnes & Noble' }]
 		};
 
 		const { container } = render(BudgetDetailPage, {

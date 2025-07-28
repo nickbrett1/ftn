@@ -91,7 +91,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Add New Budget');
 		expect(container.innerHTML).toContain('Edit');
 		expect(container.innerHTML).toContain('Delete');
-		expect(container.innerHTML).toContain('Manage');
+		// Budget names are now clickable links instead of having a separate "Manage" button
+		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/1"');
+		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/2"');
 	});
 
 	it('handles budget name variations', () => {
