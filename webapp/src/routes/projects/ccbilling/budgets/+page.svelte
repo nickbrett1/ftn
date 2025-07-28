@@ -140,11 +140,8 @@
 </script>
 
 <PageLayout title="Budget Management" description="Manage your budget categories">
-	<div class="flex justify-between items-center mb-8">
+	<div class="mb-8">
 		<h1 class="text-4xl font-bold">Budget Management</h1>
-		<Button href="/projects/ccbilling" variant="secondary" size="lg">
-			Back to Billing Cycles
-		</Button>
 	</div>
 
 	<!-- Add Budget Form -->
@@ -167,7 +164,7 @@
 				{/if}
 				<div class="flex space-x-2">
 					<Button
-						on:click={addBudget}
+						onclick={addBudget}
 						variant="success"
 						size="md"
 						disabled={isAdding}
@@ -175,7 +172,7 @@
 					>
 						{isAdding ? 'Adding...' : 'Add Budget'}
 					</Button>
-					<Button on:click={cancelAdd} variant="secondary" size="md" style="cursor: pointer;">
+					<Button onclick={cancelAdd} variant="secondary" size="md" style="cursor: pointer;">
 						Cancel
 					</Button>
 				</div>
@@ -212,7 +209,7 @@
 								{/if}
 								<div class="flex space-x-2">
 									<Button
-										on:click={saveBudget}
+										onclick={saveBudget}
 										variant="success"
 										size="sm"
 										disabled={isEditing}
@@ -220,7 +217,12 @@
 									>
 										{isEditing ? 'Saving...' : 'Save'}
 									</Button>
-									<Button on:click={cancelEdit} variant="secondary" size="sm" style="cursor: pointer;">
+									<Button
+										onclick={cancelEdit}
+										variant="secondary"
+										size="sm"
+										style="cursor: pointer;"
+									>
 										Cancel
 									</Button>
 								</div>
@@ -229,20 +231,17 @@
 							<!-- Display mode -->
 							<div class="flex justify-between items-center">
 								<div>
-									<h3 class="text-lg font-medium text-white">{budget.name}</h3>
+									<a
+										href="/projects/ccbilling/budgets/{budget.id}"
+										class="text-lg font-medium text-white hover:text-green-400 cursor-pointer"
+									>
+										{budget.name}
+									</a>
 									<p class="text-gray-400 text-sm">Budget ID: {budget.id}</p>
 								</div>
 								<div class="flex space-x-2">
 									<Button
 										href="/projects/ccbilling/budgets/{budget.id}"
-										variant="primary"
-										size="sm"
-										style="cursor: pointer;"
-									>
-										Manage
-									</Button>
-									<Button
-										on:click={() => startEdit(budget)}
 										variant="warning"
 										size="sm"
 										style="cursor: pointer;"
@@ -250,7 +249,7 @@
 										Edit
 									</Button>
 									<Button
-										on:click={() => deleteBudget(budget)}
+										onclick={() => deleteBudget(budget)}
 										variant="danger"
 										size="sm"
 										disabled={isDeleting && deletingBudget?.id === budget.id}
@@ -267,15 +266,18 @@
 		</div>
 	{/if}
 
-	<!-- Action Button -->
-	{#if !showAddForm}
-		<Button
-			on:click={() => (showAddForm = true)}
-			variant="success"
-			size="lg"
-			style="cursor: pointer;"
-		>
-			Add New Budget
-		</Button>
-	{/if}
+	<!-- Action Buttons -->
+	<div class="mt-8 flex space-x-4">
+		{#if !showAddForm}
+			<Button
+				onclick={() => (showAddForm = true)}
+				variant="success"
+				size="lg"
+				style="cursor: pointer;"
+			>
+				Add New Budget
+			</Button>
+		{/if}
+		<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
+	</div>
 </PageLayout>
