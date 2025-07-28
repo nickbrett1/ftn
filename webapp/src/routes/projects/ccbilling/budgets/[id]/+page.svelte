@@ -154,7 +154,9 @@
 		<div>
 			{#if isEditingName}
 				<div class="flex items-center space-x-2">
+					<label for="budget-name-edit" class="sr-only">Budget Name</label>
 					<input
+						id="budget-name-edit"
 						bind:value={editName}
 						type="text"
 						class="text-4xl font-bold bg-gray-900 border border-gray-600 rounded-md text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -219,8 +221,11 @@
 				<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-300 mb-2">Merchant Name</label>
+						<label for="merchant-name-input" class="block text-sm font-medium text-gray-300 mb-2"
+							>Merchant Name</label
+						>
 						<input
+							id="merchant-name-input"
 							bind:value={newMerchantName}
 							type="text"
 							placeholder="e.g., Amazon, Walmart, Target"

@@ -9,10 +9,24 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
+
+// Mock environment variables
+vi.mock('$env/static/private', () => ({
+	LLAMA_API_KEY: 'test-api-key'
+}));
+
+// Mock fetch for Llama API calls
+global.fetch = vi.fn();
 
 // Import the mocked functions
-import { getStatement, createPayment, deletePaymentsForStatement } from '$lib/server/ccbilling-db.js';
+import {
+	getStatement,
+	createPayment,
+	deletePaymentsForStatement
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/statements/[id]/parse API', () => {
@@ -22,17 +36,44 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		vi.clearAllMocks();
 
 		mockEvent = {
-			params: { id: '1' }
+			params: { id: '1' },
+			platform: {
+				env: {
+					R2_CCBILLING: {
+						get: vi.fn().mockResolvedValue({
+							arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8))
+						})
+					}
+				}
+			}
 		};
 
 		// Mock setTimeout to avoid actual delays in tests
-		vi.spyOn(global, 'setTimeout').mockImplementation((fn) => {
+		vi.spyOn(global, 'setTimeout').mockImplementation((fn, delay) => {
 			fn();
 			return 123; // Mock timer ID
 		});
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+
+		// Mock successful Llama API response
+		global.fetch.mockResolvedValue({
+			ok: true,
+			json: vi.fn().mockResolvedValue({
+				choices: [
+					{
+						message: {
+							content: JSON.stringify([
+								{ merchant: 'Amazon', amount: 85.67 },
+								{ merchant: 'Grocery Store', amount: 124.32 },
+								{ merchant: 'Gas Station', amount: 45.21 }
+							])
+						}
+					}
+				]
+			})
+		});
 	});
 
 	afterEach(() => {
@@ -40,7 +81,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 	});
 
 	describe('POST endpoint', () => {
-		it('should successfully parse a statement with mock data', async () => {
+		it('should successfully parse a statement with Llama API', async () => {
 			const mockStatement = {
 				id: 1,
 				filename: 'statement.pdf',
@@ -57,16 +98,23 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			expect(getStatement).toHaveBeenCalledWith(mockEvent, 1);
 			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, 1);
-			
-			// Should create multiple mock payments
+
+			// Should create multiple payments from Llama API response
 			expect(createPayment).toHaveBeenCalledTimes(3);
 			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Amazon', 85.67, 'Both');
-			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Grocery Store', 124.32, 'Both');
-			expect(createPayment).toHaveBeenNthCalledWith(3, mockEvent, 1, 'Gas Station', 45.21, 'Nick');
+			expect(createPayment).toHaveBeenNthCalledWith(
+				2,
+				mockEvent,
+				1,
+				'Grocery Store',
+				124.32,
+				'Both'
+			);
+			expect(createPayment).toHaveBeenNthCalledWith(3, mockEvent, 1, 'Gas Station', 45.21, 'Both');
 
 			expect(result.success).toBe(true);
 			expect(result.charges_found).toBe(3);
-			expect(result.message).toBe('Statement parsed successfully (mock implementation)');
+			expect(result.message).toBe('Statement parsed successfully using Llama API');
 		});
 
 		it('should return 400 for invalid statement ID', async () => {
@@ -96,11 +144,11 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to parse statement');
+			expect(result.error).toBe('Failed to parse statement: Database error');
 		});
 
 		it('should handle errors when deleting existing payments', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf' };
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockRejectedValue(new Error('Delete error'));
 
@@ -108,11 +156,11 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to parse statement');
+			expect(result.error).toBe('Failed to parse statement: Delete error');
 		});
 
 		it('should handle errors when creating payments', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf' };
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockResolvedValue({});
 			createPayment.mockRejectedValue(new Error('Create payment error'));
@@ -121,11 +169,31 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to parse statement');
+			expect(result.error).toBe('Failed to parse statement: Create payment error');
+		});
+
+		it('should handle Llama API errors', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock Llama API error
+			global.fetch.mockResolvedValue({
+				ok: false,
+				status: 401,
+				statusText: 'Unauthorized',
+				text: vi.fn().mockResolvedValue('Invalid API key')
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API error: 401 Unauthorized');
 		});
 
 		it('should delete existing payments before creating new ones', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf' };
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockResolvedValue({});
 			createPayment.mockResolvedValue({});
@@ -139,7 +207,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		});
 
 		it('should create payments with correct default allocation', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf' };
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockResolvedValue({});
 			createPayment.mockResolvedValue({});
@@ -150,26 +218,18 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const createPaymentCalls = createPayment.mock.calls;
 			expect(createPaymentCalls[0][4]).toBe('Both'); // Amazon
 			expect(createPaymentCalls[1][4]).toBe('Both'); // Grocery Store
-			expect(createPaymentCalls[2][4]).toBe('Nick'); // Gas Station
-		});
-
-		it('should simulate processing time', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf' };
-			getStatement.mockResolvedValue(mockStatement);
-			deletePaymentsForStatement.mockResolvedValue({});
-			createPayment.mockResolvedValue({});
-
-			await POST(mockEvent);
-
-			// Verify setTimeout was called (simulating delay)
-			expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 1000);
+			expect(createPaymentCalls[2][4]).toBe('Both'); // Gas Station (now defaulting to 'Both')
 		});
 
 		it('should use statement ID correctly in all operations', async () => {
 			mockEvent.params.id = '42';
 			const statementId = 42;
 
-			const mockStatement = { id: statementId, filename: 'statement.pdf' };
+			const mockStatement = {
+				id: statementId,
+				filename: 'statement.pdf',
+				r2_key: 'statements/42/test.pdf'
+			};
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockResolvedValue({});
 			createPayment.mockResolvedValue({});
@@ -178,9 +238,9 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			expect(getStatement).toHaveBeenCalledWith(mockEvent, statementId);
 			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, statementId);
-			
+
 			// All createPayment calls should use the same statement ID
-			createPayment.mock.calls.forEach(call => {
+			createPayment.mock.calls.forEach((call) => {
 				expect(call[1]).toBe(statementId); // statement_id parameter
 			});
 		});

@@ -1,7 +1,6 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
-
 	export let data;
 	$: ({ billingCycles } = data);
 
@@ -68,8 +67,6 @@
 		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg"
 			>Manage Credit Cards</Button
 		>
-		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg"
-			>Manage Budgets</Button
-		>
+		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button>
 	</div>
 </PageLayout>

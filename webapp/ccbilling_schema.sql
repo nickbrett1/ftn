@@ -40,7 +40,7 @@ CREATE TABLE statement (
   credit_card_id INTEGER NOT NULL REFERENCES credit_card(id),
   filename TEXT NOT NULL,
   r2_key TEXT NOT NULL,
-  due_date DATE NOT NULL,
+  statement_date DATE NOT NULL,
   uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

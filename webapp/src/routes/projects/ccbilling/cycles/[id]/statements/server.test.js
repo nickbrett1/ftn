@@ -11,10 +11,13 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => new Response(JSON.stringify(data), {
-		headers: { 'Content-Type': 'application/json' },
-		...options
-	}))
+	json: vi.fn(
+		(data, options) =>
+			new Response(JSON.stringify(data), {
+				headers: { 'Content-Type': 'application/json' },
+				...options
+			})
+	)
 }));
 
 // Import the mocked functions
@@ -110,8 +113,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			// Mock FormData
 			mockFormData = new Map([
 				['file', mockFile],
-				['credit_card_id', '1'],
-				['due_date', '2024-02-15']
+				['credit_card_id', '1']
 			]);
 
 			mockEvent.request.formData.mockResolvedValue({
@@ -144,7 +146,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 				1,
 				'statement.pdf',
 				expect.stringMatching(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/),
-				'2024-02-15'
+				'2024-01-01'
 			);
 			expect(result.success).toBe(true);
 			expect(result.filename).toBe('statement.pdf');
@@ -157,7 +159,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(400);
-			expect(result.error).toBe('Missing required fields: file, credit_card_id, due_date');
+			expect(result.error).toBe('Missing required fields: file, credit_card_id');
 		});
 
 		it('should return 400 for non-PDF files', async () => {
@@ -236,7 +238,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(uniqueKeys.size).toBe(5);
 
 			// Keys should follow the expected pattern
-			keys.forEach(key => {
+			keys.forEach((key) => {
 				expect(key).toMatch(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/);
 			});
 		});

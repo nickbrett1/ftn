@@ -164,27 +164,25 @@
 			{/if}
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div>
-					<label class="block text-gray-300 mb-2">
-						Card Name:
-						<input
-							type="text"
-							bind:value={newCardName}
-							placeholder="e.g., Chase Freedom"
-							class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-						/>
-					</label>
+					<label for="new-card-name" class="block text-gray-300 mb-2"> Card Name: </label>
+					<input
+						id="new-card-name"
+						type="text"
+						bind:value={newCardName}
+						placeholder="e.g., Chase Freedom"
+						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+					/>
 				</div>
 				<div>
-					<label class="block text-gray-300 mb-2">
-						Last 4 Digits:
-						<input
-							type="text"
-							bind:value={newCardLast4}
-							placeholder="1234"
-							maxlength="4"
-							class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-						/>
-					</label>
+					<label for="new-card-last4" class="block text-gray-300 mb-2"> Last 4 Digits: </label>
+					<input
+						id="new-card-last4"
+						type="text"
+						bind:value={newCardLast4}
+						placeholder="1234"
+						maxlength="4"
+						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+					/>
 				</div>
 			</div>
 			<div class="mt-4">
@@ -219,25 +217,27 @@
 								{/if}
 								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 									<div>
-										<label class="block text-gray-300 mb-2">
+										<label for="edit-card-name" class="block text-gray-300 mb-2">
 											Card Name:
-											<input
-												type="text"
-												bind:value={editName}
-												class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-											/>
 										</label>
+										<input
+											id="edit-card-name"
+											type="text"
+											bind:value={editName}
+											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+										/>
 									</div>
 									<div>
-										<label class="block text-gray-300 mb-2">
+										<label for="edit-card-last4" class="block text-gray-300 mb-2">
 											Last 4 Digits:
-											<input
-												type="text"
-												bind:value={editLast4}
-												maxlength="4"
-												class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-											/>
 										</label>
+										<input
+											id="edit-card-last4"
+											type="text"
+											bind:value={editLast4}
+											maxlength="4"
+											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+										/>
 									</div>
 								</div>
 								<div class="flex space-x-2">
