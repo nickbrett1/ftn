@@ -19,7 +19,7 @@ vi.mock('$env/static/private', () => ({
 }));
 
 // Mock fetch for Llama API calls
-global.fetch = vi.fn();
+// Note: We'll mock event.fetch in the beforeEach instead of global.fetch
 
 // Import the mocked functions
 import {
@@ -45,7 +45,8 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 						})
 					}
 				}
-			}
+			},
+			fetch: vi.fn()
 		};
 
 		// Mock setTimeout to avoid actual delays in tests
@@ -58,20 +59,18 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
 
 		// Mock successful Llama API response
-		global.fetch.mockResolvedValue({
+		mockEvent.fetch.mockResolvedValue({
 			ok: true,
 			json: vi.fn().mockResolvedValue({
-				choices: [
-					{
-						message: {
-							content: JSON.stringify([
-								{ merchant: 'Amazon', amount: 85.67 },
-								{ merchant: 'Grocery Store', amount: 124.32 },
-								{ merchant: 'Gas Station', amount: 45.21 }
-							])
-						}
+				completion_message: {
+					content: {
+						text: JSON.stringify([
+							{ merchant: 'Amazon', amount: 85.67 },
+							{ merchant: 'Grocery Store', amount: 124.32 },
+							{ merchant: 'Gas Station', amount: 45.21 }
+						])
 					}
-				]
+				}
 			})
 		});
 	});
@@ -178,7 +177,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			deletePaymentsForStatement.mockResolvedValue({});
 
 			// Mock Llama API error
-			global.fetch.mockResolvedValue({
+			mockEvent.fetch.mockResolvedValue({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized',

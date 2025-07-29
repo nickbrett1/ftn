@@ -77,7 +77,7 @@ async function parsePDFWithLlama(statement, event) {
 	const pdfText = await extractTextFromPDF(pdfObject);
 
 	// Parse charges using Llama API
-	const charges = await parseChargesWithLlama(pdfText, statement);
+	const charges = await parseChargesWithLlama(pdfText, statement, event);
 
 	return charges;
 }
@@ -170,10 +170,11 @@ function extractTextFromPDFBuffer(buffer) {
  * Parse charges from text using Llama API
  * @param {string} text
  * @param {Object} statement
+ * @param {Object} event
  * @returns {Promise<Array>}
  */
-async function parseChargesWithLlama(text, statement) {
-	const LLAMA_API_URL = 'https://api.llama-api.com/chat/completions';
+async function parseChargesWithLlama(text, statement, event) {
+	const LLAMA_API_URL = 'https://api.llama.com/v1/chat/completions';
 
 	// Try both methods of accessing the environment variable
 	const apiKey = LLAMA_API_KEY || process.env.LLAMA_API_KEY;
@@ -204,18 +205,23 @@ Return only valid JSON array, no other text.`;
 
 	try {
 		console.log('Making request to Llama API...');
-		const response = await fetch(LLAMA_API_URL, {
+		const response = await event.fetch(LLAMA_API_URL, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${apiKey}`
 			},
 			body: JSON.stringify({
-				model: 'llama-3.1-8b-instruct',
+				model: 'Llama-4-Maverick-17B-128E-Instruct-FP8',
 				messages: [
 					{
 						role: 'user',
 						content: prompt
+					},
+					{
+						role: 'system',
+						content:
+							'You are a helpful assistant that parses credit card statements and extracts charges. You will be given a statement text and you will need to extract the charges from the statement.'
 					}
 				],
 				temperature: 0.1,
@@ -234,17 +240,36 @@ Return only valid JSON array, no other text.`;
 		const data = await response.json();
 		console.log('Llama API response data:', JSON.stringify(data, null, 2));
 
-		const content = data.choices?.[0]?.message?.content;
+		// Extract content from Llama API response structure
+		const content = data.completion_message?.content?.text;
 
 		if (!content) {
 			console.error('No content received from Llama API');
+			console.error('Expected path: data.completion_message.content.text');
+			console.error('Available keys in data:', Object.keys(data));
+			if (data.completion_message) {
+				console.error(
+					'Available keys in completion_message:',
+					Object.keys(data.completion_message)
+				);
+			}
 			throw new Error('No content received from Llama API');
 		}
 
 		console.log('Llama API parsed content:', content);
 
+		// Clean up the content (remove markdown code blocks if present)
+		let cleanContent = content.trim();
+		if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
+			cleanContent = cleanContent.slice(7, -3).trim(); // Remove ```json and ```
+		} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
+			cleanContent = cleanContent.slice(3, -3).trim(); // Remove ``` and ```
+		}
+
+		console.log('Cleaned content for parsing:', cleanContent);
+
 		// Parse the JSON response
-		const charges = JSON.parse(content);
+		const charges = JSON.parse(cleanContent);
 		console.log('Parsed charges from Llama API:', charges);
 
 		// Validate and clean the charges
