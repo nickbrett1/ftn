@@ -50,7 +50,7 @@ Automated credit card statement processing and budget management system:
 
 ## 🛠 Technical Architecture
 
-### **Frontend Excellence**
+### **Frontend**
 
 - **Component Library**: Modular, reusable components with Storybook documentation
 - **State Management**: Reactive stores and context management
@@ -83,8 +83,6 @@ Automated credit card statement processing and budget management system:
 - **Monitoring**: 99.9% uptime with global CDN distribution
 
 ## 🎯 Professional Focus
-
-This portfolio demonstrates expertise in:
 
 - **Fintech Development**: Financial data analysis, consumer finance
 - **Modern Web Technologies**: Latest frameworks, best practices, performance optimization
