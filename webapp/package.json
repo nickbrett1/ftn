@@ -22,7 +22,7 @@
 		"deploy": "npx wrangler deploy -e production"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.10.1",
+		"@cloudflare/vite-plugin": "^1.10.2",
 		"@dimforge/rapier3d-compat": "^0.18.0",
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.86.6",
