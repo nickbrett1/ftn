@@ -126,13 +126,35 @@ function extractTextFromPDFBuffer(buffer) {
 	// Convert buffer to string and extract readable text
 	const bufferString = decoder.decode(buffer);
 
-	// Extract text between PDF text operators
-	const textMatches = bufferString.match(/\(([^)]+)\)/g);
-	if (textMatches) {
-		text = textMatches
-			.map((match) => match.slice(1, -1)) // Remove parentheses
-			.filter((str) => str.length > 2 && /[a-zA-Z]/.test(str)) // Filter meaningful text
-			.join(' ');
+	// Extract text between PDF text operators using a ReDoS-safe approach
+	// Split by parentheses and process in chunks to avoid regex backtracking issues
+	const textMatches = [];
+	let startIndex = 0;
+	let depth = 0;
+	let currentMatch = '';
+
+	for (let i = 0; i < bufferString.length; i++) {
+		const char = bufferString[i];
+
+		if (char === '(') {
+			if (depth === 0) {
+				startIndex = i;
+			}
+			depth++;
+		} else if (char === ')') {
+			depth--;
+			if (depth === 0) {
+				// Extract text between parentheses (excluding the parentheses themselves)
+				const text = bufferString.substring(startIndex + 1, i);
+				if (text.length > 2 && /[a-zA-Z]/.test(text)) {
+					textMatches.push(text);
+				}
+			}
+		}
+	}
+
+	if (textMatches.length > 0) {
+		text = textMatches.join(' ');
 	}
 
 	// If no text found, return a fallback
