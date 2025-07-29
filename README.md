@@ -1,4 +1,4 @@
-# ftn - Financial Technology Portfolio
+# fintechnick.com - Financial Technology Portfolio
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/nickbrett1/ftn/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/nickbrett1/ftn/tree/main)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nickbrett1_bem&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem)
@@ -82,7 +82,7 @@ Automated credit card statement processing and budget management system:
 - **Deployment**: <2 minute CI/CD pipeline with zero-downtime releases
 - **Monitoring**: 99.9% uptime with global CDN distribution
 
-## 🎯 Professional Focus
+## 🎯 Focus
 
 - **Fintech Development**: Financial data analysis, consumer finance
 - **Modern Web Technologies**: Latest frameworks, best practices, performance optimization
