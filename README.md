@@ -1,4 +1,4 @@
-# fintechnick.com - Financial Technology Portfolio
+# Financial Technology Portfolio
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/nickbrett1/ftn/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/nickbrett1/ftn/tree/main)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nickbrett1_bem&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem)
