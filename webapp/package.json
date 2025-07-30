@@ -81,6 +81,7 @@
 		"gsap": "^3.13.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.5",
+		"pdf-parse": "^1.1.1",
 		"three": "^0.178.0",
 		"tippy.js": "^6.3.7",
 		"tsparticles": "^3.8.1"

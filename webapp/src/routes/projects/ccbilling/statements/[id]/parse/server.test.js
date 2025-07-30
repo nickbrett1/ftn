@@ -18,8 +18,11 @@ vi.mock('$env/static/private', () => ({
 	LLAMA_API_KEY: 'test-api-key'
 }));
 
-// Mock fetch for Llama API calls
-// Note: We'll mock event.fetch in the beforeEach instead of global.fetch
+// Mock pdf-parse
+const mockPdfParse = vi.fn();
+vi.mock('pdf-parse/lib/pdf-parse.js', () => ({
+	default: mockPdfParse
+}));
 
 // Import the mocked functions
 import {
@@ -41,7 +44,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				env: {
 					R2_CCBILLING: {
 						get: vi.fn().mockResolvedValue({
-							arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8))
+							arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(1024)) // Larger buffer for realistic PDF
 						})
 					}
 				}
@@ -57,6 +60,12 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+
+		// Set up default pdf-parse mock behavior
+		mockPdfParse.mockResolvedValue({
+			numpages: 2,
+			text: 'Amazon $85.67 Grocery Store $124.32 Gas Station $45.21'
+		});
 
 		// Mock successful Llama API response
 		mockEvent.fetch.mockResolvedValue({
