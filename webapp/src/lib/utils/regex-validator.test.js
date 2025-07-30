@@ -27,7 +27,9 @@ describe('Regex Validator - ReDoS Prevention', () => {
 			const dangerousPatterns = [
 				{ pattern: '(a+)+', testString: 'a'.repeat(100) },
 				{ pattern: '(\\w+)*', testString: 'test' },
-				{ pattern: '(a|aa)*', testString: 'a'.repeat(50) }
+				{ pattern: '(a|aa)*', testString: 'a'.repeat(50) },
+				{ pattern: '(\\w+)+', testString: 'test' },
+				{ pattern: '(\\w+)*\\1', testString: 'test' }
 			];
 
 			dangerousPatterns.forEach(({ pattern, testString }) => {
@@ -150,7 +152,9 @@ describe('Regex Validator - ReDoS Prevention', () => {
 			const invalidPatterns = [
 				'[unclosed',
 				'(unclosed',
-				'\\invalid'
+				'\\',
+				'[a-z',
+				'(a|b'
 			];
 			
 			invalidPatterns.forEach(pattern => {
