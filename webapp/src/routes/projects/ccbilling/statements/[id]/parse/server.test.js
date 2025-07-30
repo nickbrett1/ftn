@@ -24,6 +24,18 @@ vi.mock('pdf-parse/lib/pdf-parse.js', () => ({
 	default: mockPdfParse
 }));
 
+// Mock llama-api-client
+const mockLlamaClient = {
+	chat: {
+		completions: {
+			create: vi.fn()
+		}
+	}
+};
+vi.mock('llama-api-client', () => ({
+	default: vi.fn(() => mockLlamaClient)
+}));
+
 // Import the mocked functions
 import {
 	getStatement,
@@ -48,8 +60,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 						})
 					}
 				}
-			},
-			fetch: vi.fn()
+			}
 		};
 
 		// Mock setTimeout to avoid actual delays in tests
@@ -68,19 +79,17 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		});
 
 		// Mock successful Llama API response
-		mockEvent.fetch.mockResolvedValue({
-			ok: true,
-			json: vi.fn().mockResolvedValue({
-				completion_message: {
-					content: {
-						text: JSON.stringify([
-							{ merchant: 'Amazon', amount: 85.67 },
-							{ merchant: 'Grocery Store', amount: 124.32 },
-							{ merchant: 'Gas Station', amount: 45.21 }
-						])
-					}
+		mockLlamaClient.chat.completions.create.mockResolvedValue({
+			completion_message: {
+				content: {
+					text:
+						'[' +
+						'{"merchant":"Amazon","amount":85.67,"date":"2024-01-15"},' +
+						'{"merchant":"Grocery Store","amount":124.32,"date":"2024-01-16"},' +
+						'{"merchant":"Gas Station","amount":45.21,"date":"2024-01-17"}' +
+						']'
 				}
-			})
+			}
 		});
 	});
 
@@ -109,16 +118,33 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			// Should create multiple payments from Llama API response
 			expect(createPayment).toHaveBeenCalledTimes(3);
-			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Amazon', 85.67, 'Both');
+			expect(createPayment).toHaveBeenNthCalledWith(
+				1,
+				mockEvent,
+				1,
+				'Amazon',
+				85.67,
+				'Both',
+				'2024-01-15'
+			);
 			expect(createPayment).toHaveBeenNthCalledWith(
 				2,
 				mockEvent,
 				1,
 				'Grocery Store',
 				124.32,
-				'Both'
+				'Both',
+				'2024-01-16'
 			);
-			expect(createPayment).toHaveBeenNthCalledWith(3, mockEvent, 1, 'Gas Station', 45.21, 'Both');
+			expect(createPayment).toHaveBeenNthCalledWith(
+				3,
+				mockEvent,
+				1,
+				'Gas Station',
+				45.21,
+				'Both',
+				'2024-01-17'
+			);
 
 			expect(result.success).toBe(true);
 			expect(result.charges_found).toBe(3);
@@ -186,12 +212,9 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			deletePaymentsForStatement.mockResolvedValue({});
 
 			// Mock Llama API error
-			mockEvent.fetch.mockResolvedValue({
-				ok: false,
-				status: 401,
-				statusText: 'Unauthorized',
-				text: vi.fn().mockResolvedValue('Invalid API key')
-			});
+			mockLlamaClient.chat.completions.create.mockRejectedValue(
+				new Error('Llama API error: 401 Unauthorized - Invalid API key')
+			);
 
 			const response = await POST(mockEvent);
 			const result = await response.json();
@@ -227,6 +250,59 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(createPaymentCalls[0][4]).toBe('Both'); // Amazon
 			expect(createPaymentCalls[1][4]).toBe('Both'); // Grocery Store
 			expect(createPaymentCalls[2][4]).toBe('Both'); // Gas Station (now defaulting to 'Both')
+		});
+
+		it('should handle charges without dates correctly', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock Llama API response with some charges missing dates
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text:
+							'[' +
+							'{"merchant":"Amazon","amount":85.67,"date":"2024-01-15"},' +
+							'{"merchant":"Grocery Store","amount":124.32},' +
+							'{"merchant":"Gas Station","amount":45.21,"date":"2024-01-17"}' +
+							']'
+					}
+				}
+			});
+
+			await POST(mockEvent);
+
+			// Check that payments are created with dates when available, null when not
+			expect(createPayment).toHaveBeenCalledTimes(3);
+			expect(createPayment).toHaveBeenNthCalledWith(
+				1,
+				mockEvent,
+				1,
+				'Amazon',
+				85.67,
+				'Both',
+				'2024-01-15'
+			);
+			expect(createPayment).toHaveBeenNthCalledWith(
+				2,
+				mockEvent,
+				1,
+				'Grocery Store',
+				124.32,
+				'Both',
+				null
+			);
+			expect(createPayment).toHaveBeenNthCalledWith(
+				3,
+				mockEvent,
+				1,
+				'Gas Station',
+				45.21,
+				'Both',
+				'2024-01-17'
+			);
 		});
 
 		it('should use statement ID correctly in all operations', async () => {

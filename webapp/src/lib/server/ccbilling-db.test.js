@@ -402,9 +402,21 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to) VALUES (?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 85.67, 'Both');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 85.67, 'Both', null);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+
+			it('should create a new payment with transaction date', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both', '2024-01-15');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 85.67, 'Both', '2024-01-15');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});

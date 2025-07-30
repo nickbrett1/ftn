@@ -6,6 +6,7 @@ import {
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { LLAMA_API_KEY } from '$env/static/private';
+import LlamaAPIClient from 'llama-api-client';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST(event) {
@@ -39,7 +40,8 @@ export async function POST(event) {
 				statement_id,
 				charge.merchant,
 				charge.amount,
-				charge.allocated_to || 'Both' // Default allocation
+				charge.allocated_to || 'Both', // Default allocation
+				charge.date // Pass the transaction date from Llama API
 			);
 		}
 
@@ -116,8 +118,6 @@ async function extractTextFromPDF(pdfObject) {
  * @returns {Promise<Array>}
  */
 async function parseChargesWithLlama(text, statement, event) {
-	const LLAMA_API_URL = 'https://api.llama.com/v1/chat/completions';
-
 	// Try both methods of accessing the environment variable
 	const apiKey = LLAMA_API_KEY || process.env.LLAMA_API_KEY;
 
@@ -129,55 +129,53 @@ async function parseChargesWithLlama(text, statement, event) {
 
 	console.log('Parsing with Llama API, text length:', text.length);
 
+	// Initialize the Llama API client
+	const client = new LlamaAPIClient({
+		apiKey: apiKey,
+		timeout: 60000, // 60 seconds timeout
+		logLevel: 'warn' // Only show warnings and errors
+	});
+
 	const prompt = `Parse the following credit card statement text and extract all charges. 
-Return the results as a JSON array with each charge having:
-- merchant: the merchant name
-- amount: the charge amount as a number
-- date: the transaction date (YYYY-MM-DD format if available)
+Return the results as a valid JSON array with each charge having:
+- merchant: the merchant name (string)
+- amount: the charge amount as a number (no currency symbols)
+- date: the transaction date (YYYY-MM-DD format if available, or null if not found)
+
+IMPORTANT: Return ONLY a valid JSON array like this example:
+[
+  {"merchant": "Amazon", "amount": 85.67, "date": "2024-01-15"},
+  {"merchant": "Grocery Store", "amount": 124.32, "date": null}
+]
 
 Statement text:
 ${text}
 
-Return only valid JSON array, no other text.`;
+Return ONLY the JSON array, no markdown formatting, no code blocks, no additional text or explanations.`;
 
 	try {
-		const response = await event.fetch(LLAMA_API_URL, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${apiKey}`
-			},
-			body: JSON.stringify({
-				model: 'Llama-4-Maverick-17B-128E-Instruct-FP8',
-				messages: [
-					{
-						role: 'user',
-						content: prompt
-					},
-					{
-						role: 'system',
-						content:
-							'You are a helpful assistant that parses credit card statements and extracts charges. You will be given a statement text and you will need to extract the charges from the statement.'
-					}
-				],
-				temperature: 0.1,
-				max_tokens: 1000
-			})
+		const response = await client.chat.completions.create({
+			model: 'Llama-4-Maverick-17B-128E-Instruct-FP8',
+			messages: [
+				{
+					role: 'system',
+					content:
+						'You are a helpful assistant that parses credit card statements and extracts charges. You will be given a statement text and you will need to extract the charges from the statement. Always return only valid JSON arrays without any markdown formatting or code blocks.'
+				},
+				{
+					role: 'user',
+					content: prompt
+				}
+			],
+			temperature: 0.1,
+			max_tokens: 1000
 		});
 
-		if (!response.ok) {
-			const errorText = await response.text();
-			console.error('Llama API error:', response.status, errorText);
-			throw new Error(`Llama API error: ${response.status} ${response.statusText} - ${errorText}`);
-		}
-
-		const data = await response.json();
-
 		// Extract content from Llama API response structure
-		const content = data.completion_message?.content?.text;
+		const content = response.completion_message?.content?.text;
 
 		if (!content) {
-			console.error('No content received from Llama API, available keys:', Object.keys(data));
+			console.error('No content received from Llama API');
 			throw new Error('No content received from Llama API');
 		}
 
@@ -189,38 +187,67 @@ Return only valid JSON array, no other text.`;
 			cleanContent = cleanContent.slice(3, -3).trim(); // Remove ``` and ```
 		}
 
-		// Remove control characters that can break JSON parsing
-		cleanContent = cleanContent
-			.replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
-			.replace(/\n/g, '\\n') // Escape newlines
-			.replace(/\r/g, '\\r') // Escape carriage returns
-			.replace(/\t/g, '\\t'); // Escape tabs
+		// Additional JSON cleaning - remove any trailing commas and fix common issues
+		cleanContent = cleanContent.replace(/,\s*}/g, '}'); // Remove trailing commas before }
+		cleanContent = cleanContent.replace(/,\s*]/g, ']'); // Remove trailing commas before ]
 
-		// Parse the JSON response
+		// Try to find JSON array in the content if it's not the entire content
+		const jsonArrayMatch = cleanContent.match(/\[.*\]/s);
+		if (jsonArrayMatch) {
+			cleanContent = jsonArrayMatch[0];
+		}
+
+		// Parse the JSON response with better error handling
 		let charges;
 		try {
 			charges = JSON.parse(cleanContent);
 		} catch (parseError) {
-			console.error('JSON parsing failed, attempting to extract JSON array');
-			// Try to find JSON array in the content
-			const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
-			if (jsonMatch) {
-				charges = JSON.parse(jsonMatch[0]);
-			} else {
-				throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+			console.error('JSON parse error:', parseError);
+			console.error('Raw content:', content);
+			console.error('Cleaned content:', cleanContent);
+
+			// Try one more time with a more aggressive cleaning approach
+			try {
+				// Remove any non-JSON content and try to extract just the array
+				const jsonMatch = content.match(/\[[\s\S]*\]/);
+				if (jsonMatch) {
+					const extractedJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1'); // Remove trailing commas
+					charges = JSON.parse(extractedJson);
+					console.log('Successfully parsed JSON on second attempt');
+				} else {
+					throw new Error('No valid JSON array found in response');
+				}
+			} catch (secondParseError) {
+				console.error('Second JSON parse attempt failed:', secondParseError);
+				throw new Error(`Invalid JSON response from Llama API: ${parseError.message}`);
 			}
 		}
 
 		console.log('Parsed', charges.length, 'charges from Llama API');
 
+		// Validate that charges is an array
+		if (!Array.isArray(charges)) {
+			console.error('Llama API returned non-array:', typeof charges, charges);
+			throw new Error('Llama API did not return a valid array of charges');
+		}
+
 		// Validate and clean the charges
 		return charges
-			.map((charge) => ({
-				merchant: charge.merchant || 'Unknown',
-				amount: parseFloat(charge.amount) || 0,
-				allocated_to: 'Both' // Default allocation
-			}))
-			.filter((charge) => charge.amount > 0);
+			.map((charge, index) => {
+				// Validate each charge object
+				if (!charge || typeof charge !== 'object') {
+					console.warn(`Invalid charge at index ${index}:`, charge);
+					return null;
+				}
+
+				return {
+					merchant: charge.merchant || 'Unknown',
+					amount: parseFloat(charge.amount) || 0,
+					date: charge.date || null, // Extract the date from Llama response
+					allocated_to: 'Both' // Default allocation
+				};
+			})
+			.filter((charge) => charge && charge.amount > 0);
 	} catch (error) {
 		console.error('Llama API parsing failed:', error);
 		console.error('Error details:', error.message);

@@ -319,23 +319,37 @@
 	{#if charges.length > 0}
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<h3 class="text-xl font-semibold text-white mb-4">Charges ({charges.length})</h3>
-			<div class="space-y-2">
-				{#each charges as charge}
-					<div class="bg-gray-700 border border-gray-600 rounded-lg p-3">
-						<div class="flex justify-between items-center">
-							<div>
-								<h4 class="text-white font-medium">{charge.merchant}</h4>
-								<p class="text-gray-400 text-sm">
-									{charge.card_name} (****{charge.last4})
-								</p>
-							</div>
-							<div class="text-right">
-								<p class="text-white font-medium">${charge.amount.toFixed(2)}</p>
-								<p class="text-gray-400 text-sm">Allocated to: {charge.allocated_to}</p>
-							</div>
-						</div>
-					</div>
-				{/each}
+			<div class="overflow-x-auto">
+				<table class="w-full">
+					<thead>
+						<tr class="border-b border-gray-600">
+							<th class="text-left text-gray-300 font-medium pb-2">Date</th>
+							<th class="text-left text-gray-300 font-medium pb-2">Merchant</th>
+							<th class="text-left text-gray-300 font-medium pb-2">Card</th>
+							<th class="text-left text-gray-300 font-medium pb-2">Allocation</th>
+							<th class="text-right text-gray-300 font-medium pb-2">Amount</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each charges as charge}
+							<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
+								<td class="text-gray-300 text-sm py-2">
+									{charge.transaction_date
+										? formatLocalDate(charge.transaction_date)
+										: formatLocalDate(charge.created_at?.split('T')[0])}
+								</td>
+								<td class="text-white py-2">{charge.merchant}</td>
+								<td class="text-gray-300 text-sm py-2">{charge.card_name}</td>
+								<td class="text-gray-300 text-sm py-2">{charge.allocated_to}</td>
+								<td class="text-right py-2">
+									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
+										{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
+									</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	{/if}
