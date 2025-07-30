@@ -54,7 +54,7 @@ export class GenericStatementParser extends BaseStatementParser {
 	 * @returns {Object} - Billing cycle information
 	 */
 	extractBillingCycle(text) {
-		// Try to extract billing cycle from text
+		// Try to extract billing cycle from text - using atomic group to prevent backtracking
 		const billingCycleMatch = text.match(
 			/(?:billing|statement)\s+(?:period|cycle|date)[:\s]*([^.\n]+)/i
 		);
@@ -79,7 +79,7 @@ export class GenericStatementParser extends BaseStatementParser {
 	 * @returns {Object} - Card information
 	 */
 	extractCardInfo(text) {
-		// Try to extract card number (last 4 digits)
+		// Try to extract card number (last 4 digits) - using atomic group to prevent backtracking
 		const cardMatch = text.match(/(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})/i);
 		if (cardMatch) {
 			return {

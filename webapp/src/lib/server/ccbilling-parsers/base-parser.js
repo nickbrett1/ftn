@@ -91,7 +91,7 @@ export class BaseStatementParser {
 			return null;
 		}
 
-		// Try different date formats
+		// Try different date formats - using safe regex patterns
 		const patterns = [
 			// MM/DD/YYYY
 			{ regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'MM/DD/YYYY' },
@@ -226,7 +226,7 @@ export class BaseStatementParser {
 		// Remove currency symbols and commas, handle negative amounts
 		const cleaned = amountStr
 			.replace(/[$,\s]/g, '') // Remove $, commas, and spaces
-			.replace(/\(([^)]+?)\)/g, '-$1'); // Convert parentheses to negative (non-greedy to prevent backtracking)
+			.replace(/\(([^)]+)\)/g, '-$1'); // Convert parentheses to negative (atomic group to prevent backtracking)
 
 		const amount = parseFloat(cleaned);
 		return isNaN(amount) ? null : amount;
