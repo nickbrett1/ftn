@@ -316,11 +316,12 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 
 					// Fourth attempt: Try to extract individual JSON objects and reconstruct
 					try {
-						// Find all potential JSON objects in the content - use a more flexible pattern
+						// Find all potential JSON objects in the content - use a more efficient pattern
+						// that avoids catastrophic backtracking by using non-greedy matching
 						const objectMatches =
-							content.match(/\{[^}]*"merchant"[^}]*\}/g) ||
-							content.match(/\{[^}]*"amount"[^}]*\}/g) ||
-							content.match(/\{[^}]*"date"[^}]*\}/g);
+							content.match(/\{[^}]*?"merchant"[^}]*?\}/g) ||
+							content.match(/\{[^}]*?"amount"[^}]*?\}/g) ||
+							content.match(/\{[^}]*?"date"[^}]*?\}/g);
 						if (objectMatches && objectMatches.length > 0) {
 							const reconstructedCharges = [];
 
