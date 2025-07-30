@@ -24,6 +24,23 @@ export function isRegexSafe(pattern, testString, timeout = 1000) {
 			return false;
 		}
 		
+		// Also check for known dangerous patterns
+		const dangerousPatterns = [
+			/(\w+)*/,           // Nested quantifiers
+			/(\w+)+/,           // Nested quantifiers
+			/(\w+){1,}/,        // Nested quantifiers
+			/(\w+)*\1/,         // Backreferences with quantifiers
+			/(\w+)+(\w+)*/,     // Multiple nested quantifiers
+			/(a+)+/,            // Classic ReDoS pattern
+			/(a|aa)*/,          // Another classic ReDoS pattern
+		];
+		
+		for (const dangerousPattern of dangerousPatterns) {
+			if (pattern.includes(dangerousPattern.source)) {
+				return false;
+			}
+		}
+		
 		return true;
 	} catch (error) {
 		// Invalid regex patterns are considered unsafe
@@ -98,9 +115,10 @@ export function createSafeRegex(pattern) {
 			/(\w+)*/,           // Nested quantifiers
 			/(\w+)+/,           // Nested quantifiers
 			/(\w+){1,}/,        // Nested quantifiers
-			/(\w+){1,}/,        // Nested quantifiers
 			/(\w+)*\1/,         // Backreferences with quantifiers
 			/(\w+)+(\w+)*/,     // Multiple nested quantifiers
+			/(a+)+/,            // Classic ReDoS pattern
+			/(a|aa)*/,          // Another classic ReDoS pattern
 		];
 		
 		for (const dangerousPattern of dangerousPatterns) {
