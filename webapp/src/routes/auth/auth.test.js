@@ -1,4 +1,4 @@
-import { expect, describe, it, vi, beforeEach } from 'vitest';
+import { expect, describe, it, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 import { createServer } from 'miragejs';
 
@@ -30,10 +30,10 @@ describe('Auth', () => {
 				this.post('https://oauth2.googleapis.com/revoke');
 			}
 		});
+	});
 
-		return () => {
-			server.shutdown();
-		};
+	afterEach(() => {
+		server.shutdown();
 	});
 
 	it('auth allows access if in KV', async () => {
@@ -68,5 +68,344 @@ describe('Auth', () => {
 		});
 
 		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
+	});
+
+	describe('Error Handling', () => {
+		it('should handle OAuth provider errors', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?error=access_denied'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle missing code parameter', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle token exchange errors', async () => {
+			server.shutdown();
+			server = createServer({
+				routes() {
+					this.post('https://oauth2.googleapis.com/token', () => ({
+						error: 'invalid_grant',
+						error_description: 'Invalid authorization code'
+					}));
+				}
+			});
+
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=invalid_code'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle userinfo API errors', async () => {
+			server.shutdown();
+			server = createServer({
+				routes() {
+					this.post('https://oauth2.googleapis.com/token', () => ({
+						access_token: 'mock_access_token',
+						expires_in: 3600
+					}));
+					this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => ({
+						error: 'invalid_token'
+					}));
+				}
+			});
+
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle unverified email', async () => {
+			server.shutdown();
+			server = createServer({
+				routes() {
+					this.post('https://oauth2.googleapis.com/token', () => ({
+						access_token: 'mock_access_token',
+						expires_in: 3600
+					}));
+					this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => ({
+						verified_email: false,
+						email: TEST_USER
+					}));
+				}
+			});
+
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
+		});
+
+		it('should handle network errors during token exchange', async () => {
+			server.shutdown();
+			server = createServer({
+				routes() {
+					this.post('https://oauth2.googleapis.com/token', () => {
+						throw new Error('Network error');
+					});
+				}
+			});
+
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle network errors during userinfo fetch', async () => {
+			server.shutdown();
+			server = createServer({
+				routes() {
+					this.post('https://oauth2.googleapis.com/token', () => ({
+						access_token: 'mock_access_token',
+						expires_in: 3600
+					}));
+					this.get('https://www.googleapis.com/oauth2/v2/userinfo', () => {
+						throw new Error('Network error');
+					});
+				}
+			});
+
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle KV storage errors', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
+							put: vi.fn().mockRejectedValue(new Error('KV storage error'))
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+	});
+
+	describe('Environment Variable Validation', () => {
+		it('should handle missing GOOGLE_CLIENT_SECRET', async () => {
+			// Mock module to return undefined for client secret
+			vi.doMock('$env/static/private', () => ({
+				GOOGLE_CLIENT_ID: '123',
+				GOOGLE_CLIENT_SECRET: undefined
+			}));
+
+			// Re-import to get the mocked version
+			const { GET: MockedGET } = await import('./+server.js?t=' + Date.now());
+
+			const res = await MockedGET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+
+		it('should handle missing GOOGLE_CLIENT_ID', async () => {
+			// Mock module to return undefined for client ID
+			vi.doMock('$env/static/private', () => ({
+				GOOGLE_CLIENT_ID: undefined,
+				GOOGLE_CLIENT_SECRET: '123'
+			}));
+
+			// Re-import to get the mocked version
+			const { GET: MockedGET } = await import('./+server.js?t=' + Date.now());
+
+			const res = await MockedGET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn(),
+							put: vi.fn()
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(500);
+			expect(await res.text()).toBe('Authentication failed due to an internal error.');
+		});
+	});
+
+	describe('Response Formatting', () => {
+		it('should set correct cookie attributes', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
+							put: vi.fn().mockResolvedValue(undefined)
+						}
+					}
+				}
+			});
+
+			const setCookieHeader = res.headers.get('Set-Cookie');
+			expect(setCookieHeader).toContain('auth=');
+			expect(setCookieHeader).toContain('Expires=');
+			expect(setCookieHeader).toContain('Path=/');
+			expect(setCookieHeader).toContain('Secure');
+			expect(setCookieHeader).toContain('HttpOnly');
+			expect(setCookieHeader).toContain('SameSite=Lax');
+		});
+
+		it('should use correct redirect status code', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
+							put: vi.fn().mockResolvedValue(undefined)
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
+		});
+
+		it('should redirect unauthorized users with correct status code', async () => {
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue(null),
+							put: vi.fn().mockResolvedValue(undefined)
+						}
+					}
+				}
+			});
+
+			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
+			expect(res.headers.get('Location')).toBe('https://fintechnick.com/preview');
+		});
+	});
+
+	describe('Token Processing', () => {
+		it('should store auth token with correct expiration', async () => {
+			const mockPut = vi.fn().mockResolvedValue(undefined);
+			const expires_in = 3600; // 1 hour
+
+			await GET({
+				request: new Request('https://fintechnick.com/auth?code=123'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
+							put: mockPut
+						}
+					}
+				}
+			});
+
+			expect(mockPut).toHaveBeenCalledWith(
+				expect.any(String), // auth token
+				'mock_access_token', // access token
+				expect.objectContaining({
+					expiration: expect.any(Number)
+				})
+			);
+
+			// Verify expiration is approximately correct (within 10 seconds)
+			const call = mockPut.mock.calls[0];
+			const expectedExpiration = Math.floor((Date.now() + expires_in * 1000) / 1000);
+			expect(call[2].expiration).toBeCloseTo(expectedExpiration, -1);
+		});
 	});
 });
