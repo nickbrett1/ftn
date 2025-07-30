@@ -316,11 +316,46 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 
 					// Fourth attempt: Try to extract individual JSON objects and reconstruct
 					try {
-						// Find all potential JSON objects in the content - use a more flexible pattern
-						const objectMatches =
-							content.match(/\{[^}]*"merchant"[^}]*\}/g) ||
-							content.match(/\{[^}]*"amount"[^}]*\}/g) ||
-							content.match(/\{[^}]*"date"[^}]*\}/g);
+						// Find all potential JSON objects in the content - use a more efficient pattern
+						// that avoids catastrophic backtracking by using a deterministic approach
+						// Find JSON objects by looking for balanced braces and required fields
+						// while properly handling braces inside string literals
+						const objectMatches = [];
+						let braceCount = 0;
+						let startIndex = -1;
+						let inString = false;
+						let escapeNext = false;
+						
+						for (let i = 0; i < content.length; i++) {
+							const char = content[i];
+							
+							if (escapeNext) {
+								escapeNext = false;
+							} else if (char === '\\') {
+								escapeNext = true;
+							} else if (char === '"' && !escapeNext) {
+								inString = !inString;
+							} else if (!inString) {
+								if (char === '{') {
+									if (braceCount === 0) {
+										startIndex = i;
+									}
+									braceCount++;
+								} else if (char === '}') {
+									braceCount--;
+									if (braceCount === 0 && startIndex !== -1) {
+										const potentialObject = content.substring(startIndex, i + 1);
+										// Check if this object contains any of the required fields
+										if (potentialObject.includes('"merchant"') || 
+											potentialObject.includes('"amount"') || 
+											potentialObject.includes('"date"')) {
+											objectMatches.push(potentialObject);
+										}
+										startIndex = -1;
+									}
+								}
+							}
+						}
 						if (objectMatches && objectMatches.length > 0) {
 							const reconstructedCharges = [];
 
