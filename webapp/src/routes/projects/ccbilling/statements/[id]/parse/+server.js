@@ -203,7 +203,7 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 		cleanContent = cleanContent.replace(/,\s*]/g, ']'); // Remove trailing commas before ] (again)
 
 		// Try to find JSON array in the content if it's not the entire content
-		const jsonArrayMatch = cleanContent.match(/\[[\s\S]*\]/);
+		const jsonArrayMatch = cleanContent.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
 		if (jsonArrayMatch) {
 			cleanContent = jsonArrayMatch[0];
 		}
@@ -220,7 +220,7 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 			// Try one more time with a more aggressive cleaning approach
 			try {
 				// Remove any non-JSON content and try to extract just the array
-				const jsonMatch = content.match(/\[[\s\S]*\]/);
+				const jsonMatch = content.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
 				if (jsonMatch) {
 					const extractedJson = jsonMatch[0]
 						.replace(/,\s*([}\]])/g, '$1') // Remove trailing commas
@@ -241,7 +241,7 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 					let thirdAttemptJson = content;
 
 					// Find the JSON array
-					const jsonArrayMatch = content.match(/\[[\s\S]*\]/);
+					const jsonArrayMatch = content.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
 					if (jsonArrayMatch) {
 						thirdAttemptJson = jsonArrayMatch[0];
 					}
