@@ -20,6 +20,93 @@ export class LlamaService {
 	}
 
 	/**
+	 * Parse a credit card statement using Llama API
+	 * @param {string} statementText - The extracted text from the PDF
+	 * @returns {Promise<Array>} - Array of charge objects
+	 */
+	async parseStatement(statementText) {
+		if (!statementText || typeof statementText !== 'string') {
+			throw new Error('Invalid statement text provided');
+		}
+
+		const prompt = `Parse the following credit card statement and extract all charges. 
+
+Statement text:
+${statementText}
+
+Please provide a JSON array of charge objects with the following structure:
+[
+  {
+    "merchant": "Merchant name",
+    "amount": 123.45,
+    "date": "YYYY-MM-DD"
+  }
+]
+
+Return ONLY the JSON array, no additional text or formatting. If no charges are found, return an empty array [].`;
+
+		try {
+			const response = await this.client.chat.completions.create({
+				model: 'Llama-4-Maverick-17B-128E-Instruct-FP8',
+				messages: [
+					{
+						role: 'system',
+						content:
+							'You are a helpful assistant that parses credit card statements and extracts charge information. Always return only valid JSON arrays without any markdown formatting or code blocks.'
+					},
+					{
+						role: 'user',
+						content: prompt
+					}
+				],
+				temperature: 0.1,
+				max_tokens: 2000
+			});
+
+			const content = response.completion_message?.content?.text;
+			if (!content) {
+				throw new Error('No content received from Llama API');
+			}
+
+			// Clean up the content
+			let cleanContent = content.trim();
+			if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
+				cleanContent = cleanContent.slice(7, -3).trim();
+			} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
+				cleanContent = cleanContent.slice(3, -3).trim();
+			}
+
+			// Parse the JSON response
+			const charges = JSON.parse(cleanContent);
+
+			// Validate that it's an array
+			if (!Array.isArray(charges)) {
+				throw new Error('Llama API did not return a valid array');
+			}
+
+			// Validate and clean up each charge
+			return charges
+				.map((charge, index) => {
+					if (!charge || typeof charge !== 'object') {
+						console.warn(`Invalid charge object at index ${index}:`, charge);
+						return null;
+					}
+
+					return {
+						merchant: charge.merchant || 'Unknown Merchant',
+						amount: parseFloat(charge.amount) || 0,
+						date: charge.date || null,
+						allocated_to: charge.allocated_to || 'Both'
+					};
+				})
+				.filter(Boolean); // Remove null entries
+		} catch (error) {
+			console.error('Llama API parsing failed:', error);
+			throw new Error(`Llama API parsing failed: ${error.message}`);
+		}
+	}
+
+	/**
 	 * Classify a merchant and provide additional information
 	 * @param {string} merchantName - The merchant name to classify
 	 * @returns {Promise<Object>} - Classification result

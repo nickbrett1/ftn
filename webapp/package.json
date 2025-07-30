@@ -13,6 +13,7 @@
 		"format": "prettier --write .",
 		"clean": "rimraf .svelte-kit",
 		"test": "vitest --coverage",
+		"test:once": "vitest run",
 		"test-staging": "vitest --coverage --reporter=junit --outputFile=./reports/junit.xml",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
