@@ -171,7 +171,7 @@ describe('CCBilling Page Server Route', () => {
 			
 			// Mock billing cycle data
 			const mockCycle = {
-				id: 789,
+				id: 123,
 				start_date: '2024-03-01',
 				end_date: '2024-03-31',
 				status: 'open'
