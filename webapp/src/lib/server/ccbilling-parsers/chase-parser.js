@@ -280,7 +280,7 @@ export class ChaseStatementParser extends BaseStatementParser {
 	 * @returns {Object} - Object with startDate and endDate
 	 */
 	extractBillingCycle(text) {
-		// Look for billing cycle patterns in Chase statements
+		// Look for billing cycle patterns in Chase statements - using safe regex patterns
 		const cyclePatterns = [
 			/BILLING CYCLE[:\s]+(\d{1,2}\/\d{1,2}\/\d{4})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
 			/STATEMENT PERIOD[:\s]+(\d{1,2}\/\d{1,2}\/\d{4})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
@@ -321,7 +321,7 @@ export class ChaseStatementParser extends BaseStatementParser {
 	 * @returns {Object} - Object with card information
 	 */
 	extractCardInfo(text) {
-		// Look for card number patterns (last 4 digits)
+		// Look for card number patterns (last 4 digits) - using safe regex patterns
 		const cardPatterns = [
 			/CARD ENDING IN (\d{4})/i,
 			/ACCOUNT ENDING (\d{4})/i,
