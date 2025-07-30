@@ -37,7 +37,12 @@ export async function isRegexSafe(pattern, testString, timeout = 1000) {
  */
 function hasDangerousStructure(pattern) {
 	// Remove regex flags and escape sequences for analysis
-	const cleanPattern = pattern.replace(/^\/|\/[gimsuy]*$/g, '');
+	// Pattern breakdown:
+	// ^(\/)           - Group 1: matches the leading slash
+	// (.*?)           - Group 2: matches the regex pattern content (non-greedy)
+	// (\/[gimsuy]*)$  - Group 3: matches the closing slash and optional flags
+	// Result: extracts just the pattern content without slashes or flags
+	const cleanPattern = pattern.replace(/^(\/)(.*?)(\/[gimsuy]*)$/, '$2');
 	
 	// Check for specific dangerous patterns that cause ReDoS
 	const dangerousPatterns = [
