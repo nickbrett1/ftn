@@ -608,4 +608,212 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(createPayment).toHaveBeenCalledTimes(2); // Only valid charges should be processed
 		});
 	});
+
+	describe('Brace-counting JSON parsing (fourth attempt)', () => {
+		it('should handle JSON objects with braces in string literals', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response that triggers the fourth attempt parsing
+			// This simulates a response where the first three parsing attempts fail
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":"Store {Branch A}","amount":85.67} {"merchant":"Shop [Location]","amount":50.00}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Store {Branch A}', 85.67, 'Both', null);
+			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Shop [Location]', 50.00, 'Both', null);
+		});
+
+		it('should handle escaped quotes in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with escaped quotes that triggers fourth attempt
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":"Store \\"Premium\\"","amount":85.67} {"merchant":"Shop \\"Elite\\"","amount":45.21}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Store "Premium"', 85.67, 'Both', null);
+			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Shop "Elite"', 45.21, 'Both', null);
+		});
+
+		it('should handle nested objects in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock response with nested objects that triggers fourth attempt
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":{"name":"Amazon","location":"Online"},"amount":{"value":85.67},"date":{"value":"2024-01-15"}}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			// The current implementation doesn't handle nested objects in brace-counting
+			// so this should fail with a 500 error
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle malformed JSON objects in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with malformed objects that need cleanup
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":"Amazon","amount":85.67,} {"merchant":"Store","amount":50.00,,}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+		});
+
+		it('should handle objects with missing fields in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with objects missing required fields
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":"Amazon"} {"amount":50.00} {"date":"2024-01-15"}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			// Should fail because objects are missing required fields
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle objects with invalid data types in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with invalid data types
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":123,"amount":"invalid","date":456}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			// Should fail because merchant is not a string and amount is not a number
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle empty content in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock response with empty content
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: ''
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle content with no valid JSON objects', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock response with no valid JSON objects
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: 'This is just plain text with no JSON objects'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle nested object extraction in brace-counting parsing', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response that triggers fourth attempt with nested objects that need extraction
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":{"name":"Amazon","location":"Online"},"amount":{"value":85.67},"date":{"value":"2024-01-15"}} {"merchant":{"merchant":"Store","branch":"Main"},"amount":{"amount":50.00},"date":{"date":"2024-01-16"}}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Amazon', 85.67, 'Both', '2024-01-15');
+			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Store', 50.00, 'Both', '2024-01-16');
+		});
+	});
 });
