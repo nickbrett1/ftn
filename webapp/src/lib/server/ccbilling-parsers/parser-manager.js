@@ -1,12 +1,16 @@
 import { ChaseStatementParser } from './chase-parser.js';
+import { GenericStatementParser } from './generic-parser.js';
+import { LlamaService } from '../ccbilling-llama-service.js';
 
 /**
  * Manager for handling different credit card statement parsers
  */
 export class StatementParserManager {
-	constructor() {
+	constructor(llamaService = null) {
+		this.llamaService = llamaService || new LlamaService();
 		this.parsers = [
-			new ChaseStatementParser()
+			new ChaseStatementParser(),
+			new GenericStatementParser(this.llamaService) // Pass LlamaService instance
 			// Add other parsers here as they are implemented
 			// new AmexStatementParser(),
 			// new CitiStatementParser(),
@@ -32,9 +36,9 @@ export class StatementParserManager {
 	/**
 	 * Parse a statement using the appropriate parser
 	 * @param {string} text - The extracted text from the PDF
-	 * @returns {Object} - Object with charges, billingCycle, cardInfo, and parser info
+	 * @returns {Promise<Object>} - Object with charges, billingCycle, cardInfo, and parser info
 	 */
-	parseStatement(text) {
+	async parseStatement(text) {
 		const parser = this.findParser(text);
 
 		if (!parser) {
@@ -42,7 +46,7 @@ export class StatementParserManager {
 		}
 
 		try {
-			const charges = parser.parse(text);
+			const charges = await parser.parse(text);
 			const billingCycle = parser.extractBillingCycle(text);
 			const cardInfo = parser.extractCardInfo(text);
 

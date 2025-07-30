@@ -20,20 +20,20 @@ This is a personal finance tool for reviewing credit card statements. The main f
 
 ### Testing Configuration
 
-When running tests in Cursor, use the `--run` flag to execute tests once and exit instead of running in watch mode:
+When running tests in Cursor, use the `test:once` command to execute tests once and exit instead of running in watch mode:
 
 ```bash
+# Run all tests once (no coverage)
+npm run test:once
+
 # Run specific test file once
-npm test -- src/lib/server/ccbilling-parsers/base-parser.test.js --run
+npm run test:once src/lib/server/ccbilling-parsers/base-parser.test.js
 
-# Run all tests once
-npm test -- --run
-
-# Run tests with coverage once
-npm test -- --run --coverage
+# Run tests with coverage (original test command)
+npm test
 ```
 
-This speeds up development by avoiding the watch mode overhead when you just want to check if tests pass.
+This speeds up development by avoiding the watch mode overhead when you just want to check if tests pass. The `test:once` command runs tests without coverage metrics for faster execution.
 
 ### Key Features
 

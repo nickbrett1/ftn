@@ -83,8 +83,9 @@ async function parsePDFWithParsers(statement, event) {
 	const pdfText = await extractTextFromPDF(pdfObject);
 
 	// Parse using the parser manager
-	const parserManager = new StatementParserManager();
-	const parseResult = parserManager.parseStatement(pdfText);
+	const llamaService = new LlamaService();
+	const parserManager = new StatementParserManager(llamaService);
+	const parseResult = await parserManager.parseStatement(pdfText);
 
 	// Optionally enhance with LLAMA classification (non-blocking)
 	try {
