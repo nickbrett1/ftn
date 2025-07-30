@@ -107,10 +107,10 @@ export class ChaseStatementParser extends BaseStatementParser {
 	extractTransactionSection(text) {
 		// Look for common Chase transaction section headers
 		const sectionPatterns = [
-			/(?:PURCHASES|TRANSACTIONS|CHARGES).*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is,
-			/(?:PURCHASES AND ADJUSTMENTS).*?(?=PAYMENTS AND CREDITS|SUMMARY|TOTAL|$)/is,
-			/(?:PURCHASES).*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is,
-			/(?:TRANSACTIONS).*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is
+			/(?:PURCHASES|TRANSACTIONS|CHARGES)[^]*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is,
+			/(?:PURCHASES AND ADJUSTMENTS)[^]*?(?=PAYMENTS AND CREDITS|SUMMARY|TOTAL|$)/is,
+			/(?:PURCHASES)[^]*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is,
+			/(?:TRANSACTIONS)[^]*?(?=PAYMENTS|CREDITS|SUMMARY|TOTAL|$)/is
 		];
 
 		return this.extractSection(text, sectionPatterns);
@@ -157,13 +157,13 @@ export class ChaseStatementParser extends BaseStatementParser {
 		// Try different patterns for Chase transaction lines
 		const patterns = [
 			// Pattern 1: DATE MERCHANT AMOUNT
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$]+?)\s+(\$[\d,]+\.\d{2})$/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$\s]+(?:\s+[^$\s]+)*)\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 2: DATE DATE MERCHANT AMOUNT (post date and transaction date)
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$]+?)\s+(\$[\d,]+\.\d{2})$/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$\s]+(?:\s+[^$\s]+)*)\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 3: DATE MERCHANT (multi-line merchant name)
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$]+?)\s+(\$[\d,]+\.\d{2})/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+([^$\s]+(?:\s+[^$\s]+)*)\s+(\$[\d,]+\.\d{2})/,
 			// Pattern 4: MERCHANT AMOUNT (date on previous line)
-			/^([^$]+?)\s+(\$[\d,]+\.\d{2})$/,
+			/^([^$\s]+(?:\s+[^$\s]+)*)\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 5: DATE MERCHANT (amount on next line)
 			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.+)$/
 		];
