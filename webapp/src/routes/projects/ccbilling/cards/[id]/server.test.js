@@ -116,16 +116,15 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 			expect(response.status).toBe(400);
 		});
 
-		it('should handle negative id (passes validation)', async () => {
+		it('should return 400 for negative id', async () => {
 			mockEvent.params = { id: '-1' };
-			getCreditCard.mockResolvedValue(null);
 
 			const response = await GET(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(getCreditCard).toHaveBeenCalledWith(mockEvent, -1);
-			expect(result).toEqual({ error: 'Credit card not found' });
-			expect(response.status).toBe(404);
+			expect(result).toEqual({ error: 'Missing or invalid id' });
+			expect(response.status).toBe(400);
+			expect(getCreditCard).not.toHaveBeenCalled();
 		});
 	});
 
@@ -175,6 +174,17 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 
 		it('should return 400 for invalid id', async () => {
 			mockEvent.params = { id: 'invalid' };
+
+			const response = await PUT(mockEvent);
+			const result = JSON.parse(await response.text());
+
+			expect(result).toEqual({ error: 'Missing or invalid id' });
+			expect(response.status).toBe(400);
+			expect(getCreditCard).not.toHaveBeenCalled();
+		});
+
+		it('should return 400 for negative id', async () => {
+			mockEvent.params = { id: '-1' };
 
 			const response = await PUT(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -369,15 +379,15 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 			expect(response.status).toBe(400);
 		});
 
-		it('should handle negative id (passes validation)', async () => {
+		it('should return 400 for negative id', async () => {
 			mockEvent.params = { id: '-1' };
-			deleteCreditCard.mockResolvedValue();
 
 			const response = await DELETE(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(deleteCreditCard).toHaveBeenCalledWith(mockEvent, -1);
-			expect(result).toEqual({ success: true });
+			expect(result).toEqual({ error: 'Missing or invalid id' });
+			expect(response.status).toBe(400);
+			expect(deleteCreditCard).not.toHaveBeenCalled();
 		});
 
 		it('should handle null id', async () => {
