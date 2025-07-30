@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from './+server.js';
+import { POST, findJsonArray } from './+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -335,6 +335,247 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(getStatement).not.toHaveBeenCalled();
 			expect(createPayment).not.toHaveBeenCalled();
 			expect(deletePaymentsForStatement).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('findJsonArray function', () => {
+		it('should find simple JSON arrays', () => {
+			const result = findJsonArray('[1, 2, 3]');
+			expect(result).toBe('[1, 2, 3]');
+		});
+
+		it('should find JSON arrays with objects', () => {
+			const input = '[{"merchant": "Amazon", "amount": 100}]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[{"merchant": "Amazon", "amount": 100}]');
+		});
+
+		it('should handle deeply nested arrays', () => {
+			const input = '[[[1, 2], [3, 4]], [[5, 6]]]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[[[1, 2], [3, 4]], [[5, 6]]]');
+		});
+
+		it('should handle square brackets in strings', () => {
+			const input = '["item [1]", "store [A]"]';
+			const result = findJsonArray(input);
+			expect(result).toBe('["item [1]", "store [A]"]');
+		});
+
+		it('should handle escaped quotes in strings', () => {
+			const input = '["escaped \\"quote\\"", "normal"]';
+			const result = findJsonArray(input);
+			expect(result).toBe('["escaped \\"quote\\"", "normal"]');
+		});
+
+		it('should find arrays in mixed content', () => {
+			const input = 'Some text before [1, 2, 3] and after';
+			const result = findJsonArray(input);
+			expect(result).toBe('[1, 2, 3]');
+		});
+
+		it('should handle complex nested objects with arrays', () => {
+			const input = '[{"a": [1, 2, [3, 4]]}, {"b": "text [test]"}]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[{"a": [1, 2, [3, 4]]}, {"b": "text [test]"}]');
+		});
+
+		it('should return null for unclosed arrays', () => {
+			const input = '[1, 2, 3';
+			const result = findJsonArray(input);
+			expect(result).toBe(null);
+		});
+
+		it('should return null for content without arrays', () => {
+			const input = 'No arrays here just text';
+			const result = findJsonArray(input);
+			expect(result).toBe(null);
+		});
+
+		it('should handle empty arrays', () => {
+			const input = '[]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[]');
+		});
+
+		it('should handle arrays with only whitespace', () => {
+			const input = '[ ]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[ ]');
+		});
+
+		it('should stop at maxLength to prevent excessive processing', () => {
+			// Create a very long string that exceeds the maxLength limit
+			const longContent = 'x'.repeat(200000) + '[1, 2, 3]';
+			const result = findJsonArray(longContent);
+			expect(result).toBe(null); // Should return null due to maxLength limit
+		});
+
+		it('should handle multiple bracket pairs and find the first complete array', () => {
+			const input = '[incomplete [ [1, 2, 3] more text';
+			const result = findJsonArray(input);
+			expect(result).toBe('[1, 2, 3]'); // Finds the complete nested array
+		});
+
+		it('should handle arrays with complex string content', () => {
+			const input = '[{"description": "Payment [Method: Credit Card] - Amount: $100"}]';
+			const result = findJsonArray(input);
+			expect(result).toBe('[{"description": "Payment [Method: Credit Card] - Amount: $100"}]');
+		});
+	});
+
+	describe('JSON parsing edge cases', () => {
+		it('should handle malformed JSON with trailing commas', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock Llama API response with trailing commas
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[{"merchant":"Amazon","amount":85.67,}]'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
+		});
+
+		it('should handle JSON wrapped in markdown code blocks', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock Llama API response wrapped in markdown
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '```json\n[{"merchant":"Amazon","amount":85.67}]\n```'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
+		});
+
+		it('should handle JSON parsing fallback scenarios', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock Llama API response that requires fallback parsing
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: 'Some text before [{"merchant":"Amazon","amount":85.67}] and after'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
+		});
+
+		it('should filter out payment credits', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with payment credits that should be filtered out
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[{"merchant":"Amazon","amount":85.67},{"merchant":"Payment Thank You","amount":-100}]'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1); // Only Amazon, not the payment
+			expect(createPayment).toHaveBeenCalledWith(mockEvent, 1, 'Amazon', 85.67, 'Both', null);
+		});
+
+		it('should handle completely malformed JSON gracefully', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock completely invalid JSON response
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: 'This is not JSON at all { broken }'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API parsing failed');
+		});
+
+		it('should handle Llama API returning non-array data', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+
+			// Mock Llama API returning an object instead of array
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '{"merchant":"Amazon","amount":85.67}'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toContain('Llama API did not return a valid array');
+		});
+
+		it('should handle invalid charge objects in array', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with invalid charge objects
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[{"merchant":"Amazon","amount":85.67}, null, "invalid", {"merchant":"Store","amount":50}]'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2); // Only valid charges should be processed
 		});
 	});
 });

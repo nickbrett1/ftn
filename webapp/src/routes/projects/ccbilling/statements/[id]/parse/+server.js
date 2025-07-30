@@ -116,7 +116,7 @@ async function extractTextFromPDF(pdfObject) {
  * @param {string} content - The content to search
  * @returns {string|null} - The matched JSON array or null if not found
  */
-function findJsonArray(content) {
+export function findJsonArray(content) {
 	const maxLength = 100000; // Reasonable limit to prevent excessive processing
 	
 	for (let i = 0; i < content.length && i < maxLength; i++) {
