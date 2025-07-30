@@ -226,7 +226,7 @@ export class BaseStatementParser {
 		// Remove currency symbols and commas, handle negative amounts
 		const cleaned = amountStr
 			.replace(/[$,\s]/g, '') // Remove $, commas, and spaces
-			.replace(/\(([^)]+)\)/g, '-$1'); // Convert parentheses to negative
+			.replace(/\(([^)]*?)\)/g, '-$1'); // Convert parentheses to negative (non-greedy to prevent backtracking)
 
 		const amount = parseFloat(cleaned);
 		return isNaN(amount) ? null : amount;
