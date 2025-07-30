@@ -83,87 +83,29 @@ async function parsePDFWithLlama(statement, event) {
 }
 
 /**
- * Extract text from PDF buffer
+ * Extract text from PDF buffer using pdf-parse
  * @param {Object} pdfObject - R2 object containing PDF
  * @returns {Promise<string>}
  */
 async function extractTextFromPDF(pdfObject) {
 	try {
-		// For now, we'll use a simple text extraction approach
-		// In production, you might want to use a more robust PDF parsing library
+		// Import pdf-parse dynamically
+		const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default;
+
 		const arrayBuffer = await pdfObject.arrayBuffer();
-		const uint8Array = new Uint8Array(arrayBuffer);
+		// Convert ArrayBuffer to Buffer for pdf-parse
+		const buffer = Buffer.from(arrayBuffer);
 
-		console.log('PDF buffer size:', uint8Array.length);
+		// Extract text using pdf-parse
+		const pdfData = await pdfParse(buffer);
 
-		// Simple text extraction - this is a basic implementation
-		// In a real implementation, you'd use a proper PDF parsing library
-		const text = extractTextFromPDFBuffer(uint8Array);
+		console.log('PDF extracted:', pdfData.numpages, 'pages,', pdfData.text.length, 'characters');
 
-		console.log('Extracted text length:', text.length);
-		console.log('Extracted text preview:', text.substring(0, 500));
-
-		return text;
+		return pdfData.text;
 	} catch (error) {
 		console.error('PDF extraction error:', error);
 		throw new Error(`Failed to extract text from PDF: ${error.message}`);
 	}
-}
-
-/**
- * Basic PDF text extraction (simplified implementation)
- * @param {Uint8Array} buffer
- * @returns {string}
- */
-function extractTextFromPDFBuffer(buffer) {
-	// This is a simplified implementation
-	// In production, you'd use a proper PDF parsing library like pdf-parse
-	// For now, we'll extract readable text from the buffer
-
-	let text = '';
-	const decoder = new TextDecoder('utf-8');
-
-	// Convert buffer to string and extract readable text
-	const bufferString = decoder.decode(buffer);
-
-	// Extract text between PDF text operators using a ReDoS-safe approach
-	// Split by parentheses and process in chunks to avoid regex backtracking issues
-	const textMatches = [];
-	let startIndex = 0;
-	let depth = 0;
-	let currentMatch = '';
-
-	for (let i = 0; i < bufferString.length; i++) {
-		const char = bufferString[i];
-
-		if (char === '(') {
-			if (depth === 0) {
-				startIndex = i;
-			}
-			depth++;
-		} else if (char === ')') {
-			depth--;
-			if (depth === 0) {
-				// Extract text between parentheses (excluding the parentheses themselves)
-				const text = bufferString.substring(startIndex + 1, i);
-				if (text.length > 2 && /[a-zA-Z]/.test(text)) {
-					textMatches.push(text);
-				}
-			}
-		}
-	}
-
-	if (textMatches.length > 0) {
-		text = textMatches.join(' ');
-	}
-
-	// If no text found, return a fallback
-	if (!text.trim()) {
-		text =
-			'Sample credit card statement with charges. Amazon $85.67, Grocery Store $124.32, Gas Station $45.21';
-	}
-
-	return text;
 }
 
 /**
@@ -179,18 +121,13 @@ async function parseChargesWithLlama(text, statement, event) {
 	// Try both methods of accessing the environment variable
 	const apiKey = LLAMA_API_KEY || process.env.LLAMA_API_KEY;
 
-	console.log('LLAMA_API_KEY available:', !!apiKey);
-	console.log('LLAMA_API_KEY length:', apiKey ? apiKey.length : 0);
-	console.log('LLAMA_API_KEY preview:', apiKey ? apiKey.substring(0, 10) + '...' : 'none');
-
 	if (!apiKey) {
 		throw new Error(
 			'LLAMA_API_KEY not found in environment variables. Please check Doppler configuration.'
 		);
 	}
 
-	console.log('Attempting Llama API parsing with text length:', text.length);
-	console.log('First 200 characters of text:', text.substring(0, 200));
+	console.log('Parsing with Llama API, text length:', text.length);
 
 	const prompt = `Parse the following credit card statement text and extract all charges. 
 Return the results as a JSON array with each charge having:
@@ -204,7 +141,6 @@ ${text}
 Return only valid JSON array, no other text.`;
 
 	try {
-		console.log('Making request to Llama API...');
 		const response = await event.fetch(LLAMA_API_URL, {
 			method: 'POST',
 			headers: {
@@ -229,34 +165,21 @@ Return only valid JSON array, no other text.`;
 			})
 		});
 
-		console.log('Llama API response status:', response.status);
-
 		if (!response.ok) {
 			const errorText = await response.text();
-			console.error('Llama API error response:', errorText);
+			console.error('Llama API error:', response.status, errorText);
 			throw new Error(`Llama API error: ${response.status} ${response.statusText} - ${errorText}`);
 		}
 
 		const data = await response.json();
-		console.log('Llama API response data:', JSON.stringify(data, null, 2));
 
 		// Extract content from Llama API response structure
 		const content = data.completion_message?.content?.text;
 
 		if (!content) {
-			console.error('No content received from Llama API');
-			console.error('Expected path: data.completion_message.content.text');
-			console.error('Available keys in data:', Object.keys(data));
-			if (data.completion_message) {
-				console.error(
-					'Available keys in completion_message:',
-					Object.keys(data.completion_message)
-				);
-			}
+			console.error('No content received from Llama API, available keys:', Object.keys(data));
 			throw new Error('No content received from Llama API');
 		}
-
-		console.log('Llama API parsed content:', content);
 
 		// Clean up the content (remove markdown code blocks if present)
 		let cleanContent = content.trim();
@@ -266,11 +189,29 @@ Return only valid JSON array, no other text.`;
 			cleanContent = cleanContent.slice(3, -3).trim(); // Remove ``` and ```
 		}
 
-		console.log('Cleaned content for parsing:', cleanContent);
+		// Remove control characters that can break JSON parsing
+		cleanContent = cleanContent
+			.replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+			.replace(/\n/g, '\\n') // Escape newlines
+			.replace(/\r/g, '\\r') // Escape carriage returns
+			.replace(/\t/g, '\\t'); // Escape tabs
 
 		// Parse the JSON response
-		const charges = JSON.parse(cleanContent);
-		console.log('Parsed charges from Llama API:', charges);
+		let charges;
+		try {
+			charges = JSON.parse(cleanContent);
+		} catch (parseError) {
+			console.error('JSON parsing failed, attempting to extract JSON array');
+			// Try to find JSON array in the content
+			const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
+			if (jsonMatch) {
+				charges = JSON.parse(jsonMatch[0]);
+			} else {
+				throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+			}
+		}
+
+		console.log('Parsed', charges.length, 'charges from Llama API');
 
 		// Validate and clean the charges
 		return charges

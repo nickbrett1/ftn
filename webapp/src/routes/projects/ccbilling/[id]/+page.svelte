@@ -24,6 +24,9 @@
 	let selectedFile = null;
 	let selectedCardId = '';
 
+	// Parse statement state
+	let parsingStatements = new Set();
+
 	async function handleDelete() {
 		isDeleting = true;
 		deleteError = '';
@@ -82,6 +85,10 @@
 	}
 
 	async function parseStatement(statementId) {
+		// Add to parsing set
+		parsingStatements.add(statementId);
+		parsingStatements = parsingStatements; // Trigger reactivity
+
 		try {
 			const response = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
 				method: 'POST'
@@ -96,6 +103,10 @@
 			location.reload();
 		} catch (err) {
 			alert('Error parsing statement: ' + err.message);
+		} finally {
+			// Remove from parsing set
+			parsingStatements.delete(statementId);
+			parsingStatements = parsingStatements; // Trigger reactivity
 		}
 	}
 </script>
@@ -284,9 +295,17 @@
 									type="button"
 									variant="success"
 									size="sm"
+									disabled={parsingStatements.has(statement.id)}
 									onclick={() => parseStatement(statement.id)}
 								>
-									Parse
+									{#if parsingStatements.has(statement.id)}
+										<div class="flex items-center space-x-2">
+											<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+											<span>Parsing...</span>
+										</div>
+									{:else}
+										Parse
+									{/if}
 								</Button>
 							</div>
 						</div>
