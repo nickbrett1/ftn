@@ -19,7 +19,7 @@ export ZSH=$HOME/.oh-my-zsh
 # See https://forum.cursor.com/t/cursor-agent-mode-when-running-terminal-commands-often-hangs-up-the-terminal-requiring-a-click-to-pop-it-out-in-order-to-continue-commands/59969/15
 # And https://forum.cursor.com/t/cursor-agent-terminal-doesn-t-work-well-with-powerlevel10k-oh-my-zsh/96808/12
 # Final fix there: https://forum.cursor.com/t/agent-not-detecting-that-a-command-has-completed/65052/19
-if [[ "$PAGER" == "head -n 10000 | cat" ]]; then
+if [[ "$PAGER" == "sh -c \"head -n 10000 | cat\"" ]]; then
   ZSH_THEME=""  # Disable Powerlevel10k for Cursor chat terminals only
 else
   ZSH_THEME="powerlevel10k/powerlevel10k"

@@ -1,80 +1,75 @@
-# Project Context for Cursor
+# Cursor Context
 
-## Project Overview
-
-- This is a website, written by a single developer, that aims to showcase their personal projects and act as a way to learn new tools and technologies.
+This is a personal finance tool for reviewing credit card statements. The main feature is the CC Billing module that allows users to upload credit card statements, parse them, and categorize charges into budgets.
 
 ## Key Technologies
 
-- The website uses:
-  - SvelteKit
-  - Cloudflare services such as Workers, D1 and R2.
-  - vitest for testing
-  - CircleCI for deployment
-  - Lighthouse for browser performance testing
-  - tsparticles for particle effects
-  - vscode containers for development
-  - vite for building
-  - doppler for secrets management
-  - sonarqube for additional code quality checks
-  - Storybook in a limited capacity for UI component testing
+- **Frontend**: SvelteKit with TypeScript
+- **Backend**: Cloudflare Workers with D1 database
+- **Storage**: Cloudflare R2 for PDF statement storage
+- **Testing**: Vitest with comprehensive test coverage
+- **Authentication**: OAuth with Google
 
-## Directory Structure
+## Project Structure
 
-- The main directories are:
-  - `webapp/` for all the website code
-  - `docs/` for design and requirement docs, targeted for LLMs
-  - `webapp/src` for source code
-  - `webapp/tests` for tests that are not associated with specific source files
-  - `webapp/static` for static assets (not images as those are pre-processed)
-  - `webapp/src/lib/components` for shared client-side components
-  - `webapp/src/lib/icons` for icons
-  - `webapp/src/lib/images` for images
-  - `webapp/src/lib/server` for shared server-side code
-  - `webapp/src/routes` for site routes
+- `webapp/` - Main SvelteKit application
+- `docs/` - Documentation and requirements
+- `.cursor/` - Cursor-specific configuration
 
-## Coding Conventions
+## Development Workflow
 
-- No specific conventions, conform to standard linting and formatting
+### Testing Configuration
 
-#$ UI Design Guidelines
+When running tests in Cursor, use the `--run` flag to execute tests once and exit instead of running in watch mode:
 
-- There is a standard Button component in lib/components that should be used for all buttons. It has variants for common use-cases.
+```bash
+# Run specific test file once
+npm test -- src/lib/server/ccbilling-parsers/base-parser.test.js --run
 
-## Special Instructions
+# Run all tests once
+npm test -- --run
 
-- After creating the dev container, the `webapp/cloud-login.sh` needs to run to login to both doppler and Cloudflare services.
+# Run tests with coverage once
+npm test -- --run --coverage
+```
 
-## Common Tasks
+This speeds up development by avoiding the watch mode overhead when you just want to check if tests pass.
 
-- Use `npm run dev` to run the dev server from webapp/ directory
-- Use `npm run test` to run the tests from webapp/ directory
-- Run `webapp/populate_local_d1_from_prod.sh` and `webapp/populate_local_r2_from_prod.sh` to copy production copies of data to read in the dev environment
+### Key Features
 
-## API Testing
+- **Statement Parsing**: Direct PDF parsing with provider-specific parsers (Chase, Amex, etc.)
+- **Budget Management**: Create and manage budgets with merchant auto-assignment
+- **Charge Categorization**: Assign charges to budgets with merchant classification
+- **Billing Cycles**: Monthly billing cycle management with statement uploads
 
-- **Authentication Bypass for Development**: When testing API endpoints in development, use the `x-dev-test: true` header to bypass authentication
-- **Example**: `curl -X GET http://localhost:5173/projects/ccbilling/cards -H "x-dev-test: true"`
-- **Security**: This bypass only works when `NODE_ENV === 'development'` and the header is present
-- **Production Safe**: Authentication is always enforced in production regardless of headers
-- **Testing Pattern**: Use this header for all API testing to avoid creating temporary test endpoints
+## Current Status
 
-## Environment/Secrets
+- ✅ Basic database schema and authentication
+- ✅ Budget management (CRUD operations)
+- ✅ Statement upload and storage
+- ✅ Credit card management
+- 🔄 **In Progress**: Migrating from LLAMA API parsing to direct PDF parsing
+- 📋 **Planned**: Charge allocation and budget reporting
 
-- All managed through doppler
+## Architecture
 
-## Quality Metrics
+### Statement Parsing (New Approach)
 
-Sonarqube quality gates are in place for all checkins that expect that <= 3% of new code contains duplication, and that >80% of new code has test coverage
+1. **Direct PDF Parsing**: Provider-specific parsers extract charges reliably
+2. **LLAMA Integration**: Used only for merchant classification and insights
+3. **Parser Architecture**: Base parser class with provider-specific implementations
 
-## Links
+### Database Schema
 
-- Repository is here -> https://github.com/nickbrett1/ftn
-- Site is here -> https://www.fintechnick.com
+- `credit_card` - Credit card information
+- `billing_cycle` - Monthly billing periods
+- `budget` - Budget categories
+- `statement` - Uploaded PDF statements
+- `payment` - Parsed charges from statements
 
-## New Feature: Real-time Collaboration
+## Development Notes
 
-- See [docs/ccbilling.md](../docs/ccbilling.md) for full requirements and design.
-- Summary: Adds a personal finance tool for reviewing credit card statements
-
----
+- Use `--run` flag for faster test execution
+- LLAMA API is now used only for merchant classification, not core parsing
+- Provider-specific parsers handle different statement formats
+- Comprehensive test coverage for all API endpoints
