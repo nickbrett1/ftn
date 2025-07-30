@@ -111,6 +111,53 @@ async function extractTextFromPDF(pdfObject) {
 }
 
 /**
+ * Safely find a JSON array in text content using bracket balancing
+ * This prevents ReDoS attacks while properly handling nested arrays and brackets in strings
+ * @param {string} content - The content to search
+ * @returns {string|null} - The matched JSON array or null if not found
+ */
+function findJsonArray(content) {
+	const maxLength = 100000; // Reasonable limit to prevent excessive processing
+	
+	for (let i = 0; i < content.length && i < maxLength; i++) {
+		if (content[i] === '[') {
+			let depth = 1;
+			let inString = false;
+			let escapeNext = false;
+			let j = i + 1;
+			
+			// Look for the matching closing bracket
+			while (j < content.length && j < i + maxLength && depth > 0) {
+				const char = content[j];
+				
+				if (escapeNext) {
+					escapeNext = false;
+				} else if (char === '\\') {
+					escapeNext = true;
+				} else if (char === '"' && !escapeNext) {
+					inString = !inString;
+				} else if (!inString) {
+					if (char === '[') {
+						depth++;
+					} else if (char === ']') {
+						depth--;
+					}
+				}
+				
+				j++;
+			}
+			
+			// If we found a complete array, return it
+			if (depth === 0) {
+				return content.substring(i, j);
+			}
+		}
+	}
+	
+	return null;
+}
+
+/**
  * Parse charges from text using Llama API
  * @param {string} text
  * @param {Object} statement
@@ -203,9 +250,10 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 		cleanContent = cleanContent.replace(/,\s*]/g, ']'); // Remove trailing commas before ] (again)
 
 		// Try to find JSON array in the content if it's not the entire content
-		const jsonArrayMatch = cleanContent.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
+		// Use a function to find balanced brackets to avoid ReDoS while handling nesting
+		const jsonArrayMatch = findJsonArray(cleanContent);
 		if (jsonArrayMatch) {
-			cleanContent = jsonArrayMatch[0];
+			cleanContent = jsonArrayMatch;
 		}
 
 		// Parse the JSON response with better error handling
@@ -220,9 +268,9 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 			// Try one more time with a more aggressive cleaning approach
 			try {
 				// Remove any non-JSON content and try to extract just the array
-				const jsonMatch = content.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
+				const jsonMatch = findJsonArray(content);
 				if (jsonMatch) {
-					const extractedJson = jsonMatch[0]
+					const extractedJson = jsonMatch
 						.replace(/,\s*([}\]])/g, '$1') // Remove trailing commas
 						.replace(/,\s*,/g, ',') // Remove double commas
 						.replace(/,\s*}/g, '}') // Remove trailing commas before }
@@ -241,9 +289,9 @@ Return ONLY the JSON array, no markdown formatting, no code blocks, no additiona
 					let thirdAttemptJson = content;
 
 					// Find the JSON array
-					const jsonArrayMatch = content.match(/\[(?:[^\[\]]*(?:\[[^\]]*\])*)*\]/);
+					const jsonArrayMatch = findJsonArray(content);
 					if (jsonArrayMatch) {
-						thirdAttemptJson = jsonArrayMatch[0];
+						thirdAttemptJson = jsonArrayMatch;
 					}
 
 					// Fix common issues
