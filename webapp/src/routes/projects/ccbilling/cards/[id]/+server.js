@@ -6,7 +6,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid id' }), { status: 400 });
 	}
 
@@ -25,7 +25,7 @@ export async function PUT(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid id' }), { status: 400 });
 	}
 
@@ -49,7 +49,7 @@ export async function DELETE(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 	const id = Number(event.params.id);
-	if (!id) {
+	if (!id || id <= 0) {
 		return new Response(JSON.stringify({ error: 'Missing or invalid id' }), { status: 400 });
 	}
 	await deleteCreditCard(event, id);
