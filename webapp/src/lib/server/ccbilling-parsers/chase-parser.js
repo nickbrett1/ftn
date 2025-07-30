@@ -207,9 +207,6 @@ export class ChaseStatementParser extends BaseStatementParser {
 					date = dateMatch[1];
 				}
 			}
-		} else if (match.length === 3 && match[1].includes('$')) {
-			// Pattern 4: MERCHANT AMOUNT
-			[, merchant, amount] = match;
 		} else if (match.length === 3) {
 			// Pattern 5: DATE MERCHANT (amount on next line)
 			[, date, merchant] = match;
