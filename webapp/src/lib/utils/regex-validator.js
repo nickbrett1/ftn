@@ -8,14 +8,155 @@
  * @param {string} pattern - The regex pattern to test
  * @param {string} testString - A string that should match the pattern
  * @param {number} timeout - Timeout in milliseconds (default: 1000)
- * @returns {boolean} - True if the pattern is safe
+ * @returns {Promise<boolean>|boolean} - True if the pattern is safe
  */
-export function isRegexSafe(pattern, testString, timeout = 1000) {
+export async function isRegexSafe(pattern, testString, timeout = 1000) {
+	try {
+		// First, analyze the pattern structure for known dangerous patterns
+		if (hasDangerousStructure(pattern)) {
+			return false;
+		}
+		
+		// Use Web Workers for true timeout capability (if available)
+		if (typeof Worker !== 'undefined') {
+			return await testRegexWithWorker(pattern, testString, timeout);
+		}
+		
+		// Fallback: Use setTimeout with Promise (less reliable but better than nothing)
+		return testRegexWithTimeout(pattern, testString, timeout);
+	} catch (error) {
+		// Invalid regex patterns are considered unsafe
+		return false;
+	}
+}
+
+/**
+ * Analyze regex pattern structure for dangerous patterns
+ * @param {string} pattern - The regex pattern to analyze
+ * @returns {boolean} - True if pattern has dangerous structure
+ */
+function hasDangerousStructure(pattern) {
+	// Remove regex flags and escape sequences for analysis
+	const cleanPattern = pattern.replace(/^\/|\/[gimsuy]*$/g, '');
+	
+	// Check for specific dangerous patterns that cause ReDoS
+	const dangerousPatterns = [
+		// Classic ReDoS patterns
+		/\(a\+\)\+/,         // (a+)+
+		/\(a\|aa\)\*/,       // (a|aa)*
+		/\(a\|a\+\)\*/,      // (a|a+)*
+		
+		// Nested quantifiers on word characters
+		/\(\\w\+\)\*/,       // (\w+)*
+		/\(\\w\+\)\+/,       // (\w+)+
+		/\(\\w\+\)\{1,\}/,   // (\w+){1,}
+		
+		// Backreferences with quantifiers
+		/\\\d+\*/,           // \1*, \2*, etc.
+		/\\\d+\+/,           // \1+, \2+, etc.
+		/\\\d+\{1,\}/,       // \1{1,}, \2{1,}, etc.
+		
+		// Multiple nested quantifiers
+		/\(\\w\+\)\+\(\\w\+\)\*/,    // (\w+)+(\w+)*
+		/\(\\w\+\)\*\(\\w\+\)\+/,    // (\w+)*(\w+)+
+		
+		// Unbounded repetitions
+		/\{\d*,\}/,          // {n,} without upper bound
+		/\*\+/,              // *+ (possessive quantifier)
+		/\+\+/,              // ++ (possessive quantifier)
+	];
+	
+	for (const dangerousPattern of dangerousPatterns) {
+		if (dangerousPattern.test(cleanPattern)) {
+			return true;
+		}
+	}
+	
+	// Check for deeply nested groups (more than 3 levels)
+	const groupDepth = countNestedGroups(cleanPattern);
+	if (groupDepth > 3) {
+		return true;
+	}
+	
+	return false;
+}
+
+/**
+ * Count the maximum depth of nested groups in a regex pattern
+ * @param {string} pattern - The regex pattern
+ * @returns {number} - Maximum nesting depth
+ */
+function countNestedGroups(pattern) {
+	let maxDepth = 0;
+	let currentDepth = 0;
+	
+	for (let i = 0; i < pattern.length; i++) {
+		const char = pattern[i];
+		
+		if (char === '(' && pattern[i - 1] !== '\\') {
+			currentDepth++;
+			maxDepth = Math.max(maxDepth, currentDepth);
+		} else if (char === ')' && pattern[i - 1] !== '\\') {
+			currentDepth = Math.max(0, currentDepth - 1);
+		}
+	}
+	
+	return maxDepth;
+}
+
+/**
+ * Test regex with Web Worker for true timeout capability
+ * @param {string} pattern - The regex pattern
+ * @param {string} testString - The test string
+ * @param {number} timeout - Timeout in milliseconds
+ * @returns {Promise<boolean>} - True if safe
+ */
+function testRegexWithWorker(pattern, testString, timeout) {
+	return new Promise((resolve) => {
+		const workerCode = `
+			self.onmessage = function(e) {
+				const { pattern, testString } = e.data;
+				try {
+					const regex = new RegExp(pattern);
+					const result = regex.test(testString);
+					self.postMessage({ safe: true, result });
+				} catch (error) {
+					self.postMessage({ safe: false, error: error.message });
+				}
+			};
+		`;
+		
+		const blob = new Blob([workerCode], { type: 'application/javascript' });
+		const worker = new Worker(URL.createObjectURL(blob));
+		
+		const timeoutId = setTimeout(() => {
+			worker.terminate();
+			resolve(false);
+		}, timeout);
+		
+		worker.onmessage = function(e) {
+			clearTimeout(timeoutId);
+			worker.terminate();
+			resolve(e.data.safe);
+		};
+		
+		worker.postMessage({ pattern, testString });
+	});
+}
+
+/**
+ * Test regex with setTimeout fallback (less reliable)
+ * @param {string} pattern - The regex pattern
+ * @param {string} testString - The test string
+ * @param {number} timeout - Timeout in milliseconds
+ * @returns {boolean} - True if safe
+ */
+function testRegexWithTimeout(pattern, testString, timeout) {
 	try {
 		const regex = new RegExp(pattern);
 		const startTime = Date.now();
 		
-		// Test the pattern with a timeout
+		// Test the pattern
 		const result = regex.test(testString);
 		const endTime = Date.now();
 		
@@ -24,26 +165,8 @@ export function isRegexSafe(pattern, testString, timeout = 1000) {
 			return false;
 		}
 		
-		// Also check for known dangerous patterns
-		const dangerousPatterns = [
-			/(\w+)*/,           // Nested quantifiers
-			/(\w+)+/,           // Nested quantifiers
-			/(\w+){1,}/,        // Nested quantifiers
-			/(\w+)*\1/,         // Backreferences with quantifiers
-			/(\w+)+(\w+)*/,     // Multiple nested quantifiers
-			/(a+)+/,            // Classic ReDoS pattern
-			/(a|aa)*/,          // Another classic ReDoS pattern
-		];
-		
-		for (const dangerousPattern of dangerousPatterns) {
-			if (pattern.includes(dangerousPattern.source)) {
-				return false;
-			}
-		}
-		
 		return true;
 	} catch (error) {
-		// Invalid regex patterns are considered unsafe
 		return false;
 	}
 }
@@ -110,22 +233,10 @@ export function createSafeCookieRegex(cookieName) {
  */
 export function createSafeRegex(pattern) {
 	try {
-		// Check for common ReDoS patterns
-		const dangerousPatterns = [
-			/(\w+)*/,           // Nested quantifiers
-			/(\w+)+/,           // Nested quantifiers
-			/(\w+){1,}/,        // Nested quantifiers
-			/(\w+)*\1/,         // Backreferences with quantifiers
-			/(\w+)+(\w+)*/,     // Multiple nested quantifiers
-			/(a+)+/,            // Classic ReDoS pattern
-			/(a|aa)*/,          // Another classic ReDoS pattern
-		];
-		
-		for (const dangerousPattern of dangerousPatterns) {
-			if (pattern.includes(dangerousPattern.source)) {
-				console.warn(`Potentially dangerous regex pattern detected: ${pattern}`);
-				return null;
-			}
+		// Use the same structural analysis as isRegexSafe
+		if (hasDangerousStructure(pattern)) {
+			console.warn(`Potentially dangerous regex pattern detected: ${pattern}`);
+			return null;
 		}
 		
 		return new RegExp(pattern);
