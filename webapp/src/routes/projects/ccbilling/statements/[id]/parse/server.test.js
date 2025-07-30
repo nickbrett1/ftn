@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST, findJsonArray } from './+server.js';
+import { POST } from './+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -338,89 +338,119 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		});
 	});
 
-	describe('findJsonArray function', () => {
-		it('should find simple JSON arrays', () => {
-			const result = findJsonArray('[1, 2, 3]');
-			expect(result).toBe('[1, 2, 3]');
+	describe('JSON Array Parsing Integration', () => {
+		it('should handle deeply nested arrays in Llama response', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with deeply nested structure
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: 'Some text before [{"merchant":"Amazon","amount":85.67,"nested":[[1,2],[3,4]]}] and after'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
 		});
 
-		it('should find JSON arrays with objects', () => {
-			const input = '[{"merchant": "Amazon", "amount": 100}]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[{"merchant": "Amazon", "amount": 100}]');
+		it('should handle square brackets in merchant names', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with brackets in strings
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[{"merchant":"Store [Location A]","amount":85.67},{"merchant":"Shop [Branch B]","amount":50.00}]'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(createPayment).toHaveBeenNthCalledWith(1, mockEvent, 1, 'Store [Location A]', 85.67, 'Both', null);
+			expect(createPayment).toHaveBeenNthCalledWith(2, mockEvent, 1, 'Shop [Branch B]', 50.00, 'Both', null);
 		});
 
-		it('should handle deeply nested arrays', () => {
-			const input = '[[[1, 2], [3, 4]], [[5, 6]]]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[[[1, 2], [3, 4]], [[5, 6]]]');
+		it('should handle escaped quotes in JSON strings', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with escaped quotes
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[{"merchant":"Store \\"Premium\\"","amount":85.67}]'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
+			expect(createPayment).toHaveBeenCalledWith(mockEvent, 1, 'Store "Premium"', 85.67, 'Both', null);
 		});
 
-		it('should handle square brackets in strings', () => {
-			const input = '["item [1]", "store [A]"]';
-			const result = findJsonArray(input);
-			expect(result).toBe('["item [1]", "store [A]"]');
+		it('should handle JSON array mixed with other content', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
+
+			// Mock response with JSON array embedded in text
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: 'Here are the charges I found: [{"merchant":"Amazon","amount":85.67}] from the statement.'
+					}
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+			expect(createPayment).toHaveBeenCalledTimes(1);
 		});
 
-		it('should handle escaped quotes in strings', () => {
-			const input = '["escaped \\"quote\\"", "normal"]';
-			const result = findJsonArray(input);
-			expect(result).toBe('["escaped \\"quote\\"", "normal"]');
-		});
+		it('should handle empty JSON arrays', async () => {
+			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue({});
+			createPayment.mockResolvedValue({});
 
-		it('should find arrays in mixed content', () => {
-			const input = 'Some text before [1, 2, 3] and after';
-			const result = findJsonArray(input);
-			expect(result).toBe('[1, 2, 3]');
-		});
+			// Mock response with empty array
+			mockLlamaClient.chat.completions.create.mockResolvedValue({
+				completion_message: {
+					content: {
+						text: '[]'
+					}
+				}
+			});
 
-		it('should handle complex nested objects with arrays', () => {
-			const input = '[{"a": [1, 2, [3, 4]]}, {"b": "text [test]"}]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[{"a": [1, 2, [3, 4]]}, {"b": "text [test]"}]');
-		});
+			const response = await POST(mockEvent);
+			const result = await response.json();
 
-		it('should return null for unclosed arrays', () => {
-			const input = '[1, 2, 3';
-			const result = findJsonArray(input);
-			expect(result).toBe(null);
-		});
-
-		it('should return null for content without arrays', () => {
-			const input = 'No arrays here just text';
-			const result = findJsonArray(input);
-			expect(result).toBe(null);
-		});
-
-		it('should handle empty arrays', () => {
-			const input = '[]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[]');
-		});
-
-		it('should handle arrays with only whitespace', () => {
-			const input = '[ ]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[ ]');
-		});
-
-		it('should stop at maxLength to prevent excessive processing', () => {
-			// Create a very long string that exceeds the maxLength limit
-			const longContent = 'x'.repeat(200000) + '[1, 2, 3]';
-			const result = findJsonArray(longContent);
-			expect(result).toBe(null); // Should return null due to maxLength limit
-		});
-
-		it('should handle multiple bracket pairs and find the first complete array', () => {
-			const input = '[incomplete [ [1, 2, 3] more text';
-			const result = findJsonArray(input);
-			expect(result).toBe('[1, 2, 3]'); // Finds the complete nested array
-		});
-
-		it('should handle arrays with complex string content', () => {
-			const input = '[{"description": "Payment [Method: Credit Card] - Amount: $100"}]';
-			const result = findJsonArray(input);
-			expect(result).toBe('[{"description": "Payment [Method: Credit Card] - Amount: $100"}]');
+			expect(result.success).toBe(true);
+			expect(result.charges_found).toBe(0);
+			expect(createPayment).not.toHaveBeenCalled();
 		});
 	});
 
