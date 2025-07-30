@@ -50,5 +50,6 @@ CREATE TABLE payment (
   merchant TEXT NOT NULL,
   amount REAL NOT NULL,
   allocated_to TEXT NOT NULL, -- 'Nick', 'Tas', or 'Both'
+  transaction_date DATE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ); 

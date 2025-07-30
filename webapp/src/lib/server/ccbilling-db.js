@@ -323,15 +323,23 @@ export async function deleteStatement(event, id) {
  * @param {string} merchant
  * @param {number} amount
  * @param {string} allocated_to
+ * @param {string} transaction_date
  */
-export async function createPayment(event, statement_id, merchant, amount, allocated_to) {
+export async function createPayment(
+	event,
+	statement_id,
+	merchant,
+	amount,
+	allocated_to,
+	transaction_date = null
+) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
 		.prepare(
-			'INSERT INTO payment (statement_id, merchant, amount, allocated_to) VALUES (?, ?, ?, ?)'
+			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
 		)
-		.bind(statement_id, merchant, amount, allocated_to)
+		.bind(statement_id, merchant, amount, allocated_to, transaction_date)
 		.run();
 }
 
@@ -352,7 +360,7 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
 			WHERE s.billing_cycle_id = ?
-			ORDER BY p.created_at DESC
+			ORDER BY p.created_at ASC
 		`
 		)
 		.bind(billing_cycle_id)
