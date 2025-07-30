@@ -81,7 +81,7 @@ export class ChaseStatementParser extends BaseStatementParser {
 			if (!line.includes('$')) continue;
 
 			// Find all dollar amounts in the line
-			const dollarMatches = line.matchAll(/([^$]+?)\s+(\$\d+\.\d{2})/g);
+			const dollarMatches = line.matchAll(/([^$\s]+(?:\s+[^$\s]+)*)\s+(\$\d+\.\d{2})/g);
 
 			for (const match of dollarMatches) {
 				const merchant = match[1].trim();
