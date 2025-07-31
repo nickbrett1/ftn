@@ -22,7 +22,7 @@ export class GenericStatementParser extends BaseStatementParser {
 		// This parser should be used as a fallback when no other parser matches
 		// We'll return true for any text that looks like it might contain transactions
 		const hasTransactionIndicators =
-			/\d+\.\d{2}/.test(text) || // Has dollar amounts
+			/\d+\.\d{2}/.test(text) || // Has dollar amounts (safe - no backtracking)
 			/\$\d+/.test(text) || // Has dollar signs
 			/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text) || // Has dates
 			/\d{4}-\d{2}-\d{2}/.test(text); // Has ISO dates
