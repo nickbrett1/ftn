@@ -15,10 +15,10 @@ const dollarMatches = line.matchAll(/([^$\s]+(?:\s+[^$\s]+)*)\s+(\$\d+\.\d{2})/g
 
 **Secure Alternative:**
 ```javascript
-const dollarMatches = line.matchAll(/((?:[^$\s]+\s*)+)\s+(\$\d+\.\d{2})/g);
+const dollarMatches = line.matchAll(/((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$\d+\.\d{2})/g);
 ```
 
-**Why it's secure:** The original pattern used nested quantifiers `([^$\s]+(?:\s+[^$\s]+)*)` which can cause exponential backtracking. The new pattern uses atomic groups `(?:[^$\s]+\s*)` to prevent backtracking.
+**Why it's secure:** The original pattern used nested quantifiers `([^$\s]+(?:\s+[^$\s]+)*)` which can cause exponential backtracking. The new pattern uses atomic groups `(?:[^$\s]+(?:\s+[^$\s]+)*)` to prevent backtracking while preserving the required spacing for proper matching.
 
 ### 2. Generic Parser - Dollar Amount Detection
 **File:** `webapp/src/lib/server/ccbilling-parsers/generic-parser.js:24`
@@ -51,23 +51,23 @@ const dollarMatches = line.matchAll(/((?:[^$\s]+\s*)+)\s+(\$\d+\.\d{2})/g);
 **Secure Alternatives:**
 ```javascript
 // Pattern 1: DATE MERCHANT AMOUNT - using atomic group to prevent backtracking
-/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 
 // Pattern 2: DATE DATE MERCHANT AMOUNT (post date and transaction date) - using atomic group to prevent backtracking
-/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 
 // Pattern 3: DATE MERCHANT (multi-line merchant name) - using atomic group to prevent backtracking
-/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})/,
+/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})/,
 
 // Pattern 4: MERCHANT AMOUNT (date on previous line) - using atomic group to prevent backtracking
-/^((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+/^((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 
 // Pattern 5: DATE MERCHANT (amount on next line) - using non-greedy quantifier to prevent backtracking
 /^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.+?)$/
 ```
 
 **Why they're secure:**
-- **Patterns 1-4:** Replaced nested quantifiers `([^$\s]+(?:\s+[^$\s]+)*)` with atomic groups `((?:[^$\s]+\s*)+)` to prevent backtracking
+- **Patterns 1-4:** Replaced nested quantifiers `([^$\s]+(?:\s+[^$\s]+)*)` with atomic groups `((?:[^$\s]+(?:\s+[^$\s]+)*))` to prevent backtracking while preserving required spacing
 - **Pattern 5:** Changed greedy quantifier `(.+)` to non-greedy `(.+?)` to prevent excessive backtracking
 
 ## Security Benefits

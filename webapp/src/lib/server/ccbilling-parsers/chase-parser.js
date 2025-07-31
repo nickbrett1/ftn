@@ -81,7 +81,7 @@ export class ChaseStatementParser extends BaseStatementParser {
 			if (!line.includes('$')) continue;
 
 			// Find all dollar amounts in the line - using atomic group to prevent backtracking
-			const dollarMatches = line.matchAll(/((?:[^$\s]+\s*)+)\s+(\$\d+\.\d{2})/g);
+			const dollarMatches = line.matchAll(/((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$\d+\.\d{2})/g);
 
 			for (const match of dollarMatches) {
 				const merchant = match[1].trim();
@@ -157,13 +157,13 @@ export class ChaseStatementParser extends BaseStatementParser {
 		// Try different patterns for Chase transaction lines
 		const patterns = [
 			// Pattern 1: DATE MERCHANT AMOUNT - using atomic group to prevent backtracking
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 2: DATE DATE MERCHANT AMOUNT (post date and transaction date) - using atomic group to prevent backtracking
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 3: DATE MERCHANT (multi-line merchant name) - using atomic group to prevent backtracking
-			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})/,
+			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})/,
 			// Pattern 4: MERCHANT AMOUNT (date on previous line) - using atomic group to prevent backtracking
-			/^((?:[^$\s]+\s*)+)\s+(\$[\d,]+\.\d{2})$/,
+			/^((?:[^$\s]+(?:\s+[^$\s]+)*))\s+(\$[\d,]+\.\d{2})$/,
 			// Pattern 5: DATE MERCHANT (amount on next line) - using non-greedy quantifier to prevent backtracking
 			/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.+?)$/
 		];
