@@ -22,6 +22,7 @@
 	// Delete state
 	let deletingCard = null;
 	let isDeleting = false;
+	let deleteError = '';
 
 	async function addCard() {
 		if (!newCardName.trim() || !newCardLast4.trim()) {
@@ -124,6 +125,7 @@
 
 		deletingCard = card;
 		isDeleting = true;
+		deleteError = '';
 
 		try {
 			const response = await fetch(`/projects/ccbilling/cards/${card.id}`, {
@@ -137,7 +139,7 @@
 
 			location.reload();
 		} catch (err) {
-			alert('Error deleting card: ' + err.message);
+			deleteError = 'Error deleting card: ' + err.message;
 		} finally {
 			deletingCard = null;
 			isDeleting = false;
@@ -203,6 +205,11 @@
 				</p>
 			</div>
 		{:else}
+			{#if deleteError}
+				<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+					{deleteError}
+				</div>
+			{/if}
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
 					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
