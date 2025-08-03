@@ -58,8 +58,8 @@ export class RouteUtils {
 	 * @param {string} value - Parameter value
 	 * @param {string} paramName - Parameter name for error messages
 	 * @param {Object} options - Validation options
-	 * @param {number} options.min - Minimum value
-	 * @param {number} options.max - Maximum value
+	 * @param {number} [options.min] - Minimum value
+	 * @param {number} [options.max] - Maximum value
 	 * @returns {number|string} - Parsed integer or error message
 	 */
 	static parseInteger(value, paramName, options = {}) {
