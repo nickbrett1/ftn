@@ -21,7 +21,7 @@
 		}
 
 		// Use the shared Google auth utility
-		await initiateGoogleAuth();
+		await initiateGoogleAuth('/projects/ccbilling');
 	}
 </script>
 

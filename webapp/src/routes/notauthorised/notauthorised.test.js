@@ -19,7 +19,8 @@ vi.mock('@tsparticles/shape-text', () => ({
 }));
 
 vi.mock('$lib/utils/particleConfig.js', () => ({
-	createErrorParticleConfig: vi.fn(() => ({ mock: 'config' }))
+	createErrorParticleConfig: vi.fn(() => ({ mock: 'config' })),
+	createAuthParticleConfig: vi.fn(() => ({ mock: 'config' }))
 }));
 
 describe('NotAuthorised Page', () => {
@@ -73,7 +74,7 @@ describe('NotAuthorised Page', () => {
 		const { tsParticles } = await import('@tsparticles/engine');
 		const { loadSlim } = await import('@tsparticles/slim');
 		const { loadTextShape } = await import('@tsparticles/shape-text');
-		const { createErrorParticleConfig } = await import('$lib/utils/particleConfig.js');
+		const { createAuthParticleConfig } = await import('$lib/utils/particleConfig.js');
 		
 		render(NotAuthorised);
 		
@@ -82,7 +83,7 @@ describe('NotAuthorised Page', () => {
 		
 		expect(loadSlim).toHaveBeenCalledWith(tsParticles);
 		expect(loadTextShape).toHaveBeenCalledWith(tsParticles);
-		expect(createErrorParticleConfig).toHaveBeenCalled();
+		expect(createAuthParticleConfig).toHaveBeenCalled();
 		expect(tsParticles.load).toHaveBeenCalledWith({
 			id: 'notauthorised-particles',
 			options: { mock: 'config' }
