@@ -83,7 +83,7 @@
 		"llama-api-client": "^0.1.2",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.5",
-		"pdf-parse": "^1.1.1",
+		"pdfjs-dist": "^5.4.54",
 		"three": "^0.178.0",
 		"tippy.js": "^6.3.7",
 		"tsparticles": "^3.8.1"

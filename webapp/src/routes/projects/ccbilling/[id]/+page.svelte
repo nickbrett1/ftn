@@ -22,10 +22,14 @@
 	let isUploading = false;
 	let uploadError = '';
 	let selectedFile = null;
-	let selectedCardId = '';
 
 	// Parse statement state
 	let parsingStatements = new Set();
+
+	// Delete statement state
+	let deletingStatements = new Set();
+	let showDeleteStatementDialog = false;
+	let statementToDelete = null;
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -52,8 +56,8 @@
 	}
 
 	async function handleFileUpload() {
-		if (!selectedFile || !selectedCardId) {
-			uploadError = 'Please select a file and credit card';
+		if (!selectedFile) {
+			uploadError = 'Please select a file';
 			return;
 		}
 
@@ -61,23 +65,24 @@
 		uploadError = '';
 
 		try {
+			// Create form data with PDF file
 			const formData = new FormData();
 			formData.append('file', selectedFile);
-			formData.append('credit_card_id', selectedCardId);
 
-			const response = await fetch(`/projects/ccbilling/cycles/${cycleId}/statements`, {
+			const uploadResponse = await fetch(`/projects/ccbilling/cycles/${cycleId}/statements`, {
 				method: 'POST',
 				body: formData
 			});
 
-			if (!response.ok) {
-				const errorData = await response.json();
+			if (!uploadResponse.ok) {
+				const errorData = await uploadResponse.json();
 				throw new Error(errorData.error || 'Failed to upload statement');
 			}
 
 			// Refresh the page to show the new statement
 			location.reload();
 		} catch (err) {
+			console.error('❌ Upload failed:', err);
 			uploadError = err.message;
 		} finally {
 			isUploading = false;
@@ -90,24 +95,84 @@
 		parsingStatements = parsingStatements; // Trigger reactivity
 
 		try {
-			const response = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
-				method: 'POST'
+			// First, get the statement details to download the PDF
+			const statementResponse = await fetch(`/projects/ccbilling/statements/${statementId}`);
+			if (!statementResponse.ok) {
+				throw new Error('Failed to get statement details');
+			}
+			const statement = await statementResponse.json();
+
+			// Download the PDF from R2
+			const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
+			if (!pdfResponse.ok) {
+				throw new Error('Failed to download PDF');
+			}
+			const pdfBlob = await pdfResponse.blob();
+			const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
+
+			// Parse the PDF on the client-side
+			const { PDFService } = await import('$lib/ccbilling-pdf-service.js');
+			const pdfService = new PDFService();
+
+			const parsedData = await pdfService.parseStatement(pdfFile);
+
+			// Send the parsed data to the server
+			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					parsedData: parsedData
+				})
 			});
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to parse statement');
+			if (!parseResponse.ok) {
+				const errorData = await parseResponse.json();
+				throw new Error(errorData.error || 'Failed to process parsed data');
 			}
 
-			// Refresh the page to show the parsed charges
+			// Refresh the page to show the updated charges
 			location.reload();
 		} catch (err) {
+			console.error('❌ Parse failed:', err);
 			alert('Error parsing statement: ' + err.message);
 		} finally {
 			// Remove from parsing set
 			parsingStatements.delete(statementId);
 			parsingStatements = parsingStatements; // Trigger reactivity
 		}
+	}
+
+	async function deleteStatement(statementId) {
+		// Add to deleting set
+		deletingStatements.add(statementId);
+		deletingStatements = deletingStatements; // Trigger reactivity
+
+		try {
+			const response = await fetch(`/projects/ccbilling/statements/${statementId}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to delete statement');
+			}
+
+			// Refresh the page to show the updated statements
+			location.reload();
+		} catch (err) {
+			alert('Error deleting statement: ' + err.message);
+		} finally {
+			// Remove from deleting set
+			deletingStatements.delete(statementId);
+			deletingStatements = deletingStatements; // Trigger reactivity
+			showDeleteStatementDialog = false;
+			statementToDelete = null;
+		}
+	}
+
+	function confirmDeleteStatement(statement) {
+		statementToDelete = statement;
+		showDeleteStatementDialog = true;
 	}
 </script>
 
@@ -170,6 +235,42 @@
 					</Button>
 					<Button type="button" variant="danger" disabled={isDeleting} onclick={handleDelete}>
 						{isDeleting ? 'Deleting...' : 'Delete'}
+					</Button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Delete statement confirmation dialog -->
+	{#if showDeleteStatementDialog && statementToDelete}
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
+				<h3 class="text-lg font-bold text-white mb-4">Delete Statement?</h3>
+				<p class="text-gray-300 mb-2">
+					Are you sure you want to delete "{statementToDelete.filename}"?
+				</p>
+				<p class="text-gray-400 text-sm mb-6">
+					This will also delete all associated charges. This action cannot be undone.
+				</p>
+				<div class="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="secondary"
+						disabled={deletingStatements.has(statementToDelete.id)}
+						onclick={() => {
+							showDeleteStatementDialog = false;
+							statementToDelete = null;
+						}}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="button"
+						variant="danger"
+						disabled={deletingStatements.has(statementToDelete.id)}
+						onclick={() => deleteStatement(statementToDelete.id)}
+					>
+						{deletingStatements.has(statementToDelete.id) ? 'Deleting...' : 'Delete'}
 					</Button>
 				</div>
 			</div>
@@ -244,21 +345,8 @@
 						</div>
 					</div>
 					<div>
-						<label for="credit-card-select" class="block text-gray-300 mb-1">Credit Card:</label>
-						<select
-							id="credit-card-select"
-							bind:value={selectedCardId}
-							class="block w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
-						>
-							<option value="">Select a credit card</option>
-							{#each creditCards as card}
-								<option value={card.id}>{card.name} (****{card.last4})</option>
-							{/each}
-						</select>
-					</div>
-					<div>
 						<p class="text-gray-400 text-sm">
-							Statement date will be automatically extracted from the PDF during processing.
+							Credit card will be automatically identified from the statement during processing.
 						</p>
 					</div>
 					<Button type="button" variant="success" disabled={isUploading} onclick={handleFileUpload}>
@@ -307,6 +395,22 @@
 										Parse
 									{/if}
 								</Button>
+								<Button
+									type="button"
+									variant="danger"
+									size="sm"
+									disabled={deletingStatements.has(statement.id)}
+									onclick={() => confirmDeleteStatement(statement)}
+								>
+									{#if deletingStatements.has(statement.id)}
+										<div class="flex items-center space-x-2">
+											<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+											<span>Deleting...</span>
+										</div>
+									{:else}
+										Delete
+									{/if}
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -328,6 +432,7 @@
 							<th class="text-left text-gray-300 font-medium pb-2">Card</th>
 							<th class="text-left text-gray-300 font-medium pb-2">Allocation</th>
 							<th class="text-right text-gray-300 font-medium pb-2">Amount</th>
+							<th class="text-left text-gray-300 font-medium pb-2">Currency</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -345,6 +450,14 @@
 									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
 										{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
 									</span>
+								</td>
+								<td class="text-gray-300 text-sm py-2">
+									{#if charge.is_foreign_currency && charge.foreign_currency_amount && charge.foreign_currency_type}
+										<span class="text-blue-400">
+											{charge.foreign_currency_amount}
+											{charge.foreign_currency_type}
+										</span>
+									{/if}
 								</td>
 							</tr>
 						{/each}

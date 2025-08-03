@@ -43,13 +43,12 @@ export async function POST(event) {
 		// Parse multipart form data for file upload
 		const formData = await event.request.formData();
 		const file = formData.get('file');
-		const credit_card_id = formData.get('credit_card_id');
 
 		// Validate required fields
-		if (!file || !credit_card_id) {
+		if (!file) {
 			return json(
 				{
-					error: 'Missing required fields: file, credit_card_id'
+					error: 'Missing required field: file'
 				},
 				{ status: 400 }
 			);
@@ -77,9 +76,8 @@ export async function POST(event) {
 		}
 
 		// Generate unique R2 key with cryptographically secure randomness
-		// Using crypto.getRandomValues() instead of Math.random() for security
 		const timestamp = Date.now();
-		const randomSuffix = generateSecureRandomHex(6); // 12 hex characters (6 bytes)
+		const randomSuffix = generateSecureRandomHex(6);
 		const r2_key = `statements/${cycleId}/${timestamp}-${randomSuffix}-${file.name}`;
 
 		// Upload to R2
@@ -91,6 +89,7 @@ export async function POST(event) {
 		// Convert file to ArrayBuffer for R2 upload
 		const fileBuffer = await file.arrayBuffer();
 
+		// Upload PDF to R2
 		await bucket.put(r2_key, fileBuffer, {
 			customMetadata: {
 				originalName: file.name,
@@ -100,18 +99,31 @@ export async function POST(event) {
 			}
 		});
 
-		// Save statement metadata to database
-		// TODO: Extract statement date from PDF during parsing
-		// For now, use a placeholder date that will be updated during parsing
+		console.log('📄 PDF uploaded to R2:', r2_key);
+
+		// Save statement metadata to database (credit card will be identified during parsing)
 		const placeholderDate = '2024-01-01'; // Will be replaced with actual statement date
-		await createStatement(
-			event,
-			cycleId,
-			parseInt(credit_card_id),
-			file.name,
-			r2_key,
-			placeholderDate
-		);
+		try {
+			await createStatement(
+				event,
+				cycleId,
+				null, // Credit card will be identified during parsing
+				file.name,
+				r2_key,
+				placeholderDate
+			);
+			console.log('✅ Statement created in database');
+		} catch (dbError) {
+			console.error('❌ Database error creating statement:', dbError);
+			// Clean up R2 file if database creation fails
+			try {
+				await bucket.delete(r2_key);
+				console.log('🗑️ Cleaned up R2 file after database error');
+			} catch (cleanupError) {
+				console.error('❌ Failed to cleanup R2 file:', cleanupError);
+			}
+			throw new Error(`Failed to create statement in database: ${dbError.message}`);
+		}
 
 		return json({
 			success: true,

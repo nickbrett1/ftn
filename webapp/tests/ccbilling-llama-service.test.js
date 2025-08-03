@@ -11,13 +11,13 @@ vi.mock('llama-api-client', () => {
 	const mockChatCompletions = {
 		create: vi.fn()
 	};
-	
+
 	const mockLlamaAPIClient = vi.fn().mockReturnValue({
 		chat: {
 			completions: mockChatCompletions
 		}
 	});
-	
+
 	return {
 		default: mockLlamaAPIClient
 	};
@@ -31,10 +31,10 @@ describe('LlamaService', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
-		
+
 		// Reset environment
 		process.env.LLAMA_API_KEY = 'test-api-key';
-		
+
 		// Create mock response structure
 		mockResponse = {
 			completion_message: {
@@ -43,7 +43,7 @@ describe('LlamaService', () => {
 				}
 			}
 		};
-		
+
 		// Get the mocked functions
 		const llamaAPIClientModule = await import('llama-api-client');
 		mockLlamaAPIClient = llamaAPIClientModule.default;
@@ -58,11 +58,11 @@ describe('LlamaService', () => {
 	describe('constructor', () => {
 		it('should initialize with API key from environment', () => {
 			llamaService = new LlamaService();
-			
+
 			expect(llamaService.apiKey).toBe('test-api-key');
 			expect(mockLlamaAPIClient).toHaveBeenCalledWith({
 				apiKey: 'test-api-key',
-				timeout: 30000,
+				timeout: 60000,
 				logLevel: 'warn'
 			});
 		});
@@ -74,15 +74,21 @@ describe('LlamaService', () => {
 		});
 
 		it('should throw error for invalid statement text', async () => {
-			await expect(llamaService.parseStatement(null)).rejects.toThrow('Invalid statement text provided');
-			await expect(llamaService.parseStatement(undefined)).rejects.toThrow('Invalid statement text provided');
-			await expect(llamaService.parseStatement(123)).rejects.toThrow('Invalid statement text provided');
+			await expect(llamaService.parseStatement(null)).rejects.toThrow(
+				'Invalid statement text provided'
+			);
+			await expect(llamaService.parseStatement(undefined)).rejects.toThrow(
+				'Invalid statement text provided'
+			);
+			await expect(llamaService.parseStatement(123)).rejects.toThrow(
+				'Invalid statement text provided'
+			);
 		});
 
 		it('should parse valid statement and return charges', async () => {
 			const mockCharges = [
 				{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' },
-				{ merchant: 'Shell', amount: 32.50, date: '2024-01-16' }
+				{ merchant: 'Shell', amount: 32.5, date: '2024-01-16' }
 			];
 
 			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
@@ -94,7 +100,8 @@ describe('LlamaService', () => {
 				messages: [
 					{
 						role: 'system',
-						content: 'You are a helpful assistant that parses credit card statements and extracts charge information. Always return only valid JSON arrays without any markdown formatting or code blocks.'
+						content:
+							'You are a helpful assistant that parses credit card statements and extracts charge information. Always return only valid JSON arrays without any markdown formatting or code blocks.'
 					},
 					{
 						role: 'user',
@@ -107,46 +114,53 @@ describe('LlamaService', () => {
 
 			expect(result).toEqual([
 				{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15', allocated_to: 'Both' },
-				{ merchant: 'Shell', amount: 32.50, date: '2024-01-16', allocated_to: 'Both' }
+				{ merchant: 'Shell', amount: 32.5, date: '2024-01-16', allocated_to: 'Both' }
 			]);
 		});
 
 		it('should handle JSON wrapped in code blocks', async () => {
-			const mockCharges = [{ merchant: 'Test', amount: 10.00, date: '2024-01-01' }];
-			
-			mockResponse.completion_message.content.text = '```json\n' + JSON.stringify(mockCharges) + '\n```';
+			const mockCharges = [{ merchant: 'Test', amount: 10.0, date: '2024-01-01' }];
+
+			mockResponse.completion_message.content.text =
+				'```json\n' + JSON.stringify(mockCharges) + '\n```';
 
 			const result = await llamaService.parseStatement('Test statement');
 
 			expect(result).toEqual([
-				{ merchant: 'Test', amount: 10.00, date: '2024-01-01', allocated_to: 'Both' }
+				{ merchant: 'Test', amount: 10.0, date: '2024-01-01', allocated_to: 'Both' }
 			]);
 		});
 
 		it('should handle empty response and throw error', async () => {
 			mockResponse.completion_message.content.text = '';
 
-			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow('No content received from Llama API');
+			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
+				'No content received from Llama API'
+			);
 		});
 
 		it('should handle invalid JSON response', async () => {
 			mockResponse.completion_message.content.text = 'invalid json';
 
-			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow('Llama API parsing failed');
+			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
+				'Llama API parsing failed'
+			);
 		});
 
 		it('should handle non-array response', async () => {
 			mockResponse.completion_message.content.text = '{"not": "an array"}';
 
-			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow('Llama API did not return a valid array');
+			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
+				'Llama API did not return a valid array'
+			);
 		});
 
 		it('should filter out invalid charge objects', async () => {
 			const mockCharges = [
-				{ merchant: 'Valid', amount: 10.00, date: '2024-01-01' },
+				{ merchant: 'Valid', amount: 10.0, date: '2024-01-01' },
 				null,
 				{ invalid: 'object' },
-				{ merchant: 'Another Valid', amount: 20.00, date: '2024-01-02' }
+				{ merchant: 'Another Valid', amount: 20.0, date: '2024-01-02' }
 			];
 
 			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
@@ -154,25 +168,21 @@ describe('LlamaService', () => {
 			const result = await llamaService.parseStatement('Test statement');
 
 			expect(result).toEqual([
-				{ merchant: 'Valid', amount: 10.00, date: '2024-01-01', allocated_to: 'Both' },
+				{ merchant: 'Valid', amount: 10.0, date: '2024-01-01', allocated_to: 'Both' },
 				{ merchant: 'Unknown Merchant', amount: 0, date: null, allocated_to: 'Both' },
-				{ merchant: 'Another Valid', amount: 20.00, date: '2024-01-02', allocated_to: 'Both' }
+				{ merchant: 'Another Valid', amount: 20.0, date: '2024-01-02', allocated_to: 'Both' }
 			]);
 		});
 
 		it('should provide defaults for missing charge properties', async () => {
-			const mockCharges = [
-				{ amount: 10.00 },
-				{ merchant: 'Test' },
-				{ date: '2024-01-01' }
-			];
+			const mockCharges = [{ amount: 10.0 }, { merchant: 'Test' }, { date: '2024-01-01' }];
 
 			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
 
 			const result = await llamaService.parseStatement('Test statement');
 
 			expect(result).toEqual([
-				{ merchant: 'Unknown Merchant', amount: 10.00, date: null, allocated_to: 'Both' },
+				{ merchant: 'Unknown Merchant', amount: 10.0, date: null, allocated_to: 'Both' },
 				{ merchant: 'Test', amount: 0, date: null, allocated_to: 'Both' },
 				{ merchant: 'Unknown Merchant', amount: 0, date: '2024-01-01', allocated_to: 'Both' }
 			]);
@@ -186,7 +196,7 @@ describe('LlamaService', () => {
 
 		it('should return default classification for invalid merchant name', async () => {
 			const result = await llamaService.classifyMerchant(null);
-			
+
 			expect(result).toEqual({
 				category: 'Unknown',
 				subcategory: 'Unknown',
@@ -214,7 +224,8 @@ describe('LlamaService', () => {
 				messages: [
 					{
 						role: 'system',
-						content: 'You are a helpful assistant that classifies merchants and provides additional information. Always return only valid JSON without any markdown formatting or code blocks.'
+						content:
+							'You are a helpful assistant that classifies merchants and provides additional information. Always return only valid JSON without any markdown formatting or code blocks.'
 					},
 					{
 						role: 'user',
@@ -310,8 +321,12 @@ describe('LlamaService', () => {
 
 			mockResponse.completion_message.content.text = JSON.stringify(mockClassification1);
 			mockChatCompletions.create
-				.mockResolvedValueOnce({ completion_message: { content: { text: JSON.stringify(mockClassification1) } } })
-				.mockResolvedValueOnce({ completion_message: { content: { text: JSON.stringify(mockClassification2) } } });
+				.mockResolvedValueOnce({
+					completion_message: { content: { text: JSON.stringify(mockClassification1) } }
+				})
+				.mockResolvedValueOnce({
+					completion_message: { content: { text: JSON.stringify(mockClassification2) } }
+				});
 
 			const result = await llamaService.classifyMerchants(['Walmart', 'Shell']);
 
@@ -329,7 +344,9 @@ describe('LlamaService', () => {
 
 		it('should handle individual merchant classification failures', async () => {
 			mockChatCompletions.create
-				.mockResolvedValueOnce({ completion_message: { content: { text: JSON.stringify({ category: 'Retail' }) } } })
+				.mockResolvedValueOnce({
+					completion_message: { content: { text: JSON.stringify({ category: 'Retail' }) } }
+				})
 				.mockRejectedValueOnce(new Error('API Error'));
 
 			const result = await llamaService.classifyMerchants(['Walmart', 'Shell']);
@@ -382,9 +399,9 @@ describe('LlamaService', () => {
 
 		it('should analyze spending patterns and generate insights', async () => {
 			const charges = [
-				{ merchant: 'Walmart', amount: 100.00 },
-				{ merchant: 'Shell', amount: 50.00 },
-				{ merchant: 'Walmart', amount: 75.00 }
+				{ merchant: 'Walmart', amount: 100.0 },
+				{ merchant: 'Shell', amount: 50.0 },
+				{ merchant: 'Walmart', amount: 75.0 }
 			];
 
 			const mockClassification1 = {
@@ -404,19 +421,23 @@ describe('LlamaService', () => {
 			};
 
 			mockChatCompletions.create
-				.mockResolvedValueOnce({ completion_message: { content: { text: JSON.stringify(mockClassification1) } } })
-				.mockResolvedValueOnce({ completion_message: { content: { text: JSON.stringify(mockClassification2) } } });
+				.mockResolvedValueOnce({
+					completion_message: { content: { text: JSON.stringify(mockClassification1) } }
+				})
+				.mockResolvedValueOnce({
+					completion_message: { content: { text: JSON.stringify(mockClassification2) } }
+				});
 
 			const result = await llamaService.getMerchantInsights(charges);
 
 			expect(result.topCategories).toEqual([
-				{ category: 'Retail', total: 175.00 },
-				{ category: 'Transportation', total: 50.00 }
+				{ category: 'Retail', total: 175.0 },
+				{ category: 'Transportation', total: 50.0 }
 			]);
 
 			expect(result.topSubcategories).toEqual([
-				{ subcategory: 'Grocery Store', total: 175.00 },
-				{ subcategory: 'Gas Station', total: 50.00 }
+				{ subcategory: 'Grocery Store', total: 175.0 },
+				{ subcategory: 'Gas Station', total: 50.0 }
 			]);
 
 			expect(result.merchantClassifications).toHaveProperty('Walmart');
@@ -431,14 +452,11 @@ describe('LlamaService', () => {
 
 		it('should generate high spending suggestion when category exceeds 30%', () => {
 			const topCategories = [
-				{ category: 'Retail', total: 400.00 },
-				{ category: 'Transportation', total: 100.00 }
+				{ category: 'Retail', total: 400.0 },
+				{ category: 'Transportation', total: 100.0 }
 			];
 
-			const charges = [
-				{ amount: 400.00 },
-				{ amount: 100.00 }
-			];
+			const charges = [{ amount: 400.0 }, { amount: 100.0 }];
 
 			const suggestions = llamaService.generateSuggestions(topCategories, [], charges);
 
@@ -446,20 +464,18 @@ describe('LlamaService', () => {
 				type: 'high_spending',
 				category: 'Retail',
 				percentage: 80,
-				message: 'Retail represents 80% of your spending. Consider setting a budget for this category.'
+				message:
+					'Retail represents 80% of your spending. Consider setting a budget for this category.'
 			});
 		});
 
 		it('should generate dining insight when dining spending exceeds 20%', () => {
 			const topCategories = [
-				{ category: 'Dining', total: 300.00 },
-				{ category: 'Transportation', total: 100.00 }
+				{ category: 'Dining', total: 300.0 },
+				{ category: 'Transportation', total: 100.0 }
 			];
 
-			const charges = [
-				{ amount: 300.00 },
-				{ amount: 100.00 }
-			];
+			const charges = [{ amount: 300.0 }, { amount: 100.0 }];
 
 			const suggestions = llamaService.generateSuggestions(topCategories, [], charges);
 
@@ -472,14 +488,11 @@ describe('LlamaService', () => {
 
 		it('should return empty array when no suggestions apply', () => {
 			const topCategories = [
-				{ category: 'Transportation', total: 15.00 },
-				{ category: 'Entertainment', total: 35.00 }
+				{ category: 'Transportation', total: 15.0 },
+				{ category: 'Entertainment', total: 35.0 }
 			];
 
-			const charges = [
-				{ amount: 15.00 },
-				{ amount: 35.00 }
-			];
+			const charges = [{ amount: 15.0 }, { amount: 35.0 }];
 
 			const suggestions = llamaService.generateSuggestions(topCategories, [], charges);
 

@@ -111,10 +111,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			};
 
 			// Mock FormData
-			mockFormData = new Map([
-				['file', mockFile],
-				['credit_card_id', '1']
-			]);
+			mockFormData = new Map([['file', mockFile]]);
 
 			mockEvent.request.formData.mockResolvedValue({
 				get: (key) => mockFormData.get(key)
@@ -143,7 +140,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(createStatement).toHaveBeenCalledWith(
 				mockEvent,
 				1,
-				1,
+				null, // credit_card_id is null now
 				'statement.pdf',
 				expect.stringMatching(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/),
 				'2024-01-01'
@@ -152,14 +149,14 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(result.filename).toBe('statement.pdf');
 		});
 
-		it('should return 400 for missing required fields', async () => {
+		it('should return 400 for missing file', async () => {
 			mockFormData.set('file', null);
 
 			const response = await POST(mockEvent);
 			const result = await response.json();
 
 			expect(response.status).toBe(400);
-			expect(result.error).toBe('Missing required fields: file, credit_card_id');
+			expect(result.error).toBe('Missing required field: file');
 		});
 
 		it('should return 400 for non-PDF files', async () => {

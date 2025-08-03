@@ -245,7 +245,7 @@ export async function listStatements(event, billing_cycle_id) {
 			`
 			SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4
 			FROM statement s
-			JOIN credit_card cc ON s.credit_card_id = cc.id
+			LEFT JOIN credit_card cc ON s.credit_card_id = cc.id
 			WHERE s.billing_cycle_id = ?
 			ORDER BY s.uploaded_at DESC
 		`
@@ -269,7 +269,7 @@ export async function getStatement(event, id) {
 			`
 			SELECT s.*, cc.name as credit_card_name, cc.last4 as credit_card_last4
 			FROM statement s
-			JOIN credit_card cc ON s.credit_card_id = cc.id
+			LEFT JOIN credit_card cc ON s.credit_card_id = cc.id
 			WHERE s.id = ?
 		`
 		)
@@ -293,26 +293,59 @@ export async function createStatement(
 	credit_card_id,
 	filename,
 	r2_key,
-	statement_date
+	statement_date,
+	image_key = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
 		.prepare(
-			'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date) VALUES (?, ?, ?, ?, ?)'
+			'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key) VALUES (?, ?, ?, ?, ?, ?)'
 		)
-		.bind(billing_cycle_id, credit_card_id, filename, r2_key, statement_date)
+		.bind(billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key)
 		.run();
 }
 
 /**
- * Delete a statement by id.
+ * Update statement with image key after PDF-to-image conversion
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @param {string} image_key
+ */
+export async function updateStatementImageKey(event, id, image_key) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db.prepare('UPDATE statement SET image_key = ? WHERE id = ?').bind(image_key, id).run();
+}
+
+/**
+ * Update statement with identified credit card
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @param {number} credit_card_id
+ */
+export async function updateStatementCreditCard(event, id, credit_card_id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db
+		.prepare('UPDATE statement SET credit_card_id = ? WHERE id = ?')
+		.bind(credit_card_id, id)
+		.run();
+}
+
+/**
+ * Delete a statement by id and all associated charges.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} id
  */
 export async function deleteStatement(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+
+	// Delete all payments/charges for this statement first
+	await deletePaymentsForStatement(event, id);
+
+	// Then delete the statement
 	await db.prepare('DELETE FROM statement WHERE id = ?').bind(id).run();
 }
 
@@ -331,15 +364,27 @@ export async function createPayment(
 	merchant,
 	amount,
 	allocated_to,
-	transaction_date = null
+	transaction_date = null,
+	is_foreign_currency = false,
+	foreign_currency_amount = null,
+	foreign_currency_type = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
 		.prepare(
-			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
+			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 		)
-		.bind(statement_id, merchant, amount, allocated_to, transaction_date)
+		.bind(
+			statement_id,
+			merchant,
+			amount,
+			allocated_to,
+			transaction_date,
+			is_foreign_currency,
+			foreign_currency_amount,
+			foreign_currency_type
+		)
 		.run();
 }
 
