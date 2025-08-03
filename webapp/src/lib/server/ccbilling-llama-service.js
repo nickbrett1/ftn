@@ -1,5 +1,6 @@
 import { LLAMA_API_KEY } from '$env/static/private';
 import LlamaAPIClient from 'llama-api-client';
+import { ParsingUtils } from '../utils/parsing-utils.js';
 
 /**
  * Service for LLAMA API integration for merchant classification and image-based parsing
@@ -77,23 +78,15 @@ Return ONLY the JSON array, no additional text or formatting. If no charges are 
 				throw new Error('No content received from Llama API');
 			}
 
-			// Clean up the content
-			let cleanContent = content.trim();
-			if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(7, -3).trim();
-			} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(3, -3).trim();
-			}
-
-			// Parse the JSON response
-			const charges = JSON.parse(cleanContent);
+			// Use shared JSON parsing utilities
+			const charges = ParsingUtils.parseJSONResponse(content);
 
 			// Validate that it's an array
 			if (!Array.isArray(charges)) {
 				throw new Error('Llama API did not return a valid array');
 			}
 
-			// Validate and clean up each charge
+			// Validate and clean up each charge using shared utilities
 			return charges
 				.map((charge, index) => {
 					if (!charge || typeof charge !== 'object') {
@@ -102,8 +95,8 @@ Return ONLY the JSON array, no additional text or formatting. If no charges are 
 					}
 
 					return {
-						merchant: charge.merchant || 'Unknown Merchant',
-						amount: parseFloat(charge.amount) || 0,
+						merchant: ParsingUtils.cleanMerchantName(charge.merchant || 'Unknown Merchant'),
+						amount: ParsingUtils.parseAmount(String(charge.amount || 0)),
 						date: charge.date || null,
 						allocated_to: charge.allocated_to || 'Both'
 					};
@@ -384,16 +377,8 @@ Return a JSON array of charges:
 				throw new Error('No content received from Llama API');
 			}
 
-			// Clean up the content
-			let cleanContent = content.trim();
-			if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(7, -3).trim();
-			} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(3, -3).trim();
-			}
-
-			// Parse the JSON response
-			const charges = JSON.parse(cleanContent);
+			// Use shared JSON parsing utilities
+			const charges = ParsingUtils.parseJSONResponse(content);
 
 			// Validate that it's an array
 			if (!Array.isArray(charges)) {
@@ -402,7 +387,7 @@ Return a JSON array of charges:
 
 			console.log('📋 Raw charges from LLAMA:', charges.slice(0, 3));
 
-			// Validate and clean up each charge
+			// Validate and clean up each charge using shared utilities
 			const validatedCharges = charges
 				.map((charge, index) => {
 					if (!charge || typeof charge !== 'object') {
@@ -411,8 +396,8 @@ Return a JSON array of charges:
 					}
 
 					return {
-						merchant: charge.merchant || 'Unknown Merchant',
-						amount: parseFloat(charge.amount) || 0,
+						merchant: ParsingUtils.cleanMerchantName(charge.merchant || 'Unknown Merchant'),
+						amount: ParsingUtils.parseAmount(String(charge.amount || 0)),
 						date: charge.date || null,
 						allocated_to: charge.allocated_to || 'Both'
 					};
@@ -513,25 +498,15 @@ If you cannot find any transactions or the image is unclear, return an empty arr
 
 			console.log('📄 Raw LLAMA response:', content.substring(0, 500) + '...');
 
-			// Clean up the content
-			let cleanContent = content.trim();
-			if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(7, -3).trim();
-			} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(3, -3).trim();
-			}
-
-			console.log('🧹 Cleaned content:', cleanContent.substring(0, 300) + '...');
-
-			// Parse the JSON response
-			const charges = JSON.parse(cleanContent);
+			// Use shared JSON parsing utilities
+			const charges = ParsingUtils.parseJSONResponse(content);
 
 			// Validate that it's an array
 			if (!Array.isArray(charges)) {
 				throw new Error('Llama API did not return a valid array');
 			}
 
-			// Validate and clean up each charge with better error handling
+			// Validate and clean up each charge using shared utilities
 			const validatedCharges = charges
 				.map((charge, index) => {
 					if (!charge || typeof charge !== 'object') {
@@ -539,42 +514,11 @@ If you cannot find any transactions or the image is unclear, return an empty arr
 						return null;
 					}
 
-					// Validate and clean merchant name
-					let merchant = charge.merchant || 'Unknown Merchant';
-					if (typeof merchant !== 'string') {
-						merchant = String(merchant);
-					}
-					merchant = merchant.trim();
-
-					// Validate and clean amount
-					let amount = charge.amount;
-					if (typeof amount === 'string') {
-						// Remove currency symbols and commas
-						amount = amount.replace(/[$,]/g, '');
-					}
-					amount = parseFloat(amount) || 0;
-
-					// Validate and clean date
-					let date = charge.date;
-					if (date && typeof date === 'string') {
-						// Try to parse and validate the date
-						const parsedDate = new Date(date);
-						if (isNaN(parsedDate.getTime())) {
-							console.warn(`Invalid date format for charge ${index}:`, date);
-							date = null;
-						} else {
-							// Format as YYYY-MM-DD
-							date = parsedDate.toISOString().split('T')[0];
-						}
-					} else {
-						date = null;
-					}
-
-					// Validate allocated_to
-					let allocated_to = charge.allocated_to || 'Both';
-					if (typeof allocated_to !== 'string') {
-						allocated_to = 'Both';
-					}
+					// Use shared utilities for validation and cleaning
+					const merchant = ParsingUtils.cleanMerchantName(charge.merchant || 'Unknown Merchant');
+					const amount = ParsingUtils.parseAmount(String(charge.amount || 0));
+					const date = ParsingUtils.parseDate(charge.date, { strict: false });
+					const allocated_to = charge.allocated_to || 'Both';
 
 					const validatedCharge = {
 						merchant,
@@ -663,16 +607,8 @@ Return ONLY the JSON object, no additional text or formatting.`;
 				throw new Error('No content received from Llama API');
 			}
 
-			// Clean up the content
-			let cleanContent = content.trim();
-			if (cleanContent.startsWith('```json') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(7, -3).trim();
-			} else if (cleanContent.startsWith('```') && cleanContent.endsWith('```')) {
-				cleanContent = cleanContent.slice(3, -3).trim();
-			}
-
-			// Parse the JSON response
-			const classification = JSON.parse(cleanContent);
+			// Use shared JSON parsing utilities
+			const classification = ParsingUtils.parseJSONResponse(content);
 
 			// Validate and provide defaults
 			return {
@@ -680,7 +616,13 @@ Return ONLY the JSON object, no additional text or formatting.`;
 				subcategory: classification.subcategory || 'Unknown',
 				website: classification.website || null,
 				description: classification.description || null,
-				confidence: Math.max(0, Math.min(1, parseFloat(classification.confidence) || 0))
+				confidence: Math.max(
+					0,
+					Math.min(
+						1,
+						ParsingUtils.parseAmount(String(classification.confidence || 0), { defaultValue: 0 })
+					)
+				)
 			};
 		} catch (error) {
 			console.error('Llama API classification failed:', error);

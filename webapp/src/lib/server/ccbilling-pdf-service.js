@@ -1,15 +1,15 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import { ParserFactory } from './ccbilling-parsers/parser-factory.js';
-
-// Set up PDF.js worker for browser environment
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+import { PDFUtils } from '../utils/pdf-utils.js';
+import { ParserFactory } from '../ccbilling-parsers/parser-factory.js';
 
 /**
- * Service for parsing credit card statements using PDF.js (Client-side)
+ * Service for parsing credit card statements using PDF.js (Server-side)
+ * Refactored to use shared PDF utilities
  */
 export class PDFService {
 	constructor() {
 		this.parserFactory = new ParserFactory();
+		// Configure PDF.js worker for server environment
+		PDFUtils.configureWorker('server');
 	}
 
 	/**
@@ -19,51 +19,20 @@ export class PDFService {
 	 */
 	async parseStatement(pdfFile) {
 		try {
-			console.log('📄 Loading PDF with PDF.js...');
+			// Validate PDF file
+			PDFUtils.validatePDFFile(pdfFile);
 
-			// Convert file to ArrayBuffer
-			const arrayBuffer = await pdfFile.arrayBuffer();
+			// Use shared PDF parsing logic with simpler text extraction for server
+			const parsedData = await PDFUtils.parseStatement(pdfFile, this.parserFactory, {
+				groupByLine: false,
+				sortByPosition: false
+			});
 
-			// Load the PDF document
-			const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-			const pdfDocument = await loadingTask.promise;
-
-			console.log(`📄 PDF loaded: ${pdfDocument.numPages} pages`);
-
-			// Extract text from all pages
-			const allText = await this.extractTextFromPDF(pdfDocument);
-			console.log('📄 Text extracted from PDF');
-
-			// Parse the statement using appropriate parser
-			const parsedData = await this.parserFactory.parseStatement(allText);
-
-			console.log('✅ Statement parsed successfully');
 			return parsedData;
 		} catch (error) {
 			console.error('❌ PDF parsing failed:', error);
 			throw new Error(`PDF parsing failed: ${error.message}`);
 		}
-	}
-
-	/**
-	 * Extract text content from all pages of a PDF
-	 * @param {Object} pdfDocument - PDF.js document object
-	 * @returns {Promise<string>} - Combined text from all pages
-	 */
-	async extractTextFromPDF(pdfDocument) {
-		const textParts = [];
-
-		for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-			const page = await pdfDocument.getPage(pageNum);
-			const textContent = await page.getTextContent();
-
-			// Extract text items and join them
-			const pageText = textContent.items.map((item) => item.str).join(' ');
-
-			textParts.push(pageText);
-		}
-
-		return textParts.join('\n');
 	}
 
 	/**

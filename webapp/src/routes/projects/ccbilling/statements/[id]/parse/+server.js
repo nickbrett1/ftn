@@ -6,27 +6,20 @@ import {
 	listCreditCards,
 	updateStatementCreditCard
 } from '$lib/server/ccbilling-db.js';
-import { requireUser } from '$lib/server/require-user.js';
+import { RouteUtils } from '$lib/server/route-utils.js';
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET(event) {
-	const authResult = await requireUser(event);
-	if (authResult instanceof Response) return authResult;
+export const GET = RouteUtils.createRouteHandler(
+	async (event) => {
+		const { params } = event;
+		const statement_id = parseInt(params.id);
 
-	const { params } = event;
-	const statement_id = parseInt(params.id);
-
-	if (isNaN(statement_id)) {
-		return json({ error: 'Invalid statement ID' }, { status: 400 });
-	}
-
-	try {
 		console.log('🔍 Debug: Getting statement details for ID:', statement_id);
 
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
 		if (!statement) {
-			return json({ error: 'Statement not found' }, { status: 404 });
+			return RouteUtils.createErrorResponse('Statement not found', { status: 404 });
 		}
 
 		console.log('📄 Statement found:', statement.filename);
@@ -40,46 +33,54 @@ export async function GET(event) {
 			},
 			message: 'Statement details retrieved successfully'
 		});
-	} catch (error) {
-		console.error('❌ Error in debug endpoint:', error);
-		return json({ error: `Debug failed: ${error.message}` }, { status: 500 });
+	},
+	{
+		requiredParams: ['id'],
+		validators: {
+			id: (value) => {
+				const parsed = RouteUtils.parseInteger(value, 'statement ID', { min: 1 });
+				return typeof parsed === 'number' ? true : 'Invalid statement ID';
+			}
+		}
 	}
-}
+);
 
-export async function POST(event) {
-	const authResult = await requireUser(event);
-	if (authResult instanceof Response) return authResult;
+export const POST = RouteUtils.createRouteHandler(
+	async (event) => {
+		const { params } = event;
+		const statement_id = parseInt(params.id);
 
-	const { params } = event;
-	const statement_id = parseInt(params.id);
-
-	if (isNaN(statement_id)) {
-		return json({ error: 'Invalid statement ID' }, { status: 400 });
-	}
-
-	try {
 		console.log('🔍 Starting parse for statement ID:', statement_id);
 
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
 		if (!statement) {
-			return json({ error: 'Statement not found' }, { status: 404 });
+			return RouteUtils.createErrorResponse('Statement not found', { status: 404 });
 		}
 
 		console.log('📄 Statement found:', statement.filename);
 
-		// Get the parsed data from the request body
+		// Get the parsed data from the request body (already validated by RouteUtils)
 		const body = await event.request.json();
 		const parsedData = body.parsedData;
-
 		if (!parsedData) {
-			return json({ error: 'No parsed data provided' }, { status: 400 });
+			return RouteUtils.createErrorResponse('No parsed data provided', { status: 400 });
 		}
 
 		console.log('📄 Received parsed data from client');
 
 		// Delete existing payments for this statement (in case of re-parsing)
-		await deletePaymentsForStatement(event, statement_id);
+		try {
+			await deletePaymentsForStatement(event, statement_id);
+		} catch (error) {
+			return json(
+				{
+					success: false,
+					error: `Failed to process parsed data: ${error.message}`
+				},
+				{ status: 500 }
+			);
+		}
 
 		// Get all available credit cards for identification
 		const availableCreditCards = await listCreditCards(event);
@@ -134,15 +135,22 @@ export async function POST(event) {
 		return json({
 			success: true,
 			charges_found: charges.length,
-			message: `Statement parsed successfully using client-side PDF parsing`,
 			billing_cycle: billingCycle,
-			card_info: cardInfo
+			card_info: cardInfo,
+			message: 'Statement parsed successfully using client-side PDF parsing'
 		});
-	} catch (error) {
-		console.error('❌ Error processing parsed data:', error);
-		return json({ error: `Failed to process parsed data: ${error.message}` }, { status: 500 });
+	},
+	{
+		requiredParams: ['id'],
+		requiredBody: ['parsedData'],
+		validators: {
+			id: (value) => {
+				const parsed = RouteUtils.parseInteger(value, 'statement ID', { min: 1 });
+				return typeof parsed === 'number' ? true : 'Invalid statement ID';
+			}
+		}
 	}
-}
+);
 
 /**
  * Identify credit card from parsed data
