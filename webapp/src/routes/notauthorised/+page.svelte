@@ -70,8 +70,8 @@
 					Looking for Information & Insights?
 				</h3>
 				<p class="text-gray-300 leading-relaxed">
-					If you're interested in data engineering and modern ETL approaches, check out our
-					comprehensive article on building efficient data transformation pipelines.
+					If you're interested in data engineering and modern ETL approaches, check out this
+					article on building efficient data transformation pipelines.
 				</p>
 				<div class="pt-2">
 					<Button
