@@ -4,7 +4,8 @@ import {
 	createPayment,
 	deletePaymentsForStatement,
 	listCreditCards,
-	updateStatementCreditCard
+	updateStatementCreditCard,
+	updateStatementDate
 } from '$lib/server/ccbilling-db.js';
 import { RouteUtils } from '$lib/server/route-utils.js';
 
@@ -107,6 +108,16 @@ export const POST = RouteUtils.createRouteHandler(
 		if (!statement.credit_card_id && identifiedCreditCard) {
 			console.log('💳 Updating statement with identified credit card:', identifiedCreditCard.id);
 			await updateStatementCreditCard(event, statement_id, identifiedCreditCard.id);
+		}
+
+		// Update statement date if available in parsed data
+		if (parsedData.statement_date && parsedData.statement_date !== statement.statement_date) {
+			console.log('📅 Updating statement date from:', statement.statement_date, 'to:', parsedData.statement_date);
+			await updateStatementDate(event, statement_id, parsedData.statement_date);
+		} else if (parsedData.statement_date && statement.statement_date === '1900-01-01') {
+			// Update placeholder date with actual statement date
+			console.log('📅 Updating placeholder statement date to:', parsedData.statement_date);
+			await updateStatementDate(event, statement_id, parsedData.statement_date);
 		}
 
 		// Create payment records from parsed charges

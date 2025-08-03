@@ -8,7 +8,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	createPayment: vi.fn(),
 	deletePaymentsForStatement: vi.fn(),
 	listCreditCards: vi.fn(),
-	updateStatementCreditCard: vi.fn()
+	updateStatementCreditCard: vi.fn(),
+	updateStatementDate: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -29,7 +30,8 @@ import {
 	createPayment,
 	deletePaymentsForStatement,
 	listCreditCards,
-	updateStatementCreditCard
+	updateStatementCreditCard,
+	updateStatementDate
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -135,6 +137,35 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(createPayment).toHaveBeenCalledTimes(2);
 			expect(result.success).toBe(true);
 			expect(result.charges_found).toBe(2);
+		});
+
+		it('should update statement date when parsing is successful', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				statement_date: '1900-01-01' // Placeholder date
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([]);
+			updateStatementDate.mockResolvedValue();
+
+			// Mock the request body with statement date
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					statement_date: '2024-01-15',
+					charges: []
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(updateStatementDate).toHaveBeenCalledWith(mockEvent, 1, '2024-01-15');
+			expect(result.success).toBe(true);
 		});
 
 		it('should return 400 when no parsed data is provided', async () => {

@@ -334,6 +334,21 @@ export async function updateStatementCreditCard(event, id, credit_card_id) {
 }
 
 /**
+ * Update statement date
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} id
+ * @param {string} statement_date
+ */
+export async function updateStatementDate(event, id, statement_date) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	await db
+		.prepare('UPDATE statement SET statement_date = ? WHERE id = ?')
+		.bind(statement_date, id)
+		.run();
+}
+
+/**
  * Delete a statement by id and all associated charges.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} id
