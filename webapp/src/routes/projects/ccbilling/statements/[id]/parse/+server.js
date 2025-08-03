@@ -114,9 +114,9 @@ export const POST = RouteUtils.createRouteHandler(
 		if (parsedData.statement_date && parsedData.statement_date !== statement.statement_date) {
 			console.log('📅 Updating statement date from:', statement.statement_date, 'to:', parsedData.statement_date);
 			await updateStatementDate(event, statement_id, parsedData.statement_date);
-		} else if (parsedData.statement_date && statement.statement_date === '1900-01-01') {
-			// Update placeholder date with actual statement date
-			console.log('📅 Updating placeholder statement date to:', parsedData.statement_date);
+		} else if (parsedData.statement_date && !statement.statement_date) {
+			// Update NULL date with actual statement date
+			console.log('📅 Setting statement date to:', parsedData.statement_date);
 			await updateStatementDate(event, statement_id, parsedData.statement_date);
 		}
 

@@ -143,7 +143,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 				null, // credit_card_id is null now
 				'statement.pdf',
 				expect.stringMatching(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/),
-				'1900-01-01'
+				null
 			);
 			expect(result.success).toBe(true);
 			expect(result.filename).toBe('statement.pdf');

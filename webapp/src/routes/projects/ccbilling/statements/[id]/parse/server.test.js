@@ -144,7 +144,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				id: 1,
 				filename: 'statement.pdf',
 				r2_key: 'statements/1/test.pdf',
-				statement_date: '1900-01-01' // Placeholder date
+				statement_date: null // NULL until parsed
 			};
 			getStatement.mockResolvedValue(mockStatement);
 			deletePaymentsForStatement.mockResolvedValue();
