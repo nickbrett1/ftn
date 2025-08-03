@@ -18,10 +18,29 @@
 			options: particlesConfig
 		});
 	});
+
+	// Function to initiate Google OAuth flow
+	const initiateGoogleAuth = () => {
+		const GOOGLE_CLIENT_ID =
+			'263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com';
+		const redirectUri =
+			process.env.NODE_ENV === 'development'
+				? 'http://127.0.0.1:5173/auth'
+				: 'https://fintechnick.com/auth';
+		const scope = 'openid profile email';
+		const responseType = 'code';
+
+		const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}`;
+
+		window.location.href = authUrl;
+	};
 </script>
 
 <svelte:head>
-	<meta name="description" content="Authentication required - Some tools require login while under development" />
+	<meta
+		name="description"
+		content="Authentication required - Some tools require login while under development"
+	/>
 	<title>Authentication Required</title>
 </svelte:head>
 
@@ -47,41 +66,50 @@
 		<!-- Main content -->
 		<div class="space-y-6">
 			<!-- Authentication explanation -->
-			<div class="bg-gray-900/50 backdrop-blur-sm border border-green-400/30 rounded-lg p-6 space-y-4">
+			<div
+				class="bg-gray-900/50 backdrop-blur-sm border border-green-400/30 rounded-lg p-6 space-y-4"
+			>
 				<h2 class="text-2xl sm:text-3xl font-bold text-gray-200 soft-neon-text">
 					Authentication Required
 				</h2>
 				<p class="text-lg text-gray-300 leading-relaxed">
-					Some tools on this site currently require authentication while they are under development. 
-					This ensures a controlled environment for testing and refinement.
+					Some tools on this site currently require authentication while they are under development.
 				</p>
 			</div>
 
 			<!-- Information and insights section -->
-			<div class="bg-gray-900/50 backdrop-blur-sm border border-blue-400/30 rounded-lg p-6 space-y-4">
+			<div
+				class="bg-gray-900/50 backdrop-blur-sm border border-blue-400/30 rounded-lg p-6 space-y-4"
+			>
 				<h3 class="text-xl font-bold text-blue-400 soft-neon-text">
 					Looking for Information & Insights?
 				</h3>
 				<p class="text-gray-300 leading-relaxed">
-					If you're interested in data engineering and modern ETL approaches, check out our comprehensive article on building efficient data transformation pipelines.
+					If you're interested in data engineering and modern ETL approaches, check out our
+					comprehensive article on building efficient data transformation pipelines.
 				</p>
 				<div class="pt-2">
-					<Button href="/projects/dbt-duckdb" variant="primary" size="lg">
+					<Button
+						href="/projects/dbt-duckdb"
+						variant="primary"
+						size="lg"
+						class="whitespace-normal text-center"
+					>
 						Read: Modern ETL with dbt & DuckDB
 					</Button>
 				</div>
 			</div>
 
 			<!-- Quick authentication retry -->
-			<div class="bg-gray-900/50 backdrop-blur-sm border border-yellow-400/30 rounded-lg p-6 space-y-4">
-				<h3 class="text-xl font-bold text-yellow-400 soft-neon-text">
-					Quick Re-authentication
-				</h3>
+			<div
+				class="bg-gray-900/50 backdrop-blur-sm border border-yellow-400/30 rounded-lg p-6 space-y-4"
+			>
+				<h3 class="text-xl font-bold text-yellow-400 soft-neon-text">Quick Re-authentication</h3>
 				<p class="text-gray-300 leading-relaxed">
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
 				<div class="pt-2">
-					<Button href="/auth" variant="secondary" size="lg">
+					<Button onclick={initiateGoogleAuth} variant="primary" size="lg">
 						Try Authentication Again
 					</Button>
 				</div>
@@ -90,9 +118,7 @@
 
 		<!-- Action buttons -->
 		<div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-			<Button href="/" variant="primary">
-				Return Home
-			</Button>
+			<Button href="/" variant="primary">Return Home</Button>
 		</div>
 
 		<!-- Matrix-style decorative elements -->
