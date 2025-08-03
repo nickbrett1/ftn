@@ -78,7 +78,7 @@
 						href="/projects/dbt-duckdb"
 						variant="primary"
 						size="lg"
-						class="whitespace-normal text-center"
+						class="whitespace-normal text-center block w-fit mx-auto"
 					>
 						Read: Modern ETL with dbt & DuckDB
 					</Button>
