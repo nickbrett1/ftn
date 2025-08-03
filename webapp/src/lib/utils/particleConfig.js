@@ -224,6 +224,68 @@ export const createErrorParticleConfig = (overrides = {}) => {
 };
 
 /**
+ * Create an authentication page particle configuration
+ * Features "AUTH" and "LOGIN" text particles
+ * @param {Object} overrides - Configuration overrides
+ * @returns {Object} Complete particle configuration
+ */
+export const createAuthParticleConfig = (overrides = {}) => {
+	const config = {
+		...baseConfig,
+		particles: {
+			...baseConfig.particles,
+			links: {
+				color: '#22c55e',
+				distance: 150,
+				enable: true,
+				opacity: 0.3,
+				width: 1
+			},
+			move: {
+				...baseConfig.particles.move,
+				direction: 'none'
+			},
+			number: { density: { enable: true, area: 800 }, value: 15 },
+			opacity: {
+				animation: { enable: true, speed: 0.5, sync: false },
+				random: false,
+				value: { min: 0.3, max: 0.8 }
+			},
+			shape: {
+				type: 'text',
+				options: {
+					text: [
+						{
+							fill: true,
+							font: 'Verdana',
+							value: ['AUTH', 'AUTH', 'AUTH'],
+							weight: '400',
+							particles: {
+								color: '#22c55e', // Green
+								size: { value: 12 }
+							}
+						},
+						{
+							fill: true,
+							font: 'Verdana',
+							value: ['LOGIN', 'LOGIN'],
+							weight: '400',
+							particles: {
+								color: '#fbbf24', // Yellow/amber
+								size: { value: 12 }
+							}
+						}
+					]
+				}
+			}
+		}
+	};
+
+	// Deep merge overrides
+	return deepMerge(config, overrides);
+};
+
+/**
  * Deep merge utility function for configuration objects
  * @param {Object} target - Target object
  * @param {Object} source - Source object to merge

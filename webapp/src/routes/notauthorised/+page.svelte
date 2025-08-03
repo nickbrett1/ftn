@@ -4,11 +4,11 @@
 	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
-	import { createErrorParticleConfig } from '$lib/utils/particleConfig.js';
+	import { createAuthParticleConfig } from '$lib/utils/particleConfig.js';
 	import { initiateGoogleAuth } from '$lib/utils/google-auth.js';
 
 	// Create the particle configuration using the utility
-	const particlesConfig = createErrorParticleConfig();
+	const particlesConfig = createAuthParticleConfig();
 
 	onMount(async () => {
 		loadSlim(tsParticles);
@@ -70,8 +70,8 @@
 					Looking for Information & Insights?
 				</h3>
 				<p class="text-gray-300 leading-relaxed">
-					If you're interested in data engineering and modern ETL approaches, check out this
-					article on building efficient data transformation pipelines.
+					If you're interested in data engineering and modern ETL approaches, check out this article
+					on building efficient data transformation pipelines.
 				</p>
 				<div class="pt-2">
 					<Button
