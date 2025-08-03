@@ -12,14 +12,14 @@ describe('Home', () => {
 		expect(screen.getByText('Galactic Unicorn'));
 	});
 
-	it('redirects to preview if not logged in', async () => {
+	it('redirects to notauthorised if not logged in', async () => {
 		expect.assertions(1);
 		try {
 			await load({ cookies: { get: () => null }, platform: {} });
 		} catch (e) {
 			let expected;
 			try {
-				redirect(307, '/preview');
+				redirect(307, '/notauthorised');
 			} catch (redirect) {
 				expected = redirect;
 			}
@@ -51,7 +51,7 @@ describe('Home', () => {
 		} catch (e) {
 			let expected;
 			try {
-				redirect(307, '/preview');
+				redirect(307, '/notauthorised');
 			} catch (redirect) {
 				expected = redirect;
 			}

@@ -49,20 +49,20 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			expect(redirect).not.toHaveBeenCalled();
 		});
 
-		it('should redirect to /preview when user is not authenticated', async () => {
-			const mockResponse = new Response('Unauthorized', { status: 401 });
-			requireUser.mockResolvedValue(mockResponse);
+	it('should redirect to /notauthorised when user is not authenticated', async () => {
+		const mockResponse = new Response('Unauthorized', { status: 401 });
+		requireUser.mockResolvedValue(mockResponse);
 
-			// Mock redirect to throw an error (as SvelteKit redirect does)
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
-
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		// Mock redirect to throw an error (as SvelteKit redirect does)
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
 		});
+
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+
+		expect(requireUser).toHaveBeenCalledWith(mockEvent);
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
 
 		it('should handle different cycle IDs', async () => {
 			mockEvent.params.id = '456';
@@ -114,99 +114,99 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			});
 		});
 
-		it('should use correct redirect status code (307)', async () => {
-			const mockResponse = new Response('Unauthorized', { status: 401 });
-			requireUser.mockResolvedValue(mockResponse);
+	it('should use correct redirect status code (307)', async () => {
+		const mockResponse = new Response('Unauthorized', { status: 401 });
+		requireUser.mockResolvedValue(mockResponse);
 
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
-
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
-
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
 		});
 
-		it('should handle requireUser throwing an error', async () => {
-			requireUser.mockRejectedValue(new Error('Database connection failed'));
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
 
-			await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
 
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(redirect).not.toHaveBeenCalled();
+	it('should handle requireUser throwing an error', async () => {
+		requireUser.mockRejectedValue(new Error('Database connection failed'));
+
+		await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
+
+		expect(requireUser).toHaveBeenCalledWith(mockEvent);
+		expect(redirect).not.toHaveBeenCalled();
+	});
+
+	it('should handle requireUser returning different response types', async () => {
+		const mockResponse = new Response('Forbidden', { status: 403 });
+		requireUser.mockResolvedValue(mockResponse);
+
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
 		});
 
-		it('should handle requireUser returning different response types', async () => {
-			const mockResponse = new Response('Forbidden', { status: 403 });
-			requireUser.mockResolvedValue(mockResponse);
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
 
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
 
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
+	it('should handle requireUser returning null (development mode)', async () => {
+		requireUser.mockResolvedValue(null);
 
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		const result = await load(mockEvent);
+
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning null (development mode)', async () => {
-			requireUser.mockResolvedValue(null);
+	it('should handle requireUser returning undefined', async () => {
+		requireUser.mockResolvedValue(undefined);
 
-			const result = await load(mockEvent);
+		const result = await load(mockEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning undefined', async () => {
-			requireUser.mockResolvedValue(undefined);
+	it('should handle requireUser returning user object', async () => {
+		const userObject = { user: { email: 'test@example.com', id: 1 } };
+		requireUser.mockResolvedValue(userObject);
 
-			const result = await load(mockEvent);
+		const result = await load(mockEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning user object', async () => {
-			const userObject = { user: { email: 'test@example.com', id: 1 } };
-			requireUser.mockResolvedValue(userObject);
+	it('should handle event object with minimal structure', async () => {
+		const minimalEvent = {
+			params: { id: '789' }
+		};
 
-			const result = await load(mockEvent);
+		const result = await load(minimalEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '789'
 		});
+		expect(requireUser).toHaveBeenCalledWith(minimalEvent);
+	});
 
-		it('should handle event object with minimal structure', async () => {
-			const minimalEvent = {
-				params: { id: '789' }
-			};
+	it('should handle event object with extra properties', async () => {
+		const extendedEvent = {
+			params: { id: '999' },
+			cookies: { get: vi.fn() },
+			request: { headers: { get: vi.fn() } },
+			platform: { env: {} },
+			url: new URL('http://localhost:3000/test'),
+			route: { id: 'test-route' }
+		};
 
-			const result = await load(minimalEvent);
-
-			expect(result).toEqual({
-				cycleId: '789'
-			});
-			expect(requireUser).toHaveBeenCalledWith(minimalEvent);
-		});
-
-		it('should handle event object with extra properties', async () => {
-			const extendedEvent = {
-				params: { id: '999' },
-				cookies: { get: vi.fn() },
-				request: { headers: { get: vi.fn() } },
-				platform: { env: {} },
-				url: new URL('http://localhost:3000/test'),
-				route: { id: 'test-route' }
-			};
-
-			const result = await load(extendedEvent);
+		const result = await load(extendedEvent);
 
 			expect(result).toEqual({
 				cycleId: '999'

@@ -53,7 +53,7 @@ describe('Auth', () => {
 		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/projects/ccbilling');
 	});
 
-	it('redirect to preview if not in KV', async () => {
+	it('redirect to notauthorised if not in KV', async () => {
 		const res = await GET({
 			request: new Request('https://fintechnick.com/auth?code=123'),
 			platform: {
@@ -67,7 +67,7 @@ describe('Auth', () => {
 			}
 		});
 
-		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
+		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/notauthorised');
 	});
 
 	describe('Error Handling', () => {
@@ -189,7 +189,7 @@ describe('Auth', () => {
 				}
 			});
 
-			expect(res.headers.get('Location')).toEqual('https://fintechnick.com/preview');
+			expect(res.headers.get('Location')).toEqual('https://fintechnick.com/notauthorised');
 		});
 
 		it('should handle network errors during token exchange', async () => {
@@ -355,7 +355,7 @@ describe('Auth', () => {
 			});
 
 			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
-			expect(res.headers.get('Location')).toBe('https://fintechnick.com/preview');
+			expect(res.headers.get('Location')).toBe('https://fintechnick.com/notauthorised');
 		});
 	});
 

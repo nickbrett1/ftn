@@ -13,7 +13,7 @@ export async function load({ cookies, platform }) {
 	const event = { cookies, platform };
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) {
-		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
 	}
 
 	return {};
