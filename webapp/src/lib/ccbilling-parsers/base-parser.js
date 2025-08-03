@@ -1,6 +1,9 @@
+import { ParsingUtils } from '../utils/parsing-utils.js';
+
 /**
  * Base class for credit card statement parsers
  * Provides common functionality for parsing PDF statements
+ * Enhanced with shared parsing utilities
  */
 export class BaseParser {
 	constructor() {
@@ -64,40 +67,53 @@ export class BaseParser {
 	}
 
 	/**
-	 * Parse a date string in MM/DD format and convert to YYYY-MM-DD
-	 * @param {string} dateStr - Date string in MM/DD format
-	 * @param {number} year - Year to use (defaults to current year)
+	 * Parse a date string using shared utilities
+	 * @param {string} dateStr - Date string in various formats
+	 * @param {Object} options - Parsing options
 	 * @returns {string|null} - Date in YYYY-MM-DD format or null if invalid
 	 */
-	parseDate(dateStr, year = new Date().getFullYear()) {
-		if (!dateStr) return null;
-
-		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
-		if (!match) return null;
-
-		const month = parseInt(match[1], 10);
-		const day = parseInt(match[2], 10);
-
-		if (month < 1 || month > 12 || day < 1 || day > 31) {
-			return null;
-		}
-
-		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+	parseDate(dateStr, options = {}) {
+		return ParsingUtils.parseDate(dateStr, options);
 	}
 
 	/**
-	 * Parse an amount string and convert to number
-	 * @param {string} amountStr - Amount string (e.g., "123.45", "-123.45")
+	 * Parse an amount string using shared utilities
+	 * @param {string} amountStr - Amount string (e.g., "123.45", "-123.45", "$1,234.56")
+	 * @param {Object} options - Parsing options
 	 * @returns {number} - Parsed amount as number
 	 */
-	parseAmount(amountStr) {
-		if (!amountStr) return 0;
+	parseAmount(amountStr, options = {}) {
+		return ParsingUtils.parseAmount(amountStr, options);
+	}
 
-		// Remove currency symbols and commas
-		const cleanAmount = amountStr.replace(/[$,]/g, '');
-		const amount = parseFloat(cleanAmount);
+	/**
+	 * Parse JSON response using shared utilities
+	 * @param {string} content - Raw JSON content
+	 * @param {Object} options - Parsing options
+	 * @returns {Object} - Parsed JSON object
+	 */
+	parseJSONResponse(content, options = {}) {
+		return ParsingUtils.parseJSONResponse(content, options);
+	}
 
-		return isNaN(amount) ? 0 : amount;
+	/**
+	 * Clean merchant name using shared utilities
+	 * @param {string} merchantName - Raw merchant name
+	 * @param {Object} options - Cleaning options
+	 * @returns {string} - Cleaned merchant name
+	 */
+	cleanMerchantName(merchantName, options = {}) {
+		return ParsingUtils.cleanMerchantName(merchantName, options);
+	}
+
+	/**
+	 * Extract numeric value from string using shared utilities
+	 * @param {string} str - String containing numeric value
+	 * @param {Object} options - Extraction options
+	 * @returns {number} - Extracted numeric value
+	 */
+	extractNumeric(str, options = {}) {
+		return ParsingUtils.extractNumeric(str, options);
 	}
 
 	/**
@@ -110,20 +126,13 @@ export class BaseParser {
 	}
 
 	/**
-	 * Validate that required fields are present
+	 * Validate that required fields are present using shared utilities
 	 * @param {Object} data - Parsed data to validate
+	 * @param {Array} requiredFields - Array of required field names (default: ['last4', 'statement_date', 'charges'])
+	 * @param {Object} options - Validation options
 	 * @returns {boolean} - True if valid, false otherwise
 	 */
-	validateParsedData(data) {
-		const required = ['last4', 'statement_date', 'charges'];
-
-		for (const field of required) {
-			if (!data[field]) {
-				console.warn(`Missing required field: ${field}`);
-				return false;
-			}
-		}
-
-		return true;
+	validateParsedData(data, requiredFields = ['last4', 'statement_date', 'charges'], options = {}) {
+		return ParsingUtils.validateParsedData(data, requiredFields, options);
 	}
 }

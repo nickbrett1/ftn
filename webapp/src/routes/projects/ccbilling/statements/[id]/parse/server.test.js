@@ -182,6 +182,14 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 		it('should return 400 for invalid statement ID', async () => {
 			mockEvent.params.id = 'invalid';
 
+			// Mock request body for this test
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					charges: []
+				}
+			});
+
 			const response = await POST(mockEvent);
 			const result = await response.json();
 

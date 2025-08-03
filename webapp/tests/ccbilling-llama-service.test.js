@@ -37,11 +37,13 @@ describe('LlamaService', () => {
 
 		// Create mock response structure
 		mockResponse = {
-			completion_message: {
-				content: {
-					text: ''
+			choices: [
+				{
+					message: {
+						content: ''
+					}
 				}
-			}
+			]
 		};
 
 		// Get the mocked functions
@@ -91,7 +93,7 @@ describe('LlamaService', () => {
 				{ merchant: 'Shell', amount: 32.5, date: '2024-01-16' }
 			];
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
 
 			const result = await llamaService.parseStatement('Sample statement text');
 
@@ -121,8 +123,7 @@ describe('LlamaService', () => {
 		it('should handle JSON wrapped in code blocks', async () => {
 			const mockCharges = [{ merchant: 'Test', amount: 10.0, date: '2024-01-01' }];
 
-			mockResponse.completion_message.content.text =
-				'```json\n' + JSON.stringify(mockCharges) + '\n```';
+			mockResponse.choices[0].message.content = '```json\n' + JSON.stringify(mockCharges) + '\n```';
 
 			const result = await llamaService.parseStatement('Test statement');
 
@@ -132,7 +133,7 @@ describe('LlamaService', () => {
 		});
 
 		it('should handle empty response and throw error', async () => {
-			mockResponse.completion_message.content.text = '';
+			mockResponse.choices[0].message.content = '';
 
 			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
 				'No content received from Llama API'
@@ -140,7 +141,7 @@ describe('LlamaService', () => {
 		});
 
 		it('should handle invalid JSON response', async () => {
-			mockResponse.completion_message.content.text = 'invalid json';
+			mockResponse.choices[0].message.content = 'invalid json';
 
 			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
 				'Llama API parsing failed'
@@ -148,7 +149,7 @@ describe('LlamaService', () => {
 		});
 
 		it('should handle non-array response', async () => {
-			mockResponse.completion_message.content.text = '{"not": "an array"}';
+			mockResponse.choices[0].message.content = '{"not": "an array"}';
 
 			await expect(llamaService.parseStatement('Test statement')).rejects.toThrow(
 				'Llama API did not return a valid array'
@@ -163,7 +164,7 @@ describe('LlamaService', () => {
 				{ merchant: 'Another Valid', amount: 20.0, date: '2024-01-02' }
 			];
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
 
 			const result = await llamaService.parseStatement('Test statement');
 
@@ -177,7 +178,7 @@ describe('LlamaService', () => {
 		it('should provide defaults for missing charge properties', async () => {
 			const mockCharges = [{ amount: 10.0 }, { merchant: 'Test' }, { date: '2024-01-01' }];
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockCharges);
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
 
 			const result = await llamaService.parseStatement('Test statement');
 
@@ -215,7 +216,7 @@ describe('LlamaService', () => {
 				confidence: 0.9
 			};
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockClassification);
+			mockResponse.choices[0].message.content = JSON.stringify(mockClassification);
 
 			const result = await llamaService.classifyMerchant('Walmart');
 
@@ -259,7 +260,7 @@ describe('LlamaService', () => {
 				// Missing other properties
 			};
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockClassification);
+			mockResponse.choices[0].message.content = JSON.stringify(mockClassification);
 
 			const result = await llamaService.classifyMerchant('Walmart');
 
@@ -281,7 +282,7 @@ describe('LlamaService', () => {
 				confidence: 1.5 // Invalid confidence
 			};
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockClassification);
+			mockResponse.choices[0].message.content = JSON.stringify(mockClassification);
 
 			const result = await llamaService.classifyMerchant('Walmart');
 
@@ -319,13 +320,13 @@ describe('LlamaService', () => {
 				confidence: 0.8
 			};
 
-			mockResponse.completion_message.content.text = JSON.stringify(mockClassification1);
+			mockResponse.choices[0].message.content = JSON.stringify(mockClassification1);
 			mockChatCompletions.create
 				.mockResolvedValueOnce({
-					completion_message: { content: { text: JSON.stringify(mockClassification1) } }
+					choices: [{ message: { content: JSON.stringify(mockClassification1) } }]
 				})
 				.mockResolvedValueOnce({
-					completion_message: { content: { text: JSON.stringify(mockClassification2) } }
+					choices: [{ message: { content: JSON.stringify(mockClassification2) } }]
 				});
 
 			const result = await llamaService.classifyMerchants(['Walmart', 'Shell']);
@@ -345,7 +346,7 @@ describe('LlamaService', () => {
 		it('should handle individual merchant classification failures', async () => {
 			mockChatCompletions.create
 				.mockResolvedValueOnce({
-					completion_message: { content: { text: JSON.stringify({ category: 'Retail' }) } }
+					choices: [{ message: { content: JSON.stringify({ category: 'Retail' }) } }]
 				})
 				.mockRejectedValueOnce(new Error('API Error'));
 
