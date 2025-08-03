@@ -26,15 +26,22 @@
 		lg: 'py-3 px-6 text-lg'
 	};
 
-	const classes = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline not-prose inline-block`;
+	const defaultClasses = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline not-prose inline-block`;
+	
+	// Extract class from rest and merge with default classes
+	const customClass = rest.class || '';
+	const classes = `${defaultClasses} ${customClass}`.trim();
+	
+	// Remove class from rest to avoid conflicts
+	const { class: _, ...restWithoutClass } = rest;
 </script>
 
 {#if href}
-	<a {href} class={classes} {...rest}>
+	<a {href} class={classes} {...restWithoutClass}>
 		{@render children?.()}
 	</a>
 {:else}
-	<button {type} {disabled} class={classes} {onclick} {...rest}>
+	<button {type} {disabled} class={classes} {onclick} {...restWithoutClass}>
 		{@render children?.()}
 	</button>
 {/if}
