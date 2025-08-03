@@ -1,51 +1,59 @@
-import { expect, vi, describe, it } from 'vitest';
-import { render, act } from '@testing-library/svelte';
+import { expect, vi, describe, it, beforeEach } from 'vitest';
+import { render } from '@testing-library/svelte';
 import { screen, fireEvent } from '@testing-library/dom';
 import Login from './Login.svelte';
 
+// Mock the shared Google auth utility
+vi.mock('$lib/utils/google-auth.js', () => ({
+	initiateGoogleAuth: vi.fn()
+}));
+
+// Mock SvelteKit navigation
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
+
 describe('Login correctly', () => {
-	vi.mock('@tsparticles/engine');
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-	it('logs in', () => {
-		const loginSpy = vi.fn();
-		const mockedInitialize = vi.fn();
-		const mockedRequestCode = vi.fn();
-		const mockedInitCodeClient = vi.fn(() => ({
-			initialize: mockedInitialize,
-			requestCode: mockedRequestCode
-		}));
+	it('logs in', async () => {
+		const { initiateGoogleAuth } = await import('$lib/utils/google-auth.js');
+		const { goto } = await import('$app/navigation');
 
-		vi.stubGlobal('google', {
-			accounts: {
-				id: { initialize: mockedInitialize },
-				oauth2: {
-					initCodeClient: mockedInitCodeClient
-				}
-			}
+		// Mock document.cookie to simulate not logged in
+		Object.defineProperty(document, 'cookie', {
+			writable: true,
+			value: ''
 		});
 
 		render(Login);
 		const button = screen.getByRole('button');
-		button.onclick = loginSpy;
 
+		// Click the button
 		fireEvent.click(button);
-		expect(loginSpy).toBeCalled();
 
-		act(() => {
-			document.querySelector('script').onload();
-		});
-
-		expect(mockedInitialize).toBeCalled();
-		expect(() => mockedInitialize.mock.calls[0][0].callback({ credential: {} })).toThrow();
-		expect(() => mockedInitCodeClient.mock.calls[0][0].callback({ error: 'error' })).toThrow();
-		expect(mockedInitCodeClient.mock.calls[0][0].redirect_uri).toBe('https://fintechnick.com/auth');
-
-		expect(mockedRequestCode).toBeCalled();
-		expect(() => screen.querySelector('script').onerror()).toThrow();
-
-		fireEvent.click(button);
-		expect(mockedRequestCode).toBeCalledTimes(2);
+		// Should call the shared Google auth utility
+		expect(initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
 	});
 
-	vi.mock('$app/navigation');
+	it('redirects to ccbilling if already logged in', async () => {
+		const { goto } = await import('$app/navigation');
+
+		// Mock document.cookie to simulate logged in
+		Object.defineProperty(document, 'cookie', {
+			writable: true,
+			value: 'auth=some-auth-token'
+		});
+
+		render(Login);
+		const button = screen.getByRole('button');
+
+		// Click the button
+		fireEvent.click(button);
+
+		// Should redirect to ccbilling
+		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+	});
 });
