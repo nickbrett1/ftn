@@ -36,7 +36,7 @@ describe('Logout Server Route', () => {
 	});
 
 	describe('GET handler', () => {
-		it('should redirect to /preview when no cookies are present', async () => {
+		it('should redirect to /notauthorised when no cookies are present', async () => {
 			mockRequest = {
 				headers: {
 					get: vi.fn(() => null)
@@ -46,10 +46,10 @@ describe('Logout Server Route', () => {
 			const { redirect } = await import('@sveltejs/kit');
 			
 			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow();
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
 
-		it('should redirect to /preview when auth cookie is not present', async () => {
+		it('should redirect to /notauthorised when auth cookie is not present', async () => {
 			mockRequest = {
 				headers: {
 					get: vi.fn(() => 'otherCookie=value; anotherCookie=value2')
@@ -59,7 +59,7 @@ describe('Logout Server Route', () => {
 			const { redirect } = await import('@sveltejs/kit');
 			
 			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow();
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
 
 		it('should return redirect response when no token is found in KV', async () => {

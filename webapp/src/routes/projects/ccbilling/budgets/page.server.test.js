@@ -53,7 +53,7 @@ describe('Budget Page Server', () => {
 	it('redirects unauthenticated user', async () => {
 		const redirectResponse = new Response(null, { 
 			status: 307, 
-			headers: { Location: '/preview' } 
+			headers: { Location: '/notauthorised' } 
 		});
 		requireUser.mockResolvedValue(redirectResponse);
 
@@ -63,7 +63,7 @@ describe('Budget Page Server', () => {
 		} catch (e) {
 			let expected;
 			try {
-				redirect(307, '/preview');
+				redirect(307, '/notauthorised');
 			} catch (redirectError) {
 				expected = redirectError;
 			}

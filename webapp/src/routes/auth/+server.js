@@ -80,7 +80,7 @@ export async function GET({ request, platform }) {
 
 		const allowed = await validateUserFromToken(tokenResponse.access_token, platform);
 		if (!allowed) {
-			return Response.redirect(`${url.origin}/preview`, HTML_TEMPORARY_REDIRECT);
+			return Response.redirect(`${url.origin}/notauthorised`, HTML_TEMPORARY_REDIRECT);
 		}
 
 		const newAuth = generateAuth();

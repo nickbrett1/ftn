@@ -23,12 +23,12 @@ const HTML_TEMPORARY_REDIRECT = 307;
 export async function GET({ request, platform }) {
 	const cookies = request.headers.get('cookie');
 	if (!cookies) {
-		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
 	}
 
 	const authCookie = cookies.match(/auth=([^;]+)/);
 	if (!authCookie) {
-		throw redirect(HTML_TEMPORARY_REDIRECT, '/preview');
+		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
 	}
 	const authCookieKey = authCookie[1];
 
