@@ -162,12 +162,12 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 };
 
 /**
- * Create an error page particle configuration
- * Features "404" and "ERROR" text particles
+ * Create a text-based particle configuration with shared settings
+ * @param {Object} textConfig - Configuration for text particles
  * @param {Object} overrides - Configuration overrides
  * @returns {Object} Complete particle configuration
  */
-export const createErrorParticleConfig = (overrides = {}) => {
+function createTextParticleConfig(textConfig, overrides = {}) {
 	const config = {
 		...baseConfig,
 		particles: {
@@ -192,28 +192,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			shape: {
 				type: 'text',
 				options: {
-					text: [
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['404', '404', '404'],
-							weight: '400',
-							particles: {
-								color: '#22c55e', // Green
-								size: { value: 12 }
-							}
-						},
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['ERROR', 'ERROR'],
-							weight: '400',
-							particles: {
-								color: '#FF0061', // Red
-								size: { value: 12 }
-							}
-						}
-					]
+					text: textConfig
 				}
 			}
 		}
@@ -221,6 +200,39 @@ export const createErrorParticleConfig = (overrides = {}) => {
 
 	// Deep merge overrides
 	return deepMerge(config, overrides);
+}
+
+/**
+ * Create an error page particle configuration
+ * Features "404" and "ERROR" text particles
+ * @param {Object} overrides - Configuration overrides
+ * @returns {Object} Complete particle configuration
+ */
+export const createErrorParticleConfig = (overrides = {}) => {
+	const textConfig = [
+		{
+			fill: true,
+			font: 'Verdana',
+			value: ['404', '404', '404'],
+			weight: '400',
+			particles: {
+				color: '#22c55e', // Green
+				size: { value: 12 }
+			}
+		},
+		{
+			fill: true,
+			font: 'Verdana',
+			value: ['ERROR', 'ERROR'],
+			weight: '400',
+			particles: {
+				color: '#FF0061', // Red
+				size: { value: 12 }
+			}
+		}
+	];
+
+	return createTextParticleConfig(textConfig, overrides);
 };
 
 /**
@@ -230,59 +242,30 @@ export const createErrorParticleConfig = (overrides = {}) => {
  * @returns {Object} Complete particle configuration
  */
 export const createAuthParticleConfig = (overrides = {}) => {
-	const config = {
-		...baseConfig,
-		particles: {
-			...baseConfig.particles,
-			links: {
-				color: '#22c55e',
-				distance: 150,
-				enable: true,
-				opacity: 0.3,
-				width: 1
-			},
-			move: {
-				...baseConfig.particles.move,
-				direction: 'none'
-			},
-			number: { density: { enable: true, area: 800 }, value: 15 },
-			opacity: {
-				animation: { enable: true, speed: 0.5, sync: false },
-				random: false,
-				value: { min: 0.3, max: 0.8 }
-			},
-			shape: {
-				type: 'text',
-				options: {
-					text: [
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['AUTH', 'AUTH', 'AUTH'],
-							weight: '400',
-							particles: {
-								color: '#22c55e', // Green
-								size: { value: 12 }
-							}
-						},
-						{
-							fill: true,
-							font: 'Verdana',
-							value: ['LOGIN', 'LOGIN'],
-							weight: '400',
-							particles: {
-								color: '#fbbf24', // Yellow/amber
-								size: { value: 12 }
-							}
-						}
-					]
-				}
+	const textConfig = [
+		{
+			fill: true,
+			font: 'Verdana',
+			value: ['AUTH', 'AUTH', 'AUTH'],
+			weight: '400',
+			particles: {
+				color: '#22c55e', // Green
+				size: { value: 12 }
+			}
+		},
+		{
+			fill: true,
+			font: 'Verdana',
+			value: ['LOGIN', 'LOGIN'],
+			weight: '400',
+			particles: {
+				color: '#fbbf24', // Yellow/amber
+				size: { value: 12 }
 			}
 		}
-	};
+	];
 
-	// Deep merge overrides
-	return deepMerge(config, overrides);
+	return createTextParticleConfig(textConfig, overrides);
 };
 
 /**
