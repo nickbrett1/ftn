@@ -22,7 +22,15 @@ jobs:
       - run:
           name: Install modules
           command: |
-            cd webapp && npm install
+            cd webapp
+            # Clear any existing corrupted installation
+            rm -rf node_modules package-lock.json
+            # Install dependencies
+            npm install
+            # Force reinstall rollup to fix native module issues
+            npm install rollup --force
+            # Explicitly install the missing native module
+            npm install @rollup/rollup-linux-x64-gnu
       - run:
           name: Install Playwright Chromium
           command: |
