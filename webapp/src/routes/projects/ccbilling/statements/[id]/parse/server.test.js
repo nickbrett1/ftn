@@ -272,5 +272,193 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
 			expect(result.success).toBe(true);
 		});
+
+		it('should not update credit card if already set', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: 2 // Already set
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					charges: []
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(updateStatementCreditCard).not.toHaveBeenCalled();
+			expect(result.success).toBe(true);
+		});
+
+		it('should handle foreign currency payments', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					charges: [
+						{
+							merchant: 'Foreign Store',
+							amount: 100.0,
+							date: '2024-01-10',
+							allocated_to: 'Both',
+							is_foreign_currency: true,
+							foreign_currency_amount: 85.0,
+							foreign_currency_type: 'EUR'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(createPayment).toHaveBeenCalledWith(
+				mockEvent,
+				1,
+				'Foreign Store',
+				100.0,
+				'Both',
+				'2024-01-10',
+				true,
+				85.0,
+				'EUR'
+			);
+			expect(result.success).toBe(true);
+		});
+
+		it('should handle missing last4 in parsed data', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					charges: []
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(true);
+		});
+
+		it('should handle empty charges array', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			listCreditCards.mockResolvedValue([]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					charges: []
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(createPayment).not.toHaveBeenCalled();
+			expect(result.success).toBe(true);
+			expect(result.charges_found).toBe(0);
+		});
+
+		it('should handle database errors during payment creation', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockRejectedValue(new Error('Payment creation failed'));
+			listCreditCards.mockResolvedValue([]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.0,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toBe('Failed to process parsed data: Payment creation failed');
+		});
+
+		it('should handle missing required fields in charges', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([]);
+
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.0
+							// Missing date and allocated_to
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(createPayment).toHaveBeenCalledWith(
+				mockEvent,
+				1,
+				'Test Store',
+				100.0,
+				'Both', // Default allocation
+				undefined, // Missing date
+				false, // Default foreign currency
+				null,
+				null
+			);
+			expect(result.success).toBe(true);
+		});
 	});
 });

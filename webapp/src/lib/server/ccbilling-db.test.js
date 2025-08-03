@@ -20,6 +20,8 @@ import {
 	listStatements,
 	createStatement,
 	getStatement,
+	updateStatementCreditCard,
+	updateStatementDate,
 	deleteStatement,
 	createPayment,
 	listChargesForCycle,
@@ -371,6 +373,40 @@ describe('ccbilling-db functions', () => {
 				);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
+
+			it('should create a statement with NULL statement date', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await createStatement(
+					mockEvent,
+					1,
+					null,
+					'statement.pdf',
+					'r2-key-123',
+					null
+				);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key) VALUES (?, ?, ?, ?, ?, ?)'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith(
+					1,
+					null,
+					'statement.pdf',
+					'r2-key-123',
+					null,
+					null
+				);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+
+			it('should throw error when CCBILLING_DB not found', async () => {
+				const eventWithoutDb = { platform: { env: {} } };
+
+				await expect(createStatement(eventWithoutDb, 1, 2, 'file.pdf', 'key', 'date')).rejects.toThrow(
+					'CCBILLING_DB binding not found'
+				);
+			});
 		});
 
 		describe('getStatement', () => {
@@ -404,6 +440,62 @@ describe('ccbilling-db functions', () => {
 
 				expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM statement WHERE id = ?');
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('updateStatementCreditCard', () => {
+			it('should update statement credit card', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await updateStatementCreditCard(mockEvent, 1, 2);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'UPDATE statement SET credit_card_id = ? WHERE id = ?'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith(2, 1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+
+			it('should throw error when CCBILLING_DB not found', async () => {
+				const eventWithoutDb = { platform: { env: {} } };
+
+				await expect(updateStatementCreditCard(eventWithoutDb, 1, 2)).rejects.toThrow(
+					'CCBILLING_DB binding not found'
+				);
+			});
+		});
+
+		describe('updateStatementDate', () => {
+			it('should update statement date', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await updateStatementDate(mockEvent, 1, '2024-01-15');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'UPDATE statement SET statement_date = ? WHERE id = ?'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith('2024-01-15', 1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+
+			it('should throw error when CCBILLING_DB not found', async () => {
+				const eventWithoutDb = { platform: { env: {} } };
+
+				await expect(updateStatementDate(eventWithoutDb, 1, '2024-01-15')).rejects.toThrow(
+					'CCBILLING_DB binding not found'
+				);
+			});
+
+			it('should handle NULL statement date', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await updateStatementDate(mockEvent, 1, null);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'UPDATE statement SET statement_date = ? WHERE id = ?'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith(null, 1);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
