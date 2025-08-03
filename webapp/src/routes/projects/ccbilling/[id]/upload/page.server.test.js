@@ -127,14 +127,14 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 	});
 
-		it('should handle requireUser throwing an error', async () => {
-			requireUser.mockRejectedValue(new Error('Database connection failed'));
+	it('should handle requireUser throwing an error', async () => {
+		requireUser.mockRejectedValue(new Error('Database connection failed'));
 
-			await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
+		await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
 
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(redirect).not.toHaveBeenCalled();
-		});
+		expect(requireUser).toHaveBeenCalledWith(mockEvent);
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
 	it('should handle requireUser returning different response types', async () => {
 		const mockResponse = new Response('Forbidden', { status: 403 });
@@ -147,66 +147,66 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
 
 		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
+
+	it('should handle requireUser returning null (development mode)', async () => {
+		requireUser.mockResolvedValue(null);
+
+		const result = await load(mockEvent);
+
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning null (development mode)', async () => {
-			requireUser.mockResolvedValue(null);
+	it('should handle requireUser returning undefined', async () => {
+		requireUser.mockResolvedValue(undefined);
 
-			const result = await load(mockEvent);
+		const result = await load(mockEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning undefined', async () => {
-			requireUser.mockResolvedValue(undefined);
+	it('should handle requireUser returning user object', async () => {
+		const userObject = { user: { email: 'test@example.com', id: 1 } };
+		requireUser.mockResolvedValue(userObject);
 
-			const result = await load(mockEvent);
+		const result = await load(mockEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '123'
 		});
+		expect(redirect).not.toHaveBeenCalled();
+	});
 
-		it('should handle requireUser returning user object', async () => {
-			const userObject = { user: { email: 'test@example.com', id: 1 } };
-			requireUser.mockResolvedValue(userObject);
+	it('should handle event object with minimal structure', async () => {
+		const minimalEvent = {
+			params: { id: '789' }
+		};
 
-			const result = await load(mockEvent);
+		const result = await load(minimalEvent);
 
-			expect(result).toEqual({
-				cycleId: '123'
-			});
-			expect(redirect).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			cycleId: '789'
 		});
+		expect(requireUser).toHaveBeenCalledWith(minimalEvent);
+	});
 
-		it('should handle event object with minimal structure', async () => {
-			const minimalEvent = {
-				params: { id: '789' }
-			};
+	it('should handle event object with extra properties', async () => {
+		const extendedEvent = {
+			params: { id: '999' },
+			cookies: { get: vi.fn() },
+			request: { headers: { get: vi.fn() } },
+			platform: { env: {} },
+			url: new URL('http://localhost:3000/test'),
+			route: { id: 'test-route' }
+		};
 
-			const result = await load(minimalEvent);
-
-			expect(result).toEqual({
-				cycleId: '789'
-			});
-			expect(requireUser).toHaveBeenCalledWith(minimalEvent);
-		});
-
-		it('should handle event object with extra properties', async () => {
-			const extendedEvent = {
-				params: { id: '999' },
-				cookies: { get: vi.fn() },
-				request: { headers: { get: vi.fn() } },
-				platform: { env: {} },
-				url: new URL('http://localhost:3000/test'),
-				route: { id: 'test-route' }
-			};
-
-			const result = await load(extendedEvent);
+		const result = await load(extendedEvent);
 
 			expect(result).toEqual({
 				cycleId: '999'
