@@ -5,6 +5,7 @@
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
 	import { createErrorParticleConfig } from '$lib/utils/particleConfig.js';
+	import { initiateGoogleAuth } from '$lib/utils/google-auth.js';
 
 	// Create the particle configuration using the utility
 	const particlesConfig = createErrorParticleConfig();
@@ -18,22 +19,6 @@
 			options: particlesConfig
 		});
 	});
-
-	// Function to initiate Google OAuth flow
-	const initiateGoogleAuth = () => {
-		const GOOGLE_CLIENT_ID =
-			'263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com';
-		const redirectUri =
-			process.env.NODE_ENV === 'development'
-				? 'http://127.0.0.1:5173/auth'
-				: 'https://fintechnick.com/auth';
-		const scope = 'openid profile email';
-		const responseType = 'code';
-
-		const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}`;
-
-		window.location.href = authUrl;
-	};
 </script>
 
 <svelte:head>
@@ -109,7 +94,7 @@
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
 				<div class="pt-2">
-					<Button onclick={initiateGoogleAuth} variant="primary" size="lg">
+					<Button onclick={() => initiateGoogleAuth()} variant="primary" size="lg">
 						Try Authentication Again
 					</Button>
 				</div>
