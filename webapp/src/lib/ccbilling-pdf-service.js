@@ -9,7 +9,7 @@ export class PDFService {
 	constructor() {
 		this.parserFactory = new ParserFactory();
 		// Configure PDF.js worker for browser environment
-		PDFUtils.configureWorker('browser');
+		PDFUtils.configureWorker();
 	}
 
 	/**

@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { getPayment, updatePayment } from '$lib/server/ccbilling-db.js';
+import { getPayment, updatePayment, listBudgets } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
@@ -45,9 +45,14 @@ export async function PUT(event) {
 			return json({ error: 'Missing required fields: merchant, amount, allocated_to' }, { status: 400 });
 		}
 
-		// Validate allocated_to values
-		if (!['Nick', 'Tas', 'Both'].includes(allocated_to)) {
-			return json({ error: 'allocated_to must be one of: Nick, Tas, Both' }, { status: 400 });
+		// Validate allocated_to values against actual budgets
+		const budgets = await listBudgets(event);
+		const budgetNames = budgets.map(budget => budget.name);
+		
+		if (!budgetNames.includes(allocated_to)) {
+			return json({ 
+				error: `allocated_to must be one of the available budgets: ${budgetNames.join(', ')}` 
+			}, { status: 400 });
 		}
 
 		// Validate amount is a number
