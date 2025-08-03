@@ -181,7 +181,7 @@ function extractBillingCycleFromCharges(charges) {
 	const dates = charges
 		.map((charge) => charge.date)
 		.filter((date) => date)
-		.sort();
+		.sort((a, b) => new Date(a) - new Date(b));
 
 	if (dates.length === 0) {
 		return { start_date: null, end_date: null };
