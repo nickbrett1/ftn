@@ -1,25 +1,17 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
 /**
- * Shared PDF utilities for both client-side and server-side PDF processing
- * Eliminates duplication between ccbilling-pdf-service.js files
+ * Shared PDF utilities for client-side PDF processing
+ * Used by ccbilling-pdf-service.js
  */
 export class PDFUtils {
 	/**
-	 * Configure PDF.js worker based on environment
-	 * @param {string} environment - 'browser' or 'server'
+	 * Configure PDF.js worker for browser environment
+	 * @param {string} environment - 'browser' (server support removed)
 	 */
 	static configureWorker(environment = 'browser') {
-		if (environment === 'browser') {
-			// Browser environment - use CDN or local worker
-			pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-		} else {
-			// Server environment - use npm package worker
-			pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-				'pdfjs-dist/build/pdf.worker.min.mjs',
-				import.meta.url
-			).toString();
-		}
+		// Browser environment - use CDN or local worker
+		pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 	}
 
 	/**
