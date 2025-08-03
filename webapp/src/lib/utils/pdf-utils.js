@@ -7,9 +7,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 export class PDFUtils {
 	/**
 	 * Configure PDF.js worker for browser environment
-	 * @param {string} environment - 'browser' (server support removed)
 	 */
-	static configureWorker(environment = 'browser') {
+	static configureWorker() {
 		// Browser environment - use CDN or local worker
 		pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 	}
