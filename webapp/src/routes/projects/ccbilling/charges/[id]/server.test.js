@@ -4,14 +4,15 @@ import { GET, PUT } from './+server.js';
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getPayment: vi.fn(),
-	updatePayment: vi.fn()
+	updatePayment: vi.fn(),
+	listBudgets: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
 
 // Import the mocked functions
-import { getPayment, updatePayment } from '$lib/server/ccbilling-db.js';
+import { getPayment, updatePayment, listBudgets } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 
@@ -31,6 +32,13 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+		
+		// Mock listBudgets to return test budgets
+		listBudgets.mockResolvedValue([
+			{ id: 1, name: 'Nick' },
+			{ id: 2, name: 'Tas' },
+			{ id: 3, name: 'Both' }
+		]);
 	});
 
 	describe('GET endpoint', () => {
@@ -142,7 +150,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(400);
-			expect(result.error).toBe('allocated_to must be one of: Nick, Tas, Both');
+			expect(result.error).toBe('allocated_to must be one of the available budgets: Nick, Tas, Both');
 		});
 
 		it('should return 400 for invalid amount', async () => {
@@ -185,6 +193,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 
 				expect(response.status).toBe(200);
 				expect(result.success).toBe(true);
+				expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Test Merchant', 99.99, option);
 			}
 		});
 

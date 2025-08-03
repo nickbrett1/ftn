@@ -46,7 +46,7 @@ describe('PDFService', () => {
 	describe('constructor', () => {
 		it('should initialize with ParserFactory and configure PDF worker', () => {
 			expect(mockParserFactory).toHaveBeenCalled();
-			expect(mockPDFUtils.configureWorker).toHaveBeenCalledWith('browser');
+			expect(mockPDFUtils.configureWorker).toHaveBeenCalledWith();
 			expect(pdfService.parserFactory).toBeDefined();
 		});
 	});
