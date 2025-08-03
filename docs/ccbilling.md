@@ -38,7 +38,7 @@
 
 - All credit card statements should be stored in blob storage (Cloudflare R2) for historical reference for a given billing cycle. Uses dedicated `ccbilling` R2 bucket for organization.
 
-- For parsing the statements, use direct PDF parsing with format-specific parsers for different credit card providers. The LLAMA LLM API will be used for merchant classification and vendor identification, not for core statement parsing.
+- For parsing the statements, use LLAMA API with PDF-to-image conversion for robust, universal parsing. This approach works with any credit card provider format and handles layout variations better than regex-based parsing. Provider-specific parsers are maintained as fallback options.
 
 - Access to the functionality should be restricted to a user who has logged into the website, see the /auth route.
 
@@ -46,37 +46,72 @@
 
 ### Statement Parsing Strategy
 
-**Direct PDF Parsing (Primary Method):**
+**LLAMA Image-Based Parsing (Primary Method):**
 
-- Implement format-specific parsers for different credit card providers (Chase, Amex, Citi, etc.)
-- Use `pdf-parse` library to extract text from PDFs
-- Apply regex patterns and text processing to identify charges, dates, and amounts
-- Handle different statement formats and layouts systematically
-- This approach is faster, more reliable, and less prone to missing data than LLM-based parsing
+- Convert PDF statements to images for LLAMA API processing
+- Use LLAMA's image analysis capabilities to extract charges, dates, and amounts
+- Leverage LLAMA's visual understanding to handle any credit card provider format
+- This approach is more robust, universal, and handles layout variations better than regex parsing
+- Provides natural language understanding of merchant names and transaction details
 
-**LLAMA API Integration (Secondary Use):**
+**Fallback Parsers (Secondary Method):**
+
+- Maintain provider-specific parsers (Chase, Amex, etc.) as fallback options
+- Use regex patterns and text processing for specific provider formats
+- Ensure compatibility if LLAMA API is unavailable
+- Handle edge cases where image conversion might fail
+
+**LLAMA API Integration (Enhanced Features):**
 
 - Use LLAMA API for merchant classification and vendor identification
 - Provide charge type classification (e.g., Retail, Dining, Transportation, etc.)
 - Identify vendor websites and additional merchant information
-- This is more appropriate for LLAMA as we can be tolerant of occasional mistakes in classification
+- Generate spending insights and budget recommendations
 
 ### Parser Architecture
 
-1. **PDF Text Extraction**: Use `pdf-parse` to extract raw text from PDF statements
-2. **Format Detection**: Identify the credit card provider and statement format
-3. **Provider-Specific Parsing**: Apply format-specific parsing rules for each provider
-4. **Data Validation**: Ensure extracted charges are valid and complete
-5. **LLAMA Enhancement**: Use LLAMA API to classify merchants and provide additional context
+1. **PDF Upload**: Store PDF statements in Cloudflare R2
+2. **Image Conversion**: Convert PDF to high-resolution image for LLAMA processing
+3. **AI Parsing**: Use LLAMA API to analyze image and extract structured charge data
+4. **Universal Support**: Handle any credit card provider format without custom parsers
+5. **Data Validation**: Ensure extracted charges are valid and complete
+6. **Fallback Processing**: Use provider-specific parsers if image parsing fails
 
 ### Credit Card Provider Support
 
-Initial focus on major providers:
+**Universal Approach:**
 
-- Chase (Chase Bank)
-- Wells Fargo
+- Works with any credit card provider format
+- No need for provider-specific parsers
+- Handles layout variations and format changes automatically
 
-Each provider will have its own parsing module that understands their specific statement format.
+**Fallback Support:**
+
+- Chase (Chase Bank) - regex-based parser
+- Wells Fargo - regex-based parser
+- Additional providers can be added as needed
+
+### Technical Implementation
+
+**PDF-to-Image Conversion:**
+
+- High-resolution image conversion (300 DPI)
+- Support for multi-page statements
+- Optimized image size for LLAMA API processing
+
+**LLAMA API Integration:**
+
+- Image input with base64 encoding
+- Structured JSON response parsing
+- Error handling and retry logic
+- Rate limiting and API quota management
+
+**Parser Pipeline:**
+
+- Generic image parser (primary)
+- Provider-specific parsers (fallback)
+- Parser manager for routing and selection
+- Comprehensive logging and debugging
 
 ## Data Model / API
 

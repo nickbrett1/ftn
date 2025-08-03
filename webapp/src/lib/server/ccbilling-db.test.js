@@ -348,12 +348,27 @@ describe('ccbilling-db functions', () => {
 			it('should create a new statement', async () => {
 				mockDb.run.mockResolvedValue({});
 
-				await createStatement(mockEvent, 1, 2, 'statement.pdf', 'r2-key-123', '2024-02-15');
+				await createStatement(
+					mockEvent,
+					1,
+					2,
+					'statement.pdf',
+					'r2-key-123',
+					'2024-02-15',
+					'image-key-123'
+				);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date) VALUES (?, ?, ?, ?, ?)'
+					'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key) VALUES (?, ?, ?, ?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 2, 'statement.pdf', 'r2-key-123', '2024-02-15');
+				expect(mockDb.bind).toHaveBeenCalledWith(
+					1,
+					2,
+					'statement.pdf',
+					'r2-key-123',
+					'2024-02-15',
+					'image-key-123'
+				);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
@@ -402,9 +417,18 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 85.67, 'Both', null);
+				expect(mockDb.bind).toHaveBeenCalledWith(
+					1,
+					'Amazon',
+					85.67,
+					'Both',
+					null,
+					false,
+					null,
+					null
+				);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 
@@ -414,9 +438,18 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both', '2024-01-15');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date) VALUES (?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 85.67, 'Both', '2024-01-15');
+				expect(mockDb.bind).toHaveBeenCalledWith(
+					1,
+					'Amazon',
+					85.67,
+					'Both',
+					'2024-01-15',
+					false,
+					null,
+					null
+				);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});

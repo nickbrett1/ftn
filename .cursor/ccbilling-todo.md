@@ -15,17 +15,18 @@
 
 ## In Progress 🔄
 
-- [ ] **MIGRATION: Replace LLAMA API parsing with direct PDF parsing**
-  - [x] Create provider-specific PDF parsers
-  - [x] Implement format detection logic
-  - [x] Add Chase Bank statement parser
-  - [ ] Add American Express statement parser
-  - [ ] Add Citibank statement parser
-  - [ ] Add Capital One statement parser
-  - [ ] Add Discover statement parser
-  - [x] Update statement parsing endpoint to use new parsers
-  - [x] Add LLAMA API integration for merchant classification only
-  - [x] Update tests to reflect new parsing approach
+- [ ] **REFACTOR: Replace LLAMA API parsing with PDF.js browser parsing**
+  - [ ] Remove LLAMA API dependencies (llama-api-client, pdftoimg-js)
+  - [ ] Add PDF.js for browser-based PDF parsing
+  - [ ] Create provider-specific PDF parsers (Chase, AmEx, Citi, etc.)
+  - [ ] Implement structured data extraction:
+    - [ ] Credit card last 4 digits
+    - [ ] Statement closing date
+    - [ ] List of charges/credits (excluding payments)
+  - [ ] Update statement parsing endpoint to use new parsers
+  - [ ] Keep LLAMA API for merchant classification only (Phase 2)
+  - [ ] Update tests to reflect new parsing approach
+  - [ ] Revert schema changes for image support
 
 ## Planned 📋
 
@@ -67,23 +68,34 @@
 
 ### Current Implementation Issues
 
-- LLAMA API parsing is unreliable and slow
+- LLAMA API parsing is unreliable for structured data extraction
 - Complex JSON parsing logic is fragile
 - Missing negative charges (refunds/credits)
 - Performance issues with large statements
+- Generic prompts don't work well for specific data extraction
 
 ### New Approach Benefits
 
-- Direct PDF parsing is faster and more reliable
+- PDF.js browser parsing is faster and more reliable
 - Provider-specific parsers handle format variations
-- LLAMA API used appropriately for classification only
+- Structured extraction of specific data points
+- LLAMA API used appropriately for classification only (Phase 2)
 - Better error handling and validation
 - More maintainable and testable code
 
 ### Next Steps
 
-1. Create the parser architecture and base classes
-2. Implement Chase Bank parser as the first example
-3. Update the statement parsing endpoint
-4. Add LLAMA integration for merchant classification
-5. Update tests and documentation
+1. Remove LLAMA API dependencies
+2. Add PDF.js for browser-based parsing
+3. Create parser architecture and base classes
+4. Implement Chase Bank parser as the first example
+5. Update the statement parsing endpoint
+6. Add LLAMA integration for merchant classification (Phase 2)
+7. Update tests and documentation
+
+### Phase 2: Merchant Classification
+
+- [ ] Keep LLAMA API for merchant classification only
+- [ ] Use parsed merchant names from PDF.js
+- [ ] Classify merchants for budget assignment
+- [ ] Add merchant insights and categorization

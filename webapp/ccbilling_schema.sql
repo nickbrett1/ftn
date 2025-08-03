@@ -37,7 +37,7 @@ CREATE TABLE budget_merchant (
 CREATE TABLE statement (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   billing_cycle_id INTEGER NOT NULL REFERENCES billing_cycle(id),
-  credit_card_id INTEGER NOT NULL REFERENCES credit_card(id),
+  credit_card_id INTEGER REFERENCES credit_card(id), -- Allow NULL for auto-identification
   filename TEXT NOT NULL,
   r2_key TEXT NOT NULL,
   statement_date DATE NOT NULL,
@@ -51,5 +51,11 @@ CREATE TABLE payment (
   amount REAL NOT NULL,
   allocated_to TEXT NOT NULL, -- 'Nick', 'Tas', or 'Both'
   transaction_date DATE,
+  is_foreign_currency BOOLEAN DEFAULT 0,
+  foreign_currency_amount REAL,
+  foreign_currency_type TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-); 
+);
+
+-- Add an index for efficient foreign currency lookups
+CREATE INDEX idx_payment_foreign_currency ON payment(is_foreign_currency); 

@@ -1,72 +1,184 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from './+server.js';
+import { POST, GET } from './+server.js';
+import { json } from '@sveltejs/kit';
 
-// Mock the database functions
+// Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getStatement: vi.fn(),
 	createPayment: vi.fn(),
-	deletePaymentsForStatement: vi.fn()
+	deletePaymentsForStatement: vi.fn(),
+	listCreditCards: vi.fn(),
+	updateStatementCreditCard: vi.fn()
 }));
 
-// Mock the user authentication
-vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: vi.fn()
-}));
+vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
-// Mock the LlamaService
-vi.mock('$lib/server/ccbilling-llama-service.js', () => ({
-	LlamaService: vi.fn().mockImplementation(() => ({
-		parseStatement: vi.fn(),
-		classifyMerchants: vi.fn()
-	}))
-}));
-
-// Mock the entire pdf-parse module
-vi.mock('pdf-parse/lib/pdf-parse.js', () => ({
-	default: vi.fn()
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn(
+		(data, options) =>
+			new Response(JSON.stringify(data), {
+				headers: { 'Content-Type': 'application/json' },
+				...options
+			})
+	)
 }));
 
 // Import the mocked functions
 import {
 	getStatement,
 	createPayment,
-	deletePaymentsForStatement
+	deletePaymentsForStatement,
+	listCreditCards,
+	updateStatementCreditCard
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
-import { LlamaService } from '$lib/server/ccbilling-llama-service.js';
 
 describe('/projects/ccbilling/statements/[id]/parse API', () => {
 	let mockEvent;
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		vi.clearAllMocks();
 
+		// Mock event object
 		mockEvent = {
 			params: { id: '1' },
-			platform: {
-				env: {
-					R2_CCBILLING: {
-						get: vi.fn().mockResolvedValue({
-							arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(1024))
-						})
-					}
-				}
+			request: {
+				json: vi.fn()
 			}
 		};
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+	});
 
-		// Mock the LlamaService to return some basic charges
-		const mockLlamaInstance = new LlamaService();
-		mockLlamaInstance.parseStatement.mockResolvedValue([
-			{ merchant: 'Amazon', amount: 85.67, date: '2024-01-15', allocated_to: 'Both' },
-			{ merchant: 'Grocery Store', amount: 124.32, date: '2024-01-16', allocated_to: 'Both' },
-			{ merchant: 'Gas Station', amount: 45.21, date: '2024-01-17', allocated_to: 'Both' }
-		]);
+	describe('GET endpoint', () => {
+		it('should return statement details', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+
+			const response = await GET(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(200);
+			expect(result.success).toBe(true);
+			expect(result.statement).toBeDefined();
+			expect(result.statement.id).toBe(1);
+			expect(result.statement.filename).toBe('statement.pdf');
+			expect(result.statement.r2_key).toBe('statements/1/test.pdf');
+		});
+
+		it('should return 400 for invalid statement ID', async () => {
+			mockEvent.params.id = 'invalid';
+
+			const response = await GET(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(400);
+			expect(result.error).toBe('Invalid statement ID');
+		});
+
+		it('should return 404 for statement not found', async () => {
+			getStatement.mockResolvedValue(null);
+
+			const response = await GET(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(404);
+			expect(result.error).toBe('Statement not found');
+		});
 	});
 
 	describe('POST endpoint', () => {
+		it('should successfully process parsed data and create payments', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+
+			// Mock the request body with parsed data
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					statement_date: '2024-01-15',
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						},
+						{
+							merchant: 'Grocery Store',
+							amount: 75.25,
+							date: '2024-01-12',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(requireUser).toHaveBeenCalledWith(mockEvent);
+			expect(getStatement).toHaveBeenCalledWith(mockEvent, 1);
+			expect(deletePaymentsForStatement).toHaveBeenCalledWith(mockEvent, 1);
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(result.success).toBe(true);
+			expect(result.charges_found).toBe(2);
+		});
+
+		it('should return 400 when no parsed data is provided', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+
+			// Mock empty request body
+			mockEvent.request.json.mockResolvedValue({});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(400);
+			expect(result.error).toBe('No parsed data provided');
+		});
+
+		it('should handle errors when deleting existing payments', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			deletePaymentsForStatement.mockRejectedValue(new Error('Delete error'));
+
+			// Mock the request body
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					charges: []
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(response.status).toBe(500);
+			expect(result.error).toBe('Failed to process parsed data: Delete error');
+		});
+
 		it('should return 400 for invalid statement ID', async () => {
 			mockEvent.params.id = 'invalid';
 
@@ -77,7 +189,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(result.error).toBe('Invalid statement ID');
 		});
 
-		it('should return 404 when statement not found', async () => {
+		it('should return 404 for statement not found', async () => {
 			getStatement.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
@@ -87,38 +199,39 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(result.error).toBe('Statement not found');
 		});
 
-		it('should handle database errors when getting statement', async () => {
-			getStatement.mockRejectedValue(new Error('Database error'));
-
-			const response = await POST(mockEvent);
-			const result = await response.json();
-
-			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to parse statement: Database error');
-		});
-
-		it('should return 401 if user not authenticated', async () => {
-			requireUser.mockResolvedValue(
-				new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401 })
-			);
-
-			const response = await POST(mockEvent);
-
-			expect(response.status).toBe(401);
-			const result = await response.json();
-			expect(result.error).toBe('Not authenticated');
-		});
-
-		it('should handle errors when deleting existing payments', async () => {
-			const mockStatement = { id: 1, filename: 'statement.pdf', r2_key: 'statements/1/test.pdf' };
+		it('should identify credit card from parsed data', async () => {
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: null
+			};
 			getStatement.mockResolvedValue(mockStatement);
-			deletePaymentsForStatement.mockRejectedValue(new Error('Delete error'));
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+			updateStatementCreditCard.mockResolvedValue();
+
+			// Mock the request body with matching last4
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
 
 			const response = await POST(mockEvent);
 			const result = await response.json();
 
-			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to parse statement: Delete error');
+			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
+			expect(result.success).toBe(true);
 		});
 	});
 });

@@ -5,8 +5,9 @@ This is a personal finance tool for reviewing credit card statements. The main f
 ## Key Technologies
 
 - **Frontend**: SvelteKit with TypeScript
-- **Backend**: Cloudflare Workers with D1 database
+- **Backend**: Cloudflare Workers with D1 database called ccbilling
 - **Storage**: Cloudflare R2 for PDF statement storage
+- **AI**: LLAMA API for merchant identification
 - **Testing**: Vitest with comprehensive test coverage
 - **Authentication**: OAuth with Google
 
@@ -37,7 +38,8 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 
 ### Key Features
 
-- **Statement Parsing**: Direct PDF parsing with provider-specific parsers (Chase, Amex, etc.)
+- **AI-Powered Statement Parsing**: LLAMA API with PDF-to-image conversion for robust parsing
+- **Universal Format Support**: Works with any credit card provider's statement format
 - **Budget Management**: Create and manage budgets with merchant auto-assignment
 - **Charge Categorization**: Assign charges to budgets with merchant classification
 - **Billing Cycles**: Monthly billing cycle management with statement uploads
@@ -48,16 +50,25 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 - ✅ Budget management (CRUD operations)
 - ✅ Statement upload and storage
 - ✅ Credit card management
-- 🔄 **In Progress**: Migrating from LLAMA API parsing to direct PDF parsing
-- 📋 **Planned**: Charge allocation and budget reporting
+- ✅ **NEW**: LLAMA image-based parsing implementation
+- 🔄 **In Progress**: PDF-to-image conversion (currently using mock)
+- 📋 **Planned**: Real PDF-to-image conversion and charge allocation
 
 ## Architecture
 
-### Statement Parsing (New Approach)
+### Statement Parsing (LLAMA + Image-Based Approach)
 
-1. **Direct PDF Parsing**: Provider-specific parsers extract charges reliably
-2. **LLAMA Integration**: Used only for merchant classification and insights
-3. **Parser Architecture**: Base parser class with provider-specific implementations
+1. **PDF Upload**: Statements stored in Cloudflare R2
+2. **Image Conversion**: PDF converted to image for LLAMA processing
+3. **AI Parsing**: LLAMA API analyzes image to extract charges
+4. **Universal Support**: Works with any credit card provider format
+5. **Fallback Parsers**: Regex-based parsers as backup for specific providers
+
+### Parser Architecture
+
+- **Generic Image Parser**: Primary parser using LLAMA with image input
+- **Provider-Specific Parsers**: Fallback parsers for Chase, Amex, etc.
+- **Parser Manager**: Routes to appropriate parser based on statement format
 
 ### Database Schema
 
@@ -70,6 +81,15 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 ## Development Notes
 
 - Use `--run` flag for faster test execution
-- LLAMA API is now used only for merchant classification, not core parsing
-- Provider-specific parsers handle different statement formats
+- LLAMA API is now the primary parsing method with image input
+- Generic parser prioritizes image-based parsing over regex
+- PDF-to-image conversion currently mocked, ready for real implementation
 - Comprehensive test coverage for all API endpoints
+
+## Recent Changes
+
+- **Migrated from regex-based parsing** to LLAMA image-based parsing
+- **Added PDF buffer passing** through the parsing pipeline
+- **Prioritized generic image parser** over provider-specific parsers
+- **Implemented mock PDF-to-image conversion** (ready for real implementation)
+- **Updated parser architecture** to support both image and text-based parsing
