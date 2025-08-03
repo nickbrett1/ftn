@@ -20,7 +20,7 @@ export async function requireUser(event) {
 	if (!token) {
 		console.log('[AUTH] Auth cookie found but no token in KV - user may need to re-authenticate');
 		console.log('[AUTH] This could happen if the token expired or was deleted');
-		console.log('[AUTH] User should try logging in again at /preview');
+		console.log('[AUTH] User should try logging in again at /notauthorised');
 		return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401 });
 	}
 

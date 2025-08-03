@@ -49,20 +49,20 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			expect(redirect).not.toHaveBeenCalled();
 		});
 
-		it('should redirect to /preview when user is not authenticated', async () => {
-			const mockResponse = new Response('Unauthorized', { status: 401 });
-			requireUser.mockResolvedValue(mockResponse);
+	it('should redirect to /notauthorised when user is not authenticated', async () => {
+		const mockResponse = new Response('Unauthorized', { status: 401 });
+		requireUser.mockResolvedValue(mockResponse);
 
-			// Mock redirect to throw an error (as SvelteKit redirect does)
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
-
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		// Mock redirect to throw an error (as SvelteKit redirect does)
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
 		});
+
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+
+		expect(requireUser).toHaveBeenCalledWith(mockEvent);
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
 
 		it('should handle different cycle IDs', async () => {
 			mockEvent.params.id = '456';
@@ -114,18 +114,18 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			});
 		});
 
-		it('should use correct redirect status code (307)', async () => {
-			const mockResponse = new Response('Unauthorized', { status: 401 });
-			requireUser.mockResolvedValue(mockResponse);
+	it('should use correct redirect status code (307)', async () => {
+		const mockResponse = new Response('Unauthorized', { status: 401 });
+		requireUser.mockResolvedValue(mockResponse);
 
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
-
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
-
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
 		});
+
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
+	});
 
 		it('should handle requireUser throwing an error', async () => {
 			requireUser.mockRejectedValue(new Error('Database connection failed'));
@@ -136,17 +136,17 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			expect(redirect).not.toHaveBeenCalled();
 		});
 
-		it('should handle requireUser returning different response types', async () => {
-			const mockResponse = new Response('Forbidden', { status: 403 });
-			requireUser.mockResolvedValue(mockResponse);
+	it('should handle requireUser returning different response types', async () => {
+		const mockResponse = new Response('Forbidden', { status: 403 });
+		requireUser.mockResolvedValue(mockResponse);
 
-			redirect.mockImplementation(() => {
-				throw new Error('Redirect to /preview');
-			});
+		redirect.mockImplementation(() => {
+			throw new Error('Redirect to /notauthorised');
+		});
 
-			await expect(load(mockEvent)).rejects.toThrow('Redirect to /preview');
+		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
 
-			expect(redirect).toHaveBeenCalledWith(307, '/preview');
+		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
 
 		it('should handle requireUser returning null (development mode)', async () => {
