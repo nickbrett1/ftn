@@ -94,7 +94,11 @@
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
 				<div class="pt-2">
-					<Button onclick={() => initiateGoogleAuth()} variant="primary" size="lg">
+					<Button
+						onclick={() => initiateGoogleAuth('/projects/ccbilling')}
+						variant="primary"
+						size="lg"
+					>
 						Try Authentication Again
 					</Button>
 				</div>
