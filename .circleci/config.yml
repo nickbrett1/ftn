@@ -16,9 +16,9 @@ jobs:
           name: Restore node_modules and next cache
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-{{ .Branch }}-
-            - node-v6-
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
       - run:
           name: Install modules
           command: |
@@ -40,7 +40,7 @@ jobs:
           name: Update node_modules cache
           paths:
             - webapp/node_modules
-          key: node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+          key: node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - persist_to_workspace:
           root: webapp
           paths:
@@ -55,9 +55,9 @@ jobs:
           name: Restore node_modules
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-{{ .Branch }}-
-            - node-v6-
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
       - attach_workspace:
           at: webapp
       - doppler/install
@@ -93,9 +93,9 @@ jobs:
           name: Restore node_modules and next cache
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-{{ .Branch }}-
-            - node-v6-
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
       - attach_workspace:
           at: webapp
       - doppler/install
@@ -123,9 +123,9 @@ jobs:
           name: Restore node_modules
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-{{ .Branch }}-
-            - node-v6-
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
       - attach_workspace:
           at: webapp
       - doppler/install
