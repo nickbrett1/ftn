@@ -23,17 +23,33 @@ vi.mock('llama-api-client', () => {
 	};
 });
 
+// Mock fetch globally
+global.fetch = vi.fn();
+
+// Mock ParsingUtils
+vi.mock('../src/lib/utils/parsing-utils.js', () => ({
+	ParsingUtils: {
+		parseJSONResponse: vi.fn(),
+		cleanMerchantName: vi.fn((name) => name),
+		parseAmount: vi.fn((amount) => parseFloat(amount) || 0),
+		parseDate: vi.fn((date) => date)
+	}
+}));
+
 describe('LlamaService', () => {
 	let llamaService;
 	let mockResponse;
 	let mockChatCompletions;
 	let mockLlamaAPIClient;
+	let mockParsingUtils;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 
 		// Reset environment
 		process.env.LLAMA_API_KEY = 'test-api-key';
+		process.env.CLOUDFLARE_ACCOUNT_ID = 'test-account-id';
+		process.env.CLOUDFLARE_BROWSER_RENDERING_API_TOKEN = 'test-api-token';
 
 		// Create mock response structure
 		mockResponse = {
@@ -51,10 +67,32 @@ describe('LlamaService', () => {
 		mockLlamaAPIClient = llamaAPIClientModule.default;
 		mockChatCompletions = mockLlamaAPIClient().chat.completions;
 		mockChatCompletions.create.mockResolvedValue(mockResponse);
+
+		// Get ParsingUtils mock
+		const parsingUtilsModule = await import('../src/lib/utils/parsing-utils.js');
+		mockParsingUtils = parsingUtilsModule.ParsingUtils;
+		mockParsingUtils.parseJSONResponse.mockImplementation((content) => {
+			if (content === 'invalid json') {
+				throw new Error('Invalid JSON');
+			}
+			// Handle markdown code blocks
+			if (content.includes('```json')) {
+				const match = content.match(/```json\n([\s\S]*?)\n```/);
+				if (match) {
+					return JSON.parse(match[1]);
+				}
+			}
+			return JSON.parse(content);
+		});
+		mockParsingUtils.cleanMerchantName.mockImplementation((name) => name);
+		mockParsingUtils.parseAmount.mockImplementation((amount) => parseFloat(amount) || 0);
+		mockParsingUtils.parseDate.mockImplementation((date) => date || null);
 	});
 
 	afterEach(() => {
 		delete process.env.LLAMA_API_KEY;
+		delete process.env.CLOUDFLARE_ACCOUNT_ID;
+		delete process.env.CLOUDFLARE_BROWSER_RENDERING_API_TOKEN;
 	});
 
 	describe('constructor', () => {
@@ -67,6 +105,16 @@ describe('LlamaService', () => {
 				timeout: 60000,
 				logLevel: 'warn'
 			});
+		});
+
+		it('should initialize with R2 bucket and public URL', () => {
+			const mockR2Bucket = { put: vi.fn() };
+			const mockR2PublicUrl = 'https://example.com';
+
+			llamaService = new LlamaService(mockR2Bucket, mockR2PublicUrl);
+
+			expect(llamaService.r2).toBe(mockR2Bucket);
+			expect(llamaService.r2PublicUrl).toBe(mockR2PublicUrl);
 		});
 	});
 
@@ -186,6 +234,308 @@ describe('LlamaService', () => {
 				{ merchant: 'Unknown Merchant', amount: 10.0, date: null, allocated_to: 'Both' },
 				{ merchant: 'Test', amount: 0, date: null, allocated_to: 'Both' },
 				{ merchant: 'Unknown Merchant', amount: 0, date: '2024-01-01', allocated_to: 'Both' }
+			]);
+		});
+	});
+
+	describe('convertPdfToImage', () => {
+		beforeEach(() => {
+			const mockR2Bucket = { put: vi.fn() };
+			llamaService = new LlamaService(mockR2Bucket, 'https://example.com');
+		});
+
+		it('should convert PDF to image successfully', async () => {
+			const mockImageBuffer = Buffer.from('fake-image-data');
+			const mockResponse = {
+				ok: true,
+				headers: new Map([['content-type', 'image/png']]),
+				arrayBuffer: vi.fn().mockResolvedValue(mockImageBuffer)
+			};
+
+			global.fetch.mockResolvedValue(mockResponse);
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.convertPdfToImage(pdfBuffer, pdfKey);
+
+			expect(global.fetch).toHaveBeenCalledWith(
+				'https://api.cloudflare.com/client/v4/accounts/test-account-id/browser-rendering/screenshot',
+				{
+					method: 'POST',
+					headers: {
+						Authorization: 'Bearer test-api-token',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						url: 'https://example.com/test-pdf.pdf'
+					})
+				}
+			);
+
+			expect(result).toEqual({
+				imageBuffer: mockImageBuffer,
+				imageKey: 'test-pdf.png'
+			});
+		});
+
+		it('should create mock image when Cloudflare credentials are missing', async () => {
+			delete process.env.CLOUDFLARE_ACCOUNT_ID;
+			delete process.env.CLOUDFLARE_BROWSER_RENDERING_API_TOKEN;
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.convertPdfToImage(pdfBuffer, pdfKey);
+
+			expect(result).toEqual({
+				imageBuffer: expect.any(Buffer),
+				imageKey: 'test-pdf.png'
+			});
+		});
+
+		it('should throw error when R2 bucket is not configured', async () => {
+			llamaService = new LlamaService(); // No R2 bucket
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			await expect(llamaService.convertPdfToImage(pdfBuffer, pdfKey)).rejects.toThrow(
+				'R2 bucket not configured in LlamaService'
+			);
+		});
+
+		it('should create mock image when API error response', async () => {
+			const mockResponse = {
+				ok: false,
+				status: 400,
+				text: vi.fn().mockResolvedValue('API Error')
+			};
+
+			global.fetch.mockResolvedValue(mockResponse);
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.convertPdfToImage(pdfBuffer, pdfKey);
+
+			expect(result).toEqual({
+				imageBuffer: expect.any(Buffer),
+				imageKey: 'test-pdf.png'
+			});
+		});
+
+		it('should create mock image when non-image response', async () => {
+			const mockResponse = {
+				ok: true,
+				headers: new Map([['content-type', 'application/json']]),
+				text: vi.fn().mockResolvedValue('{"error": "Not an image"}')
+			};
+
+			global.fetch.mockResolvedValue(mockResponse);
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.convertPdfToImage(pdfBuffer, pdfKey);
+
+			expect(result).toEqual({
+				imageBuffer: expect.any(Buffer),
+				imageKey: 'test-pdf.png'
+			});
+		});
+
+		it('should create mock image when conversion fails', async () => {
+			global.fetch.mockRejectedValue(new Error('Network error'));
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.convertPdfToImage(pdfBuffer, pdfKey);
+
+			expect(result).toEqual({
+				imageBuffer: expect.any(Buffer),
+				imageKey: 'test-pdf.png'
+			});
+		});
+	});
+
+	describe('parseStatementFromImage', () => {
+		beforeEach(() => {
+			const mockR2Bucket = { put: vi.fn() };
+			llamaService = new LlamaService(mockR2Bucket, 'https://example.com');
+		});
+
+		it('should parse statement from image successfully', async () => {
+			const mockImageBuffer = Buffer.from('fake-image-data');
+			const mockCharges = [
+				{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' }
+			];
+
+			// Mock convertPdfToImage
+			llamaService.convertPdfToImage = vi.fn().mockResolvedValue({
+				imageBuffer: mockImageBuffer,
+				imageKey: 'test-pdf.png'
+			});
+
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			const result = await llamaService.parseStatementFromImage(pdfBuffer, pdfKey);
+
+			expect(result).toEqual({
+				charges: [
+					{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15', allocated_to: 'Both' }
+				],
+				imageKey: 'test-pdf.png'
+			});
+		});
+
+		it('should throw error for invalid PDF buffer', async () => {
+			await expect(llamaService.parseStatementFromImage(null, 'test-pdf')).rejects.toThrow(
+				'Invalid PDF buffer provided'
+			);
+			await expect(llamaService.parseStatementFromImage('not-a-buffer', 'test-pdf')).rejects.toThrow(
+				'Invalid PDF buffer provided'
+			);
+		});
+
+		it('should throw error for invalid PDF key', async () => {
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+
+			await expect(llamaService.parseStatementFromImage(pdfBuffer, null)).rejects.toThrow(
+				'PDF key is required for storing files in R2'
+			);
+			await expect(llamaService.parseStatementFromImage(pdfBuffer, 123)).rejects.toThrow(
+				'PDF key is required for storing files in R2'
+			);
+		});
+
+		it('should handle API error in parseStatementFromImage', async () => {
+			llamaService.convertPdfToImage = vi.fn().mockResolvedValue({
+				imageBuffer: Buffer.from('fake-image-data'),
+				imageKey: 'test-pdf.png'
+			});
+
+			mockChatCompletions.create.mockRejectedValue(new Error('API Error'));
+
+			const pdfBuffer = Buffer.from('fake-pdf-data');
+			const pdfKey = 'test-pdf';
+
+			await expect(llamaService.parseStatementFromImage(pdfBuffer, pdfKey)).rejects.toThrow(
+				'LLAMA image parsing failed: API Error'
+			);
+		});
+	});
+
+	describe('parseImage', () => {
+		beforeEach(() => {
+			llamaService = new LlamaService();
+		});
+
+		it('should parse image successfully', async () => {
+			const mockCharges = [
+				{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' }
+			];
+
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
+
+			const imageBuffer = Buffer.from('fake-image-data');
+
+			const result = await llamaService.parseImage(imageBuffer);
+
+			expect(mockChatCompletions.create).toHaveBeenCalledWith({
+				model: 'Llama-4-Maverick-17B-128E-Instruct-FP8',
+				messages: [
+					{
+						role: 'system',
+						content:
+							'You are a specialized credit card statement parser. Your job is to extract transaction information from statement images with high accuracy. Always return only valid JSON arrays without any markdown formatting or code blocks. Pay close attention to dates, merchant names, and amounts.'
+					},
+					{
+						role: 'user',
+						content: [
+							{
+								type: 'text',
+								text: expect.stringContaining('You are a credit card statement parser')
+							},
+							{
+								type: 'image_url',
+								image_url: {
+									url: 'data:image/png;base64,ZmFrZS1pbWFnZS1kYXRh'
+								}
+							}
+						]
+					}
+				],
+				temperature: 0.05,
+				max_tokens: 3000
+			});
+
+			expect(result).toEqual([
+				{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15', allocated_to: 'Both' }
+			]);
+		});
+
+		it('should throw error for missing image buffer', async () => {
+			await expect(llamaService.parseImage(null)).rejects.toThrow(
+				'Image buffer required for parsing'
+			);
+			await expect(llamaService.parseImage(undefined)).rejects.toThrow(
+				'Image buffer required for parsing'
+			);
+		});
+
+		it('should handle API error in parseImage', async () => {
+			mockChatCompletions.create.mockRejectedValue(new Error('API Error'));
+
+			const imageBuffer = Buffer.from('fake-image-data');
+
+			await expect(llamaService.parseImage(imageBuffer)).rejects.toThrow(
+				'LLAMA image parsing failed: API Error'
+			);
+		});
+
+		it('should handle empty response from API', async () => {
+			mockResponse.choices[0].message.content = '';
+
+			const imageBuffer = Buffer.from('fake-image-data');
+
+			await expect(llamaService.parseImage(imageBuffer)).rejects.toThrow(
+				'No content received from Llama API'
+			);
+		});
+
+		it('should handle non-array response from API', async () => {
+			mockResponse.choices[0].message.content = '{"not": "an array"}';
+
+			const imageBuffer = Buffer.from('fake-image-data');
+
+			await expect(llamaService.parseImage(imageBuffer)).rejects.toThrow(
+				'Llama API did not return a valid array'
+			);
+		});
+
+		it('should filter out invalid charge objects', async () => {
+			const mockCharges = [
+				{ merchant: 'Valid', amount: 10.0, date: '2024-01-01' },
+				null,
+				{ invalid: 'object' },
+				{ merchant: 'Another Valid', amount: 20.0, date: '2024-01-02' }
+			];
+
+			mockResponse.choices[0].message.content = JSON.stringify(mockCharges);
+
+			const imageBuffer = Buffer.from('fake-image-data');
+
+			const result = await llamaService.parseImage(imageBuffer);
+
+			expect(result).toEqual([
+				{ merchant: 'Valid', amount: 10.0, date: '2024-01-01', allocated_to: 'Both' },
+				{ merchant: 'Unknown Merchant', amount: 0, date: null, allocated_to: 'Both' },
+				{ merchant: 'Another Valid', amount: 20.0, date: '2024-01-02', allocated_to: 'Both' }
 			]);
 		});
 	});
