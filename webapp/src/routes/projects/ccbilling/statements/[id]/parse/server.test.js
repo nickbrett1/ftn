@@ -8,7 +8,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	createPayment: vi.fn(),
 	deletePaymentsForStatement: vi.fn(),
 	listCreditCards: vi.fn(),
-	updateStatementCreditCard: vi.fn()
+	updateStatementCreditCard: vi.fn(),
+	updateStatementDate: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -29,7 +30,8 @@ import {
 	createPayment,
 	deletePaymentsForStatement,
 	listCreditCards,
-	updateStatementCreditCard
+	updateStatementCreditCard,
+	updateStatementDate
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 

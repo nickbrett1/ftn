@@ -9,8 +9,8 @@ export class PDFUtils {
 	 * Configure PDF.js worker for browser environment
 	 */
 	static configureWorker() {
-		// Browser environment - use CDN or local worker
-		pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+		// Use the worker from pdfjs-dist package - this works with Vite bundling
+		pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 	}
 
 	/**

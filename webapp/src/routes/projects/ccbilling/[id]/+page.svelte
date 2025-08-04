@@ -194,7 +194,7 @@
 		</div>
 		<div class="flex items-center space-x-3">
 			{#if !cycle.closed}
-				<div class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">Active</div>
+				<div class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">Open</div>
 			{:else}
 				<div class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm">Closed</div>
 			{/if}
@@ -370,12 +370,12 @@
 							<div>
 								<h4 class="text-white font-medium">{statement.filename}</h4>
 								<p class="text-gray-400 text-sm">
-									{card?.name} (****{card?.last4}) • Statement Date: {formatLocalDate(
-										statement.statement_date
-									)}
+									{card ? `${card.name} (****${card.last4})` : ''}{statement.statement_date
+										? ` • Statement Date: ${formatLocalDate(statement.statement_date)}`
+										: ''}
 								</p>
 								<p class="text-gray-500 text-xs">
-									Uploaded: {new Date(statement.uploaded_at).toLocaleDateString()}
+									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
 							</div>
 							<div class="space-x-2">

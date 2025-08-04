@@ -40,7 +40,7 @@ CREATE TABLE statement (
   credit_card_id INTEGER REFERENCES credit_card(id), -- Allow NULL for auto-identification
   filename TEXT NOT NULL,
   r2_key TEXT NOT NULL,
-  statement_date DATE NOT NULL,
+  statement_date DATE, -- Allow NULL until parsed from PDF
   uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
