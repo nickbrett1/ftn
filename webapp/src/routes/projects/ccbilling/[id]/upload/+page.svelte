@@ -1,6 +1,14 @@
 <script>
 	import { page } from '$app/stores';
-	$: cycleId = $page.params.id;
+	export let data;
+	$: ({ cycleId, cycle } = data);
+
+	function formatLocalDate(dateString) {
+		if (!dateString) return '';
+		const [year, month, day] = dateString.split('-').map(Number);
+		const date = new Date(year, month - 1, day);
+		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+	}
 </script>
 
 <svelte:head>
@@ -10,7 +18,9 @@
 
 <div class="container mx-auto p-4 space-y-8 max-w-4xl">
 	<h3 class="text-2xl font-bold text-white mb-8">
-		Upload Statement PDF for Billing Cycle: {cycleId}
+		Upload Statement PDF for Billing Cycle: {formatLocalDate(cycle.start_date)} - {formatLocalDate(
+			cycle.end_date
+		)}
 	</h3>
 
 	<!-- Placeholder: Drag-and-drop area for PDF upload (to be implemented) -->

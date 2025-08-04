@@ -184,13 +184,9 @@
 <div class="container mx-auto p-4 space-y-8 max-w-6xl">
 	<div class="flex justify-between items-start mb-8">
 		<div>
-			<h2 class="text-3xl font-bold text-white">Billing Cycle: {cycleId}</h2>
-			<p class="text-gray-400 mt-2">
-				{formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
-			</p>
-			<p class="text-sm text-gray-500 mt-1">
-				Status: {cycle.closed ? 'Closed' : 'Open'}
-			</p>
+			<h2 class="text-3xl font-bold text-white">
+				Billing Cycle: {formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
+			</h2>
 		</div>
 		<div class="flex items-center space-x-3">
 			{#if !cycle.closed}
