@@ -9,8 +9,18 @@ export class PDFUtils {
 	 * Configure PDF.js worker for browser environment
 	 */
 	static configureWorker() {
-		// Use the worker from pdfjs-dist package - this works with Vite bundling
-		pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+		// Check if we're in a Node.js environment (like tests)
+		const isNode = typeof window === 'undefined' || typeof process !== 'undefined';
+
+		if (isNode) {
+			// Disable worker in Node.js environment (for tests)
+			pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+			console.log('📄 PDF.js worker disabled for Node.js environment');
+		} else {
+			// For browser environment, use a CDN fallback that's more reliable
+			// This avoids the complexity of bundling the worker file
+			pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+		}
 	}
 
 	/**
