@@ -23,7 +23,7 @@
 		>
 			<LinkedinInBrands aria-label="LinkedIn" />
 		</a>
-		<a href="https://github.com/nickbrett1/" class="p-1 text-white flex items-center size-[48px]">
+		<a href="https://github.com/nickbrett1/ftn" class="p-1 text-white flex items-center size-[48px]">
 			<GithubBrands />
 		</a>
 		<a

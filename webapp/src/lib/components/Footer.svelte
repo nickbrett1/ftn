@@ -46,7 +46,7 @@
 					<EnvelopeRegular /></a
 				>
 				<a
-					href="https://github.com/nickbrett1/"
+					href="https://github.com/nickbrett1/ftn"
 					class=" -mt-1 size-[48px] p-1 flex items-center justify-center"
 				>
 					<GithubBrands />
