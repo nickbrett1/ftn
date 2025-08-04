@@ -9,10 +9,10 @@ export class PDFUtils {
 	 * Configure PDF.js worker for browser environment
 	 */
 	static configureWorker() {
-		// Check if we're in a Node.js environment (like tests)
-		const isNode = typeof window === 'undefined' || typeof process !== 'undefined';
+		// Check if we're in a browser environment (window exists)
+		const isBrowser = typeof window !== 'undefined';
 
-		if (isNode) {
+		if (!isBrowser) {
 			// Disable worker in Node.js environment (for tests)
 			pdfjsLib.GlobalWorkerOptions.workerSrc = false;
 			console.log('📄 PDF.js worker disabled for Node.js environment');

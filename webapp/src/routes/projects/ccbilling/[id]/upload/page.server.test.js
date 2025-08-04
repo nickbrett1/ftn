@@ -11,8 +11,13 @@ vi.mock('$lib/server/require-user.js', () => ({
 	requireUser: vi.fn()
 }));
 
+vi.mock('$lib/server/ccbilling-db.js', () => ({
+	getBillingCycle: vi.fn()
+}));
+
 // Import the mocked functions
 import { requireUser } from '$lib/server/require-user.js';
+import { getBillingCycle } from '$lib/server/ccbilling-db.js';
 
 describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 	let mockEvent;
@@ -36,6 +41,14 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+
+		// Mock getBillingCycle to return a valid billing cycle by default
+		getBillingCycle.mockResolvedValue({
+			id: 123,
+			name: 'Test Billing Cycle',
+			start_date: '2024-01-01',
+			end_date: '2024-01-31'
+		});
 	});
 
 	describe('load function', () => {
@@ -44,25 +57,31 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 
 			expect(requireUser).toHaveBeenCalledWith(mockEvent);
 			expect(result).toEqual({
-				cycleId: '123'
+				cycleId: '123',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 			expect(redirect).not.toHaveBeenCalled();
 		});
 
-	it('should redirect to /notauthorised when user is not authenticated', async () => {
-		const mockResponse = new Response('Unauthorized', { status: 401 });
-		requireUser.mockResolvedValue(mockResponse);
+		it('should redirect to /notauthorised when user is not authenticated', async () => {
+			const mockResponse = new Response('Unauthorized', { status: 401 });
+			requireUser.mockResolvedValue(mockResponse);
 
-		// Mock redirect to throw an error (as SvelteKit redirect does)
-		redirect.mockImplementation(() => {
-			throw new Error('Redirect to /notauthorised');
+			// Mock redirect to throw an error (as SvelteKit redirect does)
+			redirect.mockImplementation(() => {
+				throw new Error('Redirect to /notauthorised');
+			});
+
+			await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+
+			expect(requireUser).toHaveBeenCalledWith(mockEvent);
+			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
-
-		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
-
-		expect(requireUser).toHaveBeenCalledWith(mockEvent);
-		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
-	});
 
 		it('should handle different cycle IDs', async () => {
 			mockEvent.params.id = '456';
@@ -70,7 +89,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: '456'
+				cycleId: '456',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -80,7 +105,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: 'abc123'
+				cycleId: 'abc123',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -90,7 +121,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: ''
+				cycleId: '',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -100,7 +137,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: undefined
+				cycleId: undefined,
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -110,106 +153,142 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: null
+				cycleId: null,
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
-	it('should use correct redirect status code (307)', async () => {
-		const mockResponse = new Response('Unauthorized', { status: 401 });
-		requireUser.mockResolvedValue(mockResponse);
+		it('should use correct redirect status code (307)', async () => {
+			const mockResponse = new Response('Unauthorized', { status: 401 });
+			requireUser.mockResolvedValue(mockResponse);
 
-		redirect.mockImplementation(() => {
-			throw new Error('Redirect to /notauthorised');
+			redirect.mockImplementation(() => {
+				throw new Error('Redirect to /notauthorised');
+			});
+
+			await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+
+			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
 
-		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+		it('should handle requireUser throwing an error', async () => {
+			requireUser.mockRejectedValue(new Error('Database connection failed'));
 
-		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
-	});
+			await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
 
-	it('should handle requireUser throwing an error', async () => {
-		requireUser.mockRejectedValue(new Error('Database connection failed'));
-
-		await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
-
-		expect(requireUser).toHaveBeenCalledWith(mockEvent);
-		expect(redirect).not.toHaveBeenCalled();
-	});
-
-	it('should handle requireUser returning different response types', async () => {
-		const mockResponse = new Response('Forbidden', { status: 403 });
-		requireUser.mockResolvedValue(mockResponse);
-
-		redirect.mockImplementation(() => {
-			throw new Error('Redirect to /notauthorised');
+			expect(requireUser).toHaveBeenCalledWith(mockEvent);
+			expect(redirect).not.toHaveBeenCalled();
 		});
 
-		await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
+		it('should handle requireUser returning different response types', async () => {
+			const mockResponse = new Response('Forbidden', { status: 403 });
+			requireUser.mockResolvedValue(mockResponse);
 
-		expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
-	});
+			redirect.mockImplementation(() => {
+				throw new Error('Redirect to /notauthorised');
+			});
 
-	it('should handle requireUser returning null (development mode)', async () => {
-		requireUser.mockResolvedValue(null);
+			await expect(load(mockEvent)).rejects.toThrow('Redirect to /notauthorised');
 
-		const result = await load(mockEvent);
-
-		expect(result).toEqual({
-			cycleId: '123'
+			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
-		expect(redirect).not.toHaveBeenCalled();
-	});
 
-	it('should handle requireUser returning undefined', async () => {
-		requireUser.mockResolvedValue(undefined);
+		it('should handle requireUser returning null (development mode)', async () => {
+			requireUser.mockResolvedValue(null);
 
-		const result = await load(mockEvent);
-
-		expect(result).toEqual({
-			cycleId: '123'
-		});
-		expect(redirect).not.toHaveBeenCalled();
-	});
-
-	it('should handle requireUser returning user object', async () => {
-		const userObject = { user: { email: 'test@example.com', id: 1 } };
-		requireUser.mockResolvedValue(userObject);
-
-		const result = await load(mockEvent);
-
-		expect(result).toEqual({
-			cycleId: '123'
-		});
-		expect(redirect).not.toHaveBeenCalled();
-	});
-
-	it('should handle event object with minimal structure', async () => {
-		const minimalEvent = {
-			params: { id: '789' }
-		};
-
-		const result = await load(minimalEvent);
-
-		expect(result).toEqual({
-			cycleId: '789'
-		});
-		expect(requireUser).toHaveBeenCalledWith(minimalEvent);
-	});
-
-	it('should handle event object with extra properties', async () => {
-		const extendedEvent = {
-			params: { id: '999' },
-			cookies: { get: vi.fn() },
-			request: { headers: { get: vi.fn() } },
-			platform: { env: {} },
-			url: new URL('http://localhost:3000/test'),
-			route: { id: 'test-route' }
-		};
-
-		const result = await load(extendedEvent);
+			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: '999'
+				cycleId: '123',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
+			});
+			expect(redirect).not.toHaveBeenCalled();
+		});
+
+		it('should handle requireUser returning undefined', async () => {
+			requireUser.mockResolvedValue(undefined);
+
+			const result = await load(mockEvent);
+
+			expect(result).toEqual({
+				cycleId: '123',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
+			});
+			expect(redirect).not.toHaveBeenCalled();
+		});
+
+		it('should handle requireUser returning user object', async () => {
+			const userObject = { user: { email: 'test@example.com', id: 1 } };
+			requireUser.mockResolvedValue(userObject);
+
+			const result = await load(mockEvent);
+
+			expect(result).toEqual({
+				cycleId: '123',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
+			});
+			expect(redirect).not.toHaveBeenCalled();
+		});
+
+		it('should handle event object with minimal structure', async () => {
+			const minimalEvent = {
+				params: { id: '789' }
+			};
+
+			const result = await load(minimalEvent);
+
+			expect(result).toEqual({
+				cycleId: '789',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
+			});
+			expect(requireUser).toHaveBeenCalledWith(minimalEvent);
+		});
+
+		it('should handle event object with extra properties', async () => {
+			const extendedEvent = {
+				params: { id: '999' },
+				cookies: { get: vi.fn() },
+				request: { headers: { get: vi.fn() } },
+				platform: { env: {} },
+				url: new URL('http://localhost:3000/test'),
+				route: { id: 'test-route' }
+			};
+
+			const result = await load(extendedEvent);
+
+			expect(result).toEqual({
+				cycleId: '999',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 			expect(requireUser).toHaveBeenCalledWith(extendedEvent);
 		});
@@ -225,7 +304,7 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 
 		it('should handle redirect function throwing different errors', async () => {
 			requireUser.mockResolvedValue(new Response('Unauthorized', { status: 401 }));
-			
+
 			redirect.mockImplementation(() => {
 				throw new Error('Custom redirect error');
 			});
@@ -245,7 +324,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(eventWithoutId);
 
 			expect(result).toEqual({
-				cycleId: undefined
+				cycleId: undefined,
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 	});
@@ -257,7 +342,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: 'billing_cycle_2024_01'
+				cycleId: 'billing_cycle_2024_01',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -267,7 +358,13 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: '42'
+				cycleId: '42',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
 		});
 
@@ -277,8 +374,28 @@ describe('/projects/ccbilling/[id]/upload/+page.server.js', () => {
 			const result = await load(mockEvent);
 
 			expect(result).toEqual({
-				cycleId: '550e8400-e29b-41d4-a716-446655440000'
+				cycleId: '550e8400-e29b-41d4-a716-446655440000',
+				cycle: {
+					id: 123,
+					name: 'Test Billing Cycle',
+					start_date: '2024-01-01',
+					end_date: '2024-01-31'
+				}
 			});
+		});
+
+		it('should redirect when billing cycle is not found', async () => {
+			// Mock getBillingCycle to return null (cycle not found)
+			getBillingCycle.mockResolvedValue(null);
+
+			redirect.mockImplementation(() => {
+				throw new Error('Redirect to /projects/ccbilling');
+			});
+
+			await expect(load(mockEvent)).rejects.toThrow('Redirect to /projects/ccbilling');
+
+			expect(getBillingCycle).toHaveBeenCalledWith(mockEvent, 123);
+			expect(redirect).toHaveBeenCalledWith(307, '/projects/ccbilling');
 		});
 	});
 });
