@@ -21,6 +21,7 @@ import {
 	createStatement,
 	getStatement,
 	deleteStatement,
+	updateStatementDate,
 	createPayment,
 	listChargesForCycle,
 	getPayment,
@@ -404,6 +405,20 @@ describe('ccbilling-db functions', () => {
 
 				expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM statement WHERE id = ?');
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
+				expect(mockDb.run).toHaveBeenCalled();
+			});
+		});
+
+		describe('updateStatementDate', () => {
+			it('should update statement date', async () => {
+				mockDb.run.mockResolvedValue({});
+
+				await updateStatementDate(mockEvent, 1, '2024-02-15');
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'UPDATE statement SET statement_date = ? WHERE id = ?'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith('2024-02-15', 1);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});

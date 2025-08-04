@@ -102,7 +102,6 @@ export async function POST(event) {
 		console.log('📄 PDF uploaded to R2:', r2_key);
 
 		// Save statement metadata to database (credit card will be identified during parsing)
-		const placeholderDate = '2024-01-01'; // Will be replaced with actual statement date
 		try {
 			await createStatement(
 				event,
@@ -110,7 +109,7 @@ export async function POST(event) {
 				null, // Credit card will be identified during parsing
 				file.name,
 				r2_key,
-				placeholderDate
+				null // Statement date will be set after parsing
 			);
 			console.log('✅ Statement created in database');
 		} catch (dbError) {

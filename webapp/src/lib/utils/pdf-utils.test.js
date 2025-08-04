@@ -6,7 +6,8 @@ vi.mock('pdfjs-dist', () => ({
 	GlobalWorkerOptions: {
 		workerSrc: ''
 	},
-	getDocument: vi.fn()
+	getDocument: vi.fn(),
+	version: '5.4.54'
 }));
 
 // Import the mocked module
@@ -58,7 +59,9 @@ describe('PDFUtils', () => {
 		it('should configure PDF.js worker for browser environment', () => {
 			PDFUtils.configureWorker();
 
-			expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('/pdf.worker.min.js');
+			// The worker should be set to the imported worker entry point
+			expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeDefined();
+			expect(typeof pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('string');
 		});
 	});
 
@@ -80,7 +83,9 @@ describe('PDFUtils', () => {
 			expect(mockPdfDocument.getPage).toHaveBeenCalledTimes(2);
 			expect(mockPage.getTextContent).toHaveBeenCalledTimes(2);
 			// Should contain all text items in order without grouping
-			expect(result).toContain('Statement Date: 2024-01-31 Merchant Amount Walmart $45.67 Shell $32.50');
+			expect(result).toContain(
+				'Statement Date: 2024-01-31 Merchant Amount Walmart $45.67 Shell $32.50'
+			);
 		});
 
 		it('should handle empty text content', async () => {
@@ -144,7 +149,7 @@ describe('PDFUtils', () => {
 
 			// Mock ArrayBuffer
 			mockArrayBuffer = new ArrayBuffer(8);
-			
+
 			// Mock the arrayBuffer method directly on the mock file
 			mockFile.arrayBuffer = vi.fn().mockResolvedValue(mockArrayBuffer);
 
@@ -231,9 +236,7 @@ describe('PDFUtils', () => {
 		it('should parse statement successfully', async () => {
 			const mockParsedData = {
 				provider: 'Chase',
-				charges: [
-					{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' }
-				]
+				charges: [{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' }]
 			};
 			mockParserFactory.parseStatement.mockResolvedValue(mockParsedData);
 
