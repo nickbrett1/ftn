@@ -52,11 +52,9 @@
 		<div class="space-y-6">
 			<!-- Authentication explanation -->
 			<div
-				class="bg-gray-900/50 backdrop-blur-sm border border-green-400/30 rounded-lg p-6 space-y-4"
+				class="bg-gray-900/50 backdrop-blur-sm border border-gray-400/30 rounded-lg p-6 space-y-4"
 			>
-				<h2 class="text-2xl sm:text-3xl font-bold text-green-400 soft-neon-text">
-					Authentication Required
-				</h2>
+				<h2 class="text-xl font-bold text-gray-200">Authentication Required</h2>
 				<p class="text-lg text-gray-300 leading-relaxed">
 					Some tools on this site currently require authentication while they are under development.
 				</p>
@@ -66,9 +64,7 @@
 			<div
 				class="bg-gray-900/50 backdrop-blur-sm border border-blue-400/30 rounded-lg p-6 space-y-4"
 			>
-				<h3 class="text-xl font-bold text-blue-400 soft-neon-text">
-					Looking for Information & Insights?
-				</h3>
+				<h3 class="text-xl font-bold text-blue-400">Looking for Information & Insights?</h3>
 				<p class="text-gray-300 leading-relaxed">
 					If you're interested in data engineering and modern ETL approaches, check out this article
 					on building efficient data transformation pipelines.
@@ -89,7 +85,7 @@
 			<div
 				class="bg-gray-900/50 backdrop-blur-sm border border-yellow-400/30 rounded-lg p-6 space-y-4"
 			>
-				<h3 class="text-xl font-bold text-yellow-400 soft-neon-text">Quick Re-authentication</h3>
+				<h3 class="text-xl font-bold text-yellow-400">Quick Re-authentication</h3>
 				<p class="text-gray-300 leading-relaxed">
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
@@ -130,25 +126,16 @@
 <style>
 	/* Glitch effect for the title */
 	.glitch-text {
-		text-shadow:
-			0 0 6px #f87171,
-			0 0 12px #f87171,
-			0 0 18px #f87171;
+		/* Removed glow effect for better readability */
 	}
 
 	.glitch-layer-1 {
 		animation: glitch 3s infinite;
-		text-shadow:
-			2px 0 #f87171,
-			-2px 0 #f87171;
 		opacity: 0.8;
 	}
 
 	.glitch-layer-2 {
 		animation: glitch 3s infinite reverse;
-		text-shadow:
-			-2px 0 #f87171,
-			2px 0 #f87171;
 		opacity: 0.6;
 	}
 
@@ -169,12 +156,5 @@
 		80% {
 			transform: translate(2px, -2px);
 		}
-	}
-
-	/* Softer neon text effect */
-	.soft-neon-text {
-		text-shadow:
-			0 0 2px currentColor,
-			0 0 4px currentColor;
 	}
 </style>
