@@ -56,12 +56,36 @@ describe('PDFUtils', () => {
 	});
 
 	describe('configureWorker', () => {
-		it('should configure PDF.js worker for browser environment', () => {
+		it('should check test environment', () => {
+			console.log('Window type:', typeof window);
+			console.log('Process type:', typeof process);
+			console.log('Window exists:', typeof window !== 'undefined');
+			console.log('Process exists:', typeof process !== 'undefined');
+		});
+
+		it('should configure PDF.js worker for current environment', () => {
 			PDFUtils.configureWorker();
 
-			// The worker should be set to the imported worker entry point
+			// In test environment (jsdom), the worker should be set to a string URL
 			expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeDefined();
 			expect(typeof pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('string');
+		});
+
+		it('should configure PDF.js worker for browser environment when window is available', () => {
+			// Mock window to simulate browser environment
+			const originalWindow = global.window;
+			global.window = {};
+
+			try {
+				PDFUtils.configureWorker();
+
+				// In browser environment, the worker should be set to a string URL
+				expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeDefined();
+				expect(typeof pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('string');
+			} finally {
+				// Restore original window
+				global.window = originalWindow;
+			}
 		});
 	});
 
