@@ -36,14 +36,14 @@
 	<div class="text-center space-y-8 p-8 relative z-10 max-w-3xl">
 		<!-- Glitch effect title -->
 		<div class="relative mb-8">
-			<h1 class="text-6xl sm:text-7xl font-bold text-green-400 relative glitch-text">
+			<h1 class="text-6xl sm:text-7xl font-bold text-red-400 relative glitch-text">
 				ACCESS DENIED
 			</h1>
 			<!-- Glitch layers -->
-			<h1 class="text-6xl sm:text-7xl font-bold text-green-400 absolute inset-0 glitch-layer-1">
+			<h1 class="text-6xl sm:text-7xl font-bold text-red-400 absolute inset-0 glitch-layer-1">
 				ACCESS DENIED
 			</h1>
-			<h1 class="text-6xl sm:text-7xl font-bold text-green-400 absolute inset-0 glitch-layer-2">
+			<h1 class="text-6xl sm:text-7xl font-bold text-red-400 absolute inset-0 glitch-layer-2">
 				ACCESS DENIED
 			</h1>
 		</div>
@@ -54,7 +54,7 @@
 			<div
 				class="bg-gray-900/50 backdrop-blur-sm border border-green-400/30 rounded-lg p-6 space-y-4"
 			>
-				<h2 class="text-2xl sm:text-3xl font-bold text-gray-200 soft-neon-text">
+				<h2 class="text-2xl sm:text-3xl font-bold text-green-400 soft-neon-text">
 					Authentication Required
 				</h2>
 				<p class="text-lg text-gray-300 leading-relaxed">
@@ -131,24 +131,24 @@
 	/* Glitch effect for the title */
 	.glitch-text {
 		text-shadow:
-			0 0 10px #22c55e,
-			0 0 20px #22c55e,
-			0 0 30px #22c55e;
+			0 0 6px #f87171,
+			0 0 12px #f87171,
+			0 0 18px #f87171;
 	}
 
 	.glitch-layer-1 {
 		animation: glitch 3s infinite;
 		text-shadow:
-			2px 0 #22c55e,
-			-2px 0 #22c55e;
+			2px 0 #f87171,
+			-2px 0 #f87171;
 		opacity: 0.8;
 	}
 
 	.glitch-layer-2 {
 		animation: glitch 3s infinite reverse;
 		text-shadow:
-			-2px 0 #22c55e,
-			2px 0 #22c55e;
+			-2px 0 #f87171,
+			2px 0 #f87171;
 		opacity: 0.6;
 	}
 
@@ -174,7 +174,7 @@
 	/* Softer neon text effect */
 	.soft-neon-text {
 		text-shadow:
-			0 0 5px currentColor,
-			0 0 10px currentColor;
+			0 0 2px currentColor,
+			0 0 4px currentColor;
 	}
 </style>
