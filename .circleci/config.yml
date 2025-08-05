@@ -63,7 +63,7 @@ jobs:
           paths:
             - .svelte-kit
 
-  code_test_main:
+  code_test:
     docker:
       - image: cimg/node:current
     steps:
@@ -90,26 +90,6 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
       - store_test_results:
           path: ./webapp/reports/
-
-  code_test_sonarcloud:
-    docker:
-      - image: cimg/node:current
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore node_modules
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-fresh-{{ .Branch }}-
-            - node-v6-fresh-
-      - attach_workspace:
-          at: webapp
-      - doppler/install
-      - run:
-          name: Setup Wrangler configuration
-          command: |
-            cd webapp && ./setup-wrangler-config.sh
       - sonarcloud/scan
 
   browser_test:
@@ -196,10 +176,7 @@ workflows:
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>
       - build
-      - code_test_main:
-          requires:
-            - build
-      - code_test_sonarcloud:
+      - code_test:
           requires:
             - build
           context: SonarCloud
@@ -209,8 +186,7 @@ workflows:
       - deploy:
           requires:
             - browser_test
-            - code_test_main
-            - code_test_sonarcloud
+            - code_test
           filters:
             branches:
               only: main
