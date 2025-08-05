@@ -24,7 +24,7 @@ describe('PDFService', () => {
 		vi.clearAllMocks();
 
 		// Get the mocked modules
-		const pdfUtilsModule = await import('../src/lib/utils/pdf-utils.js');
+		const pdfUtilsModule = await import('../../src/lib/client/pdf-utils.js');
 		const parserFactoryModule = await import('../../src/lib/utils/ccbilling-parsers/parser-factory.js');
 		
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
