@@ -11,6 +11,13 @@
 		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 	}
 
+	function formatShortDate(dateString) {
+		if (!dateString) return '';
+		const [year, month, day] = dateString.split('-').map(Number);
+		const date = new Date(year, month - 1, day);
+		return date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' });
+	}
+
 	import { goto } from '$app/navigation';
 	import { invalidate } from '$app/navigation';
 	let showDeleteDialog = false;
@@ -184,9 +191,9 @@
 </svelte:head>
 
 <div class="container mx-auto p-4 space-y-8 max-w-6xl">
-	<div class="flex justify-between items-start mb-8">
-		<div>
-			<h2 class="text-3xl font-bold text-white">
+	<div class="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
+		<div class="flex-1">
+			<h2 class="text-2xl sm:text-3xl font-bold text-white">
 				Billing Cycle: {formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
 			</h2>
 		</div>
@@ -326,16 +333,16 @@
 								class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
 							/>
 							<div
-								class="flex items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300"
+								class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300 gap-2"
 							>
-								<span class="truncate">
+								<span class="truncate flex-1">
 									{selectedFile ? selectedFile.name : 'Choose a PDF file...'}
 								</span>
 								<Button
 									variant="secondary"
 									size="sm"
 									onclick={() => document.getElementById('pdf-file-input').click()}
-									class="ml-2"
+									class="sm:ml-2"
 								>
 									Browse
 								</Button>
@@ -364,8 +371,8 @@
 				{#each statements as statement}
 					{@const card = creditCards.find((c) => c.id === statement.credit_card_id)}
 					<div class="bg-gray-700 border border-gray-600 rounded-lg p-4">
-						<div class="flex justify-between items-center">
-							<div>
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+							<div class="flex-1">
 								<h4 class="text-white font-medium">{statement.filename}</h4>
 								<p class="text-gray-400 text-sm">
 									{card ? `${card.name} (****${card.last4})` : ''}{statement.statement_date
@@ -376,7 +383,7 @@
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
 							</div>
-							<div class="space-x-2">
+							<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
 								<Button
 									type="button"
 									variant="success"
@@ -421,7 +428,49 @@
 	{#if charges.length > 0}
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<h3 class="text-xl font-semibold text-white mb-4">Charges ({charges.length})</h3>
-			<div class="overflow-x-auto">
+			
+			<!-- Mobile-friendly table -->
+			<div class="block md:hidden">
+				{#each charges as charge}
+					<div class="border-b border-gray-700 py-3 last:border-b-0">
+						<div class="flex justify-between items-start gap-3">
+							<div class="flex-1 min-w-0">
+								<div class="text-white font-medium truncate">{charge.merchant}</div>
+								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
+									<span title={charge.transaction_date ? formatLocalDate(charge.transaction_date) : formatLocalDate(charge.created_at?.split('T')[0])}>
+										{charge.transaction_date
+											? formatShortDate(charge.transaction_date)
+											: formatShortDate(charge.created_at?.split('T')[0])}
+									</span>
+									{#if charge.card_name}
+										<span class="text-gray-500" title={`Card: ${charge.card_name}`}>
+											💳
+										</span>
+									{/if}
+									{#if charge.allocated_to}
+										<span class="text-gray-500 text-xs bg-gray-600 px-1 py-0.5 rounded">
+											{charge.allocated_to}
+										</span>
+									{/if}
+								</div>
+							</div>
+							<div class="text-right flex-shrink-0">
+								<div class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
+									{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
+								</div>
+							</div>
+						</div>
+						{#if charge.is_foreign_currency && charge.foreign_currency_amount && charge.foreign_currency_type}
+							<div class="text-blue-400 text-sm mt-1">
+								{charge.foreign_currency_amount} {charge.foreign_currency_type}
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<!-- Desktop table -->
+			<div class="hidden md:block overflow-x-auto">
 				<table class="w-full">
 					<thead>
 						<tr class="border-b border-gray-600">
@@ -437,12 +486,20 @@
 						{#each charges as charge}
 							<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
 								<td class="text-gray-300 text-sm py-2">
-									{charge.transaction_date
-										? formatLocalDate(charge.transaction_date)
-										: formatLocalDate(charge.created_at?.split('T')[0])}
+									<span title={charge.transaction_date ? formatLocalDate(charge.transaction_date) : formatLocalDate(charge.created_at?.split('T')[0])}>
+										{charge.transaction_date
+											? formatShortDate(charge.transaction_date)
+											: formatShortDate(charge.created_at?.split('T')[0])}
+									</span>
 								</td>
 								<td class="text-white py-2">{charge.merchant}</td>
-								<td class="text-gray-300 text-sm py-2">{charge.card_name}</td>
+								<td class="text-gray-300 text-sm py-2">
+									{#if charge.card_name}
+										<span title={`Card: ${charge.card_name}`}>
+											{charge.card_name}
+										</span>
+									{/if}
+								</td>
 								<td class="text-gray-300 text-sm py-2">{charge.allocated_to || 'None'}</td>
 								<td class="text-right py-2">
 									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
