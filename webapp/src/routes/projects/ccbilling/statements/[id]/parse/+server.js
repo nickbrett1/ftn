@@ -103,6 +103,22 @@ export const POST = RouteUtils.createRouteHandler(
 
 		if (!identifiedCreditCard) {
 			console.warn('⚠️ Could not identify credit card from statement');
+
+			let errorMessage;
+			if (!parsedData.last4 || parsedData.last4.trim() === '') {
+				errorMessage =
+					'No credit card information found in the statement. Please ensure the statement contains valid credit card details.';
+			} else {
+				errorMessage = `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
+			}
+
+			return json(
+				{
+					success: false,
+					error: errorMessage
+				},
+				{ status: 400 }
+			);
 		}
 
 		console.log(
@@ -178,7 +194,7 @@ export const POST = RouteUtils.createRouteHandler(
  * @returns {Object|null} - Identified credit card or null
  */
 function identifyCreditCardFromParsedData(last4, availableCreditCards) {
-	if (!last4) {
+	if (!last4 || last4.trim() === '') {
 		console.warn('⚠️ No last4 digits found in parsed data');
 		return null;
 	}

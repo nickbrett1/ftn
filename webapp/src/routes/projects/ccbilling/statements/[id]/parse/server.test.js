@@ -447,5 +447,158 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(result.success).toBe(true);
 			expect(result.charges_found).toBe(2);
 		});
+
+		it('should return error when no matching credit card is found', async () => {
+			// Set method to POST for this test
+			mockEvent.request.method = 'POST';
+
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: null,
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
+			deletePaymentsForStatement.mockResolvedValue();
+			listCreditCards.mockResolvedValue([
+				{ id: 1, name: 'Chase Freedom', last4: '5678' },
+				{ id: 2, name: 'Amex Gold', last4: '9012' }
+			]);
+
+			// Mock the request body with non-matching last4
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234', // This doesn't match any available cards
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain('No matching credit card found for last4: 1234');
+			expect(result.error).toContain(
+				'Please add a credit card with last4: 1234 before uploading this statement'
+			);
+			expect(response.status).toBe(400);
+
+			// Verify that no payments were created
+			expect(createPayment).not.toHaveBeenCalled();
+		});
+
+		it('should return error when no last4 data is found in parsed data', async () => {
+			// Set method to POST for this test
+			mockEvent.request.method = 'POST';
+
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: null,
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
+			deletePaymentsForStatement.mockResolvedValue();
+			listCreditCards.mockResolvedValue([
+				{ id: 1, name: 'Chase Freedom', last4: '5678' },
+				{ id: 2, name: 'Amex Gold', last4: '9012' }
+			]);
+
+			// Mock the request body with no last4 data
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					// No last4 field
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain('No credit card information found in the statement');
+			expect(response.status).toBe(400);
+
+			// Verify that no payments were created
+			expect(createPayment).not.toHaveBeenCalled();
+		});
+
+		it('should return error when last4 is empty string', async () => {
+			// Set method to POST for this test
+			mockEvent.request.method = 'POST';
+
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: null,
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
+			deletePaymentsForStatement.mockResolvedValue();
+			listCreditCards.mockResolvedValue([
+				{ id: 1, name: 'Chase Freedom', last4: '5678' },
+				{ id: 2, name: 'Amex Gold', last4: '9012' }
+			]);
+
+			// Mock the request body with empty last4
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '', // Empty string
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '2024-01-10',
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain('No credit card information found in the statement');
+			expect(response.status).toBe(400);
+
+			// Verify that no payments were created
+			expect(createPayment).not.toHaveBeenCalled();
+		});
 	});
 });
