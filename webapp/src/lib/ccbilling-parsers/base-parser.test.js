@@ -11,8 +11,9 @@ describe('BaseParser', () => {
 
 	describe('parseDate', () => {
 		it('should parse MM/DD format', () => {
-			expect(parser.parseDate('01/15')).toBe('2001-01-15');
-			expect(parser.parseDate('12/31')).toBe('2001-12-31');
+			const currentYear = new Date().getFullYear();
+			expect(parser.parseDate('01/15')).toBe(`${currentYear}-01-15`);
+			expect(parser.parseDate('12/31')).toBe(`${currentYear}-12-31`);
 		});
 
 		it('should return null for invalid dates', () => {

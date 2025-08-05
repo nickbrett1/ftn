@@ -216,10 +216,26 @@ export class ParsingUtils {
 			() => this.parseMMDDYYYY(dateStr, defaultYear),
 			() => this.parseMMDDYY(dateStr, defaultYear),
 			() => {
-				// Try parsing as ISO date
-				const date = new Date(dateStr);
-				if (!isNaN(date.getTime())) {
-					return date.toISOString().split('T')[0];
+				// Try parsing MM/DD format (common in credit card statements)
+				const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
+				if (mmddMatch) {
+					const month = parseInt(mmddMatch[1], 10);
+					const day = parseInt(mmddMatch[2], 10);
+					
+					if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+						return `${defaultYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+					}
+				}
+				return null;
+			},
+			() => {
+				// Try parsing as ISO date (only if it's not MM/DD format)
+				const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
+				if (!mmddMatch) {
+					const date = new Date(dateStr);
+					if (!isNaN(date.getTime())) {
+						return date.toISOString().split('T')[0];
+					}
 				}
 				return null;
 			}

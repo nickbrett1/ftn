@@ -108,10 +108,11 @@ describe('ChaseParser', () => {
 
 			const charges = parser.extractCharges(text);
 			expect(charges).toHaveLength(2);
+			const currentYear = new Date().getFullYear();
 			expect(charges[0]).toEqual({
 				merchant: 'AMAZON.COM',
 				amount: 123.45,
-				date: '2001-01-15',
+				date: `${currentYear}-01-15`,
 				allocated_to: 'Both',
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
@@ -188,10 +189,11 @@ describe('ChaseParser', () => {
 		it('should parse valid transaction line', () => {
 			const line = '01/15 AMAZON.COM 123.45';
 			const result = parser.parseTransactionLine(line);
+			const currentYear = new Date().getFullYear();
 			expect(result).toEqual({
 				merchant: 'AMAZON.COM',
 				amount: 123.45,
-				date: '2001-01-15',
+				date: `${currentYear}-01-15`,
 				allocated_to: 'Both'
 			});
 		});
@@ -219,6 +221,7 @@ describe('ChaseParser', () => {
 			`;
 
 			const result = await parser.parse(text);
+			const currentYear = new Date().getFullYear();
 			expect(result).toEqual({
 				last4: '1234',
 				statement_date: '2024-02-15',
@@ -226,12 +229,12 @@ describe('ChaseParser', () => {
 					expect.objectContaining({
 						merchant: 'AMAZON.COM',
 						amount: 123.45,
-						date: '2001-01-15'
+						date: `${currentYear}-01-15`
 					}),
 					expect.objectContaining({
 						merchant: 'WALMART',
 						amount: 67.89,
-						date: '2001-01-16'
+						date: `${currentYear}-01-16`
 					})
 				])
 			});
