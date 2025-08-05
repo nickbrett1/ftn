@@ -15,7 +15,8 @@
 		if (!dateString) return '';
 		const [year, month, day] = dateString.split('-').map(Number);
 		const date = new Date(year, month - 1, day);
-		return date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' });
+		// Explicitly format as MM/DD
+		return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
 	}
 
 	import { goto } from '$app/navigation';
@@ -37,6 +38,19 @@
 	let deletingStatements = new Set();
 	let showDeleteStatementDialog = false;
 	let statementToDelete = null;
+
+	// Card details state for mobile
+	let showCardDetails = false;
+	let selectedCardName = '';
+
+	function showCardInfo(cardName) {
+		selectedCardName = cardName;
+		showCardDetails = true;
+		// Auto-hide after 3 seconds
+		setTimeout(() => {
+			showCardDetails = false;
+		}, 3000);
+	}
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -443,9 +457,14 @@
 											: formatShortDate(charge.created_at?.split('T')[0])}
 									</span>
 									{#if charge.card_name}
-										<span class="text-gray-500" title={`Card: ${charge.card_name}`}>
+										<button 
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer" 
+											title={`Card: ${charge.card_name}`}
+											on:click={() => showCardInfo(charge.card_name)}
+											on:touchstart={() => showCardInfo(charge.card_name)}
+										>
 											💳
-										</span>
+										</button>
 									{/if}
 									{#if charge.allocated_to}
 										<span class="text-gray-500 text-xs bg-gray-600 px-1 py-0.5 rounded">
@@ -518,6 +537,27 @@
 						{/each}
 					</tbody>
 				</table>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Card Details Modal for Mobile -->
+	{#if showCardDetails}
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 md:hidden">
+			<div class="bg-gray-800 border border-gray-600 rounded-lg p-4 mx-4 max-w-sm w-full">
+				<div class="text-center">
+					<div class="text-2xl mb-2">💳</div>
+					<div class="text-white font-medium">{selectedCardName}</div>
+					<div class="text-gray-400 text-sm mt-1">Card Details</div>
+				</div>
+				<div class="mt-4 flex justify-center">
+					<button 
+						class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
+						on:click={() => showCardDetails = false}
+					>
+						Close
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}
