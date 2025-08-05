@@ -420,7 +420,7 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
 			WHERE s.billing_cycle_id = ?
-			ORDER BY p.created_at ASC
+			ORDER BY p.transaction_date ASC, p.created_at ASC
 		`
 		)
 		.bind(billing_cycle_id)

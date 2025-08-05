@@ -137,8 +137,22 @@ describe('ParsingUtils', () => {
 		});
 
 		it('should parse MM/DD/YY format', () => {
-			expect(ParsingUtils.parseDate('01/15/24', { format: 'MM/DD/YY' })).toBe('2024-01-15');
-			expect(ParsingUtils.parseDate('01/15/50', { format: 'MM/DD/YY' })).toBe('1950-01-15');
+			expect(ParsingUtils.parseDate('12/25/23')).to.equal('2023-12-25');
+			expect(ParsingUtils.parseDate('01/15/24')).to.equal('2024-01-15');
+			expect(ParsingUtils.parseDate('06/30/99')).to.equal('1999-06-30');
+		});
+
+		it('should parse MM/DD format with default year', () => {
+			const currentYear = new Date().getFullYear();
+			expect(ParsingUtils.parseDate('12/25')).to.equal(`${currentYear}-12-25`);
+			expect(ParsingUtils.parseDate('01/15')).to.equal(`${currentYear}-01-15`);
+			expect(ParsingUtils.parseDate('06/30')).to.equal(`${currentYear}-06-30`);
+		});
+
+		it('should parse MM/DD format with custom default year', () => {
+			expect(ParsingUtils.parseDate('12/25', { defaultYear: 2024 })).to.equal('2024-12-25');
+			expect(ParsingUtils.parseDate('01/15', { defaultYear: 2023 })).to.equal('2023-01-15');
+			expect(ParsingUtils.parseDate('06/30', { defaultYear: 2025 })).to.equal('2025-06-30');
 		});
 
 		it('should auto-detect format', () => {

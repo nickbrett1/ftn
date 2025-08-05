@@ -9,7 +9,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	deletePaymentsForStatement: vi.fn(),
 	listCreditCards: vi.fn(),
 	updateStatementCreditCard: vi.fn(),
-	updateStatementDate: vi.fn()
+	updateStatementDate: vi.fn(),
+	getBillingCycle: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -110,7 +111,8 @@ import {
 	deletePaymentsForStatement,
 	listCreditCards,
 	updateStatementCreditCard,
-	updateStatementDate
+	updateStatementDate,
+	getBillingCycle
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -182,9 +184,16 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const mockStatement = {
 				id: 1,
 				filename: 'statement.pdf',
-				r2_key: 'statements/1/test.pdf'
+				r2_key: 'statements/1/test.pdf',
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
 			};
 			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
 			deletePaymentsForStatement.mockResolvedValue();
 			createPayment.mockResolvedValue();
 			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
@@ -229,9 +238,16 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const mockStatement = {
 				id: 1,
 				filename: 'statement.pdf',
-				r2_key: 'statements/1/test.pdf'
+				r2_key: 'statements/1/test.pdf',
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
 			};
 			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
 
 			// Mock empty request body
 			mockEvent.request.json.mockResolvedValue({});
@@ -250,9 +266,16 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			const mockStatement = {
 				id: 1,
 				filename: 'statement.pdf',
-				r2_key: 'statements/1/test.pdf'
+				r2_key: 'statements/1/test.pdf',
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
 			};
 			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
 			deletePaymentsForStatement.mockRejectedValue(new Error('Delete error'));
 
 			// Mock the request body
@@ -312,9 +335,16 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				id: 1,
 				filename: 'statement.pdf',
 				r2_key: 'statements/1/test.pdf',
-				credit_card_id: null
+				credit_card_id: null,
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
 			};
 			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
 			deletePaymentsForStatement.mockResolvedValue();
 			createPayment.mockResolvedValue();
 			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
@@ -340,6 +370,82 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
 			expect(result.success).toBe(true);
+		});
+
+		it('should correct year for MM/DD format transaction dates', async () => {
+			// Set method to POST for this test
+			mockEvent.request.method = 'POST';
+
+			const mockStatement = {
+				id: 1,
+				filename: 'statement.pdf',
+				r2_key: 'statements/1/test.pdf',
+				credit_card_id: null,
+				billing_cycle_id: 1
+			};
+			const mockBillingCycle = {
+				id: 1,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31'
+			};
+			getStatement.mockResolvedValue(mockStatement);
+			getBillingCycle.mockResolvedValue(mockBillingCycle);
+			deletePaymentsForStatement.mockResolvedValue();
+			createPayment.mockResolvedValue();
+			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+			updateStatementCreditCard.mockResolvedValue();
+
+			// Mock the request body with MM/DD format dates
+			mockEvent.request.json.mockResolvedValue({
+				parsedData: {
+					last4: '1234',
+					charges: [
+						{
+							merchant: 'Test Store',
+							amount: 100.5,
+							date: '01/15', // MM/DD format without year
+							allocated_to: 'Both'
+						},
+						{
+							merchant: 'Grocery Store',
+							amount: 75.25,
+							date: '01/20', // MM/DD format without year
+							allocated_to: 'Both'
+						}
+					]
+				}
+			});
+
+			const response = await POST(mockEvent);
+			const result = await response.json();
+
+			// Verify that createPayment was called with corrected dates
+			expect(createPayment).toHaveBeenCalledTimes(2);
+			expect(createPayment).toHaveBeenCalledWith(
+				mockEvent,
+				1,
+				'Test Store',
+				100.5,
+				'Both',
+				'2024-01-15', // Should be corrected to include year
+				false,
+				null,
+				null
+			);
+			expect(createPayment).toHaveBeenCalledWith(
+				mockEvent,
+				1,
+				'Grocery Store',
+				75.25,
+				'Both',
+				'2024-01-20', // Should be corrected to include year
+				false,
+				null,
+				null
+			);
+
+			expect(result.success).toBe(true);
+			expect(result.charges_found).toBe(2);
 		});
 	});
 });
