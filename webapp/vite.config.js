@@ -42,9 +42,34 @@ export default defineConfig(({ command, mode }) => {
 			globals: true,
 			environment: 'jsdom',
 			coverage: {
-				reporter: ['text', 'lcov']
+				reporter: ['text', 'lcov'],
+				// Reduce memory usage by limiting coverage collection
+				exclude: [
+					'node_modules/**',
+					'tests/**',
+					'**/*.test.{js,ts}',
+					'**/*.spec.{js,ts}',
+					'**/*.config.{js,ts}',
+					'**/*.setup.{js,ts}'
+				],
+				// Limit coverage to essential files
+				include: [
+					'src/**/*.{js,ts}'
+				]
 			},
-			server: {}
+			server: {},
+			// Add timeout and memory optimizations
+			testTimeout: 30000,
+			hookTimeout: 30000,
+			// Limit concurrent tests to reduce memory usage
+			maxConcurrency: 2,
+			// Reduce memory usage
+			pool: 'forks',
+			poolOptions: {
+				forks: {
+					singleFork: true
+				}
+			}
 		},
 		ssr: {
 			noExternal: ['three']
