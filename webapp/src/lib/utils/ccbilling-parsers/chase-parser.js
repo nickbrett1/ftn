@@ -17,7 +17,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	canParse(text) {
 		// Look for Chase-specific identifiers
-		const chaseIdentifiers = ['CHASE', 'JPMORGAN CHASE'];
+		const chaseIdentifiers = ['CHASE'];
 
 		return chaseIdentifiers.some((identifier) => text.toUpperCase().includes(identifier));
 	}
