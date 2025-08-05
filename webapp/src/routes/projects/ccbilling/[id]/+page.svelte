@@ -177,7 +177,9 @@
 </script>
 
 <svelte:head>
-	<title>Billing Cycle {cycleId}</title>
+	<title
+		>Billing Cycle: {formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}</title
+	>
 	<meta name="description" content="Manage billing cycle details and statements" />
 </svelte:head>
 
