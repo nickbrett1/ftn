@@ -47,7 +47,7 @@ export const GET = RouteUtils.createRouteHandler(
 );
 
 export const POST = RouteUtils.createRouteHandler(
-	async (event) => {
+	async (event, parsedBody) => {
 		const { params } = event;
 		const statement_id = parseInt(params.id);
 
@@ -62,8 +62,7 @@ export const POST = RouteUtils.createRouteHandler(
 		console.log('📄 Statement found:', statement.filename);
 
 		// Get the parsed data from the request body (already validated by RouteUtils)
-		const body = await event.request.json();
-		const parsedData = body.parsedData;
+		const parsedData = parsedBody.parsedData;
 		if (!parsedData) {
 			return RouteUtils.createErrorResponse('No parsed data provided', { status: 400 });
 		}

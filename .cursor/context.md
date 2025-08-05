@@ -28,11 +28,13 @@ When running tests in Cursor, use the `test:once` command to execute tests once 
 npm run test:once
 
 # Run specific test file once
-npm run test:once src/lib/server/ccbilling-parsers/base-parser.test.js
+npm run test:once -- "src/routes/projects/ccbilling/statements/[id]/parse/server.test.js"
 
-# Run tests with coverage (original test command)
+# Run tests with coverage (original test command - runs in watch mode)
 npm test
 ```
+
+**Important**: The default `npm test` command runs in watch mode and can get stuck when running single test files. Always use `npm run test:once` for single test runs to avoid watch mode issues.
 
 This speeds up development by avoiding the watch mode overhead when you just want to check if tests pass. The `test:once` command runs tests without coverage metrics for faster execution.
 

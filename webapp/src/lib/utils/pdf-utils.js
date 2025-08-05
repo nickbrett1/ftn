@@ -1,5 +1,3 @@
-import * as pdfjsLib from 'pdfjs-dist';
-
 /**
  * Shared PDF utilities for client-side PDF processing
  * Used by ccbilling-pdf-service.js
@@ -9,18 +7,21 @@ export class PDFUtils {
 	 * Configure PDF.js worker for browser environment
 	 */
 	static configureWorker() {
-		// Check if we're in a browser environment (window exists)
-		const isBrowser = typeof window !== 'undefined';
-
-		if (!isBrowser) {
-			// Disable worker in Node.js environment (for tests)
-			pdfjsLib.GlobalWorkerOptions.workerSrc = false;
-			console.log('📄 PDF.js worker disabled for Node.js environment');
-		} else {
-			// For browser environment, use a CDN fallback that's more reliable
-			// This avoids the complexity of bundling the worker file
-			pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+		// Only configure in browser environment
+		if (typeof window === 'undefined') {
+			return;
 		}
+
+		// Import PDF.js only when needed
+		import('pdfjs-dist')
+			.then((pdfjsLib) => {
+				// Use the local worker file that gets copied during build
+				pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+				console.log('📄 PDF.js worker configured with local file');
+			})
+			.catch((error) => {
+				console.warn('PDF.js not available:', error);
+			});
 	}
 
 	/**
@@ -84,7 +85,20 @@ export class PDFUtils {
 	 * @returns {Promise<string>} - Extracted text content
 	 */
 	static async parsePDFFile(pdfFile, options = {}) {
+		// Only run in browser environment
+		if (typeof window === 'undefined') {
+			throw new Error('PDF parsing not available in server environment');
+		}
+
 		try {
+			// Import PDF.js only when needed
+			const pdfjsLib = await import('pdfjs-dist');
+
+			// Configure worker if not already done
+			if (pdfjsLib.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
+				pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+			}
+
 			console.log('📄 Loading PDF with PDF.js...');
 
 			// Convert file to ArrayBuffer
@@ -100,14 +114,15 @@ export class PDFUtils {
 				throw new Error('Invalid PDF file format');
 			}
 
-			// Load the PDF document
+			// Load PDF document
 			const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-			const pdfDocument = await loadingTask.promise;
+			const pdf = await loadingTask.promise;
 
-			console.log(`📄 PDF loaded: ${pdfDocument.numPages} pages`);
+			console.log('📄 PDF loaded:', pdf.numPages, 'pages');
 
 			// Extract text from all pages
-			const allText = await this.extractTextFromPDF(pdfDocument, options);
+			const allText = await this.extractTextFromPDF(pdf, options);
+
 			console.log('📄 Text extracted from PDF');
 
 			return allText;
@@ -118,7 +133,7 @@ export class PDFUtils {
 	}
 
 	/**
-	 * Parse a PDF file and extract statement information using a parser factory
+	 * Parse a credit card statement from a PDF file
 	 * @param {File|Buffer} pdfFile - PDF file or buffer
 	 * @param {Object} parserFactory - Parser factory instance
 	 * @param {Object} options - Parsing options
@@ -126,14 +141,17 @@ export class PDFUtils {
 	 */
 	static async parseStatement(pdfFile, parserFactory, options = {}) {
 		try {
-			// Extract text from PDF
-			const allText = await this.parsePDFFile(pdfFile, options);
+			// Validate PDF file
+			this.validatePDFFile(pdfFile);
 
-			// Parse the statement using appropriate parser
-			const parsedData = await parserFactory.parseStatement(allText);
+			// Use shared PDF parsing logic
+			const parsedData = await this.parsePDFFile(pdfFile, options);
+
+			// Parse the extracted text using the parser factory
+			const result = await parserFactory.parseStatement(parsedData);
 
 			console.log('✅ Statement parsed successfully');
-			return parsedData;
+			return result;
 		} catch (error) {
 			console.error('❌ Statement parsing failed:', error);
 			throw new Error(`Statement parsing failed: ${error.message}`);
@@ -141,8 +159,8 @@ export class PDFUtils {
 	}
 
 	/**
-	 * Validate PDF file format and size
-	 * @param {File|Buffer} pdfFile - PDF file or buffer
+	 * Validate a PDF file
+	 * @param {File|Buffer} pdfFile - PDF file or buffer to validate
 	 * @param {Object} options - Validation options
 	 * @param {number} options.maxSize - Maximum file size in bytes (default: 10MB)
 	 * @returns {boolean} - True if valid
@@ -155,12 +173,20 @@ export class PDFUtils {
 		}
 
 		// Check file size
-		const fileSize = pdfFile instanceof File ? pdfFile.size : pdfFile.length;
+		let fileSize = 0;
+		if (pdfFile instanceof File) {
+			fileSize = pdfFile.size;
+		} else if (Buffer.isBuffer(pdfFile)) {
+			fileSize = pdfFile.length;
+		} else {
+			throw new Error('Invalid PDF file format');
+		}
+
 		if (fileSize > maxSize) {
 			throw new Error(`PDF file too large. Maximum size: ${maxSize / 1024 / 1024}MB`);
 		}
 
-		// Check file type
+		// Check file type for File objects
 		if (pdfFile instanceof File) {
 			const mimeType = pdfFile.type;
 			if (mimeType !== 'application/pdf') {
