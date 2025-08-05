@@ -63,17 +63,7 @@ export default defineConfig(({ command, mode }) => {
 			testTimeout: 30000,
 			hookTimeout: 30000,
 			// Limit concurrent tests to reduce memory usage
-			maxConcurrency: 2,
-			// Use forks pool with stable configuration for CI
-			pool: 'forks',
-			poolOptions: {
-				forks: {
-					// Use multiple forks for better stability
-					singleFork: false,
-					// Add memory limit to prevent issues
-					memoryLimit: '2GB'
-				}
-			}
+			maxConcurrency: 2
 		},
 		ssr: {
 			noExternal: ['three']
