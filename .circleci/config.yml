@@ -66,7 +66,7 @@ jobs:
   code_test:
     docker:
       - image: cimg/node:current
-    resource_class: xlarge  # Increase to xlarge for more memory and CPU resources
+    resource_class: large  # Increase to large for more memory and CPU resources
     steps:
       - checkout
       - restore_cache:
@@ -86,10 +86,10 @@ jobs:
       - run:
           name: Run tests with optimized settings
           command: |
-            cd webapp && NODE_OPTIONS="--max-old-space-size=6144" npm run test-ci
+            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
-            VITEST_MAX_WORKERS: 4
+            VITEST_MAX_WORKERS: 3
             VITEST_MIN_WORKERS: 2
       - run:
           name: Check memory usage
