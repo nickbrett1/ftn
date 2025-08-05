@@ -43,16 +43,17 @@ export default defineConfig(({ command, mode }) => {
 			environment: 'jsdom',
 			coverage: {
 				reporter: ['text', 'lcov'],
-				// Reduce memory usage by limiting coverage collection
+				// Simplify coverage configuration for better CI stability
 				exclude: [
 					'node_modules/**',
 					'tests/**',
 					'**/*.test.{js,ts}',
 					'**/*.spec.{js,ts}',
 					'**/*.config.{js,ts}',
-					'**/*.setup.{js,ts}'
+					'**/*.setup.{js,ts}',
+					'**/*.stories.{js,ts}'
 				],
-				// Limit coverage to essential files
+				// Include all source files
 				include: [
 					'src/**/*.{js,ts}'
 				]
@@ -61,15 +62,8 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Limit concurrent tests to reduce memory usage
-			maxConcurrency: 2,
-			// Reduce memory usage
-			pool: 'forks',
-			poolOptions: {
-				forks: {
-					singleFork: true
-				}
-			}
+			// Optimize concurrent tests for large resource class
+			maxConcurrency: 3
 		},
 		ssr: {
 			noExternal: ['three']
