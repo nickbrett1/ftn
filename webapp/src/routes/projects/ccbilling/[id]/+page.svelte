@@ -42,14 +42,20 @@
 	// Card details state for mobile
 	let showCardDetails = false;
 	let selectedCardName = '';
+	let isShowingCardInfo = false; // Prevent rapid successive clicks
 
 	function showCardInfo(cardName) {
+		// Prevent multiple rapid clicks
+		if (isShowingCardInfo) return;
+		
+		isShowingCardInfo = true;
 		selectedCardName = cardName;
 		showCardDetails = true;
-		// Auto-hide after 3 seconds
+		
+		// Reset the flag after a short delay
 		setTimeout(() => {
-			showCardDetails = false;
-		}, 3000);
+			isShowingCardInfo = false;
+		}, 300);
 	}
 
 	async function handleDelete() {
@@ -461,7 +467,6 @@
 											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer" 
 											title={`Card: ${charge.card_name}`}
 											on:click={() => showCardInfo(charge.card_name)}
-											on:touchstart={() => showCardInfo(charge.card_name)}
 										>
 											💳
 										</button>
