@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PDFService } from '../src/lib/ccbilling-pdf-service.js';
+import { PDFService } from '../../src/lib/client/ccbilling-pdf-service.js';
 
 // Mock the PDFUtils module
-vi.mock('../src/lib/utils/pdf-utils.js', () => ({
+vi.mock('../../src/lib/client/pdf-utils.js', () => ({
 	PDFUtils: {
 		configureWorker: vi.fn(),
 		validatePDFFile: vi.fn(),
@@ -11,7 +11,7 @@ vi.mock('../src/lib/utils/pdf-utils.js', () => ({
 }));
 
 // Mock the ParserFactory module
-vi.mock('../src/lib/ccbilling-parsers/parser-factory.js', () => ({
+vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
 	ParserFactory: vi.fn()
 }));
 
@@ -24,8 +24,8 @@ describe('PDFService', () => {
 		vi.clearAllMocks();
 
 		// Get the mocked modules
-		const pdfUtilsModule = await import('../src/lib/utils/pdf-utils.js');
-		const parserFactoryModule = await import('../src/lib/ccbilling-parsers/parser-factory.js');
+		const pdfUtilsModule = await import('../../src/lib/client/pdf-utils.js');
+		const parserFactoryModule = await import('../../src/lib/utils/ccbilling-parsers/parser-factory.js');
 		
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
 		mockParserFactory = parserFactoryModule.ParserFactory;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ChaseParser } from './chase-parser.js';
-import { ParsingUtils } from '../utils/parsing-utils.js';
+import { ParsingUtils } from '../parsing-utils.js';
 
 describe('ChaseParser', () => {
 	let parser;

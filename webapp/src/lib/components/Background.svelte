@@ -3,7 +3,7 @@
 	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
-	import { createFinancialParticleConfig } from '$lib/utils/particleConfig.js';
+	import { createFinancialParticleConfig } from '$lib/client/particleConfig.js';
 
 	// Create the particle configuration using the utility
 	const particlesConfig = createFinancialParticleConfig();

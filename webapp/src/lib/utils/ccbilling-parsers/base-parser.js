@@ -1,4 +1,4 @@
-import { ParsingUtils } from '../utils/parsing-utils.js';
+import { ParsingUtils } from '../parsing-utils.js';
 
 /**
  * Base class for credit card statement parsers

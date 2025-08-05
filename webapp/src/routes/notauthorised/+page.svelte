@@ -4,8 +4,8 @@
 	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
-	import { createAuthParticleConfig } from '$lib/utils/particleConfig.js';
-	import { initiateGoogleAuth } from '$lib/utils/google-auth.js';
+	import { createAuthParticleConfig } from '$lib/client/particleConfig.js';
+import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	// Create the particle configuration using the utility
 	const particlesConfig = createAuthParticleConfig();
