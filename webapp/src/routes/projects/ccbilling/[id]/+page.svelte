@@ -111,7 +111,7 @@
 			const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
 
 			// Parse the PDF on the client-side
-			const { PDFService } = await import('$lib/ccbilling-pdf-service.js');
+			const { PDFService } = await import('$lib/client/ccbilling-pdf-service.js');
 			const pdfService = new PDFService();
 
 			const parsedData = await pdfService.parseStatement(pdfFile);

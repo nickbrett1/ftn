@@ -17,7 +17,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	canParse(text) {
 		// Look for Chase-specific identifiers
-		const chaseIdentifiers = ['CHASE', 'JPMORGAN CHASE', 'ACCOUNT SUMMARY', 'ACCOUNT ACTIVITY'];
+		const chaseIdentifiers = ['CHASE'];
 
 		return chaseIdentifiers.some((identifier) => text.toUpperCase().includes(identifier));
 	}
@@ -142,11 +142,12 @@ export class ChaseParser extends BaseParser {
 			const restOfLine = dateMatch[2];
 
 			// Check if this line contains an amount (purchase transaction)
-			const amountMatch = restOfLine.match(/(.+?)\s+([-\d,]*\.?\d{1,2})$/);
+			// Use safe regex to avoid ReDoS attacks
+			const amountMatch = this.safeMatchAmount(restOfLine);
 			if (!amountMatch) continue;
 
-			const merchant = amountMatch[1].trim();
-			const amount = this.parseAmount(amountMatch[2]);
+			const merchant = amountMatch.merchant.trim();
+			const amount = this.parseAmount(amountMatch.amount);
 
 			if (!date || !amount || merchant.length < 2) continue;
 
@@ -169,28 +170,28 @@ export class ChaseParser extends BaseParser {
 					const nextLine = lines[j];
 
 					// Check for currency type line (e.g., "DANISH KRONE")
-					if (nextLine.match(/^[A-Z\s]+$/)) {
+					if (this.safeMatchCurrencyLine(nextLine)) {
 						foreignCurrencyType = nextLine.trim();
 
 						// Look for the amount and exchange rate on the next line
 						if (j + 1 < lines.length) {
 							const rateLine = lines[j + 1];
-							const rateMatch = rateLine.match(/(\d+\.\d+)\s+X\s+(\d+\.\d+)/);
+							const rateMatch = this.safeMatchExchangeRate(rateLine);
 							if (rateMatch) {
-								foreignCurrencyAmount = parseFloat(rateMatch[1]);
+								foreignCurrencyAmount = rateMatch.amount1;
 								break;
 							}
 						}
 					}
 
 					// Check for exchange rate pattern in the same line
-					const rateMatch = nextLine.match(/(\d+\.\d+)\s+X\s+(\d+\.\d+)/);
+					const rateMatch = this.safeMatchExchangeRate(nextLine);
 					if (rateMatch) {
-						foreignCurrencyAmount = parseFloat(rateMatch[1]);
+						foreignCurrencyAmount = rateMatch.amount1;
 						// Look for currency type in the same line or previous line
-						const currencyMatch = nextLine.match(/^([A-Z\s]+)/);
+						const currencyMatch = this.safeMatchCurrencyLine(nextLine);
 						if (currencyMatch) {
-							foreignCurrencyType = currencyMatch[1].trim();
+							foreignCurrencyType = nextLine.trim();
 						}
 						break;
 					}
@@ -256,18 +257,17 @@ export class ChaseParser extends BaseParser {
 		if (!date) return null;
 
 		// Look for amount at the end (negative for credits)
-		const amountMatch = line.match(/([-\d,]+\.\d{2})$/);
+		const amountMatch = this.safeMatchAmount(line);
 		if (!amountMatch) return null;
 
-		const amount = this.parseAmount(amountMatch[1]);
+		const amount = this.parseAmount(amountMatch.amount);
 
-		// Extract merchant name (everything between date and amount)
-		const merchantStart = dateMatch[0].length;
-		const merchantEnd = line.lastIndexOf(amountMatch[1]);
-
-		if (merchantEnd <= merchantStart) return null;
-
-		let merchant = line.substring(merchantStart, merchantEnd).trim();
+		// Extract merchant name from the safe match, but remove the date part
+		let merchant = amountMatch.merchant;
+		
+		// Remove the date part from the beginning of the merchant name
+		const datePattern = /^\d{1,2}\/\d{1,2}\s+/;
+		merchant = merchant.replace(datePattern, '');
 
 		// Clean up merchant name
 		merchant = merchant.replace(/\s+/g, ' ').trim();
@@ -280,6 +280,62 @@ export class ChaseParser extends BaseParser {
 			amount,
 			date,
 			allocated_to: null
+		};
+	}
+
+	/**
+	 * Safely match amount pattern to avoid ReDoS attacks
+	 * @param {string} line - Line to parse
+	 * @returns {Object|null} - Object with merchant and amount, or null
+	 */
+	safeMatchAmount(line) {
+		// Split on whitespace and look for amount at the end
+		const parts = line.trim().split(/\s+/);
+		if (parts.length < 2) return null;
+
+		// Check if last part looks like an amount
+		const lastPart = parts[parts.length - 1];
+		const amountPattern = /^[-\d,]*\.?\d{1,2}$/;
+		
+		if (!amountPattern.test(lastPart)) return null;
+
+		// Extract merchant (everything except the amount)
+		const merchant = parts.slice(0, -1).join(' ');
+		
+		return {
+			merchant,
+			amount: lastPart
+		};
+	}
+
+	/**
+	 * Safely match currency line pattern
+	 * @param {string} line - Line to check
+	 * @returns {boolean} - True if line contains only uppercase letters and spaces
+	 */
+	safeMatchCurrencyLine(line) {
+		// Check if line contains only uppercase letters and spaces
+		return /^[A-Z\s]+$/.test(line) && line.trim().length > 0;
+	}
+
+	/**
+	 * Safely match exchange rate pattern
+	 * @param {string} line - Line to check
+	 * @returns {Object|null} - Object with amounts, or null
+	 */
+	safeMatchExchangeRate(line) {
+		// Look for pattern like "123.45 X 0.67"
+		const parts = line.trim().split(/\s+X\s+/);
+		if (parts.length !== 2) return null;
+
+		const [amount1, amount2] = parts;
+		const numberPattern = /^\d+\.\d+$/;
+		
+		if (!numberPattern.test(amount1) || !numberPattern.test(amount2)) return null;
+		
+		return {
+			amount1: parseFloat(amount1),
+			amount2: parseFloat(amount2)
 		};
 	}
 

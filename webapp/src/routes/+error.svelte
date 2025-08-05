@@ -5,7 +5,7 @@
 	import { tsParticles } from '@tsparticles/engine';
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
-	import { createErrorParticleConfig } from '$lib/utils/particleConfig.js';
+	import { createErrorParticleConfig } from '$lib/client/particleConfig.js';
 
 	$: status = $page.status;
 	$: error = $page.error;
