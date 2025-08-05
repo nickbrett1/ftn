@@ -62,8 +62,8 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Limit concurrent tests to reduce memory usage
-			maxConcurrency: 2
+			// Increase concurrent tests for xlarge resource class
+			maxConcurrency: 4
 		},
 		ssr: {
 			noExternal: ['three']
