@@ -88,6 +88,60 @@ const date = ParsingUtils.parseDate('12/25/23'); // Returns '2023-12-25'
 
 Provides utility functions for safe regex validation and testing, preventing ReDoS (Regular Expression Denial of Service) attacks.
 
+## ccbilling-parsers/
+
+Provides generic credit card statement parsing utilities that can be used on both client and server-side.
+
+### Files
+
+#### `base-parser.js`
+
+Base class for credit card statement parsers with common functionality.
+
+**Key Methods:**
+- `parseDate(dateStr, options)` - Parse date strings using shared utilities
+- `parseAmount(amountStr, options)` - Parse amount strings using shared utilities
+- `parseJSONResponse(content, options)` - Parse JSON responses using shared utilities
+- `cleanMerchantName(merchantName, options)` - Clean merchant names using shared utilities
+- `validateParsedData(data, requiredFields, options)` - Validate parsed data
+
+#### `chase-parser.js`
+
+Chase Bank credit card statement parser.
+
+**Key Methods:**
+- `canParse(text)` - Check if this parser can handle the given statement
+- `parse(pdfText)` - Parse Chase statement and extract required information
+- `extractLast4Digits(text)` - Extract the last 4 digits of the credit card
+- `extractStatementDate(text)` - Extract the statement closing date
+- `extractCharges(text)` - Extract charges from the statement
+
+#### `parser-factory.js`
+
+Factory for creating appropriate statement parsers.
+
+**Key Methods:**
+- `detectParser(text)` - Detect the appropriate parser for a given statement
+- `parseStatement(text)` - Parse a statement using the appropriate parser
+- `getSupportedProviders()` - Get list of supported providers
+
+### Usage Examples
+
+```javascript
+import { ParserFactory } from '$lib/utils/ccbilling-parsers/parser-factory.js';
+import { ChaseParser } from '$lib/utils/ccbilling-parsers/chase-parser.js';
+
+// Use factory to auto-detect parser
+const factory = new ParserFactory();
+const parsedData = await factory.parseStatement(pdfText);
+
+// Use specific parser
+const chaseParser = new ChaseParser();
+if (chaseParser.canParse(pdfText)) {
+    const data = await chaseParser.parse(pdfText);
+}
+```
+
 ### Functions
 
 #### `isRegexSafe(pattern, testString, timeout)`
@@ -144,3 +198,6 @@ These utilities use browser-specific APIs and should be imported from `$lib/clie
 Unit tests are available for all utilities:
 - `parsing-utils.test.js`
 - `regex-validator.test.js`
+- `ccbilling-parsers/base-parser.test.js`
+- `ccbilling-parsers/chase-parser.test.js`
+- `ccbilling-parsers/parser-factory.test.js`
