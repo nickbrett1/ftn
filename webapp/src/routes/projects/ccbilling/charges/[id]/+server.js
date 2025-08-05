@@ -41,18 +41,21 @@ export async function PUT(event) {
 	try {
 		const { merchant, amount, allocated_to } = await request.json();
 
-		if (!merchant || amount === undefined || !allocated_to) {
-			return json({ error: 'Missing required fields: merchant, amount, allocated_to' }, { status: 400 });
+		if (!merchant || amount === undefined) {
+			return json({ error: 'Missing required fields: merchant, amount' }, { status: 400 });
 		}
 
-		// Validate allocated_to values against actual budgets
+		// Validate allocated_to values against actual budgets (allow null for unallocated)
 		const budgets = await listBudgets(event);
-		const budgetNames = budgets.map(budget => budget.name);
-		
-		if (!budgetNames.includes(allocated_to)) {
-			return json({ 
-				error: `allocated_to must be one of the available budgets: ${budgetNames.join(', ')}` 
-			}, { status: 400 });
+		const budgetNames = budgets.map((budget) => budget.name);
+
+		if (allocated_to && !budgetNames.includes(allocated_to)) {
+			return json(
+				{
+					error: `allocated_to must be one of the available budgets: ${budgetNames.join(', ')}`
+				},
+				{ status: 400 }
+			);
 		}
 
 		// Validate amount is a number

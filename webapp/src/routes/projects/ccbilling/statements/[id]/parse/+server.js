@@ -139,7 +139,7 @@ export const POST = RouteUtils.createRouteHandler(
 				statement_id,
 				charge.merchant,
 				charge.amount,
-				charge.allocated_to || 'Both', // Default allocation
+				charge.allocated_to || null, // No default allocation - let user decide
 				transactionDate, // Use the corrected transaction date
 				charge.is_foreign_currency || false,
 				charge.foreign_currency_amount || null,

@@ -9,13 +9,13 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
 
 // Import the mocked functions
 import { getPayment, updatePayment, listBudgets } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
-
-
 
 describe('/projects/ccbilling/charges/[id] API', () => {
 	let mockEvent;
@@ -32,7 +32,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-		
+
 		// Mock listBudgets to return test budgets
 		listBudgets.mockResolvedValue([
 			{ id: 1, name: 'Nick' },
@@ -136,7 +136,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(400);
-			expect(result.error).toBe('Missing required fields: merchant, amount, allocated_to');
+			expect(result.error).toBe('Missing required fields: merchant, amount');
 		});
 
 		it('should return 400 for invalid allocated_to value', async () => {
@@ -150,7 +150,9 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(400);
-			expect(result.error).toBe('allocated_to must be one of the available budgets: Nick, Tas, Both');
+			expect(result.error).toBe(
+				'allocated_to must be one of the available budgets: Nick, Tas, Both'
+			);
 		});
 
 		it('should return 400 for invalid amount', async () => {
@@ -215,7 +217,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 		it('should handle negative amounts', async () => {
 			mockEvent.request.json.mockResolvedValue({
 				merchant: 'Credit',
-				amount: -50.00,
+				amount: -50.0,
 				allocated_to: 'Nick'
 			});
 			updatePayment.mockResolvedValue({});
@@ -224,7 +226,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			const result = await response.json();
 
 			expect(response.status).toBe(200);
-			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Credit', -50.00, 'Nick');
+			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Credit', -50.0, 'Nick');
 		});
 
 		it('should redirect if user not authenticated', async () => {

@@ -49,7 +49,7 @@ CREATE TABLE payment (
   statement_id INTEGER NOT NULL REFERENCES statement(id),
   merchant TEXT NOT NULL,
   amount REAL NOT NULL,
-  allocated_to TEXT NOT NULL, -- References budget names (dynamically managed)
+  allocated_to TEXT, -- References budget names (dynamically managed), NULL means unallocated
   transaction_date DATE,
   is_foreign_currency BOOLEAN DEFAULT 0,
   foreign_currency_amount REAL,
