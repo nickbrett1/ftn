@@ -6,8 +6,12 @@
 		"cookie": "^1.0.2"
 	},
 	"scripts": {
-		"dev": "doppler run -- vite dev",
-		"build": "doppler run -- vite build",
+		"postinstall": "node scripts/copy-pdf-worker.js",
+		"predev": "node scripts/copy-pdf-worker.js",
+		"dev": "npm run predev && doppler run -- vite dev",
+		"prebuild": "node scripts/copy-pdf-worker.js",
+		"build": "npm run prebuild && doppler run -- vite build",
+		"check-pdf-worker": "node scripts/check-pdf-worker.js",
 		"preview": "doppler run -- vite preview",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",

@@ -254,6 +254,7 @@ export class RouteUtils {
 				}
 
 				// Only parse and validate body if parameters are valid
+				let parsedBody = null;
 				if (requiredBody.length > 0 && ['POST', 'PUT', 'PATCH'].includes(event.request.method)) {
 					const bodyResult = await this.parseRequestBody(event.request);
 					if (!bodyResult.success) {
@@ -266,10 +267,16 @@ export class RouteUtils {
 							status: bodyValidation.status
 						});
 					}
+
+					parsedBody = bodyResult.body;
 				}
 
-				// Call the actual handler
-				return await handler(event);
+				// Call the actual handler with parsed body (if any)
+				if (requiredBody.length > 0) {
+					return await handler(event, parsedBody);
+				} else {
+					return await handler(event);
+				}
 			} catch (error) {
 				return this.handleError(error, handler.name);
 			}

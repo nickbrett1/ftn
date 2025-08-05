@@ -164,4 +164,7 @@ webapp/wrangler.jsonc
 # Additional webapp-specific ignores
 webapp/package
 
+# PDF.js worker file (copied during build/dev)
+webapp/static/pdf.worker.min.mjs
+
 docs/ccbillingstatementscore

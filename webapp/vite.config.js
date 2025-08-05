@@ -49,7 +49,7 @@ export default defineConfig(({ command, mode }) => {
 		ssr: {
 			noExternal: ['three']
 		},
-		assetsInclude: ['**/*.glb', '**/*.fbx'],
+		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {
 			sourcemap: true
 		},
