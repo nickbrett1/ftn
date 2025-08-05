@@ -89,6 +89,6 @@
 		"pdfjs-dist": "^5.4.54",
 		"three": "^0.179.0",
 		"tippy.js": "^6.3.7",
-		"tsparticles": "^3.9.0"
+		"tsparticles": "^3.9.1"
 	}
 }
