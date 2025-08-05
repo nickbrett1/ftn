@@ -443,7 +443,7 @@
 								</td>
 								<td class="text-white py-2">{charge.merchant}</td>
 								<td class="text-gray-300 text-sm py-2">{charge.card_name}</td>
-								<td class="text-gray-300 text-sm py-2">{charge.allocated_to}</td>
+								<td class="text-gray-300 text-sm py-2">{charge.allocated_to || 'None'}</td>
 								<td class="text-right py-2">
 									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
 										{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}

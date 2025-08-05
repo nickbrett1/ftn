@@ -113,7 +113,7 @@ describe('ChaseParser', () => {
 				merchant: 'AMAZON.COM',
 				amount: 123.45,
 				date: `${currentYear}-01-15`,
-				allocated_to: 'Both',
+				allocated_to: null,
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
 				foreign_currency_type: null
@@ -194,7 +194,7 @@ describe('ChaseParser', () => {
 				merchant: 'AMAZON.COM',
 				amount: 123.45,
 				date: `${currentYear}-01-15`,
-				allocated_to: 'Both'
+				allocated_to: null
 			});
 		});
 

@@ -201,7 +201,7 @@ export class ChaseParser extends BaseParser {
 				merchant,
 				amount,
 				date,
-				allocated_to: 'Both',
+				allocated_to: null,
 				is_foreign_currency: isForeignTransaction,
 				foreign_currency_amount: foreignCurrencyAmount,
 				foreign_currency_type: foreignCurrencyType
@@ -279,7 +279,7 @@ export class ChaseParser extends BaseParser {
 			merchant,
 			amount,
 			date,
-			allocated_to: 'Both'
+			allocated_to: null
 		};
 	}
 
