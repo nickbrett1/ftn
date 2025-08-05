@@ -4,7 +4,7 @@ import { screen, fireEvent } from '@testing-library/dom';
 import Login from './Login.svelte';
 
 // Mock the shared Google auth utility
-vi.mock('$lib/utils/google-auth.js', () => ({
+vi.mock('$lib/client/google-auth.js', () => ({
 	initiateGoogleAuth: vi.fn()
 }));
 
@@ -19,7 +19,7 @@ describe('Login correctly', () => {
 	});
 
 	it('logs in', async () => {
-		const { initiateGoogleAuth } = await import('$lib/utils/google-auth.js');
+						const { initiateGoogleAuth } = await import('$lib/client/google-auth.js');
 		const { goto } = await import('$app/navigation');
 
 		// Mock document.cookie to simulate not logged in
