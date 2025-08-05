@@ -89,8 +89,8 @@ jobs:
             cd webapp && NODE_OPTIONS="--max-old-space-size=3072" npm run test-ci
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
-            VITEST_MAX_THREADS: 2
-            VITEST_MIN_THREADS: 1
+            VITEST_MAX_WORKERS: 2
+            VITEST_MIN_WORKERS: 1
       - run:
           name: Check memory usage
           command: |
