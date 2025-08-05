@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { initiateGoogleAuth } from '$lib/utils/google-auth.js';
+	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	let loggedIn = $state(false);
 

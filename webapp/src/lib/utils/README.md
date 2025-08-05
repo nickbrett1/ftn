@@ -1,97 +1,146 @@
 # Utility Functions
 
-This directory contains reusable utility functions for the application.
+This directory contains **generic utility functions** that can be safely used anywhere in the application (both client and server-side).
 
-## particleConfig.js
+## parsing-utils.js
 
-Provides configurable particle effects using tsParticles for creating animated backgrounds.
+Provides shared parsing utilities for credit card statement parsing, eliminating duplication across different services.
 
 ### Functions
 
-#### `generatePercentageValues(count, positive)`
+#### `parseJSONResponse(content, options)`
 
-Generates cryptographically secure random percentage values for financial-themed particles.
-
-**Security Note:** Uses `crypto.getRandomValues()` for cryptographically secure random number generation, following security best practices.
+Parse JSON response from API with error handling and markdown cleaning.
 
 **Parameters:**
+- `content` (string): Raw JSON content
+- `options` (object): Parsing options
+  - `cleanMarkdown` (boolean): Whether to clean markdown formatting (default: true)
 
-- `count` (number): Number of values to generate (default: 50)
-- `positive` (boolean): Whether to generate positive (+) or negative (-) values (default: true)
+**Returns:** Parsed JSON object
 
-**Returns:** Array of formatted percentage strings (e.g., `["+5.23%", "+12.10%"]`) for display only
+#### `validateParsedData(data, requiredFields, options)`
 
-#### `createFinancialParticleConfig(overrides)`
-
-Creates a financial-themed particle configuration with dynamic percentage text particles.
-
-**Features:**
-
-- Green particles for positive percentages
-- Red particles for negative percentages
-- Upward movement direction
-- Random link colors
+Validate parsed data against required fields.
 
 **Parameters:**
+- `data` (object): Parsed data to validate
+- `requiredFields` (array): Array of required field names
+- `options` (object): Validation options
+  - `strict` (boolean): Whether to throw error on missing fields (default: false)
 
-- `overrides` (object): Configuration overrides to merge with base config
+**Returns:** Boolean indicating if data is valid
 
-**Returns:** Complete tsParticles configuration object
+#### `parseAmount(amountStr, options)`
 
-#### `createErrorParticleConfig(overrides)`
-
-Creates an error page particle configuration with "404" and "ERROR" text particles.
-
-**Features:**
-
-- Green "404" text particles
-- Red "ERROR" text particles
-- No movement direction (stationary drift)
-- Fewer particles for less distraction
+Parse an amount string and convert to number.
 
 **Parameters:**
+- `amountStr` (string): Amount string (e.g., "123.45", "-123.45", "$1,234.56")
+- `options` (object): Parsing options
+  - `defaultValue` (number): Default value if parsing fails (default: 0)
+  - `allowNegative` (boolean): Whether to allow negative amounts (default: true)
 
-- `overrides` (object): Configuration overrides to merge with base config
+**Returns:** Parsed amount as number
 
-**Returns:** Complete tsParticles configuration object
+#### `parseDate(dateStr, options)`
+
+Parse date strings in various formats.
+
+**Parameters:**
+- `dateStr` (string): Date string to parse
+- `options` (object): Parsing options
+  - `defaultYear` (number): Default year for 2-digit years (default: current year)
+
+**Returns:** Date in YYYY-MM-DD format
+
+#### `cleanMerchantName(merchantName, options)`
+
+Clean and normalize merchant names.
+
+**Parameters:**
+- `merchantName` (string): Raw merchant name
+- `options` (object): Cleaning options
+  - `removeCommonSuffixes` (boolean): Remove common suffixes (default: true)
+  - `normalizeCase` (boolean): Normalize case (default: true)
+
+**Returns:** Cleaned merchant name
 
 ### Usage Examples
 
 ```javascript
-import {
-	createFinancialParticleConfig,
-	createErrorParticleConfig
-} from '$lib/utils/particleConfig.js';
+import { ParsingUtils } from '$lib/utils/parsing-utils.js';
 
-// Basic usage
-const config = createFinancialParticleConfig();
+// Parse JSON response
+const data = ParsingUtils.parseJSONResponse(jsonString);
 
-// With customizations
-const customConfig = createFinancialParticleConfig({
-	fpsLimit: 30,
-	particles: {
-		number: { value: 10 },
-		move: { speed: 2 }
-	}
-});
+// Validate parsed data
+const isValid = ParsingUtils.validateParsedData(data, ['last4', 'statement_date']);
 
-// Error page configuration
-const errorConfig = createErrorParticleConfig();
+// Parse amounts
+const amount = ParsingUtils.parseAmount('$1,234.56'); // Returns 1234.56
+
+// Parse dates
+const date = ParsingUtils.parseDate('12/25/23'); // Returns '2023-12-25'
 ```
 
-### Implementation
+## regex-validator.js
 
-Both configurations share a common base configuration and use deep merging to allow for flexible customization while preserving default settings.
+Provides utility functions for safe regex validation and testing, preventing ReDoS (Regular Expression Denial of Service) attacks.
 
-The utility eliminates code duplication and provides a consistent API for particle effects across the application.
+### Functions
 
-**Important Note:** The financial particle configuration intentionally uses the baseConfig links properties (distance: 400, opacity: 0.2) to match the original Background.svelte behavior, where duplicate links properties caused the second definition to override the first.
+#### `isRegexSafe(pattern, testString, timeout)`
+
+Test if a regex pattern is safe from ReDoS attacks.
+
+**Parameters:**
+- `pattern` (string): The regex pattern to test
+- `testString` (string): A string that should match the pattern
+- `timeout` (number): Timeout in milliseconds (default: 1000)
+
+**Returns:** Boolean indicating if pattern is safe
+
+#### `createSafeDateRegex(format)`
+
+Create a safe regex for date validation.
+
+#### `createSafeCurrencyRegex()`
+
+Create a safe regex for currency validation.
+
+#### `createSafeCardNumberRegex()`
+
+Create a safe regex for card number validation.
+
+#### `createSafeBillingCycleRegex()`
+
+Create a safe regex for billing cycle validation.
+
+### Usage Examples
+
+```javascript
+import { isRegexSafe, createSafeDateRegex } from '$lib/utils/regex-validator.js';
+
+// Test regex safety
+const isSafe = await isRegexSafe(/^(\d{4})-(\d{2})-(\d{2})$/, '2023-12-25');
+
+// Create safe date regex
+const dateRegex = createSafeDateRegex('YYYY-MM-DD');
+```
+
+## Client-Side Utilities
+
+**Note:** Client-side utilities that require browser APIs have been moved to `$lib/client/`:
+
+- `particleConfig.js` - Particle effects using tsParticles
+- `google-auth.js` - Google OAuth authentication
+- `pdf-utils.js` - PDF processing utilities
+
+These utilities use browser-specific APIs and should be imported from `$lib/client/` instead of `$lib/utils/`.
 
 ### Testing
 
-Unit tests are available in `particleConfig.test.js` covering:
-
-- Percentage value generation
-- Configuration structure validation
-- Override functionality
-- Deep merge behavior
+Unit tests are available for all utilities:
+- `parsing-utils.test.js`
+- `regex-validator.test.js`

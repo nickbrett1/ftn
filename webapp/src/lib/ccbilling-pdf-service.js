@@ -1,4 +1,4 @@
-import { PDFUtils } from './utils/pdf-utils.js';
+import { PDFUtils } from './client/pdf-utils.js';
 import { ParserFactory } from './ccbilling-parsers/parser-factory.js';
 
 /**
