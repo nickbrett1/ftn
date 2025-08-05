@@ -111,6 +111,37 @@ await initiateGoogleAuth('/dashboard');
 
 Provides PDF processing utilities for client-side PDF parsing and text extraction.
 
+## ccbilling-pdf-service.js
+
+Service for parsing credit card statements using PDF.js on the client-side.
+
+### Functions
+
+#### `parseStatement(pdfFile)`
+
+Parse a PDF file and extract statement information.
+
+**Parameters:**
+- `pdfFile` (File): PDF file from input
+
+**Returns:** Promise<Object> - Parsed statement data
+
+#### `getSupportedProviders()`
+
+Get list of supported credit card providers.
+
+**Returns:** Array - Array of supported provider names
+
+### Usage Examples
+
+```javascript
+import { PDFService } from '$lib/client/ccbilling-pdf-service.js';
+
+const pdfService = new PDFService();
+const parsedData = await pdfService.parseStatement(pdfFile);
+const providers = pdfService.getSupportedProviders();
+```
+
 ### Functions
 
 #### `configureWorker()`
@@ -194,4 +225,5 @@ import { PDFUtils } from '$lib/utils/pdf-utils.js';
 import { createFinancialParticleConfig } from '$lib/client/particleConfig.js';
 import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 import { PDFUtils } from '$lib/client/pdf-utils.js';
+import { PDFService } from '$lib/client/ccbilling-pdf-service.js';
 ```

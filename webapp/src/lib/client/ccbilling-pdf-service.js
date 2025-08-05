@@ -1,5 +1,5 @@
-import { PDFUtils } from './client/pdf-utils.js';
-import { ParserFactory } from './ccbilling-parsers/parser-factory.js';
+import { PDFUtils } from './pdf-utils.js';
+import { ParserFactory } from '../ccbilling-parsers/parser-factory.js';
 
 /**
  * Service for parsing credit card statements using PDF.js (Client-side)

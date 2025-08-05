@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PDFService } from '../src/lib/ccbilling-pdf-service.js';
+import { PDFService } from '../../src/lib/client/ccbilling-pdf-service.js';
 
 // Mock the PDFUtils module
-vi.mock('../src/lib/utils/pdf-utils.js', () => ({
+vi.mock('../../src/lib/client/pdf-utils.js', () => ({
 	PDFUtils: {
 		configureWorker: vi.fn(),
 		validatePDFFile: vi.fn(),
