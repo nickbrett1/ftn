@@ -86,7 +86,7 @@ jobs:
       - run:
           name: Run tests with optimized settings
           command: |
-            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" ./scripts/test-ci-wrapper.sh
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
             VITEST_MAX_WORKERS: 3
