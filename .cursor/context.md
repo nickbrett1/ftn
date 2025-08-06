@@ -7,7 +7,6 @@ This is a personal finance tool for reviewing credit card statements. The main f
 - **Frontend**: SvelteKit with TypeScript
 - **Backend**: Cloudflare Workers with D1 database called ccbilling
 - **Storage**: Cloudflare R2 for PDF statement storage
-- **AI**: LLAMA API for merchant identification
 - **Testing**: Vitest with comprehensive test coverage
 - **Authentication**: OAuth with Google
 
@@ -40,8 +39,8 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 
 ### Key Features
 
-- **AI-Powered Statement Parsing**: LLAMA API with PDF-to-image conversion for robust parsing
-- **Universal Format Support**: Works with any credit card provider's statement format
+- **Provider-Specific Statement Parsing**: Dedicated parsers for each credit card provider (currently Chase)
+- **Text-Based Parsing**: Extracts text from PDFs and uses regex-based parsing for structured data extraction
 - **Budget Management**: Create and manage budgets with merchant auto-assignment
 - **Charge Categorization**: Assign charges to budgets with merchant classification
 - **Billing Cycles**: Monthly billing cycle management with statement uploads
@@ -52,25 +51,26 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 - ✅ Budget management (CRUD operations)
 - ✅ Statement upload and storage
 - ✅ Credit card management
-- ✅ **NEW**: LLAMA image-based parsing implementation
-- 🔄 **In Progress**: PDF-to-image conversion (currently using mock)
-- 📋 **Planned**: Real PDF-to-image conversion and charge allocation
+- ✅ **NEW**: Chase statement parser implementation
+- 🔄 **In Progress**: Additional provider parsers (Amex, etc.)
+- 📋 **Planned**: More provider parsers and enhanced parsing accuracy
 
 ## Architecture
 
-### Statement Parsing (LLAMA + Image-Based Approach)
+### Statement Parsing (Provider-Specific Approach)
 
 1. **PDF Upload**: Statements stored in Cloudflare R2
-2. **Image Conversion**: PDF converted to image for LLAMA processing
-3. **AI Parsing**: LLAMA API analyzes image to extract charges
-4. **Universal Support**: Works with any credit card provider format
-5. **Fallback Parsers**: Regex-based parsers as backup for specific providers
+2. **Text Extraction**: PDF text content extracted for parsing
+3. **Parser Detection**: ParserFactory detects appropriate parser based on statement format
+4. **Provider-Specific Parsing**: Dedicated parsers for each credit card provider
+5. **Structured Data**: Regex-based extraction of charges, dates, and card information
 
 ### Parser Architecture
 
-- **Generic Image Parser**: Primary parser using LLAMA with image input
-- **Provider-Specific Parsers**: Fallback parsers for Chase, Amex, etc.
-- **Parser Manager**: Routes to appropriate parser based on statement format
+- **ParserFactory**: Routes to appropriate parser based on statement format detection
+- **Provider-Specific Parsers**: Dedicated parsers for each credit card provider (Chase, Amex, etc.)
+- **BaseParser**: Common functionality and utilities for all parsers
+- **Text-Based Processing**: Extracts structured data from PDF text content
 
 ### Database Schema
 
@@ -83,15 +83,21 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 ## Development Notes
 
 - Use `--run` flag for faster test execution
-- LLAMA API is now the primary parsing method with image input
-- Generic parser prioritizes image-based parsing over regex
-- PDF-to-image conversion currently mocked, ready for real implementation
-- Comprehensive test coverage for all API endpoints
+- Current implementation uses text-based parsing with provider-specific parsers
+- Chase parser is fully implemented with comprehensive test coverage
+- ParserFactory architecture allows easy addition of new provider parsers
+- Comprehensive test coverage for all API endpoints and parsers
 
 ## Recent Changes
 
-- **Migrated from regex-based parsing** to LLAMA image-based parsing
-- **Added PDF buffer passing** through the parsing pipeline
-- **Prioritized generic image parser** over provider-specific parsers
-- **Implemented mock PDF-to-image conversion** (ready for real implementation)
-- **Updated parser architecture** to support both image and text-based parsing
+- **Implemented Chase statement parser** with full regex-based parsing
+- **Added ParserFactory** for provider detection and routing
+- **Created BaseParser** with common parsing utilities
+- **Enhanced test coverage** for all parser components
+- **Updated parsing pipeline** to use provider-specific parsers
+
+## Supported Providers
+
+- **Chase**: Fully implemented with comprehensive parsing
+- **Amex**: Planned (parser structure ready)
+- **Other providers**: Can be easily added using the ParserFactory pattern
