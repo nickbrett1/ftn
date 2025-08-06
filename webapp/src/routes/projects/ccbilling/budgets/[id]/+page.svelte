@@ -4,12 +4,8 @@
 
 	const { data } = $props();
 	
-	let budget = null;
-	let merchants = [];
-	
-	$effect(() => {
-		({ budget, merchants } = data);
-	});
+	// Use synchronous destructuring to get data immediately
+	const { budget = null, merchants = [] } = data;
 
 	// Add merchant state
 	let showAddForm = false;

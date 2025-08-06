@@ -4,30 +4,27 @@
 
 	const { data } = $props();
 	
-	let creditCards = [];
-	
-	$effect(() => {
-		({ creditCards } = data);
-	});
+	// Use synchronous destructuring to get data immediately
+	const { creditCards = [] } = data;
 
-	// Add card state
-	let showAddForm = false;
-	let newCardName = '';
-	let newCardLast4 = '';
-	let isAdding = false;
-	let addError = '';
+	// Add card state - use $state() for Svelte 5 reactivity
+	let showAddForm = $state(false);
+	let newCardName = $state('');
+	let newCardLast4 = $state('');
+	let isAdding = $state(false);
+	let addError = $state('');
 
 	// Edit card state
-	let editingCard = null;
-	let editName = '';
-	let editLast4 = '';
-	let isEditing = false;
-	let editError = '';
+	let editingCard = $state(null);
+	let editName = $state('');
+	let editLast4 = $state('');
+	let isEditing = $state(false);
+	let editError = $state('');
 
 	// Delete state
-	let deletingCard = null;
-	let isDeleting = false;
-	let deleteError = '';
+	let deletingCard = $state(null);
+	let isDeleting = $state(false);
+	let deleteError = $state('');
 
 	async function addCard() {
 		if (!newCardName.trim() || !newCardLast4.trim()) {
@@ -195,9 +192,9 @@
 				</div>
 			</div>
 			<div class="mt-4">
-				<Button type="button" variant="success" disabled={isAdding} onclick={addCard}>
+				<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" disabled={isAdding} on:click={addCard}>
 					{isAdding ? 'Adding...' : 'Add Card'}
-				</Button>
+				</button>
 			</div>
 		</div>
 	{/if}
@@ -257,17 +254,17 @@
 									</div>
 								</div>
 								<div class="flex space-x-2">
-									<Button type="button" variant="success" disabled={isEditing} onclick={saveEdit}>
+									<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" disabled={isEditing} on:click={saveEdit}>
 										{isEditing ? 'Saving...' : 'Save'}
-									</Button>
-									<Button
+									</button>
+									<button
 										type="button"
-										variant="secondary"
+										class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-2 px-4 cursor-pointer no-underline not-prose inline-block"
 										disabled={isEditing}
-										onclick={cancelEdit}
+										on:click={cancelEdit}
 									>
 										Cancel
-									</Button>
+									</button>
 								</div>
 							</div>
 						{:else}
@@ -281,18 +278,17 @@
 									</p>
 								</div>
 								<div class="flex space-x-2">
-									<Button type="button" variant="warning" size="sm" onclick={() => startEdit(card)}>
+									<button type="button" class="font-bold rounded bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block" on:click={() => startEdit(card)}>
 										Edit
-									</Button>
-									<Button
+									</button>
+									<button
 										type="button"
-										variant="danger"
-										size="sm"
+										class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
 										disabled={deletingCard?.id === card.id && isDeleting}
-										onclick={() => deleteCard(card)}
+										on:click={() => deleteCard(card)}
 									>
 										{deletingCard?.id === card.id && isDeleting ? 'Deleting...' : 'Delete'}
-									</Button>
+									</button>
 								</div>
 							</div>
 						{/if}
@@ -305,15 +301,15 @@
 	<div class="mt-8 flex space-x-4">
 		{#if !editingCard}
 			{#if showAddForm}
-				<Button type="button" variant="secondary" onclick={() => (showAddForm = false)}>
+				<button type="button" class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block" on:click={() => (showAddForm = false)}>
 					Cancel
-				</Button>
+				</button>
 			{:else}
-				<Button type="button" variant="success" onclick={() => (showAddForm = true)}>
+				<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" on:click={() => (showAddForm = true)}>
 					Add Credit Card
-				</Button>
+				</button>
 			{/if}
 		{/if}
-		<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
+		<a href="/projects/ccbilling" class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block">Back to Billing Cycles</a>
 	</div>
 </PageLayout>
