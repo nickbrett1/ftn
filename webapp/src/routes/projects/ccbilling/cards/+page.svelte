@@ -4,7 +4,7 @@
 
 	const { data } = $props();
 	
-	let creditCards;
+	let creditCards = [];
 	
 	$effect(() => {
 		({ creditCards } = data);

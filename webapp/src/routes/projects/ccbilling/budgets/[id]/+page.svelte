@@ -4,7 +4,8 @@
 
 	const { data } = $props();
 	
-	let budget, merchants;
+	let budget = null;
+	let merchants = [];
 	
 	$effect(() => {
 		({ budget, merchants } = data);
@@ -154,8 +155,8 @@
 </script>
 
 <PageLayout
-	title="Budget Details - {budget.name}"
-	description="Manage merchant associations for {budget.name}"
+	title="Budget Details - {budget?.name || 'Loading...'}"
+	description="Manage merchant associations for {budget?.name || 'this budget'}"
 >
 	<div class="flex justify-between items-center mb-8">
 		<div>
@@ -188,7 +189,7 @@
 				{/if}
 			{:else}
 				<div class="flex flex-col space-y-2">
-					<h1 class="text-4xl font-bold">{budget.name}</h1>
+					<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
 					<div class="self-start">
 						<Button onclick={startEditName} variant="warning" size="sm" style="cursor: pointer;">
 							Edit Name
@@ -205,11 +206,11 @@
 		<div class="grid grid-cols-2 gap-4">
 			<div>
 				<p class="text-gray-400 text-sm">Budget Name</p>
-				<p class="text-white font-medium">{budget.name}</p>
+				<p class="text-white font-medium">{budget?.name || 'Loading...'}</p>
 			</div>
 			<div>
 				<p class="text-gray-400 text-sm">Budget ID</p>
-				<p class="text-white font-medium">{budget.id}</p>
+				<p class="text-white font-medium">{budget?.id || 'Loading...'}</p>
 			</div>
 		</div>
 	</div>
@@ -220,7 +221,7 @@
 		<p class="text-gray-400 mb-6">
 			Add merchants to automatically assign charges from these merchants to this budget. When
 			charges are parsed from statements, any charges from these merchants will be automatically
-			categorized under "{budget.name}".
+			categorized under "{budget?.name || 'this budget'}".
 		</p>
 
 		<!-- Add Merchant Form -->
@@ -285,7 +286,7 @@
 							<div>
 								<p class="text-white font-medium">{merchant.merchant}</p>
 								<p class="text-gray-400 text-sm">
-									Charges from this merchant will be auto-assigned to "{budget.name}"
+									Charges from this merchant will be auto-assigned to "{budget?.name || 'this budget'}"
 								</p>
 							</div>
 							<Button
