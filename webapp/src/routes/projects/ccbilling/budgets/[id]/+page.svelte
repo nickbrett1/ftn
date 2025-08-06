@@ -2,8 +2,10 @@
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 
-	export let data;
-	$: ({ budget, merchants } = data);
+	const { data } = $props();
+	
+	// Use synchronous destructuring to get data immediately
+	const { budget = null, merchants = [] } = data;
 
 	// Add merchant state
 	let showAddForm = false;
@@ -22,9 +24,11 @@
 	let nameEditError = '';
 
 	// Initialize editName when budget is available
-	$: if (budget && !isEditingName) {
-		editName = budget.name;
-	}
+	$effect(() => {
+		if (budget && !isEditingName) {
+			editName = budget.name;
+		}
+	});
 
 	async function addMerchant() {
 		if (!newMerchantName.trim()) {
@@ -147,8 +151,8 @@
 </script>
 
 <PageLayout
-	title="Budget Details - {budget.name}"
-	description="Manage merchant associations for {budget.name}"
+	title="Budget Details - {budget?.name || 'Loading...'}"
+	description="Manage merchant associations for {budget?.name || 'this budget'}"
 >
 	<div class="flex justify-between items-center mb-8">
 		<div>
@@ -157,7 +161,8 @@
 					<label for="budget-name-edit" class="sr-only">Budget Name</label>
 					<input
 						id="budget-name-edit"
-						bind:value={editName}
+						value={editName}
+						on:input={(e) => editName = e.target.value}
 						type="text"
 						class="text-4xl font-bold bg-gray-900 border border-gray-600 rounded-md text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						disabled={isSavingName}
@@ -180,7 +185,7 @@
 				{/if}
 			{:else}
 				<div class="flex flex-col space-y-2">
-					<h1 class="text-4xl font-bold">{budget.name}</h1>
+					<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
 					<div class="self-start">
 						<Button onclick={startEditName} variant="warning" size="sm" style="cursor: pointer;">
 							Edit Name
@@ -197,11 +202,11 @@
 		<div class="grid grid-cols-2 gap-4">
 			<div>
 				<p class="text-gray-400 text-sm">Budget Name</p>
-				<p class="text-white font-medium">{budget.name}</p>
+				<p class="text-white font-medium">{budget?.name || 'Loading...'}</p>
 			</div>
 			<div>
 				<p class="text-gray-400 text-sm">Budget ID</p>
-				<p class="text-white font-medium">{budget.id}</p>
+				<p class="text-white font-medium">{budget?.id || 'Loading...'}</p>
 			</div>
 		</div>
 	</div>
@@ -212,7 +217,7 @@
 		<p class="text-gray-400 mb-6">
 			Add merchants to automatically assign charges from these merchants to this budget. When
 			charges are parsed from statements, any charges from these merchants will be automatically
-			categorized under "{budget.name}".
+			categorized under "{budget?.name || 'this budget'}".
 		</p>
 
 		<!-- Add Merchant Form -->
@@ -226,7 +231,8 @@
 						>
 						<input
 							id="merchant-name-input"
-							bind:value={newMerchantName}
+							value={newMerchantName}
+							on:input={(e) => newMerchantName = e.target.value}
 							type="text"
 							placeholder="e.g., Amazon, Walmart, Target"
 							class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -276,7 +282,7 @@
 							<div>
 								<p class="text-white font-medium">{merchant.merchant}</p>
 								<p class="text-gray-400 text-sm">
-									Charges from this merchant will be auto-assigned to "{budget.name}"
+									Charges from this merchant will be auto-assigned to "{budget?.name || 'this budget'}"
 								</p>
 							</div>
 							<Button
