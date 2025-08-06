@@ -2,7 +2,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import ArticleContent from './dbt-duckdb.svx';
-	export let data;
+	const { data } = $props();
 </script>
 
 <svelte:head>

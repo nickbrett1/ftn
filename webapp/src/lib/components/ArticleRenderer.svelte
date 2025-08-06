@@ -6,7 +6,7 @@
 	import bash from 'highlight.js/lib/languages/bash';
 	import 'highlight.js/styles/atom-one-dark.css'; // Choose a theme you like
 
-	export let articleMarkdown = '';
+	const { articleMarkdown = '' } = $props();
 
 	let renderedHtml = '';
 
@@ -51,7 +51,9 @@
 		xhtml: false
 	});
 
-	$: renderedHtml = marked.parse(articleMarkdown);
+	$effect(() => {
+		renderedHtml = marked.parse(articleMarkdown);
+	});
 </script>
 
 <div class="prose prose-invert lg:prose-xl max-w-none">

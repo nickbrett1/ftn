@@ -1,7 +1,6 @@
 <script>
 	import { GithubBrands } from 'svelte-awesome-icons';
-	export let href = '';
-	export let text = 'Check out the code';
+	const { href = '', text = 'Check out the code' } = $props();
 </script>
 
 <a

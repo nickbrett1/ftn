@@ -1,5 +1,5 @@
 <script>
-	export let technologies = []; // e.g., ['dbt', 'DuckDB', 'Cloudflare']
+	const { technologies = [] } = $props(); // e.g., ['dbt', 'DuckDB', 'Cloudflare']
 </script>
 
 {#if technologies.length > 0}

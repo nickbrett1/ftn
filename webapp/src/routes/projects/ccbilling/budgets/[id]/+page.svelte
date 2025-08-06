@@ -2,8 +2,13 @@
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 
-	export let data;
-	$: ({ budget, merchants } = data);
+	const { data } = $props();
+	
+	let budget, merchants;
+	
+	$effect(() => {
+		({ budget, merchants } = data);
+	});
 
 	// Add merchant state
 	let showAddForm = false;
@@ -22,9 +27,11 @@
 	let nameEditError = '';
 
 	// Initialize editName when budget is available
-	$: if (budget && !isEditingName) {
-		editName = budget.name;
-	}
+	$effect(() => {
+		if (budget && !isEditingName) {
+			editName = budget.name;
+		}
+	});
 
 	async function addMerchant() {
 		if (!newMerchantName.trim()) {
@@ -157,7 +164,8 @@
 					<label for="budget-name-edit" class="sr-only">Budget Name</label>
 					<input
 						id="budget-name-edit"
-						bind:value={editName}
+						value={editName}
+						on:input={(e) => editName = e.target.value}
 						type="text"
 						class="text-4xl font-bold bg-gray-900 border border-gray-600 rounded-md text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						disabled={isSavingName}
@@ -226,7 +234,8 @@
 						>
 						<input
 							id="merchant-name-input"
-							bind:value={newMerchantName}
+							value={newMerchantName}
+							on:input={(e) => newMerchantName = e.target.value}
 							type="text"
 							placeholder="e.g., Amazon, Walmart, Target"
 							class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
