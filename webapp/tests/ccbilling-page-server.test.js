@@ -16,7 +16,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getBillingCycle: vi.fn(),
 	listStatements: vi.fn(),
 	listChargesForCycle: vi.fn(),
-	listCreditCards: vi.fn()
+	listCreditCards: vi.fn(),
+	listBudgets: vi.fn()
 }));
 
 describe('CCBilling Page Server Route', () => {
@@ -28,10 +29,11 @@ describe('CCBilling Page Server Route', () => {
 	let mockListStatements;
 	let mockListChargesForCycle;
 	let mockListCreditCards;
+	let mockListBudgets;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
-		
+
 		// Mock platform environment
 		mockPlatform = {
 			env: {
@@ -57,7 +59,8 @@ describe('CCBilling Page Server Route', () => {
 				headers: {
 					get: vi.fn()
 				}
-			}
+			},
+			depends: vi.fn()
 		};
 
 		// Get mocked functions
@@ -67,6 +70,7 @@ describe('CCBilling Page Server Route', () => {
 		mockListStatements = (await import('$lib/server/ccbilling-db.js')).listStatements;
 		mockListChargesForCycle = (await import('$lib/server/ccbilling-db.js')).listChargesForCycle;
 		mockListCreditCards = (await import('$lib/server/ccbilling-db.js')).listCreditCards;
+		mockListBudgets = (await import('$lib/server/ccbilling-db.js')).listBudgets;
 	});
 
 	describe('load function', () => {
@@ -81,7 +85,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should redirect to /projects/ccbilling when billing cycle is not found', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle not found
 			mockGetBillingCycle.mockResolvedValue(null);
 
@@ -92,7 +96,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should return all required data when authentication and billing cycle are valid', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle data
 			const mockCycle = {
 				id: 123,
@@ -110,7 +114,7 @@ describe('CCBilling Page Server Route', () => {
 			mockListStatements.mockResolvedValue(mockStatements);
 
 			const mockCharges = [
-				{ id: 1, merchant: 'Amazon', amount: 50.00, statement_id: 1 },
+				{ id: 1, merchant: 'Amazon', amount: 50.0, statement_id: 1 },
 				{ id: 2, merchant: 'Netflix', amount: 15.99, statement_id: 1 }
 			];
 			mockListChargesForCycle.mockResolvedValue(mockCharges);
@@ -141,7 +145,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle string cycle ID and convert to integer', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle data
 			const mockCycle = {
 				id: 456,
@@ -168,7 +172,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle empty arrays for related data', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle data
 			const mockCycle = {
 				id: 123,
@@ -197,7 +201,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle database errors gracefully', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle data
 			const mockCycle = {
 				id: 123,
@@ -218,10 +222,10 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle invalid cycle ID format', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock getBillingCycle to return null for NaN
 			mockGetBillingCycle.mockResolvedValue(null);
-			
+
 			// Test with invalid ID
 			mockEvent.params.id = 'invalid';
 
@@ -232,10 +236,10 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle null cycle ID', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock getBillingCycle to return null for NaN
 			mockGetBillingCycle.mockResolvedValue(null);
-			
+
 			// Test with null ID
 			mockEvent.params.id = null;
 
@@ -246,10 +250,10 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle undefined cycle ID', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock getBillingCycle to return null for NaN
 			mockGetBillingCycle.mockResolvedValue(null);
-			
+
 			// Test with undefined ID
 			mockEvent.params.id = undefined;
 
@@ -260,7 +264,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle zero cycle ID', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle not found for zero ID
 			mockGetBillingCycle.mockResolvedValue(null);
 			mockEvent.params.id = '0';
@@ -272,7 +276,7 @@ describe('CCBilling Page Server Route', () => {
 		it('should handle negative cycle ID', async () => {
 			// Mock successful authentication
 			mockRequireUser.mockResolvedValue(null);
-			
+
 			// Mock billing cycle not found for negative ID
 			mockGetBillingCycle.mockResolvedValue(null);
 			mockEvent.params.id = '-1';

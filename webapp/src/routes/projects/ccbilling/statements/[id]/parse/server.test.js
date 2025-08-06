@@ -430,6 +430,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				'2024-01-15', // Should be corrected to include year
 				false,
 				null,
+				null,
 				null
 			);
 			expect(createPayment).toHaveBeenCalledWith(
@@ -440,6 +441,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				'Both',
 				'2024-01-20', // Should be corrected to include year
 				false,
+				null,
 				null,
 				null
 			);
