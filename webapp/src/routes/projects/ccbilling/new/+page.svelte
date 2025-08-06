@@ -2,20 +2,23 @@
 	import Button from '$lib/components/Button.svelte';
 	import { goto } from '$app/navigation';
 
-	let startDate = '';
-	let endDate = '';
+	// Get default dates from server
+	export let data;
+	
+	// Validate and set default dates
+	function validateDate(dateString) {
+		if (!dateString) return false;
+		const date = new Date(dateString);
+		return !isNaN(date.getTime());
+	}
+	
+	// Use server-provided dates if valid, otherwise fall back to today
+	const today = new Date().toISOString().split('T')[0];
+	let startDate = validateDate(data.defaultStartDate) ? data.defaultStartDate : today;
+	let endDate = validateDate(data.defaultEndDate) ? data.defaultEndDate : today;
+	
 	let isSubmitting = false;
 	let error = '';
-
-	// Set default dates
-	$: if (!startDate) {
-		// Default to today
-		startDate = new Date().toISOString().split('T')[0];
-	}
-	$: if (!endDate) {
-		// Default to today
-		endDate = new Date().toISOString().split('T')[0];
-	}
 
 	async function createBillingCycle() {
 		if (!startDate || !endDate) {
