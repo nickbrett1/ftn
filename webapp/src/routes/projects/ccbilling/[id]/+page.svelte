@@ -189,7 +189,7 @@
 				throw new Error(errorData.error || 'Failed to delete billing cycle');
 			}
 			// Invalidate the cache to ensure fresh data is loaded
-			await invalidate('statements');
+			await invalidate('/projects/ccbilling');
 			await goto('/projects/ccbilling');
 		} catch (err) {
 			deleteError = err.message;
