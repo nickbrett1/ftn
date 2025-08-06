@@ -3,11 +3,8 @@
 	import Button from '$lib/components/Button.svelte';
 	const { data } = $props();
 	
-	let billingCycles = [];
-	
-	$effect(() => {
-		({ billingCycles } = data);
-	});
+	// Use synchronous destructuring to get data immediately
+	const { billingCycles = [] } = data;
 
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';
