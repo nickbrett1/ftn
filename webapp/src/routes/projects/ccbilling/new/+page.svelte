@@ -5,8 +5,18 @@
 	// Get default dates from server
 	export let data;
 	
-	let startDate = data.defaultStartDate;
-	let endDate = data.defaultEndDate;
+	// Validate and set default dates
+	function validateDate(dateString) {
+		if (!dateString) return false;
+		const date = new Date(dateString);
+		return !isNaN(date.getTime());
+	}
+	
+	// Use server-provided dates if valid, otherwise fall back to today
+	const today = new Date().toISOString().split('T')[0];
+	let startDate = validateDate(data.defaultStartDate) ? data.defaultStartDate : today;
+	let endDate = validateDate(data.defaultEndDate) ? data.defaultEndDate : today;
+	
 	let isSubmitting = false;
 	let error = '';
 
