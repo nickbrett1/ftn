@@ -3,7 +3,7 @@
 	import Button from '$lib/components/Button.svelte';
 	const { data } = $props();
 	
-	let billingCycles;
+	let billingCycles = [];
 	
 	$effect(() => {
 		({ billingCycles } = data);

@@ -4,7 +4,7 @@
 
 	const { data } = $props();
 	
-	let budgets;
+	let budgets = [];
 	
 	$effect(() => {
 		({ budgets } = data);
