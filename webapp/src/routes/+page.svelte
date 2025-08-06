@@ -36,13 +36,13 @@
 		const module = await import('$lib/components/Background.svelte');
 		BackgroundComponent = module.default;
 
-		if (browser && window.location.hash) {
+		if (browser && typeof window !== 'undefined' && window.location.hash) {
 			scrollToHash(window.location.hash, 'onMount');
 		}
 	});
 
 	afterNavigate((navigation) => {
-		if (browser && navigation.to && navigation.to.hash) {
+		if (browser && typeof window !== 'undefined' && navigation.to && navigation.to.hash) {
 			console.log('afterNavigate: Attempting to scroll to hash:', navigation.to.hash);
 			scrollToHash(navigation.to.hash, 'afterNavigate');
 		}
