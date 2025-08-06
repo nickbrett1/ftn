@@ -8,20 +8,20 @@
 	const { budgets = [] } = data;
 
 	// Add budget state
-	let showAddForm = false;
-	let newBudgetName = '';
-	let isAdding = false;
-	let addError = '';
+	let showAddForm = $state(false);
+	let newBudgetName = $state('');
+	let isAdding = $state(false);
+	let addError = $state('');
 
 	// Edit budget state
-	let editingBudget = null;
-	let editName = '';
-	let isEditing = false;
-	let editError = '';
+	let editingBudget = $state(null);
+	let editName = $state('');
+	let isEditing = $state(false);
+	let editError = $state('');
 
 	// Delete state
-	let deletingBudget = null;
-	let isDeleting = false;
+	let deletingBudget = $state(null);
+	let isDeleting = $state(false);
 
 	async function addBudget() {
 		if (!newBudgetName.trim()) {
