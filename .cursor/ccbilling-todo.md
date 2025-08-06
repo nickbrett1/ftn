@@ -12,6 +12,64 @@
 - [x] Basic UI for viewing billing cycles and statements
 - [x] Statement parsing with LLAMA API (current implementation)
 - [x] Comprehensive test coverage for budget management
+- [x] **PDF.js Integration** - Added `pdfjs-dist` dependency
+- [x] **Foreign Currency Parsing** - Fully implemented and working
+- [x] **Enhanced JSON Parsing** - Secure JSON array extraction with `findJsonArray` function
+- [x] **Comprehensive Test Coverage** - Added tests for credit card management, auth flow, and parsing robustness
+- [x] **Authentication Robustness** - Enhanced error handling and response formatting
+- [x] **Statement Parsing Security** - ReDoS vulnerability prevention and robust JSON handling
+- [x] **Manual Charge Allocation** - Click-to-cycle allocation system with budget icons
+- [x] **Running Totals Footer** - Fixed footer showing allocation totals for all budgets
+- [x] **Flight Details Parsing** - Airport code extraction and display for flight transactions
+- [x] **Foreign Currency Formatting** - Inline display of foreign currency amounts in merchant names
+- [x] **Svelte 5 Migration** - Updated to use runes (`$props()`, `$state()`, `$derived()`, `$effect()`)
+- [x] **UI Refresh Fixes** - Proper `invalidate()` usage with `event.depends()` for reactive updates
+
+### **COMPLETED - Manual Allocation & Enhanced Parsing (Latest)**
+
+- [x] **Manual Charge Allocation System**
+
+  - Single-click allocation cycling through budgets (including "None")
+  - Visual budget icons (🛒 Groceries, 🍽️ Dining, 🚗 Transportation, etc.)
+  - Loading states during allocation updates
+  - Real-time UI updates without page refresh
+
+- [x] **Running Totals Footer**
+
+  - Fixed footer displaying allocation totals for all budgets
+  - Shows totals for "None" allocation as well
+  - Updates automatically when allocations change
+  - Always visible at bottom of screen
+
+- [x] **Flight Details Parsing**
+
+  - Enhanced Chase parser to detect flight transactions (UNITED, AMERICAN, DELTA, etc.)
+  - Multi-line airport code extraction (e.g., "100925 1 L LGA IAH")
+  - Flight details stored as JSON in database (`flight_details` column)
+  - Display format: `✈️ UNITED 0162313425796 UNITED.COM TX (LGA, IAH)`
+
+- [x] **Foreign Currency Formatting**
+
+  - Enhanced foreign currency detection to work with any merchant name
+  - Improved currency line detection (handles date prefixes like "07/01 POUND STERLING")
+  - Enhanced exchange rate parsing (handles extra text like "(EXCHG RATE)")
+  - Display format: `HM PASSPORT OFFICE DURHAM (127.86 POUND STERLING)`
+
+- [x] **Svelte 5 Migration**
+
+  - Updated from Svelte 4 to Svelte 5 runes syntax
+  - `export let data` → `let { data } = $props()`
+  - `$: { ... }` → `$effect(() => { ... })`
+  - `$: variable = ...` → `let variable = $derived(...)`
+  - `let variable = ...` → `let variable = $state(...)`
+  - `on:click` → `onclick` (event handler syntax)
+
+- [x] **UI Refresh & Reactivity Fixes**
+  - Fixed `invalidate()` usage with proper `event.depends()` declarations
+  - Cycle-specific invalidation: `event.depends(\`cycle-${cycleId}\`)`
+  - Proper reactive updates without page reloads
+  - Fixed parsing button spinner states
+  - Enhanced error popup display with user-friendly formatting
 
 ### **COMPLETED - Foreign Currency Parsing (Phase 1)**
 
@@ -53,35 +111,21 @@
 
 ## In Progress 🔄
 
-- [ ] **REFACTOR: Replace LLAMA API parsing with PDF.js browser parsing**
-  - [ ] Remove LLAMA API dependencies (llama-api-client, pdftoimg-js)
-  - [ ] Add PDF.js for browser-based PDF parsing
-  - [ ] Create provider-specific PDF parsers (Chase, AmEx, Citi, etc.)
-  - [ ] Implement structured data extraction:
-    - [ ] Credit card last 4 digits
-    - [ ] Statement closing date
-    - [ ] List of charges/credits (excluding payments)
-  - [ ] Update statement parsing endpoint to use new parsers
-  - [ ] Keep LLAMA API for merchant classification only (Phase 2)
-  - [ ] Update tests to reflect new parsing approach
-  - [ ] Revert schema changes for image support
-
-### **Phase 2: Merchant Classification**
-
-- [ ] Implement merchant classification using LLAMA API
-- [ ] Add merchant categorization to database schema
-- [ ] Create merchant classification service
-- [ ] Integrate with existing parsing pipeline
-- [ ] Add merchant categories (e.g., "Restaurants", "Travel", "Shopping")
-- [ ] Implement merchant tagging system
-- [ ] Add merchant search and filtering
-- [ ] Create merchant analytics dashboard
+- [ ] **Phase 2: Merchant Classification with LLAMA API**
+  - [ ] Implement merchant classification using LLAMA API
+  - [ ] Add merchant categorization to database schema
+  - [ ] Create merchant classification service
+  - [ ] Integrate with existing parsing pipeline
+  - [ ] Add merchant categories (e.g., "Restaurants", "Travel", "Shopping")
+  - [ ] Implement merchant tagging system
+  - [ ] Add merchant search and filtering
+  - [ ] Create merchant analytics dashboard
 
 ## Planned 📋
 
 ### Core Functionality
 
-- [ ] Charge allocation to budgets
+- [x] ~~Charge allocation to budgets~~ **COMPLETED** - Manual allocation system implemented
 - [ ] Budget totals and reporting
 - [ ] Merchant auto-assignment based on budget rules
 - [ ] Statement re-parsing capability
@@ -90,7 +134,7 @@
 
 ### Budget Management
 
-- [ ] Implement budget tracking by category
+- [x] ~~Implement budget tracking by category~~ **COMPLETED** - Running totals footer implemented
 - [ ] Add budget alerts and notifications
 - [ ] Create budget vs actual spending reports
 - [ ] Add budget rollover functionality
@@ -109,7 +153,7 @@
 - [ ] Better error messages and user feedback
 - [ ] Responsive design improvements
 - [ ] Loading states and animations
-- [ ] Mobile-responsive design improvements
+- [x] ~~Mobile-responsive design improvements~~ **COMPLETED** - Enhanced mobile UI
 - [ ] Dark/light theme toggle
 - [ ] Keyboard shortcuts
 - [ ] Bulk operations for charges
@@ -136,34 +180,37 @@
 
 ## Notes
 
-### Current Implementation Issues
+### Current Implementation Status
 
-- LLAMA API parsing is unreliable for structured data extraction
-- Complex JSON parsing logic is fragile
-- Missing negative charges (refunds/credits)
-- Performance issues with large statements
-- Generic prompts don't work well for specific data extraction
+- ✅ **PDF.js is already integrated** - `pdfjs-dist` dependency is installed
+- ✅ **LLAMA API parsing is working** - Current implementation is functional
+- ✅ **Foreign currency parsing is complete** - Multi-line transactions supported
+- ✅ **Comprehensive test coverage** - Auth, parsing, and UI components tested
+- ✅ **Security improvements** - ReDoS prevention and robust JSON handling
+- ✅ **Manual allocation system** - Click-to-cycle budget assignment with visual feedback
+- ✅ **Running totals** - Fixed footer showing allocation summaries
+- ✅ **Flight details parsing** - Airport codes extracted and displayed
+- ✅ **Foreign currency formatting** - Inline display in merchant names
+- ✅ **Svelte 5 migration** - Modern reactivity system implemented
 
-### New Approach Benefits
+### Next Priority: Phase 2 - Merchant Classification
 
-- PDF.js browser parsing is faster and more reliable
-- Provider-specific parsers handle format variations
-- Structured extraction of specific data points
-- LLAMA API used appropriately for classification only (Phase 2)
-- Better error handling and validation
-- More maintainable and testable code
+The current system is working well with LLAMA API parsing. The next logical step is to enhance merchant classification capabilities:
 
-### Next Steps
-
-1. Remove LLAMA API dependencies
-2. Add PDF.js for browser-based parsing
-3. Create parser architecture and base classes
-4. Implement Chase Bank parser as the first example
-5. Update the statement parsing endpoint
-6. Add LLAMA integration for merchant classification (Phase 2)
-7. Update tests and documentation
+1. **Merchant Categorization** - Use LLAMA API to classify merchants into categories
+2. **Auto-Assignment** - Automatically assign charges to budgets based on merchant categories
+3. **Analytics Dashboard** - Create insights based on spending patterns
 
 ### **CURRENT STATUS**
+
+**Major Accomplishments Today:**
+
+- ✅ **Manual Charge Allocation** - Users can now click to cycle through budget allocations
+- ✅ **Running Totals** - Always-visible footer showing allocation summaries
+- ✅ **Flight Details** - Airport codes displayed for flight transactions
+- ✅ **Foreign Currency Formatting** - Foreign amounts shown inline with merchant names
+- ✅ **Svelte 5 Migration** - Updated to modern reactivity system
+- ✅ **UI Refresh Fixes** - Proper reactive updates without page reloads
 
 **Phase 1 Complete:** Foreign currency parsing is fully implemented and working. The system can now:
 
@@ -186,22 +233,42 @@ CREATE TABLE payment (
   statement_id INTEGER NOT NULL REFERENCES statement(id),
   merchant TEXT NOT NULL,
   amount REAL NOT NULL,
-  allocated_to TEXT NOT NULL,
+  allocated_to TEXT,
   transaction_date DATE,
   is_foreign_currency BOOLEAN DEFAULT 0,
   foreign_currency_amount REAL,
   foreign_currency_type TEXT,
+  flight_details TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
+**Flight Details Detection:**
+
+- Multi-line transaction parsing for airport codes
+- Pattern matching: `100925 1 L LGA IAH` → extracts `LGA` and `IAH`
+- Display format: `✈️ UNITED 0162313425796 UNITED.COM TX (LGA, IAH)`
+
 **Foreign Currency Detection:**
 
 - Multi-line transaction parsing for currency conversion details
-- Exchange rate pattern matching: `145.00 X 0.154827586`
+- Exchange rate pattern matching: `127.86 X 1.375567026 (EXCHG RATE)`
+- Display format: `HM PASSPORT OFFICE DURHAM (127.86 POUND STERLING)`
 
 **PDF Parsing Improvements:**
 
 - Line-based parsing with proper Y-position grouping
 - Amount pattern matching: `([-\d,]*\.?\d{1,2})$`
 - Foreign currency look-ahead logic for multi-line transactions
+
+**Security Enhancements:**
+
+- Secure JSON array extraction with `findJsonArray` function
+- ReDoS vulnerability prevention
+- Robust error handling for malformed JSON responses
+
+**Svelte 5 Reactivity:**
+
+- Modern runes syntax for better performance
+- Proper `invalidate()` usage with dependency declarations
+- Real-time UI updates without page refreshes

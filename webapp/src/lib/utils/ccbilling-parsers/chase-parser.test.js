@@ -116,7 +116,8 @@ describe('ChaseParser', () => {
 				allocated_to: null,
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
-				foreign_currency_type: null
+				foreign_currency_type: null,
+				flight_details: null
 			});
 		});
 

@@ -347,7 +347,7 @@ describe('ccbilling-db functions', () => {
 
 		describe('createStatement', () => {
 			it('should create a new statement', async () => {
-				mockDb.run.mockResolvedValue({});
+				mockDb.run.mockResolvedValue({ meta: { last_row_id: 123 } });
 
 				await createStatement(
 					mockEvent,
@@ -432,7 +432,7 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(
 					1,
@@ -441,6 +441,7 @@ describe('ccbilling-db functions', () => {
 					'Both',
 					null,
 					false,
+					null,
 					null,
 					null
 				);
@@ -453,7 +454,7 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both', '2024-01-15');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(
 					1,
@@ -462,6 +463,7 @@ describe('ccbilling-db functions', () => {
 					'Both',
 					'2024-01-15',
 					false,
+					null,
 					null,
 					null
 				);
@@ -472,8 +474,22 @@ describe('ccbilling-db functions', () => {
 		describe('listChargesForCycle', () => {
 			it('should return charges for a billing cycle with card info', async () => {
 				const mockCharges = [
-					{ id: 1, merchant: 'Amazon', amount: 85.67, card_name: 'Chase Freedom', last4: '1234' },
-					{ id: 2, merchant: 'Target', amount: 45.32, card_name: 'Amex Gold', last4: '5678' }
+					{
+						id: 1,
+						merchant: 'Amazon',
+						amount: 85.67,
+						card_name: 'Chase Freedom',
+						last4: '1234',
+						flight_details: null
+					},
+					{
+						id: 2,
+						merchant: 'Target',
+						amount: 45.32,
+						card_name: 'Amex Gold',
+						last4: '5678',
+						flight_details: null
+					}
 				];
 				mockDb.all.mockResolvedValue({ results: mockCharges });
 

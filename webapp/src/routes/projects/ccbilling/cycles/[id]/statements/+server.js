@@ -46,6 +46,7 @@ export async function POST(event) {
 
 		// Validate required fields
 		if (!file) {
+			console.error('❌ No file provided');
 			return json(
 				{
 					error: 'Missing required field: file'
@@ -56,6 +57,7 @@ export async function POST(event) {
 
 		// Validate file type (PDF only)
 		if (file.type !== 'application/pdf') {
+			console.error('❌ Invalid file type:', file.type);
 			return json(
 				{
 					error: 'Invalid file type. Only PDF files are allowed.'
@@ -67,6 +69,7 @@ export async function POST(event) {
 		// Validate file size (10MB limit)
 		const maxSize = 10 * 1024 * 1024; // 10MB
 		if (file.size > maxSize) {
+			console.error('❌ File too large:', file.size);
 			return json(
 				{
 					error: 'File size too large. Maximum size is 10MB.'
@@ -83,6 +86,7 @@ export async function POST(event) {
 		// Upload to R2
 		const bucket = event.platform?.env?.R2_CCBILLING;
 		if (!bucket) {
+			console.error('❌ R2 bucket not configured');
 			return json({ error: 'R2 ccbilling bucket not configured' }, { status: 500 });
 		}
 
@@ -99,11 +103,10 @@ export async function POST(event) {
 			}
 		});
 
-		console.log('📄 PDF uploaded to R2:', r2_key);
-
 		// Save statement metadata to database (credit card will be identified during parsing)
+		let statementId;
 		try {
-			await createStatement(
+			statementId = await createStatement(
 				event,
 				cycleId,
 				null, // Credit card will be identified during parsing
@@ -111,7 +114,7 @@ export async function POST(event) {
 				r2_key,
 				null // Statement date will be set after parsing
 			);
-			console.log('✅ Statement created in database');
+			console.log('✅ Statement created in database with ID:', statementId);
 		} catch (dbError) {
 			console.error('❌ Database error creating statement:', dbError);
 			// Clean up R2 file if database creation fails
@@ -124,14 +127,17 @@ export async function POST(event) {
 			throw new Error(`Failed to create statement in database: ${dbError.message}`);
 		}
 
-		return json({
+		const response = {
 			success: true,
 			filename: file.name,
 			r2_key: r2_key,
-			size: file.size
-		});
+			size: file.size,
+			statement_id: statementId
+		};
+
+		return json(response);
 	} catch (error) {
-		console.error('Error uploading statement:', error);
+		console.error('❌ Error uploading statement:', error);
 		return json({ error: 'Failed to upload statement' }, { status: 500 });
 	}
 }

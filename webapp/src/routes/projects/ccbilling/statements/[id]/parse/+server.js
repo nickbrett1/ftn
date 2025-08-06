@@ -159,7 +159,8 @@ export const POST = RouteUtils.createRouteHandler(
 				transactionDate, // Use the corrected transaction date
 				charge.is_foreign_currency || false,
 				charge.foreign_currency_amount || null,
-				charge.foreign_currency_type || null
+				charge.foreign_currency_type || null,
+				charge.flight_details || null
 			);
 		}
 

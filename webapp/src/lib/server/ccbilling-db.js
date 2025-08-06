@@ -298,12 +298,15 @@ export async function createStatement(
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	await db
+
+	const result = await db
 		.prepare(
 			'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key) VALUES (?, ?, ?, ?, ?, ?)'
 		)
 		.bind(billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key)
 		.run();
+
+	return result.meta.last_row_id;
 }
 
 /**
@@ -382,13 +385,14 @@ export async function createPayment(
 	transaction_date = null,
 	is_foreign_currency = false,
 	foreign_currency_amount = null,
-	foreign_currency_type = null
+	foreign_currency_type = null,
+	flight_details = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
 		.prepare(
-			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
 		)
 		.bind(
 			statement_id,
@@ -398,7 +402,8 @@ export async function createPayment(
 			transaction_date,
 			is_foreign_currency,
 			foreign_currency_amount,
-			foreign_currency_type
+			foreign_currency_type,
+			flight_details ? JSON.stringify(flight_details) : null
 		)
 		.run();
 }
@@ -425,7 +430,12 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 		)
 		.bind(billing_cycle_id)
 		.all();
-	return results;
+
+	// Parse flight_details JSON for each charge
+	return results.map((charge) => ({
+		...charge,
+		flight_details: charge.flight_details ? JSON.parse(charge.flight_details) : null
+	}));
 }
 
 /**
