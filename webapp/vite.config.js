@@ -65,18 +65,13 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Reduce concurrency to prevent race conditions
-			maxConcurrency: 2,
-			// Add pool options for better stability
+			// Pool options for test execution
 			pool: 'forks',
 			poolOptions: {
 				forks: {
-					singleFork: true,
-					isolate: true
+					// Reverted from singleFork and isolate for better performance
 				}
 			},
-			// Add retry logic for flaky tests
-			retry: 1,
 			// Add explicit reporter configuration for both console and JUnit output
 			reporter: ['default', 'junit'],
 			outputFile: {
