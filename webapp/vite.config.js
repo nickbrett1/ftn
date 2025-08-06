@@ -41,6 +41,9 @@ export default defineConfig(({ command, mode }) => {
 			include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
 			globals: true,
 			environment: 'jsdom',
+			// Add explicit setup and teardown to prevent race conditions
+			setupFiles: [],
+			teardownTimeout: 10000, // 10 seconds for cleanup
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -62,8 +65,23 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Optimize concurrent tests for large resource class
-			maxConcurrency: 3
+			// Reduce concurrency to prevent race conditions
+			maxConcurrency: 2,
+			// Add pool options for better stability
+			pool: 'forks',
+			poolOptions: {
+				forks: {
+					singleFork: true,
+					isolate: true
+				}
+			},
+			// Add retry logic for flaky tests
+			retry: 1,
+			// Add explicit reporter configuration for both console and JUnit output
+			reporter: ['default', 'junit'],
+			outputFile: {
+				junit: './reports/junit.xml'
+			}
 		},
 		ssr: {
 			noExternal: ['three']
