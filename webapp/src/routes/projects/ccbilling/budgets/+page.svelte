@@ -280,7 +280,7 @@
 	<div class="mt-8 flex space-x-4">
 		{#if !showAddForm}
 			<Button
-				onclick={() => (showAddForm = true)}
+				onclick={() => showAddForm = true}
 				variant="success"
 				size="lg"
 				style="cursor: pointer;"
