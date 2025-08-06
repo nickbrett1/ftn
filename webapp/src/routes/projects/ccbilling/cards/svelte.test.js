@@ -486,7 +486,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			const addButton = getByText('Add Credit Card');
 			await fireEvent.click(addButton);
 
-			// Fill form
+			// Wait for form to appear and fill form
+			await waitFor(() => {
+				expect(getByLabelText('Card Name:')).toBeTruthy();
+			});
+			
 			const nameInput = getByLabelText('Card Name:');
 			const last4Input = getByLabelText('Last 4 Digits:');
 			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
@@ -514,6 +518,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			// Start edit
 			const editButtons = getAllByText('Edit');
 			await fireEvent.click(editButtons[0]);
+
+			// Wait for edit form to appear
+			await waitFor(() => {
+				expect(getAllByText('Save')[0]).toBeTruthy();
+			});
 
 			// Start saving
 			const saveButton = getAllByText('Save')[0];
@@ -555,7 +564,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			const addButton = getByText('Add Credit Card');
 			await fireEvent.click(addButton);
 
-			// Fill form
+			// Wait for form to appear and fill form
+			await waitFor(() => {
+				expect(getByLabelText('Card Name:')).toBeTruthy();
+			});
+
 			const nameInput = getByLabelText('Card Name:');
 			const last4Input = getByLabelText('Last 4 Digits:');
 			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
@@ -585,7 +598,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			const addButton = getByText('Add Credit Card');
 			await fireEvent.click(addButton);
 
-			// Fill form
+			// Wait for form to appear and fill form
+			await waitFor(() => {
+				expect(getByLabelText('Card Name:')).toBeTruthy();
+			});
+
 			const nameInput = getByLabelText('Card Name:');
 			const last4Input = getByLabelText('Last 4 Digits:');
 			await fireEvent.input(nameInput, { target: { value: 'New Card' } });

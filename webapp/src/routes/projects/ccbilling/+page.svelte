@@ -1,8 +1,10 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
-	export let data;
-	$: ({ billingCycles } = data);
+	const { data } = $props();
+	
+	// Use synchronous destructuring to get data immediately
+	const { billingCycles = [] } = data;
 
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';

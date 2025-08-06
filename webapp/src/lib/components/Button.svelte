@@ -6,7 +6,6 @@
 		disabled = false,
 		href = null,
 		children,
-		onclick = null,
 		...rest
 	} = $props();
 
@@ -41,7 +40,7 @@
 		{@render children?.()}
 	</a>
 {:else}
-	<button {type} {disabled} class={classes} {onclick} {...restWithoutClass}>
+	<button {type} {disabled} class={classes} {...restWithoutClass}>
 		{@render children?.()}
 	</button>
 {/if}
