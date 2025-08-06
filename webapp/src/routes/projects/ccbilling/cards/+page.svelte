@@ -2,8 +2,13 @@
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 
-	export let data;
-	$: ({ creditCards } = data);
+	const { data } = $props();
+	
+	let creditCards;
+	
+	$effect(() => {
+		({ creditCards } = data);
+	});
 
 	// Add card state
 	let showAddForm = false;
@@ -170,7 +175,8 @@
 					<input
 						id="new-card-name"
 						type="text"
-						bind:value={newCardName}
+						value={newCardName}
+						on:input={(e) => newCardName = e.target.value}
 						placeholder="e.g., Chase Freedom"
 						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
 					/>
@@ -180,7 +186,8 @@
 					<input
 						id="new-card-last4"
 						type="text"
-						bind:value={newCardLast4}
+						value={newCardLast4}
+						on:input={(e) => newCardLast4 = e.target.value}
 						placeholder="1234"
 						maxlength="4"
 						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -230,7 +237,8 @@
 										<input
 											id="edit-card-name"
 											type="text"
-											bind:value={editName}
+											value={editName}
+											on:input={(e) => editName = e.target.value}
 											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 										/>
 									</div>
@@ -241,7 +249,8 @@
 										<input
 											id="edit-card-last4"
 											type="text"
-											bind:value={editLast4}
+											value={editLast4}
+											on:input={(e) => editLast4 = e.target.value}
 											maxlength="4"
 											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 										/>

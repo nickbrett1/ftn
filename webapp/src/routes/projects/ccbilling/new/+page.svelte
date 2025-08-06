@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 
 	// Get default dates from server
-	export let data;
+	const { data } = $props();
 	
 	// Validate and set default dates
 	function validateDate(dateString) {
@@ -81,7 +81,8 @@
 			<input
 				id="start-date-input"
 				type="date"
-				bind:value={startDate}
+				value={startDate}
+				on:input={(e) => startDate = e.target.value}
 				required
 				class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
 			/>
@@ -92,7 +93,8 @@
 			<input
 				id="end-date-input"
 				type="date"
-				bind:value={endDate}
+				value={endDate}
+				on:input={(e) => endDate = e.target.value}
 				required
 				class="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
 			/>

@@ -1,8 +1,13 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
-	export let data;
-	$: ({ billingCycles } = data);
+	const { data } = $props();
+	
+	let billingCycles;
+	
+	$effect(() => {
+		({ billingCycles } = data);
+	});
 
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';
