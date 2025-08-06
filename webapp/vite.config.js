@@ -77,7 +77,7 @@ export default defineConfig(({ command, mode }) => {
 			},
 			// Add retry logic for flaky tests
 			retry: 1,
-			// Add explicit reporter configuration
+			// Add explicit reporter configuration for both console and JUnit output
 			reporter: ['default', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'

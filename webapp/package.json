@@ -19,7 +19,7 @@
 		"test": "vitest --coverage",
 		"test:once": "vitest run",
 		"test-staging": "vitest --coverage --reporter=junit --outputFile=./reports/junit.xml",
-		"test-ci": "vitest --coverage --reporter=junit --outputFile=./reports/junit.xml --run --no-watch --maxConcurrency=2 --pool=forks --poolOptions.forks.singleFork=true --poolOptions.forks.isolate=true --teardownTimeout=10000",
+		"test-ci": "vitest --coverage --run --no-watch",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
 		"lighthouse": "doppler run --command='LIGHTHOUSE_ENABLED=true && vite preview'",
