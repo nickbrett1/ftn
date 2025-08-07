@@ -92,9 +92,9 @@
 	// Allocation editing state - removed loading state to fix click issues
 	// Removed recentlyUpdated state as it was causing UI issues
 
-	// Calculate running totals
-	let allocationTotals = $derived(
-		localData.charges.reduce((totals, charge) => {
+	// Calculate running totals and sort them
+	function getSortedAllocationTotals() {
+		const totals = localData.charges.reduce((totals, charge) => {
 			// Use a special key for unallocated items to avoid null key conversion issues
 			const allocation = charge.allocated_to || '__unallocated__';
 			if (!totals[allocation]) {
@@ -102,12 +102,9 @@
 			}
 			totals[allocation] += charge.amount;
 			return totals;
-		}, {})
-	);
+		}, {});
 
-	// Create sorted allocation totals with consistent ordering: unallocated first, then budgets alphabetically
-	let sortedAllocationTotals = $derived(() => {
-		const entries = Object.entries(allocationTotals);
+		const entries = Object.entries(totals);
 		return entries.sort(([a], [b]) => {
 			// Always put unallocated first
 			if (a === '__unallocated__') return -1;
@@ -115,7 +112,7 @@
 			// Then sort budgets alphabetically
 			return a.localeCompare(b);
 		});
-	});
+	}
 
 	// Get budget names for allocation options (including null for unallocated)
 	let budgetNames = $derived(localData.budgets.map((b) => b.name));
@@ -359,8 +356,6 @@
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to delete statement');
 			}
-
-			console.log('✅ Statement deleted successfully');
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
@@ -872,10 +867,17 @@
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div class="text-white font-medium">Running Totals:</div>
 				<div class="flex flex-wrap items-center gap-4">
-					{#each sortedAllocationTotals as [allocation, total]}
+					{#each getSortedAllocationTotals() as [allocation, total]}
 						<div class="flex items-center gap-2">
-							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
-							<span class="text-gray-300 text-sm">{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span>
+							<span class="text-lg"
+								>{getAllocationIcon(
+									allocation === '__unallocated__' ? null : allocation,
+									localData.budgets
+								)}</span
+							>
+							<span class="text-gray-300 text-sm"
+								>{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span
+							>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
 								{total < 0 ? '-' : ''}${Math.abs(total).toFixed(2)}
 							</span>
