@@ -9,8 +9,10 @@
 	// Create a local reactive copy of the data for mutations
 	let localData = $state({
 		...data,
-		charges: [...data.charges]
+		charges: [...(data.charges || [])]
 	});
+
+
 
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';
@@ -93,8 +95,12 @@
 	// Removed recentlyUpdated state as it was causing UI issues
 
 	// Calculate running totals
-	let allocationTotals = $derived(
-		localData.charges.reduce((totals, charge) => {
+	let allocationTotals = $derived(() => {
+		if (!localData.charges || localData.charges.length === 0) {
+			return {};
+		}
+		
+		return localData.charges.reduce((totals, charge) => {
 			// Use a special key for unallocated items to avoid null key conversion issues
 			const allocation = charge.allocated_to || '__unallocated__';
 			if (!totals[allocation]) {
@@ -102,13 +108,19 @@
 			}
 			totals[allocation] += charge.amount;
 			return totals;
-		}, {})
-	);
+		}, {});
+	});
+
+
 
 
 
 	// Create sorted allocation totals with consistent ordering: unallocated first, then budgets alphabetically
 	let sortedAllocationTotals = $derived(() => {
+		if (!allocationTotals || Object.keys(allocationTotals).length === 0) {
+			return [];
+		}
+		
 		const entries = Object.entries(allocationTotals);
 		const sorted = entries.sort(([a], [b]) => {
 			// Always put unallocated first
@@ -874,6 +886,8 @@
 		<div class="flex flex-wrap items-center justify-between gap-4">
 			<div class="text-white font-medium">Running Totals:</div>
 			<div class="flex flex-wrap items-center gap-4">
+				<!-- Debug: charges length = {localData.charges?.length || 0}, sortedAllocationTotals length = {sortedAllocationTotals.length} -->
+				<!-- Debug: allocationTotals = {JSON.stringify(allocationTotals)} -->
 				{#if localData.charges && localData.charges.length > 0}
 					{#each sortedAllocationTotals as [allocation, total]}
 						<div class="flex items-center gap-2">
@@ -884,8 +898,12 @@
 							</span>
 						</div>
 					{/each}
+					<!-- Debug: Show raw totals -->
+					<div class="text-yellow-400 text-xs">
+						Raw: {JSON.stringify(allocationTotals)}
+					</div>
 				{:else}
-					<div class="text-gray-400 text-sm">No charges loaded</div>
+					<div class="text-gray-400 text-sm">No charges loaded (charges: {localData.charges?.length || 0})</div>
 				{/if}
 			</div>
 		</div>
