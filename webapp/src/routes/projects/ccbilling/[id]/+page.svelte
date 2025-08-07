@@ -5,6 +5,12 @@
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
+	// Create a local reactive copy of the data for mutations
+	let localData = $state({
+		...data,
+		charges: [...data.charges]
+	});
+
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';
 		const [year, month, day] = dateString.split('-').map(Number);
@@ -87,7 +93,7 @@
 
 	// Calculate running totals
 	let allocationTotals = $derived(
-		data.charges.reduce((totals, charge) => {
+		localData.charges.reduce((totals, charge) => {
 			const allocation = charge.allocated_to || 'Unallocated';
 			if (!totals[allocation]) {
 				totals[allocation] = 0;
@@ -98,26 +104,14 @@
 	);
 
 	// Get budget names for allocation options (including null for unallocated)
-	let budgetNames = $derived(data.budgets.map((b) => b.name));
+	let budgetNames = $derived(localData.budgets.map((b) => b.name));
 
 	// Determine if we should use radio buttons (for small number of budgets)
-	let shouldUseRadioButtons = $derived(data.budgets.length <= 5);
-
-	// Create a set of statement IDs that have been parsed (have associated charges)
-	let parsedStatementIds = $derived(() => {
-		const statementIds = new Set();
-		data.charges.forEach(charge => {
-			// Each charge should have a statement_id field from the database
-			if (charge.statement_id) {
-				statementIds.add(charge.statement_id);
-			}
-		});
-		return statementIds;
-	});
+	let shouldUseRadioButtons = $derived(localData.budgets.length <= 5);
 
 	// Function to check if a statement has been parsed (has associated charges)
 	function isStatementParsed(statementId) {
-		return parsedStatementIds.has(statementId);
+		return localData.charges.some((charge) => charge.statement_id === statementId);
 	}
 
 	function showCardInfo(cardName) {
@@ -140,7 +134,7 @@
 		updatingAllocations.add(chargeId);
 
 		try {
-			const charge = data.charges.find((c) => c.id === chargeId);
+			const charge = localData.charges.find((c) => c.id === chargeId);
 
 			const response = await fetch(`/projects/ccbilling/charges/${chargeId}`, {
 				method: 'PUT',
@@ -159,12 +153,13 @@
 				throw new Error(errorData.error || 'Failed to update allocation');
 			}
 
-			// Update the local charge data
-			const chargeIndex = data.charges.findIndex((c) => c.id === chargeId);
+			// Update the local charge data with proper reactivity
+			const chargeIndex = localData.charges.findIndex((c) => c.id === chargeId);
 			if (chargeIndex !== -1) {
-				// Store the allocation directly (null for unallocated, budget name for allocated)
-				data.charges[chargeIndex].allocated_to = newAllocation;
-				data.charges = [...data.charges]; // Trigger reactivity
+				// Create a new array to ensure reactivity
+				localData.charges = localData.charges.map((c, index) =>
+					index === chargeIndex ? { ...c, allocated_to: newAllocation } : c
+				);
 			}
 		} catch (error) {
 			console.error('Error updating allocation:', error);
@@ -590,7 +585,9 @@
 									>
 										{#if parsingStatements.has(statement.id)}
 											<div class="flex items-center space-x-2">
-												<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+												<div
+													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
+												></div>
 												<span>Parsing...</span>
 											</div>
 										{:else}
@@ -598,7 +595,9 @@
 										{/if}
 									</Button>
 								{:else}
-									<div class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded">
+									<div
+										class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded"
+									>
 										✓ Parsed
 									</div>
 								{/if}
@@ -627,13 +626,13 @@
 	</div>
 
 	<!-- Charges Section -->
-	{#if data.charges.length > 0}
+	{#if localData.charges.length > 0}
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-			<h3 class="text-xl font-semibold text-white mb-4">Charges ({data.charges.length})</h3>
+			<h3 class="text-xl font-semibold text-white mb-4">Charges ({localData.charges.length})</h3>
 
 			<!-- Mobile-friendly table -->
 			<div class="block md:hidden">
-				{#each data.charges as charge}
+				{#each localData.charges as charge}
 					<div class="border-b border-gray-700 py-3 last:border-b-0">
 						<div class="flex justify-between items-start gap-3">
 							<div class="flex-1 min-w-0">
@@ -679,7 +678,7 @@
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
-													{getAllocationIcon(budgetOption, data.budgets)}
+													{getAllocationIcon(budgetOption, localData.budgets)}
 												</button>
 											{/each}
 										</div>
@@ -692,12 +691,12 @@
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
-													getNextAllocation(charge.allocated_to, data.budgets)
+													getNextAllocation(charge.allocated_to, localData.budgets)
 												)}
 										>
 											{updatingAllocations.has(charge.id)
 												? '⏳'
-												: getAllocationIcon(charge.allocated_to, data.budgets)}
+												: getAllocationIcon(charge.allocated_to, localData.budgets)}
 										</button>
 									{/if}
 								</div>
@@ -726,7 +725,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.charges as charge}
+						{#each localData.charges as charge}
 							<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
 								<td class="text-gray-300 text-sm py-2">
 									<span
@@ -770,7 +769,7 @@
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
-													{getAllocationIcon(budgetOption, data.budgets)}
+													{getAllocationIcon(budgetOption, localData.budgets)}
 												</button>
 											{/each}
 										</div>
@@ -783,12 +782,12 @@
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
-													getNextAllocation(charge.allocated_to, data.budgets)
+													getNextAllocation(charge.allocated_to, localData.budgets)
 												)}
 										>
 											{updatingAllocations.has(charge.id)
 												? '⏳'
-												: getAllocationIcon(charge.allocated_to, data.budgets)}
+												: getAllocationIcon(charge.allocated_to, localData.budgets)}
 										</button>
 									{/if}
 								</td>
@@ -841,7 +840,7 @@
 </div>
 
 <!-- Fixed Footer with Running Totals -->
-{#if data.charges.length > 0}
+{#if localData.charges.length > 0}
 	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-40">
 		<div class="container mx-auto max-w-6xl">
 			<div class="flex flex-wrap items-center justify-between gap-4">
@@ -849,7 +848,7 @@
 				<div class="flex flex-wrap items-center gap-4">
 					{#each Object.entries(allocationTotals) as [allocation, total]}
 						<div class="flex items-center gap-2">
-							<span class="text-lg">{getAllocationIcon(allocation, data.budgets)}</span>
+							<span class="text-lg">{getAllocationIcon(allocation, localData.budgets)}</span>
 							<span class="text-gray-300 text-sm">{allocation}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
 								{total < 0 ? '-' : ''}${Math.abs(total).toFixed(2)}
