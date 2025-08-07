@@ -1,32 +1,42 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { 
+		getAvailableIcons, 
+		getIconDescription,
+		isIconUsedByOtherBudget,
+		getBudgetNameUsingIcon
+	} from '$lib/utils/budget-icons.js';
 
 	const { data } = $props();
-	
+
 	// Use synchronous destructuring to get data immediately
 	const { budget = null, merchants = [] } = data;
 
 	// Add merchant state
-	let showAddForm = false;
-	let newMerchantName = '';
-	let isAdding = false;
-	let addError = '';
+	let showAddForm = $state(false);
+	let newMerchantName = $state('');
+	let isAdding = $state(false);
+	let addError = $state('');
 
 	// Delete merchant state
-	let deletingMerchant = null;
-	let isDeleting = false;
+	let deletingMerchant = $state(null);
+	let isDeleting = $state(false);
 
-	// Edit budget name state
-	let isEditingName = false;
-	let editName = '';
-	let isSavingName = false;
-	let nameEditError = '';
+	// Edit budget name and icon state
+	let editName = $state('');
+	let editIcon = $state('');
+	let isSavingName = $state(false);
+	let nameEditError = $state('');
 
-	// Initialize editName when budget is available
+	// Get available icons
+	let availableIcons = $derived(getAvailableIcons());
+
+	// Initialize editName and editIcon when budget is available
 	$effect(() => {
-		if (budget && !isEditingName) {
+		if (budget) {
 			editName = budget.name;
+			editIcon = budget.icon || '';
 		}
 	});
 
@@ -104,21 +114,20 @@
 		addError = '';
 	}
 
-	function startEditName() {
-		isEditingName = true;
-		editName = budget.name;
-		nameEditError = '';
-	}
-
-	function cancelEditName() {
-		isEditingName = false;
-		editName = budget.name;
-		nameEditError = '';
-	}
-
 	async function saveBudgetName() {
 		if (!editName.trim()) {
 			nameEditError = 'Please enter a budget name';
+			return;
+		}
+
+		if (!editIcon) {
+			nameEditError = 'Please select a budget icon';
+			return;
+		}
+
+		// Check if the selected icon is already used by another budget
+		if (isIconUsedByOtherBudget(editIcon, data.budgets || [], budget?.id)) {
+			nameEditError = 'This icon is already used by another budget';
 			return;
 		}
 
@@ -130,17 +139,18 @@
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					name: editName.trim()
+					name: editName.trim(),
+					icon: editIcon
 				})
 			});
 
 			if (!response.ok) {
 				const error = await response.json();
-				nameEditError = error.error || 'Failed to update budget name';
+				nameEditError = error.error || 'Failed to update budget';
 				return;
 			}
 
-			// Refresh data to show updated name
+			// Refresh data to show updated name and icon
 			window.location.reload();
 		} catch (error) {
 			nameEditError = 'Network error occurred';
@@ -156,58 +166,66 @@
 >
 	<div class="flex justify-between items-center mb-8">
 		<div>
-			{#if isEditingName}
-				<div class="flex items-center space-x-2">
-					<label for="budget-name-edit" class="sr-only">Budget Name</label>
-					<input
-						id="budget-name-edit"
-						value={editName}
-						on:input={(e) => editName = e.target.value}
-						type="text"
-						class="text-4xl font-bold bg-gray-900 border border-gray-600 rounded-md text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-						disabled={isSavingName}
-					/>
-					<Button
-						onclick={saveBudgetName}
-						variant="success"
-						size="sm"
-						disabled={isSavingName}
-						style="cursor: pointer;"
-					>
-						{isSavingName ? 'Saving...' : 'Save'}
-					</Button>
-					<Button onclick={cancelEditName} variant="secondary" size="sm" style="cursor: pointer;">
-						Cancel
-					</Button>
-				</div>
-				{#if nameEditError}
-					<p class="text-red-400 text-sm mt-2">{nameEditError}</p>
-				{/if}
-			{:else}
-				<div class="flex flex-col space-y-2">
-					<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
-					<div class="self-start">
-						<Button onclick={startEditName} variant="warning" size="sm" style="cursor: pointer;">
-							Edit Name
-						</Button>
-					</div>
-				</div>
-			{/if}
+			<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
 		</div>
 	</div>
 
 	<!-- Budget Info -->
 	<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8">
 		<h2 class="text-xl font-semibold text-white mb-4">Budget Information</h2>
-		<div class="grid grid-cols-2 gap-4">
+		<div class="space-y-4">
 			<div>
-				<p class="text-gray-400 text-sm">Budget Name</p>
-				<p class="text-white font-medium">{budget?.name || 'Loading...'}</p>
+				<label for="budget-name-edit" class="block text-sm font-medium text-gray-300 mb-2"
+					>Budget Name</label
+				>
+				<input
+					id="budget-name-edit"
+					value={editName}
+					oninput={(e) => (editName = e.target.value)}
+					type="text"
+					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					disabled={isSavingName}
+				/>
 			</div>
 			<div>
-				<p class="text-gray-400 text-sm">Budget ID</p>
-				<p class="text-white font-medium">{budget?.id || 'Loading...'}</p>
+				<p class="block text-sm font-medium text-gray-300 mb-2">Budget Icon</p>
+				<div
+					class="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md"
+				>
+					{#each getAvailableIcons() as icon}
+						{@const isUsed = isIconUsedByOtherBudget(icon, data.budgets || [], budget?.id)}
+						{@const usedByBudget = getBudgetNameUsingIcon(icon, data.budgets || [], budget?.id)}
+						<button
+							type="button"
+							onclick={() => (editIcon = icon)}
+							class="p-2 text-2xl rounded transition-colors {editIcon === icon
+								? 'bg-blue-600'
+								: isUsed
+								? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+								: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
+							title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+							aria-label={`Select ${getIconDescription(icon)} icon`}
+							disabled={isUsed || isSavingName}
+						>
+							{icon}
+						</button>
+					{/each}
+				</div>
 			</div>
+			<div class="flex space-x-2">
+				<Button
+					onclick={saveBudgetName}
+					variant="success"
+					size="sm"
+					disabled={isSavingName}
+					style="cursor: pointer;"
+				>
+					{isSavingName ? 'Saving...' : 'Save Changes'}
+				</Button>
+			</div>
+			{#if nameEditError}
+				<p class="text-red-400 text-sm">{nameEditError}</p>
+			{/if}
 		</div>
 	</div>
 
@@ -232,7 +250,7 @@
 						<input
 							id="merchant-name-input"
 							value={newMerchantName}
-							on:input={(e) => newMerchantName = e.target.value}
+							oninput={(e) => (newMerchantName = e.target.value)}
 							type="text"
 							placeholder="e.g., Amazon, Walmart, Target"
 							class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -282,7 +300,8 @@
 							<div>
 								<p class="text-white font-medium">{merchant.merchant}</p>
 								<p class="text-gray-400 text-sm">
-									Charges from this merchant will be auto-assigned to "{budget?.name || 'this budget'}"
+									Charges from this merchant will be auto-assigned to "{budget?.name ||
+										'this budget'}"
 								</p>
 							</div>
 							<Button

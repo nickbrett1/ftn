@@ -108,17 +108,17 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 
 	describe('PUT endpoint', () => {
 		it('should update budget successfully', async () => {
-			const budgetData = { name: 'Updated Groceries' };
+			const budgetData = { name: 'Updated Groceries', icon: '🛒' };
 			mockEvent.request.json.mockResolvedValue(budgetData);
 			getBudget.mockResolvedValue({ id: 1, name: 'Groceries' });
-			updateBudget.mockResolvedValue({ id: 1, name: 'Updated Groceries' });
+			updateBudget.mockResolvedValue({ id: 1, name: 'Updated Groceries', icon: '🛒' });
 
 			const response = await PUT(mockEvent);
 			const result = JSON.parse(await response.text());
 
 			expect(requireUser).toHaveBeenCalledWith(mockEvent);
 			expect(getBudget).toHaveBeenCalledWith(mockEvent, 1);
-			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Updated Groceries');
+			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Updated Groceries', '🛒');
 			expect(result).toEqual({ success: true });
 		});
 
@@ -176,7 +176,7 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 		});
 
 		it('should return 404 for non-existent budget', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: 'Updated Name' });
+			mockEvent.request.json.mockResolvedValue({ name: 'Updated Name', icon: '📦' });
 			getBudget.mockResolvedValue(null);
 
 			const response = await PUT(mockEvent);
@@ -188,29 +188,29 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 		});
 
 		it('should trim budget name before update', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: '  Travel Budget  ' });
+			mockEvent.request.json.mockResolvedValue({ name: '  Travel Budget  ', icon: '✈️' });
 			getBudget.mockResolvedValue({ id: 1, name: 'Travel' });
-			updateBudget.mockResolvedValue({ id: 1, name: 'Travel Budget' });
+			updateBudget.mockResolvedValue({ id: 1, name: 'Travel Budget', icon: '✈️' });
 
 			const response = await PUT(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Travel Budget');
+			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Travel Budget', '✈️');
 			expect(result).toEqual({ success: true });
 		});
 
 		it('should handle special characters in budget names', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: 'Health & Wellness' });
+			mockEvent.request.json.mockResolvedValue({ name: 'Health & Wellness', icon: '🏥' });
 			getBudget.mockResolvedValue({ id: 1, name: 'Health' });
-			updateBudget.mockResolvedValue({ id: 1, name: 'Health & Wellness' });
+			updateBudget.mockResolvedValue({ id: 1, name: 'Health & Wellness', icon: '🏥' });
 
 			const response = await PUT(mockEvent);
 
-			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Health & Wellness');
+			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Health & Wellness', '🏥');
 		});
 
 		it('should handle database errors during update', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: 'Test' });
+			mockEvent.request.json.mockResolvedValue({ name: 'Test', icon: '📦' });
 			getBudget.mockResolvedValue({ id: 1, name: 'Original' });
 			updateBudget.mockRejectedValue(new Error('Constraint violation'));
 
@@ -303,7 +303,7 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 			// Number('1.5') converts to 1.5, so this should work
 			expect(getBudget).toHaveBeenCalledWith(mockEvent, 1.5);
 			expect(deleteBudget).toHaveBeenCalledWith(mockEvent, 1.5);
-			
+
 			const result = JSON.parse(await response.text());
 			expect(result).toEqual({ success: true });
 		});

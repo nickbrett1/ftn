@@ -239,10 +239,12 @@ describe('ccbilling-db functions', () => {
 			it('should create a new budget', async () => {
 				mockDb.run.mockResolvedValue({});
 
-				await createBudget(mockEvent, 'Entertainment');
+				await createBudget(mockEvent, 'Entertainment', '🎬');
 
-				expect(mockDb.prepare).toHaveBeenCalledWith('INSERT INTO budget (name) VALUES (?)');
-				expect(mockDb.bind).toHaveBeenCalledWith('Entertainment');
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'INSERT INTO budget (name, icon) VALUES (?, ?)'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith('Entertainment', '🎬');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
@@ -251,10 +253,12 @@ describe('ccbilling-db functions', () => {
 			it('should update a budget', async () => {
 				mockDb.run.mockResolvedValue({});
 
-				await updateBudget(mockEvent, 1, 'Updated Budget');
+				await updateBudget(mockEvent, 1, 'Updated Budget', '🛒');
 
-				expect(mockDb.prepare).toHaveBeenCalledWith('UPDATE budget SET name = ? WHERE id = ?');
-				expect(mockDb.bind).toHaveBeenCalledWith('Updated Budget', 1);
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					'UPDATE budget SET name = ?, icon = ? WHERE id = ?'
+				);
+				expect(mockDb.bind).toHaveBeenCalledWith('Updated Budget', '🛒', 1);
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});

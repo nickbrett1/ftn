@@ -65,8 +65,8 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		// Verify budget info processing
 		expect(container.innerHTML).toContain('Budget Information');
 		expect(container.innerHTML).toContain('Budget Name');
-		expect(container.innerHTML).toContain('Budget ID');
-		expect(container.innerHTML).toContain('1');
+		expect(container.innerHTML).toContain('Icon');
+		expect(container.innerHTML).toContain('Groceries');
 	});
 
 	it('displays merchant count correctly', () => {
@@ -103,7 +103,7 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Add Merchant');
 		expect(container.innerHTML).toContain('Remove');
 		expect(container.innerHTML).toContain('Back to Budgets');
-		expect(container.innerHTML).toContain('Edit Name');
+		expect(container.innerHTML).toContain('Save Changes');
 	});
 
 	it('handles merchant name variations', () => {
@@ -186,7 +186,7 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Monthly budget limits');
 	});
 
-	it('handles different budget IDs', () => {
+	it('handles different budget names', () => {
 		const differentData = {
 			budget: { id: 999, name: 'Test Budget', created_at: '2025-01-01T00:00:00Z' },
 			merchants: []
@@ -196,9 +196,9 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 			props: { data: differentData }
 		});
 
-		// This exercises budget ID processing
-		expect(container.innerHTML).toContain('999');
+		// This exercises budget name processing
 		expect(container.innerHTML).toContain('Test Budget');
+		expect(container.innerHTML).toContain('Budget Information');
 	});
 
 	it('handles component lifecycle', () => {

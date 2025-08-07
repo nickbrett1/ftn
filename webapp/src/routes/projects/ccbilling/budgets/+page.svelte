@@ -1,21 +1,31 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import {
+		getAvailableIcons,
+		getIconDescription,
+		getDefaultIcon,
+		getAvailableIconsForBudget,
+		isIconUsedByOtherBudget,
+		getBudgetNameUsingIcon
+	} from '$lib/utils/budget-icons.js';
 
 	const { data } = $props();
-	
+
 	// Use synchronous destructuring to get data immediately
 	const { budgets = [] } = data;
 
 	// Add budget state
 	let showAddForm = $state(false);
 	let newBudgetName = $state('');
+	let newBudgetIcon = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
 
 	// Edit budget state
 	let editingBudget = $state(null);
 	let editName = $state('');
+	let editIcon = $state('');
 	let isEditing = $state(false);
 	let editError = $state('');
 
@@ -23,9 +33,17 @@
 	let deletingBudget = $state(null);
 	let isDeleting = $state(false);
 
+	// Get available icons (excluding those already used by other budgets)
+	let availableIcons = $derived(getAvailableIconsForBudget(budgets));
+
 	async function addBudget() {
 		if (!newBudgetName.trim()) {
 			addError = 'Please enter a budget name';
+			return;
+		}
+
+		if (!newBudgetIcon) {
+			addError = 'Please select an icon';
 			return;
 		}
 
@@ -37,7 +55,8 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					name: newBudgetName.trim()
+					name: newBudgetName.trim(),
+					icon: newBudgetIcon
 				})
 			});
 
@@ -49,6 +68,7 @@
 
 			// Reset form and refresh data
 			newBudgetName = '';
+			newBudgetIcon = '';
 			showAddForm = false;
 			window.location.reload();
 		} catch (error) {
@@ -61,18 +81,25 @@
 	function startEdit(budget) {
 		editingBudget = budget;
 		editName = budget.name;
+		editIcon = budget.icon || '';
 		editError = '';
 	}
 
 	function cancelEdit() {
 		editingBudget = null;
 		editName = '';
+		editIcon = '';
 		editError = '';
 	}
 
 	async function saveBudget() {
 		if (!editName.trim()) {
 			editError = 'Please enter a budget name';
+			return;
+		}
+
+		if (!editIcon) {
+			editError = 'Please select an icon';
 			return;
 		}
 
@@ -84,7 +111,8 @@
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					name: editName.trim()
+					name: editName.trim(),
+					icon: editIcon
 				})
 			});
 
@@ -97,6 +125,7 @@
 			// Reset form and refresh data
 			editingBudget = null;
 			editName = '';
+			editIcon = '';
 			window.location.reload();
 		} catch (error) {
 			editError = 'Network error occurred';
@@ -137,6 +166,7 @@
 	function cancelAdd() {
 		showAddForm = false;
 		newBudgetName = '';
+		newBudgetIcon = '';
 		addError = '';
 	}
 </script>
@@ -158,12 +188,40 @@
 					<input
 						id="new-budget-name"
 						value={newBudgetName}
-						oninput={(e) => newBudgetName = e.target.value}
+						oninput={(e) => (newBudgetName = e.target.value)}
 						type="text"
 						placeholder="e.g., Groceries, Entertainment, Gas"
 						class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						disabled={isAdding}
 					/>
+				</div>
+				<div>
+					<p class="block text-sm font-medium text-gray-300 mb-2">Budget Icon</p>
+					<div
+						class="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md"
+					>
+						{#each getAvailableIcons() as icon}
+							{@const isUsed = isIconUsedByOtherBudget(icon, budgets)}
+							{@const usedByBudget = getBudgetNameUsingIcon(icon, budgets)}
+							<button
+								type="button"
+								onclick={() => (newBudgetIcon = icon)}
+								class="p-2 text-2xl rounded transition-colors {newBudgetIcon === icon
+									? 'bg-blue-600'
+									: isUsed
+									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+									: 'bg-gray-800 hover:bg-gray-700'}"
+								title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+								aria-label={`Select ${getIconDescription(icon)} icon`}
+								disabled={isUsed}
+							>
+								{icon}
+							</button>
+						{/each}
+					</div>
+					<p class="text-gray-500 text-xs mt-1">
+						Select an icon to represent this budget. Each icon can only be used once.
+					</p>
 				</div>
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
@@ -208,11 +266,39 @@
 									<input
 										id="edit-budget-name"
 										value={editName}
-										oninput={(e) => editName = e.target.value}
+										oninput={(e) => (editName = e.target.value)}
 										type="text"
 										class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										disabled={isEditing}
 									/>
+								</div>
+								<div>
+									<p class="block text-sm font-medium text-gray-300 mb-2">Budget Icon</p>
+									<div
+										class="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md"
+									>
+										{#each getAvailableIcons() as icon}
+											{@const isUsed = isIconUsedByOtherBudget(icon, budgets, budget.id)}
+											{@const usedByBudget = getBudgetNameUsingIcon(icon, budgets, budget.id)}
+											<button
+												type="button"
+												onclick={() => (editIcon = icon)}
+												class="p-2 text-2xl rounded transition-colors {editIcon === icon
+													? 'bg-blue-600'
+													: isUsed
+													? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+													: 'bg-gray-800 hover:bg-gray-700'}"
+												title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+												aria-label={`Select ${getIconDescription(icon)} icon`}
+												disabled={isUsed}
+											>
+												{icon}
+											</button>
+										{/each}
+									</div>
+									<p class="text-gray-500 text-xs mt-1">
+										Select an icon to represent this budget. Each icon can only be used once.
+									</p>
 								</div>
 								{#if editError}
 									<p class="text-red-400 text-sm">{editError}</p>
@@ -240,14 +326,16 @@
 						{:else}
 							<!-- Display mode -->
 							<div class="flex justify-between items-center">
-								<div>
+								<div class="flex items-center space-x-3">
+									{#if budget.icon}
+										<span class="text-2xl">{budget.icon}</span>
+									{/if}
 									<a
 										href="/projects/ccbilling/budgets/{budget.id}"
 										class="text-lg font-medium text-white hover:text-green-400 cursor-pointer"
 									>
 										{budget.name}
 									</a>
-									<p class="text-gray-400 text-sm">Budget ID: {budget.id}</p>
 								</div>
 								<div class="flex space-x-2">
 									<Button
