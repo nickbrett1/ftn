@@ -103,6 +103,11 @@
 	// Determine if we should use radio buttons (for small number of budgets)
 	let shouldUseRadioButtons = $derived(data.budgets.length <= 5);
 
+	// Function to check if a statement has been parsed (has associated charges)
+	function isStatementParsed(statementId) {
+		return data.charges.some(charge => charge.statement_id === statementId);
+	}
+
 	function showCardInfo(cardName) {
 		// Prevent multiple rapid clicks
 		if (isShowingCardInfo) return;
@@ -563,22 +568,28 @@
 								</p>
 							</div>
 							<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-								<Button
-									type="button"
-									variant="success"
-									size="sm"
-									disabled={parsingStatements.has(statement.id)}
-									onclick={() => parseStatement(statement.id)}
-								>
-									{#if parsingStatements.has(statement.id)}
-										<div class="flex items-center space-x-2">
-											<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-											<span>Parsing...</span>
-										</div>
-									{:else}
-										Parse
-									{/if}
-								</Button>
+								{#if !isStatementParsed(statement.id)}
+									<Button
+										type="button"
+										variant="success"
+										size="sm"
+										disabled={parsingStatements.has(statement.id)}
+										onclick={() => parseStatement(statement.id)}
+									>
+										{#if parsingStatements.has(statement.id)}
+											<div class="flex items-center space-x-2">
+												<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+												<span>Parsing...</span>
+											</div>
+										{:else}
+											Parse
+										{/if}
+									</Button>
+								{:else}
+									<div class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded">
+										✓ Parsed
+									</div>
+								{/if}
 								<Button
 									type="button"
 									variant="danger"
