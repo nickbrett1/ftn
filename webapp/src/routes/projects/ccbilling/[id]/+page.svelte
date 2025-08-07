@@ -867,7 +867,7 @@
 
 <!-- Fixed Footer with Running Totals -->
 {#if localData.charges.length > 0}
-	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-40">
+	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-50">
 		<div class="container mx-auto max-w-6xl">
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div class="text-white font-medium">Running Totals:</div>
