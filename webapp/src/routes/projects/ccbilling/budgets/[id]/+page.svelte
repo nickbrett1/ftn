@@ -198,7 +198,7 @@
 						<button
 							type="button"
 							onclick={() => (editIcon = icon)}
-							class="p-2 text-2xl rounded transition-colors {editIcon === icon
+							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon === icon
 								? 'bg-blue-600'
 								: isUsed
 									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
