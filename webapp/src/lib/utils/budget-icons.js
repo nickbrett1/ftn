@@ -131,8 +131,8 @@ export function getAllocationIcon(allocation, budgets = []) {
  * Get next allocation option for cycling
  */
 export function getNextAllocation(currentAllocation, budgets = []) {
-	const options = ['None', ...budgets.map((b) => b.name)];
-	const currentIndex = options.indexOf(currentAllocation || 'None');
+	const options = [null, ...budgets.map((b) => b.name)];
+	const currentIndex = options.indexOf(currentAllocation);
 	const nextIndex = (currentIndex + 1) % options.length;
 	return options[nextIndex];
 }
