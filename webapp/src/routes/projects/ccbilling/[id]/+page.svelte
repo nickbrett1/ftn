@@ -105,16 +105,19 @@
 		}, {})
 	);
 
+
+
 	// Create sorted allocation totals with consistent ordering: unallocated first, then budgets alphabetically
 	let sortedAllocationTotals = $derived(() => {
 		const entries = Object.entries(allocationTotals);
-		return entries.sort(([a], [b]) => {
+		const sorted = entries.sort(([a], [b]) => {
 			// Always put unallocated first
 			if (a === '__unallocated__') return -1;
 			if (b === '__unallocated__') return 1;
 			// Then sort budgets alphabetically
 			return a.localeCompare(b);
 		});
+		return sorted;
 	});
 
 	// Get budget names for allocation options (including null for unallocated)
@@ -866,12 +869,12 @@
 </div>
 
 <!-- Fixed Footer with Running Totals -->
-{#if localData.charges.length > 0}
-	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-40">
-		<div class="container mx-auto max-w-6xl">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div class="text-white font-medium">Running Totals:</div>
-				<div class="flex flex-wrap items-center gap-4">
+<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-40">
+	<div class="container mx-auto max-w-6xl">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div class="text-white font-medium">Running Totals:</div>
+			<div class="flex flex-wrap items-center gap-4">
+				{#if localData.charges && localData.charges.length > 0}
 					{#each sortedAllocationTotals as [allocation, total]}
 						<div class="flex items-center gap-2">
 							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
@@ -881,8 +884,10 @@
 							</span>
 						</div>
 					{/each}
-				</div>
+				{:else}
+					<div class="text-gray-400 text-sm">No charges loaded</div>
+				{/if}
 			</div>
 		</div>
 	</div>
-{/if}
+</div>
