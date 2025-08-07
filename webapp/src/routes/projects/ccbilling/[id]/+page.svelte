@@ -89,10 +89,8 @@
 	let selectedCardName = $state('');
 	let isShowingCardInfo = $state(false); // Prevent rapid successive clicks
 
-	// Allocation editing state
-	let updatingAllocations = $state(new Set());
-	let debounceTimers = $state(new Map()); // Track debounce timers for each charge
-	let recentlyUpdated = $state(new Set()); // Track recently updated allocations for visual feedback
+	// Allocation editing state - removed loading state to fix click issues
+	// Removed recentlyUpdated state as it was causing UI issues
 
 	// Calculate running totals
 	let allocationTotals = $derived(
@@ -132,25 +130,11 @@
 	}
 
 	async function updateChargeAllocation(chargeId, newAllocation) {
-		if (updatingAllocations.has(chargeId)) return;
-
-		// Clear any existing debounce timer for this charge
-		if (debounceTimers.has(chargeId)) {
-			clearTimeout(debounceTimers.get(chargeId));
-		}
-
-		// Set a new debounce timer
-		const timerId = setTimeout(() => {
-			performAllocationUpdate(chargeId, newAllocation);
-			debounceTimers.delete(chargeId);
-		}, 150); // 150ms debounce delay
-
-		debounceTimers.set(chargeId, timerId);
+		// Immediately perform the update without debouncing
+		await performAllocationUpdate(chargeId, newAllocation);
 	}
 
 	async function performAllocationUpdate(chargeId, newAllocation) {
-		if (updatingAllocations.has(chargeId)) return;
-
 		// Find the charge and store the previous allocation for rollback
 		const charge = localData.charges.find((c) => c.id === chargeId);
 		const previousAllocation = charge.allocated_to;
@@ -163,15 +147,6 @@
 				index === chargeIndex ? { ...c, allocated_to: newAllocation } : c
 			);
 		}
-
-		// Add visual feedback for optimistic update
-		recentlyUpdated.add(chargeId);
-		setTimeout(() => {
-			recentlyUpdated.delete(chargeId);
-		}, 1000); // Clear visual feedback after 1 second
-
-		// Add to updating set to show loading state
-		updatingAllocations.add(chargeId);
 
 		try {
 			const response = await fetch(`/projects/ccbilling/charges/${chargeId}`, {
@@ -194,21 +169,20 @@
 			// Success - no need to update UI again since we already did
 		} catch (error) {
 			console.error('Error updating allocation:', error);
-			
+
 			// Rollback the optimistic update on error
 			if (chargeIndex !== -1) {
 				localData.charges = localData.charges.map((c, index) =>
 					index === chargeIndex ? { ...c, allocated_to: previousAllocation } : c
 				);
 			}
-			
-			// Remove visual feedback on error
-			recentlyUpdated.delete(chargeId);
-			
+
+			// Removed visual feedback cleanup
+
 			// Show error to user
 			alert(`Failed to update allocation: ${error.message}`);
 		} finally {
-			updatingAllocations.delete(chargeId);
+			// Loading state is cleared by timeout
 		}
 	}
 
@@ -392,9 +366,7 @@
 	}
 
 	onDestroy(() => {
-		debounceTimers.forEach(clearTimeout);
-		debounceTimers.clear();
-		recentlyUpdated.clear();
+		// Cleanup when component unmounts
 	});
 </script>
 
@@ -722,9 +694,8 @@
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {recentlyUpdated.has(charge.id) && charge.allocated_to === budgetOption ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
 													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
-													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
 													{getAllocationIcon(budgetOption, localData.budgets)}
@@ -734,18 +705,15 @@
 									{:else}
 										<!-- Single click button for many budgets -->
 										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer {recentlyUpdated.has(charge.id) ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
 											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
-											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
 													getNextAllocation(charge.allocated_to, localData.budgets)
 												)}
 										>
-											{updatingAllocations.has(charge.id)
-												? '⏳'
-												: getAllocationIcon(charge.allocated_to, localData.budgets)}
+											{getAllocationIcon(charge.allocated_to, localData.budgets)}
 										</button>
 									{/if}
 								</div>
@@ -813,9 +781,8 @@
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {recentlyUpdated.has(charge.id) && charge.allocated_to === budgetOption ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
 													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
-													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
 													{getAllocationIcon(budgetOption, localData.budgets)}
@@ -825,18 +792,15 @@
 									{:else}
 										<!-- Single click button for many budgets -->
 										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer {recentlyUpdated.has(charge.id) ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
 											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
-											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
 													getNextAllocation(charge.allocated_to, localData.budgets)
 												)}
 										>
-											{updatingAllocations.has(charge.id)
-												? '⏳'
-												: getAllocationIcon(charge.allocated_to, localData.budgets)}
+											{getAllocationIcon(charge.allocated_to, localData.budgets)}
 										</button>
 									{/if}
 								</td>
