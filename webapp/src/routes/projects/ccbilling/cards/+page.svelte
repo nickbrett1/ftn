@@ -172,12 +172,14 @@
 									oninput={async (e) => {
 										const newName = e.target.value;
 										if (!newName.trim()) return;
-										await fetch(`/projects/ccbilling/cards/${card.id}`, {
+										const res = await fetch(`/projects/ccbilling/cards/${card.id}`, {
 											method: 'PUT',
 											headers: { 'Content-Type': 'application/json' },
 											body: JSON.stringify({ name: newName.trim(), last4: card.last4 })
 										});
-										window.location.reload();
+										if (res.ok) {
+											card.name = newName.trim();
+										}
 									}}
 									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
@@ -192,12 +194,14 @@
 									oninput={async (e) => {
 										const newLast4 = e.target.value;
 										if (newLast4.length !== 4 || !/^\d{4}$/.test(newLast4)) return;
-										await fetch(`/projects/ccbilling/cards/${card.id}`, {
+										const res = await fetch(`/projects/ccbilling/cards/${card.id}`, {
 											method: 'PUT',
 											headers: { 'Content-Type': 'application/json' },
 											body: JSON.stringify({ name: card.name, last4: newLast4 })
 										});
-										window.location.reload();
+										if (res.ok) {
+											card.last4 = newLast4;
+										}
 									}}
 									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
