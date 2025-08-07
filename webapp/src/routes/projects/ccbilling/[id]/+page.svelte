@@ -871,9 +871,9 @@
 		<div class="container mx-auto max-w-6xl">
 			<div class="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
 				<div class="text-white font-medium flex-shrink-0">Running Totals:</div>
-				<div class="flex items-center gap-4 w-full overflow-x-auto whitespace-nowrap md:flex-wrap md:whitespace-normal">
+				<div class="flex flex-wrap items-center gap-3 w-full">
 					{#each sortedAllocationTotals as [allocation, total]}
-						<div class="flex items-center gap-2 flex-shrink-0">
+						<div class="flex items-center gap-2">
 							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
 							<span class="text-gray-300 text-sm">{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
