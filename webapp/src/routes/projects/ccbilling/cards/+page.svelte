@@ -3,7 +3,7 @@
 	import Button from '$lib/components/Button.svelte';
 
 	const { data } = $props();
-	
+
 	// Use synchronous destructuring to get data immediately
 	const { creditCards = [] } = data;
 
@@ -173,7 +173,7 @@
 						id="new-card-name"
 						type="text"
 						value={newCardName}
-						on:input={(e) => newCardName = e.target.value}
+						oninput={(e) => (newCardName = e.target.value)}
 						placeholder="e.g., Chase Freedom"
 						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
 					/>
@@ -184,7 +184,7 @@
 						id="new-card-last4"
 						type="text"
 						value={newCardLast4}
-						on:input={(e) => newCardLast4 = e.target.value}
+						oninput={(e) => (newCardLast4 = e.target.value)}
 						placeholder="1234"
 						maxlength="4"
 						class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -192,7 +192,12 @@
 				</div>
 			</div>
 			<div class="mt-4">
-				<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" disabled={isAdding} on:click={addCard}>
+				<button
+					type="button"
+					class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block"
+					disabled={isAdding}
+					onclick={addCard}
+				>
 					{isAdding ? 'Adding...' : 'Add Card'}
 				</button>
 			</div>
@@ -235,7 +240,7 @@
 											id="edit-card-name"
 											type="text"
 											value={editName}
-											on:input={(e) => editName = e.target.value}
+											oninput={(e) => (editName = e.target.value)}
 											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 										/>
 									</div>
@@ -247,21 +252,26 @@
 											id="edit-card-last4"
 											type="text"
 											value={editLast4}
-											on:input={(e) => editLast4 = e.target.value}
+											oninput={(e) => (editLast4 = e.target.value)}
 											maxlength="4"
 											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 										/>
 									</div>
 								</div>
 								<div class="flex space-x-2">
-									<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" disabled={isEditing} on:click={saveEdit}>
+									<button
+										type="button"
+										class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block"
+										disabled={isEditing}
+										onclick={saveEdit}
+									>
 										{isEditing ? 'Saving...' : 'Save'}
 									</button>
 									<button
 										type="button"
 										class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-2 px-4 cursor-pointer no-underline not-prose inline-block"
 										disabled={isEditing}
-										on:click={cancelEdit}
+										onclick={cancelEdit}
 									>
 										Cancel
 									</button>
@@ -278,14 +288,18 @@
 									</p>
 								</div>
 								<div class="flex space-x-2">
-									<button type="button" class="font-bold rounded bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block" on:click={() => startEdit(card)}>
+									<button
+										type="button"
+										class="font-bold rounded bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
+										onclick={() => startEdit(card)}
+									>
 										Edit
 									</button>
 									<button
 										type="button"
 										class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
 										disabled={deletingCard?.id === card.id && isDeleting}
-										on:click={() => deleteCard(card)}
+										onclick={() => deleteCard(card)}
 									>
 										{deletingCard?.id === card.id && isDeleting ? 'Deleting...' : 'Delete'}
 									</button>
@@ -301,15 +315,27 @@
 	<div class="mt-8 flex space-x-4">
 		{#if !editingCard}
 			{#if showAddForm}
-				<button type="button" class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block" on:click={() => (showAddForm = false)}>
+				<button
+					type="button"
+					class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
+					onclick={() => (showAddForm = false)}
+				>
 					Cancel
 				</button>
 			{:else}
-				<button type="button" class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block" on:click={() => (showAddForm = true)}>
+				<button
+					type="button"
+					class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block"
+					onclick={() => (showAddForm = true)}
+				>
 					Add Credit Card
 				</button>
 			{/if}
 		{/if}
-		<a href="/projects/ccbilling" class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block">Back to Billing Cycles</a>
+		<a
+			href="/projects/ccbilling"
+			class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
+			>Back to Billing Cycles</a
+		>
 	</div>
 </PageLayout>

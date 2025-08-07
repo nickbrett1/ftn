@@ -7,7 +7,8 @@
 	import { loadTextShape } from '@tsparticles/shape-text';
 	import { createErrorParticleConfig } from '$lib/client/particleConfig.js';
 
-	let status, error;
+	let status = $state();
+	let error = $state();
 	
 	$effect(() => {
 		status = $page.status;
