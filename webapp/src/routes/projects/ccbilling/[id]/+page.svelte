@@ -1,6 +1,7 @@
 <script>
 	import Button from '$lib/components/Button.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
+	import { onDestroy } from 'svelte';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -90,6 +91,8 @@
 
 	// Allocation editing state
 	let updatingAllocations = $state(new Set());
+	let debounceTimers = $state(new Map()); // Track debounce timers for each charge
+	let recentlyUpdated = $state(new Set()); // Track recently updated allocations for visual feedback
 
 	// Calculate running totals
 	let allocationTotals = $derived(
@@ -131,11 +134,46 @@
 	async function updateChargeAllocation(chargeId, newAllocation) {
 		if (updatingAllocations.has(chargeId)) return;
 
+		// Clear any existing debounce timer for this charge
+		if (debounceTimers.has(chargeId)) {
+			clearTimeout(debounceTimers.get(chargeId));
+		}
+
+		// Set a new debounce timer
+		const timerId = setTimeout(() => {
+			performAllocationUpdate(chargeId, newAllocation);
+			debounceTimers.delete(chargeId);
+		}, 150); // 150ms debounce delay
+
+		debounceTimers.set(chargeId, timerId);
+	}
+
+	async function performAllocationUpdate(chargeId, newAllocation) {
+		if (updatingAllocations.has(chargeId)) return;
+
+		// Find the charge and store the previous allocation for rollback
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		const previousAllocation = charge.allocated_to;
+
+		// Optimistic update - update UI immediately
+		const chargeIndex = localData.charges.findIndex((c) => c.id === chargeId);
+		if (chargeIndex !== -1) {
+			// Create a new array to ensure reactivity
+			localData.charges = localData.charges.map((c, index) =>
+				index === chargeIndex ? { ...c, allocated_to: newAllocation } : c
+			);
+		}
+
+		// Add visual feedback for optimistic update
+		recentlyUpdated.add(chargeId);
+		setTimeout(() => {
+			recentlyUpdated.delete(chargeId);
+		}, 1000); // Clear visual feedback after 1 second
+
+		// Add to updating set to show loading state
 		updatingAllocations.add(chargeId);
 
 		try {
-			const charge = localData.charges.find((c) => c.id === chargeId);
-
 			const response = await fetch(`/projects/ccbilling/charges/${chargeId}`, {
 				method: 'PUT',
 				headers: {
@@ -153,17 +191,22 @@
 				throw new Error(errorData.error || 'Failed to update allocation');
 			}
 
-			// Update the local charge data with proper reactivity
-			const chargeIndex = localData.charges.findIndex((c) => c.id === chargeId);
-			if (chargeIndex !== -1) {
-				// Create a new array to ensure reactivity
-				localData.charges = localData.charges.map((c, index) =>
-					index === chargeIndex ? { ...c, allocated_to: newAllocation } : c
-				);
-			}
+			// Success - no need to update UI again since we already did
 		} catch (error) {
 			console.error('Error updating allocation:', error);
-			// Could add a toast notification here
+			
+			// Rollback the optimistic update on error
+			if (chargeIndex !== -1) {
+				localData.charges = localData.charges.map((c, index) =>
+					index === chargeIndex ? { ...c, allocated_to: previousAllocation } : c
+				);
+			}
+			
+			// Remove visual feedback on error
+			recentlyUpdated.delete(chargeId);
+			
+			// Show error to user
+			alert(`Failed to update allocation: ${error.message}`);
 		} finally {
 			updatingAllocations.delete(chargeId);
 		}
@@ -347,6 +390,12 @@
 		statementToDelete = statement;
 		showDeleteStatementDialog = true;
 	}
+
+	onDestroy(() => {
+		debounceTimers.forEach(clearTimeout);
+		debounceTimers.clear();
+		recentlyUpdated.clear();
+	});
 </script>
 
 <svelte:head>
@@ -673,7 +722,7 @@
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {recentlyUpdated.has(charge.id) && charge.allocated_to === budgetOption ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
 													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
@@ -685,7 +734,7 @@
 									{:else}
 										<!-- Single click button for many budgets -->
 										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer {recentlyUpdated.has(charge.id) ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
 											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
@@ -764,7 +813,7 @@
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {recentlyUpdated.has(charge.id) && charge.allocated_to === budgetOption ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
 													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
@@ -776,7 +825,7 @@
 									{:else}
 										<!-- Single click button for many budgets -->
 										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer {recentlyUpdated.has(charge.id) ? 'ring-2 ring-green-400 ring-opacity-50' : ''}"
 											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
