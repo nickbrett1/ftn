@@ -42,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
 			globals: true,
 			environment: 'jsdom',
 			// Add explicit setup and teardown to prevent race conditions
-			setupFiles: [],
+			setupFiles: ['src/test-setup.js'],
 			teardownTimeout: 10000, // 10 seconds for cleanup
 			coverage: {
 				reporter: ['text', 'lcov'],
