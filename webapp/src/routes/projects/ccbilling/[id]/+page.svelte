@@ -103,9 +103,21 @@
 	// Determine if we should use radio buttons (for small number of budgets)
 	let shouldUseRadioButtons = $derived(data.budgets.length <= 5);
 
+	// Create a set of statement IDs that have been parsed (have associated charges)
+	let parsedStatementIds = $derived(() => {
+		const statementIds = new Set();
+		data.charges.forEach(charge => {
+			// Each charge should have a statement_id field from the database
+			if (charge.statement_id) {
+				statementIds.add(charge.statement_id);
+			}
+		});
+		return statementIds;
+	});
+
 	// Function to check if a statement has been parsed (has associated charges)
 	function isStatementParsed(statementId) {
-		return data.charges.some(charge => charge.statement_id === statementId);
+		return parsedStatementIds.has(statementId);
 	}
 
 	function showCardInfo(cardName) {
