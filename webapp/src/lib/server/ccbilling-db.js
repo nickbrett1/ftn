@@ -155,11 +155,12 @@ export async function getBudget(event, id) {
  * Create a new budget.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {string} name
+ * @param {string} icon
  */
-export async function createBudget(event, name) {
+export async function createBudget(event, name, icon = null) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	await db.prepare('INSERT INTO budget (name) VALUES (?)').bind(name).run();
+	await db.prepare('INSERT INTO budget (name, icon) VALUES (?, ?)').bind(name, icon).run();
 }
 
 /**
@@ -167,11 +168,12 @@ export async function createBudget(event, name) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} id
  * @param {string} name
+ * @param {string} icon
  */
-export async function updateBudget(event, id, name) {
+export async function updateBudget(event, id, name, icon = null) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	await db.prepare('UPDATE budget SET name = ? WHERE id = ?').bind(name, id).run();
+	await db.prepare('UPDATE budget SET name = ?, icon = ? WHERE id = ?').bind(name, icon, id).run();
 }
 
 /**

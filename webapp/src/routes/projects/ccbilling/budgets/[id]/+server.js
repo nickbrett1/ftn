@@ -30,10 +30,14 @@ export async function PUT(event) {
 	}
 
 	const data = await event.request.json();
-	const { name } = data;
+	const { name, icon } = data;
 
 	if (!name || !name.trim()) {
 		return new Response(JSON.stringify({ error: 'Missing budget name' }), { status: 400 });
+	}
+
+	if (!icon) {
+		return new Response(JSON.stringify({ error: 'Missing budget icon' }), { status: 400 });
 	}
 
 	// Check if budget exists
@@ -42,7 +46,7 @@ export async function PUT(event) {
 		return new Response(JSON.stringify({ error: 'Budget not found' }), { status: 404 });
 	}
 
-	await updateBudget(event, id, name.trim());
+	await updateBudget(event, id, name.trim(), icon);
 	return new Response(JSON.stringify({ success: true }));
 }
 

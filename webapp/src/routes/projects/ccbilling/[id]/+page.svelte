@@ -1,5 +1,6 @@
 <script>
 	import Button from '$lib/components/Button.svelte';
+	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -99,6 +100,9 @@
 	// Get budget names for allocation options
 	let budgetNames = $derived(data.budgets.map((b) => b.name));
 
+	// Determine if we should use radio buttons (for small number of budgets)
+	let shouldUseRadioButtons = $derived(data.budgets.length <= 5);
+
 	function showCardInfo(cardName) {
 		// Prevent multiple rapid clicks
 		if (isShowingCardInfo) return;
@@ -148,24 +152,6 @@
 		} finally {
 			updatingAllocations.delete(chargeId);
 		}
-	}
-
-	function getAllocationIcon(allocation) {
-		const icons = {
-			None: '❌',
-			Groceries: '🛒',
-			Dining: '🍽️',
-			Transportation: '🚗',
-			Entertainment: '🎬',
-			Shopping: '🛍️',
-			Travel: '✈️',
-			Utilities: '💡',
-			Healthcare: '🏥',
-			Other: '📦'
-		};
-		// Handle null, undefined, or empty string as 'None'
-		const normalizedAllocation = !allocation || allocation === '' ? 'None' : allocation;
-		return icons[normalizedAllocation] || '📦';
 	}
 
 	function getNextAllocation(currentAllocation) {
@@ -661,17 +647,37 @@
 										</button>
 									{/if}
 									<!-- Allocation editing for mobile -->
-									<button
-										class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-										title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
-										disabled={updatingAllocations.has(charge.id)}
-										onclick={() =>
-											updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
-									>
-										{updatingAllocations.has(charge.id)
-											? '⏳'
-											: getAllocationIcon(charge.allocated_to)}
-									</button>
+									{#if shouldUseRadioButtons}
+										<!-- Radio buttons for small number of budgets -->
+										<div class="flex gap-1">
+											{#each ['None', ...budgetNames] as budgetOption}
+												<button
+													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
+													budgetOption
+														? 'bg-blue-600 text-white'
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+													title={`Allocate to: ${budgetOption}`}
+													disabled={updatingAllocations.has(charge.id)}
+													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
+												>
+													{getAllocationIcon(budgetOption, data.budgets)}
+												</button>
+											{/each}
+										</div>
+									{:else}
+										<!-- Single click button for many budgets -->
+										<button
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
+											disabled={updatingAllocations.has(charge.id)}
+											onclick={() =>
+												updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
+										>
+											{updatingAllocations.has(charge.id)
+												? '⏳'
+												: getAllocationIcon(charge.allocated_to, data.budgets)}
+										</button>
+									{/if}
 								</div>
 							</div>
 							<div class="text-right flex-shrink-0">
@@ -729,17 +735,37 @@
 								</td>
 								<td class="text-gray-300 text-sm py-2">
 									<!-- Allocation editing for desktop -->
-									<button
-										class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-										title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
-										disabled={updatingAllocations.has(charge.id)}
-										onclick={() =>
-											updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
-									>
-										{updatingAllocations.has(charge.id)
-											? '⏳'
-											: getAllocationIcon(charge.allocated_to)}
-									</button>
+									{#if shouldUseRadioButtons}
+										<!-- Radio buttons for small number of budgets -->
+										<div class="flex gap-1">
+											{#each ['None', ...budgetNames] as budgetOption}
+												<button
+													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
+													budgetOption
+														? 'bg-blue-600 text-white'
+														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+													title={`Allocate to: ${budgetOption}`}
+													disabled={updatingAllocations.has(charge.id)}
+													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
+												>
+													{getAllocationIcon(budgetOption, data.budgets)}
+												</button>
+											{/each}
+										</div>
+									{:else}
+										<!-- Single click button for many budgets -->
+										<button
+											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
+											disabled={updatingAllocations.has(charge.id)}
+											onclick={() =>
+												updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
+										>
+											{updatingAllocations.has(charge.id)
+												? '⏳'
+												: getAllocationIcon(charge.allocated_to, data.budgets)}
+										</button>
+									{/if}
 								</td>
 								<td class="text-right py-2">
 									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
@@ -798,7 +824,7 @@
 				<div class="flex flex-wrap items-center gap-4">
 					{#each Object.entries(allocationTotals) as [allocation, total]}
 						<div class="flex items-center gap-2">
-							<span class="text-lg">{getAllocationIcon(allocation)}</span>
+							<span class="text-lg">{getAllocationIcon(allocation, data.budgets)}</span>
 							<span class="text-gray-300 text-sm">{allocation}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
 								{total < 0 ? '-' : ''}${Math.abs(total).toFixed(2)}

@@ -16,12 +16,16 @@ export async function POST(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const data = await event.request.json();
-	const { name } = data;
+	const { name, icon } = data;
 
 	if (!name || !name.trim()) {
 		return new Response(JSON.stringify({ error: 'Missing budget name' }), { status: 400 });
 	}
 
-	await createBudget(event, name.trim());
+	if (!icon) {
+		return new Response(JSON.stringify({ error: 'Missing budget icon' }), { status: 400 });
+	}
+
+	await createBudget(event, name.trim(), icon);
 	return new Response(JSON.stringify({ success: true }));
 }

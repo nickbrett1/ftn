@@ -9,7 +9,7 @@
 
 	let status = $state();
 	let error = $state();
-	
+
 	$effect(() => {
 		status = $page.status;
 		error = $page.error;

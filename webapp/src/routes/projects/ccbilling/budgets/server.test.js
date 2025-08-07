@@ -77,16 +77,16 @@ describe('/projects/ccbilling/budgets API', () => {
 
 	describe('POST endpoint', () => {
 		it('should create new budget successfully', async () => {
-			const budgetData = { name: 'Travel' };
+			const budgetData = { name: 'Travel', icon: '✈️' };
 			mockEvent.request.json.mockResolvedValue(budgetData);
-			createBudget.mockResolvedValue({ id: 4, name: 'Travel' });
+			createBudget.mockResolvedValue({ id: 4, name: 'Travel', icon: '✈️' });
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
 
 			expect(requireUser).toHaveBeenCalledWith(mockEvent);
 			expect(mockEvent.request.json).toHaveBeenCalled();
-			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Travel');
+			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Travel', '✈️');
 			expect(result).toEqual({ success: true });
 			expect(response.status).toBe(200);
 		});
@@ -148,36 +148,36 @@ describe('/projects/ccbilling/budgets API', () => {
 		});
 
 		it('should create budget with trimmed name', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: '  Dining Out  ' });
-			createBudget.mockResolvedValue({ id: 5, name: 'Dining Out' });
+			mockEvent.request.json.mockResolvedValue({ name: '  Dining Out  ', icon: '🍽️' });
+			createBudget.mockResolvedValue({ id: 5, name: 'Dining Out', icon: '🍽️' });
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Dining Out');
+			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Dining Out', '🍽️');
 			expect(result).toEqual({ success: true });
 		});
 
 		it('should handle special characters in budget names', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: 'Coffee & Snacks' });
-			createBudget.mockResolvedValue({ id: 6, name: 'Coffee & Snacks' });
+			mockEvent.request.json.mockResolvedValue({ name: 'Coffee & Snacks', icon: '☕' });
+			createBudget.mockResolvedValue({ id: 6, name: 'Coffee & Snacks', icon: '☕' });
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Coffee & Snacks');
+			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Coffee & Snacks', '☕');
 			expect(result).toEqual({ success: true });
 		});
 
 		it('should handle long budget names', async () => {
 			const longName = 'A'.repeat(100);
-			mockEvent.request.json.mockResolvedValue({ name: longName });
-			createBudget.mockResolvedValue({ id: 7, name: longName });
+			mockEvent.request.json.mockResolvedValue({ name: longName, icon: '📦' });
+			createBudget.mockResolvedValue({ id: 7, name: longName, icon: '📦' });
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(createBudget).toHaveBeenCalledWith(mockEvent, longName);
+			expect(createBudget).toHaveBeenCalledWith(mockEvent, longName, '📦');
 			expect(result).toEqual({ success: true });
 		});
 
@@ -188,7 +188,7 @@ describe('/projects/ccbilling/budgets API', () => {
 		});
 
 		it('should handle database errors during creation', async () => {
-			mockEvent.request.json.mockResolvedValue({ name: 'Test Budget' });
+			mockEvent.request.json.mockResolvedValue({ name: 'Test Budget', icon: '📦' });
 			createBudget.mockRejectedValue(new Error('Database constraint violation'));
 
 			await expect(POST(mockEvent)).rejects.toThrow('Database constraint violation');
@@ -203,15 +203,16 @@ describe('/projects/ccbilling/budgets API', () => {
 		it('should ignore extra fields in request', async () => {
 			mockEvent.request.json.mockResolvedValue({
 				name: 'Health & Fitness',
+				icon: '🏃',
 				extraField: 'ignored',
 				anotherId: 123
 			});
-			createBudget.mockResolvedValue({ id: 8, name: 'Health & Fitness' });
+			createBudget.mockResolvedValue({ id: 8, name: 'Health & Fitness', icon: '🏃' });
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
 
-			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Health & Fitness');
+			expect(createBudget).toHaveBeenCalledWith(mockEvent, 'Health & Fitness', '🏃');
 			expect(result).toEqual({ success: true });
 		});
 	});

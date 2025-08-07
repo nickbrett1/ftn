@@ -77,9 +77,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: mockBudgets } }
 		});
 
-		// Verify budget IDs are displayed (this exercises budget data processing)
-		expect(container.innerHTML).toContain('Budget ID: 1');
-		expect(container.innerHTML).toContain('Budget ID: 2');
+		// Verify budget names are displayed (budget IDs are no longer shown)
+		expect(container.innerHTML).toContain('Groceries');
+		expect(container.innerHTML).toContain('Utilities');
 	});
 
 	it('renders all required buttons', () => {
@@ -121,13 +121,14 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('/projects/ccbilling/budgets/2');
 	});
 
-	it('handles date display', () => {
+	it('handles budget display', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: mockBudgets } }
 		});
 
-		// This exercises budget processing (dates aren't displayed in main list)
-		expect(container.innerHTML).toContain('Budget ID');
+		// This exercises budget processing (budget names are displayed)
+		expect(container.innerHTML).toContain('Groceries');
+		expect(container.innerHTML).toContain('Utilities');
 	});
 
 	it('executes reactive statements', () => {
