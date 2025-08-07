@@ -88,7 +88,7 @@
 	// Calculate running totals
 	let allocationTotals = $derived(
 		data.charges.reduce((totals, charge) => {
-			const allocation = charge.allocated_to || 'None';
+			const allocation = charge.allocated_to || 'Unallocated';
 			if (!totals[allocation]) {
 				totals[allocation] = 0;
 			}
@@ -97,7 +97,7 @@
 		}, {})
 	);
 
-	// Get budget names for allocation options
+	// Get budget names for allocation options (including null for unallocated)
 	let budgetNames = $derived(data.budgets.map((b) => b.name));
 
 	// Determine if we should use radio buttons (for small number of budgets)
@@ -123,14 +123,16 @@
 		updatingAllocations.add(chargeId);
 
 		try {
+			const charge = data.charges.find((c) => c.id === chargeId);
+
 			const response = await fetch(`/projects/ccbilling/charges/${chargeId}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					merchant: data.charges.find((c) => c.id === chargeId).merchant,
-					amount: data.charges.find((c) => c.id === chargeId).amount,
+					merchant: charge.merchant,
+					amount: charge.amount,
 					allocated_to: newAllocation
 				})
 			});
@@ -143,6 +145,7 @@
 			// Update the local charge data
 			const chargeIndex = data.charges.findIndex((c) => c.id === chargeId);
 			if (chargeIndex !== -1) {
+				// Store the allocation directly (null for unallocated, budget name for allocated)
 				data.charges[chargeIndex].allocated_to = newAllocation;
 				data.charges = [...data.charges]; // Trigger reactivity
 			}
@@ -643,13 +646,13 @@
 									{#if shouldUseRadioButtons}
 										<!-- Radio buttons for small number of budgets -->
 										<div class="flex gap-1">
-											{#each ['None', ...budgetNames] as budgetOption}
+											{#each [null, ...budgetNames] as budgetOption}
 												<button
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
 														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													title={`Allocate to: ${budgetOption}`}
+													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
@@ -661,7 +664,7 @@
 										<!-- Single click button for many budgets -->
 										<button
 											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
+											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
 												updateChargeAllocation(
@@ -734,13 +737,13 @@
 									{#if shouldUseRadioButtons}
 										<!-- Radio buttons for small number of budgets -->
 										<div class="flex gap-1">
-											{#each ['None', ...budgetNames] as budgetOption}
+											{#each [null, ...budgetNames] as budgetOption}
 												<button
 													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
 													budgetOption
 														? 'bg-blue-600 text-white'
 														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													title={`Allocate to: ${budgetOption}`}
+													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													disabled={updatingAllocations.has(charge.id)}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
@@ -752,7 +755,7 @@
 										<!-- Single click button for many budgets -->
 										<button
 											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
+											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
 												updateChargeAllocation(

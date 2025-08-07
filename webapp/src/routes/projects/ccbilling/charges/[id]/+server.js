@@ -49,6 +49,7 @@ export async function PUT(event) {
 		const budgets = await listBudgets(event);
 		const budgetNames = budgets.map((budget) => budget.name);
 
+		// Validate that allocated_to is either null or a valid budget name
 		if (allocated_to && !budgetNames.includes(allocated_to)) {
 			return json(
 				{
