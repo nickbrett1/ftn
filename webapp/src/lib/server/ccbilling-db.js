@@ -452,7 +452,7 @@ export async function getPayment(event, id) {
 	const result = await db
 		.prepare(
 			`
-			SELECT p.*, s.credit_card_id, c.name as card_name, c.last4
+			SELECT p.id, p.statement_id, p.merchant, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4
 			FROM payment p
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
