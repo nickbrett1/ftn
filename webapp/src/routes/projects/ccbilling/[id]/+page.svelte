@@ -95,7 +95,7 @@
 	// Calculate running totals
 	let allocationTotals = $derived(
 		localData.charges.reduce((totals, charge) => {
-			const allocation = charge.allocated_to || 'Unallocated';
+			const allocation = charge.allocated_to || null;
 			if (!totals[allocation]) {
 				totals[allocation] = 0;
 			}
@@ -862,7 +862,7 @@
 					{#each Object.entries(allocationTotals) as [allocation, total]}
 						<div class="flex items-center gap-2">
 							<span class="text-lg">{getAllocationIcon(allocation, localData.budgets)}</span>
-							<span class="text-gray-300 text-sm">{allocation}:</span>
+							<span class="text-gray-300 text-sm">{allocation || 'Unallocated'}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
 								{total < 0 ? '-' : ''}${Math.abs(total).toFixed(2)}
 							</span>
