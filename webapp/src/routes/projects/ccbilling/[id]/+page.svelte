@@ -867,13 +867,13 @@
 
 <!-- Fixed Footer with Running Totals -->
 {#if localData.charges.length > 0}
-	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-50">
+	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 pb-[env(safe-area-inset-bottom)] z-50">
 		<div class="container mx-auto max-w-6xl">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div class="text-white font-medium">Running Totals:</div>
-				<div class="flex flex-wrap items-center gap-4">
+			<div class="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+				<div class="text-white font-medium flex-shrink-0">Running Totals:</div>
+				<div class="flex items-center gap-4 w-full overflow-x-auto whitespace-nowrap md:flex-wrap md:whitespace-normal">
 					{#each sortedAllocationTotals as [allocation, total]}
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 flex-shrink-0">
 							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
 							<span class="text-gray-300 text-sm">{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
