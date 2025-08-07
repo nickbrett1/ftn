@@ -95,7 +95,8 @@
 	// Calculate running totals
 	let allocationTotals = $derived(
 		localData.charges.reduce((totals, charge) => {
-			const allocation = charge.allocated_to || 'Unallocated';
+			// Use a special key for unallocated items to avoid null key conversion issues
+			const allocation = charge.allocated_to || '__unallocated__';
 			if (!totals[allocation]) {
 				totals[allocation] = 0;
 			}
@@ -861,8 +862,8 @@
 				<div class="flex flex-wrap items-center gap-4">
 					{#each Object.entries(allocationTotals) as [allocation, total]}
 						<div class="flex items-center gap-2">
-							<span class="text-lg">{getAllocationIcon(allocation, localData.budgets)}</span>
-							<span class="text-gray-300 text-sm">{allocation}:</span>
+							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
+							<span class="text-gray-300 text-sm">{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span>
 							<span class="text-white font-medium {total < 0 ? 'text-red-400' : ''}">
 								{total < 0 ? '-' : ''}${Math.abs(total).toFixed(2)}
 							</span>
