@@ -158,7 +158,7 @@
 					<input
 						id="new-budget-name"
 						value={newBudgetName}
-						on:input={(e) => newBudgetName = e.target.value}
+						oninput={(e) => newBudgetName = e.target.value}
 						type="text"
 						placeholder="e.g., Groceries, Entertainment, Gas"
 						class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -208,7 +208,7 @@
 									<input
 										id="edit-budget-name"
 										value={editName}
-										on:input={(e) => editName = e.target.value}
+										oninput={(e) => editName = e.target.value}
 										type="text"
 										class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										disabled={isEditing}

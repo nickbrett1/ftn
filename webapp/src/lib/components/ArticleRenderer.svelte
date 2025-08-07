@@ -8,7 +8,7 @@
 
 	const { articleMarkdown = '' } = $props();
 
-	let renderedHtml = '';
+	let renderedHtml = $state('');
 
 	// Register languages for highlight.js
 	hljs.registerLanguage('sql', sql);
