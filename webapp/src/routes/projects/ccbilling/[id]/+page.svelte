@@ -105,6 +105,18 @@
 		}, {})
 	);
 
+	// Create sorted allocation totals with consistent ordering: unallocated first, then budgets alphabetically
+	let sortedAllocationTotals = $derived(() => {
+		const entries = Object.entries(allocationTotals);
+		return entries.sort(([a], [b]) => {
+			// Always put unallocated first
+			if (a === '__unallocated__') return -1;
+			if (b === '__unallocated__') return 1;
+			// Then sort budgets alphabetically
+			return a.localeCompare(b);
+		});
+	});
+
 	// Get budget names for allocation options (including null for unallocated)
 	let budgetNames = $derived(localData.budgets.map((b) => b.name));
 
@@ -860,7 +872,7 @@
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div class="text-white font-medium">Running Totals:</div>
 				<div class="flex flex-wrap items-center gap-4">
-					{#each Object.entries(allocationTotals) as [allocation, total]}
+					{#each sortedAllocationTotals as [allocation, total]}
 						<div class="flex items-center gap-2">
 							<span class="text-lg">{getAllocationIcon(allocation === '__unallocated__' ? null : allocation, localData.budgets)}</span>
 							<span class="text-gray-300 text-sm">{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span>
