@@ -117,7 +117,7 @@ export function getDefaultIcon(budgetName) {
  * Get allocation icon for display
  */
 export function getAllocationIcon(allocation, budgets = []) {
-	if (!allocation || allocation === '' || allocation === 'Unallocated') return '❌';
+	if (!allocation || allocation === '') return '❌';
 
 	// Find the budget with this name and get its icon
 	const budget = budgets.find((b) => b.name === allocation);
