@@ -852,7 +852,7 @@
 	{/if}
 
 	{#if !showUploadForm}
-		<div>
+		<div class="mb-8">
 			<Button href="/projects/ccbilling" variant="secondary" size="lg"
 				>Back to Billing Cycles</Button
 			>
