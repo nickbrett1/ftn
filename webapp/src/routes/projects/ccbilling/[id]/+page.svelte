@@ -154,13 +154,6 @@
 		}
 	}
 
-	function getNextAllocation(currentAllocation) {
-		const options = ['None', ...budgetNames];
-		const currentIndex = options.indexOf(currentAllocation || 'None');
-		const nextIndex = (currentIndex + 1) % options.length;
-		return options[nextIndex];
-	}
-
 	async function handleDelete() {
 		isDeleting = true;
 		deleteError = '';
@@ -671,7 +664,10 @@
 											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
-												updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
+												updateChargeAllocation(
+													charge.id,
+													getNextAllocation(charge.allocated_to, data.budgets)
+												)}
 										>
 											{updatingAllocations.has(charge.id)
 												? '⏳'
@@ -759,7 +755,10 @@
 											title={`Allocation: ${charge.allocated_to || 'None'}. Click to change.`}
 											disabled={updatingAllocations.has(charge.id)}
 											onclick={() =>
-												updateChargeAllocation(charge.id, getNextAllocation(charge.allocated_to))}
+												updateChargeAllocation(
+													charge.id,
+													getNextAllocation(charge.allocated_to, data.budgets)
+												)}
 										>
 											{updatingAllocations.has(charge.id)
 												? '⏳'

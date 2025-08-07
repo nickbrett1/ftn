@@ -1,8 +1,8 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { 
-		getAvailableIcons, 
+	import {
+		getAvailableIcons,
 		getIconDescription,
 		isIconUsedByOtherBudget,
 		getBudgetNameUsingIcon
@@ -190,7 +190,7 @@
 			<div>
 				<p class="block text-sm font-medium text-gray-300 mb-2">Budget Icon</p>
 				<div
-					class="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md"
+					class="grid grid-cols-8 gap-2 max-h-64 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md"
 				>
 					{#each getAvailableIcons() as icon}
 						{@const isUsed = isIconUsedByOtherBudget(icon, data.budgets || [], budget?.id)}
@@ -201,9 +201,11 @@
 							class="p-2 text-2xl rounded transition-colors {editIcon === icon
 								? 'bg-blue-600'
 								: isUsed
-								? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-								: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
-							title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+									: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
+							title={isUsed
+								? `${getIconDescription(icon)} (used by ${usedByBudget})`
+								: getIconDescription(icon)}
 							aria-label={`Select ${getIconDescription(icon)} icon`}
 							disabled={isUsed || isSavingName}
 						>
