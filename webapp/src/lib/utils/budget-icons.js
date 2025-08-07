@@ -41,6 +41,11 @@ export const BUDGET_ICONS = {
 	'🎭': 'Entertainment',
 	'💎': 'Luxury',
 	'🔋': 'Electronics',
+	'😍': 'Love',
+	'😎': 'Cool',
+	'🤔': 'Thinking',
+	'🤠': 'Cowboy',
+	'🤡': 'Clown',
 	'📦': 'Other'
 };
 

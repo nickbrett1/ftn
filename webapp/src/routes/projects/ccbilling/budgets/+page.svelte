@@ -209,9 +209,11 @@
 								class="p-2 text-2xl rounded transition-colors {newBudgetIcon === icon
 									? 'bg-blue-600'
 									: isUsed
-									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-									: 'bg-gray-800 hover:bg-gray-700'}"
-								title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+										? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+										: 'bg-gray-800 hover:bg-gray-700'}"
+								title={isUsed
+									? `${getIconDescription(icon)} (used by ${usedByBudget})`
+									: getIconDescription(icon)}
 								aria-label={`Select ${getIconDescription(icon)} icon`}
 								disabled={isUsed}
 							>
@@ -286,9 +288,11 @@
 												class="p-2 text-2xl rounded transition-colors {editIcon === icon
 													? 'bg-blue-600'
 													: isUsed
-													? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-													: 'bg-gray-800 hover:bg-gray-700'}"
-												title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+														? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+														: 'bg-gray-800 hover:bg-gray-700'}"
+												title={isUsed
+													? `${getIconDescription(icon)} (used by ${usedByBudget})`
+													: getIconDescription(icon)}
 												aria-label={`Select ${getIconDescription(icon)} icon`}
 												disabled={isUsed}
 											>
