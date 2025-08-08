@@ -125,8 +125,8 @@ async function handleDelete() {
 		{/if}
 	</div>
 	<div class="mt-8 flex gap-2">
-		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg">Back to Cards</Button>
-		<Button variant="danger" size="lg" data-testid="delete-card-btn" onclick={() => { showDeleteDialog = true; deleteError = ''; }}>
+		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg" class="flex-1 text-center">Back to Cards</Button>
+		<Button variant="danger" size="lg" class="flex-1 text-center" data-testid="delete-card-btn" onclick={() => { showDeleteDialog = true; deleteError = ''; }}>
 			Delete Card
 		</Button>
 	</div>
