@@ -1,7 +1,8 @@
 import {
 	addBudgetMerchant,
 	removeBudgetMerchant,
-	getBudgetMerchants
+	getBudgetMerchants,
+	getUnassignedMerchants
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -15,7 +16,11 @@ async function validateAuth(event) {
 function validateBudgetId(event) {
 	const id = Number(event.params.id);
 	if (!id || id <= 0) {
-		return { error: new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), { status: 400 }) };
+		return {
+			error: new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), {
+				status: 400
+			})
+		};
 	}
 	return { id };
 }
@@ -24,7 +29,9 @@ async function validateMerchant(event) {
 	const data = await event.request.json();
 	const { merchant } = data;
 	if (!merchant || !merchant.trim()) {
-		return { error: new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 }) };
+		return {
+			error: new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 })
+		};
 	}
 	return { merchant: merchant.trim() };
 }

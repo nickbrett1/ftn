@@ -1,6 +1,7 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
 	import {
 		getAvailableIcons,
 		getIconDescription,
@@ -15,7 +16,7 @@
 
 	// Add merchant state
 	let showAddForm = $state(false);
-	let newMerchantName = $state('');
+	let selectedMerchant = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
 
@@ -41,8 +42,8 @@
 	});
 
 	async function addMerchant() {
-		if (!newMerchantName.trim()) {
-			addError = 'Please enter a merchant name';
+		if (!selectedMerchant.trim()) {
+			addError = 'Please select a merchant';
 			return;
 		}
 
@@ -54,7 +55,7 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					merchant: newMerchantName.trim()
+					merchant: selectedMerchant.trim()
 				})
 			});
 
@@ -65,7 +66,7 @@
 			}
 
 			// Reset form and refresh data
-			newMerchantName = '';
+			selectedMerchant = '';
 			showAddForm = false;
 			window.location.reload();
 		} catch (error) {
@@ -110,7 +111,7 @@
 
 	function cancelAdd() {
 		showAddForm = false;
-		newMerchantName = '';
+		selectedMerchant = '';
 		addError = '';
 	}
 
@@ -198,7 +199,8 @@
 						<button
 							type="button"
 							onclick={() => (editIcon = icon)}
-							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon === icon
+							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon ===
+							icon
 								? 'bg-blue-600'
 								: isUsed
 									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -246,21 +248,11 @@
 				<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 				<div class="space-y-4">
 					<div>
-						<label for="merchant-name-input" class="block text-sm font-medium text-gray-300 mb-2"
-							>Merchant Name</label
-						>
-						<input
-							id="merchant-name-input"
-							value={newMerchantName}
-							oninput={(e) => (newMerchantName = e.target.value)}
-							type="text"
-							placeholder="e.g., Amazon, Walmart, Target"
-							class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-							disabled={isAdding}
+						<MerchantPicker
+							{selectedMerchant}
+							onSelect={(merchant) => (selectedMerchant = merchant)}
+							placeholder="Choose a merchant to assign to this budget..."
 						/>
-						<p class="text-gray-500 text-xs mt-1">
-							Enter the merchant name as it appears on your credit card statements
-						</p>
 					</div>
 					{#if addError}
 						<p class="text-red-400 text-sm">{addError}</p>
