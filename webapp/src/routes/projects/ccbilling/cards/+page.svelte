@@ -162,81 +162,56 @@
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
 					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-						{#if editingCard?.id === card.id}
-							<!-- Edit Form -->
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 							<div>
-								<h3 class="text-lg font-semibold text-white mb-3">Edit Credit Card</h3>
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-									<div>
-										<label for="card-name-{card.id}" class="block text-gray-300 mb-2">Card Name:</label>
-										<input
-											id="card-name-{card.id}"
-											type="text"
-											value={card.name}
-											oninput={async (e) => {
-												const newName = e.target.value;
-												if (!newName.trim()) return;
-												await fetch(`/projects/ccbilling/cards/${card.id}`, {
-													method: 'PUT',
-													headers: { 'Content-Type': 'application/json' },
-													body: JSON.stringify({ name: newName.trim(), last4: card.last4 })
-												});
-												window.location.reload();
-											}}
-											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
-									</div>
-									<div>
-										<label for="card-last4-{card.id}" class="block text-gray-300 mb-2">Last 4 Digits:</label>
-										<input
-											id="card-last4-{card.id}"
-											type="text"
-											value={card.last4}
-											maxlength="4"
-											oninput={async (e) => {
-												const newLast4 = e.target.value;
-												if (newLast4.length !== 4 || !/^\d{4}$/.test(newLast4)) return;
-												await fetch(`/projects/ccbilling/cards/${card.id}`, {
-													method: 'PUT',
-													headers: { 'Content-Type': 'application/json' },
-													body: JSON.stringify({ name: card.name, last4: newLast4 })
-												});
-												window.location.reload();
-											}}
-											class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
-									</div>
-								</div>
+								<label for="card-name-{card.id}" class="block text-gray-300 mb-2">Card Name:</label>
+								<input
+									id="card-name-{card.id}"
+									type="text"
+									value={card.name}
+									oninput={async (e) => {
+										const newName = e.target.value;
+										if (!newName.trim()) return;
+										await fetch(`/projects/ccbilling/cards/${card.id}`, {
+											method: 'PUT',
+											headers: { 'Content-Type': 'application/json' },
+											body: JSON.stringify({ name: newName.trim(), last4: card.last4 })
+										});
+										window.location.reload();
+									}}
+									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+								/>
 							</div>
-						{:else}
-							<!-- Display Mode -->
-							<div class="flex justify-between items-center">
-								<div>
-									<h3 class="text-lg font-semibold text-white">{card.name}</h3>
-									<p class="text-gray-400">****{card.last4}</p>
-									<p class="text-gray-500 text-sm">
-										Added: {new Date(card.created_at).toLocaleDateString()}
-									</p>
-								</div>
-								<div class="flex space-x-2">
-									<button
-										type="button"
-										class="font-bold rounded bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
-										onclick={() => editingCard = card}
-									>
-										Edit
-									</button>
-									<button
-										type="button"
-										class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
-										disabled={deletingCard?.id === card.id && isDeleting}
-										onclick={() => deleteCard(card)}
-									>
-										{deletingCard?.id === card.id && isDeleting ? 'Deleting...' : 'Delete'}
-									</button>
-								</div>
+							<div>
+								<label for="card-last4-{card.id}" class="block text-gray-300 mb-2">Last 4 Digits:</label>
+								<input
+									id="card-last4-{card.id}"
+									type="text"
+									value={card.last4}
+									maxlength="4"
+									oninput={async (e) => {
+										const newLast4 = e.target.value;
+										if (newLast4.length !== 4 || !/^\d{4}$/.test(newLast4)) return;
+										await fetch(`/projects/ccbilling/cards/${card.id}`, {
+											method: 'PUT',
+											headers: { 'Content-Type': 'application/json' },
+											body: JSON.stringify({ name: card.name, last4: newLast4 })
+										});
+										window.location.reload();
+									}}
+									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+								/>
 							</div>
-						{/if}
+						</div>
+						<div class="flex space-x-2 mt-2">
+							<button
+								type="button"
+								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
+								onclick={() => deleteCard(card)}
+							>
+								Delete
+							</button>
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -244,24 +219,22 @@
 	{/if}
 
 	<div class="mt-8 flex space-x-4">
-		{#if !editingCard}
-			{#if showAddForm}
-				<button
-					type="button"
-					class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
-					onclick={() => (showAddForm = false)}
-				>
-					Cancel
-				</button>
-			{:else}
-				<button
-					type="button"
-					class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block"
-					onclick={() => (showAddForm = true)}
-				>
-					Add Credit Card
-				</button>
-			{/if}
+		{#if showAddForm}
+			<button
+				type="button"
+				class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
+				onclick={() => (showAddForm = false)}
+			>
+				Cancel
+			</button>
+		{:else}
+			<button
+				type="button"
+				class="font-bold rounded bg-green-600 hover:bg-green-700 text-white py-2 px-4 cursor-pointer no-underline not-prose inline-block"
+				onclick={() => (showAddForm = true)}
+			>
+				Add Credit Card
+			</button>
 		{/if}
 		<a
 			href="/projects/ccbilling"
