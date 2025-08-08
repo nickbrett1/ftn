@@ -1,6 +1,9 @@
 <script>
 	import Button from '$lib/components/Button.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
+	import tippy from 'tippy.js';
+	import 'tippy.js/dist/tippy.css';
+	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
 
 	/** @type {import('./$types').PageProps} */
@@ -373,6 +376,14 @@
 		showDeleteStatementDialog = true;
 	}
 
+	onMount(() => {
+		// Initialize tooltips for allocation buttons
+		tippy('[data-allocation-tooltip]', {
+			content: (reference) => reference.getAttribute('data-allocation-tooltip'),
+			placement: 'top'
+		});
+	});
+
 	onDestroy(() => {
 		// Cleanup when component unmounts
 	});
@@ -703,7 +714,7 @@
 													budgetOption
 														? 'bg-blue-600 text-white'
 														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
+													data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
 													{getAllocationIcon(budgetOption, localData.budgets)}
@@ -714,7 +725,7 @@
 										<!-- Single click button for many budgets -->
 										<button
 											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
+											data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
@@ -790,7 +801,7 @@
 													budgetOption
 														? 'bg-blue-600 text-white'
 														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													title={`Allocate to: ${budgetOption || 'Unallocated'}`}
+													data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
 													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 												>
 													{getAllocationIcon(budgetOption, localData.budgets)}
@@ -801,7 +812,7 @@
 										<!-- Single click button for many budgets -->
 										<button
 											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											title={`Allocation: ${charge.allocated_to || 'Unallocated'}. Click to change.`}
+											data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
 											onclick={() =>
 												updateChargeAllocation(
 													charge.id,
