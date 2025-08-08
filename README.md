@@ -5,7 +5,7 @@
 
 **Live Site:** [www.fintechnick.com](https://www.fintechnick.com)
 
-A developer portfolio website showcasing financial technology expertise through interactive demos, modern web development practices, and production-ready fintech applications.
+A developer portfolio website showcasing financial technology expertise through demos, modern web development practices, and production-ready fintech applications.
 
 ## 🚀 Technical Highlights
 
