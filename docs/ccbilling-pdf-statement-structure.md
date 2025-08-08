@@ -14,4 +14,13 @@
 
 ## Wells Fargo
 
-TODO
+- On page 1, there are two pieces of information we need to extract:
+
+  1.  The last four digits of the credit card. This is shown at the top of the page in the line 'Account Number Ending in XXXX' where XXXX are the last four digits of the credit card.
+  2.  The statement date. This is in the line below the 'Account Number Ending' line and is in the text 'Billing Cycle MM/DD/YYYY to MM/DD/YYYY' where the statement end date is the second of these dates.
+
+- On page 1, the list of charges and payments begin, under a title 'Transaction Summary'.
+
+  - Each transaction can be on one or three lines. The first column is the date of the transaction in MM/YY format. As with Chase, we will need to use the year of the statement date to determine the year of the transaction - taking into account transactions that are close to the end or beginning of a year. The description of the transaction or merchant is in the fifth column under the title 'Description of Transaction or Credit'. If the charge is a payment for statement then it has text like 'ONLINE ACH PAYMENT THANK YOU' and we should ignore it in the same as we do for Chase statements. Foreign currency transactions, like for Chase, can span three lines and have the merchant on the first line, the foreign currency on the second, e.g. 'DK KRONE' and the final line is the foreign currency amount and conversion ratio to USD in the form '<FOREIGN CURRENCY> X <CONVERSION FACTOR>. The final column 'Amount' is the amount of the transaction, with negative for credits. It has a $ sign, e.g. $2.90
+
+- On page 3, and subsequent pages, transactions continue with the title 'Transactions Summary (continued) before the next sections 'Fees Charged', 'Interest Charged' and finally 'BiltProtect Summary' are given. After this there are additional pages, mostly blank, but we don't need any information from them.

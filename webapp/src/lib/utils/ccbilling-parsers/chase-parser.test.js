@@ -16,13 +16,18 @@ describe('ChaseParser', () => {
 	});
 
 	describe('canParse', () => {
-		it('should detect Chase statements', () => {
+		it('should detect Chase statements with JPMORGAN CHASE', () => {
 			const chaseText = 'CHASE ACCOUNT SUMMARY JPMORGAN CHASE';
 			expect(parser.canParse(chaseText)).toBe(true);
 		});
 
-		it('should detect Chase statements with different identifiers', () => {
-			const chaseText = 'ACCOUNT ACTIVITY CHASE';
+		it('should detect Chase statements with CHASE BANK', () => {
+			const chaseText = 'ACCOUNT ACTIVITY CHASE BANK';
+			expect(parser.canParse(chaseText)).toBe(true);
+		});
+
+		it('should detect Chase statements with standalone CHASE word', () => {
+			const chaseText = 'ACCOUNT ACTIVITY CHASE CREDIT CARD';
 			expect(parser.canParse(chaseText)).toBe(true);
 		});
 
@@ -31,9 +36,23 @@ describe('ChaseParser', () => {
 			expect(parser.canParse(nonChaseText)).toBe(false);
 		});
 
-		it('should be case insensitive', () => {
-			const chaseText = 'chase account summary';
+		it('should not detect Wells Fargo statements', () => {
+			const wellsFargoText = 'WELLS FARGO ONLINE Cash Advance Limit';
+			expect(parser.canParse(wellsFargoText)).toBe(false);
+		});
+
+		it('should not detect statements with CHASE in "Cash Advance"', () => {
+			const textWithCashAdvance = 'Cash Advance Limit $4,000.00 Wells Fargo';
+			expect(parser.canParse(textWithCashAdvance)).toBe(false);
+		});
+
+		it('should be case insensitive for valid Chase identifiers', () => {
+			const chaseText = 'jpmorgan chase account summary';
 			expect(parser.canParse(chaseText)).toBe(true);
+		});
+
+		it('should handle null input', () => {
+			expect(parser.canParse(null)).toBe(false);
 		});
 	});
 

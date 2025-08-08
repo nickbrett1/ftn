@@ -16,10 +16,27 @@ export class ChaseParser extends BaseParser {
 	 * @returns {boolean} - True if this is a Chase statement
 	 */
 	canParse(text) {
-		// Look for Chase-specific identifiers
-		const chaseIdentifiers = ['CHASE'];
+		// Handle null or undefined text
+		if (!text) return false;
 
-		return chaseIdentifiers.some((identifier) => text.toUpperCase().includes(identifier));
+		const textUpper = text.toUpperCase();
+
+		// Look for Chase-specific identifiers - be more specific to avoid false positives
+		const chaseIdentifiers = ['JPMORGAN CHASE', 'CHASE BANK', 'CHASE CARD'];
+
+		// Check for Chase identifiers
+		const hasChaseIdentifier = chaseIdentifiers.some((identifier) =>
+			textUpper.includes(identifier)
+		);
+
+		// Also check for "CHASE" when it appears as a standalone word or at word boundaries
+		// This avoids matching "Cash Advance" -> "CASH ADVANCE" which contains "CHASE"
+		const hasChaseWord =
+			/\bCHASE\b/.test(textUpper) &&
+			!textUpper.includes('WELLS FARGO') &&
+			!textUpper.includes('BILT');
+
+		return hasChaseIdentifier || hasChaseWord;
 	}
 
 	/**
