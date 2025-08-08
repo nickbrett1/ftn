@@ -79,6 +79,26 @@
 		newBudgetIcon = '';
 		addError = '';
 	}
+
+	// Restore deleteBudget function
+	async function deleteBudget(budget) {
+		if (!confirm(`Are you sure you want to delete the budget "${budget.name}"?`)) {
+			return;
+		}
+		try {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) {
+				const error = await response.json();
+				alert(error.error || 'Failed to delete budget');
+				return;
+			}
+			window.location.reload();
+		} catch (error) {
+			alert('Network error occurred');
+		}
+	}
 </script>
 
 <PageLayout title="Budget Management" description="Manage your budget categories">
@@ -179,7 +199,10 @@
 									value={budget.name}
 									oninput={async (e) => {
 										const newName = e.target.value;
-										if (!newName.trim()) return;
+										if (!newName.trim() || !budget.icon) {
+											alert('Please enter a budget name and select an icon.');
+											return;
+										}
 										await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
 											method: 'PUT',
 											headers: { 'Content-Type': 'application/json' },
@@ -219,6 +242,15 @@
 								</div>
 								<p class="text-gray-500 text-xs mt-1">Select an icon to represent this budget. Each icon can only be used once.</p>
 							</div>
+						</div>
+						<div class="flex space-x-2 mt-2">
+							<button
+								type="button"
+								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
+								onclick={() => deleteBudget(budget)}
+							>
+								Delete
+							</button>
 						</div>
 					</div>
 				{/each}
