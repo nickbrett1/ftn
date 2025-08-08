@@ -14,6 +14,8 @@
 
 	// Use synchronous destructuring to get data immediately
 	const { budgets = [] } = data;
+	// Sort budgets alphabetically by name
+	const sortedBudgets = budgets.slice().sort((a, b) => a.name.localeCompare(b.name));
 
 	// Add budget state
 	let showAddForm = $state(false);
@@ -247,7 +249,7 @@
 	{/if}
 
 	<!-- Budgets List -->
-	{#if budgets.length === 0}
+	{#if sortedBudgets.length === 0}
 		<div class="text-center py-8">
 			<p class="text-gray-300 mb-4">No budgets created yet.</p>
 			<p class="text-gray-400 text-sm">Create your first budget to start categorizing charges.</p>
@@ -256,7 +258,7 @@
 		<div class="space-y-4 mb-8">
 			<h2 class="text-2xl font-semibold text-white">Your Budgets</h2>
 			<div class="grid gap-4">
-				{#each budgets as budget (budget.id)}
+				{#each sortedBudgets as budget (budget.id)}
 					<div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
 						{#if editingBudget?.id === budget.id}
 							<!-- Edit form -->
