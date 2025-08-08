@@ -3,15 +3,16 @@ import { GET, POST, DELETE } from './+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
-	getBudgetMerchants: vi.fn(),
-	addBudgetMerchant: vi.fn(),
-	removeBudgetMerchant: vi.fn()
+    getBudgetMerchants: vi.fn(),
+    addBudgetMerchant: vi.fn(),
+    removeBudgetMerchant: vi.fn(),
+    getBudgetByMerchant: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 // Import the mocked functions
-import { getBudgetMerchants, addBudgetMerchant, removeBudgetMerchant } from '$lib/server/ccbilling-db.js';
+import { getBudgetMerchants, addBudgetMerchant, removeBudgetMerchant, getBudgetByMerchant } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/budgets/[id]/merchants API', () => {

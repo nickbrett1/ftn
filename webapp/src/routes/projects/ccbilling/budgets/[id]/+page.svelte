@@ -77,10 +77,7 @@
 	}
 
 	async function removeMerchant(merchantName) {
-		if (!confirm(`Remove "${merchantName}" from this budget?`)) {
-			return;
-		}
-
+		// No confirm needed; removal is safe and reversible by re-adding
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
@@ -328,14 +325,5 @@
 		{/if}
 	</div>
 
-	<!-- Future Features Info -->
-	<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-6">
-		<h3 class="text-lg font-semibold text-blue-300 mb-2">Coming Soon</h3>
-		<ul class="text-blue-200 text-sm space-y-1">
-			<li>• View charges assigned to this budget</li>
-			<li>• Budget spending analytics</li>
-			<li>• Monthly budget limits and tracking</li>
-		</ul>
-	</div>
 	<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
 </PageLayout>

@@ -174,16 +174,13 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Budget Information');
 	});
 
-	it('renders coming soon section', () => {
+	// Coming Soon section removed from UI; keep a placeholder test
+	it('does not render deprecated coming soon section', () => {
 		const { container } = render(BudgetDetailPage, {
 			props: { data: mockData }
 		});
 
-		// This exercises static content rendering
-		expect(container.innerHTML).toContain('Coming Soon');
-		expect(container.innerHTML).toContain('View charges assigned');
-		expect(container.innerHTML).toContain('Budget spending analytics');
-		expect(container.innerHTML).toContain('Monthly budget limits');
+		expect(container.innerHTML).not.toContain('Coming Soon');
 	});
 
 	it('handles different budget names', () => {

@@ -79,19 +79,19 @@ describe('MerchantPicker', () => {
 		expect(container.innerHTML).toContain('Walmart');
 	});
 
-	it('should toggle between dropdown and manual input', async () => {
-		const mockMerchants = ['Amazon'];
-		fetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => mockMerchants
-		});
+it('renders dropdown with merchants only (no manual entry)', async () => {
+    const mockMerchants = ['Amazon'];
+    fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockMerchants
+    });
 
-		const { container } = render(MerchantPicker);
+    const { container } = render(MerchantPicker);
 
-		// Wait for async data loading
-		await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for async data loading
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-		expect(container.innerHTML).toContain('Amazon');
-		expect(container.innerHTML).toContain('Enter manually');
-	});
+    expect(container.innerHTML).toContain('Amazon');
+    expect(container.innerHTML).not.toContain('Enter manually');
+});
 });
