@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ParserFactory } from './parser-factory.js';
 import { ChaseParser } from './chase-parser.js';
+import { WellsFargoParser } from './wells-fargo-parser.js';
 
-// Mock the ChaseParser
+// Mock the parsers
 vi.mock('./chase-parser.js', () => ({
 	ChaseParser: vi.fn().mockImplementation(() => ({
 		providerName: 'Chase',
@@ -11,20 +12,31 @@ vi.mock('./chase-parser.js', () => ({
 	}))
 }));
 
+vi.mock('./wells-fargo-parser.js', () => ({
+	WellsFargoParser: vi.fn().mockImplementation(() => ({
+		providerName: 'Wells Fargo',
+		canParse: vi.fn(),
+		parse: vi.fn()
+	}))
+}));
+
 describe('ParserFactory', () => {
 	let factory;
 	let mockChaseParser;
+	let mockWellsFargoParser;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		factory = new ParserFactory();
 		mockChaseParser = factory.parsers[0];
+		mockWellsFargoParser = factory.parsers[1];
 	});
 
 	describe('constructor', () => {
-		it('should initialize with Chase parser', () => {
-			expect(factory.parsers).toHaveLength(1);
+		it('should initialize with Chase and Wells Fargo parsers', () => {
+			expect(factory.parsers).toHaveLength(2);
 			expect(factory.parsers[0].providerName).toBe('Chase');
+			expect(factory.parsers[1].providerName).toBe('Wells Fargo');
 		});
 	});
 
@@ -39,8 +51,20 @@ describe('ParserFactory', () => {
 			expect(mockChaseParser.canParse).toHaveBeenCalledWith(text);
 		});
 
+		it('should detect Wells Fargo parser for Wells Fargo statements', () => {
+			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(true);
+			const text = 'WELLS FARGO BILT ACCOUNT';
+
+			const result = factory.detectParser(text);
+
+			expect(result).toBe(mockWellsFargoParser);
+			expect(mockWellsFargoParser.canParse).toHaveBeenCalledWith(text);
+		});
+
 		it('should return null when no parser matches', () => {
 			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN STATEMENT FORMAT';
 
 			const result = factory.detectParser(text);
@@ -62,6 +86,7 @@ describe('ParserFactory', () => {
 		it('should log warning when no parser found', () => {
 			const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN FORMAT';
 
 			factory.detectParser(text);
@@ -91,6 +116,7 @@ describe('ParserFactory', () => {
 
 		it('should throw error when no parser is available', async () => {
 			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN STATEMENT FORMAT';
 
 			await expect(factory.parseStatement(text)).rejects.toThrow(
@@ -103,7 +129,7 @@ describe('ParserFactory', () => {
 		it('should return list of supported provider names', () => {
 			const providers = factory.getSupportedProviders();
 
-			expect(providers).toEqual(['Chase']);
+			expect(providers).toEqual(['Chase', 'Wells Fargo']);
 		});
 
 		it('should return all provider names when multiple parsers exist', () => {
@@ -115,7 +141,7 @@ describe('ParserFactory', () => {
 
 			const providers = factory.getSupportedProviders();
 
-			expect(providers).toEqual(['Chase', 'Amex']);
+			expect(providers).toEqual(['Chase', 'Wells Fargo', 'Amex']);
 		});
 	});
 
@@ -142,6 +168,7 @@ describe('ParserFactory', () => {
 
 		it('should handle null text input', () => {
 			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(false);
 
 			const result = factory.detectParser(null);
 
@@ -150,6 +177,7 @@ describe('ParserFactory', () => {
 
 		it('should handle empty text input', () => {
 			mockChaseParser.canParse.mockReturnValue(false);
+			mockWellsFargoParser.canParse.mockReturnValue(false);
 
 			const result = factory.detectParser('');
 
@@ -166,7 +194,7 @@ describe('ParserFactory', () => {
 
 			factory.parsers.push(newParser);
 
-			expect(factory.parsers).toHaveLength(2);
+			expect(factory.parsers).toHaveLength(3);
 			expect(factory.getSupportedProviders()).toContain('NewBank');
 		});
 

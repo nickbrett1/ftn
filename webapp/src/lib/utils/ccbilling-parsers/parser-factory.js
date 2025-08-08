@@ -1,4 +1,5 @@
 import { ChaseParser } from './chase-parser.js';
+import { WellsFargoParser } from './wells-fargo-parser.js';
 
 /**
  * Factory for creating appropriate statement parsers
@@ -6,7 +7,8 @@ import { ChaseParser } from './chase-parser.js';
 export class ParserFactory {
 	constructor() {
 		this.parsers = [
-			new ChaseParser()
+			new ChaseParser(),
+			new WellsFargoParser()
 			// Add other parsers here as they're implemented
 		];
 	}

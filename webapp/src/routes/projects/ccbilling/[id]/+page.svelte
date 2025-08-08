@@ -15,6 +15,16 @@
 		charges: [...data.charges]
 	});
 
+	// Update localData when data prop changes (e.g., after invalidate())
+	$effect(() => {
+		localData.cycleId = data.cycleId;
+		localData.cycle = data.cycle;
+		localData.statements = data.statements;
+		localData.charges = [...data.charges];
+		localData.creditCards = data.creditCards;
+		localData.budgets = data.budgets;
+	});
+
 	function formatLocalDate(dateString) {
 		if (!dateString) return '';
 		const [year, month, day] = dateString.split('-').map(Number);
