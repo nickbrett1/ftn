@@ -6,7 +6,7 @@
 export async function listCreditCards(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	const { results } = await db.prepare('SELECT * FROM credit_card ORDER BY created_at DESC').all();
+	const { results } = await db.prepare('SELECT * FROM credit_card ORDER BY name ASC').all();
 	return results;
 }
 
@@ -508,4 +508,28 @@ export async function deletePaymentsForStatement(event, statement_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db.prepare('DELETE FROM payment WHERE statement_id = ?').bind(statement_id).run();
+}
+
+/**
+ * Get all unique merchants from uploaded statements that haven't been assigned to any budget.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {Promise<Array<string>>}
+ */
+export async function getUnassignedMerchants(event) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+
+	// Get all unique merchants from payments that don't have an allocated_to budget
+	const { results } = await db
+		.prepare(
+			`
+			SELECT DISTINCT p.merchant
+			FROM payment p
+			WHERE p.allocated_to IS NULL OR p.allocated_to = ''
+			ORDER BY p.merchant ASC
+		`
+		)
+		.all();
+
+	return results.map((row) => row.merchant);
 }
