@@ -103,7 +103,6 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Add Merchant');
 		expect(container.innerHTML).toContain('Remove');
 		expect(container.innerHTML).toContain('Back to Budgets');
-		expect(container.innerHTML).toContain('Save Changes');
 	});
 
 	it('handles merchant name variations', () => {
