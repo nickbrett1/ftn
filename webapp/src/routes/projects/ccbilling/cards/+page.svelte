@@ -87,6 +87,10 @@
 			isDeleting = false;
 		}
 	}
+
+	function goToCardDetail(card) {
+		window.location.href = `/projects/ccbilling/cards/${card.id}`;
+	}
 </script>
 
 <PageLayout
@@ -161,61 +165,14 @@
 			{/if}
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-							<div>
-								<label for="card-name-{card.id}" class="block text-gray-300 mb-2">Card Name:</label>
-								<input
-									id="card-name-{card.id}"
-									type="text"
-									value={card.name}
-									oninput={async (e) => {
-										const newName = e.target.value;
-										if (!newName.trim()) return;
-										const res = await fetch(`/projects/ccbilling/cards/${card.id}`, {
-											method: 'PUT',
-											headers: { 'Content-Type': 'application/json' },
-											body: JSON.stringify({ name: newName.trim(), last4: card.last4 })
-										});
-										if (res.ok) {
-											card.name = newName.trim();
-										}
-									}}
-									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-								/>
-							</div>
-							<div>
-								<label for="card-last4-{card.id}" class="block text-gray-300 mb-2">Last 4 Digits:</label>
-								<input
-									id="card-last4-{card.id}"
-									type="text"
-									value={card.last4}
-									maxlength="4"
-									oninput={async (e) => {
-										const newLast4 = e.target.value;
-										if (newLast4.length !== 4 || !/^\d{4}$/.test(newLast4)) return;
-										const res = await fetch(`/projects/ccbilling/cards/${card.id}`, {
-											method: 'PUT',
-											headers: { 'Content-Type': 'application/json' },
-											body: JSON.stringify({ name: card.name, last4: newLast4 })
-										});
-										if (res.ok) {
-											card.last4 = newLast4;
-										}
-									}}
-									class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-								/>
-							</div>
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center">
+						<div>
+							<p class="text-white font-semibold text-lg">{card.name}</p>
+							<p class="text-gray-400 text-sm">****{card.last4}</p>
 						</div>
-						<div class="flex space-x-2 mt-2">
-							<button
-								type="button"
-								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
-								onclick={() => deleteCard(card)}
-							>
-								Delete
-							</button>
-						</div>
+						<Button variant="secondary" size="md" onclick={() => goToCardDetail(card)}>
+							Edit / Delete
+						</Button>
 					</div>
 				{/each}
 			</div>

@@ -30,6 +30,11 @@
 	let isSavingName = $state(false);
 	let nameEditError = $state('');
 
+	// Delete budget state
+	let showDeleteDialog = $state(false);
+	let isDeletingBudget = $state(false);
+	let deleteBudgetError = $state('');
+
 	// Get available icons
 	let availableIcons = $derived(getAvailableIcons());
 
@@ -162,6 +167,26 @@
 		nameEditError = error;
 		if (!error) {
 			saveBudgetNameImmediate(editName, editIcon);
+		}
+	}
+
+	async function handleDeleteBudget() {
+		isDeletingBudget = true;
+		deleteBudgetError = '';
+		try {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) {
+				const error = await response.json();
+				deleteBudgetError = error.error || 'Failed to delete budget';
+				return;
+			}
+			window.location.href = '/projects/ccbilling/budgets';
+		} catch (error) {
+			deleteBudgetError = 'Network error occurred';
+		} finally {
+			isDeletingBudget = false;
 		}
 	}
 </script>
@@ -316,4 +341,34 @@
 	</div>
 
 	<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
+
+	<!-- Delete confirmation dialog -->
+	{#if showDeleteDialog}
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
+				<h3 class="text-lg font-bold text-white mb-4">Delete Budget?</h3>
+				<p class="text-gray-300 mb-6">
+					Are you sure you want to delete this budget? This action cannot be undone.
+				</p>
+				{#if deleteBudgetError}
+					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+						{deleteBudgetError}
+					</div>
+				{/if}
+				<div class="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="secondary"
+						disabled={isDeletingBudget}
+						onclick={() => (showDeleteDialog = false)}
+					>
+						Cancel
+					</Button>
+					<Button type="button" variant="danger" disabled={isDeletingBudget} onclick={handleDeleteBudget}>
+						{isDeletingBudget ? 'Deleting...' : 'Delete'}
+					</Button>
+				</div>
+			</div>
+		</div>
+	{/if}
 </PageLayout>
