@@ -102,16 +102,16 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			expect(container.innerHTML).toContain('****5678');
 		});
 
-		it('renders all required buttons', () => {
+		it('renders all required controls for each card', () => {
 			const { container } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
-
-			// Check for presence of interactive elements
+			// Check for presence of interactive elements (inline editing)
 			expect(container.innerHTML).toContain('Add Credit Card');
-			expect(container.innerHTML).toContain('Edit');
+			// There should be an input for each card name and last4
+			expect(container.querySelectorAll('input[type="text"]').length).toBeGreaterThanOrEqual(mockCreditCards.length * 2);
+			// There should be a delete button for each card
 			expect(container.innerHTML).toContain('Delete');
-			expect(container.innerHTML).toContain('Back to Billing Cycles');
 		});
 	});
 

@@ -82,18 +82,18 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Utilities');
 	});
 
-	it('renders all required buttons', () => {
+	it('renders all required controls for each budget', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: mockBudgets } }
 		});
-
-		// Check for presence of interactive elements (this exercises conditional rendering)
+		// Check for presence of interactive elements (inline editing)
 		expect(container.innerHTML).toContain('Add New Budget');
-		expect(container.innerHTML).toContain('Edit');
+		// There should be an input for each budget name
+		expect(container.querySelectorAll('input[type="text"]').length).toBeGreaterThanOrEqual(mockBudgets.length);
+		// There should be a delete button for each budget
 		expect(container.innerHTML).toContain('Delete');
-		// Budget names are now clickable links instead of having a separate "Manage" button
-		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/1"');
-		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/2"');
+		// There should be icon selection buttons
+		expect(container.innerHTML).toContain('Select an icon to represent this budget');
 	});
 
 	it('handles budget name variations', () => {
@@ -101,24 +101,12 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			{ id: 1, name: 'Food & Dining', created_at: '2025-01-01T00:00:00Z' },
 			{ id: 2, name: 'Transportation & Travel', created_at: '2025-01-02T00:00:00Z' }
 		];
-
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: specialBudgets } }
 		});
-
-		// This exercises HTML encoding and name rendering
-		expect(container.innerHTML).toContain('Food &amp; Dining');
-		expect(container.innerHTML).toContain('Transportation &amp; Travel');
-	});
-
-	it('generates correct links', () => {
-		const { container } = render(BudgetsPage, {
-			props: { data: { budgets: mockBudgets } }
-		});
-
-		// This exercises URL generation logic
-		expect(container.innerHTML).toContain('/projects/ccbilling/budgets/1');
-		expect(container.innerHTML).toContain('/projects/ccbilling/budgets/2');
+		// The input value should contain the name (no HTML encoding in input value)
+		expect(container.innerHTML).toContain('Food & Dining');
+		expect(container.innerHTML).toContain('Transportation & Travel');
 	});
 
 	it('handles budget display', () => {
