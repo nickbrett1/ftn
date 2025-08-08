@@ -68,8 +68,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container: many } = render(BudgetsPage, {
 			props: { data: { budgets: manyBudgets } }
 		});
-		expect(many.innerHTML).toContain('Budget 1');
-		expect(many.innerHTML).toContain('Budget 5');
+		const budgetInputs = many.querySelectorAll('input[type="text"]');
+		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 1')).toBe(true);
+		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 5')).toBe(true);
 	});
 
 	it('processes budget data correctly', () => {
@@ -82,18 +83,18 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		expect(container.innerHTML).toContain('Utilities');
 	});
 
-	it('renders all required buttons', () => {
+	it('renders all required controls for each budget', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: mockBudgets } }
 		});
-
-		// Check for presence of interactive elements (this exercises conditional rendering)
+		// Check for presence of interactive elements (inline editing)
 		expect(container.innerHTML).toContain('Add New Budget');
-		expect(container.innerHTML).toContain('Edit');
+		// There should be an input for each budget name
+		expect(container.querySelectorAll('input[type="text"]').length).toBeGreaterThanOrEqual(mockBudgets.length);
+		// There should be a delete button for each budget
 		expect(container.innerHTML).toContain('Delete');
-		// Budget names are now clickable links instead of having a separate "Manage" button
-		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/1"');
-		expect(container.innerHTML).toContain('href="/projects/ccbilling/budgets/2"');
+		// There should be icon selection buttons
+		expect(container.innerHTML).toContain('Select an icon to represent this budget');
 	});
 
 	it('handles budget name variations', () => {
@@ -101,24 +102,12 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			{ id: 1, name: 'Food & Dining', created_at: '2025-01-01T00:00:00Z' },
 			{ id: 2, name: 'Transportation & Travel', created_at: '2025-01-02T00:00:00Z' }
 		];
-
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: specialBudgets } }
 		});
-
-		// This exercises HTML encoding and name rendering
-		expect(container.innerHTML).toContain('Food &amp; Dining');
-		expect(container.innerHTML).toContain('Transportation &amp; Travel');
-	});
-
-	it('generates correct links', () => {
-		const { container } = render(BudgetsPage, {
-			props: { data: { budgets: mockBudgets } }
-		});
-
-		// This exercises URL generation logic
-		expect(container.innerHTML).toContain('/projects/ccbilling/budgets/1');
-		expect(container.innerHTML).toContain('/projects/ccbilling/budgets/2');
+		const specialInputs = container.querySelectorAll('input[type="text"]');
+		expect(Array.from(specialInputs).some(input => input.value === 'Food & Dining')).toBe(true);
+		expect(Array.from(specialInputs).some(input => input.value === 'Transportation & Travel')).toBe(true);
 	});
 
 	it('handles budget display', () => {
