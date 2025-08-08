@@ -45,17 +45,20 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 
 	describe('Basic Rendering', () => {
 		it('renders and executes component with credit cards', () => {
-			const { container } = render(CardsPage, {
+			const { container, getAllByText } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
 			// Verify basic rendering to ensure component executed
 			expect(container).toBeTruthy();
 			expect(container.innerHTML.length).toBeGreaterThan(100);
-			const cardInputs = container.querySelectorAll('input[type="text"]');
-			expect(Array.from(cardInputs).some(input => input.value === 'Chase Freedom')).toBe(true);
-			expect(Array.from(cardInputs).some(input => input.value === 'Amex Gold')).toBe(true);
-			expect(Array.from(cardInputs).some(input => input.value === 'Discover It')).toBe(true);
+			// Check for card names and last4
+			expect(container.innerHTML).toContain('Chase Freedom');
+			expect(container.innerHTML).toContain('Amex Gold');
+			expect(container.innerHTML).toContain('Discover It');
+			// Check for Edit / Delete button for each card
+			const editButtons = getAllByText('Edit / Delete');
+			expect(editButtons.length).toBe(mockCreditCards.length);
 		});
 
 		it('renders empty state branch', () => {
@@ -305,7 +308,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const deleteButtons = getAllByText('Delete');
+			const deleteButtons = getAllByText('Edit / Delete');
 			await fireEvent.click(deleteButtons[0]);
 
 			// Verify confirmation dialog was called
@@ -319,7 +322,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const deleteButtons = getAllByText('Delete');
+			const deleteButtons = getAllByText('Edit / Delete');
 			await fireEvent.click(deleteButtons[0]);
 
 			// Verify no API call was made
@@ -331,7 +334,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const deleteButtons = getAllByText('Delete');
+			const deleteButtons = getAllByText('Edit / Delete');
 			await fireEvent.click(deleteButtons[0]);
 
 			// Verify API call
@@ -350,7 +353,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const deleteButtons = getAllByText('Delete');
+			const deleteButtons = getAllByText('Edit / Delete');
 			await fireEvent.click(deleteButtons[0]);
 
 			// Verify API call was made
