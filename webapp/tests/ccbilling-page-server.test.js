@@ -101,8 +101,7 @@ describe('CCBilling Page Server Route', () => {
 			const mockCycle = {
 				id: 123,
 				start_date: '2024-01-01',
-				end_date: '2024-01-31',
-				status: 'open'
+				end_date: '2024-01-31'
 			};
 			mockGetBillingCycle.mockResolvedValue(mockCycle);
 
@@ -150,8 +149,7 @@ describe('CCBilling Page Server Route', () => {
 			const mockCycle = {
 				id: 456,
 				start_date: '2024-02-01',
-				end_date: '2024-02-29',
-				status: 'closed'
+				end_date: '2024-02-29'
 			};
 			mockGetBillingCycle.mockResolvedValue(mockCycle);
 
@@ -177,8 +175,7 @@ describe('CCBilling Page Server Route', () => {
 			const mockCycle = {
 				id: 123,
 				start_date: '2024-03-01',
-				end_date: '2024-03-31',
-				status: 'open'
+				end_date: '2024-03-31'
 			};
 			mockGetBillingCycle.mockResolvedValue(mockCycle);
 
@@ -206,8 +203,7 @@ describe('CCBilling Page Server Route', () => {
 			const mockCycle = {
 				id: 123,
 				start_date: '2024-01-01',
-				end_date: '2024-01-31',
-				status: 'open'
+				end_date: '2024-01-31'
 			};
 			mockGetBillingCycle.mockResolvedValue(mockCycle);
 

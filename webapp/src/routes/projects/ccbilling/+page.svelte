@@ -40,10 +40,7 @@
 									<h3 class="text-lg font-medium text-white">
 										{formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
 									</h3>
-									<p class="text-gray-400 text-sm">
-										Status: {cycle.closed ? 'Closed' : 'Open'}
-									</p>
-								</div>
+									</div>
 								<div class="text-gray-400">
 									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path

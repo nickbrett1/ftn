@@ -109,11 +109,6 @@ export async function createBillingCycle(event, start_date, end_date) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} id
  */
-export async function closeBillingCycle(event, id) {
-	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
-	await db.prepare('UPDATE billing_cycle SET closed = 1 WHERE id = ?').bind(id).run();
-}
 
 /**
  * Delete a billing cycle by id.
