@@ -112,48 +112,56 @@
 		addError = '';
 	}
 
-	async function saveBudgetName() {
-		if (!editName.trim()) {
-			nameEditError = 'Please enter a budget name';
-			return;
+	function validateBudgetNameAndIcon(name, icon) {
+		if (!name.trim()) {
+			return 'Please enter a budget name';
 		}
-
-		if (!editIcon) {
-			nameEditError = 'Please select a budget icon';
-			return;
+		if (!icon) {
+			return 'Please select a budget icon';
 		}
-
-		// Check if the selected icon is already used by another budget
-		if (isIconUsedByOtherBudget(editIcon, data.budgets || [], budget?.id)) {
-			nameEditError = 'This icon is already used by another budget';
-			return;
+		if (isIconUsedByOtherBudget(icon, data.budgets || [], budget?.id)) {
+			return 'This icon is already used by another budget';
 		}
+		return '';
+	}
 
+	async function saveBudgetNameImmediate(name, icon) {
 		isSavingName = true;
 		nameEditError = '';
-
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: editName.trim(),
-					icon: editIcon
-				})
+				body: JSON.stringify({ name: name.trim(), icon })
 			});
-
 			if (!response.ok) {
 				const error = await response.json();
 				nameEditError = error.error || 'Failed to update budget';
 				return;
 			}
-
-			// Refresh data to show updated name and icon
-			window.location.reload();
+			// No reload, just update UI
 		} catch (error) {
 			nameEditError = 'Network error occurred';
 		} finally {
 			isSavingName = false;
+		}
+	}
+
+	function handleNameInput(e) {
+		editName = e.target.value;
+		const error = validateBudgetNameAndIcon(editName, editIcon);
+		nameEditError = error;
+		if (!error) {
+			saveBudgetNameImmediate(editName, editIcon);
+		}
+	}
+
+	function handleIconSelect(icon) {
+		editIcon = icon;
+		const error = validateBudgetNameAndIcon(editName, editIcon);
+		nameEditError = error;
+		if (!error) {
+			saveBudgetNameImmediate(editName, editIcon);
 		}
 	}
 </script>
@@ -179,7 +187,7 @@
 				<input
 					id="budget-name-edit"
 					value={editName}
-					oninput={(e) => (editName = e.target.value)}
+					oninput={handleNameInput}
 					type="text"
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={isSavingName}
@@ -195,16 +203,9 @@
 						{@const usedByBudget = getBudgetNameUsingIcon(icon, data.budgets || [], budget?.id)}
 						<button
 							type="button"
-							onclick={() => (editIcon = icon)}
-							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon ===
-							icon
-								? 'bg-blue-600'
-								: isUsed
-									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-									: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
-							title={isUsed
-								? `${getIconDescription(icon)} (used by ${usedByBudget})`
-								: getIconDescription(icon)}
+							onclick={() => handleIconSelect(icon)}
+							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon === icon ? 'bg-blue-600' : isUsed ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
+							title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
 							aria-label={`Select ${getIconDescription(icon)} icon`}
 							disabled={isUsed || isSavingName}
 						>
@@ -212,17 +213,6 @@
 						</button>
 					{/each}
 				</div>
-			</div>
-			<div class="flex space-x-2">
-				<Button
-					onclick={saveBudgetName}
-					variant="success"
-					size="sm"
-					disabled={isSavingName}
-					style="cursor: pointer;"
-				>
-					{isSavingName ? 'Saving...' : 'Save Changes'}
-				</Button>
 			</div>
 			{#if nameEditError}
 				<p class="text-red-400 text-sm">{nameEditError}</p>
