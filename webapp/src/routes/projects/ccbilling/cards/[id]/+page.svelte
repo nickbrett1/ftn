@@ -1,6 +1,7 @@
 <script>
 import PageLayout from '$lib/components/PageLayout.svelte';
 import Button from '$lib/components/Button.svelte';
+import { tick } from 'svelte';
 
 const { data } = $props();
 const { card } = data;
@@ -9,36 +10,59 @@ let editName = $state(card?.name || '');
 let editLast4 = $state(card?.last4 || '');
 let isSaving = $state(false);
 let saveError = $state('');
+let saveErrorTick = $state(0);
+
+let showSaveError = $derived(() => !!saveError);
 
 let showDeleteDialog = $state(false);
 let isDeleting = $state(false);
 let deleteError = $state('');
 
-async function saveCard() {
-	if (!editName.trim() || !editLast4.trim()) {
-		saveError = 'Please enter both card name and last 4 digits';
-		return;
+function handleNameInput(e) {
+	editName = e.target.value;
+	const error = validateCard(editName, editLast4);
+	if (error) {
+		saveError = error;
+	} else {
+		saveCardImmediate(editName, editLast4);
 	}
-	if (editLast4.length !== 4 || !/^\d{4}$/.test(editLast4)) {
-		saveError = 'Last 4 digits must be exactly 4 numbers';
-		return;
+}
+function handleLast4Input(e) {
+	editLast4 = e.target.value;
+	const error = validateCard(editName, editLast4);
+	if (error) {
+		saveError = error;
+	} else {
+		saveCardImmediate(editName, editLast4);
 	}
+}
+function validateCard(name, last4) {
+	if (!name.trim() || !last4.trim()) {
+		return 'Please enter both card name and last 4 digits';
+	}
+	if (last4.length !== 4 || !/^\d{4}$/.test(last4)) {
+		return 'Last 4 digits must be exactly 4 numbers';
+	}
+	return '';
+}
+async function saveCardImmediate(name, last4) {
 	isSaving = true;
-	saveError = '';
 	try {
 		const response = await fetch(`/projects/ccbilling/cards/${card.id}`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name: editName.trim(), last4: editLast4.trim() })
+			body: JSON.stringify({ name: name.trim(), last4: last4.trim() })
 		});
 		if (!response.ok) {
 			const error = await response.json();
 			saveError = error.error || 'Failed to update card';
+			await tick();
 			return;
 		}
-		window.location.reload();
+		// Optionally, show a success indicator
 	} catch (error) {
 		saveError = 'Network error occurred';
+		await tick();
 	} finally {
 		isSaving = false;
 	}
@@ -76,7 +100,7 @@ async function handleDelete() {
 				id="edit-card-name"
 				type="text"
 				value={editName}
-				oninput={e => (editName = e.target.value)}
+				oninput={handleNameInput}
 				class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 				autocomplete="off"
 				maxlength="64"
@@ -89,20 +113,17 @@ async function handleDelete() {
 				id="edit-card-last4"
 				type="text"
 				value={editLast4}
-				oninput={e => (editLast4 = e.target.value)}
+				oninput={handleLast4Input}
 				class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 				maxlength="4"
 				autocomplete="off"
 				data-testid="edit-card-last4-input"
 			/>
 		</div>
-		{#if saveError}
-			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
-		{/if}
+		<!-- Always render the save error div, no visibility:hidden, always show content -->
+		<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
+		<!-- Remove the Save Changes button and only keep the Back to Cards button -->
 		<div class="flex gap-2 mt-4">
-			<Button type="button" variant="success" size="md" data-testid="save-card-btn" disabled={isSaving} onclick={saveCard}>
-				{isSaving ? 'Saving...' : 'Save Changes'}
-			</Button>
 			<Button href="/projects/ccbilling/cards" variant="secondary" size="md">Back to Cards</Button>
 		</div>
 	</div>
