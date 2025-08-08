@@ -193,11 +193,11 @@
 			>
 				Add Credit Card
 			</button>
+			<a
+				href="/projects/ccbilling"
+				class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
+				>Back to Billing Cycles</a
+			>
 		{/if}
-		<a
-			href="/projects/ccbilling"
-			class="font-bold rounded bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-600 hover:border-gray-500 py-3 px-6 text-lg cursor-pointer no-underline not-prose inline-block"
-			>Back to Billing Cycles</a
-		>
 	</div>
 </PageLayout>
