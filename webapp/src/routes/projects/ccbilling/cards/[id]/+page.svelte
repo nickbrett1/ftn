@@ -47,7 +47,6 @@ function validateCard(name, last4) {
 }
 async function saveCardImmediate(name, last4) {
 	isSaving = true;
-	saveError = '';
 	try {
 		const response = await fetch(`/projects/ccbilling/cards/${card.id}`, {
 			method: 'PUT',
