@@ -68,8 +68,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container: many } = render(BudgetsPage, {
 			props: { data: { budgets: manyBudgets } }
 		});
-		expect(many.innerHTML).toContain('Budget 1');
-		expect(many.innerHTML).toContain('Budget 5');
+		const budgetInputs = many.querySelectorAll('input[type="text"]');
+		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 1')).toBe(true);
+		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 5')).toBe(true);
 	});
 
 	it('processes budget data correctly', () => {
@@ -104,9 +105,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: specialBudgets } }
 		});
-		// The input value should contain the name (no HTML encoding in input value)
-		expect(container.innerHTML).toContain('Food & Dining');
-		expect(container.innerHTML).toContain('Transportation & Travel');
+		const specialInputs = container.querySelectorAll('input[type="text"]');
+		expect(Array.from(specialInputs).some(input => input.value === 'Food & Dining')).toBe(true);
+		expect(Array.from(specialInputs).some(input => input.value === 'Transportation & Travel')).toBe(true);
 	});
 
 	it('handles budget display', () => {
