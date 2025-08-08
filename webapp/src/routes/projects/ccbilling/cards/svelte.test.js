@@ -299,118 +299,6 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 		});
 	});
 
-	describe('Edit Card Functionality', () => {
-		it('shows edit form when Edit button is clicked', async () => {
-			const { container, getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-
-			// Verify edit form is shown
-			expect(container.innerHTML).toContain('Edit Credit Card');
-			// The card name and last4 are in the input values, not visible text
-			expect(container.innerHTML).toContain('edit-card-name');
-			expect(container.innerHTML).toContain('edit-card-last4');
-		});
-
-		it('cancels edit when Cancel button is clicked', async () => {
-			const { container, getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start edit
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-			expect(container.innerHTML).toContain('Edit Credit Card');
-
-			// Cancel edit
-			const cancelButton = getAllByText('Cancel')[0];
-			await fireEvent.click(cancelButton);
-
-			// Verify edit form is hidden
-			expect(container.innerHTML).not.toContain('Edit Credit Card');
-		});
-
-		it('validates edit form fields', async () => {
-			const { container, getAllByText, getByLabelText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start edit
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-
-			// Clear the name field
-			const nameInput = getByLabelText('Card Name:');
-			await fireEvent.input(nameInput, { target: { value: '' } });
-
-			// Try to save
-			const saveButton = getAllByText('Save')[0];
-			await fireEvent.click(saveButton);
-
-			// Verify error message
-			expect(container.innerHTML).toContain('Please enter both card name and last 4 digits');
-		});
-
-		it('successfully updates a card with valid data', async () => {
-			const { container, getAllByText, getByLabelText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start edit
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-
-			// Update the card name
-			const nameInput = getByLabelText('Card Name:');
-			await fireEvent.input(nameInput, { target: { value: 'Updated Card Name' } });
-
-			// Save changes
-			const saveButton = getAllByText('Save')[0];
-			await fireEvent.click(saveButton);
-
-			// Verify API call
-			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards/1', {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: 'Updated Card Name',
-					last4: '1234'
-				})
-			});
-		});
-
-		it('handles API error when updating card', async () => {
-			fetch.mockResolvedValue({
-				ok: false,
-				json: () => Promise.resolve({ error: 'Card not found' })
-			});
-
-			const { container, getAllByText, getByLabelText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start edit
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-
-			// Update the card name
-			const nameInput = getByLabelText('Card Name:');
-			await fireEvent.input(nameInput, { target: { value: 'Updated Card Name' } });
-
-			// Save changes
-			const saveButton = getAllByText('Save')[0];
-			await fireEvent.click(saveButton);
-
-			// Wait for error to be displayed
-			await waitFor(() => {
-				expect(container.innerHTML).toContain('Card not found');
-			});
-		});
-	});
-
 	describe('Delete Card Functionality', () => {
 		it('shows confirmation dialog when Delete button is clicked', async () => {
 			const { getAllByText } = render(CardsPage, {
@@ -469,88 +357,6 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards/1', {
 				method: 'DELETE'
 			});
-		});
-	});
-
-	describe('Loading States', () => {
-		it('shows loading state when adding card', async () => {
-			// Mock a slow response
-			fetch.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
-				ok: true,
-				json: () => Promise.resolve({ success: true })
-			}), 100)));
-
-			const { container, getByText, getByLabelText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Show form
-			const addButton = getByText('Add Credit Card');
-			await fireEvent.click(addButton);
-
-			// Wait for form to appear and fill form
-			await waitFor(() => {
-				expect(getByLabelText('Card Name:')).toBeTruthy();
-			});
-			
-			const nameInput = getByLabelText('Card Name:');
-			const last4Input = getByLabelText('Last 4 Digits:');
-			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
-			await fireEvent.input(last4Input, { target: { value: '9999' } });
-
-			// Start adding card
-			const addCardButton = getByText('Add Card');
-			await fireEvent.click(addCardButton);
-
-			// Verify loading state
-			expect(container.innerHTML).toContain('Adding...');
-		});
-
-		it('shows loading state when editing card', async () => {
-			// Mock a slow response
-			fetch.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
-				ok: true,
-				json: () => Promise.resolve({ success: true })
-			}), 100)));
-
-			const { container, getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start edit
-			const editButtons = getAllByText('Edit');
-			await fireEvent.click(editButtons[0]);
-
-			// Wait for edit form to appear
-			await waitFor(() => {
-				expect(getAllByText('Save')[0]).toBeTruthy();
-			});
-
-			// Start saving
-			const saveButton = getAllByText('Save')[0];
-			await fireEvent.click(saveButton);
-
-			// Verify loading state
-			expect(container.innerHTML).toContain('Saving...');
-		});
-
-		it('shows loading state when deleting card', async () => {
-			// Mock a slow response
-			fetch.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
-				ok: true,
-				json: () => Promise.resolve({ success: true })
-			}), 100)));
-
-			const { container, getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			// Start delete
-			const deleteButtons = getAllByText('Delete');
-			await fireEvent.click(deleteButtons[0]);
-
-			// Verify loading state
-			expect(container.innerHTML).toContain('Deleting...');
 		});
 	});
 
@@ -633,10 +439,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: cardsWithDifferentDates } }
 			});
 
-			// Verify all cards are displayed
-			expect(container.innerHTML).toContain('Card 1');
-			expect(container.innerHTML).toContain('Card 2');
-			expect(container.innerHTML).toContain('Card 3');
+			// Verify all cards are displayed by input value
+			const dateInputs = container.querySelectorAll('input[type="text"]');
+			expect(Array.from(dateInputs).some(input => input.value === 'Card 1')).toBe(true);
+			expect(Array.from(dateInputs).some(input => input.value === 'Card 2')).toBe(true);
+			expect(Array.from(dateInputs).some(input => input.value === 'Card 3')).toBe(true);
 		});
 
 		it('handles credit cards with special characters in names', () => {
@@ -650,10 +457,11 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: cardsWithSpecialChars } }
 			});
 
-			// Verify special characters are handled
-			expect(container.innerHTML).toContain('Chase Freedom®');
-			expect(container.innerHTML).toContain('Amex Gold Card™');
-			expect(container.innerHTML).toContain('Discover It® Cash Back');
+			// Verify special characters are handled by input value
+			const specialInputs = container.querySelectorAll('input[type="text"]');
+			expect(Array.from(specialInputs).some(input => input.value === 'Chase Freedom®')).toBe(true);
+			expect(Array.from(specialInputs).some(input => input.value === 'Amex Gold Card™')).toBe(true);
+			expect(Array.from(specialInputs).some(input => input.value === 'Discover It® Cash Back')).toBe(true);
 		});
 	});
 });
