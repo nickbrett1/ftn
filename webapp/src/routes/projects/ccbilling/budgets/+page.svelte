@@ -25,8 +25,10 @@
 	let addError = $state('');
 
 	// Delete state
-	let deletingBudget = $state(null);
+	let showDeleteDialog = $state(false);
+	let budgetToDelete = $state(null);
 	let isDeleting = $state(false);
+	let deleteError = $state('');
 
 	// Get available icons (excluding those already used by other budgets)
 	let availableIcons = $derived(getAvailableIconsForBudget(budgets));
@@ -80,23 +82,24 @@
 		addError = '';
 	}
 
-	// Restore deleteBudget function
-	async function deleteBudget(budget) {
-		if (!confirm(`Are you sure you want to delete the budget "${budget.name}"?`)) {
-			return;
-		}
+	async function handleDeleteBudget() {
+		if (!budgetToDelete) return;
+		isDeleting = true;
+		deleteError = '';
 		try {
-			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
+			const response = await fetch(`/projects/ccbilling/budgets/${budgetToDelete.id}`, {
 				method: 'DELETE'
 			});
 			if (!response.ok) {
 				const error = await response.json();
-				alert(error.error || 'Failed to delete budget');
+				deleteError = error.error || 'Failed to delete budget';
 				return;
 			}
 			window.location.reload();
 		} catch (error) {
-			alert('Network error occurred');
+			deleteError = 'Network error occurred';
+		} finally {
+			isDeleting = false;
 		}
 	}
 </script>
@@ -197,6 +200,17 @@
 							</div>
 						</div>
 					</a>
+					<Button
+						onclick={() => {
+							budgetToDelete = budget;
+							showDeleteDialog = true;
+							deleteError = '';
+						}}
+						variant="danger"
+						size="sm"
+					>
+						Delete
+					</Button>
 				{/each}
 			</div>
 		</div>
@@ -216,4 +230,34 @@
 		{/if}
 		<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
 	</div>
+
+	<!-- Custom Delete Confirmation Dialog -->
+	{#if showDeleteDialog && budgetToDelete}
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
+				<h3 class="text-lg font-bold text-white mb-4">Delete Budget?</h3>
+				<p class="text-gray-300 mb-6">
+					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be undone.
+				</p>
+				{#if deleteError}
+					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+						{deleteError}
+					</div>
+				{/if}
+				<div class="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="secondary"
+						disabled={isDeleting}
+						onclick={() => (showDeleteDialog = false)}
+					>
+						Cancel
+					</Button>
+					<Button type="button" variant="danger" disabled={isDeleting} onclick={handleDeleteBudget}>
+						{isDeleting ? 'Deleting...' : 'Delete'}
+					</Button>
+				</div>
+			</div>
+		</div>
+	{/if}
 </PageLayout>
