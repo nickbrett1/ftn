@@ -21,19 +21,19 @@ let deleteError = $state('');
 function handleNameInput(e) {
 	editName = e.target.value;
 	const error = validateCard(editName, editLast4);
-	if (!error) {
-		saveCardImmediate(editName, editLast4);
-	} else {
+	if (error) {
 		saveError = error;
+	} else {
+		saveCardImmediate(editName, editLast4);
 	}
 }
 function handleLast4Input(e) {
 	editLast4 = e.target.value;
 	const error = validateCard(editName, editLast4);
-	if (!error) {
-		saveCardImmediate(editName, editLast4);
-	} else {
+	if (error) {
 		saveError = error;
+	} else {
+		saveCardImmediate(editName, editLast4);
 	}
 }
 function validateCard(name, last4) {
