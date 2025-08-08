@@ -165,14 +165,11 @@
 			{/if}
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center">
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center cursor-pointer hover:bg-gray-700" onclick={() => goToCardDetail(card)}>
 						<div>
 							<p class="text-white font-semibold text-lg">{card.name}</p>
 							<p class="text-gray-400 text-sm">****{card.last4}</p>
 						</div>
-						<Button variant="secondary" size="md" onclick={() => goToCardDetail(card)}>
-							Edit / Delete
-						</Button>
 					</div>
 				{/each}
 			</div>
