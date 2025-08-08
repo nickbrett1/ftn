@@ -200,17 +200,6 @@
 							</div>
 						</div>
 					</a>
-					<Button
-						onclick={() => {
-							budgetToDelete = budget;
-							showDeleteDialog = true;
-							deleteError = '';
-						}}
-						variant="danger"
-						size="sm"
-					>
-						Delete
-					</Button>
 				{/each}
 			</div>
 		</div>
