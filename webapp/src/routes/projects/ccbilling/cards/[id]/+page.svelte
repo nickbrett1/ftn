@@ -120,8 +120,9 @@ async function handleDelete() {
 				data-testid="edit-card-last4-input"
 			/>
 		</div>
-		<!-- Always render the save error div, no visibility:hidden, always show content -->
-		<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
+		{#if saveError}
+			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
+		{/if}
 		<!-- Remove the Save Changes button and only keep the Back to Cards button -->
 		<div class="flex gap-2 mt-4">
 			<Button href="/projects/ccbilling/cards" variant="secondary" size="md">Back to Cards</Button>
