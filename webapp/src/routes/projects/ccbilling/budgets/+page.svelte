@@ -187,72 +187,16 @@
 			<h2 class="text-2xl font-semibold text-white">Your Budgets</h2>
 			<div class="grid gap-4">
 				{#each sortedBudgets as budget (budget.id)}
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-						{#if budget.icon}
-							<span class="text-2xl">{budget.icon}</span>
-						{/if}
-						<div class="space-y-4">
+					<a href={`/projects/ccbilling/budgets/${budget.id}`} class="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer">
+						<div class="flex items-center gap-4">
+							{#if budget.icon}
+								<span class="text-2xl">{budget.icon}</span>
+							{/if}
 							<div>
-								<label for="budget-name-{budget.id}" class="block text-sm font-medium text-gray-300 mb-2">Budget Name</label>
-								<input
-									id="budget-name-{budget.id}"
-									value={budget.name}
-									oninput={async (e) => {
-										const newName = e.target.value;
-										if (!newName.trim() || !budget.icon) {
-											alert('Please enter a budget name and select an icon.');
-											return;
-										}
-										await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
-											method: 'PUT',
-											headers: { 'Content-Type': 'application/json' },
-											body: JSON.stringify({ name: newName.trim(), icon: budget.icon })
-										});
-										window.location.reload();
-									}}
-									type="text"
-									class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-								/>
-							</div>
-							<div>
-								<p class="block text-sm font-medium text-gray-300 mb-2">Budget Icon</p>
-								<div class="grid grid-cols-8 gap-2 max-h-96 overflow-y-auto p-2 bg-gray-900 border border-gray-600 rounded-md">
-									{#each getAvailableIcons() as icon}
-										{@const isUsed = isIconUsedByOtherBudget(icon, budgets, budget.id)}
-										{@const usedByBudget = getBudgetNameUsingIcon(icon, budgets, budget.id)}
-										<button
-											type="button"
-											onclick={async () => {
-												if (isUsed) return;
-												await fetch(`/projects/ccbilling/budgets/${budget.id}`, {
-													method: 'PUT',
-													headers: { 'Content-Type': 'application/json' },
-													body: JSON.stringify({ name: budget.name, icon })
-												});
-												window.location.reload();
-											}}
-											class="p-2 text-2xl rounded transition-colors flex items-center justify-center {budget.icon === icon ? 'bg-blue-600' : isUsed ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-700'}"
-											title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
-											aria-label={`Select ${getIconDescription(icon)} icon`}
-											disabled={isUsed}
-										>
-											{icon}
-										</button>
-									{/each}
-								</div>
-								<p class="text-gray-500 text-xs mt-1">Select an icon to represent this budget. Each icon can only be used once.</p>
+								<div class="text-lg font-semibold text-white">{budget.name}</div>
 							</div>
 						</div>
-						<div class="flex space-x-2 mt-2">
-							<button
-								type="button"
-								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer no-underline not-prose inline-block"
-								onclick={() => deleteBudget(budget)}
-							>
-								Delete
-							</button>
-						</div>
-					</div>
+					</a>
 				{/each}
 			</div>
 		</div>
