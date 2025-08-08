@@ -68,9 +68,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container: many } = render(BudgetsPage, {
 			props: { data: { budgets: manyBudgets } }
 		});
-		const budgetInputs = many.querySelectorAll('input[type="text"]');
-		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 1')).toBe(true);
-		expect(Array.from(budgetInputs).some(input => input.value === 'Budget 5')).toBe(true);
+		const budgetLinks = many.querySelectorAll('a');
+		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 1'))).toBe(true);
+		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 5'))).toBe(true);
 	});
 
 	it('processes budget data correctly', () => {
@@ -87,14 +87,10 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: mockBudgets } }
 		});
-		// Check for presence of interactive elements (inline editing)
+		// Check for presence of interactive elements (click-to-edit)
 		expect(container.innerHTML).toContain('Add New Budget');
-		// There should be an input for each budget name
-		expect(container.querySelectorAll('input[type="text"]').length).toBeGreaterThanOrEqual(mockBudgets.length);
-		// There should be a delete button for each budget
-		expect(container.innerHTML).toContain('Delete');
-		// There should be icon selection buttons
-		expect(container.innerHTML).toContain('Select an icon to represent this budget');
+		// There should be a clickable card (anchor) for each budget
+		expect(container.querySelectorAll('a').length).toBeGreaterThanOrEqual(mockBudgets.length);
 	});
 
 	it('handles budget name variations', () => {
@@ -105,9 +101,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		const { container } = render(BudgetsPage, {
 			props: { data: { budgets: specialBudgets } }
 		});
-		const specialInputs = container.querySelectorAll('input[type="text"]');
-		expect(Array.from(specialInputs).some(input => input.value === 'Food & Dining')).toBe(true);
-		expect(Array.from(specialInputs).some(input => input.value === 'Transportation & Travel')).toBe(true);
+		const budgetLinks = container.querySelectorAll('a');
+		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Food & Dining'))).toBe(true);
+		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Transportation & Travel'))).toBe(true);
 	});
 
 	it('handles budget display', () => {
