@@ -18,7 +18,6 @@ describe('Card Detail Page', () => {
 		const { getByTestId } = render(CardDetailPage, { props: { data: { card: mockCard } } });
 		expect(getByTestId('edit-card-name-input').value).toBe('Chase Freedom');
 		expect(getByTestId('edit-card-last4-input').value).toBe('1234');
-		expect(getByTestId('save-card-btn')).toBeTruthy();
 		expect(getByTestId('delete-card-btn')).toBeTruthy();
 	});
 
@@ -26,14 +25,12 @@ describe('Card Detail Page', () => {
 		const { getByTestId } = render(CardDetailPage, { props: { data: { card: mockCard } } });
 		await fireEvent.input(getByTestId('edit-card-name-input'), { target: { value: '' } });
 		await fireEvent.input(getByTestId('edit-card-last4-input'), { target: { value: '' } });
-		await fireEvent.click(getByTestId('save-card-btn'));
 		expect(getByTestId('save-error').textContent).toContain('Please enter both card name and last 4 digits');
 	});
 
 	it('shows validation error if last4 is not 4 digits', async () => {
 		const { getByTestId } = render(CardDetailPage, { props: { data: { card: mockCard } } });
 		await fireEvent.input(getByTestId('edit-card-last4-input'), { target: { value: '12' } });
-		await fireEvent.click(getByTestId('save-card-btn'));
 		expect(getByTestId('save-error').textContent).toContain('Last 4 digits must be exactly 4 numbers');
 	});
 
@@ -41,7 +38,6 @@ describe('Card Detail Page', () => {
 		const { getByTestId } = render(CardDetailPage, { props: { data: { card: mockCard } } });
 		await fireEvent.input(getByTestId('edit-card-name-input'), { target: { value: 'New Name' } });
 		await fireEvent.input(getByTestId('edit-card-last4-input'), { target: { value: '5678' } });
-		await fireEvent.click(getByTestId('save-card-btn'));
 		await waitFor(() => {
 			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards/1', expect.objectContaining({ method: 'PUT' }));
 		});
@@ -69,7 +65,6 @@ describe('Card Detail Page', () => {
 		const { getByTestId } = render(CardDetailPage, { props: { data: { card: mockCard } } });
 		await fireEvent.input(getByTestId('edit-card-name-input'), { target: { value: 'New Name' } });
 		await fireEvent.input(getByTestId('edit-card-last4-input'), { target: { value: '5678' } });
-		await fireEvent.click(getByTestId('save-card-btn'));
 		await waitFor(() => {
 			expect(getByTestId('save-error').textContent).toContain('Save failed');
 		});

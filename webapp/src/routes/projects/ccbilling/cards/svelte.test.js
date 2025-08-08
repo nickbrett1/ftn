@@ -56,9 +56,10 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			expect(container.innerHTML).toContain('Chase Freedom');
 			expect(container.innerHTML).toContain('Amex Gold');
 			expect(container.innerHTML).toContain('Discover It');
-			// Check for Edit / Delete button for each card
-			const editButtons = getAllByText('Edit / Delete');
-			expect(editButtons.length).toBe(mockCreditCards.length);
+			// Check that there are as many card rows as cards
+			const cardRows = container.querySelectorAll('.bg-gray-800.border-gray-700.rounded-lg.p-6');
+			expect(cardRows.length).toBe(mockCreditCards.length);
+			// Optionally, simulate a click and check navigation (mock goToCardDetail if needed)
 		});
 
 		it('renders empty state branch', () => {

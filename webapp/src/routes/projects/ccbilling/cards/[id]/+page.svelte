@@ -1,6 +1,7 @@
 <script>
 import PageLayout from '$lib/components/PageLayout.svelte';
 import Button from '$lib/components/Button.svelte';
+import { tick } from 'svelte';
 
 const { data } = $props();
 const { card } = data;
@@ -9,6 +10,9 @@ let editName = $state(card?.name || '');
 let editLast4 = $state(card?.last4 || '');
 let isSaving = $state(false);
 let saveError = $state('');
+let saveErrorTick = $state(0);
+
+let showSaveError = $derived(() => !!saveError);
 
 let showDeleteDialog = $state(false);
 let isDeleting = $state(false);
@@ -17,17 +21,19 @@ let deleteError = $state('');
 function handleNameInput(e) {
 	editName = e.target.value;
 	const error = validateCard(editName, editLast4);
-	saveError = error;
 	if (!error) {
 		saveCardImmediate(editName, editLast4);
+	} else {
+		saveError = error;
 	}
 }
 function handleLast4Input(e) {
 	editLast4 = e.target.value;
 	const error = validateCard(editName, editLast4);
-	saveError = error;
 	if (!error) {
 		saveCardImmediate(editName, editLast4);
+	} else {
+		saveError = error;
 	}
 }
 function validateCard(name, last4) {
@@ -51,11 +57,13 @@ async function saveCardImmediate(name, last4) {
 		if (!response.ok) {
 			const error = await response.json();
 			saveError = error.error || 'Failed to update card';
+			await tick();
 			return;
 		}
 		// Optionally, show a success indicator
 	} catch (error) {
 		saveError = 'Network error occurred';
+		await tick();
 	} finally {
 		isSaving = false;
 	}
@@ -113,9 +121,8 @@ async function handleDelete() {
 				data-testid="edit-card-last4-input"
 			/>
 		</div>
-		{#if saveError}
-			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
-		{/if}
+		<!-- Always render the save error div, no visibility:hidden, always show content -->
+		<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
 		<!-- Remove the Save Changes button and only keep the Back to Cards button -->
 		<div class="flex gap-2 mt-4">
 			<Button href="/projects/ccbilling/cards" variant="secondary" size="md">Back to Cards</Button>
