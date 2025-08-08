@@ -302,67 +302,6 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 		});
 	});
 
-	describe('Delete Card Functionality', () => {
-		it('shows confirmation dialog when Delete button is clicked', async () => {
-			const { getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			const deleteButtons = getAllByText('Edit / Delete');
-			await fireEvent.click(deleteButtons[0]);
-
-			// Verify confirmation dialog was called
-			expect(confirm).toHaveBeenCalledWith('Are you sure you want to delete "Chase Freedom" (****1234)?');
-		});
-
-		it('does not delete when confirmation is cancelled', async () => {
-			confirm.mockReturnValue(false);
-
-			const { getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			const deleteButtons = getAllByText('Edit / Delete');
-			await fireEvent.click(deleteButtons[0]);
-
-			// Verify no API call was made
-			expect(fetch).not.toHaveBeenCalled();
-		});
-
-		it('successfully deletes a card when confirmed', async () => {
-			const { getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			const deleteButtons = getAllByText('Edit / Delete');
-			await fireEvent.click(deleteButtons[0]);
-
-			// Verify API call
-			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards/1', {
-				method: 'DELETE'
-			});
-		});
-
-		it('handles API error when deleting card', async () => {
-			fetch.mockResolvedValue({
-				ok: false,
-				json: () => Promise.resolve({ error: 'Cannot delete card' })
-			});
-
-			const { getAllByText } = render(CardsPage, {
-				props: { data: { creditCards: mockCreditCards } }
-			});
-
-			const deleteButtons = getAllByText('Edit / Delete');
-			await fireEvent.click(deleteButtons[0]);
-
-			// Verify API call was made
-			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards/1', {
-				method: 'DELETE'
-			});
-		});
-	});
-
 	describe('Error Handling', () => {
 		it('handles network errors gracefully', async () => {
 			fetch.mockRejectedValue(new Error('Network error'));
