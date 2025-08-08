@@ -80,6 +80,7 @@ async function handleDelete() {
 				class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 				autocomplete="off"
 				maxlength="64"
+				data-testid="edit-card-name-input"
 			/>
 		</div>
 		<div class="mb-4">
@@ -92,38 +93,39 @@ async function handleDelete() {
 				class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 				maxlength="4"
 				autocomplete="off"
+				data-testid="edit-card-last4-input"
 			/>
 		</div>
 		{#if saveError}
-			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">{saveError}</div>
+			<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="save-error">{saveError}</div>
 		{/if}
 		<div class="flex gap-2 mt-4">
-			<Button type="button" variant="success" size="md" disabled={isSaving} onclick={saveCard}>
+			<Button type="button" variant="success" size="md" data-testid="save-card-btn" disabled={isSaving} onclick={saveCard}>
 				{isSaving ? 'Saving...' : 'Save Changes'}
 			</Button>
 			<Button href="/projects/ccbilling/cards" variant="secondary" size="md">Back to Cards</Button>
 		</div>
 	</div>
 	<div class="mt-8">
-		<Button variant="danger" size="lg" onclick={() => { showDeleteDialog = true; deleteError = ''; }}>
+		<Button variant="danger" size="lg" data-testid="delete-card-btn" onclick={() => { showDeleteDialog = true; deleteError = ''; }}>
 			Delete Card
 		</Button>
 	</div>
 	{#if showDeleteDialog}
-		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60" data-testid="delete-dialog">
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Credit Card?</h3>
 				<p class="text-gray-300 mb-6">
 					Are you sure you want to delete this credit card? This action cannot be undone.
 				</p>
 				{#if deleteError}
-					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">{deleteError}</div>
+					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4" data-testid="delete-error">{deleteError}</div>
 				{/if}
 				<div class="flex justify-end gap-2">
-					<Button type="button" variant="secondary" disabled={isDeleting} onclick={() => (showDeleteDialog = false)}>
+					<Button type="button" variant="secondary" data-testid="cancel-delete-btn" disabled={isDeleting} onclick={() => (showDeleteDialog = false)}>
 						Cancel
 					</Button>
-					<Button type="button" variant="danger" disabled={isDeleting} onclick={handleDelete}>
+					<Button type="button" variant="danger" data-testid="confirm-delete-btn" disabled={isDeleting} onclick={handleDelete}>
 						{isDeleting ? 'Deleting...' : 'Delete'}
 					</Button>
 				</div>
