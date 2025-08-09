@@ -14,7 +14,7 @@ import LlamaAPIClient from 'llama-api-client';
  */
 async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
-	const apiKey = STATIC_LLAMA_API_KEY || env.LLAMA_API_KEY;
+	const apiKey = env.LLAMA_API_KEY;
 	const model =
 		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'Llama-4-Maverick-17B-128E-Instruct-FP8';
 	const baseURL =
