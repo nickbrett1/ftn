@@ -1,8 +1,5 @@
 import { json } from '@sveltejs/kit';
-import {
-	LLAMA_API_KEY as STATIC_LLAMA_API_KEY,
-	LLAMA_API_MODEL as STATIC_LLAMA_API_MODEL
-} from '$env/static/private';
+import { LLAMA_API_MODEL as STATIC_LLAMA_API_MODEL } from '$env/static/private';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import LlamaAPIClient from 'llama-api-client';
@@ -15,8 +12,7 @@ import LlamaAPIClient from 'llama-api-client';
 async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
 	const apiKey = env.LLAMA_API_KEY;
-	const model =
-		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
+	const model = STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
 		env.LLAMA_API_BASE_URL || env.LLAMA_BASE_URL || env.LLAMA_API_ENDPOINT || undefined;
 
@@ -63,83 +59,86 @@ async function runLlamaClient(event, prompt) {
 
 		function extractMessageText(response) {
 			try {
-				// Common OpenAI-style response
-				const choices = response?.choices;
-				if (Array.isArray(choices) && choices.length > 0) {
-					const firstChoice = choices[0];
-					const choiceMessage = firstChoice?.message;
-					const choiceContent = choiceMessage?.content ?? firstChoice?.content;
-					if (typeof choiceContent === 'string') return choiceContent;
-					if (Array.isArray(choiceContent)) {
-						const parts = choiceContent
-							.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
-							.filter(Boolean);
-						if (parts.length) return parts.join('\n');
-					}
-					if (choiceContent && typeof choiceContent === 'object') {
-						if (typeof choiceContent.text === 'string') return choiceContent.text;
-						if (typeof choiceContent.content === 'string') return choiceContent.content;
-					}
-					// Join all choices if they each have small fragments
-					const joined = choices
-						.map((c) => {
-							const cc = c?.message?.content ?? c?.content;
-							if (typeof cc === 'string') return cc;
-							if (Array.isArray(cc)) {
-								return cc
-									.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
-									.filter(Boolean)
-									.join('\n');
-							}
-							if (cc && typeof cc === 'object') {
-								if (typeof cc.text === 'string') return cc.text;
-								if (typeof cc.content === 'string') return cc.content;
-							}
-							return '';
-						})
-						.filter(Boolean)
-						.join('\n')
-						.trim();
-					if (joined) return joined;
-				}
+				// Extract text from choices array (OpenAI-style)
+				const choicesText = extractFromChoices(response?.choices);
+				if (choicesText) return choicesText;
 
-				// Some libraries return top-level message or completion
-				const topMessage = response?.message;
-				if (topMessage && typeof topMessage?.content === 'string') return topMessage.content;
-				if (topMessage && Array.isArray(topMessage?.content)) {
-					const parts = topMessage.content
-						.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
-						.filter(Boolean);
-					if (parts.length) return parts.join('\n');
-				}
-				if (topMessage && topMessage.content && typeof topMessage.content === 'object') {
-					if (typeof topMessage.content.text === 'string') return topMessage.content.text;
-					if (typeof topMessage.content.content === 'string') return topMessage.content.content;
-				}
+				// Extract from top-level message
+				const messageText = extractFromMessage(response?.message);
+				if (messageText) return messageText;
 
-				// Library example shows top-level completion_message
-				const cm = response?.completion_message;
-				if (typeof cm === 'string') return cm;
-				if (cm && typeof cm === 'object') {
-					if (typeof cm.content === 'string') return cm.content;
-					if (Array.isArray(cm.content)) {
-						const parts = cm.content
-							.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
-							.filter(Boolean);
-						if (parts.length) return parts.join('\n');
-					}
-					if (cm.content && typeof cm.content === 'object') {
-						if (typeof cm.content.text === 'string') return cm.content.text;
-						if (typeof cm.content.content === 'string') return cm.content.content;
-					}
-				}
+				// Extract from completion_message
+				const completionText = extractFromCompletionMessage(response?.completion_message);
+				if (completionText) return completionText;
 
-				if (typeof response?.content === 'string') return response.content;
-				if (typeof response?.text === 'string') return response.text;
-				if (typeof response?.output_text === 'string') return response.output_text;
-				if (typeof response?.completion_message?.content?.text === 'string')
-					return response.completion_message.content.text;
+				// Fallback to direct properties
+				return extractFromDirectProperties(response);
 			} catch {}
+			return '';
+		}
+
+		function extractFromChoices(choices) {
+			if (!Array.isArray(choices) || choices.length === 0) return null;
+
+			const firstChoice = choices[0];
+			const choiceText =
+				extractFromMessage(firstChoice?.message) || extractFromMessage(firstChoice);
+			if (choiceText) return choiceText;
+
+			// Join all choices if they have fragments
+			const joined = choices
+				.map((choice) => extractFromMessage(choice?.message) || extractFromMessage(choice))
+				.filter(Boolean)
+				.join('\n')
+				.trim();
+			return joined || null;
+		}
+
+		function extractFromMessage(message) {
+			if (!message) return null;
+
+			// Direct string content
+			if (typeof message.content === 'string') return message.content;
+
+			// Array of content parts
+			if (Array.isArray(message.content)) {
+				const parts = message.content.map((part) => extractFromPart(part)).filter(Boolean);
+				return parts.length ? parts.join('\n') : null;
+			}
+
+			// Object with text/content
+			if (message.content && typeof message.content === 'object') {
+				return extractFromPart(message.content);
+			}
+
+			return null;
+		}
+
+		function extractFromCompletionMessage(completionMessage) {
+			if (!completionMessage) return null;
+
+			if (typeof completionMessage === 'string') return completionMessage;
+			if (typeof completionMessage === 'object') {
+				return extractFromMessage(completionMessage);
+			}
+
+			return null;
+		}
+
+		function extractFromDirectProperties(response) {
+			if (typeof response?.content === 'string') return response.content;
+			if (typeof response?.text === 'string') return response.text;
+			if (typeof response?.output_text === 'string') return response.output_text;
+			if (typeof response?.completion_message?.content?.text === 'string') {
+				return response.completion_message.content.text;
+			}
+			return null;
+		}
+
+		function extractFromPart(part) {
+			if (typeof part === 'string') return part;
+			if (typeof part?.text === 'string') return part.text;
+			if (typeof part?.content === 'string') return part.content;
 			return '';
 		}
 
