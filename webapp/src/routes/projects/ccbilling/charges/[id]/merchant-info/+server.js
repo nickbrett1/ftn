@@ -3,42 +3,59 @@ import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 /**
- * Attempt to run a prompt against Cloudflare Workers AI if bound.
- * Returns a string response (the model's text) or throws on error.
+ * Call a LLama-compatible Chat Completions API directly using env configuration.
+ * Expects the provider to support the OpenAI-compatible schema.
+ * Required env: LLAMA_API_KEY, LLAMA_API_URL
+ * Optional env: LLAMA_API_MODEL (default: meta-llama/llama-3.1-8b-instruct)
  */
-async function runWorkersAiIfAvailable(event, prompt) {
-	const aiBinding = event.platform?.env?.AI;
-	if (!aiBinding) {
-		return null; // Not configured
+async function runLlamaApi(event, prompt) {
+	const env = event.platform?.env ?? {};
+	const apiKey = env.LLAMA_API_KEY;
+	const apiUrl = env.LLAMA_API_URL;
+	const model = env.LLAMA_API_MODEL || 'meta-llama/llama-3.1-8b-instruct';
+
+	if (!apiKey || !apiUrl) {
+		return {
+			ok: false,
+			status: 501,
+			error: 'LLAMA API not configured',
+			details: 'Set LLAMA_API_KEY and LLAMA_API_URL in the environment.'
+		};
 	}
+
 	try {
-		// Prefer chat-style with messages when available
-		const model = '@cf/meta/llama-3.1-8b-instruct';
-		let result;
-		try {
-			result = await aiBinding.run(model, {
+		const response = await fetch(apiUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${apiKey}`
+			},
+			body: JSON.stringify({
+				model,
 				messages: [
 					{ role: 'system', content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.' },
 					{ role: 'user', content: prompt }
 				]
-			});
-		} catch (e) {
-			// Some bindings prefer a simple prompt key
-			result = await aiBinding.run(model, { prompt });
+			})
+		});
+
+		if (!response.ok) {
+			const text = await response.text().catch(() => '');
+			return { ok: false, status: response.status, error: `LLama API error: ${response.status}`, details: text };
 		}
 
-		// Cloudflare AI may return different shapes; normalize to string
-		if (typeof result === 'string') return result;
-		if (result?.response && typeof result.response === 'string') return result.response;
-		if (result?.output_text && typeof result.output_text === 'string') return result.output_text;
-		if (Array.isArray(result?.messages)) {
-			const last = result.messages[result.messages.length - 1];
-			if (last?.content && typeof last.content === 'string') return last.content;
-		}
-		return String(result ?? '');
+		const data = await response.json();
+		// Normalize common response shapes
+		// OpenAI-style
+		const content = data?.choices?.[0]?.message?.content
+			|| data?.choices?.[0]?.text
+			|| data?.response
+			|| data?.output_text
+			|| '';
+		return { ok: true, text: String(content) };
 	} catch (error) {
-		console.error('Workers AI call failed:', error);
-		throw new Error('AI provider error');
+		console.error('LLama API call failed:', error);
+		return { ok: false, status: 502, error: 'LLama API network/parse error' };
 	}
 }
 
@@ -62,7 +79,8 @@ export async function GET(event) {
 		return json({ error: 'Charge has no merchant name' }, { status: 400 });
 	}
 
-	const prompt = `Given the merchant string: "${merchantName}"\n
+	const prompt = `Given the merchant string: "${merchantName}"
+
 Return a STRICT JSON object with keys: 
 - canonical_name: best known official or common merchant name
 - website: the primary website URL (include protocol), or empty string if unknown
@@ -76,26 +94,21 @@ Rules:
 - If multiple possibilities exist, pick the best guess with honest confidence.
 `;
 
-	// Try Workers AI first
-	let aiText = await runWorkersAiIfAvailable(event, prompt);
-
-	if (!aiText) {
-		// No AI configured
+	const aiResult = await runLlamaApi(event, prompt);
+	if (!aiResult.ok) {
 		return json(
 			{
-				error: 'AI provider not configured',
-				details:
-					'Workers AI binding `AI` is not configured. Configure Cloudflare Workers AI or add another provider.',
+				error: aiResult.error || 'Failed to fetch merchant info',
+				details: aiResult.details,
 				merchant: merchantName
 			},
-			{ status: 501 }
+			{ status: aiResult.status || 502 }
 		);
 	}
 
-	// Attempt to parse JSON from the model response
 	let parsed;
 	try {
-		// Trim and extract JSON substring if model wrapped content
+		const aiText = aiResult.text || '';
 		const start = aiText.indexOf('{');
 		const end = aiText.lastIndexOf('}');
 		const jsonSlice = start >= 0 && end >= 0 ? aiText.slice(start, end + 1) : aiText;
@@ -104,14 +117,12 @@ Rules:
 		return json(
 			{
 				error: 'Failed to parse AI response as JSON',
-				merchant: merchantName,
-				raw: aiText
+				merchant: merchantName
 			},
 			{ status: 502 }
 		);
 	}
 
-	// Basic normalization
 	const result = {
 		canonical_name: typeof parsed.canonical_name === 'string' ? parsed.canonical_name : merchantName,
 		website: typeof parsed.website === 'string' ? parsed.website : '',

@@ -39,11 +39,6 @@
 		}
 	],
 	"compatibility_flags": ["nodejs_compat_v2"],
-
-	"ai": {
-		"binding": "AI"
-	},
-
 	"env": {
 		"production": {
 			"main": ".svelte-kit/cloudflare/_worker.js",
@@ -78,10 +73,7 @@
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
 				}
-			],
-			"ai": {
-				"binding": "AI"
-			}
+			]
 		}
 	}
 }
