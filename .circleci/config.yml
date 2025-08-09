@@ -174,9 +174,19 @@ jobs:
           command: |
             cd webapp && ./setup-wrangler-config.sh
       - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (production)
+          command: |
+            cd webapp
+            npx wrangler secret:bulk --env production <(doppler secrets --json | jq -c 'with_entries(.value = .value.computed)')
+      - run:
           name: Deploying to Cloudflare
           command: |
-            cd webapp && npm run deploy
+            cd webapp
+            npm run deploy
 
 workflows:
   build_test_deploy:
