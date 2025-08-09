@@ -14,7 +14,7 @@ import LlamaAPIClient from 'llama-api-client';
  */
 async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
-	const apiKey = env.LLAMA_API_KEY || STATIC_LLAMA_API_KEY;
+	const apiKey = env.LLAMA_API_KEY;
 	const model =
 		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
