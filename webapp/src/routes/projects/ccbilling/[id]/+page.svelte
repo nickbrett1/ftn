@@ -5,6 +5,7 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
+	import LinkifyIt from 'linkify-it';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -107,6 +108,21 @@
 	let merchantInfoLoading = $state(false);
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
+
+	const linkify = new LinkifyIt();
+	function toSegments(text) {
+		if (!text) return [];
+		const segments = [];
+		let last = 0;
+		const matches = linkify.match(text) || [];
+		for (const m of matches) {
+			if (m.index > last) segments.push({ type: 'text', text: text.slice(last, m.index) });
+			segments.push({ type: 'link', text: m.text, href: m.url });
+			last = m.lastIndex;
+		}
+		if (last < text.length) segments.push({ type: 'text', text: text.slice(last) });
+		return segments;
+	}
 
 	async function openMerchantInfo(chargeId) {
 		merchantInfoLoading = true;
@@ -976,7 +992,13 @@
 						</div>
 						{#if merchantInfoData.text}
 							<div class="prose prose-invert max-w-none">
-								<p class="whitespace-pre-wrap text-gray-200 text-sm">{merchantInfoData.text}</p>
+								<p class="whitespace-pre-wrap text-gray-200 text-sm">
+									{#each toSegments(merchantInfoData.text) as seg}
+										{#if seg.type === 'text'}{seg.text}{:else}
+											<a href={seg.href} target="_blank" rel="noopener noreferrer nofollow" class="underline text-blue-400 hover:text-blue-300">{seg.text}</a>
+										{/if}
+									{/each}
+								</p>
 							</div>
 						{:else}
 							<div class="text-gray-300">No info available.</div>
