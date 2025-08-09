@@ -731,8 +731,8 @@
 						<div class="flex justify-between items-start gap-3">
 							<div class="flex-1 min-w-0">
 																	<div class="text-white font-medium truncate">
-										<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+										<button class="mr-2 text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
+											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-5 w-5" fill="currentColor">
 												<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
 											</svg>
 										</button>
@@ -834,8 +834,8 @@
 									</span>
 								</td>
 								<td class="text-white py-2">
-									<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
-										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+									<button class="mr-2 text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-5 w-5" fill="currentColor">
 											<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
 										</svg>
 									</button>
