@@ -731,6 +731,7 @@
 						<div class="flex justify-between items-start gap-3">
 							<div class="flex-1 min-w-0">
 								<div class="text-white font-medium truncate">
+									<button class="mr-2 text-gray-400 hover:text-white" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 									{#if charge.flight_details}
 										✈️ {formatMerchantName(charge)}
 									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
@@ -738,7 +739,6 @@
 									{:else}
 										{formatMerchantName(charge)}
 									{/if}
-									<button class="ml-2 text-gray-400 hover:text-white" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 								</div>
 								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
 									<span
@@ -830,6 +830,7 @@
 									</span>
 								</td>
 								<td class="text-white py-2">
+									<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 									{#if charge.flight_details}
 										✈️ {formatMerchantName(charge)}
 									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
@@ -837,7 +838,6 @@
 									{:else}
 										{formatMerchantName(charge)}
 									{/if}
-									<button class="ml-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 								</td>
 								<td class="text-gray-300 text-sm py-2">
 									{#if charge.card_name}
