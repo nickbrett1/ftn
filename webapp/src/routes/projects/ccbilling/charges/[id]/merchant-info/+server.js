@@ -76,6 +76,10 @@ async function runLlamaClient(event, prompt) {
 							.filter(Boolean);
 						if (parts.length) return parts.join('\n');
 					}
+					if (choiceContent && typeof choiceContent === 'object') {
+						if (typeof choiceContent.text === 'string') return choiceContent.text;
+						if (typeof choiceContent.content === 'string') return choiceContent.content;
+					}
 					// Join all choices if they each have small fragments
 					const joined = choices
 						.map((c) => {
@@ -86,6 +90,10 @@ async function runLlamaClient(event, prompt) {
 									.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
 									.filter(Boolean)
 									.join('\n');
+							}
+							if (cc && typeof cc === 'object') {
+								if (typeof cc.text === 'string') return cc.text;
+								if (typeof cc.content === 'string') return cc.content;
 							}
 							return '';
 						})
@@ -104,6 +112,10 @@ async function runLlamaClient(event, prompt) {
 						.filter(Boolean);
 					if (parts.length) return parts.join('\n');
 				}
+				if (topMessage && topMessage.content && typeof topMessage.content === 'object') {
+					if (typeof topMessage.content.text === 'string') return topMessage.content.text;
+					if (typeof topMessage.content.content === 'string') return topMessage.content.content;
+				}
 
 				// Library example shows top-level completion_message
 				const cm = response?.completion_message;
@@ -116,11 +128,17 @@ async function runLlamaClient(event, prompt) {
 							.filter(Boolean);
 						if (parts.length) return parts.join('\n');
 					}
+					if (cm.content && typeof cm.content === 'object') {
+						if (typeof cm.content.text === 'string') return cm.content.text;
+						if (typeof cm.content.content === 'string') return cm.content.content;
+					}
 				}
 
 				if (typeof response?.content === 'string') return response.content;
 				if (typeof response?.text === 'string') return response.text;
 				if (typeof response?.output_text === 'string') return response.output_text;
+				if (typeof response?.completion_message?.content?.text === 'string')
+					return response.completion_message.content.text;
 			} catch {}
 			return '';
 		}

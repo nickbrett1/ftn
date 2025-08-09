@@ -22,7 +22,7 @@ const payload = {
 	],
 	temperature: 0.2,
 	top_p: 0.95,
-	max_tokens: 32,
+	max_completion_tokens: 32,
 	stream: false
 };
 
@@ -39,6 +39,10 @@ function extractText(response) {
 					.filter(Boolean)
 					.join('\n');
 			}
+			if (content && typeof content === 'object') {
+				if (typeof content.text === 'string') return content.text;
+				if (typeof content.content === 'string') return content.content;
+			}
 		}
 		const cm = response?.completion_message;
 		if (typeof cm === 'string') return cm;
@@ -50,10 +54,16 @@ function extractText(response) {
 					.filter(Boolean)
 					.join('\n');
 			}
+			if (cm.content && typeof cm.content === 'object') {
+				if (typeof cm.content.text === 'string') return cm.content.text;
+				if (typeof cm.content.content === 'string') return cm.content.content;
+			}
 		}
 		if (typeof response?.content === 'string') return response.content;
 		if (typeof response?.text === 'string') return response.text;
 		if (typeof response?.output_text === 'string') return response.output_text;
+		if (typeof response?.completion_message?.content?.text === 'string')
+			return response.completion_message.content.text;
 	} catch {}
 	return '';
 }
@@ -61,9 +71,22 @@ function extractText(response) {
 try {
 	const resp = await client.chat.completions.create(payload);
 	const text = String(extractText(resp) || '').trim();
-	console.log(
-		JSON.stringify({ ok: true, model, textLength: text.length, preview: text.slice(0, 80) })
-	);
+	if (!text) {
+		const summary = {
+			keys: Object.keys(resp || {}),
+			choicesType: Array.isArray(resp?.choices) ? 'array' : typeof resp?.choices,
+			rawFirstChoice: resp?.choices?.[0] ?? null,
+			completion_message: resp?.completion_message ?? null,
+			content: resp?.content ?? null,
+			text: resp?.text ?? null,
+			output_text: resp?.output_text ?? null
+		};
+		console.log(JSON.stringify({ ok: true, model, textLength: 0, debug: summary }));
+	} else {
+		console.log(
+			JSON.stringify({ ok: true, model, textLength: text.length, preview: text.slice(0, 80) })
+		);
+	}
 	process.exit(0);
 } catch (err) {
 	console.error('[TEST-LLAMA] Error', { name: err?.name, message: err?.message, status: err?.status });
