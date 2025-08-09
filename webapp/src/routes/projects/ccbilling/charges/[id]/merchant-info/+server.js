@@ -27,7 +27,10 @@ async function runLlamaClient(event, prompt) {
 		const resp = await client.chat.completions.create({
 			model,
 			messages: [
-				{ role: 'system', content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.' },
+				{
+					role: 'system',
+					content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.'
+				},
 				{ role: 'user', content: prompt }
 			]
 		});
@@ -104,12 +107,15 @@ Rules:
 	}
 
 	const result = {
-		canonical_name: typeof parsed.canonical_name === 'string' ? parsed.canonical_name : merchantName,
+		canonical_name:
+			typeof parsed.canonical_name === 'string' ? parsed.canonical_name : merchantName,
 		website: typeof parsed.website === 'string' ? parsed.website : '',
 		address: typeof parsed.address === 'string' ? parsed.address : '',
 		description: typeof parsed.description === 'string' ? parsed.description : '',
 		confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
-		sources: Array.isArray(parsed.sources) ? parsed.sources.filter((s) => typeof s === 'string') : []
+		sources: Array.isArray(parsed.sources)
+			? parsed.sources.filter((s) => typeof s === 'string')
+			: []
 	};
 
 	return json({ merchant: merchantName, info: result });
