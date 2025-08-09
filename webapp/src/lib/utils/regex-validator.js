@@ -223,12 +223,22 @@ export function createSafeBillingCycleRegex() {
 }
 
 /**
+ * Escape a string so it can be safely used inside a RegExp
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeRegex(str) {
+	return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Create a safe regex pattern for matching cookies
  * @param {string} cookieName - Name of the cookie to match
  * @returns {RegExp} - Safe regex pattern for cookies
  */
 export function createSafeCookieRegex(cookieName) {
-	return new RegExp(`${cookieName}=([^;]+)`);
+	const escaped = escapeRegex(cookieName || '');
+	return new RegExp(`(?:^|;\\s*)${escaped}=([^;]+)`);
 }
 
 /**

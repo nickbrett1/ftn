@@ -151,15 +151,21 @@ export class WellsFargoParser extends BaseParser {
 			? new Date(statementDate).getFullYear()
 			: new Date().getFullYear();
 
-		// Find the Transaction Summary section
-		const transactionSectionMatch = text.match(
-			/Transaction Summary[\s\S]*?(?=Fees Charged|Interest Charged|BiltProtect Summary|$)/i
-		);
-		if (!transactionSectionMatch) {
+		// Find the Transaction Summary section without using a mega-regex
+		const upperText = text.toUpperCase();
+		const startIdx = upperText.indexOf('TRANSACTION SUMMARY');
+		if (startIdx === -1) {
 			return charges;
 		}
 
-		const transactionSection = transactionSectionMatch[0];
+		const endCandidates = [
+			upperText.indexOf('FEES CHARGED', startIdx + 1),
+			upperText.indexOf('INTEREST CHARGED', startIdx + 1),
+			upperText.indexOf('BILTPROTECT SUMMARY', startIdx + 1)
+		].filter((idx) => idx !== -1);
+		const endIdx = endCandidates.length ? Math.min(...endCandidates) : text.length;
+
+		const transactionSection = text.slice(startIdx, endIdx);
 		const lines = transactionSection
 			.split('\n')
 			.map((line) => line.trim())
