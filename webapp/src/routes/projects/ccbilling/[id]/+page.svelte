@@ -418,6 +418,31 @@
 			</h2>
 		</div>
 		<div class="flex items-center space-x-3">
+			<Button href="/projects/ccbilling" variant="secondary" size="sm">
+				Back to Billing Cycles
+			</Button>
+			<Button
+				variant="secondary"
+				size="sm"
+				onclick={async () => {
+					try {
+						const res = await fetch(`/projects/ccbilling/cycles/${data.cycleId}/charges`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ refresh: 'auto-associations' })
+						});
+						if (!res.ok) {
+							const e = await res.json().catch(() => ({}));
+							throw new Error(e.error || 'Failed to refresh auto-associations');
+						}
+						await invalidate(`cycle-${data.cycleId}`);
+					} catch (err) {
+						alert(err.message);
+					}
+				}}
+			>
+				Refresh Auto-Associations
+			</Button>
 			<Button
 				variant="danger"
 				size="sm"
@@ -862,14 +887,6 @@
 					</button>
 				</div>
 			</div>
-		</div>
-	{/if}
-
-	{#if !showUploadForm}
-		<div class="mb-8">
-			<Button href="/projects/ccbilling" variant="secondary" size="lg"
-				>Back to Billing Cycles</Button
-			>
 		</div>
 	{/if}
 </div>

@@ -10,7 +10,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	listCreditCards: vi.fn(),
 	updateStatementCreditCard: vi.fn(),
 	updateStatementDate: vi.fn(),
-	getBillingCycle: vi.fn()
+	getBillingCycle: vi.fn(),
+	getBudgetByMerchant: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -112,7 +113,8 @@ import {
 	listCreditCards,
 	updateStatementCreditCard,
 	updateStatementDate,
-	getBillingCycle
+	getBillingCycle,
+	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -197,6 +199,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			deletePaymentsForStatement.mockResolvedValue();
 			createPayment.mockResolvedValue();
 			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			// Mock the request body with parsed data
 			mockEvent.request.json.mockResolvedValue({
@@ -348,6 +351,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			deletePaymentsForStatement.mockResolvedValue();
 			createPayment.mockResolvedValue();
 			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
+			getBudgetByMerchant.mockResolvedValue({ id: 9, name: 'Both' });
 			updateStatementCreditCard.mockResolvedValue();
 
 			// Mock the request body with matching last4
@@ -473,6 +477,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				{ id: 1, name: 'Chase Freedom', last4: '5678' },
 				{ id: 2, name: 'Amex Gold', last4: '9012' }
 			]);
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			// Mock the request body with non-matching last4
 			mockEvent.request.json.mockResolvedValue({
@@ -526,6 +531,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 				{ id: 1, name: 'Chase Freedom', last4: '5678' },
 				{ id: 2, name: 'Amex Gold', last4: '9012' }
 			]);
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			// Mock the request body with no last4 data
 			mockEvent.request.json.mockResolvedValue({
