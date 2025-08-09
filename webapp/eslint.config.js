@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
+import security from 'eslint-plugin-security';
 
 export default [
 	js.configs.recommended,
@@ -16,6 +17,14 @@ export default [
 				...globals.node,
 				...globals.es2017
 			}
+		}
+	},
+	{
+		plugins: {
+			security
+		},
+		rules: {
+			'security/detect-unsafe-regex': 'error'
 		}
 	},
 	{

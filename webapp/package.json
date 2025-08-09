@@ -46,6 +46,7 @@
 		"eslint": "^9.33.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.11.0",
+		"eslint-plugin-security": "^3.0.1",
 		"highlight.js": "^11.11.1",
 		"jsdom": "^26.1.0",
 		"kolorist": "^1.8.0",
@@ -72,7 +73,8 @@
 		"vite": "^7.1.1",
 		"vite-imagetools": "^7.1.0",
 		"vitest": "^3.2.4",
-		"wrangler": "^4.28.1"
+		"wrangler": "^4.28.1",
+		"safe-regex2": "^2.0.0"
 	},
 	"type": "module",
 	"dependencies": {
