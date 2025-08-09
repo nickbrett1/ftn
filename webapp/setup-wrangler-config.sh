@@ -20,9 +20,16 @@ if [ ! -f "wrangler.template.jsonc" ]; then
     exit 1
 fi
 
+# Build doppler args if a config override is provided
+DOPPLER_ARGS=""
+if [ -n "$DOPPLER_CONFIG" ]; then
+    DOPPLER_ARGS="--config $DOPPLER_CONFIG"
+    echo "Using Doppler config: $DOPPLER_CONFIG"
+fi
+
 # Run doppler to get environment variables and execute the configuration generation
 echo "Fetching environment variables from Doppler..."
-doppler run -- bash -c '
+doppler run $DOPPLER_ARGS -- bash -c '
     # Check if required environment variables are set
     if [ -z "$KV_NAMESPACE_ID" ]; then
         echo "Error: KV_NAMESPACE_ID environment variable is not set in Doppler"
