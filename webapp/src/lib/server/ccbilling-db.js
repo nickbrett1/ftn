@@ -222,7 +222,7 @@ export async function getBudgetMerchants(event, budget_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	const { results } = await db
-        .prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant ASC')
+		.prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant ASC')
 		.bind(budget_id)
 		.all();
 	return results;
@@ -515,17 +515,17 @@ export async function getUnassignedMerchants(event) {
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
 	// Get all unique merchants from payments that don't have an allocated_to budget
-    const { results } = await db
-        .prepare(
-            `
+	const { results } = await db
+		.prepare(
+			`
             SELECT DISTINCT p.merchant
             FROM payment p
             LEFT JOIN budget_merchant bm ON bm.merchant = p.merchant
             WHERE bm.merchant IS NULL
             ORDER BY p.merchant ASC
         `
-        )
-        .all();
+		)
+		.all();
 
 	return results.map((row) => row.merchant);
 }
@@ -537,18 +537,75 @@ export async function getUnassignedMerchants(event) {
  * @returns {Promise<{id:number, name:string} | null>}
  */
 export async function getBudgetByMerchant(event, merchant) {
-    const db = event.platform?.env?.CCBILLING_DB;
-    if (!db) throw new Error('CCBILLING_DB binding not found');
-    const result = await db
-        .prepare(
-            `
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const result = await db
+		.prepare(
+			`
             SELECT b.id, b.name
             FROM budget_merchant bm
             JOIN budget b ON b.id = bm.budget_id
             WHERE bm.merchant = ?
         `
-        )
-        .bind(merchant)
-        .first();
-    return result || null;
+		)
+		.bind(merchant)
+		.first();
+	return result || null;
+}
+
+/**
+ * List all merchant → budget name mappings.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {Promise<Array<{ merchant: string, budget_name: string }>>}
+ */
+export async function listBudgetMerchantMappings(event) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const { results } = await db
+		.prepare(
+			`
+            SELECT bm.merchant AS merchant, b.name AS budget_name
+            FROM budget_merchant bm
+            JOIN budget b ON b.id = bm.budget_id
+        `
+		)
+		.all();
+	return results;
+}
+
+/**
+ * Refresh auto-associations for all charges within a billing cycle by assigning
+ * allocated_to based on current merchant → budget mappings.
+ * This will overwrite existing allocations when a mapping exists.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} billing_cycle_id
+ * @returns {Promise<number>} number of rows updated
+ */
+export async function refreshAutoAssociationsForCycle(event, billing_cycle_id) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+
+	const result = await db
+		.prepare(
+			`
+            UPDATE payment AS p
+            SET allocated_to = (
+                SELECT b.name
+                FROM budget_merchant bm
+                JOIN budget b ON b.id = bm.budget_id
+                WHERE bm.merchant = p.merchant
+                LIMIT 1
+            )
+            WHERE p.statement_id IN (
+                SELECT s.id FROM statement s WHERE s.billing_cycle_id = ?
+            )
+            AND EXISTS (
+                SELECT 1 FROM budget_merchant bm2 WHERE bm2.merchant = p.merchant
+            )
+        `
+		)
+		.bind(billing_cycle_id)
+		.run();
+
+	return result.meta?.changes ?? 0;
 }

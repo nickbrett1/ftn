@@ -6,7 +6,8 @@ import {
 	listCreditCards,
 	updateStatementCreditCard,
 	updateStatementDate,
-	getBillingCycle
+	getBillingCycle,
+	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
 import { RouteUtils } from '$lib/server/route-utils.js';
 
@@ -150,12 +151,23 @@ export const POST = RouteUtils.createRouteHandler(
 			// Determine the correct year for the transaction date
 			const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
 
+			// Determine auto-allocation based on current merchant → budget mapping
+			let allocatedTo = charge.allocated_to || null;
+			try {
+				const budget = charge.merchant ? await getBudgetByMerchant(event, charge.merchant) : null;
+				if (budget) {
+					allocatedTo = budget.name;
+				}
+			} catch (e) {
+				console.warn('Auto-association lookup failed for merchant', charge.merchant, e?.message);
+			}
+
 			await createPayment(
 				event,
 				statement_id,
 				charge.merchant,
 				charge.amount,
-				charge.allocated_to || null, // No default allocation - let user decide
+				allocatedTo,
 				transactionDate, // Use the corrected transaction date
 				charge.is_foreign_currency || false,
 				charge.foreign_currency_amount || null,

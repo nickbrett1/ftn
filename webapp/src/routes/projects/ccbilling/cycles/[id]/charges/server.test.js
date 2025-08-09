@@ -4,14 +4,21 @@ import { GET, POST } from './+server.js';
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
 	listChargesForCycle: vi.fn(),
-	bulkAssignPayments: vi.fn()
+	bulkAssignPayments: vi.fn(),
+	refreshAutoAssociationsForCycle: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts)) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
 
 // Import the mocked functions
-import { listChargesForCycle, bulkAssignPayments } from '$lib/server/ccbilling-db.js';
+import {
+	listChargesForCycle,
+	bulkAssignPayments,
+	refreshAutoAssociationsForCycle
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/cycles/[id]/charges API', () => {
@@ -92,6 +99,20 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 					{ id: 1, allocated_to: 'Nick' },
 					{ id: 2, allocated_to: 'Tas' }
 				]
+			});
+
+			describe('POST endpoint (refresh auto-associations)', () => {
+				it('should refresh auto associations when requested', async () => {
+					mockEvent.request.json.mockResolvedValue({ refresh: 'auto-associations' });
+					refreshAutoAssociationsForCycle.mockResolvedValue(7);
+
+					const response = await POST(mockEvent);
+					const result = await response.json();
+
+					expect(refreshAutoAssociationsForCycle).toHaveBeenCalledWith(mockEvent, 1);
+					expect(result.success).toBe(true);
+					expect(result.updated).toBe(7);
+				});
 			});
 		});
 
@@ -198,18 +219,14 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 
 		it('should handle single assignment', async () => {
 			mockEvent.request.json.mockResolvedValue({
-				assignments: [
-					{ id: 1, allocated_to: 'Both' }
-				]
+				assignments: [{ id: 1, allocated_to: 'Both' }]
 			});
 			bulkAssignPayments.mockResolvedValue({});
 
 			const response = await POST(mockEvent);
 			const result = await response.json();
 
-			expect(bulkAssignPayments).toHaveBeenCalledWith(mockEvent, [
-				{ id: 1, allocated_to: 'Both' }
-			]);
+			expect(bulkAssignPayments).toHaveBeenCalledWith(mockEvent, [{ id: 1, allocated_to: 'Both' }]);
 			expect(result.success).toBe(true);
 		});
 

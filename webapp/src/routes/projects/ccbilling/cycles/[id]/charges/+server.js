@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
-import { 
-	listChargesForCycle, 
-	bulkAssignPayments 
+import {
+	listChargesForCycle,
+	bulkAssignPayments,
+	refreshAutoAssociationsForCycle
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -38,24 +39,32 @@ export async function POST(event) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
 	}
 
-	try {
-		const { assignments } = await request.json();
+    try {
+        const body = await request.json();
 
-		if (!assignments || !Array.isArray(assignments)) {
-			return json({ error: 'Invalid assignments data' }, { status: 400 });
-		}
+        // If caller requests refresh of auto associations, run server-side reassignment
+        if (body && body.refresh === 'auto-associations') {
+            const updated = await refreshAutoAssociationsForCycle(event, billing_cycle_id);
+            return json({ success: true, updated });
+        }
 
-		// Validate each assignment
-		for (const assignment of assignments) {
-			if (!assignment.id || !assignment.allocated_to) {
-				return json({ error: 'Each assignment must have id and allocated_to' }, { status: 400 });
-			}
-		}
+        const { assignments } = body || {};
 
-		await bulkAssignPayments(event, assignments);
-		return json({ success: true });
-	} catch (error) {
-		console.error('Error bulk assigning charges:', error);
-		return json({ error: 'Failed to bulk assign charges' }, { status: 500 });
-	}
+        if (!assignments || !Array.isArray(assignments)) {
+            return json({ error: 'Invalid assignments data' }, { status: 400 });
+        }
+
+        // Validate each assignment
+        for (const assignment of assignments) {
+            if (!assignment.id || !assignment.allocated_to) {
+                return json({ error: 'Each assignment must have id and allocated_to' }, { status: 400 });
+            }
+        }
+
+        await bulkAssignPayments(event, assignments);
+        return json({ success: true });
+    } catch (error) {
+        console.error('Error bulk assigning charges:', error);
+        return json({ error: 'Failed to bulk assign charges' }, { status: 500 });
+    }
 }
