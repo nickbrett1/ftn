@@ -418,11 +418,6 @@
 			</h2>
 		</div>
 		<div class="flex items-center space-x-3">
-			{#if !data.cycle.closed}
-				<div class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">Open</div>
-			{:else}
-				<div class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm">Closed</div>
-			{/if}
 			<Button
 				variant="danger"
 				size="sm"
@@ -527,32 +522,30 @@
 	<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 		<div class="flex justify-between items-center mb-4">
 			<h3 class="text-xl font-semibold text-white">Statements</h3>
-			{#if !data.cycle.closed}
-				{#if showUploadForm}
-					<Button
-						type="button"
-						variant="secondary"
-						onclick={() => {
-							showUploadForm = false;
-						}}
-					>
-						Cancel
-					</Button>
-				{:else}
-					<Button
-						type="button"
-						variant="success"
-						onclick={() => {
-							showUploadForm = true;
-						}}
-					>
-						Upload Statement
-					</Button>
-				{/if}
+			{#if showUploadForm}
+				<Button
+					type="button"
+					variant="secondary"
+					onclick={() => {
+						showUploadForm = false;
+					}}
+				>
+					Cancel
+				</Button>
+			{:else}
+				<Button
+					type="button"
+					variant="success"
+					onclick={() => {
+						showUploadForm = true;
+					}}
+				>
+					Upload Statement
+				</Button>
 			{/if}
 		</div>
 
-		{#if showUploadForm && !data.cycle.closed}
+		{#if showUploadForm}
 			<div class="bg-gray-700 border border-gray-600 rounded-lg p-4 mb-4">
 				<h4 class="text-white font-medium mb-3">Upload New Statement</h4>
 				{#if uploadError}
