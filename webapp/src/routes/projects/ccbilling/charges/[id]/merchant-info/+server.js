@@ -1,61 +1,41 @@
 import { json } from '@sveltejs/kit';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
+import LlamaAPIClient from 'llama-api-client';
 
 /**
- * Call a LLama-compatible Chat Completions API directly using env configuration.
- * Expects the provider to support the OpenAI-compatible schema.
- * Required env: LLAMA_API_KEY, LLAMA_API_URL
- * Optional env: LLAMA_API_MODEL (default: meta-llama/llama-3.1-8b-instruct)
+ * Use the official llama-api-client. Base URL is handled by the client.
+ * Required env: LLAMA_API_KEY
+ * Optional env: LLAMA_API_MODEL (default: llama3.1-8b-instruct)
  */
-async function runLlamaApi(event, prompt) {
+async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
 	const apiKey = env.LLAMA_API_KEY;
-	const apiUrl = env.LLAMA_API_URL;
-	const model = env.LLAMA_API_MODEL || 'meta-llama/llama-3.1-8b-instruct';
+	const model = env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 
-	if (!apiKey || !apiUrl) {
+	if (!apiKey) {
 		return {
 			ok: false,
 			status: 501,
 			error: 'LLAMA API not configured',
-			details: 'Set LLAMA_API_KEY and LLAMA_API_URL in the environment.'
+			details: 'Set LLAMA_API_KEY in the environment.'
 		};
 	}
 
 	try {
-		const response = await fetch(apiUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${apiKey}`
-			},
-			body: JSON.stringify({
-				model,
-				messages: [
-					{ role: 'system', content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.' },
-					{ role: 'user', content: prompt }
-				]
-			})
+		const client = new LlamaAPIClient({ apiKey });
+		const resp = await client.chat.completions.create({
+			model,
+			messages: [
+				{ role: 'system', content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.' },
+				{ role: 'user', content: prompt }
+			]
 		});
-
-		if (!response.ok) {
-			const text = await response.text().catch(() => '');
-			return { ok: false, status: response.status, error: `LLama API error: ${response.status}`, details: text };
-		}
-
-		const data = await response.json();
-		// Normalize common response shapes
-		// OpenAI-style
-		const content = data?.choices?.[0]?.message?.content
-			|| data?.choices?.[0]?.text
-			|| data?.response
-			|| data?.output_text
-			|| '';
-		return { ok: true, text: String(content) };
+		const text = resp?.choices?.[0]?.message?.content || '';
+		return { ok: true, text: String(text) };
 	} catch (error) {
-		console.error('LLama API call failed:', error);
-		return { ok: false, status: 502, error: 'LLama API network/parse error' };
+		console.error('Llama client call failed:', error);
+		return { ok: false, status: 502, error: 'LLama API client error' };
 	}
 }
 
@@ -94,7 +74,7 @@ Rules:
 - If multiple possibilities exist, pick the best guess with honest confidence.
 `;
 
-	const aiResult = await runLlamaApi(event, prompt);
+	const aiResult = await runLlamaClient(event, prompt);
 	if (!aiResult.ok) {
 		return json(
 			{
