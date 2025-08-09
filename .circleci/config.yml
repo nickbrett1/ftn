@@ -181,13 +181,11 @@ jobs:
           name: Sync Doppler secrets to Cloudflare (production)
           command: |
             cd webapp
-            export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-$CLOUDFLARE_DOPPLER_TOKEN}"
             npx wrangler secret:bulk --env production <(doppler secrets --json | jq -c 'with_entries(.value = .value.computed)')
       - run:
           name: Deploying to Cloudflare
           command: |
             cd webapp
-            export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-$CLOUDFLARE_DOPPLER_TOKEN}"
             npm run deploy
 
 workflows:
