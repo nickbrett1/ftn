@@ -108,6 +108,49 @@
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
 
+	// Convert URLs in plain text to safe clickable links
+	function linkifyText(text) {
+		if (!text) return '';
+		const escapeHtml = (str) =>
+			str.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+		// Match http(s) URLs, www. URLs, and bare domains with TLDs
+		const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:\/[^^\s<>"']*)?)/gi;
+		const trailingPunct = /[),.;!?]+$/;
+
+		let html = '';
+		let lastIndex = 0;
+		let match;
+		while ((match = urlRegex.exec(text)) !== null) {
+			const matched = match[0];
+			const start = match.index;
+			const end = start + matched.length;
+
+			html += escapeHtml(text.slice(lastIndex, start));
+
+			let url = matched;
+			let trailing = '';
+			const punct = url.match(trailingPunct);
+			if (punct) {
+				trailing = punct[0];
+				url = url.slice(0, -trailing.length);
+			}
+
+			let href = url;
+			if (!/^https?:\/\//i.test(href)) {
+				href = 'https://' + href;
+			}
+
+			html += `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer nofollow" class="underline text-blue-400 hover:text-blue-300">${escapeHtml(url)}</a>`;
+			html += escapeHtml(trailing);
+
+			lastIndex = end;
+		}
+
+		html += escapeHtml(text.slice(lastIndex));
+		return html;
+	}
+
 	async function openMerchantInfo(chargeId) {
 		merchantInfoLoading = true;
 		merchantInfoError = '';
@@ -976,7 +1019,7 @@
 						</div>
 						{#if merchantInfoData.text}
 							<div class="prose prose-invert max-w-none">
-								<p class="whitespace-pre-wrap text-gray-200 text-sm">{merchantInfoData.text}</p>
+								<p class="whitespace-pre-wrap text-gray-200 text-sm">{@html linkifyText(merchantInfoData.text)}</p>
 							</div>
 						{:else}
 							<div class="text-gray-300">No info available.</div>
