@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST, GET } from './+server.js';
-import { json } from '@sveltejs/kit';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
@@ -49,6 +48,7 @@ vi.mock('$lib/server/route-utils.js', () => ({
 					try {
 						parsedBody = await event.request.json();
 					} catch (error) {
+						console.error('Error parsing request body:', error);
 						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
 							status: 400,
 							headers: { 'Content-Type': 'application/json' }
@@ -112,7 +112,6 @@ import {
 	deletePaymentsForStatement,
 	listCreditCards,
 	updateStatementCreditCard,
-	updateStatementDate,
 	getBillingCycle,
 	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
