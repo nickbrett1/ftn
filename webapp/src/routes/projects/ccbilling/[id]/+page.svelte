@@ -730,16 +730,20 @@
 					<div class="border-b border-gray-700 py-3 last:border-b-0">
 						<div class="flex justify-between items-start gap-3">
 							<div class="flex-1 min-w-0">
-								<div class="text-white font-medium truncate">
-									<button class="mr-2 text-gray-400 hover:text-white" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
-									{#if charge.flight_details}
-										✈️ {formatMerchantName(charge)}
-									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-										{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
-									{:else}
-										{formatMerchantName(charge)}
-									{/if}
-								</div>
+																	<div class="text-white font-medium truncate">
+										<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
+											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+												<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
+											</svg>
+										</button>
+										{#if charge.flight_details}
+											✈️ {formatMerchantName(charge)}
+										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
+											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+										{:else}
+											{formatMerchantName(charge)}
+										{/if}
+									</div>
 								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
 									<span
 										title={charge.transaction_date
@@ -830,7 +834,11 @@
 									</span>
 								</td>
 								<td class="text-white py-2">
-									<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
+									<button class="mr-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+											<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
+										</svg>
+									</button>
 									{#if charge.flight_details}
 										✈️ {formatMerchantName(charge)}
 									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
