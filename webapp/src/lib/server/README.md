@@ -68,9 +68,6 @@ Create a new billing cycle.
 - `start_date` (string): Start date in YYYY-MM-DD format
 - `end_date` (string): End date in YYYY-MM-DD format
 
-#### `closeBillingCycle(event, id)`
-Close a billing cycle by setting end_date to current date.
-
 #### `deleteBillingCycle(event, id)`
 Delete a billing cycle by ID.
 

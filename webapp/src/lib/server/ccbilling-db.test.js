@@ -8,7 +8,6 @@ import {
 	listBillingCycles,
 	createBillingCycle,
 	getBillingCycle,
-	closeBillingCycle,
 	listBudgets,
 	getBudget,
 	createBudget,
@@ -146,8 +145,8 @@ describe('ccbilling-db functions', () => {
 		describe('listBillingCycles', () => {
 			it('should return list of billing cycles', async () => {
 				const mockCycles = [
-					{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31', closed: 0 },
-					{ id: 2, start_date: '2024-02-01', end_date: '2024-02-29', closed: 1 }
+					{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31' },
+					{ id: 2, start_date: '2024-02-01', end_date: '2024-02-29' }
 				];
 				mockDb.all.mockResolvedValue({ results: mockCycles });
 
@@ -176,7 +175,7 @@ describe('ccbilling-db functions', () => {
 
 		describe('getBillingCycle', () => {
 			it('should return a specific billing cycle', async () => {
-				const mockCycle = { id: 1, start_date: '2024-01-01', end_date: '2024-01-31', closed: 0 };
+				const mockCycle = { id: 1, start_date: '2024-01-01', end_date: '2024-01-31' };
 				mockDb.first.mockResolvedValue(mockCycle);
 
 				const result = await getBillingCycle(mockEvent, 1);
@@ -187,19 +186,6 @@ describe('ccbilling-db functions', () => {
 			});
 		});
 
-		describe('closeBillingCycle', () => {
-			it('should close a billing cycle', async () => {
-				mockDb.run.mockResolvedValue({});
-
-				await closeBillingCycle(mockEvent, 1);
-
-				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'UPDATE billing_cycle SET closed = 1 WHERE id = ?'
-				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1);
-				expect(mockDb.run).toHaveBeenCalled();
-			});
-		});
 	});
 
 	describe('Budget Functions', () => {

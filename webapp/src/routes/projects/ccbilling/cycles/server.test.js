@@ -33,8 +33,8 @@ describe('/projects/ccbilling/cycles API', () => {
 	describe('GET endpoint', () => {
 		it('should return list of billing cycles', async () => {
 			const mockCycles = [
-				{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31', closed: 0 },
-				{ id: 2, start_date: '2024-02-01', end_date: '2024-02-29', closed: 1 }
+				{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31' },
+				{ id: 2, start_date: '2024-02-01', end_date: '2024-02-29' }
 			];
 			listBillingCycles.mockResolvedValue(mockCycles);
 
