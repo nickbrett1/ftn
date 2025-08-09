@@ -952,10 +952,11 @@
 											<li><a class="hover:underline" href={src} target="_blank" rel="noopener noreferrer">{src}</a></li>
 										{/each}
 									</ul>
-								</div>
+																</div>
 							{/if}
 						</div>
-				{:else}
+					</div>
+					{:else}
 					<div class="text-gray-300">No info available.</div>
 				{/if}
 				<div class="flex justify-end gap-2 mt-6">
