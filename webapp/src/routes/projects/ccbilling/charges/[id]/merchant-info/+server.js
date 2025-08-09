@@ -14,9 +14,9 @@ import LlamaAPIClient from 'llama-api-client';
  */
 async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
-	const apiKey = env.LLAMA_API_KEY;
+	const apiKey = env.LLAMA_API_KEY || STATIC_LLAMA_API_KEY;
 	const model =
-		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'Llama-4-Maverick-17B-128E-Instruct-FP8';
+		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
 		env.LLAMA_API_BASE_URL || env.LLAMA_BASE_URL || env.LLAMA_API_ENDPOINT || undefined;
 
@@ -51,7 +51,8 @@ async function runLlamaClient(event, prompt) {
 			],
 			temperature: 0.2,
 			top_p: 0.95,
-			max_tokens: 256
+			max_tokens: 256,
+			stream: false
 		};
 		console.log('[LLAMA] Request', {
 			model: requestPayload.model,
@@ -62,15 +63,46 @@ async function runLlamaClient(event, prompt) {
 
 		function extractMessageText(response) {
 			try {
-				const choice = response?.choices?.[0];
-				const message = choice?.message;
-				const content = message?.content;
-				if (typeof content === 'string') return content;
-				if (Array.isArray(content)) {
-					const parts = content
+				// Common OpenAI-style response
+				const choices = response?.choices;
+				if (Array.isArray(choices) && choices.length > 0) {
+					const firstChoice = choices[0];
+					const choiceMessage = firstChoice?.message;
+					const choiceContent = choiceMessage?.content ?? firstChoice?.content;
+					if (typeof choiceContent === 'string') return choiceContent;
+					if (Array.isArray(choiceContent)) {
+						const parts = choiceContent
+							.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
+							.filter(Boolean);
+						if (parts.length) return parts.join('\n');
+					}
+					// Join all choices if they each have small fragments
+					const joined = choices
+						.map((c) => {
+							const cc = c?.message?.content ?? c?.content;
+							if (typeof cc === 'string') return cc;
+							if (Array.isArray(cc)) {
+								return cc
+									.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
+									.filter(Boolean)
+									.join('\n');
+							}
+							return '';
+						})
+						.filter(Boolean)
+						.join('\n')
+						.trim();
+					if (joined) return joined;
+				}
+
+				// Some libraries return top-level message or completion
+				const topMessage = response?.message;
+				if (topMessage && typeof topMessage?.content === 'string') return topMessage.content;
+				if (topMessage && Array.isArray(topMessage?.content)) {
+					const parts = topMessage.content
 						.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
 						.filter(Boolean);
-					return parts.join('\n');
+					if (parts.length) return parts.join('\n');
 				}
 
 				// Library example shows top-level completion_message
@@ -82,10 +114,13 @@ async function runLlamaClient(event, prompt) {
 						const parts = cm.content
 							.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
 							.filter(Boolean);
-						return parts.join('\n');
+						if (parts.length) return parts.join('\n');
 					}
 				}
+
 				if (typeof response?.content === 'string') return response.content;
+				if (typeof response?.text === 'string') return response.text;
+				if (typeof response?.output_text === 'string') return response.output_text;
 			} catch {}
 			return '';
 		}
