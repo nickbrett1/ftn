@@ -5,6 +5,7 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
+	import LinkifyIt from 'linkify-it';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -108,47 +109,19 @@
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
 
-	// Convert URLs in plain text to safe clickable links
-	function linkifyText(text) {
-		if (!text) return '';
-		const escapeHtml = (str) =>
-			str.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-
-		// Match http(s) URLs, www. URLs, and bare domains with TLDs
-		const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:\/[^^\s<>"']*)?)/gi;
-		const trailingPunct = /[),.;!?]+$/;
-
-		let html = '';
-		let lastIndex = 0;
-		let match;
-		while ((match = urlRegex.exec(text)) !== null) {
-			const matched = match[0];
-			const start = match.index;
-			const end = start + matched.length;
-
-			html += escapeHtml(text.slice(lastIndex, start));
-
-			let url = matched;
-			let trailing = '';
-			const punct = url.match(trailingPunct);
-			if (punct) {
-				trailing = punct[0];
-				url = url.slice(0, -trailing.length);
-			}
-
-			let href = url;
-			if (!/^https?:\/\//i.test(href)) {
-				href = 'https://' + href;
-			}
-
-			html += `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer nofollow" class="underline text-blue-400 hover:text-blue-300">${escapeHtml(url)}</a>`;
-			html += escapeHtml(trailing);
-
-			lastIndex = end;
+	const linkify = new LinkifyIt();
+	function toSegments(text) {
+		if (!text) return [];
+		const segments = [];
+		let last = 0;
+		const matches = linkify.match(text) || [];
+		for (const m of matches) {
+			if (m.index > last) segments.push({ type: 'text', text: text.slice(last, m.index) });
+			segments.push({ type: 'link', text: m.text, href: m.url });
+			last = m.lastIndex;
 		}
-
-		html += escapeHtml(text.slice(lastIndex));
-		return html;
+		if (last < text.length) segments.push({ type: 'text', text: text.slice(last) });
+		return segments;
 	}
 
 	async function openMerchantInfo(chargeId) {
@@ -1019,7 +992,13 @@
 						</div>
 						{#if merchantInfoData.text}
 							<div class="prose prose-invert max-w-none">
-								<p class="whitespace-pre-wrap text-gray-200 text-sm">{@html linkifyText(merchantInfoData.text)}</p>
+								<p class="whitespace-pre-wrap text-gray-200 text-sm">
+									{#each toSegments(merchantInfoData.text) as seg}
+										{#if seg.type === 'text'}{seg.text}{:else}
+											<a href={seg.href} target="_blank" rel="noopener noreferrer nofollow" class="underline text-blue-400 hover:text-blue-300">{seg.text}</a>
+										{/if}
+									{/each}
+								</p>
 							</div>
 						{:else}
 							<div class="text-gray-300">No info available.</div>
