@@ -181,7 +181,7 @@ jobs:
           name: Sync Doppler secrets to Cloudflare (production)
           command: |
             cd webapp
-            npx wrangler secret:bulk --env production <(doppler secrets --json | jq -c 'with_entries(.value = .value.computed)')
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production
       - run:
           name: Deploying to Cloudflare
           command: |
