@@ -15,8 +15,11 @@
 
 	function formatCurrency(amount) {
 		if (amount == null) return '';
-		return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(amount);
+		return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 	}
+
+	// Build a lookup for budget icons by name for quick access during render
+	const budgetNameToIcon = new Map(budgets.map((b) => [b.name, b.icon]));
 
 	function getTotalsForCycle(cycleId) {
 		// Build a map of allocation -> total for the given cycle
@@ -26,12 +29,13 @@
 			const key = row.allocated_to ?? '__unallocated__';
 			map.set(key, (map.get(key) || 0) + row.total_amount);
 		}
-		// Ensure all budgets are present with 0 when absent
-		for (const b of budgets) {
-			if (!map.has(b.name)) map.set(b.name, 0);
+
+		// Remove entries that total exactly to zero
+		for (const [key, total] of Array.from(map.entries())) {
+			if (total === 0) {
+				map.delete(key);
+			}
 		}
-		// Always include unallocated bucket
-		if (!map.has('__unallocated__')) map.set('__unallocated__', 0);
 
 		// Sort: unallocated first, then alphabetical by budget name
 		const entries = Array.from(map.entries());
@@ -73,7 +77,12 @@
 									<div class="mt-2 text-sm text-gray-300 space-y-1">
 										{#each getTotalsForCycle(cycle.id) as [allocation, total]}
 											<div class="flex justify-between gap-4">
-												<span class="text-gray-400">{allocation === '__unallocated__' ? 'Unallocated' : allocation}</span>
+												<span class="text-gray-400 flex items-center gap-2">
+													{#if allocation !== '__unallocated__' && budgetNameToIcon.get(allocation)}
+														<span aria-hidden="true">{budgetNameToIcon.get(allocation)}</span>
+													{/if}
+													<span>{allocation === '__unallocated__' ? 'Unallocated' : allocation}</span>
+												</span>
 												<span class="text-white tabular-nums">{formatCurrency(total)}</span>
 											</div>
 										{/each}
