@@ -730,20 +730,32 @@
 					<div class="border-b border-gray-700 py-3 last:border-b-0">
 						<div class="flex justify-between items-start gap-3">
 							<div class="flex-1 min-w-0">
-																	<div class="text-white font-medium truncate">
-										<button class="mr-2 text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-5 w-5" fill="currentColor">
-												<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
-											</svg>
-										</button>
-										{#if charge.flight_details}
-											✈️ {formatMerchantName(charge)}
-										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
-										{:else}
-											{formatMerchantName(charge)}
-										{/if}
-									</div>
+								<div class="text-white font-medium truncate">
+									<button
+										class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
+										title="More info about this merchant"
+										aria-label="More info about this merchant"
+										onclick={() => openMerchantInfo(charge.id)}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 20 20"
+											class="h-5 w-5 block"
+											fill="currentColor"
+										>
+											<path
+												d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
+											/>
+										</svg>
+									</button>
+									{#if charge.flight_details}
+										✈️ {formatMerchantName(charge)}
+									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
+										{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+									{:else}
+										{formatMerchantName(charge)}
+									{/if}
+								</div>
 								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
 									<span
 										title={charge.transaction_date
@@ -834,9 +846,21 @@
 									</span>
 								</td>
 								<td class="text-white py-2">
-									<button class="mr-2 text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle" title="More info about this merchant" aria-label="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>
-										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-5 w-5" fill="currentColor">
-											<path d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"/>
+									<button
+										class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
+										title="More info about this merchant"
+										aria-label="More info about this merchant"
+										onclick={() => openMerchantInfo(charge.id)}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 20 20"
+											class="h-5 w-5 block"
+											fill="currentColor"
+										>
+											<path
+												d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
+											/>
 										</svg>
 									</button>
 									{#if charge.flight_details}
@@ -933,42 +957,77 @@
 				{#if merchantInfoLoading}
 					<div class="text-gray-300">Fetching info...</div>
 				{:else if merchantInfoError}
-					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">{merchantInfoError}</div>
+					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+						{merchantInfoError}
+					</div>
 				{:else if merchantInfoData}
 					<div class="space-y-2">
-						<div class="text-gray-300 text-sm">Searched: <span class="text-white">{merchantInfoData.merchant}</span></div>
+						<div class="text-gray-300 text-sm">
+							Searched: <span class="text-white">{merchantInfoData.merchant}</span>
+						</div>
 						{#if merchantInfoData.info?.canonical_name}
-							<div class="text-white text-base font-semibold">{merchantInfoData.info.canonical_name}</div>
+							<div class="text-white text-base font-semibold">
+								{merchantInfoData.info.canonical_name}
+							</div>
 						{/if}
 						{#if merchantInfoData.info?.description}
 							<div class="text-gray-300 text-sm">{merchantInfoData.info.description}</div>
 						{/if}
 						<div class="grid grid-cols-1 gap-2 mt-2">
 							{#if merchantInfoData.info?.website}
-								<div class="text-sm"><span class="text-gray-400">Website:</span> <a class="text-blue-400 hover:underline" href={merchantInfoData.info.website} target="_blank" rel="noopener noreferrer">{merchantInfoData.info.website}</a></div>
+								<div class="text-sm">
+									<span class="text-gray-400">Website:</span>
+									<a
+										class="text-blue-400 hover:underline"
+										href={merchantInfoData.info.website}
+										target="_blank"
+										rel="noopener noreferrer">{merchantInfoData.info.website}</a
+									>
+								</div>
 							{/if}
 							{#if merchantInfoData.info?.address}
-								<div class="text-sm"><span class="text-gray-400">Address:</span> <span class="text-gray-200">{merchantInfoData.info.address}</span></div>
+								<div class="text-sm">
+									<span class="text-gray-400">Address:</span>
+									<span class="text-gray-200">{merchantInfoData.info.address}</span>
+								</div>
 							{/if}
 							{#if merchantInfoData.info?.confidence !== undefined}
-								<div class="text-sm"><span class="text-gray-400">Confidence:</span> <span class="text-gray-200">{(merchantInfoData.info.confidence * 100).toFixed(0)}%</span></div>
+								<div class="text-sm">
+									<span class="text-gray-400">Confidence:</span>
+									<span class="text-gray-200"
+										>{(merchantInfoData.info.confidence * 100).toFixed(0)}%</span
+									>
+								</div>
 							{/if}
 							{#if merchantInfoData.info?.sources?.length}
-								<div class="text-sm"><span class="text-gray-400">Sources:</span>
+								<div class="text-sm">
+									<span class="text-gray-400">Sources:</span>
 									<ul class="list-disc list-inside text-blue-400">
 										{#each merchantInfoData.info.sources as src}
-											<li><a class="hover:underline" href={src} target="_blank" rel="noopener noreferrer">{src}</a></li>
+											<li>
+												<a
+													class="hover:underline"
+													href={src}
+													target="_blank"
+													rel="noopener noreferrer">{src}</a
+												>
+											</li>
 										{/each}
 									</ul>
-																</div>
+								</div>
 							{/if}
 						</div>
 					</div>
-					{:else}
+				{:else}
 					<div class="text-gray-300">No info available.</div>
 				{/if}
 				<div class="flex justify-end gap-2 mt-6">
-					<button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded" onclick={() => { showMerchantInfo = false; }}>
+					<button
+						class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+						onclick={() => {
+							showMerchantInfo = false;
+						}}
+					>
 						Close
 					</button>
 				</div>
