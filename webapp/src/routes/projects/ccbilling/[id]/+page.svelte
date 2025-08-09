@@ -102,6 +102,32 @@
 	let selectedCardName = $state('');
 	let isShowingCardInfo = $state(false); // Prevent rapid successive clicks
 
+	// Merchant info state
+	let showMerchantInfo = $state(false);
+	let merchantInfoLoading = $state(false);
+	let merchantInfoError = $state('');
+	let merchantInfoData = $state(null);
+
+	async function openMerchantInfo(chargeId) {
+		merchantInfoLoading = true;
+		merchantInfoError = '';
+		merchantInfoData = null;
+		showMerchantInfo = true;
+		try {
+			const res = await fetch(`/projects/ccbilling/charges/${chargeId}/merchant-info`);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.error || `Failed to fetch merchant info (status ${res.status})`);
+			}
+			const data = await res.json();
+			merchantInfoData = data;
+		} catch (e) {
+			merchantInfoError = e.message;
+		} finally {
+			merchantInfoLoading = false;
+		}
+	}
+
 	// Allocation editing state - removed loading state to fix click issues
 	// Removed recentlyUpdated state as it was causing UI issues
 
@@ -712,6 +738,7 @@
 									{:else}
 										{formatMerchantName(charge)}
 									{/if}
+									<button class="ml-2 text-gray-400 hover:text-white" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 								</div>
 								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
 									<span
@@ -810,6 +837,7 @@
 									{:else}
 										{formatMerchantName(charge)}
 									{/if}
+									<button class="ml-2 text-gray-400 hover:text-white align-middle" title="More info about this merchant" onclick={() => openMerchantInfo(charge.id)}>❓</button>
 								</td>
 								<td class="text-gray-300 text-sm py-2">
 									{#if charge.card_name}
@@ -883,6 +911,56 @@
 						class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
 						onclick={() => (showCardDetails = false)}
 					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	{#if showMerchantInfo}
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+			<div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-lg w-full shadow-lg">
+				<h3 class="text-lg font-bold text-white mb-4">Merchant details</h3>
+				{#if merchantInfoLoading}
+					<div class="text-gray-300">Fetching info...</div>
+				{:else if merchantInfoError}
+					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">{merchantInfoError}</div>
+				{:else if merchantInfoData}
+					<div class="space-y-2">
+						<div class="text-gray-300 text-sm">Searched: <span class="text-white">{merchantInfoData.merchant}</span></div>
+						{#if merchantInfoData.info?.canonical_name}
+							<div class="text-white text-base font-semibold">{merchantInfoData.info.canonical_name}</div>
+						{/if}
+						{#if merchantInfoData.info?.description}
+							<div class="text-gray-300 text-sm">{merchantInfoData.info.description}</div>
+						{/if}
+						<div class="grid grid-cols-1 gap-2 mt-2">
+							{#if merchantInfoData.info?.website}
+								<div class="text-sm"><span class="text-gray-400">Website:</span> <a class="text-blue-400 hover:underline" href={merchantInfoData.info.website} target="_blank" rel="noopener noreferrer">{merchantInfoData.info.website}</a></div>
+							{/if}
+							{#if merchantInfoData.info?.address}
+								<div class="text-sm"><span class="text-gray-400">Address:</span> <span class="text-gray-200">{merchantInfoData.info.address}</span></div>
+							{/if}
+							{#if merchantInfoData.info?.confidence !== undefined}
+								<div class="text-sm"><span class="text-gray-400">Confidence:</span> <span class="text-gray-200">{(merchantInfoData.info.confidence * 100).toFixed(0)}%</span></div>
+							{/if}
+							{#if merchantInfoData.info?.sources?.length}
+								<div class="text-sm"><span class="text-gray-400">Sources:</span>
+									<ul class="list-disc list-inside text-blue-400">
+										{#each merchantInfoData.info.sources as src}
+											<li><a class="hover:underline" href={src} target="_blank" rel="noopener noreferrer">{src}</a></li>
+										{/each}
+									</ul>
+																</div>
+							{/if}
+						</div>
+					</div>
+					{:else}
+					<div class="text-gray-300">No info available.</div>
+				{/if}
+				<div class="flex justify-end gap-2 mt-6">
+					<button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded" onclick={() => { showMerchantInfo = false; }}>
 						Close
 					</button>
 				</div>
