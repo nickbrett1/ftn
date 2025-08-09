@@ -115,12 +115,21 @@
 		showMerchantInfo = true;
 		try {
 			const res = await fetch(`/projects/ccbilling/charges/${chargeId}/merchant-info`);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.error || `Failed to fetch merchant info (status ${res.status})`);
+			const isOk = res.ok;
+			const data = await res.json().catch(() => ({}));
+			if (!isOk) {
+				throw new Error(data.error || `Failed to fetch merchant info (status ${res.status})`);
 			}
-			const data = await res.json();
-			merchantInfoData = data;
+
+			// Accept both {merchant, text} and error-shaped payloads for robustness
+			if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
+				merchantInfoData = data;
+			} else if (data && data.error) {
+				merchantInfoError = data.error;
+			} else {
+				// Fallback to empty text if nothing usable
+				merchantInfoData = { merchant: data.merchant || '', text: '' };
+			}
 		} catch (e) {
 			merchantInfoError = e.message;
 		} finally {
@@ -961,62 +970,17 @@
 						{merchantInfoError}
 					</div>
 				{:else if merchantInfoData}
-					<div class="space-y-2">
+					<div class="space-y-3">
 						<div class="text-gray-300 text-sm">
 							Searched: <span class="text-white">{merchantInfoData.merchant}</span>
 						</div>
-						{#if merchantInfoData.info?.canonical_name}
-							<div class="text-white text-base font-semibold">
-								{merchantInfoData.info.canonical_name}
+						{#if merchantInfoData.text}
+							<div class="prose prose-invert max-w-none">
+								<p class="whitespace-pre-wrap text-gray-200 text-sm">{merchantInfoData.text}</p>
 							</div>
+						{:else}
+							<div class="text-gray-300">No info available.</div>
 						{/if}
-						{#if merchantInfoData.info?.description}
-							<div class="text-gray-300 text-sm">{merchantInfoData.info.description}</div>
-						{/if}
-						<div class="grid grid-cols-1 gap-2 mt-2">
-							{#if merchantInfoData.info?.website}
-								<div class="text-sm">
-									<span class="text-gray-400">Website:</span>
-									<a
-										class="text-blue-400 hover:underline"
-										href={merchantInfoData.info.website}
-										target="_blank"
-										rel="noopener noreferrer">{merchantInfoData.info.website}</a
-									>
-								</div>
-							{/if}
-							{#if merchantInfoData.info?.address}
-								<div class="text-sm">
-									<span class="text-gray-400">Address:</span>
-									<span class="text-gray-200">{merchantInfoData.info.address}</span>
-								</div>
-							{/if}
-							{#if merchantInfoData.info?.confidence !== undefined}
-								<div class="text-sm">
-									<span class="text-gray-400">Confidence:</span>
-									<span class="text-gray-200"
-										>{(merchantInfoData.info.confidence * 100).toFixed(0)}%</span
-									>
-								</div>
-							{/if}
-							{#if merchantInfoData.info?.sources?.length}
-								<div class="text-sm">
-									<span class="text-gray-400">Sources:</span>
-									<ul class="list-disc list-inside text-blue-400">
-										{#each merchantInfoData.info.sources as src}
-											<li>
-												<a
-													class="hover:underline"
-													href={src}
-													target="_blank"
-													rel="noopener noreferrer">{src}</a
-												>
-											</li>
-										{/each}
-									</ul>
-								</div>
-							{/if}
-						</div>
 					</div>
 				{:else}
 					<div class="text-gray-300">No info available.</div>

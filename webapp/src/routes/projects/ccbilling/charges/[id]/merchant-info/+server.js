@@ -1,4 +1,8 @@
 import { json } from '@sveltejs/kit';
+import {
+	LLAMA_API_KEY as STATIC_LLAMA_API_KEY,
+	LLAMA_API_MODEL as STATIC_LLAMA_API_MODEL
+} from '$env/static/private';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import LlamaAPIClient from 'llama-api-client';
@@ -10,8 +14,18 @@ import LlamaAPIClient from 'llama-api-client';
  */
 async function runLlamaClient(event, prompt) {
 	const env = event.platform?.env ?? {};
-	const apiKey = env.LLAMA_API_KEY;
-	const model = env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
+	const apiKey = STATIC_LLAMA_API_KEY || env.LLAMA_API_KEY;
+	const model =
+		STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'Llama-4-Maverick-17B-128E-Instruct-FP8';
+	const baseURL =
+		env.LLAMA_API_BASE_URL || env.LLAMA_BASE_URL || env.LLAMA_API_ENDPOINT || undefined;
+
+	// Debug (no secrets):
+	console.log('[LLAMA] Config', {
+		hasApiKey: Boolean(apiKey),
+		model,
+		hasBaseURL: Boolean(baseURL)
+	});
 
 	if (!apiKey) {
 		return {
@@ -23,19 +37,67 @@ async function runLlamaClient(event, prompt) {
 	}
 
 	try {
-		const client = new LlamaAPIClient({ apiKey });
-		const resp = await client.chat.completions.create({
+		// Some deployments require a custom base URL; support optional override
+		const client = new LlamaAPIClient(baseURL ? { apiKey, baseURL } : { apiKey });
+		const requestPayload = {
 			model,
 			messages: [
 				{
 					role: 'system',
-					content: 'You are a precise merchant enrichment agent. Always answer in strict JSON.'
+					content:
+						'You are a precise merchant enrichment assistant. Reply in plain text only. Provide a concise summary including likely canonical name, primary website (if known), what the merchant does, and any notable details. No markdown, no code blocks.'
 				},
 				{ role: 'user', content: prompt }
-			]
+			],
+			temperature: 0.2,
+			top_p: 0.95,
+			max_tokens: 256
+		};
+		console.log('[LLAMA] Request', {
+			model: requestPayload.model,
+			messagesCount: requestPayload.messages.length,
+			promptChars: requestPayload.messages[1]?.content?.length || 0
 		});
-		const text = resp?.choices?.[0]?.message?.content || '';
-		return { ok: true, text: String(text) };
+		const resp = await client.chat.completions.create(requestPayload);
+
+		function extractMessageText(response) {
+			try {
+				const choice = response?.choices?.[0];
+				const message = choice?.message;
+				const content = message?.content;
+				if (typeof content === 'string') return content;
+				if (Array.isArray(content)) {
+					const parts = content
+						.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
+						.filter(Boolean);
+					return parts.join('\n');
+				}
+
+				// Library example shows top-level completion_message
+				const cm = response?.completion_message;
+				if (typeof cm === 'string') return cm;
+				if (cm && typeof cm === 'object') {
+					if (typeof cm.content === 'string') return cm.content;
+					if (Array.isArray(cm.content)) {
+						const parts = cm.content
+							.map((part) => (typeof part === 'string' ? part : part?.text || part?.content || ''))
+							.filter(Boolean);
+						return parts.join('\n');
+					}
+				}
+				if (typeof response?.content === 'string') return response.content;
+			} catch {}
+			return '';
+		}
+
+		const textRaw = extractMessageText(resp) || '';
+		const text = String(textRaw).trim();
+		console.log('[LLAMA] Response', {
+			textLength: text.length,
+			preview: text.slice(0, 120),
+			choices: Array.isArray(resp?.choices) ? resp.choices.length : 0
+		});
+		return { ok: true, text };
 	} catch (error) {
 		console.error('Llama client call failed:', error);
 		return { ok: false, status: 502, error: 'LLama API client error' };
@@ -62,23 +124,19 @@ export async function GET(event) {
 		return json({ error: 'Charge has no merchant name' }, { status: 400 });
 	}
 
-	const prompt = `Given the merchant string: "${merchantName}"
+	const prompt = `Merchant string: "${merchantName}"
 
-Return a STRICT JSON object with keys: 
-- canonical_name: best known official or common merchant name
-- website: the primary website URL (include protocol), or empty string if unknown
-- address: HQ or primary business address (single line), or empty string if unknown
-- description: concise one-sentence description (max 40 words)
-- confidence: number between 0 and 1 reflecting match confidence
-- sources: array of up to 3 useful URLs (official site, Wikipedia, business listings). Use empty array if none.
+Provide a concise plain-text summary including:
+- Likely canonical/official name
+- Primary website URL (if known)
+- Address or HQ (if known)
+- What the merchant does (1–2 sentences)
+- Any notable details`;
 
-Rules:
-- Output ONLY JSON. No markdown, no commentary.
-- If multiple possibilities exist, pick the best guess with honest confidence.
-`;
-
+	console.log('[LLAMA] Starting merchant info fetch');
 	const aiResult = await runLlamaClient(event, prompt);
 	if (!aiResult.ok) {
+		console.warn('[LLAMA] AI error', { status: aiResult.status, error: aiResult.error });
 		return json(
 			{
 				error: aiResult.error || 'Failed to fetch merchant info',
@@ -89,34 +147,18 @@ Rules:
 		);
 	}
 
-	let parsed;
-	try {
-		const aiText = aiResult.text || '';
-		const start = aiText.indexOf('{');
-		const end = aiText.lastIndexOf('}');
-		const jsonSlice = start >= 0 && end >= 0 ? aiText.slice(start, end + 1) : aiText;
-		parsed = JSON.parse(jsonSlice);
-	} catch (e) {
+	// Return raw text so UI can render directly
+	const text = String(aiResult.text || '').trim();
+	if (!text) {
+		console.warn('[LLAMA] Empty text response');
+		const debug =
+			event.url?.searchParams?.get('debug') === '1' ? { reason: 'empty-text' } : undefined;
 		return json(
-			{
-				error: 'Failed to parse AI response as JSON',
-				merchant: merchantName
-			},
+			{ error: 'Empty response from model', merchant: merchantName, debug },
 			{ status: 502 }
 		);
 	}
-
-	const result = {
-		canonical_name:
-			typeof parsed.canonical_name === 'string' ? parsed.canonical_name : merchantName,
-		website: typeof parsed.website === 'string' ? parsed.website : '',
-		address: typeof parsed.address === 'string' ? parsed.address : '',
-		description: typeof parsed.description === 'string' ? parsed.description : '',
-		confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
-		sources: Array.isArray(parsed.sources)
-			? parsed.sources.filter((s) => typeof s === 'string')
-			: []
-	};
-
-	return json({ merchant: merchantName, info: result });
+	const debug =
+		event.url?.searchParams?.get('debug') === '1' ? { textLength: text.length } : undefined;
+	return json({ merchant: merchantName, text, debug });
 }

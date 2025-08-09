@@ -4,7 +4,9 @@ import { GET } from './+server.js';
 // Mock DB and auth
 vi.mock('$lib/server/ccbilling-db.js', () => ({ getPayment: vi.fn() }));
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({ json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts) ) }));
+vi.mock('@sveltejs/kit', () => ({
+	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+}));
 
 // Expose a controllable create() fn for the llama client mock
 // eslint-disable-next-line no-underscore-dangle
@@ -41,10 +43,15 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
 	});
 
-	it('returns enriched merchant info on success', async () => {
+	it('returns model text on success', async () => {
 		const modelResponse = {
 			choices: [
-				{ message: { content: '{"canonical_name":"Amazon","website":"https://www.amazon.com","address":"Seattle, WA","description":"Online retailer","confidence":0.93,"sources":["https://www.amazon.com","https://en.wikipedia.org/wiki/Amazon_(company)"]}' } }
+				{
+					message: {
+						content:
+							'{"canonical_name":"Amazon","website":"https://www.amazon.com","address":"Seattle, WA","description":"Online retailer","confidence":0.93,"sources":["https://www.amazon.com","https://en.wikipedia.org/wiki/Amazon_(company)"]}'
+					}
+				}
 			]
 		};
 		// eslint-disable-next-line no-underscore-dangle
@@ -54,10 +61,8 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(response.status).toBe(200);
 		const body = await response.json();
 		expect(body.merchant).toBe('AMZN Mktp US*AB12C');
-		expect(body.info.canonical_name).toBe('Amazon');
-		expect(body.info.website).toBe('https://www.amazon.com');
-		expect(typeof body.info.confidence).toBe('number');
-		expect(Array.isArray(body.info.sources)).toBe(true);
+		expect(typeof body.text).toBe('string');
+		expect(body.text).toContain('Amazon');
 		// Ensure llama client was called with our prompt
 		// eslint-disable-next-line no-underscore-dangle
 		expect(globalThis.__llamaCreateMock).toHaveBeenCalledTimes(1);
@@ -87,13 +92,15 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.error).toBe('Charge not found');
 	});
 
-	it('returns 502 when model output is not JSON', async () => {
+	it('returns 200 with raw text when model output is not JSON', async () => {
 		// eslint-disable-next-line no-underscore-dangle
-		globalThis.__llamaCreateMock.mockResolvedValue({ choices: [{ message: { content: 'not json' } }] });
+		globalThis.__llamaCreateMock.mockResolvedValue({
+			choices: [{ message: { content: 'not json' } }]
+		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
-		expect(response.status).toBe(502);
-		expect(body.error).toBe('Failed to parse AI response as JSON');
+		expect(response.status).toBe(200);
+		expect(body.text).toBe('not json');
 	});
 
 	it('returns 502 when llama client throws', async () => {
