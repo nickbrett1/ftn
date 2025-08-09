@@ -574,6 +574,30 @@ export async function listBudgetMerchantMappings(event) {
 }
 
 /**
+ * Return allocation totals per billing cycle and per budget (including unallocated).
+ * Each row contains: { cycle_id: number, allocated_to: string | null, total_amount: number }
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {Promise<Array<{cycle_id:number, allocated_to:string|null, total_amount:number}>>}
+ */
+export async function listAllocationTotalsByCycle(event) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+	const { results } = await db
+		.prepare(
+			`
+            SELECT s.billing_cycle_id AS cycle_id,
+                   p.allocated_to AS allocated_to,
+                   SUM(p.amount) AS total_amount
+            FROM payment p
+            JOIN statement s ON p.statement_id = s.id
+            GROUP BY s.billing_cycle_id, p.allocated_to
+        `
+		)
+		.all();
+	return results;
+}
+
+/**
  * Refresh auto-associations for all charges within a billing cycle by assigning
  * allocated_to based on current merchant → budget mappings.
  * This will overwrite existing allocations when a mapping exists.
