@@ -26,7 +26,8 @@ import {
 	getPayment,
 	updatePayment,
 	bulkAssignPayments,
-	deletePaymentsForStatement
+	deletePaymentsForStatement,
+	getUnassignedMerchants
 } from './ccbilling-db.js';
 
 describe('ccbilling-db functions', () => {
@@ -302,6 +303,35 @@ describe('ccbilling-db functions', () => {
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(result).toEqual(mockMerchants);
+			});
+		});
+
+		describe('getUnassignedMerchants', () => {
+			it('should return unassigned merchants excluding Amazon', async () => {
+				const mockMerchants = [
+					{ merchant: 'Walmart' },
+					{ merchant: 'Target' },
+					{ merchant: 'Grocery Store' }
+				];
+				mockDb.all.mockResolvedValue({ results: mockMerchants });
+
+				const result = await getUnassignedMerchants(mockEvent);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					expect.stringContaining('WHERE bm.merchant IS NULL')
+				);
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					expect.stringContaining('AND p.merchant NOT LIKE \'%Amazon%\'')
+				);
+				expect(result).toEqual(['Walmart', 'Target', 'Grocery Store']);
+			});
+
+			it('should throw error when CCBILLING_DB not found', async () => {
+				const eventWithoutDb = { platform: { env: {} } };
+
+				await expect(getUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
+					'CCBILLING_DB binding not found'
+				);
 			});
 		});
 	});
