@@ -767,7 +767,7 @@
 			<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
 				<div class="flex items-center gap-3">
 					<h3 class="text-xl font-semibold text-white">
-						Charges ({filteredCharges.length} of {localData.charges.length})
+						Charges ({getFilteredCharges().length} of {localData.charges.length})
 					</h3>
 					{#if selectedCardFilter !== 'all'}
 						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
@@ -791,14 +791,12 @@
 							{/each}
 						</select>
 						{#if selectedCardFilter !== 'all'}
-							<Button
-								variant="secondary"
-								size="sm"
+							<button
 								onclick={() => selectedCardFilter = 'all'}
-								class="whitespace-nowrap"
+								class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
 							>
 								Clear Filter
-							</Button>
+							</button>
 						{/if}
 					</div>
 				</div>
@@ -831,9 +829,9 @@
 			{/if}
 
 			<!-- Mobile-friendly table -->
-			{#if filteredCharges.length > 0}
+			{#if getFilteredCharges().length > 0}
 				<div class="block md:hidden">
-					{#each filteredCharges as charge}
+					{#each getFilteredCharges() as charge}
 						<div class="border-b border-gray-700 py-3 last:border-b-0">
 							<div class="flex justify-between items-start gap-3">
 								<div class="flex-1 min-w-0">
@@ -939,7 +937,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each filteredCharges as charge}
+							{#each getFilteredCharges() as charge}
 								<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
 									<td class="text-gray-300 text-sm py-2">
 										<span
@@ -1035,13 +1033,12 @@
 				<div class="text-center py-8">
 					<div class="text-gray-400 text-lg mb-2">No charges found for this credit card</div>
 					<div class="text-gray-500 text-sm mb-4">Try selecting a different card or clear the filter</div>
-					<Button
-						variant="secondary"
-						size="sm"
+					<button
 						onclick={() => selectedCardFilter = 'all'}
+						class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
 					>
 						Show All Charges
-					</Button>
+					</button>
 				</div>
 			{:else}
 				<div class="text-center py-8">
@@ -1154,7 +1151,7 @@
 					{/each}
 					{#if selectedCardFilter !== 'all'}
 						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
-							Total: ${filteredCharges.reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
+							Total: ${getFilteredCharges().reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
 						</div>
 					{/if}
 				</div>

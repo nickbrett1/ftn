@@ -5,10 +5,11 @@ import BillingCyclePage from '../../src/routes/projects/ccbilling/[id]/+page.sve
 
 // Mock the Button component
 vi.mock('$lib/components/Button.svelte', () => ({
-	default: vi.fn().mockImplementation(({ children, ...props }) => {
+	default: vi.fn().mockImplementation(({ children, onclick, class: className }) => {
 		const button = document.createElement('button');
 		button.textContent = children;
-		Object.assign(button, props);
+		button.onclick = onclick || (() => {});
+		if (className) button.className = className;
 		return button;
 	})
 }));
