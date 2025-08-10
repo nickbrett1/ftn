@@ -36,7 +36,20 @@ export class ChaseParser extends BaseParser {
 			!textUpper.includes('WELLS FARGO') &&
 			!textUpper.includes('BILT');
 
-		return hasChaseIdentifier || hasChaseWord;
+		// Check for Amazon Chase card identifiers
+		const amazonChaseIdentifiers = [
+			'AMAZON REWARDS',
+			'AMAZON PRIME',
+			'AMAZON.COM',
+			'AMAZON CHASE',
+			'CHASE AMAZON'
+		];
+		
+		const hasAmazonChaseIdentifier = amazonChaseIdentifiers.some((identifier) =>
+			textUpper.includes(identifier)
+		);
+
+		return hasChaseIdentifier || hasChaseWord || hasAmazonChaseIdentifier;
 	}
 
 	/**
@@ -69,11 +82,28 @@ export class ChaseParser extends BaseParser {
 	 * @returns {string|null} - Last 4 digits or null
 	 */
 	extractLast4Digits(text) {
-		// Look for "Account Number: XXXX XXXX XXXX 1234" pattern
+		// Look for various account number patterns
 		const patterns = [
+			// Standard Chase patterns
 			/Account Number:\s*XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
 			/Account Number:\s*(\d{4})/i,
-			/XXXX\s+XXXX\s+XXXX\s+(\d{4})/i
+			/XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
+			
+			// More comprehensive patterns from regex validator
+			/(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})/i,
+			
+			// Additional patterns that might be used by Amazon Chase cards
+			/Account.*?(\d{4})/i,
+			/Card.*?(\d{4})/i,
+			/Account Number.*?(\d{4})/i,
+			/Card Number.*?(\d{4})/i,
+			
+			// Pattern for statements that show "ending in XXXX"
+			/ending\s+in\s+(\d{4})/i,
+			
+			// Pattern for masked numbers with asterisks
+			/\*{4}\s*(\d{4})/i,
+			/\*+\s*(\d{4})/i
 		];
 
 		for (const pattern of patterns) {
@@ -92,11 +122,22 @@ export class ChaseParser extends BaseParser {
 	 * @returns {string|null} - Statement date in YYYY-MM-DD format
 	 */
 	extractStatementDate(text) {
-		// Look for "Opening/Closing Date MM/DD/YY - MM/DD/YY" pattern
+		// Look for various date patterns used by Chase statements
 		const patterns = [
+			// Standard Chase patterns
 			/Opening\/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
-			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i
+			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
+			
+			// Additional patterns that might be used by Amazon Chase cards
+			/Billing Cycle\s+(\d{1,2}\/\d{1,2}\/\d{2})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
+			/Billing Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
+			/Statement Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
+			
+			// Patterns with 4-digit years
+			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
+			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
+			/Billing Cycle\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
 		];
 
 		for (const pattern of patterns) {
@@ -104,7 +145,13 @@ export class ChaseParser extends BaseParser {
 			if (match) {
 				// Use the second date (closing date) if two dates are provided
 				const dateStr = match[2] || match[1];
-				return this.parseChaseDate(dateStr);
+				
+				// Check if the date is in 4-digit year format
+				if (dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+					return this.parseChaseDate4Digit(dateStr);
+				} else {
+					return this.parseChaseDate(dateStr);
+				}
 			}
 		}
 
@@ -128,6 +175,28 @@ export class ChaseParser extends BaseParser {
 
 		// Convert 2-digit year to 4-digit year
 		const year = year2Digit < 50 ? 2000 + year2Digit : 1900 + year2Digit;
+
+		if (month < 1 || month > 12 || day < 1 || day > 31) {
+			return null;
+		}
+
+		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+	}
+
+	/**
+	 * Parse Chase date format (MM/DD/YYYY) to YYYY-MM-DD
+	 * @param {string} dateStr - Date string in MM/DD/YYYY format
+	 * @returns {string|null} - Date in YYYY-MM-DD format
+	 */
+	parseChaseDate4Digit(dateStr) {
+		if (!dateStr) return null;
+
+		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		if (!match) return null;
+
+		const month = parseInt(match[1], 10);
+		const day = parseInt(match[2], 10);
+		const year = parseInt(match[3], 10);
 
 		if (month < 1 || month > 12 || day < 1 || day > 31) {
 			return null;
