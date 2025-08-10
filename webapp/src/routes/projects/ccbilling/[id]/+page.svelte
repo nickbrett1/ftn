@@ -113,9 +113,11 @@
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
 
 	// Filtered charges based on selected card
-	$derived.filteredCharges = selectedCardFilter === 'all' 
-		? localData.charges 
-		: localData.charges.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+	function getFilteredCharges() {
+		return selectedCardFilter === 'all' 
+			? localData.charges 
+			: localData.charges.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+	}
 
 	// Card info display state
 	let showCardDetails = $state(false);
@@ -130,7 +132,7 @@
 	function getFilteredAllocationTotals() {
 		const totals = {};
 		
-		filteredCharges.forEach(charge => {
+		getFilteredCharges().forEach(charge => {
 			const allocation = charge.allocated_to || '__unallocated__';
 			totals[allocation] = (totals[allocation] || 0) + charge.amount;
 		});
