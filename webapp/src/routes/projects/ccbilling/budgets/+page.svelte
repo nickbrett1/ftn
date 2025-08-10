@@ -226,7 +226,7 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Budget?</h3>
 				<p class="text-gray-300 mb-6">
-					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be undone.
+					Are you sure you want to delete the budget "<span class="text-truncate inline-block max-w-[200px]" title={budgetToDelete.name}>{budgetToDelete.name}</span>"? This action cannot be undone.
 				</p>
 				{#if deleteError}
 					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">

@@ -959,9 +959,9 @@
 												: formatShortDate(charge.created_at?.split('T')[0])}
 										</span>
 									</td>
-									<td class="text-white py-2">
+									<td class="text-white py-2 max-w-0">
 										<button
-											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
+											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle flex-shrink-0"
 											title="More info about this merchant"
 											aria-label="More info about this merchant"
 											onclick={() => openMerchantInfo(charge.id)}
@@ -977,19 +977,21 @@
 												/>
 											</svg>
 										</button>
-										{#if charge.flight_details}
-											✈️ {formatMerchantName(charge)}
-										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
-										{:else}
-											{formatMerchantName(charge)}
-										{/if}
+										<div class="text-truncate min-w-0" title={formatMerchantName(charge)}>
+											{#if charge.flight_details}
+												✈️ {formatMerchantName(charge)}
+											{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
+												{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+											{:else}
+												{formatMerchantName(charge)}
+											{/if}
+										</div>
 									</td>
-									<td class="text-gray-300 text-sm py-2">
+									<td class="text-gray-300 text-sm py-2 max-w-0">
 										{#if charge.card_name}
-											<span title={`Card: ${charge.card_name}`}>
+											<div class="text-truncate min-w-0" title={`Card: ${charge.card_name}`}>
 												{charge.card_name}
-											</span>
+											</div>
 										{/if}
 									</td>
 									<td class="text-gray-300 text-sm py-2">

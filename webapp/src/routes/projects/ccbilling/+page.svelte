@@ -77,13 +77,15 @@
 									<div class="mt-2 text-sm text-gray-300 space-y-1">
 										{#each getTotalsForCycle(cycle.id) as [allocation, total]}
 											<div class="flex justify-between gap-4">
-												<span class="text-gray-400 flex items-center gap-2">
+												<span class="text-gray-400 flex items-center gap-2 min-w-0 flex-1">
 													{#if allocation !== '__unallocated__' && budgetNameToIcon.get(allocation)}
-														<span aria-hidden="true">{budgetNameToIcon.get(allocation)}</span>
+														<span aria-hidden="true" class="flex-shrink-0">{budgetNameToIcon.get(allocation)}</span>
 													{/if}
-													<span>{allocation === '__unallocated__' ? 'Unallocated' : allocation}</span>
+													<span class="text-truncate min-w-0" title={allocation === '__unallocated__' ? 'Unallocated' : allocation}>
+														{allocation === '__unallocated__' ? 'Unallocated' : allocation}
+													</span>
 												</span>
-												<span class="text-white tabular-nums">{formatCurrency(total)}</span>
+												<span class="text-white tabular-nums flex-shrink-0">{formatCurrency(total)}</span>
 											</div>
 										{/each}
 									</div>
