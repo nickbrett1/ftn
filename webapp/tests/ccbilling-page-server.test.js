@@ -98,47 +98,298 @@ describe('CCBilling Page Server Route', () => {
 			mockRequireUser.mockResolvedValue(null);
 
 			// Mock billing cycle data
-			const mockCycle = {
+			const mockBillingCycle = {
 				id: 123,
 				start_date: '2024-01-01',
-				end_date: '2024-01-31'
+				end_date: '2024-01-31',
+				status: 'active'
 			};
-			mockGetBillingCycle.mockResolvedValue(mockCycle);
+			mockGetBillingCycle.mockResolvedValue(mockBillingCycle);
 
-			// Mock related data
+			// Mock statements data
 			const mockStatements = [
-				{ id: 1, billing_cycle_id: 123, filename: 'statement1.pdf' },
-				{ id: 2, billing_cycle_id: 123, filename: 'statement2.pdf' }
+				{
+					id: 1,
+					filename: 'statement1.pdf',
+					credit_card_id: 1,
+					statement_date: '2024-01-15',
+					parsed: true
+				},
+				{
+					id: 2,
+					filename: 'statement2.pdf',
+					credit_card_id: 2,
+					statement_date: '2024-01-20',
+					parsed: true
+				}
 			];
 			mockListStatements.mockResolvedValue(mockStatements);
 
+			// Mock charges data with credit card information
 			const mockCharges = [
-				{ id: 1, merchant: 'Amazon', amount: 50.0, statement_id: 1 },
-				{ id: 2, merchant: 'Netflix', amount: 15.99, statement_id: 1 }
+				{
+					id: 1,
+					merchant: 'Amazon',
+					amount: 50.00,
+					allocated_to: 'Shopping',
+					credit_card_id: 1,
+					card_name: 'Chase Freedom',
+					transaction_date: '2024-01-10',
+					statement_id: 1
+				},
+				{
+					id: 2,
+					merchant: 'Starbucks',
+					amount: 5.50,
+					allocated_to: 'Food',
+					credit_card_id: 1,
+					card_name: 'Chase Freedom',
+					transaction_date: '2024-01-12',
+					statement_id: 1
+				},
+				{
+					id: 3,
+					merchant: 'Shell',
+					amount: 45.00,
+					allocated_to: 'Transportation',
+					credit_card_id: 2,
+					card_name: 'Amex Gold',
+					transaction_date: '2024-01-15',
+					statement_id: 2
+				}
 			];
 			mockListChargesForCycle.mockResolvedValue(mockCharges);
 
+			// Mock credit cards data
 			const mockCreditCards = [
-				{ id: 1, name: 'Chase Sapphire', last4: '1234' },
+				{ id: 1, name: 'Chase Freedom', last4: '1234' },
 				{ id: 2, name: 'Amex Gold', last4: '5678' }
 			];
 			mockListCreditCards.mockResolvedValue(mockCreditCards);
 
+			// Mock budgets data
+			const mockBudgets = [
+				{ id: 1, name: 'Shopping', icon: '🛍️' },
+				{ id: 2, name: 'Food', icon: '🍕' },
+				{ id: 3, name: 'Transportation', icon: '🚗' }
+			];
+			mockListBudgets.mockResolvedValue(mockBudgets);
+
+			// Call the load function
 			const result = await load(mockEvent);
 
+			// Verify all required data is returned
 			expect(result).toEqual({
 				cycleId: 123,
-				cycle: mockCycle,
+				cycle: mockBillingCycle,
 				statements: mockStatements,
 				charges: mockCharges,
-				creditCards: mockCreditCards
+				creditCards: mockCreditCards,
+				budgets: mockBudgets
 			});
 
-			// Verify all database functions were called with correct parameters
+			// Verify all database functions were called
 			expect(mockGetBillingCycle).toHaveBeenCalledWith(mockEvent, 123);
 			expect(mockListStatements).toHaveBeenCalledWith(mockEvent, 123);
 			expect(mockListChargesForCycle).toHaveBeenCalledWith(mockEvent, 123);
 			expect(mockListCreditCards).toHaveBeenCalledWith(mockEvent);
+			expect(mockListBudgets).toHaveBeenCalledWith(mockEvent);
+		});
+
+		it('should return charges with proper credit card information for filtering', async () => {
+			// Mock successful authentication
+			mockRequireUser.mockResolvedValue(null);
+
+			// Mock billing cycle data
+			mockGetBillingCycle.mockResolvedValue({
+				id: 123,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31',
+				status: 'active'
+			});
+
+			// Mock statements data
+			mockListStatements.mockResolvedValue([
+				{
+					id: 1,
+					filename: 'statement1.pdf',
+					credit_card_id: 1,
+					statement_date: '2024-01-15',
+					parsed: true
+				}
+			]);
+
+			// Mock charges with detailed credit card info
+			const mockCharges = [
+				{
+					id: 1,
+					merchant: 'Amazon',
+					amount: 50.00,
+					allocated_to: 'Shopping',
+					credit_card_id: 1,
+					card_name: 'Chase Freedom',
+					transaction_date: '2024-01-10',
+					statement_id: 1
+				},
+				{
+					id: 2,
+					merchant: 'Starbucks',
+					amount: 5.50,
+					allocated_to: 'Food',
+					credit_card_id: 1,
+					card_name: 'Chase Freedom',
+					transaction_date: '2024-01-12',
+					statement_id: 1
+				}
+			];
+			mockListChargesForCycle.mockResolvedValue(mockCharges);
+
+			// Mock credit cards
+			mockListCreditCards.mockResolvedValue([
+				{ id: 1, name: 'Chase Freedom', last4: '1234' }
+			]);
+
+			// Mock budgets
+			mockListBudgets.mockResolvedValue([
+				{ id: 1, name: 'Shopping', icon: '🛍️' },
+				{ id: 2, name: 'Food', icon: '🍕' }
+			]);
+
+			// Call the load function
+			const result = await load(mockEvent);
+
+			// Verify charges have the required credit card fields for filtering
+			expect(result.charges).toHaveLength(2);
+			expect(result.charges[0]).toHaveProperty('credit_card_id', 1);
+			expect(result.charges[0]).toHaveProperty('card_name', 'Chase Freedom');
+			expect(result.charges[1]).toHaveProperty('credit_card_id', 1);
+			expect(result.charges[1]).toHaveProperty('card_name', 'Chase Freedom');
+
+			// Verify credit cards have the required fields
+			expect(result.creditCards).toHaveLength(1);
+			expect(result.creditCards[0]).toHaveProperty('id', 1);
+			expect(result.creditCards[0]).toHaveProperty('name', 'Chase Freedom');
+			expect(result.creditCards[0]).toHaveProperty('last4', '1234');
+		});
+
+		it('should handle empty charges and credit cards gracefully', async () => {
+			// Mock successful authentication
+			mockRequireUser.mockResolvedValue(null);
+
+			// Mock billing cycle data
+			mockGetBillingCycle.mockResolvedValue({
+				id: 123,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31',
+				status: 'active'
+			});
+
+			// Mock empty statements
+			mockListStatements.mockResolvedValue([]);
+
+			// Mock empty charges
+			mockListChargesForCycle.mockResolvedValue([]);
+
+			// Mock empty credit cards
+			mockListCreditCards.mockResolvedValue([]);
+
+			// Mock empty budgets
+			mockListBudgets.mockResolvedValue([]);
+
+			// Call the load function
+			const result = await load(mockEvent);
+
+			// Verify empty arrays are returned
+			expect(result.charges).toEqual([]);
+			expect(result.creditCards).toEqual([]);
+			expect(result.statements).toEqual([]);
+			expect(result.budgets).toEqual([]);
+		});
+
+		it('should handle multiple credit cards with charges correctly', async () => {
+			// Mock successful authentication
+			mockRequireUser.mockResolvedValue(null);
+
+			// Mock billing cycle data
+			mockGetBillingCycle.mockResolvedValue({
+				id: 123,
+				start_date: '2024-01-01',
+				end_date: '2024-01-31',
+				status: 'active'
+			});
+
+			// Mock statements for multiple cards
+			mockListStatements.mockResolvedValue([
+				{
+					id: 1,
+					filename: 'chase_statement.pdf',
+					credit_card_id: 1,
+					statement_date: '2024-01-15',
+					parsed: true
+				},
+				{
+					id: 2,
+					filename: 'amex_statement.pdf',
+					credit_card_id: 2,
+					statement_date: '2024-01-20',
+					parsed: true
+				}
+			]);
+
+			// Mock charges across multiple cards
+			const mockCharges = [
+				{
+					id: 1,
+					merchant: 'Amazon',
+					amount: 50.00,
+					allocated_to: 'Shopping',
+					credit_card_id: 1,
+					card_name: 'Chase Freedom',
+					transaction_date: '2024-01-10',
+					statement_id: 1
+				},
+				{
+					id: 2,
+					merchant: 'Shell',
+					amount: 45.00,
+					allocated_to: 'Transportation',
+					credit_card_id: 2,
+					card_name: 'Amex Gold',
+					transaction_date: '2024-01-15',
+					statement_id: 2
+				}
+			];
+			mockListChargesForCycle.mockResolvedValue(mockCharges);
+
+			// Mock multiple credit cards
+			mockListCreditCards.mockResolvedValue([
+				{ id: 1, name: 'Chase Freedom', last4: '1234' },
+				{ id: 2, name: 'Amex Gold', last4: '5678' }
+			]);
+
+			// Mock budgets
+			mockListBudgets.mockResolvedValue([
+				{ id: 1, name: 'Shopping', icon: '🛍️' },
+				{ id: 2, name: 'Transportation', icon: '🚗' }
+			]);
+
+			// Call the load function
+			const result = await load(mockEvent);
+
+			// Verify multiple credit cards are returned
+			expect(result.creditCards).toHaveLength(2);
+			expect(result.creditCards[0].id).toBe(1);
+			expect(result.creditCards[1].id).toBe(2);
+
+			// Verify charges are properly associated with cards
+			expect(result.charges).toHaveLength(2);
+			expect(result.charges[0].credit_card_id).toBe(1);
+			expect(result.charges[1].credit_card_id).toBe(2);
+
+			// Verify statements are properly associated with cards
+			expect(result.statements).toHaveLength(2);
+			expect(result.statements[0].credit_card_id).toBe(1);
+			expect(result.statements[1].credit_card_id).toBe(2);
 		});
 
 		it('should handle string cycle ID and convert to integer', async () => {
@@ -183,6 +434,7 @@ describe('CCBilling Page Server Route', () => {
 			mockListStatements.mockResolvedValue([]);
 			mockListChargesForCycle.mockResolvedValue([]);
 			mockListCreditCards.mockResolvedValue([]);
+			mockListBudgets.mockResolvedValue([]);
 
 			const result = await load(mockEvent);
 
@@ -191,7 +443,8 @@ describe('CCBilling Page Server Route', () => {
 				cycle: mockCycle,
 				statements: [],
 				charges: [],
-				creditCards: []
+				creditCards: [],
+				budgets: []
 			});
 		});
 

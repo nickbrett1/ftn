@@ -98,16 +98,47 @@
 	let showDeleteStatementDialog = $state(false);
 	let statementToDelete = $state(null);
 
-	// Card details state for mobile
-	let showCardDetails = $state(false);
-	let selectedCardName = $state('');
-	let isShowingCardInfo = $state(false); // Prevent rapid successive clicks
-
 	// Merchant info state
 	let showMerchantInfo = $state(false);
 	let merchantInfoLoading = $state(false);
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
+
+	// Check if any charges exist for a statement
+	function hasChargesForStatement(statementId) {
+		return localData.charges.some((charge) => charge.statement_id === statementId);
+	}
+
+	// Credit card filter state
+	let selectedCardFilter = $state('all'); // 'all' or credit card ID
+
+	// Filtered charges based on selected card
+	function getFilteredCharges() {
+		return selectedCardFilter === 'all' 
+			? localData.charges 
+			: localData.charges.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+	}
+
+	// Card info display state
+	let showCardDetails = $state(false);
+	let selectedCardName = $state('');
+
+	function showCardInfo(cardName) {
+		selectedCardName = cardName;
+		showCardDetails = true;
+	}
+
+	// Filtered running totals
+	function getFilteredAllocationTotals() {
+		const totals = {};
+		
+		getFilteredCharges().forEach(charge => {
+			const allocation = charge.allocated_to || '__unallocated__';
+			totals[allocation] = (totals[allocation] || 0) + charge.amount;
+		});
+		
+		return Object.entries(totals).sort(([,a], [,b]) => b - a);
+	}
 
 	const linkify = new LinkifyIt();
 	function toSegments(text) {
@@ -187,20 +218,6 @@
 	// Function to check if a statement has been parsed (has associated charges)
 	function isStatementParsed(statementId) {
 		return localData.charges.some((charge) => charge.statement_id === statementId);
-	}
-
-	function showCardInfo(cardName) {
-		// Prevent multiple rapid clicks
-		if (isShowingCardInfo) return;
-
-		isShowingCardInfo = true;
-		selectedCardName = cardName;
-		showCardDetails = true;
-
-		// Reset the flag after a short delay
-		setTimeout(() => {
-			isShowingCardInfo = false;
-		}, 300);
 	}
 
 	async function updateChargeAllocation(chargeId, newAllocation) {
@@ -747,208 +764,288 @@
 	<!-- Charges Section -->
 	{#if localData.charges.length > 0}
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-			<h3 class="text-xl font-semibold text-white mb-4">Charges ({localData.charges.length})</h3>
+			<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+				<div class="flex items-center gap-3">
+					<h3 class="text-xl font-semibold text-white">
+						Charges ({getFilteredCharges().length} of {localData.charges.length})
+					</h3>
+					{#if selectedCardFilter !== 'all'}
+						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
+							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+						</div>
+					{/if}
+				</div>
+				
+				<!-- Credit Card Filter -->
+				<div class="flex items-center gap-3">
+					<label for="card-filter" class="text-gray-300 text-sm font-medium">Filter by card:</label>
+					<div class="flex items-center gap-2">
+						<select
+							id="card-filter"
+							bind:value={selectedCardFilter}
+							class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
+						>
+							<option value="all">All Cards</option>
+							{#each localData.creditCards as card}
+								<option value={card.id}>{card.name} (****{card.last4})</option>
+							{/each}
+						</select>
+						{#if selectedCardFilter !== 'all'}
+							<button
+								onclick={() => selectedCardFilter = 'all'}
+								class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+							>
+								Clear Filter
+							</button>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			<!-- Credit Card Summary (when no filter is active) -->
+			{#if selectedCardFilter === 'all' && localData.creditCards.length > 1}
+				<div class="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+					<h4 class="text-sm font-medium text-gray-300 mb-3">Charges by Credit Card:</h4>
+					<div class="flex flex-wrap gap-3">
+						{#each localData.creditCards as card}
+							{@const cardCharges = localData.charges.filter(charge => charge.credit_card_id === card.id)}
+							{@const cardTotal = cardCharges.reduce((sum, charge) => sum + charge.amount, 0)}
+							{#if cardCharges.length > 0}
+								<button
+									class="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors text-sm"
+									onclick={() => selectedCardFilter = card.id.toString()}
+									title={`Click to filter by ${card.name}`}
+								>
+									<span class="text-white font-medium">{card.name}</span>
+									<span class="text-gray-300">({cardCharges.length})</span>
+									<span class="text-white font-medium {cardTotal < 0 ? 'text-red-400' : ''}">
+										{cardTotal < 0 ? '-' : ''}${Math.abs(cardTotal).toFixed(2)}
+									</span>
+								</button>
+							{/if}
+						{/each}
+					</div>
+				</div>
+			{/if}
 
 			<!-- Mobile-friendly table -->
-			<div class="block md:hidden">
-				{#each localData.charges as charge}
-					<div class="border-b border-gray-700 py-3 last:border-b-0">
-						<div class="flex justify-between items-start gap-3">
-							<div class="flex-1 min-w-0">
-								<div class="text-white font-medium truncate">
-									<button
-										class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
-										title="More info about this merchant"
-										aria-label="More info about this merchant"
-										onclick={() => openMerchantInfo(charge.id)}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 20 20"
-											class="h-5 w-5 block"
-											fill="currentColor"
-										>
-											<path
-												d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
-											/>
-										</svg>
-									</button>
-									{#if charge.flight_details}
-										✈️ {formatMerchantName(charge)}
-									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-										{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
-									{:else}
-										{formatMerchantName(charge)}
-									{/if}
-								</div>
-								<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
-									<span
-										title={charge.transaction_date
-											? formatLocalDate(charge.transaction_date)
-											: formatLocalDate(charge.created_at?.split('T')[0])}
-									>
-										{charge.transaction_date
-											? formatShortDate(charge.transaction_date)
-											: formatShortDate(charge.created_at?.split('T')[0])}
-									</span>
-									{#if charge.card_name}
+			{#if getFilteredCharges().length > 0}
+				<div class="block md:hidden">
+					{#each getFilteredCharges() as charge}
+						<div class="border-b border-gray-700 py-3 last:border-b-0">
+							<div class="flex justify-between items-start gap-3">
+								<div class="flex-1 min-w-0">
+									<div class="text-white font-medium truncate">
 										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											title={`Card: ${charge.card_name}`}
-											onclick={() => showCardInfo(charge.card_name)}
+											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
+											title="More info about this merchant"
+											aria-label="More info about this merchant"
+											onclick={() => openMerchantInfo(charge.id)}
 										>
-											💳
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 20 20"
+												class="h-5 w-5 block"
+												fill="currentColor"
+											>
+												<path
+													d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
+												/>
+											</svg>
 										</button>
-									{/if}
-									<!-- Allocation editing for mobile -->
-									{#if shouldUseRadioButtons}
-										<!-- Radio buttons for small number of budgets -->
-										<div class="flex gap-1">
-											{#each [null, ...budgetNames] as budgetOption}
-												<button
-													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
-													budgetOption
-														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
-													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
-												>
-													{getAllocationIcon(budgetOption, localData.budgets)}
-												</button>
-											{/each}
-										</div>
-									{:else}
-										<!-- Single click button for many budgets -->
-										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-											onclick={() =>
-												updateChargeAllocation(
-													charge.id,
-													getNextAllocation(charge.allocated_to, localData.budgets)
-												)}
+										{#if charge.flight_details}
+											✈️ {formatMerchantName(charge)}
+										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
+											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+										{:else}
+											{formatMerchantName(charge)}
+										{/if}
+									</div>
+									<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
+										<span
+											title={charge.transaction_date
+												? formatLocalDate(charge.transaction_date)
+												: formatLocalDate(charge.created_at?.split('T')[0])}
 										>
-											{getAllocationIcon(charge.allocated_to, localData.budgets)}
-										</button>
-									{/if}
+											{charge.transaction_date
+												? formatShortDate(charge.transaction_date)
+												: formatShortDate(charge.created_at?.split('T')[0])}
+										</span>
+										{#if charge.card_name}
+											<button
+												class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+												title={`Card: ${charge.card_name}`}
+												onclick={() => showCardInfo(charge.card_name)}
+											>
+												💳
+											</button>
+										{/if}
+										<!-- Allocation editing for mobile -->
+										{#if shouldUseRadioButtons}
+											<!-- Radio buttons for small number of budgets -->
+											<div class="flex gap-1">
+												{#each [null, ...budgetNames] as budgetOption}
+													<button
+														class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
+														budgetOption
+															? 'bg-blue-600 text-white'
+															: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+														data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
+														onclick={() => updateChargeAllocation(charge.id, budgetOption)}
+													>
+														{getAllocationIcon(budgetOption, localData.budgets)}
+													</button>
+												{/each}
+											</div>
+										{:else}
+											<!-- Single click button for many budgets -->
+											<button
+												class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+												data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+												onclick={() =>
+													updateChargeAllocation(
+														charge.id,
+														getNextAllocation(charge.allocated_to, localData.budgets)
+													)}
+											>
+												{getAllocationIcon(charge.allocated_to, localData.budgets)}
+											</button>
+										{/if}
+									</div>
 								</div>
-							</div>
-							<div class="text-right flex-shrink-0">
-								<div class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
-									{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
+								<div class="text-right flex-shrink-0">
+									<div class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
+										{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
 
-			<!-- Desktop table -->
-			<div class="hidden md:block overflow-x-auto">
-				<table class="w-full">
-					<thead>
-						<tr class="border-b border-gray-600">
-							<th class="text-left text-gray-300 font-medium pb-2">Date</th>
-							<th class="text-left text-gray-300 font-medium pb-2">Merchant</th>
-							<th class="text-left text-gray-300 font-medium pb-2">Card</th>
-							<th class="text-left text-gray-300 font-medium pb-2">Allocation</th>
-							<th class="text-right text-gray-300 font-medium pb-2">Amount</th>
-							<th class="text-left text-gray-300 font-medium pb-2">Currency</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each localData.charges as charge}
-							<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
-								<td class="text-gray-300 text-sm py-2">
-									<span
-										title={charge.transaction_date
-											? formatLocalDate(charge.transaction_date)
-											: formatLocalDate(charge.created_at?.split('T')[0])}
-									>
-										{charge.transaction_date
-											? formatShortDate(charge.transaction_date)
-											: formatShortDate(charge.created_at?.split('T')[0])}
-									</span>
-								</td>
-								<td class="text-white py-2">
-									<button
-										class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
-										title="More info about this merchant"
-										aria-label="More info about this merchant"
-										onclick={() => openMerchantInfo(charge.id)}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 20 20"
-											class="h-5 w-5 block"
-											fill="currentColor"
-										>
-											<path
-												d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
-											/>
-										</svg>
-									</button>
-									{#if charge.flight_details}
-										✈️ {formatMerchantName(charge)}
-									{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-										{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
-									{:else}
-										{formatMerchantName(charge)}
-									{/if}
-								</td>
-								<td class="text-gray-300 text-sm py-2">
-									{#if charge.card_name}
-										<span title={`Card: ${charge.card_name}`}>
-											{charge.card_name}
-										</span>
-									{/if}
-								</td>
-								<td class="text-gray-300 text-sm py-2">
-									<!-- Allocation editing for desktop -->
-									{#if shouldUseRadioButtons}
-										<!-- Radio buttons for small number of budgets -->
-										<div class="flex gap-1">
-											{#each [null, ...budgetNames] as budgetOption}
-												<button
-													class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
-													budgetOption
-														? 'bg-blue-600 text-white'
-														: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-													data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
-													onclick={() => updateChargeAllocation(charge.id, budgetOption)}
-												>
-													{getAllocationIcon(budgetOption, localData.budgets)}
-												</button>
-											{/each}
-										</div>
-									{:else}
-										<!-- Single click button for many budgets -->
-										<button
-											class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-											data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-											onclick={() =>
-												updateChargeAllocation(
-													charge.id,
-													getNextAllocation(charge.allocated_to, localData.budgets)
-												)}
-										>
-											{getAllocationIcon(charge.allocated_to, localData.budgets)}
-										</button>
-									{/if}
-								</td>
-								<td class="text-right py-2">
-									<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
-										{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
-									</span>
-								</td>
-								<td class="text-gray-300 text-sm py-2">
-									<!-- Currency column - now integrated into merchant name -->
-								</td>
+				<!-- Desktop table -->
+				<div class="hidden md:block overflow-x-auto">
+					<table class="w-full">
+						<thead>
+							<tr class="border-b border-gray-600">
+								<th class="text-left text-gray-300 font-medium pb-2">Date</th>
+								<th class="text-left text-gray-300 font-medium pb-2">Merchant</th>
+								<th class="text-left text-gray-300 font-medium pb-2">Card</th>
+								<th class="text-left text-gray-300 font-medium pb-2">Allocation</th>
+								<th class="text-right text-gray-300 font-medium pb-2">Amount</th>
+								<th class="text-left text-gray-300 font-medium pb-2">Currency</th>
 							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+						</thead>
+						<tbody>
+							{#each getFilteredCharges() as charge}
+								<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
+									<td class="text-gray-300 text-sm py-2">
+										<span
+											title={charge.transaction_date
+												? formatLocalDate(charge.transaction_date)
+												: formatLocalDate(charge.created_at?.split('T')[0])}
+										>
+											{charge.transaction_date
+												? formatShortDate(charge.transaction_date)
+												: formatShortDate(charge.created_at?.split('T')[0])}
+										</span>
+									</td>
+									<td class="text-white py-2">
+										<button
+											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
+											title="More info about this merchant"
+											aria-label="More info about this merchant"
+											onclick={() => openMerchantInfo(charge.id)}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 20 20"
+												class="h-5 w-5 block"
+												fill="currentColor"
+											>
+												<path
+													d="M10 2a8 8 0 1 0 .001 16.001A8 8 0 0 0 10 2Zm0 4.75a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75ZM9 9.5a1 1 0 1 1 2 0v4a1 1 0 1 1-2 0v-4z"
+												/>
+											</svg>
+										</button>
+										{#if charge.flight_details}
+											✈️ {formatMerchantName(charge)}
+										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
+											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+										{:else}
+											{formatMerchantName(charge)}
+										{/if}
+									</td>
+									<td class="text-gray-300 text-sm py-2">
+										{#if charge.card_name}
+											<span title={`Card: ${charge.card_name}`}>
+												{charge.card_name}
+											</span>
+										{/if}
+									</td>
+									<td class="text-gray-300 text-sm py-2">
+										<!-- Allocation editing for desktop -->
+										{#if shouldUseRadioButtons}
+											<!-- Radio buttons for small number of budgets -->
+											<div class="flex gap-1">
+												{#each [null, ...budgetNames] as budgetOption}
+													<button
+														class="p-1 text-sm rounded transition-colors {charge.allocated_to ===
+														budgetOption
+															? 'bg-blue-600 text-white'
+															: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+														data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
+														onclick={() => updateChargeAllocation(charge.id, budgetOption)}
+													>
+														{getAllocationIcon(budgetOption, localData.budgets)}
+													</button>
+												{/each}
+											</div>
+										{:else}
+											<!-- Single click button for many budgets -->
+											<button
+												class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+												data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+												onclick={() =>
+													updateChargeAllocation(
+														charge.id,
+														getNextAllocation(charge.allocated_to, localData.budgets)
+													)}
+											>
+												{getAllocationIcon(charge.allocated_to, localData.budgets)}
+											</button>
+										{/if}
+									</td>
+									<td class="text-right py-2">
+										<span class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
+											{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
+										</span>
+									</td>
+									<td class="text-gray-300 text-sm py-2">
+										<!-- Currency column - now integrated into merchant name -->
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{:else if selectedCardFilter !== 'all'}
+				<div class="text-center py-8">
+					<div class="text-gray-400 text-lg mb-2">No charges found for this credit card</div>
+					<div class="text-gray-500 text-sm mb-4">Try selecting a different card or clear the filter</div>
+					<button
+						onclick={() => selectedCardFilter = 'all'}
+						class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
+					>
+						Show All Charges
+					</button>
+				</div>
+			{:else}
+				<div class="text-center py-8">
+					<div class="text-gray-400 text-lg">No charges found</div>
+					<div class="text-gray-500 text-sm">Upload and parse statements to see charges</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 
@@ -1027,9 +1124,16 @@
 	<div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-40">
 		<div class="container mx-auto max-w-6xl">
 			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div class="text-white font-medium">Running Totals:</div>
+				<div class="flex items-center gap-4">
+					<div class="text-white font-medium">Running Totals:</div>
+					{#if selectedCardFilter !== 'all'}
+						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
+							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+						</div>
+					{/if}
+				</div>
 				<div class="flex flex-wrap items-center gap-4">
-					{#each getSortedAllocationTotals() as [allocation, total]}
+					{#each getFilteredAllocationTotals() as [allocation, total]}
 						<div class="flex items-center gap-2">
 							<span class="text-lg"
 								>{getAllocationIcon(
@@ -1045,6 +1149,11 @@
 							</span>
 						</div>
 					{/each}
+					{#if selectedCardFilter !== 'all'}
+						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
+							Total: ${getFilteredCharges().reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
