@@ -438,6 +438,10 @@
 				throw new Error(errorData.error || 'Failed to delete statement');
 			}
 
+			// Remove the deleted statement from local state
+			localData.statements = localData.statements.filter(statement => statement.id !== statementId);
+			localData.charges = localData.charges.filter(charge => charge.statement_id !== statementId);
+
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
 		} catch (err) {
