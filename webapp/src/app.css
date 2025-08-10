@@ -95,3 +95,5 @@ main a:not([class*='text-']):not(.not-prose):hover,
 .animate-border {
 	animation: var(--animate-border);
 }
+
+

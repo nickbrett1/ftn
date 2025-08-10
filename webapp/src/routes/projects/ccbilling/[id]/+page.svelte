@@ -564,7 +564,7 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Statement?</h3>
 				<p class="text-gray-300 mb-2">
-					Are you sure you want to delete "{statementToDelete.filename}"?
+					Are you sure you want to delete "<span class="truncate block min-w-0 max-w-full" title={statementToDelete.filename}>{statementToDelete.filename}</span>"?
 				</p>
 				<p class="text-gray-400 text-sm mb-6">
 					This will also delete all associated charges. This action cannot be undone.
@@ -662,9 +662,9 @@
 								class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
 							/>
 							<div
-								class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300 gap-2"
+								class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300 gap-2 w-full"
 							>
-								<span class="truncate flex-1">
+								<span class="truncate flex-1 min-w-0 text-sm max-w-full" title={selectedFile ? selectedFile.name : ''}>
 									{selectedFile ? selectedFile.name : 'Choose a PDF file...'}
 								</span>
 								<Button
@@ -701,14 +701,17 @@
 					{@const card = data.creditCards.find((c) => c.id === statement.credit_card_id)}
 					<div class="bg-gray-700 border border-gray-600 rounded-lg p-4">
 						<div
-							class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+							class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full"
 						>
-							<div class="flex-1">
+							<div class="flex-1 min-w-0">
 								<h4 class="text-white font-medium">
 									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
 								</h4>
 								<p class="text-gray-400 text-sm">
-									{statement.filename}{statement.statement_date
+									<span class="truncate block min-w-0 max-w-full" title={statement.filename}>
+										{statement.filename}
+									</span>
+									{statement.statement_date
 										? ` • Statement Date: ${formatLocalDate(statement.statement_date)}`
 										: ''}
 								</p>
