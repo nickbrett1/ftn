@@ -20,7 +20,7 @@ describe('MerchantPicker', () => {
 	});
 
 	it('should render merchants dropdown when data is loaded', async () => {
-		const mockMerchants = ['Amazon', 'Walmart', 'Target'];
+		const mockMerchants = ['Walmart', 'Target', 'Grocery Store'];
 		fetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => mockMerchants
@@ -31,9 +31,9 @@ describe('MerchantPicker', () => {
 		// Wait for async data loading
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		expect(container.innerHTML).toContain('Amazon');
 		expect(container.innerHTML).toContain('Walmart');
 		expect(container.innerHTML).toContain('Target');
+		expect(container.innerHTML).toContain('Grocery Store');
 	});
 
 	it('should render error state when API call fails', async () => {
@@ -62,7 +62,7 @@ describe('MerchantPicker', () => {
 	});
 
 	it('should call onSelect when merchant is selected', async () => {
-		const mockMerchants = ['Amazon', 'Walmart'];
+		const mockMerchants = ['Walmart', 'Grocery Store'];
 		const mockOnSelect = vi.fn();
 
 		fetch.mockResolvedValueOnce({
@@ -75,12 +75,12 @@ describe('MerchantPicker', () => {
 		// Wait for async data loading
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		expect(container.innerHTML).toContain('Amazon');
 		expect(container.innerHTML).toContain('Walmart');
+		expect(container.innerHTML).toContain('Grocery Store');
 	});
 
 it('renders dropdown with merchants only (no manual entry)', async () => {
-    const mockMerchants = ['Amazon'];
+    const mockMerchants = ['Grocery Store'];
     fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockMerchants
@@ -91,7 +91,7 @@ it('renders dropdown with merchants only (no manual entry)', async () => {
     // Wait for async data loading
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(container.innerHTML).toContain('Amazon');
+    expect(container.innerHTML).toContain('Grocery Store');
     expect(container.innerHTML).not.toContain('Enter manually');
 });
 });

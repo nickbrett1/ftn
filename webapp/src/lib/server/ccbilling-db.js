@@ -515,6 +515,7 @@ export async function getUnassignedMerchants(event) {
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
 	// Get all unique merchants from payments that don't have an allocated_to budget
+	// Exclude Amazon merchants as they typically have diverse transactions that don't fit single budgets
 	const { results } = await db
 		.prepare(
 			`
@@ -522,6 +523,7 @@ export async function getUnassignedMerchants(event) {
             FROM payment p
             LEFT JOIN budget_merchant bm ON bm.merchant = p.merchant
             WHERE bm.merchant IS NULL
+              AND p.merchant NOT LIKE '%Amazon%'
             ORDER BY p.merchant ASC
         `
 		)
