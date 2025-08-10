@@ -15,7 +15,6 @@
 	const { budget = null, merchants = [] } = data;
 
 	// Add merchant state
-	let showAddForm = $state(false);
 	let selectedMerchant = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
@@ -72,7 +71,6 @@
 
 			// Reset form and refresh data
 			selectedMerchant = '';
-			showAddForm = false;
 			window.location.reload();
 		} catch (error) {
 			addError = 'Network error occurred';
@@ -109,12 +107,6 @@
 			deletingMerchant = null;
 			isDeleting = false;
 		}
-	}
-
-	function cancelAdd() {
-		showAddForm = false;
-		selectedMerchant = '';
-		addError = '';
 	}
 
 	function validateBudgetNameAndIcon(name, icon) {
@@ -255,37 +247,32 @@
 		</p>
 
 		<!-- Add Merchant Form -->
-		{#if showAddForm}
-			<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
-				<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
-				<div class="space-y-4">
-					<div>
-						<MerchantPicker
-							{selectedMerchant}
-							onSelect={(merchant) => (selectedMerchant = merchant)}
-							placeholder="Choose a merchant to assign to this budget..."
-						/>
-					</div>
-					{#if addError}
-						<p class="text-red-400 text-sm">{addError}</p>
-					{/if}
-					<div class="flex space-x-2">
-						<Button
-							onclick={addMerchant}
-							variant="success"
-							size="md"
-							disabled={isAdding}
-							style="cursor: pointer;"
-						>
-							{isAdding ? 'Adding...' : 'Add Merchant'}
-						</Button>
-						<Button onclick={cancelAdd} variant="secondary" size="md" style="cursor: pointer;">
-							Cancel
-						</Button>
-					</div>
+		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+			<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
+			<div class="space-y-4">
+				<div>
+					<MerchantPicker
+						{selectedMerchant}
+						onSelect={(merchant) => (selectedMerchant = merchant)}
+						placeholder="Choose a merchant to assign to this budget..."
+					/>
+				</div>
+				{#if addError}
+					<p class="text-red-400 text-sm">{addError}</p>
+				{/if}
+				<div class="flex space-x-2">
+					<Button
+						onclick={addMerchant}
+						variant="success"
+						size="md"
+						disabled={isAdding}
+						style="cursor: pointer;"
+					>
+						{isAdding ? 'Adding...' : 'Add Merchant'}
+					</Button>
 				</div>
 			</div>
-		{/if}
+		</div>
 
 		<!-- Merchants List -->
 		{#if merchants.length === 0}
@@ -322,20 +309,6 @@
 						</div>
 					{/each}
 				</div>
-			</div>
-		{/if}
-
-		<!-- Add Merchant Button -->
-		{#if !showAddForm}
-			<div class="mt-6">
-				<Button
-					onclick={() => (showAddForm = true)}
-					variant="success"
-					size="lg"
-					style="cursor: pointer;"
-				>
-					Add Merchant
-				</Button>
 			</div>
 		{/if}
 	</div>
