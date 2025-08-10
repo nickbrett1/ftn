@@ -704,9 +704,11 @@
 							class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
 						>
 							<div class="flex-1">
-								<h4 class="text-white font-medium">{statement.filename}</h4>
+								<h4 class="text-white font-medium">
+									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
+								</h4>
 								<p class="text-gray-400 text-sm">
-									{card ? `${card.name} (****${card.last4})` : ''}{statement.statement_date
+									{statement.filename}{statement.statement_date
 										? ` • Statement Date: ${formatLocalDate(statement.statement_date)}`
 										: ''}
 								</p>
