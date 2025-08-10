@@ -244,7 +244,7 @@ export async function listStatements(event, billing_cycle_id) {
 			FROM statement s
 			LEFT JOIN credit_card cc ON s.credit_card_id = cc.id
 			WHERE s.billing_cycle_id = ?
-			ORDER BY s.uploaded_at DESC
+			ORDER BY cc.name ASC, s.uploaded_at DESC
 		`
 		)
 		.bind(billing_cycle_id)
