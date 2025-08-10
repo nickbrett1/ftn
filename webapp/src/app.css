@@ -96,4 +96,30 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	animation: var(--animate-border);
 }
 
+/* Ensure proper text truncation for long filenames */
+.text-truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Ensure flex containers properly constrain their children */
+.flex-1.min-w-0 {
+	overflow: hidden;
+}
+
+/* Ensure table cells handle long text properly */
+td {
+	max-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Allow specific columns to wrap if needed */
+td.allow-wrap {
+	white-space: normal;
+	word-wrap: break-word;
+}
+
 

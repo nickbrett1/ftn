@@ -166,8 +166,8 @@
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
 					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center cursor-pointer hover:bg-gray-700" onclick={() => goToCardDetail(card)}>
-						<div>
-							<p class="text-white font-semibold text-lg">{card.name}</p>
+						<div class="flex-1 min-w-0">
+							<p class="text-white font-semibold text-lg text-truncate" title={card.name}>{card.name}</p>
 							<p class="text-gray-400 text-sm">****{card.last4}</p>
 						</div>
 					</div>

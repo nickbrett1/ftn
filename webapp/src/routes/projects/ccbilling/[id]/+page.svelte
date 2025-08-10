@@ -564,7 +564,7 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Statement?</h3>
 				<p class="text-gray-300 mb-2">
-					Are you sure you want to delete "<span class="truncate block min-w-0 max-w-full" title={statementToDelete.filename}>{statementToDelete.filename}</span>"?
+					Are you sure you want to delete "<span class="text-truncate block min-w-0 max-w-full" title={statementToDelete.filename}>{statementToDelete.filename}</span>"?
 				</p>
 				<p class="text-gray-400 text-sm mb-6">
 					This will also delete all associated charges. This action cannot be undone.
@@ -664,7 +664,7 @@
 							<div
 								class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300 gap-2 w-full"
 							>
-								<span class="truncate flex-1 min-w-0 text-sm max-w-full" title={selectedFile ? selectedFile.name : ''}>
+								<span class="text-truncate flex-1 min-w-0 text-sm max-w-full" title={selectedFile ? selectedFile.name : ''}>
 									{selectedFile ? selectedFile.name : 'Choose a PDF file...'}
 								</span>
 								<Button
@@ -703,18 +703,18 @@
 						<div
 							class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full"
 						>
-							<div class="flex-1 min-w-0">
+							<div class="flex-1 min-w-0 overflow-hidden">
 								<h4 class="text-white font-medium">
 									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
 								</h4>
-								<p class="text-gray-400 text-sm">
-									<span class="truncate block min-w-0 max-w-full" title={statement.filename}>
+								<div class="text-gray-400 text-sm space-y-1 overflow-hidden">
+									<div class="text-truncate min-w-0" title={statement.filename}>
 										{statement.filename}
-									</span>
+									</div>
 									{statement.statement_date
-										? ` • Statement Date: ${formatLocalDate(statement.statement_date)}`
+										? <div class="text-gray-400 text-sm">Statement Date: {formatLocalDate(statement.statement_date)}</div>
 										: ''}
-								</p>
+								</div>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
@@ -780,7 +780,7 @@
 					</h3>
 					{#if selectedCardFilter !== 'all'}
 						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
-							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+							Filtered by: <span class="text-truncate inline-block max-w-[150px]" title={localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}>{localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}</span>
 						</div>
 					{/if}
 				</div>
@@ -825,7 +825,7 @@
 									onclick={() => selectedCardFilter = card.id.toString()}
 									title={`Click to filter by ${card.name}`}
 								>
-									<span class="text-white font-medium">{card.name}</span>
+									<span class="text-white font-medium text-truncate" title={card.name}>{card.name}</span>
 									<span class="text-gray-300">({cardCharges.length})</span>
 									<span class="text-white font-medium {cardTotal < 0 ? 'text-red-400' : ''}">
 										{cardTotal < 0 ? '-' : ''}${Math.abs(cardTotal).toFixed(2)}
@@ -844,7 +844,7 @@
 						<div class="border-b border-gray-700 py-3 last:border-b-0">
 							<div class="flex justify-between items-start gap-3">
 								<div class="flex-1 min-w-0">
-									<div class="text-white font-medium truncate">
+									<div class="text-white font-medium text-truncate">
 										<button
 											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
 											title="More info about this merchant"
@@ -1066,7 +1066,7 @@
 			<div class="bg-gray-800 border border-gray-600 rounded-lg p-4 mx-4 max-w-sm w-full">
 				<div class="text-center">
 					<div class="text-2xl mb-2">💳</div>
-					<div class="text-white font-medium">{selectedCardName}</div>
+					<div class="text-white font-medium text-truncate" title={selectedCardName}>{selectedCardName}</div>
 					<div class="text-gray-400 text-sm mt-1">Card Details</div>
 				</div>
 				<div class="mt-4 flex justify-center">
@@ -1137,7 +1137,7 @@
 					<div class="text-white font-medium">Running Totals:</div>
 					{#if selectedCardFilter !== 'all'}
 						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
-							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+							Filtered by: <span class="text-truncate inline-block max-w-[150px]" title={localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}>{localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}</span>
 						</div>
 					{/if}
 				</div>

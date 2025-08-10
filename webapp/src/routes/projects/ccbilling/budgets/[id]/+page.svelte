@@ -303,8 +303,8 @@
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
-							<div>
-								<p class="text-white font-medium">{merchant.merchant}</p>
+							<div class="flex-1 min-w-0">
+								<p class="text-white font-medium text-truncate" title={merchant.merchant}>{merchant.merchant}</p>
 								<p class="text-gray-400 text-sm">
 									Charges from this merchant will be auto-assigned to "{budget?.name ||
 										'this budget'}"

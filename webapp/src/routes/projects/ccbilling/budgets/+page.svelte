@@ -195,8 +195,8 @@
 							{#if budget.icon}
 								<span class="text-2xl">{budget.icon}</span>
 							{/if}
-							<div>
-								<div class="text-lg font-semibold text-white">{budget.name}</div>
+							<div class="flex-1 min-w-0">
+								<div class="text-lg font-semibold text-white text-truncate" title={budget.name}>{budget.name}</div>
 							</div>
 						</div>
 					</a>
