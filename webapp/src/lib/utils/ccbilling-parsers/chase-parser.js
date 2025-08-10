@@ -148,8 +148,31 @@ export class ChaseParser extends BaseParser {
 			.map((line) => line.trim())
 			.filter((line) => line.length > 0);
 
+		// Flag to track if we're in the SHOP WITH POINTS ACTIVITY section
+		let inShopWithPointsSection = false;
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
+
+			// Check if we're entering the SHOP WITH POINTS ACTIVITY section
+			if (line.toUpperCase().includes('SHOP WITH POINTS ACTIVITY')) {
+				inShopWithPointsSection = true;
+				continue;
+			}
+
+			// Check if we're exiting the SHOP WITH POINTS ACTIVITY section
+			// Look for the next major section header
+			if (inShopWithPointsSection) {
+				if (line.toUpperCase().includes('ACCOUNT ACTIVITY') || 
+					line.toUpperCase().includes('INTEREST CHARGES') ||
+					line.toUpperCase().includes('YOUR ACCOUNT MESSAGES') ||
+					line.toUpperCase().includes('ACCOUNT SUMMARY')) {
+					inShopWithPointsSection = false;
+				} else {
+					// Skip all lines while in this section
+					continue;
+				}
+			}
 
 			// Look for date pattern at the start of a line (MM/DD)
 			const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);

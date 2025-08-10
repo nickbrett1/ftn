@@ -177,6 +177,38 @@ describe('ChaseParser', () => {
 			expect(charges).toHaveLength(2);
 			expect(charges.every((c) => c.merchant.length >= 2)).toBe(true);
 		});
+
+		it('should skip SHOP WITH POINTS ACTIVITY section', () => {
+			const text = `
+				01/15 AMAZON.COM 123.45
+				01/16 WALMART 67.89
+				SHOP WITH POINTS ACTIVITY
+				Date of
+				Transaction Merchant Name or Transaction Description $ Amount Rewards
+				05/26 AMAZON.COM AMZN.COM/BILLWA 15.67 1,567
+				05/26 AMAZON.COM AMZN.COM/BILLWA 5.40 540
+				05/27 AMAZON.COM AMZN.COM/BILLWA 12.43 1,243
+				ACCOUNT ACTIVITY
+				01/17 TARGET 45.67
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(3);
+			
+			// Should include the charges before and after the SHOP WITH POINTS section
+			expect(charges[0].merchant).toBe('AMAZON.COM');
+			expect(charges[0].amount).toBe(123.45);
+			expect(charges[1].merchant).toBe('WALMART');
+			expect(charges[1].amount).toBe(67.89);
+			expect(charges[2].merchant).toBe('TARGET');
+			expect(charges[2].amount).toBe(45.67);
+			
+			// Should NOT include any of the point redemption amounts
+			const pointRedemptionAmounts = [15.67, 5.40, 12.43];
+			pointRedemptionAmounts.forEach(amount => {
+				expect(charges.some(c => c.amount === amount)).toBe(false);
+			});
+		});
 	});
 
 	describe('isLikelyForeignTransaction', () => {
