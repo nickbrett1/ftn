@@ -787,7 +787,7 @@
 						>
 							<option value="all">All Cards</option>
 							{#each localData.creditCards as card}
-								<option value={card.id}>{card.name} (****{card.last4})</option>
+								<option value={card.id.toString()}>{card.name} (****{card.last4})</option>
 							{/each}
 						</select>
 						{#if selectedCardFilter !== 'all'}
