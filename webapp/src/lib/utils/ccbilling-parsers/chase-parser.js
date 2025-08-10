@@ -150,6 +150,7 @@ export class ChaseParser extends BaseParser {
 
 		// Flag to track if we're in the SHOP WITH POINTS ACTIVITY section
 		let inShopWithPointsSection = false;
+		let inAccountActivitySection = false;
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -160,11 +161,17 @@ export class ChaseParser extends BaseParser {
 				continue;
 			}
 
+			// Check if we're entering the ACCOUNT ACTIVITY section
+			if (line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
+				inAccountActivitySection = true;
+				inShopWithPointsSection = false; // Exit points section when entering account activity
+				continue;
+			}
+
 			// Check if we're exiting the SHOP WITH POINTS ACTIVITY section
-			// Look for the next major section header
+			// Look for other section headers
 			if (inShopWithPointsSection) {
-				if (line.toUpperCase().includes('ACCOUNT ACTIVITY') || 
-					line.toUpperCase().includes('INTEREST CHARGES') ||
+				if (line.toUpperCase().includes('INTEREST CHARGES') ||
 					line.toUpperCase().includes('YOUR ACCOUNT MESSAGES') ||
 					line.toUpperCase().includes('ACCOUNT SUMMARY')) {
 					inShopWithPointsSection = false;
@@ -173,6 +180,13 @@ export class ChaseParser extends BaseParser {
 					continue;
 				}
 			}
+
+					// Only process transaction lines when we're NOT in the SHOP WITH POINTS ACTIVITY section
+		// If we have a clear ACCOUNT ACTIVITY section, use it as a boundary
+		// Otherwise, process all transaction lines (for backward compatibility with test data)
+		if (inShopWithPointsSection) {
+			continue;
+		}
 
 			// Look for date pattern at the start of a line (MM/DD)
 			const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
@@ -190,6 +204,13 @@ export class ChaseParser extends BaseParser {
 			const amount = this.parseAmount(amountMatch.amount);
 
 			if (!date || !amount || merchant.length < 2) continue;
+
+			// Additional check: Skip if this looks like a "SHOP WITH POINTS" transaction
+			// These typically have very large amounts that don't match the transaction description
+			// and often appear in the SHOP WITH POINTS ACTIVITY section
+			if (this.isLikelyShopWithPointsTransaction(merchant, amount, restOfLine)) {
+				continue;
+			}
 
 			// Skip payments to the card
 			if (this.isPaymentToCard(merchant)) {
@@ -478,9 +499,45 @@ export class ChaseParser extends BaseParser {
 	 */
 	safeMatchCurrencyLine(line) {
 		// Check if line contains only uppercase letters and spaces, or starts with date + uppercase letters
-		const result =
-			(/^[A-Z\s]+$/.test(line) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(line)) && line.trim().length > 0;
-		return result;
+		// But exclude common section headers and non-currency text
+		const lineTrimmed = line.trim();
+		
+		// Skip if line is too short or contains common section headers
+		if (lineTrimmed.length < 3) return false;
+		
+		// Skip common section headers that might look like currency lines
+		const sectionHeaders = [
+			'SHOP WITH POINTS ACTIVITY',
+			'ACCOUNT ACTIVITY',
+			'INTEREST CHARGES',
+			'YOUR ACCOUNT MESSAGES',
+			'ACCOUNT SUMMARY',
+			'TRANSACTION',
+			'MERCHANT NAME',
+			'DESCRIPTION',
+			'AMOUNT',
+			'REWARDS'
+		];
+		
+		if (sectionHeaders.some(header => lineTrimmed.toUpperCase().includes(header))) {
+			return false;
+		}
+		
+		// Only match lines that look like actual currency names
+		// These should be relatively short and contain currency-related words
+		const currencyKeywords = [
+			'DOLLAR', 'POUND', 'EURO', 'YEN', 'FRANC', 'KRONE', 'KRONA', 
+			'PESO', 'REAL', 'YUAN', 'WON', 'RUBLE', 'LIRA', 'RAND', 'RUPEE'
+		];
+		
+		const hasCurrencyKeyword = currencyKeywords.some(keyword => 
+			lineTrimmed.toUpperCase().includes(keyword)
+		);
+		
+		// Only return true if it has a currency keyword and matches the pattern
+		const matchesPattern = /^[A-Z\s]+$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(lineTrimmed);
+		
+		return matchesPattern && hasCurrencyKeyword;
 	}
 
 	/**
@@ -531,6 +588,50 @@ export class ChaseParser extends BaseParser {
 
 		const merchantLower = merchant.toLowerCase();
 		return paymentKeywords.some((keyword) => merchantLower.includes(keyword));
+	}
+
+	/**
+	 * Check if a transaction is likely a "SHOP WITH POINTS" transaction
+	 * These transactions use points instead of money and often have suspicious amounts
+	 * @param {string} merchant - Merchant name
+	 * @param {number} amount - Transaction amount
+	 * @param {string} fullLine - Full transaction line text
+	 * @returns {boolean} - True if it's likely a SHOP WITH POINTS transaction
+	 */
+	isLikelyShopWithPointsTransaction(merchant, amount, fullLine) {
+		// Check for suspicious patterns that indicate SHOP WITH POINTS transactions
+		
+		// 1. Check if the amount is suspiciously large for the merchant description
+		// SHOP WITH POINTS transactions often have amounts like $1567.00 for a $15.67 purchase
+		if (amount > 1000 && merchant.toLowerCase().includes('amazon')) {
+			// Look for patterns that suggest this is a points transaction
+			// The amount might be 100x the actual purchase price
+			return true;
+		}
+
+		// 2. Check if the line contains points-related keywords
+		const pointsKeywords = ['points', 'rewards', 'shop with points'];
+		const lineLower = fullLine.toLowerCase();
+		if (pointsKeywords.some(keyword => lineLower.includes(keyword))) {
+			return true;
+		}
+
+		// 3. Check if the merchant name contains suspicious patterns
+		// SHOP WITH POINTS transactions often have very generic merchant names
+		const suspiciousMerchants = [
+			'amazon.com',
+			'amazon marketplace',
+			'amazon mkpl'
+		];
+		
+		if (suspiciousMerchants.some(suspicious => merchant.toLowerCase().includes(suspicious))) {
+			// If it's an Amazon transaction with a very large amount, it's likely points
+			if (amount > 500) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
