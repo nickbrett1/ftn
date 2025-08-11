@@ -186,7 +186,6 @@ describe('ccbilling-db functions', () => {
 				expect(result).toEqual(mockCycle);
 			});
 		});
-
 	});
 
 	describe('Budget Functions', () => {
@@ -267,9 +266,9 @@ describe('ccbilling-db functions', () => {
 				await addBudgetMerchant(mockEvent, 1, 'Amazon');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO budget_merchant (budget_id, merchant) VALUES (?, ?)'
+					'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 'Amazon');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
@@ -281,7 +280,7 @@ describe('ccbilling-db functions', () => {
 				await removeBudgetMerchant(mockEvent, 1, 'Amazon');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'DELETE FROM budget_merchant WHERE budget_id = ? AND merchant = ?'
+					'DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon');
 				expect(mockDb.run).toHaveBeenCalled();
@@ -291,15 +290,15 @@ describe('ccbilling-db functions', () => {
 		describe('getBudgetMerchants', () => {
 			it('should return merchants for a budget', async () => {
 				const mockMerchants = [
-					{ id: 1, budget_id: 1, merchant: 'Amazon' },
-					{ id: 2, budget_id: 1, merchant: 'Target' }
+					{ id: 1, budget_id: 1, merchant_normalized: 'Amazon', merchant: 'Amazon' },
+					{ id: 2, budget_id: 1, merchant_normalized: 'Target', merchant: 'Target' }
 				];
 				mockDb.all.mockResolvedValue({ results: mockMerchants });
 
 				const result = await getBudgetMerchants(mockEvent, 1);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant ASC'
+					'SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant_normalized ASC'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
 				expect(result).toEqual(mockMerchants);
@@ -309,19 +308,19 @@ describe('ccbilling-db functions', () => {
 		describe('getUnassignedMerchants', () => {
 			it('should return unassigned merchants excluding Amazon', async () => {
 				const mockMerchants = [
-					{ merchant: 'Walmart' },
-					{ merchant: 'Target' },
-					{ merchant: 'Grocery Store' }
+					{ merchant_normalized: 'Walmart' },
+					{ merchant_normalized: 'Target' },
+					{ merchant_normalized: 'Grocery Store' }
 				];
 				mockDb.all.mockResolvedValue({ results: mockMerchants });
 
 				const result = await getUnassignedMerchants(mockEvent);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					expect.stringContaining('WHERE bm.merchant IS NULL')
+					expect.stringContaining('WHERE bm.merchant_normalized IS NULL')
 				);
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					expect.stringContaining('AND p.merchant NOT LIKE \'%Amazon%\'')
+					expect.stringContaining('AND p.merchant_normalized IS NOT NULL')
 				);
 				expect(result).toEqual(['Walmart', 'Target', 'Grocery Store']);
 			});
@@ -450,11 +449,13 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(
 					1,
 					'Amazon',
+					'AMAZON',
+					'',
 					85.67,
 					'Both',
 					null,
@@ -472,11 +473,13 @@ describe('ccbilling-db functions', () => {
 				await createPayment(mockEvent, 1, 'Amazon', 85.67, 'Both', '2024-01-15');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+					'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(
 					1,
 					'Amazon',
+					'AMAZON',
+					'',
 					85.67,
 					'Both',
 					'2024-01-15',
