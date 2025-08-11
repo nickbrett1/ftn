@@ -1,3 +1,5 @@
+import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
+
 /**
  * List all credit cards in the CCBILLING_DB.
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -186,14 +188,14 @@ export async function deleteBudget(event, id) {
  * Add a merchant to a budget.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} budget_id
- * @param {string} merchant
+ * @param {string} merchant_normalized - The normalized merchant identifier
  */
-export async function addBudgetMerchant(event, budget_id, merchant) {
+export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
-		.prepare('INSERT INTO budget_merchant (budget_id, merchant) VALUES (?, ?)')
-		.bind(budget_id, merchant)
+		.prepare('INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)')
+		.bind(budget_id, merchant_normalized, merchant_normalized) // Store in both columns for compatibility
 		.run();
 }
 
@@ -201,14 +203,14 @@ export async function addBudgetMerchant(event, budget_id, merchant) {
  * Remove a merchant from a budget.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {number} budget_id
- * @param {string} merchant
+ * @param {string} merchant_normalized - The normalized merchant identifier
  */
-export async function removeBudgetMerchant(event, budget_id, merchant) {
+export async function removeBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
-		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant = ?')
-		.bind(budget_id, merchant)
+		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
+		.bind(budget_id, merchant_normalized)
 		.run();
 }
 
@@ -222,7 +224,7 @@ export async function getBudgetMerchants(event, budget_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	const { results } = await db
-		.prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant ASC')
+		.prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant_normalized ASC')
 		.bind(budget_id)
 		.all();
 	return results;
@@ -387,13 +389,19 @@ export async function createPayment(
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Normalize the merchant
+	const normalized = normalizeMerchant(merchant);
+	
 	await db
 		.prepare(
-			'INSERT INTO payment (statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+			'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 		)
 		.bind(
 			statement_id,
 			merchant,
+			normalized.merchant_normalized,
+			normalized.merchant_details,
 			amount,
 			allocated_to,
 			transaction_date,
@@ -514,31 +522,31 @@ export async function getUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
-	// Get all unique merchants from payments that don't have an allocated_to budget
-	// Exclude Amazon merchants as they typically have diverse transactions that don't fit single budgets
+	// Get all unique normalized merchants from payments that don't have an allocated_to budget
+	// Amazon is now included since it's properly normalized
 	const { results } = await db
 		.prepare(
 			`
-            SELECT DISTINCT p.merchant
+            SELECT DISTINCT p.merchant_normalized
             FROM payment p
-            LEFT JOIN budget_merchant bm ON bm.merchant = p.merchant
-            WHERE bm.merchant IS NULL
-              AND p.merchant NOT LIKE '%Amazon%'
-            ORDER BY p.merchant ASC
+            LEFT JOIN budget_merchant bm ON bm.merchant_normalized = p.merchant_normalized
+            WHERE bm.merchant_normalized IS NULL
+              AND p.merchant_normalized IS NOT NULL
+            ORDER BY p.merchant_normalized ASC
         `
 		)
 		.all();
 
-	return results.map((row) => row.merchant);
+	return results.map((row) => row.merchant_normalized);
 }
 
 /**
  * Return the budget (if any) that a merchant is already assigned to.
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {string} merchant
+ * @param {string} merchant_normalized - The normalized merchant identifier
  * @returns {Promise<{id:number, name:string} | null>}
  */
-export async function getBudgetByMerchant(event, merchant) {
+export async function getBudgetByMerchant(event, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	const result = await db
@@ -547,10 +555,10 @@ export async function getBudgetByMerchant(event, merchant) {
             SELECT b.id, b.name
             FROM budget_merchant bm
             JOIN budget b ON b.id = bm.budget_id
-            WHERE bm.merchant = ?
+            WHERE bm.merchant_normalized = ?
         `
 		)
-		.bind(merchant)
+		.bind(merchant_normalized)
 		.first();
 	return result || null;
 }
@@ -558,7 +566,7 @@ export async function getBudgetByMerchant(event, merchant) {
 /**
  * List all merchant → budget name mappings.
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @returns {Promise<Array<{ merchant: string, budget_name: string }>>}
+ * @returns {Promise<Array<{ merchant_normalized: string, budget_name: string }>>}
  */
 export async function listBudgetMerchantMappings(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
@@ -566,7 +574,7 @@ export async function listBudgetMerchantMappings(event) {
 	const { results } = await db
 		.prepare(
 			`
-            SELECT bm.merchant AS merchant, b.name AS budget_name
+            SELECT bm.merchant_normalized AS merchant_normalized, b.name AS budget_name
             FROM budget_merchant bm
             JOIN budget b ON b.id = bm.budget_id
         `
@@ -619,14 +627,14 @@ export async function refreshAutoAssociationsForCycle(event, billing_cycle_id) {
                 SELECT b.name
                 FROM budget_merchant bm
                 JOIN budget b ON b.id = bm.budget_id
-                WHERE bm.merchant = p.merchant
+                WHERE bm.merchant_normalized = p.merchant_normalized
                 LIMIT 1
             )
             WHERE p.statement_id IN (
                 SELECT s.id FROM statement s WHERE s.billing_cycle_id = ?
             )
             AND EXISTS (
-                SELECT 1 FROM budget_merchant bm2 WHERE bm2.merchant = p.merchant
+                SELECT 1 FROM budget_merchant bm2 WHERE bm2.merchant_normalized = p.merchant_normalized
             )
         `
 		)

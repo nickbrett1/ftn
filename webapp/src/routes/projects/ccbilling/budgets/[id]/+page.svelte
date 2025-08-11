@@ -286,25 +286,25 @@
 			<div class="space-y-2">
 				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant)}
+					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
 							<div>
-								<p class="text-white font-medium">{merchant.merchant}</p>
+								<p class="text-white font-medium">{merchant.merchant_normalized || merchant.merchant}</p>
 								<p class="text-gray-400 text-sm">
 									Charges from this merchant will be auto-assigned to "{budget?.name ||
 										'this budget'}"
 								</p>
 							</div>
 							<Button
-								onclick={() => removeMerchant(merchant.merchant)}
+								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
 								variant="danger"
 								size="sm"
-								disabled={isDeleting && deletingMerchant === merchant.merchant}
+								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
-								{isDeleting && deletingMerchant === merchant.merchant ? 'Removing...' : 'Remove'}
+								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
 							</Button>
 						</div>
 					{/each}
