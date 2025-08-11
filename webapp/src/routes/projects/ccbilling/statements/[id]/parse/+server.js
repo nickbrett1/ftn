@@ -10,6 +10,7 @@ import {
 	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
 import { RouteUtils } from '$lib/server/route-utils.js';
+import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 /** @type {import('./$types').RequestHandler} */
 export const GET = RouteUtils.createRouteHandler(
@@ -154,9 +155,12 @@ export const POST = RouteUtils.createRouteHandler(
 			// Determine auto-allocation based on current merchant → budget mapping
 			let allocatedTo = charge.allocated_to || null;
 			try {
-				const budget = charge.merchant ? await getBudgetByMerchant(event, charge.merchant) : null;
-				if (budget) {
-					allocatedTo = budget.name;
+				if (charge.merchant) {
+					const normalized = normalizeMerchant(charge.merchant);
+					const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
+					if (budget) {
+						allocatedTo = budget.name;
+					}
 				}
 			} catch (e) {
 				console.warn('Auto-association lookup failed for merchant', charge.merchant, e?.message);

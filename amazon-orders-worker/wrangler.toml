@@ -1,0 +1,37 @@
+name = "amazon-orders-worker"
+main = "src/worker.py"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["python_workers"]
+
+# Python worker configuration
+[build]
+command = ""
+
+# Bindings
+[[kv_namespaces]]
+binding = "AMAZON_CACHE"
+id = "amazon_cache_kv"
+preview_id = "amazon_cache_kv_preview"
+
+[[d1_databases]]
+binding = "ORDERS_DB"
+database_name = "amazon-orders-db"
+database_id = "amazon-orders-db-id"
+
+# Environment variables (add your Amazon credentials here)
+[vars]
+# AMAZON_EMAIL = "your-amazon-email@example.com"
+# AMAZON_PASSWORD = "your-amazon-password"
+# You can also use secrets for sensitive data:
+# wrangler secret put AMAZON_EMAIL
+# wrangler secret put AMAZON_PASSWORD
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Route configuration (optional - configure as needed)
+# routes = [
+#   { pattern = "amazon-orders.example.com/*", zone_name = "example.com" }
+# ]
