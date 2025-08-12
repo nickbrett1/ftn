@@ -9,20 +9,25 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
+	let modalRef = $state(null);
+	let backdropRef = $state(null);
 
 	async function loadAllMerchants() {
 		try {
 			isLoading = true;
 			error = '';
+			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
 			if (!response.ok) {
-				throw new Error('Failed to load merchants');
+				throw new Error(`Failed to load merchants: ${response.status} ${response.statusText}`);
 			}
 
 			merchants = await response.json();
 			filteredMerchants = merchants;
+			console.log(`Loaded ${merchants.length} merchants`); // Debug log
 		} catch (err) {
+			console.error('Error loading merchants:', err); // Debug log
 			error = err.message;
 		} finally {
 			isLoading = false;
@@ -37,11 +42,27 @@
 				merchant.toLowerCase().includes(searchTerm.toLowerCase())
 			);
 		}
+		console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
 	}
 
 	function handleSelect(merchant) {
+		console.log('Selected merchant:', merchant); // Debug log
 		onSelect(merchant);
 		onClose();
+	}
+
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			console.log('Escape key pressed, closing modal'); // Debug log
+			onClose();
+		}
+	}
+
+	function handleBackdropClick(event) {
+		if (event.target === event.currentTarget) {
+			console.log('Backdrop clicked, closing modal'); // Debug log
+			onClose();
+		}
 	}
 
 	$effect(() => {
@@ -49,70 +70,154 @@
 	});
 
 	onMount(() => {
+		console.log('MerchantSelectionModal mounted'); // Debug log
 		if (isOpen) {
 			loadAllMerchants();
 		}
 	});
 
 	$effect(() => {
+		console.log('Modal isOpen changed:', isOpen); // Debug log
 		if (isOpen) {
 			loadAllMerchants();
+			// Focus the search input when modal opens
+			setTimeout(() => {
+				const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
+				if (searchInput) {
+					searchInput.focus();
+					console.log('Search input focused'); // Debug log
+				} else {
+					console.log('Search input not found'); // Debug log
+				}
+			}, 100);
 		}
+	});
+
+	// Prevent body scroll when modal is open
+	$effect(() => {
+		if (isOpen) {
+			console.log('Preventing body scroll'); // Debug log
+			document.body.style.overflow = 'hidden';
+		} else {
+			console.log('Restoring body scroll'); // Debug log
+			document.body.style.overflow = '';
+		}
+		
+		return () => {
+			console.log('Cleanup: restoring body scroll'); // Debug log
+			document.body.style.overflow = '';
+		};
 	});
 </script>
 
 {#if isOpen}
-	<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
-		<div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-2xl w-full mx-4 shadow-lg">
-			<div class="flex justify-between items-center mb-6">
-				<h3 class="text-xl font-bold text-white">Select Merchant</h3>
-				<button onclick={onClose} class="text-gray-400 hover:text-white text-2xl font-bold">
+	<!-- Modal Backdrop - Using absolute positioning to avoid parent container issues -->
+	<div 
+		bind:this={backdropRef}
+		class="fixed inset-0 z-[9999] flex items-start justify-center p-4 overflow-y-auto"
+		style="
+			position: fixed !important; 
+			top: 0 !important; 
+			left: 0 !important; 
+			right: 0 !important; 
+			bottom: 0 !important; 
+			z-index: 9999 !important;
+			background-color: rgba(17, 24, 39, 0.75) !important;
+			min-height: 100vh !important;
+			width: 100vw !important;
+		"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
+		<!-- Debug info - remove in production -->
+		<div style="position: absolute; top: 10px; left: 10px; color: white; background: red; padding: 5px; z-index: 10001;">
+			Modal Open - Z: 9999
+		</div>
+
+		<!-- Modal Container -->
+		<div 
+			bind:this={modalRef}
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl my-8"
+			style="
+				position: relative !important; 
+				z-index: 10000 !important;
+				background-color: rgb(17, 24, 39) !important;
+				border: 1px solid rgb(55, 65, 81) !important;
+				border-radius: 0.5rem !important;
+				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+				min-height: 200px !important;
+				max-width: 90vw !important;
+			"
+			role="document"
+		>
+			<!-- Header -->
+			<div class="flex justify-between items-center p-6 border-b border-gray-700">
+				<h3 id="modal-title" class="text-xl font-bold text-white">Select Merchant</h3>
+				<button 
+					onclick={onClose} 
+					class="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
+					aria-label="Close modal"
+				>
 					&times;
 				</button>
 			</div>
 
 			<!-- Search -->
-			<div class="mb-6">
+			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
 					bind:value={searchTerm}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					aria-label="Search merchants"
 				/>
 			</div>
 
 			<!-- Merchants List -->
-			<div class="max-h-96 overflow-y-auto">
-				{#if isLoading}
-					<div class="text-center py-8">
-						<p class="text-gray-400">Loading merchants...</p>
-					</div>
-				{:else if error}
-					<div class="text-center py-8">
-						<p class="text-red-400">Error: {error}</p>
-					</div>
-				{:else if filteredMerchants.length === 0}
-					<div class="text-center py-8">
-						<p class="text-gray-400">
-							{searchTerm ? 'No merchants match your search.' : 'No unassigned merchants found.'}
-						</p>
-					</div>
-				{:else}
-					<div class="space-y-2">
-						{#each filteredMerchants as merchant}
-							<button
-								onclick={() => handleSelect(merchant)}
-								class="w-full text-left p-3 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 hover:border-gray-600 transition-colors"
+			<div class="p-6">
+				<div class="max-h-80 overflow-y-auto">
+					{#if isLoading}
+						<div class="text-center py-8">
+							<p class="text-gray-400">Loading merchants...</p>
+						</div>
+					{:else if error}
+						<div class="text-center py-8">
+							<p class="text-red-400">Error: {error}</p>
+							<button 
+								onclick={loadAllMerchants}
+								class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
 							>
-								<p class="text-white font-medium">{merchant}</p>
+								Retry
 							</button>
-						{/each}
-					</div>
-				{/if}
+						</div>
+					{:else if filteredMerchants.length === 0}
+						<div class="text-center py-8">
+							<p class="text-gray-400">
+								{searchTerm ? 'No merchants match your search.' : 'No unassigned merchants found.'}
+							</p>
+						</div>
+					{:else}
+						<div class="space-y-2" role="listbox" aria-label="Available merchants">
+							{#each filteredMerchants as merchant (merchant)}
+								<button
+									onclick={() => handleSelect(merchant)}
+									class="w-full text-left p-3 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 hover:border-gray-600 transition-colors"
+									role="option"
+									aria-selected="false"
+								>
+									<p class="text-white font-medium">{merchant}</p>
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Footer -->
-			<div class="flex justify-end mt-6">
+			<div class="flex justify-end p-6 border-t border-gray-700">
 				<Button onclick={onClose} variant="secondary" size="md">Cancel</Button>
 			</div>
 		</div>
