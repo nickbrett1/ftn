@@ -551,24 +551,32 @@ export async function getRecentMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
-	// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
-	const { results } = await db
-		.prepare(
-			`
-            SELECT DISTINCT p.merchant_normalized
-            FROM payment p
-            JOIN statement s ON p.statement_id = s.id
-            LEFT JOIN budget_merchant bm ON bm.merchant_normalized = p.merchant_normalized
-            WHERE bm.merchant_normalized IS NULL
-              AND p.merchant_normalized IS NOT NULL
-              AND s.uploaded_at >= datetime('now', '-30 days')
-            ORDER BY MAX(s.uploaded_at) DESC
-            LIMIT 20
-        `
-		)
-		.all();
+	try {
+		// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
+		// Using a simpler approach: get merchants from recent payments, then filter out assigned ones
+		const { results } = await db
+			.prepare(
+				`
+                SELECT DISTINCT p.merchant_normalized
+                FROM payment p
+                JOIN statement s ON p.statement_id = s.id
+                WHERE p.merchant_normalized IS NOT NULL
+                  AND s.uploaded_at >= datetime('now', '-30 days')
+                  AND NOT EXISTS (
+                    SELECT 1 FROM budget_merchant bm 
+                    WHERE bm.merchant_normalized = p.merchant_normalized
+                  )
+                ORDER BY s.uploaded_at DESC
+                LIMIT 20
+            `
+			)
+			.all();
 
-	return results.map((row) => row.merchant_normalized);
+		return results.map((row) => row.merchant_normalized);
+	} catch (error) {
+		console.error('Error in getRecentMerchants:', error);
+		throw new Error(`Failed to fetch recent merchants: ${error.message}`);
+	}
 }
 
 /**
@@ -674,3 +682,5 @@ export async function refreshAutoAssociationsForCycle(event, billing_cycle_id) {
 
 	return result.meta?.changes ?? 0;
 }
+
+

@@ -61,12 +61,12 @@ CREATE TABLE payment (
 );
 
 -- Add an index for efficient foreign currency lookups
-<<<<<<< Current (Your changes)
-CREATE INDEX idx_payment_foreign_currency ON payment(is_foreign_currency); 
-=======
 CREATE INDEX idx_payment_foreign_currency ON payment(is_foreign_currency);
 
 -- Add indexes for merchant normalization
 CREATE INDEX idx_payment_merchant_normalized ON payment(merchant_normalized);
-CREATE INDEX idx_budget_merchant_normalized ON budget_merchant(merchant_normalized); 
->>>>>>> Incoming (Background Agent changes)
+CREATE INDEX idx_budget_merchant_normalized ON budget_merchant(merchant_normalized);
+
+-- Add indexes for efficient recent merchants query
+CREATE INDEX idx_statement_uploaded_at ON statement(uploaded_at);
+CREATE INDEX idx_payment_statement_id ON payment(statement_id);
