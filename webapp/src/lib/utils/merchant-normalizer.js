@@ -20,6 +20,14 @@ export function normalizeMerchant(merchant) {
 
 	const merchantUpper = merchant.toUpperCase().trim();
 
+	// Priority order is important to avoid false positives:
+	// 1. Food delivery services (most specific)
+	// 2. Ride sharing services (specific)
+	// 3. Amazon/marketplaces (common, check BEFORE flights to avoid false positives)
+	// 4. Airlines/travel (check AFTER Amazon to avoid misclassifying Amazon purchases)
+	// 5. Other specific merchants
+	// 6. Generic normalization
+
 	// Food delivery services
 	if (
 		merchantUpper.includes('CAVIAR') ||
@@ -34,14 +42,14 @@ export function normalizeMerchant(merchant) {
 		return extractRideSharingDetails(merchant);
 	}
 
-	// Airlines and travel
-	if (isFlightTransaction(merchantUpper)) {
-		return extractFlightDetails(merchant);
-	}
-
-	// Amazon and similar marketplaces
+	// Amazon and similar marketplaces (check BEFORE flights to avoid false positives)
 	if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
 		return extractAmazonDetails(merchant);
+	}
+
+	// Airlines and travel (check AFTER Amazon to avoid misclassifying Amazon purchases)
+	if (isFlightTransaction(merchantUpper)) {
+		return extractFlightDetails(merchant);
 	}
 
 	// Kindle services
@@ -134,11 +142,12 @@ function extractRideSharingDetails(merchant) {
 
 /**
  * Extract flight details
+ * More intelligent extraction that avoids false positives
  */
 function extractFlightDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
 
-	// Identify airline
+	// Identify airline with more context awareness
 	const airlines = [
 		'UNITED',
 		'AMERICAN',
@@ -156,10 +165,27 @@ function extractFlightDetails(merchant) {
 	];
 
 	let airline = null;
+	let airlineContext = '';
+
+	// Look for airline names with better context checking
 	for (const airlineName of airlines) {
 		if (merchantUpper.includes(airlineName)) {
-			airline = airlineName;
-			break;
+			// Additional check: make sure this isn't just a mention in product text
+			// Real airline transactions usually have specific patterns
+			const hasFlightContext = 
+				// Airport codes
+				/\b[A-Z]{3}\s*[-*]\s*[A-Z]{3}\b/.test(merchantUpper) ||
+				// Flight numbers
+				/\b\d{1,4}\b/.test(merchantUpper) ||
+				// Flight-related words
+				/\b(DEPARTURE|ARRIVAL|GATE|TERMINAL|BOARDING|FLIGHT|TICKET)\b/i.test(merchantUpper) ||
+				// Credit card transaction patterns (amount, date, etc.)
+				/\$\d+\.\d{2}/.test(merchantUpper);
+
+			if (hasFlightContext) {
+				airline = airlineName;
+				break;
+			}
 		}
 	}
 
@@ -167,9 +193,18 @@ function extractFlightDetails(merchant) {
 	const routeMatch = merchant.match(/([A-Z]{3})\s*[-*]\s*([A-Z]{3})/i);
 	const route = routeMatch ? `${routeMatch[1]}-${routeMatch[2]}` : '';
 
+	// Only return flight classification if we're confident this is actually a flight
+	if (airline && (route || /\b(FLIGHT|TICKET|DEPARTURE|ARRIVAL)\b/i.test(merchantUpper))) {
+		return {
+			merchant_normalized: airline,
+			merchant_details: route || merchant
+		};
+	}
+
+	// If we're not confident this is a flight, fall back to generic classification
 	return {
-		merchant_normalized: airline || 'AIRLINE',
-		merchant_details: route || merchant
+		merchant_normalized: normalizeGenericMerchant(merchant),
+		merchant_details: merchant
 	};
 }
 
@@ -257,11 +292,14 @@ function extractJacadiDetails(merchant) {
 
 /**
  * Check if transaction is a flight
+ * More intelligent detection that avoids false positives from Amazon purchases
  */
 function isFlightTransaction(merchantUpper) {
-	const flightIndicators = [
+	// Strong flight indicators that are unlikely to appear in regular purchases
+	const strongFlightIndicators = [
 		'FLIGHT',
 		'AIRLINE',
+		'AIRWAYS',  // Added AIRWAYS to catch "JETBLUE AIRWAYS"
 		'AIRPORT',
 		'TICKET',
 		'TRAVEL',
@@ -270,7 +308,61 @@ function isFlightTransaction(merchantUpper) {
 		'TRANSPORTATION'
 	];
 
-	return flightIndicators.some((indicator) => merchantUpper.includes(indicator));
+	// Check for strong flight indicators
+	const hasStrongIndicator = strongFlightIndicators.some((indicator) => 
+		merchantUpper.includes(indicator)
+	);
+
+	// If we have a strong indicator, do additional checks to avoid false positives
+	if (hasStrongIndicator) {
+		// Check if this might actually be an Amazon purchase (which should take precedence)
+		if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
+			return false; // This is likely an Amazon purchase, not a flight
+		}
+
+		// Check if this looks like a real flight transaction
+		// Real flight transactions typically have specific patterns
+		const hasFlightPattern = 
+			// Airport codes (3-letter codes like JFK, LAX)
+			/\b[A-Z]{3}\s*[-*]\s*[A-Z]{3}\b/.test(merchantUpper) ||
+			// Flight numbers (typically 1-4 digits)
+			/\b\d{1,4}\b/.test(merchantUpper) ||
+			// Common flight-related words
+			/\b(DEPARTURE|ARRIVAL|GATE|TERMINAL|BOARDING)\b/i.test(merchantUpper) ||
+			// Price patterns (common in flight transactions)
+			/\$\d+\.\d{2}/.test(merchantUpper);
+
+		return hasFlightPattern;
+	}
+
+	// Also check for airline names even without strong indicators
+	// This catches cases like "JETBLUE JFK-LAX" without needing "AIRWAYS"
+	const airlines = [
+		'UNITED', 'AMERICAN', 'DELTA', 'SOUTHWEST', 'JETBLUE', 
+		'SPIRIT', 'FRONTIER', 'ALASKA', 'BRITISH AIRWAYS', 
+		'LUFTHANSA', 'AIR CANADA', 'EMIRATES', 'QATAR'
+	];
+	
+	const hasAirlineName = airlines.some(airline => merchantUpper.includes(airline));
+	if (hasAirlineName) {
+		// Check if this might actually be an Amazon purchase (which should take precedence)
+		if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
+			return false; // This is likely an Amazon purchase, not a flight
+		}
+
+		// Check for flight context
+		const hasFlightContext = 
+			// Airport codes (3-letter codes like JFK, LAX)
+			/\b[A-Z]{3}\s*[-*]\s*[A-Z]{3}\b/.test(merchantUpper) ||
+			// Price patterns
+			/\$\d+\.\d{2}/.test(merchantUpper) ||
+			// Flight-related words
+			/\b(FLIGHT|TICKET|DEPARTURE|ARRIVAL|GATE|TERMINAL|BOARDING)\b/i.test(merchantUpper);
+
+		return hasFlightContext;
+	}
+
+	return false;
 }
 
 /**
