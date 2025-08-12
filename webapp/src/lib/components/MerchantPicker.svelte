@@ -92,7 +92,7 @@
 				>
 					View All Merchants
 				</button>
-				<p class="text-gray-500 text-xs">Showing recent merchants from the past month</p>
+				<p class="text-gray-500 text-xs">Showing 20 most recent merchants from the past month</p>
 			</div>
 		</div>
 	{/if}
