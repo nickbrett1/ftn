@@ -43,8 +43,11 @@
 
 	// Function to format merchant name with flight details
 	function formatMerchantName(charge) {
+		// Use normalized merchant name for consistent display
+		const merchantName = charge.merchant_normalized || charge.merchant;
+		
 		if (!charge.flight_details) {
-			return charge.merchant;
+			return merchantName;
 		}
 
 		const flight = charge.flight_details;
@@ -58,10 +61,10 @@
 		}
 
 		if (airports.length > 0) {
-			return `${charge.merchant} (${airports.join(', ')})`;
+			return `${merchantName} (${airports.join(', ')})`;
 		}
 
-		return charge.merchant;
+		return merchantName;
 	}
 
 	// Function to format foreign currency information
