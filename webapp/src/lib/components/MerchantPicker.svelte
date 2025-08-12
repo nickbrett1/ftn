@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
 	const {
 		selectedMerchant = '',
@@ -10,16 +11,16 @@
 	let merchants = $state([]);
 	let isLoading = $state(true);
 	let error = $state('');
-    // Manual entry removed per product decision
+	let showModal = $state(false);
 
-	async function loadMerchants() {
+	async function loadRecentMerchants() {
 		try {
 			isLoading = true;
 			error = '';
 
-			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
+			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
 			if (!response.ok) {
-				throw new Error('Failed to load merchants');
+				throw new Error('Failed to load recent merchants');
 			}
 
 			merchants = await response.json();
@@ -37,10 +38,12 @@
 		}
 	}
 
-    // Manual input handlers removed
+	function handleModalSelect(merchant) {
+		onSelect(merchant);
+	}
 
 	onMount(() => {
-		loadMerchants();
+		loadRecentMerchants();
 	});
 </script>
 
@@ -51,32 +54,52 @@
 
 	{#if isLoading}
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
-			Loading merchants...
+			Loading recent merchants...
 		</div>
 	{:else if error}
 		<div class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200">
 			Error: {error}
 		</div>
-    {:else if merchants.length === 0}
+	{:else if merchants.length === 0}
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
-			No unassigned merchants found
+			No recent unassigned merchants found
 		</div>
 	{:else}
-        <select
-            id="merchant-picker"
-            onchange={handleSelect}
-            class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-            <option value="">{placeholder}</option>
-            {#each merchants as merchant}
-                <option value={merchant} selected={selectedMerchant === merchant}>
-                    {merchant}
-                </option>
-            {/each}
-        </select>
-        <p class="text-gray-500 text-xs mt-1">
-            These merchants appear in your uploaded statements but haven't been assigned to any budget
-            yet.
-        </p>
+		<div class="space-y-3">
+			<select
+				id="merchant-picker"
+				value={selectedMerchant}
+				onchange={handleSelect}
+				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+			>
+				<option value="">{placeholder}</option>
+				{#each merchants as merchant}
+					<option value={merchant}>
+						{merchant}
+					</option>
+				{/each}
+				{#if selectedMerchant && !merchants.includes(selectedMerchant)}
+					<option value={selectedMerchant}>
+						{selectedMerchant}
+					</option>
+				{/if}
+			</select>
+
+			<div class="flex justify-between items-center">
+				<button
+					onclick={() => (showModal = true)}
+					class="text-blue-400 hover:text-blue-300 text-sm underline"
+				>
+					View All Merchants
+				</button>
+				<p class="text-gray-500 text-xs">Showing recent merchants from the past month</p>
+			</div>
+		</div>
 	{/if}
 </div>
+
+<MerchantSelectionModal
+	isOpen={showModal}
+	onClose={() => (showModal = false)}
+	onSelect={handleModalSelect}
+/>

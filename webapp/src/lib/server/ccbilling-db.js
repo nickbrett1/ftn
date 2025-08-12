@@ -194,7 +194,9 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
-		.prepare('INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)')
+		.prepare(
+			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
+		)
 		.bind(budget_id, merchant_normalized, merchant_normalized) // Store in both columns for compatibility
 		.run();
 }
@@ -389,10 +391,10 @@ export async function createPayment(
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	
+
 	// Normalize the merchant
 	const normalized = normalizeMerchant(merchant);
-	
+
 	await db
 		.prepare(
 			'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -533,6 +535,35 @@ export async function getUnassignedMerchants(event) {
             WHERE bm.merchant_normalized IS NULL
               AND p.merchant_normalized IS NOT NULL
             ORDER BY p.merchant_normalized ASC
+        `
+		)
+		.all();
+
+	return results.map((row) => row.merchant_normalized);
+}
+
+/**
+ * Return recent merchants from the past month of statements that are unassigned.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {Promise<Array<string>>}
+ */
+export async function getRecentMerchants(event) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+
+	// Get merchants from statements in the last 30 days that don't have budget assignments
+	const { results } = await db
+		.prepare(
+			`
+            SELECT DISTINCT p.merchant_normalized
+            FROM payment p
+            JOIN statement s ON p.statement_id = s.id
+            LEFT JOIN budget_merchant bm ON bm.merchant_normalized = p.merchant_normalized
+            WHERE bm.merchant_normalized IS NULL
+              AND p.merchant_normalized IS NOT NULL
+              AND s.uploaded_at >= datetime('now', '-30 days')
+            ORDER BY p.merchant_normalized ASC
+            LIMIT 20
         `
 		)
 		.all();

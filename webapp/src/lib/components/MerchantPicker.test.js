@@ -1,97 +1,137 @@
-import { render, cleanup } from '@testing-library/svelte';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, fireEvent } from '@testing-library/svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
-// Mock fetch
+// Mock fetch globally
 global.fetch = vi.fn();
 
 describe('MerchantPicker', () => {
+	const mockOnSelect = vi.fn();
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	afterEach(() => {
-		cleanup();
-	});
-
 	it('should render loading state initially', () => {
-		const { container } = render(MerchantPicker);
-		expect(container.innerHTML).toContain('Loading merchants...');
+		const { getByText } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
+
+		expect(getByText('Loading recent merchants...')).toBeTruthy();
 	});
 
-	it('should render merchants dropdown when data is loaded', async () => {
-		const mockMerchants = ['Walmart', 'Target', 'Grocery Store'];
-		fetch.mockResolvedValueOnce({
+	it('should render error state when API call fails', async () => {
+		global.fetch.mockRejectedValueOnce(new Error('Network error'));
+
+		const { getByText } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
+
+		// Wait for error to appear
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(getByText('Error: Network error')).toBeTruthy();
+	});
+
+	it('should render merchants when API call succeeds', async () => {
+		const mockMerchants = ['Amazon', 'Target'];
+		global.fetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
-		const { container } = render(MerchantPicker);
+		const { getByText, getByRole } = render(MerchantPicker, {
+			props: { onSelect: mockOnSelect }
+		});
 
-		// Wait for async data loading
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		// Wait for merchants to load
+		await new Promise((resolve) => setTimeout(resolve, 0));
 
-		expect(container.innerHTML).toContain('Walmart');
-		expect(container.innerHTML).toContain('Target');
-		expect(container.innerHTML).toContain('Grocery Store');
+		// Check if the select element has the merchant options
+		const select = getByRole('combobox');
+		expect(select).toBeTruthy();
+		expect(select.innerHTML).toContain('Amazon');
+		expect(select.innerHTML).toContain('Target');
+		expect(getByText('View All Merchants')).toBeTruthy();
+		expect(getByText('Showing recent merchants from the past month')).toBeTruthy();
 	});
 
-	it('should render error state when API call fails', async () => {
-		fetch.mockRejectedValueOnce(new Error('Network error'));
-
-		const { container } = render(MerchantPicker);
-
-		// Wait for async error handling
-		await new Promise((resolve) => setTimeout(resolve, 100));
-
-		expect(container.innerHTML).toContain('Error: Network error');
-	});
-
-	it('should render empty state when no merchants found', async () => {
-		fetch.mockResolvedValueOnce({
+	it('should render no merchants message when API returns empty array', async () => {
+		global.fetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => []
 		});
 
-		const { container } = render(MerchantPicker);
+		const { getByText } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
 
-		// Wait for async data loading
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		// Wait for merchants to load
+		await new Promise((resolve) => setTimeout(resolve, 0));
 
-		expect(container.innerHTML).toContain('No unassigned merchants found');
+		expect(getByText('No recent unassigned merchants found')).toBeTruthy();
 	});
 
-	it('should call onSelect when merchant is selected', async () => {
-		const mockMerchants = ['Walmart', 'Grocery Store'];
-		const mockOnSelect = vi.fn();
-
-		fetch.mockResolvedValueOnce({
+	it('should call onSelect when a merchant is selected from dropdown', async () => {
+		const mockMerchants = ['Amazon', 'Target'];
+		global.fetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
-		const { container } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
+		const { getByRole } = render(MerchantPicker, {
+			props: { onSelect: mockOnSelect }
+		});
 
-		// Wait for async data loading
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		// Wait for merchants to load
+		await new Promise((resolve) => setTimeout(resolve, 0));
 
-		expect(container.innerHTML).toContain('Walmart');
-		expect(container.innerHTML).toContain('Grocery Store');
+		const select = getByRole('combobox');
+		await fireEvent.change(select, { target: { value: 'Target' } });
+
+		expect(mockOnSelect).toHaveBeenCalledWith('Target');
 	});
 
-it('renders dropdown with merchants only (no manual entry)', async () => {
-    const mockMerchants = ['Grocery Store'];
-    fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockMerchants
-    });
+	it('should show selected merchant when selectedMerchant prop is provided', async () => {
+		const mockMerchants = ['Amazon', 'Target'];
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => mockMerchants
+		});
 
-    const { container } = render(MerchantPicker);
+		const { getByDisplayValue } = render(MerchantPicker, {
+			props: { onSelect: mockOnSelect, selectedMerchant: 'Target' }
+		});
 
-    // Wait for async data loading
-    await new Promise((resolve) => setTimeout(resolve, 100));
+		// Wait for merchants to load
+		await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(container.innerHTML).toContain('Grocery Store');
-    expect(container.innerHTML).not.toContain('Enter manually');
-});
+		expect(getByDisplayValue('Target')).toBeTruthy();
+	});
+
+	it('should use custom placeholder when provided', async () => {
+		const mockMerchants = ['Amazon'];
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const { getByDisplayValue } = render(MerchantPicker, {
+			props: { onSelect: mockOnSelect, placeholder: 'Custom placeholder...' }
+		});
+
+		// Wait for merchants to load
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(getByDisplayValue('Custom placeholder...')).toBeTruthy();
+	});
+
+	it('should call API endpoint for recent merchants', async () => {
+		const mockMerchants = ['Amazon'];
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		render(MerchantPicker, { props: { onSelect: mockOnSelect } });
+
+		// Wait for API call
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(global.fetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
+	});
 });
