@@ -551,7 +551,7 @@ export async function getRecentMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
-	// Get merchants from statements in the last 30 days that don't have budget assignments
+	// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
 	const { results } = await db
 		.prepare(
 			`
@@ -562,7 +562,7 @@ export async function getRecentMerchants(event) {
             WHERE bm.merchant_normalized IS NULL
               AND p.merchant_normalized IS NOT NULL
               AND s.uploaded_at >= datetime('now', '-30 days')
-            ORDER BY p.merchant_normalized ASC
+            ORDER BY MAX(s.uploaded_at) DESC
             LIMIT 20
         `
 		)
