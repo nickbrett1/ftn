@@ -735,7 +735,7 @@
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
 							</div>
-							<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-self-end items-start sm:items-center">
+							<div class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center">
 								{#if !isStatementParsed(statement.id)}
 									<Button
 										type="button"
