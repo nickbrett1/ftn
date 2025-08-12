@@ -262,7 +262,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			expect(sortSelect).toBeTruthy();
 			
 			// Should have both sort options
-			expect(sortSelect.textContent).toContain('Date (newest first)');
+			expect(sortSelect.textContent).toContain('Date (oldest first)');
 			expect(sortSelect.textContent).toContain('Merchant (A-Z)');
 		});
 
