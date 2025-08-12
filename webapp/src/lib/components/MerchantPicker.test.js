@@ -49,7 +49,7 @@ describe('MerchantPicker', () => {
 		expect(select.innerHTML).toContain('Amazon');
 		expect(select.innerHTML).toContain('Target');
 		expect(getByText('View All Merchants')).toBeTruthy();
-		expect(getByText('Showing recent merchants from the past month')).toBeTruthy();
+		expect(getByText('Showing 20 most recent merchants from the past month')).toBeTruthy();
 	});
 
 	it('should render no merchants message when API returns empty array', async () => {
