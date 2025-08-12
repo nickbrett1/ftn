@@ -933,7 +933,7 @@
 			<!-- Mobile-friendly table -->
 			{#if getFilteredCharges().length > 0}
 				<div class="block md:hidden">
-					{#each getFilteredCharges() as charge}
+					{#each getFilteredCharges() as charge (charge.id)}
 						<div class="border-b border-gray-700 py-3 last:border-b-0">
 							<div class="flex justify-between items-start gap-3">
 								<div class="flex-1 min-w-0">
@@ -1039,7 +1039,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each getFilteredCharges() as charge}
+							{#each getFilteredCharges() as charge (charge.id)}
 								<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
 									<td class="text-gray-300 text-sm py-2">
 										<span
