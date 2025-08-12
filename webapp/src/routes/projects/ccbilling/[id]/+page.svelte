@@ -727,9 +727,9 @@
 									<div class="truncate" title={statement.filename}>
 										{statement.filename}
 									</div>
-									{statement.statement_date
-										? <div>Statement Date: {formatLocalDate(statement.statement_date)}</div>
-										: ''}
+									{#if statement.statement_date}
+										<div>Statement Date: {formatLocalDate(statement.statement_date)}</div>
+									{/if}
 								</div>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
