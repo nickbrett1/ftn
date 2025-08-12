@@ -127,10 +127,10 @@
 				// Sort by merchant name alphabetically
 				return a.merchant.localeCompare(b.merchant);
 			} else {
-				// Sort by date (default) - most recent first
+				// Sort by date (default) - oldest first
 				const dateA = a.transaction_date || a.created_at?.split('T')[0];
 				const dateB = b.transaction_date || b.created_at?.split('T')[0];
-				return new Date(dateB) - new Date(dateA);
+				return new Date(dateA) - new Date(dateB);
 			}
 		});
 	}
@@ -723,14 +723,14 @@
 								<h4 class="text-white font-medium">
 									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
 								</h4>
-								<p class="text-gray-400 text-sm">
-									<span class="truncate block min-w-0 max-w-full" title={statement.filename}>
+								<div class="text-gray-400 text-sm space-y-1">
+									<div class="truncate" title={statement.filename}>
 										{statement.filename}
-									</span>
-									{statement.statement_date
-										? ` • Statement Date: ${formatLocalDate(statement.statement_date)}`
-										: ''}
-								</p>
+									</div>
+									{#if statement.statement_date}
+										<div>Statement Date: {formatLocalDate(statement.statement_date)}</div>
+									{/if}
+								</div>
 								<p class="text-gray-500 text-xs">
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
@@ -802,38 +802,42 @@
 				</div>
 				
 				<!-- Credit Card Filter and Sort Options -->
-				<div class="flex items-center gap-3">
-					<label for="card-filter" class="text-gray-300 text-sm font-medium">Filter by card:</label>
-					<div class="flex items-center gap-2">
-						<select
-							id="card-filter"
-							bind:value={selectedCardFilter}
-							class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
-						>
-							<option value="all">All Cards</option>
-							{#each localData.creditCards as card}
-								<option value={card.id.toString()}>{card.name} (****{card.last4})</option>
-							{/each}
-						</select>
-						{#if selectedCardFilter !== 'all'}
-							<button
-								onclick={() => selectedCardFilter = 'all'}
-								class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+				<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+						<label for="card-filter" class="text-gray-300 text-sm font-medium">Filter by card:</label>
+						<div class="flex items-center gap-2">
+							<select
+								id="card-filter"
+								bind:value={selectedCardFilter}
+								class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
 							>
-								Clear Filter
-							</button>
-						{/if}
+								<option value="all">All Cards</option>
+								{#each localData.creditCards as card}
+									<option value={card.id.toString()}>{card.name} (****{card.last4})</option>
+								{/each}
+							</select>
+							{#if selectedCardFilter !== 'all'}
+								<button
+									onclick={() => selectedCardFilter = 'all'}
+									class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+								>
+									Clear Filter
+								</button>
+							{/if}
+						</div>
 					</div>
 					
-					<label for="sort-by" class="text-gray-300 text-sm font-medium ml-4">Sort by:</label>
-					<select
-						id="sort-by"
-						bind:value={selectedSortBy}
-						class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px]"
-					>
-						<option value="date">Date (newest first)</option>
-						<option value="merchant">Merchant (A-Z)</option>
-					</select>
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+						<label for="sort-by" class="text-gray-300 text-sm font-medium">Sort by:</label>
+						<select
+							id="sort-by"
+							bind:value={selectedSortBy}
+							class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px]"
+						>
+							<option value="date">Date (oldest first)</option>
+							<option value="merchant">Merchant (A-Z)</option>
+						</select>
+					</div>
 				</div>
 			</div>
 
