@@ -712,19 +712,19 @@
 				Upload credit card statements to begin processing charges.
 			</p>
 		{:else}
-			<div class="space-y-3">
+			<div class="space-y-3 w-full">
 				{#each data.statements as statement}
 					{@const card = data.creditCards.find((c) => c.id === statement.credit_card_id)}
 					<div class="bg-gray-700 border border-gray-600 rounded-lg p-4">
 						<div
-							class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full"
+							class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 w-full"
 						>
-							<div class="flex-1 min-w-0">
+							<div class="min-w-0 w-full overflow-hidden max-w-full">
 								<h4 class="text-white font-medium">
 									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
 								</h4>
-								<div class="text-gray-400 text-sm space-y-1">
-									<div class="truncate" title={statement.filename}>
+								<div class="text-gray-400 text-sm space-y-1 w-full overflow-hidden">
+									<div class="truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap" title={statement.filename}>
 										{statement.filename}
 									</div>
 									{#if statement.statement_date}
@@ -735,7 +735,7 @@
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
 							</div>
-							<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+							<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-self-end items-start sm:items-center">
 								{#if !isStatementParsed(statement.id)}
 									<Button
 										type="button"
