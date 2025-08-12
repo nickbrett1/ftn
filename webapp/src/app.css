@@ -96,4 +96,27 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	animation: var(--animate-border);
 }
 
+/* Ensure proper text truncation on mobile devices */
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Additional mobile-specific truncation support */
+@media (max-width: 640px) {
+	.truncate {
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	
+	/* Ensure grid containers properly constrain width on mobile */
+	.grid {
+		width: 100%;
+		max-width: 100%;
+	}
+}
+
 
