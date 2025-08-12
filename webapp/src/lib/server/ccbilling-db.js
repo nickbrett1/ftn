@@ -829,24 +829,61 @@ export async function getRecentMerchants(event) {
 		];
 	}
 
-	// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
-	const { results } = await db
-		.prepare(
-			`
-            SELECT DISTINCT p.merchant_normalized
-            FROM payment p
-            JOIN statement s ON p.statement_id = s.id
-            LEFT JOIN budget_merchant bm ON bm.merchant_normalized = p.merchant_normalized
-            WHERE bm.merchant_normalized IS NULL
-              AND p.merchant_normalized IS NOT NULL
-              AND s.uploaded_at >= datetime('now', '-30 days')
-            ORDER BY MAX(s.uploaded_at) DESC
-            LIMIT 20
-        `
-		)
-		.all();
+	// Log the query for debugging
+	console.log('[DEBUG] Executing getRecentMerchants query');
 
-	return results.map((row) => row.merchant_normalized);
+	// First, verify the database connection with a simple query
+	try {
+		const healthCheck = await db.prepare('SELECT 1 as test').first();
+		console.log('[DEBUG] Database health check passed:', healthCheck);
+	} catch (healthError) {
+		console.error('[DEBUG] Database health check failed:', healthError);
+		throw new Error(`Database connection failed: ${healthError.message}`);
+	}
+
+	try {
+		// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
+		// Using a simpler approach: get merchants from recent payments, then filter out assigned ones
+		const { results } = await db
+			.prepare(
+				`
+                SELECT DISTINCT p.merchant_normalized
+                FROM payment p
+                JOIN statement s ON p.statement_id = s.id
+                WHERE p.merchant_normalized IS NOT NULL
+                  AND s.uploaded_at >= datetime('now', '-30 days')
+                  AND NOT EXISTS (
+                    SELECT 1 FROM budget_merchant bm 
+                    WHERE bm.merchant_normalized = p.merchant_normalized
+                  )
+                ORDER BY s.uploaded_at DESC
+                LIMIT 20
+            `
+			)
+			.all();
+
+		const merchants = results.map((row) => row.merchant_normalized);
+		console.log(`[DEBUG] getRecentMerchants returned ${merchants.length} merchants:`, merchants);
+		
+		// If no recent merchants found, fall back to unassigned merchants
+		if (merchants.length === 0) {
+			console.log('[DEBUG] No recent merchants found, falling back to unassigned merchants');
+			return await getUnassignedMerchants(event);
+		}
+		
+		return merchants;
+	} catch (error) {
+		console.error('Error in getRecentMerchants:', error);
+		console.log('[DEBUG] Falling back to unassigned merchants due to error');
+		
+		// Fall back to unassigned merchants if the recent query fails
+		try {
+			return await getUnassignedMerchants(event);
+		} catch (fallbackError) {
+			console.error('Fallback to getUnassignedMerchants also failed:', fallbackError);
+			throw new Error(`Failed to fetch recent merchants: ${error.message}`);
+		}
+	}
 }
 
 /**
