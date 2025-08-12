@@ -114,7 +114,7 @@
 	<!-- Modal Backdrop - Using absolute positioning to avoid parent container issues -->
 	<div 
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-start justify-center p-4 overflow-y-auto"
+		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
 		style="
 			position: fixed !important; 
 			top: 0 !important; 
@@ -132,15 +132,10 @@
 		aria-modal="true"
 		aria-labelledby="modal-title"
 	>
-		<!-- Debug info - remove in production -->
-		<div style="position: absolute; top: 10px; left: 10px; color: white; background: red; padding: 5px; z-index: 10001;">
-			Modal Open - Z: 9999
-		</div>
-
 		<!-- Modal Container -->
 		<div 
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl my-8"
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl"
 			style="
 				position: relative !important; 
 				z-index: 10000 !important;
