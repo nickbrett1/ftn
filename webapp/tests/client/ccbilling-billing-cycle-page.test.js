@@ -435,8 +435,8 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			await tick();
 
 			// Should show appropriate message
-			expect(container.textContent).toContain('No charges found for this credit card');
-			expect(container.textContent).toContain('Try selecting a different card or clear the filter');
+			expect(container.textContent).toContain('No charges found with current filters');
+			expect(container.textContent).toContain('Try adjusting your filters or clear them');
 			expect(container.textContent).toContain('Show All Charges');
 		});
 
