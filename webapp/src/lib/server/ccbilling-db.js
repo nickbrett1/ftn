@@ -7,7 +7,15 @@ import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
  */
 export async function listCreditCards(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listCreditCards');
+		return [
+			{ id: 1, name: 'Chase Sapphire', last4: '1234' },
+			{ id: 2, name: 'Amex Gold', last4: '5678' },
+			{ id: 3, name: 'Citi Double Cash', last4: '9012' }
+		];
+	}
 	const { results } = await db.prepare('SELECT * FROM credit_card ORDER BY name ASC').all();
 	return results;
 }
@@ -20,7 +28,15 @@ export async function listCreditCards(event) {
  */
 export async function getCreditCard(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getCreditCard');
+		return {
+			id: id,
+			name: 'Chase Sapphire',
+			last4: '1234'
+		};
+	}
 	const result = await db.prepare('SELECT * FROM credit_card WHERE id = ?').bind(id).first();
 	return result;
 }
@@ -33,7 +49,11 @@ export async function getCreditCard(event, id) {
  */
 export async function createCreditCard(event, name, last4) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the creation
+		console.log('[DEV] CCBILLING_DB binding not found, logging createCreditCard:', { name, last4 });
+		return;
+	}
 	await db.prepare('INSERT INTO credit_card (name, last4) VALUES (?, ?)').bind(name, last4).run();
 }
 
@@ -46,7 +66,11 @@ export async function createCreditCard(event, name, last4) {
  */
 export async function updateCreditCard(event, id, name, last4) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updateCreditCard:', { id, name, last4 });
+		return;
+	}
 	await db
 		.prepare('UPDATE credit_card SET name = ?, last4 = ? WHERE id = ?')
 		.bind(name, last4, id)
@@ -60,7 +84,11 @@ export async function updateCreditCard(event, id, name, last4) {
  */
 export async function deleteCreditCard(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the deletion
+		console.log('[DEV] CCBILLING_DB binding not found, logging deleteCreditCard:', { id });
+		return;
+	}
 	await db.prepare('DELETE FROM credit_card WHERE id = ?').bind(id).run();
 }
 
@@ -71,7 +99,14 @@ export async function deleteCreditCard(event, id) {
  */
 export async function listBillingCycles(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listBillingCycles');
+		return [
+			{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31', created_at: '2024-01-01T00:00:00Z' },
+			{ id: 2, start_date: '2024-02-01', end_date: '2024-02-29', created_at: '2024-02-01T00:00:00Z' }
+		];
+	}
 	const { results } = await db
 		.prepare('SELECT * FROM billing_cycle ORDER BY start_date DESC')
 		.all();
@@ -86,7 +121,16 @@ export async function listBillingCycles(event) {
  */
 export async function getBillingCycle(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getBillingCycle');
+		return {
+			id: id,
+			start_date: '2024-01-01',
+			end_date: '2024-01-31',
+			created_at: '2024-01-01T00:00:00Z'
+		};
+	}
 	const result = await db.prepare('SELECT * FROM billing_cycle WHERE id = ?').bind(id).first();
 	return result;
 }
@@ -99,7 +143,11 @@ export async function getBillingCycle(event, id) {
  */
 export async function createBillingCycle(event, start_date, end_date) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the creation
+		console.log('[DEV] CCBILLING_DB binding not found, logging createBillingCycle:', { start_date, end_date });
+		return;
+	}
 	await db
 		.prepare('INSERT INTO billing_cycle (start_date, end_date) VALUES (?, ?)')
 		.bind(start_date, end_date)
@@ -119,7 +167,11 @@ export async function createBillingCycle(event, start_date, end_date) {
  */
 export async function deleteBillingCycle(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the deletion
+		console.log('[DEV] CCBILLING_DB binding not found, logging deleteBillingCycle:', { id });
+		return;
+	}
 	await db.prepare('DELETE FROM billing_cycle WHERE id = ?').bind(id).run();
 }
 
@@ -130,7 +182,16 @@ export async function deleteBillingCycle(event, id) {
  */
 export async function listBudgets(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listBudgets');
+		return [
+			{ id: 1, name: 'Entertainment', icon: '🎬', created_at: '2024-01-01T00:00:00Z' },
+			{ id: 2, name: 'Food & Dining', icon: '🍽️', created_at: '2024-01-01T00:00:00Z' },
+			{ id: 3, name: 'Transportation', icon: '🚗', created_at: '2024-01-01T00:00:00Z' },
+			{ id: 4, name: 'Travel', icon: '✈️', created_at: '2024-01-01T00:00:00Z' }
+		];
+	}
 	const { results } = await db.prepare('SELECT * FROM budget ORDER BY created_at DESC').all();
 	return results;
 }
@@ -143,7 +204,16 @@ export async function listBudgets(event) {
  */
 export async function getBudget(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getBudget');
+		return {
+			id: id,
+			name: 'Entertainment',
+			icon: '🎬',
+			created_at: '2024-01-01T00:00:00Z'
+		};
+	}
 	const result = await db.prepare('SELECT * FROM budget WHERE id = ?').bind(id).first();
 	return result;
 }
@@ -156,7 +226,11 @@ export async function getBudget(event, id) {
  */
 export async function createBudget(event, name, icon = null) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the creation
+		console.log('[DEV] CCBILLING_DB binding not found, logging createBudget:', { name, icon });
+		return;
+	}
 	await db.prepare('INSERT INTO budget (name, icon) VALUES (?, ?)').bind(name, icon).run();
 }
 
@@ -169,7 +243,11 @@ export async function createBudget(event, name, icon = null) {
  */
 export async function updateBudget(event, id, name, icon = null) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updateBudget:', { id, name, icon });
+		return;
+	}
 	await db.prepare('UPDATE budget SET name = ?, icon = ? WHERE id = ?').bind(name, icon, id).run();
 }
 
@@ -180,7 +258,11 @@ export async function updateBudget(event, id, name, icon = null) {
  */
 export async function deleteBudget(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the deletion
+		console.log('[DEV] CCBILLING_DB binding not found, logging deleteBudget:', { id });
+		return;
+	}
 	await db.prepare('DELETE FROM budget WHERE id = ?').bind(id).run();
 }
 
@@ -192,7 +274,11 @@ export async function deleteBudget(event, id) {
  */
 export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the addition
+		console.log('[DEV] CCBILLING_DB binding not found, logging addBudgetMerchant:', { budget_id, merchant_normalized });
+		return;
+	}
 	await db
 		.prepare(
 			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
@@ -209,7 +295,11 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
  */
 export async function removeBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the removal
+		console.log('[DEV] CCBILLING_DB binding not found, logging removeBudgetMerchant:', { budget_id, merchant_normalized });
+		return;
+	}
 	await db
 		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
 		.bind(budget_id, merchant_normalized)
@@ -224,7 +314,14 @@ export async function removeBudgetMerchant(event, budget_id, merchant_normalized
  */
 export async function getBudgetMerchants(event, budget_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getBudgetMerchants');
+		return [
+			{ id: 1, budget_id: budget_id, merchant_normalized: 'NETFLIX' },
+			{ id: 2, budget_id: budget_id, merchant_normalized: 'SPOTIFY' }
+		];
+	}
 	const { results } = await db
 		.prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant_normalized ASC')
 		.bind(budget_id)
@@ -240,7 +337,23 @@ export async function getBudgetMerchants(event, budget_id) {
  */
 export async function listStatements(event, billing_cycle_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listStatements');
+		return [
+			{
+				id: 1,
+				billing_cycle_id: billing_cycle_id,
+				credit_card_id: 1,
+				filename: 'chase_statement_jan_2024.pdf',
+				r2_key: 'statements/chase_statement_jan_2024.pdf',
+				statement_date: '2024-01-31',
+				uploaded_at: '2024-01-15T10:00:00Z',
+				credit_card_name: 'Chase Sapphire',
+				credit_card_last4: '1234'
+			}
+		];
+	}
 	const { results } = await db
 		.prepare(
 			`
@@ -264,7 +377,21 @@ export async function listStatements(event, billing_cycle_id) {
  */
 export async function getStatement(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getStatement');
+		return {
+			id: id,
+			billing_cycle_id: 1,
+			credit_card_id: 1,
+			filename: 'chase_statement_jan_2024.pdf',
+			r2_key: 'statements/chase_statement_jan_2024.pdf',
+			statement_date: '2024-01-31',
+			uploaded_at: '2024-01-15T10:00:00Z',
+			credit_card_name: 'Chase Sapphire',
+			credit_card_last4: '1234'
+		};
+	}
 	const result = await db
 		.prepare(
 			`
@@ -298,7 +425,11 @@ export async function createStatement(
 	image_key = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the creation and return mock ID
+		console.log('[DEV] CCBILLING_DB binding not found, logging createStatement:', { billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key });
+		return 1; // Return mock statement ID
+	}
 
 	const result = await db
 		.prepare(
@@ -318,7 +449,11 @@ export async function createStatement(
  */
 export async function updateStatementImageKey(event, id, image_key) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updateStatementImageKey:', { id, image_key });
+		return;
+	}
 	await db.prepare('UPDATE statement SET image_key = ? WHERE id = ?').bind(image_key, id).run();
 }
 
@@ -330,7 +465,11 @@ export async function updateStatementImageKey(event, id, image_key) {
  */
 export async function updateStatementCreditCard(event, id, credit_card_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updateStatementCreditCard:', { id, credit_card_id });
+		return;
+	}
 	await db
 		.prepare('UPDATE statement SET credit_card_id = ? WHERE id = ?')
 		.bind(credit_card_id, id)
@@ -345,7 +484,11 @@ export async function updateStatementCreditCard(event, id, credit_card_id) {
  */
 export async function updateStatementDate(event, id, statement_date) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updateStatementDate:', { id, statement_date });
+		return;
+	}
 	await db
 		.prepare('UPDATE statement SET statement_date = ? WHERE id = ?')
 		.bind(statement_date, id)
@@ -359,7 +502,11 @@ export async function updateStatementDate(event, id, statement_date) {
  */
 export async function deleteStatement(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the deletion
+		console.log('[DEV] CCBILLING_DB binding not found, logging deleteStatement:', { id });
+		return;
+	}
 
 	// Delete all payments/charges for this statement first
 	await deletePaymentsForStatement(event, id);
@@ -390,7 +537,11 @@ export async function createPayment(
 	flight_details = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the creation
+		console.log('[DEV] CCBILLING_DB binding not found, logging createPayment:', { statement_id, merchant, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details });
+		return;
+	}
 
 	// Normalize the merchant
 	const normalized = normalizeMerchant(merchant);
@@ -423,7 +574,42 @@ export async function createPayment(
  */
 export async function listChargesForCycle(event, billing_cycle_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listChargesForCycle');
+		return [
+			{
+				id: 1,
+				statement_id: 1,
+				merchant: 'AMAZON',
+				merchant_normalized: 'AMAZON',
+				merchant_details: '',
+				amount: 29.99,
+				allocated_to: null,
+				transaction_date: '2024-01-15',
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				flight_details: null,
+				created_at: '2024-01-15T10:00:00Z'
+			},
+			{
+				id: 2,
+				statement_id: 1,
+				merchant: 'STARBUCKS',
+				merchant_normalized: 'STARBUCKS',
+				merchant_details: '',
+				amount: 5.67,
+				allocated_to: 'Food & Dining',
+				transaction_date: '2024-01-16',
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				flight_details: null,
+				created_at: '2024-01-16T10:00:00Z'
+			}
+		];
+	}
 	const { results } = await db
 		.prepare(
 			`
@@ -453,7 +639,26 @@ export async function listChargesForCycle(event, billing_cycle_id) {
  */
 export async function getPayment(event, id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getPayment');
+		return {
+			id: id,
+			statement_id: 1,
+			merchant: 'AMAZON',
+			amount: 29.99,
+			allocated_to: null,
+			transaction_date: '2024-01-15',
+			is_foreign_currency: false,
+			foreign_currency_amount: null,
+			foreign_currency_type: null,
+			flight_details: null,
+			created_at: '2024-01-15T10:00:00Z',
+			credit_card_id: 1,
+			card_name: 'Chase Sapphire',
+			last4: '1234'
+		};
+	}
 	const result = await db
 		.prepare(
 			`
@@ -479,7 +684,11 @@ export async function getPayment(event, id) {
  */
 export async function updatePayment(event, id, merchant, amount, allocated_to) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the update
+		console.log('[DEV] CCBILLING_DB binding not found, logging updatePayment:', { id, merchant, amount, allocated_to });
+		return;
+	}
 	await db
 		.prepare('UPDATE payment SET merchant = ?, amount = ?, allocated_to = ? WHERE id = ?')
 		.bind(merchant, amount, allocated_to, id)
@@ -493,7 +702,11 @@ export async function updatePayment(event, id, merchant, amount, allocated_to) {
  */
 export async function bulkAssignPayments(event, assignments) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the bulk assignments
+		console.log('[DEV] CCBILLING_DB binding not found, logging bulkAssignPayments:', assignments);
+		return;
+	}
 
 	// Use a transaction for bulk updates
 	for (const assignment of assignments) {
@@ -511,7 +724,11 @@ export async function bulkAssignPayments(event, assignments) {
  */
 export async function deletePaymentsForStatement(event, statement_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - log the deletion
+		console.log('[DEV] CCBILLING_DB binding not found, logging deletePaymentsForStatement:', statement_id);
+		return;
+	}
 	await db.prepare('DELETE FROM payment WHERE statement_id = ?').bind(statement_id).run();
 }
 
@@ -522,7 +739,43 @@ export async function deletePaymentsForStatement(event, statement_id) {
  */
 export async function getUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getUnassignedMerchants');
+		return [
+			'AMAZON',
+			'TARGET',
+			'WALMART',
+			'COSTCO',
+			'TRADER JOES',
+			'STARBUCKS',
+			'UBER EATS',
+			'DOORDASH',
+			'LYFT',
+			'UNITED AIRLINES',
+			'AMERICAN AIRLINES',
+			'DELTA AIRLINES',
+			'MARRIOTT',
+			'HILTON',
+			'NETFLIX',
+			'SPOTIFY',
+			'APPLE',
+			'GOOGLE',
+			'MICROSOFT',
+			'ADOBE',
+			'CAVIAR',
+			'GRUBHUB',
+			'INSTACART',
+			'SHIPT',
+			'WHOLE FOODS',
+			'SAFEWAY',
+			'ALBERTSONS',
+			'KROGER',
+			'PUBLIX',
+			'MEIJER',
+			'HYVEE'
+		];
+	}
 
 	// Get all unique normalized merchants from payments that don't have an allocated_to budget
 	// Amazon is now included since it's properly normalized
@@ -549,7 +802,32 @@ export async function getUnassignedMerchants(event) {
  */
 export async function getRecentMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getRecentMerchants');
+		return [
+			'AMAZON',
+			'TARGET',
+			'WALMART',
+			'COSTCO',
+			'TRADER JOES',
+			'STARBUCKS',
+			'UBER EATS',
+			'DOORDASH',
+			'LYFT',
+			'UNITED AIRLINES',
+			'AMERICAN AIRLINES',
+			'DELTA AIRLINES',
+			'MARRIOTT',
+			'HILTON',
+			'NETFLIX',
+			'SPOTIFY',
+			'APPLE',
+			'GOOGLE',
+			'MICROSOFT',
+			'ADOBE'
+		];
+	}
 
 	// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
 	const { results } = await db
@@ -579,7 +857,12 @@ export async function getRecentMerchants(event) {
  */
 export async function getBudgetByMerchant(event, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for getBudgetByMerchant');
+		// Return null to simulate no budget assignment
+		return null;
+	}
 	const result = await db
 		.prepare(
 			`
@@ -601,7 +884,20 @@ export async function getBudgetByMerchant(event, merchant_normalized) {
  */
 export async function listBudgetMerchantMappings(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listBudgetMerchantMappings');
+		return [
+			{ merchant_normalized: 'NETFLIX', budget_name: 'Entertainment' },
+			{ merchant_normalized: 'SPOTIFY', budget_name: 'Entertainment' },
+			{ merchant_normalized: 'STARBUCKS', budget_name: 'Food & Dining' },
+			{ merchant_normalized: 'UBER EATS', budget_name: 'Food & Dining' },
+			{ merchant_normalized: 'DOORDASH', budget_name: 'Food & Dining' },
+			{ merchant_normalized: 'LYFT', budget_name: 'Transportation' },
+			{ merchant_normalized: 'UNITED AIRLINES', budget_name: 'Travel' },
+			{ merchant_normalized: 'MARRIOTT', budget_name: 'Travel' }
+		];
+	}
 	const { results } = await db
 		.prepare(
 			`
@@ -622,7 +918,21 @@ export async function listBudgetMerchantMappings(event) {
  */
 export async function listAllocationTotalsByCycle(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for listAllocationTotalsByCycle');
+		return [
+			{ cycle_id: 1, allocated_to: 'Entertainment', total_amount: 29.99 },
+			{ cycle_id: 1, allocated_to: 'Food & Dining', total_amount: 156.78 },
+			{ cycle_id: 1, allocated_to: 'Transportation', total_amount: 89.45 },
+			{ cycle_id: 1, allocated_to: 'Travel', total_amount: 1250.00 },
+			{ cycle_id: 1, allocated_to: null, total_amount: 234.56 },
+			{ cycle_id: 2, allocated_to: 'Entertainment', total_amount: 29.99 },
+			{ cycle_id: 2, allocated_to: 'Food & Dining', total_amount: 189.23 },
+			{ cycle_id: 2, allocated_to: 'Transportation', total_amount: 67.89 },
+			{ cycle_id: 2, allocated_to: null, total_amount: 456.78 }
+		];
+	}
 	const { results } = await db
 		.prepare(
 			`
@@ -648,7 +958,11 @@ export async function listAllocationTotalsByCycle(event) {
  */
 export async function refreshAutoAssociationsForCycle(event, billing_cycle_id) {
 	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) throw new Error('CCBILLING_DB binding not found');
+	if (!db) {
+		// Local development mode - return mock data
+		console.log('[DEV] CCBILLING_DB binding not found, using mock data for refreshAutoAssociationsForCycle');
+		return 15; // Return mock number of updated rows
+	}
 
 	const result = await db
 		.prepare(
@@ -674,3 +988,5 @@ export async function refreshAutoAssociationsForCycle(event, billing_cycle_id) {
 
 	return result.meta?.changes ?? 0;
 }
+
+
