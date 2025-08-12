@@ -12,8 +12,10 @@
 
 	const { data } = $props();
 
-	// Use synchronous destructuring to get data immediately
-	const { budget = null, merchants = [] } = data;
+	// Make budget, merchants, and budgets reactive to data changes
+	let budget = $derived(data.budget || null);
+	let merchants = $derived(data.merchants || []);
+	let budgets = $derived(data.budgets || []);
 
 	// Add merchant state
 	let selectedMerchant = $state('');
