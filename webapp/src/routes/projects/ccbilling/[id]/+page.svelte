@@ -112,14 +112,30 @@
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
 
+	// Budget filter state
+	let selectedBudgetFilter = $state('all'); // 'all' or budget name
+
 	// Sort state
 	let selectedSortBy = $state('date'); // 'date' or 'merchant'
 
-	// Filtered charges based on selected card and sort
+	// Filtered charges based on selected card, budget, and sort
 	function getFilteredCharges() {
-		let filtered = selectedCardFilter === 'all' 
-			? localData.charges 
-			: localData.charges.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+		let filtered = localData.charges;
+		
+		// Apply credit card filter
+		if (selectedCardFilter !== 'all') {
+			filtered = filtered.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+		}
+		
+		// Apply budget filter
+		if (selectedBudgetFilter !== 'all') {
+			filtered = filtered.filter(charge => {
+				if (selectedBudgetFilter === '__unallocated__') {
+					return !charge.allocated_to;
+				}
+				return charge.allocated_to === selectedBudgetFilter;
+			});
+		}
 		
 		// Sort the filtered charges (create a new array to avoid mutation)
 		return [...filtered].sort((a, b) => {
@@ -227,6 +243,22 @@
 
 	// Get budget names for allocation options (including null for unallocated)
 	let budgetNames = $derived(localData.budgets.map((b) => b.name));
+
+	// Get sorted budget options for filter dropdown (Unallocated first, then alphabetical)
+	let budgetFilterOptions = $derived(() => {
+		const options = [
+			{ value: 'all', label: 'All Budgets' },
+			{ value: '__unallocated__', label: 'Unallocated' }
+		];
+		
+		// Add budgets in alphabetical order
+		const sortedBudgets = [...localData.budgets].sort((a, b) => a.name.localeCompare(b.name));
+		sortedBudgets.forEach(budget => {
+			options.push({ value: budget.name, label: budget.name });
+		});
+		
+		return options;
+	});
 
 	// Determine if we should use radio buttons (for small number of budgets)
 	let shouldUseRadioButtons = $derived(localData.budgets.length <= 5);
@@ -799,6 +831,11 @@
 							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
 						</div>
 					{/if}
+					{#if selectedBudgetFilter !== 'all'}
+						<div class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1">
+							Filtered by: {selectedBudgetFilter === '__unallocated__' ? 'Unallocated' : selectedBudgetFilter}
+						</div>
+					{/if}
 				</div>
 				
 				<!-- Credit Card Filter and Sort Options -->
@@ -828,6 +865,29 @@
 					</div>
 					
 					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+						<label for="budget-filter" class="text-gray-300 text-sm font-medium">Filter by budget:</label>
+						<div class="flex items-center gap-2">
+							<select
+								id="budget-filter"
+								bind:value={selectedBudgetFilter}
+								class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
+							>
+								{#each budgetFilterOptions() as option}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
+							{#if selectedBudgetFilter !== 'all'}
+								<button
+									onclick={() => selectedBudgetFilter = 'all'}
+									class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+								>
+									Clear Filter
+								</button>
+							{/if}
+						</div>
+					</div>
+					
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 						<label for="sort-by" class="text-gray-300 text-sm font-medium">Sort by:</label>
 						<select
 							id="sort-by"
@@ -841,8 +901,8 @@
 				</div>
 			</div>
 
-			<!-- Credit Card Summary (when no filter is active) -->
-			{#if selectedCardFilter === 'all' && localData.creditCards.length > 1}
+			<!-- Credit Card Summary (when no filters are active) -->
+			{#if selectedCardFilter === 'all' && selectedBudgetFilter === 'all' && localData.creditCards.length > 1}
 				<div class="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
 					<h4 class="text-sm font-medium text-gray-300 mb-3">Charges by Credit Card:</h4>
 					<div class="flex flex-wrap gap-3">
@@ -1068,12 +1128,12 @@
 						</tbody>
 					</table>
 				</div>
-			{:else if selectedCardFilter !== 'all'}
+			{:else if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all'}
 				<div class="text-center py-8">
-					<div class="text-gray-400 text-lg mb-2">No charges found for this credit card</div>
-					<div class="text-gray-500 text-sm mb-4">Try selecting a different card or clear the filter</div>
+					<div class="text-gray-400 text-lg mb-2">No charges found with current filters</div>
+					<div class="text-gray-500 text-sm mb-4">Try adjusting your filters or clear them</div>
 					<button
-						onclick={() => selectedCardFilter = 'all'}
+						onclick={() => { selectedCardFilter = 'all'; selectedBudgetFilter = 'all'; }}
 						class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
 					>
 						Show All Charges
@@ -1170,6 +1230,11 @@
 							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
 						</div>
 					{/if}
+					{#if selectedBudgetFilter !== 'all'}
+						<div class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1">
+							Filtered by: {selectedBudgetFilter === '__unallocated__' ? 'Unallocated' : selectedBudgetFilter}
+						</div>
+					{/if}
 				</div>
 				<div class="flex flex-wrap items-center gap-4">
 					{#each getFilteredAllocationTotals() as [allocation, total]}
@@ -1188,7 +1253,7 @@
 							</span>
 						</div>
 					{/each}
-					{#if selectedCardFilter !== 'all'}
+					{#if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all'}
 						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
 							Total: ${getFilteredCharges().reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
 						</div>
