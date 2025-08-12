@@ -1253,7 +1253,7 @@
 							</span>
 						</div>
 					{/each}
-					{#if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all'}
+					{#if selectedCardFilter !== 'all' && selectedBudgetFilter === 'all'}
 						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
 							Total: ${getFilteredCharges().reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
 						</div>
