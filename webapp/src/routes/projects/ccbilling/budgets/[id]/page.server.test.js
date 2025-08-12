@@ -162,19 +162,14 @@ describe('Budget Detail Page Server', () => {
 
 	it('handles database errors when getting merchants', async () => {
 		const mockBudget = { id: 1, name: 'Groceries', created_at: '2025-01-01' };
-		const mockBudgets = [
-			{ id: 1, name: 'Groceries', icon: '🛒' },
-			{ id: 2, name: 'Entertainment', icon: '🎬' }
-		];
 		
 		getBudget.mockResolvedValue(mockBudget);
 		getBudgetMerchants.mockRejectedValue(new Error('Merchant query failed'));
-		listBudgets.mockResolvedValue(mockBudgets);
 
 		await expect(load(mockEvent)).rejects.toThrow('Merchant query failed');
 		expect(getBudget).toHaveBeenCalledWith(mockEvent, 1);
 		expect(getBudgetMerchants).toHaveBeenCalledWith(mockEvent, 1);
-		expect(listBudgets).toHaveBeenCalledWith(mockEvent);
+		expect(listBudgets).not.toHaveBeenCalled();
 	});
 
 	it('handles database errors when getting budgets', async () => {
