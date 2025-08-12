@@ -415,6 +415,26 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			// Should not show total when showing all charges
 			expect(container.textContent).not.toContain('Total: $');
 		});
+
+		it('should not show total amount when filtering by budget', async () => {
+			const { container } = render(BillingCyclePage, mockProps);
+			await tick();
+
+			const budgetFilterSelect = container.querySelector('#budget-filter');
+			
+			// Select Shopping budget
+			fireEvent.change(budgetFilterSelect, { target: { value: 'Shopping' } });
+			await tick();
+
+			// Should show running totals for Shopping budget only
+			expect(container.textContent).toContain('Running Totals:');
+			expect(container.textContent).toContain('Shopping: $125.00');
+			expect(container.textContent).not.toContain('Food: $');
+			expect(container.textContent).not.toContain('Transportation: $');
+			
+			// Should NOT show total since it would be redundant with single budget
+			expect(container.textContent).not.toContain('Total: $');
+		});
 	});
 
 	describe('Empty State Handling', () => {
