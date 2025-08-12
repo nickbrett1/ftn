@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/require-user.js';
-import { getBudget, getBudgetMerchants } from '$lib/server/ccbilling-db.js';
+import { getBudget, getBudgetMerchants, listBudgets } from '$lib/server/ccbilling-db.js';
 
 const HTML_TEMPORARY_REDIRECT = 307;
 
@@ -22,9 +22,11 @@ export async function load(event) {
 	}
 
 	const merchants = await getBudgetMerchants(event, id);
+	const budgets = await listBudgets(event);
 
 	return {
 		budget,
-		merchants
+		merchants,
+		budgets
 	};
 }
