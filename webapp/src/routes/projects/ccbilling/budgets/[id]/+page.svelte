@@ -1,4 +1,5 @@
 <script>
+	import { invalidateAll } from '$app/navigation';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
@@ -45,7 +46,7 @@
 		}
 	});
 
-	async function addMerchant() {
+		async function addMerchant() {
 		if (!selectedMerchant.trim()) {
 			addError = 'Please select a merchant';
 			return;
@@ -53,6 +54,10 @@
 
 		isAdding = true;
 		addError = '';
+
+		// Save current scroll position and add class to prevent scroll jumping
+		const scrollPosition = window.scrollY;
+		document.body.classList.add('scroll-restore');
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -71,18 +76,31 @@
 
 			// Reset form and refresh data
 			selectedMerchant = '';
-			window.location.reload();
+			// Refresh data without page reload to maintain scroll position
+			await invalidateAll();
+			
+			// Restore scroll position after data refresh and remove class
+			requestAnimationFrame(() => {
+				window.scrollTo(0, scrollPosition);
+				document.body.classList.remove('scroll-restore');
+			});
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
+			// Ensure scroll-restore class is removed even on error
+			document.body.classList.remove('scroll-restore');
 		}
 	}
 
-	async function removeMerchant(merchantName) {
+		async function removeMerchant(merchantName) {
 		// No confirm needed; removal is safe and reversible by re-adding
 		deletingMerchant = merchantName;
 		isDeleting = true;
+
+		// Save current scroll position and add class to prevent scroll jumping
+		const scrollPosition = window.scrollY;
+		document.body.classList.add('scroll-restore');
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -99,13 +117,21 @@
 				return;
 			}
 
-			// Refresh data
-			window.location.reload();
+			// Refresh data without page reload to maintain scroll position
+			await invalidateAll();
+			
+			// Restore scroll position after data refresh and remove class
+			requestAnimationFrame(() => {
+				window.scrollTo(0, scrollPosition);
+				document.body.classList.remove('scroll-restore');
+			});
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
+			// Ensure scroll-restore class is removed even on error
+			document.body.classList.remove('scroll-restore');
 		}
 	}
 
@@ -238,7 +264,7 @@
 	</div>
 
 	<!-- Merchant Auto-Assignment -->
-	<div class="mb-8">
+	<div class="mb-8 merchant-container">
 		<h2 class="text-2xl font-semibold text-white mb-4">Merchant Auto-Assignment</h2>
 		<p class="text-gray-400 mb-6">
 			Add merchants to automatically assign charges from these merchants to this budget. When
@@ -283,7 +309,7 @@
 				</p>
 			</div>
 		{:else}
-			<div class="space-y-2">
+			<div class="space-y-2 merchant-list">
 				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
 				<div class="grid gap-3">
 					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
