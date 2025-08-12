@@ -112,11 +112,27 @@
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
 
-	// Filtered charges based on selected card
+	// Sort state
+	let selectedSortBy = $state('date'); // 'date' or 'merchant'
+
+	// Filtered charges based on selected card and sort
 	function getFilteredCharges() {
-		return selectedCardFilter === 'all' 
+		let filtered = selectedCardFilter === 'all' 
 			? localData.charges 
 			: localData.charges.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+		
+		// Sort the filtered charges (create a new array to avoid mutation)
+		return [...filtered].sort((a, b) => {
+			if (selectedSortBy === 'merchant') {
+				// Sort by merchant name alphabetically
+				return a.merchant.localeCompare(b.merchant);
+			} else {
+				// Sort by date (default) - most recent first
+				const dateA = a.transaction_date || a.created_at?.split('T')[0];
+				const dateB = b.transaction_date || b.created_at?.split('T')[0];
+				return new Date(dateB) - new Date(dateA);
+			}
+		});
 	}
 
 	// Card info display state
@@ -785,7 +801,7 @@
 					{/if}
 				</div>
 				
-				<!-- Credit Card Filter -->
+				<!-- Credit Card Filter and Sort Options -->
 				<div class="flex items-center gap-3">
 					<label for="card-filter" class="text-gray-300 text-sm font-medium">Filter by card:</label>
 					<div class="flex items-center gap-2">
@@ -808,6 +824,16 @@
 							</button>
 						{/if}
 					</div>
+					
+					<label for="sort-by" class="text-gray-300 text-sm font-medium ml-4">Sort by:</label>
+					<select
+						id="sort-by"
+						bind:value={selectedSortBy}
+						class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px]"
+					>
+						<option value="date">Date (newest first)</option>
+						<option value="merchant">Merchant (A-Z)</option>
+					</select>
 				</div>
 			</div>
 
