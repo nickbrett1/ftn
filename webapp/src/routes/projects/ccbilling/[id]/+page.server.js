@@ -5,7 +5,8 @@ import {
 	listStatements,
 	listChargesForCycle,
 	listCreditCards,
-	listBudgets
+	listBudgets,
+	listBudgetMerchantMappings
 } from '$lib/server/ccbilling-db.js';
 
 const HTML_TEMPORARY_REDIRECT = 307;
@@ -32,6 +33,7 @@ export async function load(event) {
 	const charges = await listChargesForCycle(event, cycleId);
 	const creditCards = await listCreditCards(event);
 	const budgets = await listBudgets(event);
+	const autoAssociations = await listBudgetMerchantMappings(event);
 
 	return {
 		cycleId,
@@ -39,6 +41,7 @@ export async function load(event) {
 		statements,
 		charges,
 		creditCards,
-		budgets
+		budgets,
+		autoAssociations
 	};
 }
