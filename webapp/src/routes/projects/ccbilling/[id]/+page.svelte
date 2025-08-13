@@ -288,15 +288,40 @@
 		const charge = localData.charges.find((c) => c.id === chargeId);
 		const currentAllocation = charge.allocated_to;
 		
+		console.log('updateChargeAllocation called:', { chargeId, newAllocation, currentAllocation, merchant: charge.merchant_normalized });
+		
 		// Find if there's an auto-association for this merchant
 		const autoAssociation = localData.autoAssociations.find(
 			aa => aa.merchant_normalized === charge.merchant_normalized
 		);
 		
+		console.log('Auto-association found:', autoAssociation);
+		console.log('Auto-associations data:', localData.autoAssociations);
+		
 		// Check if user is changing away from an auto-association
+		console.log('Condition check:', {
+			hasAutoAssociation: !!autoAssociation,
+			currentAllocation,
+			autoAssociationBudgetName: autoAssociation?.budget_name,
+			newAllocation,
+			currentMatchesAuto: currentAllocation === autoAssociation?.budget_name,
+			newDifferentFromAuto: newAllocation !== autoAssociation?.budget_name,
+			currentAllocationType: typeof currentAllocation,
+			autoAssociationBudgetNameType: typeof autoAssociation?.budget_name,
+			newAllocationType: typeof newAllocation
+		});
+		
 		if (autoAssociation && 
 			currentAllocation === autoAssociation.budget_name && 
 			newAllocation !== autoAssociation.budget_name) {
+			
+			console.log('Showing auto-association modal for:', {
+				merchantName: charge.merchant,
+				currentAllocation: currentAllocation || 'Unallocated',
+				newAllocation: newAllocation || 'Unallocated',
+				autoAssociationBudget: autoAssociation.budget_name,
+				chargeId: chargeId
+			});
 			
 			// Show the auto-association update modal
 			autoAssociationModalData = {
@@ -307,9 +332,11 @@
 				chargeId: chargeId // Store the charge ID for later processing
 			};
 			showAutoAssociationModal = true;
+			console.log('Modal state set:', { showAutoAssociationModal, autoAssociationModalData });
 			return; // Don't proceed with the update yet
 		}
 		
+		console.log('No auto-association change, proceeding with normal update');
 		// No auto-association change, proceed with normal update
 		await performAllocationUpdate(chargeId, newAllocation);
 	}
@@ -1336,6 +1363,36 @@
 		on:skip={handleSkipAutoAssociation}
 		on:close={closeAutoAssociationModal}
 	/>
+
+	<!-- Debug Controls -->
+	<div class="mb-4 p-4 bg-red-900 border border-red-700 rounded">
+		<h3 class="text-red-200 font-bold mb-2">Debug Controls</h3>
+		<button
+			class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded mr-2"
+			onclick={() => {
+				showAutoAssociationModal = true;
+				autoAssociationModalData = {
+					merchantName: 'Test Merchant',
+					currentAllocation: 'Test Budget',
+					newAllocation: 'New Budget',
+					autoAssociationBudget: 'Test Budget',
+					chargeId: 'test-123'
+				};
+			}}
+		>
+			Test Auto-Association Modal
+		</button>
+		<button
+			class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded"
+			onclick={() => {
+				console.log('Current modal state:', { showAutoAssociationModal, autoAssociationModalData });
+			}}
+		>
+			Log Modal State
+		</button>
+	</div>
+
+	<!-- Cycle Information -->
 </div>
 
 <!-- Fixed Footer with Running Totals -->
