@@ -119,6 +119,18 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	overflow-y: auto !important;
 }
 
+/* Mobile modal positioning improvements */
+@media (max-width: 768px) {
+	.modal-backdrop {
+		align-items: flex-start !important;
+		padding-top: 1rem !important;
+	}
+	
+	.modal-backdrop > div {
+		margin-top: 0 !important;
+	}
+}
+
 .modal-container {
 	position: relative !important;
 	background-color: rgb(17, 24, 39) !important; /* gray-900 */
@@ -247,6 +259,16 @@ html, body {
 	.modal-container {
 		margin: 1rem auto;
 		max-width: calc(100vw - 2rem);
+	}
+	
+	/* Ensure modal is always visible at the top of viewport on mobile */
+	.fixed.inset-0.z-\[9999\] {
+		align-items: flex-start !important;
+	}
+	
+	/* Add top margin for mobile modal positioning */
+	.fixed.inset-0.z-\[9999\] > div {
+		margin-top: 1rem !important;
 	}
 }
 
