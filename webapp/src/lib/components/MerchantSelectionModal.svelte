@@ -102,6 +102,13 @@
 					}
 				}
 			}, 100);
+			
+			// Scroll to top of modal when it opens
+			setTimeout(() => {
+				if (modalRef) {
+					modalRef.scrollTop = 0;
+				}
+			}, 50);
 		} else {
 			// Clear timeout when modal closes
 			if (focusTimeout) {
@@ -132,7 +139,7 @@
 	<!-- Modal Backdrop - Responsive positioning -->
 	<div
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
+		class="fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
 		style="
 			position: fixed !important; 
 			top: 0 !important; 
@@ -153,7 +160,7 @@
 		<!-- Modal Container - Responsive centering -->
 		<div
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8"
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
 			style="
 				position: relative !important; 
 				z-index: 10000 !important;
@@ -165,6 +172,7 @@
 				max-width: calc(100vw - 1rem) !important;
 				max-height: calc(100vh - 1rem) !important;
 				overflow-y: auto !important;
+				margin-top: 1rem !important;
 			"
 			role="document"
 		>
