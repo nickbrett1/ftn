@@ -21,6 +21,7 @@
 	let selectedMerchant = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
+	let merchantPickerRef = $state(null);
 
 	// Delete merchant state
 	let deletingMerchant = $state(null);
@@ -78,6 +79,12 @@
 
 			// Reset form and refresh data
 			selectedMerchant = '';
+			
+			// Refresh the merchant picker to remove the newly added merchant from the list
+			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+				await merchantPickerRef.refreshMerchantList();
+			}
+			
 			// Refresh data without page reload to maintain scroll position
 			await invalidateAll();
 			
@@ -117,6 +124,11 @@
 				const error = await response.json();
 				alert(error.error || 'Failed to remove merchant');
 				return;
+			}
+
+			// Refresh the merchant picker to potentially add the removed merchant back to the list
+			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+				await merchantPickerRef.refreshMerchantList();
 			}
 
 			// Refresh data without page reload to maintain scroll position
@@ -283,6 +295,7 @@
 						{selectedMerchant}
 						onSelect={(merchant) => (selectedMerchant = merchant)}
 						placeholder="Choose a merchant to assign to this budget..."
+						bind:this={merchantPickerRef}
 					/>
 				</div>
 				{#if addError}

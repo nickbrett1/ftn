@@ -35,6 +35,9 @@
 		const selectedValue = event.target.value;
 		if (selectedValue) {
 			onSelect(selectedValue);
+			// Refresh the merchant list to ensure it's up to date
+			// This helps when the merchant might be added to auto-assignment
+			loadRecentMerchants();
 		}
 	}
 
@@ -43,6 +46,11 @@
 		// Refresh the recent merchants list to remove the newly added merchant
 		// This ensures the combo box doesn't show merchants that are no longer unassigned
 		loadRecentMerchants();
+	}
+
+	// Function to refresh the merchant list - can be called by parent components
+	async function refreshMerchantList() {
+		await loadRecentMerchants();
 	}
 
 	onMount(() => {
