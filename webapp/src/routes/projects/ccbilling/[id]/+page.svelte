@@ -113,6 +113,18 @@
 		chargeId: null
 	});
 
+	// Force reactivity by creating a new object reference
+	function setModalData(data) {
+		console.log('Setting modal data:', data);
+		// Force reactivity by creating new references
+		autoAssociationModalData = { ...data };
+		showAutoAssociationModal = true;
+		// Force a re-render by triggering a state change
+		setTimeout(() => {
+			console.log('Modal state after timeout:', { showAutoAssociationModal, autoAssociationModalData });
+		}, 0);
+	}
+
 	// Merchant info state
 	let showMerchantInfo = $state(false);
 	let merchantInfoLoading = $state(false);
@@ -324,15 +336,13 @@
 			});
 			
 			// Show the auto-association update modal
-			autoAssociationModalData = {
+			setModalData({
 				merchantName: charge.merchant,
 				currentAllocation: currentAllocation || 'Unallocated',
 				newAllocation: newAllocation || 'Unallocated',
 				autoAssociationBudget: autoAssociation.budget_name,
 				chargeId: chargeId // Store the charge ID for later processing
-			};
-			showAutoAssociationModal = true;
-			console.log('Modal state set:', { showAutoAssociationModal, autoAssociationModalData });
+			});
 			return; // Don't proceed with the update yet
 		}
 		
@@ -450,6 +460,7 @@
 	}
 
 	function closeAutoAssociationModal() {
+		console.log('Closing modal, current state:', { showAutoAssociationModal, autoAssociationModalData });
 		showAutoAssociationModal = false;
 		autoAssociationModalData = {
 			merchantName: '',
@@ -458,6 +469,7 @@
 			autoAssociationBudget: '',
 			chargeId: null
 		};
+		console.log('Modal closed, new state:', { showAutoAssociationModal, autoAssociationModalData });
 	}
 
 	async function handleDelete() {
@@ -1353,8 +1365,9 @@
 	{/if}
 
 	<!-- Auto-Association Update Modal -->
+	<!-- Debug: Modal state = {showAutoAssociationModal} -->
 	<AutoAssociationUpdateModal
-		bind:isOpen={showAutoAssociationModal}
+		isOpen={showAutoAssociationModal}
 		merchantName={autoAssociationModalData.merchantName}
 		currentAllocation={autoAssociationModalData.currentAllocation}
 		newAllocation={autoAssociationModalData.newAllocation}
@@ -1370,14 +1383,13 @@
 		<button
 			class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded mr-2"
 			onclick={() => {
-				showAutoAssociationModal = true;
-				autoAssociationModalData = {
+				setModalData({
 					merchantName: 'Test Merchant',
 					currentAllocation: 'Test Budget',
 					newAllocation: 'New Budget',
 					autoAssociationBudget: 'Test Budget',
 					chargeId: 'test-123'
-				};
+				});
 			}}
 		>
 			Test Auto-Association Modal
