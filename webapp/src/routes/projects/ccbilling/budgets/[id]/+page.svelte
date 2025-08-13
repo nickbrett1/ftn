@@ -231,6 +231,9 @@
 		<div>
 			<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
 		</div>
+		<div>
+			<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
+		</div>
 	</div>
 
 	<!-- Budget Info -->
@@ -353,8 +356,6 @@
 			</div>
 		{/if}
 	</div>
-
-	<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
 
 	<!-- Delete confirmation dialog -->
 	{#if showDeleteDialog}
