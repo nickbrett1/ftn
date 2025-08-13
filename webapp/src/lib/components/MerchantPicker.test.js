@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
-// Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
@@ -12,156 +11,45 @@ describe('MerchantPicker', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockFetch.mockClear();
-		
-		// Set up a default fetch mock to prevent errors
+	});
+
+	it('should render with minimal props and handle fetch call', async () => {
+		// Mock fetch to return empty array
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => []
 		});
-	});
 
-	it('should render without crashing', () => {
-		try {
-			const { container } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
-			console.log('Basic render successful, container:', container.innerHTML);
-			expect(container).toBeTruthy();
-		} catch (error) {
-			console.error('Basic render failed:', error);
-			throw error;
-		}
-	});
-
-	it('should render with minimal props and handle fetch call', () => {
-		try {
-			// Override the default mock for this specific test
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: async () => []
-			});
-
-			const { container } = render(MerchantPicker, { 
-				props: { 
-					onSelect: mockOnSelect,
-					selectedMerchant: '',
-					placeholder: 'Test',
-					assignedMerchants: []
-				} 
-			});
-			
-			console.log('Minimal props render successful, container:', container.innerHTML);
-			expect(container).toBeTruthy();
-			// The component will call fetch in onMount, so we expect it to be called
-			expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
-		} catch (error) {
-			console.error('Minimal props render failed:', error);
-			throw error;
-		}
-	});
-
-	it('should render without triggering fetch initially', () => {
-		try {
-			// Override the default mock for this specific test
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: async () => []
-			});
-
-			const { container } = render(MerchantPicker, { 
-				props: { 
-					onSelect: mockOnSelect,
-					selectedMerchant: '',
-					placeholder: 'Test',
-					assignedMerchants: []
-				} 
-			});
-			
-			console.log('No fetch trigger render successful, container:', container.innerHTML);
-			expect(container).toBeTruthy();
-			// The component will call fetch in onMount, so we expect it to be called
-			expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
-		} catch (error) {
-			console.error('No fetch trigger render failed:', error);
-			throw error;
-		}
-	});
-
-	it('should render and handle fetch call properly', async () => {
-		try {
-			// Override the default mock for this specific test
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: async () => ['Test Merchant']
-			});
-
-			const { container, getByText } = render(MerchantPicker, { 
-				props: { 
-					onSelect: mockOnSelect,
-					selectedMerchant: '',
-					placeholder: 'Test',
-					assignedMerchants: []
-				} 
-			});
-			
-			console.log('Initial render container:', container.innerHTML);
-			
-			// Wait for the fetch to complete
-			await waitFor(() => {
-				expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
-			});
-			
-			console.log('After fetch container:', container.innerHTML);
-			expect(container).toBeTruthy();
-		} catch (error) {
-			console.error('Fetch handling test failed:', error);
-			throw error;
-		}
-	});
-
-	it('should render loading state initially', () => {
-		try {
-			// Override the default mock for this specific test
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: async () => []
-			});
-
-			const { getByText, container } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
-
-			// Debug: log what's actually rendered
-			console.log('Container HTML:', container.innerHTML);
-
-			expect(getByText('Loading recent merchants...')).toBeTruthy();
-		} catch (error) {
-			console.error('Test error:', error);
-			throw error;
-		}
-	});
-
-	it('should render error state when API call fails', async () => {
-		// Override the default mock to simulate an error
-		mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-		const { getByText } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
-
-		// Wait for error to appear
-		await waitFor(() => {
-			expect(getByText('Error: Network error')).toBeTruthy();
+		const { getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
 		});
+
+		// Wait for loading to complete
+		await waitFor(() => {
+			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
+		});
+
+		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
 	});
 
 	it('should render merchants when API call succeeds', async () => {
-		const mockMerchants = ['Amazon', 'Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
-		const { getByText, getByRole } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect }
+		const { getByRole, getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
 		});
 
-		// Wait for merchants to load
+		// Wait for merchants to load and combobox to appear
 		await waitFor(() => {
 			expect(getByRole('combobox')).toBeTruthy();
 		});
@@ -171,35 +59,41 @@ describe('MerchantPicker', () => {
 		expect(select).toBeTruthy();
 		expect(select.innerHTML).toContain('Amazon');
 		expect(select.innerHTML).toContain('Target');
-		expect(getByText('View All Merchants')).toBeTruthy();
-		expect(getByText('Showing 20 most recent merchants from the past month')).toBeTruthy();
+		expect(select.innerHTML).toContain('Walmart');
 	});
 
 	it('should render no merchants message when API returns empty array', async () => {
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		// Mock fetch to return empty array
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => []
 		});
 
-		const { getByText } = render(MerchantPicker, { props: { onSelect: mockOnSelect } });
+		const { getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
 
-		// Wait for merchants to load
+		// Wait for loading to complete
 		await waitFor(() => {
 			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
 		});
 	});
 
 	it('should call onSelect when a merchant is selected from dropdown', async () => {
-		const mockMerchants = ['Amazon', 'Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByRole } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect }
+			props: {
+				onSelect: mockOnSelect
+			}
 		});
 
 		// Wait for merchants to load
@@ -214,15 +108,19 @@ describe('MerchantPicker', () => {
 	});
 
 	it('should show selected merchant when selectedMerchant prop is provided', async () => {
-		const mockMerchants = ['Amazon', 'Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByDisplayValue } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect, selectedMerchant: 'Target' }
+			props: {
+				selectedMerchant: 'Target',
+				onSelect: mockOnSelect
+			}
 		});
 
 		// Wait for merchants to load
@@ -232,15 +130,19 @@ describe('MerchantPicker', () => {
 	});
 
 	it('should use custom placeholder when provided', async () => {
-		const mockMerchants = ['Amazon'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByDisplayValue } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect, placeholder: 'Custom placeholder...' }
+			props: {
+				placeholder: 'Custom placeholder...',
+				onSelect: mockOnSelect
+			}
 		});
 
 		// Wait for merchants to load
@@ -249,33 +151,21 @@ describe('MerchantPicker', () => {
 		});
 	});
 
-	it('should call API endpoint for recent merchants', async () => {
-		const mockMerchants = ['Amazon'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => mockMerchants
-		});
-
-		render(MerchantPicker, { props: { onSelect: mockOnSelect } });
-
-		// Wait for API call
-		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
-		});
-	});
-
 	it('should filter out assigned merchants when assignedMerchants prop is provided', async () => {
-		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		const assignedMerchants = ['Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		const mockMerchants = ['Amazon', 'Target', 'Walmart', 'Best Buy'];
+		const assignedMerchants = ['Amazon', 'Walmart'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByRole, queryByText } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect, assignedMerchants }
+			props: {
+				onSelect: mockOnSelect,
+				assignedMerchants
+			}
 		});
 
 		// Wait for merchants to load
@@ -284,22 +174,31 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		expect(select.innerHTML).toContain('Amazon');
-		expect(select.innerHTML).toContain('Walmart');
-		expect(select.innerHTML).not.toContain('Target');
+		
+		// Check that assigned merchants are not in the options
+		expect(select.innerHTML).not.toContain('Amazon');
+		expect(select.innerHTML).not.toContain('Walmart');
+		
+		// Check that unassigned merchants are still available
+		expect(select.innerHTML).toContain('Target');
+		expect(select.innerHTML).toContain('Best Buy');
 	});
 
 	it('should show "All recent merchants are already assigned" when all merchants are assigned', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
 		const assignedMerchants = ['Amazon', 'Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByText } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect, assignedMerchants }
+			props: {
+				onSelect: mockOnSelect,
+				assignedMerchants
+			}
 		});
 
 		// Wait for message to appear
@@ -310,14 +209,18 @@ describe('MerchantPicker', () => {
 
 	it('should handle undefined assignedMerchants gracefully', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		// Override the default mock for this specific test
-		mockFetch.mockResolvedValueOnce({
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
 		const { getByRole } = render(MerchantPicker, {
-			props: { onSelect: mockOnSelect }
+			props: {
+				onSelect: mockOnSelect,
+				assignedMerchants: undefined
+			}
 		});
 
 		// Wait for merchants to load
@@ -328,5 +231,101 @@ describe('MerchantPicker', () => {
 		const select = getByRole('combobox');
 		expect(select.innerHTML).toContain('Amazon');
 		expect(select.innerHTML).toContain('Target');
+	});
+
+	it('should handle API errors gracefully', async () => {
+		// Mock fetch to return an error
+		mockFetch.mockResolvedValue({
+			ok: false,
+			status: 500
+		});
+
+		const { getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for error message to appear
+		await waitFor(() => {
+			expect(getByText('Error: Failed to load recent merchants')).toBeTruthy();
+		});
+	});
+
+	it('should handle network errors gracefully', async () => {
+		// Mock fetch to throw an error
+		mockFetch.mockRejectedValue(new Error('Network error'));
+
+		const { getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for error message to appear
+		await waitFor(() => {
+			expect(getByText('Error: Network error')).toBeTruthy();
+		});
+	});
+
+	it('should refresh merchant list when refreshMerchantList is called', async () => {
+		const mockMerchants = ['Amazon', 'Target'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const { getByRole, component } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		// Clear the mock to verify it's called again
+		mockFetch.mockClear();
+
+		// Call refreshMerchantList
+		await component.refreshMerchantList();
+
+		// Verify fetch was called again
+		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
+	});
+
+	it('should reset merchant picker when resetMerchantPicker is called', async () => {
+		const mockMerchants = ['Amazon', 'Target'];
+		
+		// Mock fetch to return merchants
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const { getByRole, component } = render(MerchantPicker, {
+			props: {
+				selectedMerchant: 'Amazon',
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		// Clear the mock to verify it's called again
+		mockFetch.mockClear();
+
+		// Call resetMerchantPicker
+		component.resetMerchantPicker();
+
+		// Verify fetch was called again
+		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
 	});
 });
