@@ -149,16 +149,6 @@ describe('CCBilling Page Server Route', () => {
 					card_name: 'Chase Freedom',
 					transaction_date: '2024-01-12',
 					statement_id: 1
-				},
-				{
-					id: 3,
-					merchant: 'Shell',
-					amount: 45.00,
-					allocated_to: 'Transportation',
-					credit_card_id: 2,
-					card_name: 'Amex Gold',
-					transaction_date: '2024-01-15',
-					statement_id: 2
 				}
 			];
 			mockListChargesForCycle.mockResolvedValue(mockCharges);
@@ -267,6 +257,12 @@ describe('CCBilling Page Server Route', () => {
 				{ id: 2, name: 'Food', icon: '🍕' }
 			]);
 
+			// Mock auto-associations
+			mockListBudgetMerchantMappings.mockResolvedValue([
+				{ merchant_normalized: 'AMAZON', budget_name: 'Shopping' },
+				{ merchant_normalized: 'STARBUCKS', budget_name: 'Food' }
+			]);
+
 			// Call the load function
 			const result = await load(mockEvent);
 
@@ -308,6 +304,9 @@ describe('CCBilling Page Server Route', () => {
 			// Mock empty budgets
 			mockListBudgets.mockResolvedValue([]);
 
+			// Mock empty auto-associations
+			mockListBudgetMerchantMappings.mockResolvedValue([]);
+
 			// Call the load function
 			const result = await load(mockEvent);
 
@@ -316,6 +315,7 @@ describe('CCBilling Page Server Route', () => {
 			expect(result.creditCards).toEqual([]);
 			expect(result.statements).toEqual([]);
 			expect(result.budgets).toEqual([]);
+			expect(result.autoAssociations).toEqual([]);
 		});
 
 		it('should handle multiple credit cards with charges correctly', async () => {
@@ -385,6 +385,12 @@ describe('CCBilling Page Server Route', () => {
 				{ id: 2, name: 'Transportation', icon: '🚗' }
 			]);
 
+			// Mock auto-associations
+			mockListBudgetMerchantMappings.mockResolvedValue([
+				{ merchant_normalized: 'AMAZON', budget_name: 'Shopping' },
+				{ merchant_normalized: 'SHELL', budget_name: 'Transportation' }
+			]);
+
 			// Call the load function
 			const result = await load(mockEvent);
 
@@ -420,6 +426,8 @@ describe('CCBilling Page Server Route', () => {
 			mockListStatements.mockResolvedValue([]);
 			mockListChargesForCycle.mockResolvedValue([]);
 			mockListCreditCards.mockResolvedValue([]);
+			mockListBudgets.mockResolvedValue([]);
+			mockListBudgetMerchantMappings.mockResolvedValue([]);
 
 			// Test with string ID
 			mockEvent.params.id = '456';
@@ -447,6 +455,7 @@ describe('CCBilling Page Server Route', () => {
 			mockListChargesForCycle.mockResolvedValue([]);
 			mockListCreditCards.mockResolvedValue([]);
 			mockListBudgets.mockResolvedValue([]);
+			mockListBudgetMerchantMappings.mockResolvedValue([]);
 
 			const result = await load(mockEvent);
 
@@ -456,7 +465,8 @@ describe('CCBilling Page Server Route', () => {
 				statements: [],
 				charges: [],
 				creditCards: [],
-				budgets: []
+				budgets: [],
+				autoAssociations: []
 			});
 		});
 
