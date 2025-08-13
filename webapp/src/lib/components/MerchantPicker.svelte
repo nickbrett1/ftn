@@ -40,6 +40,9 @@
 
 	function handleModalSelect(merchant) {
 		onSelect(merchant);
+		// Refresh the recent merchants list to remove the newly added merchant
+		// This ensures the combo box doesn't show merchants that are no longer unassigned
+		loadRecentMerchants();
 	}
 
 	onMount(() => {
