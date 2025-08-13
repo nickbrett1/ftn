@@ -21,13 +21,21 @@
 			error = '';
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			
+			// Add safety check for response
+			if (!response) {
+				throw new Error('No response received from server');
+			}
+			
 			if (!response.ok) {
 				throw new Error('Failed to load recent merchants');
 			}
 
-			merchants = await response.json();
+			const data = await response.json();
+			merchants = Array.isArray(data) ? data : [];
 		} catch (err) {
-			error = err.message;
+			console.error('Error loading merchants:', err);
+			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
 		}
