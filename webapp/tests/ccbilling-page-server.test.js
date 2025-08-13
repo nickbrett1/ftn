@@ -17,7 +17,8 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	listStatements: vi.fn(),
 	listChargesForCycle: vi.fn(),
 	listCreditCards: vi.fn(),
-	listBudgets: vi.fn()
+	listBudgets: vi.fn(),
+	listBudgetMerchantMappings: vi.fn()
 }));
 
 describe('CCBilling Page Server Route', () => {
@@ -30,6 +31,7 @@ describe('CCBilling Page Server Route', () => {
 	let mockListChargesForCycle;
 	let mockListCreditCards;
 	let mockListBudgets;
+	let mockListBudgetMerchantMappings;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -71,6 +73,7 @@ describe('CCBilling Page Server Route', () => {
 		mockListChargesForCycle = (await import('$lib/server/ccbilling-db.js')).listChargesForCycle;
 		mockListCreditCards = (await import('$lib/server/ccbilling-db.js')).listCreditCards;
 		mockListBudgets = (await import('$lib/server/ccbilling-db.js')).listBudgets;
+		mockListBudgetMerchantMappings = (await import('$lib/server/ccbilling-db.js')).listBudgetMerchantMappings;
 	});
 
 	describe('load function', () => {
@@ -175,6 +178,13 @@ describe('CCBilling Page Server Route', () => {
 			];
 			mockListBudgets.mockResolvedValue(mockBudgets);
 
+			// Mock auto-associations data
+			const mockAutoAssociations = [
+				{ merchant_normalized: 'AMAZON', budget_name: 'Shopping' },
+				{ merchant_normalized: 'STARBUCKS', budget_name: 'Food' }
+			];
+			mockListBudgetMerchantMappings.mockResolvedValue(mockAutoAssociations);
+
 			// Call the load function
 			const result = await load(mockEvent);
 
@@ -185,7 +195,8 @@ describe('CCBilling Page Server Route', () => {
 				statements: mockStatements,
 				charges: mockCharges,
 				creditCards: mockCreditCards,
-				budgets: mockBudgets
+				budgets: mockBudgets,
+				autoAssociations: mockAutoAssociations
 			});
 
 			// Verify all database functions were called
@@ -194,6 +205,7 @@ describe('CCBilling Page Server Route', () => {
 			expect(mockListChargesForCycle).toHaveBeenCalledWith(mockEvent, 123);
 			expect(mockListCreditCards).toHaveBeenCalledWith(mockEvent);
 			expect(mockListBudgets).toHaveBeenCalledWith(mockEvent);
+			expect(mockListBudgetMerchantMappings).toHaveBeenCalledWith(mockEvent);
 		});
 
 		it('should return charges with proper credit card information for filtering', async () => {
