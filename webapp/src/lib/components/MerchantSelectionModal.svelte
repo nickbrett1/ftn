@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Button from './Button.svelte';
 
 	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
@@ -11,6 +11,8 @@
 	let searchTerm = $state('');
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
+	let isMounted = $state(false);
+	let focusTimeout = $state(null);
 
 	async function loadAllMerchants() {
 		try {
@@ -71,8 +73,16 @@
 
 	onMount(() => {
 		console.log('MerchantSelectionModal mounted'); // Debug log
+		isMounted = true;
 		if (isOpen) {
 			loadAllMerchants();
+		}
+	});
+
+	onDestroy(() => {
+		isMounted = false;
+		if (focusTimeout) {
+			clearTimeout(focusTimeout);
 		}
 	});
 
@@ -80,16 +90,26 @@
 		console.log('Modal isOpen changed:', isOpen); // Debug log
 		if (isOpen) {
 			loadAllMerchants();
+			// Scroll to top to ensure modal is visible on mobile
+			window.scrollTo(0, 0);
 			// Focus the search input when modal opens
-			setTimeout(() => {
-				const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
-				if (searchInput) {
-					searchInput.focus();
-					console.log('Search input focused'); // Debug log
-				} else {
-					console.log('Search input not found'); // Debug log
+			focusTimeout = setTimeout(() => {
+				if (isMounted) {
+					const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
+					if (searchInput) {
+						searchInput.focus();
+						console.log('Search input focused'); // Debug log
+					} else {
+						console.log('Search input not found'); // Debug log
+					}
 				}
 			}, 100);
+		} else {
+			// Clear timeout when modal closes
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+				focusTimeout = null;
+			}
 		}
 	});
 
@@ -102,7 +122,7 @@
 			console.log('Restoring body scroll'); // Debug log
 			document.body.style.overflow = '';
 		}
-		
+
 		return () => {
 			console.log('Cleanup: restoring body scroll'); // Debug log
 			document.body.style.overflow = '';
@@ -111,10 +131,10 @@
 </script>
 
 {#if isOpen}
-	<!-- Modal Backdrop - Using absolute positioning to avoid parent container issues -->
-	<div 
+	<!-- Modal Backdrop - Using fixed positioning for mobile compatibility -->
+	<div
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
+		class="fixed inset-0 z-[9999] flex items-start justify-center p-2 md:p-4 overflow-y-auto"
 		style="
 			position: fixed !important; 
 			top: 0 !important; 
@@ -132,10 +152,10 @@
 		aria-modal="true"
 		aria-labelledby="modal-title"
 	>
-		<!-- Modal Container -->
-		<div 
+		<!-- Modal Container - Mobile-first positioning -->
+		<div
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl"
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mt-4 md:mt-0 md:my-auto mx-2 md:mx-0"
 			style="
 				position: relative !important; 
 				z-index: 10000 !important;
@@ -145,14 +165,16 @@
 				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 				min-height: 200px !important;
 				max-width: 90vw !important;
+				max-height: 90vh !important;
+				overflow-y: auto !important;
 			"
 			role="document"
 		>
 			<!-- Header -->
 			<div class="flex justify-between items-center p-6 border-b border-gray-700">
 				<h3 id="modal-title" class="text-xl font-bold text-white">Select Merchant</h3>
-				<button 
-					onclick={onClose} 
+				<button
+					onclick={onClose}
 					class="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
 					aria-label="Close modal"
 				>
@@ -181,7 +203,7 @@
 					{:else if error}
 						<div class="text-center py-8">
 							<p class="text-red-400">Error: {error}</p>
-							<button 
+							<button
 								onclick={loadAllMerchants}
 								class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
 							>
