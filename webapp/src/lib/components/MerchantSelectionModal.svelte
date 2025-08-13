@@ -11,6 +11,59 @@
 	let searchTerm = $state('');
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
+	let isMobile = $state(false);
+
+	// Detect mobile device and viewport
+	function detectMobile() {
+		isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+		
+		// Set CSS custom property for mobile viewport height
+		if (isMobile) {
+			const vh = window.innerHeight * 0.01;
+			document.documentElement.style.setProperty('--vh', `${vh}px`);
+			document.documentElement.style.setProperty('--mobile-vh', `${window.innerHeight}px`);
+		}
+	}
+
+	// Handle mobile viewport changes (keyboard appearance, orientation changes)
+	function handleMobileViewportChange() {
+		if (isMobile) {
+			// Recalculate viewport height
+			const vh = window.innerHeight * 0.01;
+			document.documentElement.style.setProperty('--vh', `${vh}px`);
+			document.documentElement.style.setProperty('--mobile-vh', `${window.innerHeight}px`);
+			
+			// Ensure modal is still visible
+			if (isOpen) {
+				ensureModalVisibility();
+			}
+		}
+	}
+
+	// Ensure modal is visible in viewport on mobile
+	function ensureModalVisibility() {
+		if (isMobile && modalRef) {
+			// Force modal to top of viewport on mobile
+			setTimeout(() => {
+				if (modalRef) {
+					// Scroll modal into view
+					modalRef.scrollIntoView({ 
+						behavior: 'smooth', 
+						block: 'start',
+						inline: 'nearest'
+					});
+					
+					// Also scroll the backdrop to ensure proper positioning
+					if (backdropRef) {
+						backdropRef.scrollTop = 0;
+					}
+					
+					// Force viewport to top
+					window.scrollTo(0, 0);
+				}
+			}, 100);
+		}
+	}
 
 	async function loadAllMerchants() {
 		try {
@@ -71,14 +124,31 @@
 
 	onMount(() => {
 		console.log('MerchantSelectionModal mounted'); // Debug log
+		detectMobile();
+		
+		// Handle window resize for mobile orientation changes
+		const handleResize = () => {
+			detectMobile();
+			if (isOpen && isMobile) {
+				handleMobileViewportChange();
+			}
+		};
+		
+		window.addEventListener('resize', handleResize);
+		
 		if (isOpen) {
 			loadAllMerchants();
 		}
+		
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
 	});
 
 	$effect(() => {
 		console.log('Modal isOpen changed:', isOpen); // Debug log
 		if (isOpen) {
+			detectMobile();
 			loadAllMerchants();
 			// Focus the search input when modal opens
 			setTimeout(() => {
@@ -89,6 +159,8 @@
 				} else {
 					console.log('Search input not found'); // Debug log
 				}
+				// Ensure modal is visible on mobile
+				ensureModalVisibility();
 			}, 100);
 		}
 	});
@@ -111,10 +183,10 @@
 </script>
 
 {#if isOpen}
-	<!-- Modal Backdrop - Using absolute positioning to avoid parent container issues -->
+	<!-- Modal Backdrop - Using fixed positioning with mobile-friendly adjustments -->
 	<div 
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
+		class="fixed inset-0 z-[9999] flex items-start justify-center p-4 overflow-y-auto"
 		style="
 			position: fixed !important; 
 			top: 0 !important; 
@@ -125,6 +197,9 @@
 			background-color: rgba(17, 24, 39, 0.75) !important;
 			min-height: 100vh !important;
 			width: 100vw !important;
+			align-items: flex-start !important;
+			padding-top: 1rem !important;
+			padding-bottom: 1rem !important;
 		"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
@@ -132,10 +207,10 @@
 		aria-modal="true"
 		aria-labelledby="modal-title"
 	>
-		<!-- Modal Container -->
+		<!-- Modal Container - Positioned for mobile viewport -->
 		<div 
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl"
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mt-4 mb-4 {isMobile ? 'mobile-modal' : ''}"
 			style="
 				position: relative !important; 
 				z-index: 10000 !important;
@@ -145,9 +220,20 @@
 				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 				min-height: 200px !important;
 				max-width: 90vw !important;
+				margin-top: 1rem !important;
+				margin-bottom: 1rem !important;
+				max-height: calc(100vh - 2rem) !important;
+				overflow-y: auto !important;
+				{isMobile ? 'margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; max-height: calc(100vh - 1rem) !important;' : ''}
 			"
 			role="document"
 		>
+			<!-- Mobile positioning indicator (debug) -->
+			{#if isMobile}
+				<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full z-50">
+					Mobile Modal
+				</div>
+			{/if}
 			<!-- Header -->
 			<div class="flex justify-between items-center p-6 border-b border-gray-700">
 				<h3 id="modal-title" class="text-xl font-bold text-white">Select Merchant</h3>

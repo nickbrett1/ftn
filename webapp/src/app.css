@@ -23,11 +23,18 @@ html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
 	color: #d4d4d8; /* Default text color - zinc-300 */
+	/* Mobile viewport height fixes */
+	height: 100%;
+	height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
 /* Global text color defaults for dark theme - only for basic content */
 body {
 	color: #d4d4d8; /* zinc-300 */
+	height: 100%;
+	height: 100dvh; /* Dynamic viewport height for mobile */
+	min-height: 100vh;
+	min-height: 100dvh;
 }
 
 /* Ensure headings are white by default - but only for content areas */
@@ -207,6 +214,46 @@ html, body {
 	opacity: 1 !important;
 }
 
+/* Force modal backdrop to cover entire viewport */
+.fixed.inset-0.z-\[9999\] {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100vw !important;
+	height: 100vh !important;
+	height: 100dvh !important;
+	z-index: 9999 !important;
+	overflow: hidden !important;
+}
+
+/* Ensure modal container is properly positioned */
+.fixed.inset-0.z-\[9999\] > div {
+	position: relative !important;
+	z-index: 10000 !important;
+	margin: auto !important;
+}
+
+/* Mobile-specific modal positioning */
+@media (max-width: 768px) {
+	.fixed.inset-0.z-\[9999\] {
+		display: flex !important;
+		align-items: flex-start !important;
+		justify-content: center !important;
+		padding: 1rem !important;
+		overflow-y: auto !important;
+	}
+	
+	.fixed.inset-0.z-\[9999\] > div {
+		margin-top: 0.5rem !important;
+		margin-bottom: 0.5rem !important;
+		max-height: calc(100vh - 1rem) !important;
+		max-height: calc(100dvh - 1rem) !important;
+		overflow-y: auto !important;
+	}
+}
+
 /* Additional mobile-specific truncation support */
 @media (max-width: 640px) {
 	.truncate {
@@ -247,6 +294,102 @@ html, body {
 	.modal-container {
 		margin: 1rem auto;
 		max-width: calc(100vw - 2rem);
+	}
+}
+
+/* Mobile modal positioning fixes */
+@media (max-width: 768px) {
+	/* Ensure modal backdrop covers entire mobile viewport */
+	.fixed.inset-0.z-\[9999\] {
+		align-items: flex-start !important;
+		padding-top: 1rem !important;
+		padding-bottom: 1rem !important;
+	}
+	
+	/* Position modal at top of viewport on mobile */
+	.fixed.inset-0.z-\[9999\] > div {
+		margin-top: 1rem !important;
+		margin-bottom: 1rem !important;
+		max-height: calc(100vh - 2rem) !important;
+		overflow-y: auto !important;
+	}
+	
+	/* Ensure modal doesn't get pushed below viewport */
+	[style*="max-height: calc(100vh - 2rem) !important"] {
+		max-height: calc(100vh - 2rem) !important;
+		overflow-y: auto !important;
+	}
+	
+	/* Mobile viewport height fixes */
+	@media (max-height: 600px) {
+		.fixed.inset-0.z-\[9999\] > div {
+			max-height: calc(100vh - 1rem) !important;
+			margin-top: 0.5rem !important;
+			margin-bottom: 0.5rem !important;
+		}
+	}
+}
+
+/* Mobile modal specific styling */
+.mobile-modal {
+	margin-top: 0.5rem !important;
+	margin-bottom: 0.5rem !important;
+	max-height: calc(100vh - 1rem) !important;
+	width: calc(100vw - 1rem) !important;
+	max-width: calc(100vw - 1rem) !important;
+}
+
+/* Ensure mobile modal content is properly sized */
+@media (max-width: 768px) {
+	.mobile-modal .max-h-80 {
+		max-height: calc(100vh - 12rem) !important;
+	}
+	
+	.mobile-modal .p-6 {
+		padding: 1rem !important;
+	}
+}
+
+/* Mobile viewport height fixes */
+:root {
+	--vh: 1vh;
+	--mobile-vh: 100vh;
+}
+
+/* Mobile viewport height detection and fixes */
+@media (max-width: 768px) {
+	:root {
+		--mobile-vh: calc(var(--vh, 1vh) * 100);
+	}
+	
+	/* Force modal to use mobile viewport height */
+	.fixed.inset-0.z-\[9999\] {
+		min-height: var(--mobile-vh) !important;
+		height: var(--mobile-vh) !important;
+	}
+	
+	/* Ensure modal content fits in mobile viewport */
+	.fixed.inset-0.z-\[9999\] > div {
+		max-height: calc(var(--mobile-vh) - 2rem) !important;
+	}
+}
+
+/* Additional mobile modal positioning fixes */
+@media (max-width: 768px) {
+	
+	/* Ensure modal doesn't get pushed below viewport */
+	[style*="max-height: calc(100vh - 2rem) !important"] {
+		max-height: calc(100vh - 2rem) !important;
+		overflow-y: auto !important;
+	}
+	
+	/* Mobile viewport height fixes */
+	@media (max-height: 600px) {
+		.fixed.inset-0.z-\[9999\] > div {
+			max-height: calc(100vh - 1rem) !important;
+			margin-top: 0.5rem !important;
+			margin-bottom: 0.5rem !important;
+		}
 	}
 }
 
