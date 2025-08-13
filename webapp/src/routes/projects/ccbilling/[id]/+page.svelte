@@ -1,5 +1,6 @@
 <script>
 	import Button from '$lib/components/Button.svelte';
+	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
@@ -24,6 +25,7 @@
 		localData.charges = [...data.charges];
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
+		localData.autoAssociations = data.autoAssociations;
 	});
 
 	function formatLocalDate(dateString) {
@@ -100,6 +102,15 @@
 	let deletingStatements = $state(new Set());
 	let showDeleteStatementDialog = $state(false);
 	let statementToDelete = $state(null);
+
+	// Auto-association update modal state
+	let showAutoAssociationModal = $state(false);
+	let autoAssociationModalData = $state({
+		merchantName: '',
+		currentAllocation: '',
+		newAllocation: '',
+		autoAssociationBudget: ''
+	});
 
 	// Merchant info state
 	let showMerchantInfo = $state(false);
@@ -272,7 +283,32 @@
 	}
 
 	async function updateChargeAllocation(chargeId, newAllocation) {
-		// Immediately perform the update without debouncing
+		// Check if this change involves an auto-association
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		const currentAllocation = charge.allocated_to;
+		
+		// Find if there's an auto-association for this merchant
+		const autoAssociation = localData.autoAssociations.find(
+			aa => aa.merchant_normalized === charge.merchant_normalized
+		);
+		
+		// Check if user is changing away from an auto-association
+		if (autoAssociation && 
+			currentAllocation === autoAssociation.budget_name && 
+			newAllocation !== autoAssociation.budget_name) {
+			
+			// Show the auto-association update modal
+			autoAssociationModalData = {
+				merchantName: charge.merchant,
+				currentAllocation: currentAllocation || 'Unallocated',
+				newAllocation: newAllocation || 'Unallocated',
+				autoAssociationBudget: autoAssociation.budget_name
+			};
+			showAutoAssociationModal = true;
+			return; // Don't proceed with the update yet
+		}
+		
+		// No auto-association change, proceed with normal update
 		await performAllocationUpdate(chargeId, newAllocation);
 	}
 
@@ -325,6 +361,57 @@
 			alert(`Failed to update allocation: ${error.message}`);
 		} finally {
 			// Loading state is cleared by timeout
+		}
+	}
+
+	// Auto-association modal event handlers
+	async function handleUpdateAutoAssociation() {
+		const charge = localData.charges.find(c => 
+			c.merchant === autoAssociationModalData.merchantName
+		);
+		
+		if (!charge) {
+			console.error('Charge not found for auto-association update');
+			return;
+		}
+
+		try {
+			// Update the auto-association mapping
+			const response = await fetch('/projects/ccbilling/auto-associations', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					merchant: charge.merchant_normalized,
+					newBudgetName: autoAssociationModalData.newAllocation
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to update auto-association');
+			}
+
+			// Now proceed with the allocation update
+			await performAllocationUpdate(charge.id, autoAssociationModalData.newAllocation);
+			
+			// Refresh the auto-associations data
+			await invalidate(`cycle-${data.cycleId}`);
+		} catch (error) {
+			console.error('Error updating auto-association:', error);
+			alert(`Failed to update auto-association: ${error.message}`);
+		}
+	}
+
+	async function handleSkipAutoAssociation() {
+		// Just proceed with the allocation update without changing auto-association
+		const charge = localData.charges.find(c => 
+			c.merchant === autoAssociationModalData.merchantName
+		);
+		
+		if (charge) {
+			await performAllocationUpdate(charge.id, autoAssociationModalData.newAllocation);
 		}
 	}
 
@@ -1219,6 +1306,17 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Auto-Association Update Modal -->
+	<AutoAssociationUpdateModal
+		bind:isOpen={showAutoAssociationModal}
+		merchantName={autoAssociationModalData.merchantName}
+		currentAllocation={autoAssociationModalData.currentAllocation}
+		newAllocation={autoAssociationModalData.newAllocation}
+		autoAssociationBudget={autoAssociationModalData.autoAssociationBudget}
+		on:updateAutoAssociation={handleUpdateAutoAssociation}
+		on:skip={handleSkipAutoAssociation}
+	/>
 </div>
 
 <!-- Fixed Footer with Running Totals -->
