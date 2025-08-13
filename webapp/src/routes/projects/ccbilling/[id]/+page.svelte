@@ -109,7 +109,8 @@
 		merchantName: '',
 		currentAllocation: '',
 		newAllocation: '',
-		autoAssociationBudget: ''
+		autoAssociationBudget: '',
+		chargeId: null
 	});
 
 	// Merchant info state
@@ -302,7 +303,8 @@
 				merchantName: charge.merchant,
 				currentAllocation: currentAllocation || 'Unallocated',
 				newAllocation: newAllocation || 'Unallocated',
-				autoAssociationBudget: autoAssociation.budget_name
+				autoAssociationBudget: autoAssociation.budget_name,
+				chargeId: chargeId // Store the charge ID for later processing
 			};
 			showAutoAssociationModal = true;
 			return; // Don't proceed with the update yet
@@ -366,10 +368,12 @@
 
 	// Auto-association modal event handlers
 	async function handleUpdateAutoAssociation() {
-		const charge = localData.charges.find(c => 
-			c.merchant === autoAssociationModalData.merchantName
-		);
-		
+		if (!autoAssociationModalData.chargeId) {
+			console.error('No charge ID found for auto-association update');
+			return;
+		}
+
+		const charge = localData.charges.find(c => c.id === autoAssociationModalData.chargeId);
 		if (!charge) {
 			console.error('Charge not found for auto-association update');
 			return;
@@ -394,10 +398,13 @@
 			}
 
 			// Now proceed with the allocation update
-			await performAllocationUpdate(charge.id, autoAssociationModalData.newAllocation);
+			await performAllocationUpdate(autoAssociationModalData.chargeId, autoAssociationModalData.newAllocation);
 			
 			// Refresh the auto-associations data
 			await invalidate(`cycle-${data.cycleId}`);
+			
+			// Close the modal
+			closeAutoAssociationModal();
 		} catch (error) {
 			console.error('Error updating auto-association:', error);
 			alert(`Failed to update auto-association: ${error.message}`);
@@ -406,13 +413,24 @@
 
 	async function handleSkipAutoAssociation() {
 		// Just proceed with the allocation update without changing auto-association
-		const charge = localData.charges.find(c => 
-			c.merchant === autoAssociationModalData.merchantName
-		);
-		
-		if (charge) {
-			await performAllocationUpdate(charge.id, autoAssociationModalData.newAllocation);
+		if (!autoAssociationModalData.chargeId) {
+			console.error('No charge ID found for auto-association skip');
+			return;
 		}
+		
+		await performAllocationUpdate(autoAssociationModalData.chargeId, autoAssociationModalData.newAllocation);
+		closeAutoAssociationModal();
+	}
+
+	function closeAutoAssociationModal() {
+		showAutoAssociationModal = false;
+		autoAssociationModalData = {
+			merchantName: '',
+			currentAllocation: '',
+			newAllocation: '',
+			autoAssociationBudget: '',
+			chargeId: null
+		};
 	}
 
 	async function handleDelete() {
@@ -1316,6 +1334,7 @@
 		autoAssociationBudget={autoAssociationModalData.autoAssociationBudget}
 		on:updateAutoAssociation={handleUpdateAutoAssociation}
 		on:skip={handleSkipAutoAssociation}
+		on:close={closeAutoAssociationModal}
 	/>
 </div>
 
