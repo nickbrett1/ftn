@@ -6,6 +6,11 @@
 
 	console.log('AutoAssociationUpdateModal props:', { isOpen, merchantName, currentAllocation, newAllocation, autoAssociationBudget });
 
+	// Reactive statement to ensure proper reactivity
+	$effect(() => {
+		console.log('Modal effect triggered - isOpen changed to:', isOpen);
+	});
+
 	const dispatch = createEventDispatcher();
 
 	function handleUpdateAutoAssociation() {
@@ -27,6 +32,11 @@
 <!-- Debug info - always visible -->
 <div class="fixed top-4 right-4 bg-red-500 text-white p-2 rounded z-[9999] text-xs">
 	Modal Debug: isOpen={isOpen}, merchant={merchantName}, current={currentAllocation}, new={newAllocation}
+</div>
+
+<!-- Additional debug info -->
+<div class="fixed top-20 right-4 bg-blue-500 text-white p-2 rounded z-[9999] text-xs">
+	Conditional Debug: {#if isOpen}SHOWING{/if}{#if !isOpen}HIDDEN{/if}
 </div>
 
 {#if isOpen}
