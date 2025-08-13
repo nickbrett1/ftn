@@ -4,6 +4,8 @@
 
 	let { isOpen = false, merchantName = '', currentAllocation = '', newAllocation = '', autoAssociationBudget = '' } = $props();
 
+	console.log('AutoAssociationUpdateModal props:', { isOpen, merchantName, currentAllocation, newAllocation, autoAssociationBudget });
+
 	const dispatch = createEventDispatcher();
 
 	function handleUpdateAutoAssociation() {
@@ -22,16 +24,21 @@
 	}
 </script>
 
+<!-- Debug info - always visible -->
+<div class="fixed top-4 right-4 bg-red-500 text-white p-2 rounded z-[9999] text-xs">
+	Modal Debug: isOpen={isOpen}, merchant={merchantName}, current={currentAllocation}, new={newAllocation}
+</div>
+
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+		class="fixed inset-0 bg-red-500 bg-opacity-90 flex items-center justify-center z-[9999] p-4"
 		on:click={handleBackdropClick}
 	>
-		<div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+		<div class="bg-yellow-300 border-4 border-red-500 rounded-lg shadow-xl max-w-md w-full p-6">
 			<div class="flex items-center mb-4">
 				<div class="flex-shrink-0">
 					<svg
-						class="h-6 w-6 text-yellow-500"
+						class="h-6 w-6 text-red-500"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
@@ -44,17 +51,17 @@
 						/>
 					</svg>
 				</div>
-				<h3 class="ml-3 text-lg font-medium text-gray-900">
+				<h3 class="ml-3 text-lg font-medium text-red-900">
 					Update Auto-Association?
 				</h3>
 			</div>
 
 			<div class="mb-6">
-				<p class="text-sm text-gray-600 mb-4">
+				<p class="text-sm text-red-800 mb-4">
 					You're changing the allocation for <strong>{merchantName}</strong> from{' '}
 					<strong>{autoAssociationBudget}</strong> to <strong>{newAllocation}</strong>.
 				</p>
-				<p class="text-sm text-gray-600">
+				<p class="text-sm text-red-800">
 					Would you like to update the auto-association rule so that future charges from{' '}
 					<strong>{merchantName}</strong> will automatically be allocated to{' '}
 					<strong>{newAllocation}</strong>?
