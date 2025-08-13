@@ -77,16 +77,21 @@
 				return;
 			}
 
-			// Reset form and refresh data
+			// Reset form immediately after successful addition
 			selectedMerchant = '';
 			
-			// Refresh the merchant picker to remove the newly added merchant from the list
+			// Refresh data without page reload to maintain scroll position
+			await invalidateAll();
+			
+			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
 				await merchantPickerRef.refreshMerchantList();
 			}
 			
-			// Refresh data without page reload to maintain scroll position
-			await invalidateAll();
+			// Also reset the merchant picker state to ensure it's completely clean
+			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
+				merchantPickerRef.resetMerchantPicker();
+			}
 			
 			// Restore scroll position after data refresh and remove class
 			requestAnimationFrame(() => {
@@ -126,13 +131,18 @@
 				return;
 			}
 
-			// Refresh the merchant picker to potentially add the removed merchant back to the list
+			// Refresh data without page reload to maintain scroll position
+			await invalidateAll();
+			
+			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
 				await merchantPickerRef.refreshMerchantList();
 			}
-
-			// Refresh data without page reload to maintain scroll position
-			await invalidateAll();
+			
+			// Also reset the merchant picker state to ensure it's completely clean
+			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
+				merchantPickerRef.resetMerchantPicker();
+			}
 			
 			// Restore scroll position after data refresh and remove class
 			requestAnimationFrame(() => {
@@ -298,6 +308,7 @@
 						{selectedMerchant}
 						onSelect={(merchant) => (selectedMerchant = merchant)}
 						placeholder="Choose a merchant to assign to this budget..."
+						assignedMerchants={merchants.map(m => m.merchant_normalized || m.merchant)}
 						bind:this={merchantPickerRef}
 					/>
 				</div>

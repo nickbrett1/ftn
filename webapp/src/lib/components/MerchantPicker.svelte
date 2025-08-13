@@ -5,29 +5,43 @@
 	const {
 		selectedMerchant = '',
 		onSelect = () => {},
-		placeholder = 'Select a merchant...'
+		placeholder = 'Select a merchant...',
+		assignedMerchants = []
 	} = $props();
 
 	let merchants = $state([]);
 	let isLoading = $state(true);
 	let error = $state('');
 	let showModal = $state(false);
+	let localSelectedMerchant = $state(''); // Local state for internal management
 
 	async function loadRecentMerchants() {
 		try {
 			isLoading = true;
 			error = '';
+			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			
+			// Add safety check for response
+			if (!response) {
+				throw new Error('No response received from server');
+			}
+			
 			if (!response.ok) {
 				throw new Error('Failed to load recent merchants');
 			}
 
-			merchants = await response.json();
+			const data = await response.json();
+			console.log('Received data:', data); // Debug log
+			merchants = Array.isArray(data) ? data : [];
+			console.log('Updated merchants state:', merchants); // Debug log
 		} catch (err) {
-			error = err.message;
+			console.error('Error loading merchants:', err);
+			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
+			console.log('Loading complete, isLoading:', isLoading, 'merchants:', merchants); // Debug log
 		}
 	}
 
@@ -35,23 +49,68 @@
 		const selectedValue = event.target.value;
 		if (selectedValue) {
 			onSelect(selectedValue);
-			// Refresh the merchant list to ensure it's up to date
-			// This helps when the merchant might be added to auto-assignment
-			loadRecentMerchants();
+			// Clear the selection immediately to prevent double-selection
+			localSelectedMerchant = '';
+			// Reset the select element value
+			event.target.value = '';
+			// Add a small delay to ensure any database changes are committed
+			setTimeout(() => {
+				// Refresh the merchant list to ensure it's up to date
+				// This helps when the merchant might be added to auto-assignment
+				loadRecentMerchants();
+			}, 100);
 		}
 	}
 
 	function handleModalSelect(merchant) {
 		onSelect(merchant);
-		// Refresh the recent merchants list to remove the newly added merchant
-		// This ensures the combo box doesn't show merchants that are no longer unassigned
-		loadRecentMerchants();
+		// Clear any existing selection
+		localSelectedMerchant = '';
+		// Add a small delay to ensure any database changes are committed
+		setTimeout(() => {
+			// Refresh the recent merchants list to remove the newly added merchant
+			// This ensures the combo box doesn't show merchants that are no longer unassigned
+			loadRecentMerchants();
+		}, 100);
 	}
 
 	// Function to refresh the merchant list - can be called by parent components
 	async function refreshMerchantList() {
+		// Add a small delay to ensure database transactions are fully committed
+		await new Promise(resolve => setTimeout(resolve, 100));
 		await loadRecentMerchants();
 	}
+
+	// Function to reset the merchant picker state
+	function resetMerchantPicker() {
+		localSelectedMerchant = '';
+		// Also refresh the merchant list to ensure it's up to date
+		loadRecentMerchants();
+		// Reset the select element value as well
+		const selectElement = document.getElementById('merchant-picker');
+		if (selectElement) {
+			selectElement.value = '';
+		}
+	}
+
+	// Refresh merchant list when assigned merchants change
+	$effect(() => {
+		if (assignedMerchants && assignedMerchants.length >= 0) {
+			loadRecentMerchants();
+		}
+	});
+
+	// Sync local state with prop when it changes
+	$effect(() => {
+		localSelectedMerchant = selectedMerchant;
+		// If the parent component clears the selection, also reset the select element
+		if (!selectedMerchant) {
+			const selectElement = document.getElementById('merchant-picker');
+			if (selectElement) {
+				selectElement.value = '';
+			}
+		}
+	});
 
 	onMount(() => {
 		loadRecentMerchants();
@@ -75,23 +134,27 @@
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 			No recent unassigned merchants found
 		</div>
+	{:else if merchants.filter(merchant => !(assignedMerchants || []).includes(merchant)).length === 0}
+		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+			All recent merchants are already assigned to budgets
+		</div>
 	{:else}
 		<div class="space-y-3">
 			<select
 				id="merchant-picker"
-				value={selectedMerchant}
+				value={localSelectedMerchant}
 				onchange={handleSelect}
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			>
 				<option value="">{placeholder}</option>
-				{#each merchants as merchant}
+				{#each merchants.filter(merchant => !(assignedMerchants || []).includes(merchant)) as merchant}
 					<option value={merchant}>
 						{merchant}
 					</option>
 				{/each}
-				{#if selectedMerchant && !merchants.includes(selectedMerchant)}
-					<option value={selectedMerchant}>
-						{selectedMerchant}
+				{#if localSelectedMerchant && !merchants.includes(localSelectedMerchant) && !(assignedMerchants || []).includes(localSelectedMerchant)}
+					<option value={localSelectedMerchant}>
+						{localSelectedMerchant}
 					</option>
 				{/if}
 			</select>
