@@ -90,8 +90,6 @@
 		console.log('Modal isOpen changed:', isOpen); // Debug log
 		if (isOpen) {
 			loadAllMerchants();
-			// Scroll to top to ensure modal is visible on mobile
-			window.scrollTo(0, 0);
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
 				if (isMounted) {
@@ -131,10 +129,10 @@
 </script>
 
 {#if isOpen}
-	<!-- Modal Backdrop - Using fixed positioning for mobile compatibility -->
+	<!-- Modal Backdrop - Responsive positioning -->
 	<div
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-start justify-center p-2 md:p-4 overflow-y-auto"
+		class="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
 		style="
 			position: fixed !important; 
 			top: 0 !important; 
@@ -152,10 +150,10 @@
 		aria-modal="true"
 		aria-labelledby="modal-title"
 	>
-		<!-- Modal Container - Mobile-first positioning -->
+		<!-- Modal Container - Responsive centering -->
 		<div
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mt-4 md:mt-0 md:my-auto mx-2 md:mx-0"
+			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8"
 			style="
 				position: relative !important; 
 				z-index: 10000 !important;
@@ -164,8 +162,8 @@
 				border-radius: 0.5rem !important;
 				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 				min-height: 200px !important;
-				max-width: 90vw !important;
-				max-height: 90vh !important;
+				max-width: calc(100vw - 1rem) !important;
+				max-height: calc(100vh - 1rem) !important;
 				overflow-y: auto !important;
 			"
 			role="document"
