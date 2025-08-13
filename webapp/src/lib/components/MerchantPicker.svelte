@@ -19,6 +19,7 @@
 		try {
 			isLoading = true;
 			error = '';
+			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
 			
@@ -32,12 +33,15 @@
 			}
 
 			const data = await response.json();
+			console.log('Received data:', data); // Debug log
 			merchants = Array.isArray(data) ? data : [];
+			console.log('Updated merchants state:', merchants); // Debug log
 		} catch (err) {
 			console.error('Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
+			console.log('Loading complete, isLoading:', isLoading, 'merchants:', merchants); // Debug log
 		}
 	}
 
