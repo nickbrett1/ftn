@@ -2,32 +2,22 @@
 	import { createEventDispatcher } from 'svelte';
 	import Button from './Button.svelte';
 
-	export let isOpen = false;
-	export let merchantName = '';
-	export let currentAllocation = '';
-	export let newAllocation = '';
-	export let autoAssociationBudget = '';
+	let { isOpen = false, merchantName = '', currentAllocation = '', newAllocation = '', autoAssociationBudget = '' } = $props();
 
 	const dispatch = createEventDispatcher();
 
 	function handleUpdateAutoAssociation() {
 		dispatch('updateAutoAssociation');
-		closeModal();
 	}
 
 	function handleSkip() {
 		dispatch('skip');
-		closeModal();
-	}
-
-	function closeModal() {
-		isOpen = false;
 	}
 
 	// Close modal when clicking outside
 	function handleBackdropClick(event) {
 		if (event.target === event.currentTarget) {
-			closeModal();
+			dispatch('close');
 		}
 	}
 </script>
