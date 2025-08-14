@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import Page from './+page.svelte';
 
@@ -24,7 +24,7 @@ describe('3D Heatmap Page', () => {
 
 	it('should show the 3D visualization container', () => {
 		render(Page);
-		const container = screen.getByRole('main') || document.querySelector('.h-\\[80vh\\]');
+		const container = document.querySelector('.h-\\[80vh\\]');
 		expect(container).toBeInTheDocument();
 	});
 
@@ -36,9 +36,9 @@ describe('3D Heatmap Page', () => {
 
 	it('should show the interactive controls info', () => {
 		render(Page);
-		expect(screen.getByText(/View automatically rotates/)).toBeInTheDocument();
-		expect(screen.getByText(/Columns show price changes/)).toBeInTheDocument();
-		expect(screen.getByText(/Grouped by sector/)).toBeInTheDocument();
+		expect(screen.getByText(/Drag to rotate/)).toBeInTheDocument();
+		expect(screen.getByText(/Scroll to zoom/)).toBeInTheDocument();
+		expect(screen.getByText(/Hover for details/)).toBeInTheDocument();
 	});
 
 	it('should display the legend sections', () => {
