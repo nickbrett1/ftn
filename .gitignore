@@ -73,6 +73,7 @@ vite.config.ts.timestamp-*
 !.env.example
 webapp/.svelte-kit
 webapp/build
+.vite
 webapp/.wrangler
 webapp/.cloudflare
 .wrangler
