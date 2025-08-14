@@ -68,7 +68,7 @@
 		"svelte": "^5.38.1",
 		"svelte-awesome-icons": "^2.0.1",
 		"svelte-preprocess": "^6.0.3",
-		"tailwindcss": "^4.1.11",
+		"tailwindcss": "^4.1.12",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.2",
 		"vite-imagetools": "^8.0.0",
