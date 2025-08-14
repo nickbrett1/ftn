@@ -1,7 +1,8 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
+	import { effect } from 'svelte';
 	import { Canvas } from '@threlte/core';
-	import { OrbitControls, useProgress } from '@threlte/extras';
+	import { useProgress } from '@threlte/extras';
 	import { tweened } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
 	import HeatmapScene from './HeatmapScene.svelte';
@@ -12,15 +13,44 @@
 	const tweenedProgress = tweened($progress);
 	
 	// Update tweened progress when progress changes
-	$effect(() => {
+	effect(() => {
 		tweenedProgress.set($progress);
 	});
 
 	let sp500Data = generateSP500HeatmapData();
+	let hasError = $state(false);
+	let errorMessage = $state('');
+
+	onMount(() => {
+		console.log('Heatmap3D: Component mounted');
+		console.log('Heatmap3D: Generated data:', sp500Data);
+		console.log('Heatmap3D: Data length:', sp500Data?.length);
+		
+		// Validate data
+		if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
+			hasError = true;
+			errorMessage = 'Failed to generate heatmap data';
+			console.error('Heatmap3D: Data validation failed');
+		}
+	});
 </script>
 
 <div class="relative w-full h-full">
-	{#if $tweenedProgress < 1}
+	{#if hasError}
+		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+			<div class="text-center">
+				<div class="w-16 h-16 border-4 border-red-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+				<p class="text-lg text-white mb-2">Error Loading 3D Heatmap</p>
+				<p class="text-sm text-red-400">{errorMessage}</p>
+				<button 
+					onclick={() => window.location.reload()} 
+					class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+				>
+					Reload Page
+				</button>
+			</div>
+		</div>
+	{:else if $tweenedProgress < 1}
 		<div
 			transition:fade
 			class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10"
@@ -37,40 +67,33 @@
 		</div>
 	{/if}
 
-	<Canvas>
-		<HeatmapScene {sp500Data} />
-		<OrbitControls 
-			enableDamping 
-			dampingFactor={0.05}
-			enablePan={true}
-			enableZoom={true}
-			enableRotate={true}
-			autoRotate={true}
-			autoRotateSpeed={0.5}
-		/>
-	</Canvas>
+	{#if !hasError}
+		<Canvas>
+			<HeatmapScene {sp500Data} />
+		</Canvas>
 
-	<!-- Legend overlay -->
-	<div class="absolute top-4 right-4 z-20">
-		<HeatmapLegend />
-	</div>
+		<!-- Legend overlay -->
+		<div class="absolute top-4 right-4 z-20">
+			<HeatmapLegend />
+		</div>
 
-	<!-- Data info overlay -->
-	<div class="absolute bottom-4 left-4 z-20 bg-black bg-opacity-80 rounded-lg p-4 border border-zinc-700">
-		<div class="text-white text-sm">
-			<div class="flex items-center gap-2 mb-2">
-				<span class="w-3 h-3 bg-green-400 rounded-full"></span>
-				<span>Positive Change</span>
-			</div>
-			<div class="flex items-center gap-2 mb-2">
-				<div class="w-3 h-3 bg-red-400 rounded-full"></div>
-				<span>Negative Change</span>
-			</div>
-			<div class="text-xs text-zinc-400">
-				Column height = % change<br>
-				Column area = Market cap<br>
-				Grouped by sector
+		<!-- Data info overlay -->
+		<div class="absolute bottom-4 left-4 z-20 bg-black bg-opacity-80 rounded-lg p-4 border border-zinc-700">
+			<div class="text-white text-sm">
+				<div class="flex items-center gap-2 mb-2">
+					<span class="w-3 h-3 bg-green-400 rounded-full"></span>
+					<span>Positive Change</span>
+				</div>
+				<div class="flex items-center gap-2 mb-2">
+					<div class="w-3 h-3 bg-red-400 rounded-full"></div>
+					<span>Negative Change</span>
+				</div>
+				<div class="text-xs text-zinc-400">
+					Column height = % change<br>
+					Column area = Market cap<br>
+					Grouped by sector
+				</div>
 			</div>
 		</div>
-	</div>
+	{/if}
 </div>
