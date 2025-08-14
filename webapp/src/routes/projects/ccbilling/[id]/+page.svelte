@@ -355,7 +355,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(requestBody)
+				body: JSON.stringify({ allocated_to: newAllocation })
 			});
 
 			if (!response.ok) {
