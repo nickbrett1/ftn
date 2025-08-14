@@ -1,0 +1,105 @@
+<script>
+	import { onMount } from 'svelte';
+	import { T } from '@threlte/core';
+	import { interactivity } from '@threlte/extras';
+
+	const { sp500Data } = $props();
+
+	interactivity();
+
+	let columns = $derived(sp500Data ? sp500Data.map((security, index) => {
+		const sector = security.sector;
+		const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
+		const sectorSize = sp500Data.filter(s => s.sector === sector).length;
+		const sectorPosition = sp500Data.filter(s => s.sector === sector).indexOf(security);
+		
+		// Position within sector grid
+		const gridSize = Math.ceil(Math.sqrt(sectorSize));
+		const row = Math.floor(sectorPosition / gridSize);
+		const col = sectorPosition % gridSize;
+		
+		// Sector positioning (spread sectors out)
+		const sectorSpacing = 8;
+		const x = (sectorIndex - 2) * sectorSpacing + (col - gridSize / 2) * 1.5;
+		const z = (row - gridSize / 2) * 1.5;
+		
+		// Column dimensions based on market cap and price change
+		const baseSize = Math.sqrt(security.marketCap / 1000000) * 0.1; // Scale market cap
+		const height = Math.abs(security.priceChange) * 0.5; // Scale price change
+		const y = height / 2; // Center vertically
+		
+		return {
+			...security,
+			position: [x, y, z],
+			dimensions: [baseSize, height, baseSize],
+			index
+		};
+	}) : []);
+
+	let tooltip = $state(null);
+
+	onMount(() => {
+		// Create tooltip element
+		tooltip = document.createElement('div');
+		tooltip.style.cssText = `
+			position: fixed;
+			display: none;
+			z-index: 1000;
+			pointer-events: none;
+		`;
+		document.body.appendChild(tooltip);
+	});
+
+	// Handle column hover
+	function handlePointerMove(event) {
+		if (tooltip && event.object.userData) {
+			const security = event.object.userData;
+			tooltip.innerHTML = `
+				<div class="bg-black bg-opacity-90 text-white p-3 rounded-lg border border-zinc-700 shadow-lg">
+					<div class="font-bold text-green-400">${security.ticker}</div>
+					<div class="text-sm">${security.name}</div>
+					<div class="text-sm ${security.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}">
+						${security.priceChange >= 0 ? '+' : ''}${security.priceChange.toFixed(2)}%
+					</div>
+					<div class="text-xs text-zinc-400">
+						Market Cap: $${(security.marketCap / 1000000000).toFixed(1)}B
+					</div>
+					<div class="text-xs text-zinc-400">
+						Sector: ${security.sector}
+					</div>
+				</div>
+			`;
+			
+			tooltip.style.display = 'block';
+			tooltip.style.left = event.clientX + 10 + 'px';
+			tooltip.style.top = event.clientY - 10 + 'px';
+		}
+	}
+
+	function handlePointerOut() {
+		if (tooltip) {
+			tooltip.style.display = 'none';
+		}
+	}
+</script>
+
+<!-- Render each column -->
+{#each columns as column (column.index)}
+	<T.Mesh
+		position={column.position}
+		userData={column}
+		onPointerMove={handlePointerMove}
+		onPointerOut={handlePointerOut}
+	>
+		<T.BoxGeometry args={column.dimensions} />
+		<T.MeshStandardMaterial
+			color={column.priceChange >= 0 ? '#00ff88' : '#ff0088'}
+			emissive={column.priceChange >= 0 ? '#00ff88' : '#ff0088'}
+			emissiveIntensity={0.3}
+			metalness={0.8}
+			roughness={0.2}
+			transparent={true}
+			opacity={0.9}
+		/>
+	</T.Mesh>
+{/each}
