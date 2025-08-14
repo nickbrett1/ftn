@@ -1,6 +1,5 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { $props } from 'svelte';
 	import { T } from '@threlte/core';
 	import { gsap } from 'gsap';
 	import { HeatmapColumns } from './HeatmapColumns.svelte';

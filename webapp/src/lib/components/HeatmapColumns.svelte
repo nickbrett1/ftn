@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { $props } from 'svelte';
 	import { T } from '@threlte/core';
 	import { interactivity } from '@threlte/extras';
 	import tippy from 'tippy.js';
