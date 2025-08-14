@@ -1,6 +1,22 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
+import { expect, vi } from 'vitest';
+import '@testing-library/jest-dom';
 import HeatmapGrid from './HeatmapGrid.svelte';
+
+// Mock Threlte components to avoid WebGL issues in tests
+vi.mock('@threlte/core', () => ({
+	Canvas: {
+		render: () => '<div data-testid="canvas">Canvas</div>'
+	},
+	T: {
+		Mesh: {
+			render: () => '<div data-testid="mesh">Mesh</div>'
+		},
+		LineSegments: {
+			render: () => '<div data-testid="lines">LineSegments</div>'
+		}
+	}
+}));
 
 describe('HeatmapGrid', () => {
 	it('should render the grid component', () => {
@@ -9,30 +25,26 @@ describe('HeatmapGrid', () => {
 	});
 
 	it('should display sector dividers', () => {
-		render(HeatmapGrid);
-		// The component should render sector divider lines
-		// Since this is a Three.js component, we test the structure
 		const { container } = render(HeatmapGrid);
+		// Component should render without errors
 		expect(container.firstChild).toBeInTheDocument();
 	});
 
 	it('should have proper styling classes', () => {
 		const { container } = render(HeatmapGrid);
-		const gridElement = container.firstChild;
-		expect(gridElement).toBeInTheDocument();
+		// Basic structure should be present
+		expect(container.firstChild).toBeInTheDocument();
 	});
 
 	it('should render sector labels', () => {
-		render(HeatmapGrid);
-		// The component should render sector labels for the grid
 		const { container } = render(HeatmapGrid);
+		// Component should render without errors
 		expect(container.firstChild).toBeInTheDocument();
 	});
 
 	it('should display center cross reference', () => {
-		render(HeatmapGrid);
-		// The component should render a center cross for reference
 		const { container } = render(HeatmapGrid);
+		// Component should render without errors
 		expect(container.firstChild).toBeInTheDocument();
 	});
 });
