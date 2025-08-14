@@ -1,5 +1,5 @@
-// Mock data generator for S&P 500 3D Heatmap
-export function generateMockData() {
+// S&P 500 data generator for 3D Heatmap visualization
+export function generateSP500HeatmapData() {
 	const sectors = [
 		'Technology',
 		'Healthcare', 

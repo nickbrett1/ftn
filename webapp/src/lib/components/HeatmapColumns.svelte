@@ -5,7 +5,7 @@
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 
-	export let mockData;
+	export let sp500Data;
 
 	interactivity();
 
@@ -20,12 +20,12 @@
 	});
 
 	// Calculate column dimensions and positions
-	$: if (mockData) {
-		columns = mockData.map((security, index) => {
+	$: if (sp500Data) {
+		columns = sp500Data.map((security, index) => {
 			const sector = security.sector;
-			const sectorIndex = [...new Set(mockData.map(s => s.sector))].indexOf(sector);
-			const sectorSize = mockData.filter(s => s.sector === sector).length;
-			const sectorPosition = mockData.filter(s => s.sector === sector).indexOf(security);
+			const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
+			const sectorSize = sp500Data.filter(s => s.sector === sector).length;
+			const sectorPosition = sp500Data.filter(s => s.sector === sector).indexOf(security);
 			
 			// Position within sector grid
 			const gridSize = Math.ceil(Math.sqrt(sectorSize));

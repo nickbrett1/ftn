@@ -7,7 +7,7 @@
 	import { run } from 'svelte/legacy';
 	import HeatmapScene from './HeatmapScene.svelte';
 	import HeatmapLegend from './HeatmapLegend.svelte';
-	import { generateMockData } from '$lib/utils/mockData';
+	import { generateSP500HeatmapData } from '$lib/utils/sp500HeatmapData';
 
 	const { progress } = useProgress();
 	const tweenedProgress = tweened($progress);
@@ -16,7 +16,7 @@
 		tweenedProgress.set($progress);
 	});
 
-	let mockData = generateMockData();
+	let sp500Data = generateSP500HeatmapData();
 </script>
 
 <div class="relative w-full h-full">
@@ -38,7 +38,7 @@
 	{/if}
 
 	<Canvas>
-		<HeatmapScene {mockData} />
+		<HeatmapScene {sp500Data} />
 		<OrbitControls 
 			enableDamping 
 			dampingFactor={0.05}

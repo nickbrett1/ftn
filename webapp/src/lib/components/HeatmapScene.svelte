@@ -5,7 +5,7 @@
 	import { HeatmapColumns } from './HeatmapColumns.svelte';
 	import { HeatmapGrid } from './HeatmapGrid.svelte';
 
-	export let mockData;
+	export let sp500Data;
 
 	let camera = $state();
 	let scene = $state();
@@ -98,7 +98,7 @@
 <HeatmapGrid />
 
 <!-- 3D Columns representing the heatmap data -->
-<HeatmapColumns {mockData} />
+	<HeatmapColumns {sp500Data} />
 
 <!-- Ground plane with subtle glow -->
 <T.Mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>

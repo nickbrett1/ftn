@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { generateMockData } from './mockData';
+import { generateSP500HeatmapData } from './sp500HeatmapData';
 
-describe('mockData', () => {
-	describe('generateMockData', () => {
+describe('sp500HeatmapData', () => {
+	describe('generateSP500HeatmapData', () => {
 		it('should return an array of securities', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			expect(Array.isArray(data)).toBe(true);
 			expect(data.length).toBeGreaterThan(0);
 		});
 
 		it('should have the correct structure for each security', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			const security = data[0];
 
 			expect(security).toHaveProperty('ticker');
@@ -27,7 +27,7 @@ describe('mockData', () => {
 		});
 
 		it('should include all expected sectors', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			const sectors = [...new Set(data.map(s => s.sector))];
 
 			expect(sectors).toContain('Technology');
@@ -38,7 +38,7 @@ describe('mockData', () => {
 		});
 
 		it('should have realistic market cap values', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			
 			data.forEach(security => {
 				expect(security.marketCap).toBeGreaterThan(0);
@@ -47,7 +47,7 @@ describe('mockData', () => {
 		});
 
 		it('should have realistic price change values', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			
 			data.forEach(security => {
 				expect(security.priceChange).toBeGreaterThan(-20); // Not more than -20%
@@ -56,7 +56,7 @@ describe('mockData', () => {
 		});
 
 		it('should have unique ticker symbols', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			const tickers = data.map(s => s.ticker);
 			const uniqueTickers = [...new Set(tickers)];
 
@@ -64,7 +64,7 @@ describe('mockData', () => {
 		});
 
 		it('should have companies in each sector', () => {
-			const data = generateMockData();
+			const data = generateSP500HeatmapData();
 			const sectorCounts = {};
 
 			data.forEach(security => {
