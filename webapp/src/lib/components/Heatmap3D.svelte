@@ -38,7 +38,7 @@
 	{/if}
 
 	<Canvas>
-		<HeatmapScene {sp500Data} />
+		<HeatmapScene sp500Data={sp500Data} />
 		<OrbitControls 
 			enableDamping 
 			dampingFactor={0.05}

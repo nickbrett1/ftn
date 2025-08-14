@@ -1,11 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
+	import { $props } from 'svelte';
 	import { T } from '@threlte/core';
 	import { interactivity } from '@threlte/extras';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 
-	export let sp500Data;
+	const { sp500Data } = $props();
 
 	interactivity();
 
