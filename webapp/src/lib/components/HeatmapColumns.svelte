@@ -161,7 +161,6 @@
 {/each}
 
 	<!-- Tippy.js will handle tooltips automatically -->
-</div>
 
 <style>
 	/* Custom Tippy.js styling to match the futuristic neon theme */
