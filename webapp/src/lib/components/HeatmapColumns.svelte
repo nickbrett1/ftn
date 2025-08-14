@@ -7,38 +7,54 @@
 
 	interactivity();
 
-	let columns = $derived(sp500Data ? sp500Data.map((security, index) => {
-		const sector = security.sector;
-		const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
-		const sectorSize = sp500Data.filter(s => s.sector === sector).length;
-		const sectorPosition = sp500Data.filter(s => s.sector === sector).indexOf(security);
-		
-		// Position within sector grid
-		const gridSize = Math.ceil(Math.sqrt(sectorSize));
-		const row = Math.floor(sectorPosition / gridSize);
-		const col = sectorPosition % gridSize;
-		
-		// Sector positioning (spread sectors out)
-		const sectorSpacing = 8;
-		const x = (sectorIndex - 2) * sectorSpacing + (col - gridSize / 2) * 1.5;
-		const z = (row - gridSize / 2) * 1.5;
-		
-		// Column dimensions based on market cap and price change
-		const baseSize = Math.sqrt(security.marketCap / 1000000) * 0.1; // Scale market cap
-		const height = Math.abs(security.priceChange) * 0.5; // Scale price change
-		const y = height / 2; // Center vertically
-		
-		return {
-			...security,
-			position: [x, y, z],
-			dimensions: [baseSize, height, baseSize],
-			index
-		};
-	}) : []);
-
-	let tooltip = $state(null);
+	let columns = [];
+	let tooltip = null;
 
 	onMount(() => {
+		console.log('HeatmapColumns: Component mounted with data:', sp500Data);
+		
+		// Process data
+		if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
+			console.warn('HeatmapColumns: No data provided or invalid data format');
+			columns = [];
+		} else {
+			try {
+				columns = sp500Data.map((security, index) => {
+					const sector = security.sector;
+					const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
+					const sectorSize = sp500Data.filter(s => s.sector === sector).length;
+					const sectorPosition = sp500Data.filter(s => s.sector === sector).indexOf(security);
+					
+					// Position within sector grid
+					const gridSize = Math.ceil(Math.sqrt(sectorSize));
+					const row = Math.floor(sectorPosition / gridSize);
+					const col = sectorPosition % gridSize;
+					
+					// Sector positioning (spread sectors out)
+					const sectorSpacing = 8;
+					const x = (sectorIndex - 2) * sectorSpacing + (col - gridSize / 2) * 1.5;
+					const z = (row - gridSize / 2) * 1.5;
+					
+					// Column dimensions based on market cap and price change
+					const baseSize = Math.sqrt(security.marketCap / 1000000) * 0.1; // Scale market cap
+					const height = Math.abs(security.priceChange) * 0.5; // Scale price change
+					const y = height / 2; // Center vertically
+					
+					return {
+						...security,
+						position: [x, y, z],
+						dimensions: [baseSize, height, baseSize],
+						index
+					};
+				});
+			} catch (error) {
+				console.error('HeatmapColumns: Error processing data:', error);
+				columns = [];
+			}
+		}
+		
+		console.log('HeatmapColumns: Processed columns:', columns);
+		
 		// Create tooltip element
 		tooltip = document.createElement('div');
 		tooltip.style.cssText = `
@@ -82,6 +98,13 @@
 		}
 	}
 </script>
+
+<!-- Debug info -->
+{#if columns.length === 0}
+	<div class="absolute inset-0 flex items-center justify-center text-white text-lg">
+		No data available for heatmap
+	</div>
+{/if}
 
 <!-- Render each column -->
 {#each columns as column (column.index)}

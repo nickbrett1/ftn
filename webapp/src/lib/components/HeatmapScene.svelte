@@ -1,17 +1,24 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { T } from '@threlte/core';
+	import { OrbitControls } from '@threlte/extras';
 	import { gsap } from 'gsap';
 	import HeatmapColumns from './HeatmapColumns.svelte';
 	import HeatmapGrid from './HeatmapGrid.svelte';
 
 	const { sp500Data } = $props();
 
-	let camera = $state();
-	let scene = $state();
-	let animationTimeline = $state();
+	let camera = null;
+	let scene = null;
+	let animationTimeline = null;
+	let aspectRatio = 16/9; // Default aspect ratio
 
 	onMount(() => {
+		// Set aspect ratio safely
+		if (typeof window !== 'undefined') {
+			aspectRatio = window.innerWidth / window.innerHeight;
+		}
+
 		// Create animation timeline for camera movement
 		animationTimeline = gsap.timeline({ repeat: -1, yoyo: true });
 		
@@ -48,7 +55,7 @@
 <T.PerspectiveCamera
 	position={[0, 10, 25]}
 	fov={45}
-	aspect={window.innerWidth / window.innerHeight}
+	aspect={aspectRatio}
 	near={0.1}
 	far={1000}
 	makeDefault
@@ -56,7 +63,17 @@
 		camera = ref;
 		ref.lookAt(0, 0, 0);
 	}}
-/>
+>
+	<OrbitControls 
+		enableDamping 
+		dampingFactor={0.05}
+		enablePan={true}
+		enableZoom={true}
+		enableRotate={true}
+		autoRotate={true}
+		autoRotateSpeed={0.5}
+	/>
+</T.PerspectiveCamera>
 
 <!-- Lighting setup for futuristic neon theme -->
 <T.AmbientLight intensity={0.1} color="#0a0a0a" />

@@ -79,6 +79,22 @@ webapp/.cloudflare
 migrations/
 .vite
 
+# Vite build artifacts
+.vite/
+webapp/.vite/
+dist/
+webapp/dist/
+webapp/build/
+webapp/.svelte-kit/
+webapp/out/
+
+# Development artifacts
+*.log
+*.tmp
+*.cache
+.cache/
+webapp/.cache/
+
 # Cloudflare workers stuff
 webapp/workers/out
 
