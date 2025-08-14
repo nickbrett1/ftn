@@ -3,7 +3,7 @@
 	import { T } from '@threlte/core';
 	import { interactivity } from '@threlte/extras';
 
-	const { sp500Data } = $props();
+	export let sp500Data;
 
 	interactivity();
 

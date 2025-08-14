@@ -1,6 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { Canvas } from '@threlte/core';
+	import { T } from '@threlte/core';
 	import { useProgress } from '@threlte/extras';
 	import { tweened } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
@@ -16,6 +17,7 @@
 	let hasError = false;
 	let errorMessage = '';
 	let isClient = false;
+	let canvasMounted = false;
 
 	onMount(() => {
 		isClient = true;
@@ -37,6 +39,17 @@
 
 		return unsubscribe;
 	});
+
+	function handleCanvasMount() {
+		console.log('Heatmap3D: Canvas mounted');
+		canvasMounted = true;
+	}
+
+	function handleCanvasError(error) {
+		console.error('Heatmap3D: Canvas error:', error);
+		hasError = true;
+		errorMessage = 'Failed to initialize 3D canvas';
+	}
 </script>
 
 <div class="relative w-full h-full">
@@ -88,9 +101,36 @@
 	{/if}
 
 	{#if !hasError && isClient && browser}
-		<Canvas>
-			<HeatmapScene {sp500Data} />
-		</Canvas>
+		<div class="w-full h-full bg-red-500">
+			<Canvas 
+				on:mount={handleCanvasMount} 
+				on:error={handleCanvasError}
+				style="width: 100%; height: 100%; background: blue;"
+			>
+				<!-- Test with a simple cube first -->
+				<T.PerspectiveCamera position={[0, 0, 5]} makeDefault />
+				<T.AmbientLight intensity={0.5} />
+				<T.Mesh position={[0, 0, 0]}>
+					<T.BoxGeometry args={[1, 1, 1]} />
+					<T.MeshStandardMaterial color="red" />
+				</T.Mesh>
+				
+				<!-- Original scene -->
+				<HeatmapScene {sp500Data} />
+			</Canvas>
+		</div>
+
+		<!-- Debug info -->
+		<div class="absolute top-4 left-4 z-20 bg-black bg-opacity-80 rounded-lg p-4 border border-zinc-700">
+			<div class="text-white text-sm">
+				<div>Canvas mounted: {canvasMounted}</div>
+				<div>Data length: {sp500Data?.length || 0}</div>
+				<div>Progress: {($tweenedProgress * 100).toFixed(1)}%</div>
+				<div>Browser: {browser}</div>
+				<div>Client: {isClient}</div>
+				<div>Error: {hasError}</div>
+			</div>
+		</div>
 
 		<!-- Legend overlay -->
 		<div class="absolute top-4 right-4 z-20">

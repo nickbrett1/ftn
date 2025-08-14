@@ -6,7 +6,7 @@
 	import HeatmapColumns from './HeatmapColumns.svelte';
 	import HeatmapGrid from './HeatmapGrid.svelte';
 
-	const { sp500Data } = $props();
+	export let sp500Data;
 
 	let camera = null;
 	let scene = null;
@@ -14,6 +14,8 @@
 	let aspectRatio = 16/9; // Default aspect ratio
 
 	onMount(() => {
+		console.log('HeatmapScene: Component mounted with data:', sp500Data);
+		
 		// Set aspect ratio safely
 		if (typeof window !== 'undefined') {
 			aspectRatio = window.innerWidth / window.innerHeight;
@@ -42,6 +44,8 @@
 			duration: 10, 
 			ease: 'power2.inOut' 
 		});
+		
+		console.log('HeatmapScene: Animation timeline created');
 	});
 
 	onDestroy(() => {

@@ -1,6 +1,6 @@
 <script>
 	import Header from '$lib/components/Header.svelte';
-	import Heatmap3D from '$lib/components/Heatmap3D.svelte';
+	import SimpleHeatmap3D from '$lib/components/SimpleHeatmap3D.svelte';
 </script>
 
 <div class="min-h-screen bg-zinc-900">
@@ -17,7 +17,7 @@
 		</div>
 		
 		<div class="w-full h-[80vh] bg-black rounded-lg overflow-hidden border border-zinc-700 shadow-2xl">
-			<Heatmap3D />
+			<SimpleHeatmap3D />
 		</div>
 		
 		<div class="mt-8 text-center">
