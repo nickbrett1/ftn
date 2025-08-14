@@ -73,7 +73,7 @@
 		"vite": "^7.1.2",
 		"vite-imagetools": "^8.0.0",
 		"vitest": "^3.2.4",
-		"wrangler": "^4.29.1",
+		"wrangler": "^4.30.0",
 		"safe-regex2": "^5.0.0"
 	},
 	"type": "module",
