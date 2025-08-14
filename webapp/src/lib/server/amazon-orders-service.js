@@ -38,6 +38,47 @@ export function extractAmazonOrderId(merchantString) {
 }
 
 /**
+ * Extract Amazon order ID from multi-line statement text
+ * This handles cases where the order ID is on a separate line
+ * @param {string} statementText - Full statement text that may contain multiple lines
+ * @returns {string|null} - Extracted order ID or null
+ */
+export function extractAmazonOrderIdFromMultiLine(statementText) {
+	if (!statementText) return null;
+
+	// Split into lines and look for Amazon-related content
+	const lines = statementText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+	
+	// Check if any line contains Amazon identifiers
+	const hasAmazon = lines.some(line => 
+		line.toUpperCase().includes('AMAZON') || 
+		line.toUpperCase().includes('AMZN')
+	);
+	
+	if (!hasAmazon) return null;
+
+	// Look for order ID patterns across all lines
+	for (const line of lines) {
+		// Pattern for standard Amazon order IDs (XXX-XXXXXXX-XXXXXXX)
+		const standardPattern = /\b(\d{3}-\d{7}-\d{7})\b/;
+		let match = line.match(standardPattern);
+		if (match) return match[1];
+
+		// Pattern for compact order IDs (16 digits)
+		const compactPattern = /\b(\d{16})\b/;
+		match = line.match(compactPattern);
+		if (match) return match[1];
+
+		// Try to extract any long number sequence that might be an order ID
+		const numberPattern = /\b(\d{10,})\b/;
+		match = line.match(numberPattern);
+		if (match) return match[1];
+	}
+
+	return null;
+}
+
+/**
  * Fetch order details from Amazon Orders Worker
  * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
  * @param {string} orderId - Amazon order ID
