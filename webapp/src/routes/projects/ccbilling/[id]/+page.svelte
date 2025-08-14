@@ -43,27 +43,31 @@
 		return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
 	}
 
-	// Function to format merchant name with flight details
+	// Function to format merchant name with flight details and Amazon order ID
 	function formatMerchantName(charge) {
 		// Use normalized merchant name for consistent display
 		const merchantName = charge.merchant_normalized || charge.merchant;
 
-		if (!charge.flight_details) {
-			return merchantName;
+		// Check if this is an Amazon charge with order ID
+		if (charge.amazon_order_id) {
+			return `${merchantName} (${charge.amazon_order_id})`;
 		}
 
-		const flight = charge.flight_details;
-		const airports = [];
+		// Check for flight details
+		if (charge.flight_details) {
+			const flight = charge.flight_details;
+			const airports = [];
 
-		if (flight.departure_airport) {
-			airports.push(flight.departure_airport);
-		}
-		if (flight.arrival_airport) {
-			airports.push(flight.arrival_airport);
-		}
+			if (flight.departure_airport) {
+				airports.push(flight.departure_airport);
+			}
+			if (flight.arrival_airport) {
+				airports.push(flight.arrival_airport);
+			}
 
-		if (airports.length > 0) {
-			return `${merchantName} (${airports.join(', ')})`;
+			if (airports.length > 0) {
+				return `${merchantName} (${airports.join(', ')})`;
+			}
 		}
 
 		return merchantName;
