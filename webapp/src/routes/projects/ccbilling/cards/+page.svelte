@@ -165,12 +165,23 @@
 			{/if}
 			<div class="space-y-4">
 				{#each creditCards as card (card.id)}
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center cursor-pointer hover:bg-gray-700" onclick={() => goToCardDetail(card)}>
+					<button
+						type="button"
+						class="w-full text-left bg-gray-800 border border-gray-700 rounded-lg p-6 flex justify-between items-center cursor-pointer hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+						onclick={() => goToCardDetail(card)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								goToCardDetail(card);
+							}
+						}}
+						aria-label="View details for {card.name} card ending in {card.last4}"
+					>
 						<div>
 							<p class="text-white font-semibold text-lg">{card.name}</p>
 							<p class="text-gray-400 text-sm">****{card.last4}</p>
 						</div>
-					</div>
+					</button>
 				{/each}
 			</div>
 		{/if}
