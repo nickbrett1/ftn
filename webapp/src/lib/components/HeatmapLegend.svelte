@@ -1,5 +1,5 @@
 <script>
-	let isExpanded = $state(false);
+	let isExpanded = false;
 </script>
 
 <div class="bg-black bg-opacity-90 rounded-lg p-4 border border-zinc-700 shadow-lg text-white min-w-64">
