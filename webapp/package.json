@@ -29,7 +29,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.11.4",
-		"@dimforge/rapier3d-compat": "^0.18.1",
+		"@dimforge/rapier3d-compat": "^0.18.2",
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.86.6",
 		"@sveltejs/adapter-auto": "^6.1.0",
