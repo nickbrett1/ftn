@@ -553,7 +553,27 @@ describe('ccbilling-db functions', () => {
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
-				expect(result).toEqual(mockCharges);
+				
+				// Check that the result includes the expected fields plus the new amazon_order_id
+				expect(result).toHaveLength(2);
+				expect(result[0]).toMatchObject({
+					id: 1,
+					merchant: 'Amazon',
+					amount: 85.67,
+					card_name: 'Chase Freedom',
+					last4: '1234',
+					flight_details: null,
+					amazon_order_id: null
+				});
+				expect(result[1]).toMatchObject({
+					id: 2,
+					merchant: 'Target',
+					amount: 45.32,
+					card_name: 'Amex Gold',
+					last4: '5678',
+					flight_details: null,
+					amazon_order_id: null
+				});
 			});
 		});
 
@@ -576,7 +596,17 @@ describe('ccbilling-db functions', () => {
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
-				expect(result).toEqual(mockPayment);
+				
+				// Check that the result includes the expected fields plus the new fields
+				expect(result).toMatchObject({
+					id: 1,
+					merchant: 'Amazon',
+					amount: 85.67,
+					card_name: 'Chase',
+					last4: '1234',
+					flight_details: null,
+					amazon_order_id: null
+				});
 			});
 		});
 
