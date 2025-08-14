@@ -15,42 +15,49 @@
 	let isSceneReady = false;
 
 	onMount(() => {
-		// Create animation timeline for camera movement
-		animationTimeline = gsap.timeline({ repeat: -1, yoyo: true });
+		try {
+			console.log('HeatmapScene: Component mounted with data:', sp500Data);
+			
+			// Create animation timeline for camera movement
+			animationTimeline = gsap.timeline({ repeat: -1, yoyo: true });
 
-		// Animate camera to show positive changes (green columns)
-		animationTimeline.to(camera.position, {
-			x: 15,
-			y: 20,
-			z: 15,
-			duration: 15,
-			ease: 'power2.inOut'
-		});
+			// Animate camera to show positive changes (green columns)
+			animationTimeline.to(camera.position, {
+				x: 15,
+				y: 20,
+				z: 15,
+				duration: 15,
+				ease: 'power2.inOut'
+			});
 
-		// Animate camera to show negative changes (red columns)
-		animationTimeline.to(camera.position, {
-			x: -15,
-			y: -20,
-			z: 15,
-			duration: 15,
-			ease: 'power2.inOut'
-		});
+			// Animate camera to show negative changes (red columns)
+			animationTimeline.to(camera.position, {
+				x: -15,
+				y: -20,
+				z: 15,
+				duration: 15,
+				ease: 'power2.inOut'
+			});
 
-		// Return to center view
-		animationTimeline.to(camera.position, {
-			x: 0,
-			y: 10,
-			z: 25,
-			duration: 10,
-			ease: 'power2.inOut'
-		});
+			// Return to center view
+			animationTimeline.to(camera.position, {
+				x: 0,
+				y: 10,
+				z: 25,
+				duration: 10,
+				ease: 'power2.inOut'
+			});
 
-		// Mark scene as ready after a short delay to ensure all components are loaded
-		setTimeout(() => {
-			isSceneReady = true;
-			dispatch('sceneReady');
-			console.log('HeatmapScene: Scene ready event dispatched');
-		}, 500);
+			// Mark scene as ready after a short delay to ensure all components are loaded
+			setTimeout(() => {
+				isSceneReady = true;
+				dispatch('sceneReady');
+				console.log('HeatmapScene: Scene ready event dispatched');
+			}, 500);
+		} catch (error) {
+			console.error('HeatmapScene: Error during setup:', error);
+			dispatch('error', error.message);
+		}
 	});
 
 	onDestroy(() => {
@@ -62,7 +69,7 @@
 
 <!-- Camera setup -->
 <T.PerspectiveCamera
-	position={[0, 10, 25]}
+	position={[0, 15, 30]}
 	fov={45}
 	aspect={typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9}
 	near={0.1}
@@ -81,17 +88,19 @@
 		enableRotate={true}
 		autoRotate={true}
 		autoRotateSpeed={0.5}
+		minDistance={10}
+		maxDistance={100}
 	/>
 </T.PerspectiveCamera>
 
 <!-- Lighting setup for futuristic neon theme -->
-<T.AmbientLight intensity={0.1} color="#0a0a0a" />
+<T.AmbientLight intensity={0.3} color="#0a0a0a" />
 
 <!-- Main directional light with neon green tint -->
 <T.DirectionalLight
 	position={[20, 30, 20]}
 	color="#00ff88"
-	intensity={0.8}
+	intensity={1.0}
 	castShadow
 	shadow-mapSize-width={2048}
 	shadow-mapSize-height={2048}
@@ -103,13 +112,16 @@
 />
 
 <!-- Secondary light with blue tint for contrast -->
-<T.DirectionalLight position={[-20, 20, -20]} color="#0088ff" intensity={0.4} />
+<T.DirectionalLight position={[-20, 20, -20]} color="#0088ff" intensity={0.6} />
 
 <!-- Point light for dramatic effect -->
-<T.PointLight position={[0, 15, 0]} color="#ffffff" intensity={0.3} distance={50} />
+<T.PointLight position={[0, 15, 0]} color="#ffffff" intensity={0.5} distance={50} />
+
+<!-- Additional fill light from below -->
+<T.DirectionalLight position={[0, -10, 0]} color="#ffffff" intensity={0.4} />
 
 <!-- Fog for depth and atmosphere -->
-<T.Fog attach="fog" args={['#000000', 30, 100]} />
+<T.Fog attach="fog" args={['#000000', 50, 150]} />
 
 <!-- Grid plane -->
 <HeatmapGrid />
