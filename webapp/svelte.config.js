@@ -72,6 +72,7 @@ const config = {
 				// necessary to prevent the CSP policy from causing issues with inlined
 				// image event handlers.
 				// See https://github.com/sveltejs/svelte/issues/14014
+				// NOTE: `unsafe-eval` is required for WebAssembly compilation in Threlte/Three.js 3D components
 				'script-src': [
 					'self',
 					'https://static.cloudflareinsights.com',
@@ -81,6 +82,7 @@ const config = {
 					'ajax.cloudflare.com',
 					'strict-dynamic',
 					'unsafe-hashes',
+					'unsafe-eval',
 					'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='
 				],
 				'worker-src': ['self', 'blob:']
