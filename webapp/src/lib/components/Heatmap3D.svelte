@@ -1,6 +1,5 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { effect } from 'svelte';
 	import { Canvas } from '@threlte/core';
 	import { useProgress } from '@threlte/extras';
 	import { tweened } from 'svelte/motion';
@@ -8,20 +7,18 @@
 	import HeatmapScene from './HeatmapScene.svelte';
 	import HeatmapLegend from './HeatmapLegend.svelte';
 	import { generateSP500HeatmapData } from '$lib/utils/sp500HeatmapData';
+	import { browser } from '$app/environment';
 
 	const { progress } = useProgress();
 	const tweenedProgress = tweened($progress);
 	
-	// Update tweened progress when progress changes
-	effect(() => {
-		tweenedProgress.set($progress);
-	});
-
 	let sp500Data = generateSP500HeatmapData();
-	let hasError = $state(false);
-	let errorMessage = $state('');
+	let hasError = false;
+	let errorMessage = '';
+	let isClient = false;
 
 	onMount(() => {
+		isClient = true;
 		console.log('Heatmap3D: Component mounted');
 		console.log('Heatmap3D: Generated data:', sp500Data);
 		console.log('Heatmap3D: Data length:', sp500Data?.length);
@@ -32,11 +29,34 @@
 			errorMessage = 'Failed to generate heatmap data';
 			console.error('Heatmap3D: Data validation failed');
 		}
+
+		// Update tweened progress when progress changes (client-side only)
+		const unsubscribe = progress.subscribe((value) => {
+			tweenedProgress.set(value);
+		});
+
+		return unsubscribe;
 	});
 </script>
 
 <div class="relative w-full h-full">
-	{#if hasError}
+	{#if !browser}
+		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+			<div class="text-center">
+				<div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+				<p class="text-lg text-white mb-2">3D Heatmap</p>
+				<p class="text-sm text-zinc-400">This component requires a browser environment</p>
+			</div>
+		</div>
+	{:else if !isClient}
+		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+			<div class="text-center">
+				<div class="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+				<p class="text-lg text-white mb-2">Initializing 3D Heatmap</p>
+				<p class="text-sm text-zinc-400">Loading client-side components...</p>
+			</div>
+		</div>
+	{:else if hasError}
 		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
 			<div class="text-center">
 				<div class="w-16 h-16 border-4 border-red-400 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -67,10 +87,27 @@
 		</div>
 	{/if}
 
-	{#if !hasError}
-		<Canvas>
-			<HeatmapScene {sp500Data} />
-		</Canvas>
+	{#if !hasError && isClient && browser}
+		{#try}
+			<Canvas>
+				<HeatmapScene {sp500Data} />
+			</Canvas>
+		{:catch error}
+			<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+				<div class="text-center">
+					<div class="w-16 h-16 border-4 border-red-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+					<p class="text-lg text-white mb-2">3D Rendering Error</p>
+					<p class="text-sm text-red-400">Failed to initialize 3D canvas</p>
+					<p class="text-xs text-zinc-400 mt-2">Error: {error?.message || 'Unknown error'}</p>
+					<button 
+						onclick={() => window.location.reload()} 
+						class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+					>
+						Reload Page
+					</button>
+				</div>
+			</div>
+		{/try}
 
 		<!-- Legend overlay -->
 		<div class="absolute top-4 right-4 z-20">

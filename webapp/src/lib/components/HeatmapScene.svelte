@@ -8,10 +8,10 @@
 
 	const { sp500Data } = $props();
 
-	let camera = $state();
-	let scene = $state();
-	let animationTimeline = $state();
-	let aspectRatio = $state(16/9); // Default aspect ratio
+	let camera = null;
+	let scene = null;
+	let animationTimeline = null;
+	let aspectRatio = 16/9; // Default aspect ratio
 
 	onMount(() => {
 		// Set aspect ratio safely
