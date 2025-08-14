@@ -7,7 +7,7 @@
 
 	interactivity();
 
-	let columns = [];
+	let columns = $state([]);
 	let tooltip = null;
 
 	onMount(() => {
@@ -53,7 +53,7 @@
 			}
 		}
 		
-		console.log('HeatmapColumns: Processed columns:', columns);
+		console.log('HeatmapColumns: Processed columns:', $inspect(columns));
 		
 		// Create tooltip element
 		tooltip = document.createElement('div');

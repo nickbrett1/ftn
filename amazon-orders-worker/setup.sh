@@ -28,46 +28,40 @@ fi
 # Create KV namespace
 echo ""
 echo "Creating KV namespace for caching..."
-if wrangler kv:namespace list | grep -q "AMAZON_CACHE"; then
-    echo "✅ KV namespace 'AMAZON_CACHE' already exists"
+echo "Creating KV namespace..."
+KV_OUTPUT=$(wrangler kv namespace create "AMAZON_CACHE" 2>&1)
+KV_ID=$(echo "$KV_OUTPUT" | grep -oP 'id = "\K[^"]+')
+
+if [ -n "$KV_ID" ]; then
+    echo "✅ Created KV namespace with ID: $KV_ID"
+    echo ""
+    echo "📝 Update your wrangler.toml with:"
+    echo "[[kv_namespaces]]"
+    echo "binding = \"AMAZON_CACHE\""
+    echo "id = \"$KV_ID\""
 else
-    echo "Creating KV namespace..."
-    KV_OUTPUT=$(wrangler kv:namespace create "AMAZON_CACHE" 2>&1)
-    KV_ID=$(echo "$KV_OUTPUT" | grep -oP 'id = "\K[^"]+')
-    
-    if [ -n "$KV_ID" ]; then
-        echo "✅ Created KV namespace with ID: $KV_ID"
-        echo ""
-        echo "📝 Update your wrangler.toml with:"
-        echo "[[kv_namespaces]]"
-        echo "binding = \"AMAZON_CACHE\""
-        echo "id = \"$KV_ID\""
-    else
-        echo "⚠️  Failed to create KV namespace. You may need to create it manually."
-    fi
+    echo "⚠️  Failed to create KV namespace. You may need to create it manually."
+    echo "Error output: $KV_OUTPUT"
 fi
 
 # Create D1 database
 echo ""
 echo "Creating D1 database for order history..."
-if wrangler d1 list | grep -q "amazon-orders-db"; then
-    echo "✅ D1 database 'amazon-orders-db' already exists"
+echo "Creating D1 database..."
+D1_OUTPUT=$(wrangler d1 create amazon-orders-db 2>&1)
+D1_ID=$(echo "$D1_OUTPUT" | grep -oP 'database_id = \K[a-z0-9-]+')
+
+if [ -n "$D1_ID" ]; then
+    echo "✅ Created D1 database with ID: $D1_ID"
+    echo ""
+    echo "📝 Update your wrangler.toml with:"
+    echo "[[d1_databases]]"
+    echo "binding = \"ORDERS_DB\""
+    echo "database_name = \"amazon-orders-db\""
+    echo "database_id = \"$D1_ID\""
 else
-    echo "Creating D1 database..."
-    D1_OUTPUT=$(wrangler d1 create amazon-orders-db 2>&1)
-    D1_ID=$(echo "$D1_OUTPUT" | grep -oP 'database_id = \K[a-z0-9-]+')
-    
-    if [ -n "$D1_ID" ]; then
-        echo "✅ Created D1 database with ID: $D1_ID"
-        echo ""
-        echo "📝 Update your wrangler.toml with:"
-        echo "[[d1_databases]]"
-        echo "binding = \"ORDERS_DB\""
-        echo "database_name = \"amazon-orders-db\""
-        echo "database_id = \"$D1_ID\""
-    else
-        echo "⚠️  Failed to create D1 database. You may need to create it manually."
-    fi
+    echo "⚠️  Failed to create D1 database. You may need to create it manually."
+    echo "Error output: $D1_OUTPUT"
 fi
 
 # Set up secrets

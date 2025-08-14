@@ -1,7 +1,6 @@
 name = "amazon-orders-worker"
-main = "src/worker.py"
+main = "src/worker-basic.js"
 compatibility_date = "2024-01-01"
-compatibility_flags = ["python_workers"]
 
 # Python worker configuration
 [build]
@@ -10,13 +9,13 @@ command = ""
 # Bindings
 [[kv_namespaces]]
 binding = "AMAZON_CACHE"
-id = "amazon_cache_kv"
-preview_id = "amazon_cache_kv_preview"
+id = "712063976dba4c4aab8ac8910b735afa"
+preview_id = "712063976dba4c4aab8ac8910b735afa"
 
 [[d1_databases]]
 binding = "ORDERS_DB"
 database_name = "amazon-orders-db"
-database_id = "amazon-orders-db-id"
+database_id = "0989d97b-ab68-4bf5-abed-78d943144c32"
 
 # Environment variables (add your Amazon credentials here)
 [vars]
