@@ -9,18 +9,9 @@
 
 	interactivity();
 
-	let columns = $state([]);
 	let tooltipInstances = $state([]);
-
-	onMount(() => {
-		// Cleanup tooltips on unmount
-		return () => {
-			tooltipInstances.forEach(instance => instance.destroy());
-		};
-	});
-
-	// Calculate column dimensions and positions
-	$derived(columns = sp500Data ? sp500Data.map((security, index) => {
+	
+	let columns = $derived(sp500Data ? sp500Data.map((security, index) => {
 		const sector = security.sector;
 		const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
 		const sectorSize = sp500Data.filter(s => s.sector === sector).length;
@@ -48,6 +39,15 @@
 			index
 		};
 	}) : []);
+
+	onMount(() => {
+		// Cleanup tooltips on unmount
+		return () => {
+			tooltipInstances.forEach(instance => instance.destroy());
+		};
+	});
+
+	// Calculate column dimensions and positions
 
 	// Create tooltip for a column
 	function createTooltip(column, security) {
