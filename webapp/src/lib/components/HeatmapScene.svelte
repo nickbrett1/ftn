@@ -2,8 +2,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { T } from '@threlte/core';
 	import { gsap } from 'gsap';
-	import { HeatmapColumns } from './HeatmapColumns.svelte';
-	import { HeatmapGrid } from './HeatmapGrid.svelte';
+	import HeatmapColumns from './HeatmapColumns.svelte';
+	import HeatmapGrid from './HeatmapGrid.svelte';
 
 	const { sp500Data } = $props();
 
