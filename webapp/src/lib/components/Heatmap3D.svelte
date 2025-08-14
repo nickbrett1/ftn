@@ -88,26 +88,9 @@
 	{/if}
 
 	{#if !hasError && isClient && browser}
-		{#try}
-			<Canvas>
-				<HeatmapScene {sp500Data} />
-			</Canvas>
-		{:catch error}
-			<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
-				<div class="text-center">
-					<div class="w-16 h-16 border-4 border-red-400 border-t-transparent rounded-full mx-auto mb-4"></div>
-					<p class="text-lg text-white mb-2">3D Rendering Error</p>
-					<p class="text-sm text-red-400">Failed to initialize 3D canvas</p>
-					<p class="text-xs text-zinc-400 mt-2">Error: {error?.message || 'Unknown error'}</p>
-					<button 
-						onclick={() => window.location.reload()} 
-						class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-					>
-						Reload Page
-					</button>
-				</div>
-			</div>
-		{/try}
+		<Canvas>
+			<HeatmapScene {sp500Data} />
+		</Canvas>
 
 		<!-- Legend overlay -->
 		<div class="absolute top-4 right-4 z-20">
