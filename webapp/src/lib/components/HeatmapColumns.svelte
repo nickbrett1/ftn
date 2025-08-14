@@ -2,18 +2,21 @@
 	import { onMount } from 'svelte';
 	import { T } from '@threlte/core';
 	import { interactivity } from '@threlte/extras';
-	import { createTooltip } from '$lib/utils/tooltip';
+	import tippy from 'tippy.js';
+	import 'tippy.js/dist/tippy.css';
 
 	export let mockData;
 
 	interactivity();
 
 	let columns = $state([]);
-	let tooltip = $state(null);
+	let tooltipInstances = $state([]);
 
 	onMount(() => {
-		// Create tooltip element
-		tooltip = createTooltip();
+		// Cleanup tooltips on unmount
+		return () => {
+			tooltipInstances.forEach(instance => instance.destroy());
+		};
 	});
 
 	// Calculate column dimensions and positions
@@ -48,36 +51,40 @@
 		});
 	}
 
-	// Handle column hover
-	function handlePointerMove(event) {
-		if (tooltip && event.object.userData) {
-			const security = event.object.userData;
-			tooltip.innerHTML = `
-				<div class="bg-black bg-opacity-90 text-white p-3 rounded-lg border border-zinc-700 shadow-lg">
-					<div class="font-bold text-green-400">${security.ticker}</div>
-					<div class="text-sm">${security.name}</div>
-					<div class="text-sm ${security.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}">
-						${security.priceChange >= 0 ? '+' : ''}${security.priceChange.toFixed(2)}%
-					</div>
-					<div class="text-xs text-zinc-400">
-						Market Cap: $${(security.marketCap / 1000000000).toFixed(1)}B
-					</div>
-					<div class="text-xs text-zinc-400">
-						Sector: ${security.sector}
-					</div>
+	// Create tooltip for a column
+	function createTooltip(column, security) {
+		const tooltipContent = `
+			<div class="bg-black bg-opacity-90 text-white p-3 rounded-lg border border-zinc-700 shadow-lg">
+				<div class="font-bold text-green-400">${security.ticker}</div>
+				<div class="text-sm">${security.name}</div>
+				<div class="text-sm ${security.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}">
+					${security.priceChange >= 0 ? '+' : ''}${security.priceChange.toFixed(2)}%
 				</div>
-			`;
-			
-			tooltip.style.display = 'block';
-			tooltip.style.left = event.clientX + 10 + 'px';
-			tooltip.style.top = event.clientY - 10 + 'px';
-		}
-	}
+				<div class="text-xs text-zinc-400">
+					Market Cap: $${(security.marketCap / 1000000000).toFixed(1)}B
+				</div>
+				<div class="text-xs text-zinc-400">
+					Sector: ${security.sector}
+				</div>
+			</div>
+		`;
 
-	function handlePointerOut() {
-		if (tooltip) {
-			tooltip.style.display = 'none';
-		}
+		const instance = tippy(column, {
+			content: tooltipContent,
+			allowHTML: true,
+			theme: 'custom',
+			placement: 'top',
+			arrow: true,
+			interactive: false,
+			appendTo: () => document.body,
+			onCreate(instance) {
+				// Add custom styling
+				instance.popper.classList.add('tippy-custom');
+			}
+		});
+
+		tooltipInstances.push(instance);
+		return instance;
 	}
 
 	// Create gradient material for columns
@@ -102,14 +109,16 @@
 	{@const isPositive = column.priceChange >= 0}
 	{@const material = createGradientMaterial(isPositive, column.dimensions[1])}
 	
-	<T.Mesh
-		position={column.position}
-		userData={column}
-		castShadow
-		receiveShadow
-		on:pointermove={handlePointerMove}
-		on:pointerout={handlePointerOut}
-	>
+			<T.Mesh
+			position={column.position}
+			userData={column}
+			castShadow
+			receiveShadow
+			oncreate={(ref) => {
+				// Create tooltip for this column
+				createTooltip(ref, column);
+			}}
+		>
 		<T.BoxGeometry args={column.dimensions} />
 		<T.MeshStandardMaterial
 			color={isPositive ? '#00ff88' : '#ff4444'}
@@ -151,9 +160,23 @@
 	{/if}
 {/each}
 
-<!-- Tooltip container -->
-<div 
-	bind:this={tooltip}
-	class="fixed pointer-events-none z-50 hidden"
-	style="position: fixed; z-index: 1000;"
-></div>
+	<!-- Tippy.js will handle tooltips automatically -->
+</div>
+
+<style>
+	/* Custom Tippy.js styling to match the futuristic neon theme */
+	:global(.tippy-custom) {
+		background-color: rgba(0, 0, 0, 0.95) !important;
+		border: 1px solid #374151 !important;
+		border-radius: 0.5rem !important;
+		box-shadow: 0 0 20px rgba(0, 255, 136, 0.3) !important;
+	}
+
+	:global(.tippy-custom .tippy-arrow) {
+		color: rgba(0, 0, 0, 0.95) !important;
+	}
+
+	:global(.tippy-custom .tippy-content) {
+		padding: 0 !important;
+	}
+</style>
