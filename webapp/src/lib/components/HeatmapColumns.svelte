@@ -53,7 +53,7 @@
 			}
 		}
 		
-		console.log('HeatmapColumns: Processed columns:', $inspect(columns));
+		console.log('HeatmapColumns: Processed columns:', columns);
 		
 		// Create tooltip element
 		tooltip = document.createElement('div');
