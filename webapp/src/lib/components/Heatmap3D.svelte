@@ -23,12 +23,32 @@
 		console.log('Heatmap3D: Component mounted');
 		console.log('Heatmap3D: Generated data:', sp500Data);
 		console.log('Heatmap3D: Data length:', sp500Data?.length);
+		console.log('Heatmap3D: Sample data:', sp500Data?.[0]);
 		
 		// Validate data
 		if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
 			hasError = true;
 			errorMessage = 'Failed to generate heatmap data';
 			console.error('Heatmap3D: Data validation failed');
+		} else {
+			// Additional data validation
+			const validData = sp500Data.filter(item => 
+				item && 
+				item.ticker && 
+				item.sector && 
+				typeof item.marketCap === 'number' && 
+				typeof item.priceChange === 'number'
+			);
+			
+			if (validData.length !== sp500Data.length) {
+				console.warn('Heatmap3D: Some data items are invalid:', {
+					total: sp500Data.length,
+					valid: validData.length,
+					invalid: sp500Data.length - validData.length
+				});
+			}
+			
+			console.log('Heatmap3D: Valid data count:', validData.length);
 		}
 
 		// Update tweened progress when progress changes (client-side only)
@@ -117,11 +137,22 @@
 	{/if}
 
 	{#if !hasError && isClient && browser}
-		<Canvas>
+		<Canvas
+			onError={(error) => {
+				console.error('Heatmap3D: Canvas error:', error);
+				hasError = true;
+				errorMessage = `Canvas error: ${error.message}`;
+			}}
+		>
 			<HeatmapScene
 				{sp500Data}
 				on:sceneReady={() => {
 					console.log('Heatmap3D: Scene ready event received');
+				}}
+				on:error={(event) => {
+					console.error('Heatmap3D: Scene error:', event.detail);
+					hasError = true;
+					errorMessage = `Scene error: ${event.detail}`;
 				}}
 			/>
 		</Canvas>
@@ -148,6 +179,11 @@
 					Column height = % change<br />
 					Column area = Market cap<br />
 					Grouped by sector
+				</div>
+				<!-- Debug info -->
+				<div class="text-xs text-yellow-400 mt-2 border-t border-zinc-600 pt-2">
+					Data: {sp500Data?.length || 0} companies<br />
+					Status: {isLoaded ? 'Loaded' : 'Loading...'}
 				</div>
 			</div>
 		</div>
