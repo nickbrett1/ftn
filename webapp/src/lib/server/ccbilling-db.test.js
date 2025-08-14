@@ -549,7 +549,7 @@ describe('ccbilling-db functions', () => {
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					expect.stringContaining(
-						'SELECT p.id, p.statement_id, p.merchant, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4'
+						'SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4'
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
@@ -572,7 +572,7 @@ describe('ccbilling-db functions', () => {
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					expect.stringContaining(
-						'SELECT p.id, p.statement_id, p.merchant, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4'
+						'SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4'
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);

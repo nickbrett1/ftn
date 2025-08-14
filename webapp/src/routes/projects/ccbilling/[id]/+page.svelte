@@ -47,7 +47,7 @@
 	function formatMerchantName(charge) {
 		// Use normalized merchant name for consistent display
 		const merchantName = charge.merchant_normalized || charge.merchant;
-		
+
 		if (!charge.flight_details) {
 			return merchantName;
 		}
@@ -115,14 +115,9 @@
 
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
-		console.log('Setting modal data:', data);
 		// Force reactivity by creating new references
 		autoAssociationModalData = { ...data };
 		showAutoAssociationModal = true;
-		// Force a re-render by triggering a state change
-		setTimeout(() => {
-			console.log('Modal state after timeout:', { showAutoAssociationModal, autoAssociationModalData });
-		}, 0);
 	}
 
 	// Merchant info state
@@ -148,22 +143,24 @@
 	// Filtered charges based on selected card, budget, and sort
 	function getFilteredCharges() {
 		let filtered = localData.charges;
-		
+
 		// Apply credit card filter
 		if (selectedCardFilter !== 'all') {
-			filtered = filtered.filter(charge => charge.credit_card_id === parseInt(selectedCardFilter));
+			filtered = filtered.filter(
+				(charge) => charge.credit_card_id === parseInt(selectedCardFilter)
+			);
 		}
-		
+
 		// Apply budget filter
 		if (selectedBudgetFilter !== 'all') {
-			filtered = filtered.filter(charge => {
+			filtered = filtered.filter((charge) => {
 				if (selectedBudgetFilter === '__unallocated__') {
 					return !charge.allocated_to;
 				}
 				return charge.allocated_to === selectedBudgetFilter;
 			});
 		}
-		
+
 		// Sort the filtered charges (create a new array to avoid mutation)
 		return [...filtered].sort((a, b) => {
 			if (selectedSortBy === 'merchant') {
@@ -190,13 +187,13 @@
 	// Filtered running totals
 	function getFilteredAllocationTotals() {
 		const totals = {};
-		
-		getFilteredCharges().forEach(charge => {
+
+		getFilteredCharges().forEach((charge) => {
 			const allocation = charge.allocated_to || '__unallocated__';
 			totals[allocation] = (totals[allocation] || 0) + charge.amount;
 		});
-		
-		return Object.entries(totals).sort(([,a], [,b]) => b - a);
+
+		return Object.entries(totals).sort(([, a], [, b]) => b - a);
 	}
 
 	const linkify = new LinkifyIt();
@@ -277,13 +274,13 @@
 			{ value: 'all', label: 'All Budgets' },
 			{ value: '__unallocated__', label: 'Unallocated' }
 		];
-		
+
 		// Add budgets in alphabetical order
 		const sortedBudgets = [...localData.budgets].sort((a, b) => a.name.localeCompare(b.name));
-		sortedBudgets.forEach(budget => {
+		sortedBudgets.forEach((budget) => {
 			options.push({ value: budget.name, label: budget.name });
 		});
-		
+
 		return options;
 	});
 
@@ -299,54 +296,41 @@
 		// Check if this change involves an auto-association
 		const charge = localData.charges.find((c) => c.id === chargeId);
 		const currentAllocation = charge.allocated_to;
-		
-		console.log('updateChargeAllocation called:', { chargeId, newAllocation, currentAllocation, merchant: charge.merchant_normalized });
-		
+
 		// Find if there's an auto-association for this merchant
-		const autoAssociation = localData.autoAssociations.find(
-			aa => aa.merchant_normalized === charge.merchant_normalized
-		);
-		
-		console.log('Auto-association found:', autoAssociation);
-		console.log('Auto-associations data:', localData.autoAssociations);
-		
-		// Check if user is changing away from an auto-association
-		console.log('Condition check:', {
-			hasAutoAssociation: !!autoAssociation,
-			currentAllocation,
-			autoAssociationBudgetName: autoAssociation?.budget_name,
-			newAllocation,
-			currentMatchesAuto: currentAllocation === autoAssociation?.budget_name,
-			newDifferentFromAuto: newAllocation !== autoAssociation?.budget_name,
-			currentAllocationType: typeof currentAllocation,
-			autoAssociationBudgetNameType: typeof autoAssociation?.budget_name,
-			newAllocationType: typeof newAllocation
-		});
-		
-		if (autoAssociation && 
-			currentAllocation === autoAssociation.budget_name && 
-			newAllocation !== autoAssociation.budget_name) {
-			
-			console.log('Showing auto-association modal for:', {
-				merchantName: charge.merchant,
-				currentAllocation: currentAllocation || 'Unallocated',
-				newAllocation: newAllocation || 'Unallocated',
-				autoAssociationBudget: autoAssociation.budget_name,
-				chargeId: chargeId
-			});
-			
+		// Try normalized merchant first, then fall back to original merchant name
+		let autoAssociation = null;
+
+		if (charge.merchant_normalized) {
+			// First try to find by normalized merchant name
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant_normalized
+			);
+		}
+
+		// If no auto-association found by normalized name, try original merchant name
+		if (!autoAssociation && charge.merchant) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant
+			);
+		}
+
+		if (autoAssociation && newAllocation !== autoAssociation.budget_name) {
+			// Determine if this is a deletion request (setting to None/Unallocated)
+			const isDeletionRequest =
+				!newAllocation || newAllocation === 'None' || newAllocation === null;
+
 			// Show the auto-association update modal
 			setModalData({
 				merchantName: charge.merchant,
-				currentAllocation: currentAllocation || 'Unallocated',
-				newAllocation: newAllocation || 'Unallocated',
+				currentAllocation: charge.allocated_to || 'Unallocated',
+				newAllocation: newAllocation, // Preserve null values, don't convert to string
 				autoAssociationBudget: autoAssociation.budget_name,
-				chargeId: chargeId // Store the charge ID for later processing
+				chargeId: chargeId, // Store the charge ID for later processing
+				isDeletionRequest // Flag to indicate this is a deletion request
 			});
 			return; // Don't proceed with the update yet
 		}
-		
-		console.log('No auto-association change, proceeding with normal update');
 		// No auto-association change, proceed with normal update
 		await performAllocationUpdate(chargeId, newAllocation);
 	}
@@ -371,11 +355,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					merchant: charge.merchant,
-					amount: charge.amount,
-					allocated_to: newAllocation
-				})
+				body: JSON.stringify(requestBody)
 			});
 
 			if (!response.ok) {
@@ -394,12 +374,8 @@
 				);
 			}
 
-			// Removed visual feedback cleanup
-
 			// Show error to user
 			alert(`Failed to update allocation: ${error.message}`);
-		} finally {
-			// Loading state is cleared by timeout
 		}
 	}
 
@@ -410,41 +386,64 @@
 			return;
 		}
 
-		const charge = localData.charges.find(c => c.id === autoAssociationModalData.chargeId);
+		const charge = localData.charges.find((c) => c.id === autoAssociationModalData.chargeId);
 		if (!charge) {
 			console.error('Charge not found for auto-association update');
 			return;
 		}
 
 		try {
-			// Update the auto-association mapping
-			const response = await fetch('/projects/ccbilling/auto-associations', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					merchant: charge.merchant_normalized,
-					newBudgetName: autoAssociationModalData.newAllocation
-				})
-			});
+			if (autoAssociationModalData.isDeletionRequest) {
+				// Delete the auto-association
+				const response = await fetch('/projects/ccbilling/auto-associations', {
+					method: 'DELETE',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						merchant: charge.merchant_normalized
+					})
+				});
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to update auto-association');
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || 'Failed to delete auto-association');
+				}
+			} else {
+				// Update the auto-association mapping
+				const response = await fetch('/projects/ccbilling/auto-associations', {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						merchant: charge.merchant_normalized,
+						newBudgetName: autoAssociationModalData.newAllocation
+					})
+				});
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || 'Failed to update auto-association');
+				}
 			}
 
 			// Now proceed with the allocation update
-			await performAllocationUpdate(autoAssociationModalData.chargeId, autoAssociationModalData.newAllocation);
-			
+			await performAllocationUpdate(
+				autoAssociationModalData.chargeId,
+				autoAssociationModalData.newAllocation
+			);
+
 			// Refresh the auto-associations data
 			await invalidate(`cycle-${data.cycleId}`);
-			
+
 			// Close the modal
 			closeAutoAssociationModal();
 		} catch (error) {
 			console.error('Error updating auto-association:', error);
-			alert(`Failed to update auto-association: ${error.message}`);
+			alert(
+				`Failed to ${autoAssociationModalData.isDeletionRequest ? 'delete' : 'update'} auto-association: ${error.message}`
+			);
 		}
 	}
 
@@ -454,22 +453,24 @@
 			console.error('No charge ID found for auto-association skip');
 			return;
 		}
-		
-		await performAllocationUpdate(autoAssociationModalData.chargeId, autoAssociationModalData.newAllocation);
+
+		await performAllocationUpdate(
+			autoAssociationModalData.chargeId,
+			autoAssociationModalData.newAllocation
+		);
 		closeAutoAssociationModal();
 	}
 
 	function closeAutoAssociationModal() {
-		console.log('Closing modal, current state:', { showAutoAssociationModal, autoAssociationModalData });
 		showAutoAssociationModal = false;
 		autoAssociationModalData = {
 			merchantName: '',
 			currentAllocation: '',
 			newAllocation: '',
 			autoAssociationBudget: '',
-			chargeId: null
+			chargeId: null,
+			isDeletionRequest: false
 		};
-		console.log('Modal closed, new state:', { showAutoAssociationModal, autoAssociationModalData });
 	}
 
 	async function handleDelete() {
@@ -634,8 +635,10 @@
 			}
 
 			// Remove the deleted statement from local state
-			localData.statements = localData.statements.filter(statement => statement.id !== statementId);
-			localData.charges = localData.charges.filter(charge => charge.statement_id !== statementId);
+			localData.statements = localData.statements.filter(
+				(statement) => statement.id !== statementId
+			);
+			localData.charges = localData.charges.filter((charge) => charge.statement_id !== statementId);
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
@@ -759,7 +762,10 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Statement?</h3>
 				<p class="text-gray-300 mb-2">
-					Are you sure you want to delete "<span class="truncate block min-w-0 max-w-full" title={statementToDelete.filename}>{statementToDelete.filename}</span>"?
+					Are you sure you want to delete "<span
+						class="truncate block min-w-0 max-w-full"
+						title={statementToDelete.filename}>{statementToDelete.filename}</span
+					>"?
 				</p>
 				<p class="text-gray-400 text-sm mb-6">
 					This will also delete all associated charges. This action cannot be undone.
@@ -859,7 +865,10 @@
 							<div
 								class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-300 gap-2 w-full"
 							>
-								<span class="truncate flex-1 min-w-0 text-sm max-w-full" title={selectedFile ? selectedFile.name : ''}>
+								<span
+									class="truncate flex-1 min-w-0 text-sm max-w-full"
+									title={selectedFile ? selectedFile.name : ''}
+								>
 									{selectedFile ? selectedFile.name : 'Choose a PDF file...'}
 								</span>
 								<Button
@@ -895,15 +904,16 @@
 				{#each data.statements as statement}
 					{@const card = data.creditCards.find((c) => c.id === statement.credit_card_id)}
 					<div class="bg-gray-700 border border-gray-600 rounded-lg p-4">
-						<div
-							class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 w-full"
-						>
+						<div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 w-full">
 							<div class="min-w-0 w-full overflow-hidden max-w-full">
 								<h4 class="text-white font-medium">
 									{card ? `${card.name} (****${card.last4})` : 'Unknown Card'}
 								</h4>
 								<div class="text-gray-400 text-sm space-y-1 w-full overflow-hidden">
-									<div class="truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap" title={statement.filename}>
+									<div
+										class="truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+										title={statement.filename}
+									>
 										{statement.filename}
 									</div>
 									{#if statement.statement_date}
@@ -914,7 +924,9 @@
 									Uploaded: {new Date(statement.uploaded_at + 'Z').toLocaleString()}
 								</p>
 							</div>
-							<div class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center">
+							<div
+								class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center"
+							>
 								{#if !isStatementParsed(statement.id)}
 									<Button
 										type="button"
@@ -974,21 +986,31 @@
 						Charges ({getFilteredCharges().length} of {localData.charges.length})
 					</h3>
 					{#if selectedCardFilter !== 'all'}
-						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
-							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+						<div
+							class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
+						>
+							Filtered by: {localData.creditCards.find(
+								(card) => card.id === parseInt(selectedCardFilter)
+							)?.name}
 						</div>
 					{/if}
 					{#if selectedBudgetFilter !== 'all'}
-						<div class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1">
-							Filtered by: {selectedBudgetFilter === '__unallocated__' ? 'Unallocated' : selectedBudgetFilter}
+						<div
+							class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1"
+						>
+							Filtered by: {selectedBudgetFilter === '__unallocated__'
+								? 'Unallocated'
+								: selectedBudgetFilter}
 						</div>
 					{/if}
 				</div>
-				
+
 				<!-- Credit Card Filter and Sort Options -->
 				<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-						<label for="card-filter" class="text-gray-300 text-sm font-medium">Filter by card:</label>
+						<label for="card-filter" class="text-gray-300 text-sm font-medium"
+							>Filter by card:</label
+						>
 						<div class="flex items-center gap-2">
 							<select
 								id="card-filter"
@@ -1002,7 +1024,7 @@
 							</select>
 							{#if selectedCardFilter !== 'all'}
 								<button
-									onclick={() => selectedCardFilter = 'all'}
+									onclick={() => (selectedCardFilter = 'all')}
 									class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
 								>
 									Clear Filter
@@ -1010,9 +1032,11 @@
 							{/if}
 						</div>
 					</div>
-					
+
 					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-						<label for="budget-filter" class="text-gray-300 text-sm font-medium">Filter by budget:</label>
+						<label for="budget-filter" class="text-gray-300 text-sm font-medium"
+							>Filter by budget:</label
+						>
 						<div class="flex items-center gap-2">
 							<select
 								id="budget-filter"
@@ -1025,7 +1049,7 @@
 							</select>
 							{#if selectedBudgetFilter !== 'all'}
 								<button
-									onclick={() => selectedBudgetFilter = 'all'}
+									onclick={() => (selectedBudgetFilter = 'all')}
 									class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
 								>
 									Clear Filter
@@ -1033,7 +1057,7 @@
 							{/if}
 						</div>
 					</div>
-					
+
 					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 						<label for="sort-by" class="text-gray-300 text-sm font-medium">Sort by:</label>
 						<select
@@ -1054,12 +1078,14 @@
 					<h4 class="text-sm font-medium text-gray-300 mb-3">Charges by Credit Card:</h4>
 					<div class="flex flex-wrap gap-3">
 						{#each localData.creditCards as card}
-							{@const cardCharges = localData.charges.filter(charge => charge.credit_card_id === card.id)}
+							{@const cardCharges = localData.charges.filter(
+								(charge) => charge.credit_card_id === card.id
+							)}
 							{@const cardTotal = cardCharges.reduce((sum, charge) => sum + charge.amount, 0)}
 							{#if cardCharges.length > 0}
 								<button
 									class="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors text-sm"
-									onclick={() => selectedCardFilter = card.id.toString()}
+									onclick={() => (selectedCardFilter = card.id.toString())}
 									title={`Click to filter by ${card.name}`}
 								>
 									<span class="text-white font-medium">{card.name}</span>
@@ -1280,7 +1306,10 @@
 					<div class="text-gray-400 text-lg mb-2">No charges found with current filters</div>
 					<div class="text-gray-500 text-sm mb-4">Try adjusting your filters or clear them</div>
 					<button
-						onclick={() => { selectedCardFilter = 'all'; selectedBudgetFilter = 'all'; }}
+						onclick={() => {
+							selectedCardFilter = 'all';
+							selectedBudgetFilter = 'all';
+						}}
 						class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
 					>
 						Show All Charges
@@ -1338,7 +1367,12 @@
 								<p class="whitespace-pre-wrap text-gray-200 text-sm">
 									{#each toSegments(merchantInfoData.text) as seg}
 										{#if seg.type === 'text'}{seg.text}{:else}
-											<a href={seg.href} target="_blank" rel="noopener noreferrer nofollow" class="underline text-blue-400 hover:text-blue-300">{seg.text}</a>
+											<a
+												href={seg.href}
+												target="_blank"
+												rel="noopener noreferrer nofollow"
+												class="underline text-blue-400 hover:text-blue-300">{seg.text}</a
+											>
 										{/if}
 									{/each}
 								</p>
@@ -1365,44 +1399,17 @@
 	{/if}
 
 	<!-- Auto-Association Update Modal -->
-	<!-- Debug: Modal state = {showAutoAssociationModal} -->
 	<AutoAssociationUpdateModal
 		isOpen={showAutoAssociationModal}
 		merchantName={autoAssociationModalData.merchantName}
 		currentAllocation={autoAssociationModalData.currentAllocation}
 		newAllocation={autoAssociationModalData.newAllocation}
 		autoAssociationBudget={autoAssociationModalData.autoAssociationBudget}
+		isDeletionRequest={autoAssociationModalData.isDeletionRequest}
 		on:updateAutoAssociation={handleUpdateAutoAssociation}
 		on:skip={handleSkipAutoAssociation}
 		on:close={closeAutoAssociationModal}
 	/>
-
-	<!-- Debug Controls -->
-	<div class="mb-4 p-4 bg-red-900 border border-red-700 rounded">
-		<h3 class="text-red-200 font-bold mb-2">Debug Controls</h3>
-		<button
-			class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded mr-2"
-			onclick={() => {
-				setModalData({
-					merchantName: 'Test Merchant',
-					currentAllocation: 'Test Budget',
-					newAllocation: 'New Budget',
-					autoAssociationBudget: 'Test Budget',
-					chargeId: 'test-123'
-				});
-			}}
-		>
-			Test Auto-Association Modal
-		</button>
-		<button
-			class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded"
-			onclick={() => {
-				console.log('Current modal state:', { showAutoAssociationModal, autoAssociationModalData });
-			}}
-		>
-			Log Modal State
-		</button>
-	</div>
 
 	<!-- Cycle Information -->
 </div>
@@ -1415,13 +1422,21 @@
 				<div class="flex items-center gap-4">
 					<div class="text-white font-medium">Running Totals:</div>
 					{#if selectedCardFilter !== 'all'}
-						<div class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
-							Filtered by: {localData.creditCards.find(card => card.id === parseInt(selectedCardFilter))?.name}
+						<div
+							class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
+						>
+							Filtered by: {localData.creditCards.find(
+								(card) => card.id === parseInt(selectedCardFilter)
+							)?.name}
 						</div>
 					{/if}
 					{#if selectedBudgetFilter !== 'all'}
-						<div class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1">
-							Filtered by: {selectedBudgetFilter === '__unallocated__' ? 'Unallocated' : selectedBudgetFilter}
+						<div
+							class="text-green-400 text-sm bg-green-900/20 border border-green-700 rounded px-2 py-1"
+						>
+							Filtered by: {selectedBudgetFilter === '__unallocated__'
+								? 'Unallocated'
+								: selectedBudgetFilter}
 						</div>
 					{/if}
 				</div>
@@ -1444,7 +1459,9 @@
 					{/each}
 					{#if selectedCardFilter !== 'all' && selectedBudgetFilter === 'all'}
 						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
-							Total: ${getFilteredCharges().reduce((sum, charge) => sum + charge.amount, 0).toFixed(2)}
+							Total: ${getFilteredCharges()
+								.reduce((sum, charge) => sum + charge.amount, 0)
+								.toFixed(2)}
 						</div>
 					{/if}
 				</div>
