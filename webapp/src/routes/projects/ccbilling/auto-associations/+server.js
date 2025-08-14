@@ -17,20 +17,23 @@ export async function PUT(event) {
 		const { merchant, newBudgetName } = await event.request.json();
 
 		if (!merchant || !newBudgetName) {
-			return json({ error: 'Missing required fields: merchant and newBudgetName' }, { status: 400 });
+			return json(
+				{ error: 'Missing required fields: merchant and newBudgetName' },
+				{ status: 400 }
+			);
 		}
 
 		// Get the budget ID for the new budget name
 		const budgets = await listBudgets(event);
-		const newBudget = budgets.find(b => b.name === newBudgetName);
-		
+		const newBudget = budgets.find((b) => b.name === newBudgetName);
+
 		if (!newBudget) {
 			return json({ error: 'Budget not found' }, { status: 404 });
 		}
 
 		// Check if there's an existing auto-association for this merchant
 		const existingBudget = await getBudgetByMerchant(event, merchant);
-		
+
 		if (existingBudget) {
 			// Remove the existing auto-association
 			await removeBudgetMerchant(event, existingBudget.id, merchant);
@@ -43,5 +46,34 @@ export async function PUT(event) {
 	} catch (error) {
 		console.error('Error updating auto-association:', error);
 		return json({ error: 'Failed to update auto-association' }, { status: 500 });
+	}
+}
+
+export async function DELETE(event) {
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) {
+		return authResult;
+	}
+
+	try {
+		const { merchant } = await event.request.json();
+
+		if (!merchant) {
+			return json({ error: 'Missing required field: merchant' }, { status: 400 });
+		}
+
+		// Check if there's an existing auto-association for this merchant
+		const existingBudget = await getBudgetByMerchant(event, merchant);
+
+		if (existingBudget) {
+			// Remove the existing auto-association
+			await removeBudgetMerchant(event, existingBudget.id, merchant);
+			return json({ success: true, message: 'Auto-association deleted successfully' });
+		} else {
+			return json({ error: 'No auto-association found for this merchant' }, { status: 404 });
+		}
+	} catch (error) {
+		console.error('Error deleting auto-association:', error);
+		return json({ error: 'Failed to delete auto-association' }, { status: 500 });
 	}
 }

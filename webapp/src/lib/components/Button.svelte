@@ -31,7 +31,7 @@
 	const customClass = rest.class || '';
 	const classes = `${defaultClasses} ${customClass}`.trim();
 	
-	// Remove class from rest to avoid conflicts
+	// Remove class from rest to avoid conflicts, but keep event handlers
 	const { class: _, ...restWithoutClass } = rest;
 </script>
 

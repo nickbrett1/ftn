@@ -2,14 +2,14 @@
 	import { createEventDispatcher } from 'svelte';
 	import Button from './Button.svelte';
 
-	let { isOpen = false, merchantName = '', currentAllocation = '', newAllocation = '', autoAssociationBudget = '' } = $props();
-
-	console.log('AutoAssociationUpdateModal props:', { isOpen, merchantName, currentAllocation, newAllocation, autoAssociationBudget });
-
-	// Reactive statement to ensure proper reactivity
-	$effect(() => {
-		console.log('Modal effect triggered - isOpen changed to:', isOpen);
-	});
+	let {
+		isOpen = false,
+		merchantName = '',
+		currentAllocation = '',
+		newAllocation = '',
+		autoAssociationBudget = '',
+		isDeletionRequest = false
+	} = $props();
 
 	const dispatch = createEventDispatcher();
 
@@ -29,30 +29,19 @@
 	}
 </script>
 
-<!-- Debug info - always visible -->
-<div class="fixed top-4 right-4 bg-red-500 text-white p-2 rounded z-[9999] text-xs">
-	Modal Debug: isOpen={isOpen}, merchant={merchantName}, current={currentAllocation}, new={newAllocation}
-</div>
-
-<!-- Additional debug info -->
-<div class="fixed top-20 right-4 bg-blue-500 text-white p-2 rounded z-[9999] text-xs">
-	Conditional Debug: {#if isOpen}SHOWING{/if}{#if !isOpen}HIDDEN{/if}
-</div>
-
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-red-500 bg-opacity-90 flex items-center justify-center z-[9999] p-4"
-		on:click={handleBackdropClick}
+		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+		onclick={handleBackdropClick}
+		onkeydown={(e) => e.key === 'Escape' && handleBackdropClick(e)}
+		role="button"
+		tabindex="0"
+		aria-label="Close modal"
 	>
-		<div class="bg-yellow-300 border-4 border-red-500 rounded-lg shadow-xl max-w-md w-full p-6">
+		<div class="bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-w-md w-full p-6">
 			<div class="flex items-center mb-4">
 				<div class="flex-shrink-0">
-					<svg
-						class="h-6 w-6 text-red-500"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
+					<svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -61,34 +50,51 @@
 						/>
 					</svg>
 				</div>
-				<h3 class="ml-3 text-lg font-medium text-red-900">
-					Update Auto-Association?
-				</h3>
+				<h3 class="ml-3 text-lg font-medium text-white">Update Auto-Association?</h3>
 			</div>
 
 			<div class="mb-6">
-				<p class="text-sm text-red-800 mb-4">
-					You're changing the allocation for <strong>{merchantName}</strong> from{' '}
-					<strong>{autoAssociationBudget}</strong> to <strong>{newAllocation}</strong>.
-				</p>
-				<p class="text-sm text-red-800">
-					Would you like to update the auto-association rule so that future charges from{' '}
-					<strong>{merchantName}</strong> will automatically be allocated to{' '}
-					<strong>{newAllocation}</strong>?
-				</p>
+				{#if isDeletionRequest}
+					<p class="text-sm text-gray-300 mb-4">
+						You're changing the allocation for <strong>{merchantName}</strong> from{' '}
+						<strong>{autoAssociationBudget}</strong> to <strong>Unallocated</strong>.
+					</p>
+					<p class="text-sm text-gray-300">
+						Would you like to <strong>delete the auto-association rule</strong> for{' '}
+						<strong>{merchantName}</strong>? This means future charges from this merchant{' '}
+						will remain unallocated until manually assigned.
+					</p>
+				{:else}
+					<p class="text-sm text-gray-300 mb-4">
+						You're changing the allocation for <strong>{merchantName}</strong> from{' '}
+						<strong>{autoAssociationBudget}</strong> to
+						<strong>{newAllocation || 'Unallocated'}</strong>.
+					</p>
+					<p class="text-sm text-gray-300">
+						Would you like to update the auto-association rule so that future charges from{' '}
+						<strong>{merchantName}</strong> will automatically be allocated to{' '}
+						<strong>{newAllocation || 'Unallocated'}</strong>?
+					</p>
+				{/if}
 			</div>
 
 			<div class="flex flex-col sm:flex-row gap-3">
-				<Button
-					on:click={handleUpdateAutoAssociation}
-					class="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-				>
-					Update Auto-Association
-				</Button>
-				<Button
-					on:click={handleSkip}
-					class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800"
-				>
+				{#if isDeletionRequest}
+					<Button
+						onclick={handleUpdateAutoAssociation}
+						class="flex-1 bg-red-600 hover:bg-red-700 text-white"
+					>
+						Delete Auto-Association
+					</Button>
+				{:else}
+					<Button
+						onclick={handleUpdateAutoAssociation}
+						class="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+					>
+						Update Auto-Association
+					</Button>
+				{/if}
+				<Button onclick={handleSkip} class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800">
 					Skip
 				</Button>
 			</div>

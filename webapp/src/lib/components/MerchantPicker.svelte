@@ -19,29 +19,25 @@
 		try {
 			isLoading = true;
 			error = '';
-			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
-			
+
 			// Add safety check for response
 			if (!response) {
 				throw new Error('No response received from server');
 			}
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to load recent merchants');
 			}
 
 			const data = await response.json();
-			console.log('Received data:', data); // Debug log
 			merchants = Array.isArray(data) ? data : [];
-			console.log('Updated merchants state:', merchants); // Debug log
 		} catch (err) {
 			console.error('Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
-			console.log('Loading complete, isLoading:', isLoading, 'merchants:', merchants); // Debug log
 		}
 	}
 
@@ -77,7 +73,7 @@
 	// Function to refresh the merchant list - can be called by parent components
 	async function refreshMerchantList() {
 		// Add a small delay to ensure database transactions are fully committed
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 		await loadRecentMerchants();
 	}
 
@@ -134,7 +130,7 @@
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 			No recent unassigned merchants found
 		</div>
-	{:else if merchants.filter(merchant => !(assignedMerchants || []).includes(merchant)).length === 0}
+	{:else if merchants.filter((merchant) => !(assignedMerchants || []).includes(merchant)).length === 0}
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 			All recent merchants are already assigned to budgets
 		</div>
@@ -147,7 +143,7 @@
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			>
 				<option value="">{placeholder}</option>
-				{#each merchants.filter(merchant => !(assignedMerchants || []).includes(merchant)) as merchant}
+				{#each merchants.filter((merchant) => !(assignedMerchants || []).includes(merchant)) as merchant}
 					<option value={merchant}>
 						{merchant}
 					</option>
