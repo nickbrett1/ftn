@@ -14,6 +14,12 @@
 	let animationTimeline = null;
 	let isSceneReady = false;
 
+	// Watch for data changes
+	$effect(() => {
+		console.log('HeatmapScene: Data changed:', sp500Data);
+		console.log('HeatmapScene: Data length:', sp500Data?.length);
+	});
+
 	onMount(() => {
 		try {
 			console.log('HeatmapScene: Component mounted with data:', sp500Data);
@@ -78,8 +84,8 @@
 
 <!-- Camera setup -->
 <T.PerspectiveCamera
-	position={[0, 15, 30]}
-	fov={45}
+	position={[0, 20, 40]}
+	fov={60}
 	aspect={typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9}
 	near={0.1}
 	far={1000}
@@ -103,13 +109,13 @@
 </T.PerspectiveCamera>
 
 <!-- Lighting setup for futuristic neon theme -->
-<T.AmbientLight intensity={0.3} color="#0a0a0a" />
+<T.AmbientLight intensity={0.6} color="#ffffff" />
 
 <!-- Main directional light with neon green tint -->
 <T.DirectionalLight
 	position={[20, 30, 20]}
 	color="#00ff88"
-	intensity={1.0}
+	intensity={1.5}
 	castShadow
 	shadow-mapSize-width={2048}
 	shadow-mapSize-height={2048}
@@ -121,22 +127,22 @@
 />
 
 <!-- Secondary light with blue tint for contrast -->
-<T.DirectionalLight position={[-20, 20, -20]} color="#0088ff" intensity={0.6} />
+<T.DirectionalLight position={[-20, 20, -20]} color="#0088ff" intensity={1.0} />
 
 <!-- Point light for dramatic effect -->
-<T.PointLight position={[0, 15, 0]} color="#ffffff" intensity={0.5} distance={50} />
+<T.PointLight position={[0, 15, 0]} color="#ffffff" intensity={0.8} distance={50} />
 
 <!-- Additional fill light from below -->
-<T.DirectionalLight position={[0, -10, 0]} color="#ffffff" intensity={0.4} />
+<T.DirectionalLight position={[0, -10, 0]} color="#ffffff" intensity={0.6} />
 
 <!-- Additional light from below to illuminate negative bars -->
-<T.PointLight position={[0, -5, 0]} color="#ffffff" intensity={0.3} distance={30} />
+<T.PointLight position={[0, -5, 0]} color="#ffffff" intensity={0.5} distance={30} />
 
 <!-- Additional light from below to illuminate negative bars -->
 <T.SpotLight 
 	position={[0, -8, 0]} 
 	color="#ffffff" 
-	intensity={0.2} 
+	intensity={0.4} 
 	distance={40}
 	angle={Math.PI / 3}
 	penumbra={0.5}
@@ -144,10 +150,22 @@
 />
 
 <!-- Fog for depth and atmosphere -->
-<T.Fog attach="fog" args={['#000000', 50, 150]} />
+<T.Fog attach="fog" args={['#000000', 80, 200]} />
 
 <!-- Grid plane -->
 <HeatmapGrid />
+
+<!-- Simple test cube to verify 3D rendering -->
+<T.Mesh position={[0, 10, 0]}>
+	<T.BoxGeometry args={[3, 3, 3]} />
+	<T.MeshStandardMaterial
+		color="#ffff00"
+		emissive="#ffff00"
+		emissiveIntensity={0.8}
+		metalness={0.3}
+		roughness={0.7}
+	/>
+</T.Mesh>
 
 <!-- 3D Columns representing the heatmap data -->
 <HeatmapColumns {sp500Data} />
