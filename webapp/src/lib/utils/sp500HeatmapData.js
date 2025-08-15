@@ -92,24 +92,32 @@ export function generateSP500HeatmapData() {
 		}));
 
 		console.log('SP500HeatmapData: Generated', result.length, 'companies');
+		console.log('SP500HeatmapData: Sample data:', result[0]);
 		return result;
 	} catch (error) {
 		console.error('SP500HeatmapData: Error generating data:', error);
-		// Return fallback data
+		// Return fallback data with more reasonable values
 		return [
 			{
 				ticker: 'AAPL',
 				name: 'Apple Inc.',
 				sector: 'Technology',
 				marketCap: 500,
-				priceChange: 2.5
+				priceChange: 5.2
 			},
 			{
 				ticker: 'MSFT',
 				name: 'Microsoft Corporation',
 				sector: 'Technology',
 				marketCap: 450,
-				priceChange: -1.2
+				priceChange: -3.1
+			},
+			{
+				ticker: 'GOOGL',
+				name: 'Alphabet Inc.',
+				sector: 'Technology',
+				marketCap: 400,
+				priceChange: 2.8
 			}
 		];
 	}

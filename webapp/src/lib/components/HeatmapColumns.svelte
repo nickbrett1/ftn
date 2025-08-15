@@ -13,13 +13,19 @@
 	onMount(() => {
 		console.log('HeatmapColumns: Component mounted with data:', sp500Data);
 		
-		// Process data
-		if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
-			console.warn('HeatmapColumns: No data provided or invalid data format');
-			columns = [];
-		} else {
-			try {
+		try {
+			// Process data
+			if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
+				console.warn('HeatmapColumns: No data provided or invalid data format');
+				columns = [];
+			} else {
 				columns = sp500Data.map((security, index) => {
+					// Validate security data
+					if (!security || !security.sector || typeof security.marketCap !== 'number' || typeof security.priceChange !== 'number') {
+						console.warn('HeatmapColumns: Invalid security data:', security);
+						return null;
+					}
+					
 					const sector = security.sector;
 					const sectorIndex = [...new Set(sp500Data.map(s => s.sector))].indexOf(sector);
 					const sectorSize = sp500Data.filter(s => s.sector === sector).length;
@@ -36,8 +42,9 @@
 					const z = (row - gridSize / 2) * 1.5;
 					
 					// Column dimensions based on market cap and price change
-					const baseSize = Math.sqrt(security.marketCap / 1000000) * 0.1; // Scale market cap
-					const height = Math.abs(security.priceChange) * 0.5; // Scale price change
+					// Ensure minimum sizes for visibility
+					const baseSize = Math.max(0.2, Math.sqrt(security.marketCap / 1000000) * 0.1);
+					const height = Math.max(0.5, Math.abs(security.priceChange) * 0.5);
 					const y = height / 2; // Center vertically
 					
 					return {
@@ -46,14 +53,15 @@
 						dimensions: [baseSize, height, baseSize],
 						index
 					};
-				});
-			} catch (error) {
-				console.error('HeatmapColumns: Error processing data:', error);
-				columns = [];
+				}).filter(Boolean); // Remove null entries
+				
+				console.log('HeatmapColumns: Processed columns:', columns);
+				console.log('HeatmapColumns: Sample column data:', columns[0]);
 			}
+		} catch (error) {
+			console.error('HeatmapColumns: Error processing data:', error);
+			columns = [];
 		}
-		
-		console.log('HeatmapColumns: Processed columns:', columns);
 		
 		// Create tooltip element
 		tooltip = document.createElement('div');
@@ -103,6 +111,11 @@
 {#if columns.length === 0}
 	<div class="absolute inset-0 flex items-center justify-center text-white text-lg">
 		No data available for heatmap
+	</div>
+{:else}
+	<!-- Debug overlay showing column count -->
+	<div class="absolute top-4 left-4 z-30 bg-black bg-opacity-80 text-white p-2 rounded text-xs">
+		Columns: {columns.length}
 	</div>
 {/if}
 
