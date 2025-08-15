@@ -14,6 +14,18 @@
 	/>
 </T.Mesh>
 
+<!-- Floor reference plane at y=0 for better visibility of negative bars -->
+<T.Mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+	<T.PlaneGeometry args={[50, 50]} />
+	<T.MeshStandardMaterial 
+		color="#1a1a1a" 
+		transparent={true} 
+		opacity={0.4}
+		metalness={0.5}
+		roughness={0.3}
+	/>
+</T.Mesh>
+
 <!-- Grid lines -->
 <T.LineSegments>
 	<T.BufferGeometry>
