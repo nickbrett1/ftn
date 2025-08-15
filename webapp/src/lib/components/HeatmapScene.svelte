@@ -30,11 +30,20 @@
 				ease: 'power2.inOut'
 			});
 
-			// Animate camera to show negative changes (red columns)
+			// Animate camera to show negative changes (red columns) - look down from above
 			animationTimeline.to(camera.position, {
 				x: -15,
-				y: -20,
+				y: 25,
 				z: 15,
+				duration: 15,
+				ease: 'power2.inOut'
+			});
+
+			// Animate camera to show negative bars from below - look up at negative bars
+			animationTimeline.to(camera.position, {
+				x: 0,
+				y: -15,
+				z: 25,
 				duration: 15,
 				ease: 'power2.inOut'
 			});
@@ -119,6 +128,20 @@
 
 <!-- Additional fill light from below -->
 <T.DirectionalLight position={[0, -10, 0]} color="#ffffff" intensity={0.4} />
+
+<!-- Additional light from below to illuminate negative bars -->
+<T.PointLight position={[0, -5, 0]} color="#ffffff" intensity={0.3} distance={30} />
+
+<!-- Additional light from below to illuminate negative bars -->
+<T.SpotLight 
+	position={[0, -8, 0]} 
+	color="#ffffff" 
+	intensity={0.2} 
+	distance={40}
+	angle={Math.PI / 3}
+	penumbra={0.5}
+	target={[0, 0, 0]}
+/>
 
 <!-- Fog for depth and atmosphere -->
 <T.Fog attach="fog" args={['#000000', 50, 150]} />
