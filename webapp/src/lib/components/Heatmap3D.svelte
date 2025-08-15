@@ -1,7 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { Canvas } from '@threlte/core';
-	import { useProgress } from '@threlte/extras';
+	import { Canvas, T } from '@threlte/core';
+	import { useProgress, OrbitControls } from '@threlte/extras';
 	import { tweened } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
 	import HeatmapScene from './HeatmapScene.svelte';
@@ -12,18 +12,33 @@
 	const { progress } = useProgress();
 	const tweenedProgress = tweened(0);
 	
-	let sp500Data = generateSP500HeatmapData();
+	let sp500Data = $state([]);
 	let hasError = $state(false);
 	let errorMessage = $state('');
 	let isClient = $state(false);
 	let isLoaded = $state(false);
+	
+	// Create a reactive statement to watch data changes
+	$effect(() => {
+		console.log('Heatmap3D: Data state changed:', sp500Data);
+		console.log('Heatmap3D: Data length:', sp500Data?.length);
+	});
 
 	onMount(() => {
 		isClient = true;
-		console.log('Heatmap3D: Component mounted');
-		console.log('Heatmap3D: Generated data:', sp500Data);
-		console.log('Heatmap3D: Data length:', sp500Data?.length);
-		console.log('Heatmap3D: Sample data:', sp500Data?.[0]);
+		
+		// Generate data
+		try {
+			sp500Data = generateSP500HeatmapData();
+			console.log('Heatmap3D: Generated data:', sp500Data);
+			console.log('Heatmap3D: Data length:', sp500Data?.length);
+			console.log('Heatmap3D: Sample data:', sp500Data?.[0]);
+		} catch (error) {
+			console.error('Heatmap3D: Error generating data:', error);
+			hasError = true;
+			errorMessage = 'Failed to generate heatmap data';
+			return;
+		}
 		
 		// Validate data
 		if (!sp500Data || !Array.isArray(sp500Data) || sp500Data.length === 0) {
@@ -49,6 +64,7 @@
 			}
 			
 			console.log('Heatmap3D: Valid data count:', validData.length);
+			console.log('Heatmap3D: Data state updated, length:', sp500Data.length);
 		}
 
 		// Update tweened progress when progress changes (client-side only)
@@ -137,25 +153,105 @@
 	{/if}
 
 	{#if !hasError && isClient && browser}
-		<Canvas
-			onError={(error) => {
-				console.error('Heatmap3D: Canvas error:', error);
-				hasError = true;
-				errorMessage = `Canvas error: ${error.message}`;
-			}}
-		>
-			<HeatmapScene
-				{sp500Data}
-				on:sceneReady={() => {
-					console.log('Heatmap3D: Scene ready event received');
-				}}
-				on:error={(event) => {
-					console.error('Heatmap3D: Scene error:', event.detail);
+		<!-- Canvas container with fallback -->
+		<div class="w-full h-full relative">
+			<Canvas
+				gl={{ antialias: true, alpha: false }}
+				onError={(error) => {
+					console.error('Heatmap3D: Canvas error:', error);
 					hasError = true;
-					errorMessage = `Scene error: ${event.detail}`;
+					errorMessage = `Canvas error: ${error.message}`;
 				}}
+				oncreate={() => {
+					console.log('Heatmap3D: Canvas created successfully');
+				}}
+				onload={() => {
+					console.log('Heatmap3D: Canvas loaded successfully');
+				}}
+				class="w-full h-full"
+			>
+			<!-- Background color -->
+			<T.Color attach="background" args={['#000000']} />
+			
+			<!-- Basic lighting for test cube -->
+			<T.AmbientLight intensity={0.8} />
+			<T.DirectionalLight position={[10, 10, 5]} intensity={1} />
+			
+			<!-- Camera controls -->
+			<T.PerspectiveCamera
+				position={[0, 20, 40]}
+				fov={60}
+				makeDefault
 			/>
-		</Canvas>
+			<OrbitControls
+				enableDamping
+				dampingFactor={0.05}
+				enablePan={true}
+				enableZoom={true}
+				enableRotate={true}
+				autoRotate={true}
+				autoRotateSpeed={0.5}
+			/>
+			
+			<!-- Simple test to verify Canvas is working -->
+			<T.Mesh position={[0, 0, 0]}>
+				<T.BoxGeometry args={[5, 5, 5]} />
+				<T.MeshStandardMaterial
+					color="#ff0000"
+					emissive="#ff0000"
+					emissiveIntensity={1.0}
+				/>
+			</T.Mesh>
+			
+			<!-- Additional test objects to verify 3D rendering -->
+			<T.Mesh position={[10, 0, 0]}>
+				<T.SphereGeometry args={[2]} />
+				<T.MeshStandardMaterial
+					color="#0000ff"
+					emissive="#0000ff"
+					emissiveIntensity={0.8}
+				/>
+			</T.Mesh>
+			
+			<T.Mesh position={[-10, 0, 0]}>
+				<T.ConeGeometry args={[2, 4]} />
+				<T.MeshStandardMaterial
+					color="#00ffff"
+					emissive="#00ffff"
+					emissiveIntensity={0.8}
+				/>
+			</T.Mesh>
+			
+			{#if sp500Data && sp500Data.length > 0}
+				<HeatmapScene
+					{sp500Data}
+					on:sceneReady={() => {
+						console.log('Heatmap3D: Scene ready event received');
+					}}
+					on:error={(event) => {
+						console.error('Heatmap3D: Scene error:', event.detail);
+						hasError = true;
+						errorMessage = `Scene error: ${event.detail}`;
+					}}
+				/>
+			{:else}
+				<!-- Debug: Show when no data -->
+				<T.Mesh position={[0, 15, 0]}>
+					<T.BoxGeometry args={[2, 2, 2]} />
+					<T.MeshStandardMaterial
+						color="#00ff00"
+						emissive="#00ff00"
+						emissiveIntensity={1.0}
+					/>
+				</T.Mesh>
+			{/if}
+			</Canvas>
+			
+			<!-- Fallback text if Canvas fails -->
+			<div class="absolute inset-0 flex items-center justify-center text-white text-lg bg-black bg-opacity-50" style="display: none;">
+				Canvas failed to load
+			</div>
+		</div>
 
 		<!-- Legend overlay -->
 		<div class="absolute top-4 right-4 z-20">
@@ -183,7 +279,11 @@
 				<!-- Debug info -->
 				<div class="text-xs text-yellow-400 mt-2 border-t border-zinc-600 pt-2">
 					Data: {sp500Data?.length || 0} companies<br />
-					Status: {isLoaded ? 'Loaded' : 'Loading...'}
+					Status: {isLoaded ? 'Loaded' : 'Loading...'}<br />
+					Client: {isClient ? 'Yes' : 'No'}<br />
+					Browser: {browser ? 'Yes' : 'No'}<br />
+					Data Type: {typeof sp500Data}<br />
+					Is Array: {Array.isArray(sp500Data) ? 'Yes' : 'No'}
 				</div>
 			</div>
 		</div>
