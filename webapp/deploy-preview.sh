@@ -69,7 +69,10 @@ doppler run $DOPPLER_ARGS -- bash -c "
     # Deploy to preview environment
     echo \"🚀 Deploying to preview environment\"
     DEPLOY_OUTPUT=\$(npx wrangler deploy --config wrangler.jsonc --env preview 2>&1)
-    echo \"\$DEPLOY_OUTPUT\"
+    
+    # Filter out the masked URL from the output before displaying
+    CLEAN_OUTPUT=\$(echo \"\$DEPLOY_OUTPUT\" | sed 's|https://[^[:space:]]*\.workers\.dev|https://ftn-preview.nick-brett1.workers.dev|g')
+    echo \"\$CLEAN_OUTPUT\"
     
     # Always use the known unmasked URL since Cloudflare masks it in output
     DEPLOYED_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
