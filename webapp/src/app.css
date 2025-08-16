@@ -137,9 +137,44 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 .milestone img, .milestone .svelte-img {
 	max-width: 100% !important;
 	max-height: 100% !important;
-	width: auto !important;
-	height: auto !important;
+	width: 100% !important;
+	height: 100% !important;
 	object-fit: contain !important;
+	object-position: center !important;
+}
+
+/* Ensure milestone logo containers don't overflow */
+.milestone .flex-shrink-0 {
+	flex-shrink: 0 !important;
+	overflow: hidden !important;
+}
+
+/* Ensure milestone logo buttons maintain proper sizing */
+.milestone button.size-full {
+	width: 100% !important;
+	height: 100% !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+	overflow: hidden !important;
+}
+
+/* Mobile landscape orientation fixes for milestone icons */
+@media (max-width: 768px) and (orientation: landscape) {
+	.milestone .flex-shrink-0 {
+		max-width: 4rem !important;
+		max-height: 4rem !important;
+		min-width: 3rem !important;
+		min-height: 3rem !important;
+	}
+	
+	.milestone img, .milestone .svelte-img {
+		max-width: 100% !important;
+		max-height: 100% !important;
+		width: 100% !important;
+		height: 100% !important;
+		object-fit: contain !important;
+		object-position: center !important;
+	}
 }
 
 /* Ensure headings are white by default - but only for content areas */
