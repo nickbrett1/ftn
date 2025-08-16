@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 
 	let id = $props.id();
-	let logoContainer;
+	let logoContainer = $state();
 
 	let {
 		heading = '',

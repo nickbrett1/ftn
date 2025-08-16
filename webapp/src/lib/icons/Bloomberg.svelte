@@ -2,7 +2,7 @@
 	import icon from '$lib/images/bloomberg-icon.jpeg';
 	import { onMount } from 'svelte';
 	
-	let imgElement;
+	let imgElement = $state();
 	
 	onMount(() => {
 		if (imgElement) {
