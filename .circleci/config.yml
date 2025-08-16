@@ -188,6 +188,45 @@ jobs:
             cd webapp
             npm run deploy
 
+  deploy-preview:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: preview
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (preview)
+          command: |
+            cd webapp
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview
+      - run:
+          name: Deploying preview to Cloudflare
+          command: |
+            cd webapp
+            npm run deploy-preview
+
 workflows:
   build_test_deploy:
     jobs:
@@ -210,3 +249,10 @@ workflows:
           filters:
             branches:
               only: main
+      - deploy-preview:
+          requires:
+            - browser_test
+            - code_test
+          filters:
+            branches:
+              ignore: main
