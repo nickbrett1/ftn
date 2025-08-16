@@ -31,13 +31,13 @@
 			<li class="flex">
 				<Login loginCallback={loginStateUpdated}>
 					{#if !isLoggedIn}
-						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer" />
+						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer size-8 md:size-[48px]" />
 					{:else}
 						<div class="flex gap-2">
-							<UserSecretSolid class="text-green-400" title="Administrator" />
+							<UserSecretSolid class="text-green-400 size-8 md:size-[48px]" title="Administrator" />
 							<a
 								href="/deploys"
-								class="hover:text-green-400 cursor-pointer text-2xl"
+								class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
 								title="View Deployments"
 							>
 								🚀
@@ -52,20 +52,20 @@
 			<li class="flex">
 				<a
 					href="mailto:nick@fintechnick.com"
-					class="hover:text-green-400 -mt-1 size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 -mt-1 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
 					<EnvelopeRegular /></a
 				>
 				<a
 					href="https://github.com/nickbrett1/ftn"
-					class=" -mt-1 size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 -mt-1 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
 					<GithubBrands />
 				</a>
 
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
-					class="hover:text-sky-600 -mt-1 size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-sky-600 -mt-1 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
 					<LinkedinInBrands />
 				</a>
