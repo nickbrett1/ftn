@@ -51,6 +51,11 @@ doppler run $DOPPLER_ARGS -- bash -c '
         exit 1
     fi
 
+    echo "✅ Environment variables verified:"
+    echo "   KV_NAMESPACE_ID: $KV_NAMESPACE_ID"
+    echo "   D1_WDI_DATABASE_ID: $D1_WDI_DATABASE_ID"
+    echo "   D1_CCBILLING_DATABASE_ID: $D1_CCBILLING_DATABASE_ID"
+
     # Create wrangler.jsonc from template with substitutions
     echo "📝 Generating wrangler.jsonc for preview deployment..."
     sed \
@@ -61,19 +66,19 @@ doppler run $DOPPLER_ARGS -- bash -c '
 
     echo "✅ Wrangler configuration generated successfully"
 
-    # Deploy to unique preview environment
-    echo "🚀 Deploying to preview environment: $PREVIEW_ENV"
-    npx wrangler deploy --env $PREVIEW_ENV
+    # Build the project first
+    echo "🔨 Building the project..."
+    doppler run $DOPPLER_ARGS -- npm run build
+    echo "✅ Build completed successfully"
 
-    # Also deploy to "latest" preview environment (overwrites previous)
-    echo "🎯 Deploying to latest preview environment: $LATEST_PREVIEW_ENV"
-    npx wrangler deploy --env $LATEST_PREVIEW_ENV
+    # Deploy to preview environment
+    echo "🚀 Deploying to preview environment"
+    doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview
 
     echo "🎉 Preview deployment completed successfully!"
-    echo "🔗 Unique Preview URL: https://$PREVIEW_ENV.ftn.workers.dev"
-    echo "🎯 Latest Preview URL: https://$LATEST_PREVIEW_ENV.ftn.workers.dev"
-    echo "📋 Environment: $PREVIEW_ENV"
+    echo "🔗 Preview URL: https://ftn.preview.workers.dev"
+    echo "📋 Environment: preview"
     echo "🌿 Branch: $BRANCH_NAME"
     echo ""
-    echo "💡 Tip: Use the latest preview URL for quick iteration!"
+    echo "💡 Tip: Use the preview URL for quick iteration!"
 '
