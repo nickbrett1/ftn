@@ -15,7 +15,7 @@
 	<div class="my-20 text-xl leading-none text-green-400">&rarr; PROJECTS</div>
 
 	<div
-		class="grid gap-4 items-stretch auto-rows-fr grid-cols-[repeat(auto-fill,minmax(312px,1fr))] text-white"
+		class="grid gap-4 items-stretch auto-rows-fr grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(312px,1fr))] text-white"
 	>
 		<div class="md:p-6 text-pretty md:text-right text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code and writings.
