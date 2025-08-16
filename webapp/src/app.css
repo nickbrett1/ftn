@@ -123,14 +123,6 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	footer .gap-6 {
 		gap: 1.5rem;
 	}
-	
-	/* Ensure milestone logos don't overflow on mobile */
-	.milestone .max-h-16 {
-		max-height: 4rem;
-		max-width: 4rem;
-		min-height: 4rem;
-		min-width: 4rem;
-	}
 }
 
 /* Ensure image-based icons maintain proper sizing */
@@ -170,6 +162,8 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	min-width: 4rem !important;
 	min-height: 4rem !important;
 	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
 }
 
 .milestone .sm\:w-20.sm\:h-20 {
@@ -180,6 +174,22 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	min-width: 5rem !important;
 	min-height: 5rem !important;
 	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+/* Ensure milestone flex containers behave predictably */
+.milestone .flex {
+	align-items: flex-start !important;
+}
+
+.milestone .flex > div:first-child {
+	flex: 1 1 auto !important;
+	min-width: 0 !important;
+}
+
+.milestone .flex > div:last-child {
+	flex: 0 0 auto !important;
 }
 
 /* Global image optimization */
