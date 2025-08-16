@@ -166,6 +166,21 @@ export const POST = RouteUtils.createRouteHandler(
 				console.warn('Auto-association lookup failed for merchant', charge.merchant, e?.message);
 			}
 
+			// Check if this is an Amazon charge and capture full statement text
+			const isAmazon = charge.merchant && (
+				charge.merchant.toUpperCase().includes('AMAZON') || 
+				charge.merchant.toUpperCase().includes('AMZN')
+			);
+			
+			// For Amazon charges, try to get the full statement text from the parsed data
+			let fullStatementText = null;
+			if (isAmazon && charge.full_statement_text) {
+				fullStatementText = charge.full_statement_text;
+			} else if (isAmazon && charge.merchant_details) {
+				// Fallback: use merchant_details if available
+				fullStatementText = charge.merchant_details;
+			}
+
 			await createPayment(
 				event,
 				statement_id,
@@ -176,7 +191,8 @@ export const POST = RouteUtils.createRouteHandler(
 				charge.is_foreign_currency || false,
 				charge.foreign_currency_amount || null,
 				charge.foreign_currency_type || null,
-				charge.flight_details || null
+				charge.flight_details || null,
+				fullStatementText
 			);
 		}
 

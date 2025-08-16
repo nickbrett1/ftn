@@ -206,7 +206,8 @@ describe('WellsFargoParser', () => {
 				allocated_to: null,
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
-				foreign_currency_type: null
+				foreign_currency_type: null,
+				full_statement_text: '01/15 01/15 860001800 5543286595Z9WS512 AMAZON.COM AMZN.COM/BILL WA $123.45'
 			});
 		});
 

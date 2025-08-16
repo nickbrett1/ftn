@@ -136,7 +136,8 @@ describe('ChaseParser', () => {
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
 				foreign_currency_type: null,
-				flight_details: null
+				flight_details: null,
+				full_statement_text: '01/15 AMAZON.COM 123.45'
 			});
 		});
 
