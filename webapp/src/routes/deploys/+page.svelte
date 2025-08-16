@@ -120,17 +120,6 @@
 										</svg>
 									</a>
 								{/if}
-								
-								{#if deployment.adminUrl}
-									<a
-										href={deployment.adminUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="inline-flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
-									>
-										⚙️ Admin
-									</a>
-								{/if}
 							</div>
 						</div>
 					</div>
