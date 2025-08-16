@@ -34,7 +34,7 @@ fi
 
 # Run doppler to get environment variables and execute the deployment
 echo "🔐 Fetching environment variables from Doppler..."
-doppler run $DOPPLER_ARGS -- bash -c "
+BRANCH_NAME="$BRANCH_NAME" BRANCH_SANITIZED="$BRANCH_SANITIZED" doppler run $DOPPLER_ARGS -- bash -c "
     # Check if required environment variables are set
     if [ -z \"\$KV_NAMESPACE_ID\" ]; then
         echo \"Error: KV_NAMESPACE_ID environment variable is not set in Doppler\"
@@ -72,13 +72,13 @@ doppler run $DOPPLER_ARGS -- bash -c "
     
     # Construct the preview URLs directly from known structure and branch
     GENERIC_PREVIEW_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
-    BRANCH_PREVIEW_URL=\"https://ftn-preview-$BRANCH_SANITIZED.nick-brett1.workers.dev\"
+    BRANCH_PREVIEW_URL=\"https://ftn-preview-\$BRANCH_SANITIZED.nick-brett1.workers.dev\"
     
     echo \"🎉 Preview deployment completed successfully!\"
     echo \"🔗 Generic Preview URL: \$GENERIC_PREVIEW_URL\"
     echo \"🌿 Branch Preview URL: \$BRANCH_PREVIEW_URL\"
     echo \"📋 Environment: preview\"
-    echo \"🌿 Branch: $BRANCH_NAME\"
+    echo \"🌿 Branch: \$BRANCH_NAME\"
     echo \"\"
     echo \"💡 Tip: Use the generic preview URL for quick iteration!\"
     echo \"💡 Tip: Use the branch preview URL for branch-specific testing!\"
