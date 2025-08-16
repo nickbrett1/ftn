@@ -34,56 +34,56 @@ fi
 
 # Run doppler to get environment variables and execute the deployment
 echo "🔐 Fetching environment variables from Doppler..."
-doppler run $DOPPLER_ARGS -- bash -c '
+doppler run $DOPPLER_ARGS -- bash -c "
     # Check if required environment variables are set
-    if [ -z "$KV_NAMESPACE_ID" ]; then
-        echo "Error: KV_NAMESPACE_ID environment variable is not set in Doppler"
+    if [ -z \"\$KV_NAMESPACE_ID\" ]; then
+        echo \"Error: KV_NAMESPACE_ID environment variable is not set in Doppler\"
         exit 1
     fi
 
-    if [ -z "$D1_WDI_DATABASE_ID" ]; then
-        echo "Error: D1_WDI_DATABASE_ID environment variable is not set in Doppler"
+    if [ -z \"\$D1_WDI_DATABASE_ID\" ]; then
+        echo \"Error: D1_WDI_DATABASE_ID environment variable is not set in Doppler\"
         exit 1
     fi
 
-    if [ -z "$D1_CCBILLING_DATABASE_ID" ]; then
-        echo "Error: D1_CCBILLING_DATABASE_ID environment variable is not set in Doppler"
+    if [ -z \"\$D1_CCBILLING_DATABASE_ID\" ]; then
+        echo \"Error: D1_CCBILLING_DATABASE_ID environment variable is not set in Doppler\"
         exit 1
     fi
 
-    echo "✅ Environment variables verified:"
-    echo "   KV_NAMESPACE_ID: $KV_NAMESPACE_ID"
-    echo "   D1_WDI_DATABASE_ID: $D1_WDI_DATABASE_ID"
-    echo "   D1_CCBILLING_DATABASE_ID: $D1_CCBILLING_DATABASE_ID"
+    echo \"✅ Environment variables verified:\"
+    echo \"   KV_NAMESPACE_ID: \$KV_NAMESPACE_ID\"
+    echo \"   D1_WDI_DATABASE_ID: \$D1_WDI_DATABASE_ID\"
+    echo \"   D1_CCBILLING_DATABASE_ID: \$D1_CCBILLING_DATABASE_ID\"
 
     # Create wrangler.jsonc from template with substitutions
-    echo "📝 Generating wrangler.jsonc for preview deployment..."
-    sed \
-        -e "s/KV_NAMESPACE_ID_PLACEHOLDER/$KV_NAMESPACE_ID/g" \
-        -e "s/D1_WDI_DATABASE_ID_PLACEHOLDER/$D1_WDI_DATABASE_ID/g" \
-        -e "s/D1_CCBILLING_DATABASE_ID_PLACEHOLDER/$D1_CCBILLING_DATABASE_ID/g" \
+    echo \"📝 Generating wrangler.jsonc for preview deployment...\"
+    sed \\
+        -e \"s/KV_NAMESPACE_ID_PLACEHOLDER/\$KV_NAMESPACE_ID/g\" \\
+        -e \"s/D1_WDI_DATABASE_ID_PLACEHOLDER/\$D1_WDI_DATABASE_ID/g\" \\
+        -e \"s/D1_CCBILLING_DATABASE_ID_PLACEHOLDER/\$D1_CCBILLING_DATABASE_ID/g\" \\
         wrangler.template.jsonc > wrangler.jsonc
 
-    echo "✅ Wrangler configuration generated successfully"
+    echo \"✅ Wrangler configuration generated successfully\"
 
     # Deploy to preview environment
-    echo "🚀 Deploying to preview environment"
-    DEPLOY_OUTPUT=$(doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview 2>&1)
-    echo "$DEPLOY_OUTPUT"
+    echo \"🚀 Deploying to preview environment\"
+    DEPLOY_OUTPUT=\$(npx wrangler deploy --config wrangler.jsonc --env preview 2>&1)
+    echo \"\$DEPLOY_OUTPUT\"
     
     # Extract the actual deployed URL from wrangler output
-    DEPLOYED_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^[:space:]]*\.workers\.dev' | head -1)
+    DEPLOYED_URL=\$(echo \"\$DEPLOY_OUTPUT\" | grep -o 'https://[^[:space:]]*\.workers\.dev' | head -1)
     
     # If the URL is masked, construct it from known format
-    if [[ "$DEPLOYED_URL" == *"**********"* ]]; then
-        DEPLOYED_URL="https://ftn-preview.nick-brett1.workers.dev"
+    if [[ \"\$DEPLOYED_URL\" == *\"**********\"* ]]; then
+        DEPLOYED_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
     fi
     
-    echo "🎉 Preview deployment completed successfully!"
-    echo "🔗 Deployed URL: $DEPLOYED_URL"
-    echo "📋 Environment: preview"
-    echo "🌿 Branch: $BRANCH_NAME"
-    echo ""
-    echo "💡 Tip: Use the deployed URL above for testing!"
-    echo "💡 Tip: Your mobile navigation fixes are now live for testing!"
-'
+    echo \"🎉 Preview deployment completed successfully!\"
+    echo \"🔗 Deployed URL: \$DEPLOYED_URL\"
+    echo \"📋 Environment: preview\"
+    echo \"🌿 Branch: $BRANCH_NAME\"
+    echo \"\"
+    echo \"💡 Tip: Use the deployed URL above for testing!\"
+    echo \"💡 Tip: Your mobile navigation fixes are now live for testing!\"
+"
