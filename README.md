@@ -24,6 +24,7 @@ A developer portfolio website showcasing financial technology expertise through 
 - **Security**: GitGuardian secret scanning and dependency vulnerability checks
 - **Performance**: Lighthouse CI for automated performance monitoring
 - **Testing**: Vitest unit testing, Storybook component testing
+- **Preview Deployments**: Automatic preview URLs for all feature branches
 
 ## 💼 Featured Fintech Projects
 
@@ -81,6 +82,30 @@ Automated credit card statement processing and budget management system:
 - **Security**: Zero critical vulnerabilities via automated scanning
 - **Deployment**: <2 minute CI/CD pipeline with zero-downtime releases
 - **Monitoring**: 99.9% uptime with global CDN distribution
+
+## 🚀 Preview Deployments
+
+Every feature branch automatically gets a preview deployment with a unique URL:
+
+```bash
+# Get your preview URL
+npm run preview-url
+
+# Deploy to preview locally
+npm run deploy-preview
+```
+
+**Benefits:**
+- 🎨 **Visual Testing**: Catch UI bugs that unit tests miss
+- 🔄 **Rapid Iteration**: Test changes without merging to main
+- 🤖 **Agent-Friendly**: Perfect for Cursor agent development workflows
+- 🌐 **Real Environment**: Test with production data and services
+
+**Example URLs:**
+- `feature/user-dashboard` → `https://preview-feature-user-dashboard.ftn.workers.dev`
+- `bugfix/login-validation` → `https://preview-bugfix-login-validation.ftn.workers.dev`
+
+See [Preview Deployments Guide](docs/PREVIEW_DEPLOYMENTS.md) for detailed usage.
 
 ## 🎯 Focus
 
