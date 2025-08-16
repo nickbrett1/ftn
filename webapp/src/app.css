@@ -149,15 +149,6 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	overflow: hidden !important;
 }
 
-/* Ensure milestone logo buttons maintain proper sizing */
-.milestone button.size-full {
-	width: 100% !important;
-	height: 100% !important;
-	max-width: 100% !important;
-	max-height: 100% !important;
-	overflow: hidden !important;
-}
-
 /* Force milestone icons to stay within bounds */
 .milestone .overflow-hidden {
 	overflow: hidden !important;
@@ -170,20 +161,7 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	height: 100% !important;
 }
 
-/* Specific rules for image-based milestone icons */
-.milestone img[alt="Bloomberg"],
-.milestone img[alt="Velma"],
-.milestone img[alt="Library House"] {
-	max-width: 100% !important;
-	max-height: 100% !important;
-	width: 100% !important;
-	height: 100% !important;
-	object-fit: contain !important;
-	object-position: center !important;
-	overflow: hidden !important;
-}
-
-/* Absolute container constraints for milestone logos */
+/* Container constraints for milestone logos */
 .milestone .w-16.h-16 {
 	width: 4rem !important;
 	height: 4rem !important;
@@ -204,42 +182,14 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	overflow: hidden !important;
 }
 
-/* Additional viewport change protection */
-@media (max-width: 768px) {
-	.milestone .overflow-hidden {
-		max-width: 4rem !important;
-		max-height: 4rem !important;
-		min-width: 4rem !important;
-		min-height: 4rem !important;
-	}
+/* Global image optimization */
+img[loading="lazy"] {
+	opacity: 0;
+	transition: opacity 0.3s;
 }
 
-@media (max-width: 768px) and (orientation: landscape) {
-	.milestone .overflow-hidden {
-		max-width: 4rem !important;
-		max-height: 4rem !important;
-		min-width: 3rem !important;
-		min-height: 3rem !important;
-	}
-}
-
-/* Mobile landscape orientation fixes for milestone icons */
-@media (max-width: 768px) and (orientation: landscape) {
-	.milestone .flex-shrink-0 {
-		max-width: 4rem !important;
-		max-height: 4rem !important;
-		min-width: 3rem !important;
-		min-height: 3rem !important;
-	}
-	
-	.milestone img, .milestone .svelte-img {
-		max-width: 100% !important;
-		max-height: 100% !important;
-		width: 100% !important;
-		height: 100% !important;
-		object-fit: contain !important;
-		object-position: center !important;
-	}
+img[loading="lazy"].loaded {
+	opacity: 1;
 }
 
 /* Ensure headings are white by default - but only for content areas */
