@@ -74,19 +74,16 @@ doppler run $DOPPLER_ARGS -- bash -c '
     # Extract the actual deployed URL from wrangler output
     DEPLOYED_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^[:space:]]*\.workers\.dev' | head -1)
     
-    if [ -n "$DEPLOYED_URL" ]; then
-        echo "🎉 Preview deployment completed successfully!"
-        echo "🔗 Deployed URL: $DEPLOYED_URL"
-        echo "📋 Environment: preview"
-        echo "🌿 Branch: $BRANCH_NAME"
-        echo ""
-        echo "💡 Tip: Use the deployed URL above for testing!"
-    else
-        echo "🎉 Preview deployment completed successfully!"
-        echo "🔗 Generic Preview URL: https://ftn-preview.nick-brett1.workers.dev"
-        echo "📋 Environment: preview"
-        echo "🌿 Branch: $BRANCH_NAME"
-        echo ""
-        echo "💡 Tip: Use the generic preview URL for quick iteration!"
+    # If the URL is masked, construct it from known format
+    if [[ "$DEPLOYED_URL" == *"**********"* ]]; then
+        DEPLOYED_URL="https://ftn-preview.nick-brett1.workers.dev"
     fi
+    
+    echo "🎉 Preview deployment completed successfully!"
+    echo "🔗 Deployed URL: $DEPLOYED_URL"
+    echo "📋 Environment: preview"
+    echo "🌿 Branch: $BRANCH_NAME"
+    echo ""
+    echo "💡 Tip: Use the deployed URL above for testing!"
+    echo "💡 Tip: Your mobile navigation fixes are now live for testing!"
 '
