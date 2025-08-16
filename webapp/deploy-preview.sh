@@ -66,11 +66,6 @@ doppler run $DOPPLER_ARGS -- bash -c '
 
     echo "✅ Wrangler configuration generated successfully"
 
-    # Build the project first
-    echo "🔨 Building the project..."
-    doppler run $DOPPLER_ARGS -- npm run build
-    echo "✅ Build completed successfully"
-
     # Deploy to preview environment
     echo "🚀 Deploying to preview environment"
     doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview
