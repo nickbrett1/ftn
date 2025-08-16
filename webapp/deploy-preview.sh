@@ -68,14 +68,25 @@ doppler run $DOPPLER_ARGS -- bash -c '
 
     # Deploy to preview environment
     echo "🚀 Deploying to preview environment"
-    doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview
-
-    echo "🎉 Preview deployment completed successfully!"
-    echo "🔗 Generic Preview URL: https://ftn-preview.nick-brett1.workers.dev"
-    echo "🌿 Branch Preview URL: https://ftn-preview-$BRANCH_SANITIZED.nick-brett1.workers.dev"
-    echo "📋 Environment: preview"
-    echo "🌿 Branch: $BRANCH_NAME"
-    echo ""
-    echo "💡 Tip: Use the generic preview URL for quick iteration!"
-    echo "💡 Tip: Use the branch preview URL for branch-specific testing!"
+    DEPLOY_OUTPUT=$(doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview 2>&1)
+    echo "$DEPLOY_OUTPUT"
+    
+    # Extract the actual deployed URL from wrangler output
+    DEPLOYED_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^[:space:]]*\.workers\.dev' | head -1)
+    
+    if [ -n "$DEPLOYED_URL" ]; then
+        echo "🎉 Preview deployment completed successfully!"
+        echo "🔗 Deployed URL: $DEPLOYED_URL"
+        echo "📋 Environment: preview"
+        echo "🌿 Branch: $BRANCH_NAME"
+        echo ""
+        echo "💡 Tip: Use the deployed URL above for testing!"
+    else
+        echo "🎉 Preview deployment completed successfully!"
+        echo "🔗 Generic Preview URL: https://ftn-preview.nick-brett1.workers.dev"
+        echo "📋 Environment: preview"
+        echo "🌿 Branch: $BRANCH_NAME"
+        echo ""
+        echo "💡 Tip: Use the generic preview URL for quick iteration!"
+    fi
 '
