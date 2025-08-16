@@ -4,7 +4,7 @@
 
 <li>
 	<a
-		href="/#{current}"
+		href="#{current}"
 		class="block py-2 {active == current ? 'text-green-400' : ''}"
 		onclick={() => {
 			hide();
