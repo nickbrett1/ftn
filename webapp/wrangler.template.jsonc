@@ -3,28 +3,10 @@
 	"name": "ftn",
 	"compatibility_date": "2024-05-30",
 	"compatibility_flags": ["nodejs_compat_v2"],
-	"external": [
-		"clsx",
-		"@sveltejs/kit",
-		"@sveltejs/kit/internal",
-		"@sveltejs/kit/internal/server",
-		"devalue",
-		"cookie",
-		"set-cookie-parser",
-		"nanoid",
-		"nanoid/non-secure",
-		"dequal",
-		"@floating-ui/dom",
-		"focus-trap",
-		"mitt",
-		"camera-controls",
-		"three-viewport-gizmo",
-		"three-mesh-bvh",
-		"@threejs-kit/instanced-sprite-mesh",
-		"linkify-it",
-		"llama-api-client"
-	],
-	"no_bundle": true,
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
 	"observability": {
 		"logs": {
 			"enabled": true
@@ -63,7 +45,6 @@
 	],
 	"env": {
 		"production": {
-			"main": ".svelte-kit/cloudflare/entry.worker.js",
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
@@ -98,7 +79,6 @@
 			]
 		},
 		"preview": {
-			"main": ".svelte-kit/cloudflare/entry.worker.js",
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
@@ -133,7 +113,6 @@
 			]
 		},
 		"latest-preview": {
-			"main": ".svelte-kit/cloudflare/entry.worker.js",
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
