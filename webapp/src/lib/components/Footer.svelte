@@ -32,6 +32,17 @@
 				<Login loginCallback={loginStateUpdated}>
 					{#if !isLoggedIn}
 						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer" />
+					{:else}
+						<div class="flex gap-2">
+							<UserSecretSolid class="text-green-400" title="Administrator" />
+							<a
+								href="/deploys"
+								class="hover:text-green-400 cursor-pointer text-2xl"
+								title="View Deployments"
+							>
+								🚀
+							</a>
+						</div>
 					{/if}
 				</Login>
 			</li>

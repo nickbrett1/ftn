@@ -1,13 +1,27 @@
 <script>
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 
 	let deployments = [];
 	let loading = true;
 	let error = null;
+	let isAuthenticated = false;
 
 	onMount(async () => {
+		// Check authentication
+		const match = document.cookie.match(/(^| )auth=([^;]+)/);
+		const hasValidAuth = match !== null && match[2] !== 'deleted';
+		
+		if (!hasValidAuth) {
+			error = 'Authentication required';
+			loading = false;
+			return;
+		}
+
+		isAuthenticated = true;
+
 		try {
 			const response = await fetch('/api/deploys');
 			if (response.ok) {
@@ -57,6 +71,17 @@
 		{#if loading}
 			<div class="flex justify-center items-center py-12">
 				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400"></div>
+			</div>
+		{:else if error === 'Authentication required'}
+			<div class="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
+				<p class="text-red-400 text-lg mb-4">Authentication Required</p>
+				<p class="text-gray-400 mb-6">You must be logged in to view deployments.</p>
+				<button
+					onclick={() => goto('/')}
+					class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+				>
+					Go Home
+				</button>
 			</div>
 		{:else if error}
 			<div class="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
