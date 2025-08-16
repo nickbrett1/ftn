@@ -17,6 +17,13 @@
 
 	<nav class="flex flex-row-reverse grow">
 		<a
+			href="/deploys"
+			class="p-1 text-white hover:text-green-400 flex items-center size-[48px]"
+			title="View Deployments"
+		>
+			🚀
+		</a>
+		<a
 			href="https://www.linkedin.com/in/nick-brett/"
 			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
 			rel="noopener noreferrer"
