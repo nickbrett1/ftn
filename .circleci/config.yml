@@ -62,10 +62,6 @@ jobs:
           root: webapp
           paths:
             - .svelte-kit
-            - package.json
-            - package-lock.json
-            - deploy-preview.sh
-            - wrangler.template.jsonc
 
   code_test:
     docker:
@@ -201,13 +197,14 @@ jobs:
     docker:
       - image: cimg/node:current
     steps:
+      - checkout
       - attach_workspace:
           at: webapp
       - doppler/install
       - run:
           name: Deploying preview to Cloudflare
           command: |
-            npm run deploy-preview
+            cd webapp && npm run deploy-preview
 
 workflows:
   build_test_deploy:
