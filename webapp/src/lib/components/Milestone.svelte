@@ -117,7 +117,7 @@
 					<div 
 						class="flex-shrink-0 pt-2 pr-2 sm:pt-4 sm:pr-4 overflow-hidden"
 						style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px;"
-						ref:logoContainer
+						bind:this={logoContainer}
 					>
 						<MilestoneLogo data={logo} />
 					</div>
