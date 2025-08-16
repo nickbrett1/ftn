@@ -276,6 +276,92 @@ img[loading="lazy"].loaded {
 	object-position: center !important;
 }
 
+/* Absolute override for milestone logo containers - highest priority */
+.milestone .flex-shrink-0[style*="width: 64px"] {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* Nuclear option - force all milestone images to be exactly 64px regardless of any other CSS */
+.milestone img,
+.milestone .flex-shrink-0 img,
+.milestone .flex-shrink-0 div img,
+.milestone button img,
+.milestone button div img {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	object-fit: contain !important;
+	object-position: center !important;
+	transform: none !important;
+	scale: 1 !important;
+	zoom: 1 !important;
+}
+
+/* Prevent any CSS transforms or scaling on milestone containers */
+.milestone .flex-shrink-0,
+.milestone .flex-shrink-0 div,
+.milestone button {
+	transform: none !important;
+	scale: 1 !important;
+	zoom: 1 !important;
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	overflow: hidden !important;
+}
+
+/* Prevent any viewport-based scaling */
+@media (max-width: 768px) {
+	.milestone img,
+	.milestone .flex-shrink-0 img,
+	.milestone .flex-shrink-0 div img,
+	.milestone button img,
+	.milestone button div img {
+		width: 64px !important;
+		height: 64px !important;
+		max-width: 64px !important;
+		max-height: 64px !important;
+		min-width: 64px !important;
+		min-height: 64px !important;
+		transform: none !important;
+		scale: 1 !important;
+		zoom: 1 !important;
+	}
+}
+
+@media (orientation: landscape) {
+	.milestone img,
+	.milestone .flex-shrink-0 img,
+	.milestone .flex-shrink-0 div img,
+	.milestone button img,
+	.milestone button div img {
+		width: 64px !important;
+		height: 64px !important;
+		max-width: 64px !important;
+		max-height: 64px !important;
+		min-width: 64px !important;
+		min-height: 64px !important;
+		transform: none !important;
+		scale: 1 !important;
+		zoom: 1 !important;
+	}
+}
+
 /* Ensure headings are white by default - but only for content areas */
 article h1,
 article h2,

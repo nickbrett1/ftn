@@ -21,12 +21,13 @@
 	});
 </script>
 
-<img 
-	bind:this={imgElement}
-	src={icon} 
-	alt="Bloomberg" 
-	class="h-full w-full object-contain max-w-full max-h-full"
-	style="max-width: 100% !important; max-height: 100% !important; width: 100% !important; height: 100% !important; object-fit: contain !important;"
-	loading="lazy"
-	decoding="async"
-/>
+<div style="width: 64px; height: 64px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+	<img 
+		bind:this={imgElement}
+		src={icon} 
+		alt="Bloomberg" 
+		style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px; object-fit: contain; object-position: center;"
+		loading="lazy"
+		decoding="async"
+	/>
+</div>
