@@ -202,6 +202,80 @@ img[loading="lazy"].loaded {
 	opacity: 1;
 }
 
+/* Horizontal orientation fixes for milestone icons */
+@media (orientation: landscape) and (max-height: 768px) {
+	.milestone .w-16.h-16,
+	.milestone .sm\:w-20.sm\:h-20 {
+		width: 4rem !important;
+		height: 4rem !important;
+		max-width: 4rem !important;
+		max-height: 4rem !important;
+		min-width: 4rem !important;
+		min-height: 4rem !important;
+		overflow: hidden !important;
+		flex-shrink: 0 !important;
+		flex-grow: 0 !important;
+	}
+	
+	.milestone img {
+		max-width: 4rem !important;
+		max-height: 4rem !important;
+		width: 4rem !important;
+		height: 4rem !important;
+		object-fit: contain !important;
+		object-position: center !important;
+	}
+}
+
+/* Force modal logo containers to respect inline styles */
+.milestone .flex-shrink-0 {
+	width: 4rem !important;
+	height: 4rem !important;
+	max-width: 4rem !important;
+	max-height: 4rem !important;
+	min-width: 4rem !important;
+	min-height: 4rem !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+/* Ensure milestone images are always constrained */
+.milestone img {
+	max-width: 4rem !important;
+	max-height: 4rem !important;
+	width: 4rem !important;
+	height: 4rem !important;
+	object-fit: contain !important;
+	object-position: center !important;
+}
+
+/* Absolute override for milestone logo containers - highest priority */
+.milestone .flex-shrink-0[style*="width: 64px"] {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* Force all milestone images to be exactly 64px */
+.milestone .flex-shrink-0 img {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	object-fit: contain !important;
+	object-position: center !important;
+}
+
 /* Ensure headings are white by default - but only for content areas */
 article h1,
 article h2,
