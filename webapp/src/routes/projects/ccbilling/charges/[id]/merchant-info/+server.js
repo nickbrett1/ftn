@@ -1,5 +1,13 @@
 import { json } from '@sveltejs/kit';
-import { LLAMA_API_MODEL as STATIC_LLAMA_API_MODEL } from '$env/static/private';
+// Try to import environment variables, with fallbacks for build time
+let STATIC_LLAMA_API_MODEL;
+try {
+	const env = await import('$env/static/private');
+	STATIC_LLAMA_API_MODEL = env.LLAMA_API_MODEL;
+} catch (error) {
+	// During build time, these might not be available
+	STATIC_LLAMA_API_MODEL = process.env?.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
+}
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import LlamaAPIClient from 'llama-api-client';

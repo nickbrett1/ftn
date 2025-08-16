@@ -35,7 +35,11 @@ export async function highlight(code, lang) {
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			platformProxy: {
+				enabled: true
+			}
+		}),
 		serviceWorker: {
 			register: true
 		},
