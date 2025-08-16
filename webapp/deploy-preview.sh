@@ -3,6 +3,7 @@ set -e
 
 # Preview Deployment Script for Non-Main Branches
 # This script deploys the app to a preview environment with a unique URL
+# AND to a fixed "latest" preview URL for easy access
 
 echo "🚀 Setting up preview deployment..."
 
@@ -12,9 +13,11 @@ BRANCH_SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:
 
 # Create preview environment name
 PREVIEW_ENV="preview-${BRANCH_SANITIZED}"
+LATEST_PREVIEW_ENV="latest-preview"
 
 echo "📋 Branch: $BRANCH_NAME"
 echo "🔗 Preview Environment: $PREVIEW_ENV"
+echo "🎯 Latest Preview Environment: $LATEST_PREVIEW_ENV"
 
 # Check if doppler CLI is available
 if ! command -v doppler &> /dev/null; then
@@ -58,12 +61,19 @@ doppler run $DOPPLER_ARGS -- bash -c '
 
     echo "✅ Wrangler configuration generated successfully"
 
-    # Deploy to preview environment
+    # Deploy to unique preview environment
     echo "🚀 Deploying to preview environment: $PREVIEW_ENV"
     npx wrangler deploy --env $PREVIEW_ENV
 
+    # Also deploy to "latest" preview environment (overwrites previous)
+    echo "🎯 Deploying to latest preview environment: $LATEST_PREVIEW_ENV"
+    npx wrangler deploy --env $LATEST_PREVIEW_ENV
+
     echo "🎉 Preview deployment completed successfully!"
-    echo "🔗 Preview URL: https://$PREVIEW_ENV.ftn.workers.dev"
+    echo "🔗 Unique Preview URL: https://$PREVIEW_ENV.ftn.workers.dev"
+    echo "🎯 Latest Preview URL: https://$LATEST_PREVIEW_ENV.ftn.workers.dev"
     echo "📋 Environment: $PREVIEW_ENV"
     echo "🌿 Branch: $BRANCH_NAME"
+    echo ""
+    echo "💡 Tip: Use the latest preview URL for quick iteration!"
 '

@@ -109,6 +109,41 @@
 					"bucket_name": "ccbilling"
 				}
 			]
+		},
+		"latest-preview": {
+			"main": ".svelte-kit/cloudflare/_worker.js",
+			"assets": {
+				"binding": "ASSETS",
+				"directory": ".svelte-kit/cloudflare"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "KV",
+					"id": "KV_NAMESPACE_ID_PLACEHOLDER"
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "wdi",
+					"database_id": "D1_WDI_DATABASE_ID_PLACEHOLDER"
+				},
+				{
+					"binding": "CCBILLING_DB",
+					"database_name": "ccbilling",
+					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "R2_WDI",
+					"bucket_name": "wdi"
+				},
+				{
+					"binding": "R2_CCBILLING",
+					"bucket_name": "ccbilling"
+				}
+			]
 		}
 	}
 }
