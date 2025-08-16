@@ -9,6 +9,7 @@
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	onMount(() => {
 		tippy('#login', {
@@ -19,6 +20,10 @@
 	let isLoggedIn = $state(false);
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
+		if (loggedIn) {
+			// Redirect to deploys page after successful login
+			goto('/deploys');
+		}
 	}
 
 	import Login from '$lib/components/Login.svelte';
@@ -28,21 +33,29 @@
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
 		<div class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-32">
-			<div class="flex justify-center md:justify-start">
+			<div class="flex justify-center md:justify-start gap-2">
+				<!-- Always show deploys icon -->
+				<button
+					onclick={() => {
+						if (isLoggedIn) {
+							goto('/deploys');
+						} else {
+							// Trigger login workflow
+							document.getElementById('login').click();
+						}
+					}}
+					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
+					title={isLoggedIn ? "View Deployments" : "Login to View Deployments"}
+				>
+					🚀
+				</button>
+				
+				<!-- Admin login icon -->
 				<Login loginCallback={loginStateUpdated}>
 					{#if !isLoggedIn}
 						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer size-8 md:size-[48px]" />
 					{:else}
-						<div class="flex gap-2">
-							<UserSecretSolid class="text-green-400 size-8 md:size-[48px]" title="Administrator" />
-							<a
-								href="/deploys"
-								class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-								title="View Deployments"
-							>
-								🚀
-							</a>
-						</div>
+						<UserSecretSolid class="text-green-400 size-8 md:size-[48px]" title="Administrator" />
 					{/if}
 				</Login>
 			</div>
