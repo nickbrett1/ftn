@@ -25,7 +25,10 @@
 		"lighthouse": "doppler run --command='LIGHTHOUSE_ENABLED=true && vite preview'",
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
-		"deploy": "npx wrangler deploy -e production"
+		"deploy": "npx wrangler deploy -e production",
+		"deploy-preview": "chmod +x ./deploy-preview.sh && ./deploy-preview.sh",
+		"preview-url": "./get-preview-url.sh",
+		"cleanup-previews": "./cleanup-preview-environments.sh"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.11.5",
