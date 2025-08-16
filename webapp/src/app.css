@@ -23,6 +23,8 @@ html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
 	color: #d4d4d8; /* Default text color - zinc-300 */
+	/* Enable smooth scrolling for better navigation experience */
+	scroll-behavior: smooth;
 }
 
 /* Global text color defaults for dark theme - only for basic content */
@@ -236,7 +238,7 @@ html, body {
 	
 	/* Prevent scroll jumping on mobile when content changes */
 	html {
-		scroll-behavior: auto;
+		scroll-behavior: smooth;
 	}
 	
 	/* Ensure smooth transitions for dynamic content */
@@ -252,7 +254,7 @@ html, body {
 	
 	/* Smooth scroll restoration */
 	.scroll-restore {
-		scroll-behavior: auto;
+		scroll-behavior: smooth;
 	}
 	
 	/* Mobile modal adjustments */

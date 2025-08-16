@@ -9,11 +9,18 @@
 	} = createPopover({
 		// Allow page scrolling when popover links are clicked
 		preventScroll: false,
-		forceVisible: true
+		forceVisible: true,
+		// Ensure the popover doesn't interfere with navigation
+		closeOnEscape: true,
+		closeOnOutsideClick: true,
+		// Ensure the popover doesn't prevent navigation
+		modal: false
 	});
 
 	function hide() {
+		console.log('MobileNavigation: hide() called');
 		open.set(false);
+		console.log('MobileNavigation: Menu closed, open state:', $open);
 	}
 
 	let { active, items = [], class: classes = '' } = $props();
@@ -47,6 +54,10 @@
 		use:melt={$overlay}
 		transition:fade={{ duration: 300 }}
 		class="fixed inset-0 z-50 bg-base-800/40 transition-all duration-300"
+		on:click={() => {
+			console.log('MobileNavigation: Overlay clicked, closing menu');
+			hide();
+		}}
 	></div>
 
 	<div use:melt={$content}>
@@ -54,6 +65,7 @@
 		<div
 			transition:slide={{ duration: 300 }}
 			class="fixed inset-x-4 bottom-8 z-50 origin-top rounded-3xl bg-green-400/30 text-white p-8 ring-1 backdrop-blur-md"
+			style="max-height: 80vh; overflow-y: auto;"
 		>
 			<div class="flex flex-row-reverse items-center justify-between">
 				<button aria-label="Close menu" class="-m-1 p-1 focus:outline-none" use:melt={$close}>
@@ -66,7 +78,15 @@
 			<nav class="mt-6">
 				<ul class="-my-2 divide-y divide-white/10">
 					{#each items as item (item)}
-						<MobileNavigationItem current={item} {active} {hide} />
+						{console.log(`MobileNavigation: Rendering item ${item}`)}
+						<MobileNavigationItem 
+							current={item} 
+							{active} 
+							hide={() => {
+								console.log(`MobileNavigation: hide() called from item ${item}`);
+								hide();
+							}} 
+						/>
 					{/each}
 				</ul>
 			</nav>
