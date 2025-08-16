@@ -70,14 +70,17 @@ doppler run $DOPPLER_ARGS -- bash -c "
     echo \"🚀 Deploying to preview environment\"
     npx wrangler deploy --config wrangler.jsonc --env preview
     
-    # Construct the preview URL directly from known structure
-    PREVIEW_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
+    # Construct the preview URLs directly from known structure and branch
+    GENERIC_PREVIEW_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
+    BRANCH_PREVIEW_URL=\"https://ftn-preview-$BRANCH_SANITIZED.nick-brett1.workers.dev\"
     
     echo \"🎉 Preview deployment completed successfully!\"
-    echo \"🔗 Preview URL: \$PREVIEW_URL\"
+    echo \"🔗 Generic Preview URL: \$GENERIC_PREVIEW_URL\"
+    echo \"🌿 Branch Preview URL: \$BRANCH_PREVIEW_URL\"
     echo \"📋 Environment: preview\"
     echo \"🌿 Branch: $BRANCH_NAME\"
     echo \"\"
-    echo \"💡 Tip: Use the preview URL above for testing!\"
+    echo \"💡 Tip: Use the generic preview URL for quick iteration!\"
+    echo \"💡 Tip: Use the branch preview URL for branch-specific testing!\"
     echo \"💡 Tip: Your mobile navigation fixes are now live for testing!\"
 "
