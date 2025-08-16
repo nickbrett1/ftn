@@ -22,30 +22,11 @@
 
 				if (element) {
 					console.log(`Scrolling to element ${targetId} from ${source}`);
-					// Ensure the element is visible and scroll to it smoothly
-					element.scrollIntoView({ 
-						behavior: 'smooth', 
-						block: 'start',
-						inline: 'nearest'
-					});
+					element.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				} else {
 					console.log(`Element ${targetId} not found for scrolling from ${source}`);
 				}
 			}, 100); // 100ms
-		}
-	};
-
-	const handleHashClick = (event) => {
-		// Check if the clicked element is a hash link
-		const target = event.target.closest('a[href^="#"]');
-		if (target) {
-			const href = target.getAttribute('href');
-			if (href && href.startsWith('#')) {
-				event.preventDefault();
-				// Update the URL hash without triggering a page navigation
-				window.history.pushState(null, '', href);
-				scrollToHash(href, 'hashClick');
-			}
 		}
 	};
 
@@ -55,22 +36,9 @@
 		const module = await import('$lib/components/Background.svelte');
 		BackgroundComponent = module.default;
 
-		if (browser && typeof window !== 'undefined') {
-			// Add click event listener for hash links
-			document.addEventListener('click', handleHashClick);
-			
-			// Handle initial hash if present
-			if (window.location.hash) {
-				scrollToHash(window.location.hash, 'onMount');
-			}
+		if (browser && typeof window !== 'undefined' && window.location.hash) {
+			scrollToHash(window.location.hash, 'onMount');
 		}
-
-		// Cleanup function to remove event listener
-		return () => {
-			if (browser && typeof window !== 'undefined') {
-				document.removeEventListener('click', handleHashClick);
-			}
-		};
 	});
 
 	afterNavigate((navigation) => {
