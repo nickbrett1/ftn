@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { LinkedinInBrands, EnvelopeRegular, GithubBrands } from 'svelte-awesome-icons';
+	import { LinkedinInBrands, EnvelopeRegular, GithubBrands, UserSecretSolid } from 'svelte-awesome-icons';
+	import Login from './Login.svelte';
 </script>
 
 <div class="w-full p-2 flex flex-row">
@@ -16,6 +17,9 @@
 	</button>
 
 	<nav class="flex flex-row-reverse grow">
+		<Login loginCallback={() => {}}>
+			<UserSecretSolid class="p-1 text-white hover:text-red-600 cursor-pointer size-[48px]" />
+		</Login>
 		<a
 			href="https://www.linkedin.com/in/nick-brett/"
 			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
