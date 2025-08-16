@@ -17,7 +17,7 @@
 			animate-border"
 	>
 		{#each items as item (item)}
-			<DesktopNavigationItem href={`#${item}`} isActive={active == item}
+			<DesktopNavigationItem href={`/#${item}`} isActive={active == item}
 				>{item}</DesktopNavigationItem
 			>
 		{/each}
