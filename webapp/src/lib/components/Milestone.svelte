@@ -2,8 +2,10 @@
 
 <script>
 	import MilestoneLogo from '$lib/components/MilestoneLogo.svelte';
+	import { onMount } from 'svelte';
 
 	let id = $props.id();
+	let logoContainer;
 
 	let {
 		heading = '',
@@ -15,6 +17,28 @@
 		to = '',
 		logo = null
 	} = $props();
+
+	onMount(() => {
+		if (logoContainer) {
+			console.log(`Milestone ${id} logo container dimensions:`, {
+				offsetWidth: logoContainer.offsetWidth,
+				offsetHeight: logoContainer.offsetHeight,
+				clientWidth: logoContainer.clientWidth,
+				clientHeight: logoContainer.clientHeight,
+				scrollWidth: logoContainer.scrollWidth,
+				scrollHeight: logoContainer.scrollHeight,
+				style: logoContainer.style.cssText,
+				className: logoContainer.className
+			});
+			
+			// Check viewport orientation
+			console.log(`Viewport dimensions:`, {
+				width: window.innerWidth,
+				height: window.innerHeight,
+				orientation: window.screen.orientation?.type || 'unknown'
+			});
+		}
+	});
 </script>
 
 <div
@@ -82,15 +106,19 @@
 			<h3 class="sm:hidden text-white pb-2">
 				{from} - {to}
 			</h3>
-			<div class="flex grow">
-				<div class="grow">
+			<div class="flex items-start justify-between">
+				<div class="flex-1 min-w-0">
 					<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
 					<h3 class="tracking-tight text-green-400/80 lg:text-lg">
 						{subheading}
 					</h3>
 				</div>
 				{#if logo}
-					<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
+					<div 
+						class="flex-shrink-0 pt-2 pr-2 sm:pt-4 sm:pr-4 overflow-hidden"
+						style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px;"
+						ref:logoContainer
+					>
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}

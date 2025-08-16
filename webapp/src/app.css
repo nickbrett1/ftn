@@ -23,11 +23,257 @@ html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
 	color: #d4d4d8; /* Default text color - zinc-300 */
+	/* Enable smooth scrolling for better navigation experience */
+	scroll-behavior: smooth;
+	/* Ensure proper viewport handling */
+	box-sizing: border-box;
+	/* Prevent horizontal overflow */
+	overflow-x: hidden;
+	/* Ensure proper width */
+	width: 100%;
+	max-width: 100vw;
 }
 
 /* Global text color defaults for dark theme - only for basic content */
 body {
 	color: #d4d4d8; /* zinc-300 */
+	/* Ensure proper content width */
+	box-sizing: border-box;
+	/* Prevent horizontal overflow */
+	overflow-x: hidden;
+	/* Ensure content fits viewport */
+	width: 100%;
+	max-width: 100vw;
+}
+
+/* Ensure all elements use border-box sizing */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Fix content-width issues for mobile */
+@media (max-width: 768px) {
+	/* Ensure text doesn't overflow on mobile */
+	.text-pretty {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+	
+	/* Ensure proper padding on mobile */
+	.pr-24 {
+		padding-right: 1rem;
+	}
+	
+	/* Ensure grid items don't overflow */
+	.grid {
+		width: 100%;
+		max-width: 100%;
+		overflow-x: hidden;
+	}
+	
+	/* Ensure cards don't overflow on mobile */
+	.card, [class*="card"] {
+		max-width: 100%;
+		overflow: hidden;
+	}
+}
+
+/* Ensure proper viewport handling */
+.section {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+/* Ensure fixed-width elements don't overflow */
+[class*="w-"], [class*="max-w-"], [class*="min-w-"] {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Ensure proper text wrapping */
+p, h1, h2, h3, h4, h5, h6, span, div {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+/* Ensure grid layouts don't overflow */
+.grid {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+/* Ensure auto-fill grids work properly on mobile */
+.grid-cols-\[repeat\(auto-fill\,minmax\(.*\)\)\] {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+/* Footer mobile responsiveness */
+@media (max-width: 768px) {
+	/* Ensure icons don't overlap on mobile */
+	.size-8 {
+		width: 2rem;
+		height: 2rem;
+	}
+	
+	/* Ensure proper spacing between footer sections */
+	footer .gap-6 {
+		gap: 1.5rem;
+	}
+}
+
+/* Ensure image-based icons maintain proper sizing */
+.milestone img, .milestone .svelte-img {
+	max-width: 100% !important;
+	max-height: 100% !important;
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: contain !important;
+	object-position: center !important;
+}
+
+/* Ensure milestone logo containers don't overflow */
+.milestone .flex-shrink-0 {
+	flex-shrink: 0 !important;
+	overflow: hidden !important;
+}
+
+/* Force milestone icons to stay within bounds */
+.milestone .overflow-hidden {
+	overflow: hidden !important;
+}
+
+.milestone .overflow-hidden * {
+	max-width: 100% !important;
+	max-height: 100% !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+/* Container constraints for milestone logos */
+.milestone .w-16.h-16 {
+	width: 4rem !important;
+	height: 4rem !important;
+	max-width: 4rem !important;
+	max-height: 4rem !important;
+	min-width: 4rem !important;
+	min-height: 4rem !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+.milestone .sm\:w-20.sm\:h-20 {
+	width: 5rem !important;
+	height: 5rem !important;
+	max-width: 5rem !important;
+	max-height: 5rem !important;
+	min-width: 5rem !important;
+	min-height: 5rem !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+/* Ensure milestone flex containers behave predictably */
+.milestone .flex {
+	align-items: flex-start !important;
+}
+
+.milestone .flex > div:first-child {
+	flex: 1 1 auto !important;
+	min-width: 0 !important;
+}
+
+.milestone .flex > div:last-child {
+	flex: 0 0 auto !important;
+}
+
+/* Global image optimization */
+img[loading="lazy"] {
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+	opacity: 1;
+}
+
+/* Horizontal orientation fixes for milestone icons */
+@media (orientation: landscape) and (max-height: 768px) {
+	.milestone .w-16.h-16,
+	.milestone .sm\:w-20.sm\:h-20 {
+		width: 4rem !important;
+		height: 4rem !important;
+		max-width: 4rem !important;
+		max-height: 4rem !important;
+		min-width: 4rem !important;
+		min-height: 4rem !important;
+		overflow: hidden !important;
+		flex-shrink: 0 !important;
+		flex-grow: 0 !important;
+	}
+	
+	.milestone img {
+		max-width: 4rem !important;
+		max-height: 4rem !important;
+		width: 4rem !important;
+		height: 4rem !important;
+		object-fit: contain !important;
+		object-position: center !important;
+	}
+}
+
+/* Force modal logo containers to respect inline styles */
+.milestone .flex-shrink-0 {
+	width: 4rem !important;
+	height: 4rem !important;
+	max-width: 4rem !important;
+	max-height: 4rem !important;
+	min-width: 4rem !important;
+	min-height: 4rem !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+/* Ensure milestone images are always constrained */
+.milestone img {
+	max-width: 4rem !important;
+	max-height: 4rem !important;
+	width: 4rem !important;
+	height: 4rem !important;
+	object-fit: contain !important;
+	object-position: center !important;
+}
+
+/* Absolute override for milestone logo containers - highest priority */
+.milestone .flex-shrink-0[style*="width: 64px"] {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* Force all milestone images to be exactly 64px */
+.milestone .flex-shrink-0 img {
+	width: 64px !important;
+	height: 64px !important;
+	max-width: 64px !important;
+	max-height: 64px !important;
+	min-width: 64px !important;
+	min-height: 64px !important;
+	object-fit: contain !important;
+	object-position: center !important;
 }
 
 /* Ensure headings are white by default - but only for content areas */
@@ -236,7 +482,7 @@ html, body {
 	
 	/* Prevent scroll jumping on mobile when content changes */
 	html {
-		scroll-behavior: auto;
+		scroll-behavior: smooth;
 	}
 	
 	/* Ensure smooth transitions for dynamic content */
@@ -252,7 +498,7 @@ html, body {
 	
 	/* Smooth scroll restoration */
 	.scroll-restore {
-		scroll-behavior: auto;
+		scroll-behavior: smooth;
 	}
 	
 	/* Mobile modal adjustments */

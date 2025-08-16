@@ -4,7 +4,7 @@
 <div id="about" class="section">
 	<div class="my-20 text-xl leading-none text-green-400">&rarr; HELLO</div>
 	<p
-		class="mb-16 pr-24 text-2xl font-medium leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
+		class="mb-16 pr-4 md:pr-12 lg:pr-24 text-2xl font-medium leading-tight tracking-tight text-white md:text-3xl lg:w-1/2"
 	>
 		Then let me introduce myself. My name is <span class="text-green-400 font-bold">Nick Brett</span
 		>. Based in New York, I'm a builder, a product manager and an expert in leading teams to harness
