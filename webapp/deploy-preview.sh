@@ -67,21 +67,17 @@ doppler run $DOPPLER_ARGS -- bash -c "
     echo \"✅ Wrangler configuration generated successfully\"
 
     # Deploy to preview environment
-    echo \"🚀 Deploying to preview environment\"
-    DEPLOY_OUTPUT=\$(npx wrangler deploy --config wrangler.jsonc --env preview 2>&1)
+    echo "🚀 Deploying to preview environment"
+    npx wrangler deploy --config wrangler.jsonc --env preview
     
-    # Filter out the masked URL from the output before displaying
-    CLEAN_OUTPUT=\$(echo \"\$DEPLOY_OUTPUT\" | sed 's|https://ftn-preview\.\*\{10,\}1\.workers\.dev|https://ftn-preview.nick-brett1.workers.dev|g')
-    echo \"\$CLEAN_OUTPUT\"
+    # Construct the preview URL directly from known structure
+    PREVIEW_URL="https://ftn-preview.nick-brett1.workers.dev"
     
-    # Always use the known unmasked URL since Cloudflare masks it in output
-    DEPLOYED_URL=\"https://ftn-preview.nick-brett1.workers.dev\"
-    
-    echo \"🎉 Preview deployment completed successfully!\"
-    echo \"🔗 Deployed URL: \$DEPLOYED_URL\"
-    echo \"📋 Environment: preview\"
-    echo \"🌿 Branch: $BRANCH_NAME\"
-    echo \"\"
-    echo \"💡 Tip: Use the deployed URL above for testing!\"
-    echo \"💡 Tip: Your mobile navigation fixes are now live for testing!\"
+    echo "🎉 Preview deployment completed successfully!"
+    echo "🔗 Preview URL: \$PREVIEW_URL"
+    echo "📋 Environment: preview"
+    echo "🌿 Branch: $BRANCH_NAME"
+    echo ""
+    echo "💡 Tip: Use the preview URL above for testing!"
+    echo "💡 Tip: Your mobile navigation fixes are now live for testing!"
 "
