@@ -25,11 +25,90 @@ html {
 	color: #d4d4d8; /* Default text color - zinc-300 */
 	/* Enable smooth scrolling for better navigation experience */
 	scroll-behavior: smooth;
+	/* Ensure proper viewport handling */
+	box-sizing: border-box;
+	/* Prevent horizontal overflow */
+	overflow-x: hidden;
+	/* Ensure proper width */
+	width: 100%;
+	max-width: 100vw;
 }
 
 /* Global text color defaults for dark theme - only for basic content */
 body {
 	color: #d4d4d8; /* zinc-300 */
+	/* Ensure proper content width */
+	box-sizing: border-box;
+	/* Prevent horizontal overflow */
+	overflow-x: hidden;
+	/* Ensure content fits viewport */
+	width: 100%;
+	max-width: 100vw;
+}
+
+/* Ensure all elements use border-box sizing */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Fix content-width issues for mobile */
+@media (max-width: 768px) {
+	/* Ensure text doesn't overflow on mobile */
+	.text-pretty {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+	
+	/* Ensure proper padding on mobile */
+	.pr-24 {
+		padding-right: 1rem;
+	}
+	
+	/* Ensure grid items don't overflow */
+	.grid {
+		width: 100%;
+		max-width: 100%;
+		overflow-x: hidden;
+	}
+	
+	/* Ensure cards don't overflow on mobile */
+	.card, [class*="card"] {
+		max-width: 100%;
+		overflow: hidden;
+	}
+}
+
+/* Ensure proper viewport handling */
+.section {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+/* Ensure fixed-width elements don't overflow */
+[class*="w-"], [class*="max-w-"], [class*="min-w-"] {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Ensure proper text wrapping */
+p, h1, h2, h3, h4, h5, h6, span, div {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+/* Ensure grid layouts don't overflow */
+.grid {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+/* Ensure auto-fill grids work properly on mobile */
+.grid-cols-\[repeat\(auto-fill\,minmax\(.*\)\)\] {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 
 /* Ensure headings are white by default - but only for content areas */
