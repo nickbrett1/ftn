@@ -82,8 +82,8 @@
 			<h3 class="sm:hidden text-white pb-2">
 				{from} - {to}
 			</h3>
-			<div class="flex grow items-start justify-between">
-				<div class="grow">
+			<div class="flex items-start justify-between">
+				<div class="flex-1 min-w-0">
 					<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
 					<h3 class="tracking-tight text-green-400/80 lg:text-lg">
 						{subheading}
