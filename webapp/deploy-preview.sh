@@ -76,4 +76,8 @@ BRANCH_NAME="$BRANCH_NAME" BRANCH_SANITIZED="$BRANCH_SANITIZED" doppler run $DOP
     echo \"\"
     echo \"💡 Tip: Check /deploys for all active deployment URLs!\"
     echo \"💡 Tip: Your mobile navigation fixes are now live for testing!\"
+    echo ""
+    echo "📝 Note: To see real deployment data, add these to your Doppler config:"
+    echo "   - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID"
+    echo "   - CLOUDFLARE_API_TOKEN: Your Cloudflare API token with Workers:Read permission"
 "
