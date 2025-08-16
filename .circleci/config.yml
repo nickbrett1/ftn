@@ -203,7 +203,6 @@ jobs:
       - run:
           name: Deploying preview to Cloudflare
           command: |
-            cd webapp
             npm run deploy-preview
 
 workflows:
