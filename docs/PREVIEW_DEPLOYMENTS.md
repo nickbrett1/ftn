@@ -16,8 +16,9 @@ Preview deployments allow you to deploy and test changes from feature branches w
 ### 1. Automatic Deployment
 When you push to any branch other than `main`:
 1. CircleCI builds and tests your code
-2. If tests pass, it automatically deploys to a preview environment
-3. You get a unique preview URL: `https://preview-{branch-name}.ftn.workers.dev`
+2. If tests pass, it automatically deploys to **two preview environments**:
+   - **Unique Preview**: `https://preview-{branch-name}.ftn.workers.dev`
+   - **Latest Preview**: `https://latest-preview.ftn.workers.dev` (overwrites previous)
 
 ### 2. Preview Environment Naming
 - Branch: `feature/user-authentication`
@@ -30,6 +31,12 @@ When you push to any branch other than `main`:
 - This ensures realistic testing conditions
 - **Important**: Be careful with data modifications in preview environments
 
+### 4. Resource Management & Cleanup
+- **Automatic Cleanup**: GitHub Actions automatically remove environments when branches are deleted
+- **Scheduled Cleanup**: Daily cleanup runs to catch orphaned environments
+- **Resource Protection**: Prevents Cloudflare resource exhaustion
+- **Manual Cleanup**: Use `npm run cleanup-previews` to manage environments manually
+
 ## Benefits
 
 ### For Development
@@ -37,6 +44,11 @@ When you push to any branch other than `main`:
 - **UI testing**: Catch visual bugs that unit tests miss
 - **Integration testing**: Test with real backend services
 - **Stakeholder review**: Share working demos easily
+
+### Dual URL Strategy
+- **🎯 Latest Preview URL**: Always points to your most recent changes - perfect for rapid iteration
+- **🔗 Unique Preview URL**: Stable URL for sharing specific versions with stakeholders
+- **🔄 Best of Both Worlds**: Quick testing + stable sharing
 
 ### For Cursor Agents
 - **Iterative development**: Deploy each change and see results
@@ -92,6 +104,35 @@ git push origin agent/improve-ui
 # 4. Agent makes more changes
 # 5. Repeat until satisfied
 # 6. Merge when ready
+```
+
+## Available Commands
+
+### Preview Deployment
+```bash
+# Get preview URLs for current branch
+npm run preview-url
+
+# Deploy to preview locally
+npm run deploy-preview
+
+# Cleanup old preview environments
+npm run cleanup-previews
+```
+
+### Cleanup Options
+```bash
+# Show cleanup status
+npm run cleanup-previews
+
+# List all preview environments
+npm run cleanup-previews list
+
+# Run cleanup operations
+npm run cleanup-previews cleanup
+
+# Remove specific environment
+npm run cleanup-previews remove preview-feature-name
 ```
 
 ## Configuration
@@ -175,6 +216,12 @@ Preview deployments are triggered automatically for non-main branches:
 - View preview environments in the Cloudflare Workers dashboard
 - Monitor performance and error rates
 - Check logs for any runtime issues
+
+### Automated Cleanup
+- **Branch Deletion**: Automatically removes environments when branches are deleted
+- **Daily Cleanup**: Scheduled cleanup runs every day at 2 AM UTC
+- **Manual Cleanup**: Use cleanup commands to manage environments manually
+- **Resource Monitoring**: Track environment count and resource usage
 
 ## Security Considerations
 
