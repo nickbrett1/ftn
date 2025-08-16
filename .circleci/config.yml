@@ -62,6 +62,10 @@ jobs:
           root: webapp
           paths:
             - .svelte-kit
+            - package.json
+            - package-lock.json
+            - deploy-preview.sh
+            - wrangler.template.jsonc
 
   code_test:
     docker:
