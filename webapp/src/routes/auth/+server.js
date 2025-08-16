@@ -1,4 +1,14 @@
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
+// Try to import environment variables, with fallbacks for build time
+let GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET;
+try {
+	const env = await import('$env/static/private');
+	GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
+	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
+} catch (error) {
+	// During build time, these might not be available
+	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
+	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
+}
 import { isUserAllowed } from '$lib/server/user-validation.js';
 
 const logPrefix = '[AUTH_HANDLER]';
