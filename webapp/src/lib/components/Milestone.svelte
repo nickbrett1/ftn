@@ -90,7 +90,7 @@
 					</h3>
 				</div>
 				{#if logo}
-					<div class="max-h-16 max-w-16 min-h-16 min-w-16 sm:max-h-22 sm:max-w-22 sm:min-h-20 sm:min-w-20 flex-shrink-0 pt-2 pr-2 sm:pt-4 sm:pr-4">
+					<div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 pt-2 pr-2 sm:pt-4 sm:pr-4 overflow-hidden">
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
