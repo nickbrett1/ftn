@@ -71,7 +71,7 @@ doppler run $DOPPLER_ARGS -- bash -c '
     doppler run $DOPPLER_ARGS -- npx wrangler deploy --config wrangler.jsonc --env preview
 
     echo "🎉 Preview deployment completed successfully!"
-    echo "🔗 Preview URL: https://ftn.preview.workers.dev"
+    echo "🔗 Preview URL: https://ftn-preview.nick-brett1.workers.dev"
     echo "📋 Environment: preview"
     echo "🌿 Branch: $BRANCH_NAME"
     echo ""
