@@ -131,16 +131,6 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 		min-height: 4rem;
 		min-width: 4rem;
 	}
-	
-	/* Ensure milestone layout works properly on mobile */
-	.milestone .flex.grow {
-		flex-direction: column;
-		gap: 1rem;
-	}
-	
-	.milestone .flex.grow > div:last-child {
-		align-self: center;
-	}
 }
 
 /* Ensure headings are white by default - but only for content areas */

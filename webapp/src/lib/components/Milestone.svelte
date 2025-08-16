@@ -82,7 +82,7 @@
 			<h3 class="sm:hidden text-white pb-2">
 				{from} - {to}
 			</h3>
-			<div class="flex grow">
+			<div class="flex grow items-start justify-between">
 				<div class="grow">
 					<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">{heading}</h2>
 					<h3 class="tracking-tight text-green-400/80 lg:text-lg">
@@ -90,7 +90,7 @@
 					</h3>
 				</div>
 				{#if logo}
-					<div class="max-h-16 max-w-16 min-h-16 min-w-16 sm:max-h-22 sm:max-w-22 sm:min-h-20 sm:min-w-20 grow flex-shrink-0">
+					<div class="max-h-16 max-w-16 min-h-16 min-w-16 sm:max-h-22 sm:max-w-22 sm:min-h-20 sm:min-w-20 flex-shrink-0">
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
