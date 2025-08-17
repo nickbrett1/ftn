@@ -134,15 +134,56 @@ export async function GET({ request }) {
 					}
 				} else {
 					console.log('Deploys API: Preview deployments response not ok:', previewDeployResponse.status, previewDeployResponse.statusText);
+					// Try alternative endpoint
+					try {
+						const alternativeUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/versions`;
+						console.log('Deploys API: Trying alternative endpoint:', alternativeUrl);
+						
+						const altResponse = await fetch(alternativeUrl, {
+							headers: {
+								'Authorization': `Bearer ${apiToken}`,
+								'Content-Type': 'application/json'
+							}
+						});
+						
+						if (altResponse.ok) {
+							const altData = await altResponse.json();
+							console.log('Deploys API: Alternative endpoint response:', altData);
+							
+							if (altData.result && altData.result.length > 0) {
+								const latestVersion = altData.result[0];
+								previewLatestDeployment = latestVersion;
+								previewDeployedAt = latestVersion.created_on || previewDeployedAt;
+								
+								if (latestVersion.metadata) {
+									versionParts = ['preview'];
+									if (latestVersion.metadata.branch) {
+										versionParts.push(latestVersion.metadata.branch);
+									}
+									if (latestVersion.metadata.git_commit) {
+										versionParts.push(latestVersion.metadata.git_commit.substring(0, 8));
+									}
+								}
+								
+								console.log('Deploys API: Found preview version at:', previewDeployedAt, 'version parts:', versionParts);
+							}
+						}
+					} catch (altError) {
+						console.log('Alternative endpoint also failed:', altError.message);
+					}
 				}
 			} catch (error) {
 				console.log('Could not fetch preview deployment info:', error.message);
 				// Continue with created_on as fallback
 			}
 			
-			// Fallback to deployment ID if no metadata
-			if (versionParts.length === 1 && previewLatestDeployment?.id) {
-				versionParts.push(previewLatestDeployment.id.substring(0, 8));
+			// Fallback to worker ID if no metadata
+			if (versionParts.length === 1) {
+				if (previewLatestDeployment?.id) {
+					versionParts.push(previewLatestDeployment.id.substring(0, 8));
+				} else if (previewWorker.id) {
+					versionParts.push(previewWorker.id.substring(0, 8));
+				}
 			}
 			
 			previewVersion = versionParts.join('-');
@@ -174,6 +215,18 @@ export async function GET({ request }) {
 			let productionDeployData = null;
 			let productionLatestDeployment = null;
 			
+			// Build version from worker metadata first
+			let versionParts = ['prod'];
+			if (productionWorker.metadata) {
+				console.log('Deploys API: Production worker metadata:', productionWorker.metadata);
+				if (productionWorker.metadata.branch) {
+					versionParts.push(productionWorker.metadata.branch);
+				}
+				if (productionWorker.metadata.git_commit) {
+					versionParts.push(productionWorker.metadata.git_commit.substring(0, 8));
+				}
+			}
+			
 			try {
 				// Get deployment information for the production worker
 				const productionDeployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/deployments`;
@@ -188,18 +241,19 @@ export async function GET({ request }) {
 
 				if (productionDeployResponse.ok) {
 					productionDeployData = await productionDeployResponse.json();
-					if (productionDeployData.result.length > 0) {
+					console.log('Deploys API: Production deployments response:', productionDeployData);
+					
+					if (productionDeployData.result && productionDeployData.result.length > 0) {
 						// Use the most recent deployment time
 						productionLatestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
 						productionDeployedAt = productionLatestDeployment.created_on || productionDeployedAt;
 						
-						// Build comprehensive version info from deployment metadata
-						let versionParts = ['prod'];
-						
 						console.log('Deploys API: Production deployment metadata:', productionLatestDeployment.metadata);
 						console.log('Deploys API: Production deployment full object:', productionLatestDeployment);
 						
+						// Override version parts with deployment metadata if available
 						if (productionLatestDeployment.metadata) {
+							versionParts = ['prod'];
 							if (productionLatestDeployment.metadata.branch) {
 								versionParts.push(productionLatestDeployment.metadata.branch);
 							}
@@ -208,20 +262,64 @@ export async function GET({ request }) {
 							}
 						}
 						
-						// Fallback to deployment ID if no metadata
-						if (versionParts.length === 1) {
-							versionParts.push(productionLatestDeployment.id);
+						console.log('Deploys API: Found production deployment at:', productionDeployedAt, 'version parts:', versionParts);
+					}
+				} else {
+					console.log('Deploys API: Production deployments response not ok:', productionDeployResponse.status, productionDeployResponse.statusText);
+					// Try alternative endpoint
+					try {
+						const alternativeUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
+						console.log('Deploys API: Trying alternative endpoint:', alternativeUrl);
+						
+						const altResponse = await fetch(alternativeUrl, {
+							headers: {
+								'Authorization': `Bearer ${apiToken}`,
+								'Content-Type': 'application/json'
+							}
+						});
+						
+						if (altResponse.ok) {
+							const altData = await altResponse.json();
+							console.log('Deploys API: Alternative endpoint response:', altData);
+							
+							if (altData.result && altData.result.length > 0) {
+								const latestVersion = altData.result[0];
+								productionLatestDeployment = latestVersion;
+								productionDeployedAt = latestVersion.created_on || productionDeployedAt;
+								
+								if (latestVersion.metadata) {
+									versionParts = ['prod'];
+									if (latestVersion.metadata.branch) {
+										versionParts.push(latestVersion.metadata.branch);
+									}
+									if (latestVersion.metadata.git_commit) {
+										versionParts.push(latestVersion.metadata.git_commit.substring(0, 8));
+									}
+								}
+								
+								console.log('Deploys API: Found production version at:', productionDeployedAt, 'version parts:', versionParts);
+							}
 						}
-						
-						productionVersion = versionParts.join('-');
-						
-						console.log('Deploys API: Found production deployment at:', productionDeployedAt, 'version:', productionVersion);
+					} catch (altError) {
+						console.log('Alternative endpoint also failed:', altError.message);
 					}
 				}
 			} catch (error) {
 				console.log('Could not fetch production deployment info:', error.message);
 				// Continue with created_on as fallback
 			}
+			
+			// Fallback to worker ID if no metadata
+			if (versionParts.length === 1) {
+				if (productionLatestDeployment?.id) {
+					versionParts.push(productionLatestDeployment.id.substring(0, 8));
+				} else if (productionWorker.id) {
+					versionParts.push(productionWorker.id.substring(0, 8));
+				}
+			}
+			
+			productionVersion = versionParts.join('-');
+			console.log('Deploys API: Final production version:', productionVersion);
 			
 			deployments.push({
 				name: 'Production Environment',
@@ -233,9 +331,10 @@ export async function GET({ request }) {
 				_debug: {
 					metadata: productionWorker.metadata,
 					deployment_metadata: productionLatestDeployment?.metadata || null,
-					version_parts: productionVersion,
+					version_parts: versionParts,
 					worker_created_on: productionWorker.created_on,
-					deployment_created_on: productionLatestDeployment?.created_on || null
+					deployment_created_on: productionLatestDeployment?.created_on || null,
+					worker_id: productionWorker.id
 				}
 			});
 		}
