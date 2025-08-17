@@ -3,7 +3,7 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		UserSecretSolid
+		CreditCardSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -12,21 +12,15 @@
 	import { goto } from '$app/navigation';
 
 	onMount(() => {
-		tippy('#login', {
-			content: 'Administrator Login'
+		tippy('#deployments', {
+			content: 'View Deployments & Preview Environments'
+		});
+		tippy('#credit-card-billing', {
+			content: 'Credit Card Billing Tool'
 		});
 	});
 
-	let isLoggedIn = $state(false);
-	function loginStateUpdated(loggedIn) {
-		isLoggedIn = loggedIn;
-		if (loggedIn) {
-			// Redirect to deploys page after successful login
-			goto('/deploys');
-		}
-	}
 
-	import Login from '$lib/components/Login.svelte';
 </script>
 
 <footer class="left-0 w-full overflow-hidden py-24">
@@ -36,23 +30,25 @@
 			<div class="flex justify-center md:justify-start gap-2">
 				<!-- Always show deploys icon -->
 				<button
+					id="deployments"
 					onclick={() => {
 						goto('/deploys');
 					}}
 					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-					title="View Deployments"
 				>
 					🚀
 				</button>
 				
-				<!-- Admin login icon -->
-				<Login loginCallback={loginStateUpdated}>
-					{#if !isLoggedIn}
-						<UserSecretSolid id="login" class="hover:text-red-600 cursor-pointer size-8 md:size-[48px]" />
-					{:else}
-						<UserSecretSolid class="text-green-400 size-8 md:size-[48px]" title="Administrator" />
-					{/if}
-				</Login>
+				<!-- Credit Card Billing Tool icon -->
+				<button
+					id="credit-card-billing"
+					onclick={() => {
+						goto('/projects/ccbilling');
+					}}
+					class="hover:text-green-400 cursor-pointer size-8 md:size-[48px] flex items-center justify-center"
+				>
+					<CreditCardSolid />
+				</button>
 			</div>
 
 			<div class="flex-1"></div>
