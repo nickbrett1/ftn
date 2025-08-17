@@ -1,5 +1,6 @@
 <script>
-	import PageLayout from '$lib/components/PageLayout.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	const { data } = $props();
 	
