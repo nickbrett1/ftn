@@ -96,6 +96,7 @@
 							current={item} 
 							{active} 
 							{updateDebug}
+							close={$close}
 							hide={() => {
 								console.log(`MobileNavigation: hide() called from item ${item}`);
 								hide();
