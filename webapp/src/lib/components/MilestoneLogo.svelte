@@ -22,7 +22,7 @@
 	onclick={() => {
 		window.location = data.link;
 	}}
-	style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px; overflow: hidden;"
+	style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px;"
 >
 	<data.Icon />
 </button>

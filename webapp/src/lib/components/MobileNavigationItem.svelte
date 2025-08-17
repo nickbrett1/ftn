@@ -24,9 +24,6 @@
 		event.preventDefault();
 		event.stopPropagation();
 		
-		// Close the mobile menu immediately
-		hide();
-		
 		// Simple hash navigation
 		const targetId = current;
 		const element = document.getElementById(targetId);
@@ -61,6 +58,11 @@
 			console.log(`MobileNavigationItem: Element ${targetId} not found`);
 			console.log(`MobileNavigationItem: Available elements:`, document.querySelectorAll('[id]'));
 		}
+		
+		// Close the mobile menu after scrolling
+		setTimeout(() => {
+			hide();
+		}, 100);
 	};
 </script>
 
@@ -68,8 +70,8 @@
 	<a
 		href="/#{current}"
 		class="block py-3 px-2 {active == current ? 'text-green-400' : ''} cursor-pointer touch-manipulation select-none"
-		onclick={handleClick}
-		onpointerdown={() => {
+		on:click={handleClick}
+		on:pointerdown={() => {
 			console.log(`MobileNavigationItem: Pointer down for ${current}`);
 		}}
 		aria-label="Navigate to {current} section"

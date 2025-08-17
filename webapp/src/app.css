@@ -153,6 +153,15 @@ img[loading="lazy"].loaded {
 	opacity: 1;
 }
 
+/* Ensure SVG icons scale properly within milestone containers */
+.milestone button svg {
+	width: 100% !important;
+	height: 100% !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+	object-fit: contain !important;
+}
+
 
 
 
