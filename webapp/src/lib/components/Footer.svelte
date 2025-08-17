@@ -38,8 +38,8 @@
 <footer class="left-0 w-full overflow-hidden py-24">
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
-		<div class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-32">
-			<div class="flex justify-center md:justify-start gap-2">
+		<div class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-8 justify-between items-center">
+			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
 				<button
 					id="deployments"
@@ -61,9 +61,7 @@
 				</Login>
 			</div>
 
-			<div class="flex-1"></div>
-
-			<div class="flex justify-center md:justify-end gap-4">
+			<div class="flex gap-4">
 				<a
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
