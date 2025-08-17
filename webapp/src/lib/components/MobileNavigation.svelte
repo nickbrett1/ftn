@@ -13,7 +13,7 @@
 		forceVisible: true,
 		// Ensure the popover doesn't interfere with navigation
 		closeOnEscape: true,
-		closeOnOutsideClick: true,
+		closeOnOutsideClick: false, // Changed to false to prevent auto-closing
 		// Ensure the popover doesn't prevent navigation
 		modal: false
 	});
