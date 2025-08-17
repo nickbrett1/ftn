@@ -9,20 +9,38 @@ export async function GET({ request }) {
 		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
 		const apiToken = env.CLOUDFLARE_DEPLOYS_TOKEN;
 		
+		console.log('Deploys API: Environment variables check:', {
+			hasAccountId: !!accountId,
+			hasApiToken: !!apiToken,
+			accountIdLength: accountId?.length || 0,
+			apiTokenLength: apiToken?.length || 0
+		});
+		
 		if (!accountId || !apiToken) {
-			throw error(500, 'Cloudflare credentials not available. This is expected in development. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DEPLOYS_TOKEN environment variables for production.');
+			const missingVars = [];
+			if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
+			if (!apiToken) missingVars.push('CLOUDFLARE_DEPLOYS_TOKEN');
+			
+			throw error(500, `Missing Cloudflare environment variables: ${missingVars.join(', ')}. Please check your environment configuration.`);
 		}
 
 		// Fetch real deployment data from Cloudflare API
-		const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn/versions`, {
+		const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn/versions`;
+		console.log('Deploys API: Making request to:', apiUrl);
+		
+		const response = await fetch(apiUrl, {
 			headers: {
 				'Authorization': `Bearer ${apiToken}`,
 				'Content-Type': 'application/json'
 			}
 		});
 
+		console.log('Deploys API: Response status:', response.status, response.statusText);
+
 		if (!response.ok) {
-			throw error(500, `Cloudflare API error: ${response.status}`);
+			const errorText = await response.text();
+			console.error('Deploys API: Response error:', errorText);
+			throw error(500, `Cloudflare API error: ${response.status} ${response.statusText}. Response: ${errorText}`);
 		}
 
 		const data = await response.json();
@@ -53,9 +71,20 @@ export async function GET({ request }) {
 
 		return json(deployments);
 	} catch (err) {
+		console.error('Deploys API: Caught error:', err);
+		
 		if (err.status) {
 			throw err; // Re-throw SvelteKit errors
 		}
-		throw error(500, err.message);
+		
+		// Give more specific error information
+		const errorMessage = err.message || 'Unknown error occurred';
+		console.error('Deploys API: Error details:', {
+			message: errorMessage,
+			stack: err.stack,
+			name: err.name
+		});
+		
+		throw error(500, `Deploys API error: ${errorMessage}`);
 	}
 }
