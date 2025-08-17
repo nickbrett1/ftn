@@ -1,13 +1,14 @@
 <script>
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	
 	let branchName = 'unknown';
 	let commitHash = 'unknown';
 	let isPreview = false;
 	
 	onMount(() => {
-		// Try to get branch and commit from environment variables or build-time data
-		if (typeof window !== 'undefined') {
+		// Only run in browser environment
+		if (browser) {
 			// Check if this is a preview deployment
 			isPreview = window.location.hostname.includes('preview');
 			
@@ -30,6 +31,8 @@
 </script>
 
 <!-- Deployment info - small and discrete -->
-<div class="text-center py-2 text-xs text-gray-500/30 font-mono">
-	Branch: {branchName} | Commit: {commitHash} | Env: {isPreview ? 'preview' : 'production'}
-</div>
+{#if browser}
+	<div class="text-center py-2 text-xs text-gray-500/30 font-mono">
+		Branch: {branchName} | Commit: {commitHash} | Env: {isPreview ? 'preview' : 'production'}
+	</div>
+{/if}
