@@ -5,6 +5,21 @@ import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import { execSync } from 'child_process';
+
+// Get git info at build time
+function getGitInfo() {
+	try {
+		const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+		const branchName = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
+		return { commitHash, branchName };
+	} catch (error) {
+		console.warn('Could not get git info:', error.message);
+		return { commitHash: 'unknown', branchName: 'unknown' };
+	}
+}
+
+const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
@@ -90,6 +105,10 @@ export default defineConfig(({ command, mode }) => {
 		},
 		optimizeDeps: {
 			exclude: ['saos']
+		},
+		define: {
+			__GIT_COMMIT__: JSON.stringify(gitInfo.commitHash),
+			__GIT_BRANCH__: JSON.stringify(gitInfo.branchName)
 		}
 	};
 });

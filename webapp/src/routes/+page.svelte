@@ -56,8 +56,7 @@
 		name="description"
 		content="Nick Brett's personal website and portfolio, focused on financial technology."
 	/>
-	<meta name="git-commit" content="%GIT_COMMIT%" />
-	<meta name="git-branch" content="%GIT_BRANCH%" />
+
 </svelte:head>
 
 {#if BackgroundComponent}
