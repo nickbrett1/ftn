@@ -2,15 +2,10 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ftn",
 	"compatibility_date": "2024-05-30",
-	"compatibility_flags": ["nodejs_compat_v2"],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
-	},
-	"define": {
-		"global": "globalThis",
-		"process.env.NODE_ENV": "\"production\""
 	},
 	"observability": {
 		"logs": {
@@ -48,21 +43,13 @@
 			"bucket_name": "ccbilling"
 		}
 	],
+	"compatibility_flags": ["nodejs_compat_v2"],
 	"env": {
 		"production": {
 			"main": ".svelte-kit/cloudflare/_worker.js",
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
-			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
 			},
 			"kv_namespaces": [
 				{
@@ -99,15 +86,6 @@
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
 			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
-			},
 			"kv_namespaces": [
 				{
 					"binding": "KV",
@@ -142,15 +120,6 @@
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
-			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
 			},
 			"kv_namespaces": [
 				{
