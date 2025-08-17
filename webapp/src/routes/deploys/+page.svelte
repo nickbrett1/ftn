@@ -56,8 +56,8 @@
 <Header />
 
 <div class="min-h-screen bg-base-900 text-white">
-	<div class="container mx-auto px-4 py-8">
-		<div class="mb-8">
+	<div class="container mx-auto px-4 py-8 pb-4">
+		<div class="mb-6">
 			<h1 class="text-4xl font-bold text-green-400 mb-2">Deployments</h1>
 			<p class="text-xl text-gray-300">Active deployments and preview environments</p>
 		</div>
@@ -99,7 +99,7 @@
 				<p class="text-gray-400 text-lg">No deployments found</p>
 			</div>
 		{:else}
-			<div class="grid gap-6">
+			<div class="grid gap-4">
 				{#each deployments as deployment}
 					<div class="bg-gray-800/20 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
 						<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
