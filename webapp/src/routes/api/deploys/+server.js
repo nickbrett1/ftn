@@ -103,6 +103,9 @@ export async function GET({ request }) {
 						// Build comprehensive version info from deployment metadata
 						let versionParts = ['preview'];
 						
+						console.log('Deploys API: Preview deployment metadata:', latestDeployment.metadata);
+						console.log('Deploys API: Preview deployment full object:', latestDeployment);
+						
 						if (latestDeployment.metadata) {
 							if (latestDeployment.metadata.branch) {
 								versionParts.push(latestDeployment.metadata.branch);
@@ -164,6 +167,9 @@ export async function GET({ request }) {
 						
 						// Build comprehensive version info from deployment metadata
 						let versionParts = ['prod'];
+						
+						console.log('Deploys API: Production deployment metadata:', latestDeployment.metadata);
+						console.log('Deploys API: Production deployment full object:', latestDeployment);
 						
 						if (latestDeployment.metadata) {
 							if (latestDeployment.metadata.branch) {
