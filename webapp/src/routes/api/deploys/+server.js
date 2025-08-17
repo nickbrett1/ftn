@@ -136,7 +136,14 @@ export async function GET({ request }) {
 				environment: 'preview',
 				url: 'https://ftn-preview.nick-brett1.workers.dev',
 				version: previewVersion,
-				deployedAt: formatDate(previewDeployedAt)
+				deployedAt: formatDate(previewDeployedAt),
+				_debug: {
+					metadata: previewWorker.metadata,
+					deployment_metadata: previewDeployData?.result?.[0]?.metadata,
+					version_parts: previewVersion,
+					worker_created_on: previewWorker.created_on,
+					deployment_created_on: previewDeployData?.result?.[0]?.created_on
+				}
 			});
 		}
 		
@@ -201,7 +208,14 @@ export async function GET({ request }) {
 				environment: 'production',
 				url: 'https://ftn-production.nick-brett1.workers.dev',
 				version: productionVersion,
-				deployedAt: formatDate(productionDeployedAt)
+				deployedAt: formatDate(productionDeployedAt),
+				_debug: {
+					metadata: productionWorker.metadata,
+					deployment_metadata: productionDeployData?.result?.[0]?.metadata,
+					version_parts: productionVersion,
+					worker_created_on: productionWorker.created_on,
+					deployment_created_on: productionDeployData?.result?.[0]?.created_on
+				}
 			});
 		}
 		
