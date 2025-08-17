@@ -3,4 +3,4 @@
 	import Img from '@zerodevx/svelte-img';
 </script>
 
-<Img src={icon} alt="Velma" />
+<Img src={icon} alt="Velma" class="h-full " />
