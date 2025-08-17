@@ -39,8 +39,10 @@ describe('Google Auth Utils', () => {
 			process.env.NODE_ENV = 'production';
 			
 			// Mock browser environment for production test
+			const originalLocation = window.location;
 			Object.defineProperty(window, 'location', {
 				writable: true,
+				configurable: true,
 				value: {
 					origin: 'https://fintechnick.com'
 				}
@@ -50,7 +52,11 @@ describe('Google Auth Utils', () => {
 			expect(uri).toBe('https://fintechnick.com/auth');
 			
 			// Clean up
-			delete window.location;
+			Object.defineProperty(window, 'location', {
+				writable: true,
+				configurable: true,
+				value: originalLocation
+			});
 			process.env.NODE_ENV = originalEnv;
 		});
 
@@ -59,8 +65,10 @@ describe('Google Auth Utils', () => {
 			process.env.NODE_ENV = 'production';
 			
 			// Mock browser environment for preview deployment
+			const originalLocation = window.location;
 			Object.defineProperty(window, 'location', {
 				writable: true,
+				configurable: true,
 				value: {
 					origin: 'https://ftn-preview.nick-brett1.workers.dev'
 				}
@@ -70,7 +78,11 @@ describe('Google Auth Utils', () => {
 			expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
 			
 			// Clean up
-			delete window.location;
+			Object.defineProperty(window, 'location', {
+				writable: true,
+				configurable: true,
+				value: originalLocation
+			});
 			process.env.NODE_ENV = originalEnv;
 		});
 	});
