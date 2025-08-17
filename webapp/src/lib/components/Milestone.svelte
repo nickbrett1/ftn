@@ -92,7 +92,7 @@
 					</h3>
 				</div>
 				{#if logo}
-					<div class="max-h-22 max-w-22 min-h-20 min-w-20 flex-shrink-0">
+					<div class="max-h-22 max-w-22 min-h-20 min-w-20 flex-shrink-0 pr-2">
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
