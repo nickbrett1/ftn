@@ -2,6 +2,20 @@ import { json, error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 export async function GET({ request }) {
+	// Helper function to format dates clearly
+	function formatDate(dateString) {
+		const date = new Date(dateString);
+		const options = { 
+			year: 'numeric', 
+			month: 'long', 
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			timeZoneName: 'short'
+		};
+		return date.toLocaleDateString('en-US', options);
+	}
+
 	try {
 		// Temporarily removed auth check for testing
 
@@ -69,7 +83,7 @@ export async function GET({ request }) {
 				environment: 'preview',
 				url: 'https://ftn-preview.nick-brett1.workers.dev',
 				version: 'latest',
-				deployedAt: new Date().toISOString()
+				deployedAt: formatDate(previewWorker.created_on || new Date().toISOString())
 			});
 		}
 		
@@ -81,7 +95,7 @@ export async function GET({ request }) {
 				environment: 'production',
 				url: 'https://ftn-production.nick-brett1.workers.dev',
 				version: 'latest',
-				deployedAt: new Date().toISOString()
+				deployedAt: formatDate(productionWorker.created_on || new Date().toISOString())
 			});
 		}
 		
@@ -108,8 +122,8 @@ export async function GET({ request }) {
 								status: 'active',
 								environment: 'production',
 								url: 'https://ftn-production.nick-brett1.workers.dev',
-								version: version.id,
-								deployedAt: version.created_on
+								version: `v${version.id}`,
+								deployedAt: formatDate(version.created_on)
 							});
 						});
 					}
