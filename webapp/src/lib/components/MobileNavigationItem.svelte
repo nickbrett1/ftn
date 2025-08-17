@@ -21,14 +21,10 @@
 		updateDebug('targetSection', targetSection ? 'YES' : 'NO');
 	});
 
-	const handleClick = (event) => {
+	const handleClick = () => {
 		console.log(`MobileNavigationItem: Click event triggered for ${current}`);
 		alert(`Click detected for ${current}!`); // Temporary debug alert
 		updateDebug('clicked', current);
-		
-		// Don't prevent default or stop propagation for Melt UI
-		// event.preventDefault();
-		// event.stopPropagation();
 		
 		// Simple hash navigation
 		const targetId = current;
@@ -79,17 +75,23 @@
 			hide();
 		}, 500); // Increased delay to ensure scroll completes
 	};
+	
+	// Function to handle both navigation and closing
+	const handleNavigationClick = () => {
+		// First handle the navigation
+		handleClick();
+		// Then close the popover immediately (Melt UI will handle the closing)
+		if (close) {
+			close();
+		}
+	};
 </script>
 
 <li>
 	<button
 		type="button"
 		class="block w-full text-left py-3 px-2 {active == current ? 'text-green-400' : ''} cursor-pointer touch-manipulation select-none"
-		use:melt={close}
-		onclick={() => {
-			// Handle navigation when the button is clicked
-			handleClick();
-		}}
+		on:click={handleNavigationClick}
 		aria-label="Navigate to {current} section"
 		role="menuitem"
 	>
