@@ -198,6 +198,13 @@ jobs:
       - image: cimg/node:current
     steps:
       - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
       - attach_workspace:
           at: webapp
       - doppler/install
