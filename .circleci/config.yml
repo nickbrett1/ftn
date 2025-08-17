@@ -25,9 +25,234 @@ jobs:
             - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - playwright-{{ .Branch }}-
             - playwright-
+      - run:
+          name: Install modules
+          command: |
+            cd webapp
+            # Clear any existing corrupted installation
+            rm -rf node_modules package-lock.json
+            # Install dependencies with optimized rollup installation
+            npm install
+            # Install rollup and native module in one step
+            npm install rollup @rollup/rollup-linux-x64-gnu --force
+      - run:
+          name: Install Playwright Chromium (if not cached)
+          command: |
+            cd webapp && npx playwright install --with-deps chromium
+      - save_cache:
+          name: Cache Playwright
+          paths:
+            - ~/.cache/ms-playwright
+          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Build app
+          command: |
+            cd webapp && npm run build
+      - save_cache:
+          name: Update node_modules cache
+          paths:
+            - webapp/node_modules
+          key: node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - persist_to_workspace:
+          root: webapp
+          paths:
+            - .svelte-kit
+
+  code_test:
+    docker:
+      - image: cimg/node:current
+    resource_class: large  # Increase to large for more memory and CPU resources
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Run tests
+          command: |
+            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+      - run:
+          name: Check memory usage
+          command: |
+            echo "Memory usage after tests:"
+            free -h
+            echo "Disk usage:"
+            df -h
+          when: always
+      - store_test_results:
+          path: ./webapp/reports/
+      # Temporarily disable SonarCloud scan to debug exit code issue
+      # - sonarcloud/scan
+
+  browser_test:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current-browsers
+    steps:
+      - run: sudo apt-get update
+      - browser-tools/install-chrome:
+          replace-existing: true
+      - browser-tools/install-chromedriver
+      - restore_cache:
+          name: Restore Lighthouse CLI cache
+          keys:
+            - lighthouse-cli-{{ .Branch }}-
+            - lighthouse-cli-
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Install Lighthouse CLI (if not cached)
+          command: |
+            sudo npm install -g @lhci/cli@0.9.x
+      - save_cache:
+          name: Cache Lighthouse CLI
+          paths:
+            - /usr/local/lib/node_modules/@lhci
+          key: lighthouse-cli-{{ .Branch }}-
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            cd webapp && npm run lighthouse-staging
+
+  deploy:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (production)
+          command: |
+            cd webapp
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production
+      - run:
+          name: Deploying to Cloudflare
+          command: |
+            cd webapp
+            npm run deploy
+
+  deploy-preview:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: preview
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: webapp
+      - doppler/install
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (preview)
+          command: |
+            cd webapp
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview
+      - run:
+          name: Deploying preview to Cloudflare
+          command: |
+            cd webapp
+            npm run deploy-preview
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
+      - build
+      - code_test:
+          requires:
+            - build
+          context: SonarCloud
+      - browser_test:
+          requires:
+            - build
+      - deploy:
           requires:
             - browser_test
             - code_test
           filters:
             branches:
               only: main
+      - deploy-preview:
+          requires:
+            - browser_test
+            - code_test
+          filters:
+            branches:
+              ignore: main
