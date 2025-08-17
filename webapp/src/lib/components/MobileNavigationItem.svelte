@@ -83,8 +83,8 @@
 	<a
 		href="/#{current}"
 		class="block py-3 px-2 {active == current ? 'text-green-400' : ''} cursor-pointer touch-manipulation select-none"
-		onclick={handleClick}
-		onpointerdown={() => {
+		on:click={handleClick}
+		on:pointerdown={() => {
 			console.log(`MobileNavigationItem: Pointer down for ${current}`);
 		}}
 		aria-label="Navigate to {current} section"
