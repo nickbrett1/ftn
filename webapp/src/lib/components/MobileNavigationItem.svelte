@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	
-	let { current = 'home', active = 'home', hide = () => {}, updateDebug = () => {}, close = null } = $props();
+	let { current = 'home', active = 'home', updateDebug = () => {}, popover = null } = $props();
 
 	onMount(() => {
 		console.log(`MobileNavigationItem: Component mounted for ${current}`);
@@ -80,9 +80,9 @@
 	const handleNavigationClick = () => {
 		// First handle the navigation
 		handleClick();
-		// Then close the popover immediately (Melt UI will handle the closing)
-		if (close) {
-			close();
+		// Then close the popover using Melt UI's close action
+		if (popover) {
+			popover.close();
 		}
 	};
 </script>
