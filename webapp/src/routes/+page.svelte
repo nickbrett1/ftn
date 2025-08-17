@@ -7,6 +7,7 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Contact from '$lib/components/Contact.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import DeploymentInfo from '$lib/components/DeploymentInfo.svelte';
 
 	import { afterNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -55,6 +56,8 @@
 		name="description"
 		content="Nick Brett's personal website and portfolio, focused on financial technology."
 	/>
+	<meta name="git-commit" content="%GIT_COMMIT%" />
+	<meta name="git-branch" content="%GIT_BRANCH%" />
 </svelte:head>
 
 {#if BackgroundComponent}
@@ -80,4 +83,7 @@
 		<Contact />
 	</div>
 </div>
+
+<DeploymentInfo />
+
 <Footer />
