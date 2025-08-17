@@ -1,34 +1,15 @@
 import { json, error } from '@sveltejs/kit';
 
-export async function GET({ request }) {
+export async function GET({ request, env }) {
 	try {
 		// Temporarily removed auth check for testing
 
 		// Get Cloudflare account ID and API token from environment
-		const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-		const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
+		const apiToken = env.CLOUDFLARE_API_TOKEN;
 		
 		if (!accountId || !apiToken) {
-			// Return mock data for development
-			console.log('Cloudflare credentials not available, returning mock data');
-			return json([
-				{
-					name: 'Preview Environment',
-					status: 'active',
-					environment: 'preview',
-					url: 'https://ftn-preview.nick-brett1.workers.dev',
-					version: 'latest',
-					deployedAt: new Date().toISOString()
-				},
-				{
-					name: 'Production Environment',
-					status: 'active',
-					environment: 'production',
-					url: 'https://ftn.nick-brett1.workers.dev',
-					version: 'v1.0.0',
-					deployedAt: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-				}
-			]);
+			throw error(500, 'Cloudflare credentials not available. This is expected in development. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN environment variables for production.');
 		}
 
 		// Fetch real deployment data from Cloudflare API
