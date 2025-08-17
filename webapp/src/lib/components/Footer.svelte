@@ -24,17 +24,27 @@
 	import Login from '$lib/components/Login.svelte';
 
 	onMount(() => {
-		const deploymentsTooltip = tippy('#deployments', {
+		const deploymentsTooltips = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
-		const loginTooltip = tippy('#login', {
+		const loginTooltips = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
 
 		// Clean up tooltips when component unmounts
 		return () => {
-			deploymentsTooltip.destroy();
-			loginTooltip.destroy();
+			// tippy returns an array, so we need to destroy each instance
+			if (Array.isArray(deploymentsTooltips)) {
+				deploymentsTooltips.forEach(tooltip => tooltip.destroy());
+			} else {
+				deploymentsTooltips.destroy();
+			}
+			
+			if (Array.isArray(loginTooltips)) {
+				loginTooltips.forEach(tooltip => tooltip.destroy());
+			} else {
+				loginTooltips.destroy();
+			}
 		};
 	});
 
