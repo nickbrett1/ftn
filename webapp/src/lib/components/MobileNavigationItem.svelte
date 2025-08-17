@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	
-	let { current = 'home', active = 'home', hide = () => {}, updateDebug = () => {} } = $props();
+	let { current = 'home', active = 'home', hide = () => {}, updateDebug = () => {}, close = null } = $props();
 
 	onMount(() => {
 		console.log(`MobileNavigationItem: Component mounted for ${current}`);
@@ -26,8 +26,9 @@
 		alert(`Click detected for ${current}!`); // Temporary debug alert
 		updateDebug('clicked', current);
 		
-		event.preventDefault();
-		event.stopPropagation();
+		// Don't prevent default or stop propagation for Melt UI
+		// event.preventDefault();
+		// event.stopPropagation();
 		
 		// Simple hash navigation
 		const targetId = current;
@@ -84,9 +85,10 @@
 	<button
 		type="button"
 		class="block w-full text-left py-3 px-2 {active == current ? 'text-green-400' : ''} cursor-pointer touch-manipulation select-none"
-		on:click={handleClick}
-		on:pointerdown={() => {
-			console.log(`MobileNavigationItem: Pointer down for ${current}`);
+		use:melt={close}
+		onclick={() => {
+			// Handle navigation when the button is clicked
+			handleClick();
 		}}
 		aria-label="Navigate to {current} section"
 		role="menuitem"
