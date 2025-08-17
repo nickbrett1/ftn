@@ -25,36 +25,9 @@ jobs:
             - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - playwright-{{ .Branch }}-
             - playwright-
-          name: Deploying preview to Cloudflare
-          command: |
-            cd webapp && npm run deploy-preview
-
-workflows:
-  build_test_deploy:
-    jobs:
-      - ggshield/scan:
-          name: ggshield-scan
-          base_revision: << pipeline.git.base_revision >>
-          revision: <<pipeline.git.revision>>
-      - build
-      - code_test:
-          requires:
-            - build
-          context: SonarCloud
-      - browser_test:
-          requires:
-            - build
-      - deploy:
           requires:
             - browser_test
             - code_test
           filters:
             branches:
               only: main
-      - deploy-preview:
-          requires:
-            - browser_test
-            - code_test
-          filters:
-            branches:
-              ignore: main
