@@ -1,2 +1,6 @@
         kit: {
-                adapter: adapter(),
+                adapter: adapter({
+                        platformProxy: {
+                                enabled: true
+                        }
+                }),
