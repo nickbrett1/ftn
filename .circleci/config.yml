@@ -209,6 +209,10 @@ jobs:
           at: webapp
       - doppler/install
       - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./setup-wrangler-config.sh
+      - run:
           name: Deploying preview to Cloudflare
           command: |
             cd webapp && npm run deploy-preview
