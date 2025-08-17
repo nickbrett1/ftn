@@ -1,4 +1,6 @@
 <script>
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
@@ -670,7 +672,10 @@
 	<meta name="description" content="Manage billing cycle details and statements" />
 </svelte:head>
 
-<div class="container mx-auto p-4 space-y-8 max-w-6xl pb-32">
+<Header />
+
+<div class="min-h-screen bg-base-900 text-white">
+	<div class="container mx-auto p-4 space-y-8 max-w-6xl pb-32">
 	<div class="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
 		<div class="flex-1">
 			<h2 class="text-2xl sm:text-3xl font-bold text-white">
@@ -1404,7 +1409,10 @@
 	/>
 
 	<!-- Cycle Information -->
+	</div>
 </div>
+
+<Footer />
 
 <!-- Fixed Footer with Running Totals -->
 {#if localData.charges.length > 0}
