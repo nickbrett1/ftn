@@ -1,27 +1,29 @@
 <script>
 	import { onMount } from 'svelte';
 	
-	let { current = 'home', active = 'home', hide = () => {} } = $props();
+	let { current = 'home', active = 'home', hide = () => {}, updateDebug = () => {} } = $props();
 
 	onMount(() => {
 		console.log(`MobileNavigationItem: Component mounted for ${current}`);
+		updateDebug('mounted', current);
+		
 		const targetId = current;
 		const element = document.getElementById(targetId);
-		console.log(`MobileNavigationItem: On mount - Element ${targetId} found:`, element);
+		updateDebug('onMountElement', element ? 'YES' : 'NO');
 		
 		// Check all sections
 		const sections = document.querySelectorAll('.section');
-		console.log(`MobileNavigationItem: All sections found:`, Array.from(sections).map(el => ({ id: el.id, className: el.className })));
+		const sectionIds = Array.from(sections).map(el => el.id);
+		updateDebug('sectionsFound', sectionIds.join(', '));
 		
 		// Check if the target section exists
 		const targetSection = document.querySelector(`#${targetId}.section`);
-		console.log(`MobileNavigationItem: Target section ${targetId} found:`, targetSection);
+		updateDebug('targetSection', targetSection ? 'YES' : 'NO');
 	});
 
 	const handleClick = (event) => {
 		console.log(`MobileNavigationItem: Click event triggered for ${current}`);
-		console.log(`MobileNavigationItem: Event type: ${event.type}`);
-		console.log(`MobileNavigationItem: Event target:`, event.target);
+		updateDebug('clicked', current);
 		
 		event.preventDefault();
 		event.stopPropagation();
@@ -30,11 +32,14 @@
 		const targetId = current;
 		const element = document.getElementById(targetId);
 		
-		console.log(`MobileNavigationItem: Looking for element with id "${targetId}"`);
-		console.log(`MobileNavigationItem: Found element:`, element);
-		console.log(`MobileNavigationItem: All elements with IDs:`, Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+		updateDebug('targetId', targetId);
+		updateDebug('elementFound', element ? 'YES' : 'NO');
 		
 		if (element) {
+			updateDebug('elementTag', element.tagName);
+			updateDebug('elementClasses', element.className);
+			updateDebug('elementRect', `${element.getBoundingClientRect().top}px from top`);
+			
 			console.log(`MobileNavigationItem: Scrolling to ${targetId}`);
 			
 			// Try to scroll to the element
@@ -47,22 +52,28 @@
 				// Update URL hash
 				window.history.pushState(null, '', `#${targetId}`);
 				console.log(`MobileNavigationItem: Successfully scrolled to ${targetId}`);
+				updateDebug('scrollResult', 'SUCCESS');
 			} catch (error) {
 				console.error(`MobileNavigationItem: Error scrolling to ${targetId}:`, error);
+				updateDebug('scrollResult', `ERROR: ${error.message}`);
 				
 				// Fallback to instant scroll if smooth scroll fails
 				element.scrollIntoView({ 
 					behavior: 'auto', 
 					block: 'start'
 				});
+				updateDebug('scrollResult', 'FALLBACK SUCCESS');
 			}
 		} else {
 			console.log(`MobileNavigationItem: Element ${targetId} not found`);
-			console.log(`MobileNavigationItem: Available elements:`, document.querySelectorAll('[id]'));
+			const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id);
+			updateDebug('availableIds', allIds.join(', '));
+			updateDebug('scrollResult', 'ELEMENT NOT FOUND');
 		}
 		
 		// Close the mobile menu after scrolling completes
 		setTimeout(() => {
+			updateDebug('menuClosing', 'YES');
 			hide();
 		}, 500); // Increased delay to ensure scroll completes
 	};
