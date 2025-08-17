@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
-export async function GET({ request, env }) {
+export async function GET({ request }) {
 	try {
 		// Temporarily removed auth check for testing
 

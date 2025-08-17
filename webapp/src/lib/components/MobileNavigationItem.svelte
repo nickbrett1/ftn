@@ -61,10 +61,10 @@
 			console.log(`MobileNavigationItem: Available elements:`, document.querySelectorAll('[id]'));
 		}
 		
-		// Close the mobile menu after scrolling
+		// Close the mobile menu after scrolling completes
 		setTimeout(() => {
 			hide();
-		}, 100);
+		}, 500); // Increased delay to ensure scroll completes
 	};
 </script>
 
