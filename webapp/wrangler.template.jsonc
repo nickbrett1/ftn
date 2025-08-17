@@ -8,10 +8,6 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
-	"define": {
-		"global": "globalThis",
-		"process.env.NODE_ENV": "\"production\""
-	},
 	"observability": {
 		"logs": {
 			"enabled": true
@@ -55,15 +51,6 @@
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
 			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
-			},
 			"kv_namespaces": [
 				{
 					"binding": "KV",
@@ -99,15 +86,6 @@
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
 			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
-			},
 			"kv_namespaces": [
 				{
 					"binding": "KV",
@@ -142,15 +120,6 @@
 			"assets": {
 				"binding": "ASSETS",
 				"directory": ".svelte-kit/cloudflare"
-			},
-			"define": {
-				"global": "globalThis",
-				"process.env.NODE_ENV": "\"production\""
-			},
-			"observability": {
-				"logs": {
-					"enabled": true
-				}
 			},
 			"kv_namespaces": [
 				{
