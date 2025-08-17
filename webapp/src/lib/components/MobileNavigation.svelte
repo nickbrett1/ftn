@@ -29,7 +29,9 @@
 		closeOnEscape: true,
 		closeOnOutsideClick: false, // Changed to false to prevent auto-closing
 		// Ensure the popover doesn't prevent navigation
-		modal: false
+		modal: false,
+		// Prevent the popover from trying to match trigger size
+		sameWidth: false
 	});
 
 	function hide() {
@@ -64,10 +66,9 @@
 
 {#if $open}
 	<div
-		use:melt={$content}
 		transition:slide={{ duration: 300 }}
 		class="fixed inset-x-4 bottom-8 z-50 origin-top rounded-3xl bg-green-400/30 text-white p-8 ring-1 backdrop-blur-md"
-		style="max-height: 80vh; overflow-y: auto;"
+		style="max-height: 80vh; overflow-y: auto; min-width: 300px; width: auto;"
 	>
 		<div class="flex flex-row-reverse items-center justify-between">
 			<button aria-label="Close menu" class="-m-1 p-1 focus:outline-none" use:melt={$close}>
