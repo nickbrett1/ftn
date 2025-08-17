@@ -76,7 +76,7 @@
 						</div>
 					</div>
 					<button
-						on:click={() => goto('/')}
+						onclick={() => goto('/')}
 						class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
 					>
 						Go Home
@@ -84,7 +84,7 @@
 				{:else}
 					<p class="text-gray-400 mb-4">{error}</p>
 					<button
-						on:click={() => goto('/')}
+						onclick={() => goto('/')}
 						class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
 					>
 						Go Home
