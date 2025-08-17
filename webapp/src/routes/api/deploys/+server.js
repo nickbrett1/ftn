@@ -83,8 +83,20 @@ export async function GET({ request }) {
 			let previewDeployData = null;
 			let previewLatestDeployment = null;
 			
+			// Build version from worker metadata first
+			let versionParts = ['preview'];
+			if (previewWorker.metadata) {
+				console.log('Deploys API: Preview worker metadata:', previewWorker.metadata);
+				if (previewWorker.metadata.branch) {
+					versionParts.push(previewWorker.metadata.branch);
+				}
+				if (previewWorker.metadata.git_commit) {
+					versionParts.push(previewWorker.metadata.git_commit.substring(0, 8));
+				}
+			}
+			
+			// Try to get deployment information for the preview worker
 			try {
-				// Get deployment information for the preview worker
 				const previewDeployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/deployments`;
 				console.log('Deploys API: Getting preview deployment info from:', previewDeployUrl);
 				
@@ -97,18 +109,19 @@ export async function GET({ request }) {
 
 				if (previewDeployResponse.ok) {
 					previewDeployData = await previewDeployResponse.json();
-					if (previewDeployData.result.length > 0) {
+					console.log('Deploys API: Preview deployments response:', previewDeployData);
+					
+					if (previewDeployData.result && previewDeployData.result.length > 0) {
 						// Use the most recent deployment time
 						previewLatestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
 						previewDeployedAt = previewLatestDeployment.created_on || previewDeployedAt;
 						
-						// Build comprehensive version info from deployment metadata
-						let versionParts = ['preview'];
-						
 						console.log('Deploys API: Preview deployment metadata:', previewLatestDeployment.metadata);
 						console.log('Deploys API: Preview deployment full object:', previewLatestDeployment);
 						
+						// Override version parts with deployment metadata if available
 						if (previewLatestDeployment.metadata) {
+							versionParts = ['preview'];
 							if (previewLatestDeployment.metadata.branch) {
 								versionParts.push(previewLatestDeployment.metadata.branch);
 							}
@@ -117,20 +130,23 @@ export async function GET({ request }) {
 							}
 						}
 						
-						// Fallback to deployment ID if no metadata
-						if (versionParts.length === 1) {
-							versionParts.push(previewLatestDeployment.id);
-						}
-						
-						previewVersion = versionParts.join('-');
-						
-						console.log('Deploys API: Found preview deployment at:', previewDeployedAt, 'version:', previewVersion);
+						console.log('Deploys API: Found preview deployment at:', previewDeployedAt, 'version parts:', versionParts);
 					}
+				} else {
+					console.log('Deploys API: Preview deployments response not ok:', previewDeployResponse.status, previewDeployResponse.statusText);
 				}
 			} catch (error) {
 				console.log('Could not fetch preview deployment info:', error.message);
 				// Continue with created_on as fallback
 			}
+			
+			// Fallback to deployment ID if no metadata
+			if (versionParts.length === 1 && previewLatestDeployment?.id) {
+				versionParts.push(previewLatestDeployment.id.substring(0, 8));
+			}
+			
+			previewVersion = versionParts.join('-');
+			console.log('Deploys API: Final preview version:', previewVersion);
 			
 			deployments.push({
 				name: 'Preview Environment',
@@ -142,9 +158,10 @@ export async function GET({ request }) {
 				_debug: {
 					metadata: previewWorker.metadata,
 					deployment_metadata: previewLatestDeployment?.metadata || null,
-					version_parts: previewVersion,
+					version_parts: versionParts,
 					worker_created_on: previewWorker.created_on,
-					deployment_created_on: previewLatestDeployment?.created_on || null
+					deployment_created_on: previewLatestDeployment?.created_on || null,
+					worker_id: previewWorker.id
 				}
 			});
 		}
