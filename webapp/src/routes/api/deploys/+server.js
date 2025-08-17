@@ -6,10 +6,10 @@ export async function GET({ request, env }) {
 
 		// Get Cloudflare account ID and API token from environment
 		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
-		const apiToken = env.CLOUDFLARE_API_TOKEN;
+		const apiToken = env.CLOUDFLARE_DEPLOYS_TOKEN;
 		
 		if (!accountId || !apiToken) {
-			throw error(500, 'Cloudflare credentials not available. This is expected in development. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN environment variables for production.');
+			throw error(500, 'Cloudflare credentials not available. This is expected in development. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DEPLOYS_TOKEN environment variables for production.');
 		}
 
 		// Fetch real deployment data from Cloudflare API
