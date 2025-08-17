@@ -3,7 +3,8 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		CreditCardSolid
+		CreditCardSolid,
+		UserSecretSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -11,11 +12,22 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
+	let isLoggedIn = $state(false);
+	function loginStateUpdated(loggedIn) {
+		isLoggedIn = loggedIn;
+		if (loggedIn) {
+			// Redirect to credit card billing tool after successful login
+			goto('/projects/ccbilling');
+		}
+	}
+
+	import Login from '$lib/components/Login.svelte';
+
 	onMount(() => {
 		tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
-		tippy('#credit-card-billing', {
+		tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
 	});
@@ -39,16 +51,14 @@
 					🚀
 				</button>
 				
-				<!-- Credit Card Billing Tool icon -->
-				<button
-					id="credit-card-billing"
-					onclick={() => {
-						goto('/projects/ccbilling');
-					}}
-					class="hover:text-green-400 cursor-pointer size-8 md:size-[48px] flex items-center justify-center"
-				>
-					<CreditCardSolid />
-				</button>
+				<!-- Credit Card Billing Tool login icon -->
+				<Login loginCallback={loginStateUpdated}>
+					{#if !isLoggedIn}
+						<CreditCardSolid id="login" class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]" />
+					{:else}
+						<CreditCardSolid class="text-green-400 size-8 md:size-[48px]" title="Credit Card Billing Tool" />
+					{/if}
+				</Login>
 			</div>
 
 			<div class="flex-1"></div>
