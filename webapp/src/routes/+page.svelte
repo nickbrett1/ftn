@@ -67,9 +67,17 @@
 	<Landing />
 </div>
 <div class="flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl pt-8">
-	<About />
-	<Projects />
-	<Experience />
-	<Contact />
+	<div id="about" class="section">
+		<About />
+	</div>
+	<div id="projects" class="section">
+		<Projects />
+	</div>
+	<div id="experience" class="section">
+		<Experience />
+	</div>
+	<div id="contact" class="section">
+		<Contact />
+	</div>
 </div>
 <Footer />

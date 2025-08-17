@@ -141,56 +141,7 @@ p, h1, h2, h3, h4, h5, h6, span, div {
 	overflow: hidden !important;
 }
 
-/* Force milestone icons to stay within bounds */
-.milestone .overflow-hidden {
-	overflow: hidden !important;
-}
 
-.milestone .overflow-hidden * {
-	max-width: 100% !important;
-	max-height: 100% !important;
-	width: 100% !important;
-	height: 100% !important;
-}
-
-/* Container constraints for milestone logos */
-.milestone .w-16.h-16 {
-	width: 4rem !important;
-	height: 4rem !important;
-	max-width: 4rem !important;
-	max-height: 4rem !important;
-	min-width: 4rem !important;
-	min-height: 4rem !important;
-	overflow: hidden !important;
-	flex-shrink: 0 !important;
-	flex-grow: 0 !important;
-}
-
-.milestone .sm\:w-20.sm\:h-20 {
-	width: 5rem !important;
-	height: 5rem !important;
-	max-width: 5rem !important;
-	max-height: 5rem !important;
-	min-width: 5rem !important;
-	min-height: 5rem !important;
-	overflow: hidden !important;
-	flex-shrink: 0 !important;
-	flex-grow: 0 !important;
-}
-
-/* Ensure milestone flex containers behave predictably */
-.milestone .flex {
-	align-items: flex-start !important;
-}
-
-.milestone .flex > div:first-child {
-	flex: 1 1 auto !important;
-	min-width: 0 !important;
-}
-
-.milestone .flex > div:last-child {
-	flex: 0 0 auto !important;
-}
 
 /* Global image optimization */
 img[loading="lazy"] {
@@ -202,53 +153,11 @@ img[loading="lazy"].loaded {
 	opacity: 1;
 }
 
-/* Horizontal orientation fixes for milestone icons */
-@media (orientation: landscape) and (max-height: 768px) {
-	.milestone .w-16.h-16,
-	.milestone .sm\:w-20.sm\:h-20 {
-		width: 4rem !important;
-		height: 4rem !important;
-		max-width: 4rem !important;
-		max-height: 4rem !important;
-		min-width: 4rem !important;
-		min-height: 4rem !important;
-		overflow: hidden !important;
-		flex-shrink: 0 !important;
-		flex-grow: 0 !important;
-	}
-	
-	.milestone img {
-		max-width: 4rem !important;
-		max-height: 4rem !important;
-		width: 4rem !important;
-		height: 4rem !important;
-		object-fit: contain !important;
-		object-position: center !important;
-	}
-}
 
-/* Force modal logo containers to respect inline styles */
-.milestone .flex-shrink-0 {
-	width: 4rem !important;
-	height: 4rem !important;
-	max-width: 4rem !important;
-	max-height: 4rem !important;
-	min-width: 4rem !important;
-	min-height: 4rem !important;
-	overflow: hidden !important;
-	flex-shrink: 0 !important;
-	flex-grow: 0 !important;
-}
 
-/* Ensure milestone images are always constrained */
-.milestone img {
-	max-width: 4rem !important;
-	max-height: 4rem !important;
-	width: 4rem !important;
-	height: 4rem !important;
-	object-fit: contain !important;
-	object-position: center !important;
-}
+
+
+
 
 /* Absolute override for milestone logo containers - highest priority */
 .milestone .flex-shrink-0[style*="width: 64px"] {
@@ -290,77 +199,13 @@ img[loading="lazy"].loaded {
 	box-sizing: border-box !important;
 }
 
-/* Nuclear option - force all milestone images to be exactly 64px regardless of any other CSS */
-.milestone img,
-.milestone .flex-shrink-0 img,
-.milestone .flex-shrink-0 div img,
-.milestone button img,
-.milestone button div img {
-	width: 64px !important;
-	height: 64px !important;
-	max-width: 64px !important;
-	max-height: 64px !important;
-	min-width: 64px !important;
-	min-height: 64px !important;
-	object-fit: contain !important;
-	object-position: center !important;
-	transform: none !important;
-	scale: 1 !important;
-	zoom: 1 !important;
-}
 
-/* Prevent any CSS transforms or scaling on milestone containers */
-.milestone .flex-shrink-0,
-.milestone .flex-shrink-0 div,
-.milestone button {
-	transform: none !important;
-	scale: 1 !important;
-	zoom: 1 !important;
-	width: 64px !important;
-	height: 64px !important;
-	max-width: 64px !important;
-	max-height: 64px !important;
-	min-width: 64px !important;
-	min-height: 64px !important;
-	overflow: hidden !important;
-}
 
-/* Prevent any viewport-based scaling */
-@media (max-width: 768px) {
-	.milestone img,
-	.milestone .flex-shrink-0 img,
-	.milestone .flex-shrink-0 div img,
-	.milestone button img,
-	.milestone button div img {
-		width: 64px !important;
-		height: 64px !important;
-		max-width: 64px !important;
-		max-height: 64px !important;
-		min-width: 64px !important;
-		min-height: 64px !important;
-		transform: none !important;
-		scale: 1 !important;
-		zoom: 1 !important;
-	}
-}
 
-@media (orientation: landscape) {
-	.milestone img,
-	.milestone .flex-shrink-0 img,
-	.milestone .flex-shrink-0 div img,
-	.milestone button img,
-	.milestone button div img {
-		width: 64px !important;
-		height: 64px !important;
-		max-width: 64px !important;
-		max-height: 64px !important;
-		min-width: 64px !important;
-		min-height: 64px !important;
-		transform: none !important;
-		scale: 1 !important;
-		zoom: 1 !important;
-	}
-}
+
+
+
+
 
 /* Ensure headings are white by default - but only for content areas */
 article h1,
