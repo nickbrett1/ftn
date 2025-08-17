@@ -79,6 +79,7 @@ export async function GET({ request }) {
 		if (previewWorker) {
 			// Try to get the actual deployment time for preview
 			let previewDeployedAt = previewWorker.created_on || new Date().toISOString();
+			let previewVersion = 'latest';
 			
 			try {
 				// Get deployment information for the preview worker
@@ -94,11 +95,21 @@ export async function GET({ request }) {
 
 				if (previewDeployResponse.ok) {
 					const previewDeployData = await previewDeployResponse.json();
-					if (previewDeployData.success && previewDeployData.result.length > 0) {
+					if (previewDeployData.result.length > 0) {
 						// Use the most recent deployment time
 						const latestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
 						previewDeployedAt = latestDeployment.created_on || previewDeployedAt;
-						console.log('Deploys API: Found preview deployment at:', previewDeployedAt);
+						
+						// Try to get more version info from the deployment
+						if (latestDeployment.metadata && latestDeployment.metadata.git_commit) {
+							previewVersion = `preview-${latestDeployment.metadata.git_commit.substring(0, 8)}`;
+						} else if (latestDeployment.metadata && latestDeployment.metadata.branch) {
+							previewVersion = `preview-${latestDeployment.metadata.branch}`;
+						} else {
+							previewVersion = `preview-${latestDeployment.id}`;
+						}
+						
+						console.log('Deploys API: Found preview deployment at:', previewDeployedAt, 'version:', previewVersion);
 					}
 				}
 			} catch (error) {
@@ -111,7 +122,7 @@ export async function GET({ request }) {
 				status: 'active',
 				environment: 'preview',
 				url: 'https://ftn-preview.nick-brett1.workers.dev',
-				version: 'latest',
+				version: previewVersion,
 				deployedAt: formatDate(previewDeployedAt)
 			});
 		}
@@ -120,6 +131,7 @@ export async function GET({ request }) {
 		if (productionWorker) {
 			// Try to get the actual deployment time for production
 			let productionDeployedAt = productionWorker.created_on || new Date().toISOString();
+			let productionVersion = 'latest';
 			
 			try {
 				// Get deployment information for the production worker
@@ -129,17 +141,27 @@ export async function GET({ request }) {
 				const productionDeployResponse = await fetch(productionDeployUrl, {
 					headers: {
 						'Authorization': `Bearer ${apiToken}`,
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json`
 					}
 				});
 
 				if (productionDeployResponse.ok) {
 					const productionDeployData = await productionDeployResponse.json();
-					if (productionDeployData.success && productionDeployData.result.length > 0) {
+					if (productionDeployData.result.length > 0) {
 						// Use the most recent deployment time
 						const latestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
 						productionDeployedAt = latestDeployment.created_on || productionDeployedAt;
-						console.log('Deploys API: Found production deployment at:', productionDeployedAt);
+						
+						// Try to get more version info from the deployment
+						if (latestDeployment.metadata && latestDeployment.metadata.git_commit) {
+							productionVersion = `prod-${latestDeployment.metadata.git_commit.substring(0, 8)}`;
+						} else if (latestDeployment.metadata && latestDeployment.metadata.branch) {
+							productionVersion = `prod-${latestDeployment.metadata.branch}`;
+						} else {
+							productionVersion = `prod-${latestDeployment.id}`;
+						}
+						
+						console.log('Deploys API: Found production deployment at:', productionDeployedAt, 'version:', productionVersion);
 					}
 				}
 			} catch (error) {
@@ -152,7 +174,7 @@ export async function GET({ request }) {
 				status: 'active',
 				environment: 'production',
 				url: 'https://ftn-production.nick-brett1.workers.dev',
-				version: 'latest',
+				version: productionVersion,
 				deployedAt: formatDate(productionDeployedAt)
 			});
 		}
