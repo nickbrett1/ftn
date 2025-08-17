@@ -37,15 +37,10 @@
 				<!-- Always show deploys icon -->
 				<button
 					onclick={() => {
-						if (isLoggedIn) {
-							goto('/deploys');
-						} else {
-							// Trigger login workflow
-							document.getElementById('login').click();
-						}
+						goto('/deploys');
 					}}
 					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-					title={isLoggedIn ? "View Deployments" : "Login to View Deployments"}
+					title="View Deployments"
 				>
 					🚀
 				</button>
