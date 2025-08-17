@@ -80,6 +80,8 @@ export async function GET({ request }) {
 			// Try to get the actual deployment time for preview
 			let previewDeployedAt = previewWorker.created_on || new Date().toISOString();
 			let previewVersion = 'latest';
+			let previewDeployData = null;
+			let previewLatestDeployment = null;
 			
 			try {
 				// Get deployment information for the preview worker
@@ -94,30 +96,30 @@ export async function GET({ request }) {
 				});
 
 				if (previewDeployResponse.ok) {
-					const previewDeployData = await previewDeployResponse.json();
+					previewDeployData = await previewDeployResponse.json();
 					if (previewDeployData.result.length > 0) {
 						// Use the most recent deployment time
-						const latestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
-						previewDeployedAt = latestDeployment.created_on || previewDeployedAt;
+						previewLatestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
+						previewDeployedAt = previewLatestDeployment.created_on || previewDeployedAt;
 						
 						// Build comprehensive version info from deployment metadata
 						let versionParts = ['preview'];
 						
-						console.log('Deploys API: Preview deployment metadata:', latestDeployment.metadata);
-						console.log('Deploys API: Preview deployment full object:', latestDeployment);
+						console.log('Deploys API: Preview deployment metadata:', previewLatestDeployment.metadata);
+						console.log('Deploys API: Preview deployment full object:', previewLatestDeployment);
 						
-						if (latestDeployment.metadata) {
-							if (latestDeployment.metadata.branch) {
-								versionParts.push(latestDeployment.metadata.branch);
+						if (previewLatestDeployment.metadata) {
+							if (previewLatestDeployment.metadata.branch) {
+								versionParts.push(previewLatestDeployment.metadata.branch);
 							}
-							if (latestDeployment.metadata.git_commit) {
-								versionParts.push(latestDeployment.metadata.git_commit.substring(0, 8));
+							if (previewLatestDeployment.metadata.git_commit) {
+								versionParts.push(previewLatestDeployment.metadata.git_commit.substring(0, 8));
 							}
 						}
 						
 						// Fallback to deployment ID if no metadata
 						if (versionParts.length === 1) {
-							versionParts.push(latestDeployment.id);
+							versionParts.push(previewLatestDeployment.id);
 						}
 						
 						previewVersion = versionParts.join('-');
@@ -139,10 +141,10 @@ export async function GET({ request }) {
 				deployedAt: formatDate(previewDeployedAt),
 				_debug: {
 					metadata: previewWorker.metadata,
-					deployment_metadata: previewDeployData?.result?.[0]?.metadata,
+					deployment_metadata: previewLatestDeployment?.metadata || null,
 					version_parts: previewVersion,
 					worker_created_on: previewWorker.created_on,
-					deployment_created_on: previewDeployData?.result?.[0]?.created_on
+					deployment_created_on: previewLatestDeployment?.created_on || null
 				}
 			});
 		}
@@ -152,6 +154,8 @@ export async function GET({ request }) {
 			// Try to get the actual deployment time for production
 			let productionDeployedAt = productionWorker.created_on || new Date().toISOString();
 			let productionVersion = 'latest';
+			let productionDeployData = null;
+			let productionLatestDeployment = null;
 			
 			try {
 				// Get deployment information for the production worker
@@ -166,30 +170,30 @@ export async function GET({ request }) {
 				});
 
 				if (productionDeployResponse.ok) {
-					const productionDeployData = await productionDeployResponse.json();
+					productionDeployData = await productionDeployResponse.json();
 					if (productionDeployData.result.length > 0) {
 						// Use the most recent deployment time
-						const latestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
-						productionDeployedAt = latestDeployment.created_on || productionDeployedAt;
+						productionLatestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
+						productionDeployedAt = productionLatestDeployment.created_on || productionDeployedAt;
 						
 						// Build comprehensive version info from deployment metadata
 						let versionParts = ['prod'];
 						
-						console.log('Deploys API: Production deployment metadata:', latestDeployment.metadata);
-						console.log('Deploys API: Production deployment full object:', latestDeployment);
+						console.log('Deploys API: Production deployment metadata:', productionLatestDeployment.metadata);
+						console.log('Deploys API: Production deployment full object:', productionLatestDeployment);
 						
-						if (latestDeployment.metadata) {
-							if (latestDeployment.metadata.branch) {
-								versionParts.push(latestDeployment.metadata.branch);
+						if (productionLatestDeployment.metadata) {
+							if (productionLatestDeployment.metadata.branch) {
+								versionParts.push(productionLatestDeployment.metadata.branch);
 							}
-							if (latestDeployment.metadata.git_commit) {
-								versionParts.push(latestDeployment.metadata.git_commit.substring(0, 8));
+							if (productionLatestDeployment.metadata.git_commit) {
+								versionParts.push(productionLatestDeployment.metadata.git_commit.substring(0, 8));
 							}
 						}
 						
 						// Fallback to deployment ID if no metadata
 						if (versionParts.length === 1) {
-							versionParts.push(latestDeployment.id);
+							versionParts.push(productionLatestDeployment.id);
 						}
 						
 						productionVersion = versionParts.join('-');
@@ -211,10 +215,10 @@ export async function GET({ request }) {
 				deployedAt: formatDate(productionDeployedAt),
 				_debug: {
 					metadata: productionWorker.metadata,
-					deployment_metadata: productionDeployData?.result?.[0]?.metadata,
+					deployment_metadata: productionLatestDeployment?.metadata || null,
 					version_parts: productionVersion,
 					worker_created_on: productionWorker.created_on,
-					deployment_created_on: productionDeployData?.result?.[0]?.created_on
+					deployment_created_on: productionLatestDeployment?.created_on || null
 				}
 			});
 		}
