@@ -99,6 +99,29 @@
 				<p class="text-gray-400 text-lg">No deployments found</p>
 			</div>
 		{:else}
+			<!-- Debug Information -->
+			<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+				<h3 class="text-blue-400 font-semibold mb-3">🔍 Debug Information</h3>
+				<div class="text-xs text-blue-300 font-mono">
+					<p class="mb-2">Raw deployment data (to help debug version display):</p>
+					{#each deployments as deployment, index}
+						<div class="mb-3 p-2 bg-blue-900/30 rounded">
+							<div class="font-semibold text-blue-200">{deployment.name}:</div>
+							<div class="text-blue-300">
+								<div>Version: <span class="text-yellow-300">{deployment.version}</span></div>
+								<div>Environment: <span class="text-yellow-300">{deployment.environment}</span></div>
+								<div>Deployed At: <span class="text-yellow-300">{deployment.deployedAt}</span></div>
+								{#if deployment._debug}
+									<div class="mt-2 text-blue-400">
+										<div>Debug Metadata: <span class="text-yellow-300">{JSON.stringify(deployment._debug, null, 2)}</span></div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+			
 			<div class="grid gap-4">
 				{#each deployments as deployment}
 					<div class="bg-gray-800/20 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
