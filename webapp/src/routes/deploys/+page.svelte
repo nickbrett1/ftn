@@ -65,7 +65,31 @@
 			</div>
 		{:else if error}
 			<div class="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
-				<p class="text-red-400 text-lg">{error}</p>
+				<p class="text-red-400 text-lg mb-4">Unable to Load Deployments</p>
+				{#if error.includes('Cloudflare credentials not available')}
+					<div class="text-gray-400 mb-6">
+						<p class="mb-2">This is expected in development environments.</p>
+						<p class="mb-4">To view real deployment data, you need to set these environment variables:</p>
+						<div class="bg-gray-800/50 p-3 rounded font-mono text-sm text-left">
+							<div class="mb-2">CLOUDFLARE_ACCOUNT_ID</div>
+							<div>CLOUDFLARE_API_TOKEN</div>
+						</div>
+					</div>
+					<button
+						on:click={() => goto('/')}
+						class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+					>
+						Go Home
+					</button>
+				{:else}
+					<p class="text-gray-400 mb-4">{error}</p>
+					<button
+						on:click={() => goto('/')}
+						class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+					>
+						Go Home
+					</button>
+				{/if}
 			</div>
 		{:else if deployments.length === 0}
 			<div class="bg-gray-800/20 border border-gray-700 rounded-lg p-6 text-center">
