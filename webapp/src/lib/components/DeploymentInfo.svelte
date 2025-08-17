@@ -1,33 +1,12 @@
 <script>
-	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	
-	let branchName = 'unknown';
-	let commitHash = 'unknown';
-	let isPreview = false;
+	// Get git info from build-time constants
+	const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'unknown';
+	const branchName = typeof __GIT_BRANCH__ !== 'undefined' ? __GIT_BRANCH__ : 'unknown';
 	
-	onMount(() => {
-		// Only run in browser environment
-		if (browser) {
-			// Check if this is a preview deployment
-			isPreview = window.location.hostname.includes('preview');
-			
-			// Try to get commit hash from meta tag or other build-time data
-			const commitMeta = document.querySelector('meta[name="git-commit"]');
-			if (commitMeta) {
-				commitHash = commitMeta.getAttribute('content') || 'unknown';
-			}
-			
-			// Try to get branch name from meta tag
-			const branchMeta = document.querySelector('meta[name="git-branch"]');
-			if (branchMeta) {
-				branchName = branchMeta.getAttribute('content') || 'unknown';
-			} else {
-				// Fallback to deployment type
-				branchName = isPreview ? 'preview' : 'main';
-			}
-		}
-	});
+	// Check if this is a preview deployment
+	$: isPreview = browser && window.location.hostname.includes('preview');
 </script>
 
 <!-- Deployment info - small and discrete -->
