@@ -66,9 +66,9 @@ BRANCH_NAME="$BRANCH_NAME" BRANCH_SANITIZED="$BRANCH_SANITIZED" doppler run $DOP
 
     echo \"✅ Wrangler configuration generated successfully\"
 
-    # Deploy to production environment (which has secrets configured)
+    # Deploy to preview environment (which has secrets configured)
     echo \"🚀 Deploying to preview environment\"
-    npx wrangler deploy --config wrangler.jsonc --env production
+    npx wrangler deploy --config wrangler.jsonc --env preview
     
     echo \"🎉 Preview deployment completed successfully!\"
     echo \"📋 Environment: production (with secrets)\"
