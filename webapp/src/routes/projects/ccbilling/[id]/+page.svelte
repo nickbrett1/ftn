@@ -28,20 +28,7 @@
 		localData.autoAssociations = data.autoAssociations;
 	});
 
-	function formatLocalDate(dateString) {
-		if (!dateString) return '';
-		const [year, month, day] = dateString.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-	}
 
-	function formatShortDate(dateString) {
-		if (!dateString) return '';
-		const [year, month, day] = dateString.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		// Explicitly format as MM/DD
-		return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-	}
 
 	// Function to format merchant name with flight details and Amazon order ID
 	function formatMerchantName(charge) {
@@ -88,6 +75,7 @@
 
 	import { goto } from '$app/navigation';
 	import { invalidate } from '$app/navigation';
+	import { formatDate, formatShortDate } from '$lib/utils/date-utils.js';
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
@@ -675,9 +663,9 @@
 
 <svelte:head>
 	<title
-		>Billing Cycle: {formatLocalDate(data.cycle.start_date)} - {formatLocalDate(
-			data.cycle.end_date
-		)}</title
+							>Billing Cycle: {formatDate(data.cycle.start_date, { includeTime: false })} - {formatDate(
+						data.cycle.end_date, { includeTime: false }
+					)}</title
 	>
 	<meta name="description" content="Manage billing cycle details and statements" />
 </svelte:head>
@@ -686,8 +674,8 @@
 	<div class="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
 		<div class="flex-1">
 			<h2 class="text-2xl sm:text-3xl font-bold text-white">
-				Billing Cycle: {formatLocalDate(data.cycle.start_date)} - {formatLocalDate(
-					data.cycle.end_date
+				Billing Cycle: {formatDate(data.cycle.start_date, { includeTime: false })} - {formatDate(
+					data.cycle.end_date, { includeTime: false }
 				)}
 			</h2>
 		</div>
@@ -921,7 +909,7 @@
 										{statement.filename}
 									</div>
 									{#if statement.statement_date}
-										<div>Statement Date: {formatLocalDate(statement.statement_date)}</div>
+										<div>Statement Date: {formatDate(statement.statement_date, { includeTime: false })}</div>
 									{/if}
 								</div>
 								<p class="text-gray-500 text-xs">
@@ -1140,8 +1128,8 @@
 									<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
 										<span
 											title={charge.transaction_date
-												? formatLocalDate(charge.transaction_date)
-												: formatLocalDate(charge.created_at?.split('T')[0])}
+												? formatDate(charge.transaction_date, { includeTime: false })
+												: formatDate(charge.created_at?.split('T')[0], { includeTime: false })}
 										>
 											{charge.transaction_date
 												? formatShortDate(charge.transaction_date)
@@ -1218,8 +1206,8 @@
 									<td class="text-gray-300 text-sm py-2">
 										<span
 											title={charge.transaction_date
-												? formatLocalDate(charge.transaction_date)
-												: formatLocalDate(charge.created_at?.split('T')[0])}
+												? formatDate(charge.transaction_date, { includeTime: false })
+												: formatDate(charge.created_at?.split('T')[0], { includeTime: false })}
 										>
 											{charge.transaction_date
 												? formatShortDate(charge.transaction_date)

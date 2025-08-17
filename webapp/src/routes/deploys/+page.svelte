@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	let deployments = [];
 	let loading = true;
@@ -31,27 +32,7 @@
 		}
 	});
 
-	function formatDate(dateString) {
-		const date = new Date(dateString);
-		
-		// Format the date in user's local timezone
-		const dateOptions = { 
-			year: 'numeric', 
-			month: 'long', 
-			day: 'numeric'
-		};
-		
-		const timeOptions = { 
-			hour: '2-digit',
-			minute: '2-digit',
-			timeZoneName: 'short'
-		};
-		
-		const formattedDate = date.toLocaleDateString('en-US', dateOptions);
-		const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
-		
-		return `${formattedDate} at ${formattedTime}`;
-	}
+
 
 	function getStatusColor(status) {
 		switch (status) {

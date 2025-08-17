@@ -6,12 +6,7 @@
 	// Use synchronous destructuring to get data immediately
 	const { billingCycles = [], budgets = [], allocationTotals = [] } = data;
 
-	function formatLocalDate(dateString) {
-		if (!dateString) return '';
-		const [year, month, day] = dateString.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-	}
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	function formatCurrency(amount) {
 		if (amount == null) return '';
@@ -72,7 +67,7 @@
 							<div class="flex justify-between items-start">
 								<div>
 									<h3 class="text-lg font-medium text-white">
-										{formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
+										{formatDate(cycle.start_date, { includeTime: false })} - {formatDate(cycle.end_date, { includeTime: false })}
 									</h3>
 									<div class="mt-2 text-sm text-gray-300 space-y-1">
 										{#each getTotalsForCycle(cycle.id) as [allocation, total]}
