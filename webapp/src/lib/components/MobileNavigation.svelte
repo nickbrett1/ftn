@@ -17,7 +17,6 @@
 		debugInfo = { ...debugInfo, [key]: value };
 		console.log(`Debug: ${key} = ${value}`);
 	}
-</script>
 
 	const {
 		elements: { trigger, content, close },
