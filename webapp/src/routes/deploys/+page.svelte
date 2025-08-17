@@ -18,9 +18,13 @@
 			if (response.ok) {
 				deployments = await response.json();
 			} else {
-				error = 'Failed to fetch deployments';
+				// Get the detailed error message from the API response
+				const errorData = await response.text();
+				console.error('Deploys API error response:', errorData);
+				error = `Failed to fetch deployments: ${response.status} ${response.statusText}. ${errorData}`;
 			}
 		} catch (err) {
+			console.error('Deploys fetch error:', err);
 			error = 'Error fetching deployments: ' + err.message;
 		} finally {
 			loading = false;
