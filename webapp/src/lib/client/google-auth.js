@@ -8,9 +8,19 @@ const GOOGLE_CLIENT_ID = '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.goo
  * Get the appropriate redirect URI based on environment
  */
 export function getRedirectUri() {
-	return process.env.NODE_ENV === 'development'
-		? 'http://127.0.0.1:5173/auth'
-		: 'https://fintechnick.com/auth';
+	// For development, use localhost
+	if (process.env.NODE_ENV === 'development') {
+		return 'http://127.0.0.1:5173/auth';
+	}
+	
+	// For production/preview, use the current origin dynamically
+	// This ensures preview deployments redirect back to the preview domain
+	if (typeof window !== 'undefined') {
+		return `${window.location.origin}/auth`;
+	}
+	
+	// Fallback for SSR
+	return 'https://fintechnick.com/auth';
 }
 
 /**
