@@ -27,7 +27,11 @@
 	let { active, items = [], class: classes = '' } = $props();
 	
 	// Debug state
-	let debugInfo = {};
+	let debugInfo = {
+		'status': 'MobileNavigation loaded',
+		'items': items.join(', '),
+		'active': active
+	};
 	
 	function updateDebug(key, value) {
 		debugInfo = { ...debugInfo, [key]: value };
