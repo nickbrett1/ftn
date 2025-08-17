@@ -24,7 +24,39 @@ export async function GET({ request }) {
 			throw error(500, `Missing Cloudflare environment variables: ${missingVars.join(', ')}. Please check your environment configuration.`);
 		}
 
-		// Fetch real deployment data from Cloudflare API
+		// First, let's check what Workers exist on this account
+		const listWorkersUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`;
+		console.log('Deploys API: Checking available Workers at:', listWorkersUrl);
+		
+		const listResponse = await fetch(listWorkersUrl, {
+			headers: {
+				'Authorization': `Bearer ${apiToken}`,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		if (!listResponse.ok) {
+			const errorText = await listResponse.text();
+			console.error('Deploys API: Failed to list Workers:', errorText);
+			throw error(500, `Failed to list Cloudflare Workers: ${listResponse.status} ${listResponse.statusText}. Response: ${errorText}`);
+		}
+
+		const workersList = await listResponse.json();
+		console.log('Deploys API: Available Workers:', workersList);
+
+		if (!workersList.success) {
+			throw error(500, `Failed to list Workers: ${workersList.errors?.[0]?.message || 'Unknown error'}`);
+		}
+
+		// Check if the 'ftn' Worker exists
+		const ftnWorker = workersList.result.find(worker => worker.id === 'ftn');
+		if (!ftnWorker) {
+			// Worker doesn't exist, return a helpful message
+			const availableWorkers = workersList.result.map(w => w.id).join(', ');
+			throw error(404, `Worker 'ftn' not found on your Cloudflare account. Available Workers: ${availableWorkers || 'none'}. You may need to deploy the Worker first.`);
+		}
+
+		// Now fetch the specific Worker's versions
 		const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn/versions`;
 		console.log('Deploys API: Making request to:', apiUrl);
 		
@@ -40,6 +72,12 @@ export async function GET({ request }) {
 		if (!response.ok) {
 			const errorText = await response.text();
 			console.error('Deploys API: Response error:', errorText);
+			
+			// Provide more helpful error messages for common cases
+			if (response.status === 404) {
+				throw error(404, `Worker 'ftn' not found. This usually means the Worker hasn't been deployed yet. Please deploy the Worker first using 'npm run deploy-preview' or 'npm run deploy'.`);
+			}
+			
 			throw error(500, `Cloudflare API error: ${response.status} ${response.statusText}. Response: ${errorText}`);
 		}
 
