@@ -1,22 +1,9 @@
 <script>
 	import { createPopover } from '@melt-ui/svelte';
-	import { fade, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import MobileNavigationItem from '$lib/components/MobileNavigationItem.svelte';
-	import MobileNavigationDebug from '$lib/components/MobileNavigationDebug.svelte';
 
 	let { active, items = [], class: classes = '' } = $props();
-	
-	// Debug state
-	let debugInfo = $state({
-		'status': 'MobileNavigation loaded',
-		'items': items.join(', '),
-		'active': active
-	});
-	
-	function updateDebug(key, value) {
-		debugInfo = { ...debugInfo, [key]: value };
-		console.log(`Debug: ${key} = ${value}`);
-	}
 
 	const {
 		elements: { trigger, content, close },
@@ -35,9 +22,7 @@
 	});
 
 	function hide() {
-		console.log('MobileNavigation: hide() called');
 		open.set(false);
-		console.log('MobileNavigation: Menu closed, open state:', $open);
 	}
 </script>
 
@@ -80,20 +65,15 @@
 		</div>
 		<nav class="mt-6">
 			<ul class="-my-2 divide-y divide-white/10">
-				{#each items as item (item)}
-					{console.log(`MobileNavigation: Rendering item ${item}`)}
-					<MobileNavigationItem 
-						current={item} 
-						{active} 
-						{updateDebug}
-						close={$close}
-						hide={hide}
-					/>
-				{/each}
+									{#each items as item (item)}
+						<MobileNavigationItem 
+							current={item} 
+							{active} 
+							close={$close}
+							hide={hide}
+						/>
+					{/each}
 			</ul>
 		</nav>
 	</div>
 {/if}
-
-<!-- Debug display -->
-<MobileNavigationDebug {debugInfo} />
