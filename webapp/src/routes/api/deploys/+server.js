@@ -100,14 +100,24 @@ export async function GET({ request }) {
 						const latestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
 						previewDeployedAt = latestDeployment.created_on || previewDeployedAt;
 						
-						// Try to get more version info from the deployment
-						if (latestDeployment.metadata && latestDeployment.metadata.git_commit) {
-							previewVersion = `preview-${latestDeployment.metadata.git_commit.substring(0, 8)}`;
-						} else if (latestDeployment.metadata && latestDeployment.metadata.branch) {
-							previewVersion = `preview-${latestDeployment.metadata.branch}`;
-						} else {
-							previewVersion = `preview-${latestDeployment.id}`;
+						// Build comprehensive version info from deployment metadata
+						let versionParts = ['preview'];
+						
+						if (latestDeployment.metadata) {
+							if (latestDeployment.metadata.branch) {
+								versionParts.push(latestDeployment.metadata.branch);
+							}
+							if (latestDeployment.metadata.git_commit) {
+								versionParts.push(latestDeployment.metadata.git_commit.substring(0, 8));
+							}
 						}
+						
+						// Fallback to deployment ID if no metadata
+						if (versionParts.length === 1) {
+							versionParts.push(latestDeployment.id);
+						}
+						
+						previewVersion = versionParts.join('-');
 						
 						console.log('Deploys API: Found preview deployment at:', previewDeployedAt, 'version:', previewVersion);
 					}
@@ -152,14 +162,24 @@ export async function GET({ request }) {
 						const latestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
 						productionDeployedAt = latestDeployment.created_on || productionDeployedAt;
 						
-						// Try to get more version info from the deployment
-						if (latestDeployment.metadata && latestDeployment.metadata.git_commit) {
-							productionVersion = `prod-${latestDeployment.metadata.git_commit.substring(0, 8)}`;
-						} else if (latestDeployment.metadata && latestDeployment.metadata.branch) {
-							productionVersion = `prod-${latestDeployment.metadata.branch}`;
-						} else {
-							productionVersion = `prod-${latestDeployment.id}`;
+						// Build comprehensive version info from deployment metadata
+						let versionParts = ['prod'];
+						
+						if (latestDeployment.metadata) {
+							if (latestDeployment.metadata.branch) {
+								versionParts.push(latestDeployment.metadata.branch);
+							}
+							if (latestDeployment.metadata.git_commit) {
+								versionParts.push(latestDeployment.metadata.git_commit.substring(0, 8));
+							}
 						}
+						
+						// Fallback to deployment ID if no metadata
+						if (versionParts.length === 1) {
+							versionParts.push(latestDeployment.id);
+						}
+						
+						productionVersion = versionParts.join('-');
 						
 						console.log('Deploys API: Found production deployment at:', productionDeployedAt, 'version:', productionVersion);
 					}
