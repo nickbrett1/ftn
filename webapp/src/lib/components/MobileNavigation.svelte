@@ -2,6 +2,7 @@
 	import { createPopover, melt } from '@melt-ui/svelte';
 	import { fade, slide } from 'svelte/transition';
 	import MobileNavigationItem from '$lib/components/MobileNavigationItem.svelte';
+	import MobileNavigationDebug from '$lib/components/MobileNavigationDebug.svelte';
 
 	const {
 		elements: { trigger, content, arrow, close, overlay },
@@ -24,6 +25,14 @@
 	}
 
 	let { active, items = [], class: classes = '' } = $props();
+	
+	// Debug state
+	let debugInfo = {};
+	
+	function updateDebug(key, value) {
+		debugInfo = { ...debugInfo, [key]: value };
+		console.log(`Debug: ${key} = ${value}`);
+	}
 </script>
 
 <button
@@ -82,6 +91,7 @@
 						<MobileNavigationItem 
 							current={item} 
 							{active} 
+							{updateDebug}
 							hide={() => {
 								console.log(`MobileNavigation: hide() called from item ${item}`);
 								hide();
@@ -93,3 +103,6 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Debug display -->
+<MobileNavigationDebug {debugInfo} />
