@@ -23,6 +23,7 @@
 
 	const handleClick = (event) => {
 		console.log(`MobileNavigationItem: Click event triggered for ${current}`);
+		alert(`Click detected for ${current}!`); // Temporary debug alert
 		updateDebug('clicked', current);
 		
 		event.preventDefault();
