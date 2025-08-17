@@ -20,6 +20,8 @@
 
 	const handleClick = (event) => {
 		console.log(`MobileNavigationItem: Click event triggered for ${current}`);
+		console.log(`MobileNavigationItem: Event type: ${event.type}`);
+		console.log(`MobileNavigationItem: Event target:`, event.target);
 		
 		event.preventDefault();
 		event.stopPropagation();

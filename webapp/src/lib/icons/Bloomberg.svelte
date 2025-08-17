@@ -3,4 +3,6 @@
 	import Img from '@zerodevx/svelte-img';
 </script>
 
-<Img src={icon} alt="Bloomberg" class="h-full " />
+<div style="width: 64px; height: 64px; border: 1px solid red;">
+	<Img src={icon} alt="Bloomberg" class="h-full" />
+</div>
