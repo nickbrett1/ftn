@@ -1,33 +1,6 @@
 <script>
-	import icon from '$lib/images/library-house-logo.png';
-	import { onMount } from 'svelte';
-	
-	let imgElement = $state();
-	
-	onMount(() => {
-		if (imgElement) {
-			// Add intersection observer for lazy loading
-			const observer = new IntersectionObserver((entries) => {
-				entries.forEach(entry => {
-					if (entry.isIntersecting) {
-						imgElement.classList.add('loaded');
-						observer.unobserve(imgElement);
-					}
-				});
-			});
-			
-			observer.observe(imgElement);
-		}
-	});
+	import icon from '$lib/images/library-house-logo.png?as=run:1';
+	import Img from '@zerodevx/svelte-img';
 </script>
 
-<div style="width: 64px; height: 64px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-	<img 
-		bind:this={imgElement}
-		src={icon} 
-		alt="Library House" 
-		style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px; object-fit: contain; object-position: center;"
-		loading="lazy"
-		decoding="async"
-	/>
-</div>
+<Img src={icon} alt="Library House" class="h-full " />
