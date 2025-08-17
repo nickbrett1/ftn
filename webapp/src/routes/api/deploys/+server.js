@@ -85,15 +85,21 @@ export async function GET({ request }) {
 			
 			// Build version from worker metadata first
 			let versionParts = ['preview'];
+			console.log('Deploys API: Preview worker full object:', previewWorker);
+			console.log('Deploys API: Preview worker metadata:', previewWorker.metadata);
+			
 			if (previewWorker.metadata) {
-				console.log('Deploys API: Preview worker metadata:', previewWorker.metadata);
 				if (previewWorker.metadata.branch) {
+					console.log('Deploys API: Found branch in metadata:', previewWorker.metadata.branch);
 					versionParts.push(previewWorker.metadata.branch);
 				}
 				if (previewWorker.metadata.git_commit) {
+					console.log('Deploys API: Found git_commit in metadata:', previewWorker.metadata.git_commit);
 					versionParts.push(previewWorker.metadata.git_commit.substring(0, 8));
 				}
 			}
+			
+			console.log('Deploys API: Initial version parts from worker metadata:', versionParts);
 			
 			// Try to get deployment information for the preview worker
 			try {
@@ -178,16 +184,28 @@ export async function GET({ request }) {
 			}
 			
 			// Fallback to worker ID if no metadata
+			console.log('Deploys API: Before fallback, version parts:', versionParts);
+			
 			if (versionParts.length === 1) {
 				if (previewLatestDeployment?.id) {
+					console.log('Deploys API: Adding deployment ID to version parts:', previewLatestDeployment.id.substring(0, 8));
 					versionParts.push(previewLatestDeployment.id.substring(0, 8));
 				} else if (previewWorker.id) {
+					console.log('Deploys API: Adding worker ID to version parts:', previewWorker.id.substring(0, 8));
 					versionParts.push(previewWorker.id.substring(0, 8));
 				}
 			}
 			
+			// Ensure we always have at least 2 parts
+			if (versionParts.length === 1) {
+				console.log('Deploys API: Still only 1 part, adding timestamp fallback');
+				const timestamp = new Date().getTime().toString(36).substring(0, 6);
+				versionParts.push(timestamp);
+			}
+			
 			previewVersion = versionParts.join('-');
 			console.log('Deploys API: Final preview version:', previewVersion);
+			console.log('Deploys API: Final version parts array:', versionParts);
 			
 			deployments.push({
 				name: 'Preview Environment',
@@ -217,15 +235,21 @@ export async function GET({ request }) {
 			
 			// Build version from worker metadata first
 			let versionParts = ['prod'];
+			console.log('Deploys API: Production worker full object:', productionWorker);
+			console.log('Deploys API: Production worker metadata:', productionWorker.metadata);
+			
 			if (productionWorker.metadata) {
-				console.log('Deploys API: Production worker metadata:', productionWorker.metadata);
 				if (productionWorker.metadata.branch) {
+					console.log('Deploys API: Found branch in metadata:', productionWorker.metadata.branch);
 					versionParts.push(productionWorker.metadata.branch);
 				}
 				if (productionWorker.metadata.git_commit) {
+					console.log('Deploys API: Found git_commit in metadata:', productionWorker.metadata.git_commit);
 					versionParts.push(productionWorker.metadata.git_commit.substring(0, 8));
 				}
 			}
+			
+			console.log('Deploys API: Initial production version parts from worker metadata:', versionParts);
 			
 			try {
 				// Get deployment information for the production worker
@@ -310,16 +334,28 @@ export async function GET({ request }) {
 			}
 			
 			// Fallback to worker ID if no metadata
+			console.log('Deploys API: Before production fallback, version parts:', versionParts);
+			
 			if (versionParts.length === 1) {
 				if (productionLatestDeployment?.id) {
+					console.log('Deploys API: Adding production deployment ID to version parts:', productionLatestDeployment.id.substring(0, 8));
 					versionParts.push(productionLatestDeployment.id.substring(0, 8));
 				} else if (productionWorker.id) {
+					console.log('Deploys API: Adding production worker ID to version parts:', productionWorker.id.substring(0, 8));
 					versionParts.push(productionWorker.id.substring(0, 8));
 				}
 			}
 			
+			// Ensure we always have at least 2 parts
+			if (versionParts.length === 1) {
+				console.log('Deploys API: Production still only 1 part, adding timestamp fallback');
+				const timestamp = new Date().getTime().toString(36).substring(0, 6);
+				versionParts.push(timestamp);
+			}
+			
 			productionVersion = versionParts.join('-');
 			console.log('Deploys API: Final production version:', productionVersion);
+			console.log('Deploys API: Final production version parts array:', versionParts);
 			
 			deployments.push({
 				name: 'Production Environment',
