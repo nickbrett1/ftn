@@ -77,13 +77,42 @@ export async function GET({ request }) {
 		
 		// Add preview environment if it exists
 		if (previewWorker) {
+			// Try to get the actual deployment time for preview
+			let previewDeployedAt = previewWorker.created_on || new Date().toISOString();
+			
+			try {
+				// Get deployment information for the preview worker
+				const previewDeployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/deployments`;
+				console.log('Deploys API: Getting preview deployment info from:', previewDeployUrl);
+				
+				const previewDeployResponse = await fetch(previewDeployUrl, {
+					headers: {
+						'Authorization': `Bearer ${apiToken}`,
+						'Content-Type': 'application/json'
+					}
+				});
+
+				if (previewDeployResponse.ok) {
+					const previewDeployData = await previewDeployResponse.json();
+					if (previewDeployData.success && previewDeployData.result.length > 0) {
+						// Use the most recent deployment time
+						const latestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
+						previewDeployedAt = latestDeployment.created_on || previewDeployedAt;
+						console.log('Deploys API: Found preview deployment at:', previewDeployedAt);
+					}
+				}
+			} catch (error) {
+				console.log('Could not fetch preview deployment info:', error.message);
+				// Continue with created_on as fallback
+			}
+			
 			deployments.push({
 				name: 'Preview Environment',
 				status: 'active',
 				environment: 'preview',
 				url: 'https://ftn-preview.nick-brett1.workers.dev',
 				version: 'latest',
-				deployedAt: formatDate(previewWorker.created_on || new Date().toISOString())
+				deployedAt: formatDate(previewDeployedAt)
 			});
 		}
 		
