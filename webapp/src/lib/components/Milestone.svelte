@@ -2,10 +2,8 @@
 
 <script>
 	import MilestoneLogo from '$lib/components/MilestoneLogo.svelte';
-	import { onMount } from 'svelte';
 
 	let id = $props.id();
-	let logoContainer = $state();
 
 	let {
 		heading = '',
@@ -18,27 +16,7 @@
 		logo = null
 	} = $props();
 
-	onMount(() => {
-		if (logoContainer) {
-			console.log(`Milestone ${id} logo container dimensions:`, {
-				offsetWidth: logoContainer.offsetWidth,
-				offsetHeight: logoContainer.offsetHeight,
-				clientWidth: logoContainer.clientWidth,
-				clientHeight: logoContainer.clientHeight,
-				scrollWidth: logoContainer.scrollWidth,
-				scrollHeight: logoContainer.scrollHeight,
-				style: logoContainer.style.cssText,
-				className: logoContainer.className
-			});
-			
-			// Check viewport orientation
-			console.log(`Viewport dimensions:`, {
-				width: window.innerWidth,
-				height: window.innerHeight,
-				orientation: window.screen.orientation?.type || 'unknown'
-			});
-		}
-	});
+
 </script>
 
 <div
@@ -114,11 +92,7 @@
 					</h3>
 				</div>
 				{#if logo}
-					<div 
-						class="flex-shrink-0 pt-2 pr-2 sm:pt-4 sm:pr-4 overflow-hidden"
-						style="width: 64px; height: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px;"
-						bind:this={logoContainer}
-					>
+					<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
