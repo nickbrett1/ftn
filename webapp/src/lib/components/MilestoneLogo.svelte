@@ -19,7 +19,7 @@
 	class="size-full cursor-pointer"
 	type="button"
 	aria-label={data.tooltip}
-	onclick={() => {
+	on:click={() => {
 		window.location = data.link;
 	}}
 >

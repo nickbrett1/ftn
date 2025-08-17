@@ -67,7 +67,7 @@
 		use:melt={$overlay}
 		transition:fade={{ duration: 300 }}
 		class="fixed inset-0 z-50 bg-base-800/40 transition-all duration-300"
-		onclick={() => {
+		on:click={() => {
 			console.log('MobileNavigation: Overlay clicked, closing menu');
 			hide();
 		}}
