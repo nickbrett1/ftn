@@ -48,64 +48,77 @@ export async function GET({ request }) {
 			throw error(500, `Failed to list Workers: ${workersList.errors?.[0]?.message || 'Unknown error'}`);
 		}
 
-		// Check if the 'ftn' Worker exists
-		const ftnWorker = workersList.result.find(worker => worker.id === 'ftn');
-		if (!ftnWorker) {
-			// Worker doesn't exist, return a helpful message
+		// Look for our main Workers (ftn-preview and ftn-production)
+		const previewWorker = workersList.result.find(worker => worker.id === 'ftn-preview');
+		const productionWorker = workersList.result.find(worker => worker.id === 'ftn-production');
+		
+		if (!previewWorker && !productionWorker) {
+			// Neither main Worker exists, return a helpful message
 			const availableWorkers = workersList.result.map(w => w.id).join(', ');
-			throw error(404, `Worker 'ftn' not found on your Cloudflare account. Available Workers: ${availableWorkers || 'none'}. You may need to deploy the Worker first.`);
+			throw error(404, `Main Workers 'ftn-preview' and 'ftn-production' not found on your Cloudflare account. Available Workers: ${availableWorkers || 'none'}. You may need to deploy the Workers first.`);
 		}
 
-		// Now fetch the specific Worker's versions
-		const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn/versions`;
-		console.log('Deploys API: Making request to:', apiUrl);
+		// Build deployments list from available Workers
+		const deployments = [];
 		
-		const response = await fetch(apiUrl, {
-			headers: {
-				'Authorization': `Bearer ${apiToken}`,
-				'Content-Type': 'application/json'
-			}
-		});
-
-		console.log('Deploys API: Response status:', response.status, response.statusText);
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			console.error('Deploys API: Response error:', errorText);
-			
-			// Provide more helpful error messages for common cases
-			if (response.status === 404) {
-				throw error(404, `Worker 'ftn' not found. This usually means the Worker hasn't been deployed yet. Please deploy the Worker first using 'npm run deploy-preview' or 'npm run deploy'.`);
-			}
-			
-			throw error(500, `Cloudflare API error: ${response.status} ${response.statusText}. Response: ${errorText}`);
+		// Add preview environment if it exists
+		if (previewWorker) {
+			deployments.push({
+				name: 'Preview Environment',
+				status: 'active',
+				environment: 'preview',
+				url: 'https://ftn-preview.nick-brett1.workers.dev',
+				version: 'latest',
+				deployedAt: new Date().toISOString()
+			});
 		}
-
-		const data = await response.json();
 		
-		if (!data.success) {
-			throw error(500, `Cloudflare API error: ${data.errors?.[0]?.message || 'Unknown error'}`);
+		// Add production environment if it exists
+		if (productionWorker) {
+			deployments.push({
+				name: 'Production Environment',
+				status: 'active',
+				environment: 'production',
+				url: 'https://ftn-production.nick-brett1.workers.dev',
+				version: 'latest',
+				deployedAt: new Date().toISOString()
+			});
 		}
+		
+		// If we have Workers, try to get version information for production
+		if (productionWorker) {
+			try {
+				const productionApiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
+				console.log('Deploys API: Making request to production:', productionApiUrl);
+				
+				const productionResponse = await fetch(productionApiUrl, {
+					headers: {
+						'Authorization': `Bearer ${apiToken}`,
+						'Content-Type': 'application/json'
+					}
+				});
 
-		// Transform Cloudflare data into our format
-		const deployments = data.result.map(version => ({
-			name: `Worker Version ${version.id}`,
-			status: 'active',
-			environment: 'production',
-			url: 'https://ftn.nick-brett1.workers.dev',
-			version: version.id,
-			deployedAt: version.created_on
-		}));
-
-		// Add preview environment
-		deployments.unshift({
-			name: 'Preview Environment',
-			status: 'active',
-			environment: 'preview',
-			url: 'https://ftn-preview.nick-brett1.workers.dev',
-			version: 'latest',
-			deployedAt: new Date().toISOString()
-		});
+				if (productionResponse.ok) {
+					const productionData = await productionResponse.json();
+					if (productionData.success && productionData.result.length > 0) {
+						// Add production versions
+						productionData.result.forEach(version => {
+							deployments.push({
+								name: `Production Version ${version.id}`,
+								status: 'active',
+								environment: 'production',
+								url: 'https://ftn-production.nick-brett1.workers.dev',
+								version: version.id,
+								deployedAt: version.created_on
+							});
+						});
+					}
+				}
+			} catch (error) {
+				console.log('Could not fetch production versions:', error.message);
+				// Continue without production versions
+			}
+		}
 
 		return json(deployments);
 	} catch (err) {
