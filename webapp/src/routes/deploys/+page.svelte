@@ -33,15 +33,24 @@
 
 	function formatDate(dateString) {
 		const date = new Date(dateString);
-		const options = { 
+		
+		// Format the date in user's local timezone
+		const dateOptions = { 
 			year: 'numeric', 
 			month: 'long', 
-			day: 'numeric',
+			day: 'numeric'
+		};
+		
+		const timeOptions = { 
 			hour: '2-digit',
 			minute: '2-digit',
 			timeZoneName: 'short'
 		};
-		return date.toLocaleDateString('en-US', options);
+		
+		const formattedDate = date.toLocaleDateString('en-US', dateOptions);
+		const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
+		
+		return `${formattedDate} at ${formattedTime}`;
 	}
 
 	function getStatusColor(status) {
