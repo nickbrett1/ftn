@@ -78,5 +78,10 @@
 				</a>
 			</div>
 		</div>
+		
+		<!-- Git info at bottom of footer -->
+		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
+			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: preview
+		</div>
 	</div>
 </footer>

@@ -7,7 +7,6 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Contact from '$lib/components/Contact.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
-	import DeploymentInfo from '$lib/components/DeploymentInfo.svelte';
 
 	import { afterNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -81,8 +80,6 @@
 	<div id="contact" class="section">
 		<Contact />
 	</div>
-</div>
-
-<DeploymentInfo />
+	</div>
 
 <Footer />
