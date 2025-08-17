@@ -38,9 +38,39 @@ describe('Google Auth Utils', () => {
 			const originalEnv = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
 			
+			// Mock browser environment for production test
+			Object.defineProperty(window, 'location', {
+				writable: true,
+				value: {
+					origin: 'https://fintechnick.com'
+				}
+			});
+			
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://fintechnick.com/auth');
 			
+			// Clean up
+			delete window.location;
+			process.env.NODE_ENV = originalEnv;
+		});
+
+		it('should return preview URI for preview deployments', () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'production';
+			
+			// Mock browser environment for preview deployment
+			Object.defineProperty(window, 'location', {
+				writable: true,
+				value: {
+					origin: 'https://ftn-preview.nick-brett1.workers.dev'
+				}
+			});
+			
+			const uri = getRedirectUri();
+			expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
+			
+			// Clean up
+			delete window.location;
 			process.env.NODE_ENV = originalEnv;
 		});
 	});
