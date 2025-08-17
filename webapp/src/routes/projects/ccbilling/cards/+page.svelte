@@ -1,5 +1,6 @@
 <script>
-	import PageLayout from '$lib/components/PageLayout.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 
 	const { data } = $props();
@@ -93,10 +94,10 @@
 	}
 </script>
 
-<PageLayout
-	title="Credit Card Management"
-	description="Manage your credit cards for billing cycle tracking"
->
+<Header />
+
+<div class="min-h-screen bg-base-900 text-white">
+	<div class="container mx-auto px-4 py-8">
 	<div class="mb-8">
 		<h1 class="text-4xl font-bold">Credit Cards</h1>
 	</div>
@@ -211,4 +212,7 @@
 			>
 		{/if}
 	</div>
-</PageLayout>
+	</div>
+</div>
+
+<Footer />

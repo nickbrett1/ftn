@@ -44,10 +44,10 @@
 	}
 </script>
 
-<PageLayout
-	title="Credit Card Billing Tool"
-	description="Track and categorize credit card statements"
->
+<Header />
+
+<div class="min-h-screen bg-base-900 text-white">
+	<div class="container mx-auto px-4 py-8">
 	<h1 class="text-4xl font-bold mb-8">Credit Card Billing Tool</h1>
 
 	<!-- Billing cycles list -->
@@ -109,6 +109,10 @@
 		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg"
 			>Manage Credit Cards</Button
 		>
-		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button>
+		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button
+		>
 	</div>
-</PageLayout>
+	</div>
+</div>
+
+<Footer />

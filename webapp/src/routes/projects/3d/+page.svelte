@@ -1,5 +1,6 @@
 <script>
 	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Heatmap3D from '$lib/components/Heatmap3D.svelte';
 </script>
 
@@ -26,4 +27,6 @@
 			</p>
 		</div>
 	</div>
+	
+	<Footer />
 </div>
