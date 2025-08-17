@@ -118,13 +118,42 @@ export async function GET({ request }) {
 		
 		// Add production environment if it exists
 		if (productionWorker) {
+			// Try to get the actual deployment time for production
+			let productionDeployedAt = productionWorker.created_on || new Date().toISOString();
+			
+			try {
+				// Get deployment information for the production worker
+				const productionDeployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/deployments`;
+				console.log('Deploys API: Getting production deployment info from:', productionDeployUrl);
+				
+				const productionDeployResponse = await fetch(productionDeployUrl, {
+					headers: {
+						'Authorization': `Bearer ${apiToken}`,
+						'Content-Type': 'application/json'
+					}
+				});
+
+				if (productionDeployResponse.ok) {
+					const productionDeployData = await productionDeployResponse.json();
+					if (productionDeployData.success && productionDeployData.result.length > 0) {
+						// Use the most recent deployment time
+						const latestDeployment = productionDeployData.result[0]; // Assuming sorted by most recent first
+						productionDeployedAt = latestDeployment.created_on || productionDeployedAt;
+						console.log('Deploys API: Found production deployment at:', productionDeployedAt);
+					}
+				}
+			} catch (error) {
+				console.log('Could not fetch production deployment info:', error.message);
+				// Continue with created_on as fallback
+			}
+			
 			deployments.push({
 				name: 'Production Environment',
 				status: 'active',
 				environment: 'production',
 				url: 'https://ftn-production.nick-brett1.workers.dev',
 				version: 'latest',
-				deployedAt: formatDate(productionWorker.created_on || new Date().toISOString())
+				deployedAt: formatDate(productionDeployedAt)
 			});
 		}
 		
