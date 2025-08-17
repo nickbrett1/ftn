@@ -24,12 +24,18 @@
 	import Login from '$lib/components/Login.svelte';
 
 	onMount(() => {
-		tippy('#deployments', {
+		const deploymentsTooltip = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
-		tippy('#login', {
+		const loginTooltip = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
+
+		// Clean up tooltips when component unmounts
+		return () => {
+			deploymentsTooltip.destroy();
+			loginTooltip.destroy();
+		};
 	});
 
 
