@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	
-	let { current = 'home', active = 'home', updateDebug = () => {}, popover = null } = $props();
+	let { current = 'home', active = 'home', updateDebug = () => {}, close = null, hide = () => {} } = $props();
 
 	onMount(() => {
 		console.log(`MobileNavigationItem: Component mounted for ${current}`);
@@ -80,10 +80,12 @@
 	const handleNavigationClick = () => {
 		// First handle the navigation
 		handleClick();
-		// Then close the popover using Melt UI's close action
-		if (popover) {
-			popover.close();
+		// Then close the popover using the close action
+		if (close) {
+			close();
 		}
+		// Also call the hide function to ensure the menu closes
+		hide();
 	};
 </script>
 
@@ -91,7 +93,7 @@
 	<button
 		type="button"
 		class="block w-full text-left py-3 px-2 {active == current ? 'text-green-400' : ''} cursor-pointer touch-manipulation select-none"
-		on:click={handleNavigationClick}
+		onclick={handleNavigationClick}
 		aria-label="Navigate to {current} section"
 		role="menuitem"
 	>
