@@ -151,7 +151,7 @@ export async function GET({ request }) {
 				const productionDeployResponse = await fetch(productionDeployUrl, {
 					headers: {
 						'Authorization': `Bearer ${apiToken}`,
-						'Content-Type': 'application/json`
+						'Content-Type': 'application/json'
 					}
 				});
 
