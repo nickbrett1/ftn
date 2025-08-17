@@ -10,7 +10,7 @@
 		"predev": "node scripts/copy-pdf-worker.js",
 		"dev": "npm run predev && doppler run -- vite dev",
 		"prebuild": "node scripts/copy-pdf-worker.js",
-		"build": "npm run prebuild && doppler run -- vite build",
+		"build": "doppler run -- vite build",
 		"postbuild": "node scripts/inject-git-info.js",
 		"check-pdf-worker": "node scripts/check-pdf-worker.js",
 		"preview": "doppler run -- vite preview",
