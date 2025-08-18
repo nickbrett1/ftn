@@ -1,6 +1,8 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import {
 		getAvailableIcons,
 		getIconDescription,
@@ -103,6 +105,8 @@
 		}
 	}
 </script>
+
+<Header />
 
 <PageLayout title="Budget Management" description="Manage your budget categories">
 	<div class="mb-8">
@@ -250,3 +254,5 @@
 		</div>
 	{/if}
 </PageLayout>
+
+<Footer />
