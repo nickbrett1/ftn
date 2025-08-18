@@ -220,7 +220,11 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			expect(container.textContent).toContain('Charges (2 of 4)');
 			
 			// Click clear filter button
-			const clearButton = container.querySelector('button');
+			const clearButton = container.querySelector('button[onclick*="clear"]') || 
+								Array.from(container.querySelectorAll('button')).find(btn => 
+									btn.textContent.includes('Clear Filter')
+								);
+			expect(clearButton).toBeTruthy();
 			fireEvent.click(clearButton);
 			await tick();
 

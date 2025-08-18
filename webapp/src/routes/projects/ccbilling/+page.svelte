@@ -1,17 +1,13 @@
 <script>
-	import PageLayout from '$lib/components/PageLayout.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	const { data } = $props();
 	
 	// Use synchronous destructuring to get data immediately
 	const { billingCycles = [], budgets = [], allocationTotals = [] } = data;
 
-	function formatLocalDate(dateString) {
-		if (!dateString) return '';
-		const [year, month, day] = dateString.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-	}
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	function formatCurrency(amount) {
 		if (amount == null) return '';
@@ -48,10 +44,10 @@
 	}
 </script>
 
-<PageLayout
-	title="Credit Card Billing Tool"
-	description="Track and categorize credit card statements"
->
+<Header />
+
+<div class="min-h-screen bg-base-900 text-white">
+	<div class="container mx-auto px-4 py-8">
 	<h1 class="text-4xl font-bold mb-8">Credit Card Billing Tool</h1>
 
 	<!-- Billing cycles list -->
@@ -72,7 +68,7 @@
 							<div class="flex justify-between items-start">
 								<div>
 									<h3 class="text-lg font-medium text-white">
-										{formatLocalDate(cycle.start_date)} - {formatLocalDate(cycle.end_date)}
+										{formatDate(cycle.start_date, { includeTime: false })} - {formatDate(cycle.end_date, { includeTime: false })}
 									</h3>
 									<div class="mt-2 text-sm text-gray-300 space-y-1">
 										{#each getTotalsForCycle(cycle.id) as [allocation, total]}
@@ -113,6 +109,10 @@
 		<Button href="/projects/ccbilling/cards" variant="secondary" size="lg"
 			>Manage Credit Cards</Button
 		>
-		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button>
+		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button
+		>
 	</div>
-</PageLayout>
+	</div>
+</div>
+
+<Footer />

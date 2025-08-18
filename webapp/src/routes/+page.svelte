@@ -55,6 +55,7 @@
 		name="description"
 		content="Nick Brett's personal website and portfolio, focused on financial technology."
 	/>
+
 </svelte:head>
 
 {#if BackgroundComponent}
@@ -66,10 +67,19 @@
 	<Header />
 	<Landing />
 </div>
-<div class="overflow-hidden flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl pt-8">
-	<About />
-	<Projects />
-	<Experience />
-	<Contact />
-</div>
+<div class="flex flex-col mx-auto gap-y-24 px-4 md:px-6 max-w-7xl pt-8">
+	<div id="about" class="section">
+		<About />
+	</div>
+	<div id="projects" class="section">
+		<Projects />
+	</div>
+	<div id="experience" class="section">
+		<Experience />
+	</div>
+	<div id="contact" class="section">
+		<Contact />
+	</div>
+	</div>
+
 <Footer />
