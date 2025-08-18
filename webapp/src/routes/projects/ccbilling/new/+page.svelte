@@ -1,4 +1,6 @@
 <script>
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { goto } from '$app/navigation';
 
@@ -66,8 +68,11 @@
 	<meta name="description" content="Create a new billing cycle for credit card statements" />
 </svelte:head>
 
-<div class="container mx-auto p-4 space-y-8 max-w-4xl">
-	<h2 class="text-3xl font-bold text-white mb-8">Create New Billing Cycle</h2>
+<Header />
+
+<div class="min-h-screen bg-base-900 text-white">
+	<div class="container mx-auto px-4 py-8 max-w-4xl">
+		<h2 class="text-3xl font-bold text-white mb-8">Create New Billing Cycle</h2>
 
 	<form
 		onsubmit={(e) => {
@@ -112,4 +117,7 @@
 	</form>
 
 	<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
+	</div>
 </div>
+
+<Footer />

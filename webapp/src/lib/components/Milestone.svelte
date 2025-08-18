@@ -2,8 +2,10 @@
 
 <script>
 	import MilestoneLogo from '$lib/components/MilestoneLogo.svelte';
+	import { onMount } from 'svelte';
 
 	let id = $props.id();
+	let milestoneElement;
 
 	let {
 		heading = '',
@@ -15,11 +17,35 @@
 		to = '',
 		logo = null
 	} = $props();
+
+	onMount(() => {
+		if (milestoneElement) {
+			const observer = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							entry.target.setAttribute('data-visible', 'true');
+						}
+					});
+				},
+				{
+					threshold: 0.1,
+					rootMargin: '0px 0px -50px 0px'
+				}
+			);
+
+			observer.observe(milestoneElement);
+
+			return () => {
+				observer.disconnect();
+			};
+		}
+	});
 </script>
 
 <div
-	scroll-btween={'milestone' + id}
-	data-filter="blur(|0:2 to 30:0 to 70:0 to 100:2|px) contrast(|0:0.1 to 30:1 to 70:1 to 100:0.1|)"
+	bind:this={milestoneElement}
+	id={'milestone' + id}
 	class="
 		milestone
 		relative
@@ -35,7 +61,15 @@
 		sm:before:w-1/2
 		sm:before:bg-gradient-to-r
 		sm:before:from-white/25
-		sm:before:to-transparent"
+		sm:before:to-transparent
+		opacity-0
+		transform
+		translate-y-8
+		transition-all
+		duration-700
+		ease-out
+		data-[visible=true]:opacity-100
+		data-[visible=true]:translate-y-0"
 >
 	<!-- Date -->
 	<span
@@ -90,7 +124,7 @@
 					</h3>
 				</div>
 				{#if logo}
-					<div class="max-h-22 max-w-22 min-h-20 min-w-20 grow">
+					<div class="max-h-22 max-w-22 min-h-20 min-w-20 flex-shrink-0 pr-2">
 						<MilestoneLogo data={logo} />
 					</div>
 				{/if}
