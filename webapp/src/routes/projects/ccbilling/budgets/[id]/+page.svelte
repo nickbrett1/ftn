@@ -3,6 +3,8 @@
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import {
 		getAvailableIcons,
 		getIconDescription,
@@ -233,6 +235,8 @@
 	}
 </script>
 
+<Header />
+
 <PageLayout
 	title="Budget Details - {budget?.name || 'Loading...'}"
 	description="Manage merchant associations for {budget?.name || 'this budget'}"
@@ -398,3 +402,5 @@
 		</div>
 	{/if}
 </PageLayout>
+
+<Footer />
