@@ -86,7 +86,7 @@ export async function POST(event) {
 				merchant: charge.merchant
 			},
 			{ status: 404 }
-		});
+		);
 	}
 
 	// Generate fresh Amazon order information
