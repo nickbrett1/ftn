@@ -1,5 +1,8 @@
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
-import { extractAmazonOrderId } from '$lib/server/amazon-orders-service.js';
+import {
+	extractAmazonOrderId,
+	extractAmazonOrderIdFromMultiLine
+} from '$lib/server/amazon-orders-service.js';
 
 /**
  * List all credit cards in the CCBILLING_DB.
@@ -445,7 +448,7 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 	return results.map((charge) => ({
 		...charge,
 		flight_details: charge.flight_details ? JSON.parse(charge.flight_details) : null,
-		amazon_order_id: charge.full_statement_text 
+		amazon_order_id: charge.full_statement_text
 			? extractAmazonOrderIdFromMultiLine(charge.full_statement_text)
 			: extractAmazonOrderId(charge.merchant)
 	}));
@@ -472,14 +475,14 @@ export async function getPayment(event, id) {
 		)
 		.bind(id)
 		.first();
-	
+
 	if (!result) return null;
-	
+
 	// Parse flight_details JSON and add Amazon order ID if applicable
 	return {
 		...result,
 		flight_details: result.flight_details ? JSON.parse(result.flight_details) : null,
-		amazon_order_id: result.full_statement_text 
+		amazon_order_id: result.full_statement_text
 			? extractAmazonOrderIdFromMultiLine(result.full_statement_text)
 			: extractAmazonOrderId(result.merchant)
 	};
