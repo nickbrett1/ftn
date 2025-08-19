@@ -11,15 +11,28 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { isUserAuthenticated } from '$lib/client/google-auth.js';
 
 	let isLoggedIn = $state(false);
+	
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
+	}
+
+	// Check authentication status
+	function checkAuthStatus() {
+		isLoggedIn = isUserAuthenticated();
 	}
 
 	import Login from '$lib/components/Login.svelte';
 
 	onMount(() => {
+		// Check initial auth status
+		checkAuthStatus();
+		
+		// Set up periodic auth status check (every 5 seconds)
+		const authCheckInterval = setInterval(checkAuthStatus, 5000);
+		
 		const deploymentsTooltips = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
@@ -29,6 +42,7 @@
 
 		// Clean up tooltips when component unmounts
 		return () => {
+			clearInterval(authCheckInterval);
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
 				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());

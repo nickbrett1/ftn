@@ -7,7 +7,8 @@
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
-		SitemapSolid
+		SitemapSolid,
+		CreditCardSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -20,6 +21,20 @@
 		<div class="md:p-6 text-pretty md:text-right text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code and writings.
 		</div>
+
+		<Card onclick={() => (window.location.href = '/projects/ccbilling')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow"
+						>Credit Card Billing Tool</span
+					>
+					<CreditCardSolid class="size-10" aria-label="Credit Card Billing Tool" />
+				</div>
+				<p class="grow pt-5">
+					A comprehensive tool for managing credit card statements, tracking charges, and organizing expenses across multiple cards and billing cycles.
+				</p>
+			</div>
+		</Card>
 
 		<Card onclick={() => (window.location.href = '/projects/dbt-duckdb')}>
 			<div class="flex flex-col grow">
@@ -71,14 +86,12 @@
 		<HoverFadeCard>
 			{#snippet initial()}
 				<div class="flex flex-col grow">
-					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">My Tools</span>
-						<ToolboxSolid class="size-10 " aria-label="Tools" />
-					</div>
-					<p class="grow pt-5">
-						Recommendations on the tools I use as an Engineer, Product Manager and Data Person.
-					</p>
+					<span class="text-xl font-bold leading-none pt-2 grow">My Tools</span>
+					<ToolboxSolid class="size-10 " aria-label="Tools" />
 				</div>
+				<p class="grow pt-5">
+					Recommendations on the tools I use as an Engineer, Product Manager and Data Person.
+				</p>
 			{/snippet}
 			{#snippet onHover()}
 				<div class="flex flex-col items-center grow">
@@ -88,19 +101,15 @@
 		</HoverFadeCard>
 		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/')}>
 			<div class="flex flex-col grow">
-				<div class="flex flex-row">
-					<span class="text-xl font-bold leading-none pt-2 grow">My Code</span>
-					<GithubBrands class="size-10" aria-label="Github" />
-				</div>
+				<span class="text-xl font-bold leading-none pt-2 grow">My Code</span>
+				<GithubBrands class="size-10" aria-label="Github" />
 				<p class="grow pt-5">Here you'll find all of my code. Feel free to embrace and extend.</p>
 			</div>
 		</Card>
 		<Card onclick={() => (window.location = 'https://medium.com/the-management-code')}>
 			<div class="flex flex-col grow">
-				<div class="flex flex-row">
-					<span class="text-xl font-bold leading-none pt-2 grow">My Writings</span>
-					<PenToSquareRegular class="size-10" aria-label="Blog" />
-				</div>
+				<span class="text-xl font-bold leading-none pt-2 grow">My Writings</span>
+				<PenToSquareRegular class="size-10" aria-label="Blog" />
 				<p class="grow pt-5">
 					A collection of articles focusing on things I've learned as a Software Engineering
 					Manager.
