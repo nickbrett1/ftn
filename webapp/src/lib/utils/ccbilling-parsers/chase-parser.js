@@ -337,6 +337,12 @@ export class ChaseParser extends BaseParser {
 				flightDetails = this.extractFlightDetails(lines, i);
 			}
 
+			// Check if this is an Amazon charge and capture full statement text
+			let fullStatementText = null;
+			if (this.isAmazonTransaction(merchant)) {
+				fullStatementText = this.extractFullStatementText(lines, i);
+			}
+
 			const charge = {
 				merchant,
 				amount,
@@ -345,7 +351,8 @@ export class ChaseParser extends BaseParser {
 				is_foreign_currency: isForeignTransaction,
 				foreign_currency_amount: foreignCurrencyAmount,
 				foreign_currency_type: foreignCurrencyType,
-				flight_details: flightDetails
+				flight_details: flightDetails,
+				full_statement_text: fullStatementText
 			};
 
 			charges.push(charge);
@@ -712,5 +719,77 @@ export class ChaseParser extends BaseParser {
 	findText(text, pattern) {
 		const match = text.match(pattern);
 		return match ? match[1] : null;
+	}
+
+	/**
+	 * Check if a transaction is an Amazon transaction
+	 * @param {string} merchant - Merchant name
+	 * @returns {boolean} - True if it's an Amazon transaction
+	 */
+	isAmazonTransaction(merchant) {
+		if (!merchant) return false;
+		
+		const merchantUpper = merchant.toUpperCase();
+		return merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN');
+	}
+
+	/**
+	 * Extract full statement text for Amazon transactions
+	 * This captures multiple lines to get the order ID information
+	 * @param {Array} lines - All lines from the statement
+	 * @param {number} currentIndex - Current line index
+	 * @returns {string|null} - Full statement text or null
+	 */
+	extractFullStatementText(lines, currentIndex) {
+		if (currentIndex >= lines.length) return null;
+
+		const currentLine = lines[currentIndex];
+		let fullText = currentLine;
+
+		// Look ahead for additional lines that might contain order ID information
+		// Check the next few lines for order ID patterns
+		for (let i = currentIndex + 1; i < Math.min(currentIndex + 5, lines.length); i++) {
+			const nextLine = lines[i];
+			
+			// Stop if we hit another transaction line (starts with date pattern)
+			if (nextLine.match(/^\d{2}\/\d{2}\s+/)) {
+				break;
+			}
+			
+			// Check if this line contains order ID information
+			if (this.containsOrderIdInfo(nextLine)) {
+				fullText += '\n' + nextLine;
+			}
+		}
+
+		return fullText;
+	}
+
+	/**
+	 * Check if a line contains order ID information
+	 * @param {string} line - Line to check
+	 * @returns {boolean} - True if line contains order ID info
+	 */
+	containsOrderIdInfo(line) {
+		if (!line) return false;
+		
+		const lineUpper = line.toUpperCase();
+		
+		// Look for order ID patterns
+		const orderIdPatterns = [
+			/ORDER NUMBER/i,
+			/ORDER ID/i,
+			/ORDER #/i,
+			/\d{3}-\d{7}-\d{7}/, // Standard Amazon order ID format
+			/\d{16}/, // Compact order ID format
+			/\d{10,}/ // Any long number sequence
+		];
+		
+		return orderIdPatterns.some(pattern => {
+			if (typeof pattern === 'string') {
+				return lineUpper.includes(pattern);
+			}
+			return pattern.test(line);
+		});
 	}
 }

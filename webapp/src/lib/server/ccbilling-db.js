@@ -388,7 +388,8 @@ export async function createPayment(
 	is_foreign_currency = false,
 	foreign_currency_amount = null,
 	foreign_currency_type = null,
-	flight_details = null
+	flight_details = null,
+	full_statement_text = null
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
@@ -398,7 +399,7 @@ export async function createPayment(
 
 	await db
 		.prepare(
-			'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+			'INSERT INTO payment (statement_id, merchant, merchant_normalized, merchant_details, amount, allocated_to, transaction_date, is_foreign_currency, foreign_currency_amount, foreign_currency_type, flight_details, full_statement_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 		)
 		.bind(
 			statement_id,
@@ -411,7 +412,8 @@ export async function createPayment(
 			is_foreign_currency,
 			foreign_currency_amount,
 			foreign_currency_type,
-			flight_details ? JSON.stringify(flight_details) : null
+			flight_details ? JSON.stringify(flight_details) : null,
+			full_statement_text
 		)
 		.run();
 }
@@ -428,7 +430,7 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 	const { results } = await db
 		.prepare(
 			`
-			SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4
+			SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.full_statement_text, p.created_at, s.credit_card_id, c.name as card_name, c.last4
 			FROM payment p
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
@@ -443,7 +445,9 @@ export async function listChargesForCycle(event, billing_cycle_id) {
 	return results.map((charge) => ({
 		...charge,
 		flight_details: charge.flight_details ? JSON.parse(charge.flight_details) : null,
-		amazon_order_id: extractAmazonOrderId(charge.merchant)
+		amazon_order_id: charge.full_statement_text 
+			? extractAmazonOrderIdFromMultiLine(charge.full_statement_text)
+			: extractAmazonOrderId(charge.merchant)
 	}));
 }
 
@@ -459,7 +463,7 @@ export async function getPayment(event, id) {
 	const result = await db
 		.prepare(
 			`
-			SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.created_at, s.credit_card_id, c.name as card_name, c.last4
+			SELECT p.id, p.statement_id, p.merchant, p.merchant_normalized, p.amount, p.allocated_to, p.transaction_date, p.is_foreign_currency, p.foreign_currency_amount, p.foreign_currency_type, p.flight_details, p.full_statement_text, p.created_at, s.credit_card_id, c.name as card_name, c.last4
 			FROM payment p
 			JOIN statement s ON p.statement_id = s.id
 			JOIN credit_card c ON s.credit_card_id = c.id
@@ -475,7 +479,9 @@ export async function getPayment(event, id) {
 	return {
 		...result,
 		flight_details: result.flight_details ? JSON.parse(result.flight_details) : null,
-		amazon_order_id: extractAmazonOrderId(result.merchant)
+		amazon_order_id: result.full_statement_text 
+			? extractAmazonOrderIdFromMultiLine(result.full_statement_text)
+			: extractAmazonOrderId(result.merchant)
 	};
 }
 
