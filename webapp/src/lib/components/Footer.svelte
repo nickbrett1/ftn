@@ -15,10 +15,6 @@
 	let isLoggedIn = $state(false);
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
-		if (loggedIn) {
-			// Redirect to credit card billing tool after successful login
-			goto('/projects/ccbilling');
-		}
 	}
 
 	import Login from '$lib/components/Login.svelte';
@@ -35,26 +31,36 @@
 		return () => {
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
-				deploymentsTooltips.forEach(tooltip => tooltip.destroy());
+				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
 			} else {
 				deploymentsTooltips.destroy();
 			}
-			
+
 			if (Array.isArray(loginTooltips)) {
-				loginTooltips.forEach(tooltip => tooltip.destroy());
+				loginTooltips.forEach((tooltip) => tooltip.destroy());
 			} else {
 				loginTooltips.destroy();
 			}
 		};
 	});
 
-
+	function handleCreditCardClick() {
+		if (isLoggedIn) {
+			// User is already logged in, go directly to billing page
+			goto('/projects/ccbilling');
+		} else {
+			// User is not logged in, show login modal
+			// The Login component will handle this
+		}
+	}
 </script>
 
 <footer class="left-0 w-full overflow-hidden py-24">
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
-		<div class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-8 justify-between items-center">
+		<div
+			class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-8 justify-between items-center"
+		>
 			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
 				<button
@@ -66,15 +72,25 @@
 				>
 					🚀
 				</button>
-				
-				<!-- Credit Card Billing Tool login icon -->
-				<Login loginCallback={loginStateUpdated}>
-					{#if !isLoggedIn}
-						<CreditCardSolid id="login" class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]" />
-					{:else}
-						<CreditCardSolid class="text-green-400 size-8 md:size-[48px]" title="Credit Card Billing Tool" />
-					{/if}
-				</Login>
+
+				<!-- Credit Card Billing Tool icon -->
+				{#if isLoggedIn}
+					<!-- User is logged in, show clickable icon that goes directly to billing -->
+					<CreditCardSolid
+						id="login"
+						onclick={handleCreditCardClick}
+						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
+						title="Credit Card Billing Tool"
+					/>
+				{:else}
+					<!-- User is not logged in, show login modal -->
+					<Login loginCallback={loginStateUpdated}>
+						<CreditCardSolid
+							id="login"
+							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+						/>
+					</Login>
+				{/if}
 			</div>
 
 			<div class="flex gap-4">
@@ -98,7 +114,7 @@
 				</a>
 			</div>
 		</div>
-		
+
 		<!-- Git info at bottom of footer -->
 		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
 			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: preview
