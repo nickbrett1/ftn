@@ -12,6 +12,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isUserAuthenticated } from '$lib/client/google-auth.js';
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	let isLoggedIn = $state(false);
 
@@ -130,6 +131,11 @@
 		<!-- Git info at bottom of footer -->
 		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
 			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: preview
+		</div>
+		
+		<!-- Build time info -->
+		<div class="mt-2 text-xs text-white/40 text-center">
+			Built: {formatDate(__BUILD_TIME__, { includeTime: true, includeTimezone: true })}
 		</div>
 	</div>
 </footer>

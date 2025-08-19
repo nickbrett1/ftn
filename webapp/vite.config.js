@@ -12,10 +12,11 @@ function getGitInfo() {
 	try {
 		const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
 		const branchName = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
-		return { commitHash, branchName };
+		const buildTime = new Date().toISOString();
+		return { commitHash, branchName, buildTime };
 	} catch (error) {
 		console.warn('Could not get git info:', error.message);
-		return { commitHash: 'unknown', branchName: 'unknown' };
+		return { commitHash: 'unknown', branchName: 'unknown', buildTime: new Date().toISOString() };
 	}
 }
 
@@ -108,7 +109,8 @@ export default defineConfig(({ command, mode }) => {
 		},
 		define: {
 			__GIT_COMMIT__: JSON.stringify(gitInfo.commitHash),
-			__GIT_BRANCH__: JSON.stringify(gitInfo.branchName)
+			__GIT_BRANCH__: JSON.stringify(gitInfo.branchName),
+			__BUILD_TIME__: JSON.stringify(gitInfo.buildTime)
 		}
 	};
 });
