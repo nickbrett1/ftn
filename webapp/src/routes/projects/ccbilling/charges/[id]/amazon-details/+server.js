@@ -3,7 +3,7 @@ import { requireUser } from '$lib/server/require-user.js';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import {
 	extractAmazonOrderId,
-	fetchAmazonOrderDetails,
+	getAmazonOrderInfo,
 	getCachedAmazonOrder,
 	cacheAmazonOrder,
 	categorizeAmazonItems
@@ -11,7 +11,7 @@ import {
 
 /**
  * GET /projects/ccbilling/charges/[id]/amazon-details
- * Fetch Amazon order details for a specific charge
+ * Get Amazon order information and click-out links for a specific charge
  */
 export async function GET(event) {
 	const authResult = await requireUser(event);
@@ -43,34 +43,24 @@ export async function GET(event) {
 		);
 	}
 
-	// Check cache first
-	let orderDetails = await getCachedAmazonOrder(event, orderId);
+	// Check cache first for any existing data
+	let cachedOrder = await getCachedAmazonOrder(event, orderId);
+	
+	// Generate Amazon order information with click-out links
+	const orderInfo = getAmazonOrderInfo(orderId);
 
-	if (!orderDetails) {
-		// Fetch from Amazon Orders Worker
-		orderDetails = await fetchAmazonOrderDetails(event, orderId);
-
-		// Cache the result if successful
-		if (orderDetails && !orderDetails.error) {
-			await cacheAmazonOrder(event, orderDetails);
-		}
+	// If we have cached data, merge it with the order info
+	if (cachedOrder) {
+		orderInfo.cached_data = cachedOrder;
+		orderInfo.cache_source = 'database';
+	} else {
+		orderInfo.cache_source = 'none';
 	}
 
-	if (!orderDetails) {
-		return json(
-			{
-				error: 'Failed to fetch order details',
-				order_id: orderId,
-				merchant: charge.merchant
-			},
-			{ status: 502 }
-		);
-	}
-
-	// Add category suggestions if we have items
+	// Add category suggestions if we have cached items
 	let categories = {};
-	if (orderDetails.items && orderDetails.items.length > 0) {
-		categories = categorizeAmazonItems(orderDetails.items);
+	if (cachedOrder?.items && cachedOrder.items.length > 0) {
+		categories = categorizeAmazonItems(cachedOrder.items);
 	}
 
 	return json({
@@ -83,15 +73,15 @@ export async function GET(event) {
 			allocated_to: charge.allocated_to
 		},
 		order_id: orderId,
-		order_details: orderDetails,
+		order_info: orderInfo,
 		suggested_categories: categories,
-		cache_source: orderDetails.updated_at ? 'database' : 'worker'
+		message: 'Click the Amazon order link above to view your order details on Amazon'
 	});
 }
 
 /**
  * POST /projects/ccbilling/charges/[id]/amazon-details
- * Manually trigger a refresh of Amazon order details
+ * Manually trigger a refresh of Amazon order information
  */
 export async function POST(event) {
 	const authResult = await requireUser(event);
@@ -102,39 +92,32 @@ export async function POST(event) {
 		return json({ error: 'Invalid charge ID' }, { status: 400 });
 	}
 
+	// Get the charge from database
 	const charge = await getPayment(event, chargeId);
 	if (!charge) {
 		return json({ error: 'Charge not found' }, { status: 404 });
 	}
 
+	// Extract Amazon order ID from merchant string
 	const orderId = extractAmazonOrderId(charge.merchant);
 	if (!orderId) {
-		return json({ error: 'No Amazon order ID found' }, { status: 404 });
+		return json(
+			{
+				error: 'No Amazon order ID found',
+				merchant: charge.merchant
+			},
+			{ status: 404 }
+		);
 	}
 
-	// Force refresh from worker (bypass cache)
-	const orderDetails = await fetchAmazonOrderDetails(event, orderId);
-
-	if (!orderDetails) {
-		return json({ error: 'Failed to fetch order details' }, { status: 502 });
-	}
-
-	// Update cache
-	if (!orderDetails.error) {
-		await cacheAmazonOrder(event, orderDetails);
-	}
-
-	// Add category suggestions
-	let categories = {};
-	if (orderDetails.items && orderDetails.items.length > 0) {
-		categories = categorizeAmazonItems(orderDetails.items);
-	}
+	// Generate fresh Amazon order information
+	const orderInfo = getAmazonOrderInfo(orderId);
+	orderInfo.refreshed_at = new Date().toISOString();
 
 	return json({
 		success: true,
+		message: 'Amazon order information refreshed',
 		order_id: orderId,
-		order_details: orderDetails,
-		suggested_categories: categories,
-		refreshed: true
+		order_info: orderInfo
 	});
 }

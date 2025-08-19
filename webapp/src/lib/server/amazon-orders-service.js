@@ -1,7 +1,6 @@
 /**
  * Amazon Orders Service
- * Integrates with the Amazon Orders Worker to fetch detailed order information
- * for Amazon charges found in credit card statements
+ * Provides Amazon order ID extraction and generates click-out links to view order data on Amazon
  */
 
 /**
@@ -79,127 +78,69 @@ export function extractAmazonOrderIdFromMultiLine(statementText) {
 }
 
 /**
- * Fetch order details from Amazon Orders Worker
- * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
+ * Generate Amazon order URL for click-out to view order data
  * @param {string} orderId - Amazon order ID
- * @returns {Promise<Object|null>} - Order details or null
+ * @returns {string} - Amazon order URL
  */
-export async function fetchAmazonOrderDetails(event, orderId) {
-	const env = event.platform?.env;
-	if (!env) return null;
-
-	// Get the Amazon Orders Worker URL from environment
-	const workerUrl = env.AMAZON_ORDERS_WORKER_URL || 'http://localhost:8787';
-
-	try {
-		const response = await fetch(`${workerUrl}/order/${orderId}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				// Add authentication if needed
-				...(env.AMAZON_ORDERS_API_KEY
-					? {
-							Authorization: `Bearer ${env.AMAZON_ORDERS_API_KEY}`
-						}
-					: {})
-			}
-		});
-
-		if (!response.ok) {
-			console.error(`Failed to fetch Amazon order ${orderId}: ${response.status}`);
-			return null;
-		}
-
-		const data = await response.json();
-		if (data.success && data.data) {
-			return data.data;
-		}
-
-		return null;
-	} catch (error) {
-		console.error('Error fetching Amazon order details:', error);
-		return null;
-	}
+export function generateAmazonOrderUrl(orderId) {
+	if (!orderId) return null;
+	
+	// Standard Amazon order URL format
+	return `https://www.amazon.com/gp/your-account/order-details?orderID=${orderId}`;
 }
 
 /**
- * Process multiple Amazon charges and fetch their order details
- * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
- * @param {Array} charges - Array of charge objects with merchant strings
- * @returns {Promise<Array>} - Charges enhanced with order details
+ * Generate Amazon order search URL as fallback
+ * @param {string} orderId - Amazon order ID
+ * @returns {string} - Amazon search URL
  */
-export async function enrichAmazonCharges(event, charges) {
+export function generateAmazonSearchUrl(orderId) {
+	if (!orderId) return null;
+	
+	// Amazon search URL as fallback
+	return `https://www.amazon.com/s?k=${encodeURIComponent(orderId)}`;
+}
+
+/**
+ * Get Amazon order information for display
+ * @param {string} orderId - Amazon order ID
+ * @returns {Object} - Order information with click-out links
+ */
+export function getAmazonOrderInfo(orderId) {
+	if (!orderId) return null;
+
+	return {
+		order_id: orderId,
+		order_url: generateAmazonOrderUrl(orderId),
+		search_url: generateAmazonSearchUrl(orderId),
+		message: 'Click the link above to view your order details on Amazon',
+		timestamp: new Date().toISOString()
+	};
+}
+
+/**
+ * Process multiple Amazon charges and generate order links
+ * @param {Array} charges - Array of charge objects with merchant strings
+ * @returns {Array} - Charges enhanced with Amazon order information
+ */
+export function enrichAmazonCharges(charges) {
 	if (!charges || charges.length === 0) return charges;
 
-	const env = event.platform?.env;
-	if (!env) return charges;
-
-	const workerUrl = env.AMAZON_ORDERS_WORKER_URL || 'http://localhost:8787';
-
 	// Extract Amazon charges and their order IDs
-	const amazonCharges = charges
-		.map((charge, index) => ({
-			...charge,
-			originalIndex: index,
-			orderId: extractAmazonOrderId(charge.merchant)
-		}))
-		.filter((charge) => charge.orderId);
-
-	if (amazonCharges.length === 0) return charges;
-
-	try {
-		// Batch request to the worker
-		const response = await fetch(`${workerUrl}/bulk`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				...(env.AMAZON_ORDERS_API_KEY
-					? {
-							Authorization: `Bearer ${env.AMAZON_ORDERS_API_KEY}`
-						}
-					: {})
-			},
-			body: JSON.stringify({
-				merchants: amazonCharges.map((c) => c.merchant),
-				fetch_details: true
-			})
-		});
-
-		if (!response.ok) {
-			console.error(`Failed to fetch Amazon orders in bulk: ${response.status}`);
-			return charges;
+	return charges.map(charge => {
+		const orderId = extractAmazonOrderId(charge.merchant);
+		if (orderId) {
+			return {
+				...charge,
+				amazon_order: getAmazonOrderInfo(orderId)
+			};
 		}
-
-		const data = await response.json();
-		if (!data.success || !data.results) return charges;
-
-		// Create a map of enhanced charges
-		const enhancedMap = new Map();
-		data.results.forEach((result, i) => {
-			if (result.order_details && !result.order_details.error) {
-				const originalCharge = amazonCharges[i];
-				enhancedMap.set(originalCharge.originalIndex, {
-					...originalCharge,
-					amazon_order: result.order_details
-				});
-			}
-		});
-
-		// Merge enhanced data back into original charges array
-		return charges.map((charge, index) => {
-			if (enhancedMap.has(index)) {
-				return enhancedMap.get(index);
-			}
-			return charge;
-		});
-	} catch (error) {
-		console.error('Error enriching Amazon charges:', error);
-		return charges;
-	}
+		return charge;
+	});
 }
 
 /**
- * Get cached Amazon order details from D1 database
+ * Get cached Amazon order details from D1 database (if any exist)
  * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
  * @param {string} orderId - Amazon order ID
  * @returns {Promise<Object|null>} - Cached order details or null
@@ -235,7 +176,7 @@ export async function getCachedAmazonOrder(event, orderId) {
 }
 
 /**
- * Save Amazon order details to D1 database cache
+ * Save Amazon order details to D1 database cache (if needed for future use)
  * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
  * @param {Object} orderData - Order details to cache
  * @returns {Promise<void>}
