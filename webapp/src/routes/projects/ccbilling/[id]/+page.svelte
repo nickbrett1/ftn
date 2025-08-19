@@ -133,7 +133,7 @@
 			window.open(createAmazonOrderLink(charge.amazon_order_id), '_blank', 'noopener,noreferrer');
 		} else {
 			// External order - show popup
-			showExternalOrderPopup(charge);
+			openExternalOrderPopup(charge);
 		}
 	}
 
@@ -142,7 +142,7 @@
 	let externalOrderData = $state(null);
 
 	// Function to show external order popup
-	function showExternalOrderPopup(charge) {
+	function openExternalOrderPopup(charge) {
 		externalOrderData = {
 			orderId: charge.amazon_order_id,
 			merchant: charge.merchant_normalized || charge.merchant,
