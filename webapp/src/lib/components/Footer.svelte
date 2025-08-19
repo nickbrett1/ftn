@@ -131,5 +131,10 @@
 		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
 			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: preview
 		</div>
+		
+		<!-- Build time info -->
+		<div class="mt-2 text-xs text-white/40 text-center">
+			Built: {new Date(__BUILD_TIME__).toLocaleString()}
+		</div>
 	</div>
 </footer>
