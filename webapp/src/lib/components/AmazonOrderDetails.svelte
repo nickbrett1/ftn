@@ -42,24 +42,52 @@
 		checkingAccessibility = true;
 		
 		try {
-			// Make a HEAD request to check if the order page is accessible
-			// Amazon will redirect to login/order listing page if user can't access the specific order
+			// Make a GET request to check the actual page content
+			// Amazon will serve the order history page if user can't access the specific order
 			const response = await fetch(orderUrl, {
-				method: 'HEAD',
+				method: 'GET',
 				credentials: 'include', // Include cookies for authentication
-				redirect: 'manual' // Don't follow redirects automatically
 			});
 			
-			// If we get a redirect (3xx status), the order is not accessible
-			// If we get 200, the order page is accessible
-			// If we get 401/403, the order is not accessible
-			const isAccessible = response.status === 200;
-			
-			if (!isAccessible) {
+			if (!response.ok) {
+				// If we get an error status, the order is not accessible
 				showAccessibilityPopup = true;
+				return false;
 			}
 			
-			return isAccessible;
+			// Get the response text to check the content
+			const html = await response.text();
+			
+			// Debug logging to help understand what we're getting
+			console.log('Amazon response URL:', response.url);
+			console.log('Amazon response status:', response.status);
+			console.log('Amazon response content length:', html.length);
+			console.log('Amazon response contains order-details:', html.includes('order-details'));
+			console.log('Amazon response contains order-history:', html.includes('order-history'));
+			console.log('Amazon response contains css/order-history:', html.includes('css/order-history'));
+			
+			// Check if we're on the specific order page or redirected to order history
+			// The specific order page contains order details, while the order history page has different content
+			const hasOrderSpecificContent = html.includes('order-details') || 
+				html.includes('orderID=') ||
+				html.includes('order-detail') ||
+				html.includes('order-details-container');
+			
+			const isGenericListingPage = html.includes('order-history') || 
+				html.includes('css/order-history') ||
+				html.includes('Your Orders') ||
+				html.includes('order-history-table') ||
+				html.includes('order-history-container') ||
+				html.includes('order-history-page');
+			
+			const isSpecificOrderPage = hasOrderSpecificContent && !isGenericListingPage;
+			
+			if (!isSpecificOrderPage) {
+				showAccessibilityPopup = true;
+				return false;
+			}
+			
+			return true;
 		} catch (err) {
 			// If there's an error (like CORS), assume it's not accessible
 			showAccessibilityPopup = true;
