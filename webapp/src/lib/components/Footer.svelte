@@ -14,25 +14,15 @@
 	import { isUserAuthenticated } from '$lib/client/google-auth.js';
 
 	let isLoggedIn = $state(false);
-	let debugInfo = $state('');
-	let clickFeedback = $state('');
-	
+
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
-		updateDebugInfo();
 	}
 
 	// Check authentication status
 	function checkAuthStatus() {
 		const authStatus = isUserAuthenticated();
 		isLoggedIn = authStatus;
-		updateDebugInfo();
-	}
-
-	function updateDebugInfo() {
-		const cookies = document.cookie;
-		const authMatch = cookies.match(/(^| )auth=([^;]+)/);
-		debugInfo = `Debug: isLoggedIn=${isLoggedIn}, cookies="${cookies}", auth match=${authMatch ? authMatch[2] : 'none'}`;
 	}
 
 	import Login from '$lib/components/Login.svelte';
@@ -40,10 +30,10 @@
 	onMount(() => {
 		// Check initial auth status with a small delay to ensure cookie is set
 		setTimeout(checkAuthStatus, 100);
-		
+
 		// Set up periodic auth status check (every 5 seconds)
 		const authCheckInterval = setInterval(checkAuthStatus, 5000);
-		
+
 		const deploymentsTooltips = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
@@ -72,11 +62,9 @@
 	function handleCreditCardClick() {
 		if (isLoggedIn) {
 			// User is already logged in, go directly to billing page
-			clickFeedback = 'Redirecting to credit card billing tool...';
-			setTimeout(() => goto('/projects/ccbilling'), 500);
+			goto('/projects/ccbilling');
 		} else {
 			// User is not logged in, show login modal
-			clickFeedback = 'User not logged in, showing login modal...';
 		}
 	}
 </script>
@@ -84,24 +72,7 @@
 <footer class="left-0 w-full overflow-hidden py-24">
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
-		
-		<!-- Debug Information -->
-		<div class="mb-4 p-3 bg-gray-800 border border-gray-600 rounded text-xs text-gray-300 font-mono">
-			{debugInfo}
-		</div>
-		
-		<!-- Authentication Status -->
-		<div class="mb-4 p-3 {isLoggedIn ? 'bg-green-800 border-green-600 text-green-200' : 'bg-red-800 border-red-600 text-red-200'} border rounded text-sm font-medium">
-			🔐 Authentication Status: {isLoggedIn ? 'LOGGED IN' : 'NOT LOGGED IN'}
-		</div>
-		
-		<!-- Click Feedback -->
-		{#if clickFeedback}
-			<div class="mb-4 p-3 bg-blue-800 border border-blue-600 rounded text-sm text-blue-200">
-				{clickFeedback}
-			</div>
-		{/if}
-		
+
 		<div
 			class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-8 justify-between items-center"
 		>
