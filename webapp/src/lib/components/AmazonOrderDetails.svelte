@@ -13,6 +13,7 @@
 	let showAccessibilityPopup = false;
 	let checkingAccessibility = false;
 	let debugInfo = null;
+	let lastCheckResult = null;
 
 	// Check if this is an Amazon charge
 	$: isAmazon =
@@ -40,6 +41,9 @@
 	async function checkOrderAccessibility(orderUrl) {
 		if (!orderUrl) return false;
 		
+		// Simple alert to confirm function is being called
+		alert('🔍 Starting accessibility check for: ' + orderUrl);
+		
 		checkingAccessibility = true;
 		
 		try {
@@ -53,6 +57,7 @@
 			if (!response.ok) {
 				// If we get an error status, the order is not accessible
 				showAccessibilityPopup = true;
+				lastCheckResult = 'NOT_ACCESSIBLE';
 				return false;
 			}
 			
@@ -95,13 +100,16 @@
 			
 			if (!isSpecificOrderPage) {
 				showAccessibilityPopup = true;
-				return false;
+				lastCheckResult = 'NOT_ACCESSIBLE';
+			} else {
+				lastCheckResult = 'ACCESSIBLE';
 			}
 			
-			return true;
+			return isSpecificOrderPage;
 		} catch (err) {
 			// If there's an error (like CORS), assume it's not accessible
 			showAccessibilityPopup = true;
+			lastCheckResult = 'NOT_ACCESSIBLE';
 			return false;
 		} finally {
 			checkingAccessibility = false;
@@ -257,6 +265,21 @@
 								🔍 Test Accessibility Check
 							</button>
 						</div>
+						
+						<!-- Simple Status Display -->
+						<div class="debug-status">
+							<strong>Last Check Result:</strong> 
+							{#if checkingAccessibility}
+								<span class="status-checking">🔍 Checking...</span>
+							{:else if lastCheckResult === 'ACCESSIBLE'}
+								<span class="status-accessible">✅ Accessible</span>
+							{:else if lastCheckResult === 'NOT_ACCESSIBLE'}
+								<span class="status-not-accessible">❌ Not Accessible</span>
+							{:else}
+								<span class="status-not-checked">⏳ Not checked yet</span>
+							{/if}
+						</div>
+						
 						<p class="link-description">
 							{orderInfo.order_info.message || 'Click the link above to view your order details on Amazon'}
 						</p>
@@ -829,6 +852,47 @@
 	.debug-check-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	.debug-status {
+		margin: 1rem 0;
+		padding: 0.75rem;
+		background: #f8f9fa;
+		border: 1px solid #dee2e6;
+		border-radius: 6px;
+		font-size: 0.875rem;
+	}
+
+	.status-checking {
+		color: #856404;
+		background: #fff3cd;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-weight: bold;
+	}
+
+	.status-accessible {
+		color: #155724;
+		background: #d4edda;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-weight: bold;
+	}
+
+	.status-not-accessible {
+		color: #721c24;
+		background: #f8d7da;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-weight: bold;
+	}
+
+	.status-not-checked {
+		color: #6c757d;
+		background: #e9ecef;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-weight: bold;
 	}
 
 	/* Dark mode support for debug panel */
