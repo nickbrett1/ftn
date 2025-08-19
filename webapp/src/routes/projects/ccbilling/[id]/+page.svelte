@@ -71,49 +71,27 @@
 	async function checkOrderAccessibility(orderUrl) {
 		if (!orderUrl) return false;
 		
+		checkingAmazonAccessibility = true;
+		
 		try {
-			// Make a GET request to check the actual page content
-			// Amazon will serve the order history page if user can't access the specific order
+			// Make a HEAD request to check if we get redirected
+			// Amazon will redirect to order history page if user can't access the specific order
 			const response = await fetch(orderUrl, {
-				method: 'GET',
+				method: 'HEAD',
 				credentials: 'include', // Include cookies for authentication
+				redirect: 'manual' // Don't follow redirects automatically
 			});
 			
-			if (!response.ok) {
-				// If we get an error status, the order is not accessible
-				return false;
-			}
+			// If we get a redirect (3xx status), the order is not accessible
+			// If we get 200, the order page is accessible
+			const isAccessible = response.status === 200;
 			
-			// Get the response text to check the content
-			const html = await response.text();
-			
-			// Debug logging to help understand what we're getting
-			console.log('Amazon response URL:', response.url);
-			console.log('Amazon response status:', response.status);
-			console.log('Amazon response content length:', html.length);
-			console.log('Amazon response contains order-details:', html.includes('order-details'));
-			console.log('Amazon response contains order-history:', html.includes('order-history'));
-			console.log('Amazon response contains css/order-history:', html.includes('css/order-history'));
-			
-			// Check if we're on the specific order page or redirected to order history
-			const hasOrderSpecificContent = html.includes('order-details') || 
-				html.includes('orderID=') ||
-				html.includes('order-detail') ||
-				html.includes('order-details-container');
-			
-			const isGenericListingPage = html.includes('order-history') || 
-				html.includes('css/order-history') ||
-				html.includes('Your Orders') ||
-				html.includes('order-history-table') ||
-				html.includes('order-history-container') ||
-				html.includes('order-history-page');
-			
-			const isSpecificOrderPage = hasOrderSpecificContent && !isGenericListingPage;
-			
-			return isSpecificOrderPage;
+			return isAccessible;
 		} catch (err) {
 			// If there's an error (like CORS), assume it's not accessible
 			return false;
+		} finally {
+			checkingAmazonAccessibility = false;
 		}
 	}
 
@@ -193,6 +171,7 @@
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
+	let checkingAmazonAccessibility = $state(false);
 
 	// File upload state
 	let showUploadForm = $state(false);
@@ -1241,10 +1220,9 @@
 											{merchantInfo.merchant} (
 												<a 
 													href={createAmazonOrderLink(charge.amazon_order_id)}
-													target="_blank"
-													rel="noopener noreferrer"
 													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
 													title="View Amazon order details"
+													onclick={(e) => handleAmazonLinkClick(e, createAmazonOrderLink(charge.amazon_order_id))}
 												>
 													{merchantInfo.amazonOrderId}
 												</a>
@@ -1369,12 +1347,14 @@
 											{merchantInfo.merchant} (
 												<a 
 													href={createAmazonOrderLink(charge.amazon_order_id)}
-													target="_blank"
-													rel="noopener noreferrer"
 													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
 													title="View Amazon order details"
+													onclick={(e) => handleAmazonLinkClick(e, createAmazonOrderLink(charge.amazon_order_id))}
 												>
 													{merchantInfo.amazonOrderId}
+													{#if checkingAmazonAccessibility}
+														<span class="ml-1 text-yellow-400">🔍</span>
+													{/if}
 												</a>
 											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
