@@ -62,6 +62,53 @@
 		return merchantName;
 	}
 
+	// Function to create clickable Amazon order link
+	function createAmazonOrderLink(orderId) {
+		return `https://www.amazon.com/gp/aw/ya?ac=od&ref=ppx_pop_mob_b_order_details&oid=${orderId}`;
+	}
+
+	// Function to format merchant name with clickable Amazon order links
+	function formatMerchantNameWithLinks(charge) {
+		// Use normalized merchant name for consistent display
+		const merchantName = charge.merchant_normalized || charge.merchant;
+
+		// Check if this is an Amazon charge with order ID
+		if (charge.amazon_order_id) {
+			return {
+				merchant: merchantName,
+				amazonOrderId: charge.amazon_order_id,
+				hasAmazonOrder: true
+			};
+		}
+
+		// Check for flight details
+		if (charge.flight_details) {
+			const flight = charge.flight_details;
+			const airports = [];
+
+			if (flight.departure_airport) {
+				airports.push(flight.departure_airport);
+			}
+			if (flight.arrival_airport) {
+				airports.push(flight.arrival_airport);
+			}
+
+			if (airports.length > 0) {
+				return {
+					merchant: merchantName,
+					flightDetails: airports.join(', '),
+					hasFlightDetails: true
+				};
+			}
+		}
+
+		return {
+			merchant: merchantName,
+			hasAmazonOrder: false,
+			hasFlightDetails: false
+		};
+	}
+
 	// Function to format foreign currency information
 	function formatForeignCurrency(charge) {
 		if (
@@ -1122,12 +1169,25 @@
 												/>
 											</svg>
 										</button>
-										{#if charge.flight_details}
-											✈️ {formatMerchantName(charge)}
+										{@const merchantInfo = formatMerchantNameWithLinks(charge)}
+										{#if merchantInfo.hasFlightDetails}
+											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
+										{:else if merchantInfo.hasAmazonOrder}
+											{merchantInfo.merchant} (
+												<a 
+													href={createAmazonOrderLink(merchantInfo.amazonOrderId)}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
+													title="View Amazon order details"
+												>
+													{merchantInfo.amazonOrderId}
+												</a>
+											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+											{merchantInfo.merchant} ({formatForeignCurrency(charge)})
 										{:else}
-											{formatMerchantName(charge)}
+											{merchantInfo.merchant}
 										{/if}
 									</div>
 									<div class="text-gray-400 text-sm mt-1 flex items-center gap-2">
@@ -1237,12 +1297,25 @@
 												/>
 											</svg>
 										</button>
-										{#if charge.flight_details}
-											✈️ {formatMerchantName(charge)}
+										{@const merchantInfo = formatMerchantNameWithLinks(charge)}
+										{#if merchantInfo.hasFlightDetails}
+											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
+										{:else if merchantInfo.hasAmazonOrder}
+											{merchantInfo.merchant} (
+												<a 
+													href={createAmazonOrderLink(merchantInfo.amazonOrderId)}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
+													title="View Amazon order details"
+												>
+													{merchantInfo.amazonOrderId}
+												</a>
+											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
-											{formatMerchantName(charge)} ({formatForeignCurrency(charge)})
+											{merchantInfo.merchant} ({formatForeignCurrency(charge)})
 										{:else}
-											{formatMerchantName(charge)}
+											{merchantInfo.merchant}
 										{/if}
 									</td>
 									<td class="text-gray-300 text-sm py-2">
