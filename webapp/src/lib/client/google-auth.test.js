@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initiateGoogleAuth, getRedirectUri } from './google-auth.js';
+import { initiateGoogleAuth, getRedirectUri, isUserAuthenticated } from './google-auth.js';
 
 // Mock SvelteKit navigation
 vi.mock('$app/navigation', () => ({
@@ -84,6 +84,44 @@ describe('Google Auth Utils', () => {
 				value: originalLocation
 			});
 			process.env.NODE_ENV = originalEnv;
+		});
+	});
+
+	describe('isUserAuthenticated', () => {
+		it('should return true when auth cookie is present and valid', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=some-valid-token'
+			});
+
+			expect(isUserAuthenticated()).toBe(true);
+		});
+
+		it('should return false when auth cookie is deleted', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=deleted'
+			});
+
+			expect(isUserAuthenticated()).toBe(false);
+		});
+
+		it('should return false when no auth cookie is present', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
+			});
+
+			expect(isUserAuthenticated()).toBe(false);
+		});
+
+		it('should return false when auth cookie is malformed', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'invalid-cookie-format'
+			});
+
+			expect(isUserAuthenticated()).toBe(false);
 		});
 	});
 

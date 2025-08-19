@@ -321,7 +321,6 @@ describe('Auth', () => {
 			expect(setCookieHeader).toContain('Expires=');
 			expect(setCookieHeader).toContain('Path=/');
 			expect(setCookieHeader).toContain('Secure');
-			expect(setCookieHeader).toContain('HttpOnly');
 			expect(setCookieHeader).toContain('SameSite=Lax');
 		});
 

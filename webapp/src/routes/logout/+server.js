@@ -35,7 +35,7 @@ export async function GET({ request, platform }) {
 	let response = new Response('', {
 		status: HTML_TEMPORARY_REDIRECT,
 		headers: {
-			'set-cookie': cookie.serialize('auth', ''),
+			'set-cookie': cookie.serialize('auth', '', { httpOnly: false }),
 			location: '/'
 		}
 	});
