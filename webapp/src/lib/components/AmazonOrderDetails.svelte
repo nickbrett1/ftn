@@ -7,7 +7,7 @@
 
 	let loading = false;
 	let error = null;
-	let orderDetails = null;
+	let orderInfo = null;
 	let showDetails = false;
 	let refreshing = false;
 
@@ -33,8 +33,8 @@
 		});
 	}
 
-	// Fetch Amazon order details
-	async function fetchOrderDetails() {
+	// Fetch Amazon order information
+	async function fetchOrderInfo() {
 		if (!chargeId || !isAmazon) return;
 
 		loading = true;
@@ -45,10 +45,10 @@
 			const data = await response.json();
 
 			if (data.success) {
-				orderDetails = data;
+				orderInfo = data;
 				showDetails = true;
 			} else {
-				error = data.error || 'Failed to fetch order details';
+				error = data.error || 'Failed to fetch order information';
 				if (data.is_amazon && !data.order_id) {
 					error = 'No order ID found in merchant description';
 				}
@@ -60,8 +60,8 @@
 		}
 	}
 
-	// Refresh order details (bypass cache)
-	async function refreshOrderDetails() {
+	// Refresh order information
+	async function refreshOrderInfo() {
 		if (!chargeId || refreshing) return;
 
 		refreshing = true;
@@ -74,10 +74,10 @@
 			const data = await response.json();
 
 			if (data.success) {
-				orderDetails = data;
+				orderInfo = data;
 				showDetails = true;
 			} else {
-				error = data.error || 'Failed to refresh order details';
+				error = data.error || 'Failed to refresh order information';
 			}
 		} catch (err) {
 			error = 'Network error: ' + err.message;
@@ -89,7 +89,7 @@
 	// Auto-fetch on mount if Amazon charge
 	onMount(() => {
 		if (isAmazon) {
-			fetchOrderDetails();
+			fetchOrderInfo();
 		}
 	});
 </script>
@@ -97,15 +97,15 @@
 {#if isAmazon}
 	<div class="amazon-order-details" transition:fade={{ duration: 200 }}>
 		{#if !showDetails && !loading && !error}
-			<button on:click={fetchOrderDetails} class="fetch-button" disabled={loading}>
-				📦 View Amazon Order Details
+			<button on:click={fetchOrderInfo} class="fetch-button" disabled={loading}>
+				📦 View Amazon Order Information
 			</button>
 		{/if}
 
 		{#if loading}
 			<div class="loading">
 				<div class="spinner"></div>
-				<span>Fetching order details...</span>
+				<span>Fetching order information...</span>
 			</div>
 		{/if}
 
@@ -113,77 +113,122 @@
 			<div class="error" transition:slide>
 				<span class="error-icon">⚠️</span>
 				<span>{error}</span>
-				<button on:click={fetchOrderDetails} class="retry-button"> Retry </button>
+				<button on:click={fetchOrderInfo} class="retry-button"> Retry </button>
 			</div>
 		{/if}
 
-		{#if orderDetails && showDetails}
+		{#if orderInfo && showDetails}
 			<div class="order-container" transition:slide>
 				<div class="order-header">
-					<h3>📦 Amazon Order Details</h3>
+					<h3>📦 Amazon Order Information</h3>
 					<div class="order-meta">
-						<span class="order-id">Order #{orderDetails.order_id}</span>
-						{#if orderDetails.cache_source === 'database'}
+						<span class="order-id">Order #{orderInfo.order_id}</span>
+						{#if orderInfo.order_info?.cache_source === 'database'}
 							<span class="cache-badge">Cached</span>
 						{/if}
 						<button
-							on:click={refreshOrderDetails}
+							on:click={refreshOrderInfo}
 							class="refresh-button"
 							disabled={refreshing}
-							title="Refresh order details"
+							title="Refresh order information"
 						>
 							{refreshing ? '⟳' : '🔄'}
 						</button>
 					</div>
 				</div>
 
-				{#if orderDetails.order_details}
+				{#if orderInfo.order_info}
 					<div class="order-info">
 						<div class="info-row">
-							<span class="label">Order Date:</span>
-							<span class="value">{formatDate(orderDetails.order_details.order_date)}</span>
+							<span class="label">Order ID:</span>
+							<span class="value order-id-value">{orderInfo.order_info.order_id}</span>
 						</div>
-						<div class="info-row">
-							<span class="label">Total Amount:</span>
-							<span class="value amount"
-								>{formatCurrency(orderDetails.order_details.total_amount)}</span
-							>
-						</div>
-						{#if orderDetails.order_details.status}
+						{#if orderInfo.order_info.timestamp}
 							<div class="info-row">
-								<span class="label">Status:</span>
-								<span class="value status">{orderDetails.order_details.status}</span>
+								<span class="label">Generated:</span>
+								<span class="value">{formatDate(orderInfo.order_info.timestamp)}</span>
 							</div>
 						{/if}
 					</div>
 
-					{#if orderDetails.order_details.items && orderDetails.order_details.items.length > 0}
-						<div class="items-section">
-							<h4>Items ({orderDetails.order_details.items.length})</h4>
-							<div class="items-list">
-								{#each orderDetails.order_details.items as item}
-									<div class="item" transition:slide>
-										<div class="item-name">{item.name}</div>
-										<div class="item-details">
-											<span class="item-quantity">Qty: {item.quantity}</span>
-											<span class="item-price">{formatCurrency(item.price)}</span>
-										</div>
-										{#if item.asin}
-											<div class="item-meta">
-												<span class="asin">ASIN: {item.asin}</span>
-											</div>
-										{/if}
+					<div class="links-section">
+						<h4>View Order Details</h4>
+						<div class="links-list">
+							<a
+								href={orderInfo.order_info.order_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="amazon-link primary"
+							>
+								🛒 View Order on Amazon
+							</a>
+							<a
+								href={orderInfo.order_info.search_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="amazon-link secondary"
+							>
+								🔍 Search Order on Amazon
+							</a>
+						</div>
+						<p class="link-description">
+							{orderInfo.order_info.message || 'Click the links above to view your order details on Amazon'}
+						</p>
+					</div>
+
+					{#if orderInfo.order_info.cached_data}
+						<div class="cached-data-section">
+							<h4>📋 Cached Order Data</h4>
+							<div class="cached-info">
+								{#if orderInfo.order_info.cached_data.order_date}
+									<div class="info-row">
+										<span class="label">Order Date:</span>
+										<span class="value">{formatDate(orderInfo.order_info.cached_data.order_date)}</span>
 									</div>
-								{/each}
+								{/if}
+								{#if orderInfo.order_info.cached_data.total_amount}
+									<div class="info-row">
+										<span class="label">Total Amount:</span>
+										<span class="value amount">{formatCurrency(orderInfo.order_info.cached_data.total_amount)}</span>
+									</div>
+								{/if}
+								{#if orderInfo.order_info.cached_data.status}
+									<div class="info-row">
+										<span class="label">Status:</span>
+										<span class="value status">{orderInfo.order_info.cached_data.status}</span>
+									</div>
+								{/if}
 							</div>
+
+							{#if orderInfo.order_info.cached_data.items && orderInfo.order_info.cached_data.items.length > 0}
+								<div class="items-section">
+									<h5>Items ({orderInfo.order_info.cached_data.items.length})</h5>
+									<div class="items-list">
+										{#each orderInfo.order_info.cached_data.items as item}
+											<div class="item" transition:slide>
+												<div class="item-name">{item.name}</div>
+												<div class="item-details">
+													<span class="item-quantity">Qty: {item.quantity}</span>
+													<span class="item-price">{formatCurrency(item.price)}</span>
+												</div>
+												{#if item.asin}
+													<div class="item-meta">
+														<span class="asin">ASIN: {item.asin}</span>
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
 						</div>
 					{/if}
 
-					{#if orderDetails.suggested_categories && Object.keys(orderDetails.suggested_categories).length > 0}
+					{#if orderInfo.suggested_categories && Object.keys(orderInfo.suggested_categories).length > 0}
 						<div class="categories-section">
 							<h4>Suggested Budget Categories</h4>
 							<div class="categories-list">
-								{#each Object.entries(orderDetails.suggested_categories) as [category, data]}
+								{#each Object.entries(orderInfo.suggested_categories) as [category, data]}
 									<div class="category">
 										<span class="category-name">{category}</span>
 										<span class="category-amount">{formatCurrency(data.total)}</span>
@@ -314,6 +359,12 @@
 		color: #6c757d;
 	}
 
+	.order-id-value {
+		font-family: monospace;
+		font-size: 0.875rem;
+		color: #333;
+	}
+
 	.cache-badge {
 		padding: 0.125rem 0.5rem;
 		background: #e7f3ff;
@@ -374,14 +425,95 @@
 		font-size: 0.875rem;
 	}
 
+	.links-section {
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background: #f8f9fa;
+		border-radius: 6px;
+		border: 1px solid #e9ecef;
+	}
+
+	.links-section h4 {
+		margin: 0 0 1rem 0;
+		color: #495057;
+		font-size: 1.1rem;
+	}
+
+	.links-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.amazon-link {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.75rem 1rem;
+		text-decoration: none;
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.2s;
+		gap: 0.5rem;
+	}
+
+	.amazon-link.primary {
+		background: #ff9900;
+		color: white;
+	}
+
+	.amazon-link.primary:hover {
+		background: #e88800;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
+	}
+
+	.amazon-link.secondary {
+		background: #6c757d;
+		color: white;
+	}
+
+	.amazon-link.secondary:hover {
+		background: #5a6268;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+	}
+
+	.link-description {
+		margin: 0;
+		font-size: 0.875rem;
+		color: #6c757d;
+		text-align: center;
+		font-style: italic;
+	}
+
+	.cached-data-section {
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+		background: #e7f3ff;
+		border-radius: 6px;
+		border: 1px solid #b3d9ff;
+	}
+
+	.cached-data-section h4 {
+		margin: 0 0 1rem 0;
+		color: #0066cc;
+		font-size: 1.1rem;
+	}
+
+	.cached-info {
+		margin-bottom: 1rem;
+	}
+
 	.items-section {
 		margin-bottom: 1.5rem;
 	}
 
-	.items-section h4 {
+	.items-section h5 {
 		margin: 0 0 1rem 0;
 		color: #495057;
-		font-size: 1.1rem;
+		font-size: 1rem;
 	}
 
 	.items-list {
@@ -499,6 +631,16 @@
 
 	:global(.dark) .order-header h3 {
 		color: #e0e0e0;
+	}
+
+	:global(.dark) .links-section {
+		background: #1a1a1a;
+		border-color: #333;
+	}
+
+	:global(.dark) .cached-data-section {
+		background: #1a3a52;
+		border-color: #2a5a7a;
 	}
 
 	:global(.dark) .item {

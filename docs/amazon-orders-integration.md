@@ -2,7 +2,7 @@
 
 ## Overview
 
-This integration solves the problem of mapping Amazon charges on credit card statements back to the actual items purchased. When reviewing credit card statements, Amazon charges typically show only an order identifier with no details about what was actually bought. This integration automatically extracts those order IDs and fetches the complete order details from Amazon.
+This integration solves the problem of mapping Amazon charges on credit card statements back to the actual items purchased. When reviewing credit card statements, Amazon charges typically show only an order identifier with no details about what was actually bought. This integration automatically extracts those order IDs and provides click-out links to view the complete order details on Amazon.
 
 ## How It Works
 
@@ -14,18 +14,17 @@ When a credit card statement is parsed, the system automatically detects Amazon 
 - `AMZN.COM/BILL 987-6543210-9876543`
 - `Amazon.com 1234567890123456`
 
-### 2. Order Details Retrieval
+### 2. Click-Out to Amazon
 
-The system extracts the order ID from the merchant string and uses the Amazon Orders Worker to:
+The system extracts the order ID from the merchant string and generates:
 
-- Fetch the complete order details from Amazon
-- Retrieve item names, prices, and quantities
-- Get order date and status information
-- Cache the results for future reference
+- Direct links to Amazon order details pages
+- Fallback search URLs for order lookup
+- Seamless integration with Amazon's native order viewing
 
 ### 3. Budget Categorization
 
-Once order details are retrieved, the system can:
+For any previously cached order data, the system can:
 
 - Automatically categorize items into appropriate budget categories
 - Split a single Amazon charge across multiple budgets
@@ -47,224 +46,148 @@ Once order details are retrieved, the system can:
            │
            ▼
 ┌─────────────────────┐     ┌─────────────────────┐
-│ Amazon Orders       │────▶│ Amazon.com          │
-│ Worker (Python)     │     │ (via amazon-orders) │
+│ Click-Out Links     │────▶│ Amazon.com          │
+│ Generator           │     │ (Native Order View) │
 └──────────┬──────────┘     └─────────────────────┘
            │
            ▼
 ┌─────────────────────┐
 │ Cache Layer         │
-│ (KV + D1 Database)  │
+│ (D1 Database)       │
 └──────────┬──────────┘
            │
            ▼
 ┌─────────────────────┐
 │ UI Component        │
-│ (Order Details)     │
+│ (Order Links)       │
 └─────────────────────┘
 ```
 
 ## Setup Instructions
 
-### 1. Deploy the Amazon Orders Worker
+### 1. No External Worker Required
 
-```bash
-cd amazon-orders-worker
-npm install
-./setup.sh  # Interactive setup script
-```
-
-Or manually:
-
-```bash
-# Install dependencies
-npm install -g wrangler
-pip install -r requirements.txt
-
-# Create resources
-wrangler kv:namespace create "AMAZON_CACHE"
-wrangler d1 create amazon-orders-db
-
-# Set credentials
-wrangler secret put AMAZON_EMAIL
-wrangler secret put AMAZON_PASSWORD
-
-# Deploy
-wrangler deploy
-```
+The new integration approach doesn't require deploying a separate Cloudflare Worker. All functionality is built into the main application.
 
 ### 2. Configure the Main Application
 
-Add the worker URL to your environment:
+The system automatically generates Amazon order URLs using the standard format:
+- Order details: `https://www.amazon.com/gp/your-account/order-details?orderID={ORDER_ID}`
+- Search fallback: `https://www.amazon.com/s?k={ORDER_ID}`
 
-```bash
-# In webapp/.env or wrangler.toml
-AMAZON_ORDERS_WORKER_URL=https://amazon-orders-worker.your-subdomain.workers.dev
-```
+### 3. Environment Variables
 
-### 3. Update Database Schema
+No additional environment variables are required for the Amazon integration. The system works with your existing database configuration.
 
-The integration automatically creates the necessary tables, but you can manually create them:
+## API Endpoints
 
-```sql
-CREATE TABLE IF NOT EXISTS amazon_orders (
-    order_id TEXT PRIMARY KEY,
-    order_date TEXT,
-    total_amount REAL,
-    status TEXT,
-    items TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+### GET /projects/ccbilling/charges/[id]/amazon-details
 
-## Usage
+Returns Amazon order information and click-out links for a specific charge.
 
-### In the UI
-
-1. **Automatic Detection**: When viewing charges, Amazon transactions are automatically detected
-2. **View Details**: Click "View Amazon Order Details" to fetch order information
-3. **Budget Allocation**: Use the suggested categories to allocate items to appropriate budgets
-4. **Caching**: Order details are cached for 7 days to reduce API calls
-
-### Via API
-
-```javascript
-// Get Amazon order details for a charge
-const response = await fetch(`/projects/ccbilling/charges/${chargeId}/amazon-details`);
-const data = await response.json();
-
-// Response includes:
+**Response:**
+```json
 {
   "success": true,
-  "charge": { /* charge details */ },
-  "order_id": "123-4567890-1234567",
-  "order_details": {
-    "order_date": "2024-01-15",
-    "total_amount": 49.99,
-    "status": "Delivered",
-    "items": [
-      {
-        "name": "Product Name",
-        "price": 24.99,
-        "quantity": 2,
-        "asin": "B08XYZ123"
-      }
-    ]
+  "charge": {
+    "id": 123,
+    "merchant": "AMAZON.COM*123-4567890-1234567",
+    "amount": 29.99,
+    "date": "2024-01-15",
+    "allocated_to": "Electronics"
   },
-  "suggested_categories": {
-    "Electronics": {
-      "items": [...],
-      "total": 49.99
-    }
-  }
+  "order_id": "123-4567890-1234567",
+  "order_info": {
+    "order_id": "123-4567890-1234567",
+    "order_url": "https://www.amazon.com/gp/your-account/order-details?orderID=123-4567890-1234567",
+    "search_url": "https://www.amazon.com/s?k=123-4567890-1234567",
+    "message": "Click the link above to view your order details on Amazon",
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "suggested_categories": {},
+  "message": "Click the Amazon order link above to view your order details on Amazon"
 }
 ```
 
-## Features
+### POST /projects/ccbilling/charges/[id]/amazon-details
 
-### Current Features
+Refreshes Amazon order information for a specific charge.
 
-- ✅ Automatic Amazon order ID extraction
-- ✅ Order details fetching from Amazon
-- ✅ Item-level detail retrieval
-- ✅ Intelligent caching (KV + D1)
-- ✅ Budget category suggestions
-- ✅ Bulk processing support
-- ✅ UI component for viewing details
+## Usage Examples
 
-### Future Enhancements
+### Frontend Integration
 
-- 🔄 Support for other retailers (Walmart, Target, etc.)
-- 🔄 Machine learning for better categorization
-- 🔄 Receipt image processing
-- 🔄 Automated budget allocation
-- 🔄 Subscription tracking
-- 🔄 Price drop alerts
-- 🔄 Return tracking
+```javascript
+// Get Amazon order information
+const response = await fetch(`/projects/ccbilling/charges/${chargeId}/amazon-details`);
+const data = await response.json();
+
+if (data.success && data.order_info) {
+  const { order_url, search_url } = data.order_info;
+  
+  // Display click-out links
+  const orderLink = document.createElement('a');
+  orderLink.href = order_url;
+  orderLink.textContent = 'View Order on Amazon';
+  orderLink.target = '_blank';
+  
+  const searchLink = document.createElement('a');
+  searchLink.href = search_url;
+  searchLink.textContent = 'Search on Amazon';
+  searchLink.target = '_blank';
+}
+```
+
+### Order ID Extraction
+
+```javascript
+import { extractAmazonOrderId } from '$lib/server/amazon-orders-service.js';
+
+const merchantString = "AMAZON.COM*123-4567890-1234567";
+const orderId = extractAmazonOrderId(merchantString);
+// Returns: "123-4567890-1234567"
+```
+
+## Benefits of the New Approach
+
+1. **Simplified Architecture**: No external worker to maintain or deploy
+2. **Direct Integration**: Users click through to Amazon's native order view
+3. **No Authentication Issues**: Leverages Amazon's existing user authentication
+4. **Real-time Data**: Always shows the most current order information
+5. **Reduced Complexity**: Fewer moving parts and potential failure points
+6. **Better User Experience**: Familiar Amazon interface for order details
+
+## Migration from Worker-Based Approach
+
+If you were previously using the Amazon Orders Worker:
+
+1. **Remove Worker**: The `amazon-orders-worker/` directory has been removed
+2. **Update Imports**: The service now exports different functions
+3. **Update API Calls**: Frontend should expect `order_info` instead of `order_details`
+4. **Environment Variables**: Remove `AMAZON_ORDERS_WORKER_URL` and related configs
+
+## Future Enhancements
+
+The system maintains the database caching infrastructure, so you can:
+
+- Store order metadata for offline access
+- Track order history and patterns
+- Implement budget categorization for cached items
+- Add analytics on Amazon spending patterns
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **No Order ID Found**
-
-   - Some Amazon charges may not include order IDs
-   - Digital purchases often have different formats
-   - Try manually entering the order ID
-
-2. **Authentication Failed**
-
-   - Verify Amazon credentials are correct
-   - Check for 2FA requirements
-   - Consider using app-specific passwords
-
-3. **Order Not Found**
-
-   - Order may be from a different Amazon account
-   - Order may be archived or very old
-   - Business accounts may have different access
-
-4. **Slow Performance**
-   - Enable caching (KV namespace)
-   - Use bulk endpoints for multiple orders
-   - Check worker logs for errors
+1. **Order ID Not Found**: Ensure the merchant string contains valid Amazon order ID patterns
+2. **Invalid URLs**: Check that order IDs are properly formatted
+3. **Cached Data**: Clear database cache if you encounter stale information
 
 ### Debug Mode
 
-Enable debug logging:
+Enable debug logging to see order ID extraction details:
 
 ```javascript
-// In worker.py
-console.log("[DEBUG]", data);
-
-// In the UI
-const response = await fetch(`/api/amazon-orders?debug=1`);
+console.log('Merchant:', charge.merchant);
+console.log('Extracted Order ID:', extractAmazonOrderId(charge.merchant));
 ```
-
-## Security Considerations
-
-1. **Credentials**: Store Amazon credentials as encrypted secrets
-2. **Rate Limiting**: Implement rate limiting to prevent abuse
-3. **Authentication**: Use API keys for worker access
-4. **Data Privacy**: Cache only necessary order information
-5. **Access Control**: Restrict access to authorized users only
-
-## Performance Optimization
-
-1. **Caching Strategy**:
-
-   - KV for short-term cache (24 hours)
-   - D1 for long-term storage (7 days)
-   - Client-side caching for session
-
-2. **Batch Processing**:
-
-   - Process multiple orders in parallel
-   - Use bulk endpoints for statement imports
-   - Queue processing for large batches
-
-3. **Lazy Loading**:
-   - Fetch details only when requested
-   - Progressive enhancement in UI
-   - Background refresh for stale data
-
-## Cost Considerations
-
-- **Cloudflare Workers**: Free tier includes 100,000 requests/day
-- **KV Storage**: Free tier includes 100,000 reads/day
-- **D1 Database**: Free tier includes 5GB storage
-- **Amazon API**: No direct costs, but be mindful of rate limits
-
-## Support
-
-For issues or questions:
-
-1. Check the logs: `wrangler tail`
-2. Review the test suite: `npm test`
-3. Check worker health: `curl https://your-worker.workers.dev/health`
-4. Review this documentation
-
-## Conclusion
-
-This integration transforms opaque Amazon charges into detailed, categorizable transactions, making budget tracking and expense management significantly more accurate and efficient. The combination of automatic detection, intelligent caching, and seamless UI integration provides a robust solution for personal finance management.
