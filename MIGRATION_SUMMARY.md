@@ -78,15 +78,10 @@ This document summarizes the changes made to migrate from the Amazon Orders Work
 
 ### Click-Out Links
 
-The system now generates two types of Amazon links:
+The system now generates Amazon order links:
 
-1. **Primary Link**: Direct order details page
-   - Format: `https://www.amazon.com/gp/your-account/order-details?orderID={ORDER_ID}`
-   - Takes users directly to their order on Amazon
-
-2. **Secondary Link**: Amazon search fallback
-   - Format: `https://www.amazon.com/s?k={ORDER_ID}`
-   - Useful if direct order link doesn't work
+- **Direct Order Link**: Takes users directly to their order on Amazon
+  - Format: `https://www.amazon.com/gp/your-account/order-details?orderID={ORDER_ID}`
 
 ### Benefits of New Approach
 

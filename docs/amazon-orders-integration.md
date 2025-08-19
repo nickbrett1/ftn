@@ -19,7 +19,6 @@ When a credit card statement is parsed, the system automatically detects Amazon 
 The system extracts the order ID from the merchant string and generates:
 
 - Direct links to Amazon order details pages
-- Fallback search URLs for order lookup
 - Seamless integration with Amazon's native order viewing
 
 ### 3. Budget Categorization
@@ -100,7 +99,6 @@ Returns Amazon order information and click-out links for a specific charge.
   "order_info": {
     "order_id": "123-4567890-1234567",
     "order_url": "https://www.amazon.com/gp/your-account/order-details?orderID=123-4567890-1234567",
-    "search_url": "https://www.amazon.com/s?k=123-4567890-1234567",
     "message": "Click the link above to view your order details on Amazon",
     "timestamp": "2024-01-15T10:30:00.000Z"
   },
@@ -123,18 +121,13 @@ const response = await fetch(`/projects/ccbilling/charges/${chargeId}/amazon-det
 const data = await response.json();
 
 if (data.success && data.order_info) {
-  const { order_url, search_url } = data.order_info;
+  const { order_url } = data.order_info;
   
   // Display click-out links
   const orderLink = document.createElement('a');
   orderLink.href = order_url;
   orderLink.textContent = 'View Order on Amazon';
   orderLink.target = '_blank';
-  
-  const searchLink = document.createElement('a');
-  searchLink.href = search_url;
-  searchLink.textContent = 'Search on Amazon';
-  searchLink.target = '_blank';
 }
 ```
 

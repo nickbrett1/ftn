@@ -158,21 +158,13 @@
 								href={orderInfo.order_info.order_url}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="amazon-link primary"
+								class="amazon-link"
 							>
 								🛒 View Order on Amazon
 							</a>
-							<a
-								href={orderInfo.order_info.search_url}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="amazon-link secondary"
-							>
-								🔍 Search Order on Amazon
-							</a>
 						</div>
 						<p class="link-description">
-							{orderInfo.order_info.message || 'Click the links above to view your order details on Amazon'}
+							{orderInfo.order_info.message || 'Click the link above to view your order details on Amazon'}
 						</p>
 					</div>
 
@@ -456,28 +448,14 @@
 		font-weight: 500;
 		transition: all 0.2s;
 		gap: 0.5rem;
-	}
-
-	.amazon-link.primary {
 		background: #ff9900;
 		color: white;
 	}
 
-	.amazon-link.primary:hover {
+	.amazon-link:hover {
 		background: #e88800;
 		transform: translateY(-1px);
 		box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
-	}
-
-	.amazon-link.secondary {
-		background: #6c757d;
-		color: white;
-	}
-
-	.amazon-link.secondary:hover {
-		background: #5a6268;
-		transform: translateY(-1px);
-		box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 	}
 
 	.link-description {
