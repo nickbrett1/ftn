@@ -67,6 +67,44 @@
 		return `https://www.amazon.com/gp/your-account/order-details?orderID=${orderId}`;
 	}
 
+	// Check if Amazon order is accessible to the current user
+	async function checkOrderAccessibility(orderUrl) {
+		if (!orderUrl) return false;
+		
+		try {
+			// Make a HEAD request to check if the order page is accessible
+			// Amazon will redirect to login/order listing page if user can't access the specific order
+			const response = await fetch(orderUrl, {
+				method: 'HEAD',
+				credentials: 'include', // Include cookies for authentication
+				redirect: 'manual' // Don't follow redirects automatically
+			});
+			
+			// If we get a redirect (3xx status), the order is not accessible
+			// If we get 200, the order page is accessible
+			// If we get 401/403, the order is not accessible
+			return response.status === 200;
+		} catch (err) {
+			// If there's an error (like CORS), assume it's not accessible
+			return false;
+		}
+	}
+
+	// Handle Amazon link click
+	async function handleAmazonLinkClick(event, orderUrl) {
+		event.preventDefault();
+		
+		const isAccessible = await checkOrderAccessibility(orderUrl);
+		
+		if (isAccessible) {
+			// Open the link in a new tab if accessible
+			window.open(orderUrl, '_blank', 'noopener,noreferrer');
+		} else {
+			// Show alert for inaccessible orders
+			alert('⚠️ Order Not Accessible\n\nThis Amazon order appears to be from a different account than the one you\'re currently logged into.\n\nCredit card statements may contain charges from family members, business accounts, or other Amazon accounts that you don\'t have access to.\n\nTry logging into the Amazon account that made this purchase, or contact the person who made the charge for order details.');
+		}
+	}
+
 	// Function to format merchant name with clickable Amazon order links
 	function formatMerchantNameWithLinks(charge) {
 		// Use normalized merchant name for consistent display

@@ -10,6 +10,8 @@
 	let orderInfo = null;
 	let showDetails = false;
 	let refreshing = false;
+	let showAccessibilityPopup = false;
+	let checkingAccessibility = false;
 
 	// Check if this is an Amazon charge
 	$: isAmazon =
@@ -31,6 +33,53 @@
 			month: 'short',
 			day: 'numeric'
 		});
+	}
+
+	// Check if Amazon order is accessible to the current user
+	async function checkOrderAccessibility(orderUrl) {
+		if (!orderUrl) return false;
+		
+		checkingAccessibility = true;
+		
+		try {
+			// Make a HEAD request to check if the order page is accessible
+			// Amazon will redirect to login/order listing page if user can't access the specific order
+			const response = await fetch(orderUrl, {
+				method: 'HEAD',
+				credentials: 'include', // Include cookies for authentication
+				redirect: 'manual' // Don't follow redirects automatically
+			});
+			
+			// If we get a redirect (3xx status), the order is not accessible
+			// If we get 200, the order page is accessible
+			// If we get 401/403, the order is not accessible
+			const isAccessible = response.status === 200;
+			
+			if (!isAccessible) {
+				showAccessibilityPopup = true;
+			}
+			
+			return isAccessible;
+		} catch (err) {
+			// If there's an error (like CORS), assume it's not accessible
+			showAccessibilityPopup = true;
+			return false;
+		} finally {
+			checkingAccessibility = false;
+		}
+	}
+
+	// Handle Amazon link click
+	async function handleAmazonLinkClick(event, orderUrl) {
+		event.preventDefault();
+		
+		const isAccessible = await checkOrderAccessibility(orderUrl);
+		
+		if (isAccessible) {
+			// Open the link in a new tab if accessible
+			window.open(orderUrl, '_blank', 'noopener,noreferrer');
+		}
+		// If not accessible, the popup is already shown
 	}
 
 	// Fetch Amazon order information
@@ -153,11 +202,13 @@
 						<div class="links-list">
 							<a
 								href={orderInfo.order_info.order_url}
-								target="_blank"
-								rel="noopener noreferrer"
 								class="amazon-link"
+								on:click={(e) => handleAmazonLinkClick(e, orderInfo.order_info.order_url)}
 							>
 								🛒 View Order on Amazon
+								{#if checkingAccessibility}
+									<span class="checking-indicator">🔍</span>
+								{/if}
 							</a>
 						</div>
 						<p class="link-description">
@@ -169,6 +220,44 @@
 				<button on:click={() => (showDetails = false)} class="close-button"> Close Details </button>
 			</div>
 		{/if}
+	</div>
+{/if}
+
+<!-- Accessibility Popup -->
+{#if showAccessibilityPopup}
+	<div class="accessibility-popup-overlay" transition:fade={{ duration: 200 }}>
+		<div class="accessibility-popup" transition:slide={{ duration: 200 }}>
+			<div class="popup-header">
+				<h3>⚠️ Order Not Accessible</h3>
+				<button 
+					class="popup-close-button" 
+					on:click={() => (showAccessibilityPopup = false)}
+				>
+					×
+				</button>
+			</div>
+			<div class="popup-content">
+				<p>
+					This Amazon order appears to be from a different account than the one you're currently logged into.
+				</p>
+				<p>
+					<strong>Why this happens:</strong> Credit card statements may contain charges from family members, 
+					business accounts, or other Amazon accounts that you don't have access to.
+				</p>
+				<p>
+					<strong>What you can do:</strong> Try logging into the Amazon account that made this purchase, 
+					or contact the person who made the charge for order details.
+				</p>
+			</div>
+			<div class="popup-actions">
+				<button 
+					class="popup-close-button-secondary" 
+					on:click={() => (showAccessibilityPopup = false)}
+				>
+					Got it
+				</button>
+			</div>
+		</div>
 	</div>
 {/if}
 
@@ -384,6 +473,12 @@
 		gap: 0.5rem;
 		background: #ff9900;
 		color: white;
+		cursor: pointer;
+	}
+
+	.checking-indicator {
+		font-size: 0.9rem;
+		opacity: 0.8;
 	}
 
 	.amazon-link:hover {
@@ -434,5 +529,120 @@
 	:global(.dark) .links-section {
 		background: #1a1a1a;
 		border-color: #333;
+	}
+
+	/* Accessibility Popup Styles */
+	.accessibility-popup-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+	}
+
+	.accessibility-popup {
+		background: white;
+		border-radius: 12px;
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+		max-width: 500px;
+		width: 90%;
+		max-height: 80vh;
+		overflow-y: auto;
+	}
+
+	.popup-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.5rem 1.5rem 1rem 1.5rem;
+		border-bottom: 1px solid #e9ecef;
+	}
+
+	.popup-header h3 {
+		margin: 0;
+		color: #dc3545;
+		font-size: 1.25rem;
+	}
+
+	.popup-close-button {
+		background: none;
+		border: none;
+		font-size: 1.5rem;
+		cursor: pointer;
+		color: #6c757d;
+		padding: 0.25rem;
+		border-radius: 4px;
+		transition: background 0.2s;
+	}
+
+	.popup-close-button:hover {
+		background: #f8f9fa;
+	}
+
+	.popup-content {
+		padding: 1rem 1.5rem;
+	}
+
+	.popup-content p {
+		margin: 0 0 1rem 0;
+		line-height: 1.6;
+		color: #495057;
+	}
+
+	.popup-content p:last-child {
+		margin-bottom: 0;
+	}
+
+	.popup-content strong {
+		color: #333;
+	}
+
+	.popup-actions {
+		padding: 1rem 1.5rem 1.5rem 1.5rem;
+		display: flex;
+		justify-content: flex-end;
+		border-top: 1px solid #e9ecef;
+	}
+
+	.popup-close-button-secondary {
+		background: #6c757d;
+		color: white;
+		border: none;
+		padding: 0.75rem 1.5rem;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: background 0.2s;
+	}
+
+	.popup-close-button-secondary:hover {
+		background: #5a6268;
+	}
+
+	/* Dark mode support for popup */
+	:global(.dark) .accessibility-popup {
+		background: #2a2a2a;
+		color: #e0e0e0;
+	}
+
+	:global(.dark) .popup-header {
+		border-color: #444;
+	}
+
+	:global(.dark) .popup-content p {
+		color: #c0c0c0;
+	}
+
+	:global(.dark) .popup-content strong {
+		color: #e0e0e0;
+	}
+
+	:global(.dark) .popup-actions {
+		border-color: #444;
 	}
 </style>
