@@ -127,7 +127,7 @@ Response URL: ${lastResponseUrl || 'Unknown'}
 Status: ${lastResponseStatus || 'Unknown'}
 Redirected: ${lastResponseRedirected || 'Unknown'}
 Error: ${lastResponseError || 'None'}
-Headers: ${lastResponseHeaders ? Array.from(lastResponseHeaders.entries()).map(([k,v]) => \`\${k}: \${v}\`).join(', ') : 'None'}
+Headers: ${lastResponseHeaders ? Array.from(lastResponseHeaders.entries()).map(([k,v]) => k + ': ' + v).join(', ') : 'None'}
 
 This Amazon order appears to be from a different account than the one you're currently logged into.
 
