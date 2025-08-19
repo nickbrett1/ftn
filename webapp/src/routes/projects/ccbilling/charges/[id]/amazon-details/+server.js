@@ -3,10 +3,7 @@ import { requireUser } from '$lib/server/require-user.js';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import {
 	extractAmazonOrderId,
-	getAmazonOrderInfo,
-	getCachedAmazonOrder,
-	cacheAmazonOrder,
-	categorizeAmazonItems
+	getAmazonOrderInfo
 } from '$lib/server/amazon-orders-service.js';
 
 /**
@@ -43,25 +40,8 @@ export async function GET(event) {
 		);
 	}
 
-	// Check cache first for any existing data
-	let cachedOrder = await getCachedAmazonOrder(event, orderId);
-	
-	// Generate Amazon order information with click-out links
+	// Generate Amazon order information with click-out link
 	const orderInfo = getAmazonOrderInfo(orderId);
-
-	// If we have cached data, merge it with the order info
-	if (cachedOrder) {
-		orderInfo.cached_data = cachedOrder;
-		orderInfo.cache_source = 'database';
-	} else {
-		orderInfo.cache_source = 'none';
-	}
-
-	// Add category suggestions if we have cached items
-	let categories = {};
-	if (cachedOrder?.items && cachedOrder.items.length > 0) {
-		categories = categorizeAmazonItems(cachedOrder.items);
-	}
 
 	return json({
 		success: true,
@@ -74,7 +54,6 @@ export async function GET(event) {
 		},
 		order_id: orderId,
 		order_info: orderInfo,
-		suggested_categories: categories,
 		message: 'Click the Amazon order link above to view your order details on Amazon'
 	});
 }
@@ -107,7 +86,7 @@ export async function POST(event) {
 				merchant: charge.merchant
 			},
 			{ status: 404 }
-		);
+		});
 	}
 
 	// Generate fresh Amazon order information

@@ -23,11 +23,7 @@ The system extracts the order ID from the merchant string and generates:
 
 ### 3. Budget Categorization
 
-For any previously cached order data, the system can:
-
-- Automatically categorize items into appropriate budget categories
-- Split a single Amazon charge across multiple budgets
-- Provide accurate spending insights
+The system maintains the ability to extract Amazon order IDs for budget tracking purposes.
 
 ## Architecture
 
@@ -48,12 +44,6 @@ For any previously cached order data, the system can:
 │ Click-Out Links     │────▶│ Amazon.com          │
 │ Generator           │     │ (Native Order View) │
 └──────────┬──────────┘     └─────────────────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Cache Layer         │
-│ (D1 Database)       │
-└──────────┬──────────┘
            │
            ▼
 ┌─────────────────────┐
@@ -102,7 +92,6 @@ Returns Amazon order information and click-out links for a specific charge.
     "message": "Click the link above to view your order details on Amazon",
     "timestamp": "2024-01-15T10:30:00.000Z"
   },
-  "suggested_categories": {},
   "message": "Click the Amazon order link above to view your order details on Amazon"
 }
 ```
