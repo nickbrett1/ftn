@@ -123,9 +123,6 @@
 					<h3>📦 Amazon Order Information</h3>
 					<div class="order-meta">
 						<span class="order-id">Order #{orderInfo.order_id}</span>
-						{#if orderInfo.order_info?.cache_source === 'database'}
-							<span class="cache-badge">Cached</span>
-						{/if}
 						<button
 							on:click={refreshOrderInfo}
 							class="refresh-button"
@@ -167,69 +164,6 @@
 							{orderInfo.order_info.message || 'Click the link above to view your order details on Amazon'}
 						</p>
 					</div>
-
-					{#if orderInfo.order_info.cached_data}
-						<div class="cached-data-section">
-							<h4>📋 Cached Order Data</h4>
-							<div class="cached-info">
-								{#if orderInfo.order_info.cached_data.order_date}
-									<div class="info-row">
-										<span class="label">Order Date:</span>
-										<span class="value">{formatDate(orderInfo.order_info.cached_data.order_date)}</span>
-									</div>
-								{/if}
-								{#if orderInfo.order_info.cached_data.total_amount}
-									<div class="info-row">
-										<span class="label">Total Amount:</span>
-										<span class="value amount">{formatCurrency(orderInfo.order_info.cached_data.total_amount)}</span>
-									</div>
-								{/if}
-								{#if orderInfo.order_info.cached_data.status}
-									<div class="info-row">
-										<span class="label">Status:</span>
-										<span class="value status">{orderInfo.order_info.cached_data.status}</span>
-									</div>
-								{/if}
-							</div>
-
-							{#if orderInfo.order_info.cached_data.items && orderInfo.order_info.cached_data.items.length > 0}
-								<div class="items-section">
-									<h5>Items ({orderInfo.order_info.cached_data.items.length})</h5>
-									<div class="items-list">
-										{#each orderInfo.order_info.cached_data.items as item}
-											<div class="item" transition:slide>
-												<div class="item-name">{item.name}</div>
-												<div class="item-details">
-													<span class="item-quantity">Qty: {item.quantity}</span>
-													<span class="item-price">{formatCurrency(item.price)}</span>
-												</div>
-												{#if item.asin}
-													<div class="item-meta">
-														<span class="asin">ASIN: {item.asin}</span>
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								</div>
-							{/if}
-						</div>
-					{/if}
-
-					{#if orderInfo.suggested_categories && Object.keys(orderInfo.suggested_categories).length > 0}
-						<div class="categories-section">
-							<h4>Suggested Budget Categories</h4>
-							<div class="categories-list">
-								{#each Object.entries(orderInfo.suggested_categories) as [category, data]}
-									<div class="category">
-										<span class="category-name">{category}</span>
-										<span class="category-amount">{formatCurrency(data.total)}</span>
-										<span class="category-items">({data.items.length} items)</span>
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/if}
 				{/if}
 
 				<button on:click={() => (showDetails = false)} class="close-button"> Close Details </button>
@@ -466,120 +400,6 @@
 		font-style: italic;
 	}
 
-	.cached-data-section {
-		margin-bottom: 1.5rem;
-		padding: 1rem;
-		background: #e7f3ff;
-		border-radius: 6px;
-		border: 1px solid #b3d9ff;
-	}
-
-	.cached-data-section h4 {
-		margin: 0 0 1rem 0;
-		color: #0066cc;
-		font-size: 1.1rem;
-	}
-
-	.cached-info {
-		margin-bottom: 1rem;
-	}
-
-	.items-section {
-		margin-bottom: 1.5rem;
-	}
-
-	.items-section h5 {
-		margin: 0 0 1rem 0;
-		color: #495057;
-		font-size: 1rem;
-	}
-
-	.items-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.item {
-		padding: 0.75rem;
-		background: #f8f9fa;
-		border-radius: 6px;
-		border-left: 3px solid #ff9900;
-	}
-
-	.item-name {
-		font-weight: 500;
-		color: #333;
-		margin-bottom: 0.25rem;
-	}
-
-	.item-details {
-		display: flex;
-		gap: 1rem;
-		font-size: 0.875rem;
-		color: #6c757d;
-	}
-
-	.item-quantity {
-		font-weight: 500;
-	}
-
-	.item-price {
-		color: #28a745;
-		font-weight: 600;
-	}
-
-	.item-meta {
-		margin-top: 0.25rem;
-		font-size: 0.75rem;
-		color: #868e96;
-	}
-
-	.asin {
-		font-family: monospace;
-	}
-
-	.categories-section {
-		margin-bottom: 1.5rem;
-	}
-
-	.categories-section h4 {
-		margin: 0 0 1rem 0;
-		color: #495057;
-		font-size: 1.1rem;
-	}
-
-	.categories-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.category {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 0.5rem 0.75rem;
-		background: #e7f3ff;
-		border-radius: 4px;
-	}
-
-	.category-name {
-		font-weight: 500;
-		color: #0066cc;
-		flex: 1;
-	}
-
-	.category-amount {
-		font-weight: 600;
-		color: #28a745;
-	}
-
-	.category-items {
-		font-size: 0.875rem;
-		color: #6c757d;
-	}
-
 	.close-button {
 		margin-top: 1rem;
 		padding: 0.5rem 1rem;
@@ -614,18 +434,5 @@
 	:global(.dark) .links-section {
 		background: #1a1a1a;
 		border-color: #333;
-	}
-
-	:global(.dark) .cached-data-section {
-		background: #1a3a52;
-		border-color: #2a5a7a;
-	}
-
-	:global(.dark) .item {
-		background: #1a1a1a;
-	}
-
-	:global(.dark) .category {
-		background: #1a3a52;
 	}
 </style>
