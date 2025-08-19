@@ -12,6 +12,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isUserAuthenticated } from '$lib/client/google-auth.js';
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	let isLoggedIn = $state(false);
 
@@ -134,7 +135,7 @@
 		
 		<!-- Build time info -->
 		<div class="mt-2 text-xs text-white/40 text-center">
-			Built: {new Date(__BUILD_TIME__).toLocaleString()}
+			Built: {formatDate(__BUILD_TIME__, { includeTime: true, includeTimezone: true })}
 		</div>
 	</div>
 </footer>
