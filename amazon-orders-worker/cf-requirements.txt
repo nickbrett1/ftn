@@ -1,7 +1,0 @@
-amazon-orders
-beautifulsoup4
-lxml
-requests
-python-dateutil
-cachetools
-aiohttp
