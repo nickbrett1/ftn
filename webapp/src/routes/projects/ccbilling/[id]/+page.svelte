@@ -1148,6 +1148,7 @@
 			{#if getFilteredCharges().length > 0}
 				<div class="block md:hidden">
 					{#each getFilteredCharges() as charge (charge.id)}
+						{@const merchantInfo = formatMerchantNameWithLinks(charge)}
 						<div class="border-b border-gray-700 py-3 last:border-b-0">
 							<div class="flex justify-between items-start gap-3">
 								<div class="flex-1 min-w-0">
@@ -1169,7 +1170,6 @@
 												/>
 											</svg>
 										</button>
-										{@const merchantInfo = formatMerchantNameWithLinks(charge)}
 										{#if merchantInfo.hasFlightDetails}
 											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
 										{:else if merchantInfo.hasAmazonOrder}
@@ -1267,6 +1267,7 @@
 						</thead>
 						<tbody>
 							{#each getFilteredCharges() as charge (charge.id)}
+								{@const merchantInfo = formatMerchantNameWithLinks(charge)}
 								<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
 									<td class="text-gray-300 text-sm py-2">
 										<span
@@ -1297,7 +1298,6 @@
 												/>
 											</svg>
 										</button>
-										{@const merchantInfo = formatMerchantNameWithLinks(charge)}
 										{#if merchantInfo.hasFlightDetails}
 											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
 										{:else if merchantInfo.hasAmazonOrder}
