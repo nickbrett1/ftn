@@ -57,6 +57,7 @@ CREATE TABLE payment (
   foreign_currency_amount REAL,
   foreign_currency_type TEXT,
   flight_details TEXT, -- JSON string for flight-specific details
+  full_statement_text TEXT, -- Full multi-line text from statement for Amazon order ID extraction
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
