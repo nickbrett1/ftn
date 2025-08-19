@@ -67,76 +67,33 @@
 		return `https://www.amazon.com/gp/your-account/order-details?orderID=${orderId}`;
 	}
 
-	// Check if Amazon order is accessible to the current user
-	async function checkOrderAccessibility(orderUrl) {
-		if (!orderUrl) return false;
-		
-		// Reset debug info
-		lastResponseStatus = null;
-		lastResponseRedirected = null;
-		lastResponseError = null;
-		lastResponseUrl = null;
-		lastResponseHeaders = null;
-		
-		checkingAmazonAccessibility = true;
-		
-		try {
-			// Make a HEAD request to check if we get redirected
-			// Amazon will redirect to order history page if user can't access the specific order
-			const response = await fetch(orderUrl, {
-				method: 'HEAD',
-				credentials: 'include', // Include cookies for authentication
-				redirect: 'manual' // Don't follow redirects automatically
-			});
-			
-			// Store debug info
-			lastResponseStatus = response.status;
-			lastResponseRedirected = response.status >= 300 && response.status < 400;
-			lastResponseUrl = response.url;
-			lastResponseHeaders = response.headers;
-			
-			// If we get a redirect (3xx status), the order is not accessible
-			// If we get 200, the order page is accessible
-			const isAccessible = response.status === 200;
-			
-			return isAccessible;
-		} catch (err) {
-			// Store error info
-			lastResponseError = err.message;
-			// If there's an error (like CORS), assume it's not accessible
-			return false;
-		} finally {
-			checkingAmazonAccessibility = false;
-		}
-	}
-
 	// Handle Amazon link click
 	async function handleAmazonLinkClick(event, orderUrl) {
 		event.preventDefault();
 		
-		const isAccessible = await checkOrderAccessibility(orderUrl);
+		// Show helpful information about Amazon order access
+		const infoMessage = `🛒 Amazon Order Access
+
+You're about to view an Amazon order. Here's what to expect:
+
+✅ If you have access: You'll see the order details
+❌ If you don't have access: Amazon will show you their order history page
+
+This can happen when:
+• The order is from a different Amazon account
+• The order is from a family member's account  
+• The order is from a business account
+• You're not logged into the right Amazon account
+
+Amazon will handle the redirect automatically and show you the appropriate page.
+
+Click OK to proceed to Amazon, or Cancel to stay here.`;
 		
-		if (isAccessible) {
-			// Open the link in a new tab if accessible
+		if (confirm(infoMessage)) {
+			// User clicked OK, open the Amazon link
 			window.open(orderUrl, '_blank', 'noopener,noreferrer');
-		} else {
-			// Show alert for inaccessible orders with debug info
-			const debugInfo = `🔍 Debug Info:
-URL: ${orderUrl}
-Response URL: ${lastResponseUrl || 'Unknown'}
-Status: ${lastResponseStatus || 'Unknown'}
-Redirected: ${lastResponseRedirected || 'Unknown'}
-Error: ${lastResponseError || 'None'}
-Headers: ${lastResponseHeaders ? Array.from(lastResponseHeaders.entries()).map(([k,v]) => k + ': ' + v).join(', ') : 'None'}
-
-This Amazon order appears to be from a different account than the one you're currently logged into.
-
-Credit card statements may contain charges from family members, business accounts, or other Amazon accounts that you don't have access to.
-
-Try logging into the Amazon account that made this purchase, or contact the person who made the charge for order details.`;
-			
-			alert(debugInfo);
 		}
+		// If user clicked Cancel, stay on the current page
 	}
 
 	// Function to format merchant name with clickable Amazon order links
@@ -200,18 +157,11 @@ Try logging into the Amazon account that made this purchase, or contact the pers
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
-	let checkingAmazonAccessibility = $state(false);
-	let lastResponseStatus = null;
-	let lastResponseRedirected = null;
-	let lastResponseError = null;
-	let lastResponseUrl = null;
-	let lastResponseHeaders = null;
 
 	// File upload state
 	let showUploadForm = $state(false);
 	let isUploading = $state(false);
 	let uploadError = $state('');
-	let selectedFile = $state(null);
 
 	// Parse statement state
 	let parsingStatements = $state(new Set());
@@ -1386,9 +1336,6 @@ Try logging into the Amazon account that made this purchase, or contact the pers
 													onclick={(e) => handleAmazonLinkClick(e, createAmazonOrderLink(charge.amazon_order_id))}
 												>
 													{merchantInfo.amazonOrderId}
-													{#if checkingAmazonAccessibility}
-														<span class="ml-1 text-yellow-400">🔍</span>
-													{/if}
 												</a>
 											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
