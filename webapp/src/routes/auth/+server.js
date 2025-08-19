@@ -106,7 +106,7 @@ export async function GET({ request, platform }) {
 			status: HTML_TEMPORARY_REDIRECT,
 			headers: {
 				Location: `${url.origin}/projects/ccbilling`,
-				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; HttpOnly; SameSite=Lax`
+				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax`
 			}
 		});
 	} catch (e) {

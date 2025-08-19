@@ -24,16 +24,29 @@ export function getRedirectUri() {
 }
 
 /**
+ * Check if user is currently authenticated
+ */
+export function isUserAuthenticated() {
+	console.log('isUserAuthenticated: Checking cookies...');
+	console.log('isUserAuthenticated: document.cookie:', document.cookie);
+	
+	const match = document.cookie.match(/(^| )auth=([^;]+)/);
+	console.log('isUserAuthenticated: Cookie match:', match);
+	
+	const result = match !== null && match[2] !== 'deleted';
+	console.log('isUserAuthenticated: Result:', result);
+	
+	return result;
+}
+
+/**
  * Initiate Google OAuth flow using the Google Identity Services library
  * This is the preferred method as it handles the OAuth flow properly
  * @param {string} redirectPath - Optional path to redirect to after successful auth (defaults to /projects/ccbilling)
  */
 export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
 	// Check if user is already logged in
-	const match = document.cookie.match(/(^| )auth=([^;]+)/);
-	const hasValidAuth = match !== null && match[2] !== 'deleted';
-
-	if (hasValidAuth) {
+	if (isUserAuthenticated()) {
 		// If already logged in, redirect using SvelteKit navigation
 		const { goto } = await import('$app/navigation');
 		goto(redirectPath);

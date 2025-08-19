@@ -11,15 +11,29 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { isUserAuthenticated } from '$lib/client/google-auth.js';
 
 	let isLoggedIn = $state(false);
+
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
+	}
+
+	// Check authentication status
+	function checkAuthStatus() {
+		const authStatus = isUserAuthenticated();
+		isLoggedIn = authStatus;
 	}
 
 	import Login from '$lib/components/Login.svelte';
 
 	onMount(() => {
+		// Check initial auth status with a small delay to ensure cookie is set
+		setTimeout(checkAuthStatus, 100);
+
+		// Set up periodic auth status check (every 5 seconds)
+		const authCheckInterval = setInterval(checkAuthStatus, 5000);
+
 		const deploymentsTooltips = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
@@ -29,6 +43,7 @@
 
 		// Clean up tooltips when component unmounts
 		return () => {
+			clearInterval(authCheckInterval);
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
 				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
@@ -50,7 +65,6 @@
 			goto('/projects/ccbilling');
 		} else {
 			// User is not logged in, show login modal
-			// The Login component will handle this
 		}
 	}
 </script>
@@ -58,6 +72,7 @@
 <footer class="left-0 w-full overflow-hidden py-24">
 	<div class="relative mx-auto max-w-7xl px-4 md:px-6">
 		<p class="mb-2 block text-base font-bold tracking-tight text-green-400">NICK BRETT</p>
+
 		<div
 			class="flex flex-col md:flex-row border-t border-white/20 pt-8 text-sm text-white gap-6 md:gap-8 justify-between items-center"
 		>
@@ -100,10 +115,7 @@
 				>
 					<EnvelopeRegular />
 				</a>
-				<a
-					href="https://github.com/nickbrett1/ftn"
-					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
-				>
+				<a href="https://github.com/nickbrett1/ftn" class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center">
 					<GithubBrands />
 				</a>
 				<a
