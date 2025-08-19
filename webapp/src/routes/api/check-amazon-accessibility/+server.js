@@ -21,24 +21,42 @@ export async function POST({ request }) {
 			}
 		});
 		
-		// Check if we got a redirect (3xx status) or if the final URL is different
-		const isRedirected = response.status >= 300 && response.status < 400;
+		// Get response details
+		const status = response.status;
 		const finalUrl = response.url;
+		const headers = Object.fromEntries(response.headers.entries());
+		
+		// Check for redirect indicators
+		const hasLocationHeader = headers.location || headers.Location;
+		const isRedirectStatus = status >= 300 && status < 400;
 		const urlChanged = finalUrl !== url;
+		
+		// Log what we're seeing for debugging
+		console.log('Amazon response details:', {
+			originalUrl: url,
+			finalUrl: finalUrl,
+			status: status,
+			hasLocationHeader: hasLocationHeader,
+			locationHeader: headers.location || headers.Location,
+			urlChanged: urlChanged,
+			allHeaders: headers
+		});
 		
 		// An order is accessible if:
 		// 1. We get a 200 status (direct access)
-		// 2. The URL didn't change (we're still on the order page)
-		// 3. We didn't get a redirect status
-		const isAccessible = response.status === 200 && !urlChanged && !isRedirected;
+		// 2. No redirect headers or status codes
+		// 3. URL didn't change
+		const isAccessible = status === 200 && !isRedirectStatus && !hasLocationHeader && !urlChanged;
 		
 		return json({
 			success: true,
 			accessible: isAccessible,
-			redirected: isRedirected || urlChanged,
-			status: response.status,
+			redirected: isRedirectStatus || hasLocationHeader || urlChanged,
+			status: status,
 			finalUrl: finalUrl,
 			urlChanged: urlChanged,
+			hasLocationHeader: hasLocationHeader,
+			locationHeader: headers.location || headers.Location,
 			error: null
 		});
 		

@@ -84,6 +84,8 @@ Response URL: ${lastResponseUrl || 'Unknown'}
 Status: ${lastResponseStatus || 'Unknown'}
 Redirected: ${lastResponseRedirected || 'Unknown'}
 URL Changed: ${lastResponseUrlChanged || 'Unknown'}
+Has Location Header: ${lastResponseHasLocationHeader || 'Unknown'}
+Location Header: ${lastResponseLocationHeader || 'None'}
 Error: ${lastResponseError || 'None'}
 
 This Amazon order appears to be from a different account than the one you're currently logged into.
@@ -163,6 +165,8 @@ Try logging into the Amazon account that made this purchase, or contact the pers
 	let lastResponseError = null;
 	let lastResponseUrl = null;
 	let lastResponseUrlChanged = null;
+	let lastResponseHasLocationHeader = null;
+	let lastResponseLocationHeader = null;
 
 	// File upload state
 	let showUploadForm = $state(false);
@@ -772,6 +776,8 @@ Try logging into the Amazon account that made this purchase, or contact the pers
 			lastResponseUrl = data.finalUrl;
 			lastResponseUrlChanged = data.urlChanged;
 			lastResponseError = data.error || null;
+			lastResponseHasLocationHeader = data.hasLocationHeader;
+			lastResponseLocationHeader = data.locationHeader;
 			
 			return data.accessible;
 			
