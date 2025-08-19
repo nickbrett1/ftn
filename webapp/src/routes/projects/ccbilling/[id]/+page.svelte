@@ -67,6 +67,91 @@
 		return `https://www.amazon.com/gp/aw/ya?ac=od&ref=ppx_pop_mob_b_order_details&oid=${orderId}`;
 	}
 
+	// Function to check if Amazon order belongs to current user
+	// This is a heuristic - we'll assume orders from the last 2 years belong to the user
+	// and older orders or orders from different regions might be external
+	function isUserOwnedAmazonOrder(charge) {
+		if (!charge.amazon_order_id) return false;
+		
+		// Check if this is a recent order (likely user's own)
+		const transactionDate = charge.transaction_date || charge.created_at?.split('T')[0];
+		if (transactionDate) {
+			const orderDate = new Date(transactionDate);
+			const twoYearsAgo = new Date();
+			twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+			
+			// If order is older than 2 years, it might be external
+			if (orderDate < twoYearsAgo) {
+				return false;
+			}
+		}
+		
+		// Check if the order ID format suggests it's from a different region
+		// Amazon order IDs can have different formats for different regions
+		const orderId = charge.amazon_order_id;
+		
+		// Check for common patterns that might indicate external orders
+		// This is a heuristic based on common Amazon order ID patterns
+		if (orderId.includes('-') && orderId.split('-').length >= 3) {
+			// Standard format: XXX-XXXXXXXXX-XXXXXXX
+			// If the middle section is very long or short, it might be external
+			const parts = orderId.split('-');
+			if (parts[1] && (parts[1].length < 8 || parts[1].length > 12)) {
+				return false;
+			}
+		}
+		
+		// Check if the merchant name suggests it's from user's local Amazon
+		const merchantName = (charge.merchant_normalized || charge.merchant || '').toLowerCase();
+		
+		// If it's clearly a different region's Amazon, mark as external
+		if (merchantName.includes('amazon.co.uk') || 
+			merchantName.includes('amazon.de') || 
+			merchantName.includes('amazon.fr') || 
+			merchantName.includes('amazon.ca') ||
+			merchantName.includes('amazon.com.au') ||
+			merchantName.includes('amazon.co.jp')) {
+			// This is a heuristic - user might actually have accounts in these regions
+			// But it's safer to assume external for now
+			return false;
+		}
+		
+		// Additional checks could be added here:
+		// - Check if there are multiple Amazon charges suggesting different accounts
+		// - Check if the order ID format matches known user patterns
+		// - Check if the charge amount is in a different currency
+		
+		return true;
+	}
+
+	// Function to handle Amazon order link clicks
+	function handleAmazonOrderClick(charge, event) {
+		event.preventDefault();
+		
+		if (isUserOwnedAmazonOrder(charge)) {
+			// User's own order - navigate to Amazon
+			window.open(createAmazonOrderLink(charge.amazon_order_id), '_blank', 'noopener,noreferrer');
+		} else {
+			// External order - show popup
+			showExternalOrderPopup(charge);
+		}
+	}
+
+	// External order popup state
+	let showExternalOrderPopup = $state(false);
+	let externalOrderData = $state(null);
+
+	// Function to show external order popup
+	function showExternalOrderPopup(charge) {
+		externalOrderData = {
+			orderId: charge.amazon_order_id,
+			merchant: charge.merchant_normalized || charge.merchant,
+			date: charge.transaction_date || charge.created_at?.split('T')[0],
+			amount: charge.amount
+		};
+		showExternalOrderPopup = true;
+	}
+
 	// Function to format merchant name with clickable Amazon order links
 	function formatMerchantNameWithLinks(charge) {
 		// Use normalized merchant name for consistent display
@@ -1174,15 +1259,18 @@
 											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
 										{:else if merchantInfo.hasAmazonOrder}
 											{merchantInfo.merchant} (
-												<a 
-													href={createAmazonOrderLink(merchantInfo.amazonOrderId)}
-													target="_blank"
-													rel="noopener noreferrer"
-													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
-													title="View Amazon order details"
+												<button 
+													onclick={(event) => handleAmazonOrderClick(charge, event)}
+													class="{isUserOwnedAmazonOrder(charge) 
+														? 'text-blue-400 hover:text-blue-300' 
+														: 'text-orange-400 hover:text-orange-300'} underline cursor-pointer bg-transparent border-none p-0 font-inherit"
+													title={isUserOwnedAmazonOrder(charge) ? "View Amazon order details" : "Order may be from different Amazon account"}
 												>
 													{merchantInfo.amazonOrderId}
-												</a>
+													{#if !isUserOwnedAmazonOrder(charge)}
+														<span class="text-xs ml-1">⚠️</span>
+													{/if}
+												</button>
 											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
 											{merchantInfo.merchant} ({formatForeignCurrency(charge)})
@@ -1302,15 +1390,18 @@
 											✈️ {merchantInfo.merchant} ({merchantInfo.flightDetails})
 										{:else if merchantInfo.hasAmazonOrder}
 											{merchantInfo.merchant} (
-												<a 
-													href={createAmazonOrderLink(merchantInfo.amazonOrderId)}
-													target="_blank"
-													rel="noopener noreferrer"
-													class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
-													title="View Amazon order details"
+												<button 
+													onclick={(event) => handleAmazonOrderClick(charge, event)}
+													class="{isUserOwnedAmazonOrder(charge) 
+														? 'text-blue-400 hover:text-blue-300' 
+														: 'text-orange-400 hover:text-orange-300'} underline cursor-pointer bg-transparent border-none p-0 font-inherit"
+													title={isUserOwnedAmazonOrder(charge) ? "View Amazon order details" : "Order may be from different Amazon account"}
 												>
 													{merchantInfo.amazonOrderId}
-												</a>
+													{#if !isUserOwnedAmazonOrder(charge)}
+														<span class="text-xs ml-1">⚠️</span>
+													{/if}
+												</button>
 											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
 											{merchantInfo.merchant} ({formatForeignCurrency(charge)})
@@ -1480,6 +1571,76 @@
 		on:skip={handleSkipAutoAssociation}
 		on:close={closeAutoAssociationModal}
 	/>
+
+	<!-- External Amazon Order Popup -->
+	{#if showExternalOrderPopup && externalOrderData}
+		<div
+			class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+			onclick={() => (showExternalOrderPopup = false)}
+		>
+			<div
+				class="bg-gray-800 border border-gray-600 rounded-lg p-6 mx-4 max-w-md w-full"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<div class="text-center mb-4">
+					<div class="text-3xl mb-2">⚠️</div>
+					<h3 class="text-white text-lg font-medium">External Amazon Order</h3>
+					<p class="text-gray-400 text-sm mt-1">
+						This order may not be accessible
+					</p>
+				</div>
+				
+				<div class="space-y-3 mb-6">
+					<div class="flex justify-between">
+						<span class="text-gray-400">Order ID:</span>
+						<span class="text-white font-mono">{externalOrderData.orderId}</span>
+					</div>
+					<div class="flex justify-between">
+						<span class="text-gray-400">Merchant:</span>
+						<span class="text-white">{externalOrderData.merchant}</span>
+					</div>
+					<div class="flex justify-between">
+						<span class="text-gray-400">Date:</span>
+						<span class="text-white">
+							{externalOrderData.date ? formatShortDate(externalOrderData.date) : 'Unknown'}
+						</span>
+					</div>
+					<div class="flex justify-between">
+						<span class="text-gray-400">Amount:</span>
+						<span class="text-white font-medium">
+							${Math.abs(externalOrderData.amount).toFixed(2)}
+						</span>
+					</div>
+				</div>
+
+				<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-3 mb-6">
+					<div class="text-blue-300 text-sm">
+						<strong>Why this happens:</strong> Amazon order links only work for orders from your own account. 
+						This order appears to be from a different Amazon account or region, so the link would redirect to a generic page.
+					</div>
+				</div>
+
+				<div class="flex justify-end gap-3">
+					<button
+						class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+						onclick={() => (showExternalOrderPopup = false)}
+					>
+						Close
+					</button>
+					<button
+						class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
+						onclick={() => {
+							window.open(createAmazonOrderLink(externalOrderData.orderId), '_blank', 'noopener,noreferrer');
+							showExternalOrderPopup = false;
+						}}
+						title="Try anyway (will likely redirect to Amazon order listing)"
+					>
+						Try Anyway
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Cycle Information -->
 	</div>
