@@ -11,7 +11,6 @@
 		"dev": "npm run predev && doppler run -- vite dev",
 		"prebuild": "node scripts/copy-pdf-worker.js",
 		"build": "doppler run -- vite build",
-
 		"check-pdf-worker": "node scripts/check-pdf-worker.js",
 		"preview": "doppler run -- vite preview",
 		"lint": "prettier --check . && eslint .",
@@ -27,9 +26,7 @@
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
 		"deploy": "npx wrangler deploy -e production",
-		"deploy-preview": "chmod +x ./deploy-preview.sh && ./deploy-preview.sh",
-		"preview-url": "./get-preview-url.sh",
-		"cleanup-previews": "./cleanup-preview-environments.sh"
+		"deploy-preview": "npx wrangler deploy --env preview"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.11.5",
