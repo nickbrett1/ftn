@@ -12,6 +12,7 @@
 	let refreshing = false;
 	let showAccessibilityPopup = false;
 	let checkingAccessibility = false;
+	let debugInfo = null;
 
 	// Check if this is an Amazon charge
 	$: isAmazon =
@@ -58,13 +59,23 @@
 			// Get the response text to check the content
 			const html = await response.text();
 			
-			// Debug logging to help understand what we're getting
-			console.log('Amazon response URL:', response.url);
-			console.log('Amazon response status:', response.status);
-			console.log('Amazon response content length:', html.length);
-			console.log('Amazon response contains order-details:', html.includes('order-details'));
-			console.log('Amazon response contains order-history:', html.includes('order-history'));
-			console.log('Amazon response contains css/order-history:', html.includes('css/order-history'));
+			// Store debug information for display
+			debugInfo = {
+				url: response.url,
+				status: response.status,
+				contentLength: html.length,
+				hasOrderDetails: html.includes('order-details'),
+				hasOrderHistory: html.includes('order-history'),
+				hasCssOrderHistory: html.includes('css/order-history'),
+				hasOrderId: html.includes('orderID='),
+				hasOrderDetail: html.includes('order-detail'),
+				hasOrderDetailsContainer: html.includes('order-details-container'),
+				hasOrderHistoryTable: html.includes('order-history-table'),
+				hasOrderHistoryContainer: html.includes('order-history-container'),
+				hasOrderHistoryPage: html.includes('order-history-page'),
+				hasYourOrders: html.includes('Your Orders'),
+				contentPreview: html.substring(0, 500) + '...'
+			};
 			
 			// Check if we're on the specific order page or redirected to order history
 			// The specific order page contains order details, while the order history page has different content
@@ -238,6 +249,13 @@
 									<span class="checking-indicator">🔍</span>
 								{/if}
 							</a>
+							<button
+								class="debug-check-button"
+								on:click={() => checkOrderAccessibility(orderInfo.order_info.order_url)}
+								disabled={checkingAccessibility}
+							>
+								🔍 Test Accessibility Check
+							</button>
 						</div>
 						<p class="link-description">
 							{orderInfo.order_info.message || 'Click the link above to view your order details on Amazon'}
@@ -246,6 +264,44 @@
 				{/if}
 
 				<button on:click={() => (showDetails = false)} class="close-button"> Close Details </button>
+			</div>
+		{/if}
+		
+		<!-- Debug Information Panel -->
+		{#if debugInfo}
+			<div class="debug-panel">
+				<h4>🔍 Debug Info - Amazon Response</h4>
+				<div class="debug-grid">
+					<div class="debug-item">
+						<strong>Response URL:</strong> <span class="debug-value">{debugInfo.url}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Status:</strong> <span class="debug-value">{debugInfo.status}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Content Length:</strong> <span class="debug-value">{debugInfo.contentLength}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Has order-details:</strong> <span class="debug-value {debugInfo.hasOrderDetails ? 'true' : 'false'}">{debugInfo.hasOrderDetails}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Has order-history:</strong> <span class="debug-value {debugInfo.hasOrderHistory ? 'true' : 'false'}">{debugInfo.hasOrderHistory}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Has css/order-history:</strong> <span class="debug-value {debugInfo.hasCssOrderHistory ? 'true' : 'false'}">{debugInfo.hasCssOrderHistory}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Has orderID=:</strong> <span class="debug-value {debugInfo.hasOrderId ? 'true' : 'false'}">{debugInfo.hasOrderId}</span>
+					</div>
+					<div class="debug-item">
+						<strong>Has Your Orders:</strong> <span class="debug-value {debugInfo.hasYourOrders ? 'true' : 'false'}">{debugInfo.hasYourOrders}</span>
+					</div>
+				</div>
+				<div class="debug-content-preview">
+					<strong>Content Preview (first 500 chars):</strong>
+					<pre class="debug-pre">{debugInfo.contentPreview}</pre>
+				</div>
+				<button class="debug-close-button" on:click={() => (debugInfo = null)}>Close Debug Info</button>
 			</div>
 		{/if}
 	</div>
@@ -672,5 +728,122 @@
 
 	:global(.dark) .popup-actions {
 		border-color: #444;
+	}
+
+	/* Debug Panel Styles */
+	.debug-panel {
+		margin-top: 1rem;
+		padding: 1rem;
+		background: #f0f8ff;
+		border: 1px solid #0066cc;
+		border-radius: 8px;
+		font-family: monospace;
+		font-size: 0.875rem;
+	}
+
+	.debug-panel h4 {
+		margin: 0 0 1rem 0;
+		color: #0066cc;
+		font-size: 1rem;
+	}
+
+	.debug-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.debug-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.25rem 0;
+	}
+
+	.debug-value {
+		font-weight: bold;
+		padding: 0.125rem 0.25rem;
+		border-radius: 3px;
+	}
+
+	.debug-value.true {
+		background: #d4edda;
+		color: #155724;
+	}
+
+	.debug-value.false {
+		background: #f8d7da;
+		color: #721c24;
+	}
+
+	.debug-content-preview {
+		margin-bottom: 1rem;
+	}
+
+	.debug-pre {
+		background: #f8f9fa;
+		border: 1px solid #dee2e6;
+		border-radius: 4px;
+		padding: 0.5rem;
+		margin: 0.5rem 0 0 0;
+		font-size: 0.75rem;
+		white-space: pre-wrap;
+		word-break: break-all;
+		max-height: 200px;
+		overflow-y: auto;
+	}
+
+	.debug-close-button {
+		background: #6c757d;
+		color: white;
+		border: none;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: background 0.2s;
+	}
+
+	.debug-close-button:hover {
+		background: #5a6268;
+	}
+
+	.debug-check-button {
+		background: #17a2b8;
+		color: white;
+		border: none;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: background 0.2s;
+		margin-left: 0.5rem;
+		font-size: 0.875rem;
+	}
+
+	.debug-check-button:hover:not(:disabled) {
+		background: #138496;
+	}
+
+	.debug-check-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	/* Dark mode support for debug panel */
+	:global(.dark) .debug-panel {
+		background: #1a1a2e;
+		border-color: #4a9eff;
+	}
+
+	:global(.dark) .debug-panel h4 {
+		color: #4a9eff;
+	}
+
+	:global(.dark) .debug-pre {
+		background: #2a2a3e;
+		border-color: #4a4a5e;
+		color: #e0e0e0;
 	}
 </style>
