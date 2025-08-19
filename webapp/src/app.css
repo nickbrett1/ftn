@@ -219,6 +219,22 @@ html, body {
 	opacity: 1 !important;
 }
 
+/* General styles for external links to ensure proper mobile behavior */
+a[target="_blank"] {
+	-webkit-touch-callout: default;
+	-webkit-user-select: text;
+	user-select: text;
+	touch-action: manipulation;
+}
+
+/* Ensure Amazon order links have proper mobile behavior */
+a[href*="amazon.com"] {
+	-webkit-touch-callout: default;
+	-webkit-user-select: text;
+	user-select: text;
+	touch-action: manipulation;
+}
+
 /* Additional mobile-specific truncation support */
 @media (max-width: 640px) {
 	.truncate {
@@ -269,6 +285,21 @@ html, body {
 	/* Add top margin for mobile modal positioning */
 	.fixed.inset-0.z-\[9999\] > div {
 		margin-top: 1rem !important;
+	}
+	
+	/* Mobile-specific styles for Amazon order links */
+	/* Ensure links are properly tappable on mobile devices */
+	a[href*="amazon.com"] {
+		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
+		touch-action: manipulation;
+		-webkit-touch-callout: default;
+		-webkit-user-select: text;
+		user-select: text;
+	}
+	
+	/* Improve long-press behavior on mobile */
+	a[href*="amazon.com"]:active {
+		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.5);
 	}
 }
 
