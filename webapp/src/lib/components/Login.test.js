@@ -5,7 +5,8 @@ import Login from './Login.svelte';
 
 // Mock the shared Google auth utility
 vi.mock('$lib/client/google-auth.js', () => ({
-	initiateGoogleAuth: vi.fn()
+	initiateGoogleAuth: vi.fn(),
+	isUserAuthenticated: vi.fn()
 }));
 
 // Mock SvelteKit navigation
@@ -19,14 +20,11 @@ describe('Login correctly', () => {
 	});
 
 	it('logs in', async () => {
-						const { initiateGoogleAuth } = await import('$lib/client/google-auth.js');
+		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
 		const { goto } = await import('$app/navigation');
 
-		// Mock document.cookie to simulate not logged in
-		Object.defineProperty(document, 'cookie', {
-			writable: true,
-			value: ''
-		});
+		// Mock isUserAuthenticated to return false (not logged in)
+		isUserAuthenticated.mockReturnValue(false);
 
 		render(Login);
 		const button = screen.getByRole('button');
@@ -40,12 +38,10 @@ describe('Login correctly', () => {
 
 	it('redirects to ccbilling if already logged in', async () => {
 		const { goto } = await import('$app/navigation');
+		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
 
-		// Mock document.cookie to simulate logged in
-		Object.defineProperty(document, 'cookie', {
-			writable: true,
-			value: 'auth=some-auth-token'
-		});
+		// Mock isUserAuthenticated to return true (logged in)
+		isUserAuthenticated.mockReturnValue(true);
 
 		render(Login);
 		const button = screen.getByRole('button');
@@ -55,5 +51,7 @@ describe('Login correctly', () => {
 
 		// Should redirect to ccbilling
 		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+		// Should not call initiateGoogleAuth
+		expect(initiateGoogleAuth).not.toHaveBeenCalled();
 	});
 });
