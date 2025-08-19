@@ -7,8 +7,7 @@
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
-		SitemapSolid,
-		CreditCardSolid
+		SitemapSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -21,20 +20,6 @@
 		<div class="md:p-6 text-pretty md:text-right text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code and writings.
 		</div>
-
-		<Card onclick={() => (window.location.href = '/projects/ccbilling')}>
-			<div class="flex flex-col grow">
-				<div class="flex flex-row">
-					<span class="text-xl font-bold leading-none pt-2 grow"
-						>Credit Card Billing Tool</span
-					>
-					<CreditCardSolid class="size-10" aria-label="Credit Card Billing Tool" />
-				</div>
-				<p class="grow pt-5">
-					A comprehensive tool for managing credit card statements, tracking charges, and organizing expenses across multiple cards and billing cycles.
-				</p>
-			</div>
-		</Card>
 
 		<Card onclick={() => (window.location.href = '/projects/dbt-duckdb')}>
 			<div class="flex flex-col grow">
