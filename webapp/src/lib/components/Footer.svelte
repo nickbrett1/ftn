@@ -21,14 +21,18 @@
 
 	// Check authentication status
 	function checkAuthStatus() {
-		isLoggedIn = isUserAuthenticated();
+		console.log('Footer: Checking auth status...');
+		console.log('Footer: Current cookies:', document.cookie);
+		const authStatus = isUserAuthenticated();
+		console.log('Footer: Auth status result:', authStatus);
+		isLoggedIn = authStatus;
 	}
 
 	import Login from '$lib/components/Login.svelte';
 
 	onMount(() => {
-		// Check initial auth status
-		checkAuthStatus();
+		// Check initial auth status with a small delay to ensure cookie is set
+		setTimeout(checkAuthStatus, 100);
 		
 		// Set up periodic auth status check (every 5 seconds)
 		const authCheckInterval = setInterval(checkAuthStatus, 5000);
@@ -59,11 +63,15 @@
 	});
 
 	function handleCreditCardClick() {
+		console.log('Footer: Credit card clicked, isLoggedIn:', isLoggedIn);
+		console.log('Footer: Current cookies:', document.cookie);
 		if (isLoggedIn) {
 			// User is already logged in, go directly to billing page
+			console.log('Footer: Redirecting to /projects/ccbilling');
 			goto('/projects/ccbilling');
 		} else {
 			// User is not logged in, show login modal
+			console.log('Footer: User not logged in, showing login modal');
 			// The Login component will handle this
 		}
 	}
