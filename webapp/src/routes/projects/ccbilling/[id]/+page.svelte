@@ -71,6 +71,13 @@
 	async function checkOrderAccessibility(orderUrl) {
 		if (!orderUrl) return false;
 		
+		// Reset debug info
+		lastResponseStatus = null;
+		lastResponseRedirected = null;
+		lastResponseError = null;
+		lastResponseUrl = null;
+		lastResponseHeaders = null;
+		
 		checkingAmazonAccessibility = true;
 		
 		try {
@@ -82,12 +89,20 @@
 				redirect: 'manual' // Don't follow redirects automatically
 			});
 			
+			// Store debug info
+			lastResponseStatus = response.status;
+			lastResponseRedirected = response.status >= 300 && response.status < 400;
+			lastResponseUrl = response.url;
+			lastResponseHeaders = response.headers;
+			
 			// If we get a redirect (3xx status), the order is not accessible
 			// If we get 200, the order page is accessible
 			const isAccessible = response.status === 200;
 			
 			return isAccessible;
 		} catch (err) {
+			// Store error info
+			lastResponseError = err.message;
 			// If there's an error (like CORS), assume it's not accessible
 			return false;
 		} finally {
@@ -105,8 +120,22 @@
 			// Open the link in a new tab if accessible
 			window.open(orderUrl, '_blank', 'noopener,noreferrer');
 		} else {
-			// Show alert for inaccessible orders
-			alert('⚠️ Order Not Accessible\n\nThis Amazon order appears to be from a different account than the one you\'re currently logged into.\n\nCredit card statements may contain charges from family members, business accounts, or other Amazon accounts that you don\'t have access to.\n\nTry logging into the Amazon account that made this purchase, or contact the person who made the charge for order details.');
+			// Show alert for inaccessible orders with debug info
+			const debugInfo = `🔍 Debug Info:
+URL: ${orderUrl}
+Response URL: ${lastResponseUrl || 'Unknown'}
+Status: ${lastResponseStatus || 'Unknown'}
+Redirected: ${lastResponseRedirected || 'Unknown'}
+Error: ${lastResponseError || 'None'}
+Headers: ${lastResponseHeaders ? Array.from(lastResponseHeaders.entries()).map(([k,v]) => \`\${k}: \${v}\`).join(', ') : 'None'}
+
+This Amazon order appears to be from a different account than the one you're currently logged into.
+
+Credit card statements may contain charges from family members, business accounts, or other Amazon accounts that you don't have access to.
+
+Try logging into the Amazon account that made this purchase, or contact the person who made the charge for order details.`;
+			
+			alert(debugInfo);
 		}
 	}
 
@@ -172,6 +201,11 @@
 	let isDeleting = $state(false);
 	let deleteError = $state('');
 	let checkingAmazonAccessibility = $state(false);
+	let lastResponseStatus = null;
+	let lastResponseRedirected = null;
+	let lastResponseError = null;
+	let lastResponseUrl = null;
+	let lastResponseHeaders = null;
 
 	// File upload state
 	let showUploadForm = $state(false);
