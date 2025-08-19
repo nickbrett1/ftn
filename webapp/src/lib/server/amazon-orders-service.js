@@ -90,21 +90,9 @@ export function generateAmazonOrderUrl(orderId) {
 }
 
 /**
- * Generate Amazon order search URL as fallback
- * @param {string} orderId - Amazon order ID
- * @returns {string} - Amazon search URL
- */
-export function generateAmazonSearchUrl(orderId) {
-	if (!orderId) return null;
-	
-	// Amazon search URL as fallback
-	return `https://www.amazon.com/s?k=${encodeURIComponent(orderId)}`;
-}
-
-/**
  * Get Amazon order information for display
  * @param {string} orderId - Amazon order ID
- * @returns {Object} - Order information with click-out links
+ * @returns {Object} - Order information with click-out link
  */
 export function getAmazonOrderInfo(orderId) {
 	if (!orderId) return null;
@@ -112,7 +100,6 @@ export function getAmazonOrderInfo(orderId) {
 	return {
 		order_id: orderId,
 		order_url: generateAmazonOrderUrl(orderId),
-		search_url: generateAmazonSearchUrl(orderId),
 		message: 'Click the link above to view your order details on Amazon',
 		timestamp: new Date().toISOString()
 	};
