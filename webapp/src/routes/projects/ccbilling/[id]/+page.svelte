@@ -71,29 +71,28 @@
 	async function handleAmazonLinkClick(event, orderUrl) {
 		event.preventDefault();
 		
-		// Show helpful information about Amazon order access
-		const infoMessage = `🛒 Amazon Order Access
-
-You're about to view an Amazon order. Here's what to expect:
-
-✅ If you have access: You'll see the order details
-❌ If you don't have access: Amazon will show you their order history page
-
-This can happen when:
-• The order is from a different Amazon account
-• The order is from a family member's account  
-• The order is from a business account
-• You're not logged into the right Amazon account
-
-Amazon will handle the redirect automatically and show you the appropriate page.
-
-Click OK to proceed to Amazon, or Cancel to stay here.`;
+		const isAccessible = await checkOrderAccessibility(orderUrl);
 		
-		if (confirm(infoMessage)) {
-			// User clicked OK, open the Amazon link
+		if (isAccessible) {
+			// Open the link in a new tab if accessible
 			window.open(orderUrl, '_blank', 'noopener,noreferrer');
+		} else {
+			// Show alert for inaccessible orders with debug info
+			const debugInfo = `🔍 Debug Info:
+URL: ${orderUrl}
+Response URL: ${lastResponseUrl || 'Unknown'}
+Status: ${lastResponseStatus || 'Unknown'}
+Redirected: ${lastResponseRedirected || 'Unknown'}
+Error: ${lastResponseError || 'None'}
+
+This Amazon order appears to be from a different account than the one you're currently logged into.
+
+Credit card statements may contain charges from family members, business accounts, or other Amazon accounts that you don't have access to.
+
+Try logging into the Amazon account that made this purchase, or contact the person who made the charge for order details.`;
+			
+			alert(debugInfo);
 		}
-		// If user clicked Cancel, stay on the current page
 	}
 
 	// Function to format merchant name with clickable Amazon order links
@@ -157,6 +156,11 @@ Click OK to proceed to Amazon, or Cancel to stay here.`;
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
+	let checkingAmazonAccessibility = $state(false);
+	let lastResponseStatus = null;
+	let lastResponseRedirected = null;
+	let lastResponseError = null;
+	let lastResponseUrl = null;
 
 	// File upload state
 	let showUploadForm = $state(false);
@@ -736,6 +740,46 @@ Click OK to proceed to Amazon, or Cancel to stay here.`;
 	onDestroy(() => {
 		// Cleanup when component unmounts
 	});
+
+	// Check if Amazon order is accessible to the current user
+	async function checkOrderAccessibility(orderUrl) {
+		if (!orderUrl) return false;
+		
+		checkingAmazonAccessibility = true;
+		
+		try {
+			// Use our server-side proxy to check Amazon accessibility
+			// This avoids CORS issues by making the request from our backend
+			const response = await fetch('/api/check-amazon-accessibility', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ url: orderUrl })
+			});
+			
+			if (!response.ok) {
+				throw new Error(`Server error: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			
+			// Store debug info
+			lastResponseStatus = data.status;
+			lastResponseRedirected = data.redirected;
+			lastResponseUrl = data.finalUrl;
+			lastResponseError = data.error || null;
+			
+			return data.accessible;
+			
+		} catch (err) {
+			// Store error info
+			lastResponseError = err.message;
+			return false;
+		} finally {
+			checkingAmazonAccessibility = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -1209,6 +1253,9 @@ Click OK to proceed to Amazon, or Cancel to stay here.`;
 													onclick={(e) => handleAmazonLinkClick(e, createAmazonOrderLink(charge.amazon_order_id))}
 												>
 													{merchantInfo.amazonOrderId}
+													{#if checkingAmazonAccessibility}
+														<span class="ml-1 text-yellow-400">🔍</span>
+													{/if}
 												</a>
 											)
 										{:else if charge.is_foreign_currency && formatForeignCurrency(charge)}
