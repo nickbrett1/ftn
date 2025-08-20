@@ -132,6 +132,19 @@
 		return [x, y, z];
 	}
 
+	// Get position for floating market indicators
+	function getMarketIndicatorPosition(marketIndex) {
+		const basePos = getGlobePosition();
+		const offset = (marketIndex - 1.5) * 0.4;
+		const height = 1.8;
+		
+		return [
+			basePos[0] + offset,
+			basePos[1] + height,
+			basePos[2]
+		];
+	}
+
 	// Determine marker color based on market sentiment
 	function getMarkerColor() {
 		if (center.marketSentiment >= 0) {
@@ -190,22 +203,41 @@
 	/>
 </T.Mesh>
 
+<!-- Add a pulsing ring effect -->
+<T.Mesh position={getGlobePosition()}>
+	<T.RingGeometry args={[getMarkerSize() * 2, getMarkerSize() * 2.5, 8]} />
+	<T.MeshBasicMaterial
+		color={getMarkerColor()}
+		transparent={true}
+		opacity={0.3 * pulseIntensity}
+		side={THREE.DoubleSide}
+	/>
+</T.Mesh>
+
 <!-- Add market data indicators floating above the marker -->
 {#each marketData as market, marketIndex}
 	<T.Mesh 
-		position={[
-			getGlobePosition()[0] + (marketIndex - 1.5) * 0.3,
-			getGlobePosition()[1] + 1.5,
-			getGlobePosition()[2]
-		]}
+		position={getMarketIndicatorPosition(marketIndex)}
 	>
-		<T.SphereGeometry args={[0.1, 6, 6]} />
-		<T.MeshBasicMaterial
+		<T.SphereGeometry args={[0.12, 8, 6]} />
+		<T.MeshStandardMaterial
 			color={market.change >= 0 ? '#00ff88' : '#ff0088'}
 			emissive={market.change >= 0 ? '#00ff88' : '#ff0088'}
 			emissiveIntensity={0.8}
+			metalness={0.6}
+			roughness={0.3}
 			transparent={true}
-			opacity={0.7}
+			opacity={0.8}
+		/>
+	</T.Mesh>
+	
+	<!-- Add a subtle glow around each market indicator -->
+	<T.Mesh position={getMarketIndicatorPosition(marketIndex)}>
+		<T.SphereGeometry args={[0.18, 6, 4]} />
+		<T.MeshBasicMaterial
+			color={market.change >= 0 ? '#00ff88' : '#ff0088'}
+			transparent={true}
+			opacity={0.2}
 		/>
 	</T.Mesh>
 {/each}
