@@ -66,7 +66,7 @@ jobs:
   code_test:
     docker:
       - image: cimg/node:current
-    resource_class: large  # Increase to large for more memory and CPU resources
+    resource_class: large # Increase to large for more memory and CPU resources
     steps:
       - checkout
       - restore_cache:
@@ -181,7 +181,13 @@ jobs:
           name: Sync Doppler secrets to Cloudflare (production)
           command: |
             cd webapp
-            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production
+            echo "Attempting to sync secrets to Cloudflare production environment..."
+            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production; then
+              echo "✅ Secrets successfully synced to Cloudflare production"
+            else
+              echo "❌ Error: Failed to sync secrets to Cloudflare production. This is critical for production deployments."
+              exit 1
+            fi
       - run:
           name: Deploying to Cloudflare
           command: |
@@ -220,7 +226,13 @@ jobs:
           name: Sync Doppler secrets to Cloudflare (preview)
           command: |
             cd webapp
-            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview
+            echo "Attempting to sync secrets to Cloudflare preview environment..."
+            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview; then
+              echo "✅ Secrets successfully synced to Cloudflare preview"
+            else
+              echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview. This may be due to script settings conflicts."
+              echo "Continuing with deployment as this is not critical for preview environments..."
+            fi
       - run:
           name: Deploying preview to Cloudflare
           command: |
