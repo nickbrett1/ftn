@@ -50,6 +50,12 @@
 		try {
 			console.log('Starting to fetch worker info for', deployments.length, 'deployments');
 			for (const deployment of deployments) {
+				// Skip if we already have worker info for this deployment
+				if (deployment.workerInfo || deployment.workerInfoError) {
+					console.log('Skipping', deployment.name, '- already has worker info');
+					continue;
+				}
+				
 				if (deployment.url) {
 					console.log('Fetching worker info for:', deployment.name, 'at URL:', deployment.url);
 					try {
@@ -95,7 +101,17 @@
 			try {
 				const response = await fetch('/api/deploys');
 				if (response.ok) {
-					deployments = await response.json();
+					const newDeployments = await response.json();
+					// Preserve existing worker info when updating deployments
+					deployments = newDeployments.map(newDeployment => {
+						const existingDeployment = deployments.find(d => d.name === newDeployment.name);
+						return {
+							...newDeployment,
+							workerInfo: existingDeployment?.workerInfo || null,
+							workerInfoError: existingDeployment?.workerInfoError || null
+						};
+					});
+					// Only fetch worker info for deployments that don't have it yet
 					await fetchWorkerInfo();
 					lastUpdated = new Date();
 					updatePageUrl();
@@ -120,7 +136,17 @@
 		try {
 			const response = await fetch('/api/deploys');
 			if (response.ok) {
-				deployments = await response.json();
+				const newDeployments = await response.json();
+				// Preserve existing worker info when updating deployments
+				deployments = newDeployments.map(newDeployment => {
+					const existingDeployment = deployments.find(d => d.name === newDeployment.name);
+					return {
+						...newDeployment,
+						workerInfo: existingDeployment?.workerInfo || null,
+						workerInfoError: existingDeployment?.workerInfoError || null
+					};
+				});
+				// Only fetch worker info for deployments that don't have it yet
 				await fetchWorkerInfo();
 				lastUpdated = new Date();
 				updatePageUrl();
