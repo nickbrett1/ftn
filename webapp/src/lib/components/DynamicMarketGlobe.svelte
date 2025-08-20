@@ -140,6 +140,8 @@
 				<!-- Enhanced lighting for dramatic effect -->
 				<T.AmbientLight intensity={0.1} color="#ffffff" />
 				<T.DirectionalLight position={[50, 30, 20]} intensity={0.8} color="#ffffff" />
+				<T.PointLight position={[20, 15, 10]} intensity={0.6} color="#4a90e2" distance={100} />
+				<T.PointLight position={[-20, 15, -10]} intensity={0.4} color="#ffffff" distance={80} />
 				
 				<!-- Sun - bright glowing sphere -->
 				<T.Mesh position={[100, 50, 50]}>
@@ -188,27 +190,76 @@
 					/>
 				</T.Points>
 				
-				<!-- Earth with realistic textures -->
+				<!-- Earth with realistic appearance -->
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10, 64, 64]} />
 					<T.MeshStandardMaterial
 						color="#4a90e2"
 						emissive="#1a3a5a"
 						emissiveIntensity={0.1}
-						metalness={0.1}
-						roughness={0.8}
-					>
-						<!-- Earth texture map -->
-						<T.TextureLoader
-							attach="map"
-							args={['/earth-texture.jpg']}
-							onload={(texture) => {
-								texture.wrapS = THREE.RepeatWrapping;
-								texture.wrapT = THREE.RepeatWrapping;
-							}}
-						/>
-					</T.MeshStandardMaterial>
+						metalness={0.2}
+						roughness={0.7}
+						wireframe={false}
+					/>
 				</T.Mesh>
+				
+				<!-- Earth atmosphere glow -->
+				<T.Mesh position={[0, 0, 0]}>
+					<T.SphereGeometry args={[10.3, 32, 32]} />
+					<T.MeshBasicMaterial
+						color="#4a90e2"
+						transparent={true}
+						opacity={0.1}
+					/>
+				</T.Mesh>
+				
+				<!-- Subtle grid lines on Earth surface -->
+				<T.LineSegments>
+					<T.BufferGeometry>
+						<T.BufferAttribute
+							attach="attributes.position"
+							args={[
+								new Float32Array([
+									// Latitude lines
+									...Array.from({ length: 8 }, (_, i) => {
+										const lat = (i - 4) * Math.PI / 4;
+										const points = [];
+										for (let j = 0; j <= 32; j++) {
+											const lng = j * Math.PI / 16;
+											points.push(
+												10 * Math.cos(lat) * Math.cos(lng),
+												10 * Math.sin(lat),
+												10 * Math.cos(lat) * Math.sin(lng)
+											);
+										}
+										return points;
+									}).flat(),
+									// Longitude lines
+									...Array.from({ length: 16 }, (_, i) => {
+										const lng = i * Math.PI / 8;
+										const points = [];
+										for (let j = 0; j <= 16; j++) {
+											const lat = (j - 8) * Math.PI / 8;
+											points.push(
+												10 * Math.cos(lat) * Math.cos(lng),
+												10 * Math.sin(lat),
+												10 * Math.cos(lat) * Math.sin(lng)
+											);
+										}
+										return points;
+									}).flat()
+								]),
+								3
+							]}
+						/>
+					</T.BufferGeometry>
+					<T.LineBasicMaterial
+						color="#2a5a8a"
+						transparent={true}
+						opacity={0.3}
+						linewidth={1}
+					/>
+				</T.LineSegments>
 				
 				<!-- Financial center markers on the globe -->
 				{#if financialCentersData && financialCentersData.length > 0}
