@@ -356,10 +356,12 @@
 												✨ FRESH
 											</span>
 										{/if}
-										{@const health = getDeploymentHealth(deployment._debug?.worker_created_on)}
-										<span class="text-xs {health.color} px-2 py-1 rounded-full flex items-center gap-1">
-											{health.icon} {health.status}
-										</span>
+										{#if deployment._debug?.worker_created_on}
+											{@const health = getDeploymentHealth(deployment._debug.worker_created_on)}
+											<span class="text-xs {health.color} px-2 py-1 rounded-full flex items-center gap-1">
+												{health.icon} {health.status}
+											</span>
+										{/if}
 									</div>
 									<div class="text-sm text-green-300">Version: {deployment.version}</div>
 									{#if deployment._debug?.worker_created_on}
@@ -462,10 +464,12 @@
 											✨ FRESH
 										</span>
 									{/if}
-									{@const health = getDeploymentHealth(deployment._debug?.worker_created_on)}
-									<span class="text-xs {health.color} px-2 py-1 rounded-full flex items-center gap-1">
-										{health.icon} {health.status}
-									</span>
+									{#if deployment._debug?.worker_created_on}
+										{@const health = getDeploymentHealth(deployment._debug?.worker_created_on)}
+										<span class="text-xs {health.color} px-2 py-1 rounded-full flex items-center gap-1">
+											{health.icon} {health.status}
+										</span>
+									{/if}
 									{#if deployment._debug?.worker_created_on}
 										{@const ageCategory = getDeploymentAgeCategory(deployment._debug.worker_created_on)}
 										<span class="text-xs {ageCategory.color} px-2 py-1 rounded-full border border-current">
