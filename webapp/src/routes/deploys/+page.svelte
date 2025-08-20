@@ -959,28 +959,29 @@
 				{/each}
 				
 				{#if alerts.length > 0}
-				<div class="space-y-3 mb-6">
-					{#each alerts as alert}
-						<div class="border rounded-lg p-4 {alert.type === 'warning' ? 'bg-red-900/20 border-red-700' : 'bg-blue-900/20 border-blue-700'}">
-							<div class="flex items-start gap-3">
-								<span class="text-lg">
-									{#if alert.type === 'warning'}⚠️{:else}ℹ️{/if}
-								</span>
-								<div class="flex-1">
-									<h4 class="font-semibold {alert.type === 'warning' ? 'text-red-300' : 'text-blue-300'} mb-1">
-										{alert.title}
-									</h4>
-									<p class="text-sm {alert.type === 'warning' ? 'text-red-400' : 'text-blue-400'} mb-2">
-										{alert.message}
-									</p>
-									<div class="text-xs text-gray-400">
-										Environment: {alert.deployment.environment} | Version: {alert.deployment.version}
+					<div class="space-y-3 mb-6">
+						{#each alerts as alert}
+							<div class="border rounded-lg p-4 {alert.type === 'warning' ? 'bg-red-900/20 border-red-700' : 'bg-blue-900/20 border-blue-700'}">
+								<div class="flex items-start gap-3">
+									<span class="text-lg">
+										{#if alert.type === 'warning'}⚠️{:else}ℹ️{/if}
+									</span>
+									<div class="flex-1">
+										<h4 class="font-semibold {alert.type === 'warning' ? 'text-red-300' : 'text-blue-300'} mb-1">
+											{alert.title}
+										</h4>
+										<p class="text-sm {alert.type === 'warning' ? 'text-red-400' : 'text-blue-400'} mb-2">
+											{alert.message}
+										</p>
+										<div class="text-xs text-gray-400">
+											Environment: {alert.deployment.environment} | Version: {alert.deployment.version}
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-					{/each}
-				</div>
+						{/each}
+					</div>
+				{/if}
 			{/if}
 		{/if}
 
