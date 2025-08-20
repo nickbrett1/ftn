@@ -29,11 +29,9 @@
 				updatePageUrl();
 			} else {
 				const errorData = await response.text();
-				console.error('Deploys API error response:', errorData);
 				error = `Failed to fetch deployments: ${response.status} ${response.statusText}. ${errorData}`;
 			}
 		} catch (err) {
-			console.error('Deploys fetch error:', err);
 			error = 'Error fetching deployments: ' + err.message;
 		} finally {
 			loading = false;
@@ -48,19 +46,15 @@
 		// Fetch worker info for each deployment to get build time, branch, and commit
 		fetchingWorkerInfo = true;
 		try {
-			console.log('Starting to fetch worker info for', deployments.length, 'deployments');
 			for (const deployment of deployments) {
 				// Skip if we already have worker info for this deployment
 				if (deployment.workerInfo || deployment.workerInfoError) {
-					console.log('Skipping', deployment.name, '- already has worker info');
 					continue;
 				}
 				
 				if (deployment.url) {
-					console.log('Fetching worker info for:', deployment.name, 'at URL:', deployment.url);
 					try {
 						const deploymentInfoUrl = `${deployment.url}/api/deployment-info`;
-						console.log('Making direct request to:', deploymentInfoUrl);
 						
 						const response = await fetch(deploymentInfoUrl, {
 							method: 'GET',
@@ -69,20 +63,15 @@
 							}
 						});
 						
-						console.log('Response status:', response.status, 'for', deployment.name);
-						
 						if (response.ok) {
 							const workerInfo = await response.json();
 							deployment.workerInfo = workerInfo;
-							console.log('Successfully fetched worker info for', deployment.name, ':', workerInfo);
 						} else {
 							const errorText = await response.text();
-							console.warn(`Failed to fetch worker info for ${deployment.name}:`, response.status, errorText);
 							deployment.workerInfo = null;
 							deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}. ${errorText}`;
 						}
 					} catch (err) {
-						console.warn(`Could not fetch worker info for ${deployment.name}:`, err);
 						deployment.workerInfo = null;
 						
 						// Provide more specific error messages for common issues
@@ -98,11 +87,8 @@
 							deployment.workerInfoError = `Failed to fetch worker info: ${err.message}`;
 						}
 					}
-				} else {
-					console.log('No URL for deployment:', deployment.name);
 				}
 			}
-			console.log('Finished fetching worker info');
 		} finally {
 			fetchingWorkerInfo = false;
 		}
@@ -129,7 +115,7 @@
 					updatePageUrl();
 				}
 			} catch (err) {
-				console.error('Auto-refresh error:', err);
+				// Auto-refresh error handled silently
 			}
 		}, 5 * 60 * 1000);
 	}
@@ -167,7 +153,6 @@
 				error = `Failed to fetch deployments: ${response.status} ${response.statusText}. ${errorData}`;
 			}
 		} catch (err) {
-			console.error('Manual refresh error:', err);
 			error = 'Error fetching deployments: ' + err.message;
 		} finally {
 			refreshing = false;
@@ -187,9 +172,7 @@
 	async function requestNotificationPermission() {
 		if ('Notification' in window && Notification.permission === 'default') {
 			const permission = await Notification.requestPermission();
-			if (permission === 'granted') {
-				console.log('🔔 Notification permission granted');
-			}
+			// Notification permission status handled silently
 		}
 	}
 
