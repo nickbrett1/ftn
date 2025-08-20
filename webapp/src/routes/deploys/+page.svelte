@@ -342,23 +342,23 @@
 					.sort((a, b) => new Date(b._debug.worker_created_on) - new Date(a._debug.worker_created_on))[0]
 				}
 				{#if mostRecentDeployment}
-				<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
-					<h3 class="text-blue-400 font-semibold mb-2">📈 Quick Stats</h3>
-					<div class="text-sm text-blue-300 space-y-1">
-						<p>
-							<span class="text-blue-200">Most Recent Deployment:</span> 
-							{mostRecentDeployment.name} 
-							<span class="text-yellow-300">({getDetailedTimeDifference(mostRecentDeployment._debug.worker_created_on)})</span>
-						</p>
-						{#if getDeploymentFrequency(deployments)}
+					<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+						<h3 class="text-blue-400 font-semibold mb-2">📈 Quick Stats</h3>
+						<div class="text-sm text-blue-300 space-y-1">
 							<p>
-								<span class="text-blue-200">Deployment Span:</span> 
-								<span class="text-yellow-300">{getDeploymentFrequency(deployments)}</span>
+								<span class="text-blue-200">Most Recent Deployment:</span> 
+								{mostRecentDeployment.name} 
+								<span class="text-yellow-300">({getDetailedTimeDifference(mostRecentDeployment._debug.worker_created_on)})</span>
 							</p>
-						{/if}
+							{#if getDeploymentFrequency(deployments)}
+								<p>
+									<span class="text-blue-200">Deployment Span:</span> 
+									<span class="text-yellow-300">{getDeploymentFrequency(deployments)}</span>
+								</p>
+							{/if}
+						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
 		{/if}
 
 		{#if !loading && !error && deployments.length > 0}
