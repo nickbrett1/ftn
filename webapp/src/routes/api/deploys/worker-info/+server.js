@@ -1,18 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 
-export async function POST({ request }) {
+export async function GET({ request, url }) {
 	try {
-		const { url } = await request.json();
+		// Get the target URL from query parameters
+		const targetUrl = url.searchParams.get('url');
 		
-		if (!url) {
-			throw error(400, 'URL is required');
+		if (!targetUrl) {
+			throw error(400, 'URL query parameter is required');
 		}
 
 		// First, try to fetch from a potential deployment info endpoint
 		let workerInfo = null;
 		
 		try {
-			const deploymentInfoUrl = new URL('/api/deployment-info', url);
+			const deploymentInfoUrl = new URL('/api/deployment-info', targetUrl);
 			const deploymentResponse = await fetch(deploymentInfoUrl.toString(), {
 				method: 'GET',
 				headers: {
@@ -33,7 +34,7 @@ export async function POST({ request }) {
 		if (!workerInfo) {
 			try {
 				// Make a request to the worker to get the page content
-				const response = await fetch(url, {
+				const response = await fetch(targetUrl, {
 					method: 'GET',
 					headers: {
 						'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -140,7 +141,7 @@ export async function POST({ request }) {
 		
 		// Log what we found for debugging
 		console.log('Worker info extracted:', {
-			url,
+			url: targetUrl,
 			buildTime: workerInfo.buildTime,
 			gitBranch: workerInfo.gitBranch,
 			gitCommit: workerInfo.gitCommit,
