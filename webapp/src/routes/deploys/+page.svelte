@@ -266,15 +266,7 @@
 
 <svelte:head>
 	<title>
-		{#if loading}
-			Loading Deployments - Fintech Nick
-		{:else if error}
-			Deployment Error - Fintech Nick
-		{:else if deployments.length === 0}
-			No Deployments - Fintech Nick
-		{:else}
-			{deployments.length} Deployment{deployments.length > 1 ? 's' : ''} - Fintech Nick
-		{/if}
+		{loading ? 'Loading Deployments' : error ? 'Deployment Error' : deployments.length === 0 ? 'No Deployments' : `${deployments.length} Deployment${deployments.length > 1 ? 's' : ''}`} - Fintech Nick
 	</title>
 	<meta name="description" content="View all active deployments and preview environments." />
 	
