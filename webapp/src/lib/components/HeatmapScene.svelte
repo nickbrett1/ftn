@@ -24,44 +24,62 @@
 		try {
 			console.log('HeatmapScene: Component mounted with data:', sp500Data);
 			
-			// Create animation timeline for camera movement
-			animationTimeline = gsap.timeline({ repeat: -1, yoyo: true });
+			// Wait for camera to be available before setting up animations
+			const setupAnimations = () => {
+				if (!camera || !camera.position) {
+					console.warn('HeatmapScene: Camera not ready, retrying...');
+					setTimeout(setupAnimations, 100);
+					return;
+				}
 
-			// Animate camera to show positive changes (green columns)
-			animationTimeline.to(camera.position, {
-				x: 15,
-				y: 20,
-				z: 15,
-				duration: 15,
-				ease: 'power2.inOut'
-			});
+				try {
+					// Create animation timeline for camera movement
+					animationTimeline = gsap.timeline({ repeat: -1, yoyo: true });
 
-			// Animate camera to show negative changes (red columns) - look down from above
-			animationTimeline.to(camera.position, {
-				x: -15,
-				y: 25,
-				z: 15,
-				duration: 15,
-				ease: 'power2.inOut'
-			});
+					// Animate camera to show positive changes (green columns)
+					animationTimeline.to(camera.position, {
+						x: 15,
+						y: 20,
+						z: 15,
+						duration: 15,
+						ease: 'power2.inOut'
+					});
 
-			// Animate camera to show negative bars from below - look up at negative bars
-			animationTimeline.to(camera.position, {
-				x: 0,
-				y: -15,
-				z: 25,
-				duration: 15,
-				ease: 'power2.inOut'
-			});
+					// Animate camera to show negative changes (red columns) - look down from above
+					animationTimeline.to(camera.position, {
+						x: -15,
+						y: 25,
+						z: 15,
+						duration: 15,
+						ease: 'power2.inOut'
+					});
 
-			// Return to center view
-			animationTimeline.to(camera.position, {
-				x: 0,
-				y: 10,
-				z: 25,
-				duration: 10,
-				ease: 'power2.inOut'
-			});
+					// Animate camera to show negative bars from below - look up at negative bars
+					animationTimeline.to(camera.position, {
+						x: 0,
+						y: -15,
+						z: 25,
+						duration: 15,
+						ease: 'power2.inOut'
+					});
+
+					// Return to center view
+					animationTimeline.to(camera.position, {
+						x: 0,
+						y: 10,
+						z: 25,
+						duration: 10,
+						ease: 'power2.inOut'
+					});
+
+					console.log('HeatmapScene: Animations set up successfully');
+				} catch (error) {
+					console.error('HeatmapScene: Error setting up animations:', error);
+				}
+			};
+
+			// Start setting up animations after a short delay
+			setTimeout(setupAnimations, 200);
 
 			// Mark scene as ready after a short delay to ensure all components are loaded
 			setTimeout(() => {
@@ -91,8 +109,17 @@
 	far={1000}
 	makeDefault
 	oncreate={(ref) => {
-		camera = ref;
-		ref.lookAt(0, 0, 0);
+		try {
+			camera = ref;
+			if (ref && ref.position) {
+				ref.lookAt(0, 0, 0);
+				console.log('HeatmapScene: Camera created successfully at position:', ref.position);
+			} else {
+				console.warn('HeatmapScene: Camera ref or position is undefined');
+			}
+		} catch (error) {
+			console.error('HeatmapScene: Error setting up camera:', error);
+		}
 	}}
 >
 	<OrbitControls
