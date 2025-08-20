@@ -194,23 +194,119 @@
 					/>
 				</T.Points>
 				
-				<!-- Earth with realistic appearance -->
+				<!-- Earth with realistic appearance using built-in materials -->
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10, 64, 64]} />
 					<T.MeshStandardMaterial
-						color="#ffffff"
+						color="#4a90e2"
 						emissive="#1a3a5a"
 						emissiveIntensity={0.1}
 						metalness={0.1}
 						roughness={0.8}
 						wireframe={false}
-					>
-						<!-- Earth texture map -->
-						<T.TextureLoader
-							attach="map"
-							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg']}
-						/>
-					</T.MeshStandardMaterial>
+					/>
+				</T.Mesh>
+				
+				<!-- Land masses using positioned shapes -->
+				<!-- North America -->
+				<T.Mesh position={[0, 7, -7]}>
+					<T.SphereGeometry args={[3, 12, 12]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- South America -->
+				<T.Mesh position={[0, -3, -8]}>
+					<T.SphereGeometry args={[2.5, 10, 10]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Europe/Asia -->
+				<T.Mesh position={[0, 7, 7]}>
+					<T.SphereGeometry args={[4, 12, 12]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Africa -->
+				<T.Mesh position={[0, 0, 7]}>
+					<T.SphereGeometry args={[3, 12, 12]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Australia -->
+				<T.Mesh position={[0, -6, 9]}>
+					<T.SphereGeometry args={[2, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Greenland -->
+				<T.Mesh position={[0, 9, -5]}>
+					<T.SphereGeometry args={[1.5, 6, 6]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Antarctica -->
+				<T.Mesh position={[0, -9, 0]}>
+					<T.SphereGeometry args={[2.5, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#ffffff"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- Additional land features -->
+				<!-- Sahara Desert -->
+				<T.Mesh position={[0, 2, 7]}>
+					<T.SphereGeometry args={[2, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#D2B48C"
+						transparent={true}
+						opacity={0.8}
+					/>
+				</T.Mesh>
+				
+				<!-- Amazon Rainforest -->
+				<T.Mesh position={[0, -2, -8]}>
+					<T.SphereGeometry args={[2, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#228B22"
+						transparent={true}
+						opacity={0.8}
+					/>
+				</T.Mesh>
+				
+				<!-- Siberian Tundra -->
+				<T.Mesh position={[0, 8, 7]}>
+					<T.SphereGeometry args={[2.5, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#8FBC8F"
+						transparent={true}
+						opacity={0.8}
+					/>
 				</T.Mesh>
 				
 				<!-- Cloud layer for atmosphere -->
@@ -246,6 +342,24 @@
 											10 * Math.cos(0) * Math.cos(angle), 10 * Math.sin(angle), 10 * Math.cos(0) * Math.sin(angle),
 											10 * Math.cos(0) * Math.cos(angle + Math.PI / 8), 10 * Math.sin(angle + Math.PI / 8), 10 * Math.cos(0) * Math.sin(angle + Math.PI / 8)
 										];
+									}).flat(),
+									// Tropic of Cancer
+									...Array.from({ length: 32 }, (_, i) => {
+										const angle = i * Math.PI / 16;
+										const lat = 23.5 * Math.PI / 180;
+										return [
+											10 * Math.cos(lat) * Math.cos(angle), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle),
+											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
+										];
+									}).flat(),
+									// Tropic of Capricorn
+									...Array.from({ length: 32 }, (_, i) => {
+										const angle = i * Math.PI / 16;
+										const lat = -23.5 * Math.PI / 180;
+										return [
+											10 * Math.cos(lat) * Math.cos(angle), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle),
+											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
+										];
 									}).flat()
 								]),
 								3
@@ -255,7 +369,7 @@
 					<T.LineBasicMaterial
 						color="#2a5a8a"
 						transparent={true}
-						opacity={0.3}
+						opacity={0.4}
 						linewidth={1}
 					/>
 				</T.LineSegments>
