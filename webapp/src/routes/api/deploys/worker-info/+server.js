@@ -10,7 +10,7 @@ export async function GET({ request, url }) {
 		}
 
 		// We need to fetch the deployment info from the target worker
-		// First try to get it from their deployment-info endpoint
+		// Try to get it from their deployment-info endpoint
 		let workerInfo = null;
 		
 		try {
@@ -35,102 +35,32 @@ export async function GET({ request, url }) {
 			console.log('Could not fetch from deployment-info endpoint:', endpointError.message);
 		}
 		
-		// If no deployment-info endpoint, try to extract from the HTML
-		if (!workerInfo) {
-			try {
-				console.log('Fetching HTML from target URL:', targetUrl);
-				const response = await fetch(targetUrl, {
-					method: 'GET',
-					headers: {
-						'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-						'User-Agent': 'Mozilla/5.0 (compatible; Deployment-Info-Fetcher/1.0)'
-					}
-				});
-
-				if (!response.ok) {
-					throw error(response.status, `Failed to fetch worker info: ${response.status} ${response.statusText}`);
+		// If we found worker info, process it
+		if (workerInfo) {
+			// If we found build time, use it as the last updated time
+			if (workerInfo.buildTime) {
+				try {
+					workerInfo.lastUpdated = new Date(workerInfo.buildTime).toISOString();
+				} catch (e) {
+					console.warn('Could not parse build time:', workerInfo.buildTime);
 				}
-
-				const html = await response.text();
-				
-				// Try to find the constants in the HTML content
-				// Look for constants in script tags
-				let buildTimeMatch = html.match(/__BUILD_TIME__\s*=\s*['"]([^'"]+)['"]/);
-				let gitBranchMatch = html.match(/__GIT_BRANCH__\s*=\s*['"]([^'"]+)['"]/);
-				let gitCommitMatch = html.match(/__GIT_COMMIT__\s*=\s*['"]([^'"]+)['"]/);
-				
-				// Look for constants in the footer text
-				if (!gitBranchMatch) {
-					gitBranchMatch = html.match(/Branch:\s*([^\s|]+)/);
-				}
-				if (!gitCommitMatch) {
-					gitCommitMatch = html.match(/Commit:\s*([^\s|]+)/);
-				}
-				
-				// Look for build time in the footer "Built:" text
-				if (!buildTimeMatch) {
-					const builtMatch = html.match(/Built:\s*([^<]+)/);
-					if (builtMatch) {
-						try {
-							const builtDate = new Date(builtMatch[1].trim());
-							if (!isNaN(builtDate.getTime())) {
-								buildTimeMatch = [null, builtDate.toISOString()];
-							}
-						} catch (e) {
-							console.warn('Could not parse built date:', builtMatch[1]);
-						}
-					}
-				}
-				
-				workerInfo = {
-					buildTime: buildTimeMatch ? buildTimeMatch[1] : null,
-					gitBranch: gitBranchMatch ? gitBranchMatch[1] : null,
-					gitCommit: gitCommitMatch ? gitCommitMatch[1] : null,
-					lastUpdated: null
-				};
-				
-				console.log('Extracted from HTML:', {
-					buildTime: buildTimeMatch ? buildTimeMatch[1] : null,
-					gitBranch: gitBranchMatch ? gitBranchMatch[1] : null,
-					gitCommit: gitCommitMatch ? gitCommitMatch[1] : null
-				});
-				
-			} catch (htmlError) {
-				console.log('Could not parse HTML:', htmlError.message);
 			}
+			
+			// Log what we found for debugging
+			console.log('Worker info extracted:', {
+				url: targetUrl,
+				buildTime: workerInfo.buildTime,
+				gitBranch: workerInfo.gitBranch,
+				gitCommit: workerInfo.gitCommit,
+				lastUpdated: workerInfo.lastUpdated
+			});
+			
+			return json(workerInfo);
 		}
 		
-		// If we found build time, use it as the last updated time
-		if (workerInfo && workerInfo.buildTime) {
-			try {
-				workerInfo.lastUpdated = new Date(workerInfo.buildTime).toISOString();
-			} catch (e) {
-				console.warn('Could not parse build time:', workerInfo.buildTime);
-			}
-		}
+		// If no deployment-info endpoint available, return error
+		throw error(404, `Deployment info not available for ${targetUrl}. The worker does not have a /api/deployment-info endpoint.`);
 		
-		// If we still don't have worker info, create a fallback
-		if (!workerInfo) {
-			workerInfo = {
-				buildTime: null,
-				gitBranch: null,
-				gitCommit: null,
-				lastUpdated: null,
-				note: 'Worker info not available - could not fetch from target worker'
-			};
-		}
-		
-		// Log what we found for debugging
-		console.log('Worker info extracted:', {
-			url: targetUrl,
-			buildTime: workerInfo.buildTime,
-			gitBranch: workerInfo.gitBranch,
-			gitCommit: workerInfo.gitCommit,
-			lastUpdated: workerInfo.lastUpdated,
-			note: workerInfo.note
-		});
-		
-		return json(workerInfo);
 	} catch (err) {
 		console.error('Worker info API error:', err);
 		
