@@ -270,43 +270,13 @@
 	</title>
 	<meta name="description" content="View all active deployments and preview environments." />
 	
-	<!-- Dynamic meta tags based on deployment status -->
-	{#if !loading && !error && deployments.length > 0}
-		{@const recentCount = deployments.filter(d => d._debug?.worker_created_on && isRecentDeployment(d._debug.worker_created_on)).length}
-		{@const totalCount = deployments.length}
-		
-		<meta name="deployment:count" content={totalCount.toString()} />
-		<meta name="deployment:recent" content={recentCount.toString()} />
-		<meta name="deployment:status" content={recentCount > 0 ? 'active' : 'stable'} />
-		
-		{#if recentCount > 0}
-			<meta property="og:title" content="🚀 Active Deployments - Fintech Nick" />
-			<meta property="og:description" content="{recentCount} recent deployment{recentCount > 1 ? 's' : ''} in the last hour" />
-		{:else}
-			<meta property="og:title" content="✅ Stable Deployments - Fintech Nick" />
-			<meta property="og:description" content="{totalCount} deployment{totalCount > 1 ? 's' : ''} running stably" />
-		{/if}
-	{:else}
-		<meta name="deployment:status" content="loading" />
-		<meta property="og:title" content="⏳ Loading Deployments - Fintech Nick" />
-		<meta property="og:description" content="Loading deployment information..." />
-	{/if}
+	<!-- Basic meta tags -->
+	<meta name="deployment:status" content={loading ? 'loading' : error ? 'error' : deployments.length > 0 ? 'active' : 'empty'} />
+	<meta property="og:title" content="Deployments - Fintech Nick" />
+	<meta property="og:description" content="View all active deployments and preview environments." />
 	
-	<!-- Dynamic favicon based on deployment status -->
-	{#if !loading && !error && deployments.length > 0}
-		{@const hasRecentDeployments = deployments.some(d => d._debug?.worker_created_on && isRecentDeployment(d._debug.worker_created_on))}
-		{@const hasOldDeployments = deployments.some(d => d._debug?.worker_created_on && (new Date() - new Date(d._debug.worker_created_on)) / (1000 * 60 * 60 * 24) > 7)}
-		
-		{#if hasRecentDeployments}
-			<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
-		{:else if hasOldDeployments}
-			<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚠️</text></svg>" />
-		{:else}
-			<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>" />
-		{/if}
-	{:else}
-		<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>" />
-	{/if}
+	<!-- Simple favicon -->
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
 </svelte:head>
 
 <Header />
