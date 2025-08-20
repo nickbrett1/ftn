@@ -992,44 +992,44 @@
 					.sort((a, b) => a.environment === 'preview' ? -1 : 1)
 				}
 				{#if environmentComparison.length > 1}
-				<div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 mb-6">
-					<h3 class="text-purple-400 font-semibold mb-3">⚖️ Environment Comparison</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each environmentComparison as deployment}
-							<div class="p-3 bg-purple-900/30 rounded">
-								<div class="flex items-center gap-2 mb-2">
-									<span class="text-lg">
-										{#if deployment.environment === 'preview'}🔍{:else}🚀{/if}
-									</span>
-									<h4 class="font-semibold text-purple-200">{deployment.name}</h4>
-								</div>
-								<div class="space-y-1 text-sm">
-									<div class="flex justify-between">
-										<span class="text-purple-300">Version:</span>
-										<span class="text-purple-100">{deployment.version}</span>
+					<div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 mb-6">
+						<h3 class="text-purple-400 font-semibold mb-3">⚖️ Environment Comparison</h3>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							{#each environmentComparison as deployment}
+								<div class="p-3 bg-purple-900/30 rounded">
+									<div class="flex items-center gap-2 mb-2">
+										<span class="text-lg">
+											{#if deployment.environment === 'preview'}🔍{:else}🚀{/if}
+										</span>
+										<h4 class="font-semibold text-purple-200">{deployment.name}</h4>
 									</div>
-									{#if deployment._debug?.worker_created_on}
+									<div class="space-y-1 text-sm">
 										<div class="flex justify-between">
-											<span class="text-purple-300">Last Deployed:</span>
-											<span class="text-purple-100">{getDetailedTimeDifference(deployment._debug.worker_created_on)}</span>
+											<span class="text-purple-300">Version:</span>
+											<span class="text-purple-100">{deployment.version}</span>
 										</div>
-										{@const ageCategory = getDeploymentAgeCategory(deployment._debug.worker_created_on)}
-										<div class="flex justify-between">
-											<span class="text-purple-300">Age Category:</span>
-											<span class="text-xs {ageCategory.color}">{ageCategory.category}</span>
-										</div>
-										{@const health = getDeploymentHealth(deployment._debug.worker_created_on)}
-										<div class="flex justify-between">
-											<span class="text-purple-300">Health:</span>
-											<span class="text-xs {health.color}">{health.icon} {health.status}</span>
-										</div>
-									{/if}
+										{#if deployment._debug?.worker_created_on}
+											<div class="flex justify-between">
+												<span class="text-purple-300">Last Deployed:</span>
+												<span class="text-purple-100">{getDetailedTimeDifference(deployment._debug.worker_created_on)}</span>
+											</div>
+											{@const ageCategory = getDeploymentAgeCategory(deployment._debug.worker_created_on)}
+											<div class="flex justify-between">
+												<span class="text-purple-300">Age Category:</span>
+												<span class="text-xs {ageCategory.color}">{ageCategory.category}</span>
+											</div>
+											{@const health = getDeploymentHealth(deployment._debug.worker_created_on)}
+											<div class="flex justify-between">
+												<span class="text-purple-300">Health:</span>
+												<span class="text-xs {health.color}">{health.icon} {health.status}</span>
+											</div>
+										{/if}
+									</div>
 								</div>
-							</div>
-						{/each}
+							{/each}
+						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
 		{/if}
 
 		{#if !loading && !error && deployments.length > 0}
