@@ -53,10 +53,10 @@
 				if (deployment.url) {
 					console.log('Fetching worker info for:', deployment.name, 'at URL:', deployment.url);
 					try {
-						const workerInfoUrl = `/api/deploys/worker-info?url=${encodeURIComponent(deployment.url)}`;
-						console.log('Making request to:', workerInfoUrl);
+						const deploymentInfoUrl = `${deployment.url}/api/deployment-info`;
+						console.log('Making direct request to:', deploymentInfoUrl);
 						
-						const response = await fetch(workerInfoUrl, {
+						const response = await fetch(deploymentInfoUrl, {
 							method: 'GET',
 							headers: {
 								'Accept': 'application/json'
