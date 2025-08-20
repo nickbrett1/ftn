@@ -53,7 +53,8 @@ const config = {
 					'https://cloudflareinsights.com',
 					'https://static.cloudflareinsights.com',
 					'https://accounts.google.com/gsi/',
-					'https://www.gstatic.com'
+					'https://www.gstatic.com',
+					'https://ftn-*.nick-brett1.workers.dev'
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
 				'frame-src': ['self', 'https://accounts.google.com/gsi/'],
