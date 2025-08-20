@@ -12,13 +12,13 @@ export function getRedirectUri() {
 	if (process.env.NODE_ENV === 'development') {
 		return 'http://127.0.0.1:5173/auth';
 	}
-	
+
 	// For production/preview, use the current origin dynamically
 	// This ensures preview deployments redirect back to the preview domain
 	if (typeof window !== 'undefined') {
 		return `${window.location.origin}/auth`;
 	}
-	
+
 	// Fallback for SSR
 	return 'https://fintechnick.com/auth';
 }
@@ -27,15 +27,8 @@ export function getRedirectUri() {
  * Check if user is currently authenticated
  */
 export function isUserAuthenticated() {
-	console.log('isUserAuthenticated: Checking cookies...');
-	console.log('isUserAuthenticated: document.cookie:', document.cookie);
-	
 	const match = document.cookie.match(/(^| )auth=([^;]+)/);
-	console.log('isUserAuthenticated: Cookie match:', match);
-	
 	const result = match !== null && match[2] !== 'deleted';
-	console.log('isUserAuthenticated: Result:', result);
-	
 	return result;
 }
 
