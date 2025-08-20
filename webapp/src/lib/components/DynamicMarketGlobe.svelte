@@ -4,11 +4,11 @@
 	import { T, Canvas } from '@threlte/core';
 	import { OrbitControls } from '@threlte/extras';
 	import * as THREE from 'three';
-	import { generateMarketData } from '$lib/utils/marketDataGenerator';
-	import MarketDataPoint from './MarketDataPoint.svelte';
+	import { generateFinancialCentersData } from '$lib/utils/financialCentersData';
+	import FinancialCenterMarker from './FinancialCenterMarker.svelte';
 	import MarketLegend from './MarketLegend.svelte';
 
-	let marketData = $state([]);
+	let financialCentersData = $state([]);
 	let isLoaded = $state(false);
 	let hasError = $state(false);
 	let errorMessage = $state('');
@@ -18,7 +18,7 @@
 	onMount(() => {
 		try {
 			isClient = true;
-			marketData = generateMarketData();
+			financialCentersData = generateFinancialCentersData();
 			isLoaded = true;
 			startAnimation();
 		} catch (error) {
@@ -63,29 +63,31 @@
 				<p class="text-sm text-zinc-400">3D rendering failed, showing 2D representation</p>
 			</div>
 			
-			{#if marketData && marketData.length > 0}
+			{#if financialCentersData && financialCentersData.length > 0}
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{#each marketData as instrument}
+					{#each financialCentersData as center}
 						<div class="bg-zinc-800 rounded-lg p-3 border border-zinc-700">
 							<div class="flex justify-between items-start mb-2">
 								<div>
-									<div class="font-bold text-white">{instrument.symbol}</div>
-									<div class="text-sm text-zinc-400">{instrument.name}</div>
+									<div class="font-bold text-white">{center.name}</div>
+									<div class="text-sm text-zinc-400">{center.country}</div>
 								</div>
 								<div class="text-right">
-									<div class="text-sm font-medium {instrument.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}">
-										{instrument.priceChange >= 0 ? '+' : ''}{instrument.priceChange.toFixed(2)}%
+									<div class="text-sm font-medium {center.marketSentiment >= 0 ? 'text-green-400' : 'text-red-400'}">
+										{center.marketSentiment >= 0 ? '+' : ''}{center.marketSentiment.toFixed(1)}%
 									</div>
-									<div class="text-xs text-zinc-500">${instrument.price.toFixed(2)}</div>
+									<div class="text-xs text-zinc-500">{center.timezone}</div>
 								</div>
 							</div>
-							<div class="text-xs text-zinc-500">{instrument.type}</div>
+							<div class="text-xs text-zinc-500">
+								Markets: {center.markets.join(', ')}
+							</div>
 						</div>
 					{/each}
 				</div>
 			{:else}
 				<div class="text-center text-zinc-400">
-					No market data available
+					No financial center data available
 				</div>
 			{/if}
 			
@@ -133,36 +135,91 @@
 				}}
 			>
 				<!-- Background color -->
-				<T.Color attach="background" args={['#000000']} />
+				<T.Color attach="background" args={['#000011']} />
 				
-				<!-- Enhanced lighting for neon effect -->
-				<T.AmbientLight intensity={0.2} color="#ffffff" />
-				<T.DirectionalLight position={[10, 10, 5]} intensity={0.8} color="#00ffff" />
-				<T.PointLight position={[0, 20, 0]} intensity={1.5} color="#ff00ff" distance={50} />
-				<T.PointLight position={[20, 0, 20]} intensity={1.0} color="#00ff88" distance={40} />
+				<!-- Enhanced lighting for dramatic effect -->
+				<T.AmbientLight intensity={0.1} color="#ffffff" />
+				<T.DirectionalLight position={[50, 30, 20]} intensity={0.8} color="#ffffff" />
 				
-				<!-- Central sphere representing the market core -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[8, 32, 32]} />
-					<T.MeshStandardMaterial
-						color="#1a1a1a"
-						emissive="#0a0a0a"
-						metalness={0.9}
-						roughness={0.1}
-						wireframe={true}
+				<!-- Sun - bright glowing sphere -->
+				<T.Mesh position={[100, 50, 50]}>
+					<T.SphereGeometry args={[15, 32, 32]} />
+					<T.MeshBasicMaterial
+						color="#ffff00"
+						emissive="#ffff00"
+						emissiveIntensity={2.0}
 					/>
 				</T.Mesh>
 				
-				<!-- Orbiting market data points -->
-				{#if marketData && marketData.length > 0}
-					{#each marketData as instrument, index}
-						<MarketDataPoint {instrument} {index} />
+				<!-- Sun glow effect -->
+				<T.Mesh position={[100, 50, 50]}>
+					<T.SphereGeometry args={[20, 32, 32]} />
+					<T.MeshBasicMaterial
+						color="#ffff00"
+						transparent={true}
+						opacity={0.3}
+					/>
+				</T.Mesh>
+				
+				<!-- Stars background -->
+				<T.Points>
+					<T.BufferGeometry>
+						<T.BufferAttribute
+							attach="attributes.position"
+							args={[
+								new Float32Array([
+									// Generate random star positions in a large sphere
+									...Array.from({ length: 1000 }, () => [
+										(Math.random() - 0.5) * 400,
+										(Math.random() - 0.5) * 400,
+										(Math.random() - 0.5) * 400
+									]).flat()
+								]),
+								3
+							]}
+						/>
+					</T.BufferGeometry>
+					<T.PointsMaterial
+						color="#ffffff"
+						size={2}
+						sizeAttenuation={true}
+						transparent={true}
+						opacity={0.8}
+					/>
+				</T.Points>
+				
+				<!-- Earth with realistic textures -->
+				<T.Mesh position={[0, 0, 0]}>
+					<T.SphereGeometry args={[10, 64, 64]} />
+					<T.MeshStandardMaterial
+						color="#4a90e2"
+						emissive="#1a3a5a"
+						emissiveIntensity={0.1}
+						metalness={0.1}
+						roughness={0.8}
+					>
+						<!-- Earth texture map -->
+						<T.TextureLoader
+							attach="map"
+							args={['/earth-texture.jpg']}
+							onload={(texture) => {
+								texture.wrapS = THREE.RepeatWrapping;
+								texture.wrapT = THREE.RepeatWrapping;
+							}}
+						/>
+					</T.MeshStandardMaterial>
+				</T.Mesh>
+				
+				<!-- Financial center markers on the globe -->
+				{#if financialCentersData && financialCentersData.length > 0}
+					{#each financialCentersData as center, index}
+						<FinancialCenterMarker {center} {index} />
 					{/each}
 				{/if}
 				
 				<!-- Camera setup -->
 				<T.PerspectiveCamera
-					position={[0, 25, 35]}
+					position={[0, 15, 25]}
 					fov={60}
 					aspect={typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9}
 					near={0.1}
@@ -176,9 +233,9 @@
 						enableZoom={true}
 						enableRotate={true}
 						autoRotate={true}
-						autoRotateSpeed={0.5}
-						minDistance={20}
-						maxDistance={80}
+						autoRotateSpeed={0.3}
+						minDistance={15}
+						maxDistance={50}
 					/>
 				</T.PerspectiveCamera>
 			</Canvas>
@@ -193,14 +250,14 @@
 				<div class="text-white text-sm">
 					<div class="flex items-center gap-2 mb-2">
 						<span class="w-3 h-3 bg-green-400 rounded-full"></span>
-						<span>Positive Change</span>
+						<span>Positive Sentiment</span>
 					</div>
 					<div class="flex items-center gap-2 mb-2">
 						<div class="w-3 h-3 bg-red-400 rounded-full"></div>
-						<span>Negative Change</span>
+						<span>Negative Sentiment</span>
 					</div>
 					<div class="text-xs text-zinc-400">
-						Instruments: {marketData?.length || 0}<br />
+						Financial Centers: {financialCentersData?.length || 0}<br />
 						Status: {isLoaded ? 'Live' : 'Loading...'}
 					</div>
 				</div>
