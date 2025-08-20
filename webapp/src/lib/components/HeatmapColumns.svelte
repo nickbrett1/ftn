@@ -12,9 +12,6 @@
 
 	onMount(() => {
 		console.log('HeatmapColumns: Component mounted with data:', sp500Data);
-		console.log('HeatmapColumns: Data type:', typeof sp500Data);
-		console.log('HeatmapColumns: Data length:', sp500Data?.length);
-		console.log('HeatmapColumns: Sample data:', sp500Data?.[0]);
 		
 		try {
 			// Process data
@@ -34,27 +31,26 @@
 					const sectorSize = sp500Data.filter(s => s.sector === sector).length;
 					const sectorPosition = sp500Data.filter(s => s.sector === sector).indexOf(security);
 					
-							// Position within sector grid
-		const gridSize = Math.ceil(Math.sqrt(sectorSize));
-		const row = Math.floor(sectorPosition / gridSize);
-		const col = sectorPosition % gridSize;
-		
-		// Sector positioning (spread sectors out) - reduced spacing to keep columns in view
-		const sectorSpacing = 4; // Reduced from 8 to 4
-		const x = (sectorIndex - 2) * sectorSpacing + (col - gridSize / 2) * 0.8; // Reduced spacing from 1.0 to 0.8
-		const z = (row - gridSize / 2) * 0.8; // Reduced spacing from 1.0 to 0.8
+					// Position within sector grid
+					const gridSize = Math.ceil(Math.sqrt(sectorSize));
+					const row = Math.floor(sectorPosition / gridSize);
+					const col = sectorPosition % gridSize;
 					
-					// Column dimensions based on market cap and price change
-					// Make base size proportional to market cap (square root for better visual balance)
-					const baseSize = Math.max(0.4, Math.sqrt(security.marketCap / 50) * 0.3); // Improved scaling with larger minimum
+					// Sector positioning
+					const sectorSpacing = 4;
+					const x = (sectorIndex - 2) * sectorSpacing + (col - gridSize / 2) * 0.8;
+					const z = (row - gridSize / 2) * 0.8;
+					
+					// Column dimensions
+					const baseSize = Math.max(0.4, Math.sqrt(security.marketCap / 50) * 0.3);
 					const height = Math.max(0.5, Math.abs(security.priceChange) * 0.5);
 					
 					// Position bars: positive above floor (y=0), negative below floor
 					let y;
 					if (security.priceChange >= 0) {
-						y = height / 2; // Positive bars extend upward from floor
+						y = height / 2;
 					} else {
-						y = -height / 2; // Negative bars extend downward from floor
+						y = -height / 2;
 					}
 					
 					return {
@@ -63,12 +59,9 @@
 						dimensions: [baseSize, height, baseSize],
 						index
 					};
-				}).filter(Boolean); // Remove null entries
+				}).filter(Boolean);
 				
-				console.log('HeatmapColumns: Processed columns:', columns);
-				console.log('HeatmapColumns: Sample column data:', columns[0]);
-				console.log('HeatmapColumns: First column position:', columns[0]?.position);
-				console.log('HeatmapColumns: First column dimensions:', columns[0]?.dimensions);
+				console.log('HeatmapColumns: Processed columns:', columns.length);
 			}
 		} catch (error) {
 			console.error('HeatmapColumns: Error processing data:', error);
@@ -129,24 +122,6 @@
 	<div class="absolute top-4 left-4 z-30 bg-black bg-opacity-80 text-white p-2 rounded text-xs">
 		Columns: {columns.length}
 	</div>
-	
-	<!-- Debug overlay showing sample data -->
-	{#if columns.length > 0}
-		<div class="absolute top-16 left-4 z-30 bg-black bg-opacity-80 text-white p-2 rounded text-xs">
-			Sample: {columns[0].ticker}<br/>
-			Market Cap: ${(columns[0].marketCap / 1000000000).toFixed(1)}B<br/>
-			Size: {columns[0].dimensions[0].toFixed(2)}<br/>
-			Height: {columns[0].dimensions[1].toFixed(2)}<br/>
-			Position: [{columns[0].position[0].toFixed(1)}, {columns[0].position[1].toFixed(1)}, {columns[0].position[2].toFixed(1)}]
-		</div>
-		
-		<!-- Debug overlay showing position ranges -->
-		<div class="absolute top-32 left-4 z-30 bg-black bg-opacity-80 text-white p-2 rounded text-xs">
-			X Range: {Math.min(...columns.map(c => c.position[0])).toFixed(1)} to {Math.max(...columns.map(c => c.position[0])).toFixed(1)}<br/>
-			Y Range: {Math.min(...columns.map(c => c.position[1])).toFixed(1)} to {Math.max(...columns.map(c => c.position[1])).toFixed(1)}<br/>
-			Z Range: {Math.min(...columns.map(c => c.position[2])).toFixed(1)} to {Math.max(...columns.map(c => c.position[2])).toFixed(1)}
-		</div>
-	{/if}
 {/if}
 
 <!-- Test column to verify 3D rendering -->
