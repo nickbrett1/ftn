@@ -85,29 +85,7 @@ Automated credit card statement processing and budget management system:
 
 ## 🚀 Preview Deployments
 
-Every feature branch automatically gets a preview deployment with a unique URL:
-
-```bash
-# Get your preview URL
-npm run preview-url
-
-# Deploy to preview locally
-npm run deploy-preview
-```
-
-**Benefits:**
-- 🎨 **Visual Testing**: Catch UI bugs that unit tests miss
-- 🔄 **Rapid Iteration**: Test changes without merging to main
-- 🤖 **Agent-Friendly**: Perfect for Cursor agent development workflows
-- 🌐 **Real Environment**: Test with production data and services
-- 🎯 **Fixed URL**: Always use `https://latest-preview.ftn.workers.dev` for quick testing
-
-**Example URLs:**
-- `feature/user-dashboard` → `https://preview-feature-user-dashboard.ftn.workers.dev`
-- `bugfix/login-validation` → `https://preview-bugfix-login-validation.ftn.workers.dev`
-- **Latest Preview** → `https://latest-preview.ftn.workers.dev` (always current)
-
-See [Preview Deployments Guide](docs/PREVIEW_DEPLOYMENTS.md) for detailed usage.
+Available for all non-main branch commits with latest commit under https://ftn-preview.nick-brett1.workers.dev
 
 ## 🎯 Focus
 
