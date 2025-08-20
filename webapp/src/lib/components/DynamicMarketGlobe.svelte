@@ -143,6 +143,10 @@
 				<T.PointLight position={[20, 15, 10]} intensity={0.6} color="#4a90e2" distance={100} />
 				<T.PointLight position={[-20, 15, -10]} intensity={0.4} color="#ffffff" distance={80} />
 				
+				<!-- Additional lighting for Earth details -->
+				<T.DirectionalLight position={[0, 1, 0]} intensity={0.3} color="#ffffff" />
+				<T.DirectionalLight position={[1, 0, 0]} intensity={0.2} color="#ffffff" />
+				
 				<!-- Sun - bright glowing sphere -->
 				<T.Mesh position={[100, 50, 50]}>
 					<T.SphereGeometry args={[15, 32, 32]} />
@@ -194,85 +198,45 @@
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10, 64, 64]} />
 					<T.MeshStandardMaterial
-						color="#4a90e2"
+						color="#ffffff"
 						emissive="#1a3a5a"
 						emissiveIntensity={0.1}
-						metalness={0.2}
-						roughness={0.7}
+						metalness={0.1}
+						roughness={0.8}
 						wireframe={false}
-					/>
+					>
+						<!-- Earth texture map -->
+						<T.TextureLoader
+							attach="map"
+							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg']}
+						/>
+						<!-- Bump map for terrain -->
+						<T.TextureLoader
+							attach="bumpMap"
+							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg']}
+						/>
+						<!-- Specular map for ocean reflections -->
+						<T.TextureLoader
+							attach="specularMap"
+							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg']}
+						/>
+					</T.MeshStandardMaterial>
 				</T.Mesh>
 				
-				<!-- Simple land masses using positioned shapes -->
-				<!-- North America -->
-				<T.Mesh position={[0, 7, -7]}>
-					<T.SphereGeometry args={[3, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.8}
-					/>
-				</T.Mesh>
-				
-				<!-- South America -->
-				<T.Mesh position={[0, -3, -8]}>
-					<T.SphereGeometry args={[2.5, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.8}
-					/>
-				</T.Mesh>
-				
-				<!-- Europe/Asia -->
-				<T.Mesh position={[0, 7, 7]}>
-					<T.SphereGeometry args={[4, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.8}
-					/>
-				</T.Mesh>
-				
-				<!-- Africa -->
-				<T.Mesh position={[0, 0, 7]}>
-					<T.SphereGeometry args={[3, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.8}
-					/>
-				</T.Mesh>
-				
-				<!-- Australia -->
-				<T.Mesh position={[0, -6, 9]}>
-					<T.SphereGeometry args={[2, 6, 6]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.8}
-					/>
-				</T.Mesh>
-				
-				<!-- Polar ice caps -->
-				<!-- North Pole -->
-				<T.Mesh position={[0, 10, 0]}>
-					<T.SphereGeometry args={[2, 8, 8]} />
+				<!-- Cloud layer for atmosphere -->
+				<T.Mesh position={[0, 0, 0]}>
+					<T.SphereGeometry args={[10.05, 32, 32]} />
 					<T.MeshBasicMaterial
 						color="#ffffff"
 						transparent={true}
-						opacity={0.9}
-					/>
-				</T.Mesh>
-				
-				<!-- South Pole -->
-				<T.Mesh position={[0, -10, 0]}>
-					<T.SphereGeometry args={[2, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#ffffff"
-						transparent={true}
-						opacity={0.9}
-					/>
+						opacity={0.3}
+						wireframe={false}
+					>
+						<T.TextureLoader
+							attach="map"
+							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png']}
+						/>
+					</T.MeshBasicMaterial>
 				</T.Mesh>
 				
 				<!-- Earth atmosphere glow -->
