@@ -1096,20 +1096,21 @@
 				{/if}
 				
 				{#if insights.length > 0}
-				<div class="bg-gradient-to-r from-teal-900/20 to-cyan-900/20 border border-teal-700 rounded-lg p-4 mb-6">
-					<h3 class="text-teal-400 font-semibold mb-3">🧠 Deployment Insights</h3>
-					<div class="space-y-3">
-						{#each insights as insight}
-							<div class="flex items-start gap-3 p-3 bg-teal-900/30 rounded">
-								<span class="text-2xl">{insight.icon}</span>
-								<div class="flex-1">
-									<h4 class="font-semibold text-teal-200 mb-1">{insight.title}</h4>
-									<p class="text-sm text-teal-300">{insight.message}</p>
+					<div class="bg-gradient-to-r from-teal-900/20 to-cyan-900/20 border border-teal-700 rounded-lg p-4 mb-6">
+						<h3 class="text-teal-400 font-semibold mb-3">🧠 Deployment Insights</h3>
+						<div class="space-y-3">
+							{#each insights as insight}
+								<div class="flex items-start gap-3 p-3 bg-teal-900/30 rounded">
+									<span class="text-2xl">{insight.icon}</span>
+									<div class="flex-1">
+										<h4 class="font-semibold text-teal-200 mb-1">{insight.title}</h4>
+										<p class="text-sm text-teal-300">{insight.message}</p>
+									</div>
 								</div>
-							</div>
-						{/each}
+							{/each}
+						</div>
 					</div>
-				</div>
+				{/if}
 			{/if}
 		{/if}
 
