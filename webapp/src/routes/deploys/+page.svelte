@@ -84,7 +84,19 @@
 					} catch (err) {
 						console.warn(`Could not fetch worker info for ${deployment.name}:`, err);
 						deployment.workerInfo = null;
-						deployment.workerInfoError = `Failed to fetch worker info: ${err.message}`;
+						
+						// Provide more specific error messages for common issues
+						if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+							if (err.message.includes('CORS')) {
+								deployment.workerInfoError = 'CORS error: Worker does not allow cross-origin requests';
+							} else if (err.message.includes('net::ERR_CONNECTION_REFUSED')) {
+								deployment.workerInfoError = 'Connection refused: Worker may be down or endpoint not available';
+							} else {
+								deployment.workerInfoError = 'Network error: Unable to reach worker';
+							}
+						} else {
+							deployment.workerInfoError = `Failed to fetch worker info: ${err.message}`;
+						}
 					}
 				} else {
 					console.log('No URL for deployment:', deployment.name);
