@@ -259,6 +259,22 @@
 				<p class="text-gray-400 text-lg">No deployments found</p>
 			</div>
 		{:else}
+			<!-- Refresh Button -->
+			<div class="mb-6 flex justify-end">
+				<button
+					onclick={manualRefresh}
+					disabled={refreshing}
+					class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+				>
+					{#if refreshing}
+						<span class="animate-spin">⏳</span>
+						Refreshing...
+					{:else}
+						🔄 Refresh
+					{/if}
+				</button>
+			</div>
+
 			<div class="grid gap-4">
 				{#each deployments as deployment}
 					<div class="bg-gray-800/20 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
@@ -341,37 +357,6 @@
 			</div>
 		{/if}
 	</div>
-
-	{#if !loading && !error && deployments.length > 0}
-		<!-- Footer Status Summary -->
-		<div class="bg-gray-900/50 border-t border-gray-700 py-4">
-			<div class="container mx-auto px-4">
-				<div class="flex flex-col md:flex-row items-center justify-between gap-4">
-					<div class="flex items-center gap-4 text-sm text-gray-400">
-						<span>📊 {deployments.length} deployment{deployments.length > 1 ? 's' : ''}</span>
-						{#if lastUpdated}
-							<span>🔄 Updated {getDetailedTimeDifference(lastUpdated)}</span>
-						{/if}
-					</div>
-					
-					<div class="flex items-center gap-4 text-sm">
-						<button
-							onclick={manualRefresh}
-							disabled={refreshing}
-							class="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
-						>
-							{#if refreshing}
-								<span class="animate-spin">⏳</span>
-								Refreshing...
-							{:else}
-								🔄 Refresh
-							{/if}
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
 </div>
 
 <Footer />
