@@ -28,8 +28,7 @@
 				lastUpdated = new Date();
 				updatePageUrl();
 			} else {
-				const errorData = await response.text();
-				error = `Failed to fetch deployments: ${response.status} ${response.statusText}. ${errorData}`;
+				error = `Failed to fetch deployments: ${response.status} ${response.statusText}`;
 			}
 		} catch (err) {
 			error = 'Error fetching deployments: ' + err.message;
@@ -67,9 +66,8 @@
 							const workerInfo = await response.json();
 							deployment.workerInfo = workerInfo;
 						} else {
-							const errorText = await response.text();
 							deployment.workerInfo = null;
-							deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}. ${errorText}`;
+							deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}`;
 						}
 					} catch (err) {
 						deployment.workerInfo = null;
@@ -149,8 +147,7 @@
 				lastUpdated = new Date();
 				updatePageUrl();
 			} else {
-				const errorData = await response.text();
-				error = `Failed to fetch deployments: ${response.status} ${response.statusText}. ${errorData}`;
+				error = `Failed to fetch deployments: ${response.status} ${response.statusText}`;
 			}
 		} catch (err) {
 			error = 'Error fetching deployments: ' + err.message;
