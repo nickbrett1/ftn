@@ -315,20 +315,6 @@
 									<p class="text-green-500 text-xs">
 										⏰ {getDetailedTimeDifference(deployment.workerInfo.lastUpdated)}
 									</p>
-								{:else if deployment._debug?.worker_created_on}
-									<p class="text-blue-400 text-sm">
-										📅 Worker Created: {formatDate(deployment._debug.worker_created_on)}
-									</p>
-									<p class="text-blue-500 text-xs">
-										⏰ {getDetailedTimeDifference(deployment._debug.worker_created_on)}
-									</p>
-									<p class="text-gray-500 text-xs">
-										ℹ️ Worker info not available - showing creation time
-									</p>
-								{:else}
-									<p class="text-gray-500 text-xs">
-										ℹ️ Deployment time information not available
-									</p>
 								{/if}
 								
 								{#if deployment.workerInfoError}
