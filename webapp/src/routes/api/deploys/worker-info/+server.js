@@ -48,6 +48,10 @@ export async function GET({ request, url }) {
 
 				const html = await response.text();
 				
+				// Log a sample of the HTML for debugging
+				console.log('HTML sample (first 1000 chars):', html.substring(0, 1000));
+				console.log('HTML length:', html.length);
+				
 				// Try to find the constants in the HTML content
 				// Since these are injected by Vite, they might be in different formats
 				
@@ -97,6 +101,86 @@ export async function GET({ request, url }) {
 							}
 						} catch (e) {
 							console.warn('Could not parse built date:', builtMatch[1]);
+						}
+					}
+				}
+				
+				// Pattern 6: Look for any script tags that might contain the constants
+				const scriptTags = html.match(/<script[^>]*>([\s\S]*?)<\/script>/g);
+				if (scriptTags) {
+					console.log('Found script tags:', scriptTags.length);
+					scriptTags.forEach((script, index) => {
+						console.log(`Script ${index}:`, script.substring(0, 200));
+						
+						// Look for constants in each script tag
+						if (!buildTimeMatch) {
+							const match = script.match(/__BUILD_TIME__\s*=\s*['"]([^'"]+)['"]/);
+							if (match) {
+								buildTimeMatch = match;
+								console.log('Found BUILD_TIME in script tag:', match[1]);
+							}
+						}
+						if (!gitBranchMatch) {
+							const match = script.match(/__GIT_BRANCH__\s*=\s*['"]([^'"]+)['"]/);
+							if (match) {
+								gitBranchMatch = match;
+								console.log('Found GIT_BRANCH in script tag:', match[1]);
+							}
+						}
+						if (!gitCommitMatch) {
+							const match = script.match(/__GIT_COMMIT__\s*=\s*['"]([^'"]+)['"]/);
+							if (match) {
+								gitCommitMatch = match;
+								console.log('Found GIT_COMMIT in script tag:', match[1]);
+							}
+						}
+						
+						// Look for the global window assignments we added
+						if (!buildTimeMatch) {
+							const match = script.match(/window\.__BUILD_TIME__\s*=\s*__BUILD_TIME__/);
+							if (match) {
+								// Look for the actual value in the same script tag
+								const valueMatch = script.match(/__BUILD_TIME__\s*=\s*['"]([^'"]+)['"]/);
+								if (valueMatch) {
+									buildTimeMatch = valueMatch;
+									console.log('Found BUILD_TIME in global script:', valueMatch[1]);
+								}
+							}
+						}
+						if (!gitBranchMatch) {
+							const match = script.match(/window\.__GIT_BRANCH__\s*=\s*__GIT_BRANCH__/);
+							if (match) {
+								const valueMatch = script.match(/__GIT_BRANCH__\s*=\s*['"]([^'"]+)['"]/);
+								if (valueMatch) {
+									gitBranchMatch = valueMatch;
+									console.log('Found GIT_BRANCH in global script:', valueMatch[1]);
+								}
+							}
+						}
+						if (!gitCommitMatch) {
+							const match = script.match(/window\.__GIT_COMMIT__\s*=\s*__GIT_COMMIT__/);
+							if (match) {
+								const valueMatch = script.match(/__GIT_COMMIT__\s*=\s*['"]([^'"]+)['"]/);
+								if (valueMatch) {
+									gitCommitMatch = valueMatch;
+									console.log('Found GIT_COMMIT in global script:', valueMatch[1]);
+								}
+							}
+						}
+					});
+				}
+				
+				// Pattern 7: Look for constants in the footer text more broadly
+				if (!gitBranchMatch || !gitCommitMatch) {
+					const footerMatch = html.match(/Branch:\s*([^\s|]+)\s*\|\s*Commit:\s*([^\s|]+)/);
+					if (footerMatch) {
+						if (!gitBranchMatch) {
+							gitBranchMatch = [null, footerMatch[1]];
+							console.log('Found branch in footer:', footerMatch[1]);
+						}
+						if (!gitCommitMatch) {
+							gitCommitMatch = [null, footerMatch[2]];
+							console.log('Found commit in footer:', footerMatch[2]);
 						}
 					}
 				}
