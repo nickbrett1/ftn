@@ -1194,30 +1194,29 @@
 				{/each}
 				
 				{#if notifications.length > 0}
-				<div class="space-y-3 mb-6">
-					{#each notifications as notification}
-						<div class="border rounded-lg p-4 {notification.type === 'success' ? 'bg-green-900/20 border-green-700' : 'bg-blue-900/20 border-blue-700'}">
-							<div class="flex items-start gap-3">
-								<span class="text-lg">{notification.icon}</span>
-								<div class="flex-1">
-									<h4 class="font-semibold {notification.type === 'success' ? 'text-green-300' : 'text-blue-300'} mb-1">
-										{notification.title}
-									</h4>
-									<p class="text-sm {notification.type === 'success' ? 'text-green-400' : 'text-blue-400'} mb-2">
-										{notification.message}
-									</p>
-									<div class="text-xs text-gray-400">
-										Environment: {notification.deployment.environment} | Version: {notification.deployment.version}
+					<div class="space-y-3 mb-6">
+						{#each notifications as notification}
+							<div class="border rounded-lg p-4 {notification.type === 'success' ? 'bg-green-900/20 border-green-700' : 'bg-blue-900/20 border-blue-700'}">
+								<div class="flex items-start gap-3">
+									<span class="text-lg">{notification.icon}</span>
+									<div class="flex-1">
+										<h4 class="font-semibold {notification.type === 'success' ? 'text-green-300' : 'text-blue-300'} mb-1">
+											{notification.title}
+										</h4>
+										<p class="text-sm {notification.type === 'success' ? 'text-green-400' : 'text-blue-400'} mb-2">
+											{notification.message}
+										</p>
+										<div class="text-xs text-gray-400">
+											Environment: {notification.deployment.environment} | Version: {notification.deployment.version}
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-					{/each}
-				</div>
+						{/each}
+					</div>
+				{/if}
 			{/if}
 		{/if}
-	</div>
-</div>
 
 {#if !loading && !error && deployments.length > 0}
 	<!-- Footer Status Summary -->
