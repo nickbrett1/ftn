@@ -1030,6 +1030,7 @@
 						</div>
 					</div>
 				{/if}
+			{/if}
 		{/if}
 
 		{#if !loading && !error && deployments.length > 0}
