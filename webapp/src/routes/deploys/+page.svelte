@@ -48,8 +48,10 @@
 		// Fetch worker info for each deployment to get build time, branch, and commit
 		fetchingWorkerInfo = true;
 		try {
+			console.log('Starting to fetch worker info for', deployments.length, 'deployments');
 			for (const deployment of deployments) {
 				if (deployment.url) {
+					console.log('Fetching worker info for:', deployment.name, 'at URL:', deployment.url);
 					try {
 						const response = await fetch('/api/deploys/worker-info', {
 							method: 'POST',
@@ -62,16 +64,21 @@
 						if (response.ok) {
 							const workerInfo = await response.json();
 							deployment.workerInfo = workerInfo;
+							console.log('Successfully fetched worker info for', deployment.name, ':', workerInfo);
 						} else {
-							console.warn(`Failed to fetch worker info for ${deployment.name}:`, response.status);
+							const errorText = await response.text();
+							console.warn(`Failed to fetch worker info for ${deployment.name}:`, response.status, errorText);
 							deployment.workerInfo = null;
 						}
 					} catch (err) {
 						console.warn(`Could not fetch worker info for ${deployment.name}:`, err);
 						deployment.workerInfo = null;
 					}
+				} else {
+					console.log('No URL for deployment:', deployment.name);
 				}
 			}
+			console.log('Finished fetching worker info');
 		} finally {
 			fetchingWorkerInfo = false;
 		}
@@ -304,6 +311,12 @@
 								{:else}
 									<p class="text-gray-500 text-xs">
 										ℹ️ Deployment time information not available
+									</p>
+								{/if}
+								
+								{#if deployment.workerInfo?.note}
+									<p class="text-orange-500 text-xs">
+										⚠️ {deployment.workerInfo.note}
 									</p>
 								{/if}
 							</div>
