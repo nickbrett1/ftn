@@ -68,10 +68,12 @@
 							const errorText = await response.text();
 							console.warn(`Failed to fetch worker info for ${deployment.name}:`, response.status, errorText);
 							deployment.workerInfo = null;
+							deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}. ${errorText}`;
 						}
 					} catch (err) {
 						console.warn(`Could not fetch worker info for ${deployment.name}:`, err);
 						deployment.workerInfo = null;
+						deployment.workerInfoError = `Failed to fetch worker info: ${err.message}`;
 					}
 				} else {
 					console.log('No URL for deployment:', deployment.name);
@@ -329,9 +331,9 @@
 									</p>
 								{/if}
 								
-								{#if deployment.workerInfo?.note}
+								{#if deployment.workerInfoError}
 									<p class="text-orange-500 text-xs">
-										⚠️ {deployment.workerInfo.note}
+										⚠️ {deployment.workerInfoError}
 									</p>
 								{/if}
 							</div>
