@@ -53,12 +53,17 @@
 				if (deployment.url) {
 					console.log('Fetching worker info for:', deployment.name, 'at URL:', deployment.url);
 					try {
-						const response = await fetch(`/api/deploys/worker-info?url=${encodeURIComponent(deployment.url)}`, {
+						const workerInfoUrl = `/api/deploys/worker-info?url=${encodeURIComponent(deployment.url)}`;
+						console.log('Making request to:', workerInfoUrl);
+						
+						const response = await fetch(workerInfoUrl, {
 							method: 'GET',
 							headers: {
 								'Accept': 'application/json'
 							}
 						});
+						
+						console.log('Response status:', response.status, 'for', deployment.name);
 						
 						if (response.ok) {
 							const workerInfo = await response.json();
