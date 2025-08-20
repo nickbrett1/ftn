@@ -182,16 +182,17 @@
 				position={[0, 20, 40]}
 				fov={60}
 				makeDefault
-			/>
-			<OrbitControls
-				enableDamping
-				dampingFactor={0.05}
-				enablePan={true}
-				enableZoom={true}
-				enableRotate={true}
-				autoRotate={true}
-				autoRotateSpeed={0.5}
-			/>
+			>
+				<OrbitControls
+					enableDamping
+					dampingFactor={0.05}
+					enablePan={true}
+					enableZoom={true}
+					enableRotate={true}
+					autoRotate={true}
+					autoRotateSpeed={0.5}
+				/>
+			</T.PerspectiveCamera>
 			
 			<!-- Simple test to verify Canvas is working -->
 			<T.Mesh position={[0, 0, 0]}>
