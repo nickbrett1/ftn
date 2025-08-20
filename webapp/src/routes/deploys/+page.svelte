@@ -336,11 +336,12 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Quick Stats -->
-			{@const mostRecentDeployment = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.sort((a, b) => new Date(b._debug.worker_created_on) - new Date(a._debug.worker_created_on))[0]
-			}
-			{#if mostRecentDeployment}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const mostRecentDeployment = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.sort((a, b) => new Date(b._debug.worker_created_on) - new Date(a._debug.worker_created_on))[0]
+				}
+				{#if mostRecentDeployment}
 				<div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
 					<h3 class="text-blue-400 font-semibold mb-2">📈 Quick Stats</h3>
 					<div class="text-sm text-blue-300 space-y-1">
@@ -362,18 +363,19 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Health Overview -->
-			{@const healthOverview = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.map(d => getDeploymentHealth(d._debug.worker_created_on))
-			}
-			{@const excellentCount = healthOverview.filter(h => h.status === 'Excellent').length}
-			{@const goodCount = healthOverview.filter(h => h.status === 'Good').length}
-			{@const fairCount = healthOverview.filter(h => h.status === 'Fair').length}
-			{@const attentionCount = healthOverview.filter(h => h.status === 'Attention').length}
-			{@const warningCount = healthOverview.filter(h => h.status === 'Warning').length}
-			{@const criticalCount = healthOverview.filter(h => h.status === 'Critical').length}
-			
-			<div class="bg-gradient-to-r from-gray-800/20 to-gray-700/20 border border-gray-600 rounded-lg p-4 mb-6">
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const healthOverview = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.map(d => getDeploymentHealth(d._debug.worker_created_on))
+				}
+				{@const excellentCount = healthOverview.filter(h => h.status === 'Excellent').length}
+				{@const goodCount = healthOverview.filter(h => h.status === 'Good').length}
+				{@const fairCount = healthOverview.filter(h => h.status === 'Fair').length}
+				{@const attentionCount = healthOverview.filter(h => h.status === 'Attention').length}
+				{@const warningCount = healthOverview.filter(h => h.status === 'Warning').length}
+				{@const criticalCount = healthOverview.filter(h => h.status === 'Critical').length}
+				
+				<div class="bg-gradient-to-r from-gray-800/20 to-gray-700/20 border border-gray-600 rounded-lg p-4 mb-6">
 				<h3 class="text-gray-200 font-semibold mb-3">🏥 Deployment Health Overview</h3>
 				<div class="grid grid-cols-2 md:grid-cols-6 gap-3">
 					{#if excellentCount > 0}
@@ -424,8 +426,8 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Metrics -->
-			{@const metrics = deployments.filter(d => d._debug?.worker_created_on)}
-			{#if metrics.length > 0}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const metrics = deployments.filter(d => d._debug?.worker_created_on)}
 				{@const totalDeployments = metrics.length}
 				{@const recentDeployments = metrics.filter(d => isRecentDeployment(d._debug.worker_created_on)).length}
 				{@const healthyDeployments = metrics.filter(d => {
@@ -477,12 +479,13 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment History -->
-			{@const deploymentHistory = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.sort((a, b) => new Date(b._debug.worker_created_on) - new Date(a._debug.worker_created_on))
-				.slice(0, 5)
-			}
-			{#if deploymentHistory.length > 1}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 1}
+				{@const deploymentHistory = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.sort((a, b) => new Date(b._debug.worker_created_on) - new Date(a._debug.worker_created_on))
+					.slice(0, 5)
+				}
+				{#if deploymentHistory.length > 1}
 				<div class="bg-purple-900/20 border border-purple-700 rounded-lg p-4 mb-6">
 					<h3 class="text-purple-400 font-semibold mb-3">📚 Recent Deployment History</h3>
 					<div class="space-y-2">
@@ -499,10 +502,12 @@
 									<div class="text-xs text-purple-300">
 										{getDetailedTimeDifference(deployment._debug.worker_created_on)}
 									</div>
-									{@const ageCategory = getDeploymentAgeCategory(deployment._debug.worker_created_on)}
-									<div class="text-xs {ageCategory.color}">
-										{ageCategory.category}
-									</div>
+									{#if deployment._debug?.worker_created_on}
+										{@const ageCategory = getDeploymentAgeCategory(deployment._debug.worker_created_on)}
+										<div class="text-xs {ageCategory.color}">
+											{ageCategory.category}
+										</div>
+									{/if}
 								</div>
 							</div>
 						{/each}
@@ -808,25 +813,26 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Recommendations -->
-			{@const recommendations = []}
-			{@const oldestDeployment = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))[0]
-			}
-			{#if oldestDeployment}
-				{@const oldestAge = (new Date() - new Date(oldestDeployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
-				{#if oldestAge > 30}
-					{@const _ = recommendations.push('Consider updating older deployments to ensure security and performance')}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const recommendations = []}
+				{@const oldestDeployment = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))[0]
+				}
+				{#if oldestDeployment}
+					{@const oldestAge = (new Date() - new Date(oldestDeployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
+					{#if oldestAge > 30}
+						{@const _ = recommendations.push('Consider updating older deployments to ensure security and performance')}
+					{/if}
+					{#if oldestAge > 7}
+						{@const _ = recommendations.push('Some deployments are over a week old - consider refreshing them')}
+					{/if}
 				{/if}
-				{#if oldestAge > 7}
-					{@const _ = recommendations.push('Some deployments are over a week old - consider refreshing them')}
+				{#if deployments.filter(d => d._debug?.worker_created_on && isRecentDeployment(d._debug.worker_created_on)).length === 0}
+					{@const _ = recommendations.push('No recent deployments detected - consider deploying updates')}
 				{/if}
-			{/if}
-			{#if deployments.filter(d => d._debug?.worker_created_on && isRecentDeployment(d._debug.worker_created_on)).length === 0}
-				{@const _ = recommendations.push('No recent deployments detected - consider deploying updates')}
-			{/if}
-			
-			{#if recommendations.length > 0}
+				
+				{#if recommendations.length > 0}
 				<div class="bg-amber-900/20 border border-amber-700 rounded-lg p-4 mb-6">
 					<h3 class="text-amber-400 font-semibold mb-3">💡 Deployment Recommendations</h3>
 					<div class="space-y-2">
@@ -843,11 +849,12 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Trends -->
-			{@const deploymentTrends = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))
-			}
-			{#if deploymentTrends.length > 1}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 1}
+				{@const deploymentTrends = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))
+				}
+				{#if deploymentTrends.length > 1}
 				{@const firstDeployment = new Date(deploymentTrends[0]._debug.worker_created_on)}
 				{@const lastDeployment = new Date(deploymentTrends[deploymentTrends.length - 1]._debug.worker_created_on)}
 				{@const totalTimeMs = lastDeployment - firstDeployment}
@@ -879,11 +886,12 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Progress Timeline -->
-			{@const timelineDeployments = deployments
-				.filter(d => d._debug?.worker_created_on)
-				.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))
-			}
-			{#if timelineDeployments.length > 1}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 1}
+				{@const timelineDeployments = deployments
+					.filter(d => d._debug?.worker_created_on)
+					.sort((a, b) => new Date(a._debug.worker_created_on) - new Date(b._debug.worker_created_on))
+				}
+				{#if timelineDeployments.length > 1}
 				<div class="bg-gradient-to-r from-rose-900/20 to-pink-900/20 border border-rose-700 rounded-lg p-4 mb-6">
 					<h3 class="text-rose-400 font-semibold mb-3">⏳ Deployment Timeline</h3>
 					<div class="relative">
@@ -927,29 +935,30 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Alerts -->
-			{@const alerts = []}
-			{#each deployments as deployment}
-				{#if deployment._debug?.worker_created_on}
-					{@const deploymentAge = (new Date() - new Date(deployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
-					{#if deploymentAge > 30}
-						{@const _ = alerts.push({
-							type: 'warning',
-							title: `${deployment.name} is very old`,
-							message: `Last deployed ${Math.round(deploymentAge)} days ago`,
-							deployment: deployment
-						})}
-					{:else if deploymentAge > 7}
-						{@const _ = alerts.push({
-							type: 'info',
-							title: `${deployment.name} needs attention`,
-							message: `Last deployed ${Math.round(deploymentAge)} days ago`,
-							deployment: deployment
-						})}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const alerts = []}
+				{#each deployments as deployment}
+					{#if deployment._debug?.worker_created_on}
+						{@const deploymentAge = (new Date() - new Date(deployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
+						{#if deploymentAge > 30}
+							{@const _ = alerts.push({
+								type: 'warning',
+								title: `${deployment.name} is very old`,
+								message: `Last deployed ${Math.round(deploymentAge)} days ago`,
+								deployment: deployment
+							})}
+						{:else if deploymentAge > 7}
+							{@const _ = alerts.push({
+								type: 'info',
+								title: `${deployment.name} needs attention`,
+								message: `Last deployed ${Math.round(deploymentAge)} days ago`,
+								deployment: deployment
+							})}
+						{/if}
 					{/if}
-				{/if}
-			{/each}
-			
-			{#if alerts.length > 0}
+				{/each}
+				
+				{#if alerts.length > 0}
 				<div class="space-y-3 mb-6">
 					{#each alerts as alert}
 						<div class="border rounded-lg p-4 {alert.type === 'warning' ? 'bg-red-900/20 border-red-700' : 'bg-blue-900/20 border-blue-700'}">
@@ -977,11 +986,12 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Environment Comparison -->
-			{@const environmentComparison = deployments
-				.filter(d => d.environment === 'preview' || d.environment === 'production')
-				.sort((a, b) => a.environment === 'preview' ? -1 : 1)
-			}
-			{#if environmentComparison.length > 1}
+			{#if deployments.filter(d => d.environment === 'preview' || d.environment === 'production').length > 1}
+				{@const environmentComparison = deployments
+					.filter(d => d.environment === 'preview' || d.environment === 'production')
+					.sort((a, b) => a.environment === 'preview' ? -1 : 1)
+				}
+				{#if environmentComparison.length > 1}
 				<div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 mb-6">
 					<h3 class="text-purple-400 font-semibold mb-3">⚖️ Environment Comparison</h3>
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1024,67 +1034,68 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Insights -->
-			{@const insights = []}
-			{@const allDeployments = deployments.filter(d => d._debug?.worker_created_on)}
-			{@const recentDeployments = allDeployments.filter(d => isRecentDeployment(d._debug.worker_created_on))}
-			{@const healthyDeployments = allDeployments.filter(d => {
-				const health = getDeploymentHealth(d._debug.worker_created_on);
-				return health.status === 'Excellent' || health.status === 'Good';
-			})}
-			
-			{#if recentDeployments.length > 0}
-				{@const _ = insights.push({
-					type: 'positive',
-					icon: '🎉',
-					title: 'Active Development',
-					message: `${recentDeployments.length} deployment${recentDeployments.length > 1 ? 's' : ''} in the last hour`
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const insights = []}
+				{@const allDeployments = deployments.filter(d => d._debug?.worker_created_on)}
+				{@const recentDeployments = allDeployments.filter(d => isRecentDeployment(d._debug.worker_created_on))}
+				{@const healthyDeployments = allDeployments.filter(d => {
+					const health = getDeploymentHealth(d._debug.worker_created_on);
+					return health.status === 'Excellent' || health.status === 'Good';
 				})}
-			{/if}
-			
-			{#if healthyDeployments.length === allDeployments.length && allDeployments.length > 0}
-				{@const _ = insights.push({
-					type: 'positive',
-					icon: '✅',
-					title: 'Excellent Health',
-					message: 'All deployments are in excellent or good health'
-				})}
-			{:else if healthyDeployments.length > 0}
-				{@const _ = insights.push({
-					type: 'info',
-					icon: '📊',
-					title: 'Mixed Health',
-					message: `${healthyDeployments.length} of ${allDeployments.length} deployments are healthy`
-				})}
-			{/if}
-			
-			{#if allDeployments.length > 1}
-				{@const deploymentAges = allDeployments.map(d => (new Date() - new Date(d._debug.worker_created_on)) / (1000 * 60 * 60 * 24))}
-				{@const avgAge = deploymentAges.reduce((a, b) => a + b, 0) / deploymentAges.length}
-				{#if avgAge < 1}
+				
+				{#if recentDeployments.length > 0}
 					{@const _ = insights.push({
 						type: 'positive',
-						icon: '🚀',
-						title: 'Frequent Deployments',
-						message: 'Average deployment age is less than 1 day'
-					})}
-				{:else if avgAge < 7}
-					{@const _ = insights.push({
-						type: 'info',
-						icon: '📅',
-						title: 'Regular Deployments',
-						message: `Average deployment age is ${Math.round(avgAge)} days`
-					})}
-				{:else}
-					{@const _ = insights.push({
-						type: 'warning',
-						icon: '⏰',
-						title: 'Infrequent Deployments',
-						message: `Average deployment age is ${Math.round(avgAge)} days - consider more frequent updates`
+						icon: '🎉',
+						title: 'Active Development',
+						message: `${recentDeployments.length} deployment${recentDeployments.length > 1 ? 's' : ''} in the last hour`
 					})}
 				{/if}
-			{/if}
-			
-			{#if insights.length > 0}
+				
+				{#if healthyDeployments.length === allDeployments.length && allDeployments.length > 0}
+					{@const _ = insights.push({
+						type: 'positive',
+						icon: '✅',
+						title: 'Excellent Health',
+						message: 'All deployments are in excellent or good health'
+					})}
+				{:else if healthyDeployments.length > 0}
+					{@const _ = insights.push({
+						type: 'info',
+						icon: '📊',
+						title: 'Mixed Health',
+						message: `${healthyDeployments.length} of ${allDeployments.length} deployments are healthy`
+					})}
+				{/if}
+				
+				{#if allDeployments.length > 1}
+					{@const deploymentAges = allDeployments.map(d => (new Date() - new Date(d._debug.worker_created_on)) / (1000 * 60 * 60 * 24))}
+					{@const avgAge = deploymentAges.reduce((a, b) => a + b, 0) / deploymentAges.length}
+					{#if avgAge < 1}
+						{@const _ = insights.push({
+							type: 'positive',
+							icon: '🚀',
+							title: 'Frequent Deployments',
+							message: 'Average deployment age is less than 1 day'
+						})}
+					{:else if avgAge < 7}
+						{@const _ = insights.push({
+							type: 'info',
+							icon: '📅',
+							title: 'Regular Deployments',
+							message: `Average deployment age is ${Math.round(avgAge)} days`
+						})}
+					{:else}
+						{@const _ = insights.push({
+							type: 'warning',
+							icon: '⏰',
+							title: 'Infrequent Deployments',
+							message: `Average deployment age is ${Math.round(avgAge)} days - consider more frequent updates`
+						})}
+					{/if}
+				{/if}
+				
+				{#if insights.length > 0}
 				<div class="bg-gradient-to-r from-teal-900/20 to-cyan-900/20 border border-teal-700 rounded-lg p-4 mb-6">
 					<h3 class="text-teal-400 font-semibold mb-3">🧠 Deployment Insights</h3>
 					<div class="space-y-3">
@@ -1157,31 +1168,32 @@
 
 		{#if !loading && !error && deployments.length > 0}
 			<!-- Deployment Notifications -->
-			{@const notifications = []}
-			{#each deployments as deployment}
-				{#if deployment._debug?.worker_created_on}
-					{@const deploymentAge = (new Date() - new Date(deployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
-					{#if deploymentAge < 0.1} <!-- Less than 2.4 hours -->
-						{@const _ = notifications.push({
-							type: 'success',
-							icon: '🎉',
-							title: 'Very Recent Deployment',
-							message: `${deployment.name} was deployed very recently`,
-							deployment: deployment
-						})}
-					{:else if deploymentAge < 1} <!-- Less than 1 day -->
-						{@const _ = notifications.push({
-							type: 'info',
-							icon: '📅',
-							title: 'Recent Deployment',
-							message: `${deployment.name} was deployed today`,
-							deployment: deployment
-						})}
+			{#if deployments.filter(d => d._debug?.worker_created_on).length > 0}
+				{@const notifications = []}
+				{#each deployments as deployment}
+					{#if deployment._debug?.worker_created_on}
+						{@const deploymentAge = (new Date() - new Date(deployment._debug.worker_created_on)) / (1000 * 60 * 60 * 24)}
+						{#if deploymentAge < 0.1} <!-- Less than 2.4 hours -->
+							{@const _ = notifications.push({
+								type: 'success',
+								icon: '🎉',
+								title: 'Very Recent Deployment',
+								message: `${deployment.name} was deployed very recently`,
+								deployment: deployment
+							})}
+						{:else if deploymentAge < 1} <!-- Less than 1 day -->
+							{@const _ = notifications.push({
+								type: 'info',
+								icon: '📅',
+								title: 'Recent Deployment',
+								message: `${deployment.name} was deployed today`,
+								deployment: deployment
+							})}
+						{/if}
 					{/if}
-				{/if}
-			{/each}
-			
-			{#if notifications.length > 0}
+				{/each}
+				
+				{#if notifications.length > 0}
 				<div class="space-y-3 mb-6">
 					{#each notifications as notification}
 						<div class="border rounded-lg p-4 {notification.type === 'success' ? 'bg-green-900/20 border-green-700' : 'bg-blue-900/20 border-blue-700'}">
