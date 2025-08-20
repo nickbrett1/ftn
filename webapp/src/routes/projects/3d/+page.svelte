@@ -1,4 +1,5 @@
 <script>
+	import { browser } from '$app/environment';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Heatmap3D from '$lib/components/Heatmap3D.svelte';
@@ -18,7 +19,17 @@
 		</div>
 		
 		<div class="w-full h-[80vh] bg-black rounded-lg overflow-hidden border border-zinc-700 shadow-2xl">
-			<Heatmap3D />
+			{#if browser}
+				<Heatmap3D />
+			{:else}
+				<div class="w-full h-full flex items-center justify-center">
+					<div class="text-center text-white">
+						<div class="w-16 h-16 border-4 border-blue-400 border-t-transparent animate-spin mx-auto mb-4"></div>
+						<div class="text-lg mb-2">Loading 3D Heatmap</div>
+						<div class="text-sm text-zinc-400">Please wait while the 3D components initialize...</div>
+					</div>
+				</div>
+			{/if}
 		</div>
 		
 		<div class="mt-8 text-center">
