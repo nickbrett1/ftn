@@ -238,9 +238,7 @@
 </script>
 
 <svelte:head>
-	<title>
-		{loading ? 'Loading Deployments' : error ? 'Deployment Error' : deployments.length === 0 ? 'No Deployments' : `${deployments.length} Deployment${deployments.length > 1 ? 's' : ''}`} - Fintech Nick
-	</title>
+	<title>Deployments - Fintech Nick</title>
 	<meta name="description" content="View all active deployments and preview environments." />
 	<meta name="deployment:status" content={loading ? 'loading' : error ? 'error' : deployments.length > 0 ? 'active' : 'empty'} />
 	<meta property="og:title" content="Deployments - Fintech Nick" />
