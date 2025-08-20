@@ -41,10 +41,6 @@ export async function PUT(event) {
 	try {
 		const { merchant, amount, allocated_to } = await request.json();
 
-		if (!merchant || amount === undefined) {
-			return json({ error: 'Missing required fields: merchant, amount' }, { status: 400 });
-		}
-
 		// Validate allocated_to values against actual budgets (allow null for unallocated)
 		const budgets = await listBudgets(event);
 		const budgetNames = budgets.map((budget) => budget.name);
@@ -59,13 +55,32 @@ export async function PUT(event) {
 			);
 		}
 
-		// Validate amount is a number
-		const parsedAmount = parseFloat(amount);
-		if (isNaN(parsedAmount)) {
-			return json({ error: 'Amount must be a valid number' }, { status: 400 });
-		}
+		// If we're only updating allocation, get the current charge data
+		if (allocated_to !== undefined && (merchant === undefined || amount === undefined)) {
+			const currentCharge = await getPayment(event, charge_id);
+			if (!currentCharge) {
+				return json({ error: 'Charge not found' }, { status: 404 });
+			}
 
-		await updatePayment(event, charge_id, merchant, parsedAmount, allocated_to);
+			// Use current values for fields not provided
+			const updateMerchant = merchant !== undefined ? merchant : currentCharge.merchant;
+			const updateAmount = amount !== undefined ? parseFloat(amount) : currentCharge.amount;
+
+			await updatePayment(event, charge_id, updateMerchant, updateAmount, allocated_to);
+		} else {
+			// Full update - validate all required fields
+			if (!merchant || amount === undefined) {
+				return json({ error: 'Missing required fields: merchant, amount' }, { status: 400 });
+			}
+
+			// Validate amount is a number
+			const parsedAmount = parseFloat(amount);
+			if (isNaN(parsedAmount)) {
+				return json({ error: 'Amount must be a valid number' }, { status: 400 });
+			}
+
+			await updatePayment(event, charge_id, merchant, parsedAmount, allocated_to);
+		}
 		return json({ success: true });
 	} catch (error) {
 		console.error('Error updating charge:', error);
