@@ -37,119 +37,6 @@
 	function startAnimation() {
 		// Animation loop will be handled by Three.js
 	}
-
-	// Function to create a simple land mask for Earth
-	function createLandMask() {
-		const size = 64;
-		const data = new Uint8Array(size * size * 4);
-		
-		// Define major land masses (simplified)
-		const landMasses = [
-			// North America
-			{ lat: 45, lng: -100, radius: 25, intensity: 0.9 },
-			// South America
-			{ lat: -15, lng: -60, radius: 20, intensity: 0.8 },
-			// Europe
-			{ lat: 50, lng: 10, radius: 15, intensity: 0.7 },
-			// Africa
-			{ lat: 0, lng: 20, radius: 25, intensity: 0.8 },
-			// Asia
-			{ lat: 45, lng: 100, radius: 30, intensity: 0.9 },
-			// Australia
-			{ lat: -25, lng: 135, radius: 12, intensity: 0.6 },
-			// Greenland
-			{ lat: 70, lng: -40, radius: 8, intensity: 0.5 },
-			// Antarctica
-			{ lat: -80, lng: 0, radius: 20, intensity: 0.4 }
-		];
-		
-		for (let y = 0; y < size; y++) {
-			for (let x = 0; x < size; x++) {
-				const index = (y * size + x) * 4;
-				
-				// Convert pixel coordinates to lat/lng
-				const lat = ((y / size) - 0.5) * Math.PI;
-				const lng = ((x / size) - 0.5) * 2 * Math.PI;
-				
-				let alpha = 0; // Start with ocean (transparent)
-				
-				// Check if this pixel is on land
-				for (const land of landMasses) {
-					const landLat = land.lat * Math.PI / 180;
-					const landLng = land.lng * Math.PI / 180;
-					const landRadius = land.radius * Math.PI / 180;
-					
-					// Calculate distance from land center
-					const dLat = lat - landLat;
-					const dLng = lng - landLng;
-					const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-					
-					if (distance < landRadius) {
-						// Smooth falloff from center
-						const falloff = 1 - (distance / landRadius);
-						alpha = Math.max(alpha, falloff * land.intensity);
-					}
-				}
-				
-				// Set RGBA values
-				data[index] = 139;     // R (brown color)
-				data[index + 1] = 115; // G
-				data[index + 2] = 85;  // B
-				data[index + 3] = Math.floor(alpha * 255); // A (transparency)
-			}
-		}
-		
-		return data;
-	}
-
-	// Function to create simple land masks for individual continents
-	function createSimpleLandMask(continent) {
-		const size = 32;
-		const data = new Uint8Array(size * size * 4);
-		
-		// Define continent parameters
-		const continents = {
-			northAmerica: { lat: 45, lng: -100, radius: 25, intensity: 0.9 },
-			eurasia: { lat: 45, lng: 100, radius: 30, intensity: 0.8 },
-			africa: { lat: 0, lng: 20, radius: 25, intensity: 0.8 },
-			southAmerica: { lat: -15, lng: -60, radius: 20, intensity: 0.8 },
-			australia: { lat: -25, lng: 135, radius: 12, intensity: 0.7 }
-		};
-		
-		const continentData = continents[continent];
-		if (!continentData) return data;
-		
-		for (let y = 0; y < size; y++) {
-			for (let x = 0; x < size; x++) {
-				const index = (y * size + x) * 4;
-				
-				// Convert pixel coordinates to lat/lng
-				const lat = ((y / size) - 0.5) * Math.PI;
-				const lng = ((x / size) - 0.5) * 2 * Math.PI;
-				
-				// Calculate distance from continent center
-				const dLat = lat - (continentData.lat * Math.PI / 180);
-				const dLng = lng - (continentData.lng * Math.PI / 180);
-				const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-				const radius = continentData.radius * Math.PI / 180;
-				
-				let alpha = 0;
-				if (distance < radius) {
-					// Smooth falloff from center
-					const falloff = 1 - (distance / radius);
-					alpha = falloff * continentData.intensity;
-				}
-				
-				// Set RGBA values
-				data[index] = 139;     // R (brown color)
-				data[index + 1] = 115; // G
-				data[index + 2] = 85;  // B
-				data[index + 3] = Math.floor(alpha * 255); // A (transparency)
-			}
-		}
-		
-		return data;
-	}
 </script>
 
 <div class="relative w-full h-full">
@@ -316,85 +203,76 @@
 					/>
 				</T.Mesh>
 				
-				<!-- Land masses using overlapping spheres -->
+				<!-- Simple land masses using positioned shapes -->
 				<!-- North America -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.02, 32, 32]} />
+				<T.Mesh position={[0, 7, -7]}>
+					<T.SphereGeometry args={[3, 8, 8]} />
 					<T.MeshBasicMaterial
 						color="#8B7355"
 						transparent={true}
-						opacity={0.7}
-						wireframe={false}
-					>
-						<T.DataTexture
-							attach="alphaMap"
-							args={[createSimpleLandMask('northAmerica'), 32, 32, THREE.RGBAFormat]}
-						/>
-					</T.MeshBasicMaterial>
-				</T.Mesh>
-				
-				<!-- Europe/Asia -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.02, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.7}
-						wireframe={false}
-					>
-						<T.DataTexture
-							attach="alphaMap"
-							args={[createSimpleLandMask('eurasia'), 32, 32, THREE.RGBAFormat]}
-						/>
-					</T.MeshBasicMaterial>
-				</T.Mesh>
-				
-				<!-- Africa -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.02, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.7}
-						wireframe={false}
-					>
-						<T.DataTexture
-							attach="alphaMap"
-							args={[createSimpleLandMask('africa'), 32, 32, THREE.RGBAFormat]}
-						/>
-					</T.MeshBasicMaterial>
+						opacity={0.8}
+					/>
 				</T.Mesh>
 				
 				<!-- South America -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.02, 32, 32]} />
+				<T.Mesh position={[0, -3, -8]}>
+					<T.SphereGeometry args={[2.5, 8, 8]} />
 					<T.MeshBasicMaterial
 						color="#8B7355"
 						transparent={true}
-						opacity={0.7}
-						wireframe={false}
-					>
-						<T.DataTexture
-							attach="alphaMap"
-							args={[createSimpleLandMask('southAmerica'), 32, 32, THREE.RGBAFormat]}
-						/>
-					</T.MeshBasicMaterial>
+						opacity={0.8}
+					/>
+				</T.Mesh>
+				
+				<!-- Europe/Asia -->
+				<T.Mesh position={[0, 7, 7]}>
+					<T.SphereGeometry args={[4, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.8}
+					/>
+				</T.Mesh>
+				
+				<!-- Africa -->
+				<T.Mesh position={[0, 0, 7]}>
+					<T.SphereGeometry args={[3, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#8B7355"
+						transparent={true}
+						opacity={0.8}
+					/>
 				</T.Mesh>
 				
 				<!-- Australia -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.02, 32, 32]} />
+				<T.Mesh position={[0, -6, 9]}>
+					<T.SphereGeometry args={[2, 6, 6]} />
 					<T.MeshBasicMaterial
 						color="#8B7355"
 						transparent={true}
-						opacity={0.7}
-						wireframe={false}
-					>
-						<T.DataTexture
-							attach="alphaMap"
-							args={[createSimpleLandMask('australia'), 32, 32, THREE.RGBAFormat]}
-						/>
-					</T.MeshBasicMaterial>
+						opacity={0.8}
+					/>
+				</T.Mesh>
+				
+				<!-- Polar ice caps -->
+				<!-- North Pole -->
+				<T.Mesh position={[0, 10, 0]}>
+					<T.SphereGeometry args={[2, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#ffffff"
+						transparent={true}
+						opacity={0.9}
+					/>
+				</T.Mesh>
+				
+				<!-- South Pole -->
+				<T.Mesh position={[0, -10, 0]}>
+					<T.SphereGeometry args={[2, 8, 8]} />
+					<T.MeshBasicMaterial
+						color="#ffffff"
+						transparent={true}
+						opacity={0.9}
+					/>
 				</T.Mesh>
 				
 				<!-- Earth atmosphere glow -->
