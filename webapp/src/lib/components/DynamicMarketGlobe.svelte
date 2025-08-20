@@ -210,16 +210,6 @@
 							attach="map"
 							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg']}
 						/>
-						<!-- Bump map for terrain -->
-						<T.TextureLoader
-							attach="bumpMap"
-							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg']}
-						/>
-						<!-- Specular map for ocean reflections -->
-						<T.TextureLoader
-							attach="specularMap"
-							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg']}
-						/>
 					</T.MeshStandardMaterial>
 				</T.Mesh>
 				
@@ -229,60 +219,33 @@
 					<T.MeshBasicMaterial
 						color="#ffffff"
 						transparent={true}
-						opacity={0.3}
+						opacity={0.2}
 						wireframe={false}
-					>
-						<T.TextureLoader
-							attach="map"
-							args={['https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png']}
-						/>
-					</T.MeshBasicMaterial>
-				</T.Mesh>
-				
-				<!-- Earth atmosphere glow -->
-				<T.Mesh position={[0, 0, 0]}>
-					<T.SphereGeometry args={[10.3, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#4a90e2"
-						transparent={true}
-						opacity={0.1}
 					/>
 				</T.Mesh>
 				
-				<!-- Subtle grid lines on Earth surface -->
+				<!-- Subtle grid lines for geographic reference -->
 				<T.LineSegments>
 					<T.BufferGeometry>
 						<T.BufferAttribute
 							attach="attributes.position"
 							args={[
 								new Float32Array([
-									// Latitude lines
-									...Array.from({ length: 8 }, (_, i) => {
-										const lat = (i - 4) * Math.PI / 4;
-										const points = [];
-										for (let j = 0; j <= 32; j++) {
-											const lng = j * Math.PI / 16;
-											points.push(
-												10 * Math.cos(lat) * Math.cos(lng),
-												10 * Math.sin(lat),
-												10 * Math.cos(lat) * Math.sin(lng)
-											);
-										}
-										return points;
+									// Equator line
+									...Array.from({ length: 32 }, (_, i) => {
+										const angle = i * Math.PI / 16;
+										return [
+											10 * Math.cos(angle), 0, 10 * Math.sin(angle),
+											10 * Math.cos(angle + Math.PI / 16), 0, 10 * Math.sin(angle + Math.PI / 16)
+										];
 									}).flat(),
-									// Longitude lines
+									// Prime meridian
 									...Array.from({ length: 16 }, (_, i) => {
-										const lng = i * Math.PI / 8;
-										const points = [];
-										for (let j = 0; j <= 16; j++) {
-											const lat = (j - 8) * Math.PI / 8;
-											points.push(
-												10 * Math.cos(lat) * Math.cos(lng),
-												10 * Math.sin(lat),
-												10 * Math.cos(lat) * Math.sin(lng)
-											);
-										}
-										return points;
+										const angle = (i - 8) * Math.PI / 8;
+										return [
+											10 * Math.cos(0) * Math.cos(angle), 10 * Math.sin(angle), 10 * Math.cos(0) * Math.sin(angle),
+											10 * Math.cos(0) * Math.cos(angle + Math.PI / 8), 10 * Math.sin(angle + Math.PI / 8), 10 * Math.cos(0) * Math.sin(angle + Math.PI / 8)
+										];
 									}).flat()
 								]),
 								3
@@ -296,6 +259,16 @@
 						linewidth={1}
 					/>
 				</T.LineSegments>
+				
+				<!-- Earth atmosphere glow -->
+				<T.Mesh position={[0, 0, 0]}>
+					<T.SphereGeometry args={[10.3, 32, 32]} />
+					<T.MeshBasicMaterial
+						color="#4a90e2"
+						transparent={true}
+						opacity={0.1}
+					/>
+				</T.Mesh>
 				
 				<!-- Financial center markers on the globe -->
 				{#if financialCentersData && financialCentersData.length > 0}
