@@ -12,8 +12,9 @@
 	let refreshing = false;
 
 	// Check if this is an Amazon charge
-	$: isAmazon =
-		merchant?.toUpperCase().includes('AMAZON') || merchant?.toUpperCase().includes('AMZN');
+	const isAmazon = $derived(
+		merchant?.toUpperCase().includes('AMAZON') || merchant?.toUpperCase().includes('AMZN')
+	);
 
 	// Format currency
 	function formatCurrency(value) {
