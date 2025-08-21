@@ -18,7 +18,7 @@
 	let isLoggedIn = $state(false);
 
 	// Check if this is a preview deployment
-	$: isPreview = browser && window.location.hostname.includes('preview');
+	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
 
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
