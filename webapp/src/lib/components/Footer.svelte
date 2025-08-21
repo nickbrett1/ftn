@@ -13,8 +13,12 @@
 	import { goto } from '$app/navigation';
 	import { isUserAuthenticated } from '$lib/client/google-auth.js';
 	import { formatDate } from '$lib/utils/date-utils.js';
+	import { browser } from '$app/environment';
 
 	let isLoggedIn = $state(false);
+
+	// Check if this is a preview deployment
+	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
 
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
@@ -130,7 +134,7 @@
 
 		<!-- Git info at bottom of footer -->
 		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
-			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: preview
+			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: {isPreview ? 'preview' : 'production'}
 		</div>
 		
 		<!-- Build time info -->

@@ -6,7 +6,7 @@
 	const branchName = typeof __GIT_BRANCH__ !== 'undefined' ? __GIT_BRANCH__ : 'unknown';
 	
 	// Check if this is a preview deployment
-	$: isPreview = browser && window.location.hostname.includes('preview');
+	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
 </script>
 
 <!-- Deployment info - small and discrete -->
