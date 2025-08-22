@@ -35,7 +35,7 @@ function testManifestGeneration() {
 			name: 'Lighthouse Manifest',
 			command: 'npm run manifest:lighthouse',
 			expectedUrl: 'http://127.0.0.1:4173',
-			outputFile: 'static/manifest.json'
+			outputFile: 'static/manifest-lighthouse.json'
 		}
 	];
 	
