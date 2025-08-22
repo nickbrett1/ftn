@@ -135,7 +135,10 @@
 
 	// Handle search input changes
 	function handleSearchInput(event) {
-		searchTerm = event.target.value || '';
+		const value = event.target.value || '';
+		console.log('Search input changed:', value); // Debug log
+		searchTerm = value;
+		console.log('searchTerm state updated to:', searchTerm); // Debug log
 		debouncedSearch();
 	}
 
@@ -300,6 +303,12 @@
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
+				<!-- Debug display to see if searchTerm is updating -->
+				{#if import.meta.env.DEV}
+					<div class="mt-2 text-xs text-gray-500">
+						Debug: searchTerm = "{searchTerm}" (length: {searchTerm.length})
+					</div>
+				{/if}
 			</div>
 
 			<!-- Merchants List -->
