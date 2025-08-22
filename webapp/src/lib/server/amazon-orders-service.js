@@ -23,6 +23,11 @@ export function extractAmazonOrderId(merchantString) {
 	let match = merchantString.match(standardPattern);
 	if (match) return match[1];
 
+	// Pattern for D01 format order IDs (D01-XXXXXXX-XXXXXXX)
+	const d01Pattern = /\b(D01-\d{7}-\d{7})\b/;
+	match = merchantString.match(d01Pattern);
+	if (match) return match[1];
+
 	// Pattern for compact order IDs (16 digits)
 	const compactPattern = /\b(\d{16})\b/;
 	match = merchantString.match(compactPattern);
@@ -61,6 +66,11 @@ export function extractAmazonOrderIdFromMultiLine(statementText) {
 		// Pattern for standard Amazon order IDs (XXX-XXXXXXX-XXXXXXX)
 		const standardPattern = /\b(\d{3}-\d{7}-\d{7})\b/;
 		let match = line.match(standardPattern);
+		if (match) return match[1];
+
+		// Pattern for D01 format order IDs (D01-XXXXXXX-XXXXXXX)
+		const d01Pattern = /\b(D01-\d{7}-\d{7})\b/;
+		match = line.match(d01Pattern);
 		if (match) return match[1];
 
 		// Pattern for compact order IDs (16 digits)
