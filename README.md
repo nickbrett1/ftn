@@ -42,7 +42,7 @@ Modern data pipeline and visualization tools:
 
 Automated credit card statement processing and budget management system:
 
-- **AI-Powered**: LLama LLM integration for intelligent PDF statement parsing
+- **AI-Powered**: LLama LLM integration for merchant descriptions
 - **Document Processing**: Automated extraction of transactions from multiple credit card PDFs
 - **Budget Management**: Budget allocation and spending analysis
 - **Data Security**: Encrypted document storage
