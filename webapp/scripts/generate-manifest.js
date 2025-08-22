@@ -79,8 +79,29 @@ function main() {
 	const manifest = generateManifest(env);
 	const outputPath = path.join(process.cwd(), env.outputFile);
 	
+	// Write the environment-specific manifest
 	fs.writeFileSync(outputPath, JSON.stringify(manifest, null, '\t'));
-	console.log(`✅ Manifest generated successfully at ${env.outputFile}`);
+	console.log(`✅ Environment-specific manifest generated successfully at ${env.outputFile}`);
+	
+	// For production and preview, also update the main manifest.json
+	// This ensures app.html always references the correct manifest
+	if (envArg === 'production' || envArg === 'preview') {
+		const mainManifestPath = path.join(process.cwd(), 'static/manifest.json');
+		fs.writeFileSync(mainManifestPath, JSON.stringify(manifest, null, '\t'));
+		console.log(`✅ Main manifest.json updated for ${envArg} environment`);
+	}
+	
+	// For development, create a symlink or copy to make it easy to test
+	if (envArg === 'development') {
+		const mainManifestPath = path.join(process.cwd(), 'static/manifest.json');
+		try {
+			// Copy the development manifest to the main manifest for local testing
+			fs.copyFileSync(outputPath, mainManifestPath);
+			console.log(`✅ Development manifest copied to main manifest.json for local testing`);
+		} catch (error) {
+			console.log(`ℹ️  Could not copy development manifest (this is normal in CI): ${error.message}`);
+		}
+	}
 }
 
 main();

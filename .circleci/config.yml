@@ -50,6 +50,33 @@ jobs:
           command: |
             cd webapp && ./setup-wrangler-config.sh
       - run:
+          name: Clean up previous manifests
+          command: |
+            cd webapp
+            echo "🧹 Cleaning up previous manifest files..."
+            rm -f static/manifest-*.json
+            echo "✅ Previous manifests cleaned up"
+      - run:
+          name: Generate development manifest
+          command: |
+            cd webapp
+            echo "🔧 Generating development manifest with localhost URLs..."
+            npm run manifest:dev
+            echo "✅ Development manifest generated successfully"
+      - run:
+          name: Verify development manifest
+          command: |
+            cd webapp
+            echo "🔍 Verifying development manifest..."
+            if [ -f "static/manifest-dev.json" ]; then
+              echo "✅ Development manifest exists"
+              echo "📋 Manifest contents:"
+              cat static/manifest-dev.json
+            else
+              echo "❌ Development manifest not found!"
+              exit 1
+            fi
+      - run:
           name: Build app
           command: |
             cd webapp && npm run build
@@ -174,6 +201,26 @@ jobs:
           command: |
             cd webapp && ./setup-wrangler-config.sh
       - run:
+          name: Generate production manifest
+          command: |
+            cd webapp
+            echo "🔧 Generating production manifest with fintechnick.com URLs..."
+            npm run manifest:production
+            echo "✅ Production manifest generated successfully"
+      - run:
+          name: Verify production manifest
+          command: |
+            cd webapp
+            echo "🔍 Verifying production manifest..."
+            if [ -f "static/manifest.json" ]; then
+              echo "✅ Production manifest exists"
+              echo "📋 Manifest contents:"
+              cat static/manifest.json
+            else
+              echo "❌ Production manifest not found!"
+              exit 1
+            fi
+      - run:
           name: Install jq
           command: |
             sudo apt-get update && sudo apt-get install -y jq
@@ -218,6 +265,26 @@ jobs:
           name: Setup Wrangler configuration
           command: |
             cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Generate preview manifest
+          command: |
+            cd webapp
+            echo "🔧 Generating preview manifest with ftn-preview.nick-brett1.workers.dev URLs..."
+            npm run manifest:preview
+            echo "✅ Preview manifest generated successfully"
+      - run:
+          name: Verify preview manifest
+          command: |
+            cd webapp
+            echo "🔍 Verifying preview manifest..."
+            if [ -f "static/manifest.json" ]; then
+              echo "✅ Preview manifest exists"
+              echo "📋 Manifest contents:"
+              cat static/manifest.json
+            else
+              echo "❌ Preview manifest not found!"
+              exit 1
+            fi
       - run:
           name: Install jq
           command: |
