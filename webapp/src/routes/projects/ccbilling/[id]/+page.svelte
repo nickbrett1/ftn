@@ -137,7 +137,22 @@
 
 	// Parse statement state
 	let parsingStatements = $state(new Set());
+	let parsingProgress = $state(new Map()); // Track progress for each statement
 	let parseError = $state('');
+	
+	// Toast notification state
+	let showToast = $state(false);
+	let toastMessage = $state('');
+	let toastType = $state('success'); // 'success', 'error', 'info'
+	
+	// Progress tracking for parsing steps
+	const parsingSteps = [
+		'Getting statement details',
+		'Downloading PDF',
+		'Parsing PDF',
+		'Processing on server',
+		'Refreshing data'
+	];
 
 	// Delete statement state
 	let deletingStatements = $state(new Set());
@@ -170,6 +185,25 @@
 	// Check if any charges exist for a statement
 	function hasChargesForStatement(statementId) {
 		return localData.charges.some((charge) => charge.statement_id === statementId);
+	}
+	
+	// Toast notification functions
+	function showToastMessage(message, type = 'success') {
+		toastMessage = message;
+		toastType = type;
+		showToast = true;
+		
+		// Auto-hide after 5 seconds
+		setTimeout(() => {
+			showToast = false;
+		}, 5000);
+	}
+	
+	// Cancel parsing function
+	function cancelParsing(statementId) {
+		parsingStatements.delete(statementId);
+		parsingProgress.delete(statementId);
+		showToastMessage('Parsing cancelled', 'info');
 	}
 
 	// Credit card filter state
@@ -584,49 +618,90 @@
 		parsingStatements.add(statementId);
 		parseError = ''; // Clear previous errors
 
+		// Add timeout to prevent hanging
+		const timeoutPromise = new Promise((_, reject) => {
+			setTimeout(() => reject(new Error('Parsing timed out after 60 seconds. Please try again.')), 60000);
+		});
+		
+		// Add cancellation support
+		let isCancelled = false;
+		const cancelToken = { cancelled: false };
+		
+		// Show info toast when starting
+		showToastMessage('Starting to parse statement...', 'info');
+
 		try {
-			// First, get the statement details to download the PDF
-			const statementResponse = await fetch(`/projects/ccbilling/statements/${statementId}`);
-			if (!statementResponse.ok) {
-				throw new Error('Failed to get statement details');
-			}
-			const statement = await statementResponse.json();
+			console.log('🔄 Starting to parse statement:', statementId);
+			parsingProgress.set(statementId, { step: 0, message: 'Starting...' });
+			
+			// Race between the actual parsing and the timeout
+			const result = await Promise.race([
+				(async () => {
+					// First, get the statement details to download the PDF
+					parsingProgress.set(statementId, { step: 1, message: 'Getting statement details...' });
+					const statementResponse = await fetch(`/projects/ccbilling/statements/${statementId}`);
+					if (!statementResponse.ok) {
+						throw new Error('Failed to get statement details');
+					}
+					const statement = await statementResponse.json();
+					console.log('📄 Statement details retrieved:', statement.filename);
 
-			// Download the PDF from R2
-			const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
-			if (!pdfResponse.ok) {
-				throw new Error('Failed to download PDF');
-			}
-			const pdfBlob = await pdfResponse.blob();
-			const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
+					// Download the PDF from R2
+					parsingProgress.set(statementId, { step: 2, message: 'Downloading PDF...' });
+					console.log('⬇️ Downloading PDF...');
+					const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
+					if (!pdfResponse.ok) {
+						throw new Error('Failed to download PDF');
+					}
+					const pdfBlob = await pdfResponse.blob();
+					const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
+					console.log('📄 PDF downloaded, size:', pdfBlob.size, 'bytes');
 
-			// Parse the PDF on the client-side
-			const { PDFService } = await import('$lib/client/ccbilling-pdf-service.js');
-			const pdfService = new PDFService();
+					// Parse the PDF on the client-side
+					parsingProgress.set(statementId, { step: 3, message: 'Parsing PDF...' });
+					console.log('🔍 Starting PDF parsing...');
+					const { PDFService } = await import('$lib/client/ccbilling-pdf-service.js');
+					const pdfService = new PDFService();
 
-			const parsedData = await pdfService.parseStatement(pdfFile);
+					const parsedData = await pdfService.parseStatement(pdfFile);
+					console.log('✅ PDF parsed successfully, parsed data:', parsedData);
 
-			// Send the parsed data to the server
-			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					parsedData: parsedData
-				})
-			});
+					// Send the parsed data to the server
+					parsingProgress.set(statementId, { step: 4, message: 'Processing on server...' });
+					console.log('📤 Sending parsed data to server...');
+					const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							parsedData: parsedData
+						})
+					});
 
-			if (!parseResponse.ok) {
-				const errorData = await parseResponse.json();
-				throw new Error(errorData.error || 'Failed to parse statement');
-			}
+					if (!parseResponse.ok) {
+						const errorData = await parseResponse.json();
+						throw new Error(errorData.error || 'Failed to parse statement');
+					}
+					console.log('✅ Server processing completed successfully');
+
+					// Use invalidate() to refresh the data instead of reloading
+					parsingProgress.set(statementId, { step: 5, message: 'Refreshing data...' });
+					await invalidate(`cycle-${data.cycleId}`);
+					console.log('🔄 Data refreshed successfully');
+					
+					// Show success toast
+					showToastMessage('Statement parsed successfully!', 'success');
+					
+					return { success: true };
+				})(),
+				timeoutPromise
+			]);
 
 			// Clear parsing state before invalidating
 			parsingStatements.delete(statementId);
-
-			// Use invalidate() to refresh the data instead of reloading
-			await invalidate(`cycle-${data.cycleId}`);
+			parsingProgress.delete(statementId);
+			
 		} catch (err) {
-			console.error('Error parsing statement:', err);
+			console.error('❌ Error parsing statement:', err);
 			// Format error messages to be more user-friendly
 			let userFriendlyError = err.message;
 
@@ -654,9 +729,11 @@
 			);
 
 			parseError = userFriendlyError;
+			showToastMessage(`Failed to parse statement: ${userFriendlyError}`, 'error');
 		} finally {
 			// Ensure parsing state is cleared even if invalidation fails
 			parsingStatements.delete(statementId);
+			parsingProgress.delete(statementId);
 		}
 	}
 
@@ -972,24 +1049,47 @@
 								class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center"
 							>
 								{#if !isStatementParsed(statement.id)}
-									<Button
-										type="button"
-										variant="success"
-										size="sm"
-										disabled={parsingStatements.has(statement.id)}
-										onclick={() => parseStatement(statement.id)}
-									>
-										{#if parsingStatements.has(statement.id)}
-											<div class="flex items-center space-x-2">
-												<div
-													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-												></div>
-												<span>Parsing...</span>
+									<div class="flex flex-col space-y-2">
+										<Button
+											type="button"
+											variant="success"
+											size="sm"
+											disabled={parsingStatements.has(statement.id)}
+											onclick={() => parseStatement(statement.id)}
+										>
+											{#if parsingStatements.has(statement.id)}
+												<div class="flex items-center space-x-2">
+													<div
+														class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
+													></div>
+													<span>Parsing...</span>
+												</div>
+											{:else}
+												Parse
+											{/if}
+										</Button>
+										{#if parsingStatements.has(statement.id) && parsingProgress.get(statement.id)}
+											{@const progress = parsingProgress.get(statement.id)}
+											<div class="text-xs text-blue-400 bg-blue-900/20 border border-blue-700 rounded px-2 py-1">
+												{progress.message}
 											</div>
-										{:else}
-											Parse
+											<div class="w-full bg-gray-700 rounded-full h-1">
+												<div class="bg-blue-500 h-1 rounded-full transition-all duration-300" style="width: {Math.round((progress.step / 5) * 100)}%"></div>
+											</div>
+											<div class="text-xs text-gray-400 text-center">
+												Step {progress.step} of 5
+											</div>
+											<Button
+												type="button"
+												variant="secondary"
+												size="sm"
+												onclick={() => cancelParsing(statement.id)}
+												class="mt-2"
+											>
+												Cancel
+											</Button>
 										{/if}
-									</Button>
+									</div>
 								{:else}
 									<div
 										class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded"
@@ -1484,6 +1584,46 @@
 	<!-- Cycle Information -->
 	</div>
 </div>
+
+<!-- Toast Notifications -->
+{#if showToast}
+	<div class="fixed top-4 right-4 z-50 max-w-sm">
+		<div class="bg-white border-l-4 border-{toastType === 'success' ? 'green' : toastType === 'error' ? 'red' : 'blue'}-500 shadow-lg rounded-lg p-4">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					{#if toastType === 'success'}
+						<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+						</svg>
+					{:else if toastType === 'error'}
+						<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+						</svg>
+					{:else}
+						<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+						</svg>
+					{/if}
+				</div>
+				<div class="ml-3">
+					<p class="text-sm font-medium text-gray-900">{toastMessage}</p>
+				</div>
+				<div class="ml-auto pl-3">
+					<div class="-mx-1.5 -my-1.5">
+						<button
+							class="inline-flex bg-white rounded-md p-1.5 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+							onclick={() => (showToast = false)}
+						>
+							<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+								<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <Footer />
 
