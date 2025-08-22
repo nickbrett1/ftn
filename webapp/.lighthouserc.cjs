@@ -8,7 +8,9 @@ module.exports = {
 			extends: 'lighthouse:default',
 			settings: {
 				chromeFlags: '--no-sandbox'
-			}
+			},
+			// Add a delay to ensure manifest is properly generated
+			waitForServer: 5000
 		},
 		upload: {
 			target: 'temporary-public-storage'
