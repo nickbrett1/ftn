@@ -25,64 +25,129 @@
 				throw new Error(`Failed to load merchants: ${response.status} ${response.statusText}`);
 			}
 
-			merchants = await response.json();
-			filteredMerchants = merchants;
-			console.log(`Loaded ${merchants.length} merchants`); // Debug log
+			const data = await response.json();
+			
+			// Validate that we received an array of strings
+			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
+				merchants = data;
+				filteredMerchants = data;
+				console.log(`Loaded ${merchants.length} merchants`); // Debug log
+			} else {
+				console.warn('Received invalid merchants data format:', data);
+				merchants = [];
+				filteredMerchants = [];
+				error = 'Invalid data format received from server';
+			}
 		} catch (err) {
 			console.error('Error loading merchants:', err); // Debug log
 			error = err.message;
+			merchants = [];
+			filteredMerchants = [];
 		} finally {
 			isLoading = false;
 		}
 	}
 
 	function handleSearch() {
-		if (!searchTerm.trim()) {
-			filteredMerchants = merchants;
-		} else {
-			filteredMerchants = merchants.filter((merchant) =>
-				merchant.toLowerCase().includes(searchTerm.toLowerCase())
-			);
+		try {
+			// Ensure merchants is a valid array
+			if (!Array.isArray(merchants) || merchants.length === 0) {
+				filteredMerchants = [];
+				return;
+			}
+
+			if (!searchTerm.trim()) {
+				filteredMerchants = merchants;
+			} else {
+				// Ensure merchants is an array and contains only strings before filtering
+				if (merchants.every(m => typeof m === 'string')) {
+					filteredMerchants = merchants.filter((merchant) =>
+						merchant.toLowerCase().includes(searchTerm.toLowerCase())
+					);
+				} else {
+					console.warn('Merchants data is not in expected format:', merchants);
+					filteredMerchants = [];
+				}
+			}
+			console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
+		} catch (err) {
+			console.error('Error in handleSearch:', err);
+			// Fallback to showing all merchants if filtering fails
+			filteredMerchants = Array.isArray(merchants) ? merchants : [];
 		}
-		console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
 	}
 
 	function handleSelect(merchant) {
-		console.log('Selected merchant:', merchant); // Debug log
-		onSelect(merchant);
-		onClose();
+		try {
+			if (typeof merchant === 'string' && merchant.trim()) {
+				console.log('Selected merchant:', merchant); // Debug log
+				onSelect(merchant);
+				onClose();
+			} else {
+				console.warn('Invalid merchant selected:', merchant);
+			}
+		} catch (err) {
+			console.error('Error in handleSelect:', err);
+		}
 	}
 
 	function handleKeydown(event) {
-		if (event.key === 'Escape') {
-			console.log('Escape key pressed, closing modal'); // Debug log
-			onClose();
+		try {
+			if (event && event.key === 'Escape') {
+				console.log('Escape key pressed, closing modal'); // Debug log
+				onClose();
+			}
+		} catch (err) {
+			console.error('Error in handleKeydown:', err);
 		}
 	}
 
 	function handleBackdropClick(event) {
-		if (event.target === event.currentTarget) {
-			console.log('Backdrop clicked, closing modal'); // Debug log
-			onClose();
+		try {
+			if (event && event.target === event.currentTarget) {
+				console.log('Backdrop clicked, closing modal'); // Debug log
+				onClose();
+			}
+		} catch (err) {
+			console.error('Error in handleBackdropClick:', err);
 		}
 	}
 
+	// Only run handleSearch when searchTerm changes
 	$effect(() => {
-		handleSearch();
+		if (Array.isArray(merchants) && merchants.length > 0) {
+			handleSearch();
+		}
+	});
+
+	// Effect for when merchants data is loaded
+	$effect(() => {
+		if (Array.isArray(merchants) && merchants.length > 0) {
+			// Initialize filtered merchants when data is first loaded
+			filteredMerchants = merchants;
+		}
 	});
 
 	onMount(() => {
-		console.log('MerchantSelectionModal mounted'); // Debug log
-		isMounted = true;
-		if (isOpen) {
-			loadAllMerchants();
+		try {
+			console.log('MerchantSelectionModal mounted'); // Debug log
+			isMounted = true;
+			if (isOpen) {
+				loadAllMerchants();
+			}
+		} catch (err) {
+			console.error('Error in onMount:', err);
 		}
 	});
 
 	onDestroy(() => {
-		isMounted = false;
-		if (focusTimeout) {
-			clearTimeout(focusTimeout);
+		try {
+			isMounted = false;
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+			}
+		} catch (err) {
+			console.error('Error in onDestroy:', err);
 		}
 	});
 
@@ -92,21 +157,29 @@
 			loadAllMerchants();
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
-				if (isMounted) {
-					const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
-					if (searchInput) {
-						searchInput.focus();
-						console.log('Search input focused'); // Debug log
-					} else {
-						console.log('Search input not found'); // Debug log
+				try {
+					if (isMounted) {
+						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
+						if (searchInput) {
+							searchInput.focus();
+							console.log('Search input focused'); // Debug log
+						} else {
+							console.log('Search input not found'); // Debug log
+						}
 					}
+				} catch (err) {
+					console.error('Error focusing search input:', err);
 				}
 			}, 100);
 			
 			// Scroll to top of modal when it opens
 			setTimeout(() => {
-				if (modalRef) {
-					modalRef.scrollTop = 0;
+				try {
+					if (modalRef) {
+						modalRef.scrollTop = 0;
+					}
+				} catch (err) {
+					console.error('Error scrolling modal:', err);
 				}
 			}, 50);
 		} else {
@@ -120,17 +193,31 @@
 
 	// Prevent body scroll when modal is open
 	$effect(() => {
-		if (isOpen) {
-			console.log('Preventing body scroll'); // Debug log
-			document.body.style.overflow = 'hidden';
-		} else {
-			console.log('Restoring body scroll'); // Debug log
-			document.body.style.overflow = '';
+		try {
+			if (isOpen) {
+				console.log('Preventing body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = 'hidden';
+				}
+			} else {
+				console.log('Restoring body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = '';
+				}
+			}
+		} catch (err) {
+			console.error('Error managing body scroll:', err);
 		}
 
 		return () => {
-			console.log('Cleanup: restoring body scroll'); // Debug log
-			document.body.style.overflow = '';
+			try {
+				console.log('Cleanup: restoring body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = '';
+				}
+			} catch (err) {
+				console.error('Error in cleanup:', err);
+			}
 		};
 	});
 </script>
@@ -193,7 +280,8 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={searchTerm}
+					value={searchTerm || ''}
+					oninput={(e) => searchTerm = e.target.value || ''}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
