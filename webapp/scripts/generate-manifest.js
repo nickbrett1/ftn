@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+/**
+ * Script to generate environment-specific manifest files
+ * Run with: node scripts/generate-manifest.js [environment]
+ */
+
+import fs from 'fs';
+import path from 'path';
+
+const environments = {
+	development: {
+		baseUrl: 'http://localhost:5173',
+		outputFile: 'static/manifest-dev.json'
+	},
+	preview: {
+		baseUrl: 'https://ftn-preview.nick-brett1.workers.dev',
+		outputFile: 'static/manifest-preview.json'
+	},
+	production: {
+		baseUrl: 'https://fintechnick.com',
+		outputFile: 'static/manifest.json'
+	}
+};
+
+function generateManifest(env) {
+	const baseUrl = env.baseUrl;
+	
+	const manifest = {
+		name: "Fintech Nick",
+		display: "standalone",
+		icons: [
+			{ 
+				src: `${baseUrl}/icon-192.png`, 
+				type: "image/png", 
+				sizes: "192x192" 
+			},
+			{ 
+				src: `${baseUrl}/icon-512.png`, 
+				type: "image/png", 
+				sizes: "512x512" 
+			},
+			{
+				src: `${baseUrl}/icon-192-maskable.png`,
+				type: "image/png",
+				sizes: "192x192",
+				purpose: "maskable"
+			},
+			{
+				src: `${baseUrl}/icon-512-maskable.png`,
+				type: "image/png",
+				sizes: "512x512",
+				purpose: "maskable"
+			}
+		],
+		theme_color: "#FFFFFF",
+		background_color: "#FFFFFF",
+		start_url: "/",
+		scope: "/"
+	};
+	
+	return manifest;
+}
+
+function main() {
+	const envArg = process.argv[2] || 'production';
+	const env = environments[envArg];
+	
+	if (!env) {
+		console.error(`Unknown environment: ${envArg}`);
+		console.error(`Available environments: ${Object.keys(environments).join(', ')}`);
+		process.exit(1);
+	}
+	
+	console.log(`Generating manifest for ${envArg} environment...`);
+	console.log(`Base URL: ${env.baseUrl}`);
+	console.log(`Output file: ${env.outputFile}`);
+	
+	const manifest = generateManifest(env);
+	const outputPath = path.join(process.cwd(), env.outputFile);
+	
+	fs.writeFileSync(outputPath, JSON.stringify(manifest, null, '\t'));
+	console.log(`✅ Manifest generated successfully at ${env.outputFile}`);
+}
+
+main();

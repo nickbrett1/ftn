@@ -26,7 +26,10 @@
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
 		"deploy": "npx wrangler deploy -e production",
-		"deploy-preview": "npx wrangler deploy --env preview"
+		"deploy-preview": "npx wrangler deploy --env preview",
+		"manifest:dev": "node scripts/generate-manifest.js development",
+		"manifest:preview": "node scripts/generate-manifest.js preview",
+		"manifest:production": "node scripts/generate-manifest.js production"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.11.7",
