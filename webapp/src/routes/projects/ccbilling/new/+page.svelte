@@ -2,7 +2,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 
 	// Get default dates from server
 	const { data } = $props();
@@ -53,6 +53,9 @@
 				throw new Error(errorData.error || 'Failed to create billing cycle');
 			}
 
+			// Invalidate the billing cycles data cache to ensure fresh data is loaded
+			await invalidate('/projects/ccbilling');
+			
 			// Redirect to the main billing cycles page
 			await goto('/projects/ccbilling');
 		} catch (err) {
