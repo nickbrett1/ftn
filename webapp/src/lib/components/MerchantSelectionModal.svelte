@@ -193,10 +193,16 @@ FIXES APPLIED:
 	$effect(() => {
 		if (isOpen) {
 			console.log('Modal opened, starting load process...');
-			// In development mode, load mock data immediately for testing
+			
+			// Always show loading state briefly for better UX
+			isLoading = true;
+			
+			// In development mode, load mock data after a brief delay
 			if (import.meta.env.DEV) {
-				console.log('Development mode: Loading mock data immediately');
-				loadMockData();
+				console.log('Development mode: Loading mock data after brief loading state');
+				setTimeout(() => {
+					loadMockData();
+				}, 500); // Show loading for 500ms for better UX
 			} else {
 				// In production, try API first
 				loadAllMerchants();

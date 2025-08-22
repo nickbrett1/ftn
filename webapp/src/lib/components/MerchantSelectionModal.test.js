@@ -70,7 +70,7 @@ describe('MerchantSelectionModal', () => {
 		expect(mockOnClose).toHaveBeenCalled();
 	});
 
-	it('should show loading state initially', () => {
+	it('should show loading state initially', async () => {
 		const { getByText } = render(MerchantSelectionModal, {
 			props: {
 				isOpen: true,
@@ -79,7 +79,15 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
+		// Should show loading state initially
 		expect(getByText('Loading merchants...')).toBeTruthy();
+		
+		// Wait for loading to complete
+		await new Promise(resolve => setTimeout(resolve, 600));
+		
+		// After loading, should show merchants (in dev mode) or error (in prod mode)
+		// Check that loading is no longer visible
+		expect(() => getByText('Loading merchants...')).toThrow();
 	});
 
 	it('should show search input', () => {
