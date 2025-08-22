@@ -210,6 +210,30 @@ describe('ChaseParser', () => {
 				expect(charges.some(c => c.amount === amount)).toBe(false);
 			});
 		});
+
+		it('should handle ACCOUNT ACTIVITY (CONTINUED) section boundary correctly', () => {
+			const text = `
+				01/15 AMAZON.COM 123.45
+				SHOP WITH POINTS ACTIVITY
+				Date of
+				Transaction Merchant Name or Transaction Description $ Amount Rewards
+				07/11 AMAZON.COM AMZN.COM/BILLWA 2.15 215
+				ACCOUNT ACTIVITY (CONTINUED)
+				01/16 WALMART 67.89
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(2);
+			
+			// Should include the charges before and after the SHOP WITH POINTS section
+			expect(charges[0].merchant).toBe('AMAZON.COM');
+			expect(charges[0].amount).toBe(123.45);
+			expect(charges[1].merchant).toBe('WALMART');
+			expect(charges[1].amount).toBe(67.89);
+			
+			// Should NOT include the point redemption amount (2.15)
+			expect(charges.some(c => c.amount === 2.15)).toBe(false);
+		});
 	});
 
 	describe('isLikelyForeignTransaction', () => {
@@ -235,6 +259,20 @@ describe('ChaseParser', () => {
 		it('should not identify regular transactions as payments', () => {
 			expect(parser.isPaymentToCard('AMAZON.COM')).toBe(false);
 			expect(parser.isPaymentToCard('WALMART')).toBe(false);
+		});
+	});
+
+	describe('isLikelyShopWithPointsTransaction', () => {
+		it('should identify AMZN.COM/BILLWA pattern as points transaction', () => {
+			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '2.15', 'AMAZON.COM AMZN.COM/BILLWA 2.15 215')).toBe(true);
+		});
+
+		it('should identify large Amazon amounts as potential points transactions', () => {
+			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '1500.00', 'AMAZON.COM 1500.00')).toBe(true);
+		});
+
+		it('should not identify regular Amazon transactions as points transactions', () => {
+			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '23.75', 'AMAZON.COM*NR0ZC4090 Amzn.com/bill WA 23.75')).toBe(false);
 		});
 	});
 
