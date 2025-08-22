@@ -53,10 +53,15 @@ function generateLighthouseManifest() {
 	fs.writeFileSync(outputPath, JSON.stringify(manifest, null, '\t'));
 	console.log(`✅ Lighthouse manifest generated successfully at static/manifest-lighthouse.json`);
 	
-	// Also update the main manifest.json for the Lighthouse tests
-	const mainManifestPath = path.join(process.cwd(), 'static/manifest.json');
-	fs.writeFileSync(mainManifestPath, JSON.stringify(manifest, null, '\t'));
-	console.log(`✅ Main manifest.json updated for Lighthouse tests`);
+	// Only update the main manifest.json if this is actually being used for Lighthouse tests
+	// (i.e., when LIGHTHOUSE_ENABLED is set and we're in CI)
+	if (process.env.LIGHTHOUSE_ENABLED && process.env.CIRCLECI) {
+		const mainManifestPath = path.join(process.cwd(), 'static/manifest.json');
+		fs.writeFileSync(mainManifestPath, JSON.stringify(manifest, null, '\t'));
+		console.log(`✅ Main manifest.json updated for Lighthouse tests`);
+	} else {
+		console.log(`ℹ️  Main manifest.json not updated (not in Lighthouse CI environment)`);
+	}
 	
 	return manifest;
 }
