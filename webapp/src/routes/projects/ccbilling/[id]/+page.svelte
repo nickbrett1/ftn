@@ -1320,6 +1320,7 @@
 															? 'bg-blue-600 text-white'
 															: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
 														data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
+														title={`${budgetOption || 'Unallocated'}`}
 														onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 													>
 														{getAllocationIcon(budgetOption, localData.budgets)}
@@ -1331,6 +1332,7 @@
 											<button
 												class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
 												data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+												title={`${charge.allocated_to || 'Unallocated'}`}
 												onclick={() =>
 													updateChargeAllocation(
 														charge.id,
@@ -1437,6 +1439,7 @@
 															? 'bg-blue-600 text-white'
 															: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
 														data-allocation-tooltip={`Allocate to: ${budgetOption || 'Unallocated'}`}
+														title={`${budgetOption || 'Unallocated'}`}
 														onclick={() => updateChargeAllocation(charge.id, budgetOption)}
 													>
 														{getAllocationIcon(budgetOption, localData.budgets)}
@@ -1448,6 +1451,7 @@
 											<button
 												class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
 												data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+												title={`${charge.allocated_to || 'Unallocated'}`}
 												onclick={() =>
 													updateChargeAllocation(
 														charge.id,
@@ -1656,12 +1660,15 @@
 				<div class="flex flex-wrap items-center gap-4">
 					{#each getFilteredAllocationTotals() as [allocation, total]}
 						<div class="flex items-center gap-2">
-							<span class="text-lg"
-								>{getAllocationIcon(
+							<span 
+								class="text-lg cursor-help"
+								title={allocation === '__unallocated__' ? 'Unallocated' : allocation}
+							>
+								{getAllocationIcon(
 									allocation === '__unallocated__' ? null : allocation,
 									localData.budgets
-								)}</span
-							>
+								)}
+							</span>
 							<span class="text-gray-300 text-sm"
 								>{allocation === '__unallocated__' ? 'Unallocated' : allocation}:</span
 							>
