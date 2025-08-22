@@ -1,0 +1,211 @@
+<script>
+	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+
+	const { data } = $props();
+
+	const projectUrl = "https://github.com/nickbrett1/ftn";
+</script>
+
+<style>
+	.mermaid-container {
+		display: flex;
+		justify-content: center;
+	}
+</style>
+
+<h1 class="!mb-0 no-underline">Building with AI Agents: Lessons from a 14,500-Line Project</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool</p>
+January 2025
+<ProjectLinkButton href={projectUrl} />
+
+## Introduction
+
+Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as simple tab completions with GitHub Copilot has transformed into a collaborative partnership where AI agents handle entire components of my applications. This article chronicles my experience building the [ccbilling project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/ccbilling) - a personal finance tool for reviewing credit card statements - using Cursor's agent mode.
+
+<!-- Placeholder for meme image -->
+<div class="mx-auto my-4 max-w-md text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
+	<p class="text-gray-400">[Meme placeholder: "Me coding on my phone while the AI agent does the heavy lifting"]</p>
+</div>
+
+The ccbilling project is a comprehensive personal finance management system that automates the tedious process of reviewing monthly credit card statements. It parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
+
+**Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**. This represents a substantial application that would have taken significantly longer to build without AI assistance.
+
+Here's the high-level architecture of the system:
+
+<div class="mermaid-container">
+
+```mermaid
+graph TD;
+    A["PDF Statement Upload"] --> B["Cloudflare R2 Storage"];
+    B --> C["Statement Parser Factory"];
+    C --> D["Provider-Specific Parsers&#10;(Chase, Amex, etc.)"];
+    D --> E["D1 Database&#10;(Charges, Budgets, Cycles)"];
+    E --> F["SvelteKit Frontend"];
+    F --> G["Budget Management UI"];
+    F --> H["Charge Allocation"];
+    F --> I["Billing Cycle Reports"];
+
+    J["LLAMA API"] --> K["Merchant Classification"];
+    K --> E;
+
+    L["CircleCI Pipeline"] --> M["Automated Testing"];
+    M --> N["SonarCloud Quality"];
+    N --> O["Preview Deployments"];
+
+    classDef mainNode fill:#222,stroke:#cccccc,stroke-width:2px;
+    classDef apiNode fill:#166534,stroke:#cccccc,stroke-width:2px;
+    classDef storageNode fill:#7c2d12,stroke:#cccccc,stroke-width:2px;
+
+    class A,B,C,D,E,F,G,H,I mainNode;
+    class J,K apiNode;
+    class L,M,N,O storageNode;
+```
+
+</div>
+
+<!-- Placeholder for screenshots -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+	<div class="text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
+		<p class="text-gray-400">[Screenshot 1: Main dashboard showing billing cycles and budgets]</p>
+	</div>
+	<div class="text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
+		<p class="text-gray-400">[Screenshot 2: Statement parsing interface with charge allocation]</p>
+	</div>
+</div>
+
+## The Evolution of AI Agent Use
+
+My journey with AI coding assistants has followed a clear progression:
+
+1. **GitHub Copilot (Early 2023):** Basic tab completions and simple function suggestions
+2. **Gemini Integration (Mid 2023):** Writing larger scripts and files for my [dbt-duckdb project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/dbt-duckdb)
+3. **Cursor Agent Mode (Late 2023):** Full component development and architectural decisions
+
+This evolution represents a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation.
+
+<div class="mermaid-container">
+
+```mermaid
+graph LR;
+    A["GitHub Copilot&#10;Tab Completions"] --> B["Gemini&#10;Script Generation"];
+    B --> C["Cursor Agent Mode&#10;Component Development"];
+    C --> D["Full Project&#10;Architecture"];
+
+    E["Simple Assistance"] --> F["File-Level Help"];
+    F --> G["Component Building"];
+    G --> H["Project Leadership"];
+
+    classDef phase fill:#222,stroke:#cccccc,stroke-width:2px;
+    classDef capability fill:#166534,stroke:#cccccc,stroke-width:2px;
+
+    class A,B,C,D phase;
+    class E,F,G,H capability;
+```
+
+</div>
+
+## 10 Key Lessons Learned
+
+### 1. Planning Upfront Works Well
+
+The most successful AI agent interactions started with clear structure and requirements. I began the ccbilling project with a comprehensive [requirements document](https://github.com/nickbrett1/ftn/blob/main/docs/ccbilling.md) that outlined the data model, user flows, and technical constraints. This gave the agent a solid foundation to work from.
+
+I also asked the agent to create a [comprehensive TODO file](https://github.com/nickbrett1/ftn/blob/main/.cursor/ccbilling-todo.md) that tracked progress and provided clear next steps. This pattern of structured, spec-driven development is exactly what [Amazon's new IDE Kiro](https://kiro.dev/) is designed around - though I'm still on their waitlist to try it firsthand.
+
+**Key Insight:** The clearer your initial requirements and architecture, the more effectively AI agents can contribute to implementation.
+
+### 2. Automated Checks Are More Valuable
+
+With AI agents generating significant portions of code, automated quality checks become essential rather than optional. I leveraged [SonarCloud](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem) for comprehensive code quality analysis, which proved invaluable for catching issues that human code review might miss.
+
+The automated CI/CD pipeline on [CircleCI](https://github.com/nickbrett1/ftn/blob/main/.circleci/config.yml) enforced test coverage and quality standards, providing structured feedback that the agent could use to address problems. This created a virtuous cycle where the agent would generate code, tests would identify issues, and the agent would fix them based on the structured error output.
+
+**Key Insight:** Automation isn't just about speed - it's about providing AI agents with structured, actionable feedback they can act upon.
+
+### 3. Coding on Just a Phone Is Doable
+
+One of the most surprising discoveries was Cursor's agent mode webapp, which allows you to operate the AI agent outside of the IDE through a web interface. The agent spins up a VM to make changes to your branch, enabling development from anywhere.
+
+This capability fundamentally changed my development workflow. Like the introduction of mobile phones, it means I can now code from anywhere - which is both empowering and potentially dangerous for work-life balance. But for personal projects like ccbilling, it's been a massive productivity booster.
+
+**Key Insight:** The future of development isn't tied to a specific device or location - AI agents enable truly mobile development workflows.
+
+### 4. Environment Iteration Becomes Critical
+
+Given the ability to code from anywhere, having an environment that supports rapid iteration becomes even more important. While this is straightforward on desktop, I found I needed to invest in creating [preview deployments for all branches](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/deploys) accessible through the `/deploys` route.
+
+This preview system allowed me to see what the agent was building without risking my main site, creating a safe space for experimentation and iteration. The investment in this infrastructure paid dividends in development velocity.
+
+**Key Insight:** When AI agents can work autonomously, you need systems that let you observe and iterate on their work safely.
+
+### 5. UI Changes Remained Difficult
+
+Despite AI agents' capabilities, UI changes proved challenging. Describing placement and styling in natural language is inherently imprecise, and without a consistent design language, the agent struggled with visual consistency.
+
+I addressed this by introducing a standardized [Button component](https://github.com/nickbrett1/ftn/blob/main/webapp/src/lib/components/Button.svelte) with clear style variants and documenting my [style guidelines in the context file](https://github.com/nickbrett1/ftn/blob/main/.cursor/context.md). The more structured and consistent your UI components, the easier it is for agents to work with them.
+
+**Key Insight:** AI agents excel at logic and structure but struggle with subjective visual decisions. Clear design systems and component libraries are essential.
+
+### 6. There Were Bugs to Work Around
+
+AI agents aren't perfect, and I encountered several technical issues that required workarounds. For example, my use of zsh with powerlevel10k caused Cursor to hang when running terminal commands. I solved this by adding conditional logic to my [.zshrc configuration](https://github.com/nickbrett1/ftn/blob/main/.devcontainer/.zshrc):
+
+```bash
+# Set Oh My Zsh theme conditionally to avoid Cursor hanging issues
+if [[ "$PAGER" == "sh -c \"head -n 10000 | cat\"" ]]; then
+  ZSH_THEME=""  # Disable Powerlevel10k for Cursor chat terminals only
+else
+  ZSH_THEME="powerlevel10k/powerlevel10k"
+fi
+```
+
+Similarly, Cursor would hang when running tests in watch mode, so I introduced a special `npm run test:once` command and documented this in my context file to guide the agent.
+
+**Key Insight:** AI agents introduce new failure modes that require creative workarounds and clear documentation.
+
+### 7. Newer Frameworks Are Challenging
+
+The agent struggled significantly with Svelte 5's runes mode and its approach to UI reactivity. The newer the framework or feature, the less training data the agent has access to, making it harder to generate correct code.
+
+However, once I had a body of examples in my own codebase that the agent could reference and copy from, its performance improved dramatically. This suggests that creating internal examples and patterns is crucial when working with cutting-edge technologies.
+
+**Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
+
+### 8. More Software Will Be Written
+
+There's an ongoing debate about what AI agents mean for the programming profession. I'm relatively optimistic: I believe this will make it much easier to create new software, but that there's so much demand for software that we'll see significantly more of it written.
+
+The ccbilling tool is a perfect example - it's a useful personal finance application that I would never have built without AI assistance. The barrier to entry for creating software has been dramatically lowered, which means more people can solve more problems.
+
+**Key Insight:** AI agents don't replace programmers - they enable more people to create more software to solve more problems.
+
+### 9. Quality Can Actually Improve
+
+A common concern is that AI-generated code will lower software quality. In my experience, when used well, the opposite can be true. I was able to use agents to implement many quality-enhancing systems that I wouldn't have had time to build otherwise.
+
+For example, the preview deployment system, comprehensive test coverage, and automated quality checks all contribute to higher software quality. The agent also enabled me to quickly try different approaches to solving problems, allowing me to choose the best solution rather than being stuck with the first working implementation.
+
+**Key Insight:** AI agents can raise software quality by implementing best practices and enabling architectural experimentation that would be too time-consuming otherwise.
+
+### 10. Surprisingly Fun
+
+Perhaps most unexpectedly, working with AI agents was genuinely enjoyable. The back-and-forth on approaches mimicked the collaborative feeling of working with other developers. While agents can be somewhat fawning in their responses, there's something genuinely satisfying about having a conversation about code architecture and then watching it come to life.
+
+**Key Insight:** AI agents can make development more collaborative and engaging, not less human.
+
+## The Trade-off: Knowledge vs. Velocity
+
+As exciting as this new approach is, I do feel like something is lost by not knowing every detail of the codebase as thoroughly as when I'd written it all myself. There's a certain confidence that comes from having written every line, and some debugging scenarios become more challenging when you're not intimately familiar with the implementation details.
+
+However, I believe this trade-off is inevitable and that the positives outweigh the negatives. The ability to build more ambitious projects, implement better architectures, and focus on higher-level problem-solving more than compensates for the loss of deep implementation knowledge.
+
+## Looking Forward
+
+The ccbilling project represents a significant milestone in my journey with AI-assisted development. What started as a personal finance tool has become a case study in how AI agents can transform the development process. The combination of structured requirements, automated quality checks, and collaborative AI agents has created a development workflow that's both more productive and more enjoyable.
+
+As AI agents continue to evolve, I'm excited to see how they'll further transform software development. The key, I've learned, is not to treat them as replacements for human developers, but as collaborative partners that can amplify our capabilities and enable us to build better software, faster.
+
+For those interested in exploring this approach, I'd recommend starting with a well-defined, self-contained project like ccbilling. The combination of clear requirements, automated testing, and AI assistance can create a powerful development environment that scales from personal projects to production systems.
+
+The future of software development isn't humans versus AI - it's humans and AI working together to solve problems that neither could solve alone.
