@@ -230,7 +230,7 @@ export class ChaseParser extends BaseParser {
 				continue;
 			}
 
-			// Check if we're entering the ACCOUNT ACTIVITY section
+			// Check if we're entering the ACCOUNT ACTIVITY section (including continued)
 			if (line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
 				inAccountActivitySection = true;
 				inShopWithPointsSection = false; // Exit points section when entering account activity
@@ -242,7 +242,8 @@ export class ChaseParser extends BaseParser {
 			if (inShopWithPointsSection) {
 				if (line.toUpperCase().includes('INTEREST CHARGES') ||
 					line.toUpperCase().includes('YOUR ACCOUNT MESSAGES') ||
-					line.toUpperCase().includes('ACCOUNT SUMMARY')) {
+					line.toUpperCase().includes('ACCOUNT SUMMARY') ||
+					line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
 					inShopWithPointsSection = false;
 				} else {
 					// Skip all lines while in this section
@@ -670,14 +671,20 @@ export class ChaseParser extends BaseParser {
 	 * Check if a transaction is likely a "SHOP WITH POINTS" transaction
 	 * These transactions use points instead of money and often have suspicious amounts
 	 * @param {string} merchant - Merchant name
-	 * @param {number} amount - Transaction amount
+	 * @param {string} amount - Transaction amount
 	 * @param {string} fullLine - Full transaction line text
 	 * @returns {boolean} - True if it's likely a SHOP WITH POINTS transaction
 	 */
 	isLikelyShopWithPointsTransaction(merchant, amount, fullLine) {
 		// Check for suspicious patterns that indicate SHOP WITH POINTS transactions
 		
-		// 1. Check if the amount is suspiciously large for the merchant description
+		// 1. Check if the line contains the specific AMZN.COM/BILLWA pattern
+		// This is a clear indicator of SHOP WITH POINTS transactions
+		if (fullLine.includes('AMZN.COM/BILLWA')) {
+			return true;
+		}
+		
+		// 2. Check if the amount is suspiciously large for the merchant description
 		// SHOP WITH POINTS transactions often have amounts like $1567.00 for a $15.67 purchase
 		if (amount > 1000 && merchant.toLowerCase().includes('amazon')) {
 			// Look for patterns that suggest this is a points transaction
@@ -685,14 +692,14 @@ export class ChaseParser extends BaseParser {
 			return true;
 		}
 
-		// 2. Check if the line contains points-related keywords
+		// 3. Check if the line contains points-related keywords
 		const pointsKeywords = ['points', 'rewards', 'shop with points'];
 		const lineLower = fullLine.toLowerCase();
 		if (pointsKeywords.some(keyword => lineLower.includes(keyword))) {
 			return true;
 		}
 
-		// 3. Check if the merchant name contains suspicious patterns
+		// 4. Check if the merchant name contains suspicious patterns
 		// SHOP WITH POINTS transactions often have very generic merchant names
 		const suspiciousMerchants = [
 			'amazon.com',
