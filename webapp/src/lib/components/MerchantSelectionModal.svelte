@@ -1,253 +1,224 @@
-<!--
-MerchantSelectionModal.svelte
-
-This component has been completely rewritten to resolve performance issues that caused the popup to become unresponsive.
-
-FIXES APPLIED:
-1. Simplified state management to prevent infinite loops
-2. Single effect for modal open/close handling
-3. Immediate fallback to mock data in development mode
-4. Aggressive timeout handling (5s max)
-5. No complex effect chains that could cause hanging
-6. Direct state updates without reactive dependencies
--->
-
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import Button from './Button.svelte';
 
 	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
 
-	// Simplified state management
 	let merchants = $state([]);
 	let filteredMerchants = $state([]);
-	let displayedMerchants = $state([]);
-	let isLoading = $state(false);
-	let isSearching = $state(false);
+	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
-	let searchTimeout = $state(null);
-	let isRequestInProgress = $state(false);
-	
-	// Constants
-	const MAX_DISPLAY_RESULTS = 100;
-	const VIRTUAL_SCROLL_THRESHOLD = 200;
-	const REQUEST_TIMEOUT = 5000; // Reduced to 5 seconds
 
-	// Mock data for immediate fallback
-	const MOCK_MERCHANTS = [
-		'Amazon.com', 'Netflix', 'Spotify', 'Uber', 'DoorDash',
-		'Target', 'Walmart', 'Best Buy', 'Home Depot', 'Lowe\'s',
-		'Starbucks', 'McDonald\'s', 'Subway', 'Chipotle', 'Panera',
-		'Costco', 'Sam\'s Club', 'Trader Joe\'s', 'Whole Foods', 'Kroger'
-	];
-
-	// Simple function to get visible merchants
-	function getVisibleMerchants(merchantList) {
-		if (!Array.isArray(merchantList)) return [];
-		return merchantList.length > VIRTUAL_SCROLL_THRESHOLD 
-			? merchantList.slice(0, MAX_DISPLAY_RESULTS) 
-			: merchantList;
-	}
-
-	// Simplified search function
-	function handleSearch() {
-		if (!Array.isArray(merchants) || merchants.length === 0) {
-			filteredMerchants = [];
-			displayedMerchants = [];
-			return;
-		}
-
-		if (!searchTerm.trim()) {
-			filteredMerchants = merchants;
-			displayedMerchants = getVisibleMerchants(merchants);
-		} else {
-			const term = searchTerm.toLowerCase().trim();
-			filteredMerchants = merchants.filter(merchant =>
-				merchant.toLowerCase().includes(term)
-			);
-			displayedMerchants = getVisibleMerchants(filteredMerchants);
-		}
-	}
-
-	// Debounced search
-	function debouncedSearch() {
-		if (searchTimeout) clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			isSearching = true;
-			handleSearch();
-			setTimeout(() => { isSearching = false; }, 100);
-		}, 150);
-	}
-
-	// Handle search input
-	function handleSearchInput(event) {
-		searchTerm = event.target.value || '';
-		debouncedSearch();
-	}
-
-	// Load mock data immediately
-	function loadMockData() {
-		console.log('Loading mock data...');
-		merchants = MOCK_MERCHANTS;
-		filteredMerchants = MOCK_MERCHANTS;
-		displayedMerchants = MOCK_MERCHANTS;
-		isLoading = false;
-		error = '';
-		console.log('Mock data loaded successfully');
-	}
-
-	// Simplified API loading with aggressive timeout
 	async function loadAllMerchants() {
-		if (isRequestInProgress) {
-			console.log('Request already in progress, skipping...');
-			return;
-		}
-
 		try {
-			isRequestInProgress = true;
 			isLoading = true;
 			error = '';
-			console.log('Attempting to load merchants from API...');
+			console.log('Loading merchants...'); // Debug log
 
-			// Aggressive timeout
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => {
-				console.log('Request timeout reached, aborting...');
-				controller.abort();
-			}, REQUEST_TIMEOUT);
-
-			// Development headers
-			const headers = {};
-			if (import.meta.env.DEV) {
-				headers['x-dev-test'] = 'true';
-			}
-
-			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants', {
-				signal: controller.signal,
-				headers
-			});
-			
-			clearTimeout(timeoutId);
-			console.log('API response received:', response.status);
-
+			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
 			if (!response.ok) {
-				throw new Error(`API failed: ${response.status} ${response.statusText}`);
+				throw new Error(`Failed to load merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
-			console.log('API data received:', data);
-
+			
+			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
 				merchants = data;
 				filteredMerchants = data;
-				displayedMerchants = getVisibleMerchants(data);
-				console.log(`Successfully loaded ${merchants.length} merchants from API`);
+				console.log(`Loaded ${merchants.length} merchants`); // Debug log
 			} else {
-				throw new Error('Invalid data format received from API');
+				console.warn('Received invalid merchants data format:', data);
+				merchants = [];
+				filteredMerchants = [];
+				error = 'Invalid data format received from server';
 			}
 		} catch (err) {
-			console.error('API loading failed:', err);
-			error = err.message || 'Failed to load merchants from API';
-			
-			// In development mode, immediately fall back to mock data
-			if (import.meta.env.DEV) {
-				console.log('Development mode: Falling back to mock data');
-				loadMockData();
-				return;
-			}
+			console.error('Error loading merchants:', err); // Debug log
+			error = err.message;
+			merchants = [];
+			filteredMerchants = [];
 		} finally {
 			isLoading = false;
-			isRequestInProgress = false;
 		}
 	}
 
-	// Handle merchant selection
-	function handleSelect(merchant) {
-		if (typeof merchant === 'string' && merchant.trim()) {
-			console.log('Selected merchant:', merchant);
-			onSelect(merchant);
-			onClose();
-		}
-	}
+	function handleSearch() {
+		try {
+			// Ensure merchants is a valid array
+			if (!Array.isArray(merchants) || merchants.length === 0) {
+				filteredMerchants = [];
+				return;
+			}
 
-	// Handle keydown events
-	function handleKeydown(event) {
-		if (event.key === 'Escape') {
-			onClose();
-		}
-	}
-
-	// Handle backdrop clicks
-	function handleBackdropClick(event) {
-		if (event.target === event.currentTarget) {
-			onClose();
-		}
-	}
-
-	// Single effect for modal state changes
-	$effect(() => {
-		if (isOpen) {
-			console.log('Modal opened, starting load process...');
-			
-			// Always show loading state briefly for better UX
-			isLoading = true;
-			
-			// In development mode, load mock data after a brief delay
-			if (import.meta.env.DEV) {
-				console.log('Development mode: Loading mock data after brief loading state');
-				setTimeout(() => {
-					loadMockData();
-				}, 500); // Show loading for 500ms for better UX
+			if (!searchTerm.trim()) {
+				filteredMerchants = merchants;
 			} else {
-				// In production, try API first
-				loadAllMerchants();
-			}
-			
-			// Focus search input after a short delay
-			focusTimeout = setTimeout(() => {
-				if (isMounted) {
-					const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
-					if (searchInput) {
-						searchInput.focus();
-					}
+				// Ensure merchants is an array and contains only strings before filtering
+				if (merchants.every(m => typeof m === 'string')) {
+					filteredMerchants = merchants.filter((merchant) =>
+						merchant.toLowerCase().includes(searchTerm.toLowerCase())
+					);
+				} else {
+					console.warn('Merchants data is not in expected format:', merchants);
+					filteredMerchants = [];
 				}
-			}, 100);
-		} else {
-			// Modal closed, cleanup
-			if (focusTimeout) {
-				clearTimeout(focusTimeout);
-				focusTimeout = null;
 			}
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-				searchTimeout = null;
+			console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
+		} catch (err) {
+			console.error('Error in handleSearch:', err);
+			// Fallback to showing all merchants if filtering fails
+			filteredMerchants = Array.isArray(merchants) ? merchants : [];
+		}
+	}
+
+	function handleSelect(merchant) {
+		try {
+			if (typeof merchant === 'string' && merchant.trim()) {
+				console.log('Selected merchant:', merchant); // Debug log
+				onSelect(merchant);
+				onClose();
+			} else {
+				console.warn('Invalid merchant selected:', merchant);
 			}
+		} catch (err) {
+			console.error('Error in handleSelect:', err);
+		}
+	}
+
+	function handleKeydown(event) {
+		try {
+			if (event && event.key === 'Escape') {
+				console.log('Escape key pressed, closing modal'); // Debug log
+				onClose();
+			}
+		} catch (err) {
+			console.error('Error in handleKeydown:', err);
+		}
+	}
+
+	function handleBackdropClick(event) {
+		try {
+			if (event && event.target === event.currentTarget) {
+				console.log('Backdrop clicked, closing modal'); // Debug log
+				onClose();
+			}
+		} catch (err) {
+			console.error('Error in handleBackdropClick:', err);
+		}
+	}
+
+	// Only run handleSearch when searchTerm changes
+	$effect(() => {
+		if (Array.isArray(merchants) && merchants.length > 0) {
+			handleSearch();
 		}
 	});
 
-	// Body scroll management
+	// Effect for when merchants data is loaded
 	$effect(() => {
-		if (isOpen && document?.body) {
-			document.body.style.overflow = 'hidden';
-		} else if (document?.body) {
-			document.body.style.overflow = '';
+		if (Array.isArray(merchants) && merchants.length > 0) {
+			// Initialize filtered merchants when data is first loaded
+			filteredMerchants = merchants;
 		}
 	});
 
 	onMount(() => {
-		isMounted = true;
-		console.log('MerchantSelectionModal mounted');
+		try {
+			console.log('MerchantSelectionModal mounted'); // Debug log
+			isMounted = true;
+			if (isOpen) {
+				loadAllMerchants();
+			}
+		} catch (err) {
+			console.error('Error in onMount:', err);
+		}
 	});
 
 	onDestroy(() => {
-		isMounted = false;
-		if (focusTimeout) clearTimeout(focusTimeout);
-		if (searchTimeout) clearTimeout(searchTimeout);
+		try {
+			isMounted = false;
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+			}
+		} catch (err) {
+			console.error('Error in onDestroy:', err);
+		}
+	});
+
+	$effect(() => {
+		console.log('Modal isOpen changed:', isOpen); // Debug log
+		if (isOpen) {
+			loadAllMerchants();
+			// Focus the search input when modal opens
+			focusTimeout = setTimeout(() => {
+				try {
+					if (isMounted) {
+						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
+						if (searchInput) {
+							searchInput.focus();
+							console.log('Search input focused'); // Debug log
+						} else {
+							console.log('Search input not found'); // Debug log
+						}
+					}
+				} catch (err) {
+					console.error('Error focusing search input:', err);
+				}
+			}, 100);
+			
+			// Scroll to top of modal when it opens
+			setTimeout(() => {
+				try {
+					if (modalRef) {
+						modalRef.scrollTop = 0;
+					}
+				} catch (err) {
+					console.error('Error scrolling modal:', err);
+				}
+			}, 50);
+		} else {
+			// Clear timeout when modal closes
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+				focusTimeout = null;
+			}
+		}
+	});
+
+	// Prevent body scroll when modal is open
+	$effect(() => {
+		try {
+			if (isOpen) {
+				console.log('Preventing body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = 'hidden';
+				}
+			} else {
+				console.log('Restoring body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = '';
+				}
+			}
+		} catch (err) {
+			console.error('Error managing body scroll:', err);
+		}
+
+		return () => {
+			try {
+				console.log('Cleanup: restoring body scroll'); // Debug log
+				if (document && document.body) {
+					document.body.style.overflow = '';
+				}
+			} catch (err) {
+				console.error('Error in cleanup:', err);
+			}
+		};
 	});
 </script>
 
@@ -296,41 +267,25 @@ FIXES APPLIED:
 			<!-- Header -->
 			<div class="flex justify-between items-center p-6 border-b border-gray-700">
 				<h3 id="modal-title" class="text-xl font-bold text-white">Select Merchant</h3>
-				<div class="flex items-center space-x-2">
-					{#if isLoading}
-						<div class="flex items-center space-x-2 text-blue-400">
-							<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-							<span class="text-sm">Loading...</span>
-						</div>
-					{/if}
-					<button
-						onclick={onClose}
-						class="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
-						aria-label="Close modal"
-					>
-						&times;
-					</button>
-				</div>
+				<button
+					onclick={onClose}
+					class="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
+					aria-label="Close modal"
+				>
+					&times;
+				</button>
 			</div>
 
 			<!-- Search -->
 			<div class="p-6 border-b border-gray-700">
-				<div class="relative">
-					<input
-						type="text"
-						value={searchTerm || ''}
-						oninput={handleSearchInput}
-						placeholder="Search merchants..."
-						class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						aria-label="Search merchants"
-						disabled={isLoading}
-					/>
-					{#if isSearching}
-						<div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-							<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-						</div>
-					{/if}
-				</div>
+				<input
+					type="text"
+					value={searchTerm || ''}
+					oninput={(e) => searchTerm = e.target.value || ''}
+					placeholder="Search merchants..."
+					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					aria-label="Search merchants"
+				/>
 			</div>
 
 			<!-- Merchants List -->
@@ -338,48 +293,27 @@ FIXES APPLIED:
 				<div class="max-h-80 overflow-y-auto">
 					{#if isLoading}
 						<div class="text-center py-8">
-							<div class="flex items-center justify-center space-x-2">
-								<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-								<p class="text-gray-400">Loading merchants...</p>
-							</div>
+							<p class="text-gray-400">Loading merchants...</p>
 						</div>
 					{:else if error}
 						<div class="text-center py-8">
 							<p class="text-red-400">Error: {error}</p>
-							<div class="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
-								<button
-									onclick={loadAllMerchants}
-									class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
-									disabled={isRequestInProgress}
-								>
-									{isRequestInProgress ? 'Loading...' : 'Retry API'}
-								</button>
-								{#if import.meta.env.DEV}
-									<button
-										onclick={loadMockData}
-										class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
-									>
-										Load Sample Data
-									</button>
-								{/if}
-							</div>
-						</div>
-					{:else if isSearching && searchTerm.trim()}
-						<div class="text-center py-8">
-							<div class="flex items-center justify-center space-x-2">
-								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-								<p class="text-gray-400">Searching...</p>
-							</div>
+							<button
+								onclick={loadAllMerchants}
+								class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+							>
+								Retry
+							</button>
 						</div>
 					{:else if filteredMerchants.length === 0}
 						<div class="text-center py-8">
 							<p class="text-gray-400">
-								{searchTerm ? 'No merchants match your search.' : 'No merchants found.'}
+								{searchTerm ? 'No merchants match your search.' : 'No unassigned merchants found.'}
 							</p>
 						</div>
 					{:else}
 						<div class="space-y-2" role="listbox" aria-label="Available merchants">
-							{#each displayedMerchants as merchant (merchant)}
+							{#each filteredMerchants as merchant (merchant)}
 								<button
 									onclick={() => handleSelect(merchant)}
 									class="w-full text-left p-3 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 hover:border-gray-600 transition-colors"
@@ -389,25 +323,6 @@ FIXES APPLIED:
 									<p class="text-white font-medium">{merchant}</p>
 								</button>
 							{/each}
-							
-							{#if filteredMerchants.length > MAX_DISPLAY_RESULTS}
-								<div class="text-center py-4 border-t border-gray-700">
-									<p class="text-gray-400 text-sm">
-										Showing {displayedMerchants.length} of {filteredMerchants.length} results
-									</p>
-									<p class="text-gray-500 text-xs mt-1">
-										{filteredMerchants.length > VIRTUAL_SCROLL_THRESHOLD 
-											? 'Use search to find specific merchants quickly'
-											: 'Refine your search to see more specific results'
-										}
-									</p>
-									{#if filteredMerchants.length > VIRTUAL_SCROLL_THRESHOLD}
-										<p class="text-yellow-400 text-xs mt-1">
-											Large list detected - search is recommended for better performance
-										</p>
-									{/if}
-								</div>
-							{/if}
 						</div>
 					{/if}
 				</div>
