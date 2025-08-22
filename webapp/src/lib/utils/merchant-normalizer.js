@@ -179,7 +179,18 @@ function extractFlightDetails(merchant) {
 function extractAmazonDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
 
-	// Check for specific Amazon services
+	// First check if this contains an order ID - if so, it's a purchase, not a service
+	const hasOrderId = /\b(\d{3}-\d{7}-\d{7})\b|\b(\d{16})\b|\b(\d{10,})\b/.test(merchant);
+	
+	// If it has an order ID, it's a purchase, not a service
+	if (hasOrderId) {
+		return {
+			merchant_normalized: 'AMAZON',
+			merchant_details: ''
+		};
+	}
+
+	// Check for specific Amazon services (only if no order ID found)
 	if (merchantUpper.includes('AMAZON PRIME')) {
 		return {
 			merchant_normalized: 'AMAZON PRIME',
