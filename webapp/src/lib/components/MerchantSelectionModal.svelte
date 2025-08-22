@@ -294,8 +294,8 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={searchTerm || ''}
-					oninput={(e) => handleSearchInput(e)}
+					bind:value={searchTerm}
+					oninput={handleSearchInput}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
