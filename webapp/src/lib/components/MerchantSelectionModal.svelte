@@ -113,13 +113,6 @@
 		}
 	}
 
-	// Only run handleSearch when searchTerm changes
-	$effect(() => {
-		if (Array.isArray(merchants) && merchants.length > 0) {
-			handleSearch();
-		}
-	});
-
 	// Effect for when merchants data is loaded
 	$effect(() => {
 		if (Array.isArray(merchants) && merchants.length > 0) {
@@ -127,6 +120,24 @@
 			filteredMerchants = merchants;
 		}
 	});
+
+	// Debounced search function
+	let searchTimeout = $state(null);
+	
+	function debouncedSearch() {
+		if (searchTimeout) {
+			clearTimeout(searchTimeout);
+		}
+		searchTimeout = setTimeout(() => {
+			handleSearch();
+		}, 150); // 150ms debounce
+	}
+
+	// Handle search input changes
+	function handleSearchInput(event) {
+		searchTerm = event.target.value || '';
+		debouncedSearch();
+	}
 
 	onMount(() => {
 		try {
@@ -145,6 +156,9 @@
 			isMounted = false;
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
+			}
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
 			}
 		} catch (err) {
 			console.error('Error in onDestroy:', err);
@@ -281,7 +295,7 @@
 				<input
 					type="text"
 					value={searchTerm || ''}
-					oninput={(e) => searchTerm = e.target.value || ''}
+					oninput={(e) => handleSearchInput(e)}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
