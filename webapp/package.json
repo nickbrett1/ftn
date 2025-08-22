@@ -29,7 +29,9 @@
 		"deploy-preview": "npx wrangler deploy --env preview",
 		"manifest:dev": "node scripts/generate-manifest.js development",
 		"manifest:preview": "node scripts/generate-manifest.js preview",
-		"manifest:production": "node scripts/generate-manifest.js production"
+		"manifest:production": "node scripts/generate-manifest.js production",
+		"manifest:lighthouse": "node scripts/generate-lighthouse-manifest.js",
+		"test:manifests": "node scripts/test-manifest-generation.js"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.11.7",

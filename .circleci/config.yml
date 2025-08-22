@@ -77,6 +77,13 @@ jobs:
               exit 1
             fi
       - run:
+          name: Test manifest generation
+          command: |
+            cd webapp
+            echo "🧪 Testing all manifest generation commands..."
+            npm run test:manifests
+            echo "✅ All manifest tests passed"
+      - run:
           name: Build app
           command: |
             cd webapp && npm run build
@@ -135,6 +142,7 @@ jobs:
       SENTRY_PROJECT: bem-backend
       SENTRY_ENVIRONMENT: staging
       SENTRY_RELEASE: << pipeline.git.revision >>
+      LIGHTHOUSE_ENABLED: "true"
     docker:
       - image: cimg/node:current-browsers
     steps:
@@ -162,6 +170,34 @@ jobs:
           name: Setup Wrangler configuration
           command: |
             cd webapp && ./setup-wrangler-config.sh
+      - run:
+          name: Generate Lighthouse manifest
+          command: |
+            cd webapp
+            echo "🔧 Generating Lighthouse test manifest..."
+            npm run manifest:lighthouse
+            echo "✅ Lighthouse manifest generated successfully"
+      - run:
+          name: Verify Lighthouse manifest
+          command: |
+            cd webapp
+            echo "🔍 Verifying Lighthouse manifest..."
+            if [ -f "static/manifest.json" ]; then
+              echo "✅ Lighthouse manifest exists"
+              echo "📋 Manifest contents:"
+              cat static/manifest.json
+              echo ""
+              echo "🔍 Checking for 127.0.0.1:4173 URLs..."
+              if grep -q "127.0.0.1:4173" static/manifest.json; then
+                echo "✅ Manifest contains correct preview server URLs"
+              else
+                echo "❌ Manifest does not contain preview server URLs!"
+                exit 1
+              fi
+            else
+              echo "❌ Lighthouse manifest not found!"
+              exit 1
+            fi
       - run:
           name: Install Lighthouse CLI (if not cached)
           command: |

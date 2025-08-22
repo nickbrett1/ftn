@@ -23,8 +23,17 @@ const environments = {
 	}
 };
 
+// Special handling for Lighthouse tests in CI
+const isLighthouseTest = process.env.CIRCLECI && process.env.LIGHTHOUSE_ENABLED;
+
 function generateManifest(env) {
-	const baseUrl = env.baseUrl;
+	let baseUrl = env.baseUrl;
+	
+	// Special case: If running Lighthouse tests in CI, use the preview server URL
+	if (isLighthouseTest && env.baseUrl.includes('ftn-preview')) {
+		baseUrl = 'http://127.0.0.1:4173';
+		console.log(`🔧 Lighthouse test detected, using preview server URL: ${baseUrl}`);
+	}
 	
 	const manifest = {
 		name: "Fintech Nick",
@@ -75,6 +84,11 @@ function main() {
 	console.log(`Generating manifest for ${envArg} environment...`);
 	console.log(`Base URL: ${env.baseUrl}`);
 	console.log(`Output file: ${env.outputFile}`);
+	
+	// Check if this is a Lighthouse test
+	if (isLighthouseTest) {
+		console.log(`🚨 Lighthouse test environment detected`);
+	}
 	
 	const manifest = generateManifest(env);
 	const outputPath = path.join(process.cwd(), env.outputFile);
