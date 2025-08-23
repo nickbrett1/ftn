@@ -9,6 +9,7 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
+	let inputValue = $state(''); // Local input state for display
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -127,6 +128,7 @@
 			
 			// Reset search state when modal opens
 			searchTerm = '';
+			inputValue = '';
 			
 			loadAllMerchants();
 			
@@ -209,13 +211,20 @@
 		handleModalStateChange();
 	});
 
-	// Effect that runs when searchTerm changes to filter merchants
+	// Effect that runs when merchants are loaded to initialize filtered list
 	$effect(() => {
-		console.log('🔍 Search effect triggered, searchTerm:', searchTerm); // Debug log
-		if (isMounted && !isLoading) {
-			handleSearch();
+		console.log('📋 Merchants effect triggered, count:', merchants.length); // Debug log
+		if (merchants.length > 0 && isMounted) {
+			// Initialize filtered merchants and apply current search if any
+			if (searchTerm.trim()) {
+				handleSearch();
+			} else {
+				filteredMerchants = merchants;
+			}
 		}
 	});
+
+
 </script>
 
 {#if isOpen}
@@ -276,7 +285,20 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={searchTerm}
+					bind:value={inputValue}
+					oninput={(e) => {
+						const newValue = e.target.value || '';
+						console.log('🔤 INPUT EVENT - new value:', newValue);
+						
+						// Update the input display immediately
+						inputValue = newValue;
+						
+						// Update search term and trigger search
+						searchTerm = newValue;
+						if (isMounted && !isLoading) {
+							handleSearch();
+						}
+					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
