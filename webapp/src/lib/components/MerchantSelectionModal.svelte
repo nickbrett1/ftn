@@ -37,16 +37,13 @@
 
 	// Simple search function
 	function performSearch() {
-		console.log('performSearch called:', { searchTerm, merchantsCount: merchants.length });
 		
 		if (!searchTerm.trim()) {
 			filteredMerchants = merchants;
-			console.log('No search term, showing all merchants:', filteredMerchants);
 		} else {
 			filteredMerchants = merchants.filter(merchant => 
 				merchant.toLowerCase().includes(searchTerm.toLowerCase())
 			);
-			console.log('Filtered merchants:', filteredMerchants);
 		}
 	}
 
@@ -66,14 +63,8 @@
 	// Search when searchTerm changes
 	$effect(() => {
 		if (merchants.length > 0) {
-			console.log('Search effect triggered:', { searchTerm, merchantsCount: merchants.length });
 			performSearch();
 		}
-	});
-
-	// Debug: Log when merchants change
-	$effect(() => {
-		console.log('Merchants changed:', { count: merchants.length, merchants });
 	});
 
 	// Prevent body scroll when modal is open
