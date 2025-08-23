@@ -9,15 +9,7 @@
 	let error = $state('');
 	let searchTerm = $state('');
 	
-	// Computed value for filtered merchants - updates automatically when searchTerm or merchants change
-	let filteredMerchants = $derived(() => {
-		if (!searchTerm.trim()) {
-			return merchants;
-		}
-		return merchants.filter((merchant) =>
-			merchant.toLowerCase().includes(searchTerm.toLowerCase())
-		);
-	});
+	let filteredMerchants = $state([]);
 	
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
@@ -28,35 +20,56 @@
 		try {
 			isLoading = true;
 			error = '';
-			console.log('Loading merchants...'); // Debug log
+			console.log('🔄 Starting to load merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
+			console.log('🔄 Fetch response status:', response.status, response.statusText);
+			
 			if (!response.ok) {
 				throw new Error(`Failed to load merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
+			console.log('🔄 Raw API response data:', data);
+			console.log('🔄 Data type:', typeof data, 'Is array:', Array.isArray(data));
 			
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
 				merchants = data;
-				console.log(`Loaded ${merchants.length} merchants`); // Debug log
+				filteredMerchants = data;
+				console.log(`✅ Loaded ${merchants.length} merchants successfully`); // Debug log
+				console.log('✅ Sample merchants:', data.slice(0, 3)); // Show first 3 merchants
+				// Initialize filtered list
+				handleSearch();
 			} else {
-				console.warn('Received invalid merchants data format:', data);
+				console.warn('❌ Received invalid merchants data format:', data);
+				console.warn('❌ Expected array of strings, got:', typeof data);
 				merchants = [];
 				error = 'Invalid data format received from server';
 			}
 		} catch (err) {
-			console.error('Error loading merchants:', err); // Debug log
+			console.error('❌ Error loading merchants:', err); // Debug log
 			error = err.message;
 			merchants = [];
-			filteredMerchants = [];
 		} finally {
 			isLoading = false;
+			console.log('🔄 Loading complete. Final state - merchants:', merchants.length, 'error:', error);
 		}
 	}
 
-
+	function handleSearch() {
+		console.log('🔍 handleSearch called - searchTerm:', searchTerm, 'merchants length:', merchants.length);
+		// Simple, fast filtering without function call overhead
+		if (!searchTerm.trim()) {
+			filteredMerchants = merchants;
+			console.log('🔍 Showing all merchants:', merchants.length);
+		} else {
+			filteredMerchants = merchants.filter((merchant) =>
+				merchant.toLowerCase().includes(searchTerm.toLowerCase())
+			);
+			console.log('🔍 Filtered to:', filteredMerchants.length, 'merchants for term:', searchTerm);
+		}
+	}
 
 	function handleSelect(merchant) {
 		try {
@@ -245,10 +258,22 @@
 					oninput={(e) => {
 						const startTime = performance.now();
 						const newValue = e.target.value || '';
-						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
+						console.log('🔤 INPUT EVENT START');
+						console.log('🔤 Event target value:', e.target.value);
+						console.log('🔤 Old searchTerm:', searchTerm);
+						console.log('🔤 New value:', newValue);
+						console.log('🔤 Current merchants length:', merchants.length);
+						
+						// Execute search immediately for instant filtering
+						handleSearch();
+						
+						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
+						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
+						console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
 						
 						const endTime = performance.now();
 						console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
+						console.log('🔤 INPUT EVENT END');
 					}}
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
