@@ -5,10 +5,20 @@
 	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
 
 	let merchants = $state([]);
-	let filteredMerchants = $state([]);
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
+	
+	// Computed value for filtered merchants - updates automatically when searchTerm or merchants change
+	let filteredMerchants = $derived(() => {
+		if (!searchTerm.trim()) {
+			return merchants;
+		}
+		return merchants.filter((merchant) =>
+			merchant.toLowerCase().includes(searchTerm.toLowerCase())
+		);
+	});
+	
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -30,12 +40,10 @@
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
 				merchants = data;
-				filteredMerchants = data;
 				console.log(`Loaded ${merchants.length} merchants`); // Debug log
 			} else {
 				console.warn('Received invalid merchants data format:', data);
 				merchants = [];
-				filteredMerchants = [];
 				error = 'Invalid data format received from server';
 			}
 		} catch (err) {
@@ -48,41 +56,7 @@
 		}
 	}
 
-	function handleSearch() {
-		try {
-			console.log('🔍 handleSearch called with searchTerm:', searchTerm); // Debug log
-			console.log('🔍 Current merchants length:', merchants.length); // Debug log
-			
-			// Ensure merchants is a valid array
-			if (!Array.isArray(merchants) || merchants.length === 0) {
-				console.log('🔍 No merchants to filter, setting empty array'); // Debug log
-				filteredMerchants = [];
-				return;
-			}
 
-			if (!searchTerm.trim()) {
-				console.log('🔍 Empty search term, showing all merchants'); // Debug log
-				filteredMerchants = merchants;
-			} else {
-				// Ensure merchants is an array and contains only strings before filtering
-				if (merchants.every(m => typeof m === 'string')) {
-					const filtered = merchants.filter((merchant) =>
-						merchant.toLowerCase().includes(searchTerm.toLowerCase())
-					);
-					console.log(`🔍 Filtered to ${filtered.length} merchants for term: "${searchTerm}"`); // Debug log
-					filteredMerchants = filtered;
-				} else {
-					console.warn('Merchants data is not in expected format:', merchants);
-					filteredMerchants = [];
-				}
-			}
-			console.log(`🔍 Final filtered merchants count: ${filteredMerchants.length}`); // Debug log
-		} catch (err) {
-			console.error('Error in handleSearch:', err);
-			// Fallback to showing all merchants if filtering fails
-			filteredMerchants = Array.isArray(merchants) ? merchants : [];
-		}
-	}
 
 	function handleSelect(merchant) {
 		try {
@@ -134,7 +108,7 @@
 			focusTimeout = setTimeout(() => {
 				try {
 					if (isMounted) {
-						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
+						const searchInput = document.querySelector('input[aria-label="Search merchants"]');
 						if (searchInput) {
 							searchInput.focus();
 							console.log('Search input focused'); // Debug log
@@ -145,7 +119,7 @@
 				} catch (err) {
 					console.error('Error focusing search input:', err);
 				}
-			}, 100);
+			}, 50); // Reduced from 100ms to 50ms
 			
 			// Scroll to top of modal when it opens
 			setTimeout(() => {
@@ -156,7 +130,7 @@
 				} catch (err) {
 					console.error('Error scrolling modal:', err);
 				}
-			}, 50);
+			}, 25); // Reduced from 50ms to 25ms
 
 			// Prevent body scroll
 			if (document && document.body) {
@@ -269,11 +243,12 @@
 					type="text"
 					bind:value={searchTerm}
 					oninput={(e) => {
+						const startTime = performance.now();
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
 						
-						// Execute search immediately for instant filtering
-						handleSearch();
+						const endTime = performance.now();
+						console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
 					}}
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
