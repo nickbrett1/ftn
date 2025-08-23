@@ -267,18 +267,14 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={searchTerm}
+					bind:value={searchTerm}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
 						
-						// Update search term immediately for display
-						searchTerm = newValue;
-						
 						// Execute search immediately for instant filtering
 						handleSearch();
 					}}
-					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>

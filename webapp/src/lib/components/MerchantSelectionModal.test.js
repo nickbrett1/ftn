@@ -28,7 +28,7 @@ describe('MerchantSelectionModal', () => {
 	});
 
 	it('should render when isOpen is true', () => {
-		const { getByText, getByPlaceholderText } = render(MerchantSelectionModal, {
+		const { getByText, getByLabelText } = render(MerchantSelectionModal, {
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -37,7 +37,7 @@ describe('MerchantSelectionModal', () => {
 		});
 
 		expect(getByText('Select Merchant')).toBeTruthy();
-		expect(getByPlaceholderText('Search merchants...')).toBeTruthy();
+		expect(getByLabelText('Search merchants')).toBeTruthy();
 	});
 
 	it('should call onClose when close button is clicked', async () => {
@@ -83,7 +83,7 @@ describe('MerchantSelectionModal', () => {
 	});
 
 	it('should show search input', () => {
-		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+		const { getByLabelText } = render(MerchantSelectionModal, {
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -91,7 +91,7 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		expect(getByPlaceholderText('Search merchants...')).toBeTruthy();
+		expect(getByLabelText('Search merchants')).toBeTruthy();
 	});
 
 	it('should not cause infinite loops when typing in search input', async () => {
@@ -101,7 +101,7 @@ describe('MerchantSelectionModal', () => {
 			json: async () => ['Merchant A', 'Merchant B', 'Merchant C']
 		});
 
-		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+		const { getByLabelText } = render(MerchantSelectionModal, {
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -109,7 +109,7 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		const searchInput = getByPlaceholderText('Search merchants...');
+		const searchInput = getByLabelText('Search merchants');
 		
 		// Wait for initial load to complete
 		await new Promise(resolve => setTimeout(resolve, 100));
@@ -136,7 +136,7 @@ describe('MerchantSelectionModal', () => {
 			json: async () => ['Merchant A', 'Merchant B', 'Merchant C']
 		});
 
-		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+		const { getByLabelText } = render(MerchantSelectionModal, {
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -144,7 +144,7 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		const searchInput = getByPlaceholderText('Search merchants...');
+		const searchInput = getByLabelText('Search merchants');
 		
 		// Wait for initial load to complete
 		await new Promise(resolve => setTimeout(resolve, 100));
