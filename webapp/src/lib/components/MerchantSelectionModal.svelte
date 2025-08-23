@@ -2,13 +2,17 @@
 	import { onMount, onDestroy } from 'svelte';
 	import Button from './Button.svelte';
 
-	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
+	let { 
+		isOpen = false, 
+		onClose = () => {}, 
+		onSelect = () => {},
+		searchTerm = $bindable('')
+	} = $props();
 
 	let merchants = $state([]);
 	let filteredMerchants = $state([]);
 	let isLoading = $state(true);
 	let error = $state('');
-	let searchTerm = $state('');
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -183,16 +187,16 @@
 			focusTimeout = setTimeout(() => {
 				try {
 					if (isMounted) {
-						const searchInput = document.querySelector('textarea[id="merchant-search-input"]');
+						const searchInput = document.querySelector('input[id="merchant-search-input"]');
 						if (searchInput) {
 							searchInput.focus();
-							console.log('Search textarea focused'); // Debug log
+							console.log('Search input focused'); // Debug log
 						} else {
-							console.log('Search textarea not found'); // Debug log
+							console.log('Search input not found'); // Debug log
 						}
 					}
 				} catch (err) {
-					console.error('Error focusing search textarea:', err);
+					console.error('Error focusing search input:', err);
 				}
 			}, 100);
 			
@@ -302,35 +306,17 @@
 
 			<!-- Search -->
 			<div class="p-6 border-b border-gray-700">
-				<!-- Try textarea instead of input to see if it's an input-specific issue -->
-				<textarea
+				<!-- Proper Svelte 5 input binding -->
+				<input
+					type="text"
 					id="merchant-search-input"
+					bind:value={searchTerm}
 					placeholder="Search merchants..."
-					rows="1"
-					style="
-						width: 100%;
-						padding: 8px;
-						background: black;
-						color: white;
-						border: 2px solid red;
-						font-size: 16px;
-						resize: none;
-						overflow: hidden;
-					"
-					oninput={(e) => {
-						const value = e.target.value;
-						searchTerm = value;
-						console.log('=== TEXTAREA DEBUG ===');
-						console.log('Browser:', navigator.userAgent);
-						console.log('Event target value:', e.target.value);
-						console.log('Event target type:', e.target.type);
-						console.log('Event target tagName:', e.target.tagName);
-						console.log('searchTerm state updated to:', searchTerm);
-						console.log('Input element value after update:', e.target.value);
-						console.log('==================');
-						debouncedSearch();
-					}}
-				></textarea>
+					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					style="color: white !important; -webkit-text-fill-color: white !important; caret-color: white !important;"
+					aria-label="Search merchants"
+					oninput={debouncedSearch}
+				/>
 				
 				<!-- Additional debug info -->
 				{#if import.meta.env.DEV}
@@ -338,10 +324,10 @@
 						Debug: searchTerm = "{searchTerm}" (length: {searchTerm.length})
 					</div>
 					<div class="mt-1 text-xs text-gray-500">
-						Input ID: merchant-search-input (textarea)
+						Input ID: merchant-search-input
 					</div>
 					<div class="mt-1 text-xs text-gray-500">
-						Browser: {navigator.userAgent}
+						Using $bindable() rune for proper Svelte 5 binding
 					</div>
 				{/if}
 			</div>

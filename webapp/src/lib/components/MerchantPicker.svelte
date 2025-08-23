@@ -14,6 +14,7 @@
 	let error = $state('');
 	let showModal = $state(false);
 	let localSelectedMerchant = $state(''); // Local state for internal management
+	let searchTerm = $state(''); // State for search term binding with modal
 
 	async function loadRecentMerchants() {
 		try {
@@ -172,4 +173,5 @@
 	isOpen={showModal}
 	onClose={() => (showModal = false)}
 	onSelect={handleModalSelect}
+	bind:searchTerm={searchTerm}
 />
