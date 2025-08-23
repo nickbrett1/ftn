@@ -13,7 +13,6 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
-	let searchTimeout = $state(null);
 
 	async function loadAllMerchants() {
 		try {
@@ -128,10 +127,6 @@
 			
 			// Reset search state when modal opens
 			searchTerm = '';
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-				searchTimeout = null;
-			}
 			
 			loadAllMerchants();
 			
@@ -174,11 +169,7 @@
 				focusTimeout = null;
 			}
 			
-			// Clear search timeout when modal closes
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-				searchTimeout = null;
-			}
+
 			
 			// Restore body scroll
 			if (document && document.body) {
@@ -203,9 +194,6 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 			}
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-			}
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
@@ -219,6 +207,14 @@
 	$effect(() => {
 		console.log('🔄 isOpen changed to:', isOpen); // Debug log
 		handleModalStateChange();
+	});
+
+	// Effect that runs when searchTerm changes to filter merchants
+	$effect(() => {
+		console.log('🔍 Search effect triggered, searchTerm:', searchTerm); // Debug log
+		if (isMounted && !isLoading) {
+			handleSearch();
+		}
 	});
 </script>
 
@@ -281,22 +277,6 @@
 				<input
 					type="text"
 					bind:value={searchTerm}
-					oninput={(e) => {
-						const newValue = e.target.value || '';
-						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
-						
-						// Clear any existing timeout
-						if (searchTimeout) {
-							clearTimeout(searchTimeout);
-						}
-						
-						// Debounce the search to prevent excessive updates
-						searchTimeout = setTimeout(() => {
-							console.log('🔤 Debounced search update to:', newValue);
-							// Call handleSearch directly instead of relying on effects
-							handleSearch();
-						}, 150); // 150ms delay
-					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
