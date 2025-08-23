@@ -1,5 +1,5 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import Button from './Button.svelte';
 
 	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
@@ -255,7 +255,7 @@
 				<input
 					type="text"
 					bind:value={searchTerm}
-					oninput={(e) => {
+					oninput={async (e) => {
 						const startTime = performance.now();
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT START');
@@ -266,6 +266,9 @@
 						
 						// Execute search immediately for instant filtering
 						handleSearch();
+						
+						// Force Svelte 5 to flush DOM updates
+						await tick();
 						
 						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
 						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
