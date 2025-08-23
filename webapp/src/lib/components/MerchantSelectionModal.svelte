@@ -9,6 +9,7 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
+	let inputValue = $state(''); // Local state for input display
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -125,6 +126,11 @@
 	function handleModalStateChange() {
 		if (isOpen && isMounted) {
 			console.log('🔄 Modal opening, loading merchants'); // Debug log
+			
+			// Reset search state when modal opens
+			searchTerm = '';
+			inputValue = '';
+			
 			loadAllMerchants();
 			
 			// Focus the search input when modal opens
@@ -266,10 +272,13 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={searchTerm || ''}
+					bind:value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
+						
+						// Update input display immediately
+						inputValue = newValue;
 						
 						// Clear any existing timeout
 						if (searchTimeout) {

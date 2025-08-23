@@ -93,4 +93,39 @@ describe('MerchantSelectionModal', () => {
 
 		expect(getByPlaceholderText('Search merchants...')).toBeTruthy();
 	});
+
+	it('should not cause infinite loops when typing in search input', async () => {
+		// Mock successful fetch response
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ['Merchant A', 'Merchant B', 'Merchant C']
+		});
+
+		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+			props: {
+				isOpen: true,
+				onClose: mockOnClose,
+				onSelect: mockOnSelect
+			}
+		});
+
+		const searchInput = getByPlaceholderText('Search merchants...');
+		
+		// Wait for initial load to complete
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Type multiple characters rapidly to trigger search
+		await fireEvent.input(searchInput, { target: { value: 'a' } });
+		await fireEvent.input(searchInput, { target: { value: 'ab' } });
+		await fireEvent.input(searchInput, { target: { value: 'abc' } });
+		await fireEvent.input(searchInput, { target: { value: 'abcd' } });
+		await fireEvent.input(searchInput, { target: { value: 'abcde' } });
+
+		// Wait for debounced search to complete
+		await new Promise(resolve => setTimeout(resolve, 200));
+
+		// If we get here without the test timing out or throwing an error,
+		// it means no infinite loop occurred
+		expect(searchInput.value).toBe('abcde');
+	});
 });
