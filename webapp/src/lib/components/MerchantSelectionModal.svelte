@@ -13,6 +13,7 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
+	let searchTimeout = $state(null);
 
 	async function loadAllMerchants() {
 		try {
@@ -122,8 +123,6 @@
 	});
 
 	// Debounced search function
-	let searchTimeout = $state(null);
-	
 	function debouncedSearch() {
 		if (searchTimeout) {
 			clearTimeout(searchTimeout);
@@ -133,9 +132,9 @@
 		}, 150); // 150ms debounce
 	}
 
-	// Handle search input changes
-	function handleSearchInput(event) {
-		console.log('Search input changed:', searchTerm); // Debug log
+	// Handle search input changes - simplified for Svelte 5
+	function handleSearchInput() {
+		console.log('Search input changed, searchTerm is now:', searchTerm);
 		debouncedSearch();
 	}
 
@@ -295,11 +294,11 @@
 				<input
 					type="text"
 					bind:value={searchTerm}
-					oninput={handleSearchInput}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					style="color: white !important; -webkit-text-fill-color: white !important; caret-color: white !important;"
 					aria-label="Search merchants"
+					oninput={handleSearchInput}
 				/>
 				<!-- Debug display to see if searchTerm is updating -->
 				{#if import.meta.env.DEV}
