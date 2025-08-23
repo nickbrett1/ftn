@@ -13,14 +13,7 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
-
-	// Debug counters to track effect runs
-	let searchEffectRuns = $state(0);
-	let merchantsEffectRuns = $state(0);
-	let isOpenEffectRuns = $state(0);
-	let bodyScrollEffectRuns = $state(0);
-	let lastSearchTerm = $state(''); // Track last processed search term
-	let searchTimeout = $state(null); // For debounced search
+	let searchTimeout = $state(null);
 
 	async function loadAllMerchants() {
 		try {
@@ -128,78 +121,12 @@
 		}
 	}
 
-	// Only run handleSearch when searchTerm changes
-	$effect(() => {
-		searchEffectRuns++;
-		console.log(`🔄 SEARCH EFFECT #${searchEffectRuns} - searchTerm: "${searchTerm}", merchants length: ${merchants.length}`); // Debug log
-		
-		// Don't run effects if component isn't mounted
-		if (!isMounted) {
-			console.log('🔄 Component not mounted, skipping search effect'); // Debug log
-			return;
-		}
-		
-		// Guard against infinite loops - only process if search term actually changed
-		if (searchTerm === lastSearchTerm) {
-			console.log('🔄 Search term unchanged, skipping'); // Debug log
-			return;
-		}
-		
-		// Only run if we have merchants and a search term change
-		if (Array.isArray(merchants) && merchants.length > 0) {
-			console.log('🔄 Calling handleSearch from search effect'); // Debug log
-			handleSearch();
-			lastSearchTerm = searchTerm; // Update last processed term
-		} else {
-			console.log('🔄 Skipping handleSearch - no merchants available'); // Debug log
-		}
-	});
-
-	// Effect for when merchants data is loaded
-	$effect(() => {
-		merchantsEffectRuns++;
-		console.log(`🔄 MERCHANTS EFFECT #${merchantsEffectRuns} - merchants length: ${merchants.length}`); // Debug log
-		
-		if (Array.isArray(merchants) && merchants.length > 0) {
-			// Initialize filtered merchants when data is first loaded
-			console.log('🔄 Initializing filteredMerchants from merchants effect'); // Debug log
-			filteredMerchants = merchants;
-		}
-	});
-
-	onMount(() => {
-		try {
-			console.log('MerchantSelectionModal mounted'); // Debug log
-			isMounted = true;
-			if (isOpen) {
-				loadAllMerchants();
-			}
-		} catch (err) {
-			console.error('Error in onMount:', err);
-		}
-	});
-
-	onDestroy(() => {
-		try {
-			isMounted = false;
-			if (focusTimeout) {
-				clearTimeout(focusTimeout);
-			}
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-			}
-		} catch (err) {
-			console.error('Error in onDestroy:', err);
-		}
-	});
-
-	$effect(() => {
-		isOpenEffectRuns++;
-		console.log(`🔄 ISOPEN EFFECT #${isOpenEffectRuns} - isOpen: ${isOpen}`); // Debug log
-		
-		if (isOpen) {
+	// Function to handle modal state changes
+	function handleModalStateChange() {
+		if (isOpen && isMounted) {
 			console.log('🔄 Modal opening, loading merchants'); // Debug log
 			loadAllMerchants();
+			
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
 				try {
@@ -227,46 +154,57 @@
 					console.error('Error scrolling modal:', err);
 				}
 			}, 50);
+
+			// Prevent body scroll
+			if (document && document.body) {
+				document.body.style.overflow = 'hidden';
+			}
 		} else {
 			// Clear timeout when modal closes
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
 			}
+			
+			// Restore body scroll
+			if (document && document.body) {
+				document.body.style.overflow = '';
+			}
+		}
+	}
+
+	onMount(() => {
+		try {
+			console.log('MerchantSelectionModal mounted'); // Debug log
+			isMounted = true;
+			handleModalStateChange();
+		} catch (err) {
+			console.error('Error in onMount:', err);
 		}
 	});
 
-	// Prevent body scroll when modal is open
-	$effect(() => {
-		bodyScrollEffectRuns++;
-		console.log(`🔄 BODY SCROLL EFFECT #${bodyScrollEffectRuns} - isOpen: ${isOpen}`); // Debug log
-		
+	onDestroy(() => {
 		try {
-			if (isOpen) {
-				console.log('Preventing body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = 'hidden';
-				}
-			} else {
-				console.log('Restoring body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = '';
-				}
+			isMounted = false;
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+			}
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+			}
+			// Restore body scroll
+			if (document && document.body) {
+				document.body.style.overflow = '';
 			}
 		} catch (err) {
-			console.error('Error managing body scroll:', err);
+			console.error('Error in onDestroy:', err);
 		}
+	});
 
-		return () => {
-			try {
-				console.log('Cleanup: restoring body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = '';
-				}
-			} catch (err) {
-				console.error('Error in cleanup:', err);
-			}
-		};
+	// Simple effect that only runs when isOpen changes
+	$effect(() => {
+		console.log('🔄 isOpen changed to:', isOpen); // Debug log
+		handleModalStateChange();
 	});
 </script>
 
@@ -338,10 +276,12 @@
 							clearTimeout(searchTimeout);
 						}
 						
-						// Debounce the search to prevent excessive effect runs
+						// Debounce the search to prevent excessive updates
 						searchTimeout = setTimeout(() => {
 							console.log('🔤 Debounced search update to:', newValue);
 							searchTerm = newValue;
+							// Call handleSearch directly instead of relying on effects
+							handleSearch();
 						}, 150); // 150ms delay
 					}}
 					placeholder="Search merchants..."
@@ -350,7 +290,7 @@
 				/>
 				<!-- Debug info -->
 				<div class="mt-2 text-xs text-gray-500">
-					Debug: Search Effect Runs: {searchEffectRuns} | Merchants Effect Runs: {merchantsEffectRuns}
+					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
 				</div>
 			</div>
 
