@@ -128,4 +128,46 @@ describe('MerchantSelectionModal', () => {
 		// it means no infinite loop occurred
 		expect(searchInput.value).toBe('abcde');
 	});
+
+	it('should properly capture and display typed input characters', async () => {
+		// Mock successful fetch response
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ['Merchant A', 'Merchant B', 'Merchant C']
+		});
+
+		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+			props: {
+				isOpen: true,
+				onClose: mockOnClose,
+				onSelect: mockOnSelect
+			}
+		});
+
+		const searchInput = getByPlaceholderText('Search merchants...');
+		
+		// Wait for initial load to complete
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Test typing individual characters and verify each is captured
+		const testChars = ['a', 'b', 'c'];
+		let currentValue = '';
+		
+		for (let i = 0; i < testChars.length; i++) {
+			const char = testChars[i];
+			currentValue += char;
+			
+			// Simulate typing the character
+			await fireEvent.input(searchInput, { target: { value: currentValue } });
+			
+			// Wait a bit for the event to be processed
+			await new Promise(resolve => setTimeout(resolve, 20));
+			
+			// Verify the input value is updated immediately
+			expect(searchInput.value).toBe(currentValue);
+		}
+
+		// Final verification that all characters are captured
+		expect(searchInput.value).toBe('abc');
+	});
 });

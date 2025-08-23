@@ -9,7 +9,6 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
-	let inputValue = $state(''); // Local state for input display
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -127,9 +126,8 @@
 		if (isOpen && isMounted) {
 			console.log('🔄 Modal opening, loading merchants'); // Debug log
 			
-			// Reset search state when modal opens
-			searchTerm = '';
-			inputValue = '';
+					// Reset search state when modal opens
+		searchTerm = '';
 			
 			loadAllMerchants();
 			
@@ -272,23 +270,22 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={inputValue}
+					value={searchTerm}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
 						
-						// Update input display immediately
-						inputValue = newValue;
+						// Update search term immediately for display
+						searchTerm = newValue;
 						
 						// Clear any existing timeout
 						if (searchTimeout) {
 							clearTimeout(searchTimeout);
 						}
 						
-						// Debounce the search to prevent excessive updates
+						// Debounce the actual search to prevent excessive API calls
 						searchTimeout = setTimeout(() => {
-							console.log('🔤 Debounced search update to:', newValue);
-							searchTerm = newValue;
+							console.log('🔤 Debounced search execution for:', newValue);
 							// Call handleSearch directly instead of relying on effects
 							handleSearch();
 						}, 150); // 150ms delay
