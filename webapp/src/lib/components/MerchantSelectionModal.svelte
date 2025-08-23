@@ -13,7 +13,6 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
-	let searchTimeout = $state(null);
 
 	async function loadAllMerchants() {
 		try {
@@ -193,9 +192,7 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 			}
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-			}
+			
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
@@ -278,17 +275,8 @@
 						// Update search term immediately for display
 						searchTerm = newValue;
 						
-						// Clear any existing timeout
-						if (searchTimeout) {
-							clearTimeout(searchTimeout);
-						}
-						
-						// Debounce the actual search to prevent excessive API calls
-						searchTimeout = setTimeout(() => {
-							console.log('🔤 Debounced search execution for:', newValue);
-							// Call handleSearch directly instead of relying on effects
-							handleSearch();
-						}, 150); // 150ms delay
+						// Execute search immediately for instant filtering
+						handleSearch();
 					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
