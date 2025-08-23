@@ -125,6 +125,14 @@
 	function handleModalStateChange() {
 		if (isOpen && isMounted) {
 			console.log('🔄 Modal opening, loading merchants'); // Debug log
+			
+			// Reset search state when modal opens
+			searchTerm = '';
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+				searchTimeout = null;
+			}
+			
 			loadAllMerchants();
 			
 			// Focus the search input when modal opens
@@ -164,6 +172,12 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
+			}
+			
+			// Clear search timeout when modal closes
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+				searchTimeout = null;
 			}
 			
 			// Restore body scroll
@@ -266,7 +280,7 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={searchTerm || ''}
+					bind:value={searchTerm}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
@@ -279,7 +293,6 @@
 						// Debounce the search to prevent excessive updates
 						searchTimeout = setTimeout(() => {
 							console.log('🔤 Debounced search update to:', newValue);
-							searchTerm = newValue;
 							// Call handleSearch directly instead of relying on effects
 							handleSearch();
 						}, 150); // 150ms delay
