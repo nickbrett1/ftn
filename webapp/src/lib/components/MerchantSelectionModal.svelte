@@ -122,6 +122,17 @@
 		}
 	});
 
+	// Effect to sync input value with searchTerm state
+	$effect(() => {
+		if (isMounted) {
+			const input = document.getElementById('merchant-search-input');
+			if (input && input.value !== searchTerm) {
+				input.value = searchTerm;
+				console.log('Synced input value to:', searchTerm);
+			}
+		}
+	});
+
 	// Debounced search function
 	function debouncedSearch() {
 		if (searchTimeout) {
@@ -293,12 +304,18 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={searchTerm}
+					id="merchant-search-input"
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					style="color: white !important; -webkit-text-fill-color: white !important; caret-color: white !important;"
 					aria-label="Search merchants"
-					oninput={handleSearchInput}
+					oninput={(e) => {
+						const value = e.target.value;
+						searchTerm = value;
+						console.log('Input value changed to:', value);
+						console.log('searchTerm state is now:', searchTerm);
+						debouncedSearch();
+					}}
 				/>
 				<!-- Debug display to see if searchTerm is updating -->
 				{#if import.meta.env.DEV}
