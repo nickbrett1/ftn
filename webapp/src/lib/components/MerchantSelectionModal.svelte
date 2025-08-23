@@ -272,7 +272,7 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={inputValue}
+					value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
