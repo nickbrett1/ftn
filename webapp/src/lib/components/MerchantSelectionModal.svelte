@@ -14,6 +14,14 @@
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
 
+	// Debug counters to track effect runs
+	let searchEffectRuns = $state(0);
+	let merchantsEffectRuns = $state(0);
+	let isOpenEffectRuns = $state(0);
+	let bodyScrollEffectRuns = $state(0);
+	let lastSearchTerm = $state(''); // Track last processed search term
+	let searchTimeout = $state(null); // For debounced search
+
 	async function loadAllMerchants() {
 		try {
 			isLoading = true;
@@ -50,26 +58,33 @@
 
 	function handleSearch() {
 		try {
+			console.log('🔍 handleSearch called with searchTerm:', searchTerm); // Debug log
+			console.log('🔍 Current merchants length:', merchants.length); // Debug log
+			
 			// Ensure merchants is a valid array
 			if (!Array.isArray(merchants) || merchants.length === 0) {
+				console.log('🔍 No merchants to filter, setting empty array'); // Debug log
 				filteredMerchants = [];
 				return;
 			}
 
 			if (!searchTerm.trim()) {
+				console.log('🔍 Empty search term, showing all merchants'); // Debug log
 				filteredMerchants = merchants;
 			} else {
 				// Ensure merchants is an array and contains only strings before filtering
 				if (merchants.every(m => typeof m === 'string')) {
-					filteredMerchants = merchants.filter((merchant) =>
+					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
+					console.log(`🔍 Filtered to ${filtered.length} merchants for term: "${searchTerm}"`); // Debug log
+					filteredMerchants = filtered;
 				} else {
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
 				}
 			}
-			console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
+			console.log(`🔍 Final filtered merchants count: ${filteredMerchants.length}`); // Debug log
 		} catch (err) {
 			console.error('Error in handleSearch:', err);
 			// Fallback to showing all merchants if filtering fails
@@ -115,15 +130,39 @@
 
 	// Only run handleSearch when searchTerm changes
 	$effect(() => {
+		searchEffectRuns++;
+		console.log(`🔄 SEARCH EFFECT #${searchEffectRuns} - searchTerm: "${searchTerm}", merchants length: ${merchants.length}`); // Debug log
+		
+		// Don't run effects if component isn't mounted
+		if (!isMounted) {
+			console.log('🔄 Component not mounted, skipping search effect'); // Debug log
+			return;
+		}
+		
+		// Guard against infinite loops - only process if search term actually changed
+		if (searchTerm === lastSearchTerm) {
+			console.log('🔄 Search term unchanged, skipping'); // Debug log
+			return;
+		}
+		
+		// Only run if we have merchants and a search term change
 		if (Array.isArray(merchants) && merchants.length > 0) {
+			console.log('🔄 Calling handleSearch from search effect'); // Debug log
 			handleSearch();
+			lastSearchTerm = searchTerm; // Update last processed term
+		} else {
+			console.log('🔄 Skipping handleSearch - no merchants available'); // Debug log
 		}
 	});
 
 	// Effect for when merchants data is loaded
 	$effect(() => {
+		merchantsEffectRuns++;
+		console.log(`🔄 MERCHANTS EFFECT #${merchantsEffectRuns} - merchants length: ${merchants.length}`); // Debug log
+		
 		if (Array.isArray(merchants) && merchants.length > 0) {
 			// Initialize filtered merchants when data is first loaded
+			console.log('🔄 Initializing filteredMerchants from merchants effect'); // Debug log
 			filteredMerchants = merchants;
 		}
 	});
@@ -146,14 +185,20 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 			}
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+			}
 		} catch (err) {
 			console.error('Error in onDestroy:', err);
 		}
 	});
 
 	$effect(() => {
-		console.log('Modal isOpen changed:', isOpen); // Debug log
+		isOpenEffectRuns++;
+		console.log(`🔄 ISOPEN EFFECT #${isOpenEffectRuns} - isOpen: ${isOpen}`); // Debug log
+		
 		if (isOpen) {
+			console.log('🔄 Modal opening, loading merchants'); // Debug log
 			loadAllMerchants();
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
@@ -193,6 +238,9 @@
 
 	// Prevent body scroll when modal is open
 	$effect(() => {
+		bodyScrollEffectRuns++;
+		console.log(`🔄 BODY SCROLL EFFECT #${bodyScrollEffectRuns} - isOpen: ${isOpen}`); // Debug log
+		
 		try {
 			if (isOpen) {
 				console.log('Preventing body scroll'); // Debug log
@@ -281,11 +329,29 @@
 				<input
 					type="text"
 					value={searchTerm || ''}
-					oninput={(e) => searchTerm = e.target.value || ''}
+					oninput={(e) => {
+						const newValue = e.target.value || '';
+						console.log('🔤 INPUT EVENT - old searchTerm:', searchTerm, 'new value:', newValue);
+						
+						// Clear any existing timeout
+						if (searchTimeout) {
+							clearTimeout(searchTimeout);
+						}
+						
+						// Debounce the search to prevent excessive effect runs
+						searchTimeout = setTimeout(() => {
+							console.log('🔤 Debounced search update to:', newValue);
+							searchTerm = newValue;
+						}, 150); // 150ms delay
+					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
+				<!-- Debug info -->
+				<div class="mt-2 text-xs text-gray-500">
+					Debug: Search Effect Runs: {searchEffectRuns} | Merchants Effect Runs: {merchantsEffectRuns}
+				</div>
 			</div>
 
 			<!-- Merchants List -->
