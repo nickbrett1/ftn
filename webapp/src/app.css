@@ -75,13 +75,6 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	animation: var(--animate-border);
 }
 
-/* Ensure proper text truncation on mobile devices */
-.truncate {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 /* General styles for external links to ensure proper mobile behavior */
 a[target="_blank"] {
 	-webkit-touch-callout: default;
