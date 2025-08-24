@@ -14,6 +14,7 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
+	let searchTimeout = $state(null); // Add debouncing timeout
 
 	async function loadAllMerchants() {
 		try {
@@ -31,7 +32,12 @@
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
 				merchants = data;
-				filteredMerchants = data;
+				// Initialize filtered merchants based on current search term
+				if (searchTerm.trim()) {
+					handleSearch();
+				} else {
+					filteredMerchants = data;
+				}
 				console.log(`Loaded ${merchants.length} merchants`); // Debug log
 			} else {
 				console.warn('Received invalid merchants data format:', data);
@@ -51,18 +57,13 @@
 
 	function handleSearch() {
 		try {
-			console.log('🔍 handleSearch called with searchTerm:', searchTerm); // Debug log
-			console.log('🔍 Current merchants length:', merchants.length); // Debug log
-			
 			// Ensure merchants is a valid array
 			if (!Array.isArray(merchants) || merchants.length === 0) {
-				console.log('🔍 No merchants to filter, setting empty array'); // Debug log
 				filteredMerchants = [];
 				return;
 			}
 
 			if (!searchTerm.trim()) {
-				console.log('🔍 Empty search term, showing all merchants'); // Debug log
 				filteredMerchants = merchants;
 			} else {
 				// Ensure merchants is an array and contains only strings before filtering
@@ -70,14 +71,12 @@
 					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
-					console.log(`🔍 Filtered to ${filtered.length} merchants for term: "${searchTerm}"`); // Debug log
 					filteredMerchants = filtered;
 				} else {
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
 				}
 			}
-			console.log(`🔍 Final filtered merchants count: ${filteredMerchants.length}`); // Debug log
 		} catch (err) {
 			console.error('Error in handleSearch:', err);
 			// Fallback to showing all merchants if filtering fails
@@ -124,8 +123,6 @@
 	// Function to handle modal state changes
 	function handleModalStateChange() {
 		if (isOpen && isMounted) {
-			console.log('🔄 Modal opening, loading merchants'); // Debug log
-			
 			// Reset search state when modal opens
 			searchTerm = '';
 			inputValue = '';
@@ -139,9 +136,6 @@
 						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
 						if (searchInput) {
 							searchInput.focus();
-							console.log('Search input focused'); // Debug log
-						} else {
-							console.log('Search input not found'); // Debug log
 						}
 					}
 				} catch (err) {
@@ -171,8 +165,6 @@
 				focusTimeout = null;
 			}
 			
-
-			
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
@@ -182,7 +174,6 @@
 
 	onMount(() => {
 		try {
-			console.log('MerchantSelectionModal mounted'); // Debug log
 			isMounted = true;
 			handleModalStateChange();
 		} catch (err) {
@@ -196,6 +187,9 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 			}
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+			}
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
@@ -207,22 +201,11 @@
 
 	// Simple effect that only runs when isOpen changes
 	$effect(() => {
-		console.log('🔄 isOpen changed to:', isOpen); // Debug log
 		handleModalStateChange();
 	});
 
-	// Effect that runs when merchants are loaded to initialize filtered list
-	$effect(() => {
-		console.log('📋 Merchants effect triggered, count:', merchants.length); // Debug log
-		if (merchants.length > 0 && isMounted) {
-			// Initialize filtered merchants and apply current search if any
-			if (searchTerm.trim()) {
-				handleSearch();
-			} else {
-				filteredMerchants = merchants;
-			}
-		}
-	});
+	// Remove the problematic effect that was causing infinite loops
+	// Instead, handle merchants initialization in the loadAllMerchants function
 
 
 </script>
@@ -288,27 +271,24 @@
 					bind:value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
-						console.log('🔤 INPUT EVENT - new value:', newValue);
-						console.log('🔤 Input element:', e.target);
-						console.log('🔤 Input computed styles:', window.getComputedStyle(e.target));
 						
 						// Update the input display immediately
 						inputValue = newValue;
 						
-						// Update search term and trigger search
-						searchTerm = newValue;
-						if (isMounted && !isLoading) {
-							handleSearch();
+						// Clear any existing search timeout
+						if (searchTimeout) {
+							clearTimeout(searchTimeout);
 						}
-					}}
-					onfocus={(e) => {
-						console.log('🔤 INPUT FOCUS - element:', e.target);
-						console.log('🔤 Focused input value:', e.target.value);
-						console.log('🔤 Focused input styles:', window.getComputedStyle(e.target));
-					}}
-					onblur={(e) => {
-						console.log('🔤 INPUT BLUR - element:', e.target);
-						console.log('🔤 Blurred input value:', e.target.value);
+						
+						// Update search term
+						searchTerm = newValue;
+						
+						// Debounce the search to prevent excessive calls
+						searchTimeout = setTimeout(() => {
+							if (isMounted && !isLoading) {
+								handleSearch();
+							}
+						}, 300); // 300ms delay
 					}}
 					placeholder="Search merchants..."
 					class="merchant-search-input w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
