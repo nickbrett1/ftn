@@ -267,60 +267,95 @@
 
 			<!-- Search -->
 			<div class="p-6 border-b border-gray-700">
-				<input
-					type="text"
-					bind:value={searchTerm}
-					oninput={async (e) => {
-						const startTime = performance.now();
-						const newValue = e.target.value || '';
-						
-						// Log orientation and viewport info
-						const orientation = window.orientation || 'unknown';
-						const viewport = `${window.innerWidth}x${window.innerHeight}`;
-						const devicePixelRatio = window.devicePixelRatio || 'unknown';
-						
-						console.log('🔤 INPUT EVENT START');
-						console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
-						console.log('🔤 Event target value:', e.target.value);
-						console.log('🔤 Old searchTerm:', searchTerm);
-						console.log('🔤 New value:', newValue);
-						console.log('🔤 Current merchants length:', merchants.length);
-						
-						// Execute search immediately for instant filtering
-						handleSearch();
-						
-						// Force Svelte 5 to flush DOM updates - aggressive approach for mobile
-						await tick();
-						
-						// Force immediate DOM update for mobile browsers (multiple frames)
-						await new Promise(resolve => {
-							requestAnimationFrame(() => {
+				<!-- Completely isolated input to bypass any CSS/viewport issues -->
+				<div style="
+					position: relative !important;
+					width: 100% !important;
+					z-index: 9999 !important;
+				">
+					<input
+						type="text"
+						value={searchTerm}
+						oninput={async (e) => {
+							// Update searchTerm directly to bypass any binding issues
+							searchTerm = e.target.value;
+							const startTime = performance.now();
+							const newValue = e.target.value || '';
+							
+							// Log orientation and viewport info
+							const orientation = window.orientation || 'unknown';
+							const viewport = `${window.innerWidth}x${window.innerHeight}`;
+							const devicePixelRatio = window.devicePixelRatio || 'unknown';
+							
+							console.log('🔤 INPUT EVENT START');
+							console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
+							console.log('🔤 Event target value:', e.target.value);
+							console.log('🔤 Old searchTerm:', searchTerm);
+							console.log('🔤 New value:', newValue);
+							console.log('🔤 Current merchants length:', merchants.length);
+							
+							// Execute search immediately for instant filtering
+							handleSearch();
+							
+							// Force Svelte 5 to flush DOM updates - aggressive approach for mobile
+							await tick();
+							
+							// Force immediate DOM update for mobile browsers (multiple frames)
+							await new Promise(resolve => {
 								requestAnimationFrame(() => {
 									requestAnimationFrame(() => {
-										resolve();
+										requestAnimationFrame(() => {
+											resolve();
+										});
 									});
 								});
 							});
-						});
-						
-						// Additional force update specifically for mobile portrait mode
-						if (window.innerHeight > window.innerWidth) {
-							// Portrait mode - need more aggressive updates
-							await tick();
-							await new Promise(resolve => setTimeout(resolve, 0));
-						}
-						
-						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
-						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
-						console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
-						
-						const endTime = performance.now();
-						console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
-						console.log('🔤 INPUT EVENT END');
-					}}
-					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					aria-label="Search merchants"
-				/>
+							
+							// Additional force update specifically for mobile portrait mode
+							if (window.innerHeight > window.innerWidth) {
+								// Portrait mode - need more aggressive updates
+								await tick();
+								await new Promise(resolve => setTimeout(resolve, 0));
+								
+								// Force the input to be visible and focused
+								e.target.style.opacity = '1';
+								e.target.style.visibility = 'visible';
+								e.target.focus();
+								
+								// Force another tick after focus
+								await tick();
+							}
+							
+							console.log('🔤 After handleSearch - searchTerm:', searchTerm);
+							console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
+							console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
+							
+							const endTime = performance.now();
+							console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
+							console.log('🔤 INPUT EVENT END');
+						}}
+						style="
+							width: 100% !important;
+							padding: 0.5rem 0.75rem !important;
+							background-color: rgb(31, 41, 55) !important;
+							border: 1px solid rgb(75, 85, 99) !important;
+							border-radius: 0.375rem !important;
+							color: white !important;
+							font-size: 1rem !important;
+							line-height: 1.5rem !important;
+							outline: none !important;
+							box-sizing: border-box !important;
+							display: block !important;
+							position: relative !important;
+							z-index: 9999 !important;
+							transform: translateZ(0) !important;
+							-webkit-transform: translateZ(0) !important;
+							-webkit-appearance: none !important;
+							appearance: none !important;
+						"
+						aria-label="Search merchants"
+					/>
+				</div>
 				<!-- Debug info -->
 				<div class="mt-2 text-xs text-gray-500">
 					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
