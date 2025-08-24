@@ -884,7 +884,7 @@
 				<h3 class="text-lg font-bold text-white mb-4">Delete Statement?</h3>
 				<p class="text-gray-300 mb-2">
 					Are you sure you want to delete "<span
-						class="truncate block min-w-0 max-w-full"
+						class="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
 						title={statementToDelete.filename}>{statementToDelete.filename}</span
 					>"?
 				</p>
