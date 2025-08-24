@@ -19,7 +19,6 @@
 		try {
 			isLoading = true;
 			error = '';
-			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
 			if (!response.ok) {
@@ -31,8 +30,12 @@
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
 				merchants = data;
-				filteredMerchants = data;
-				console.log(`Loaded ${merchants.length} merchants`); // Debug log
+				// Initialize filtered merchants based on current search term
+				if (searchTerm.trim()) {
+					handleSearch();
+				} else {
+					filteredMerchants = data;
+				}
 			} else {
 				console.warn('Received invalid merchants data format:', data);
 				merchants = [];
@@ -40,7 +43,7 @@
 				error = 'Invalid data format received from server';
 			}
 		} catch (err) {
-			console.error('Error loading merchants:', err); // Debug log
+			console.error('Error loading merchants:', err);
 			error = err.message;
 			merchants = [];
 			filteredMerchants = [];
@@ -51,18 +54,13 @@
 
 	function handleSearch() {
 		try {
-			console.log('🔍 handleSearch called with searchTerm:', searchTerm); // Debug log
-			console.log('🔍 Current merchants length:', merchants.length); // Debug log
-			
 			// Ensure merchants is a valid array
 			if (!Array.isArray(merchants) || merchants.length === 0) {
-				console.log('🔍 No merchants to filter, setting empty array'); // Debug log
 				filteredMerchants = [];
 				return;
 			}
 
 			if (!searchTerm.trim()) {
-				console.log('🔍 Empty search term, showing all merchants'); // Debug log
 				filteredMerchants = merchants;
 			} else {
 				// Ensure merchants is an array and contains only strings before filtering
@@ -70,14 +68,12 @@
 					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
-					console.log(`🔍 Filtered to ${filtered.length} merchants for term: "${searchTerm}"`); // Debug log
 					filteredMerchants = filtered;
 				} else {
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
 				}
 			}
-			console.log(`🔍 Final filtered merchants count: ${filteredMerchants.length}`); // Debug log
 		} catch (err) {
 			console.error('Error in handleSearch:', err);
 			// Fallback to showing all merchants if filtering fails
@@ -88,7 +84,6 @@
 	function handleSelect(merchant) {
 		try {
 			if (typeof merchant === 'string' && merchant.trim()) {
-				console.log('Selected merchant:', merchant); // Debug log
 				onSelect(merchant);
 				onClose();
 			} else {
@@ -102,7 +97,6 @@
 	function handleKeydown(event) {
 		try {
 			if (event && event.key === 'Escape') {
-				console.log('Escape key pressed, closing modal'); // Debug log
 				onClose();
 			}
 		} catch (err) {
@@ -113,7 +107,6 @@
 	function handleBackdropClick(event) {
 		try {
 			if (event && event.target === event.currentTarget) {
-				console.log('Backdrop clicked, closing modal'); // Debug log
 				onClose();
 			}
 		} catch (err) {
@@ -121,15 +114,12 @@
 		}
 	}
 
-	// Function to handle modal state changes
-	function handleModalStateChange() {
+	// Effect that only runs when isOpen changes, and only handles modal open/close state
+	$effect(() => {
 		if (isOpen && isMounted) {
-			console.log('🔄 Modal opening, loading merchants'); // Debug log
-			
-			// Reset search state when modal opens
+			// Modal is opening - reset state and load merchants
 			searchTerm = '';
 			inputValue = '';
-			
 			loadAllMerchants();
 			
 			// Focus the search input when modal opens
@@ -139,9 +129,6 @@
 						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
 						if (searchInput) {
 							searchInput.focus();
-							console.log('Search input focused'); // Debug log
-						} else {
-							console.log('Search input not found'); // Debug log
 						}
 					}
 				} catch (err) {
@@ -164,27 +151,24 @@
 			if (document && document.body) {
 				document.body.style.overflow = 'hidden';
 			}
-		} else {
-			// Clear timeout when modal closes
+		} else if (isMounted) {
+			// Modal is closing - cleanup
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
 			}
-			
-
 			
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
 			}
 		}
-	}
+	});
 
 	onMount(() => {
 		try {
-			console.log('MerchantSelectionModal mounted'); // Debug log
 			isMounted = true;
-			handleModalStateChange();
+			// handleModalStateChange(); // This is now handled by the effect
 		} catch (err) {
 			console.error('Error in onMount:', err);
 		}
@@ -205,24 +189,8 @@
 		}
 	});
 
-	// Simple effect that only runs when isOpen changes
-	$effect(() => {
-		console.log('🔄 isOpen changed to:', isOpen); // Debug log
-		handleModalStateChange();
-	});
-
-	// Effect that runs when merchants are loaded to initialize filtered list
-	$effect(() => {
-		console.log('📋 Merchants effect triggered, count:', merchants.length); // Debug log
-		if (merchants.length > 0 && isMounted) {
-			// Initialize filtered merchants and apply current search if any
-			if (searchTerm.trim()) {
-				handleSearch();
-			} else {
-				filteredMerchants = merchants;
-			}
-		}
-	});
+	// Remove the problematic effect that was causing infinite loops
+	// Instead, handle merchants initialization in the loadAllMerchants function
 
 
 </script>
@@ -231,18 +199,7 @@
 	<!-- Modal Backdrop - Responsive positioning -->
 	<div
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
-		style="
-			position: fixed !important; 
-			top: 0 !important; 
-			left: 0 !important; 
-			right: 0 !important; 
-			bottom: 0 !important; 
-			z-index: 9999 !important;
-			background-color: rgba(17, 24, 39, 0.75) !important;
-			min-height: 100vh !important;
-			width: 100vw !important;
-		"
+		class="modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
 		role="dialog"
@@ -253,20 +210,7 @@
 		<!-- Modal Container - Responsive centering -->
 		<div
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
-			style="
-				position: relative !important; 
-				z-index: 10000 !important;
-				background-color: rgb(17, 24, 39) !important;
-				border: 1px solid rgb(55, 65, 81) !important;
-				border-radius: 0.5rem !important;
-				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-				min-height: 200px !important;
-				max-width: calc(100vw - 1rem) !important;
-				max-height: calc(100vh - 1rem) !important;
-				overflow-y: auto !important;
-				margin-top: 1rem !important;
-			"
+			class="modal-container relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
 			role="document"
 		>
 			<!-- Header -->
@@ -285,10 +229,9 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={inputValue}
+					value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
-						console.log('🔤 INPUT EVENT - new value:', newValue);
 						
 						// Update the input display immediately
 						inputValue = newValue;
@@ -300,13 +243,9 @@
 						}
 					}}
 					placeholder="Search merchants..."
-					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					class="merchant-search-input w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
-				<!-- Debug info -->
-				<div class="mt-2 text-xs text-gray-500">
-					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
-				</div>
 			</div>
 
 			<!-- Merchants List -->
@@ -356,3 +295,154 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	/* Modal backdrop and container styles */
+	.modal-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 9999;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		background-color: rgba(17, 24, 39, 0.75);
+		padding: 1rem;
+		overflow-y: auto;
+	}
+
+	/* Modal content container */
+	.modal-container {
+		position: relative;
+		z-index: 10000;
+		background-color: rgb(17, 24, 39);
+		border: 1px solid rgb(55, 65, 81);
+		border-radius: 0.5rem;
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+		width: 100%;
+		max-width: 42rem;
+		margin: 1rem auto;
+	}
+
+	/* Merchant search input specific styling - using high specificity to override global styles */
+	.modal-container .merchant-search-input,
+	.modal-backdrop .merchant-search-input {
+		/* Essential text visibility properties */
+		color: white;
+		-webkit-text-fill-color: white;
+		text-fill-color: white;
+		
+		/* Background and border */
+		background-color: rgb(31, 41, 55);
+		border: 1px solid rgb(75, 85, 99);
+		
+		/* Remove default browser styling */
+		-webkit-appearance: none;
+		appearance: none;
+		
+		/* Font properties */
+		font-size: 16px;
+		font-family: inherit;
+		line-height: 1.5;
+		
+		/* Text size adjustments */
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+		
+		/* Ensure proper display */
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+		
+		/* Remove any potential text hiding */
+		text-indent: 0;
+		text-align: left;
+		text-transform: none;
+		text-shadow: none;
+		
+		/* Ensure proper opacity */
+		opacity: 1;
+	}
+
+	/* Focus state styling */
+	.modal-container .merchant-search-input:focus,
+	.modal-backdrop .merchant-search-input:focus {
+		background-color: rgb(31, 41, 55);
+		border-color: rgb(59, 130, 246);
+		outline: none;
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+	}
+
+	/* Placeholder styling */
+	.modal-container .merchant-search-input::placeholder,
+	.modal-backdrop .merchant-search-input::placeholder {
+		color: rgb(156, 163, 175);
+		opacity: 1;
+	}
+
+	/* Mobile-specific improvements */
+	@media (max-width: 768px) {
+		.modal-backdrop {
+			align-items: flex-start;
+			padding-top: 1rem;
+		}
+
+		.modal-container {
+			margin-top: 1rem;
+			max-width: calc(100vw - 2rem);
+		}
+
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
+			min-height: 44px; /* Ensure proper touch target size */
+			font-size: 16px; /* Prevent zoom on iOS */
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
+		}
+	}
+
+	/* iOS Safari specific fixes */
+	@supports (-webkit-touch-callout: none) {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
+			font-size: 16px;
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
+			-webkit-appearance: none;
+			appearance: none;
+			border-radius: 0.375rem;
+		}
+	}
+
+	/* Additional mobile input fixes for very small screens */
+	@media (max-width: 480px) {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
+			font-size: 16px;
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
+		}
+	}
+
+	/* Additional fixes for mobile input visibility */
+	@media (max-width: 768px) {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
+			/* Ensure text is visible */
+			color: white;
+			-webkit-text-fill-color: white;
+			text-fill-color: white;
+			
+			/* Ensure proper contrast */
+			background-color: rgb(31, 41, 55);
+			border: 1px solid rgb(75, 85, 99);
+			
+			/* Remove any potential hiding */
+			visibility: visible;
+			opacity: 1;
+			display: block;
+		}
+	}
+</style>
