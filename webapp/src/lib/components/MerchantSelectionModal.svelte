@@ -9,6 +9,7 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let searchTerm = $state('');
+	let inputValue = $state(''); // Local input state for display
 	let modalRef = $state(null);
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
@@ -50,26 +51,33 @@
 
 	function handleSearch() {
 		try {
+			console.log('🔍 handleSearch called with searchTerm:', searchTerm); // Debug log
+			console.log('🔍 Current merchants length:', merchants.length); // Debug log
+			
 			// Ensure merchants is a valid array
 			if (!Array.isArray(merchants) || merchants.length === 0) {
+				console.log('🔍 No merchants to filter, setting empty array'); // Debug log
 				filteredMerchants = [];
 				return;
 			}
 
 			if (!searchTerm.trim()) {
+				console.log('🔍 Empty search term, showing all merchants'); // Debug log
 				filteredMerchants = merchants;
 			} else {
 				// Ensure merchants is an array and contains only strings before filtering
 				if (merchants.every(m => typeof m === 'string')) {
-					filteredMerchants = merchants.filter((merchant) =>
+					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
+					console.log(`🔍 Filtered to ${filtered.length} merchants for term: "${searchTerm}"`); // Debug log
+					filteredMerchants = filtered;
 				} else {
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
 				}
 			}
-			console.log(`Filtered to ${filteredMerchants.length} merchants`); // Debug log
+			console.log(`🔍 Final filtered merchants count: ${filteredMerchants.length}`); // Debug log
 		} catch (err) {
 			console.error('Error in handleSearch:', err);
 			// Fallback to showing all merchants if filtering fails
@@ -113,48 +121,17 @@
 		}
 	}
 
-	// Only run handleSearch when searchTerm changes
-	$effect(() => {
-		if (Array.isArray(merchants) && merchants.length > 0) {
-			handleSearch();
-		}
-	});
-
-	// Effect for when merchants data is loaded
-	$effect(() => {
-		if (Array.isArray(merchants) && merchants.length > 0) {
-			// Initialize filtered merchants when data is first loaded
-			filteredMerchants = merchants;
-		}
-	});
-
-	onMount(() => {
-		try {
-			console.log('MerchantSelectionModal mounted'); // Debug log
-			isMounted = true;
-			if (isOpen) {
-				loadAllMerchants();
-			}
-		} catch (err) {
-			console.error('Error in onMount:', err);
-		}
-	});
-
-	onDestroy(() => {
-		try {
-			isMounted = false;
-			if (focusTimeout) {
-				clearTimeout(focusTimeout);
-			}
-		} catch (err) {
-			console.error('Error in onDestroy:', err);
-		}
-	});
-
-	$effect(() => {
-		console.log('Modal isOpen changed:', isOpen); // Debug log
-		if (isOpen) {
+	// Function to handle modal state changes
+	function handleModalStateChange() {
+		if (isOpen && isMounted) {
+			console.log('🔄 Modal opening, loading merchants'); // Debug log
+			
+			// Reset search state when modal opens
+			searchTerm = '';
+			inputValue = '';
+			
 			loadAllMerchants();
+			
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
 				try {
@@ -182,44 +159,72 @@
 					console.error('Error scrolling modal:', err);
 				}
 			}, 50);
+
+			// Prevent body scroll
+			if (document && document.body) {
+				document.body.style.overflow = 'hidden';
+			}
 		} else {
 			// Clear timeout when modal closes
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
 			}
+			
+
+			
+			// Restore body scroll
+			if (document && document.body) {
+				document.body.style.overflow = '';
+			}
+		}
+	}
+
+	onMount(() => {
+		try {
+			console.log('MerchantSelectionModal mounted'); // Debug log
+			isMounted = true;
+			handleModalStateChange();
+		} catch (err) {
+			console.error('Error in onMount:', err);
 		}
 	});
 
-	// Prevent body scroll when modal is open
-	$effect(() => {
+	onDestroy(() => {
 		try {
-			if (isOpen) {
-				console.log('Preventing body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = 'hidden';
-				}
-			} else {
-				console.log('Restoring body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = '';
-				}
+			isMounted = false;
+			if (focusTimeout) {
+				clearTimeout(focusTimeout);
+			}
+			// Restore body scroll
+			if (document && document.body) {
+				document.body.style.overflow = '';
 			}
 		} catch (err) {
-			console.error('Error managing body scroll:', err);
+			console.error('Error in onDestroy:', err);
 		}
-
-		return () => {
-			try {
-				console.log('Cleanup: restoring body scroll'); // Debug log
-				if (document && document.body) {
-					document.body.style.overflow = '';
-				}
-			} catch (err) {
-				console.error('Error in cleanup:', err);
-			}
-		};
 	});
+
+	// Simple effect that only runs when isOpen changes
+	$effect(() => {
+		console.log('🔄 isOpen changed to:', isOpen); // Debug log
+		handleModalStateChange();
+	});
+
+	// Effect that runs when merchants are loaded to initialize filtered list
+	$effect(() => {
+		console.log('📋 Merchants effect triggered, count:', merchants.length); // Debug log
+		if (merchants.length > 0 && isMounted) {
+			// Initialize filtered merchants and apply current search if any
+			if (searchTerm.trim()) {
+				handleSearch();
+			} else {
+				filteredMerchants = merchants;
+			}
+		}
+	});
+
+
 </script>
 
 {#if isOpen}
@@ -280,12 +285,28 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					value={searchTerm || ''}
-					oninput={(e) => searchTerm = e.target.value || ''}
+					bind:value={inputValue}
+					oninput={(e) => {
+						const newValue = e.target.value || '';
+						console.log('🔤 INPUT EVENT - new value:', newValue);
+						
+						// Update the input display immediately
+						inputValue = newValue;
+						
+						// Update search term and trigger search
+						searchTerm = newValue;
+						if (isMounted && !isLoading) {
+							handleSearch();
+						}
+					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
+				<!-- Debug info -->
+				<div class="mt-2 text-xs text-gray-500">
+					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
+				</div>
 			</div>
 
 			<!-- Merchants List -->
