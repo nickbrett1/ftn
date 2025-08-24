@@ -347,11 +347,6 @@
 		/* Ensure text is always visible */
 		-webkit-text-fill-color: white;
 		text-fill-color: white;
-		/* Force proper rendering */
-		transform: translateZ(0);
-		-webkit-transform: translateZ(0);
-		backface-visibility: hidden;
-		-webkit-backface-visibility: hidden;
 	}
 
 	/* Ensure text is visible on all browsers */
@@ -373,16 +368,6 @@
 
 	/* Placeholder styling */
 	.merchant-search-input::placeholder {
-		color: rgb(156, 163, 175);
-		opacity: 1;
-	}
-
-	.merchant-search-input::-webkit-input-placeholder {
-		color: rgb(156, 163, 175);
-		opacity: 1;
-	}
-
-	.merchant-search-input::-moz-placeholder {
 		color: rgb(156, 163, 175);
 		opacity: 1;
 	}
@@ -416,10 +401,6 @@
 			-webkit-appearance: none;
 			appearance: none;
 			border-radius: 0.375rem;
-		}
-
-		.modal-backdrop {
-			-webkit-overflow-scrolling: touch;
 		}
 	}
 
