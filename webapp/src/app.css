@@ -279,12 +279,12 @@ a[href*="amazon.com"] {
 	
 	/* Ensure modal is always visible at the top of viewport on mobile */
 	.fixed.inset-0.z-\[9999\] {
-		align-items: flex-start !important;
+		align-items: flex-start;
 	}
 	
 	/* Add top margin for mobile modal positioning */
 	.fixed.inset-0.z-\[9999\] > div {
-		margin-top: 1rem !important;
+		margin-top: 1rem;
 	}
 	
 	/* Mobile-specific styles for Amazon order links */
