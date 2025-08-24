@@ -1,34 +1,13 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-	*,
-	::after,
-	::before,
-	::backdrop,
-	::file-selector-button {
-		border-color: var(--color-gray-200, currentColor);
-	}
-}
-
 html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
-	color: #d4d4d8; /* Default text color - zinc-300 */
 }
 
 /* Global text color defaults for dark theme - only for basic content */
-body {
-	color: #d4d4d8; /* zinc-300 */
-}
+/* Removed global text color that could interfere with form inputs */
 
 /* Ensure headings are white by default - but only for content areas */
 article h1,
@@ -96,211 +75,12 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	animation: var(--animate-border);
 }
 
-/* Ensure proper text truncation on mobile devices */
-.truncate {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-/* Modal-specific fixes to prevent black screen and positioning issues */
-.modal-backdrop {
-	position: fixed !important;
-	top: 0 !important;
-	left: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	background-color: rgba(17, 24, 39, 0.75) !important; /* gray-900 with opacity */
-	z-index: 9999 !important;
-	display: flex !important;
-	align-items: flex-start !important;
-	justify-content: center !important;
-	padding: 1rem !important;
-	overflow-y: auto !important;
-}
-
-/* Mobile modal positioning improvements */
-@media (max-width: 768px) {
-	.modal-backdrop {
-		align-items: flex-start !important;
-		padding-top: 1rem !important;
-	}
-	
-	.modal-backdrop > div {
-		margin-top: 0 !important;
-	}
-}
-
-.modal-container {
-	position: relative !important;
-	background-color: rgb(17, 24, 39) !important; /* gray-900 */
-	border: 1px solid rgb(55, 65, 81) !important; /* gray-700 */
-	border-radius: 0.5rem !important;
-	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-	width: 100% !important;
-	max-width: 42rem !important; /* max-w-2xl */
-	margin: 2rem auto !important;
-}
-
-/* Ensure modal is always visible and properly positioned */
-.fixed.inset-0 {
-	z-index: 9999 !important;
-}
-
-/* Fix for modal content overflow */
-.max-h-80 {
-	max-height: 20rem !important;
-}
-
-/* Ensure proper modal backdrop */
-.bg-gray-900.bg-opacity-75 {
-	background-color: rgba(17, 24, 39, 0.75) !important;
-}
-
-/* Force modal positioning to avoid parent container issues */
-[style*="position: fixed !important"] {
-	position: fixed !important;
-	top: 0 !important;
-	left: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	z-index: 9999 !important;
-}
-
-/* Ensure modal content is properly styled */
-[style*="background-color: rgb(17, 24, 39) !important"] {
-	background-color: rgb(17, 24, 39) !important;
-	border: 1px solid rgb(55, 65, 81) !important;
-	border-radius: 0.5rem !important;
-	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-}
-
-/* Additional modal fixes for viewport and positioning */
-html, body {
-	overflow: visible !important;
-}
-
-/* Ensure modal backdrop covers entire viewport */
-[style*="min-height: 100vh !important"] {
-	min-height: 100vh !important;
-}
-
-/* Force modal to be above all other content */
-.z-\[9999\], .z-\[10000\], .z-\[10001\] {
-	z-index: 9999 !important;
-}
-
-/* Ensure modal container is properly sized */
-[style*="min-height: 200px !important"] {
-	min-height: 200px !important;
-}
-
-/* Additional viewport fixes */
-[style*="width: 100vw !important"] {
-	width: 100vw !important;
-}
-
-[style*="max-width: 90vw !important"] {
-	max-width: 90vw !important;
-}
-
-/* Ensure modal is responsive */
-@media (max-width: 768px) {
-	[style*="max-width: 90vw !important"] {
-		max-width: 95vw !important;
-		margin: 1rem auto !important;
-	}
-}
-
-/* Force modal visibility */
-.fixed.inset-0.z-\[9999\] {
-	display: flex !important;
-	visibility: visible !important;
-	opacity: 1 !important;
-}
-
 /* General styles for external links to ensure proper mobile behavior */
 a[target="_blank"] {
 	-webkit-touch-callout: default;
 	-webkit-user-select: text;
 	user-select: text;
 	touch-action: manipulation;
-}
-
-/* Ensure Amazon order links have proper mobile behavior */
-a[href*="amazon.com"] {
-	-webkit-touch-callout: default;
-	-webkit-user-select: text;
-	user-select: text;
-	touch-action: manipulation;
-}
-
-/* Additional mobile-specific truncation support */
-@media (max-width: 640px) {
-	.truncate {
-		max-width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	
-	/* Ensure grid containers properly constrain width on mobile */
-	.grid {
-		width: 100%;
-		max-width: 100%;
-	}
-	
-	/* Prevent scroll jumping on mobile when content changes */
-	html {
-		scroll-behavior: auto;
-	}
-	
-	/* Ensure smooth transitions for dynamic content */
-	.merchant-list {
-		transition: all 0.2s ease-in-out;
-	}
-	
-	/* Prevent layout shift during merchant operations */
-	.merchant-container {
-		min-height: 200px;
-		contain: layout;
-	}
-	
-	/* Smooth scroll restoration */
-	.scroll-restore {
-		scroll-behavior: auto;
-	}
-	
-	/* Mobile modal adjustments */
-	.modal-container {
-		margin: 1rem auto;
-		max-width: calc(100vw - 2rem);
-	}
-	
-	/* Ensure modal is always visible at the top of viewport on mobile */
-	.fixed.inset-0.z-\[9999\] {
-		align-items: flex-start !important;
-	}
-	
-	/* Add top margin for mobile modal positioning */
-	.fixed.inset-0.z-\[9999\] > div {
-		margin-top: 1rem !important;
-	}
-	
-	/* Mobile-specific styles for Amazon order links */
-	/* Ensure links are properly tappable on mobile devices */
-	a[href*="amazon.com"] {
-		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
-		touch-action: manipulation;
-		-webkit-touch-callout: default;
-		-webkit-user-select: text;
-		user-select: text;
-	}
-	
-	/* Improve long-press behavior on mobile */
-	a[href*="amazon.com"]:active {
-		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.5);
-	}
 }
 
 
