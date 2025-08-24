@@ -19,7 +19,6 @@
 		try {
 			isLoading = true;
 			error = '';
-			console.log('Loading merchants...'); // Debug log
 
 			const response = await fetch('/projects/ccbilling/budgets/unassigned-merchants');
 			if (!response.ok) {
@@ -44,7 +43,7 @@
 				error = 'Invalid data format received from server';
 			}
 		} catch (err) {
-			console.error('Error loading merchants:', err); // Debug log
+			console.error('Error loading merchants:', err);
 			error = err.message;
 			merchants = [];
 			filteredMerchants = [];
@@ -85,7 +84,6 @@
 	function handleSelect(merchant) {
 		try {
 			if (typeof merchant === 'string' && merchant.trim()) {
-				console.log('Selected merchant:', merchant); // Debug log
 				onSelect(merchant);
 				onClose();
 			} else {
@@ -99,7 +97,6 @@
 	function handleKeydown(event) {
 		try {
 			if (event && event.key === 'Escape') {
-				console.log('Escape key pressed, closing modal'); // Debug log
 				onClose();
 			}
 		} catch (err) {
@@ -110,7 +107,6 @@
 	function handleBackdropClick(event) {
 		try {
 			if (event && event.target === event.currentTarget) {
-				console.log('Backdrop clicked, closing modal'); // Debug log
 				onClose();
 			}
 		} catch (err) {
@@ -250,10 +246,6 @@
 					class="merchant-search-input w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
-				<!-- Debug info -->
-				<div class="mt-2 text-xs text-gray-500">
-					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}" | Input: "{inputValue}"
-				</div>
 			</div>
 
 			<!-- Merchants List -->
