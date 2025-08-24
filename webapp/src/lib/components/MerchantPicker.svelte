@@ -32,7 +32,7 @@
 			}
 
 			const data = await response.json();
-			merchants = Array.isArray(data) ? data : [];
+			merchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
 		} catch (err) {
 			console.error('Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
