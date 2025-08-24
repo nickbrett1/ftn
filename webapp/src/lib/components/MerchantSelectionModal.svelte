@@ -267,69 +267,69 @@
 
 			<!-- Search -->
 			<div class="p-6 border-b border-gray-700">
-				<!-- Completely isolated input to bypass any CSS/viewport issues -->
-				<div style="
-					position: relative !important;
-					width: 100% !important;
-					z-index: 9999 !important;
-				">
-					<input
-						type="text"
-						value={searchTerm}
-						oninput={async (e) => {
-							// Update searchTerm directly to bypass any binding issues
-							searchTerm = e.target.value;
-							const startTime = performance.now();
-							const newValue = e.target.value || '';
-							
-							// Log orientation and viewport info
-							const orientation = window.orientation || 'unknown';
-							const viewport = `${window.innerWidth}x${window.innerHeight}`;
-							const devicePixelRatio = window.devicePixelRatio || 'unknown';
-							
-							console.log('🔤 INPUT EVENT START');
-							console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
-							console.log('🔤 Event target value:', e.target.value);
-							console.log('🔤 Old searchTerm:', searchTerm);
-							console.log('🔤 New value:', newValue);
-							console.log('🔤 Current merchants length:', merchants.length);
-							
-							// Execute search immediately for instant filtering
-							handleSearch();
-							
-													// Force Svelte 5 to flush DOM updates - simple approach
+								<!-- CSS-FREE input - completely isolated from app.css interference -->
+				<input
+					type="text"
+					value={searchTerm}
+					oninput={async (e) => {
+						// Update searchTerm directly to bypass any binding issues
+						searchTerm = e.target.value;
+						const startTime = performance.now();
+						const newValue = e.target.value || '';
+						
+						// Log orientation and viewport info
+						const orientation = window.orientation || 'unknown';
+						const viewport = `${window.innerWidth}x${window.innerHeight}`;
+						const devicePixelRatio = window.devicePixelRatio || 'unknown';
+						
+						console.log('🔤 INPUT EVENT START');
+						console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
+						console.log('🔤 Event target value:', e.target.value);
+						console.log('🔤 Old searchTerm:', searchTerm);
+						console.log('🔤 New value:', newValue);
+						console.log('🔤 Current merchants length:', merchants.length);
+						
+						// Execute search immediately for instant filtering
+						handleSearch();
+						
+						// Force Svelte 5 to flush DOM updates - simple approach
 						await tick();
-							
-							console.log('🔤 After handleSearch - searchTerm:', searchTerm);
-							console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
-							console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
-							
-							const endTime = performance.now();
-							console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
-							console.log('🔤 INPUT EVENT END');
-						}}
-						style="
-							width: 100% !important;
-							padding: 0.5rem 0.75rem !important;
-							background-color: rgb(31, 41, 55) !important;
-							border: 1px solid rgb(75, 85, 99) !important;
-							border-radius: 0.375rem !important;
-							color: white !important;
-							font-size: 1rem !important;
-							line-height: 1.5rem !important;
-							outline: none !important;
-							box-sizing: border-box !important;
-							display: block !important;
-							position: relative !important;
-							z-index: 9999 !important;
-							transform: translateZ(0) !important;
-							-webkit-transform: translateZ(0) !important;
-							-webkit-appearance: none !important;
-							appearance: none !important;
-						"
-						aria-label="Search merchants"
-					/>
-				</div>
+						
+						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
+						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
+						console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
+						
+						const endTime = performance.now();
+						console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
+						console.log('🔤 INPUT EVENT END');
+					}}
+					style="
+						/* COMPLETELY ISOLATED STYLES - NO CSS CLASSES */
+						width: 100%;
+						padding: 0.5rem 0.75rem;
+						background-color: rgb(31, 41, 55);
+						border: 1px solid rgb(75, 85, 99);
+						border-radius: 0.375rem;
+						color: white;
+						font-size: 1rem;
+						line-height: 1.5rem;
+						outline: none;
+						box-sizing: border-box;
+						display: block;
+						position: relative;
+						z-index: 99999;
+						/* Force hardware acceleration and bypass CSS */
+						transform: translateZ(0);
+						-webkit-transform: translateZ(0);
+						-webkit-appearance: none;
+						appearance: none;
+						/* Override any potential CSS interference */
+						transition: none !important;
+						animation: none !important;
+						scroll-behavior: auto !important;
+					"
+					aria-label="Search merchants"
+				/>
 				<!-- Debug info -->
 				<div class="mt-2 text-xs text-gray-500">
 					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
