@@ -60,9 +60,8 @@
 		isAdding = true;
 		addError = '';
 
-		// Save current scroll position and add class to prevent scroll jumping
+		// Save current scroll position
 		const scrollPosition = window.scrollY;
-		document.body.classList.add('scroll-restore');
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -95,17 +94,14 @@
 				merchantPickerRef.resetMerchantPicker();
 			}
 			
-			// Restore scroll position after data refresh and remove class
+			// Restore scroll position after data refresh
 			requestAnimationFrame(() => {
 				window.scrollTo(0, scrollPosition);
-				document.body.classList.remove('scroll-restore');
 			});
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
-			// Ensure scroll-restore class is removed even on error
-			document.body.classList.remove('scroll-restore');
 		}
 	}
 
@@ -114,9 +110,8 @@
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
-		// Save current scroll position and add class to prevent scroll jumping
+		// Save current scroll position
 		const scrollPosition = window.scrollY;
-		document.body.classList.add('scroll-restore');
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -146,18 +141,15 @@
 				merchantPickerRef.resetMerchantPicker();
 			}
 			
-			// Restore scroll position after data refresh and remove class
+			// Restore scroll position after data refresh
 			requestAnimationFrame(() => {
 				window.scrollTo(0, scrollPosition);
-				document.body.classList.remove('scroll-restore');
 			});
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
-			// Ensure scroll-restore class is removed even on error
-			document.body.classList.remove('scroll-restore');
 		}
 	}
 
@@ -404,10 +396,3 @@
 </PageLayout>
 
 <Footer />
-
-<style>
-	/* Scroll restoration styles for this component */
-	.scroll-restore {
-		scroll-behavior: auto;
-	}
-</style>

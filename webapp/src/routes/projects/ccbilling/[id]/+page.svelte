@@ -1032,7 +1032,7 @@
 								</h4>
 								<div class="text-gray-400 text-sm space-y-1 w-full overflow-hidden">
 									<div
-										class="truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+										class="w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
 										title={statement.filename}
 									>
 										{statement.filename}
@@ -1252,7 +1252,7 @@
 						<div class="border-b border-gray-700 py-3 last:border-b-0">
 							<div class="flex justify-between items-start gap-3">
 								<div class="flex-1 min-w-0">
-									<div class="text-white font-medium truncate">
+									<div class="text-white font-medium overflow-hidden text-ellipsis whitespace-nowrap">
 										<button
 											class="mr-2 inline-flex items-center justify-center text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 align-middle"
 											title="More info about this merchant"
