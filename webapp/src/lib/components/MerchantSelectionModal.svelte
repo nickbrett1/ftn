@@ -311,20 +311,7 @@
 						console.log('🔤 Blurred input value:', e.target.value);
 					}}
 					placeholder="Search merchants..."
-					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					style="
-						color: white !important;
-						background-color: rgb(31, 41, 55) !important;
-						border: 1px solid rgb(75, 85, 99) !important;
-						-webkit-text-fill-color: white !important;
-						-webkit-appearance: none !important;
-						appearance: none !important;
-						z-index: 10001 !important;
-						position: relative !important;
-						font-size: 16px !important;
-						-webkit-text-size-adjust: 100% !important;
-						text-size-adjust: 100% !important;
-					"
+					class="merchant-search-input w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					aria-label="Search merchants"
 				/>
 				<!-- Debug info -->
@@ -382,94 +369,107 @@
 {/if}
 
 <style>
-	/* Mobile-specific fixes for modal input visibility */
+	/* Modal backdrop and container styles */
+	.fixed.inset-0.z-\[9999\] {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 9999;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		background-color: rgba(17, 24, 39, 0.75);
+		padding: 1rem;
+		overflow-y: auto;
+	}
+
+	/* Modal content container */
+	.fixed.inset-0.z-\[9999\] > div {
+		position: relative;
+		z-index: 10000;
+		background-color: rgb(17, 24, 39);
+		border: 1px solid rgb(55, 65, 81);
+		border-radius: 0.5rem;
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+		width: 100%;
+		max-width: 42rem;
+		margin: 1rem auto;
+	}
+
+	/* Merchant search input specific styling */
+	.merchant-search-input {
+		color: white;
+		background-color: rgb(31, 41, 55);
+		border: 1px solid rgb(75, 85, 99);
+		-webkit-appearance: none;
+		appearance: none;
+		font-size: 16px;
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+	}
+
+	/* Ensure text is visible on all browsers */
+	.merchant-search-input,
+	.merchant-search-input:focus {
+		-webkit-text-fill-color: white;
+	}
+
+	/* Focus state styling */
+	.merchant-search-input:focus {
+		background-color: rgb(31, 41, 55);
+		border-color: rgb(59, 130, 246);
+		outline: none;
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+	}
+
+	/* Placeholder styling */
+	.merchant-search-input::placeholder {
+		color: rgb(156, 163, 175);
+		opacity: 1;
+	}
+
+	.merchant-search-input::-webkit-input-placeholder {
+		color: rgb(156, 163, 175);
+		opacity: 1;
+	}
+
+	.merchant-search-input::-moz-placeholder {
+		color: rgb(156, 163, 175);
+		opacity: 1;
+	}
+
+	/* Mobile-specific improvements */
 	@media (max-width: 768px) {
-		/* Ensure input text is always visible on mobile */
-		input[type="text"] {
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
-			-webkit-appearance: none !important;
-			appearance: none !important;
-			z-index: 10001 !important;
-			position: relative !important;
-			font-size: 16px !important;
-			-webkit-text-size-adjust: 100% !important;
-			text-size-adjust: 100% !important;
-		}
-		
-		/* Fix for iOS Safari input styling */
-		input[type="text"]::-webkit-input-placeholder {
-			color: rgb(156, 163, 175) !important;
-			opacity: 1 !important;
-		}
-		
-		input[type="text"]::-moz-placeholder {
-			color: rgb(156, 163, 175) !important;
-			opacity: 1 !important;
-		}
-		
-		input[type="text"]::placeholder {
-			color: rgb(156, 163, 175) !important;
-			opacity: 1 !important;
-		}
-		
-		/* Ensure modal is properly positioned on mobile */
 		.fixed.inset-0.z-\[9999\] {
-			align-items: flex-start !important;
-			padding-top: 1rem !important;
+			align-items: flex-start;
+			padding-top: 1rem;
 		}
-		
-		/* Fix for mobile viewport issues */
+
 		.fixed.inset-0.z-\[9999\] > div {
-			margin-top: 1rem !important;
-			max-width: calc(100vw - 2rem) !important;
+			margin-top: 1rem;
+			max-width: calc(100vw - 2rem);
+		}
+
+		.merchant-search-input {
+			min-height: 44px; /* Ensure proper touch target size */
 		}
 	}
-	
-	/* Global fixes for input visibility */
-	input[type="text"] {
-		color: white !important;
-		-webkit-text-fill-color: white !important;
-		background-color: rgb(31, 41, 55) !important;
-		border: 1px solid rgb(75, 85, 99) !important;
-		-webkit-appearance: none !important;
-		appearance: none !important;
-		font-size: 16px !important;
-		-webkit-text-size-adjust: 100% !important;
-		text-size-adjust: 100% !important;
-	}
-	
-	/* Ensure focus states work properly */
-	input[type="text"]:focus {
-		color: white !important;
-		-webkit-text-fill-color: white !important;
-		background-color: rgb(31, 41, 55) !important;
-		border-color: rgb(59, 130, 246) !important;
-		outline: none !important;
-		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
-	}
-	
+
 	/* iOS Safari specific fixes */
 	@supports (-webkit-touch-callout: none) {
-		input[type="text"] {
-			font-size: 16px !important;
-			-webkit-text-size-adjust: 100% !important;
-			text-size-adjust: 100% !important;
-			-webkit-appearance: none !important;
-			appearance: none !important;
-			border-radius: 0.375rem !important;
+		.merchant-search-input {
+			font-size: 16px;
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
+			-webkit-appearance: none;
+			appearance: none;
+			border-radius: 0.375rem;
 		}
-	}
-	
-	/* Additional mobile input fixes */
-	@media (max-width: 640px) {
-		input[type="text"] {
-			font-size: 16px !important;
-			-webkit-text-size-adjust: 100% !important;
-			text-size-adjust: 100% !important;
-			min-height: 44px !important; /* Ensure proper touch target size */
+
+		.fixed.inset-0.z-\[9999\] {
+			-webkit-overflow-scrolling: touch;
 		}
 	}
 </style>
