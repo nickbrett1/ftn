@@ -168,6 +168,21 @@
 			console.log('MerchantSelectionModal mounted'); // Debug log
 			isMounted = true;
 			handleModalStateChange();
+			
+			// Add orientation change listener
+			const handleOrientationChange = () => {
+				const orientation = window.orientation || 'unknown';
+				const viewport = `${window.innerWidth}x${window.innerHeight}`;
+				console.log('🔄 Orientation changed to:', orientation, 'Viewport:', viewport);
+			};
+			
+			window.addEventListener('orientationchange', handleOrientationChange);
+			
+			// Log initial orientation
+			const initialOrientation = window.orientation || 'unknown';
+			const initialViewport = `${window.innerWidth}x${window.innerHeight}`;
+			console.log('🔄 Initial orientation:', initialOrientation, 'Viewport:', initialViewport);
+			
 		} catch (err) {
 			console.error('Error in onMount:', err);
 		}
@@ -258,7 +273,14 @@
 					oninput={async (e) => {
 						const startTime = performance.now();
 						const newValue = e.target.value || '';
+						
+						// Log orientation and viewport info
+						const orientation = window.orientation || 'unknown';
+						const viewport = `${window.innerWidth}x${window.innerHeight}`;
+						const devicePixelRatio = window.devicePixelRatio || 'unknown';
+						
 						console.log('🔤 INPUT EVENT START');
+						console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
 						console.log('🔤 Event target value:', e.target.value);
 						console.log('🔤 Old searchTerm:', searchTerm);
 						console.log('🔤 New value:', newValue);
@@ -267,8 +289,26 @@
 						// Execute search immediately for instant filtering
 						handleSearch();
 						
-						// Force Svelte 5 to flush DOM updates
+						// Force Svelte 5 to flush DOM updates - aggressive approach for mobile
 						await tick();
+						
+						// Force immediate DOM update for mobile browsers (multiple frames)
+						await new Promise(resolve => {
+							requestAnimationFrame(() => {
+								requestAnimationFrame(() => {
+									requestAnimationFrame(() => {
+										resolve();
+									});
+								});
+							});
+						});
+						
+						// Additional force update specifically for mobile portrait mode
+						if (window.innerHeight > window.innerWidth) {
+							// Portrait mode - need more aggressive updates
+							await tick();
+							await new Promise(resolve => setTimeout(resolve, 0));
+						}
 						
 						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
 						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
