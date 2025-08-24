@@ -274,34 +274,12 @@
 					oninput={async (e) => {
 						// Update searchTerm directly to bypass any binding issues
 						searchTerm = e.target.value;
-						const startTime = performance.now();
-						const newValue = e.target.value || '';
-						
-						// Log orientation and viewport info
-						const orientation = window.orientation || 'unknown';
-						const viewport = `${window.innerWidth}x${window.innerHeight}`;
-						const devicePixelRatio = window.devicePixelRatio || 'unknown';
-						
-						console.log('🔤 INPUT EVENT START');
-						console.log('🔤 Orientation:', orientation, 'Viewport:', viewport, 'DPR:', devicePixelRatio);
-						console.log('🔤 Event target value:', e.target.value);
-						console.log('🔤 Old searchTerm:', searchTerm);
-						console.log('🔤 New value:', newValue);
-						console.log('🔤 Current merchants length:', merchants.length);
 						
 						// Execute search immediately for instant filtering
 						handleSearch();
 						
-						// Force Svelte 5 to flush DOM updates - simple approach
+						// Force Svelte 5 to flush DOM updates
 						await tick();
-						
-						console.log('🔤 After handleSearch - searchTerm:', searchTerm);
-						console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
-						console.log('🔤 After handleSearch - filteredMerchants:', filteredMerchants.slice(0, 3));
-						
-						const endTime = performance.now();
-						console.log(`⚡ Input processing time: ${endTime - startTime}ms`);
-						console.log('🔤 INPUT EVENT END');
 					}}
 					style="
 						/* COMPLETELY ISOLATED STYLES - NO CSS CLASSES */
@@ -330,10 +308,7 @@
 					"
 					aria-label="Search merchants"
 				/>
-				<!-- Debug info -->
-				<div class="mt-2 text-xs text-gray-500">
-					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
-				</div>
+
 			</div>
 
 			<!-- Merchants List -->
