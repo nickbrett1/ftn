@@ -297,34 +297,21 @@
 							// Execute search immediately for instant filtering
 							handleSearch();
 							
-							// Force Svelte 5 to flush DOM updates - aggressive approach for mobile
-							await tick();
-							
-							// Force immediate DOM update for mobile browsers (multiple frames)
-							await new Promise(resolve => {
-								requestAnimationFrame(() => {
-									requestAnimationFrame(() => {
-										requestAnimationFrame(() => {
-											resolve();
-										});
-									});
-								});
+													// Force Svelte 5 to flush DOM updates - optimized approach
+						await tick();
+						
+						// Single frame update for mobile browsers (reduced from 3 frames)
+						await new Promise(resolve => {
+							requestAnimationFrame(() => {
+								resolve();
 							});
-							
-							// Additional force update specifically for mobile portrait mode
-							if (window.innerHeight > window.innerWidth) {
-								// Portrait mode - need more aggressive updates
-								await tick();
-								await new Promise(resolve => setTimeout(resolve, 0));
-								
-								// Force the input to be visible and focused
-								e.target.style.opacity = '1';
-								e.target.style.visibility = 'visible';
-								e.target.focus();
-								
-								// Force another tick after focus
-								await tick();
-							}
+						});
+						
+						// Portrait mode specific optimization
+						if (window.innerHeight > window.innerWidth) {
+							// Just one additional tick for portrait mode
+							await tick();
+						}
 							
 							console.log('🔤 After handleSearch - searchTerm:', searchTerm);
 							console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
