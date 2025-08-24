@@ -90,14 +90,6 @@ a[target="_blank"] {
 	touch-action: manipulation;
 }
 
-/* Ensure Amazon order links have proper mobile behavior */
-a[href*="amazon.com"] {
-	-webkit-touch-callout: default;
-	-webkit-user-select: text;
-	user-select: text;
-	touch-action: manipulation;
-}
-
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
 	/* Ensure proper text truncation on mobile */
@@ -117,26 +109,6 @@ a[href*="amazon.com"] {
 	/* Prevent scroll jumping on mobile when content changes */
 	html {
 		scroll-behavior: auto;
-	}
-	
-	/* Smooth scroll restoration */
-	.scroll-restore {
-		scroll-behavior: auto;
-	}
-	
-	/* Mobile-specific styles for Amazon order links */
-	/* Ensure links are properly tappable on mobile devices */
-	a[href*="amazon.com"] {
-		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
-		touch-action: manipulation;
-		-webkit-touch-callout: default;
-		-webkit-user-select: text;
-		user-select: text;
-	}
-	
-	/* Improve long-press behavior on mobile */
-	a[href*="amazon.com"]:active {
-		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.5);
 	}
 }
 
