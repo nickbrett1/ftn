@@ -14,7 +14,6 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
-	let searchTimeout = $state(null); // Add debouncing timeout
 
 	async function loadAllMerchants() {
 		try {
@@ -38,7 +37,6 @@
 				} else {
 					filteredMerchants = data;
 				}
-				console.log(`Loaded ${merchants.length} merchants`); // Debug log
 			} else {
 				console.warn('Received invalid merchants data format:', data);
 				merchants = [];
@@ -120,13 +118,12 @@
 		}
 	}
 
-	// Function to handle modal state changes
-	function handleModalStateChange() {
+	// Effect that only runs when isOpen changes, and only handles modal open/close state
+	$effect(() => {
 		if (isOpen && isMounted) {
-			// Reset search state when modal opens
+			// Modal is opening - reset state and load merchants
 			searchTerm = '';
 			inputValue = '';
-			
 			loadAllMerchants();
 			
 			// Focus the search input when modal opens
@@ -158,8 +155,8 @@
 			if (document && document.body) {
 				document.body.style.overflow = 'hidden';
 			}
-		} else {
-			// Clear timeout when modal closes
+		} else if (isMounted) {
+			// Modal is closing - cleanup
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
@@ -170,12 +167,12 @@
 				document.body.style.overflow = '';
 			}
 		}
-	}
+	});
 
 	onMount(() => {
 		try {
 			isMounted = true;
-			handleModalStateChange();
+			// handleModalStateChange(); // This is now handled by the effect
 		} catch (err) {
 			console.error('Error in onMount:', err);
 		}
@@ -187,9 +184,6 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 			}
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-			}
 			// Restore body scroll
 			if (document && document.body) {
 				document.body.style.overflow = '';
@@ -197,11 +191,6 @@
 		} catch (err) {
 			console.error('Error in onDestroy:', err);
 		}
-	});
-
-	// Simple effect that only runs when isOpen changes
-	$effect(() => {
-		handleModalStateChange();
 	});
 
 	// Remove the problematic effect that was causing infinite loops
@@ -268,27 +257,18 @@
 			<div class="p-6 border-b border-gray-700">
 				<input
 					type="text"
-					bind:value={inputValue}
+					value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						
 						// Update the input display immediately
 						inputValue = newValue;
 						
-						// Clear any existing search timeout
-						if (searchTimeout) {
-							clearTimeout(searchTimeout);
-						}
-						
-						// Update search term
+						// Update search term and trigger search
 						searchTerm = newValue;
-						
-						// Debounce the search to prevent excessive calls
-						searchTimeout = setTimeout(() => {
-							if (isMounted && !isLoading) {
-								handleSearch();
-							}
-						}, 300); // 300ms delay
+						if (isMounted && !isLoading) {
+							handleSearch();
+						}
 					}}
 					placeholder="Search merchants..."
 					class="merchant-search-input w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
