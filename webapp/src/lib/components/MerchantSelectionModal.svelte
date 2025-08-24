@@ -203,18 +203,7 @@
 	<!-- Modal Backdrop - Responsive positioning -->
 	<div
 		bind:this={backdropRef}
-		class="fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
-		style="
-			position: fixed !important; 
-			top: 0 !important; 
-			left: 0 !important; 
-			right: 0 !important; 
-			bottom: 0 !important; 
-			z-index: 9999 !important;
-			background-color: rgba(17, 24, 39, 0.75) !important;
-			min-height: 100vh !important;
-			width: 100vw !important;
-		"
+		class="modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
 		role="dialog"
@@ -225,20 +214,7 @@
 		<!-- Modal Container - Responsive centering -->
 		<div
 			bind:this={modalRef}
-			class="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
-			style="
-				position: relative !important; 
-				z-index: 10000 !important;
-				background-color: rgb(17, 24, 39) !important;
-				border: 1px solid rgb(55, 65, 81) !important;
-				border-radius: 0.5rem !important;
-				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-				min-height: 200px !important;
-				max-width: calc(100vw - 1rem) !important;
-				max-height: calc(100vh - 1rem) !important;
-				overflow-y: auto !important;
-				margin-top: 1rem !important;
-			"
+			class="modal-container relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
 			role="document"
 		>
 			<!-- Header -->
@@ -330,7 +306,7 @@
 
 <style>
 	/* Modal backdrop and container styles */
-	.fixed.inset-0.z-\[9999\] {
+	.modal-backdrop {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -346,7 +322,7 @@
 	}
 
 	/* Modal content container */
-	.fixed.inset-0.z-\[9999\] > div {
+	.modal-container {
 		position: relative;
 		z-index: 10000;
 		background-color: rgb(17, 24, 39);
@@ -368,12 +344,23 @@
 		font-size: 16px;
 		-webkit-text-size-adjust: 100%;
 		text-size-adjust: 100%;
+		/* Ensure text is always visible */
+		-webkit-text-fill-color: white;
+		text-fill-color: white;
+		/* Force proper rendering */
+		transform: translateZ(0);
+		-webkit-transform: translateZ(0);
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
 	}
 
 	/* Ensure text is visible on all browsers */
 	.merchant-search-input,
-	.merchant-search-input:focus {
+	.merchant-search-input:focus,
+	.merchant-search-input:active {
 		-webkit-text-fill-color: white;
+		text-fill-color: white;
+		color: white;
 	}
 
 	/* Focus state styling */
@@ -402,18 +389,28 @@
 
 	/* Mobile-specific improvements */
 	@media (max-width: 768px) {
-		.fixed.inset-0.z-\[9999\] {
+		.modal-backdrop {
 			align-items: flex-start;
 			padding-top: 1rem;
 		}
 
-		.fixed.inset-0.z-\[9999\] > div {
+		.modal-container {
 			margin-top: 1rem;
 			max-width: calc(100vw - 2rem);
 		}
 
 		.merchant-search-input {
 			min-height: 44px; /* Ensure proper touch target size */
+			/* Additional mobile-specific input fixes */
+			font-size: 16px !important; /* Prevent zoom on iOS */
+			-webkit-text-size-adjust: 100% !important;
+			text-size-adjust: 100% !important;
+			/* Force text visibility on mobile */
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			text-fill-color: white !important;
+			background-color: rgb(31, 41, 55) !important;
+			border: 1px solid rgb(75, 85, 99) !important;
 		}
 	}
 
@@ -426,10 +423,58 @@
 			-webkit-appearance: none;
 			appearance: none;
 			border-radius: 0.375rem;
+			/* iOS-specific text visibility fixes */
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			text-fill-color: white !important;
 		}
 
-		.fixed.inset-0.z-\[9999\] {
+		.modal-backdrop {
 			-webkit-overflow-scrolling: touch;
+		}
+	}
+
+	/* Additional mobile input fixes for very small screens */
+	@media (max-width: 480px) {
+		.merchant-search-input {
+			font-size: 16px !important;
+			-webkit-text-size-adjust: 100% !important;
+			text-size-adjust: 100% !important;
+			/* Ensure text is visible on small mobile screens */
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			text-fill-color: white !important;
+			background-color: rgb(31, 41, 55) !important;
+			border: 1px solid rgb(75, 85, 99) !important;
+		}
+	}
+
+	/* Portrait orientation specific fixes for mobile */
+	@media (max-width: 768px) and (orientation: portrait) {
+		.merchant-search-input {
+			/* Force text visibility in portrait mode */
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			text-fill-color: white !important;
+			background-color: rgb(31, 41, 55) !important;
+			border: 1px solid rgb(75, 85, 99) !important;
+			/* Prevent any potential CSS conflicts */
+			-webkit-box-shadow: none !important;
+			box-shadow: none !important;
+			/* Ensure proper text rendering */
+			text-rendering: optimizeLegibility;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+		}
+	}
+
+	/* Landscape orientation specific fixes for mobile */
+	@media (max-width: 768px) and (orientation: landscape) {
+		.merchant-search-input {
+			/* Ensure text is visible in landscape mode too */
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			text-fill-color: white !important;
 		}
 	}
 </style>
