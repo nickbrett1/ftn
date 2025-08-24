@@ -90,26 +90,4 @@ a[target="_blank"] {
 	touch-action: manipulation;
 }
 
-/* Mobile-specific improvements */
-@media (max-width: 768px) {
-	/* Ensure proper text truncation on mobile */
-	.truncate {
-		max-width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	
-	/* Ensure grid containers properly constrain width on mobile */
-	.grid {
-		width: 100%;
-		max-width: 100%;
-	}
-	
-	/* Prevent scroll jumping on mobile when content changes */
-	html {
-		scroll-behavior: auto;
-	}
-}
-
 
