@@ -1,34 +1,13 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-	*,
-	::after,
-	::before,
-	::backdrop,
-	::file-selector-button {
-		border-color: var(--color-gray-200, currentColor);
-	}
-}
-
 html {
 	/* Using a dark gray instead of pure black */
 	background-color: #18181b; /* Tailwind zinc-900 */
-	color: #d4d4d8; /* Default text color - zinc-300 */
 }
 
 /* Global text color defaults for dark theme - only for basic content */
-body {
-	color: #d4d4d8; /* zinc-300 */
-}
+/* Removed global text color that could interfere with form inputs */
 
 /* Ensure headings are white by default - but only for content areas */
 article h1,
@@ -138,17 +117,6 @@ a[href*="amazon.com"] {
 	/* Prevent scroll jumping on mobile when content changes */
 	html {
 		scroll-behavior: auto;
-	}
-	
-	/* Ensure smooth transitions for dynamic content */
-	.merchant-list {
-		transition: all 0.2s ease-in-out;
-	}
-	
-	/* Prevent layout shift during merchant operations */
-	.merchant-container {
-		min-height: 200px;
-		contain: layout;
 	}
 	
 	/* Smooth scroll restoration */
