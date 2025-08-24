@@ -334,8 +334,9 @@
 		margin: 1rem auto;
 	}
 
-	/* Merchant search input specific styling */
-	.merchant-search-input {
+	/* Merchant search input specific styling - using high specificity to override global styles */
+	.modal-container .merchant-search-input,
+	.modal-backdrop .merchant-search-input {
 		/* Essential text visibility properties */
 		color: white;
 		-webkit-text-fill-color: white;
@@ -374,7 +375,8 @@
 	}
 
 	/* Focus state styling */
-	.merchant-search-input:focus {
+	.modal-container .merchant-search-input:focus,
+	.modal-backdrop .merchant-search-input:focus {
 		background-color: rgb(31, 41, 55);
 		border-color: rgb(59, 130, 246);
 		outline: none;
@@ -382,7 +384,8 @@
 	}
 
 	/* Placeholder styling */
-	.merchant-search-input::placeholder {
+	.modal-container .merchant-search-input::placeholder,
+	.modal-backdrop .merchant-search-input::placeholder {
 		color: rgb(156, 163, 175);
 		opacity: 1;
 	}
@@ -399,35 +402,19 @@
 			max-width: calc(100vw - 2rem);
 		}
 
-		.merchant-search-input {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
 			min-height: 44px; /* Ensure proper touch target size */
 			font-size: 16px; /* Prevent zoom on iOS */
 			-webkit-text-size-adjust: 100%;
 			text-size-adjust: 100%;
-			
-			/* Force text visibility on mobile */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
-			
-			/* Ensure proper background */
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
-			
-			/* Remove any potential mobile-specific hiding */
-			-webkit-box-shadow: none;
-			box-shadow: none;
-			text-shadow: none;
-			
-			/* Force proper rendering */
-			-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
 		}
 	}
 
 	/* iOS Safari specific fixes */
 	@supports (-webkit-touch-callout: none) {
-		.merchant-search-input {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
 			font-size: 16px;
 			-webkit-text-size-adjust: 100%;
 			text-size-adjust: 100%;
@@ -439,36 +426,31 @@
 
 	/* Additional mobile input fixes for very small screens */
 	@media (max-width: 480px) {
-		.merchant-search-input {
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
 			font-size: 16px;
 			-webkit-text-size-adjust: 100%;
 			text-size-adjust: 100%;
-			
-			/* Additional fixes for very small screens */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
 		}
 	}
 
 	/* Additional fixes for mobile input visibility */
 	@media (max-width: 768px) {
-		.merchant-search-input {
-			/* Force text to be visible */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
+		.modal-container .merchant-search-input,
+		.modal-backdrop .merchant-search-input {
+			/* Ensure text is visible */
+			color: white;
+			-webkit-text-fill-color: white;
+			text-fill-color: white;
 			
 			/* Ensure proper contrast */
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
+			background-color: rgb(31, 41, 55);
+			border: 1px solid rgb(75, 85, 99);
 			
 			/* Remove any potential hiding */
-			visibility: visible !important;
-			opacity: 1 !important;
-			display: block !important;
+			visibility: visible;
+			opacity: 1;
+			display: block;
 		}
 	}
 </style>
