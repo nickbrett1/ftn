@@ -145,6 +145,12 @@ async function normalizeBatch() {
 			pattern: "merchant LIKE '%CHEVRON%'",
 			normalized: 'CHEVRON',
 			details: ''
+		},
+		// Bluemercury
+		{
+			pattern: "merchant LIKE 'BLUEMERCURY%'",
+			normalized: 'BLUEMERCURY',
+			details: ''
 		}
 	];
 	

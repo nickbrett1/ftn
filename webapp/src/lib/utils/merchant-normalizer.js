@@ -59,6 +59,11 @@ export function normalizeMerchant(merchant) {
 		return extractJacadiDetails(merchant);
 	}
 
+	// BLUEMERCURY beauty store
+	if (merchantUpper.includes('BLUEMERCURY')) {
+		return extractBluemercuryDetails(merchant);
+	}
+
 	// Default: return as-is with minimal normalization
 	return {
 		merchant_normalized: normalizeGenericMerchant(merchant),
@@ -244,7 +249,7 @@ function extractMaidMarinesDetails(merchant) {
 
 	return {
 		merchant_normalized: 'MAIDMARINES',
-		merchant_details: cleanedMerchant || ''
+		merchant_details: ''
 	};
 }
 
@@ -262,6 +267,24 @@ function extractJacadiDetails(merchant) {
 
 	return {
 		merchant_normalized: 'JACADI',
+		merchant_details: cleanedMerchant || ''
+	};
+}
+
+/**
+ * Extract BLUEMERCURY details
+ */
+function extractBluemercuryDetails(merchant) {
+	// Clean up BLUEMERCURY merchant name by removing store numbers and location information
+	let cleanedMerchant = merchant
+		.replace(/BLUEMERCURY\s+#\d+/i, 'BLUEMERCURY') // Remove store number like "#1710"
+		.replace(/\s+NEW\s+YORK/i, '') // Remove "NEW YORK" location
+		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
+		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.trim();
+
+	return {
+		merchant_normalized: 'BLUEMERCURY',
 		merchant_details: cleanedMerchant || ''
 	};
 }
@@ -291,15 +314,15 @@ function normalizeGenericMerchant(merchant) {
 	// Remove common prefixes/suffixes
 	let normalized = merchant
 		.replace(/^THE\s+/i, '')
-		.replace(/\s+LLC$/i, '')
-		.replace(/\s+INC$/i, '')
-		.replace(/\s+CORP$/i, '')
-		.replace(/\s+CO$/i, '')
+		.replace(/\s+LLC\b/i, '')
+		.replace(/\s+INC\b/i, '')
+		.replace(/\s+CORP\b/i, '')
+		.replace(/\s+CO\b/i, '')
 		.trim();
 
 	// Remove location suffixes (common patterns)
 	normalized = normalized.replace(/\s+[A-Z]{2}\s*$/i, ''); // Remove state codes
 	normalized = normalized.replace(/\s+[0-9]{5}\s*$/i, ''); // Remove ZIP codes
 
-	return normalized || merchant;
+	return normalized;
 }
