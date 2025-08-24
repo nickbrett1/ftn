@@ -304,7 +304,29 @@ function isFlightTransaction(merchantUpper) {
 		'TRANSPORTATION'
 	];
 
-	return flightIndicators.some((indicator) => merchantUpper.includes(indicator));
+	// Check for generic flight indicators
+	if (flightIndicators.some((indicator) => merchantUpper.includes(indicator))) {
+		return true;
+	}
+
+	// Check for specific airline names
+	const airlines = [
+		'UNITED',
+		'AMERICAN',
+		'DELTA',
+		'SOUTHWEST',
+		'JETBLUE',
+		'SPIRIT',
+		'FRONTIER',
+		'ALASKA',
+		'BRITISH AIRWAYS',
+		'LUFTHANSA',
+		'AIR CANADA',
+		'EMIRATES',
+		'QATAR'
+	];
+
+	return airlines.some((airline) => merchantUpper.includes(airline));
 }
 
 /**
