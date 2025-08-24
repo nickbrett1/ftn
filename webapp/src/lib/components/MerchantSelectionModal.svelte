@@ -289,6 +289,8 @@
 					oninput={(e) => {
 						const newValue = e.target.value || '';
 						console.log('🔤 INPUT EVENT - new value:', newValue);
+						console.log('🔤 Input element:', e.target);
+						console.log('🔤 Input computed styles:', window.getComputedStyle(e.target));
 						
 						// Update the input display immediately
 						inputValue = newValue;
@@ -299,13 +301,35 @@
 							handleSearch();
 						}
 					}}
+					onfocus={(e) => {
+						console.log('🔤 INPUT FOCUS - element:', e.target);
+						console.log('🔤 Focused input value:', e.target.value);
+						console.log('🔤 Focused input styles:', window.getComputedStyle(e.target));
+					}}
+					onblur={(e) => {
+						console.log('🔤 INPUT BLUR - element:', e.target);
+						console.log('🔤 Blurred input value:', e.target.value);
+					}}
 					placeholder="Search merchants..."
 					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					style="
+						color: white !important;
+						background-color: rgb(31, 41, 55) !important;
+						border: 1px solid rgb(75, 85, 99) !important;
+						-webkit-text-fill-color: white !important;
+						-webkit-appearance: none !important;
+						appearance: none !important;
+						z-index: 10001 !important;
+						position: relative !important;
+						font-size: 16px !important;
+						-webkit-text-size-adjust: 100% !important;
+						text-size-adjust: 100% !important;
+					"
 					aria-label="Search merchants"
 				/>
 				<!-- Debug info -->
 				<div class="mt-2 text-xs text-gray-500">
-					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}"
+					Debug: Merchants: {merchants.length} | Filtered: {filteredMerchants.length} | Search: "{searchTerm}" | Input: "{inputValue}"
 				</div>
 			</div>
 
@@ -356,3 +380,96 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	/* Mobile-specific fixes for modal input visibility */
+	@media (max-width: 768px) {
+		/* Ensure input text is always visible on mobile */
+		input[type="text"] {
+			color: white !important;
+			-webkit-text-fill-color: white !important;
+			background-color: rgb(31, 41, 55) !important;
+			border: 1px solid rgb(75, 85, 99) !important;
+			-webkit-appearance: none !important;
+			appearance: none !important;
+			z-index: 10001 !important;
+			position: relative !important;
+			font-size: 16px !important;
+			-webkit-text-size-adjust: 100% !important;
+			text-size-adjust: 100% !important;
+		}
+		
+		/* Fix for iOS Safari input styling */
+		input[type="text"]::-webkit-input-placeholder {
+			color: rgb(156, 163, 175) !important;
+			opacity: 1 !important;
+		}
+		
+		input[type="text"]::-moz-placeholder {
+			color: rgb(156, 163, 175) !important;
+			opacity: 1 !important;
+		}
+		
+		input[type="text"]::placeholder {
+			color: rgb(156, 163, 175) !important;
+			opacity: 1 !important;
+		}
+		
+		/* Ensure modal is properly positioned on mobile */
+		.fixed.inset-0.z-\[9999\] {
+			align-items: flex-start !important;
+			padding-top: 1rem !important;
+		}
+		
+		/* Fix for mobile viewport issues */
+		.fixed.inset-0.z-\[9999\] > div {
+			margin-top: 1rem !important;
+			max-width: calc(100vw - 2rem) !important;
+		}
+	}
+	
+	/* Global fixes for input visibility */
+	input[type="text"] {
+		color: white !important;
+		-webkit-text-fill-color: white !important;
+		background-color: rgb(31, 41, 55) !important;
+		border: 1px solid rgb(75, 85, 99) !important;
+		-webkit-appearance: none !important;
+		appearance: none !important;
+		font-size: 16px !important;
+		-webkit-text-size-adjust: 100% !important;
+		text-size-adjust: 100% !important;
+	}
+	
+	/* Ensure focus states work properly */
+	input[type="text"]:focus {
+		color: white !important;
+		-webkit-text-fill-color: white !important;
+		background-color: rgb(31, 41, 55) !important;
+		border-color: rgb(59, 130, 246) !important;
+		outline: none !important;
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+	}
+	
+	/* iOS Safari specific fixes */
+	@supports (-webkit-touch-callout: none) {
+		input[type="text"] {
+			font-size: 16px !important;
+			-webkit-text-size-adjust: 100% !important;
+			text-size-adjust: 100% !important;
+			-webkit-appearance: none !important;
+			appearance: none !important;
+			border-radius: 0.375rem !important;
+		}
+	}
+	
+	/* Additional mobile input fixes */
+	@media (max-width: 640px) {
+		input[type="text"] {
+			font-size: 16px !important;
+			-webkit-text-size-adjust: 100% !important;
+			text-size-adjust: 100% !important;
+			min-height: 44px !important; /* Ensure proper touch target size */
+		}
+	}
+</style>

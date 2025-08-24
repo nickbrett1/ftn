@@ -103,120 +103,101 @@ main a:not([class*='text-']):not(.not-prose):hover,
 	white-space: nowrap;
 }
 
-/* Modal-specific fixes to prevent black screen and positioning issues */
-.modal-backdrop {
+/* Global input field fixes for mobile visibility */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+	color: white !important;
+	-webkit-text-fill-color: white !important;
+	background-color: rgb(31, 41, 55) !important;
+	border: 1px solid rgb(75, 85, 99) !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+}
+
+/* Ensure input focus states work properly */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+	color: white !important;
+	-webkit-text-fill-color: white !important;
+	background-color: rgb(31, 41, 55) !important;
+	border-color: rgb(59, 130, 246) !important;
+	outline: none !important;
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Fix for iOS Safari input styling */
+input[type="text"]::-webkit-input-placeholder,
+input[type="email"]::-webkit-input-placeholder,
+input[type="password"]::-webkit-input-placeholder,
+input[type="search"]::-webkit-input-placeholder,
+input[type="tel"]::-webkit-input-placeholder,
+input[type="url"]::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+	color: rgb(156, 163, 175) !important;
+	opacity: 1 !important;
+}
+
+input[type="text"]::-moz-placeholder,
+input[type="email"]::-moz-placeholder,
+input[type="password"]::-moz-placeholder,
+input[type="search"]::-moz-placeholder,
+input[type="tel"]::-moz-placeholder,
+input[type="url"]::-moz-placeholder,
+textarea::-moz-placeholder {
+	color: rgb(156, 163, 175) !important;
+	opacity: 1 !important;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="search"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+	color: rgb(156, 163, 175) !important;
+	opacity: 1 !important;
+}
+
+/* Modal-specific fixes for mobile */
+.fixed.inset-0.z-\[9999\],
+.fixed.inset-0.z-\[10000\] {
 	position: fixed !important;
 	top: 0 !important;
 	left: 0 !important;
 	right: 0 !important;
 	bottom: 0 !important;
-	background-color: rgba(17, 24, 39, 0.75) !important; /* gray-900 with opacity */
 	z-index: 9999 !important;
 	display: flex !important;
 	align-items: flex-start !important;
 	justify-content: center !important;
+	background-color: rgba(17, 24, 39, 0.75) !important;
 	padding: 1rem !important;
 	overflow-y: auto !important;
 }
 
-/* Mobile modal positioning improvements */
-@media (max-width: 768px) {
-	.modal-backdrop {
-		align-items: flex-start !important;
-		padding-top: 1rem !important;
-	}
-	
-	.modal-backdrop > div {
-		margin-top: 0 !important;
-	}
-}
-
-.modal-container {
+/* Ensure modal content is properly positioned */
+.fixed.inset-0.z-\[9999\] > div,
+.fixed.inset-0.z-\[10000\] > div {
 	position: relative !important;
-	background-color: rgb(17, 24, 39) !important; /* gray-900 */
-	border: 1px solid rgb(55, 65, 81) !important; /* gray-700 */
-	border-radius: 0.5rem !important;
-	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-	width: 100% !important;
-	max-width: 42rem !important; /* max-w-2xl */
-	margin: 2rem auto !important;
-}
-
-/* Ensure modal is always visible and properly positioned */
-.fixed.inset-0 {
-	z-index: 9999 !important;
-}
-
-/* Fix for modal content overflow */
-.max-h-80 {
-	max-height: 20rem !important;
-}
-
-/* Ensure proper modal backdrop */
-.bg-gray-900.bg-opacity-75 {
-	background-color: rgba(17, 24, 39, 0.75) !important;
-}
-
-/* Force modal positioning to avoid parent container issues */
-[style*="position: fixed !important"] {
-	position: fixed !important;
-	top: 0 !important;
-	left: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	z-index: 9999 !important;
-}
-
-/* Ensure modal content is properly styled */
-[style*="background-color: rgb(17, 24, 39) !important"] {
+	z-index: 10000 !important;
 	background-color: rgb(17, 24, 39) !important;
 	border: 1px solid rgb(55, 65, 81) !important;
 	border-radius: 0.5rem !important;
 	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-}
-
-/* Additional modal fixes for viewport and positioning */
-html, body {
-	overflow: visible !important;
-}
-
-/* Ensure modal backdrop covers entire viewport */
-[style*="min-height: 100vh !important"] {
-	min-height: 100vh !important;
-}
-
-/* Force modal to be above all other content */
-.z-\[9999\], .z-\[10000\], .z-\[10001\] {
-	z-index: 9999 !important;
-}
-
-/* Ensure modal container is properly sized */
-[style*="min-height: 200px !important"] {
-	min-height: 200px !important;
-}
-
-/* Additional viewport fixes */
-[style*="width: 100vw !important"] {
-	width: 100vw !important;
-}
-
-[style*="max-width: 90vw !important"] {
-	max-width: 90vw !important;
-}
-
-/* Ensure modal is responsive */
-@media (max-width: 768px) {
-	[style*="max-width: 90vw !important"] {
-		max-width: 95vw !important;
-		margin: 1rem auto !important;
-	}
-}
-
-/* Force modal visibility */
-.fixed.inset-0.z-\[9999\] {
-	display: flex !important;
-	visibility: visible !important;
-	opacity: 1 !important;
+	width: 100% !important;
+	max-width: 42rem !important;
+	margin: 1rem auto !important;
 }
 
 /* General styles for external links to ensure proper mobile behavior */
@@ -235,8 +216,9 @@ a[href*="amazon.com"] {
 	touch-action: manipulation;
 }
 
-/* Additional mobile-specific truncation support */
-@media (max-width: 640px) {
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+	/* Ensure proper text truncation on mobile */
 	.truncate {
 		max-width: 100%;
 		overflow: hidden;
@@ -271,22 +253,6 @@ a[href*="amazon.com"] {
 		scroll-behavior: auto;
 	}
 	
-	/* Mobile modal adjustments */
-	.modal-container {
-		margin: 1rem auto;
-		max-width: calc(100vw - 2rem);
-	}
-	
-	/* Ensure modal is always visible at the top of viewport on mobile */
-	.fixed.inset-0.z-\[9999\] {
-		align-items: flex-start !important;
-	}
-	
-	/* Add top margin for mobile modal positioning */
-	.fixed.inset-0.z-\[9999\] > div {
-		margin-top: 1rem !important;
-	}
-	
 	/* Mobile-specific styles for Amazon order links */
 	/* Ensure links are properly tappable on mobile devices */
 	a[href*="amazon.com"] {
@@ -300,6 +266,56 @@ a[href*="amazon.com"] {
 	/* Improve long-press behavior on mobile */
 	a[href*="amazon.com"]:active {
 		-webkit-tap-highlight-color: rgba(59, 130, 246, 0.5);
+	}
+	
+	/* Additional mobile input fixes */
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="search"],
+	input[type="tel"],
+	input[type="url"],
+	textarea {
+		font-size: 16px !important; /* Prevent zoom on iOS */
+		-webkit-text-size-adjust: 100% !important;
+		text-size-adjust: 100% !important;
+	}
+	
+	/* Mobile modal positioning improvements */
+	.fixed.inset-0.z-\[9999\],
+	.fixed.inset-0.z-\[10000\] {
+		align-items: flex-start !important;
+		padding-top: 1rem !important;
+	}
+	
+	.fixed.inset-0.z-\[9999\] > div,
+	.fixed.inset-0.z-\[10000\] > div {
+		margin-top: 1rem !important;
+		max-width: calc(100vw - 2rem) !important;
+	}
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="search"],
+	input[type="tel"],
+	input[type="url"],
+	textarea {
+		font-size: 16px !important;
+		-webkit-text-size-adjust: 100% !important;
+		text-size-adjust: 100% !important;
+		-webkit-appearance: none !important;
+		appearance: none !important;
+		border-radius: 0.375rem !important;
+	}
+	
+	/* Fix for iOS Safari modal positioning */
+	.fixed.inset-0.z-\[9999\],
+	.fixed.inset-0.z-\[10000\] {
+		-webkit-overflow-scrolling: touch !important;
 	}
 }
 
