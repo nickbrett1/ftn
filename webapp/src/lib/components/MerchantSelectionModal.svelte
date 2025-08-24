@@ -297,21 +297,8 @@
 							// Execute search immediately for instant filtering
 							handleSearch();
 							
-													// Force Svelte 5 to flush DOM updates - optimized approach
+													// Force Svelte 5 to flush DOM updates - simple approach
 						await tick();
-						
-						// Single frame update for mobile browsers (reduced from 3 frames)
-						await new Promise(resolve => {
-							requestAnimationFrame(() => {
-								resolve();
-							});
-						});
-						
-						// Portrait mode specific optimization
-						if (window.innerHeight > window.innerWidth) {
-							// Just one additional tick for portrait mode
-							await tick();
-						}
 							
 							console.log('🔤 After handleSearch - searchTerm:', searchTerm);
 							console.log('🔤 After handleSearch - filteredMerchants length:', filteredMerchants.length);
