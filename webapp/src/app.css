@@ -136,26 +136,26 @@ a[href*="amazon.com"] {
 		max-width: 100%;
 	}
 	
-	/* Prevent scroll jumping on mobile when content changes */
-	html {
+	/* Prevent scroll jumping on mobile when content changes - REMOVED: was interfering with inputs */
+	/* html {
 		scroll-behavior: auto;
-	}
+	} */
 	
 	/* Ensure smooth transitions for dynamic content - REMOVED: was causing input delays */
 	/* .merchant-list {
 		transition: all 0.2s ease-in-out;
 	} */
 	
-	/* Prevent layout shift during merchant operations */
-	.merchant-container {
+	/* Prevent layout shift during merchant operations - REMOVED: was interfering with inputs */
+	/* .merchant-container {
 		min-height: 200px;
 		contain: layout;
-	}
+	} */
 	
-	/* Smooth scroll restoration */
-	.scroll-restore {
+	/* Smooth scroll restoration - REMOVED: was interfering with inputs */
+	/* .scroll-restore {
 		scroll-behavior: auto;
-	}
+	} */
 	
 	/* Mobile modal styles moved to shared Modal.svelte component */
 	
