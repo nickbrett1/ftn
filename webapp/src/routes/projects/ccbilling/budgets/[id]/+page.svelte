@@ -404,3 +404,10 @@
 </PageLayout>
 
 <Footer />
+
+<style>
+	/* Scroll restoration styles for this component */
+	.scroll-restore {
+		scroll-behavior: auto;
+	}
+</style>
