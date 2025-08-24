@@ -267,8 +267,7 @@
 
 			<!-- Search -->
 			<div class="p-6 border-b border-gray-700">
-								<!-- CSS-FREE input - completely isolated from app.css interference -->
-				<input
+								<input
 					type="text"
 					value={searchTerm}
 					oninput={async (e) => {
@@ -281,31 +280,7 @@
 						// Force Svelte 5 to flush DOM updates
 						await tick();
 					}}
-					style="
-						/* COMPLETELY ISOLATED STYLES - NO CSS CLASSES */
-						width: 100%;
-						padding: 0.5rem 0.75rem;
-						background-color: rgb(31, 41, 55);
-						border: 1px solid rgb(75, 85, 99);
-						border-radius: 0.375rem;
-						color: white;
-						font-size: 1rem;
-						line-height: 1.5rem;
-						outline: none;
-						box-sizing: border-box;
-						display: block;
-						position: relative;
-						z-index: 99999;
-						/* Force hardware acceleration and bypass CSS */
-						transform: translateZ(0);
-						-webkit-transform: translateZ(0);
-						-webkit-appearance: none;
-						appearance: none;
-						/* Override any potential CSS interference */
-						transition: none !important;
-						animation: none !important;
-						scroll-behavior: auto !important;
-					"
+					class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 					aria-label="Search merchants"
 				/>
 
