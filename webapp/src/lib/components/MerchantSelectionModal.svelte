@@ -401,16 +401,9 @@
 
 		.merchant-search-input {
 			min-height: 44px; /* Ensure proper touch target size */
-			/* Additional mobile-specific input fixes */
-			font-size: 16px !important; /* Prevent zoom on iOS */
-			-webkit-text-size-adjust: 100% !important;
-			text-size-adjust: 100% !important;
-			/* Force text visibility on mobile */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
+			font-size: 16px; /* Prevent zoom on iOS */
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
 		}
 	}
 
@@ -423,10 +416,6 @@
 			-webkit-appearance: none;
 			appearance: none;
 			border-radius: 0.375rem;
-			/* iOS-specific text visibility fixes */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
 		}
 
 		.modal-backdrop {
@@ -437,44 +426,9 @@
 	/* Additional mobile input fixes for very small screens */
 	@media (max-width: 480px) {
 		.merchant-search-input {
-			font-size: 16px !important;
-			-webkit-text-size-adjust: 100% !important;
-			text-size-adjust: 100% !important;
-			/* Ensure text is visible on small mobile screens */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
-		}
-	}
-
-	/* Portrait orientation specific fixes for mobile */
-	@media (max-width: 768px) and (orientation: portrait) {
-		.merchant-search-input {
-			/* Force text visibility in portrait mode */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
-			background-color: rgb(31, 41, 55) !important;
-			border: 1px solid rgb(75, 85, 99) !important;
-			/* Prevent any potential CSS conflicts */
-			-webkit-box-shadow: none !important;
-			box-shadow: none !important;
-			/* Ensure proper text rendering */
-			text-rendering: optimizeLegibility;
-			-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
-		}
-	}
-
-	/* Landscape orientation specific fixes for mobile */
-	@media (max-width: 768px) and (orientation: landscape) {
-		.merchant-search-input {
-			/* Ensure text is visible in landscape mode too */
-			color: white !important;
-			-webkit-text-fill-color: white !important;
-			text-fill-color: white !important;
+			font-size: 16px;
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
 		}
 	}
 </style>
