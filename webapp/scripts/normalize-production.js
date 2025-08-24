@@ -111,17 +111,17 @@ async function normalizeBatch() {
 		},
 		// Airlines
 		{
-			pattern: "merchant LIKE '%UNITED AIRLINE%'",
+			pattern: "merchant LIKE '%UNITED%'",
 			normalized: 'UNITED',
 			details: "merchant"
 		},
 		{
-			pattern: "merchant LIKE '%AMERICAN AIRLINE%'",
+			pattern: "merchant LIKE '%AMERICAN%'",
 			normalized: 'AMERICAN',
 			details: "merchant"
 		},
 		{
-			pattern: "merchant LIKE '%DELTA%AIRLINE%'",
+			pattern: "merchant LIKE '%DELTA%'",
 			normalized: 'DELTA',
 			details: "merchant"
 		},
