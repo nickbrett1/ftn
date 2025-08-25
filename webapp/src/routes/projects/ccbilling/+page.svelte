@@ -111,8 +111,8 @@
 		>
 		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button
 		>
-		<Button href="/projects/ccbilling/admin" variant="warning" size="lg">Admin Tools</Button
-		>
+		       <Button href="/projects/ccbilling/admin" variant="secondary" size="lg">Admin Tools</Button
+       >
 	</div>
 	</div>
 </div>
