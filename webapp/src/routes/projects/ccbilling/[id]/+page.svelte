@@ -3,6 +3,7 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
+	import Fireworks from '$lib/components/Fireworks.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
@@ -198,6 +199,10 @@
 			showToast = false;
 		}, 5000);
 	}
+
+	// Fireworks state
+	let showFireworks = $state(false);
+	let lastUnallocatedTotal = $state(0);
 	
 	// Cancel parsing function
 	function cancelParsing(statementId) {
@@ -267,6 +272,18 @@
 			const allocation = charge.allocated_to || '__unallocated__';
 			totals[allocation] = (totals[allocation] || 0) + charge.amount;
 		});
+
+		// Check if unallocated charges reached zero and trigger fireworks
+		const unallocatedTotal = totals['__unallocated__'] || 0;
+		if (unallocatedTotal === 0 && lastUnallocatedTotal > 0) {
+			console.log('🎆 Fireworks triggered! Unallocated charges reached zero!');
+			showFireworks = true;
+			// Hide fireworks after 3 seconds
+			setTimeout(() => {
+				showFireworks = false;
+			}, 3000);
+		}
+		lastUnallocatedTotal = unallocatedTotal;
 
 		return Object.entries(totals).sort(([, a], [, b]) => b - a);
 	}
@@ -780,6 +797,11 @@
 			content: (reference) => reference.getAttribute('data-allocation-tooltip'),
 			placement: 'top'
 		});
+
+		// Initialize lastUnallocatedTotal with current value
+		const currentTotals = getSortedAllocationTotals();
+		const unallocatedEntry = currentTotals.find(([key]) => key === '__unallocated__');
+		lastUnallocatedTotal = unallocatedEntry ? unallocatedEntry[1] : 0;
 	});
 
 	onDestroy(() => {
@@ -1628,6 +1650,8 @@
 		</div>
 	</div>
 {/if}
+
+<Fireworks show={showFireworks} />
 
 <Footer />
 
