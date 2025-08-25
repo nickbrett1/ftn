@@ -347,6 +347,7 @@ export async function GET(event) {
 				SELECT 
 					COUNT(*) as total_payments,
 					COUNT(CASE WHEN merchant_normalized IS NOT NULL AND merchant_normalized != merchant THEN 1 END) as normalized_payments,
+					COUNT(CASE WHEN merchant_normalized IS NOT NULL THEN 1 END) as processed_payments,
 					COUNT(DISTINCT merchant) as unique_merchants,
 					COUNT(DISTINCT merchant_normalized) as unique_normalized_merchants
 				FROM payment
@@ -389,7 +390,7 @@ export async function GET(event) {
 			payments: {
 				total: stats.total_payments,
 				normalized: stats.normalized_payments,
-				pending: stats.total_payments - stats.normalized_payments,
+				pending: stats.total_payments - stats.processed_payments,
 				uniqueMerchants: stats.unique_merchants,
 				uniqueNormalized: stats.unique_normalized_merchants
 			},
@@ -398,9 +399,9 @@ export async function GET(event) {
 				normalized: budgetStats.normalized_mappings
 			},
 			samples,
-			message: stats.normalized_payments === stats.total_payments 
-				? 'All merchants are normalized!' 
-				: `${stats.total_payments - stats.normalized_payments} payments need normalization`
+			message: stats.processed_payments === stats.total_payments 
+				? 'All merchants have been processed!' 
+				: `${stats.total_payments - stats.processed_payments} payments still need processing`
 		});
 
 	} catch (error) {

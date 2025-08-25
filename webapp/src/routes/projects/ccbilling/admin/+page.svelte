@@ -149,6 +149,14 @@
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8">
 			<h2 class="text-2xl font-semibold mb-4">Merchant Normalization Status</h2>
 			
+			<div class="mb-6 p-4 bg-blue-900 border border-blue-700 rounded-lg">
+				<div class="text-blue-300 text-sm">
+					<strong>How it works:</strong> The system processes all payments to determine if merchant names need normalization. 
+					Some merchants may already be unique and won't be changed, while others will be grouped under standardized names 
+					(e.g., "AMAZON.COM*123" becomes "AMAZON"). The "Actually Changed" count shows how many were modified.
+				</div>
+			</div>
+			
 			{#if loading}
 				<div class="text-gray-300">Loading status...</div>
 			{:else if error}
@@ -165,11 +173,15 @@
 								<span class="text-white font-mono">{status.payments.total}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-300">Normalized:</span>
+								<span class="text-gray-300">Processed:</span>
+								<span class="text-blue-400 font-mono">{status.payments.processed || 0}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-gray-300">Actually Changed:</span>
 								<span class="text-green-400 font-mono">{status.payments.normalized}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-300">Pending:</span>
+								<span class="text-gray-300">Still Need Processing:</span>
 								<span class="text-yellow-400 font-mono">{status.payments.pending}</span>
 							</div>
 							<div class="flex justify-between">
@@ -236,7 +248,8 @@
 			{#if status && status.payments.pending > 0}
 				<div class="mb-4">
 					<p class="text-gray-300 mb-4">
-						This will process {status.payments.pending} payments that need merchant normalization.
+						This will process {status.payments.pending} payments that still need merchant normalization.
+						Note: Some payments may not need changes if their merchant names are already unique.
 						The process runs in batches to avoid timeouts and shows real-time progress.
 					</p>
 					<Button 
@@ -245,12 +258,12 @@
 						size="lg"
 						disabled={normalizing}
 					>
-						{normalizing ? 'Normalizing...' : 'Start Normalization'}
+						{normalizing ? 'Processing...' : 'Start Processing'}
 					</Button>
 				</div>
 			{:else if status}
 				<div class="text-green-400 text-center py-4">
-					✅ All merchants are already normalized! No action needed.
+					✅ All merchants have been processed! No action needed.
 				</div>
 			{/if}
 		</div>
