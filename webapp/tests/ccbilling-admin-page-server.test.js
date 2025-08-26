@@ -45,11 +45,13 @@ describe('CCBilling Admin Page Server Route', () => {
 	});
 
 	describe('load function', () => {
-		it('should redirect to /notauthorised when user is not authenticated', async () => {
+		it('should return authentication response when user is not authenticated', async () => {
 			const authResponse = new Response('Not authenticated', { status: 401 });
 			mockRequireUser.mockResolvedValue(authResponse);
 
-			await expect(load(mockEvent)).rejects.toThrow();
+			const result = await load(mockEvent);
+			expect(result).toBe(authResponse);
+			expect(result.status).toBe(401);
 		});
 
 		it('should return empty data when user is authenticated', async () => {
