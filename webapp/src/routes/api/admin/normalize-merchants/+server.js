@@ -4,7 +4,11 @@ import { requireUser } from '$lib/server/require-user.js';
 
 /**
  * Admin endpoint to normalize existing merchant data
- * This processes payments in batches to avoid timeouts
+ * This processes payments in batches to avoid timeouts.
+ * 
+ * The normalization now always redoes previously normalized patterns to ensure
+ * consistency, especially for cases like UNITED airlines where some transactions
+ * may have been missed or inconsistently processed.
  */
 export async function POST(event) {
 	// Require authentication
@@ -21,16 +25,14 @@ export async function POST(event) {
 		const body = await event.request.json().catch(() => ({}));
 		const batchSize = body.batchSize || 50;
 		const offset = body.offset || 0;
-		const forceUnitedCleanup = body.forceUnitedCleanup || false;
 
-		// Get payments that need normalization
+		// Get payments to normalize (process all since we're always updating)
 		const { results: payments } = await db
 			.prepare(
 				`
 				SELECT id, merchant 
 				FROM payment 
 				WHERE merchant IS NOT NULL
-				AND (merchant_normalized IS NULL OR merchant_normalized = merchant)
 				ORDER BY id
 				LIMIT ? OFFSET ?
 			`
@@ -43,19 +45,18 @@ export async function POST(event) {
 
 		// Process each payment
 		for (const payment of payments) {
-			try {
+						try {
 				const normalized = normalizeMerchant(payment.merchant);
 				
-				// Only update if normalization actually changed something
-				if (normalized.merchant_normalized !== payment.merchant) {
-					await db
-						.prepare(
-							`
-							UPDATE payment 
-							SET merchant_normalized = ?,
-								merchant_details = ?
-							WHERE id = ?
+				// Always update to ensure consistency
+				await db
+					.prepare(
 						`
+						UPDATE payment 
+						SET merchant_normalized = ?,
+							merchant_details = ?
+						WHERE id = ?
+					`
 						)
 						.bind(
 							normalized.merchant_normalized,
@@ -63,9 +64,8 @@ export async function POST(event) {
 							payment.id
 						)
 						.run();
-					
-					updatedCount++;
-				}
+				
+				updatedCount++;
 			} catch (error) {
 				errors.push({
 					id: payment.id,
@@ -75,14 +75,13 @@ export async function POST(event) {
 			}
 		}
 
-		// Get total count of payments needing normalization
+		// Get total count of payments to normalize
 		const { results: countResult } = await db
 			.prepare(
 				`
 				SELECT COUNT(*) as total
 				FROM payment 
 				WHERE merchant IS NOT NULL
-				AND (merchant_normalized IS NULL OR merchant_normalized = merchant)
 			`
 			)
 			.all();
@@ -143,14 +142,7 @@ export async function POST(event) {
 					errors.push(...bulkUpdates.errors);
 				}
 
-				// Special cleanup for UNITED airlines - fix any remaining inconsistent records
-				if (forceUnitedCleanup) {
-					const unitedCleanup = await performUnitedCleanup(db);
-					updatedCount += unitedCleanup.updated;
-					if (unitedCleanup.errors && unitedCleanup.errors.length > 0) {
-						errors.push(...unitedCleanup.errors);
-					}
-				}
+
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -170,7 +162,7 @@ export async function POST(event) {
 			errors: errors.length > 0 ? errors : undefined,
 			message: totalRemaining > batchSize 
 				? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-				: 'All merchants normalized successfully!'
+				: 'All merchants normalized successfully! Note: This renormalized all patterns for consistency.'
 		});
 
 	} catch (error) {
@@ -227,12 +219,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 			normalized: 'UBER',
 			details: "SUBSTR(merchant, 6)" // Everything after 'UBER '
 		},
-		// Airlines - Fix UNITED normalization to handle already-processed records
+		// Airlines
 		{
 			pattern: "merchant LIKE '%UNITED%'",
 			normalized: 'UNITED',
-			details: "merchant",
-			forceUpdate: true  // Force update even if already normalized
+			details: "merchant"
 		},
 		{
 			pattern: "merchant LIKE '%AMERICAN%'",
@@ -290,17 +281,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 				detailsField = "''";
 			}
 			
-					// Build WHERE clause - allow force updates for certain patterns
-		let whereClause = `(${update.pattern})`;
-		if (!update.forceUpdate) {
-			whereClause += ` AND merchant_normalized IS NULL`;
-		}
-		
-		const sql = `
+					const sql = `
 			UPDATE payment 
 			SET merchant_normalized = ?,
 				merchant_details = ${detailsField}
-			WHERE ${whereClause}
+			WHERE (${update.pattern})
 		`;
 			
 			const result = await db
@@ -329,68 +314,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 	};
 }
 
-/**
- * Special cleanup function for UNITED airlines
- * This fixes any UNITED transactions that weren't properly normalized
- */
-async function performUnitedCleanup(db) {
-	try {
-		// Find all UNITED transactions that aren't normalized to "UNITED"
-		const { results: unitedTransactions } = await db
-			.prepare(
-				`
-				SELECT id, merchant, merchant_normalized
-				FROM payment 
-				WHERE merchant LIKE '%UNITED%'
-				  AND (merchant_normalized != 'UNITED' OR merchant_normalized IS NULL)
-			`
-			)
-			.all();
 
-		let updated = 0;
-		const errors = [];
-
-		for (const transaction of unitedTransactions) {
-			try {
-				// Extract ticket number for merchant_details
-				const ticketMatch = transaction.merchant.match(/UNITED\s+(\d+)\s+UNITED\.COM/);
-				const ticketNumber = ticketMatch ? ticketMatch[1] : '';
-				
-				await db
-					.prepare(
-						`
-						UPDATE payment 
-						SET merchant_normalized = 'UNITED',
-							merchant_details = ?
-						WHERE id = ?
-					`
-					)
-					.bind(ticketNumber, transaction.id)
-					.run();
-				
-				updated++;
-			} catch (error) {
-				errors.push({
-					type: 'united_cleanup',
-					id: transaction.id,
-					merchant: transaction.merchant,
-					error: error.message
-				});
-			}
-		}
-
-		return { updated, errors };
-	} catch (error) {
-		console.error('UNITED cleanup failed:', error);
-		return { 
-			updated: 0, 
-			errors: [{ 
-				type: 'united_cleanup_failure', 
-				error: error.message 
-			}] 
-		};
-	}
-}
 
 /**
  * Get normalization status
