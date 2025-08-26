@@ -98,14 +98,17 @@
 
 			console.log('API call successful, proceeding with UI update');
 
-			// Reset form immediately after successful addition
+			// Reset ALL component state BEFORE calling invalidateAll
+			console.log('Resetting component state...');
 			selectedMerchant = '';
+			isAdding = false;  // Reset the loading state immediately
+			addError = '';
+			console.log('State reset complete, isAdding is now:', isAdding);
 			
 			// Refresh data without page reload to maintain scroll position
 			console.log('Calling invalidateAll...');
 			await invalidateAll();
 			console.log('invalidateAll completed');
-			console.log('After invalidateAll - isAdding state:', isAdding);
 			console.log('After invalidateAll - merchants count:', merchants.length);
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
@@ -127,9 +130,7 @@
 			addError = 'Network error occurred';
 		} finally {
 			console.log('=== FINALLY BLOCK ===');
-			console.log('Setting isAdding to false');
-			isAdding = false;
-			console.log('isAdding after setting to false:', isAdding);
+			console.log('Final state check - isAdding:', isAdding);
 			console.log('=== addMerchant END ===');
 		}
 	}
