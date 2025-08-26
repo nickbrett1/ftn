@@ -263,7 +263,6 @@ async function performBulkPatternUpdates(db, batchSize) {
 	];
 
 	let totalUpdated = 0;
-	let budgetMerchantsUpdated = 0;
 	const errors = [];
 
 	for (const update of updates) {
@@ -297,17 +296,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 			const updated = result.changes || 0;
 			totalUpdated += updated;
 
-			// Also update budget_merchant table for main merchants
-			if (['AMAZON', 'CAVIAR', 'DOORDASH', 'UBER EATS', 'UBER'].includes(update.normalized)) {
-				const budgetSql = `
-					UPDATE budget_merchant 
-					SET merchant_normalized = ?
-					WHERE (${update.pattern})
-					AND (merchant_normalized IS NULL OR merchant_normalized = '')
-				`;
-				
-				await db.prepare(budgetSql).bind(update.normalized).run();
-			}
+
 			
 		} catch (error) {
 			errors.push({
@@ -321,7 +310,6 @@ async function performBulkPatternUpdates(db, batchSize) {
 
 	return {
 		paymentsUpdated: totalUpdated,
-		budgetMerchantsUpdated,
 		errors
 	};
 }
