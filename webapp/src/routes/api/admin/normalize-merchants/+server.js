@@ -284,7 +284,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 				SET merchant_normalized = ?,
 					merchant_details = ${detailsField}
 				WHERE (${update.pattern})
-				AND (merchant_normalized IS NULL OR merchant_normalized = merchant)
+				AND merchant_normalized IS NULL
 				LIMIT ?
 			`;
 			
