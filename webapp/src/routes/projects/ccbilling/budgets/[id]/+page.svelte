@@ -18,6 +18,14 @@
 	let budget = $derived(data.budget || null);
 	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
+	
+	// Debug: Track when data changes
+	$effect(() => {
+		console.log('=== DATA CHANGED ===');
+		console.log('data.merchants count:', data.merchants?.length || 0);
+		console.log('derived merchants count:', merchants.length);
+		console.log('=======================');
+	});
 
 	// Add merchant state
 	let selectedMerchant = $state('');
@@ -97,6 +105,8 @@
 			console.log('Calling invalidateAll...');
 			await invalidateAll();
 			console.log('invalidateAll completed');
+			console.log('After invalidateAll - isAdding state:', isAdding);
+			console.log('After invalidateAll - merchants count:', merchants.length);
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
