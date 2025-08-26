@@ -38,6 +38,33 @@
 		}
 	}
 
+	async function fixUnitedAirlines() {
+		normalizing = true;
+		error = null;
+		results = null;
+
+		try {
+			// Call the normalization API with a special flag for UNITED cleanup
+			const response = await fetch('/api/admin/normalize-merchants', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ offset: 0, forceUnitedCleanup: true })
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			results = await response.json();
+			// Refresh status after normalization
+			await loadStatus();
+		} catch (err) {
+			error = err.message;
+		} finally {
+			normalizing = false;
+		}
+	}
+
 	async function loadStatus() {
 		loadingStatus = true;
 		try {
@@ -93,14 +120,25 @@
 				Run the merchant normalization process across all payment records.
 			</p>
 
-			<Button 
-				onclick={runNormalization} 
-				variant="success" 
-				size="lg"
-				disabled={normalizing}
-			>
-				{normalizing ? 'Running...' : 'Run Normalization'}
-			</Button>
+			<div class="flex gap-4">
+				<Button 
+					onclick={runNormalization} 
+					variant="success" 
+					size="lg"
+					disabled={normalizing}
+				>
+					{normalizing ? 'Running...' : 'Run Normalization'}
+				</Button>
+
+				<Button 
+					onclick={fixUnitedAirlines} 
+					variant="warning" 
+					size="lg"
+					disabled={normalizing}
+				>
+					{normalizing ? 'Running...' : 'Fix UNITED Airlines'}
+				</Button>
+			</div>
 
 			{#if error}
 				<div class="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">

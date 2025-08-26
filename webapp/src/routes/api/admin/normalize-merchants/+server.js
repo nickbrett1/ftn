@@ -21,6 +21,7 @@ export async function POST(event) {
 		const body = await event.request.json().catch(() => ({}));
 		const batchSize = body.batchSize || 50;
 		const offset = body.offset || 0;
+		const forceUnitedCleanup = body.forceUnitedCleanup || false;
 
 		// Get payments that need normalization
 		const { results: payments } = await db
@@ -141,6 +142,15 @@ export async function POST(event) {
 				if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
 					errors.push(...bulkUpdates.errors);
 				}
+
+				// Special cleanup for UNITED airlines - fix any remaining inconsistent records
+				if (forceUnitedCleanup) {
+					const unitedCleanup = await performUnitedCleanup(db);
+					updatedCount += unitedCleanup.updated;
+					if (unitedCleanup.errors && unitedCleanup.errors.length > 0) {
+						errors.push(...unitedCleanup.errors);
+					}
+				}
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -217,11 +227,12 @@ async function performBulkPatternUpdates(db, batchSize) {
 			normalized: 'UBER',
 			details: "SUBSTR(merchant, 6)" // Everything after 'UBER '
 		},
-		// Airlines
+		// Airlines - Fix UNITED normalization to handle already-processed records
 		{
 			pattern: "merchant LIKE '%UNITED%'",
 			normalized: 'UNITED',
-			details: "merchant"
+			details: "merchant",
+			forceUpdate: true  // Force update even if already normalized
 		},
 		{
 			pattern: "merchant LIKE '%AMERICAN%'",
@@ -279,13 +290,18 @@ async function performBulkPatternUpdates(db, batchSize) {
 				detailsField = "''";
 			}
 			
-			const sql = `
-				UPDATE payment 
-				SET merchant_normalized = ?,
-					merchant_details = ${detailsField}
-				WHERE (${update.pattern})
-				AND merchant_normalized IS NULL
-			`;
+					// Build WHERE clause - allow force updates for certain patterns
+		let whereClause = `(${update.pattern})`;
+		if (!update.forceUpdate) {
+			whereClause += ` AND merchant_normalized IS NULL`;
+		}
+		
+		const sql = `
+			UPDATE payment 
+			SET merchant_normalized = ?,
+				merchant_details = ${detailsField}
+			WHERE ${whereClause}
+		`;
 			
 			const result = await db
 				.prepare(sql)
@@ -311,6 +327,69 @@ async function performBulkPatternUpdates(db, batchSize) {
 		paymentsUpdated: totalUpdated,
 		errors
 	};
+}
+
+/**
+ * Special cleanup function for UNITED airlines
+ * This fixes any UNITED transactions that weren't properly normalized
+ */
+async function performUnitedCleanup(db) {
+	try {
+		// Find all UNITED transactions that aren't normalized to "UNITED"
+		const { results: unitedTransactions } = await db
+			.prepare(
+				`
+				SELECT id, merchant, merchant_normalized
+				FROM payment 
+				WHERE merchant LIKE '%UNITED%'
+				  AND (merchant_normalized != 'UNITED' OR merchant_normalized IS NULL)
+			`
+			)
+			.all();
+
+		let updated = 0;
+		const errors = [];
+
+		for (const transaction of unitedTransactions) {
+			try {
+				// Extract ticket number for merchant_details
+				const ticketMatch = transaction.merchant.match(/UNITED\s+(\d+)\s+UNITED\.COM/);
+				const ticketNumber = ticketMatch ? ticketMatch[1] : '';
+				
+				await db
+					.prepare(
+						`
+						UPDATE payment 
+						SET merchant_normalized = 'UNITED',
+							merchant_details = ?
+						WHERE id = ?
+					`
+					)
+					.bind(ticketNumber, transaction.id)
+					.run();
+				
+				updated++;
+			} catch (error) {
+				errors.push({
+					type: 'united_cleanup',
+					id: transaction.id,
+					merchant: transaction.merchant,
+					error: error.message
+				});
+			}
+		}
+
+		return { updated, errors };
+	} catch (error) {
+		console.error('UNITED cleanup failed:', error);
+		return { 
+			updated: 0, 
+			errors: [{ 
+				type: 'united_cleanup_failure', 
+				error: error.message 
+			}] 
+		};
+	}
 }
 
 /**
