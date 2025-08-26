@@ -19,22 +19,7 @@
 	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
 	
-	// Track when merchants data actually updates to ensure UI consistency
-	let lastMerchantsCount = $state(data.merchants?.length || 0);
-	$effect(() => {
-		const currentCount = data.merchants?.length || 0;
-		if (currentCount !== lastMerchantsCount) {
-			const previousCount = lastMerchantsCount;
-			console.log('Merchants count changed from', previousCount, 'to', currentCount);
-			lastMerchantsCount = currentCount;
-			
-			// If we're in the middle of adding a merchant and the data has increased, reset the loading state
-			if (isAdding && currentCount > previousCount) {
-				console.log('Data updated, resetting loading state');
-				isAdding = false;
-			}
-		}
-	});
+
 	
 	// Add merchant state
 	let selectedMerchant = $state('');
@@ -115,6 +100,11 @@
 			await invalidateAll();
 			console.log('invalidateAll completed');
 			console.log('After invalidateAll - merchants count:', merchants.length);
+			
+			// GUARANTEE state reset after invalidateAll completes
+			console.log('Guaranteeing state reset after invalidateAll');
+			isAdding = false;
+			console.log('State reset guaranteed, isAdding is now:', isAdding);
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
