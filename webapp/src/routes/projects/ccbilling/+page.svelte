@@ -102,7 +102,7 @@
 		</div>
 	{/if}
 
-	<div class="flex space-x-4">
+	<div class="flex flex-wrap gap-4">
 		<Button href="/projects/ccbilling/new" variant="success" size="lg"
 			>Create New Billing Cycle</Button
 		>
@@ -111,6 +111,8 @@
 		>
 		<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Manage Budgets</Button
 		>
+		       <Button href="/projects/ccbilling/admin" variant="secondary" size="lg">Admin Tools</Button
+       >
 	</div>
 	</div>
 </div>
