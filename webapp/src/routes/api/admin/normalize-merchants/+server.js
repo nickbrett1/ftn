@@ -373,6 +373,37 @@ export async function GET(event) {
 			)
 			.all();
 
+		// Get UNITED airlines specific information
+		const { results: unitedInfo } = await db
+			.prepare(
+				`
+				SELECT 
+					merchant_normalized,
+					COUNT(*) as count
+				FROM payment
+				WHERE merchant LIKE '%UNITED%'
+				GROUP BY merchant_normalized
+				ORDER BY count DESC
+			`
+			)
+			.all();
+
+		// Get merchants that still need normalization
+		const { results: pendingMerchants } = await db
+			.prepare(
+				`
+				SELECT 
+					merchant,
+					COUNT(*) as count
+				FROM payment
+				WHERE merchant_normalized IS NULL OR merchant_normalized = merchant
+				GROUP BY merchant
+				ORDER BY count DESC
+				LIMIT 10
+			`
+			)
+			.all();
+
 		return json({
 			payments: {
 				total: stats.total_payments,
@@ -386,6 +417,8 @@ export async function GET(event) {
 				normalized: budgetStats.normalized_mappings
 			},
 			samples,
+			unitedInfo,
+			pendingMerchants,
 			message: stats.processed_payments === stats.total_payments 
 				? 'All merchants have been processed!' 
 				: `${stats.total_payments - stats.processed_payments} payments still need processing`
