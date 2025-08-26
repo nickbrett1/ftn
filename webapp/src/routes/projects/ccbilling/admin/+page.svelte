@@ -41,7 +41,10 @@
 
 <main class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
-		<h1 class="text-3xl font-bold mb-8">Admin Tools</h1>
+		<div class="flex items-center justify-between mb-8">
+			<h1 class="text-3xl font-bold">Admin Tools</h1>
+			<Button href="/projects/ccbilling" variant="secondary" size="lg">Back to Billing Cycles</Button>
+		</div>
 
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<h2 class="text-xl font-semibold mb-4">Database Normalization</h2>
