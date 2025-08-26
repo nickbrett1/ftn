@@ -129,6 +129,27 @@ export async function POST(event) {
 			}
 		}
 
+		// If this is the first batch (offset = 0), also do bulk pattern-based updates
+		// This is more efficient for known merchant patterns
+		if (offset === 0) {
+			try {
+				const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
+				updatedCount += bulkUpdates.paymentsUpdated;
+				budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
+				
+				// Add any bulk update errors
+				if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
+					errors.push(...bulkUpdates.errors);
+				}
+			} catch (bulkError) {
+				console.error('Bulk pattern updates failed:', bulkError);
+				errors.push({
+					type: 'bulk_update_failure',
+					error: bulkError.message
+				});
+			}
+		}
+
 		return json({
 			success: true,
 			paymentsProcessed: payments.length,
@@ -155,6 +176,144 @@ export async function POST(event) {
 }
 
 /**
+ * Perform bulk pattern-based updates for known merchant patterns
+ * This is more efficient than processing each payment individually
+ */
+async function performBulkPatternUpdates(db, batchSize) {
+	const updates = [
+		// Amazon variations
+		{
+			pattern: "merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%'",
+			normalized: 'AMAZON',
+			details: ''
+		},
+		// Caviar
+		{
+			pattern: "merchant LIKE 'CAVIAR%'",
+			normalized: 'CAVIAR',
+			details: "SUBSTR(merchant, 8)" // Everything after 'CAVIAR '
+		},
+		// DoorDash
+		{
+			pattern: "merchant LIKE 'DOORDASH%'",
+			normalized: 'DOORDASH',
+			details: "SUBSTR(merchant, 10)" // Everything after 'DOORDASH '
+		},
+		// Uber Eats
+		{
+			pattern: "merchant LIKE '%UBER EATS%'",
+			normalized: 'UBER EATS',
+			details: "REPLACE(merchant, 'UBER EATS', '')"
+		},
+		// Lyft
+		{
+			pattern: "merchant LIKE 'LYFT%'",
+			normalized: 'LYFT',
+			details: "SUBSTR(merchant, 6)" // Everything after 'LYFT '
+		},
+		// Uber (not Uber Eats)
+		{
+			pattern: "merchant LIKE 'UBER%' AND merchant NOT LIKE '%UBER EATS%'",
+			normalized: 'UBER',
+			details: "SUBSTR(merchant, 6)" // Everything after 'UBER '
+		},
+		// Airlines
+		{
+			pattern: "merchant LIKE '%UNITED%'",
+			normalized: 'UNITED',
+			details: "merchant"
+		},
+		{
+			pattern: "merchant LIKE '%AMERICAN%'",
+			normalized: 'AMERICAN',
+			details: "merchant"
+		},
+		{
+			pattern: "merchant LIKE '%DELTA%'",
+			normalized: 'DELTA',
+			details: "merchant"
+		},
+		{
+			pattern: "merchant LIKE '%SOUTHWEST%'",
+			normalized: 'SOUTHWEST',
+			details: "merchant"
+		},
+		// Gas stations
+		{
+			pattern: "merchant LIKE '%SHELL%'",
+			normalized: 'SHELL',
+			details: ''
+		},
+		{
+			pattern: "merchant LIKE '%EXXON%'",
+			normalized: 'EXXON',
+			details: ''
+		},
+		{
+			pattern: "merchant LIKE '%CHEVRON%'",
+			normalized: 'CHEVRON',
+			details: ''
+		},
+		// Bluemercury
+		{
+			pattern: "merchant LIKE 'BLUEMERCURY%'",
+			normalized: 'BLUEMERCURY',
+			details: ''
+		}
+	];
+
+	let totalUpdated = 0;
+	const errors = [];
+
+	for (const update of updates) {
+		try {
+			// Update payments
+			let detailsField;
+			if (update.details === 'merchant') {
+				detailsField = 'merchant';
+			} else if (update.details && update.details.startsWith('SUBSTR')) {
+				detailsField = update.details;
+			} else if (update.details && update.details.startsWith('REPLACE')) {
+				detailsField = update.details;
+			} else {
+				detailsField = "''";
+			}
+			
+			const sql = `
+				UPDATE payment 
+				SET merchant_normalized = ?,
+					merchant_details = ${detailsField}
+				WHERE (${update.pattern})
+				AND merchant_normalized IS NULL
+			`;
+			
+			const result = await db
+				.prepare(sql)
+				.bind(update.normalized)
+				.run();
+			
+			const updated = result.changes || 0;
+			totalUpdated += updated;
+
+
+			
+		} catch (error) {
+			errors.push({
+				type: 'bulk_update',
+				pattern: update.pattern,
+				normalized: update.normalized,
+				error: error.message
+			});
+		}
+	}
+
+	return {
+		paymentsUpdated: totalUpdated,
+		errors
+	};
+}
+
+/**
  * Get normalization status
  */
 export async function GET(event) {
@@ -175,6 +334,7 @@ export async function GET(event) {
 				SELECT 
 					COUNT(*) as total_payments,
 					COUNT(CASE WHEN merchant_normalized IS NOT NULL AND merchant_normalized != merchant THEN 1 END) as normalized_payments,
+					COUNT(CASE WHEN merchant_normalized IS NOT NULL THEN 1 END) as processed_payments,
 					COUNT(DISTINCT merchant) as unique_merchants,
 					COUNT(DISTINCT merchant_normalized) as unique_normalized_merchants
 				FROM payment
@@ -217,7 +377,7 @@ export async function GET(event) {
 			payments: {
 				total: stats.total_payments,
 				normalized: stats.normalized_payments,
-				pending: stats.total_payments - stats.normalized_payments,
+				pending: stats.total_payments - stats.processed_payments,
 				uniqueMerchants: stats.unique_merchants,
 				uniqueNormalized: stats.unique_normalized_merchants
 			},
@@ -226,9 +386,9 @@ export async function GET(event) {
 				normalized: budgetStats.normalized_mappings
 			},
 			samples,
-			message: stats.normalized_payments === stats.total_payments 
-				? 'All merchants are normalized!' 
-				: `${stats.total_payments - stats.normalized_payments} payments need normalization`
+			message: stats.processed_payments === stats.total_payments 
+				? 'All merchants have been processed!' 
+				: `${stats.total_payments - stats.processed_payments} payments still need processing`
 		});
 
 	} catch (error) {
