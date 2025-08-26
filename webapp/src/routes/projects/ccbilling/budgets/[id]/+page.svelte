@@ -19,18 +19,25 @@
 	let merchants = $derived(data.merchants || []);
 		let budgets = $derived(data.budgets || []);
 	
+	// Track previous merchants count to detect increases
+	let previousMerchantsCount = $state(data.merchants?.length || 0);
+	
 	// Properly sync component state when data changes (Svelte 5 + invalidateAll compatibility)
 	$effect(() => {
+		const currentCount = data.merchants?.length || 0;
 		console.log('=== DATA PROP CHANGED ===');
-		console.log('data.merchants count:', data.merchants?.length || 0);
-		console.log('Current merchants count:', merchants.length);
+		console.log('Previous merchants count:', previousMerchantsCount);
+		console.log('Current merchants count:', currentCount);
 		console.log('Current isAdding state:', isAdding);
 		
 		// If we're in the middle of adding and the data has increased, reset the loading state
-		if (isAdding && data.merchants && data.merchants.length > merchants.length) {
+		if (isAdding && currentCount > previousMerchantsCount) {
 			console.log('Data increased, resetting loading state');
 			isAdding = false;
 		}
+		
+		// Update the previous count for next comparison
+		previousMerchantsCount = currentCount;
 		console.log('=======================');
 	});
 	
