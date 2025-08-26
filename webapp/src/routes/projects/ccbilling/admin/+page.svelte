@@ -72,7 +72,6 @@
 					</div>
 					<div class="mt-3 text-sm text-green-200">
 						<div>Payments updated: {results.paymentsUpdated}</div>
-						<div>Budget merchants updated: {results.budgetMerchantsUpdated}</div>
 						{#if results.errors && results.errors.length > 0}
 							<div class="mt-2 text-yellow-200">
 								Warnings: {results.errors.length} issues encountered
