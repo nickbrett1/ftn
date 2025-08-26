@@ -339,6 +339,21 @@
 				<!-- Debug info -->
 				<div class="text-xs text-gray-500 mb-2">
 					Debug: isAdding = {isAdding}, Button should show: "{isAdding ? 'Adding...' : 'Add Merchant'}"
+					<br>
+					Timestamp: {new Date().toLocaleTimeString()}
+					<br>
+					Render count: {Math.random().toFixed(4)}
+					<br>
+					<button 
+						onclick={() => {
+							console.log('Manual toggle clicked, current isAdding:', isAdding);
+							isAdding = !isAdding;
+							console.log('Manual toggle, isAdding is now:', isAdding);
+						}}
+						class="text-xs bg-blue-600 px-2 py-1 rounded text-white"
+					>
+						Toggle isAdding (currently {isAdding ? 'true' : 'false'})
+					</button>
 				</div>
 				<div class="flex space-x-2">
 					<Button
