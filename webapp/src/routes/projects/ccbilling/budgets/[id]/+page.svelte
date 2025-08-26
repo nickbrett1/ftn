@@ -24,11 +24,12 @@
 	$effect(() => {
 		const currentCount = data.merchants?.length || 0;
 		if (currentCount !== lastMerchantsCount) {
-			console.log('Merchants count changed from', lastMerchantsCount, 'to', currentCount);
+			const previousCount = lastMerchantsCount;
+			console.log('Merchants count changed from', previousCount, 'to', currentCount);
 			lastMerchantsCount = currentCount;
 			
-			// If we're in the middle of adding a merchant and the data has updated, reset the loading state
-			if (isAdding && currentCount > lastMerchantsCount) {
+			// If we're in the middle of adding a merchant and the data has increased, reset the loading state
+			if (isAdding && currentCount > previousCount) {
 				console.log('Data updated, resetting loading state');
 				isAdding = false;
 			}
