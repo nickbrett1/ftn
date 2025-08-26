@@ -6,9 +6,8 @@ import { requireUser } from '$lib/server/require-user.js';
  * Admin endpoint to normalize existing merchant data
  * This processes payments in batches to avoid timeouts.
  * 
- * The normalization now always redoes previously normalized patterns to ensure
- * consistency, especially for cases like UNITED airlines where some transactions
- * may have been missed or inconsistently processed.
+ * The normalization now intelligently updates only records that actually need changes,
+ * ensuring consistency while avoiding unnecessary database updates.
  */
 export async function POST(event) {
 	// Require authentication
@@ -30,7 +29,7 @@ export async function POST(event) {
 		const { results: payments } = await db
 			.prepare(
 				`
-				SELECT id, merchant 
+				SELECT id, merchant, merchant_normalized, merchant_details
 				FROM payment 
 				WHERE merchant IS NOT NULL
 				ORDER BY id
@@ -43,29 +42,33 @@ export async function POST(event) {
 		let updatedCount = 0;
 		const errors = [];
 
-		// Process each payment
+				// Process each payment
 		for (const payment of payments) {
-						try {
+			try {
 				const normalized = normalizeMerchant(payment.merchant);
 				
-				// Always update to ensure consistency
-				await db
-					.prepare(
+				// Only update if normalization actually changed something
+				if (normalized.merchant_normalized !== payment.merchant_normalized || 
+					normalized.merchant_details !== (payment.merchant_details || '')) {
+					
+					await db
+						.prepare(
+							`
+							UPDATE payment 
+							SET merchant_normalized = ?,
+								merchant_details = ?
+							WHERE id = ?
 						`
-						UPDATE payment 
-						SET merchant_normalized = ?,
-							merchant_details = ?
-						WHERE id = ?
-					`
-						)
-						.bind(
-							normalized.merchant_normalized,
-							normalized.merchant_details || '',
-							payment.id
-						)
-						.run();
-				
-				updatedCount++;
+							)
+							.bind(
+								normalized.merchant_normalized,
+								normalized.merchant_details || '',
+								payment.id
+							)
+							.run();
+					
+					updatedCount++;
+				}
 			} catch (error) {
 				errors.push({
 					id: payment.id,
@@ -162,7 +165,7 @@ export async function POST(event) {
 			errors: errors.length > 0 ? errors : undefined,
 			message: totalRemaining > batchSize 
 				? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-				: 'All merchants normalized successfully! Note: This renormalized all patterns for consistency.'
+				: 'All merchants normalized successfully! Only records that needed updates were modified.'
 		});
 
 	} catch (error) {
@@ -286,11 +289,12 @@ async function performBulkPatternUpdates(db, batchSize) {
 			SET merchant_normalized = ?,
 				merchant_details = ${detailsField}
 			WHERE (${update.pattern})
+			AND (merchant_normalized != ? OR merchant_normalized IS NULL)
 		`;
 			
 			const result = await db
 				.prepare(sql)
-				.bind(update.normalized)
+				.bind(update.normalized, update.normalized)
 				.run();
 			
 			const updated = result.changes || 0;
