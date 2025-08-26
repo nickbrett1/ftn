@@ -285,12 +285,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 					merchant_details = ${detailsField}
 				WHERE (${update.pattern})
 				AND merchant_normalized IS NULL
-				LIMIT ?
 			`;
 			
 			const result = await db
 				.prepare(sql)
-				.bind(update.normalized, batchSize)
+				.bind(update.normalized)
 				.run();
 			
 			const updated = result.changes || 0;
