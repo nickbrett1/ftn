@@ -19,8 +19,22 @@
 	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
 	
-
-
+	// Track when merchants data actually updates to ensure UI consistency
+	let lastMerchantsCount = $state(data.merchants?.length || 0);
+	$effect(() => {
+		const currentCount = data.merchants?.length || 0;
+		if (currentCount !== lastMerchantsCount) {
+			console.log('Merchants count changed from', lastMerchantsCount, 'to', currentCount);
+			lastMerchantsCount = currentCount;
+			
+			// If we're in the middle of adding a merchant and the data has updated, reset the loading state
+			if (isAdding && currentCount > lastMerchantsCount) {
+				console.log('Data updated, resetting loading state');
+				isAdding = false;
+			}
+		}
+	});
+	
 	// Add merchant state
 	let selectedMerchant = $state('');
 	let isAdding = $state(false);
@@ -101,9 +115,6 @@
 			console.log('invalidateAll completed');
 			console.log('After invalidateAll - merchants count:', merchants.length);
 			
-			// Small delay to ensure data refresh is complete before state reset
-			await new Promise(resolve => setTimeout(resolve, 50));
-			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
 				await merchantPickerRef.refreshMerchantList();
@@ -123,9 +134,7 @@
 			addError = 'Network error occurred';
 		} finally {
 			console.log('=== FINALLY BLOCK ===');
-			console.log('Setting isAdding to false');
-			isAdding = false;
-			console.log('isAdding after setting to false:', isAdding);
+			console.log('Final state check - isAdding:', isAdding);
 			console.log('=== addMerchant END ===');
 		}
 	}
