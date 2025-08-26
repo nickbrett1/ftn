@@ -52,18 +52,24 @@
 	});
 
 		async function addMerchant() {
+		console.log('=== addMerchant START ===');
+		console.log('isAdding at start:', isAdding);
+		
 		if (!selectedMerchant.trim()) {
 			addError = 'Please select a merchant';
 			return;
 		}
 
+		console.log('Setting isAdding to true');
 		isAdding = true;
+		console.log('isAdding after setting to true:', isAdding);
 		addError = '';
 
 		// Save current scroll position
 		const scrollPosition = window.scrollY;
 
 		try {
+			console.log('Making API call...');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -72,17 +78,25 @@
 				})
 			});
 
+			console.log('API response received, ok:', response.ok);
+
 			if (!response.ok) {
 				const error = await response.json();
 				addError = error.error || 'Failed to add merchant';
+				console.log('API call failed, setting isAdding to false');
+				isAdding = false;
 				return;
 			}
+
+			console.log('API call successful, proceeding with UI update');
 
 			// Reset form immediately after successful addition
 			selectedMerchant = '';
 			
 			// Refresh data without page reload to maintain scroll position
+			console.log('Calling invalidateAll...');
 			await invalidateAll();
+			console.log('invalidateAll completed');
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
@@ -99,9 +113,14 @@
 				window.scrollTo(0, scrollPosition);
 			});
 		} catch (error) {
+			console.log('Error occurred:', error);
 			addError = 'Network error occurred';
 		} finally {
+			console.log('=== FINALLY BLOCK ===');
+			console.log('Setting isAdding to false');
 			isAdding = false;
+			console.log('isAdding after setting to false:', isAdding);
+			console.log('=== addMerchant END ===');
 		}
 	}
 
@@ -311,6 +330,10 @@
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
 				{/if}
+				<!-- Debug info -->
+				<div class="text-xs text-gray-500 mb-2">
+					Debug: isAdding = {isAdding}, Button should show: "{isAdding ? 'Adding...' : 'Add Merchant'}"
+				</div>
 				<div class="flex space-x-2">
 					<Button
 						onclick={addMerchant}
