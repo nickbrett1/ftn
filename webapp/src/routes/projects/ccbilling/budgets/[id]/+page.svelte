@@ -17,9 +17,22 @@
 	// Make budget, merchants, and budgets reactive to data changes
 	let budget = $derived(data.budget || null);
 	let merchants = $derived(data.merchants || []);
-	let budgets = $derived(data.budgets || []);
+		let budgets = $derived(data.budgets || []);
 	
-
+	// Properly sync component state when data changes (Svelte 5 + invalidateAll compatibility)
+	$effect(() => {
+		console.log('=== DATA PROP CHANGED ===');
+		console.log('data.merchants count:', data.merchants?.length || 0);
+		console.log('Current merchants count:', merchants.length);
+		console.log('Current isAdding state:', isAdding);
+		
+		// If we're in the middle of adding and the data has increased, reset the loading state
+		if (isAdding && data.merchants && data.merchants.length > merchants.length) {
+			console.log('Data increased, resetting loading state');
+			isAdding = false;
+		}
+		console.log('=======================');
+	});
 	
 	// Add merchant state
 	let selectedMerchant = $state('');
@@ -95,23 +108,10 @@
 			// Reset form immediately after successful addition
 			selectedMerchant = '';
 			
-			// MANUALLY update the merchants list instead of relying on invalidateAll
-			console.log('Manually updating merchants list...');
-			const newMerchant = {
-				id: Date.now(),
-				budget_id: budget.id,
-				merchant: selectedMerchant.trim(),
-				created_at: new Date().toISOString()
-			};
-			
-			// Force a reactive update by creating a new array
-			merchants = [...merchants, newMerchant];
-			console.log('Merchants list manually updated, count:', merchants.length);
-			
-			// Reset state immediately after manual update
-			console.log('Resetting state after manual update');
-			isAdding = false;
-			console.log('State reset complete, isAdding is now:', isAdding);
+			// Use invalidateAll() and let the effect handle state reset
+			console.log('Calling invalidateAll...');
+			await invalidateAll();
+			console.log('invalidateAll completed');
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
