@@ -50,7 +50,7 @@
 			<h2 class="text-xl font-semibold mb-4">Database Normalization</h2>
 			
 			<p class="text-gray-300 mb-6">
-				Run the merchant normalization process across all payment records. This will ensure all merchant names are consistently normalized.
+				Run the merchant normalization process across all payment records and budget-to-merchant auto-association mappings. This will ensure all merchant names are consistently normalized and budget assignments stay in sync.
 			</p>
 
 			<Button 
@@ -82,7 +82,7 @@
 					</div>
 					<div class="mt-3 text-sm text-green-200">
 						<div>Payments updated: {results.paymentsUpdated}</div>
-						<div>Budget merchants updated: {results.budgetMerchantsUpdated || 0}</div>
+						<div>Budget to merchant auto-association mappings updated: {results.budgetMerchantsUpdated || 0}</div>
 						{#if results.errors && results.errors.length > 0}
 							<div class="mt-2 text-yellow-200">
 								Warnings: {results.errors.length} issues encountered
