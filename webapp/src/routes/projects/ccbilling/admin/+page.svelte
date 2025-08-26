@@ -61,7 +61,14 @@
 
 			{#if error}
 				<div class="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
-					<div class="text-red-300">❌ Error: {error}</div>
+					<div class="text-red-300">
+						❌ Error: {error}
+						{#if error.includes('401')}
+							<div class="mt-2 text-red-200 text-sm">
+								This appears to be an authentication error. You may need to log in again.
+							</div>
+						{/if}
+					</div>
 				</div>
 			{/if}
 
