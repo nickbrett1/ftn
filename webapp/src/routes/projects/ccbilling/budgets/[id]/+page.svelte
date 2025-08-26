@@ -19,13 +19,7 @@
 	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
 	
-	// Debug: Track when data changes
-	$effect(() => {
-		console.log('=== DATA CHANGED ===');
-		console.log('data.merchants count:', data.merchants?.length || 0);
-		console.log('derived merchants count:', merchants.length);
-		console.log('=======================');
-	});
+
 
 	// Add merchant state
 	let selectedMerchant = $state('');
@@ -98,18 +92,17 @@
 
 			console.log('API call successful, proceeding with UI update');
 
-			// Reset ALL component state BEFORE calling invalidateAll
-			console.log('Resetting component state...');
+			// Reset form immediately after successful addition
 			selectedMerchant = '';
-			isAdding = false;  // Reset the loading state immediately
-			addError = '';
-			console.log('State reset complete, isAdding is now:', isAdding);
 			
 			// Refresh data without page reload to maintain scroll position
 			console.log('Calling invalidateAll...');
 			await invalidateAll();
 			console.log('invalidateAll completed');
 			console.log('After invalidateAll - merchants count:', merchants.length);
+			
+			// Small delay to ensure data refresh is complete before state reset
+			await new Promise(resolve => setTimeout(resolve, 50));
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
@@ -130,7 +123,9 @@
 			addError = 'Network error occurred';
 		} finally {
 			console.log('=== FINALLY BLOCK ===');
-			console.log('Final state check - isAdding:', isAdding);
+			console.log('Setting isAdding to false');
+			isAdding = false;
+			console.log('isAdding after setting to false:', isAdding);
 			console.log('=== addMerchant END ===');
 		}
 	}
