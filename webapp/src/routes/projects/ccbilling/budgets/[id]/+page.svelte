@@ -25,6 +25,10 @@
 	// Properly sync component state when data changes (Svelte 5 + invalidateAll compatibility)
 	$effect(() => {
 		const currentCount = data.merchants?.length || 0;
+		console.log('=== EFFECT TRIGGERED ===');
+		console.log('Previous count:', previousMerchantsCount);
+		console.log('Current count:', currentCount);
+		console.log('isAdding state:', isAdding);
 		
 		// If we're in the middle of adding and the data has increased, reset the loading state
 		if (isAdding && currentCount > previousMerchantsCount) {
@@ -34,6 +38,7 @@
 		
 		// Update the previous count for next comparison
 		previousMerchantsCount = currentCount;
+		console.log('=======================');
 	});
 	
 	// Add merchant state
@@ -114,6 +119,8 @@
 			console.log('Calling invalidateAll...');
 			await invalidateAll();
 			console.log('invalidateAll completed');
+			console.log('Data after invalidateAll - merchants count:', data.merchants?.length);
+			console.log('Derived merchants count:', merchants.length);
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
