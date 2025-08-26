@@ -7,9 +7,19 @@ import { requireUser } from '$lib/server/require-user.js';
  * This processes payments in batches to avoid timeouts
  */
 export async function POST(event) {
+	// Debug authentication
+	console.log('[DEBUG] POST request received');
+	console.log('[DEBUG] Cookies:', event.cookies.getAll());
+	console.log('[DEBUG] Auth cookie:', event.cookies.get('auth'));
+	
 	// Require authentication
 	const authResult = await requireUser(event);
-	if (authResult instanceof Response) return authResult;
+	if (authResult instanceof Response) {
+		console.log('[DEBUG] Authentication failed:', authResult.status);
+		return authResult;
+	}
+	
+	console.log('[DEBUG] Authentication successful');
 
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) {
