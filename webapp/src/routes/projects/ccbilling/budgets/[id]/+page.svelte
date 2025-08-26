@@ -95,16 +95,23 @@
 			// Reset form immediately after successful addition
 			selectedMerchant = '';
 			
-			// Refresh data without page reload to maintain scroll position
-			console.log('Calling invalidateAll...');
-			await invalidateAll();
-			console.log('invalidateAll completed');
-			console.log('After invalidateAll - merchants count:', merchants.length);
+			// MANUALLY update the merchants list instead of relying on invalidateAll
+			console.log('Manually updating merchants list...');
+			const newMerchant = {
+				id: Date.now(),
+				budget_id: budget.id,
+				merchant: selectedMerchant.trim(),
+				created_at: new Date().toISOString()
+			};
 			
-			// GUARANTEE state reset after invalidateAll completes
-			console.log('Guaranteeing state reset after invalidateAll');
+			// Force a reactive update by creating a new array
+			merchants = [...merchants, newMerchant];
+			console.log('Merchants list manually updated, count:', merchants.length);
+			
+			// Reset state immediately after manual update
+			console.log('Resetting state after manual update');
 			isAdding = false;
-			console.log('State reset guaranteed, isAdding is now:', isAdding);
+			console.log('State reset complete, isAdding is now:', isAdding);
 			
 			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
 			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
