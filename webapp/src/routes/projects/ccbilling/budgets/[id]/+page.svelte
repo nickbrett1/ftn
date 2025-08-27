@@ -91,28 +91,27 @@
 				return;
 			}
 
-		// Manually add the new merchant to the local state for immediate UI update
-		const newMerchant = {
-			merchant: selectedMerchant.trim(),
-			merchant_normalized: selectedMerchant.trim()
-		};
-		
-		// Add to the local merchants state for immediate UI update and sort alphabetically
-		localMerchants = [...localMerchants, newMerchant].sort((a, b) => 
-			a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
-		);
-		
-		// Remove the merchant from the picker's local state (no server call needed)
-		if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
-			merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
-		}
-		
-		// Reset form and loading state
-		selectedMerchant = '';
-		isAdding = false;
+			// Manually add the new merchant to the local state for immediate UI update
+			const newMerchant = {
+				merchant: selectedMerchant.trim(),
+				merchant_normalized: selectedMerchant.trim()
+			};
+			
+			// Add to the local merchants state for immediate UI update and sort alphabetically
+			localMerchants = [...localMerchants, newMerchant].sort((a, b) => 
+				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
+			);
+			
+			// Remove the merchant from the picker's local state (no server call needed)
+			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
+				merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
+			}
+			
+			// Reset form and loading state
+			selectedMerchant = '';
+			isAdding = false;
 		} catch (error) {
 			addError = 'Network error occurred';
-		} finally {
 			isAdding = false;
 		}
 	}
