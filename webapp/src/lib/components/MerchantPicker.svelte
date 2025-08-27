@@ -104,12 +104,7 @@
 		}
 	}
 
-	// Refresh merchant list when assigned merchants change
-	$effect(() => {
-		if (assignedMerchants && assignedMerchants.length >= 0) {
-			loadUnassignedMerchants();
-		}
-	});
+
 
 	// Sync local state with prop when it changes
 	$effect(() => {
