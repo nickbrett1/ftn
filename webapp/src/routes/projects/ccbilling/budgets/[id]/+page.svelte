@@ -99,6 +99,12 @@
 		data.merchants = [...(data.merchants || []), newMerchant];
 		console.log('Added new merchant to local state:', newMerchant.merchant);
 		
+		// Refresh the merchant picker to get fresh merchants after the assignedMerchants prop updates
+		if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+			await merchantPickerRef.refreshMerchantList();
+			console.log('Refreshed merchant picker with fresh data');
+		}
+		
 		// Reset form and loading state
 		selectedMerchant = '';
 		isAdding = false;
