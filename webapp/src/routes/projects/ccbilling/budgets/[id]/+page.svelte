@@ -14,9 +14,8 @@
 
 	const { data } = $props();
 
-	// Make budget, merchants, and budgets reactive to data changes
+	// Make budget and budgets reactive to data changes
 	let budget = $derived(data.budget || null);
-	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
 	
 
@@ -83,9 +82,6 @@
 				return;
 			}
 
-			// Refresh the data to show the new merchant
-			await invalidateAll();
-			
 			// Remove the merchant from the picker's local state (no server call needed)
 			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
 				merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
@@ -94,6 +90,9 @@
 			// Reset form and loading state
 			selectedMerchant = '';
 			isAdding = false;
+			
+			// Refresh the page to show the new merchant
+			window.location.reload();
 		} catch (error) {
 			addError = 'Network error occurred';
 			isAdding = false;
@@ -105,8 +104,7 @@
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
+
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -123,18 +121,13 @@
 				return;
 			}
 
-			// Refresh the data to remove the merchant from the list
-			await invalidateAll();
-			
 			// Add the removed merchant back to the picker's available merchants list
 			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
 				merchantPickerRef.addMerchantToLocalState(merchantName);
 			}
 			
-			// Restore scroll position
-			requestAnimationFrame(() => {
-				window.scrollTo(0, scrollPosition);
-			});
+			// Refresh the page to remove the merchant from the list
+			window.location.reload();
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
@@ -316,7 +309,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.length === 0}
+		{#if data.merchants?.length === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -325,9 +318,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({data.merchants?.length || 0})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each data.merchants || [] as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
