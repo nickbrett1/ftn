@@ -151,20 +151,19 @@ describe('MerchantPicker', () => {
 		});
 	});
 
-	it('should filter out assigned merchants when assignedMerchants prop is provided', async () => {
-		const mockMerchants = ['Amazon', 'Target', 'Walmart', 'Best Buy'];
-		const assignedMerchants = ['Amazon', 'Walmart'];
+	it('should display merchants returned from server (server-side filtering)', async () => {
+		// Server now returns only unassigned merchants, so we don't need client-side filtering
+		const mockMerchants = ['Best Buy', 'Target']; // Only unassigned merchants
 		
-		// Mock fetch to return merchants
+		// Mock fetch to return unassigned merchants only
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
-		const { getByRole, queryByText } = render(MerchantPicker, {
+		const { getByRole } = render(MerchantPicker, {
 			props: {
-				onSelect: mockOnSelect,
-				assignedMerchants
+				onSelect: mockOnSelect
 			}
 		});
 
@@ -175,20 +174,16 @@ describe('MerchantPicker', () => {
 
 		const select = getByRole('combobox');
 		
-		// Check that assigned merchants are not in the options
-		expect(select.innerHTML).not.toContain('Amazon');
-		expect(select.innerHTML).not.toContain('Walmart');
-		
-		// Check that unassigned merchants are still available
+		// Check that only unassigned merchants are displayed (server-side filtering)
 		expect(select.innerHTML).toContain('Target');
 		expect(select.innerHTML).toContain('Best Buy');
 	});
 
-	it('should show "All recent merchants are already assigned" when all merchants are assigned', async () => {
-		const mockMerchants = ['Amazon', 'Target'];
-		const assignedMerchants = ['Amazon', 'Target'];
+	it('should show "No merchants available" when server returns empty array', async () => {
+		// Server returns empty array when all merchants are assigned
+		const mockMerchants = [];
 		
-		// Mock fetch to return merchants
+		// Mock fetch to return empty array
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
@@ -196,18 +191,17 @@ describe('MerchantPicker', () => {
 
 		const { getByText } = render(MerchantPicker, {
 			props: {
-				onSelect: mockOnSelect,
-				assignedMerchants
+				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for message to appear
 		await waitFor(() => {
-			expect(getByText('All recent merchants are already assigned to budgets')).toBeTruthy();
+			expect(getByText('No merchants available')).toBeTruthy();
 		});
 	});
 
-	it('should handle undefined assignedMerchants gracefully', async () => {
+	it('should handle normal merchant loading', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
 		
 		// Mock fetch to return merchants
@@ -218,8 +212,7 @@ describe('MerchantPicker', () => {
 
 		const { getByRole } = render(MerchantPicker, {
 			props: {
-				onSelect: mockOnSelect,
-				assignedMerchants: undefined
+				onSelect: mockOnSelect
 			}
 		});
 
