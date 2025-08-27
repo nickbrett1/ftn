@@ -99,15 +99,6 @@
 		data.merchants = [...(data.merchants || []), newMerchant];
 		console.log('Added new merchant to local state:', newMerchant.merchant);
 		
-		// Clear the merchant picker and fetch fresh list to avoid gradual item removal
-		// Add a small delay to ensure the derived merchants variable updates first
-		setTimeout(async () => {
-			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
-				merchantPickerRef.resetMerchantPicker();
-				console.log('Reset merchant picker - cleared selection and refreshed available merchants');
-			}
-		}, 50);
-		
 		// Reset form and loading state
 		selectedMerchant = '';
 		isAdding = false;
