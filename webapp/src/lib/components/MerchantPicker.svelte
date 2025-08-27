@@ -15,7 +15,7 @@
 	let showModal = $state(false);
 	let localSelectedMerchant = $state(''); // Local state for internal management
 
-	async function loadRecentMerchants() {
+	async function loadUnassignedMerchants() {
 		try {
 			isLoading = true;
 			error = '';
@@ -34,7 +34,7 @@
 			const data = await response.json();
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
 			
-			// Show the most recent 20 merchants
+			// Show the first 20 merchants (they're already sorted by recency from the server)
 			merchants = allUnassignedMerchants.slice(0, 20);
 		} catch (err) {
 			console.error('Error loading merchants:', err);
@@ -56,7 +56,7 @@
 			setTimeout(() => {
 				// Refresh the merchant list to ensure it's up to date
 				// This helps when the merchant might be added to auto-assignment
-				loadRecentMerchants();
+				loadUnassignedMerchants();
 			}, 100);
 		}
 	}
@@ -68,8 +68,8 @@
 		// Add a small delay to ensure any database changes are committed
 		setTimeout(() => {
 			// Refresh the recent merchants list to remove the newly added merchant
-			// This ensures the combo box doesn't show merchants that are no longer unassigned
-			loadRecentMerchants();
+					// This ensures the combo box doesn't show merchants that are no longer unassigned
+		loadUnassignedMerchants();
 		}, 100);
 	}
 
@@ -77,7 +77,7 @@
 	async function refreshMerchantList() {
 		// Add a small delay to ensure database transactions are fully committed
 		await new Promise((resolve) => setTimeout(resolve, 100));
-		await loadRecentMerchants();
+		await loadUnassignedMerchants();
 	}
 
 	// Function to remove a merchant from local state and refresh the display
@@ -96,7 +96,7 @@
 	function resetMerchantPicker() {
 		localSelectedMerchant = '';
 		// Also refresh the merchant list to ensure it's up to date
-		loadRecentMerchants();
+		loadUnassignedMerchants();
 		// Reset the select element value as well
 		const selectElement = document.getElementById('merchant-picker');
 		if (selectElement) {
@@ -107,7 +107,7 @@
 	// Refresh merchant list when assigned merchants change
 	$effect(() => {
 		if (assignedMerchants && assignedMerchants.length >= 0) {
-			loadRecentMerchants();
+			loadUnassignedMerchants();
 		}
 	});
 
@@ -124,7 +124,7 @@
 	});
 
 	onMount(() => {
-		loadRecentMerchants();
+		loadUnassignedMerchants();
 	});
 </script>
 
