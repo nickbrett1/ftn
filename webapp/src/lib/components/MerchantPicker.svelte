@@ -101,8 +101,10 @@
 				a.toLowerCase().localeCompare(b.toLowerCase())
 			);
 			
-			// Update the displayed merchants (show the next 20)
-			merchants = allUnassignedMerchants.slice(0, 20);
+			// For recently removed merchants, prioritize them in the combo box
+			// Put the recently removed merchant at the top, followed by the rest
+			const otherMerchants = allUnassignedMerchants.filter(m => m !== merchantToAdd);
+			merchants = [merchantToAdd, ...otherMerchants].slice(0, 20);
 		}
 	}
 
