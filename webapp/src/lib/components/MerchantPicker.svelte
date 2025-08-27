@@ -145,6 +145,9 @@
 	onMount(() => {
 		loadUnassignedMerchants();
 	});
+
+	// Export functions for parent component to use
+	export { removeMerchantFromLocalState, addMerchantToLocalState };
 </script>
 
 <div class="w-full">
