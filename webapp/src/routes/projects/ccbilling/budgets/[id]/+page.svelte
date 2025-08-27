@@ -26,6 +26,7 @@
 	let isAdding = $state(false);
 	let addError = $state('');
 	let merchantPickerRef = $state(null);
+	let isRefreshingData = $state(false);
 
 	// Delete merchant state
 	let deletingMerchant = $state(null);
@@ -56,6 +57,12 @@
 		async function addMerchant() {
 		console.log('=== addMerchant START ===');
 		console.log('isAdding at start:', isAdding);
+		
+		// Prevent running during data refresh to avoid infinite loops
+		if (isRefreshingData) {
+			console.log('Skipping addMerchant - currently refreshing data');
+			return;
+		}
 		
 		if (!selectedMerchant.trim()) {
 			addError = 'Please select a merchant';
@@ -89,21 +96,12 @@
 
 					console.log('API call successful, proceeding with UI update');
 
-		// Manually add the new merchant to the local state to avoid invalidateAll infinite loop
-		const newMerchant = {
-			merchant: selectedMerchant.trim(),
-			merchant_normalized: selectedMerchant.trim()
-		};
-		
-		// Add to the merchants array by updating the data object
-		data.merchants = [...(data.merchants || []), newMerchant];
-		console.log('Added new merchant to local state:', newMerchant.merchant);
-		
-		// Refresh the merchant picker to get fresh merchants after the assignedMerchants prop updates
-		if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-			await merchantPickerRef.refreshMerchantList();
-			console.log('Refreshed merchant picker with fresh data');
-		}
+		// Use invalidateAll to refresh data from server (this will include the newly added merchant)
+		isRefreshingData = true;
+		console.log('Calling invalidateAll to refresh data from server...');
+		await invalidateAll();
+		console.log('invalidateAll completed');
+		isRefreshingData = false;
 		
 		// Reset form and loading state
 		selectedMerchant = '';
