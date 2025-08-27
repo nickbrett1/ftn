@@ -87,12 +87,19 @@
 				return;
 			}
 
-			console.log('API call successful, proceeding with UI update');
+					console.log('API call successful, proceeding with UI update');
 
-					// Reset form and loading state immediately after successful addition
+		// Reset form immediately after successful addition
 		selectedMerchant = '';
+		
+		// Use invalidateAll to refresh the data, but with a small delay to prevent infinite loops
+		console.log('Calling invalidateAll...');
+		await invalidateAll();
+		console.log('invalidateAll completed');
+		
+		// Reset loading state after data refresh
 		isAdding = false;
-		console.log('Reset form and loading state after successful API call');
+		console.log('Reset isAdding to false after invalidateAll');
 		} catch (error) {
 			console.log('Error occurred:', error);
 			addError = 'Network error occurred';
