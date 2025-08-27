@@ -87,9 +87,19 @@
 		
 		// Update the displayed merchants (show the next 20)
 		merchants = allUnassignedMerchants.slice(0, 20);
-		
-		console.log('Removed merchant from local state:', merchantToRemove);
-		console.log('Updated merchants list, now showing:', merchants.length, 'merchants');
+	}
+
+	// Function to add a merchant back to the available merchants list
+	function addMerchantToLocalState(merchantToAdd) {
+		// Add the merchant to allUnassignedMerchants if it's not already there
+		if (!allUnassignedMerchants.includes(merchantToAdd)) {
+			allUnassignedMerchants = [...allUnassignedMerchants, merchantToAdd].sort((a, b) => 
+				a.toLowerCase().localeCompare(b.toLowerCase())
+			);
+			
+			// Update the displayed merchants (show the next 20)
+			merchants = allUnassignedMerchants.slice(0, 20);
+		}
 	}
 
 	// Function to reset the merchant picker state

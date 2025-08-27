@@ -138,20 +138,15 @@
 				return;
 			}
 
-			// Refresh data without page reload to maintain scroll position
-			await invalidateAll();
+			// Manually remove the merchant from the local state for immediate UI update
+			localMerchants = localMerchants.filter(merchant => merchant.merchant !== merchantName);
 			
-			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				await merchantPickerRef.refreshMerchantList();
+			// Add the removed merchant back to the picker's available merchants list
+			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
+				merchantPickerRef.addMerchantToLocalState(merchantName);
 			}
 			
-			// Also reset the merchant picker state to ensure it's completely clean
-			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
-				merchantPickerRef.resetMerchantPicker();
-			}
-			
-			// Restore scroll position after data refresh
+			// Restore scroll position
 			requestAnimationFrame(() => {
 				window.scrollTo(0, scrollPosition);
 			});
