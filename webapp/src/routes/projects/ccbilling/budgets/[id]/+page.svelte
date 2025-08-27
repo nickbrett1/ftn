@@ -63,13 +63,18 @@
 	$effect(() => {
 		console.log('Budget effect triggered, budget:', budget);
 		console.log('Data:', data);
-		if (budget) {
-			console.log('Setting editName to:', budget.name);
-			console.log('Setting editIcon to:', budget.icon);
-			editName = budget.name;
-			editIcon = budget.icon || '';
+		console.log('data.budget:', data.budget);
+		
+		// Use data.budget directly to avoid derived value timing issues
+		const currentBudget = data.budget || budget;
+		
+		if (currentBudget && currentBudget.name) {
+			console.log('Setting editName to:', currentBudget.name);
+			console.log('Setting editIcon to:', currentBudget.icon);
+			editName = currentBudget.name;
+			editIcon = currentBudget.icon || '';
 		} else {
-			console.log('No budget available');
+			console.log('No valid budget available');
 		}
 	});
 
