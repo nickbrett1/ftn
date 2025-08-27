@@ -2,8 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 
-	export let chargeId;
-	export let merchant = '';
+	const { chargeId, merchant = '' } = $props();
 
 	let loading = false;
 	let error = null;
