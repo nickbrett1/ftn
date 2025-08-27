@@ -16,16 +16,8 @@
 
 	// Make budget, merchants, and budgets reactive to data changes
 	let budget = $derived(data.budget || null);
-	let localMerchants = $state(data.merchants || []);
-	let merchants = $derived(localMerchants);
+	let merchants = $derived(data.merchants || []);
 	let budgets = $derived(data.budgets || []);
-	
-	// Sync local merchants with data changes (e.g., on page load)
-	$effect(() => {
-		if (data.merchants) {
-			localMerchants = data.merchants;
-		}
-	});
 	
 
 	
@@ -91,16 +83,8 @@
 				return;
 			}
 
-			// Manually add the new merchant to the local state for immediate UI update
-			const newMerchant = {
-				merchant: selectedMerchant.trim(),
-				merchant_normalized: selectedMerchant.trim()
-			};
-			
-			// Add to the local merchants state for immediate UI update and sort alphabetically
-			localMerchants = [...localMerchants, newMerchant].sort((a, b) => 
-				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
-			);
+			// Refresh the data to show the new merchant
+			await invalidateAll();
 			
 			// Remove the merchant from the picker's local state (no server call needed)
 			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
@@ -139,17 +123,12 @@
 				return;
 			}
 
-			// Manually remove the merchant from the local state for immediate UI update
-			localMerchants = localMerchants.filter(merchant => merchant.merchant !== merchantName);
-			console.log('Removed merchant from localMerchants:', merchantName);
-			console.log('Updated localMerchants:', localMerchants);
+			// Refresh the data to remove the merchant from the list
+			await invalidateAll();
 			
 			// Add the removed merchant back to the picker's available merchants list
 			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
-				console.log('Calling addMerchantToLocalState for:', merchantName);
 				merchantPickerRef.addMerchantToLocalState(merchantName);
-			} else {
-				console.log('merchantPickerRef or addMerchantToLocalState not available');
 			}
 			
 			// Restore scroll position
