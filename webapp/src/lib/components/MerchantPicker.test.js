@@ -197,7 +197,7 @@ describe('MerchantPicker', () => {
 
 		// Wait for message to appear
 		await waitFor(() => {
-			expect(getByText('No merchants available')).toBeTruthy();
+			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
 		});
 	});
 
