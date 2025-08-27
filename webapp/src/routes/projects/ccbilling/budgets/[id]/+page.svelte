@@ -91,8 +91,8 @@
 			selectedMerchant = '';
 			isAdding = false;
 			
-			// Refresh the page to show the new merchant
-			window.location.reload();
+			// Refresh the data to show the new merchant
+			await invalidateAll();
 		} catch (error) {
 			addError = 'Network error occurred';
 			isAdding = false;
@@ -126,8 +126,8 @@
 				merchantPickerRef.addMerchantToLocalState(merchantName);
 			}
 			
-			// Refresh the page to remove the merchant from the list
-			window.location.reload();
+			// Refresh the data to remove the merchant from the list
+			await invalidateAll();
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
