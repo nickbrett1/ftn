@@ -58,9 +58,9 @@
 		console.log('=== addMerchant START ===');
 		console.log('isAdding at start:', isAdding);
 		
-		// Prevent running during data refresh to avoid infinite loops
-		if (isRefreshingData) {
-			console.log('Skipping addMerchant - currently refreshing data');
+		// Prevent running if already adding or refreshing data
+		if (isAdding || isRefreshingData) {
+			console.log('Skipping addMerchant - already in progress, isAdding:', isAdding, 'isRefreshingData:', isRefreshingData);
 			return;
 		}
 		
@@ -98,9 +98,9 @@
 
 		// Use invalidateAll to refresh data from server (this will include the newly added merchant)
 		isRefreshingData = true;
-		console.log('Calling invalidateAll to refresh data from server...');
+		console.log('Set isRefreshingData to true, calling invalidateAll...');
 		await invalidateAll();
-		console.log('invalidateAll completed');
+		console.log('invalidateAll completed, setting isRefreshingData to false');
 		isRefreshingData = false;
 		
 		// Reset form and loading state
