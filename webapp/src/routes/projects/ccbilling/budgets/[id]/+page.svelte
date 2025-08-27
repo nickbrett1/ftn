@@ -16,8 +16,16 @@
 
 	// Make budget, merchants, and budgets reactive to data changes
 	let budget = $derived(data.budget || null);
-	let merchants = $derived(data.merchants || []);
-		let budgets = $derived(data.budgets || []);
+	let localMerchants = $state(data.merchants || []);
+	let merchants = $derived(localMerchants);
+	let budgets = $derived(data.budgets || []);
+	
+	// Sync local merchants with data changes (e.g., on page load)
+	$effect(() => {
+		if (data.merchants) {
+			localMerchants = data.merchants;
+		}
+	});
 	
 
 	
@@ -101,9 +109,10 @@
 			merchant_normalized: selectedMerchant.trim()
 		};
 		
-		// Add to the merchants array by updating the data object
-		data.merchants = [...(data.merchants || []), newMerchant];
+		// Add to the local merchants state for immediate UI update
+		localMerchants = [...localMerchants, newMerchant];
 		console.log('Added new merchant to local state:', newMerchant.merchant);
+		console.log('Updated merchants count:', localMerchants.length);
 		
 		// Remove the merchant from the picker's local state (no server call needed)
 		if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
