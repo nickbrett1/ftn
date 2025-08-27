@@ -539,7 +539,7 @@ export async function deletePaymentsForStatement(event, statement_id) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {Promise<Array<string>>}
  */
-export async function getUnassignedMerchants(event) {
+export async function getAllUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 

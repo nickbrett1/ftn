@@ -36,7 +36,7 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 
 		expect(response.status).toBe(200);
 		expect(data).toEqual(mockMerchants);
-		expect(mockGetRecentMerchants).toHaveBeenCalledWith(mockEvent);
+		expect(mockGetUnassignedMerchants).toHaveBeenCalledWith(mockEvent);
 	});
 
 	it('should return 401 when user is not authenticated', async () => {
@@ -48,7 +48,7 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 		const response = await GET(mockEvent);
 
 		expect(response.status).toBe(401);
-		expect(mockGetRecentMerchants).not.toHaveBeenCalled();
+		expect(mockGetUnassignedMerchants).not.toHaveBeenCalled();
 	});
 
 	it('should handle database errors gracefully', async () => {
