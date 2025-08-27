@@ -566,7 +566,7 @@ export async function getUnassignedMerchants(event) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {Promise<Array<string>>}
  */
-export async function getRecentMerchants(event) {
+export async function getUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
@@ -593,7 +593,7 @@ export async function getRecentMerchants(event) {
 
 		return results.map((row) => row.merchant_normalized);
 	} catch (error) {
-		console.error('Error in getRecentMerchants:', error);
+		console.error('Error in getUnassignedMerchants:', error);
 		throw new Error(`Failed to fetch recent merchants: ${error.message}`);
 	}
 }
