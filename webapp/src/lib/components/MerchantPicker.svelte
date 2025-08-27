@@ -8,7 +8,8 @@
 		placeholder = 'Select a merchant...'
 	} = $props();
 
-	let merchants = $state([]);
+	let allUnassignedMerchants = $state([]); // All unassigned merchants from server
+	let merchants = $state([]); // Currently displayed merchants (filtered from allUnassignedMerchants)
 	let isLoading = $state(true);
 	let error = $state('');
 	let showModal = $state(false);
@@ -31,7 +32,10 @@
 			}
 
 			const data = await response.json();
-			merchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
+			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
+			
+			// Show the most recent 20 merchants
+			merchants = allUnassignedMerchants.slice(0, 20);
 		} catch (err) {
 			console.error('Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
@@ -74,6 +78,18 @@
 		// Add a small delay to ensure database transactions are fully committed
 		await new Promise((resolve) => setTimeout(resolve, 100));
 		await loadRecentMerchants();
+	}
+
+	// Function to remove a merchant from local state and refresh the display
+	function removeMerchantFromLocalState(merchantToRemove) {
+		// Remove the merchant from allUnassignedMerchants
+		allUnassignedMerchants = allUnassignedMerchants.filter(merchant => merchant !== merchantToRemove);
+		
+		// Update the displayed merchants (show the next 20)
+		merchants = allUnassignedMerchants.slice(0, 20);
+		
+		console.log('Removed merchant from local state:', merchantToRemove);
+		console.log('Updated merchants list, now showing:', merchants.length, 'merchants');
 	}
 
 	// Function to reset the merchant picker state
