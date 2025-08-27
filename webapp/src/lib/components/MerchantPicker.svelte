@@ -99,10 +99,15 @@
 				a.toLowerCase().localeCompare(b.toLowerCase())
 			);
 			
-			// For recently removed merchants, prioritize them in the combo box
-			// Put the recently removed merchant at the top, followed by the rest
-			const otherMerchants = allUnassignedMerchants.filter(m => m !== merchantToAdd);
-			merchants = [merchantToAdd, ...otherMerchants].slice(0, 20);
+			// Only add to combo box if the merchant would be in the first 20
+			// This respects the "most recent merchants" logic
+			const updatedMerchants = allUnassignedMerchants.slice(0, 20);
+			if (updatedMerchants.includes(merchantToAdd)) {
+				merchants = updatedMerchants;
+				console.log('Merchant added to combo box (within first 20)');
+			} else {
+				console.log('Merchant not added to combo box (beyond first 20)');
+			}
 			
 			console.log('After adding - allUnassignedMerchants:', allUnassignedMerchants);
 			console.log('After adding - merchants (combo box):', merchants);
