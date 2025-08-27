@@ -5,9 +5,7 @@
 	const {
 		selectedMerchant = '',
 		onSelect = () => {},
-		placeholder = 'Select a merchant...',
-		assignedMerchants = [],
-		budgetId = null
+		placeholder = 'Select a merchant...'
 	} = $props();
 
 	let merchants = $state([]);
@@ -21,13 +19,7 @@
 			isLoading = true;
 			error = '';
 
-			// Build URL with budgetId parameter if provided
-			const url = new URL('/projects/ccbilling/budgets/recent-merchants', window.location.origin);
-			if (budgetId) {
-				url.searchParams.set('budgetId', budgetId);
-			}
-
-			const response = await fetch(url.toString());
+			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
 
 			// Add safety check for response
 			if (!response) {
