@@ -95,10 +95,21 @@
 
 					console.log('API call successful, proceeding with UI update');
 
-		// Refresh data from server to include the newly added merchant
-		console.log('Calling invalidateAll to refresh data...');
-		await invalidateAll();
-		console.log('invalidateAll completed');
+		// Manually add the new merchant to the local state for immediate UI update
+		const newMerchant = {
+			merchant: selectedMerchant.trim(),
+			merchant_normalized: selectedMerchant.trim()
+		};
+		
+		// Add to the merchants array by updating the data object
+		data.merchants = [...(data.merchants || []), newMerchant];
+		console.log('Added new merchant to local state:', newMerchant.merchant);
+		
+		// Refresh the merchant picker to get updated list (without the newly assigned merchant)
+		if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+			await merchantPickerRef.refreshMerchantList();
+			console.log('Refreshed merchant picker with updated data');
+		}
 		
 		// Reset form and loading state
 		selectedMerchant = '';
