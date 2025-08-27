@@ -62,12 +62,8 @@
 	});
 
 		async function addMerchant() {
-		console.log('=== addMerchant START ===');
-		console.log('isAdding at start:', isAdding);
-		
 		// Prevent running if already adding
 		if (isAdding) {
-			console.log('Skipping addMerchant - already in progress, isAdding:', isAdding);
 			return;
 		}
 		
@@ -76,13 +72,10 @@
 			return;
 		}
 
-		console.log('Setting isAdding to true');
 		isAdding = true;
-		console.log('isAdding after setting to true:', isAdding);
 		addError = '';
 
 		try {
-			console.log('Making API call...');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -91,17 +84,12 @@
 				})
 			});
 
-			console.log('API response received, ok:', response.ok);
-
 			if (!response.ok) {
 				const error = await response.json();
 				addError = error.error || 'Failed to add merchant';
-				console.log('API call failed, setting isAdding to false');
 				isAdding = false;
 				return;
 			}
-
-					console.log('API call successful, proceeding with UI update');
 
 		// Manually add the new merchant to the local state for immediate UI update
 		const newMerchant = {
