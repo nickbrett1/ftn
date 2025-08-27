@@ -20,12 +20,6 @@
 	let merchants = $derived(localMerchants);
 	let budgets = $derived(data.budgets || []);
 	
-	// Debug budget data
-	$effect(() => {
-		console.log('Budget derived effect - data.budget:', data.budget);
-		console.log('Budget derived effect - budget:', budget);
-	});
-	
 	// Sync local merchants with data changes (e.g., on page load)
 	$effect(() => {
 		if (data.merchants) {
@@ -61,20 +55,9 @@
 
 	// Initialize editName and editIcon when budget is available
 	$effect(() => {
-		console.log('Budget effect triggered, budget:', budget);
-		console.log('Data:', data);
-		console.log('data.budget:', data.budget);
-		
-		// Use data.budget directly to avoid derived value timing issues
-		const currentBudget = data.budget || budget;
-		
-		if (currentBudget && currentBudget.name) {
-			console.log('Setting editName to:', currentBudget.name);
-			console.log('Setting editIcon to:', currentBudget.icon);
-			editName = currentBudget.name;
-			editIcon = currentBudget.icon || '';
-		} else {
-			console.log('No valid budget available');
+		if (budget && budget.name) {
+			editName = budget.name;
+			editIcon = budget.icon || '';
 		}
 	});
 
