@@ -562,39 +562,33 @@ export async function getUnassignedMerchants(event) {
 }
 
 /**
- * Return recent merchants from the past month of statements that are unassigned to a specific budget.
+ * Return recent merchants from the past month of statements that are unassigned to any budget.
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {string|null} budgetId - If provided, exclude merchants already assigned to this budget
  * @returns {Promise<Array<string>>}
  */
-export async function getRecentMerchants(event, budgetId = null) {
+export async function getRecentMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
 	try {
 		// Get the 20 most recent merchants from statements in the last 30 days
-		// If budgetId is provided, exclude merchants already assigned to that specific budget
-		let query = `
-            SELECT DISTINCT p.merchant_normalized
-            FROM payment p
-            JOIN statement s ON p.statement_id = s.id
-            WHERE p.merchant_normalized IS NOT NULL
-              AND s.uploaded_at >= datetime('now', '-30 days')
-        `;
-		
-		if (budgetId) {
-			query += ` AND NOT EXISTS (
-                SELECT 1 FROM budget_merchant bm 
-                WHERE bm.merchant_normalized = p.merchant_normalized
-                  AND bm.budget_id = ?
-            )`;
-		}
-		
-		query += ` ORDER BY s.uploaded_at DESC LIMIT 20`;
-		
+		// that are not assigned to ANY budget (merchants can only be assigned to one budget)
 		const { results } = await db
-			.prepare(query)
-			.bind(budgetId || null)
+			.prepare(
+				`
+                SELECT DISTINCT p.merchant_normalized
+                FROM payment p
+                JOIN statement s ON p.statement_id = s.id
+                WHERE p.merchant_normalized IS NOT NULL
+                  AND s.uploaded_at >= datetime('now', '-30 days')
+                  AND NOT EXISTS (
+                    SELECT 1 FROM budget_merchant bm 
+                    WHERE bm.merchant_normalized = p.merchant_normalized
+                  )
+                ORDER BY s.uploaded_at DESC
+                LIMIT 20
+            `
+			)
 			.all();
 
 		return results.map((row) => row.merchant_normalized);

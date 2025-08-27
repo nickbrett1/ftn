@@ -313,7 +313,6 @@
 					{selectedMerchant}
 					onSelect={(merchant) => (selectedMerchant = merchant)}
 					placeholder="Choose a merchant to assign to this budget..."
-					budgetId={budget?.id}
 					bind:this={merchantPickerRef}
 				/>
 				</div>
