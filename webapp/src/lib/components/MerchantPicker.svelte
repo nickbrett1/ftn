@@ -95,6 +95,10 @@
 
 	// Function to add a merchant back to the available merchants list
 	function addMerchantToLocalState(merchantToAdd) {
+		console.log('addMerchantToLocalState called with:', merchantToAdd);
+		console.log('Current allUnassignedMerchants:', allUnassignedMerchants);
+		console.log('Current merchants (combo box):', merchants);
+		
 		// Add the merchant to allUnassignedMerchants if it's not already there
 		if (!allUnassignedMerchants.includes(merchantToAdd)) {
 			allUnassignedMerchants = [...allUnassignedMerchants, merchantToAdd].sort((a, b) => 
@@ -105,6 +109,11 @@
 			// Put the recently removed merchant at the top, followed by the rest
 			const otherMerchants = allUnassignedMerchants.filter(m => m !== merchantToAdd);
 			merchants = [merchantToAdd, ...otherMerchants].slice(0, 20);
+			
+			console.log('After adding - allUnassignedMerchants:', allUnassignedMerchants);
+			console.log('After adding - merchants (combo box):', merchants);
+		} else {
+			console.log('Merchant already exists in allUnassignedMerchants');
 		}
 	}
 

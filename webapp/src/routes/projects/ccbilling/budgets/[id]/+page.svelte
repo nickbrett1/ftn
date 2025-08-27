@@ -140,10 +140,15 @@
 
 			// Manually remove the merchant from the local state for immediate UI update
 			localMerchants = localMerchants.filter(merchant => merchant.merchant !== merchantName);
+			console.log('Removed merchant from localMerchants:', merchantName);
+			console.log('Updated localMerchants:', localMerchants);
 			
 			// Add the removed merchant back to the picker's available merchants list
 			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
+				console.log('Calling addMerchantToLocalState for:', merchantName);
 				merchantPickerRef.addMerchantToLocalState(merchantName);
+			} else {
+				console.log('merchantPickerRef or addMerchantToLocalState not available');
 			}
 			
 			// Restore scroll position
