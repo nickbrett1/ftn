@@ -5,7 +5,6 @@
 	const {
 		selectedMerchant = '',
 		onSelect = () => {},
-		onAddMerchant = null, // New prop for directly adding merchants
 		placeholder = 'Select a merchant...'
 	} = $props();
 
@@ -63,13 +62,8 @@
 	}
 
 	function handleModalSelect(merchant) {
-		// If onAddMerchant is provided, directly add the merchant
-		if (onAddMerchant && typeof onAddMerchant === 'function') {
-			onAddMerchant(merchant);
-		} else {
-			// Fallback to the old behavior
-			onSelect(merchant);
-		}
+		// Always just select the merchant in the combo box for consistency
+		onSelect(merchant);
 		
 		// Clear any existing selection
 		localSelectedMerchant = '';
