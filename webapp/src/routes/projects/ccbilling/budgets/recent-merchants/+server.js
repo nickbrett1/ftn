@@ -5,7 +5,11 @@ export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 
-	const merchants = await getRecentMerchants(event);
+	// Get budget ID from query parameters
+	const url = new URL(event.request.url);
+	const budgetId = url.searchParams.get('budgetId');
+
+	const merchants = await getRecentMerchants(event, budgetId);
 	return new Response(JSON.stringify(merchants), {
 		headers: { 'Content-Type': 'application/json' }
 	});

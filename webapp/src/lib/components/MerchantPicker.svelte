@@ -6,7 +6,8 @@
 		selectedMerchant = '',
 		onSelect = () => {},
 		placeholder = 'Select a merchant...',
-		assignedMerchants = []
+		assignedMerchants = [],
+		budgetId = null
 	} = $props();
 
 	let merchants = $state([]);
@@ -20,7 +21,13 @@
 			isLoading = true;
 			error = '';
 
-			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			// Build URL with budgetId parameter if provided
+			const url = new URL('/projects/ccbilling/budgets/recent-merchants', window.location.origin);
+			if (budgetId) {
+				url.searchParams.set('budgetId', budgetId);
+			}
+
+			const response = await fetch(url.toString());
 
 			// Add safety check for response
 			if (!response) {
@@ -130,10 +137,6 @@
 		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 			No recent unassigned merchants found
 		</div>
-	{:else if merchants.filter((merchant) => !(assignedMerchants || []).includes(merchant)).length === 0}
-		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
-			All recent merchants are already assigned to budgets
-		</div>
 	{:else}
 		<div class="space-y-3">
 			<select
@@ -143,12 +146,12 @@
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			>
 				<option value="">{placeholder}</option>
-				{#each merchants.filter((merchant) => !(assignedMerchants || []).includes(merchant)) as merchant}
+				{#each merchants as merchant}
 					<option value={merchant}>
 						{merchant}
 					</option>
 				{/each}
-				{#if localSelectedMerchant && !merchants.includes(localSelectedMerchant) && !(assignedMerchants || []).includes(localSelectedMerchant)}
+				{#if localSelectedMerchant && !merchants.includes(localSelectedMerchant)}
 					<option value={localSelectedMerchant}>
 						{localSelectedMerchant}
 					</option>

@@ -26,7 +26,6 @@
 	let isAdding = $state(false);
 	let addError = $state('');
 	let merchantPickerRef = $state(null);
-	let isRefreshingData = $state(false);
 
 	// Delete merchant state
 	let deletingMerchant = $state(null);
@@ -58,9 +57,9 @@
 		console.log('=== addMerchant START ===');
 		console.log('isAdding at start:', isAdding);
 		
-		// Prevent running if already adding or refreshing data
-		if (isAdding || isRefreshingData) {
-			console.log('Skipping addMerchant - already in progress, isAdding:', isAdding, 'isRefreshingData:', isRefreshingData);
+		// Prevent running if already adding
+		if (isAdding) {
+			console.log('Skipping addMerchant - already in progress, isAdding:', isAdding);
 			return;
 		}
 		
@@ -96,12 +95,10 @@
 
 					console.log('API call successful, proceeding with UI update');
 
-		// Use invalidateAll to refresh data from server (this will include the newly added merchant)
-		isRefreshingData = true;
-		console.log('Set isRefreshingData to true, calling invalidateAll...');
+		// Refresh data from server to include the newly added merchant
+		console.log('Calling invalidateAll to refresh data...');
 		await invalidateAll();
-		console.log('invalidateAll completed, setting isRefreshingData to false');
-		isRefreshingData = false;
+		console.log('invalidateAll completed');
 		
 		// Reset form and loading state
 		selectedMerchant = '';
@@ -312,13 +309,13 @@
 			<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 			<div class="space-y-4">
 				<div>
-					<MerchantPicker
-						{selectedMerchant}
-						onSelect={(merchant) => (selectedMerchant = merchant)}
-						placeholder="Choose a merchant to assign to this budget..."
-						assignedMerchants={merchants.map(m => m.merchant_normalized || m.merchant)}
-						bind:this={merchantPickerRef}
-					/>
+									<MerchantPicker
+					{selectedMerchant}
+					onSelect={(merchant) => (selectedMerchant = merchant)}
+					placeholder="Choose a merchant to assign to this budget..."
+					budgetId={budget?.id}
+					bind:this={merchantPickerRef}
+				/>
 				</div>
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
