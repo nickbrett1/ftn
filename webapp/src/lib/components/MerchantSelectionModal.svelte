@@ -15,6 +15,11 @@
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
 
+	// Helper function to sort merchants alphabetically
+	function sortMerchants(merchantList) {
+		return [...merchantList].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+	}
+
 	async function loadAllMerchants() {
 		try {
 			isLoading = true;
@@ -29,12 +34,12 @@
 			
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
-				merchants = data;
+				merchants = sortMerchants(data);
 				// Initialize filtered merchants based on current search term
 				if (searchTerm.trim()) {
 					handleSearch();
 				} else {
-					filteredMerchants = data;
+					filteredMerchants = merchants;
 				}
 			} else {
 				console.warn('Received invalid merchants data format:', data);
@@ -68,7 +73,7 @@
 					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
-					filteredMerchants = filtered;
+					filteredMerchants = sortMerchants(filtered);
 				} else {
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
@@ -77,7 +82,7 @@
 		} catch (err) {
 			console.error('Error in handleSearch:', err);
 			// Fallback to showing all merchants if filtering fails
-			filteredMerchants = Array.isArray(merchants) ? merchants : [];
+			filteredMerchants = Array.isArray(merchants) ? sortMerchants(merchants) : [];
 		}
 	}
 
