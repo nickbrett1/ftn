@@ -308,6 +308,10 @@
 									<MerchantPicker
 					{selectedMerchant}
 					onSelect={(merchant) => (selectedMerchant = merchant)}
+					onAddMerchant={async (merchant) => {
+						selectedMerchant = merchant;
+						await addMerchant();
+					}}
 					placeholder="Choose a merchant to assign to this budget..."
 					bind:this={merchantPickerRef}
 				/>

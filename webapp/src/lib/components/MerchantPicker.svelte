@@ -5,6 +5,7 @@
 	const {
 		selectedMerchant = '',
 		onSelect = () => {},
+		onAddMerchant = null, // New prop for directly adding merchants
 		placeholder = 'Select a merchant...'
 	} = $props();
 
@@ -62,15 +63,18 @@
 	}
 
 	function handleModalSelect(merchant) {
-		onSelect(merchant);
+		// If onAddMerchant is provided, directly add the merchant
+		if (onAddMerchant && typeof onAddMerchant === 'function') {
+			onAddMerchant(merchant);
+		} else {
+			// Fallback to the old behavior
+			onSelect(merchant);
+		}
+		
 		// Clear any existing selection
 		localSelectedMerchant = '';
-		// Add a small delay to ensure any database changes are committed
-		setTimeout(() => {
-			// Refresh the recent merchants list to remove the newly added merchant
-					// This ensures the combo box doesn't show merchants that are no longer unassigned
-		loadUnassignedMerchants();
-		}, 100);
+		// Close the modal
+		showModal = false;
 	}
 
 	// Function to refresh the merchant list - can be called by parent components
