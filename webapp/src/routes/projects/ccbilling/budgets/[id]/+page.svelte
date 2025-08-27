@@ -99,10 +99,10 @@
 		data.merchants = [...(data.merchants || []), newMerchant];
 		console.log('Added new merchant to local state:', newMerchant.merchant);
 		
-		// Refresh the merchant picker to remove the added merchant from available options
-		if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-			await merchantPickerRef.refreshMerchantList();
-			console.log('Refreshed merchant picker to remove added merchant from options');
+		// Clear the merchant picker and fetch fresh list to avoid gradual item removal
+		if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
+			merchantPickerRef.resetMerchantPicker();
+			console.log('Reset merchant picker - cleared selection and refreshed available merchants');
 		}
 		
 		// Reset form and loading state
