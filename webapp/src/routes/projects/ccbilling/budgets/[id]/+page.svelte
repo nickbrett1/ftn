@@ -89,17 +89,20 @@
 
 					console.log('API call successful, proceeding with UI update');
 
-		// Reset form immediately after successful addition
+		// Manually add the new merchant to the local state to avoid invalidateAll infinite loop
+		const newMerchant = {
+			merchant: selectedMerchant.trim(),
+			merchant_normalized: selectedMerchant.trim()
+		};
+		
+		// Add to the merchants array by updating the data object
+		data.merchants = [...(data.merchants || []), newMerchant];
+		console.log('Added new merchant to local state:', newMerchant.merchant);
+		
+		// Reset form and loading state
 		selectedMerchant = '';
-		
-		// Use invalidateAll to refresh the data, but with a small delay to prevent infinite loops
-		console.log('Calling invalidateAll...');
-		await invalidateAll();
-		console.log('invalidateAll completed');
-		
-		// Reset loading state after data refresh
 		isAdding = false;
-		console.log('Reset isAdding to false after invalidateAll');
+		console.log('Reset form and loading state after manual update');
 		} catch (error) {
 			console.log('Error occurred:', error);
 			addError = 'Network error occurred';
