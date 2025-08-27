@@ -20,14 +20,10 @@
 	let merchants = $derived(localMerchants);
 	let budgets = $derived(data.budgets || []);
 	
-	// Preserve budget data during navigation to prevent blank display
-	let preservedBudget = $state(null);
-	
 	// Debug budget data
 	$effect(() => {
 		console.log('Budget derived effect - data.budget:', data.budget);
 		console.log('Budget derived effect - budget:', budget);
-		console.log('Budget derived effect - preservedBudget:', preservedBudget);
 	});
 	
 	// Sync local merchants with data changes (e.g., on page load)
@@ -68,16 +64,9 @@
 		console.log('Budget effect triggered, budget:', budget);
 		console.log('Data:', data);
 		console.log('data.budget:', data.budget);
-		console.log('preservedBudget:', preservedBudget);
 		
-		// Preserve budget data when it's available
-		if (data.budget && data.budget.name) {
-			preservedBudget = data.budget;
-			console.log('Preserved budget:', preservedBudget);
-		}
-		
-		// Use preserved budget during navigation when data.budget is temporarily unavailable
-		const currentBudget = data.budget || preservedBudget;
+		// Use data.budget directly to avoid derived value timing issues
+		const currentBudget = data.budget || budget;
 		
 		if (currentBudget && currentBudget.name) {
 			console.log('Setting editName to:', currentBudget.name);
