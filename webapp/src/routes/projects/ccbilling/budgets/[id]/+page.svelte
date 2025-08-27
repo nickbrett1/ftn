@@ -99,26 +99,19 @@
 		
 		// Add to the local merchants state for immediate UI update
 		localMerchants = [...localMerchants, newMerchant];
-		console.log('Added new merchant to local state:', newMerchant.merchant);
-		console.log('Updated merchants count:', localMerchants.length);
 		
 		// Remove the merchant from the picker's local state (no server call needed)
 		if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
 			merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
-			console.log('Removed merchant from picker local state');
 		}
 		
 		// Reset form and loading state
 		selectedMerchant = '';
 		isAdding = false;
-		console.log('Reset form and loading state after manual update');
 		} catch (error) {
-			console.log('Error occurred:', error);
 			addError = 'Network error occurred';
 		} finally {
-			console.log('=== FINALLY BLOCK ===');
-			console.log('Final state check - isAdding:', isAdding);
-			console.log('=== addMerchant END ===');
+			isAdding = false;
 		}
 	}
 
@@ -327,10 +320,7 @@
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
 				{/if}
-				<!-- Debug info -->
-				<div class="text-xs text-gray-500 mb-2">
-					Debug: isAdding = {isAdding}, Button should show: "{isAdding ? 'Adding...' : 'Add Merchant'}"
-				</div>
+
 				<div class="flex space-x-2">
 					<Button
 						onclick={addMerchant}
