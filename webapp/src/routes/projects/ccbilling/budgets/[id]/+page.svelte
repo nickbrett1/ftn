@@ -97,8 +97,10 @@
 			merchant_normalized: selectedMerchant.trim()
 		};
 		
-		// Add to the local merchants state for immediate UI update
-		localMerchants = [...localMerchants, newMerchant];
+		// Add to the local merchants state for immediate UI update and sort alphabetically
+		localMerchants = [...localMerchants, newMerchant].sort((a, b) => 
+			a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
+		);
 		
 		// Remove the merchant from the picker's local state (no server call needed)
 		if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
