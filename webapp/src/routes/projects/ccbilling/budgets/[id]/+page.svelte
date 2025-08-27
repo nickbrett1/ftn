@@ -67,9 +67,6 @@
 		console.log('isAdding after setting to true:', isAdding);
 		addError = '';
 
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
-
 		try {
 			console.log('Making API call...');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
@@ -92,34 +89,10 @@
 
 			console.log('API call successful, proceeding with UI update');
 
-			// Reset form immediately after successful addition
-			selectedMerchant = '';
-			
-			// Use invalidateAll() and let the effect handle state reset
-			console.log('Calling invalidateAll...');
-			await invalidateAll();
-			console.log('invalidateAll completed');
-			console.log('Data after invalidateAll - merchants count:', data.merchants?.length);
-			console.log('Derived merchants count:', merchants.length);
-			
-			// Reset the loading state after data refresh
-			isAdding = false;
-			console.log('Reset isAdding to false after invalidateAll');
-			
-			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				await merchantPickerRef.refreshMerchantList();
-			}
-			
-			// Also reset the merchant picker state to ensure it's completely clean
-			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
-				merchantPickerRef.resetMerchantPicker();
-			}
-			
-			// Restore scroll position after data refresh
-			requestAnimationFrame(() => {
-				window.scrollTo(0, scrollPosition);
-			});
+					// Reset form and loading state immediately after successful addition
+		selectedMerchant = '';
+		isAdding = false;
+		console.log('Reset form and loading state after successful API call');
 		} catch (error) {
 			console.log('Error occurred:', error);
 			addError = 'Network error occurred';
