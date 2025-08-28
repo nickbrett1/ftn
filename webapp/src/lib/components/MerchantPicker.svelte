@@ -8,19 +8,25 @@
 		placeholder = 'Select a merchant...'
 	} = $props();
 
-	// Simple variables - only use $state for UI-reactive variables
-	let allUnassignedMerchants = []; // All unassigned merchants from server (no UI reactivity needed)
-	let merchants = $state([]); // Currently displayed merchants (UI needs to react to changes)
-	let isLoading = $state(true); // UI needs to show loading state
-	let error = $state(''); // UI needs to show errors
-	let showModal = $state(false); // UI needs to show/hide modal
-	let localSelectedMerchant = $state(selectedMerchant); // UI needs to react to selection changes
+	// Simple non-reactive variables - no $state to avoid reactive loops
+	let allUnassignedMerchants = []; // All unassigned merchants from server
+	let merchants = []; // Currently displayed merchants
+	let isLoading = true; // Loading state
+	let error = ''; // Error state
+	let showModal = false; // Modal visibility
+	let localSelectedMerchant = selectedMerchant; // Local selection
+	
+	// DOM references for manual updates
+	let merchantsSelect;
+	let loadingElement;
+	let errorElement;
 
 	async function loadUnassignedMerchants() {
 		try {
 			console.log('🔄 Loading unassigned merchants...');
 			isLoading = true;
 			error = '';
+			updateLoadingUI();
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
 			console.log('📡 Response status:', response.status, response.statusText);
@@ -45,11 +51,15 @@
 			// Show the first 20 merchants (they're already sorted by recency from the server)
 			merchants = allUnassignedMerchants.slice(0, 20);
 			console.log('🎯 Final merchants for UI:', merchants);
+			
+			updateMerchantsUI();
 		} catch (err) {
 			console.error('💥 Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
+			updateErrorUI();
 		} finally {
 			isLoading = false;
+			updateLoadingUI();
 			console.log('✅ Loading finished, isLoading:', isLoading, 'error:', error);
 		}
 	}
@@ -69,9 +79,50 @@
 		}
 	}
 
+	// Manual UI update functions to avoid reactive state
+	function updateLoadingUI() {
+		if (loadingElement && loadingElement.style) {
+			loadingElement.textContent = isLoading ? 'Loading Recent Merchants...' : '';
+			loadingElement.style.display = isLoading ? 'block' : 'none';
+		}
+	}
+	
+	function updateErrorUI() {
+		if (errorElement && errorElement.style) {
+			errorElement.textContent = error;
+			errorElement.style.display = error ? 'block' : 'none';
+		}
+	}
+	
+	function updateMerchantsUI() {
+		if (merchantsSelect && merchantsSelect.children) {
+			// Clear existing options except the first one
+			while (merchantsSelect.children.length > 1) {
+				merchantsSelect.removeChild(merchantsSelect.lastChild);
+			}
+			
+			// Add merchant options
+			merchants.forEach(merchant => {
+				const option = document.createElement('option');
+				option.value = merchant;
+				option.textContent = merchant;
+				merchantsSelect.appendChild(option);
+			});
+			
+			// Set selected value
+			merchantsSelect.value = localSelectedMerchant || '';
+		}
+	}
+	
+	function updateModalUI() {
+		// Modal visibility is handled by the MerchantSelectionModal component's isOpen prop
+		// No need to manually update DOM here
+	}
+
 	// Function to open modal and fetch fresh data
 	async function openModal() {
 		showModal = true;
+		updateModalUI();
 		// Fetch fresh data when modal opens
 		await loadUnassignedMerchants();
 	}
@@ -82,6 +133,7 @@
 		onSelect(merchant);
 		// Close the modal
 		showModal = false;
+		updateModalUI();
 	}
 
 	// Function to refresh the merchant list - can be called by parent components
@@ -111,6 +163,7 @@
 
 
 	onMount(() => {
+		// Load merchants - UI will be updated when DOM elements are available
 		loadUnassignedMerchants();
 	});
 
@@ -123,37 +176,26 @@
 		Select Merchant
 	</label>
 
-	{#if isLoading}
-		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+	<div class="space-y-3">
+		<!-- Loading state -->
+		<div bind:this={loadingElement} class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" style="display: none;">
 			Loading recent merchants...
 		</div>
-	{:else if error}
-		<div class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200">
-			Error: {error}
+		
+		<!-- Error state -->
+		<div bind:this={errorElement} class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200" style="display: none;">
+			Error: 
 		</div>
-	{:else if merchants.length === 0}
-		<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
-			No recent unassigned merchants found
-		</div>
-	{:else}
-		<div class="space-y-3">
-			<select
-				id="merchant-picker"
-				value={localSelectedMerchant}
-				onchange={handleSelect}
-				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-			>
-				<option value="">{placeholder}</option>
-				{#each merchants as merchant}
-					<option value={merchant}>
-						{merchant}
-					</option>
-				{/each}
-				{#if localSelectedMerchant && !merchants.includes(localSelectedMerchant)}
-					<option value={localSelectedMerchant}>
-						{localSelectedMerchant}
-					</option>
-				{/if}
+		
+		<!-- Merchants select -->
+		<select
+			bind:this={merchantsSelect}
+			id="merchant-picker"
+			onchange={handleSelect}
+			class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+		>
+			<option value="">{placeholder}</option>
+			<!-- Options will be added manually via updateMerchantsUI() -->
 			</select>
 
 			<div class="flex justify-between items-center">
@@ -166,11 +208,12 @@
 				<p class="text-gray-500 text-xs">Showing 20 most recent merchants from the past month</p>
 			</div>
 		</div>
-	{/if}
 </div>
 
 <MerchantSelectionModal
 	isOpen={showModal}
-	onClose={() => (showModal = false)}
+	onClose={() => {
+		showModal = false;
+	}}
 	onSelect={handleModalSelect}
 />
