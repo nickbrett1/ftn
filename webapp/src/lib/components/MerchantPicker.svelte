@@ -14,6 +14,7 @@
 	let error = $state(''); // UI needs to show errors
 	let showModal = $state(false); // UI needs to show/hide modal
 	let localSelectedMerchant = $state(selectedMerchant); // UI needs to react to selection changes
+	let isUpdatingMerchants = false; // Flag to prevent recursive updates
 
 	async function loadUnassignedMerchants() {
 		try {
@@ -76,16 +77,20 @@
 
 	// Function to remove a merchant from local state and refresh the display
 	function removeMerchantFromLocalState(merchantToRemove) {
+		if (isUpdatingMerchants) return; // Prevent recursive calls
+		
+		isUpdatingMerchants = true;
+		
 		// Remove the merchant from allUnassignedMerchants
 		allUnassignedMerchants = allUnassignedMerchants.filter(merchant => merchant !== merchantToRemove);
 		
-		// Update the displayed merchants (show the next 20)
-		merchants = allUnassignedMerchants.slice(0, 20);
+		// Update the displayed merchants (show the next 20) using a new array to trigger reactivity
+		merchants = [...allUnassignedMerchants.slice(0, 20)];
 		
-		// Reset the selection if the removed merchant was selected
-		if (localSelectedMerchant === merchantToRemove) {
-			localSelectedMerchant = '';
-		}
+		// Note: Don't reset localSelectedMerchant here to avoid reactive loops
+		// The parent component will handle resetting the selection
+		
+		isUpdatingMerchants = false;
 	}
 
 	// Function to add a merchant back to the available merchants list
