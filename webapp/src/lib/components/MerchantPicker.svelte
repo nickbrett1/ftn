@@ -8,13 +8,13 @@
 		placeholder = 'Select a merchant...'
 	} = $props();
 
+	// Simple variables - only use $state for UI-reactive variables
 	let allUnassignedMerchants = []; // All unassigned merchants from server (no UI reactivity needed)
 	let merchants = $state([]); // Currently displayed merchants (UI needs to react to changes)
 	let isLoading = $state(true); // UI needs to show loading state
 	let error = $state(''); // UI needs to show errors
 	let showModal = $state(false); // UI needs to show/hide modal
 	let localSelectedMerchant = $state(selectedMerchant); // UI needs to react to selection changes
-	let isUpdatingMerchants = false; // Flag to prevent recursive updates
 
 	async function loadUnassignedMerchants() {
 		try {
@@ -60,6 +60,13 @@
 		}
 	}
 
+	// Function to open modal and fetch fresh data
+	async function openModal() {
+		showModal = true;
+		// Fetch fresh data when modal opens
+		await loadUnassignedMerchants();
+	}
+
 	function handleModalSelect(merchant) {
 		// Update local selection to match the modal selection
 		localSelectedMerchant = merchant;
@@ -75,52 +82,8 @@
 		await loadUnassignedMerchants();
 	}
 
-	// Function to remove a merchant from local state and refresh the display
-	function removeMerchantFromLocalState(merchantToRemove) {
-		if (isUpdatingMerchants) return; // Prevent recursive calls
-		
-		isUpdatingMerchants = true;
-		
-		// Remove the merchant from allUnassignedMerchants
-		allUnassignedMerchants = allUnassignedMerchants.filter(merchant => merchant !== merchantToRemove);
-		
-		// Update the displayed merchants (show the next 20) using a new array to trigger reactivity
-		merchants = [...allUnassignedMerchants.slice(0, 20)];
-		
-		// Note: Don't reset localSelectedMerchant here to avoid reactive loops
-		// The parent component will handle resetting the selection
-		
-		isUpdatingMerchants = false;
-	}
-
-	// Function to add a merchant back to the available merchants list
-	function addMerchantToLocalState(merchantToAdd) {
-		console.log('addMerchantToLocalState called with:', merchantToAdd);
-		console.log('Current allUnassignedMerchants:', allUnassignedMerchants);
-		console.log('Current merchants (combo box):', merchants);
-		
-		// Add the merchant to allUnassignedMerchants if it's not already there
-		if (!allUnassignedMerchants.includes(merchantToAdd)) {
-			allUnassignedMerchants = [...allUnassignedMerchants, merchantToAdd].sort((a, b) => 
-				a.toLowerCase().localeCompare(b.toLowerCase())
-			);
-			
-			// Only add to combo box if the merchant would be in the first 20
-			// This respects the "most recent merchants" logic
-			const updatedMerchants = allUnassignedMerchants.slice(0, 20);
-			if (updatedMerchants.includes(merchantToAdd)) {
-				merchants = updatedMerchants;
-				console.log('Merchant added to combo box (within first 20)');
-			} else {
-				console.log('Merchant not added to combo box (beyond first 20)');
-			}
-			
-			console.log('After adding - allUnassignedMerchants:', allUnassignedMerchants);
-			console.log('After adding - merchants (combo box):', merchants);
-		} else {
-			console.log('Merchant already exists in allUnassignedMerchants');
-		}
-	}
+	// Note: No longer need removeMerchantFromLocalState or addMerchantToLocalState
+	// The modal will fetch fresh data when opened, eliminating state synchronization issues
 
 	// Function to reset the merchant picker state
 	function resetMerchantPicker() {
@@ -142,8 +105,8 @@
 		loadUnassignedMerchants();
 	});
 
-	// Export functions for parent component to use
-	export { removeMerchantFromLocalState, addMerchantToLocalState };
+	// Note: No longer exporting state management functions
+	// The modal fetches fresh data when opened, eliminating the need for state synchronization
 </script>
 
 <div class="w-full">
@@ -186,7 +149,7 @@
 
 			<div class="flex justify-between items-center">
 				<button
-					onclick={() => (showModal = true)}
+					onclick={openModal}
 					class="text-blue-400 hover:text-blue-300 text-sm underline"
 				>
 					View All Merchants
