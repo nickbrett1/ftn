@@ -92,4 +92,52 @@ describe('Budget Page - Merchant Removal', () => {
 		// The actual bug (UI not updating) needs to be tested in the real application
 		expect(removeButton).toBeTruthy();
 	});
+
+	it('should expose the merchant addition infinite loop bug', async () => {
+		// Mock successful addition response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock the recent merchants endpoint
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		const { getByRole, getByText, container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for the merchant picker to load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Select a merchant from the combo box
+		await fireEvent.change(select, { target: { value: 'walmart' } });
+
+		// Find and click the Add Merchant button (not the heading)
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for the addition to complete
+		await new Promise(resolve => setTimeout(resolve, 1000));
+
+		// Debug: Log the current state of the DOM
+		console.log('DOM after addition:', container.innerHTML);
+
+		// The bug: The app should not become unresponsive
+		// The select should be reset to empty after successful addition
+		// This test will help expose if there's an infinite loop
+		expect(select.value).toBe('');
+		
+		// The merchant should be added to the list
+		await waitFor(() => {
+			expect(getByText('walmart')).toBeTruthy();
+		});
+	});
 });

@@ -128,6 +128,9 @@
 			
 			// Clear flag after DOM update is complete
 			isUpdatingUI = false;
+			
+			// Sync with parent after UI update
+			syncWithParent();
 		}
 	}
 	
@@ -172,21 +175,24 @@
 
 
 
-	// Sync localSelectedMerchant with prop changes
-	$effect(() => {
-		// Update the DOM to match the prop value when it changes
-		// This ensures the DOM stays in sync with the parent's selectedMerchant prop
+	// Manual sync function to avoid infinite loops
+	function syncWithParent() {
 		if (!isUpdatingUI && merchantsSelect) {
 			merchantsSelect.value = selectedMerchant || '';
 		}
-		
-		// Update local state to match the prop
-		localSelectedMerchant = selectedMerchant;
-	});
+		if (localSelectedMerchant !== selectedMerchant) {
+			localSelectedMerchant = selectedMerchant;
+		}
+	}
 
 	onMount(() => {
 		// Load merchants - UI will be updated when DOM elements are available
 		loadUnassignedMerchants();
+		
+		// Sync with parent after DOM is ready
+		setTimeout(() => {
+			syncWithParent();
+		}, 100);
 	});
 
 	// Note: No longer exporting state management functions
