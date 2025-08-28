@@ -18,10 +18,12 @@
 
 	async function loadUnassignedMerchants() {
 		try {
+			console.log('🔄 Loading unassigned merchants...');
 			isLoading = true;
 			error = '';
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			console.log('📡 Response status:', response.status, response.statusText);
 
 			// Add safety check for response
 			if (!response) {
@@ -29,19 +31,26 @@
 			}
 
 			if (!response.ok) {
-				throw new Error('Failed to load recent merchants');
+				console.error('❌ Response not OK:', response.status, response.statusText);
+				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
+			console.log('📦 Data received:', data);
+			console.log('📦 Data type:', typeof data, 'Is array:', Array.isArray(data));
+			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
+			console.log('📋 Processed merchants:', allUnassignedMerchants);
 			
 			// Show the first 20 merchants (they're already sorted by recency from the server)
 			merchants = allUnassignedMerchants.slice(0, 20);
+			console.log('🎯 Final merchants for UI:', merchants);
 		} catch (err) {
-			console.error('Error loading merchants:', err);
+			console.error('💥 Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
+			console.log('✅ Loading finished, isLoading:', isLoading, 'error:', error);
 		}
 	}
 
