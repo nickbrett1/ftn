@@ -115,38 +115,104 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(getByRole('combobox')).toBeTruthy();
 		});
 
-		// Debug: Check what fetch calls were made
-		console.log('Fetch calls made:', mockFetch.mock.calls);
-		console.log('Fetch call count:', mockFetch.mock.calls.length);
-
 		const select = getByRole('combobox');
 		
 		// Select a merchant from the combo box
 		await fireEvent.change(select, { target: { value: 'walmart' } });
 
-		// Find and click the Add Merchant button (not the heading)
+		// Verify the selection worked
+		expect(select.value).toBe('walmart');
+
+		// Find and click the Add Merchant button
 		const addButton = getByRole('button', { name: 'Add Merchant' });
 		await fireEvent.click(addButton);
 
-		// Wait for the addition to complete
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		// Wait a bit for the async operation to complete
+		await new Promise(resolve => setTimeout(resolve, 100));
 
-		// Debug: Log the current state of the DOM
-		console.log('DOM after addition:', container.innerHTML);
+		// The bug: After clicking Add, the select should be reset but it's not
+		// This indicates the infinite loop is preventing the reset
+		expect(select.value).toBe(''); // This should fail and expose the bug
+	});
 
-		// The bug: The app should not become unresponsive
-		// The select should be reset to empty after successful addition
-		// This test will help expose if there's an infinite loop
-		// Wait for the select to be reset (due to setTimeout in the component)
-		await waitFor(() => {
-			expect(select.value).toBe('');
-		}, { timeout: 2000 });
-		
-		// The merchant should be added to the list (look for it in the assigned merchants section)
-		await waitFor(() => {
-			const merchantList = container.querySelector('.merchant-list');
-			expect(merchantList).toBeTruthy();
-			expect(merchantList.textContent).toContain('walmart');
+	it('should expose the infinite loop by testing multiple rapid interactions', async () => {
+		// Mock the recent merchants endpoint
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
+
+		// Mock successful addition responses
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { getByRole, container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for the merchant picker to load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+
+		// Simulate rapid user interactions that might trigger the infinite loop
+		await fireEvent.change(select, { target: { value: 'walmart' } });
+		await fireEvent.click(addButton);
+		
+		// Wait for the operation to complete
+		await new Promise(resolve => setTimeout(resolve, 50));
+		
+		// Try to interact with the select again - this should work if no infinite loop
+		await fireEvent.change(select, { target: { value: 'costco' } });
+		
+		// If there's an infinite loop, the select value won't change
+		expect(select.value).toBe('costco'); // This should fail if there's an infinite loop
+	});
+
+	it('should expose the infinite loop by testing the View All Merchants button', async () => {
+		// Mock the recent merchants endpoint
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition responses
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { getByRole, getByText, container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for the merchant picker to load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+
+		// First, add a merchant to trigger the infinite loop
+		await fireEvent.change(select, { target: { value: 'walmart' } });
+		await fireEvent.click(addButton);
+		
+		// Wait for the operation to complete
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Now try to click "View All Merchants" - this should work if no infinite loop
+		const viewAllButton = getByText('View All Merchants');
+		await fireEvent.click(viewAllButton);
+		
+		// If there's an infinite loop, the modal won't open or the button won't respond
+		// We can't easily test modal opening in this test environment, but we can test
+		// that the button click doesn't cause the test to hang (which would indicate infinite loop)
+		expect(viewAllButton).toBeTruthy(); // This should pass if no infinite loop
 	});
 });

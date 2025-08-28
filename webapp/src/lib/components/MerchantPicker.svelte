@@ -17,7 +17,7 @@
 	
 	// Only use $state for variables that directly affect UI reactivity
 	let showModal = $state(false); // Modal visibility - needs to be reactive for isOpen prop
-	let localSelectedMerchant = selectedMerchant; // Local selection - no longer reactive to avoid loops
+	let localSelectedMerchant = ''; // Local selection - completely non-reactive to avoid loops
 	
 	// DOM references for manual updates
 	let merchantsSelect;
@@ -74,12 +74,8 @@
 			// Update local selection to match the combo box selection
 			localSelectedMerchant = selectedValue;
 			onSelect(selectedValue);
-			// Add a small delay to ensure any database changes are committed
-			setTimeout(() => {
-				// Refresh the merchant list to ensure it's up to date
-				// This helps when the merchant might be added to auto-assignment
-				loadUnassignedMerchants();
-			}, 100);
+			// Don't refresh the merchant list here to avoid infinite loops
+			// The parent component will handle refreshing when needed
 		}
 	}
 
@@ -159,14 +155,23 @@
 	// Function to reset the merchant picker state
 	function resetMerchantPicker() {
 		localSelectedMerchant = '';
-		// Also refresh the merchant list to ensure it's up to date
-		loadUnassignedMerchants();
 		// Reset the select element value as well
 		const selectElement = document.getElementById('merchant-picker');
 		if (selectElement) {
 			selectElement.value = '';
 		}
 	}
+
+	// Function to manually sync the select value with the parent's selectedMerchant prop
+	function syncSelectValue() {
+		if (merchantsSelect && !isUpdatingUI) {
+			merchantsSelect.value = selectedMerchant || '';
+			// Don't update localSelectedMerchant to avoid reactive loops
+		}
+	}
+
+	// Expose the sync function to parent components
+	export { syncSelectValue };
 
 
 
@@ -181,15 +186,8 @@
 		localSelectedMerchant = selectedMerchant;
 	}
 
-	// Watch for changes to selectedMerchant prop and update DOM accordingly
-	$effect(() => {
-		// Only update if we're not currently updating UI and the select exists
-		if (!isUpdatingUI && merchantsSelect) {
-			merchantsSelect.value = selectedMerchant || '';
-		}
-		// Update local state
-		localSelectedMerchant = selectedMerchant;
-	});
+	// Remove the $effect to prevent infinite loops
+	// State synchronization will be handled manually in event handlers
 
 	onMount(() => {
 		// Load merchants - UI will be updated when DOM elements are available
