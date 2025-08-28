@@ -15,6 +15,7 @@
 	let error = ''; // Error state
 	let showModal = false; // Modal visibility
 	let localSelectedMerchant = selectedMerchant; // Local selection
+	let isUpdatingUI = false; // Flag to prevent recursive event handling
 	
 	// DOM references for manual updates
 	let merchantsSelect;
@@ -60,6 +61,11 @@
 	}
 
 	function handleSelect(event) {
+		// Prevent recursive calls when we're updating the UI
+		if (isUpdatingUI) {
+			return;
+		}
+		
 		const selectedValue = event.target.value;
 		if (selectedValue) {
 			// Update local selection to match the combo box selection
@@ -98,6 +104,9 @@
 	
 	function updateMerchantsUI() {
 		if (merchantsSelect && merchantsSelect.children) {
+			// Set flag to prevent recursive event handling
+			isUpdatingUI = true;
+			
 			// Clear existing options except the first one
 			while (merchantsSelect.children.length > 1) {
 				merchantsSelect.removeChild(merchantsSelect.lastChild);
@@ -113,6 +122,9 @@
 			
 			// Set selected value
 			merchantsSelect.value = localSelectedMerchant || '';
+			
+			// Clear flag after DOM update is complete
+			isUpdatingUI = false;
 		}
 	}
 	
