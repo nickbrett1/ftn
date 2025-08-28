@@ -87,6 +87,11 @@
 			// Reset form and loading state
 			selectedMerchant = '';
 			isAdding = false;
+			
+			// Manually sync the merchant picker to avoid infinite loops
+			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
+				merchantPickerRef.syncSelectValue();
+			}
 		} catch (error) {
 			addError = 'Network error occurred';
 			isAdding = false;
