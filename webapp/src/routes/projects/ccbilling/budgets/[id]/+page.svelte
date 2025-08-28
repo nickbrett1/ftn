@@ -25,11 +25,9 @@
 	let addError = $state(''); // UI needs to show errors
 	let merchantPickerRef = null; // No UI reactivity needed
 
-	// Delete merchant state - using a single state object for better reactivity
-	let deleteState = $state({ 
-		deletingMerchant: null, 
-		isDeleting: false 
-	});
+	// Delete merchant state - using individual $state variables for better reactivity
+	let deletingMerchant = $state(null);
+	let isDeleting = $state(false);
 
 	// Edit budget name and icon state
 	let editName = $state(budget?.name || ''); // UI needs to react to name changes
@@ -105,8 +103,8 @@
 
 		async function removeMerchant(merchantName) {
 		// No confirm needed; removal is safe and reversible by re-adding
-		deleteState.deletingMerchant = merchantName;
-		deleteState.isDeleting = true;
+		deletingMerchant = merchantName;
+		isDeleting = true;
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`, {
@@ -127,8 +125,8 @@
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
-			deleteState.deletingMerchant = null;
-			deleteState.isDeleting = false;
+			deletingMerchant = null;
+			isDeleting = false;
 		}
 	}
 
@@ -330,10 +328,10 @@
 							<button
 								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
-								disabled={deleteState.isDeleting && deleteState.deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
+								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
-								{deleteState.isDeleting && deleteState.deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
+								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
 							</button>
 						</div>
 					{/each}
