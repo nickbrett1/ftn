@@ -13,7 +13,7 @@
 	let isLoading = $state(true);
 	let error = $state('');
 	let showModal = $state(false);
-	let localSelectedMerchant = $state(''); // Local state for internal management
+	let localSelectedMerchant = $state(selectedMerchant); // Local state for internal management
 
 	async function loadUnassignedMerchants() {
 		try {
@@ -89,7 +89,6 @@
 		// Reset the selection if the removed merchant was selected
 		if (localSelectedMerchant === merchantToRemove) {
 			localSelectedMerchant = '';
-			onSelect(''); // Notify parent component
 		}
 	}
 
@@ -136,17 +135,7 @@
 
 
 
-	// Sync local state with prop when it changes
-	$effect(() => {
-		localSelectedMerchant = selectedMerchant;
-		// If the parent component clears the selection, also reset the select element
-		if (!selectedMerchant) {
-			const selectElement = document.getElementById('merchant-picker');
-			if (selectElement) {
-				selectElement.value = '';
-			}
-		}
-	});
+
 
 	onMount(() => {
 		loadUnassignedMerchants();
