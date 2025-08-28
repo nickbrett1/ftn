@@ -20,16 +20,15 @@
 	let merchantsSelect;
 	let loadingElement;
 	let errorElement;
+	let emptyStateElement;
 
 	async function loadUnassignedMerchants() {
 		try {
-			console.log('🔄 Loading unassigned merchants...');
 			isLoading = true;
 			error = '';
 			updateLoadingUI();
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
-			console.log('📡 Response status:', response.status, response.statusText);
 
 			// Add safety check for response
 			if (!response) {
@@ -37,30 +36,26 @@
 			}
 
 			if (!response.ok) {
-				console.error('❌ Response not OK:', response.status, response.statusText);
 				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
-			console.log('📦 Data received:', data);
-			console.log('📦 Data type:', typeof data, 'Is array:', Array.isArray(data));
 			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
-			console.log('📋 Processed merchants:', allUnassignedMerchants);
 			
 			// Show the first 20 merchants (they're already sorted by recency from the server)
 			merchants = allUnassignedMerchants.slice(0, 20);
-			console.log('🎯 Final merchants for UI:', merchants);
 			
 			updateMerchantsUI();
+			updateEmptyStateUI();
 		} catch (err) {
-			console.error('💥 Error loading merchants:', err);
 			error = err.message || 'Failed to load merchants';
 			updateErrorUI();
+			updateEmptyStateUI();
 		} finally {
 			isLoading = false;
 			updateLoadingUI();
-			console.log('✅ Loading finished, isLoading:', isLoading, 'error:', error);
+			updateEmptyStateUI();
 		}
 	}
 
@@ -89,8 +84,15 @@
 	
 	function updateErrorUI() {
 		if (errorElement && errorElement.style) {
-			errorElement.textContent = error;
+			errorElement.textContent = error ? `Error: ${error}` : '';
 			errorElement.style.display = error ? 'block' : 'none';
+		}
+	}
+	
+	function updateEmptyStateUI() {
+		if (emptyStateElement && emptyStateElement.style) {
+			const shouldShow = !isLoading && !error && merchants.length === 0;
+			emptyStateElement.style.display = shouldShow ? 'block' : 'none';
 		}
 	}
 	
@@ -184,7 +186,11 @@
 		
 		<!-- Error state -->
 		<div bind:this={errorElement} class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200" style="display: none;">
-			Error: 
+		</div>
+		
+		<!-- Empty state -->
+		<div bind:this={emptyStateElement} class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" style="display: none;">
+			No recent unassigned merchants found
 		</div>
 		
 		<!-- Merchants select -->

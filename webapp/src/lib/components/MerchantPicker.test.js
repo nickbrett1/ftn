@@ -241,7 +241,7 @@ describe('MerchantPicker', () => {
 
 		// Wait for error message to appear
 		await waitFor(() => {
-			expect(getByText('Error: Failed to load recent merchants')).toBeTruthy();
+			expect(getByText(/Error: Failed to load recent merchants/)).toBeTruthy();
 		});
 	});
 
