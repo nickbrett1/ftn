@@ -14,46 +14,34 @@
 
 	const { data } = $props();
 
-	// Make budget and budgets reactive to data changes
-	let budget = $derived(data.budget || null);
-	let budgets = $derived(data.budgets || []);
-	
-	// Local state for merchants - start with server data
-	let merchants = $state(data.merchants || []);
-	
-
+	// Simple variables - only use $state for UI-reactive variables
+	let budget = data.budget || null;
+	let budgets = data.budgets || [];
+	let merchants = $state(data.merchants || []); // UI needs to react to merchant changes
 	
 	// Add merchant state
-	let selectedMerchant = $state('');
-	let isAdding = $state(false);
-	let addError = $state('');
-	let merchantPickerRef = $state(null);
+	let selectedMerchant = $state(''); // UI needs to react to selection changes
+	let isAdding = $state(false); // UI needs to show loading state
+	let addError = $state(''); // UI needs to show errors
+	let merchantPickerRef = null; // No UI reactivity needed
 
 	// Delete merchant state
-	let deletingMerchant = $state(null);
-	let isDeleting = $state(false);
+	let deletingMerchant = $state(null); // UI needs to show which merchant is being deleted
+	let isDeleting = $state(false); // UI needs to show loading state
 
 	// Edit budget name and icon state
-	let editName = $state('');
-	let editIcon = $state('');
-	let isSavingName = $state(false);
-	let nameEditError = $state('');
+	let editName = $state(budget?.name || ''); // UI needs to react to name changes
+	let editIcon = $state(budget?.icon || ''); // UI needs to react to icon changes
+	let isSavingName = $state(false); // UI needs to show loading state
+	let nameEditError = $state(''); // UI needs to show errors
 
 	// Delete budget state
-	let showDeleteDialog = $state(false);
-	let isDeletingBudget = $state(false);
-	let deleteBudgetError = $state('');
+	let showDeleteDialog = $state(false); // UI needs to show/hide dialog
+	let isDeletingBudget = $state(false); // UI needs to show loading state
+	let deleteBudgetError = $state(''); // UI needs to show errors
 
 	// Get available icons
-	let availableIcons = $derived(getAvailableIcons());
-
-	// Initialize editName and editIcon when budget is available
-	$effect(() => {
-		if (budget && budget.name) {
-			editName = budget.name;
-			editIcon = budget.icon || '';
-		}
-	});
+	let availableIcons = getAvailableIcons();
 
 		async function addMerchant() {
 		// Prevent running if already adding
@@ -132,6 +120,11 @@
 
 			// Remove the merchant from the local UI state
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			
+			// Add the removed merchant back to the picker's available merchants list
+			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
+				merchantPickerRef.addMerchantToLocalState(merchantName);
+			}
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {

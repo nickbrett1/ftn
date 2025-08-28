@@ -8,12 +8,12 @@
 		placeholder = 'Select a merchant...'
 	} = $props();
 
-	let allUnassignedMerchants = $state([]); // All unassigned merchants from server
-	let merchants = $state([]); // Currently displayed merchants (filtered from allUnassignedMerchants)
-	let isLoading = $state(true);
-	let error = $state('');
-	let showModal = $state(false);
-	let localSelectedMerchant = $state(selectedMerchant); // Local state for internal management
+	let allUnassignedMerchants = []; // All unassigned merchants from server (no UI reactivity needed)
+	let merchants = $state([]); // Currently displayed merchants (UI needs to react to changes)
+	let isLoading = $state(true); // UI needs to show loading state
+	let error = $state(''); // UI needs to show errors
+	let showModal = $state(false); // UI needs to show/hide modal
+	let localSelectedMerchant = $state(selectedMerchant); // UI needs to react to selection changes
 
 	async function loadUnassignedMerchants() {
 		try {
