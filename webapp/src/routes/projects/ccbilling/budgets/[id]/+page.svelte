@@ -320,15 +320,14 @@
 										'this budget'}"
 								</p>
 							</div>
-							<Button
+							<button
 								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
-								variant="danger"
-								size="sm"
+								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
 								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
 								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
-							</Button>
+							</button>
 						</div>
 					{/each}
 				</div>
