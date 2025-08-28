@@ -295,7 +295,13 @@
 				<div>
 									<MerchantPicker
 					{selectedMerchant}
-					onSelect={(merchant) => (selectedMerchant = merchant)}
+					onSelect={(merchant) => {
+						selectedMerchant = merchant;
+						// Automatically add the merchant when selected
+						if (merchant && !isAdding) {
+							addMerchant();
+						}
+					}}
 					placeholder="Choose a merchant to assign to this budget..."
 					bind:this={merchantPickerRef}
 				/>

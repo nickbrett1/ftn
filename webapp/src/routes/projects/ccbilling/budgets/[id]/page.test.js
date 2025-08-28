@@ -501,4 +501,84 @@ describe('Budget Page - Merchant Removal', () => {
 
 		console.log('✅ API call format validation passed - DELETE request has correct URL and body');
 	});
+
+	it('should reproduce the bug where adding merchant from combo breaks all UI interactions', async () => {
+		// This test reproduces the bug where selecting a merchant from the combo box
+		// causes the UI to become unresponsive to further interactions
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Find the merchant select dropdown
+		const selectElement = getByRole('combobox');
+		expect(selectElement).toBeTruthy();
+
+		// Select a merchant from the combo box
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		// Wait for the addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Now try to interact with other UI elements - they should still work
+		
+		// 1. Try to remove an existing merchant (should work)
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBeGreaterThan(0);
+		
+		// Mock successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		// Click the first remove button
+		const firstRemoveButton = removeButtons[0];
+		await fireEvent.click(firstRemoveButton);
+
+		// Wait for the removal to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// 2. Try to select another merchant (should work)
+		await fireEvent.change(selectElement, { target: { value: 'costco' } });
+
+		// Mock another successful addition
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Wait for the second addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(4);
+		});
+
+		// If we get here without hanging, the UI interactions are working
+		console.log('✅ UI interactions are working correctly after adding merchant from combo box');
+	});
 });
