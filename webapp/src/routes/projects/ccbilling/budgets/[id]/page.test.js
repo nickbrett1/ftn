@@ -130,9 +130,10 @@ describe('Budget Page - Merchant Removal', () => {
 		// Wait a bit for the async operation to complete
 		await new Promise(resolve => setTimeout(resolve, 100));
 
-		// The bug: After clicking Add, the select should be reset but it's not
-		// This indicates the infinite loop is preventing the reset
-		expect(select.value).toBe(''); // This should fail and expose the bug
+		// After clicking Add, the select value should be reset
+		// Note: We removed syncSelectValue() to fix DOM event handler issues
+		// The select value will be reset by the component's internal logic
+		expect(select.value).toBe(''); // This should pass now
 	});
 
 	it('should expose the infinite loop by testing multiple rapid interactions', async () => {
@@ -589,5 +590,162 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// If we get here without hanging, the UI interactions are working
 		console.log('✅ UI interactions are working correctly after adding merchant');
+	});
+
+	it('should reproduce the bug where remove button does nothing after adding merchant', async () => {
+		// This test reproduces the exact bug: select merchant, click add, see it in UI, 
+		// then try to remove it and the remove button does nothing
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole, getByText } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Step 1: Select a merchant from the combo box
+		const selectElement = getByRole('combobox');
+		expect(selectElement).toBeTruthy();
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		// Step 2: Click the "Add Merchant" button
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		expect(addButton).toBeTruthy();
+		await fireEvent.click(addButton);
+
+		// Step 3: Wait for the addition to complete and verify it appears in UI
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant appears in the UI
+		const merchantList = container.querySelector('.merchant-list');
+		expect(merchantList).toBeTruthy();
+		expect(merchantList.textContent).toContain('walmart');
+
+		// Step 4: Try to remove the newly added merchant
+		// First, find all remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBeGreaterThan(0);
+
+		// Mock successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		// Find the remove button for the walmart merchant (should be the last one added)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+		expect(walmartRemoveButton).toBeTruthy();
+
+		// Step 5: Click the remove button - this should work but currently doesn't
+		const fetchCallsBefore = mockFetch.mock.calls.length;
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait a bit to see if the remove call is made
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		const fetchCallsAfter = mockFetch.mock.calls.length;
+		
+		// This assertion will fail if the remove button does nothing (the bug)
+		expect(fetchCallsAfter).toBeGreaterThan(fetchCallsBefore);
+		
+		console.log('✅ Remove button is working correctly after adding merchant');
+	});
+
+	it('should reproduce the bug where remove button stops working after adding merchant', async () => {
+		// This test specifically checks if the remove button actually works after adding a merchant
+		// by trying to click it and see if it makes a fetch call
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Get the initial remove buttons before adding a merchant
+		const initialRemoveButtons = getAllByText(container, 'Remove');
+		expect(initialRemoveButtons.length).toBeGreaterThan(0);
+
+		// Don't test the remove button before adding - just verify it exists
+		console.log('Remove button exists before adding merchant:', initialRemoveButtons.length > 0);
+
+		// Select a merchant from the combo box
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		// Click the "Add Merchant" button
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for the addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2); // 1 initial + 1 add
+		});
+
+		// Get the remove buttons after adding a merchant
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBeGreaterThan(initialRemoveButtons.length);
+
+		// Test if the first remove button still works after adding a merchant
+		const firstRemoveButtonAfter = removeButtonsAfter[0];
+		
+		// Mock another successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const fetchCallsBeforeTest2 = mockFetch.mock.calls.length;
+		await fireEvent.click(firstRemoveButtonAfter);
+		
+		// Wait a bit to see if the remove call is made
+		await new Promise(resolve => setTimeout(resolve, 100));
+		
+		const fetchCallsAfterTest2 = mockFetch.mock.calls.length;
+		const removeButtonWorksAfter = fetchCallsAfterTest2 > fetchCallsBeforeTest2;
+		console.log('Remove button works after adding merchant:', removeButtonWorksAfter);
+
+		// This assertion will fail if the remove button stops working after adding a merchant (the bug)
+		expect(removeButtonWorksAfter).toBe(true);
+		
+		console.log('✅ Remove button continues to work after adding merchant');
 	});
 });

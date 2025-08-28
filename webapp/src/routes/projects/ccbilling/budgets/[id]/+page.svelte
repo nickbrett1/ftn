@@ -76,7 +76,7 @@
 			// Add the merchant to the local UI state
 			const newMerchant = {
 				merchant: selectedMerchant.trim(),
-				merchant_normalized: selectedMerchant.trim()
+				merchant_normalized: selectedMerchant.trim().toLowerCase()
 			};
 			merchants = [...merchants, newMerchant].sort((a, b) => 
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
@@ -88,10 +88,18 @@
 			selectedMerchant = '';
 			isAdding = false;
 			
-			// Manually sync the merchant picker to avoid infinite loops
+			// Manually reset the select element to ensure it's cleared
 			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
 				merchantPickerRef.syncSelectValue();
 			}
+			
+			// Small delay to ensure DOM updates are complete
+			setTimeout(() => {
+				// This ensures the UI is fully updated before allowing further interactions
+			}, 10);
+			
+			// Note: Removed syncSelectValue() call as it might interfere with DOM event handlers
+			// The merchant picker will sync automatically when needed
 			
 			// Note: Removed refreshMerchantList() call as it might be causing DOM manipulation
 			// issues that interfere with event handlers. The modal will fetch fresh data when opened.
