@@ -317,6 +317,62 @@ describe('Budget Page - Merchant Removal', () => {
 
 
 
+	it('should reproduce the bug where remove button shows "Removing..." but merchant stays in UI', async () => {
+		// This test reproduces the bug where clicking remove shows "Removing..." but the merchant
+		// doesn't actually disappear from the UI
+		
+		// Mock successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { getByText, container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for merchants to be rendered
+		await waitFor(() => {
+			expect(getByText('amazon')).toBeTruthy();
+			expect(getByText('target')).toBeTruthy();
+		});
+
+		// Find the Remove button for amazon
+		const amazonElement = getByText('amazon');
+		const amazonInfoDiv = amazonElement.closest('div');
+		const amazonCard = amazonInfoDiv.parentElement;
+		const amazonRemoveButton = amazonCard.querySelector('button');
+		
+		expect(amazonRemoveButton).toBeTruthy();
+		expect(amazonRemoveButton.textContent).toContain('Remove');
+
+		// Click the remove button
+		await fireEvent.click(amazonRemoveButton);
+		
+		// Wait for the button text to change to "Removing..." (this waits for DOM re-render)
+		await waitFor(() => {
+			expect(amazonRemoveButton.textContent).toContain('Removing');
+		}, { timeout: 2000 });
+
+		// Wait for the removal to complete (API call + UI update)
+		await waitFor(() => {
+			// The merchant should be removed from the UI
+			const merchantList = container.querySelector('.merchant-list');
+			expect(merchantList).toBeTruthy();
+			expect(merchantList.textContent).not.toContain('amazon');
+		}, { timeout: 3000 });
+
+		// Verify the API call was made
+		expect(mockFetch).toHaveBeenCalledWith(
+			'/projects/ccbilling/budgets/test-budget-id/merchants/amazon',
+			expect.objectContaining({
+				method: 'DELETE'
+			})
+		);
+
+		console.log('✅ Merchant removal bug has been fixed - merchant disappears from UI after removal');
+	});
+
 	it('should verify that remove buttons work after adding merchant from combo box', async () => {
 		// This test verifies that the production bug has been fixed - remove buttons
 		// should work correctly after adding a merchant from the combo box
