@@ -107,26 +107,72 @@
 		isDeleting = true;
 
 		try {
+			console.log('🔄 Starting merchant removal:', {
+				merchantName,
+				budgetId: budget.id,
+				url: `/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`
+			});
+
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' }
 			});
+			
+			console.log('🔍 Fetch response object:', response);
+			console.log('🔍 Response type:', typeof response);
+			console.log('🔍 Response is undefined?', response === undefined);
+
+			console.log('📡 Response received:', {
+				status: response.status,
+				statusText: response.statusText,
+				ok: response.ok,
+				headers: Object.fromEntries(response.headers.entries())
+			});
 
 			if (!response.ok) {
-				const error = await response.json();
-				alert(error.error || 'Failed to remove merchant');
+				let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
+				try {
+					const errorBody = await response.text();
+					console.log('❌ Error response body:', errorBody);
+					errorDetails += `\nResponse: ${errorBody}`;
+				} catch (e) {
+					console.log('❌ Could not read error response body:', e);
+				}
+				alert(`Failed to remove merchant "${merchantName}":\n\n${errorDetails}\n\nCheck console for full details.`);
 				return;
+			}
+
+			// Try to parse response body for success confirmation
+			let responseData = null;
+			try {
+				const responseText = await response.text();
+				if (responseText) {
+					responseData = JSON.parse(responseText);
+					console.log('✅ Success response:', responseData);
+				}
+			} catch (e) {
+				console.log('ℹ️ No response body or not JSON (this is normal for DELETE)');
 			}
 
 			// Remove the merchant from the local UI state
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			console.log('✅ Merchant removed from local state successfully');
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
-			alert('Network error occurred');
+			console.error('❌ Merchant removal failed:', {
+				error: error.message,
+				merchantName,
+				budgetId: budget.id,
+				stack: error.stack
+			});
+			
+			// Show detailed error message for debugging
+			alert(`Failed to remove merchant "${merchantName}":\n\n${error.message}\n\nCheck console for full details.`);
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
+			console.log('🔄 Cleanup completed - state reset');
 		}
 	}
 
