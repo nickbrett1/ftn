@@ -17,7 +17,7 @@
 	
 	// Only use $state for variables that directly affect UI reactivity
 	let showModal = $state(false); // Modal visibility - needs to be reactive for isOpen prop
-	let localSelectedMerchant = $state(selectedMerchant); // Local selection - needs to be reactive to prop changes
+	let localSelectedMerchant = selectedMerchant; // Local selection - no longer reactive to avoid loops
 	
 	// DOM references for manual updates
 	let merchantsSelect;
@@ -128,9 +128,6 @@
 			
 			// Clear flag after DOM update is complete
 			isUpdatingUI = false;
-			
-			// Sync with parent after UI update
-			syncWithParent();
 		}
 	}
 	
@@ -180,19 +177,23 @@
 		if (!isUpdatingUI && merchantsSelect) {
 			merchantsSelect.value = selectedMerchant || '';
 		}
-		if (localSelectedMerchant !== selectedMerchant) {
-			localSelectedMerchant = selectedMerchant;
-		}
+		// Update local state without triggering reactivity
+		localSelectedMerchant = selectedMerchant;
 	}
+
+	// Watch for changes to selectedMerchant prop and update DOM accordingly
+	$effect(() => {
+		// Only update if we're not currently updating UI and the select exists
+		if (!isUpdatingUI && merchantsSelect) {
+			merchantsSelect.value = selectedMerchant || '';
+		}
+		// Update local state
+		localSelectedMerchant = selectedMerchant;
+	});
 
 	onMount(() => {
 		// Load merchants - UI will be updated when DOM elements are available
 		loadUnassignedMerchants();
-		
-		// Sync with parent after DOM is ready
-		setTimeout(() => {
-			syncWithParent();
-		}, 100);
 	});
 
 	// Note: No longer exporting state management functions
