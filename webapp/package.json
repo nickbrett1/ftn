@@ -72,7 +72,7 @@
 		"resize-observer-polyfill": "^1.5.1",
 		"safe-regex2": "^5.0.0",
 		"sharp": "^0.34.3",
-		"shiki": "^3.11.0",
+		"shiki": "^3.12.0",
 		"svelte": "^5.38.6",
 		"svelte-awesome-icons": "^2.0.2",
 		"svelte-preprocess": "^6.0.3",
