@@ -170,8 +170,8 @@
 		}
 	}
 
-	// Expose the sync function to parent components
-	export { syncSelectValue };
+	// Expose functions to parent components
+	export { syncSelectValue, refreshMerchantList };
 
 
 

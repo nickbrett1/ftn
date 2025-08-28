@@ -136,16 +136,22 @@ describe('Budget Page - Merchant Removal', () => {
 	});
 
 	it('should expose the infinite loop by testing multiple rapid interactions', async () => {
-		// Mock the recent merchants endpoint
-		mockFetch.mockResolvedValue({
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
-		// Mock successful addition responses
-		mockFetch.mockResolvedValue({
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock the recent merchants endpoint (third call - refresh after addition)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['costco', 'bestbuy'] // walmart is now assigned, so not in list
 		});
 
 		const { getByRole, container } = render(BudgetPage, {
@@ -167,8 +173,17 @@ describe('Budget Page - Merchant Removal', () => {
 		// Wait for the operation to complete
 		await new Promise(resolve => setTimeout(resolve, 50));
 		
+		// Debug: Check the current state before trying to change
+		console.log('Select value before change:', select.value);
+		console.log('Select options:', Array.from(select.options).map(opt => opt.value));
+		console.log('Fetch calls made:', mockFetch.mock.calls);
+		console.log('Fetch call count:', mockFetch.mock.calls.length);
+		
 		// Try to interact with the select again - this should work if no infinite loop
 		await fireEvent.change(select, { target: { value: 'costco' } });
+		
+		// Debug: Check the state after change
+		console.log('Select value after change:', select.value);
 		
 		// If there's an infinite loop, the select value won't change
 		expect(select.value).toBe('costco'); // This should fail if there's an infinite loop
