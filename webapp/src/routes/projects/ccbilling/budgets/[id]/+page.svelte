@@ -82,10 +82,7 @@
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
 			
-			// Remove the merchant from the picker's available merchants
-			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
-				merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
-			}
+			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 			
 			// Reset form and loading state
 			selectedMerchant = '';
@@ -121,10 +118,7 @@
 			// Remove the merchant from the local UI state
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			
-			// Add the removed merchant back to the picker's available merchants list
-			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
-				merchantPickerRef.addMerchantToLocalState(merchantName);
-			}
+			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
