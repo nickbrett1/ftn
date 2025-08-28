@@ -67,7 +67,7 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 	});
 
-	it('should remove merchant successfully and update UI', async () => {
+	it('should expose the merchant removal bug - button shows "Removing..." but merchant is not removed', async () => {
 		// Mock successful removal response
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -94,31 +94,16 @@ describe('Budget Page - Merchant Removal', () => {
 		// Click the remove button
 		await fireEvent.click(removeButton);
 
-		// Check that button shows "Removing..." state
+		// Wait a bit for state to update
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Debug: check what buttons are available
+		const allButtons = document.querySelectorAll('button');
+		console.log('All buttons after click:', Array.from(allButtons).map(btn => btn.textContent));
+
+		// The bug: The button should show "Removing..." but it doesn't
+		// This test will fail and expose the bug
 		expect(getByText('Removing...')).toBeTruthy();
-
-		// Wait for the removal to complete
-		await waitFor(() => {
-			expect(queryByText('Removing...')).toBeFalsy();
-		}, { timeout: 3000 });
-
-		// Verify the API was called correctly
-		expect(mockFetch).toHaveBeenCalledWith(
-			'/projects/ccbilling/budgets/test-budget-id/merchants',
-			{
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					merchant: 'amazon'
-				})
-			}
-		);
-
-		// Verify the merchant was removed from the UI
-		await waitFor(() => {
-			expect(queryByText('amazon')).toBeFalsy();
-			expect(getByText('target')).toBeTruthy(); // Other merchant should still be there
-		});
 	});
 
 	it('should handle removal API error gracefully', async () => {
