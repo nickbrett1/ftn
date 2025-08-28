@@ -85,6 +85,12 @@
 		
 		// Update the displayed merchants (show the next 20)
 		merchants = allUnassignedMerchants.slice(0, 20);
+		
+		// Reset the selection if the removed merchant was selected
+		if (localSelectedMerchant === merchantToRemove) {
+			localSelectedMerchant = '';
+			onSelect(''); // Notify parent component
+		}
 	}
 
 	// Function to add a merchant back to the available merchants list
