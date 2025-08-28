@@ -70,9 +70,10 @@
 		
 		const selectedValue = event.target.value;
 		
+		// Update local selection to match the combo box selection
+		localSelectedMerchant = selectedValue;
+		
 		if (selectedValue) {
-			// Update local selection to match the combo box selection
-			localSelectedMerchant = selectedValue;
 			onSelect(selectedValue);
 			// Don't refresh the merchant list here to avoid infinite loops
 			// The parent component will handle refreshing when needed
@@ -186,12 +187,30 @@
 		localSelectedMerchant = selectedMerchant;
 	}
 
-	// Remove the $effect to prevent infinite loops
-	// State synchronization will be handled manually in event handlers
+	// Watch for changes to selectedMerchant prop and update DOM accordingly
+	// This is necessary for the component to respond to parent prop changes
+	$effect(() => {
+		// Only update the DOM if we're not currently updating UI and the select exists
+		// Update if the selectedMerchant prop is different from the current select value
+		if (!isUpdatingUI && merchantsSelect && merchantsSelect.value !== selectedMerchant) {
+			merchantsSelect.value = selectedMerchant || '';
+		}
+		// Don't update localSelectedMerchant to avoid reactive loops
+	});
 
 	onMount(() => {
 		// Load merchants - UI will be updated when DOM elements are available
 		loadUnassignedMerchants();
+		
+		// Ensure the select value is synced with the prop after DOM is ready
+		// Only sync if selectedMerchant is explicitly provided
+		if (selectedMerchant) {
+			setTimeout(() => {
+				if (merchantsSelect && !isUpdatingUI) {
+					merchantsSelect.value = selectedMerchant;
+				}
+			}, 100);
+		}
 	});
 
 	// Note: No longer exporting state management functions
