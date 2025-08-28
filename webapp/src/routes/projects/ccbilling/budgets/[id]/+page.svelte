@@ -25,9 +25,11 @@
 	let addError = $state(''); // UI needs to show errors
 	let merchantPickerRef = null; // No UI reactivity needed
 
-	// Delete merchant state
-	let deletingMerchant = $state(null); // UI needs to show which merchant is being deleted
-	let isDeleting = $state(false); // UI needs to show loading state
+	// Delete merchant state - using a single state object for better reactivity
+	let deleteState = $state({ 
+		deletingMerchant: null, 
+		isDeleting: false 
+	});
 
 	// Edit budget name and icon state
 	let editName = $state(budget?.name || ''); // UI needs to react to name changes
@@ -103,8 +105,8 @@
 
 		async function removeMerchant(merchantName) {
 		// No confirm needed; removal is safe and reversible by re-adding
-		deletingMerchant = merchantName;
-		isDeleting = true;
+		deleteState.deletingMerchant = merchantName;
+		deleteState.isDeleting = true;
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`, {
@@ -125,8 +127,8 @@
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
-			deletingMerchant = null;
-			isDeleting = false;
+			deleteState.deletingMerchant = null;
+			deleteState.isDeleting = false;
 		}
 	}
 
@@ -328,10 +330,10 @@
 							<button
 								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
-								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
+								disabled={deleteState.isDeleting && deleteState.deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
-								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
+								{deleteState.isDeleting && deleteState.deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
 							</button>
 						</div>
 					{/each}
