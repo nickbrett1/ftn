@@ -172,21 +172,16 @@
 
 
 
-	// Track the previous prop value to detect external changes
-	let previousSelectedMerchant = selectedMerchant;
-	
-	// Sync localSelectedMerchant with prop changes (only when prop changes externally)
+	// Sync localSelectedMerchant with prop changes
 	$effect(() => {
-		// Only update if the prop changed externally (not from our internal changes)
-		if (selectedMerchant !== previousSelectedMerchant && !isUpdatingUI) {
-			// Update the DOM to reflect the new selection
-			if (merchantsSelect) {
-				merchantsSelect.value = selectedMerchant || '';
-			}
-			// Update both local state and previous tracking
-			localSelectedMerchant = selectedMerchant;
-			previousSelectedMerchant = selectedMerchant;
+		// Update the DOM to match the prop value, but only if we're not updating UI
+		// This ensures the DOM stays in sync with the parent's selectedMerchant prop
+		if (!isUpdatingUI && merchantsSelect) {
+			merchantsSelect.value = selectedMerchant || '';
 		}
+		
+		// Update local state to match the prop
+		localSelectedMerchant = selectedMerchant;
 	});
 
 	onMount(() => {
