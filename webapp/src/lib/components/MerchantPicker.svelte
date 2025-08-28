@@ -13,9 +13,11 @@
 	let merchants = []; // Currently displayed merchants
 	let isLoading = true; // Loading state
 	let error = ''; // Error state
-	let showModal = false; // Modal visibility
 	let localSelectedMerchant = selectedMerchant; // Local selection
 	let isUpdatingUI = false; // Flag to prevent recursive event handling
+	
+	// Only use $state for variables that directly affect UI reactivity
+	let showModal = $state(false); // Modal visibility - needs to be reactive for isOpen prop
 	
 	// DOM references for manual updates
 	let merchantsSelect;
@@ -128,15 +130,9 @@
 		}
 	}
 	
-	function updateModalUI() {
-		// Modal visibility is handled by the MerchantSelectionModal component's isOpen prop
-		// No need to manually update DOM here
-	}
-
 	// Function to open modal and fetch fresh data
 	async function openModal() {
 		showModal = true;
-		updateModalUI();
 		// Fetch fresh data when modal opens
 		await loadUnassignedMerchants();
 	}
@@ -147,7 +143,6 @@
 		onSelect(merchant);
 		// Close the modal
 		showModal = false;
-		updateModalUI();
 	}
 
 	// Function to refresh the merchant list - can be called by parent components
