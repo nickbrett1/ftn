@@ -502,8 +502,8 @@ describe('Budget Page - Merchant Removal', () => {
 		console.log('✅ API call format validation passed - DELETE request has correct URL and body');
 	});
 
-	it('should reproduce the bug where adding merchant from combo breaks all UI interactions', async () => {
-		// This test reproduces the bug where selecting a merchant from the combo box
+	it('should reproduce the bug where adding merchant breaks all UI interactions', async () => {
+		// This test reproduces the bug where clicking "Add Merchant" button
 		// causes the UI to become unresponsive to further interactions
 		
 		// Mock the recent merchants endpoint (first call - initial load)
@@ -518,7 +518,7 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
-		const { container, getByRole } = render(BudgetPage, {
+		const { container, getByRole, getByText } = render(BudgetPage, {
 			props: { data: mockData }
 		});
 
@@ -533,6 +533,11 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Select a merchant from the combo box
 		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		// Find and click the "Add Merchant" button (use getByRole to get the button specifically)
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		expect(addButton).toBeTruthy();
+		await fireEvent.click(addButton);
 
 		// Wait for the addition to complete
 		await waitFor(() => {
@@ -564,7 +569,7 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(3);
 		});
 
-		// 2. Try to select another merchant (should work)
+		// 2. Try to select another merchant and add it (should work)
 		await fireEvent.change(selectElement, { target: { value: 'costco' } });
 
 		// Mock another successful addition
@@ -573,12 +578,16 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Click the "Add Merchant" button again
+		const addButton2 = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton2);
+
 		// Wait for the second addition to complete
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(4);
 		});
 
 		// If we get here without hanging, the UI interactions are working
-		console.log('✅ UI interactions are working correctly after adding merchant from combo box');
+		console.log('✅ UI interactions are working correctly after adding merchant');
 	});
 });
