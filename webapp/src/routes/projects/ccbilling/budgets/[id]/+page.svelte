@@ -93,10 +93,8 @@
 				merchantPickerRef.syncSelectValue();
 			}
 			
-			// Refresh the merchant picker's merchant list
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				merchantPickerRef.refreshMerchantList();
-			}
+			// Note: Removed refreshMerchantList() call as it might be causing DOM manipulation
+			// issues that interfere with event handlers. The modal will fetch fresh data when opened.
 		} catch (error) {
 			addError = 'Network error occurred';
 			isAdding = false;
