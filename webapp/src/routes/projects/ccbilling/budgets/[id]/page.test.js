@@ -230,4 +230,79 @@ describe('Budget Page - Merchant Removal', () => {
 		// that the button click doesn't cause the test to hang (which would indicate infinite loop)
 		expect(viewAllButton).toBeTruthy(); // This should pass if no infinite loop
 	});
+
+	it('should successfully remove merchant after adding from combo box', async () => {
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock the recent merchants endpoint (third call - refresh after addition)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['costco', 'bestbuy'] // walmart is now assigned, so not in list
+		});
+
+		// Mock successful removal response (fourth call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { getByRole, getByText, container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for the merchant picker to load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+
+		// Step 1: Add a merchant from the combo box
+		await fireEvent.change(select, { target: { value: 'walmart' } });
+		await fireEvent.click(addButton);
+		
+		// Wait for the addition to complete
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Step 2: Verify the merchant was added to the list
+		await waitFor(() => {
+			const merchantList = container.querySelector('.merchant-list');
+			expect(merchantList).toBeTruthy();
+			expect(merchantList.textContent).toContain('walmart');
+		});
+
+		// Step 3: Remove the merchant that was just added
+		const walmartElement = getByText('walmart');
+		const merchantInfoDiv = walmartElement.closest('div');
+		const merchantCard = merchantInfoDiv.parentElement;
+		const removeButton = merchantCard.querySelector('button');
+		
+		// Verify the remove button exists and has the correct text
+		expect(removeButton).toBeTruthy();
+		expect(removeButton.textContent).toContain('Remove');
+		
+		// Click the remove button
+		await fireEvent.click(removeButton);
+		
+		// Wait for the removal to complete
+		await new Promise(resolve => setTimeout(resolve, 200));
+
+		// Step 4: Verify the merchant was successfully removed from the list
+		await waitFor(() => {
+			const merchantList = container.querySelector('.merchant-list');
+			expect(merchantList).toBeTruthy();
+			expect(merchantList.textContent).not.toContain('walmart');
+		});
+	});
 });
