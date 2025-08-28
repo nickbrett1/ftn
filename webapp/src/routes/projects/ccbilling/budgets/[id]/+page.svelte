@@ -98,8 +98,6 @@
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
-
-
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
