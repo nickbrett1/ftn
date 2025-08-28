@@ -20,7 +20,7 @@
 	let merchants = $state(data.merchants || []); // UI needs to react to merchant changes
 	
 	// Add merchant state
-	let selectedMerchant = $state(''); // UI needs to react to selection changes
+	let selectedMerchant = ''; // Non-reactive to avoid infinite loops
 	let isAdding = $state(false); // UI needs to show loading state
 	let addError = $state(''); // UI needs to show errors
 	let merchantPickerRef = null; // No UI reactivity needed
@@ -91,6 +91,11 @@
 			// Manually sync the merchant picker to avoid infinite loops
 			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
 				merchantPickerRef.syncSelectValue();
+			}
+			
+			// Refresh the merchant picker's merchant list
+			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+				merchantPickerRef.refreshMerchantList();
 			}
 		} catch (error) {
 			addError = 'Network error occurred';
