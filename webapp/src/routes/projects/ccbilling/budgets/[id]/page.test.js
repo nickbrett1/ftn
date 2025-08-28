@@ -322,17 +322,14 @@ describe('Budget Page - Merchant Removal', () => {
 		// doesn't actually disappear from the UI
 		
 		// Mock successful removal response
-		const mockResponse = {
+		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			statusText: 'OK',
 			headers: new Map([['content-type', 'application/json']]),
 			text: async () => '{"success": true}',
 			json: async () => ({ success: true })
-		};
-		
-		console.log('🔧 Setting up mock for fetch:', mockResponse);
-		mockFetch.mockResolvedValueOnce(mockResponse);
+		});
 
 		const { getByText, container } = render(BudgetPage, {
 			props: { data: mockData }

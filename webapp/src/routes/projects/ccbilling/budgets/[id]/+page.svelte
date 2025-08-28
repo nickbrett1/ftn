@@ -107,26 +107,9 @@
 		isDeleting = true;
 
 		try {
-			console.log('🔄 Starting merchant removal:', {
-				merchantName,
-				budgetId: budget.id,
-				url: `/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`
-			});
-
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' }
-			});
-			
-			console.log('🔍 Fetch response object:', response);
-			console.log('🔍 Response type:', typeof response);
-			console.log('🔍 Response is undefined?', response === undefined);
-
-			console.log('📡 Response received:', {
-				status: response.status,
-				statusText: response.statusText,
-				ok: response.ok,
-				headers: Object.fromEntries(response.headers.entries())
 			});
 
 			if (!response.ok) {
@@ -142,21 +125,8 @@
 				return;
 			}
 
-			// Try to parse response body for success confirmation
-			let responseData = null;
-			try {
-				const responseText = await response.text();
-				if (responseText) {
-					responseData = JSON.parse(responseText);
-					console.log('✅ Success response:', responseData);
-				}
-			} catch (e) {
-				console.log('ℹ️ No response body or not JSON (this is normal for DELETE)');
-			}
-
 			// Remove the merchant from the local UI state
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			console.log('✅ Merchant removed from local state successfully');
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
@@ -172,7 +142,6 @@
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
-			console.log('🔄 Cleanup completed - state reset');
 		}
 	}
 
