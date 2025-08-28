@@ -44,8 +44,12 @@
 	let availableIcons = getAvailableIcons();
 
 		async function addMerchant() {
+		console.log('🔍 DEBUG: addMerchant called with selectedMerchant:', selectedMerchant);
+		console.log('🔍 DEBUG: Current merchants before addition:', merchants.map(m => m.merchant));
+		
 		// Prevent running if already adding
 		if (isAdding) {
+			console.log('🔍 DEBUG: Already adding, returning early');
 			return;
 		}
 		
@@ -57,30 +61,53 @@
 		isAdding = true;
 		addError = '';
 
+		console.log('🔍 DEBUG: Starting merchant addition, isAdding set to:', isAdding);
+
 		try {
-			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
+			const url = `/projects/ccbilling/budgets/${budget.id}/merchants`;
+			const requestBody = JSON.stringify({
+				merchant: selectedMerchant.trim()
+			});
+			
+			console.log('🔍 DEBUG: Making POST request to:', url);
+			console.log('🔍 DEBUG: Request body:', requestBody);
+			
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					merchant: selectedMerchant.trim()
-				})
+				body: requestBody
+			});
+
+			console.log('🔍 DEBUG: Add response received:', {
+				ok: response.ok,
+				status: response.status,
+				statusText: response.statusText
 			});
 
 			if (!response.ok) {
 				const error = await response.json();
+				console.log('🔍 DEBUG: Add failed with error:', error);
 				addError = error.error || 'Failed to add merchant';
 				isAdding = false;
 				return;
 			}
 
+			console.log('🔍 DEBUG: Add successful, updating UI state');
+			
 			// Add the merchant to the local UI state
 			const newMerchant = {
 				merchant: selectedMerchant.trim(),
-				merchant_normalized: selectedMerchant.trim().toLowerCase()
+				merchant_normalized: selectedMerchant.trim() // Keep original case for display
 			};
+			
+			console.log('🔍 DEBUG: New merchant object:', newMerchant);
+			console.log('🔍 DEBUG: Merchants before addition:', merchants.map(m => m.merchant));
+			
 			merchants = [...merchants, newMerchant].sort((a, b) => 
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
+			
+			console.log('🔍 DEBUG: Merchants after addition and sort:', merchants.map(m => m.merchant));
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 			
@@ -88,13 +115,17 @@
 			selectedMerchant = '';
 			isAdding = false;
 			
+			console.log('🔍 DEBUG: Reset selectedMerchant to:', selectedMerchant, 'isAdding to:', isAdding);
+			
 			// Manually reset the select element to ensure it's cleared
 			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
+				console.log('🔍 DEBUG: Calling syncSelectValue to reset select element');
 				merchantPickerRef.syncSelectValue();
 			}
 			
 			// Small delay to ensure DOM updates are complete
 			setTimeout(() => {
+				console.log('🔍 DEBUG: DOM update delay completed');
 				// This ensures the UI is fully updated before allowing further interactions
 			}, 10);
 			
@@ -104,21 +135,40 @@
 			// Note: Removed refreshMerchantList() call as it might be causing DOM manipulation
 			// issues that interfere with event handlers. The modal will fetch fresh data when opened.
 		} catch (error) {
+			console.log('🔍 DEBUG: Add merchant exception:', error);
 			addError = 'Network error occurred';
 			isAdding = false;
 		}
 	}
 
 		async function removeMerchant(merchantName) {
+		console.log('🔍 DEBUG: removeMerchant called with:', merchantName);
+		console.log('🔍 DEBUG: Current merchants before removal:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current UI state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
+		
 		// No confirm needed; removal is safe and reversible by re-adding
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
+		console.log('🔍 DEBUG: Set deletingMerchant to:', deletingMerchant, 'isDeleting to:', isDeleting);
+
 		try {
-			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
+			const url = `/projects/ccbilling/budgets/${budget.id}/merchants`;
+			const requestBody = JSON.stringify({ merchant: merchantName });
+			
+			console.log('🔍 DEBUG: Making DELETE request to:', url);
+			console.log('🔍 DEBUG: Request body:', requestBody);
+			
+			const response = await fetch(url, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ merchant: merchantName })
+				body: requestBody
+			});
+
+			console.log('🔍 DEBUG: Response received:', {
+				ok: response.ok,
+				status: response.status,
+				statusText: response.statusText
 			});
 
 			if (!response.ok) {
@@ -130,12 +180,22 @@
 				} catch (e) {
 					console.log('❌ Could not read error response body:', e);
 				}
+				console.log('🔍 DEBUG: API call failed, showing alert');
 				alert(`Failed to remove merchant "${merchantName}":\n\n${errorDetails}\n\nCheck console for full details.`);
 				return;
 			}
 
+			console.log('🔍 DEBUG: API call successful, updating UI state');
+			console.log('🔍 DEBUG: Merchants before filter:', merchants.map(m => m.merchant));
+			
 			// Remove the merchant from the local UI state
+			const merchantsBefore = merchants.length;
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			const merchantsAfter = merchants.length;
+			
+			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
+			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
@@ -149,8 +209,10 @@
 			// Show detailed error message for debugging
 			alert(`Failed to remove merchant "${merchantName}":\n\n${error.message}\n\nCheck console for full details.`);
 		} finally {
+			console.log('🔍 DEBUG: Finally block - resetting state');
 			deletingMerchant = null;
 			isDeleting = false;
+			console.log('🔍 DEBUG: State reset - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		}
 	}
 
