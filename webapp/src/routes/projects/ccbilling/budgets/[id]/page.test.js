@@ -748,4 +748,107 @@ describe('Budget Page - Merchant Removal', () => {
 		
 		console.log('✅ Remove button continues to work after adding merchant');
 	});
+
+	it('should reproduce the exact bug: add merchant then remove it from UI', async () => {
+		// This test reproduces the EXACT bug: add a merchant, then try to remove it
+		// and verify that it actually disappears from the UI
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole, getByText } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Verify initial state: should have 2 merchants (amazon, target)
+		const initialMerchantList = container.querySelector('.merchant-list');
+		expect(initialMerchantList.textContent).toContain('amazon');
+		expect(initialMerchantList.textContent).toContain('target');
+		expect(initialMerchantList.textContent).not.toContain('walmart');
+
+		// Step 1: Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Step 2: Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+		expect(merchantListAfterAdd.textContent).toContain('amazon');
+		expect(merchantListAfterAdd.textContent).toContain('target');
+
+		// Step 3: Try to remove the newly added merchant
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Mock successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+		expect(walmartRemoveButton).toBeTruthy();
+
+		// Step 4: Click the remove button for walmart
+		const fetchCallsBeforeRemove = mockFetch.mock.calls.length;
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Step 5: Verify the API call was made with correct parameters
+		const removeCall = mockFetch.mock.calls[2];
+		expect(removeCall[0]).toBe('/projects/ccbilling/budgets/test-budget-id/merchants');
+		expect(removeCall[1]).toEqual({
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ merchant: 'walmart' })
+		});
+
+		// Step 6: CRITICAL - Verify the merchant was actually removed from the UI
+		// This is where the bug would manifest: API call succeeds but UI doesn't update
+		const merchantListAfterRemove = container.querySelector('.merchant-list');
+		
+		// The bug: walmart should be gone from the UI, but it might still be there
+		expect(merchantListAfterRemove.textContent).not.toContain('walmart');
+		
+		// Verify other merchants are still there
+		expect(merchantListAfterRemove.textContent).toContain('amazon');
+		expect(merchantListAfterRemove.textContent).toContain('target');
+
+		// Verify the remove button count decreased
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
+
+		console.log('✅ Successfully added and removed merchant - UI updated correctly');
+	});
 });
