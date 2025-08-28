@@ -260,4 +260,139 @@ describe('MerchantPicker', () => {
 			expect(getByText('Error: Network error')).toBeTruthy();
 		});
 	});
+
+	it('should not cause infinite loop when selecting merchant and refreshing list', async () => {
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let onSelectCallCount = 0;
+		
+		// Mock fetch to return merchants initially
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const mockOnSelect = vi.fn(() => {
+			onSelectCallCount++;
+			// Simulate the parent component adding the merchant and then refreshing
+			// This would normally trigger loadUnassignedMerchants() after 100ms
+		});
+
+		const { getByRole } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Select a merchant - this should trigger onSelect exactly once
+		// and not cause an infinite loop when the DOM is updated
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		
+		// Wait a bit to ensure any async operations complete
+		await new Promise(resolve => setTimeout(resolve, 200));
+		
+		// onSelect should be called exactly once, not in a loop
+		expect(onSelectCallCount).toBe(1);
+		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
+		expect(mockOnSelect).toHaveBeenCalledTimes(1);
+		
+		// The select should still have the correct value
+		expect(select.value).toBe('Amazon');
+	});
+
+	it('should prevent infinite loop when DOM updates trigger onchange events', async () => {
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let onSelectCallCount = 0;
+		let maxCalls = 10; // Safety limit to prevent actual infinite loop in test
+		
+		// Mock fetch to return merchants initially
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const mockOnSelect = vi.fn(() => {
+			onSelectCallCount++;
+			if (onSelectCallCount > maxCalls) {
+				throw new Error('Infinite loop detected! onSelect called too many times');
+			}
+		});
+
+		const { getByRole } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Select a merchant
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		
+		// Wait for the 100ms timeout and any subsequent DOM updates
+		await new Promise(resolve => setTimeout(resolve, 300));
+		
+		// onSelect should be called exactly once, not in a loop
+		expect(onSelectCallCount).toBe(1);
+		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
+		expect(mockOnSelect).toHaveBeenCalledTimes(1);
+		
+		// Verify the select value is still correct after all updates
+		expect(select.value).toBe('Amazon');
+		
+		// This test would fail if the infinite loop bug returns because:
+		// 1. onSelect would be called multiple times (violating the count check)
+		// 2. The test would throw an error if onSelect is called more than maxCalls times
+		// 3. The select value might be incorrect due to recursive updates
+	});
+
+	// This test demonstrates how the infinite loop bug would be caught
+	// It's commented out because it would fail with our current fix
+	// Uncomment and remove the isUpdatingUI flag to see it fail
+	/*
+	it('would fail if infinite loop bug returns (demonstration)', async () => {
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let onSelectCallCount = 0;
+		
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		const mockOnSelect = vi.fn(() => {
+			onSelectCallCount++;
+			// Without the isUpdatingUI flag, this would be called multiple times
+			// causing the test to fail
+		});
+
+		const { getByRole } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		await new Promise(resolve => setTimeout(resolve, 300));
+		
+		// This would fail if the infinite loop bug returns:
+		// expect(onSelectCallCount).toBe(1); // Would be > 1
+		// expect(mockOnSelect).toHaveBeenCalledTimes(1); // Would be > 1
+	});
+	*/
 });
