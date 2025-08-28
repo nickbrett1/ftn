@@ -132,11 +132,6 @@
 
 			// Remove the merchant from the local UI state
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			
-			// Add the removed merchant back to the picker's available merchants list
-			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
-				merchantPickerRef.addMerchantToLocalState(merchantName);
-			}
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
