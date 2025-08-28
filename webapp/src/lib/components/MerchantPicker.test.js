@@ -434,7 +434,7 @@ describe('MerchantPicker', () => {
 		});
 
 		// This simulates the real-world scenario more accurately:
-		// Parent immediately resets selectedMerchant = '' without delay
+		// Parent first sets selectedMerchant to the selected value, then resets it
 		let selectedMerchant = '';
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
@@ -443,7 +443,11 @@ describe('MerchantPicker', () => {
 				throw new Error(`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`);
 			}
 			
-			// Simulate parent component behavior: immediately reset selectedMerchant
+			// Simulate parent component behavior: first set to selected value, then reset
+			selectedMerchant = merchant;
+			rerender({ selectedMerchant, onSelect: mockOnSelect });
+			
+			// Then immediately reset to empty
 			selectedMerchant = '';
 			rerender({ selectedMerchant, onSelect: mockOnSelect });
 		});

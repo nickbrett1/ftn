@@ -174,7 +174,7 @@
 
 	// Sync localSelectedMerchant with prop changes
 	$effect(() => {
-		// Update the DOM to match the prop value, but only if we're not updating UI
+		// Update the DOM to match the prop value when it changes
 		// This ensures the DOM stays in sync with the parent's selectedMerchant prop
 		if (!isUpdatingUI && merchantsSelect) {
 			merchantsSelect.value = selectedMerchant || '';
