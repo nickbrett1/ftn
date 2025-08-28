@@ -366,13 +366,14 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(merchantList.textContent).not.toContain('amazon');
 		}, { timeout: 3000 });
 
-		// Verify the API call was made
-		expect(mockFetch).toHaveBeenCalledWith(
-			'/projects/ccbilling/budgets/test-budget-id/merchants/amazon',
-			expect.objectContaining({
-				method: 'DELETE'
-			})
-		);
+		// Verify the API call was made (should be the second call after initial load)
+		const deleteCall = mockFetch.mock.calls[1];
+		expect(deleteCall[0]).toBe('/projects/ccbilling/budgets/test-budget-id/merchants');
+		expect(deleteCall[1]).toEqual({
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ merchant: 'amazon' })
+		});
 
 		console.log('✅ Merchant removal bug has been fixed - merchant disappears from UI after removal');
 	});
@@ -448,5 +449,56 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(buttonStateChanged || fetchCallMade).toBe(true);
 		
 		console.log('✅ Remove button is working correctly after adding merchant from combo box');
+	});
+
+	it('should make correct API call format when removing merchant', async () => {
+		// This test validates that the DELETE request is made with the correct URL and body format
+		// to catch API endpoint mismatches like the one we just fixed
+		
+		// Mock the initial fetch call (for recent merchants)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful removal response
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Find and click the first remove button (for amazon)
+		const removeButtons = getAllByText(container, 'Remove');
+		const removeButton = removeButtons[0]; // First remove button is for amazon
+		await fireEvent.click(removeButton);
+
+		// Wait for the DELETE API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the DELETE API call format (should be the second call)
+		const deleteCall = mockFetch.mock.calls[1];
+		expect(deleteCall[0]).toBe('/projects/ccbilling/budgets/test-budget-id/merchants');
+		expect(deleteCall[1]).toEqual({
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ merchant: 'amazon' })
+		});
+
+		console.log('✅ API call format validation passed - DELETE request has correct URL and body');
 	});
 });
