@@ -13,11 +13,11 @@
 	let merchants = []; // Currently displayed merchants
 	let isLoading = true; // Loading state
 	let error = ''; // Error state
-	let localSelectedMerchant = selectedMerchant; // Local selection
 	let isUpdatingUI = false; // Flag to prevent recursive event handling
 	
 	// Only use $state for variables that directly affect UI reactivity
 	let showModal = $state(false); // Modal visibility - needs to be reactive for isOpen prop
+	let localSelectedMerchant = $state(selectedMerchant); // Local selection - needs to be reactive to prop changes
 	
 	// DOM references for manual updates
 	let merchantsSelect;
@@ -69,6 +69,7 @@
 		}
 		
 		const selectedValue = event.target.value;
+		
 		if (selectedValue) {
 			// Update local selection to match the combo box selection
 			localSelectedMerchant = selectedValue;
@@ -170,6 +171,22 @@
 
 
 
+
+	// Track the previous prop value to detect external changes
+	let previousSelectedMerchant = selectedMerchant;
+	
+	// Sync localSelectedMerchant with prop changes (only when prop changes externally)
+	$effect(() => {
+		// Only update if the prop changed externally (not from our internal changes)
+		if (selectedMerchant !== previousSelectedMerchant && !isUpdatingUI) {
+			previousSelectedMerchant = selectedMerchant;
+			localSelectedMerchant = selectedMerchant;
+			// Update the DOM to reflect the new selection
+			if (merchantsSelect) {
+				merchantsSelect.value = localSelectedMerchant || '';
+			}
+		}
+	});
 
 	onMount(() => {
 		// Load merchants - UI will be updated when DOM elements are available
