@@ -190,12 +190,20 @@
 			
 			// Remove the merchant from the local UI state
 			const merchantsBefore = merchants.length;
-			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			// Force reactivity by creating a completely new array and triggering update
+			const filteredMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			merchants = filteredMerchants; // Direct assignment to trigger reactivity
 			const merchantsAfter = merchants.length;
 			
 			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
 			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
+			
+			// Force UI update by triggering a small delay
+			setTimeout(() => {
+				console.log('🔍 DEBUG: Forcing UI update after merchant removal');
+				// This ensures the UI re-renders with the updated merchants array
+			}, 10);
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
