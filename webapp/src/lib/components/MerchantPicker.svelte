@@ -179,12 +179,13 @@
 	$effect(() => {
 		// Only update if the prop changed externally (not from our internal changes)
 		if (selectedMerchant !== previousSelectedMerchant && !isUpdatingUI) {
-			previousSelectedMerchant = selectedMerchant;
-			localSelectedMerchant = selectedMerchant;
 			// Update the DOM to reflect the new selection
 			if (merchantsSelect) {
-				merchantsSelect.value = localSelectedMerchant || '';
+				merchantsSelect.value = selectedMerchant || '';
 			}
+			// Update both local state and previous tracking
+			localSelectedMerchant = selectedMerchant;
+			previousSelectedMerchant = selectedMerchant;
 		}
 	});
 
