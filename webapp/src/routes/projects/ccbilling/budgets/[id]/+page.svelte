@@ -82,8 +82,10 @@
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
 			
-			// Note: Not calling removeMerchantFromLocalState to avoid infinite loops
-			// The merchant will be removed from the picker on next page load
+			// Remove the merchant from the picker's available merchants
+			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
+				merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
+			}
 			
 			// Reset form and loading state
 			selectedMerchant = '';
