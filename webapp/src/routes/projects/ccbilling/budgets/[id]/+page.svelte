@@ -18,6 +18,9 @@
 	let budget = $derived(data.budget || null);
 	let budgets = $derived(data.budgets || []);
 	
+	// Local state for merchants - start with server data
+	let merchants = $state(data.merchants || []);
+	
 
 	
 	// Add merchant state
@@ -82,7 +85,16 @@
 				return;
 			}
 
-			// Remove the merchant from the picker's local state (no server call needed)
+			// Add the merchant to the local UI state
+			const newMerchant = {
+				merchant: selectedMerchant.trim(),
+				merchant_normalized: selectedMerchant.trim()
+			};
+			merchants = [...merchants, newMerchant].sort((a, b) => 
+				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
+			);
+			
+			// Remove the merchant from the picker's available merchants
 			if (merchantPickerRef && merchantPickerRef.removeMerchantFromLocalState) {
 				merchantPickerRef.removeMerchantFromLocalState(selectedMerchant.trim());
 			}
@@ -90,9 +102,6 @@
 			// Reset form and loading state
 			selectedMerchant = '';
 			isAdding = false;
-			
-			// Refresh the data to show the new merchant
-			await invalidateAll();
 		} catch (error) {
 			addError = 'Network error occurred';
 			isAdding = false;
@@ -121,13 +130,13 @@
 				return;
 			}
 
+			// Remove the merchant from the local UI state
+			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			
 			// Add the removed merchant back to the picker's available merchants list
 			if (merchantPickerRef && merchantPickerRef.addMerchantToLocalState) {
 				merchantPickerRef.addMerchantToLocalState(merchantName);
 			}
-			
-			// Refresh the data to remove the merchant from the list
-			await invalidateAll();
 		} catch (error) {
 			alert('Network error occurred');
 		} finally {
@@ -309,7 +318,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if data.merchants?.length === 0}
+		{#if merchants.length === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -318,9 +327,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({data.merchants?.length || 0})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
 				<div class="grid gap-3">
-					{#each data.merchants || [] as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
