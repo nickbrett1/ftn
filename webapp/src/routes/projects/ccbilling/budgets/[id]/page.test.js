@@ -285,9 +285,14 @@ describe('Budget Page - Merchant Removal', () => {
 		// Step 3: Remove the merchant that was just added
 		// Use getAllByText to get all walmart elements, then find the one in the merchant list
 		const walmartElements = getAllByText(container, 'walmart');
-		const walmartElement = walmartElements.find(el => 
-			el.closest('.merchant-list') || el.closest('[class*="merchant"]')
-		);
+		const walmartElement = walmartElements.find(el => {
+			// Find the element that's in the merchant list (not in the dropdown)
+			const merchantList = el.closest('.merchant-list');
+			return merchantList && el.tagName === 'P'; // The merchant name is in a <p> tag
+		});
+		
+		expect(walmartElement).toBeTruthy();
+		
 		const merchantInfoDiv = walmartElement.closest('div');
 		const merchantCard = merchantInfoDiv.parentElement;
 		const removeButton = merchantCard.querySelector('button');
@@ -310,137 +315,7 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 	});
 
-	it('should investigate production bug - remove button becomes unresponsive after adding merchant', async () => {
-		// This test specifically investigates the production bug where remove buttons
-		// become unresponsive after adding a merchant from the combo box
-		
-		// Mock the recent merchants endpoint (first call - initial load)
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ['walmart', 'costco', 'bestbuy']
-		});
 
-		// Mock successful addition response (second call - add merchant)
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ success: true })
-		});
-
-		// Mock the recent merchants endpoint (third call - refresh after addition)
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ['costco', 'bestbuy'] // walmart is now assigned, so not in list
-		});
-
-		const { getByRole, getByText, container } = render(BudgetPage, {
-			props: { data: mockData }
-		});
-
-		// Wait for the merchant picker to load
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
-
-		const select = getByRole('combobox');
-		const addButton = getByRole('button', { name: 'Add Merchant' });
-
-		// Step 1: Add a merchant from the combo box
-		await fireEvent.change(select, { target: { value: 'walmart' } });
-		await fireEvent.click(addButton);
-		
-		// Wait for the addition to complete and UI to update
-		await new Promise(resolve => setTimeout(resolve, 300));
-
-		// Step 2: Verify the merchant was added to the list
-		await waitFor(() => {
-			const merchantList = container.querySelector('.merchant-list');
-			expect(merchantList).toBeTruthy();
-			expect(merchantList.textContent).toContain('walmart');
-		});
-
-		// Step 3: Check if remove buttons are still functional
-		// First, let's check if there are any existing merchants (amazon, target) that we can test
-		const existingMerchants = ['amazon', 'target'];
-		let foundWorkingRemoveButton = false;
-		
-		for (const merchantName of existingMerchants) {
-			try {
-				const merchantElement = getByText(merchantName);
-				const merchantInfoDiv = merchantElement.closest('div');
-				const merchantCard = merchantInfoDiv.parentElement;
-				const removeButton = merchantCard.querySelector('button');
-				
-				if (removeButton && removeButton.textContent.includes('Remove')) {
-					// Test if the button is clickable and responsive
-					const initialText = removeButton.textContent;
-					
-					// Try to click the button
-					await fireEvent.click(removeButton);
-					
-					// Wait a bit to see if anything changes
-					await new Promise(resolve => setTimeout(resolve, 100));
-					
-					// Check if the button state changed (e.g., to "Removing...")
-					const afterClickText = removeButton.textContent;
-					
-					console.log(`Testing remove button for ${merchantName}:`);
-					console.log(`  Initial text: ${initialText}`);
-					console.log(`  After click text: ${afterClickText}`);
-					console.log(`  Button disabled: ${removeButton.disabled}`);
-					console.log(`  Button clickable: ${!removeButton.disabled && removeButton.style.pointerEvents !== 'none'}`);
-					
-					// If the button text changed or it's not disabled, it's working
-					if (afterClickText !== initialText || !removeButton.disabled) {
-						foundWorkingRemoveButton = true;
-						console.log(`  ✅ Remove button for ${merchantName} is working`);
-					} else {
-						console.log(`  ❌ Remove button for ${merchantName} is NOT working`);
-					}
-					
-					break; // Test one button to avoid interfering with the test
-				}
-			} catch (error) {
-				console.log(`Could not find remove button for ${merchantName}:`, error.message);
-			}
-		}
-
-		// Step 4: Now test the newly added merchant's remove button
-		try {
-			const walmartElement = getByText('walmart');
-			const merchantInfoDiv = walmartElement.closest('div');
-			const merchantCard = merchantInfoDiv.parentElement;
-			const walmartRemoveButton = merchantCard.querySelector('button');
-			
-			console.log('Testing newly added walmart remove button:');
-			console.log(`  Button found: ${!!walmartRemoveButton}`);
-			console.log(`  Button text: ${walmartRemoveButton?.textContent}`);
-			console.log(`  Button disabled: ${walmartRemoveButton?.disabled}`);
-			console.log(`  Button onclick handler: ${!!walmartRemoveButton?.__click}`);
-			
-			// This should fail if the bug exists - the remove button should not be working
-			expect(walmartRemoveButton).toBeTruthy();
-			expect(walmartRemoveButton.textContent).toContain('Remove');
-			expect(walmartRemoveButton.disabled).toBe(false);
-			
-			// Try to click the button
-			await fireEvent.click(walmartRemoveButton);
-			
-			// Wait for any state changes
-			await new Promise(resolve => setTimeout(resolve, 100));
-			
-			console.log(`  After click - Button text: ${walmartRemoveButton.textContent}`);
-			console.log(`  After click - Button disabled: ${walmartRemoveButton.disabled}`);
-			
-		} catch (error) {
-			console.log('Error testing walmart remove button:', error.message);
-			// If we can't even find or interact with the button, that's the bug
-			throw new Error(`Remove button for newly added merchant is not working: ${error.message}`);
-		}
-
-		// Step 5: Verify that at least one remove button is working
-		// This test will pass if the bug doesn't exist, fail if it does
-		expect(foundWorkingRemoveButton).toBe(true);
-	});
 
 	it('should verify that remove buttons work after adding merchant from combo box', async () => {
 		// This test verifies that the production bug has been fixed - remove buttons
