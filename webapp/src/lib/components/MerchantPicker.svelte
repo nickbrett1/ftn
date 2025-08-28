@@ -47,11 +47,9 @@
 	function handleSelect(event) {
 		const selectedValue = event.target.value;
 		if (selectedValue) {
+			// Update local selection to match the combo box selection
+			localSelectedMerchant = selectedValue;
 			onSelect(selectedValue);
-			// Clear the selection immediately to prevent double-selection
-			localSelectedMerchant = '';
-			// Reset the select element value
-			event.target.value = '';
 			// Add a small delay to ensure any database changes are committed
 			setTimeout(() => {
 				// Refresh the merchant list to ensure it's up to date
@@ -62,11 +60,9 @@
 	}
 
 	function handleModalSelect(merchant) {
-		// Always just select the merchant in the combo box for consistency
+		// Update local selection to match the modal selection
+		localSelectedMerchant = merchant;
 		onSelect(merchant);
-		
-		// Clear any existing selection
-		localSelectedMerchant = '';
 		// Close the modal
 		showModal = false;
 	}
