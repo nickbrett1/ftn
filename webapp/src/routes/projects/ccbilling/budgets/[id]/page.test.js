@@ -94,16 +94,16 @@ describe('Budget Page - Merchant Removal', () => {
 	});
 
 	it('should expose the merchant addition infinite loop bug', async () => {
-		// Mock successful addition response
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ success: true })
-		});
-
-		// Mock the recent merchants endpoint
+		// Mock the recent merchants endpoint FIRST (this is called on component mount)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (this is called when adding merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
 		});
 
 		const { getByRole, getByText, container } = render(BudgetPage, {
@@ -114,6 +114,10 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(getByRole('combobox')).toBeTruthy();
 		});
+
+		// Debug: Check what fetch calls were made
+		console.log('Fetch calls made:', mockFetch.mock.calls);
+		console.log('Fetch call count:', mockFetch.mock.calls.length);
 
 		const select = getByRole('combobox');
 		
@@ -133,11 +137,16 @@ describe('Budget Page - Merchant Removal', () => {
 		// The bug: The app should not become unresponsive
 		// The select should be reset to empty after successful addition
 		// This test will help expose if there's an infinite loop
-		expect(select.value).toBe('');
-		
-		// The merchant should be added to the list
+		// Wait for the select to be reset (due to setTimeout in the component)
 		await waitFor(() => {
-			expect(getByText('walmart')).toBeTruthy();
+			expect(select.value).toBe('');
+		}, { timeout: 2000 });
+		
+		// The merchant should be added to the list (look for it in the assigned merchants section)
+		await waitFor(() => {
+			const merchantList = container.querySelector('.merchant-list');
+			expect(merchantList).toBeTruthy();
+			expect(merchantList.textContent).toContain('walmart');
 		});
 	});
 });
