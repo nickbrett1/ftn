@@ -107,12 +107,9 @@
 		isDeleting = true;
 
 		try {
-			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants/${merchantName}`, {
 				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					merchant: merchantName
-				})
+				headers: { 'Content-Type': 'application/json' }
 			});
 
 			if (!response.ok) {
