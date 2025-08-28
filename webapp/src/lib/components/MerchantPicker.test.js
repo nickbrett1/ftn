@@ -360,7 +360,7 @@ describe('MerchantPicker', () => {
 	it('should handle parent component resetting selectedMerchant prop without infinite loop', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let onSelectCallCount = 0;
-		let maxCalls = 10; // Safety limit
+		let maxCalls = 5; // Lower safety limit to catch loops faster
 		
 		// Mock fetch to return merchants initially
 		mockFetch.mockResolvedValue({
@@ -375,8 +375,9 @@ describe('MerchantPicker', () => {
 		let selectedMerchant = '';
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
+			
 			if (onSelectCallCount > maxCalls) {
-				throw new Error('Infinite loop detected! onSelect called too many times');
+				throw new Error(`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`);
 			}
 			
 			// Simulate parent component behavior: 
@@ -410,7 +411,62 @@ describe('MerchantPicker', () => {
 		await fireEvent.change(select, { target: { value: 'Amazon' } });
 		
 		// Wait for the 100ms timeout and any subsequent DOM updates
-		await new Promise(resolve => setTimeout(resolve, 300));
+		await new Promise(resolve => setTimeout(resolve, 500)); // Longer wait
+		
+		// onSelect should be called exactly once, not in a loop
+		expect(onSelectCallCount).toBe(1);
+		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
+		expect(mockOnSelect).toHaveBeenCalledTimes(1);
+		
+		// The select should be reset to empty (as the parent intended)
+		expect(select.value).toBe('');
+	});
+
+	it('should not cause infinite loop when parent resets selectedMerchant immediately', async () => {
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let onSelectCallCount = 0;
+		let maxCalls = 3; // Very low limit to catch loops quickly
+		
+		// Mock fetch to return merchants initially
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		// This simulates the real-world scenario more accurately:
+		// Parent immediately resets selectedMerchant = '' without delay
+		let selectedMerchant = '';
+		const mockOnSelect = vi.fn((merchant) => {
+			onSelectCallCount++;
+			
+			if (onSelectCallCount > maxCalls) {
+				throw new Error(`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`);
+			}
+			
+			// Simulate parent component behavior: immediately reset selectedMerchant
+			selectedMerchant = '';
+			rerender({ selectedMerchant, onSelect: mockOnSelect });
+		});
+
+		const { getByRole, rerender } = render(MerchantPicker, {
+			props: {
+				selectedMerchant,
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Select a merchant - this should trigger onSelect exactly once
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		
+		// Wait for any async operations
+		await new Promise(resolve => setTimeout(resolve, 200));
 		
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
