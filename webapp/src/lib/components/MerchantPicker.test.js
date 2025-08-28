@@ -357,6 +357,70 @@ describe('MerchantPicker', () => {
 		// 3. The select value might be incorrect due to recursive updates
 	});
 
+	it('should handle parent component resetting selectedMerchant prop without infinite loop', async () => {
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let onSelectCallCount = 0;
+		let maxCalls = 10; // Safety limit
+		
+		// Mock fetch to return merchants initially
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => mockMerchants
+		});
+
+		// This simulates what the parent component does:
+		// 1. User selects merchant -> onSelect called
+		// 2. Parent adds merchant to list
+		// 3. Parent resets selectedMerchant = '' (this is what causes the infinite loop)
+		let selectedMerchant = '';
+		const mockOnSelect = vi.fn((merchant) => {
+			onSelectCallCount++;
+			if (onSelectCallCount > maxCalls) {
+				throw new Error('Infinite loop detected! onSelect called too many times');
+			}
+			
+			// Simulate parent component behavior: 
+			// First, the parent sets selectedMerchant to the selected value
+			selectedMerchant = merchant;
+			rerender({ selectedMerchant, onSelect: mockOnSelect });
+			
+			// Then, after a brief delay, the parent resets it to empty
+			setTimeout(() => {
+				selectedMerchant = '';
+				rerender({ selectedMerchant, onSelect: mockOnSelect });
+			}, 50);
+		});
+
+		const { getByRole, rerender } = render(MerchantPicker, {
+			props: {
+				selectedMerchant,
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Select a merchant - this should trigger onSelect exactly once
+		// even though the parent resets selectedMerchant = '' after onSelect
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		
+		// Wait for the 100ms timeout and any subsequent DOM updates
+		await new Promise(resolve => setTimeout(resolve, 300));
+		
+		// onSelect should be called exactly once, not in a loop
+		expect(onSelectCallCount).toBe(1);
+		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
+		expect(mockOnSelect).toHaveBeenCalledTimes(1);
+		
+		// The select should be reset to empty (as the parent intended)
+		expect(select.value).toBe('');
+	});
+
 	// This test demonstrates how the infinite loop bug would be caught
 	// It's commented out because it would fail with our current fix
 	// Uncomment and remove the isUpdatingUI flag to see it fail
