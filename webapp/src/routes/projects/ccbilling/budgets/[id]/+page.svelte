@@ -190,7 +190,7 @@
 			
 			// Remove the merchant from the local UI state
 			const merchantsBefore = merchants.length;
-			// Force reactivity by creating a completely new array and triggering update
+			// FIXED VERSION: Force reactivity by creating a completely new array and triggering update
 			const filteredMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			merchants = filteredMerchants; // Direct assignment to trigger reactivity
 			const merchantsAfter = merchants.length;
