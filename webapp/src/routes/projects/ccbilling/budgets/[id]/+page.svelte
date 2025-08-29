@@ -192,14 +192,10 @@
 			const merchantsBefore = merchants.length;
 			const merchantsBeforeRef = merchants; // Store reference to check if it changed
 			
-			// PRODUCTION FIX: Force Svelte reactivity with multiple approaches
-			// Method 1: Direct filter assignment
+			// TEMPORARILY REMOVE FIX TO TEST BUG REPRODUCTION
+			// Original code that might cause the bug
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			const merchantsAfter = merchants.length;
-			
-			// Method 2: Force reactivity by triggering a re-assignment
-			// This ensures Svelte 5 detects the change in production
-			merchants = [...merchants];
 			
 			// Additional debugging to understand the production issue
 			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
@@ -244,21 +240,10 @@
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
 				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
 				
-				// AGGRESSIVE FIX: Force a complete re-render if merchant is still visible
+				// TEMPORARILY REMOVE AGGRESSIVE FIX TO TEST BUG REPRODUCTION
 				if (merchantStillVisible) {
-					console.log('🚨 PRODUCTION BUG DETECTED: Forcing aggressive UI update');
-					
-					// Method 1: Force Svelte to re-render by triggering a state change
-					merchants = [...merchants];
-					
-					// Method 2: Force DOM update by temporarily hiding and showing the list
-					if (merchantList) {
-						merchantList.style.display = 'none';
-						setTimeout(() => {
-							merchantList.style.display = '';
-							console.log('🔍 DEBUG: Forced DOM re-render completed');
-						}, 1);
-					}
+					console.log('🚨 PRODUCTION BUG DETECTED: UI did not update after removal');
+					console.log('🚨 This should now be reproducible in browser: true test environment');
 				}
 				
 				// This ensures the UI re-renders with the updated merchants array
