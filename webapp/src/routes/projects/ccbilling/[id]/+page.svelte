@@ -895,6 +895,20 @@
 			>
 				Delete Cycle
 			</Button>
+			<!-- Temporary test button for tsparticles fireworks -->
+			<Button
+				variant="secondary"
+				size="sm"
+				onclick={() => {
+					console.log('🎆 Testing tsparticles fireworks!');
+					showFireworks = true;
+					setTimeout(() => {
+						showFireworks = false;
+					}, 5000);
+				}}
+			>
+				Test TSParticles Fireworks
+			</Button>
 		</div>
 	</div>
 
