@@ -539,7 +539,7 @@ export async function deletePaymentsForStatement(event, statement_id) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {Promise<Array<string>>}
  */
-export async function getUnassignedMerchants(event) {
+export async function getAllUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
@@ -562,17 +562,17 @@ export async function getUnassignedMerchants(event) {
 }
 
 /**
- * Return recent merchants from the past month of statements that are unassigned.
+ * Return recent merchants from the past month of statements that are unassigned to any budget.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {Promise<Array<string>>}
  */
-export async function getRecentMerchants(event) {
+export async function getUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
 	try {
-		// Get the 20 most recent merchants from statements in the last 30 days that don't have budget assignments
-		// Using a simpler approach: get merchants from recent payments, then filter out assigned ones
+		// Get the 20 most recent merchants from statements in the last 30 days
+		// that are not assigned to ANY budget (merchants can only be assigned to one budget)
 		const { results } = await db
 			.prepare(
 				`
@@ -593,7 +593,7 @@ export async function getRecentMerchants(event) {
 
 		return results.map((row) => row.merchant_normalized);
 	} catch (error) {
-		console.error('Error in getRecentMerchants:', error);
+		console.error('Error in getUnassignedMerchants:', error);
 		throw new Error(`Failed to fetch recent merchants: ${error.message}`);
 	}
 }

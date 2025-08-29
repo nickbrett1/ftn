@@ -27,8 +27,8 @@ import {
 	updatePayment,
 	bulkAssignPayments,
 	deletePaymentsForStatement,
-	getUnassignedMerchants,
-	getRecentMerchants
+	getAllUnassignedMerchants,
+	getUnassignedMerchants
 } from './ccbilling-db.js';
 
 describe('ccbilling-db functions', () => {
@@ -306,7 +306,7 @@ describe('ccbilling-db functions', () => {
 			});
 		});
 
-		describe('getUnassignedMerchants', () => {
+		describe('getAllUnassignedMerchants', () => {
 			it('should return unassigned merchants excluding Amazon', async () => {
 				const mockMerchants = [
 					{ merchant_normalized: 'Walmart' },
@@ -315,7 +315,7 @@ describe('ccbilling-db functions', () => {
 				];
 				mockDb.all.mockResolvedValue({ results: mockMerchants });
 
-				const result = await getUnassignedMerchants(mockEvent);
+				const result = await getAllUnassignedMerchants(mockEvent);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					expect.stringContaining('WHERE bm.merchant_normalized IS NULL')
@@ -329,13 +329,13 @@ describe('ccbilling-db functions', () => {
 			it('should throw error when CCBILLING_DB not found', async () => {
 				const eventWithoutDb = { platform: { env: {} } };
 
-				await expect(getUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
+				await expect(getAllUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
 					'CCBILLING_DB binding not found'
 				);
 			});
 		});
 
-		describe('getRecentMerchants', () => {
+		describe('getUnassignedMerchants', () => {
 			it('should return recent unassigned merchants from the past month', async () => {
 				const mockMerchants = [
 					{ merchant_normalized: 'Amazon' },
@@ -344,7 +344,7 @@ describe('ccbilling-db functions', () => {
 				];
 				mockDb.all.mockResolvedValue({ results: mockMerchants });
 
-				const result = await getRecentMerchants(mockEvent);
+				const result = await getUnassignedMerchants(mockEvent);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					expect.stringContaining('JOIN statement s ON p.statement_id = s.id')
@@ -359,7 +359,7 @@ describe('ccbilling-db functions', () => {
 			it('should throw error when CCBILLING_DB not found', async () => {
 				const eventWithoutDb = { platform: { env: {} } };
 
-				await expect(getRecentMerchants(eventWithoutDb)).rejects.toThrow(
+				await expect(getUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
 					'CCBILLING_DB binding not found'
 				);
 			});

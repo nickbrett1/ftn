@@ -19,9 +19,17 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		fetch.mockResolvedValue({
-			ok: true,
-			json: () => Promise.resolve({ success: true })
+		fetch.mockImplementation((url) => {
+			if (url.includes('/recent-merchants')) {
+				return Promise.resolve({
+					ok: true,
+					json: () => Promise.resolve(['Amazon', 'Target', 'Walmart', 'Best Buy', 'Home Depot'])
+				});
+			}
+			return Promise.resolve({
+				ok: true,
+				json: () => Promise.resolve({ success: true })
+			});
 		});
 	});
 
