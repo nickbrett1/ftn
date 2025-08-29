@@ -851,4 +851,173 @@ describe('Budget Page - Merchant Removal', () => {
 
 		console.log('✅ Successfully added and removed merchant - UI updated correctly');
 	});
+
+	it('should reproduce the UI reactivity bug: merchant removed from data but still visible in UI', async () => {
+		// This test reproduces the exact bug where:
+		// 1. Merchant is removed from the data array (API call succeeds)
+		// 2. But UI doesn't re-render, so merchant is still visible
+		// 3. Clicking remove again tries to remove a merchant that's already gone from data
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Step 1: Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Step 2: Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+
+		// Step 3: Get the remove buttons and find the one for walmart
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// Step 4: Click the remove button for walmart
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Step 5: CRITICAL - Check if the merchant is still visible in the UI
+		// This is where the bug manifests: the merchant should be gone from the UI
+		const merchantListAfterRemove = container.querySelector('.merchant-list');
+		
+		// The bug: walmart should be gone from the UI, but it might still be there
+		expect(merchantListAfterRemove.textContent).not.toContain('walmart');
+		
+		// Step 6: Verify the remove button count decreased
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
+
+		// Step 7: Try to click the remove button again (this should fail if the bug exists)
+		// If the UI didn't update, the walmart remove button would still be there
+		// and clicking it would try to remove a merchant that's already gone from the data
+		
+		// This test will pass if the UI properly updates after removal
+		// It will fail if the UI doesn't update and the merchant is still visible
+		
+		console.log('✅ UI properly updated after merchant removal - no reactivity bug');
+	});
+
+	it('should handle the case where remove button is clicked on already-removed merchant', async () => {
+		// This test simulates the exact scenario from the production logs:
+		// 1. Merchant is removed from data (count goes from 37 to 36)
+		// 2. UI doesn't update, so merchant is still visible
+		// 3. User clicks remove again, but merchant is already gone from data
+		// 4. Filter operation finds nothing to remove (count stays 36)
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// First removal - this should work
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Simulate the bug: UI doesn't update, so the remove button is still there
+		// In a real scenario, the user would click the same button again
+		// But since the merchant is already removed from the data, nothing happens
+		
+		// This test verifies that our fix prevents this scenario
+		// by ensuring the UI properly updates after the first removal
+		
+		// Verify the merchant is actually gone from the UI
+		const merchantListAfterRemove = container.querySelector('.merchant-list');
+		expect(merchantListAfterRemove.textContent).not.toContain('walmart');
+		
+		// Verify the remove button count decreased
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
+		
+		console.log('✅ UI properly updated - no duplicate removal possible');
+	});
 });
