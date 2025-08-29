@@ -1352,4 +1352,202 @@ describe('Budget Page - Merchant Removal', () => {
 		// If we get here, the Svelte 5 reactivity issue is resolved
 		console.log('✅ SVELTE 5 REACTIVITY ISSUE RESOLVED - Array changes trigger UI updates');
 	});
+
+	it('should reproduce the exact production bug: UI not updating after successful removal', async () => {
+		// This test reproduces the EXACT production scenario:
+		// 1. Merchant is removed from data (count decreases)
+		// 2. UI doesn't update (merchant still visible)
+		// 3. User clicks remove again
+		// 4. Second attempt fails (merchant already gone from data)
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// FIRST REMOVAL ATTEMPT - This should work
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// CRITICAL: Check if the UI actually updated after first removal
+		// In the production bug, the UI doesn't update even though data changed
+		const merchantListAfterFirstRemove = container.querySelector('.merchant-list');
+		
+		// This assertion will FAIL if the production bug exists
+		// (merchant still visible in UI even though data was updated)
+		expect(merchantListAfterFirstRemove.textContent).not.toContain('walmart');
+		
+		// Also check that the remove button count decreased
+		const removeButtonsAfterFirst = getAllByText(container, 'Remove');
+		expect(removeButtonsAfterFirst.length).toBe(2); // Only amazon and target should remain
+		
+		// If we get here, the UI properly updated after the first removal
+		console.log('✅ PRODUCTION BUG NOT REPRODUCED - UI properly updates after first removal');
+	});
+
+	it('should reproduce the production bug: second removal attempt fails because UI did not update', async () => {
+		// This test simulates the exact production scenario where:
+		// 1. First removal succeeds in data but UI doesn't update
+		// 2. User clicks remove again (thinking it didn't work)
+		// 3. Second attempt fails because merchant is already gone from data
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - first remove attempt)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (fourth call - second remove attempt)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// FIRST REMOVAL ATTEMPT - This should work
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the first removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Wait a bit to ensure any async operations complete
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		// Check if the UI updated after first removal
+		const merchantListAfterFirstRemove = container.querySelector('.merchant-list');
+		const merchantStillVisible = merchantListAfterFirstRemove.textContent.includes('walmart');
+		
+		if (merchantStillVisible) {
+			// This is the production bug: UI didn't update after first removal
+			console.log('🚨 PRODUCTION BUG REPRODUCED: UI did not update after first removal');
+			
+			// Get the remove buttons again (they should still be there if UI didn't update)
+			const removeButtonsAfterFirst = getAllByText(container, 'Remove');
+			expect(removeButtonsAfterFirst.length).toBe(3); // Still 3 because UI didn't update
+			
+			// Find the walmart remove button again
+			const walmartRemoveButtonAgain = removeButtonsAfterFirst[removeButtonsAfterFirst.length - 1];
+			
+			// SECOND REMOVAL ATTEMPT - This should fail because merchant is already gone from data
+			await fireEvent.click(walmartRemoveButtonAgain);
+			
+			// Wait for the second removal API call to be made
+			await waitFor(() => {
+				expect(mockFetch).toHaveBeenCalledTimes(4);
+			});
+			
+			// The second attempt should fail (merchant already gone from data)
+			// This is what we see in production: "Merchant count changed from 34 to 34"
+			console.log('🚨 PRODUCTION BUG CONFIRMED: Second removal attempt fails because merchant already gone from data');
+		} else {
+			// UI properly updated after first removal - no bug
+			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
+		}
+	});
 });

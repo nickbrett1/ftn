@@ -244,6 +244,23 @@
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
 				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
 				
+				// AGGRESSIVE FIX: Force a complete re-render if merchant is still visible
+				if (merchantStillVisible) {
+					console.log('🚨 PRODUCTION BUG DETECTED: Forcing aggressive UI update');
+					
+					// Method 1: Force Svelte to re-render by triggering a state change
+					merchants = [...merchants];
+					
+					// Method 2: Force DOM update by temporarily hiding and showing the list
+					if (merchantList) {
+						merchantList.style.display = 'none';
+						setTimeout(() => {
+							merchantList.style.display = '';
+							console.log('🔍 DEBUG: Forced DOM re-render completed');
+						}, 1);
+					}
+				}
+				
 				// This ensures the UI re-renders with the updated merchants array
 			}, 10);
 			
