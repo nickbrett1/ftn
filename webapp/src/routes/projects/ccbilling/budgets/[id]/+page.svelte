@@ -118,6 +118,12 @@
 			
 			console.log('🔍 DEBUG: Reset selectedMerchant to:', selectedMerchant, 'isAdding to:', isAdding);
 			
+			// Refresh the merchant picker to remove the newly added merchant from the list
+			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+				console.log('🔍 DEBUG: Refreshing merchant list to remove newly added merchant');
+				await merchantPickerRef.refreshMerchantList();
+			}
+			
 			// Manually reset the select element to ensure it's cleared
 			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
 				console.log('🔍 DEBUG: Calling syncSelectValue to reset select element');

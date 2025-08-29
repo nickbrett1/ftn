@@ -139,6 +139,12 @@
 		// Update local selection to match the modal selection
 		localSelectedMerchant = merchant;
 		onSelect(merchant);
+		
+		// Update the select element to show the selected value
+		if (merchantsSelect && !isUpdatingUI) {
+			merchantsSelect.value = merchant;
+		}
+		
 		// Close the modal
 		showModal = false;
 	}
