@@ -192,13 +192,13 @@
 			const merchantsBefore = merchants.length;
 			const merchantsBeforeRef = merchants; // Store reference to check if it changed
 			
-			// CRITICAL FIX: Force Svelte reactivity by creating a completely new array
+			// PRODUCTION FIX: Force Svelte reactivity with multiple approaches
 			// Method 1: Direct filter assignment
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			const merchantsAfter = merchants.length;
 			
 			// Method 2: Force reactivity by triggering a re-assignment
-			// This ensures Svelte 5 detects the change
+			// This ensures Svelte 5 detects the change in production
 			merchants = [...merchants];
 			
 			// Additional debugging to understand the production issue
