@@ -1184,4 +1184,172 @@ describe('Budget Page - Merchant Removal', () => {
 		// If we get here, the UI properly updated and the bug is fixed
 		console.log('✅ PRODUCTION BUG NOT REPRODUCED - UI properly reflects data changes');
 	});
+
+	it('should reproduce the Svelte reactivity bug: array changes but UI does not update', async () => {
+		// This test specifically targets the Svelte reactivity issue we discovered
+		// The bug: merchants array is updated but Svelte doesn't detect the change
+		// Result: UI doesn't re-render even though data changed
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// Click the remove button for walmart
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// CRITICAL: Check if the UI actually updated
+		// This is where the Svelte reactivity bug manifests
+		const merchantListAfterRemove = container.querySelector('.merchant-list');
+		
+		// The bug: walmart should be gone from the UI, but it might still be there
+		// due to Svelte not detecting the array change
+		expect(merchantListAfterRemove.textContent).not.toContain('walmart');
+		
+		// Also check that the remove button count decreased
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
+		
+		// If we get here, the Svelte reactivity bug is fixed
+		console.log('✅ SVELTE REACTIVITY BUG FIXED - UI properly reflects array changes');
+	});
+
+	it('should test the specific Svelte 5 reactivity issue with array mutations', async () => {
+		// This test specifically targets the Svelte 5 reactivity issue
+		// where array mutations don't trigger UI updates
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - remove merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add a merchant
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('walmart');
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, walmart
+
+		// Find the remove button for walmart (should be the last one)
+		const walmartRemoveButton = removeButtons[removeButtons.length - 1];
+
+		// Click the remove button for walmart
+		await fireEvent.click(walmartRemoveButton);
+
+		// Wait for the removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Wait a bit longer to ensure any async UI updates complete
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		// CRITICAL: Check if the UI actually updated
+		// This tests the specific Svelte 5 reactivity issue
+		const merchantListAfterRemove = container.querySelector('.merchant-list');
+		
+		// The Svelte 5 bug: array changes don't trigger UI updates
+		// Our fix should ensure the UI reflects the data changes
+		expect(merchantListAfterRemove.textContent).not.toContain('walmart');
+		
+		// Also check that the remove button count decreased
+		const removeButtonsAfter = getAllByText(container, 'Remove');
+		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
+		
+		// If we get here, the Svelte 5 reactivity issue is resolved
+		console.log('✅ SVELTE 5 REACTIVITY ISSUE RESOLVED - Array changes trigger UI updates');
+	});
 });
