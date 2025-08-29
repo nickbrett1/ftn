@@ -8,14 +8,14 @@
 
 	let particlesInstance = $state();
 
-	// Fireworks configuration for tsparticles - subtle and elegant
+	// Fireworks configuration for tsparticles - spectacular celebration
 	const fireworksConfig = {
 		particles: {
 			number: {
-				value: 30
+				value: 80
 			},
 			color: {
-				value: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff']
+				value: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#ff6b9d', '#c44569', '#f8b500']
 			},
 			shape: {
 				type: 'circle'
@@ -24,7 +24,7 @@
 				value: 1,
 				animation: {
 					enable: true,
-					speed: 0.5,
+					speed: 0.3,
 					sync: false
 				}
 			},
@@ -32,14 +32,14 @@
 				value: { min: 1, max: 4 },
 				animation: {
 					enable: true,
-					speed: 2,
+					speed: 1.5,
 					minimumValue: 0.1,
 					sync: false
 				}
 			},
 			move: {
 				enable: true,
-				speed: { min: 5, max: 15 },
+				speed: { min: 3, max: 10 },
 				direction: 'none',
 				random: true,
 				straight: false,
