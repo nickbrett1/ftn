@@ -12,10 +12,10 @@
 	const fireworksConfig = {
 		particles: {
 			number: {
-				value: 30
+				value: 50
 			},
 			color: {
-				value: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff']
+				value: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff']
 			},
 			shape: {
 				type: 'circle'
@@ -24,22 +24,22 @@
 				value: 1,
 				animation: {
 					enable: true,
-					speed: 0.5,
+					speed: 1,
 					sync: false
 				}
 			},
 			size: {
-				value: { min: 2, max: 6 },
+				value: { min: 5, max: 15 },
 				animation: {
 					enable: true,
-					speed: 2,
-					minimumValue: 0.1,
+					speed: 3,
+					minimumValue: 1,
 					sync: false
 				}
 			},
 			move: {
 				enable: true,
-				speed: { min: 8, max: 20 },
+				speed: { min: 2, max: 8 },
 				direction: 'none',
 				random: true,
 				straight: false,
@@ -90,7 +90,9 @@
 
 	function stopFireworks() {
 		if (particlesInstance) {
-			particlesInstance.clear();
+			console.log('🎆 Fireworks: Stopping fireworks and destroying particles instance');
+			particlesInstance.destroy();
+			particlesInstance = null;
 		}
 	}
 
@@ -98,14 +100,18 @@
 	$effect(() => {
 		console.log('🎆 Fireworks: show prop changed to:', show);
 		if (show) {
-			startFireworks();
+			// Initialize particles when show becomes true
+			initParticles().then(() => {
+				startFireworks();
+			});
 		} else {
 			stopFireworks();
 		}
 	});
 
-	onMount(async () => {
-		await initParticles();
+	onMount(() => {
+		// Don't initialize particles on mount - wait for show to become true
+		console.log('🎆 Fireworks: Component mounted, waiting for show prop');
 	});
 
 	onDestroy(() => {
