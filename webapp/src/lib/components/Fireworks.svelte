@@ -4,11 +4,11 @@
 	/** @type {boolean} */
 	let { show = false } = $props();
 
-	let canvas;
-	let ctx;
-	let animationId;
-	let particles = [];
-	let isAnimating = false;
+	let canvas = $state();
+	let ctx = $state();
+	let animationId = $state();
+	let particles = $state([]);
+	let isAnimating = $state(false);
 
 	// Firework particle class
 	class Particle {
@@ -119,6 +119,8 @@
 	let fireworks = [];
 
 	function createFirework() {
+		if (!canvas) return;
+		
 		const startX = Math.random() * canvas.width;
 		const startY = canvas.height;
 		const targetX = Math.random() * canvas.width;
@@ -128,7 +130,7 @@
 	}
 
 	function animate() {
-		if (!isAnimating) return;
+		if (!isAnimating || !ctx) return;
 		
 		// Clear canvas
 		ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
@@ -150,7 +152,7 @@
 	}
 
 	function startFireworks() {
-		if (isAnimating) return;
+		if (isAnimating || !canvas || !ctx) return;
 		
 		isAnimating = true;
 		fireworks = [];
@@ -174,7 +176,7 @@
 			cancelAnimationFrame(animationId);
 		}
 		// Clear canvas
-		if (ctx) {
+		if (ctx && canvas) {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 		}
 		fireworks = [];
