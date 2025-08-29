@@ -15,225 +15,121 @@
 
 	const { data } = $props();
 
-	// Simple variables - only use $state for UI-reactive variables
-	let budget = data.budget || null;
-	let budgets = data.budgets || [];
-	// Use SvelteSet for natively reactive merchant collection
-	let merchants = new SvelteSet(data.merchants || []);
+	// Core data - reactive state
+	let budget = $state(data.budget || null);
+	let budgets = $state(data.budgets || []);
+	let merchants = $state(new SvelteSet(data.merchants || []));
 	
-	// Add merchant state
-	let selectedMerchant = ''; // Non-reactive to avoid infinite loops
-	let isAdding = $state(false); // UI needs to show loading state
-	let addError = $state(''); // UI needs to show errors
-	let merchantPickerRef = null; // No UI reactivity needed
-
-	// Delete merchant state - using individual $state variables for better reactivity
+	// Merchant management state
+	let selectedMerchant = $state('');
+	let isAdding = $state(false);
+	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
+	let merchantPickerRef = null;
 
-	// Edit budget name and icon state
-	let editName = $state(budget?.name || ''); // UI needs to react to name changes
-	let editIcon = $state(budget?.icon || ''); // UI needs to react to icon changes
-	let isSavingName = $state(false); // UI needs to show loading state
-	let nameEditError = $state(''); // UI needs to show errors
+	// Budget editing state
+	let editName = $state(budget?.name || '');
+	let editIcon = $state(budget?.icon || '');
+	let isSavingName = $state(false);
+	let nameEditError = $state('');
 
-	// Delete budget state
-	let showDeleteDialog = $state(false); // UI needs to show/hide dialog
-	let isDeletingBudget = $state(false); // UI needs to show loading state
-	let deleteBudgetError = $state(''); // UI needs to show errors
+	// Budget deletion state
+	let showDeleteDialog = $state(false);
+	let isDeletingBudget = $state(false);
+	let deleteBudgetError = $state('');
 
-	// Get available icons
-	let availableIcons = getAvailableIcons();
+	// Derived state for UI
+	let availableIcons = $derived(getAvailableIcons());
+	let sortedMerchants = $derived(Array.from(merchants).sort((a, b) => 
+		a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
+	));
 
-		async function addMerchant() {
-		console.log('🔍 DEBUG: addMerchant called with selectedMerchant:', selectedMerchant);
-		console.log('🔍 DEBUG: Current merchants before addition:', Array.from(merchants).map(m => m.merchant));
-		
-		// Prevent running if already adding
-		if (isAdding) {
-			console.log('🔍 DEBUG: Already adding, returning early');
+	async function addMerchant() {
+		if (isAdding || !selectedMerchant?.trim()) {
+			if (!selectedMerchant?.trim()) {
+				addError = 'Please select a merchant';
+			}
 			return;
 		}
 		
-		if (!selectedMerchant.trim()) {
-			addError = 'Please select a merchant';
+		// Check if merchant already exists
+		const merchantExists = Array.from(merchants).some(merchant => 
+			merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
+		);
+		if (merchantExists) {
+			addError = 'This merchant is already assigned to this budget';
 			return;
 		}
-
-		isAdding = true;
-		addError = '';
-
-		console.log('🔍 DEBUG: Starting merchant addition, isAdding set to:', isAdding);
-
+		
 		try {
-			const url = `/projects/ccbilling/budgets/${budget.id}/merchants`;
-			const requestBody = JSON.stringify({
-				merchant: selectedMerchant.trim()
-			});
+			isAdding = true;
+			addError = '';
 			
-			console.log('🔍 DEBUG: Making POST request to:', url);
-			console.log('🔍 DEBUG: Request body:', requestBody);
-			
-			const response = await fetch(url, {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: requestBody
+				body: JSON.stringify({ merchant: selectedMerchant.trim() })
 			});
-
-			console.log('🔍 DEBUG: Add response received:', {
-				ok: response.ok,
-				status: response.status,
-				statusText: response.statusText
-			});
-
+			
 			if (!response.ok) {
 				const error = await response.json();
-				console.log('🔍 DEBUG: Add failed with error:', error);
 				addError = error.error || 'Failed to add merchant';
-				isAdding = false;
 				return;
 			}
-
-			console.log('🔍 DEBUG: Add successful, updating UI state');
 			
-			// Add the merchant to the local UI state
-			const newMerchant = {
+			// Add to reactive collection
+			merchants.add({
 				merchant: selectedMerchant.trim(),
-				merchant_normalized: selectedMerchant.trim() // Keep original case for display
-			};
+				merchant_normalized: selectedMerchant.trim()
+			});
 			
-			console.log('🔍 DEBUG: New merchant object:', newMerchant);
-			console.log('🔍 DEBUG: Merchants before addition:', Array.from(merchants).map(m => m.merchant));
-			
-			// Add to SvelteSet - natively reactive
-			merchants.add(newMerchant);
-			
-			console.log('🔍 DEBUG: Merchants after addition:', Array.from(merchants).map(m => m.merchant));
-			
-			// Note: No longer need to update picker state - modal will fetch fresh data when opened
-			
-			// Reset form and loading state
+			// Reset form
 			selectedMerchant = '';
-			isAdding = false;
 			
-			console.log('🔍 DEBUG: Reset selectedMerchant to:', selectedMerchant, 'isAdding to:', isAdding);
-			
-			// Refresh the merchant picker to remove the newly added merchant from the list
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				console.log('🔍 DEBUG: Refreshing merchant list to remove newly added merchant');
-				await merchantPickerRef.refreshMerchantList();
-			}
-			
-			// Manually reset the select element to ensure it's cleared
-			if (merchantPickerRef && merchantPickerRef.syncSelectValue) {
-				console.log('🔍 DEBUG: Calling syncSelectValue to reset select element');
-				merchantPickerRef.syncSelectValue();
-			}
-			
-			// Small delay to ensure DOM updates are complete
-			setTimeout(() => {
-				console.log('🔍 DEBUG: DOM update delay completed');
-				// This ensures the UI is fully updated before allowing further interactions
-			}, 10);
-			
-			// Note: Removed syncSelectValue() call as it might interfere with DOM event handlers
-			// The merchant picker will sync automatically when needed
-			
-			// Note: Removed refreshMerchantList() call as it might be causing DOM manipulation
-			// issues that interfere with event handlers. The modal will fetch fresh data when opened.
+			// Refresh picker to remove added merchant from list
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
-			console.log('🔍 DEBUG: Add merchant exception:', error);
 			addError = 'Network error occurred';
+		} finally {
 			isAdding = false;
 		}
 	}
 
-		async function removeMerchant(merchantName) {
-		console.log('🔍 DEBUG: removeMerchant called with:', merchantName);
-		console.log('🔍 DEBUG: Current merchants before removal:', Array.from(merchants).map(m => m.merchant));
-		console.log('🔍 DEBUG: Current UI state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
+	async function removeMerchant(merchantName) {
+		if (isDeleting) return;
 		
-		// No confirm needed; removal is safe and reversible by re-adding
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
-		console.log('🔍 DEBUG: Set deletingMerchant to:', deletingMerchant, 'isDeleting to:', isDeleting);
-
 		try {
-			const url = `/projects/ccbilling/budgets/${budget.id}/merchants`;
-			const requestBody = JSON.stringify({ merchant: merchantName });
-			
-			console.log('🔍 DEBUG: Making DELETE request to:', url);
-			console.log('🔍 DEBUG: Request body:', requestBody);
-			
-			const response = await fetch(url, {
+			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
-				body: requestBody
-			});
-
-			console.log('🔍 DEBUG: Response received:', {
-				ok: response.ok,
-				status: response.status,
-				statusText: response.statusText
+				body: JSON.stringify({ merchant: merchantName })
 			});
 
 			if (!response.ok) {
-				let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
-				try {
-					const errorBody = await response.text();
-					console.log('❌ Error response body:', errorBody);
-					errorDetails += `\nResponse: ${errorBody}`;
-				} catch (e) {
-					console.log('❌ Could not read error response body:', e);
-				}
-				console.log('🔍 DEBUG: API call failed, showing alert');
-				alert(`Failed to remove merchant "${merchantName}":\n\n${errorDetails}\n\nCheck console for full details.`);
+				const errorText = await response.text();
+				alert(`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`);
 				return;
 			}
 
-			console.log('🔍 DEBUG: API call successful, updating UI state');
-			console.log('🔍 DEBUG: Merchants before removal:', Array.from(merchants).map(m => m.merchant));
-			
-			// Remove the merchant from the SvelteSet
-			const merchantsBefore = merchants.size;
-			
-			// Find and remove the merchant from the set
+			// Remove from reactive collection
 			for (const merchant of merchants) {
 				if (merchant.merchant === merchantName) {
 					merchants.delete(merchant);
 					break;
 				}
 			}
-			const merchantsAfter = merchants.size;
 			
-			console.log('🔍 DEBUG: Merchants after removal:', Array.from(merchants).map(m => m.merchant));
-			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
-			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
-			
-			// Refresh the merchant picker to re-add the removed merchant to the list
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				console.log('🔍 DEBUG: Refreshing merchant list to re-add removed merchant');
-				await merchantPickerRef.refreshMerchantList();
-			}
-			
-			// Simple UI update - data.merchants is already reactive
-			console.log('🔍 DEBUG: Merchant removal completed successfully');
+			// Refresh picker to re-add removed merchant to list
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
-			console.error('❌ Merchant removal failed:', {
-				error: error.message,
-				merchantName,
-				budgetId: budget.id,
-				stack: error.stack
-			});
-			
-			// Show detailed error message for debugging
-			alert(`Failed to remove merchant "${merchantName}":\n\n${error.message}\n\nCheck console for full details.`);
+			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
-			console.log('🔍 DEBUG: Finally block - resetting state');
 			deletingMerchant = null;
 			isDeleting = false;
-			console.log('🔍 DEBUG: State reset - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		}
 	}
 
@@ -421,7 +317,7 @@
 			<div class="space-y-2 merchant-list">
 				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.size})</h3>
 				<div class="grid gap-3">
-					{#each Array.from(merchants).sort((a, b) => a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())) as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each sortedMerchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>

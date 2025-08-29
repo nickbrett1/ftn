@@ -8,36 +8,26 @@
 		placeholder = 'Select a merchant...'
 	} = $props();
 
-	// Simple non-reactive variables - no $state to avoid reactive loops
-	let allUnassignedMerchants = []; // All unassigned merchants from server
-	let merchants = []; // Currently displayed merchants
-	let isLoading = true; // Loading state
-	let error = ''; // Error state
-	let isUpdatingUI = false; // Flag to prevent recursive event handling
+	// Reactive state
+	let allUnassignedMerchants = $state([]);
+	let merchants = $state([]);
+	let isLoading = $state(true);
+	let error = $state('');
+	let showModal = $state(false);
+	let localSelectedMerchant = $state('');
 	
-	// Only use $state for variables that directly affect UI reactivity
-	let showModal = $state(false); // Modal visibility - needs to be reactive for isOpen prop
-	let localSelectedMerchant = ''; // Local selection - completely non-reactive to avoid loops
-	
-	// DOM references for manual updates
-	let merchantsSelect;
-	let loadingElement;
-	let errorElement;
-	let emptyStateElement;
+	// Derived state
+	let displayMerchants = $derived(merchants.slice(0, 20));
+	let hasMerchants = $derived(merchants.length > 0);
+	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 
 	async function loadUnassignedMerchants() {
 		try {
 			isLoading = true;
 			error = '';
-			updateLoadingUI();
 
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
-
-			// Add safety check for response
-			if (!response) {
-				throw new Error('No response received from server');
-			}
-
+			
 			if (!response.ok) {
 				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
 			}
@@ -45,185 +35,50 @@
 			const data = await response.json();
 			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
-			
-			// Show the first 20 merchants (they're already sorted by recency from the server)
-			merchants = allUnassignedMerchants.slice(0, 20);
-			
-			updateMerchantsUI();
-			updateEmptyStateUI();
+			merchants = allUnassignedMerchants;
 		} catch (err) {
 			error = err.message || 'Failed to load merchants';
-			updateErrorUI();
-			updateEmptyStateUI();
 		} finally {
 			isLoading = false;
-			updateLoadingUI();
-			updateEmptyStateUI();
 		}
 	}
 
 	function handleSelect(event) {
-		// Prevent recursive calls when we're updating the UI
-		if (isUpdatingUI) {
-			return;
-		}
-		
 		const selectedValue = event.target.value;
-		
-		// Update local selection to match the combo box selection
 		localSelectedMerchant = selectedValue;
 		
 		if (selectedValue) {
 			onSelect(selectedValue);
-			// Don't refresh the merchant list here to avoid infinite loops
-			// The parent component will handle refreshing when needed
-		}
-	}
-
-	// Manual UI update functions to avoid reactive state
-	function updateLoadingUI() {
-		if (loadingElement && loadingElement.style) {
-			loadingElement.textContent = isLoading ? 'Loading Recent Merchants...' : '';
-			loadingElement.style.display = isLoading ? 'block' : 'none';
 		}
 	}
 	
-	function updateErrorUI() {
-		if (errorElement && errorElement.style) {
-			errorElement.textContent = error ? `Error: ${error}` : '';
-			errorElement.style.display = error ? 'block' : 'none';
-		}
-	}
-	
-	function updateEmptyStateUI() {
-		if (emptyStateElement && emptyStateElement.style) {
-			const shouldShow = !isLoading && !error && merchants.length === 0;
-			emptyStateElement.style.display = shouldShow ? 'block' : 'none';
-		}
-	}
-	
-	function updateMerchantsUI() {
-		if (merchantsSelect && merchantsSelect.children) {
-			// Set flag to prevent recursive event handling
-			isUpdatingUI = true;
-			
-			// Clear existing options except the first one
-			while (merchantsSelect.children.length > 1) {
-				merchantsSelect.removeChild(merchantsSelect.lastChild);
-			}
-			
-			// Add merchant options
-			merchants.forEach(merchant => {
-				const option = document.createElement('option');
-				option.value = merchant;
-				option.textContent = merchant;
-				merchantsSelect.appendChild(option);
-			});
-			
-			// Set selected value
-			merchantsSelect.value = localSelectedMerchant || '';
-			
-			// Clear flag after DOM update is complete
-			isUpdatingUI = false;
-		}
-	}
-	
-	// Function to open modal and fetch fresh data
 	async function openModal() {
 		showModal = true;
-		// Fetch fresh data when modal opens
 		await loadUnassignedMerchants();
 	}
 
 	function handleModalSelect(merchant) {
-		// Update local selection to match the modal selection
 		localSelectedMerchant = merchant;
 		onSelect(merchant);
-		
-		// Update the select element to show the selected value
-		if (merchantsSelect && !isUpdatingUI) {
-			merchantsSelect.value = merchant;
-		}
-		
-		// Close the modal
 		showModal = false;
 	}
 
-	// Function to refresh the merchant list - can be called by parent components
 	async function refreshMerchantList() {
-		// Add a small delay to ensure database transactions are fully committed
 		await new Promise((resolve) => setTimeout(resolve, 100));
 		await loadUnassignedMerchants();
 	}
 
-	// Note: No longer need removeMerchantFromLocalState or addMerchantToLocalState
-	// The modal will fetch fresh data when opened, eliminating state synchronization issues
-
-	// Function to reset the merchant picker state
-	function resetMerchantPicker() {
-		localSelectedMerchant = '';
-		// Reset the select element value as well
-		const selectElement = document.getElementById('merchant-picker');
-		if (selectElement) {
-			selectElement.value = '';
-		}
-	}
-
-	// Function to manually sync the select value with the parent's selectedMerchant prop
-	function syncSelectValue() {
-		if (merchantsSelect && !isUpdatingUI) {
-			// Always set to empty string to show placeholder, unless there's a valid selection
-			merchantsSelect.value = selectedMerchant || '';
-			// Update local state to match
-			localSelectedMerchant = selectedMerchant || '';
-		}
-	}
+	// Sync local state with parent prop
+	$effect(() => {
+		localSelectedMerchant = selectedMerchant || '';
+	});
 
 	// Expose functions to parent components
-	export { syncSelectValue, refreshMerchantList };
-
-
-
-
-
-	// Manual sync function to avoid infinite loops
-	function syncWithParent() {
-		if (!isUpdatingUI && merchantsSelect) {
-			merchantsSelect.value = selectedMerchant || '';
-		}
-		// Update local state without triggering reactivity
-		localSelectedMerchant = selectedMerchant;
-	}
-
-	// Watch for changes to selectedMerchant prop and update DOM accordingly
-	// This is necessary for the component to respond to parent prop changes
-	$effect(() => {
-		// Only update the DOM if we're not currently updating UI and the select exists
-		// Update if the selectedMerchant prop is different from the current select value
-		if (!isUpdatingUI && merchantsSelect && merchantsSelect.value !== (selectedMerchant || '')) {
-			merchantsSelect.value = selectedMerchant || '';
-			// Update local state to match
-			localSelectedMerchant = selectedMerchant || '';
-		}
-	});
+	export { refreshMerchantList };
 
 	onMount(() => {
-		// Load merchants - UI will be updated when DOM elements are available
 		loadUnassignedMerchants();
-		
-		// Ensure the select value is synced with the prop after DOM is ready
-		// Only sync if selectedMerchant is explicitly provided
-		if (selectedMerchant) {
-			setTimeout(() => {
-				if (merchantsSelect && !isUpdatingUI) {
-					merchantsSelect.value = selectedMerchant;
-				}
-			}, 100);
-		}
 	});
-
-	// Note: No longer exporting state management functions
-	// The modal fetches fresh data when opened, eliminating the need for state synchronization
 </script>
 
 <div class="w-full">
@@ -233,29 +88,40 @@
 
 	<div class="space-y-3">
 		<!-- Loading state -->
-		<div bind:this={loadingElement} class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" style="display: none;">
-			Loading recent merchants...
-		</div>
+		{#if isLoading}
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+				Loading recent merchants...
+			</div>
+		{/if}
 		
 		<!-- Error state -->
-		<div bind:this={errorElement} class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200" style="display: none;">
-		</div>
+		{#if error}
+			<div class="w-full px-3 py-2 bg-red-900 border border-red-700 rounded-md text-red-200">
+				Error: {error}
+			</div>
+		{/if}
 		
 		<!-- Empty state -->
-		<div bind:this={emptyStateElement} class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" style="display: none;">
-			No recent unassigned merchants found
-		</div>
+		{#if showEmptyState}
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+				No recent unassigned merchants found
+			</div>
+		{/if}
 		
 		<!-- Merchants select -->
-		<select
-			bind:this={merchantsSelect}
-			id="merchant-picker"
-			onchange={handleSelect}
-			class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-		>
-			<option value="">{placeholder}</option>
-			<!-- Options will be added manually via updateMerchantsUI() -->
+		{#if !isLoading && !error}
+			<select
+				id="merchant-picker"
+				bind:value={localSelectedMerchant}
+				onchange={handleSelect}
+				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+			>
+				<option value="">{placeholder}</option>
+				{#each displayMerchants as merchant}
+					<option value={merchant}>{merchant}</option>
+				{/each}
 			</select>
+		{/if}
 
 			<div class="flex justify-between items-center">
 				<button
@@ -271,12 +137,6 @@
 
 <MerchantSelectionModal
 	isOpen={showModal}
-	onClose={() => {
-		showModal = false;
-		// Ensure combo box shows placeholder when modal is closed without selection
-		if (!localSelectedMerchant) {
-			syncSelectValue();
-		}
-	}}
+	onClose={() => (showModal = false)}
 	onSelect={handleModalSelect}
 />
