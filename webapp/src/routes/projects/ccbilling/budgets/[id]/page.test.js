@@ -127,13 +127,13 @@ describe('Budget Page - Merchant Removal', () => {
 		const addButton = getByRole('button', { name: 'Add Merchant' });
 		await fireEvent.click(addButton);
 
-		// Wait a bit for the async operation to complete
+		// Wait for the async operation to complete and the select value to be reset
+		await waitFor(() => {
+			expect(select.value).toBe('');
+		}, { timeout: 3000 });
+		
+		// Additional small delay to ensure all reactive updates complete
 		await new Promise(resolve => setTimeout(resolve, 100));
-
-		// After clicking Add, the select value should be reset
-		// Note: We removed syncSelectValue() to fix DOM event handler issues
-		// The select value will be reset by the component's internal logic
-		expect(select.value).toBe(''); // This should pass now
 	});
 
 	it('should expose the infinite loop by testing multiple rapid interactions', async () => {
@@ -572,7 +572,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// 2. Try to select another merchant and add it (should work)
@@ -590,7 +590,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the second addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(4);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// If we get here without hanging, the UI interactions are working
@@ -697,6 +697,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		const { container, getByRole } = render(BudgetPage, {
 			props: { data: mockData }
 		});
@@ -728,7 +734,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2); // 1 initial + 1 add
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Get the remove buttons after adding a merchant
@@ -851,7 +857,7 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Step 5: Verify the API call was made with correct parameters
-		const removeCall = mockFetch.mock.calls[4]; // Now the 5th call (after initial load + add + refresh + remove + refresh)
+		const removeCall = mockFetch.mock.calls[3]; // 4th call (after initial load + add + refresh + remove)
 		expect(removeCall[0]).toBe('/projects/ccbilling/budgets/test-budget-id/merchants');
 		expect(removeCall[1]).toEqual({
 			method: 'DELETE',

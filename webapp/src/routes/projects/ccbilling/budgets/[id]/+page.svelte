@@ -92,8 +92,10 @@
 			// Reset form
 			selectedMerchant = '';
 			
-			// Tell the picker to refresh its merchant list
-			merchantPickerRef?.refreshMerchantList();
+			// Tell the picker to refresh its merchant list (with a small delay to ensure reset completes)
+			setTimeout(() => {
+				merchantPickerRef?.refreshMerchantList();
+			}, 0);
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
