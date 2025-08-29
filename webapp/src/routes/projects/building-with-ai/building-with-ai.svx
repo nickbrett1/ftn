@@ -168,6 +168,26 @@ Similarly, Cursor would hang when running tests in watch mode, so I introduced a
 
 The agent struggled significantly with Svelte 5's runes mode and its approach to UI reactivity. The newer the framework or feature, the less training data the agent has access to, making it harder to generate correct code.
 
+A perfect example of this was when the agent tried to implement reactive state using Svelte 5's `$state` rune. The agent would often make the mistake of directly assigning to a `$state` variable, which breaks reactivity:
+
+```javascript
+// ❌ What the agent would generate (incorrect)
+let count = $state(0);
+
+function increment() {
+  count = count + 1; // This assignment breaks reactivity!
+}
+
+// ✅ Correct approach with $state
+let count = $state(0);
+
+function increment() {
+  count++; // Direct mutation maintains reactivity
+}
+```
+
+The agent's confusion stemmed from its training on older Svelte patterns where you would reassign variables. With runes, the reactive system expects direct mutation rather than reassignment, which is a subtle but critical difference that the agent initially missed.
+
 However, once I had a body of examples in my own codebase that the agent could reference and copy from, its performance improved dramatically. This suggests that creating internal examples and patterns is crucial when working with cutting-edge technologies.
 
 **Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
