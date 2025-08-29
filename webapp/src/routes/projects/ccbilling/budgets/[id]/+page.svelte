@@ -1,6 +1,7 @@
 <script>
 	import { invalidateAll } from '$app/navigation';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { tick } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
@@ -92,10 +93,9 @@
 			// Reset form
 			selectedMerchant = '';
 			
-			// Tell the picker to refresh its merchant list (with a small delay to ensure reset completes)
-			setTimeout(() => {
-				merchantPickerRef?.refreshMerchantList();
-			}, 0);
+			// Wait for DOM updates to complete, then refresh the merchant list
+			await tick();
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
