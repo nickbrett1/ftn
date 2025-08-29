@@ -92,29 +92,49 @@
 	};
 
 	async function initParticles() {
-		if (!container) return;
+		if (!container) {
+			console.log('🚫 Fireworks: No container element');
+			return;
+		}
 
-		// Load tsparticles
-		await loadSlim(tsParticles);
+		try {
+			console.log('🎆 Fireworks: Loading TSParticles...');
+			// Load tsparticles
+			await loadSlim(tsParticles);
+			console.log('✅ Fireworks: TSParticles loaded successfully');
 
-		// Initialize particles
-		particlesInstance = await tsParticles.load(container, fireworksConfig);
+			// Initialize particles
+			particlesInstance = await tsParticles.load(container, fireworksConfig);
+			console.log('✅ Fireworks: Particles instance created:', particlesInstance);
+		} catch (error) {
+			console.error('❌ Fireworks: Error initializing particles:', error);
+		}
 	}
 
 	function startFireworks() {
-		if (!particlesInstance) return;
+		console.log('🎆 Fireworks: startFireworks called, particlesInstance:', particlesInstance);
+		if (!particlesInstance) {
+			console.log('🚫 Fireworks: No particles instance available');
+			return;
+		}
 
+		console.log('🎆 Fireworks: Starting fireworks animation...');
 		// Create multiple firework bursts
 		const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
 		
 		// Create 5-8 firework bursts over 3 seconds
 		for (let i = 0; i < 6; i++) {
 			setTimeout(() => {
-				if (!particlesInstance) return;
+				if (!particlesInstance) {
+					console.log('🚫 Fireworks: Particles instance lost during animation');
+					return;
+				}
 				
 				// Random position for firework
 				const x = Math.random() * window.innerWidth;
 				const y = Math.random() * (window.innerHeight * 0.6) + (window.innerHeight * 0.2);
+				
+				console.log(`🎆 Fireworks: Creating firework ${i + 1} at (${x}, ${y})`);
 				
 				// Create firework burst
 				particlesInstance.addParticles({
