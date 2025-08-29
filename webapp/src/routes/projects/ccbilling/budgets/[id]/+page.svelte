@@ -26,7 +26,7 @@
 	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
-	let merchantPickerRef = null;
+	// No longer needed - MerchantPicker is now fully reactive
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');
@@ -44,6 +44,11 @@
 	let sortedMerchants = $derived(Array.from(merchants).sort((a, b) => 
 		a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 	));
+	
+	// Derived set of assigned merchant names for reactive filtering
+	let assignedMerchantNames = $derived(
+		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
+	);
 
 	async function addMerchant() {
 		if (isAdding || !selectedMerchant?.trim()) {
@@ -87,8 +92,7 @@
 			// Reset form
 			selectedMerchant = '';
 			
-			// Refresh picker to remove added merchant from list
-			merchantPickerRef?.refreshMerchantList();
+			// No need to refresh picker - it's now reactive to assignedMerchantNames!
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
@@ -124,7 +128,7 @@
 			}
 			
 			// Refresh picker to re-add removed merchant to list
-			merchantPickerRef?.refreshMerchantList();
+			// No need to refresh picker - it's now reactive to assignedMerchantNames!
 		} catch (error) {
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
@@ -284,7 +288,7 @@
 					{selectedMerchant}
 					onSelect={(merchant) => (selectedMerchant = merchant)}
 					placeholder="Choose a merchant to assign to this budget..."
-					bind:this={merchantPickerRef}
+					assignedMerchants={assignedMerchantNames}
 				/>
 				</div>
 				{#if addError}
