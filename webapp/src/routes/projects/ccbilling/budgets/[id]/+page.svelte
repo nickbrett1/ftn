@@ -190,16 +190,35 @@
 			
 			// Remove the merchant from the local UI state
 			const merchantsBefore = merchants.length;
-			// ENHANCED FIX: Force reactivity with multiple approaches
-			const filteredMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			merchants = filteredMerchants; // Direct assignment to trigger reactivity
+			const merchantsBeforeRef = merchants; // Store reference to check if it changed
+			
+			// CRITICAL FIX: Force Svelte reactivity by creating a completely new array
+			// Method 1: Direct filter assignment
+			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			const merchantsAfter = merchants.length;
+			
+			// Method 2: Force reactivity by triggering a re-assignment
+			// This ensures Svelte 5 detects the change
+			merchants = [...merchants];
 			
 			// Additional debugging to understand the production issue
 			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
-				merchants !== merchants, 'Length:', merchants.length);
-			console.log('🔍 DEBUG: DOM elements before update:', 
-				document.querySelectorAll('.merchant-list .merchant-item').length);
+				merchants !== merchantsBeforeRef, 'Length:', merchants.length);
+			
+			// Debug the actual DOM structure
+			const merchantList = document.querySelector('.merchant-list');
+			console.log('🔍 DEBUG: Merchant list element found:', !!merchantList);
+			console.log('🔍 DEBUG: Merchant list HTML structure:', merchantList?.innerHTML?.substring(0, 500));
+			
+			// Try different selectors to find the actual structure
+			const allMerchantElements = document.querySelectorAll('[class*="merchant"]');
+			console.log('🔍 DEBUG: All elements with "merchant" in class:', allMerchantElements.length);
+			
+			const allListItems = document.querySelectorAll('li');
+			console.log('🔍 DEBUG: All li elements:', allListItems.length);
+			
+			const allDivs = document.querySelectorAll('div');
+			console.log('🔍 DEBUG: All div elements:', allDivs.length);
 			
 			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
@@ -208,10 +227,18 @@
 			// Force UI update by triggering a small delay
 			setTimeout(() => {
 				console.log('🔍 DEBUG: Forcing UI update after merchant removal');
-				console.log('🔍 DEBUG: DOM elements after update:', 
-					document.querySelectorAll('.merchant-list .merchant-item').length);
-				console.log('🔍 DEBUG: Merchant list HTML content:', 
-					document.querySelector('.merchant-list')?.textContent?.substring(0, 200));
+				
+				// Debug the actual DOM structure after update
+				const merchantList = document.querySelector('.merchant-list');
+				console.log('🔍 DEBUG: Merchant list element found after update:', !!merchantList);
+				console.log('🔍 DEBUG: Merchant list HTML structure after update:', merchantList?.innerHTML?.substring(0, 500));
+				
+				// Try different selectors to find the actual structure
+				const allMerchantElements = document.querySelectorAll('[class*="merchant"]');
+				console.log('🔍 DEBUG: All elements with "merchant" in class after update:', allMerchantElements.length);
+				
+				const allListItems = document.querySelectorAll('li');
+				console.log('🔍 DEBUG: All li elements after update:', allListItems.length);
 				
 				// Check if the merchant is still visible in the DOM
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
