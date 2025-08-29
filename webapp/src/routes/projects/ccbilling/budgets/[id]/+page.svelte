@@ -1,5 +1,7 @@
 <script>
 	import { invalidateAll } from '$app/navigation';
+	import { SvelteSet } from 'svelte/reactivity';
+	import { tick } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
@@ -14,90 +16,86 @@
 
 	const { data } = $props();
 
-	// Make budget, merchants, and budgets reactive to data changes
-	let budget = $derived(data.budget || null);
-	let merchants = $derived(data.merchants || []);
-	let budgets = $derived(data.budgets || []);
-
-	// Add merchant state
+	// Core data - reactive state
+	let budget = $state(data.budget || null);
+	let budgets = $state(data.budgets || []);
+	let merchants = $state(new SvelteSet(data.merchants || []));
+	
+	// Merchant management state
 	let selectedMerchant = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
-	let merchantPickerRef = $state(null);
-
-	// Delete merchant state
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
+	let merchantPickerRef = null;
 
-	// Edit budget name and icon state
-	let editName = $state('');
-	let editIcon = $state('');
+	// Budget editing state
+	let editName = $state(budget?.name || '');
+	let editIcon = $state(budget?.icon || '');
 	let isSavingName = $state(false);
 	let nameEditError = $state('');
 
-	// Delete budget state
+	// Budget deletion state
 	let showDeleteDialog = $state(false);
 	let isDeletingBudget = $state(false);
 	let deleteBudgetError = $state('');
 
-	// Get available icons
+	// Derived state for UI
 	let availableIcons = $derived(getAvailableIcons());
+	let sortedMerchants = $derived(Array.from(merchants).sort((a, b) => 
+		a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
+	));
+	
+	// Derived set of assigned merchant names for reactive filtering
+	let assignedMerchantNames = $derived(
+		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
+	);
 
-	// Initialize editName and editIcon when budget is available
-	$effect(() => {
-		if (budget) {
-			editName = budget.name;
-			editIcon = budget.icon || '';
-		}
-	});
-
-		async function addMerchant() {
-		if (!selectedMerchant.trim()) {
-			addError = 'Please select a merchant';
+	async function addMerchant() {
+		if (isAdding || !selectedMerchant?.trim()) {
+			if (!selectedMerchant?.trim()) {
+				addError = 'Please select a merchant';
+			}
 			return;
 		}
-
-		isAdding = true;
-		addError = '';
-
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
-
+		
+		// Check if merchant already exists
+		const merchantExists = Array.from(merchants).some(merchant => 
+			merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
+		);
+		if (merchantExists) {
+			addError = 'This merchant is already assigned to this budget';
+			return;
+		}
+		
 		try {
+			isAdding = true;
+			addError = '';
+			
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					merchant: selectedMerchant.trim()
-				})
+				body: JSON.stringify({ merchant: selectedMerchant.trim() })
 			});
-
+			
 			if (!response.ok) {
 				const error = await response.json();
 				addError = error.error || 'Failed to add merchant';
 				return;
 			}
-
-			// Reset form immediately after successful addition
+			
+			// Add to reactive collection
+			merchants.add({
+				merchant: selectedMerchant.trim(),
+				merchant_normalized: selectedMerchant.trim()
+			});
+			
+			// Reset form
 			selectedMerchant = '';
 			
-			// Refresh data without page reload to maintain scroll position
-			await invalidateAll();
-			
-			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				await merchantPickerRef.refreshMerchantList();
-			}
-			
-			// Also reset the merchant picker state to ensure it's completely clean
-			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
-				merchantPickerRef.resetMerchantPicker();
-			}
-			
-			// Restore scroll position after data refresh
-			requestAnimationFrame(() => {
-				window.scrollTo(0, scrollPosition);
-			});
+			// Wait for DOM updates to complete, then refresh the merchant list
+			await tick();
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
@@ -105,48 +103,38 @@
 		}
 	}
 
-		async function removeMerchant(merchantName) {
-		// No confirm needed; removal is safe and reversible by re-adding
+	async function removeMerchant(merchantName) {
+		if (isDeleting) return;
+		
 		deletingMerchant = merchantName;
 		isDeleting = true;
-
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
 
 		try {
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					merchant: merchantName
-				})
+				body: JSON.stringify({ merchant: merchantName })
 			});
 
 			if (!response.ok) {
-				const error = await response.json();
-				alert(error.error || 'Failed to remove merchant');
+				const errorText = await response.text();
+				alert(`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`);
 				return;
 			}
 
-			// Refresh data without page reload to maintain scroll position
-			await invalidateAll();
-			
-			// Refresh the merchant picker AFTER data invalidation to ensure it's up to date
-			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
-				await merchantPickerRef.refreshMerchantList();
+			// Remove from reactive collection
+			for (const merchant of merchants) {
+				if (merchant.merchant === merchantName) {
+					merchants.delete(merchant);
+					break;
+				}
 			}
 			
-			// Also reset the merchant picker state to ensure it's completely clean
-			if (merchantPickerRef && merchantPickerRef.resetMerchantPicker) {
-				merchantPickerRef.resetMerchantPicker();
-			}
-			
-			// Restore scroll position after data refresh
-			requestAnimationFrame(() => {
-				window.scrollTo(0, scrollPosition);
-			});
+			// Refresh picker to re-add removed merchant to list
+			// Tell the picker to refresh its merchant list
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
-			alert('Network error occurred');
+			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
@@ -300,17 +288,18 @@
 			<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 			<div class="space-y-4">
 				<div>
-					<MerchantPicker
-						{selectedMerchant}
-						onSelect={(merchant) => (selectedMerchant = merchant)}
-						placeholder="Choose a merchant to assign to this budget..."
-						assignedMerchants={merchants.map(m => m.merchant_normalized || m.merchant)}
-						bind:this={merchantPickerRef}
-					/>
+									<MerchantPicker
+					{selectedMerchant}
+					onSelect={(merchant) => (selectedMerchant = merchant)}
+					placeholder="Choose a merchant to assign to this budget..."
+					assignedMerchants={assignedMerchantNames}
+					bind:this={merchantPickerRef}
+				/>
 				</div>
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
 				{/if}
+
 				<div class="flex space-x-2">
 					<Button
 						onclick={addMerchant}
@@ -326,7 +315,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.length === 0}
+		{#if merchants.size === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -335,9 +324,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.size})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each sortedMerchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
@@ -348,15 +337,14 @@
 										'this budget'}"
 								</p>
 							</div>
-							<Button
+							<button
 								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
-								variant="danger"
-								size="sm"
+								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
 								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
 								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
-							</Button>
+							</button>
 						</div>
 					{/each}
 				</div>

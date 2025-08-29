@@ -13,7 +13,7 @@ vi.mock('$app/navigation', () => ({
 }));
 
 vi.mock('$app/environment', () => ({
-	browser: false,
+	browser: false,  // Revert to false to avoid breaking other tests
 	dev: false,
 	prerendering: false,
 	version: 'test'
@@ -37,7 +37,12 @@ Object.defineProperty(window, 'location', {
 		hash: '',
 		href: 'http://localhost:3000',
 		pathname: '/',
-		search: ''
+		search: '',
+		hostname: 'localhost',  // ✅ Add hostname to fix Footer component
+		host: 'localhost:3000',
+		port: '3000',
+		protocol: 'http:',
+		origin: 'http://localhost:3000'
 	},
 	writable: true
 });
@@ -69,4 +74,27 @@ Object.defineProperty(window, 'matchMedia', {
 		removeEventListener: vi.fn(),
 		dispatchEvent: vi.fn()
 	}))
+});
+
+// Add browser-like behavior for better production simulation
+Object.defineProperty(window, 'requestAnimationFrame', {
+	writable: true,
+	value: vi.fn().mockImplementation(callback => {
+		// Simulate browser timing
+		setTimeout(callback, 16); // ~60fps
+		return 1;
+	})
+});
+
+Object.defineProperty(window, 'cancelAnimationFrame', {
+	writable: true,
+	value: vi.fn()
+});
+
+// Mock performance.now for timing-sensitive code
+Object.defineProperty(window, 'performance', {
+	writable: true,
+	value: {
+		now: vi.fn(() => Date.now())
+	}
 });
