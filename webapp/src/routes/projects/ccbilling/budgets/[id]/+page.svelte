@@ -1,5 +1,6 @@
 <script>
 	import { invalidateAll } from '$app/navigation';
+	import { SvelteSet } from 'svelte/reactivity';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
@@ -17,8 +18,8 @@
 	// Simple variables - only use $state for UI-reactive variables
 	let budget = data.budget || null;
 	let budgets = data.budgets || [];
-	// Create local reactive state for merchants - we can't mutate data.merchants directly
-	let merchants = $state(data.merchants || []);
+	// Use SvelteSet for natively reactive merchant collection
+	let merchants = new SvelteSet(data.merchants || []);
 	
 	// Add merchant state
 	let selectedMerchant = ''; // Non-reactive to avoid infinite loops
@@ -46,7 +47,7 @@
 
 		async function addMerchant() {
 		console.log('🔍 DEBUG: addMerchant called with selectedMerchant:', selectedMerchant);
-		console.log('🔍 DEBUG: Current merchants before addition:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before addition:', Array.from(merchants).map(m => m.merchant));
 		
 		// Prevent running if already adding
 		if (isAdding) {
@@ -102,15 +103,12 @@
 			};
 			
 			console.log('🔍 DEBUG: New merchant object:', newMerchant);
-			console.log('🔍 DEBUG: Merchants before addition:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before addition:', Array.from(merchants).map(m => m.merchant));
 			
-			// Update local reactive state by mutating the existing array
-			merchants.push(newMerchant);
-			merchants.sort((a, b) => 
-				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
-			);
+			// Add to SvelteSet - natively reactive
+			merchants.add(newMerchant);
 			
-			console.log('🔍 DEBUG: Merchants after addition and sort:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after addition:', Array.from(merchants).map(m => m.merchant));
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 			
@@ -146,7 +144,7 @@
 
 		async function removeMerchant(merchantName) {
 		console.log('🔍 DEBUG: removeMerchant called with:', merchantName);
-		console.log('🔍 DEBUG: Current merchants before removal:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before removal:', Array.from(merchants).map(m => m.merchant));
 		console.log('🔍 DEBUG: Current UI state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		
 		// No confirm needed; removal is safe and reversible by re-adding
@@ -189,23 +187,21 @@
 			}
 
 			console.log('🔍 DEBUG: API call successful, updating UI state');
-			console.log('🔍 DEBUG: Merchants before filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before removal:', Array.from(merchants).map(m => m.merchant));
 			
-			// Remove the merchant from the local UI state
-			const merchantsBefore = merchants.length;
-			const merchantsBeforeRef = merchants; // Store reference to check if it changed
+			// Remove the merchant from the SvelteSet
+			const merchantsBefore = merchants.size;
 			
-			// Update local reactive state by mutating the existing array
-			const index = merchants.findIndex(merchant => merchant.merchant === merchantName);
-			if (index !== -1) {
-				merchants.splice(index, 1);
+			// Find and remove the merchant from the set
+			for (const merchant of merchants) {
+				if (merchant.merchant === merchantName) {
+					merchants.delete(merchant);
+					break;
+				}
 			}
-			const merchantsAfter = merchants.length;
+			const merchantsAfter = merchants.size;
 			
-			// Debug: Verify the array change was detected
-			console.log('🔍 DEBUG: Array reference changed:', merchants !== merchantsBeforeRef);
-			
-			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after removal:', Array.from(merchants).map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
 			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
 			
@@ -404,7 +400,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.length === 0}
+		{#if merchants.size === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -413,9 +409,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.size})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each Array.from(merchants).sort((a, b) => a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())) as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
