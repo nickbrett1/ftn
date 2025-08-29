@@ -382,7 +382,7 @@
 			// Auto-hide fireworks after animation completes
 			setTimeout(() => {
 				showFireworks = false;
-			}, 5000);
+			}, 8000);
 		}
 		
 		previousUnallocatedTotal = currentUnallocatedTotal;
