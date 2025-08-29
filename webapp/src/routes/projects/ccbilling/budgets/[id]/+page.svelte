@@ -192,14 +192,29 @@
 			const merchantsBefore = merchants.length;
 			const merchantsBeforeRef = merchants; // Store reference to check if it changed
 			
-			// PRODUCTION FIX: Force Svelte reactivity with multiple approaches
-			// Method 1: Direct filter assignment
-			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			const merchantsAfter = merchants.length;
+			// PRODUCTION FIX: Force Svelte 5 reactivity with nuclear approach
+			// The issue is that Svelte 5 isn't detecting array changes in production
+			// We need to completely replace the array reference to force reactivity
 			
-			// Method 2: Force reactivity by triggering a re-assignment
-			// This ensures Svelte 5 detects the change in production
-			merchants = [...merchants];
+			// Method 1: Create a completely new array with new references
+			const newMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			const merchantsAfter = newMerchants.length;
+			
+			// Method 2: Force Svelte 5 to detect the change by completely replacing the array
+			// This creates a new array reference that Svelte 5 should definitely detect
+			merchants = newMerchants;
+			
+			// Method 3: Additional nuclear option - force a complete state reset
+			// This ensures Svelte 5's reactivity system is completely reset
+			setTimeout(() => {
+				// Force Svelte 5 to re-evaluate the entire merchants array
+				const currentMerchants = [...merchants];
+				merchants = [];
+				// Use requestAnimationFrame to ensure DOM is ready
+				requestAnimationFrame(() => {
+					merchants = currentMerchants;
+				});
+			}, 0);
 			
 			// Additional debugging to understand the production issue
 			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
@@ -244,20 +259,27 @@
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
 				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
 				
-				// NUCLEAR OPTION: Complete page refresh if UI is completely stuck
+				// FALLBACK: If UI is still stuck after all our fixes, provide user feedback
 				if (merchantStillVisible) {
-					console.log('🚨 PRODUCTION BUG DETECTED: UI completely stuck, using nuclear option');
+					console.log('🚨 PRODUCTION BUG DETECTED: UI still stuck after nuclear fixes');
 					
-					// Check if this is a persistent issue (UI stuck after multiple attempts)
-					// If the merchant is still visible after all our fixes, the UI is completely broken
-					// In this case, we need to refresh the page to restore functionality
+					// The merchant has been successfully removed from the database
+					// but Svelte 5's reactivity system is completely broken
+					// Provide user feedback and a way to refresh
 					
-					// Show a user-friendly message
-					alert(`The UI has become unresponsive. The merchant has been removed from the database, but the interface needs to be refreshed to show the changes.\n\nClick OK to refresh the page.`);
+					// Show a user-friendly message explaining the situation
+					const userConfirmed = confirm(
+						`The merchant "${merchantName}" has been successfully removed from the database, but the interface is not updating properly.\n\n` +
+						`This is a known issue with the current version. Would you like to refresh the page to see the updated list?\n\n` +
+						`Click OK to refresh, or Cancel to continue (the merchant is already removed from the database).`
+					);
 					
-					// Refresh the page to restore UI functionality
-					window.location.reload();
-					return; // Exit early since we're refreshing
+					if (userConfirmed) {
+						// Refresh the page to restore UI functionality
+						window.location.reload();
+						return; // Exit early since we're refreshing
+					}
+					// If user cancels, continue - the merchant is already removed from database
 				}
 				
 				// This ensures the UI re-renders with the updated merchants array
