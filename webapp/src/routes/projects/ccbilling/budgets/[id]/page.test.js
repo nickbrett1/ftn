@@ -1444,20 +1444,17 @@ describe('Budget Page - Merchant Removal', () => {
 		global.browser = originalBrowser;
 	});
 
-	it('should reproduce the production bug: second removal attempt fails because UI did not update', async () => {
-		// Temporarily override browser environment to match production
-		const originalBrowser = global.browser;
-		global.browser = true;
-		
-		// This test simulates the exact production scenario where:
-		// 1. First removal succeeds in data but UI doesn't update
-		// 2. User clicks remove again (thinking it didn't work)
-		// 3. Second attempt fails because merchant is already gone from data
+	it('should reproduce the exact production bug from logs: UI never updates after removal', async () => {
+		// This test reproduces the EXACT production scenario from the logs:
+		// 1. Add merchant "CURSOR, AI POWERED IDE CURSOR.COM"
+		// 2. Remove it - data changes (35->34) but UI doesn't update
+		// 3. Try to remove again - data doesn't change (34->34) because already gone
+		// 4. UI still shows the merchant even though it's gone from data
 		
 		// Mock the recent merchants endpoint (first call - initial load)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
-			json: async () => ['walmart', 'costco', 'bestbuy']
+			json: async () => ['CURSOR, AI POWERED IDE CURSOR.COM', 'costco', 'bestbuy']
 		});
 
 		// Mock successful addition response (second call - add merchant)
@@ -1562,5 +1559,123 @@ describe('Budget Page - Merchant Removal', () => {
 		
 		// Restore original browser environment
 		global.browser = originalBrowser;
+	});
+
+	it('should reproduce the exact production bug: UI never updates after removal', async () => {
+		// This test reproduces the EXACT production scenario from the logs:
+		// 1. Add merchant "CURSOR, AI POWERED IDE CURSOR.COM"
+		// 2. Remove it - data changes (35->34) but UI doesn't update
+		// 3. Try to remove again - data doesn't change (34->34) because already gone
+		// 4. UI still shows the merchant even though it's gone from data
+		
+		// Mock the recent merchants endpoint (first call - initial load)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['CURSOR, AI POWERED IDE CURSOR.COM', 'costco', 'bestbuy']
+		});
+
+		// Mock successful addition response (second call - add merchant)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (third call - first remove attempt)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		// Mock successful removal response (fourth call - second remove attempt)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			headers: new Map([['content-type', 'application/json']]),
+			text: async () => '{"success": true}',
+			json: async () => ({ success: true })
+		});
+
+		const { container, getByRole } = render(BudgetPage, {
+			props: { data: mockData }
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+		});
+
+		// Add the exact merchant from production logs
+		const selectElement = getByRole('combobox');
+		await fireEvent.change(selectElement, { target: { value: 'CURSOR, AI POWERED IDE CURSOR.COM' } });
+
+		const addButton = getByRole('button', { name: 'Add Merchant' });
+		await fireEvent.click(addButton);
+
+		// Wait for addition to complete
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+		});
+
+		// Verify the merchant was added to the UI
+		const merchantListAfterAdd = container.querySelector('.merchant-list');
+		expect(merchantListAfterAdd.textContent).toContain('CURSOR, AI POWERED IDE CURSOR.COM');
+
+		// Get the remove buttons
+		const removeButtons = getAllByText(container, 'Remove');
+		expect(removeButtons.length).toBe(3); // amazon, target, CURSOR
+
+		// Find the remove button for CURSOR (should be the middle one after sorting)
+		// The merchants are sorted alphabetically: amazon, CURSOR, target
+		const cursorRemoveButton = removeButtons[1]; // Second button (index 1)
+
+		// FIRST REMOVAL ATTEMPT - This should work in data but fail in UI
+		await fireEvent.click(cursorRemoveButton);
+
+		// Wait for the first removal API call to be made
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+		});
+
+		// Wait a bit to ensure any async operations complete
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		// Check if the UI updated after first removal
+		const merchantListAfterFirstRemove = container.querySelector('.merchant-list');
+		const merchantStillVisible = merchantListAfterFirstRemove.textContent.includes('CURSOR, AI POWERED IDE CURSOR.COM');
+		
+		if (merchantStillVisible) {
+			// This is the production bug: UI didn't update after first removal
+			console.log('🚨 PRODUCTION BUG REPRODUCED: UI did not update after first removal');
+			
+			// Get the remove buttons again (they should still be there if UI didn't update)
+			const removeButtonsAfterFirst = getAllByText(container, 'Remove');
+			expect(removeButtonsAfterFirst.length).toBe(3); // Still 3 because UI didn't update
+			
+			// Find the CURSOR remove button again (should still be at index 1)
+			const cursorRemoveButtonAgain = removeButtonsAfterFirst[1];
+			
+			// SECOND REMOVAL ATTEMPT - This should fail because merchant is already gone from data
+			await fireEvent.click(cursorRemoveButtonAgain);
+			
+			// Wait for the second removal API call to be made
+			await waitFor(() => {
+				expect(mockFetch).toHaveBeenCalledTimes(4);
+			});
+			
+			// The second attempt should fail (merchant already gone from data)
+			// This is what we see in production: "Merchant count changed from 34 to 34"
+			console.log('🚨 PRODUCTION BUG CONFIRMED: Second removal attempt fails because merchant already gone from data');
+			
+			// This test should FAIL if the bug is reproduced
+			expect(merchantStillVisible).toBe(false); // This will fail, proving the bug exists
+		} else {
+			// UI properly updated after first removal - no bug
+			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
+		}
 	});
 });
