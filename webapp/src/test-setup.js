@@ -13,7 +13,7 @@ vi.mock('$app/navigation', () => ({
 }));
 
 vi.mock('$app/environment', () => ({
-	browser: true,  // ✅ Set to true to match production browser environment
+	browser: false,  // Revert to false to avoid breaking other tests
 	dev: false,
 	prerendering: false,
 	version: 'test'
