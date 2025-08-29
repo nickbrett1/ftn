@@ -211,10 +211,14 @@
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
 			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
 			
+			// Refresh the merchant picker to re-add the removed merchant to the list
+			if (merchantPickerRef && merchantPickerRef.refreshMerchantList) {
+				console.log('🔍 DEBUG: Refreshing merchant list to re-add removed merchant');
+				await merchantPickerRef.refreshMerchantList();
+			}
+			
 			// Simple UI update - data.merchants is already reactive
 			console.log('🔍 DEBUG: Merchant removal completed successfully');
-			
-			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
 			console.error('❌ Merchant removal failed:', {
 				error: error.message,
