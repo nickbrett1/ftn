@@ -1,185 +1,191 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
+	import { loadSlim } from '@tsparticles/slim';
+	import { tsParticles } from '@tsparticles/engine';
 
 	/** @type {boolean} */
 	let { show = false } = $props();
 
-	let canvas = $state();
-	let ctx = $state();
-	let animationId = $state();
-	let particles = $state([]);
-	let isAnimating = $state(false);
+	let container = $state();
+	let particlesInstance = $state();
 
-	// Firework particle class
-	class Particle {
-		constructor(x, y, color) {
-			this.x = x;
-			this.y = y;
-			this.vx = (Math.random() - 0.5) * 8;
-			this.vy = (Math.random() - 0.5) * 8;
-			this.color = color;
-			this.life = 1.0;
-			this.decay = Math.random() * 0.015 + 0.01;
-			this.size = Math.random() * 3 + 1;
-		}
-
-		update() {
-			this.x += this.vx;
-			this.y += this.vy;
-			this.vy += 0.1; // gravity
-			this.life -= this.decay;
-			this.size *= 0.99;
-		}
-
-		draw(ctx) {
-			ctx.save();
-			ctx.globalAlpha = this.life;
-			ctx.fillStyle = this.color;
-			ctx.beginPath();
-			ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-			ctx.fill();
-			ctx.restore();
-		}
-
-		isDead() {
-			return this.life <= 0 || this.size <= 0.1;
-		}
-	}
-
-	// Firework class
-	class Firework {
-		constructor(x, y, targetX, targetY) {
-			this.x = x;
-			this.y = y;
-			this.targetX = targetX;
-			this.targetY = targetY;
-			this.speed = 2;
-			this.exploded = false;
-			this.particles = [];
-			
-			// Calculate direction
-			const dx = targetX - x;
-			const dy = targetY - y;
-			const distance = Math.sqrt(dx * dx + dy * dy);
-			this.vx = (dx / distance) * this.speed;
-			this.vy = (dy / distance) * this.speed;
-		}
-
-		update() {
-			if (!this.exploded) {
-				this.x += this.vx;
-				this.y += this.vy;
-				
-				// Check if reached target
-				const dx = this.targetX - this.x;
-				const dy = this.targetY - this.y;
-				if (Math.sqrt(dx * dx + dy * dy) < 5) {
-					this.explode();
+	// Fireworks configuration for tsparticles
+	const fireworksConfig = {
+		particles: {
+			number: {
+				value: 0
+			},
+			color: {
+				value: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#ff6b9d', '#c44569', '#f8b500']
+			},
+			shape: {
+				type: 'circle'
+			},
+			opacity: {
+				value: 1,
+				animation: {
+					enable: true,
+					speed: 0.5,
+					sync: false,
+					destroy: 'none',
+					startValue: 'random'
 				}
-			} else {
-				// Update particles
-				this.particles = this.particles.filter(particle => {
-					particle.update();
-					return !particle.isDead();
-				});
+			},
+			size: {
+				value: { min: 1, max: 4 },
+				animation: {
+					enable: true,
+					speed: 2,
+					minimumValue: 0.1,
+					sync: false,
+					startValue: 'random',
+					destroy: 'none'
+				}
+			},
+			life: {
+				duration: {
+					sync: false,
+					value: 3
+				},
+				count: 1
+			},
+			move: {
+				enable: true,
+				gravity: {
+					enable: true,
+					acceleration: 9.81,
+					inverse: false
+				},
+				speed: { min: 5, max: 15 },
+				direction: 'none',
+				random: true,
+				straight: false,
+				outModes: {
+					default: 'destroy',
+					top: 'none'
+				}
 			}
-		}
-
-		explode() {
-			this.exploded = true;
-			const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
-			
-			// Create explosion particles
-			for (let i = 0; i < 30; i++) {
-				const color = colors[Math.floor(Math.random() * colors.length)];
-				this.particles.push(new Particle(this.x, this.y, color));
+		},
+		emitters: {
+			life: {
+				count: 0,
+				duration: 0.1,
+				delay: 0.1
+			},
+			rate: {
+				delay: 0.1,
+				quantity: 0
+			},
+			size: {
+				width: 0,
+				height: 0
 			}
-		}
+		},
+		background: {
+			color: 'transparent'
+		},
+		fullScreen: {
+			enable: true,
+			zIndex: 50
+		},
+		detectRetina: true
+	};
 
-		draw(ctx) {
-			if (!this.exploded) {
-				// Draw firework trail
-				ctx.save();
-				ctx.fillStyle = '#ffffff';
-				ctx.beginPath();
-				ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.restore();
-			} else {
-				// Draw particles
-				this.particles.forEach(particle => particle.draw(ctx));
-			}
-		}
+	async function initParticles() {
+		if (!container) return;
 
-		isDead() {
-			return this.exploded && this.particles.length === 0;
-		}
-	}
+		// Load tsparticles
+		await loadSlim(tsParticles);
 
-	let fireworks = [];
-
-	function createFirework() {
-		if (!canvas) return;
-		
-		const startX = Math.random() * canvas.width;
-		const startY = canvas.height;
-		const targetX = Math.random() * canvas.width;
-		const targetY = Math.random() * canvas.height * 0.6;
-		
-		fireworks.push(new Firework(startX, startY, targetX, targetY));
-	}
-
-	function animate() {
-		if (!isAnimating || !ctx) return;
-		
-		// Clear canvas
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		
-		// Update and draw fireworks
-		fireworks = fireworks.filter(firework => {
-			firework.update();
-			firework.draw(ctx);
-			return !firework.isDead();
-		});
-		
-		// Create new fireworks occasionally
-		if (Math.random() < 0.1 && fireworks.length < 5) {
-			createFirework();
-		}
-		
-		animationId = requestAnimationFrame(animate);
+		// Initialize particles
+		particlesInstance = await tsParticles.load(container, fireworksConfig);
 	}
 
 	function startFireworks() {
-		if (isAnimating || !canvas || !ctx) return;
+		if (!particlesInstance) return;
+
+		// Create multiple firework bursts
+		const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
 		
-		isAnimating = true;
-		fireworks = [];
-		
-		// Create initial fireworks
-		for (let i = 0; i < 3; i++) {
-			setTimeout(() => createFirework(), i * 200);
+		// Create 5-8 firework bursts over 3 seconds
+		for (let i = 0; i < 6; i++) {
+			setTimeout(() => {
+				if (!particlesInstance) return;
+				
+				// Random position for firework
+				const x = Math.random() * window.innerWidth;
+				const y = Math.random() * (window.innerHeight * 0.6) + (window.innerHeight * 0.2);
+				
+				// Create firework burst
+				particlesInstance.addParticles({
+					particles: {
+						number: {
+							value: 30
+						},
+						color: {
+							value: colors[Math.floor(Math.random() * colors.length)]
+						},
+						shape: {
+							type: 'circle'
+						},
+						opacity: {
+							value: 1,
+							animation: {
+								enable: true,
+								speed: 0.5,
+								sync: false,
+								destroy: 'none',
+								startValue: 'random'
+							}
+						},
+						size: {
+							value: { min: 2, max: 6 },
+							animation: {
+								enable: true,
+								speed: 2,
+								minimumValue: 0.1,
+								sync: false,
+								startValue: 'random',
+								destroy: 'none'
+							}
+						},
+						life: {
+							duration: {
+								sync: false,
+								value: 3
+							},
+							count: 1
+						},
+						move: {
+							enable: true,
+							gravity: {
+								enable: true,
+								acceleration: 9.81,
+								inverse: false
+							},
+							speed: { min: 8, max: 20 },
+							direction: 'none',
+							random: true,
+							straight: false,
+							outModes: {
+								default: 'destroy',
+								top: 'none'
+							}
+						}
+					},
+					position: {
+						x: x,
+						y: y
+					}
+				});
+			}, i * 500);
 		}
-		
-		animate();
-		
-		// Stop after 5 seconds
-		setTimeout(() => {
-			stopFireworks();
-		}, 5000);
 	}
 
 	function stopFireworks() {
-		isAnimating = false;
-		if (animationId) {
-			cancelAnimationFrame(animationId);
+		if (particlesInstance) {
+			particlesInstance.clear();
 		}
-		// Clear canvas
-		if (ctx && canvas) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-		}
-		fireworks = [];
 	}
 
 	// Watch for show prop changes
@@ -191,21 +197,19 @@
 		}
 	});
 
-	onMount(() => {
-		if (canvas) {
-			ctx = canvas.getContext('2d');
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
-		}
+	onMount(async () => {
+		await initParticles();
 	});
 
 	onDestroy(() => {
-		stopFireworks();
+		if (particlesInstance) {
+			particlesInstance.destroy();
+		}
 	});
 </script>
 
 {#if show}
 	<div class="fixed inset-0 pointer-events-none z-50">
-		<canvas bind:this={canvas} class="w-full h-full"></canvas>
+		<div bind:this={container} class="w-full h-full"></div>
 	</div>
 {/if}
