@@ -104,8 +104,9 @@
 			console.log('🔍 DEBUG: New merchant object:', newMerchant);
 			console.log('🔍 DEBUG: Merchants before addition:', merchants.map(m => m.merchant));
 			
-			// Update local reactive state
-			merchants = [...merchants, newMerchant].sort((a, b) => 
+			// Update local reactive state by mutating the existing array
+			merchants.push(newMerchant);
+			merchants.sort((a, b) => 
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
 			
@@ -194,8 +195,11 @@
 			const merchantsBefore = merchants.length;
 			const merchantsBeforeRef = merchants; // Store reference to check if it changed
 			
-			// Update local reactive state
-			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
+			// Update local reactive state by mutating the existing array
+			const index = merchants.findIndex(merchant => merchant.merchant === merchantName);
+			if (index !== -1) {
+				merchants.splice(index, 1);
+			}
 			const merchantsAfter = merchants.length;
 			
 			// Debug: Verify the array change was detected
