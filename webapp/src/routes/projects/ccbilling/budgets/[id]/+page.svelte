@@ -17,7 +17,8 @@
 	// Simple variables - only use $state for UI-reactive variables
 	let budget = data.budget || null;
 	let budgets = data.budgets || [];
-	let merchants = $state(data.merchants || []); // UI needs to react to merchant changes
+	// Use data.merchants directly since it's already reactive as a $prop
+	let merchants = data.merchants || [];
 	
 	// Add merchant state
 	let selectedMerchant = ''; // Non-reactive to avoid infinite loops
@@ -45,7 +46,7 @@
 
 		async function addMerchant() {
 		console.log('🔍 DEBUG: addMerchant called with selectedMerchant:', selectedMerchant);
-		console.log('🔍 DEBUG: Current merchants before addition:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before addition:', data.merchants.map(m => m.merchant));
 		
 		// Prevent running if already adding
 		if (isAdding) {
@@ -101,13 +102,14 @@
 			};
 			
 			console.log('🔍 DEBUG: New merchant object:', newMerchant);
-			console.log('🔍 DEBUG: Merchants before addition:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before addition:', data.merchants.map(m => m.merchant));
 			
-			merchants = [...merchants, newMerchant].sort((a, b) => 
+			// Update data.merchants directly since it's already reactive
+			data.merchants = [...data.merchants, newMerchant].sort((a, b) => 
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
 			
-			console.log('🔍 DEBUG: Merchants after addition and sort:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after addition and sort:', data.merchants.map(m => m.merchant));
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 			
@@ -143,7 +145,7 @@
 
 		async function removeMerchant(merchantName) {
 		console.log('🔍 DEBUG: removeMerchant called with:', merchantName);
-		console.log('🔍 DEBUG: Current merchants before removal:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before removal:', data.merchants.map(m => m.merchant));
 		console.log('🔍 DEBUG: Current UI state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		
 		// No confirm needed; removal is safe and reversible by re-adding
@@ -186,104 +188,26 @@
 			}
 
 			console.log('🔍 DEBUG: API call successful, updating UI state');
-			console.log('🔍 DEBUG: Merchants before filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before filter:', data.merchants.map(m => m.merchant));
 			
 			// Remove the merchant from the local UI state
-			const merchantsBefore = merchants.length;
-			const merchantsBeforeRef = merchants; // Store reference to check if it changed
+			const merchantsBefore = data.merchants.length;
+			const merchantsBeforeRef = data.merchants; // Store reference to check if it changed
 			
-			// PRODUCTION FIX: Force Svelte 5 reactivity with nuclear approach
-			// The issue is that Svelte 5 isn't detecting array changes in production
-			// We need to completely replace the array reference to force reactivity
+			// SIMPLIFIED FIX: Update data.merchants directly since it's already reactive
+			// This should work better than creating a separate state variable
+			data.merchants = data.merchants.filter(merchant => merchant.merchant !== merchantName);
+			const merchantsAfter = data.merchants.length;
 			
-			// Method 1: Create a completely new array with new references
-			const newMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			const merchantsAfter = newMerchants.length;
+			// Debug: Verify the array change was detected
+			console.log('🔍 DEBUG: Array reference changed:', data.merchants !== merchantsBeforeRef);
 			
-			// Method 2: Force Svelte 5 to detect the change by completely replacing the array
-			// This creates a new array reference that Svelte 5 should definitely detect
-			merchants = newMerchants;
-			
-			// Method 3: Additional nuclear option - force a complete state reset
-			// This ensures Svelte 5's reactivity system is completely reset
-			setTimeout(() => {
-				// Force Svelte 5 to re-evaluate the entire merchants array
-				const currentMerchants = [...merchants];
-				merchants = [];
-				// Use requestAnimationFrame to ensure DOM is ready
-				requestAnimationFrame(() => {
-					merchants = currentMerchants;
-				});
-			}, 0);
-			
-			// Additional debugging to understand the production issue
-			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
-				merchants !== merchantsBeforeRef, 'Length:', merchants.length);
-			
-			// Debug the actual DOM structure
-			const merchantList = document.querySelector('.merchant-list');
-			console.log('🔍 DEBUG: Merchant list element found:', !!merchantList);
-			console.log('🔍 DEBUG: Merchant list HTML structure:', merchantList?.innerHTML?.substring(0, 500));
-			
-			// Try different selectors to find the actual structure
-			const allMerchantElements = document.querySelectorAll('[class*="merchant"]');
-			console.log('🔍 DEBUG: All elements with "merchant" in class:', allMerchantElements.length);
-			
-			const allListItems = document.querySelectorAll('li');
-			console.log('🔍 DEBUG: All li elements:', allListItems.length);
-			
-			const allDivs = document.querySelectorAll('div');
-			console.log('🔍 DEBUG: All div elements:', allDivs.length);
-			
-			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after filter:', data.merchants.map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
 			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
 			
-			// Force UI update by triggering a small delay
-			setTimeout(() => {
-				console.log('🔍 DEBUG: Forcing UI update after merchant removal');
-				
-				// Debug the actual DOM structure after update
-				const merchantList = document.querySelector('.merchant-list');
-				console.log('🔍 DEBUG: Merchant list element found after update:', !!merchantList);
-				console.log('🔍 DEBUG: Merchant list HTML structure after update:', merchantList?.innerHTML?.substring(0, 500));
-				
-				// Try different selectors to find the actual structure
-				const allMerchantElements = document.querySelectorAll('[class*="merchant"]');
-				console.log('🔍 DEBUG: All elements with "merchant" in class after update:', allMerchantElements.length);
-				
-				const allListItems = document.querySelectorAll('li');
-				console.log('🔍 DEBUG: All li elements after update:', allListItems.length);
-				
-				// Check if the merchant is still visible in the DOM
-				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
-				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
-				
-				// FALLBACK: If UI is still stuck after all our fixes, provide user feedback
-				if (merchantStillVisible) {
-					console.log('🚨 PRODUCTION BUG DETECTED: UI still stuck after nuclear fixes');
-					
-					// The merchant has been successfully removed from the database
-					// but Svelte 5's reactivity system is completely broken
-					// Provide user feedback and a way to refresh
-					
-					// Show a user-friendly message explaining the situation
-					const userConfirmed = confirm(
-						`The merchant "${merchantName}" has been successfully removed from the database, but the interface is not updating properly.\n\n` +
-						`This is a known issue with the current version. Would you like to refresh the page to see the updated list?\n\n` +
-						`Click OK to refresh, or Cancel to continue (the merchant is already removed from the database).`
-					);
-					
-					if (userConfirmed) {
-						// Refresh the page to restore UI functionality
-						window.location.reload();
-						return; // Exit early since we're refreshing
-					}
-					// If user cancels, continue - the merchant is already removed from database
-				}
-				
-				// This ensures the UI re-renders with the updated merchants array
-			}, 10);
+			// Simple UI update - data.merchants is already reactive
+			console.log('🔍 DEBUG: Merchant removal completed successfully');
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 		} catch (error) {
@@ -477,7 +401,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.length === 0}
+		{#if data.merchants.length === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -486,9 +410,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({data.merchants.length})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each data.merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
