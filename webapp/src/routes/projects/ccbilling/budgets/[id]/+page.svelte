@@ -244,33 +244,20 @@
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
 				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
 				
-				// AGGRESSIVE FIX: Force a complete re-render if merchant is still visible
+				// NUCLEAR OPTION: Complete page refresh if UI is completely stuck
 				if (merchantStillVisible) {
-					console.log('🚨 PRODUCTION BUG DETECTED: Forcing aggressive UI update');
+					console.log('🚨 PRODUCTION BUG DETECTED: UI completely stuck, using nuclear option');
 					
-					// Method 1: Force Svelte to re-render by triggering a state change
-					merchants = [...merchants];
+					// Check if this is a persistent issue (UI stuck after multiple attempts)
+					// If the merchant is still visible after all our fixes, the UI is completely broken
+					// In this case, we need to refresh the page to restore functionality
 					
-					// Method 2: Force DOM update by temporarily hiding and showing the list
-					if (merchantList) {
-						merchantList.style.display = 'none';
-						setTimeout(() => {
-							merchantList.style.display = '';
-							console.log('🔍 DEBUG: Forced DOM re-render completed');
-						}, 1);
-					}
+					// Show a user-friendly message
+					alert(`The UI has become unresponsive. The merchant has been removed from the database, but the interface needs to be refreshed to show the changes.\n\nClick OK to refresh the page.`);
 					
-					// Method 3: Force a complete component re-render by triggering a state change
-					setTimeout(() => {
-						// Force a re-render by updating a dummy state variable
-						// This ensures the entire component re-renders
-						const currentMerchants = merchants;
-						merchants = [];
-						setTimeout(() => {
-							merchants = currentMerchants;
-							console.log('🔍 DEBUG: Forced component re-render completed');
-						}, 1);
-					}, 5);
+					// Refresh the page to restore UI functionality
+					window.location.reload();
+					return; // Exit early since we're refreshing
 				}
 				
 				// This ensures the UI re-renders with the updated merchants array
