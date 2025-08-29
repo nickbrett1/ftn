@@ -1353,15 +1353,14 @@ describe('Budget Page - Merchant Removal', () => {
 		console.log('✅ SVELTE 5 REACTIVITY ISSUE RESOLVED - Array changes trigger UI updates');
 	});
 
-	it('should reproduce the exact production bug: UI not updating after successful removal', async () => {
+	it('should validate the fix: UI updates correctly after successful removal', async () => {
 		// Temporarily override browser environment to match production
 		const originalBrowser = global.browser;
 		global.browser = true;
-		// This test reproduces the EXACT production scenario:
+		// This test validates that the fix works correctly:
 		// 1. Merchant is removed from data (count decreases)
-		// 2. UI doesn't update (merchant still visible)
-		// 3. User clicks remove again
-		// 4. Second attempt fails (merchant already gone from data)
+		// 2. UI should update correctly (merchant no longer visible)
+		// 3. The fix should prevent the production bug
 		
 		// Mock the recent merchants endpoint (first call - initial load)
 		mockFetch.mockResolvedValueOnce({
@@ -1429,27 +1428,26 @@ describe('Budget Page - Merchant Removal', () => {
 		// In the production bug, the UI doesn't update even though data changed
 		const merchantListAfterFirstRemove = container.querySelector('.merchant-list');
 		
-		// This assertion will FAIL if the production bug exists
-		// (merchant still visible in UI even though data was updated)
+		// This assertion validates that the fix is working
+		// (merchant should NOT be visible in UI after successful removal)
 		expect(merchantListAfterFirstRemove.textContent).not.toContain('walmart');
 		
 		// Also check that the remove button count decreased
 		const removeButtonsAfterFirst = getAllByText(container, 'Remove');
 		expect(removeButtonsAfterFirst.length).toBe(2); // Only amazon and target should remain
 		
-		// If we get here, the UI properly updated after the first removal
-		console.log('✅ PRODUCTION BUG NOT REPRODUCED - UI properly updates after first removal');
+		// If we get here, the fix is working correctly
+		console.log('✅ FIX VALIDATED - UI properly updates after merchant removal');
 		
 		// Restore original browser environment
 		global.browser = originalBrowser;
 	});
 
-	it('should reproduce the exact production bug from logs: UI never updates after removal', async () => {
-		// This test reproduces the EXACT production scenario from the logs:
+	it('should validate the fix with exact production scenario: UI updates correctly after removal', async () => {
+		// This test validates the fix using the EXACT production scenario from the logs:
 		// 1. Add merchant "CURSOR, AI POWERED IDE CURSOR.COM"
-		// 2. Remove it - data changes (35->34) but UI doesn't update
-		// 3. Try to remove again - data doesn't change (34->34) because already gone
-		// 4. UI still shows the merchant even though it's gone from data
+		// 2. Remove it - data changes (35->34) and UI should update correctly
+		// 3. The fix should prevent the production bug where UI doesn't update
 		
 		// Mock the recent merchants endpoint (first call - initial load)
 		mockFetch.mockResolvedValueOnce({
@@ -1648,34 +1646,20 @@ describe('Budget Page - Merchant Removal', () => {
 		const merchantListAfterFirstRemove = container.querySelector('.merchant-list');
 		const merchantStillVisible = merchantListAfterFirstRemove.textContent.includes('CURSOR, AI POWERED IDE CURSOR.COM');
 		
+		// The fix should ensure the UI updates correctly
+		// If the bug was reproduced, merchantStillVisible would be true
+		// If the fix is working, merchantStillVisible should be false
+		expect(merchantStillVisible).toBe(false);
+		
 		if (merchantStillVisible) {
-			// This is the production bug: UI didn't update after first removal
+			// This would be the production bug: UI didn't update after first removal
 			console.log('🚨 PRODUCTION BUG REPRODUCED: UI did not update after first removal');
-			
-			// Get the remove buttons again (they should still be there if UI didn't update)
-			const removeButtonsAfterFirst = getAllByText(container, 'Remove');
-			expect(removeButtonsAfterFirst.length).toBe(3); // Still 3 because UI didn't update
-			
-			// Find the CURSOR remove button again (should still be at index 1)
-			const cursorRemoveButtonAgain = removeButtonsAfterFirst[1];
-			
-			// SECOND REMOVAL ATTEMPT - This should fail because merchant is already gone from data
-			await fireEvent.click(cursorRemoveButtonAgain);
-			
-			// Wait for the second removal API call to be made
-			await waitFor(() => {
-				expect(mockFetch).toHaveBeenCalledTimes(4);
-			});
-			
-			// The second attempt should fail (merchant already gone from data)
-			// This is what we see in production: "Merchant count changed from 34 to 34"
-			console.log('🚨 PRODUCTION BUG CONFIRMED: Second removal attempt fails because merchant already gone from data');
-			
-			// This test should FAIL if the bug is reproduced
-			expect(merchantStillVisible).toBe(false); // This will fail, proving the bug exists
+			// This should not happen with the fix in place
+			fail('Production bug was reproduced - fix is not working');
 		} else {
-			// UI properly updated after first removal - no bug
+			// UI properly updated after first removal - fix is working
 			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
+			console.log('✅ FIX IS WORKING: UI updates correctly after merchant removal');
 		}
 	});
 });
