@@ -172,8 +172,10 @@
 	// Function to manually sync the select value with the parent's selectedMerchant prop
 	function syncSelectValue() {
 		if (merchantsSelect && !isUpdatingUI) {
+			// Always set to empty string to show placeholder, unless there's a valid selection
 			merchantsSelect.value = selectedMerchant || '';
-			// Don't update localSelectedMerchant to avoid reactive loops
+			// Update local state to match
+			localSelectedMerchant = selectedMerchant || '';
 		}
 	}
 
@@ -198,10 +200,11 @@
 	$effect(() => {
 		// Only update the DOM if we're not currently updating UI and the select exists
 		// Update if the selectedMerchant prop is different from the current select value
-		if (!isUpdatingUI && merchantsSelect && merchantsSelect.value !== selectedMerchant) {
+		if (!isUpdatingUI && merchantsSelect && merchantsSelect.value !== (selectedMerchant || '')) {
 			merchantsSelect.value = selectedMerchant || '';
+			// Update local state to match
+			localSelectedMerchant = selectedMerchant || '';
 		}
-		// Don't update localSelectedMerchant to avoid reactive loops
 	});
 
 	onMount(() => {
@@ -270,6 +273,10 @@
 	isOpen={showModal}
 	onClose={() => {
 		showModal = false;
+		// Ensure combo box shows placeholder when modal is closed without selection
+		if (!localSelectedMerchant) {
+			syncSelectValue();
+		}
 	}}
 	onSelect={handleModalSelect}
 />
