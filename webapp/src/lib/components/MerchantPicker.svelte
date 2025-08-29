@@ -5,7 +5,8 @@
 	const {
 		selectedMerchant = '',
 		onSelect = () => {},
-		placeholder = 'Select a merchant...'
+		placeholder = 'Select a merchant...',
+		assignedMerchants = new Set() // New prop: set of currently assigned merchant names
 	} = $props();
 
 	// Reactive state
@@ -16,9 +17,14 @@
 	let showModal = $state(false);
 	let localSelectedMerchant = $state('');
 	
-	// Derived state
-	let displayMerchants = $derived(merchants.slice(0, 20));
-	let hasMerchants = $derived(merchants.length > 0);
+	// Derived state - automatically filter out assigned merchants
+	let availableMerchants = $derived(
+		allUnassignedMerchants.filter(merchant => 
+			!assignedMerchants.has(merchant.toLowerCase())
+		)
+	);
+	let displayMerchants = $derived(availableMerchants.slice(0, 20));
+	let hasMerchants = $derived(availableMerchants.length > 0);
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 
 	async function loadUnassignedMerchants() {
@@ -35,7 +41,7 @@
 			const data = await response.json();
 			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
-			merchants = allUnassignedMerchants;
+			// No need to set merchants - it's now derived from allUnassignedMerchants and assignedMerchants
 		} catch (err) {
 			error = err.message || 'Failed to load merchants';
 		} finally {
@@ -63,18 +69,10 @@
 		showModal = false;
 	}
 
-	async function refreshMerchantList() {
-		await new Promise((resolve) => setTimeout(resolve, 100));
-		await loadUnassignedMerchants();
-	}
-
 	// Sync local state with parent prop
 	$effect(() => {
 		localSelectedMerchant = selectedMerchant || '';
 	});
-
-	// Expose functions to parent components
-	export { refreshMerchantList };
 
 	onMount(() => {
 		loadUnassignedMerchants();
