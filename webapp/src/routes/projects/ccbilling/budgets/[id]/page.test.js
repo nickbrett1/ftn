@@ -1354,6 +1354,9 @@ describe('Budget Page - Merchant Removal', () => {
 	});
 
 	it('should reproduce the exact production bug: UI not updating after successful removal', async () => {
+		// Temporarily override browser environment to match production
+		const originalBrowser = global.browser;
+		global.browser = true;
 		// This test reproduces the EXACT production scenario:
 		// 1. Merchant is removed from data (count decreases)
 		// 2. UI doesn't update (merchant still visible)
@@ -1436,9 +1439,16 @@ describe('Budget Page - Merchant Removal', () => {
 		
 		// If we get here, the UI properly updated after the first removal
 		console.log('✅ PRODUCTION BUG NOT REPRODUCED - UI properly updates after first removal');
+		
+		// Restore original browser environment
+		global.browser = originalBrowser;
 	});
 
 	it('should reproduce the production bug: second removal attempt fails because UI did not update', async () => {
+		// Temporarily override browser environment to match production
+		const originalBrowser = global.browser;
+		global.browser = true;
+		
 		// This test simulates the exact production scenario where:
 		// 1. First removal succeeds in data but UI doesn't update
 		// 2. User clicks remove again (thinking it didn't work)
@@ -1549,5 +1559,8 @@ describe('Budget Page - Merchant Removal', () => {
 			// UI properly updated after first removal - no bug
 			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
 		}
+		
+		// Restore original browser environment
+		global.browser = originalBrowser;
 	});
 });
