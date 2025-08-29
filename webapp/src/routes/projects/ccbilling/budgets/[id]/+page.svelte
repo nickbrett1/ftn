@@ -17,8 +17,7 @@
 	// Simple variables - only use $state for UI-reactive variables
 	let budget = data.budget || null;
 	let budgets = data.budgets || [];
-	// Create reactive state from the prop - this ensures UI updates when we modify it
-	let merchants = $state(data.merchants || []);
+	// Use data.merchants directly - it's already reactive as a $prop
 	
 	// Add merchant state
 	let selectedMerchant = ''; // Non-reactive to avoid infinite loops
@@ -46,7 +45,7 @@
 
 		async function addMerchant() {
 		console.log('🔍 DEBUG: addMerchant called with selectedMerchant:', selectedMerchant);
-		console.log('🔍 DEBUG: Current merchants before addition:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before addition:', data.merchants.map(m => m.merchant));
 		
 		// Prevent running if already adding
 		if (isAdding) {
@@ -102,14 +101,14 @@
 			};
 			
 			console.log('🔍 DEBUG: New merchant object:', newMerchant);
-			console.log('🔍 DEBUG: Merchants before addition:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before addition:', data.merchants.map(m => m.merchant));
 			
-			// Update the reactive merchants state
-			merchants = [...merchants, newMerchant].sort((a, b) => 
+			// Update data.merchants directly - it's already reactive as a $prop
+			data.merchants = [...data.merchants, newMerchant].sort((a, b) => 
 				a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 			);
 			
-			console.log('🔍 DEBUG: Merchants after addition and sort:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after addition and sort:', data.merchants.map(m => m.merchant));
 			
 			// Note: No longer need to update picker state - modal will fetch fresh data when opened
 			
@@ -145,7 +144,7 @@
 
 		async function removeMerchant(merchantName) {
 		console.log('🔍 DEBUG: removeMerchant called with:', merchantName);
-		console.log('🔍 DEBUG: Current merchants before removal:', merchants.map(m => m.merchant));
+		console.log('🔍 DEBUG: Current merchants before removal:', data.merchants.map(m => m.merchant));
 		console.log('🔍 DEBUG: Current UI state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		
 		// No confirm needed; removal is safe and reversible by re-adding
@@ -188,20 +187,20 @@
 			}
 
 			console.log('🔍 DEBUG: API call successful, updating UI state');
-			console.log('🔍 DEBUG: Merchants before filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants before filter:', data.merchants.map(m => m.merchant));
 			
 			// Remove the merchant from the local UI state
-			const merchantsBefore = merchants.length;
-			const merchantsBeforeRef = merchants; // Store reference to check if it changed
+			const merchantsBefore = data.merchants.length;
+			const merchantsBeforeRef = data.merchants; // Store reference to check if it changed
 			
-			// Update the reactive merchants state
-			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
-			const merchantsAfter = merchants.length;
+			// Update data.merchants directly - it's already reactive as a $prop
+			data.merchants = data.merchants.filter(merchant => merchant.merchant !== merchantName);
+			const merchantsAfter = data.merchants.length;
 			
 			// Debug: Verify the array change was detected
-			console.log('🔍 DEBUG: Array reference changed:', merchants !== merchantsBeforeRef);
+			console.log('🔍 DEBUG: Array reference changed:', data.merchants !== merchantsBeforeRef);
 			
-			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
+			console.log('🔍 DEBUG: Merchants after filter:', data.merchants.map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
 			console.log('🔍 DEBUG: Merchant removed successfully:', merchantsBefore > merchantsAfter);
 			
@@ -400,7 +399,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.length === 0}
+		{#if data.merchants.length === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -409,9 +408,9 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({data.merchants.length})</h3>
 				<div class="grid gap-3">
-					{#each merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each data.merchants as merchant (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
