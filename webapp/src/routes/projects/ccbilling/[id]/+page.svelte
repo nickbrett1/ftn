@@ -3,6 +3,7 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
+	import Fireworks from '$lib/components/Fireworks.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
@@ -28,6 +29,14 @@
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
 		localData.autoAssociations = data.autoAssociations;
+	});
+
+	// Watch for changes in charges to check for fireworks
+	$effect(() => {
+		// Only check for fireworks if we have charges
+		if (localData.charges.length > 0) {
+			checkForFireworks();
+		}
 	});
 
 
@@ -254,6 +263,10 @@
 	let showCardDetails = $state(false);
 	let selectedCardName = $state('');
 
+	// Fireworks state
+	let showFireworks = $state(false);
+	let previousUnallocatedTotal = $state(null);
+
 	function showCardInfo(cardName) {
 		selectedCardName = cardName;
 		showCardDetails = true;
@@ -340,6 +353,41 @@
 		});
 	}
 
+	// Get the current unallocated total
+	function getUnallocatedTotal() {
+		const totals = localData.charges.reduce((totals, charge) => {
+			const allocation = charge.allocated_to || '__unallocated__';
+			if (!totals[allocation]) {
+				totals[allocation] = 0;
+			}
+			totals[allocation] += charge.amount;
+			return totals;
+		}, {});
+		
+		return totals['__unallocated__'] || 0;
+	}
+
+	// Check if unallocated total reached zero and trigger fireworks
+	function checkForFireworks() {
+		const currentUnallocatedTotal = getUnallocatedTotal();
+		
+		// Only trigger fireworks if:
+		// 1. We have a previous total (not the first load)
+		// 2. Previous total was greater than 0
+		// 3. Current total is exactly 0
+		if (previousUnallocatedTotal !== null && 
+			previousUnallocatedTotal > 0 && 
+			currentUnallocatedTotal === 0) {
+			showFireworks = true;
+			// Auto-hide fireworks after animation completes
+			setTimeout(() => {
+				showFireworks = false;
+			}, 15000);
+		}
+		
+		previousUnallocatedTotal = currentUnallocatedTotal;
+	}
+
 	// Get budget names for allocation options (including null for unallocated)
 	let budgetNames = $derived(localData.budgets.map((b) => b.name));
 
@@ -422,6 +470,9 @@
 			localData.charges = localData.charges.map((c, index) =>
 				index === chargeIndex ? { ...c, allocated_to: newAllocation } : c
 			);
+			
+			// Check for fireworks after local update
+			checkForFireworks();
 		}
 
 		try {
@@ -1630,6 +1681,9 @@
 {/if}
 
 <Footer />
+
+<!-- Fireworks Animation -->
+<Fireworks show={showFireworks} />
 
 <!-- Fixed Footer with Running Totals -->
 {#if localData.charges.length > 0}
