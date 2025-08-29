@@ -29,9 +29,14 @@
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
 		localData.autoAssociations = data.autoAssociations;
-		
-		// Check for fireworks after data updates
-		checkForFireworks();
+	});
+
+	// Watch for changes in charges to check for fireworks
+	$effect(() => {
+		// Only check for fireworks if we have charges
+		if (localData.charges.length > 0) {
+			checkForFireworks();
+		}
 	});
 
 
@@ -366,15 +371,6 @@
 	function checkForFireworks() {
 		const currentUnallocatedTotal = getUnallocatedTotal();
 		
-		// Debug logging
-		console.log('Fireworks check:', {
-			previous: previousUnallocatedTotal,
-			current: currentUnallocatedTotal,
-			shouldTrigger: previousUnallocatedTotal !== null && 
-				previousUnallocatedTotal > 0 && 
-				currentUnallocatedTotal === 0
-		});
-		
 		// Only trigger fireworks if:
 		// 1. We have a previous total (not the first load)
 		// 2. Previous total was greater than 0
@@ -382,7 +378,6 @@
 		if (previousUnallocatedTotal !== null && 
 			previousUnallocatedTotal > 0 && 
 			currentUnallocatedTotal === 0) {
-			console.log('🎆 FIREWORKS TRIGGERED! Unallocated total reached zero!');
 			showFireworks = true;
 			// Auto-hide fireworks after animation completes
 			setTimeout(() => {
@@ -899,20 +894,6 @@
 				}}
 			>
 				Delete Cycle
-			</Button>
-			<!-- Temporary test button for fireworks -->
-			<Button
-				variant="secondary"
-				size="sm"
-				onclick={() => {
-					console.log('🎆 Manual fireworks test triggered!');
-					showFireworks = true;
-					setTimeout(() => {
-						showFireworks = false;
-					}, 5000);
-				}}
-			>
-				Test Fireworks
 			</Button>
 		</div>
 	</div>
