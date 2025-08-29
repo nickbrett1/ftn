@@ -488,7 +488,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the DELETE API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the DELETE API call format (should be the second call)
@@ -547,7 +547,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Now try to interact with other UI elements - they should still work
@@ -639,7 +639,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Step 3: Wait for the addition to complete and verify it appears in UI
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant appears in the UI
@@ -851,7 +851,7 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Step 5: Verify the API call was made with correct parameters
-		const removeCall = mockFetch.mock.calls[2];
+		const removeCall = mockFetch.mock.calls[4]; // Now the 5th call (after initial load + add + refresh + remove + refresh)
 		expect(removeCall[0]).toBe('/projects/ccbilling/budgets/test-budget-id/merchants');
 		expect(removeCall[1]).toEqual({
 			method: 'DELETE',
