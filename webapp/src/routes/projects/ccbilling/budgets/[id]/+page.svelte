@@ -26,7 +26,7 @@
 	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
-	// No longer needed - MerchantPicker is now fully reactive
+	let merchantPickerRef = null;
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');
@@ -92,7 +92,8 @@
 			// Reset form
 			selectedMerchant = '';
 			
-			// No need to refresh picker - it's now reactive to assignedMerchantNames!
+			// Tell the picker to refresh its merchant list
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
@@ -128,7 +129,8 @@
 			}
 			
 			// Refresh picker to re-add removed merchant to list
-			// No need to refresh picker - it's now reactive to assignedMerchantNames!
+			// Tell the picker to refresh its merchant list
+			merchantPickerRef?.refreshMerchantList();
 		} catch (error) {
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
@@ -289,6 +291,7 @@
 					onSelect={(merchant) => (selectedMerchant = merchant)}
 					placeholder="Choose a merchant to assign to this budget..."
 					assignedMerchants={assignedMerchantNames}
+					bind:this={merchantPickerRef}
 				/>
 				</div>
 				{#if addError}

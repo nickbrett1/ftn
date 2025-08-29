@@ -814,7 +814,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Step 2: Verify the merchant was added to the UI
@@ -847,7 +847,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// Step 5: Verify the API call was made with correct parameters
@@ -928,7 +928,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Step 2: Verify the merchant was added to the UI
@@ -947,7 +947,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// Step 5: CRITICAL - Check if the merchant is still visible in the UI
@@ -1023,7 +1023,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Get the remove buttons
@@ -1035,7 +1035,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// Simulate the bug: UI doesn't update, so the remove button is still there
@@ -1105,7 +1105,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1124,7 +1124,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// CRITICAL TEST: Check if the UI actually updated
@@ -1192,7 +1192,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1211,7 +1211,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// CRITICAL: Check if the UI actually updated
@@ -1280,7 +1280,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1299,7 +1299,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// CRITICAL: Check if the UI actually updated
@@ -1367,7 +1367,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1386,7 +1386,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// Wait a bit longer to ensure any async UI updates complete
@@ -1467,7 +1467,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1486,7 +1486,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the removal API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenCalledTimes(5); // Initial load + add merchant + refresh + remove merchant + refresh
 		});
 
 		// CRITICAL: Check if the UI actually updated after first removal
@@ -1570,7 +1570,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
@@ -1693,7 +1693,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for addition to complete
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
 		});
 
 		// Verify the merchant was added to the UI
