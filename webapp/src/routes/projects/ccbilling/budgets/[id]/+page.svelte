@@ -192,10 +192,14 @@
 			const merchantsBefore = merchants.length;
 			const merchantsBeforeRef = merchants; // Store reference to check if it changed
 			
-			// TEMPORARILY REMOVE FIX TO TEST BUG REPRODUCTION
-			// Original code that might cause the bug
+			// PRODUCTION FIX: Force Svelte reactivity with multiple approaches
+			// Method 1: Direct filter assignment
 			merchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			const merchantsAfter = merchants.length;
+			
+			// Method 2: Force reactivity by triggering a re-assignment
+			// This ensures Svelte 5 detects the change in production
+			merchants = [...merchants];
 			
 			// Additional debugging to understand the production issue
 			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
@@ -240,10 +244,33 @@
 				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
 				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
 				
-				// TEMPORARILY REMOVE AGGRESSIVE FIX TO TEST BUG REPRODUCTION
+				// AGGRESSIVE FIX: Force a complete re-render if merchant is still visible
 				if (merchantStillVisible) {
-					console.log('🚨 PRODUCTION BUG DETECTED: UI did not update after removal');
-					console.log('🚨 This should now be reproducible in browser: true test environment');
+					console.log('🚨 PRODUCTION BUG DETECTED: Forcing aggressive UI update');
+					
+					// Method 1: Force Svelte to re-render by triggering a state change
+					merchants = [...merchants];
+					
+					// Method 2: Force DOM update by temporarily hiding and showing the list
+					if (merchantList) {
+						merchantList.style.display = 'none';
+						setTimeout(() => {
+							merchantList.style.display = '';
+							console.log('🔍 DEBUG: Forced DOM re-render completed');
+						}, 1);
+					}
+					
+					// Method 3: Force a complete component re-render by triggering a state change
+					setTimeout(() => {
+						// Force a re-render by updating a dummy state variable
+						// This ensures the entire component re-renders
+						const currentMerchants = merchants;
+						merchants = [];
+						setTimeout(() => {
+							merchants = currentMerchants;
+							console.log('🔍 DEBUG: Forced component re-render completed');
+						}, 1);
+					}, 5);
 				}
 				
 				// This ensures the UI re-renders with the updated merchants array
