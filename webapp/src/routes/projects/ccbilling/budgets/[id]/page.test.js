@@ -528,6 +528,11 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Find the merchant select dropdown
 		const selectElement = getByRole('combobox');
 		expect(selectElement).toBeTruthy();
@@ -617,6 +622,11 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Step 1: Select a merchant from the combo box
 		const selectElement = getByRole('combobox');
 		expect(selectElement).toBeTruthy();
@@ -703,6 +713,11 @@ describe('Budget Page - Merchant Removal', () => {
 		// Don't test the remove button before adding - just verify it exists
 		console.log('Remove button exists before adding merchant:', initialRemoveButtons.length > 0);
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Select a merchant from the combo box
 		const selectElement = getByRole('combobox');
 		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
@@ -779,6 +794,16 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(initialMerchantList.textContent).toContain('amazon');
 		expect(initialMerchantList.textContent).toContain('target');
 		expect(initialMerchantList.textContent).not.toContain('walmart');
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Step 1: Add a merchant
 		const selectElement = getByRole('combobox');
@@ -889,6 +914,11 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Step 1: Add a merchant
 		const selectElement = getByRole('combobox');
 		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
@@ -979,6 +1009,11 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Add a merchant
 		const selectElement = getByRole('combobox');
 		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
@@ -1055,6 +1090,11 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add a merchant
 		const selectElement = getByRole('combobox');
@@ -1137,6 +1177,11 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add a merchant
 		const selectElement = getByRole('combobox');
@@ -1221,6 +1266,11 @@ describe('Budget Page - Merchant Removal', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
 
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
 		// Add a merchant
 		const selectElement = getByRole('combobox');
 		await fireEvent.change(selectElement, { target: { value: 'walmart' } });
@@ -1302,6 +1352,11 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add a merchant
 		const selectElement = getByRole('combobox');
@@ -1392,6 +1447,16 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add a merchant
 		const selectElement = getByRole('combobox');
@@ -1490,6 +1555,11 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add a merchant
 		const selectElement = getByRole('combobox');
@@ -1608,6 +1678,11 @@ describe('Budget Page - Merchant Removal', () => {
 		await waitFor(() => {
 			expect(mockFetch).toHaveBeenCalledTimes(1);
 		});
+
+		// Wait for MerchantPicker to finish loading and render the select element
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		}, { timeout: 3000 });
 
 		// Add the exact merchant from production logs
 		const selectElement = getByRole('combobox');
