@@ -74,21 +74,13 @@
 		localSelectedMerchant = selectedMerchant || '';
 	});
 
-	// Track changes to assigned merchants to detect removals
-	let lastAssignedMerchants = new Set();
-	$effect(() => {
-		// When assignedMerchants changes, check if any merchants were removed
-		// and add them to our available list
-		for (const merchant of lastAssignedMerchants) {
-			if (!assignedMerchants.has(merchant)) {
-				// This merchant was removed, add it to our available list if not already there
-				if (!allUnassignedMerchants.some(m => m.toLowerCase() === merchant.toLowerCase())) {
-					allUnassignedMerchants = [...allUnassignedMerchants, merchant];
-				}
-			}
-		}
-		lastAssignedMerchants = new Set(assignedMerchants);
-	});
+	// Expose refresh function to parent
+	async function refreshMerchantList() {
+		await loadUnassignedMerchants();
+	}
+
+	// Export the function for parent components
+	export { refreshMerchantList };
 
 	onMount(() => {
 		loadUnassignedMerchants();
