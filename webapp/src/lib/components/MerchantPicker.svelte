@@ -11,13 +11,13 @@
 
 	// Reactive state
 	let allUnassignedMerchants = $state([]);
-	let merchants = $state([]);
+
 	let isLoading = $state(true);
 	let error = $state('');
 	let showModal = $state(false);
 	let localSelectedMerchant = $state('');
 	
-	// Derived state - automatically filter out assigned merchants
+	// Derived state - filter out currently assigned merchants
 	let availableMerchants = $derived(
 		allUnassignedMerchants.filter(merchant => 
 			!assignedMerchants.has(merchant.toLowerCase())
@@ -72,6 +72,22 @@
 	// Sync local state with parent prop
 	$effect(() => {
 		localSelectedMerchant = selectedMerchant || '';
+	});
+
+	// Track changes to assigned merchants to detect removals
+	let lastAssignedMerchants = new Set();
+	$effect(() => {
+		// When assignedMerchants changes, check if any merchants were removed
+		// and add them to our available list
+		for (const merchant of lastAssignedMerchants) {
+			if (!assignedMerchants.has(merchant)) {
+				// This merchant was removed, add it to our available list if not already there
+				if (!allUnassignedMerchants.some(m => m.toLowerCase() === merchant.toLowerCase())) {
+					allUnassignedMerchants = [...allUnassignedMerchants, merchant];
+				}
+			}
+		}
+		lastAssignedMerchants = new Set(assignedMerchants);
 	});
 
 	onMount(() => {
