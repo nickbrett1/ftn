@@ -190,10 +190,16 @@
 			
 			// Remove the merchant from the local UI state
 			const merchantsBefore = merchants.length;
-			// FIXED VERSION: Force reactivity by creating a completely new array and triggering update
+			// ENHANCED FIX: Force reactivity with multiple approaches
 			const filteredMerchants = merchants.filter(merchant => merchant.merchant !== merchantName);
 			merchants = filteredMerchants; // Direct assignment to trigger reactivity
 			const merchantsAfter = merchants.length;
+			
+			// Additional debugging to understand the production issue
+			console.log('🔍 DEBUG: Reactivity check - merchants array reference changed:', 
+				merchants !== merchants, 'Length:', merchants.length);
+			console.log('🔍 DEBUG: DOM elements before update:', 
+				document.querySelectorAll('.merchant-list .merchant-item').length);
 			
 			console.log('🔍 DEBUG: Merchants after filter:', merchants.map(m => m.merchant));
 			console.log('🔍 DEBUG: Merchant count changed from', merchantsBefore, 'to', merchantsAfter);
@@ -202,6 +208,15 @@
 			// Force UI update by triggering a small delay
 			setTimeout(() => {
 				console.log('🔍 DEBUG: Forcing UI update after merchant removal');
+				console.log('🔍 DEBUG: DOM elements after update:', 
+					document.querySelectorAll('.merchant-list .merchant-item').length);
+				console.log('🔍 DEBUG: Merchant list HTML content:', 
+					document.querySelector('.merchant-list')?.textContent?.substring(0, 200));
+				
+				// Check if the merchant is still visible in the DOM
+				const merchantStillVisible = document.querySelector('.merchant-list')?.textContent?.includes(merchantName);
+				console.log('🔍 DEBUG: Merchant still visible in DOM after removal:', merchantStillVisible);
+				
 				// This ensures the UI re-renders with the updated merchants array
 			}, 10);
 			
