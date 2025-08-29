@@ -149,6 +149,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		// Mock the recent merchants endpoint (third call - refresh after addition)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -243,6 +249,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock the recent merchants endpoint (third call - refresh after addition)
@@ -395,6 +407,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		// Mock successful removal response (third call - remove merchant)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -519,6 +537,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		const { container, getByRole, getByText } = render(BudgetPage, {
 			props: { data: mockData }
 		});
@@ -613,6 +637,18 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		const { container, getByRole, getByText } = render(BudgetPage, {
 			props: { data: mockData }
 		});
@@ -703,6 +739,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		const { container, getByRole } = render(BudgetPage, {
 			props: { data: mockData }
 		});
@@ -784,6 +826,18 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		const { container, getByRole, getByText } = render(BudgetPage, {
@@ -901,6 +955,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		// Mock successful removal response (third call - remove merchant)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -996,6 +1056,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		// Mock successful removal response (third call - remove merchant)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -1076,6 +1142,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - remove merchant)
@@ -1163,6 +1235,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - remove merchant)
@@ -1253,6 +1331,12 @@ describe('Budget Page - Merchant Removal', () => {
 			json: async () => ({ success: true })
 		});
 
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
+		});
+
 		// Mock successful removal response (third call - remove merchant)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -1338,6 +1422,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - remove merchant)
@@ -1433,6 +1523,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - remove merchant)
@@ -1531,6 +1627,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - first remove attempt)
@@ -1654,6 +1756,12 @@ describe('Budget Page - Merchant Removal', () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		// Mock successful removal response (third call - first remove attempt)
