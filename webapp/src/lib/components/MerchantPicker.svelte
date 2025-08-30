@@ -46,6 +46,16 @@
 		}
 	});
 
+	// Add a small delay to ensure UI updates after state changes
+	$effect(() => {
+		if (!isLoading && availableMerchants.length > 0) {
+			// Use a microtask to ensure DOM updates happen after state changes
+			Promise.resolve().then(() => {
+				if (DEBUG) console.log('🔄 Microtask: UI should now show merchants');
+			});
+		}
+	});
+
 	async function loadUnassignedMerchants() {
 		if (DEBUG) {
 			console.log('🔄 MerchantPicker.loadUnassignedMerchants called');
@@ -202,7 +212,7 @@
 	<div class="space-y-3">
 		<!-- Loading state -->
 		{#if isLoading}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" key="loading-{merchantsVersion}">
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 				Loading recent merchants...
 			</div>
 		{/if}
@@ -216,19 +226,18 @@
 		
 		<!-- Empty state -->
 		{#if showEmptyState}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" key="empty-{merchantsVersion}">
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 				No recent unassigned merchants found
 			</div>
 		{/if}
 		
 		<!-- Merchants select -->
-		{#if !isLoading && !error}
+		{#if !isLoading && !error && availableMerchants.length > 0}
 			<select
 				id="merchant-picker"
 				bind:value={localSelectedMerchant}
 				onchange={handleSelect}
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				key={merchantsVersion}
 			>
 				<option value="">{placeholder}</option>
 				{#each displayMerchants as merchant}
