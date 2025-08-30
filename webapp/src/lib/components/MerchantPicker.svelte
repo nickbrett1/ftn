@@ -31,28 +31,10 @@
 	let hasMerchants = $derived(availableMerchants.length > 0);
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 	
-	// Force UI update when merchants change
-	let merchantsVersion = $state(0);
+	// Track merchants changes for debugging
 	$effect(() => {
-		// This effect will run whenever availableMerchants changes
-		availableMerchants.length; // Access the length to make this reactive
-		merchantsVersion++;
-		if (DEBUG) console.log('🔄 Merchants changed, forcing UI update, version:', merchantsVersion);
-		
-		// Force a UI update by triggering a re-render
-		if (!isLoading && availableMerchants.length > 0) {
-			if (DEBUG) console.log('🔄 Forcing UI to show merchants instead of loading');
-			// This should trigger the UI to switch from loading to showing merchants
-		}
-	});
-
-	// Add a small delay to ensure UI updates after state changes
-	$effect(() => {
-		if (!isLoading && availableMerchants.length > 0) {
-			// Use a microtask to ensure DOM updates happen after state changes
-			Promise.resolve().then(() => {
-				if (DEBUG) console.log('🔄 Microtask: UI should now show merchants');
-			});
+		if (DEBUG) {
+			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
 		}
 	});
 
@@ -232,7 +214,7 @@
 		{/if}
 		
 		<!-- Merchants select -->
-		{#if !isLoading && !error && availableMerchants.length > 0}
+		{#if !isLoading && !error}
 			<select
 				id="merchant-picker"
 				bind:value={localSelectedMerchant}
