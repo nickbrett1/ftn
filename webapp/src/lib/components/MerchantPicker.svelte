@@ -39,7 +39,15 @@
 			isLoading = true;
 			error = '';
 
-			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			// Add timeout to prevent hanging requests
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+			const response = await fetch('/projects/ccbilling/budgets/recent-merchants', {
+				signal: controller.signal
+			});
+			
+			clearTimeout(timeoutId);
 			
 			if (!response.ok) {
 				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
@@ -50,7 +58,12 @@
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
 			// No need to set merchants - it's now derived from allUnassignedMerchants and assignedMerchants
 		} catch (err) {
-			error = err.message || 'Failed to load merchants';
+			if (err.name === 'AbortError') {
+				error = 'Request timed out. Please try again.';
+			} else {
+				error = err.message || 'Failed to load merchants';
+			}
+			console.error('MerchantPicker loadUnassignedMerchants error:', err);
 		} finally {
 			isLoading = false;
 			isLoadingInProgress = false;
@@ -84,13 +97,25 @@
 
 	// Expose refresh function to parent
 	async function refreshMerchantList() {
-		// If a load is already in progress, wait for it to complete
+		// If a load is already in progress, wait for it to complete with timeout
 		if (isLoadingInProgress) {
-			// Wait for the current load to finish
-			while (isLoadingInProgress) {
+			// Wait for the current load to finish, but with a timeout to prevent infinite waiting
+			const maxWaitTime = 5000; // 5 seconds
+			const startTime = Date.now();
+			
+			while (isLoadingInProgress && (Date.now() - startTime) < maxWaitTime) {
 				await new Promise(resolve => setTimeout(resolve, 50));
 			}
-			return;
+			
+			// If we timed out, force reset the loading state and proceed
+			if (isLoadingInProgress) {
+				console.warn('MerchantPicker: Initial load timed out, forcing refresh');
+				isLoadingInProgress = false;
+				isLoading = false;
+			} else {
+				// Initial load completed successfully, no need to refresh
+				return;
+			}
 		}
 		
 		await loadUnassignedMerchants();

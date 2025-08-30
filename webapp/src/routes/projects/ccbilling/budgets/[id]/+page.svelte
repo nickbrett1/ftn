@@ -131,8 +131,16 @@
 			}
 			
 			// Refresh picker to re-add removed merchant to list
-			// Tell the picker to refresh its merchant list
-			merchantPickerRef?.refreshMerchantList();
+			// Tell the picker to refresh its merchant list with timeout protection
+			try {
+				await Promise.race([
+					merchantPickerRef?.refreshMerchantList(),
+					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
+				]);
+			} catch (error) {
+				console.warn('MerchantPicker refresh failed:', error);
+				// Continue anyway - the UI will still work, just the picker might not be updated
+			}
 		} catch (error) {
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
