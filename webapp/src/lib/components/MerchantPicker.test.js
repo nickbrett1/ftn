@@ -31,7 +31,9 @@ describe('MerchantPicker', () => {
 			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
 		});
 
-		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
+		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants', {
+			signal: expect.any(AbortSignal)
+		});
 	});
 
 	it('should render merchants when API call succeeds', async () => {
@@ -531,7 +533,12 @@ describe('MerchantPicker', () => {
 		});
 		
 		// Mock fetch to return a promise that we can control
-		mockFetch.mockImplementation(() => initialLoadPromise);
+		mockFetch.mockImplementation((url, options) => {
+			// Verify the fetch is called with the expected URL and AbortSignal
+			expect(url).toBe('/projects/ccbilling/budgets/recent-merchants');
+			expect(options?.signal).toBeInstanceOf(AbortSignal);
+			return initialLoadPromise;
+		});
 		
 		const { getByText, component } = render(MerchantPicker, {
 			props: {
@@ -576,8 +583,11 @@ describe('MerchantPicker', () => {
 		let fetchCallCount = 0;
 		
 		// Mock fetch to track how many times it's called
-		mockFetch.mockImplementation(() => {
+		mockFetch.mockImplementation((url, options) => {
 			fetchCallCount++;
+			// Verify the fetch is called with the expected URL and AbortSignal
+			expect(url).toBe('/projects/ccbilling/budgets/recent-merchants');
+			expect(options?.signal).toBeInstanceOf(AbortSignal);
 			return Promise.resolve({
 				ok: true,
 				json: async () => mockMerchants
@@ -623,7 +633,12 @@ describe('MerchantPicker', () => {
 		});
 		
 		// Mock fetch to return a controlled promise
-		mockFetch.mockImplementation(() => initialLoadPromise);
+		mockFetch.mockImplementation((url, options) => {
+			// Verify the fetch is called with the expected URL and AbortSignal
+			expect(url).toBe('/projects/ccbilling/budgets/recent-merchants');
+			expect(options?.signal).toBeInstanceOf(AbortSignal);
+			return initialLoadPromise;
+		});
 		
 		const { component } = render(MerchantPicker, {
 			props: {
