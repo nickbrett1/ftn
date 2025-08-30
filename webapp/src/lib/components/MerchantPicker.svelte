@@ -51,6 +51,17 @@
 		}
 	});
 
+	// Track authentication state changes
+	$effect(() => {
+		if (DEBUG) {
+			// Check if auth cookie changes might be affecting the component
+			const authCookie = document.cookie.match(/(^| )auth=([^;]+)/);
+			if (authCookie) {
+				console.log('🍪 Auth cookie detected:', authCookie[2] !== 'deleted' ? 'present' : 'deleted');
+			}
+		}
+	});
+
 	async function loadUnassignedMerchants() {
 		if (DEBUG) {
 			console.log('🔄 MerchantPicker.loadUnassignedMerchants called');
@@ -111,6 +122,12 @@
 			if (DEBUG) console.log('📊 Final UI state - isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress);
 			if (DEBUG) console.log('📊 Final merchants count:', allUnassignedMerchants.length);
 			if (DEBUG) console.log('📊 Available merchants count:', availableMerchants.length);
+			
+			// Check for state corruption after the operation
+			if (isLoading || isLoadingInProgress) {
+				console.error('🚨 STATE CORRUPTION DETECTED: Loading state not properly reset!');
+				console.error('🚨 isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress);
+			}
 		}
 	}
 
