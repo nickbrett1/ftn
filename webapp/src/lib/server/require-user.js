@@ -4,7 +4,7 @@
  */
 export async function requireUser(event) {
 	const startTime = Date.now();
-	const url = event.url.pathname;
+	const url = event.url?.pathname || 'unknown';
 	const isTest = process.env.NODE_ENV === 'test' || event.request?.headers?.get('x-dev-test') === 'true';
 	
 	// Development testing bypass - only in dev mode with special header
