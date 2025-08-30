@@ -154,6 +154,7 @@
 				if (merchant.merchant === merchantName) {
 					merchants.delete(merchant);
 					if (DEBUG) console.log('✅ Merchant removed from reactive collection');
+					if (DEBUG) console.log('📊 Merchants count after removal:', merchants.size);
 					break;
 				}
 			}
@@ -173,6 +174,16 @@
 					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
 				]);
 				if (DEBUG) console.log('✅ refreshMerchantList completed successfully');
+			
+			// Add a small delay to let DOM updates complete, then check UI state
+			setTimeout(() => {
+				if (DEBUG) {
+					console.log('🔍 Post-refresh UI check:');
+					console.log('🔍 Button should show "Remove" (not "Removing..."):', !isDeleting);
+					console.log('🔍 Combo box should not show "Loading...":', !document.querySelector('div')?.textContent?.includes('Loading recent merchants...'));
+					console.log('🔍 Merchants count:', merchants.size);
+				}
+			}, 100);
 			} catch (error) {
 				console.warn('⚠️ MerchantPicker refresh failed:', error);
 				// Continue anyway - the UI will still work, just the picker might not be updated
@@ -185,6 +196,9 @@
 			deletingMerchant = null;
 			isDeleting = false;
 			if (DEBUG) console.log('✅ State reset complete');
+			if (DEBUG) console.log('📊 Final merchants count:', merchants.size);
+			if (DEBUG) console.log('📊 Final deletingMerchant:', deletingMerchant);
+			if (DEBUG) console.log('📊 Final isDeleting:', isDeleting);
 		}
 	}
 

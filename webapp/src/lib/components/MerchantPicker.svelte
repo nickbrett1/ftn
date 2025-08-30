@@ -88,6 +88,9 @@
 			isLoading = false;
 			isLoadingInProgress = false;
 			if (DEBUG) console.log('✅ Loading state reset complete');
+			if (DEBUG) console.log('📊 Final UI state - isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress);
+			if (DEBUG) console.log('📊 Final merchants count:', allUnassignedMerchants.length);
+			if (DEBUG) console.log('📊 Available merchants count:', availableMerchants.length);
 		}
 	}
 
@@ -114,6 +117,21 @@
 	// Sync local state with parent prop
 	$effect(() => {
 		localSelectedMerchant = selectedMerchant || '';
+	});
+
+	// Track UI state changes
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🎨 UI State Change - isLoading:', isLoading, 'error:', error, 'hasMerchants:', hasMerchants, 'showEmptyState:', showEmptyState);
+		}
+	});
+
+	// Track assignedMerchants changes
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🔗 assignedMerchants changed:', assignedMerchants.size, 'merchants');
+			console.log('🔗 availableMerchants count:', availableMerchants.length);
+		}
 	});
 
 	// Expose refresh function to parent
