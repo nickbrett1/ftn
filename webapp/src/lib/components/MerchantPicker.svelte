@@ -36,6 +36,16 @@
 		if (DEBUG) {
 			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
 		}
+		
+		// Force UI update after auth - this is a workaround for reactivity issues
+		if (availableMerchants.length > 0 && isLoading === false && error === null) {
+			// Use a microtask to ensure DOM updates happen
+			Promise.resolve().then(() => {
+				if (DEBUG) {
+					console.log('🔄 Force UI update triggered - availableMerchants:', availableMerchants.length, 'isLoading:', isLoading);
+				}
+			});
+		}
 	});
 
 	// Track potential state corruption
@@ -160,6 +170,7 @@
 	$effect(() => {
 		if (DEBUG) {
 			console.log('🎨 UI State Change - isLoading:', isLoading, 'error:', error, 'hasMerchants:', hasMerchants, 'showEmptyState:', showEmptyState);
+			console.log('🎨 UI State Change - availableMerchants.length:', availableMerchants.length, 'isLoadingInProgress:', isLoadingInProgress);
 		}
 	});
 

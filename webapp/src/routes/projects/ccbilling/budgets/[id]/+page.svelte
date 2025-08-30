@@ -41,6 +41,21 @@
 			});
 		}
 	});
+	
+	// Track auth cookie changes
+	$effect(() => {
+		if (DEBUG) {
+			const authCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth='));
+			console.log('🍪 Auth cookie detected:', authCookie ? 'present' : 'not found');
+		}
+	});
+	
+	// Track when merchantPickerRef becomes available
+	$effect(() => {
+		if (DEBUG && merchantPickerRef) {
+			console.log('🔗 MerchantPicker ref available - isLoading:', merchantPickerRef.isLoading, 'availableMerchants:', merchantPickerRef.availableMerchants?.length);
+		}
+	});
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');
@@ -182,6 +197,17 @@
 					console.log('🔍 Button should show "Remove" (not "Removing..."):', !isDeleting);
 					console.log('🔍 Combo box should not show "Loading...":', !document.querySelector('div')?.textContent?.includes('Loading recent merchants...'));
 					console.log('🔍 Merchants count:', merchants.size);
+					
+					// Check actual DOM state
+					const selectElement = document.querySelector('select[data-testid="merchant-select"]');
+					const loadingDiv = document.querySelector('[data-testid="merchant-loading"]');
+					const emptyDiv = document.querySelector('[data-testid="merchant-empty"]');
+					
+					console.log('🔍 DOM State Check:');
+					console.log('🔍 Select element visible:', selectElement ? selectElement.style.display !== 'none' : 'not found');
+					console.log('🔍 Loading div visible:', loadingDiv ? loadingDiv.style.display !== 'none' : 'not found');
+					console.log('🔍 Empty div visible:', emptyDiv ? emptyDiv.style.display !== 'none' : 'not found');
+					console.log('🔍 Select element disabled:', selectElement?.disabled);
 				}
 			}, 100);
 			} catch (error) {
