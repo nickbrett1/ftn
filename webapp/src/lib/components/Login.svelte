@@ -19,15 +19,8 @@
 	}
 
 	onMount(async () => {
-		// Check initial auth status
+		// Check initial auth status only
 		checkAuthStatus();
-		
-		// Set up periodic auth status check (every 2 seconds)
-		const authCheckInterval = setInterval(checkAuthStatus, 2000);
-		
-		return () => {
-			clearInterval(authCheckInterval);
-		};
 	});
 
 	async function onClick() {

@@ -1,6 +1,9 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
+
+	// Debug flag - always enabled for debugging
+	const DEBUG = true;
 
 	const {
 		selectedMerchant = '',
@@ -27,33 +30,114 @@
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));
 	let hasMerchants = $derived(availableMerchants.length > 0);
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
+	
+	// Track merchants changes for debugging
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
+		}
+		
+		// Force UI update after auth - this is a workaround for reactivity issues
+		if (availableMerchants.length > 0 && isLoading === false && error === null) {
+			// Use a microtask to ensure DOM updates happen
+			Promise.resolve().then(() => {
+				if (DEBUG) {
+					console.log('🔄 Force UI update triggered - availableMerchants:', availableMerchants.length, 'isLoading:', isLoading);
+				}
+			});
+		}
+	});
+
+	// Track potential state corruption
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🔍 State Check - isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress, 'error:', error);
+			if (isLoading && isLoadingInProgress) {
+				console.log('⚠️ Potential state corruption: both isLoading and isLoadingInProgress are true');
+			}
+			if (!isLoading && isLoadingInProgress) {
+				console.log('⚠️ Potential state corruption: isLoadingInProgress is true but isLoading is false');
+			}
+		}
+	});
+
+	// Track authentication state changes
+	$effect(() => {
+		if (DEBUG) {
+			// Check if auth cookie changes might be affecting the component
+			const authCookie = document.cookie.match(/(^| )auth=([^;]+)/);
+			if (authCookie) {
+				console.log('🍪 Auth cookie detected:', authCookie[2] !== 'deleted' ? 'present' : 'deleted');
+			}
+		}
+	});
 
 	async function loadUnassignedMerchants() {
+		if (DEBUG) {
+			console.log('🔄 MerchantPicker.loadUnassignedMerchants called');
+			console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
+		}
+		
 		// Prevent concurrent calls to avoid race conditions
 		if (isLoadingInProgress) {
+			if (DEBUG) console.log('❌ Load already in progress, returning early');
 			return;
 		}
 		
 		try {
+			if (DEBUG) console.log('✅ Setting loading state');
 			isLoadingInProgress = true;
 			isLoading = true;
 			error = '';
 
-			const response = await fetch('/projects/ccbilling/budgets/recent-merchants');
+			// Add timeout to prevent hanging requests
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => {
+				if (DEBUG) console.log('⏰ Request timeout reached, aborting');
+				controller.abort();
+			}, 10000); // 10 second timeout
+
+			if (DEBUG) console.log('🌐 Making fetch request to /projects/ccbilling/budgets/recent-merchants');
+			const response = await fetch('/projects/ccbilling/budgets/recent-merchants', {
+				signal: controller.signal
+			});
+			
+			clearTimeout(timeoutId);
+			if (DEBUG) console.log('📡 Fetch response received:', response.status, response.statusText);
 			
 			if (!response.ok) {
 				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
+			if (DEBUG) console.log('📊 Received merchant data:', data?.length || 0, 'merchants');
 			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
+			if (DEBUG) console.log('✅ Processed merchants:', allUnassignedMerchants.length);
 			// No need to set merchants - it's now derived from allUnassignedMerchants and assignedMerchants
 		} catch (err) {
-			error = err.message || 'Failed to load merchants';
+			console.error('❌ MerchantPicker loadUnassignedMerchants error:', err);
+			if (err.name === 'AbortError') {
+				error = 'Request timed out. Please try again.';
+				if (DEBUG) console.log('⏰ Request was aborted due to timeout');
+			} else {
+				error = err.message || 'Failed to load merchants';
+				if (DEBUG) console.log('❌ Request failed with error:', err.message);
+			}
 		} finally {
+			if (DEBUG) console.log('🏁 loadUnassignedMerchants finally block - resetting loading state');
 			isLoading = false;
 			isLoadingInProgress = false;
+			if (DEBUG) console.log('✅ Loading state reset complete');
+			if (DEBUG) console.log('📊 Final UI state - isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress);
+			if (DEBUG) console.log('📊 Final merchants count:', allUnassignedMerchants.length);
+			if (DEBUG) console.log('📊 Available merchants count:', availableMerchants.length);
+			
+			// Check for state corruption after the operation
+			if (isLoading || isLoadingInProgress) {
+				console.error('🚨 STATE CORRUPTION DETECTED: Loading state not properly reset!');
+				console.error('🚨 isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress);
+			}
 		}
 	}
 
@@ -82,25 +166,72 @@
 		localSelectedMerchant = selectedMerchant || '';
 	});
 
+	// Track UI state changes
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🎨 UI State Change - isLoading:', isLoading, 'error:', error, 'hasMerchants:', hasMerchants, 'showEmptyState:', showEmptyState);
+			console.log('🎨 UI State Change - availableMerchants.length:', availableMerchants.length, 'isLoadingInProgress:', isLoadingInProgress);
+		}
+	});
+
+	// Track assignedMerchants changes
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🔗 assignedMerchants changed:', assignedMerchants.size, 'merchants');
+			console.log('🔗 availableMerchants count:', availableMerchants.length);
+		}
+	});
+
 	// Expose refresh function to parent
 	async function refreshMerchantList() {
-		// If a load is already in progress, wait for it to complete
-		if (isLoadingInProgress) {
-			// Wait for the current load to finish
-			while (isLoadingInProgress) {
-				await new Promise(resolve => setTimeout(resolve, 50));
-			}
-			return;
+		if (DEBUG) {
+			console.log('🔄 MerchantPicker.refreshMerchantList called');
+			console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
 		}
 		
+		// If a load is already in progress, wait for it to complete with timeout
+		if (isLoadingInProgress) {
+			if (DEBUG) console.log('⏳ Load already in progress, waiting for completion...');
+			// Wait for the current load to finish, but with a timeout to prevent infinite waiting
+			const maxWaitTime = 5000; // 5 seconds
+			const startTime = Date.now();
+			
+			while (isLoadingInProgress && (Date.now() - startTime) < maxWaitTime) {
+				if (DEBUG) console.log('⏳ Still waiting for load to complete...', Date.now() - startTime, 'ms elapsed');
+				await new Promise(resolve => setTimeout(resolve, 50));
+			}
+			
+			// If we timed out, force reset the loading state and proceed
+			if (isLoadingInProgress) {
+				console.warn('⚠️ MerchantPicker: Initial load timed out, forcing refresh');
+				isLoadingInProgress = false;
+				isLoading = false;
+			} else {
+				// Initial load completed successfully, no need to refresh
+				if (DEBUG) console.log('✅ Initial load completed successfully, no refresh needed');
+				return;
+			}
+		}
+		
+		if (DEBUG) console.log('🔄 Proceeding with refresh...');
 		await loadUnassignedMerchants();
+		if (DEBUG) console.log('✅ refreshMerchantList completed');
 	}
 
 	// Export the function for parent components
 	export { refreshMerchantList };
 
 	onMount(() => {
+		if (DEBUG) console.log('🚀 MerchantPicker onMount called - starting initial load');
 		loadUnassignedMerchants();
+		
+		// Track component lifecycle
+		if (DEBUG) console.log('🚀 MerchantPicker mounted, component instance created');
+	});
+
+	// Track component destruction
+	onDestroy(() => {
+		if (DEBUG) console.log('🗑️ MerchantPicker onDestroy called - component being destroyed');
 	});
 </script>
 

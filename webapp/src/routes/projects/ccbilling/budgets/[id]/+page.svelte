@@ -29,6 +29,34 @@
 	let isDeleting = $state(false);
 	let merchantPickerRef = null;
 
+	// Debug flag - always enabled for debugging
+	const DEBUG = true;
+
+	// Track when merchantPickerRef is bound
+	$effect(() => {
+		if (merchantPickerRef && DEBUG) {
+			console.log('🔗 MerchantPicker ref bound:', !!merchantPickerRef);
+			console.log('🔗 MerchantPicker methods available:', {
+				refreshMerchantList: !!(merchantPickerRef?.refreshMerchantList)
+			});
+		}
+	});
+	
+	// Track auth cookie changes
+	$effect(() => {
+		if (DEBUG) {
+			const authCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth='));
+			console.log('🍪 Auth cookie detected:', authCookie ? 'present' : 'not found');
+		}
+	});
+	
+	// Track when merchantPickerRef becomes available
+	$effect(() => {
+		if (DEBUG && merchantPickerRef) {
+			console.log('🔗 MerchantPicker ref available - isLoading:', merchantPickerRef.isLoading, 'availableMerchants:', merchantPickerRef.availableMerchants?.length);
+		}
+	});
+
 	// Budget editing state
 	let editName = $state(budget?.name || '');
 	let editIcon = $state(budget?.icon || '');
@@ -104,40 +132,99 @@
 	}
 
 	async function removeMerchant(merchantName) {
-		if (isDeleting) return;
+		if (DEBUG) {
+			console.log('🔄 removeMerchant called for:', merchantName);
+			console.log('🔄 Current state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
+		}
 		
+		if (isDeleting) {
+			if (DEBUG) console.log('❌ Already deleting, returning early');
+			return;
+		}
+		
+		if (DEBUG) console.log('✅ Setting deletion state');
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
 		try {
+			if (DEBUG) console.log('🌐 Making DELETE request to remove merchant');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ merchant: merchantName })
 			});
 
+			if (DEBUG) console.log('📡 DELETE response received:', response.status, response.statusText);
+
 			if (!response.ok) {
 				const errorText = await response.text();
+				console.error('❌ DELETE request failed:', response.status, errorText);
 				alert(`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`);
 				return;
 			}
 
+			if (DEBUG) console.log('✅ DELETE request successful, removing from reactive collection');
 			// Remove from reactive collection
 			for (const merchant of merchants) {
 				if (merchant.merchant === merchantName) {
 					merchants.delete(merchant);
+					if (DEBUG) console.log('✅ Merchant removed from reactive collection');
+					if (DEBUG) console.log('📊 Merchants count after removal:', merchants.size);
 					break;
 				}
 			}
 			
+			if (DEBUG) {
+				console.log('🔄 About to refresh merchant picker');
+				console.log('🔄 merchantPickerRef exists:', !!merchantPickerRef);
+				console.log('🔄 merchantPickerRef.refreshMerchantList exists:', !!(merchantPickerRef?.refreshMerchantList));
+			}
+			
 			// Refresh picker to re-add removed merchant to list
-			// Tell the picker to refresh its merchant list
-			merchantPickerRef?.refreshMerchantList();
+			// Tell the picker to refresh its merchant list with timeout protection
+			try {
+				if (DEBUG) console.log('🔄 Starting refreshMerchantList with timeout protection');
+				await Promise.race([
+					merchantPickerRef?.refreshMerchantList(),
+					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
+				]);
+				if (DEBUG) console.log('✅ refreshMerchantList completed successfully');
+			
+			// Add a small delay to let DOM updates complete, then check UI state
+			setTimeout(() => {
+				if (DEBUG) {
+					console.log('🔍 Post-refresh UI check:');
+					console.log('🔍 Button should show "Remove" (not "Removing..."):', !isDeleting);
+					console.log('🔍 Combo box should not show "Loading...":', !document.querySelector('div')?.textContent?.includes('Loading recent merchants...'));
+					console.log('🔍 Merchants count:', merchants.size);
+					
+					// Check actual DOM state
+					const selectElement = document.querySelector('select[data-testid="merchant-select"]');
+					const loadingDiv = document.querySelector('[data-testid="merchant-loading"]');
+					const emptyDiv = document.querySelector('[data-testid="merchant-empty"]');
+					
+					console.log('🔍 DOM State Check:');
+					console.log('🔍 Select element visible:', selectElement ? selectElement.style.display !== 'none' : 'not found');
+					console.log('🔍 Loading div visible:', loadingDiv ? loadingDiv.style.display !== 'none' : 'not found');
+					console.log('🔍 Empty div visible:', emptyDiv ? emptyDiv.style.display !== 'none' : 'not found');
+					console.log('🔍 Select element disabled:', selectElement?.disabled);
+				}
+			}, 100);
+			} catch (error) {
+				console.warn('⚠️ MerchantPicker refresh failed:', error);
+				// Continue anyway - the UI will still work, just the picker might not be updated
+			}
 		} catch (error) {
+			console.error('❌ removeMerchant error:', error);
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
+			if (DEBUG) console.log('🏁 removeMerchant finally block - resetting state');
 			deletingMerchant = null;
 			isDeleting = false;
+			if (DEBUG) console.log('✅ State reset complete');
+			if (DEBUG) console.log('📊 Final merchants count:', merchants.size);
+			if (DEBUG) console.log('📊 Final deletingMerchant:', deletingMerchant);
+			if (DEBUG) console.log('📊 Final isDeleting:', isDeleting);
 		}
 	}
 
