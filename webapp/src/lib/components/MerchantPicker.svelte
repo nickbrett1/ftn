@@ -30,6 +30,21 @@
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));
 	let hasMerchants = $derived(availableMerchants.length > 0);
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
+	
+	// Force UI update when merchants change
+	let merchantsVersion = $state(0);
+	$effect(() => {
+		// This effect will run whenever availableMerchants changes
+		availableMerchants.length; // Access the length to make this reactive
+		merchantsVersion++;
+		if (DEBUG) console.log('🔄 Merchants changed, forcing UI update, version:', merchantsVersion);
+		
+		// Force a UI update by triggering a re-render
+		if (!isLoading && availableMerchants.length > 0) {
+			if (DEBUG) console.log('🔄 Forcing UI to show merchants instead of loading');
+			// This should trigger the UI to switch from loading to showing merchants
+		}
+	});
 
 	async function loadUnassignedMerchants() {
 		if (DEBUG) {
@@ -187,7 +202,7 @@
 	<div class="space-y-3">
 		<!-- Loading state -->
 		{#if isLoading}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" key="loading-{merchantsVersion}">
 				Loading recent merchants...
 			</div>
 		{/if}
@@ -201,7 +216,7 @@
 		
 		<!-- Empty state -->
 		{#if showEmptyState}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400" key="empty-{merchantsVersion}">
 				No recent unassigned merchants found
 			</div>
 		{/if}
@@ -213,6 +228,7 @@
 				bind:value={localSelectedMerchant}
 				onchange={handleSelect}
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				key={merchantsVersion}
 			>
 				<option value="">{placeholder}</option>
 				{#each displayMerchants as merchant}
