@@ -79,8 +79,14 @@ export async function POST(event) {
 }
 
 export async function DELETE(event) {
+	console.log(`[API] DELETE /merchants called for budget ${event.params.id}`);
+	const startTime = Date.now();
+	
 	const authError = await validateAuth(event);
-	if (authError) return authError;
+	if (authError) {
+		console.log(`[API] Auth failed for DELETE /merchants (${Date.now() - startTime}ms)`);
+		return authError;
+	}
 
 	const { id, error: idError } = validateBudgetId(event);
 	if (idError) return idError;
@@ -88,6 +94,8 @@ export async function DELETE(event) {
 	const { merchant, error: merchantError } = await validateMerchant(event);
 	if (merchantError) return merchantError;
 
+	console.log(`[API] Removing merchant "${merchant}" from budget ${id}`);
 	await removeBudgetMerchant(event, id, merchant);
+	console.log(`[API] DELETE /merchants completed successfully (${Date.now() - startTime}ms)`);
 	return createJsonResponse({ success: true });
 }
