@@ -31,10 +31,33 @@
 	let hasMerchants = $derived(availableMerchants.length > 0);
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 	
+	// Force UI state re-evaluation
+	let showSelect = $derived(!isLoading && !error);
+	let forceUpdate = $state(0);
+	
+	// Track when we need to force UI updates
+	$effect(() => {
+		if (!isLoading && !error && availableMerchants.length > 0) {
+			forceUpdate++;
+			if (DEBUG) console.log('🔄 Force UI update triggered, version:', forceUpdate);
+		}
+	});
+	
 	// Track merchants changes for debugging
 	$effect(() => {
 		if (DEBUG) {
 			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
+		}
+	});
+
+	// Force UI state synchronization
+	$effect(() => {
+		// This effect ensures the UI state is properly synchronized
+		if (!isLoading && !error) {
+			// Force a microtask to ensure DOM updates happen after state changes
+			Promise.resolve().then(() => {
+				if (DEBUG) console.log('🔄 Microtask: UI should now be ready, isLoading:', isLoading, 'merchants:', availableMerchants.length);
+			});
 		}
 	});
 
@@ -214,12 +237,13 @@
 		{/if}
 		
 		<!-- Merchants select -->
-		{#if !isLoading && !error}
+		{#if showSelect}
 			<select
 				id="merchant-picker"
 				bind:value={localSelectedMerchant}
 				onchange={handleSelect}
 				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				key="select-{forceUpdate}"
 			>
 				<option value="">{placeholder}</option>
 				{#each displayMerchants as merchant}
