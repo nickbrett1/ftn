@@ -16,6 +16,7 @@
 	let error = $state('');
 	let showModal = $state(false);
 	let localSelectedMerchant = $state('');
+	let isLoadingInProgress = $state(false); // Track if a load operation is in progress
 	
 	// Derived state - filter out currently assigned merchants
 	let availableMerchants = $derived(
@@ -28,7 +29,13 @@
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 
 	async function loadUnassignedMerchants() {
+		// Prevent concurrent calls to avoid race conditions
+		if (isLoadingInProgress) {
+			return;
+		}
+		
 		try {
+			isLoadingInProgress = true;
 			isLoading = true;
 			error = '';
 
@@ -46,6 +53,7 @@
 			error = err.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
+			isLoadingInProgress = false;
 		}
 	}
 
@@ -76,6 +84,15 @@
 
 	// Expose refresh function to parent
 	async function refreshMerchantList() {
+		// If a load is already in progress, wait for it to complete
+		if (isLoadingInProgress) {
+			// Wait for the current load to finish
+			while (isLoadingInProgress) {
+				await new Promise(resolve => setTimeout(resolve, 50));
+			}
+			return;
+		}
+		
 		await loadUnassignedMerchants();
 	}
 

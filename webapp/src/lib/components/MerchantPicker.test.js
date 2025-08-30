@@ -519,4 +519,142 @@ describe('MerchantPicker', () => {
 		// expect(mockOnSelect).toHaveBeenCalledTimes(1); // Would be > 1
 	});
 	*/
+
+	it('should handle race condition when refreshMerchantList is called during initial load', async () => {
+		// This test exposes the race condition where refreshMerchantList() is called
+		// while the initial loadUnassignedMerchants() is still in progress
+		
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let resolveInitialLoad;
+		let initialLoadPromise = new Promise(resolve => {
+			resolveInitialLoad = resolve;
+		});
+		
+		// Mock fetch to return a promise that we can control
+		mockFetch.mockImplementation(() => initialLoadPromise);
+		
+		const { getByText, component } = render(MerchantPicker, {
+			props: {
+				onSelect: vi.fn()
+			}
+		});
+
+		// Verify we're in loading state
+		expect(getByText('Loading recent merchants...')).toBeTruthy();
+		
+		// Call refreshMerchantList while initial load is still in progress
+		// This should NOT cause the UI to get stuck in loading state
+		const refreshPromise = component.refreshMerchantList();
+		
+		// Now resolve the initial load
+		resolveInitialLoad({
+			ok: true,
+			json: async () => mockMerchants
+		});
+		
+		// Wait for both operations to complete
+		await Promise.all([initialLoadPromise, refreshPromise]);
+		
+		// The UI should not be stuck in loading state
+		// It should show the merchants or empty state, not "Loading recent merchants..."
+		await waitFor(() => {
+			// Should either show merchants or empty state, but NOT loading
+			const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
+			expect(loadingText).toBeFalsy();
+		}, { timeout: 2000 });
+		
+		// Verify the component is in a valid state (not stuck)
+		const combobox = document.querySelector('select');
+		expect(combobox).toBeTruthy();
+	});
+
+	it('should prevent multiple concurrent loadUnassignedMerchants calls', async () => {
+		// This test verifies that multiple concurrent calls to loadUnassignedMerchants
+		// are properly handled and don't cause race conditions
+		
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let fetchCallCount = 0;
+		
+		// Mock fetch to track how many times it's called
+		mockFetch.mockImplementation(() => {
+			fetchCallCount++;
+			return Promise.resolve({
+				ok: true,
+				json: async () => mockMerchants
+			});
+		});
+		
+		const { component } = render(MerchantPicker, {
+			props: {
+				onSelect: vi.fn()
+			}
+		});
+
+		// Wait for initial load to complete
+		await waitFor(() => {
+			expect(document.querySelector('select')).toBeTruthy();
+		});
+		
+		const initialFetchCount = fetchCallCount;
+		
+		// Make multiple rapid calls to refreshMerchantList
+		const promises = [
+			component.refreshMerchantList(),
+			component.refreshMerchantList(),
+			component.refreshMerchantList(),
+			component.refreshMerchantList()
+		];
+		
+		await Promise.all(promises);
+		
+		// Should only make one additional fetch call, not 4
+		// The race condition protection should prevent multiple concurrent calls
+		expect(fetchCallCount).toBe(initialFetchCount + 1);
+	});
+
+	it('should handle refreshMerchantList being called before initial load completes', async () => {
+		// This test simulates the exact race condition described in the issue:
+		// User clicks remove merchant before combo box has loaded
+		
+		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
+		let resolveInitialLoad;
+		let initialLoadPromise = new Promise(resolve => {
+			resolveInitialLoad = resolve;
+		});
+		
+		// Mock fetch to return a controlled promise
+		mockFetch.mockImplementation(() => initialLoadPromise);
+		
+		const { component } = render(MerchantPicker, {
+			props: {
+				onSelect: vi.fn()
+			}
+		});
+
+		// Verify we're in loading state
+		expect(document.querySelector('div')?.textContent?.includes('Loading recent merchants...')).toBeTruthy();
+		
+		// Simulate the race condition: refreshMerchantList called before initial load completes
+		// This is what happens when user clicks remove merchant before combo box loads
+		const refreshPromise = component.refreshMerchantList();
+		
+		// Resolve the initial load
+		resolveInitialLoad({
+			ok: true,
+			json: async () => mockMerchants
+		});
+		
+		// Wait for operations to complete
+		await Promise.all([initialLoadPromise, refreshPromise]);
+		
+		// The component should be in a valid state, not stuck
+		await waitFor(() => {
+			const combobox = document.querySelector('select');
+			expect(combobox).toBeTruthy();
+		}, { timeout: 2000 });
+		
+		// Should not be stuck in loading state
+		const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
+		expect(loadingText).toBeFalsy();
+	});
 });
