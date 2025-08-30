@@ -29,15 +29,12 @@
 	let isDeleting = $state(false);
 	let merchantPickerRef = null;
 
-	// Track component lifecycle for debugging
-	if (import.meta.env.DEV) {
-		console.log('🚀 Budget page component initialized');
-		console.log('🚀 Initial state - merchants:', merchants.size, 'budget:', budget?.name);
-	}
+	// Debug flag - set to true to enable detailed logging
+	const DEBUG = typeof window !== 'undefined' && window.location?.hostname === 'localhost';
 
 	// Track when merchantPickerRef is bound
 	$effect(() => {
-		if (merchantPickerRef && import.meta.env.DEV) {
+		if (merchantPickerRef && DEBUG) {
 			console.log('🔗 MerchantPicker ref bound:', !!merchantPickerRef);
 			console.log('🔗 MerchantPicker methods available:', {
 				refreshMerchantList: !!(merchantPickerRef?.refreshMerchantList)
@@ -120,29 +117,29 @@
 	}
 
 	async function removeMerchant(merchantName) {
-		if (import.meta.env.DEV) {
+		if (DEBUG) {
 			console.log('🔄 removeMerchant called for:', merchantName);
 			console.log('🔄 Current state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		}
 		
 		if (isDeleting) {
-			if (import.meta.env.DEV) console.log('❌ Already deleting, returning early');
+			if (DEBUG) console.log('❌ Already deleting, returning early');
 			return;
 		}
 		
-		if (import.meta.env.DEV) console.log('✅ Setting deletion state');
+		if (DEBUG) console.log('✅ Setting deletion state');
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
 		try {
-			if (import.meta.env.DEV) console.log('🌐 Making DELETE request to remove merchant');
+			if (DEBUG) console.log('🌐 Making DELETE request to remove merchant');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ merchant: merchantName })
 			});
 
-			if (import.meta.env.DEV) console.log('📡 DELETE response received:', response.status, response.statusText);
+			if (DEBUG) console.log('📡 DELETE response received:', response.status, response.statusText);
 
 			if (!response.ok) {
 				const errorText = await response.text();
@@ -151,17 +148,17 @@
 				return;
 			}
 
-			if (import.meta.env.DEV) console.log('✅ DELETE request successful, removing from reactive collection');
+			if (DEBUG) console.log('✅ DELETE request successful, removing from reactive collection');
 			// Remove from reactive collection
 			for (const merchant of merchants) {
 				if (merchant.merchant === merchantName) {
 					merchants.delete(merchant);
-					if (import.meta.env.DEV) console.log('✅ Merchant removed from reactive collection');
+					if (DEBUG) console.log('✅ Merchant removed from reactive collection');
 					break;
 				}
 			}
 			
-			if (import.meta.env.DEV) {
+			if (DEBUG) {
 				console.log('🔄 About to refresh merchant picker');
 				console.log('🔄 merchantPickerRef exists:', !!merchantPickerRef);
 				console.log('🔄 merchantPickerRef.refreshMerchantList exists:', !!(merchantPickerRef?.refreshMerchantList));
@@ -170,12 +167,12 @@
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list with timeout protection
 			try {
-				if (import.meta.env.DEV) console.log('🔄 Starting refreshMerchantList with timeout protection');
+				if (DEBUG) console.log('🔄 Starting refreshMerchantList with timeout protection');
 				await Promise.race([
 					merchantPickerRef?.refreshMerchantList(),
 					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
 				]);
-				if (import.meta.env.DEV) console.log('✅ refreshMerchantList completed successfully');
+				if (DEBUG) console.log('✅ refreshMerchantList completed successfully');
 			} catch (error) {
 				console.warn('⚠️ MerchantPicker refresh failed:', error);
 				// Continue anyway - the UI will still work, just the picker might not be updated
@@ -184,10 +181,10 @@
 			console.error('❌ removeMerchant error:', error);
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
-			if (import.meta.env.DEV) console.log('🏁 removeMerchant finally block - resetting state');
+			if (DEBUG) console.log('🏁 removeMerchant finally block - resetting state');
 			deletingMerchant = null;
 			isDeleting = false;
-			if (import.meta.env.DEV) console.log('✅ State reset complete');
+			if (DEBUG) console.log('✅ State reset complete');
 		}
 	}
 
