@@ -29,6 +29,20 @@
 	let isDeleting = $state(false);
 	let merchantPickerRef = null;
 
+	// Track component lifecycle for debugging
+	console.log('🚀 Budget page component initialized');
+	console.log('🚀 Initial state - merchants:', merchants.size, 'budget:', budget?.name);
+
+	// Track when merchantPickerRef is bound
+	$effect(() => {
+		if (merchantPickerRef) {
+			console.log('🔗 MerchantPicker ref bound:', !!merchantPickerRef);
+			console.log('🔗 MerchantPicker methods available:', {
+				refreshMerchantList: !!(merchantPickerRef?.refreshMerchantList)
+			});
+		}
+	});
+
 	// Budget editing state
 	let editName = $state(budget?.name || '');
 	let editIcon = $state(budget?.icon || '');
@@ -104,48 +118,70 @@
 	}
 
 	async function removeMerchant(merchantName) {
-		if (isDeleting) return;
+		console.log('🔄 removeMerchant called for:', merchantName);
+		console.log('🔄 Current state - isDeleting:', isDeleting, 'deletingMerchant:', deletingMerchant);
 		
+		if (isDeleting) {
+			console.log('❌ Already deleting, returning early');
+			return;
+		}
+		
+		console.log('✅ Setting deletion state');
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
 		try {
+			console.log('🌐 Making DELETE request to remove merchant');
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ merchant: merchantName })
 			});
 
+			console.log('📡 DELETE response received:', response.status, response.statusText);
+
 			if (!response.ok) {
 				const errorText = await response.text();
+				console.error('❌ DELETE request failed:', response.status, errorText);
 				alert(`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`);
 				return;
 			}
 
+			console.log('✅ DELETE request successful, removing from reactive collection');
 			// Remove from reactive collection
 			for (const merchant of merchants) {
 				if (merchant.merchant === merchantName) {
 					merchants.delete(merchant);
+					console.log('✅ Merchant removed from reactive collection');
 					break;
 				}
 			}
 			
+			console.log('🔄 About to refresh merchant picker');
+			console.log('🔄 merchantPickerRef exists:', !!merchantPickerRef);
+			console.log('🔄 merchantPickerRef.refreshMerchantList exists:', !!(merchantPickerRef?.refreshMerchantList));
+			
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list with timeout protection
 			try {
+				console.log('🔄 Starting refreshMerchantList with timeout protection');
 				await Promise.race([
 					merchantPickerRef?.refreshMerchantList(),
 					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
 				]);
+				console.log('✅ refreshMerchantList completed successfully');
 			} catch (error) {
-				console.warn('MerchantPicker refresh failed:', error);
+				console.warn('⚠️ MerchantPicker refresh failed:', error);
 				// Continue anyway - the UI will still work, just the picker might not be updated
 			}
 		} catch (error) {
+			console.error('❌ removeMerchant error:', error);
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
+			console.log('🏁 removeMerchant finally block - resetting state');
 			deletingMerchant = null;
 			isDeleting = false;
+			console.log('✅ State reset complete');
 		}
 	}
 
