@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
 	// Debug flag - always enabled for debugging
@@ -35,6 +35,19 @@
 	$effect(() => {
 		if (DEBUG) {
 			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
+		}
+	});
+
+	// Track potential state corruption
+	$effect(() => {
+		if (DEBUG) {
+			console.log('🔍 State Check - isLoading:', isLoading, 'isLoadingInProgress:', isLoadingInProgress, 'error:', error);
+			if (isLoading && isLoadingInProgress) {
+				console.log('⚠️ Potential state corruption: both isLoading and isLoadingInProgress are true');
+			}
+			if (!isLoading && isLoadingInProgress) {
+				console.log('⚠️ Potential state corruption: isLoadingInProgress is true but isLoading is false');
+			}
 		}
 	});
 
@@ -183,6 +196,14 @@
 	onMount(() => {
 		if (DEBUG) console.log('🚀 MerchantPicker onMount called - starting initial load');
 		loadUnassignedMerchants();
+		
+		// Track component lifecycle
+		if (DEBUG) console.log('🚀 MerchantPicker mounted, component instance created');
+	});
+
+	// Track component destruction
+	onDestroy(() => {
+		if (DEBUG) console.log('🗑️ MerchantPicker onDestroy called - component being destroyed');
 	});
 </script>
 
