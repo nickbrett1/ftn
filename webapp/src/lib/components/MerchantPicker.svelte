@@ -29,17 +29,19 @@
 	let showEmptyState = $derived(!isLoading && !error && !hasMerchants);
 
 	async function loadUnassignedMerchants() {
-		console.log('🔄 MerchantPicker.loadUnassignedMerchants called');
-		console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
+		if (import.meta.env.DEV) {
+			console.log('🔄 MerchantPicker.loadUnassignedMerchants called');
+			console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
+		}
 		
 		// Prevent concurrent calls to avoid race conditions
 		if (isLoadingInProgress) {
-			console.log('❌ Load already in progress, returning early');
+			if (import.meta.env.DEV) console.log('❌ Load already in progress, returning early');
 			return;
 		}
 		
 		try {
-			console.log('✅ Setting loading state');
+			if (import.meta.env.DEV) console.log('✅ Setting loading state');
 			isLoadingInProgress = true;
 			isLoading = true;
 			error = '';
@@ -47,42 +49,42 @@
 			// Add timeout to prevent hanging requests
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => {
-				console.log('⏰ Request timeout reached, aborting');
+				if (import.meta.env.DEV) console.log('⏰ Request timeout reached, aborting');
 				controller.abort();
 			}, 10000); // 10 second timeout
 
-			console.log('🌐 Making fetch request to /projects/ccbilling/budgets/recent-merchants');
+			if (import.meta.env.DEV) console.log('🌐 Making fetch request to /projects/ccbilling/budgets/recent-merchants');
 			const response = await fetch('/projects/ccbilling/budgets/recent-merchants', {
 				signal: controller.signal
 			});
 			
 			clearTimeout(timeoutId);
-			console.log('📡 Fetch response received:', response.status, response.statusText);
+			if (import.meta.env.DEV) console.log('📡 Fetch response received:', response.status, response.statusText);
 			
 			if (!response.ok) {
 				throw new Error(`Failed to load recent merchants: ${response.status} ${response.statusText}`);
 			}
 
 			const data = await response.json();
-			console.log('📊 Received merchant data:', data?.length || 0, 'merchants');
+			if (import.meta.env.DEV) console.log('📊 Received merchant data:', data?.length || 0, 'merchants');
 			
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
-			console.log('✅ Processed merchants:', allUnassignedMerchants.length);
+			if (import.meta.env.DEV) console.log('✅ Processed merchants:', allUnassignedMerchants.length);
 			// No need to set merchants - it's now derived from allUnassignedMerchants and assignedMerchants
 		} catch (err) {
 			console.error('❌ MerchantPicker loadUnassignedMerchants error:', err);
 			if (err.name === 'AbortError') {
 				error = 'Request timed out. Please try again.';
-				console.log('⏰ Request was aborted due to timeout');
+				if (import.meta.env.DEV) console.log('⏰ Request was aborted due to timeout');
 			} else {
 				error = err.message || 'Failed to load merchants';
-				console.log('❌ Request failed with error:', err.message);
+				if (import.meta.env.DEV) console.log('❌ Request failed with error:', err.message);
 			}
 		} finally {
-			console.log('🏁 loadUnassignedMerchants finally block - resetting loading state');
+			if (import.meta.env.DEV) console.log('🏁 loadUnassignedMerchants finally block - resetting loading state');
 			isLoading = false;
 			isLoadingInProgress = false;
-			console.log('✅ Loading state reset complete');
+			if (import.meta.env.DEV) console.log('✅ Loading state reset complete');
 		}
 	}
 
@@ -113,18 +115,20 @@
 
 	// Expose refresh function to parent
 	async function refreshMerchantList() {
-		console.log('🔄 MerchantPicker.refreshMerchantList called');
-		console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
+		if (import.meta.env.DEV) {
+			console.log('🔄 MerchantPicker.refreshMerchantList called');
+			console.log('🔄 Current state - isLoadingInProgress:', isLoadingInProgress, 'isLoading:', isLoading);
+		}
 		
 		// If a load is already in progress, wait for it to complete with timeout
 		if (isLoadingInProgress) {
-			console.log('⏳ Load already in progress, waiting for completion...');
+			if (import.meta.env.DEV) console.log('⏳ Load already in progress, waiting for completion...');
 			// Wait for the current load to finish, but with a timeout to prevent infinite waiting
 			const maxWaitTime = 5000; // 5 seconds
 			const startTime = Date.now();
 			
 			while (isLoadingInProgress && (Date.now() - startTime) < maxWaitTime) {
-				console.log('⏳ Still waiting for load to complete...', Date.now() - startTime, 'ms elapsed');
+				if (import.meta.env.DEV) console.log('⏳ Still waiting for load to complete...', Date.now() - startTime, 'ms elapsed');
 				await new Promise(resolve => setTimeout(resolve, 50));
 			}
 			
@@ -135,21 +139,21 @@
 				isLoading = false;
 			} else {
 				// Initial load completed successfully, no need to refresh
-				console.log('✅ Initial load completed successfully, no refresh needed');
+				if (import.meta.env.DEV) console.log('✅ Initial load completed successfully, no refresh needed');
 				return;
 			}
 		}
 		
-		console.log('🔄 Proceeding with refresh...');
+		if (import.meta.env.DEV) console.log('🔄 Proceeding with refresh...');
 		await loadUnassignedMerchants();
-		console.log('✅ refreshMerchantList completed');
+		if (import.meta.env.DEV) console.log('✅ refreshMerchantList completed');
 	}
 
 	// Export the function for parent components
 	export { refreshMerchantList };
 
 	onMount(() => {
-		console.log('🚀 MerchantPicker onMount called - starting initial load');
+		if (import.meta.env.DEV) console.log('🚀 MerchantPicker onMount called - starting initial load');
 		loadUnassignedMerchants();
 	});
 </script>
