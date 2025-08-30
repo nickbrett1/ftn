@@ -2,8 +2,8 @@
 	import { onMount } from 'svelte';
 	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
-	// Debug flag - set to true to enable detailed logging
-	const DEBUG = typeof window !== 'undefined' && window.location?.hostname === 'localhost';
+	// Debug flag - always enabled for debugging
+	const DEBUG = true;
 
 	const {
 		selectedMerchant = '',

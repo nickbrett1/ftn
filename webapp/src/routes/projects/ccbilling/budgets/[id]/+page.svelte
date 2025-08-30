@@ -29,8 +29,8 @@
 	let isDeleting = $state(false);
 	let merchantPickerRef = null;
 
-	// Debug flag - set to true to enable detailed logging
-	const DEBUG = typeof window !== 'undefined' && window.location?.hostname === 'localhost';
+	// Debug flag - always enabled for debugging
+	const DEBUG = true;
 
 	// Track when merchantPickerRef is bound
 	$effect(() => {
