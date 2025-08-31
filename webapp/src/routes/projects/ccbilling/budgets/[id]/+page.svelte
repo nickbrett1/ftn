@@ -74,10 +74,19 @@
 		a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
 	));
 	
-	// Derived set of assigned merchant names for reactive filtering
-	let assignedMerchantNames = $derived(
-		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
-	);
+	// Stable set of assigned merchant names for reactive filtering
+	let assignedMerchantNames = $state(new Set());
+	
+	// Update the set only when merchant names actually change
+	$effect(() => {
+		const newNames = new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()));
+		// Only update if the content actually changed
+		if (newNames.size !== assignedMerchantNames.size || 
+			!Array.from(newNames).every(name => assignedMerchantNames.has(name))) {
+			assignedMerchantNames.clear();
+			newNames.forEach(name => assignedMerchantNames.add(name));
+		}
+	});
 
 	async function addMerchant() {
 		if (isAdding || !selectedMerchant?.trim()) {

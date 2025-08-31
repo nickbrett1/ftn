@@ -479,6 +479,8 @@ describe('Budget Page - Merchant Removal', () => {
 		// Mock the initial fetch call (for recent merchants)
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
+			status: 200,
+			statusText: 'OK',
 			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
@@ -490,6 +492,14 @@ describe('Budget Page - Merchant Removal', () => {
 			headers: new Map([['content-type', 'application/json']]),
 			text: async () => '{"success": true}',
 			json: async () => ({ success: true })
+		});
+
+		// Mock refresh merchant list response (third call - refresh merchant list)
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			json: async () => ['walmart', 'costco', 'bestbuy']
 		});
 
 		const { container } = render(BudgetPage, {
