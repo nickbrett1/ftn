@@ -9,7 +9,7 @@
 		selectedMerchant = '',
 		onSelect = () => {},
 		placeholder = 'Select a merchant...',
-		assignedMerchants = new Set() // New prop: set of currently assigned merchant names
+		assignedMerchants = [] // New prop: array of currently assigned merchant names
 	} = $props();
 
 	// Reactive state
@@ -25,7 +25,7 @@
 	// Derived state - filter out currently assigned merchants
 	let availableMerchants = $derived(
 		allUnassignedMerchants.filter(merchant => 
-			!assignedMerchants.has(merchant.toLowerCase())
+			!assignedMerchants.includes(merchant.toLowerCase())
 		)
 	);
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));

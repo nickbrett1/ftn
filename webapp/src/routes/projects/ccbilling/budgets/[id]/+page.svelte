@@ -76,7 +76,7 @@
 	
 	// Derived set of assigned merchant names for reactive filtering
 	let assignedMerchantNames = $derived(
-		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
+		Array.from(merchants).map(m => m.merchant.toLowerCase())
 	);
 
 	async function addMerchant() {
