@@ -362,27 +362,29 @@
 	</div>
 
 	<!-- Merchant Auto-Assignment -->
-	<div class="mb-8 merchant-container">
-		<h2 class="text-2xl font-semibold text-white mb-4">Merchant Auto-Assignment</h2>
-		<p class="text-gray-400 mb-6">
-			Add merchants to automatically assign charges from these merchants to this budget. When
-			charges are parsed from statements, any charges from these merchants will be automatically
-			categorized under "{budget?.name || 'this budget'}".
-		</p>
+	{#if budget}
+		<div class="mb-8 merchant-container">
+			<h2 class="text-2xl font-semibold text-white mb-4">Merchant Auto-Assignment</h2>
+			<p class="text-gray-400 mb-6">
+				Add merchants to automatically assign charges from these merchants to this budget. When
+				charges are parsed from statements, any charges from these merchants will be automatically
+				categorized under "{budget?.name || 'this budget'}".
+			</p>
 
-		<!-- Add Merchant Form -->
-		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
-			<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
-			<div class="space-y-4">
-				<div>
-									<MerchantPicker
-					{selectedMerchant}
-					onSelect={(merchant) => (selectedMerchant = merchant)}
-					placeholder="Choose a merchant to assign to this budget..."
-					assignedMerchants={assignedMerchantNames}
-					bind:this={merchantPickerRef}
-				/>
-				</div>
+			<!-- Add Merchant Form -->
+			<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+				<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
+				<div class="space-y-4">
+					<div>
+										<MerchantPicker
+						{selectedMerchant}
+						onSelect={(merchant) => (selectedMerchant = merchant)}
+						placeholder="Choose a merchant to assign to this budget..."
+						assignedMerchants={assignedMerchantNames}
+						bind:this={merchantPickerRef}
+					/>
+					</div>
+	{/if}
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
 				{/if}
@@ -437,7 +439,8 @@
 				</div>
 			</div>
 		{/if}
-	</div>
+		</div>
+	{/if}
 
 	<!-- Delete confirmation dialog -->
 	{#if showDeleteDialog}
