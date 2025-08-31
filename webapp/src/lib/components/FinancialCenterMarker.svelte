@@ -5,12 +5,13 @@
 	import * as THREE from 'three';
 
 	const { center, index } = $props();
-	
+
 	interactivity();
 
+	// @ts-ignore - markerRef is managed by bind:ref
 	let markerRef;
-	let pulseIntensity = 0.5;
-	let pulseDirection = 1;
+	let pulseIntensity = $state(0.5);
+	let pulseDirection = $state(1);
 	let tooltip = null;
 	let marketData = $state([]);
 
@@ -42,7 +43,7 @@
 	function generateMarketData() {
 		// Generate sample market data for this financial center
 		const marketTypes = ['Stocks', 'Bonds', 'Forex', 'Commodities'];
-		marketData = marketTypes.map(type => ({
+		marketData = marketTypes.map((type) => ({
 			type,
 			change: (Math.random() - 0.5) * 4, // -2% to +2%
 			volume: Math.random() * 1000000000 + 100000000 // 100M to 1.1B
@@ -91,14 +92,18 @@
 					
 					<div class="mb-3">
 						<div class="text-sm font-semibold text-zinc-300 mb-2">Live Market Data</div>
-						${marketData.map(market => `
+						${marketData
+							.map(
+								(market) => `
 							<div class="flex justify-between items-center text-xs mb-1">
 								<span class="text-zinc-400">${market.type}</span>
 								<span class="${market.change >= 0 ? 'text-green-400' : 'text-red-400'}">
 									${market.change >= 0 ? '+' : ''}${market.change.toFixed(2)}%
 								</span>
 							</div>
-						`).join('')}
+						`
+							)
+							.join('')}
 					</div>
 					
 					<div class="text-xs text-zinc-500">
@@ -106,7 +111,7 @@
 					</div>
 				</div>
 			`;
-			
+
 			tooltip.style.display = 'block';
 			tooltip.style.left = event.clientX + 15 + 'px';
 			tooltip.style.top = event.clientY - 15 + 'px';
@@ -124,11 +129,11 @@
 		const radius = 10.2; // Slightly larger than Earth radius for visibility
 		const lat = center.latitude * (Math.PI / 180);
 		const lng = center.longitude * (Math.PI / 180);
-		
+
 		const x = radius * Math.cos(lat) * Math.cos(lng);
 		const y = radius * Math.sin(lat);
 		const z = radius * Math.cos(lat) * Math.sin(lng);
-		
+
 		return [x, y, z];
 	}
 
@@ -137,12 +142,8 @@
 		const basePos = getGlobePosition();
 		const offset = (marketIndex - 1.5) * 0.4;
 		const height = 1.8;
-		
-		return [
-			basePos[0] + offset,
-			basePos[1] + height,
-			basePos[2]
-		];
+
+		return [basePos[0] + offset, basePos[1] + height, basePos[2]];
 	}
 
 	// Determine marker color based on market sentiment
@@ -179,9 +180,7 @@
 	onPointerOut={handlePointerOut}
 >
 	<!-- Marker geometry - use a cone pointing outward from the globe -->
-	<T.ConeGeometry 
-		args={[getMarkerSize(), getMarkerSize() * 2, 8]} 
-	/>
+	<T.ConeGeometry args={[getMarkerSize(), getMarkerSize() * 2, 8]} />
 	<T.MeshStandardMaterial
 		color={getMarkerColor()}
 		emissive={getMarkerEmissive()}
@@ -196,11 +195,7 @@
 <!-- Add a subtle glow effect around the marker -->
 <T.Mesh position={getGlobePosition()}>
 	<T.SphereGeometry args={[getMarkerSize() * 1.5, 8, 6]} />
-	<T.MeshBasicMaterial
-		color={getMarkerColor()}
-		transparent={true}
-		opacity={0.2}
-	/>
+	<T.MeshBasicMaterial color={getMarkerColor()} transparent={true} opacity={0.2} />
 </T.Mesh>
 
 <!-- Add a pulsing ring effect -->
@@ -216,9 +211,7 @@
 
 <!-- Add market data indicators floating above the marker -->
 {#each marketData as market, marketIndex}
-	<T.Mesh 
-		position={getMarketIndicatorPosition(marketIndex)}
-	>
+	<T.Mesh position={getMarketIndicatorPosition(marketIndex)}>
 		<T.SphereGeometry args={[0.12, 8, 6]} />
 		<T.MeshStandardMaterial
 			color={market.change >= 0 ? '#00ff88' : '#ff0088'}
@@ -230,7 +223,7 @@
 			opacity={0.8}
 		/>
 	</T.Mesh>
-	
+
 	<!-- Add a subtle glow around each market indicator -->
 	<T.Mesh position={getMarketIndicatorPosition(marketIndex)}>
 		<T.SphereGeometry args={[0.18, 6, 4]} />
