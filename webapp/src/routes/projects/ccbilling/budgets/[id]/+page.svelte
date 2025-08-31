@@ -384,27 +384,26 @@
 						bind:this={merchantPickerRef}
 					/>
 					</div>
-	{/if}
-				{#if addError}
-					<p class="text-red-400 text-sm">{addError}</p>
-				{/if}
+					{#if addError}
+						<p class="text-red-400 text-sm">{addError}</p>
+					{/if}
 
-				<div class="flex space-x-2">
-					<Button
-						onclick={addMerchant}
-						variant="success"
+					<div class="flex space-x-2">
+						<Button
+							onclick={addMerchant}
+							variant="success"
 						size="md"
 						disabled={isAdding}
 						style="cursor: pointer;"
 					>
 						{isAdding ? 'Adding...' : 'Add Merchant'}
 					</Button>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Merchants List -->
-		{#if merchants.size === 0}
+			<!-- Merchants List -->
+			{#if merchants.size === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -438,7 +437,7 @@
 					{/each}
 				</div>
 			</div>
-		{/if}
+			{/if}
 		</div>
 	{/if}
 
