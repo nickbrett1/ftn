@@ -204,10 +204,6 @@
 					console.log('🔍 Select element disabled:', selectElement?.disabled);
 				}
 			}, 100);
-		} catch (error) {
-			console.warn('⚠️ MerchantPicker refresh failed:', error);
-			// Continue anyway - the UI will still work, just the picker might not be updated
-		}
 	} catch (error) {
 			console.error('❌ removeMerchant error:', error);
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
