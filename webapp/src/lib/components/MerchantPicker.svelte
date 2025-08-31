@@ -20,6 +20,7 @@
 	let showModal = $state(false);
 	let localSelectedMerchant = $state('');
 	let isLoadingInProgress = $state(false); // Track if a load operation is in progress
+	let forceUpdate = $state(false); // Force re-render after auth issues
 	
 	// Derived state - filter out currently assigned merchants
 	let availableMerchants = $derived(
@@ -44,6 +45,8 @@
 				if (DEBUG) {
 					console.log('🔄 Force UI update triggered - availableMerchants:', availableMerchants.length, 'isLoading:', isLoading);
 				}
+				// Force a re-render by triggering a state change
+				forceUpdate = !forceUpdate;
 			});
 		}
 	});
