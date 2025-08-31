@@ -76,7 +76,7 @@
 	
 	// Derived set of assigned merchant names for reactive filtering
 	let assignedMerchantNames = $derived(
-		Array.from(merchants).map(m => m.merchant.toLowerCase())
+		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
 	);
 
 	async function addMerchant() {
@@ -180,15 +180,9 @@
 				console.log('🔄 merchantPickerRef.refreshMerchantList exists:', !!(merchantPickerRef?.refreshMerchantList));
 			}
 			
-			// Refresh picker to re-add removed merchant to list
-			// Tell the picker to refresh its merchant list with timeout protection
-			try {
-				if (DEBUG) console.log('🔄 Starting refreshMerchantList with timeout protection');
-				await Promise.race([
-					merchantPickerRef?.refreshMerchantList(),
-					new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 15000))
-				]);
-				if (DEBUG) console.log('✅ refreshMerchantList completed successfully');
+			// Component will be recreated with key="merchant-picker-{merchants.size}" 
+			// so no need to manually refresh - it will load with the correct data
+			if (DEBUG) console.log('🔄 Component will be recreated with updated merchant count:', merchants.size);
 			
 			// Add a small delay to let DOM updates complete, then check UI state
 			setTimeout(() => {
@@ -377,6 +371,7 @@
 				<div class="space-y-4">
 					<div>
 										<MerchantPicker
+						key="merchant-picker-{merchants.size}"
 						{selectedMerchant}
 						onSelect={(merchant) => (selectedMerchant = merchant)}
 						placeholder="Choose a merchant to assign to this budget..."
