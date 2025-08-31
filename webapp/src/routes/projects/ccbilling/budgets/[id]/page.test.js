@@ -508,7 +508,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the DELETE API call to be made
 		await waitFor(() => {
-			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + add merchant + refresh merchant list
+			expect(mockFetch).toHaveBeenCalledTimes(3); // Initial load + DELETE (component recreation handles refresh)
 		});
 
 		// Verify the DELETE API call format (should be the second call)
