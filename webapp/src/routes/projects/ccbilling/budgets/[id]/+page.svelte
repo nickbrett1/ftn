@@ -378,6 +378,11 @@
 	{#if budget}
 		<div class="mb-8 merchant-container">
 			<h2 class="text-2xl font-semibold text-white mb-4">Merchant Auto-Assignment</h2>
+			{#if DEBUG}
+				<div class="text-xs text-gray-500 mb-2">
+					DEBUG: budget={budget?.name}, merchants={merchants.size}, assignedMerchantNames={assignedMerchantNames.size}
+				</div>
+			{/if}
 			<p class="text-gray-400 mb-6">
 				Add merchants to automatically assign charges from these merchants to this budget. When
 				charges are parsed from statements, any charges from these merchants will be automatically
@@ -389,13 +394,18 @@
 				<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 				<div class="space-y-4">
 					<div>
-										<MerchantPicker
-						{selectedMerchant}
-						onSelect={(merchant) => (selectedMerchant = merchant)}
-						placeholder="Choose a merchant to assign to this budget..."
-						assignedMerchants={assignedMerchantNames}
-						bind:this={merchantPickerRef}
-					/>
+						{#if DEBUG}
+							<div class="text-xs text-gray-500 mb-2">
+								DEBUG: About to render MerchantPicker with assignedMerchants={assignedMerchantNames.size}
+							</div>
+						{/if}
+						<MerchantPicker
+							{selectedMerchant}
+							onSelect={(merchant) => (selectedMerchant = merchant)}
+							placeholder="Choose a merchant to assign to this budget..."
+							assignedMerchants={assignedMerchantNames}
+							bind:this={merchantPickerRef}
+						/>
 					</div>
 					{#if addError}
 						<p class="text-red-400 text-sm">{addError}</p>

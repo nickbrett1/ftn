@@ -36,6 +36,11 @@
 	$effect(() => {
 		if (DEBUG) {
 			console.log('🔄 availableMerchants changed:', availableMerchants.length, 'merchants');
+			console.log('🔍 allUnassignedMerchants:', allUnassignedMerchants.length, 'merchants');
+			console.log('🔍 assignedMerchants size:', assignedMerchants.size, 'assigned merchants');
+			console.log('🔍 displayMerchants:', displayMerchants.length, 'display merchants');
+			console.log('🔍 hasMerchants:', hasMerchants);
+			console.log('🔍 showEmptyState:', showEmptyState);
 		}
 		
 		// Force UI update after auth - this is a workaround for reactivity issues
@@ -246,7 +251,7 @@
 	<div class="space-y-3">
 		<!-- Loading state -->
 		{#if isLoading}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+			<div data-testid="merchant-loading" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 				Loading recent merchants...
 			</div>
 		{/if}
@@ -260,24 +265,30 @@
 		
 		<!-- Empty state -->
 		{#if showEmptyState}
-			<div class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
+			<div data-testid="merchant-empty" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-gray-400">
 				No recent unassigned merchants found
 			</div>
 		{/if}
 		
 		<!-- Merchants select -->
-		{#if !isLoading && !error}
-			<select
-				id="merchant-picker"
-				bind:value={localSelectedMerchant}
-				onchange={handleSelect}
-				class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-			>
-				<option value="">{placeholder}</option>
-				{#each displayMerchants as merchant}
-					<option value={merchant}>{merchant}</option>
-				{/each}
-			</select>
+		<select
+			id="merchant-picker"
+			data-testid="merchant-select"
+			bind:value={localSelectedMerchant}
+			onchange={handleSelect}
+			class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+			style:display={isLoading || error ? 'none' : 'block'}
+		>
+			<option value="">{placeholder}</option>
+			{#each displayMerchants as merchant}
+				<option value={merchant}>{merchant}</option>
+			{/each}
+		</select>
+		
+		{#if DEBUG}
+			<div class="text-xs text-gray-500 mt-1">
+				DEBUG: isLoading={isLoading}, error={error}, displayMerchants={displayMerchants.length}, hasMerchants={hasMerchants}
+			</div>
 		{/if}
 
 			<div class="flex justify-between items-center">
