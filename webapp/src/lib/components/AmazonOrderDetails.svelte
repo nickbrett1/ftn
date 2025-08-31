@@ -4,11 +4,11 @@
 
 	const { chargeId, merchant = '' } = $props();
 
-	let loading = false;
-	let error = null;
-	let orderInfo = null;
-	let showDetails = false;
-	let refreshing = false;
+	let loading = $state(false);
+	let error = $state(null);
+	let orderInfo = $state(null);
+	let showDetails = $state(false);
+	let refreshing = $state(false);
 
 	// Check if this is an Amazon charge
 	const isAmazon = $derived(
@@ -97,7 +97,7 @@
 {#if isAmazon}
 	<div class="amazon-order-details" transition:fade={{ duration: 200 }}>
 		{#if !showDetails && !loading && !error}
-			<button on:click={fetchOrderInfo} class="fetch-button" disabled={loading}>
+			<button onclick={fetchOrderInfo} class="fetch-button" disabled={loading}>
 				📦 View Amazon Order Information
 			</button>
 		{/if}
@@ -113,7 +113,7 @@
 			<div class="error" transition:slide>
 				<span class="error-icon">⚠️</span>
 				<span>{error}</span>
-				<button on:click={fetchOrderInfo} class="retry-button"> Retry </button>
+				<button onclick={fetchOrderInfo} class="retry-button"> Retry </button>
 			</div>
 		{/if}
 
@@ -124,7 +124,7 @@
 					<div class="order-meta">
 						<span class="order-id">Order #{orderInfo.order_id}</span>
 						<button
-							on:click={refreshOrderInfo}
+							onclick={refreshOrderInfo}
 							class="refresh-button"
 							disabled={refreshing}
 							title="Refresh order information"
@@ -161,12 +161,13 @@
 							</a>
 						</div>
 						<p class="link-description">
-							{orderInfo.order_info.message || 'Click the link above to view your order details on Amazon'}
+							{orderInfo.order_info.message ||
+								'Click the link above to view your order details on Amazon'}
 						</p>
 					</div>
 				{/if}
 
-				<button on:click={() => (showDetails = false)} class="close-button"> Close Details </button>
+				<button onclick={() => (showDetails = false)} class="close-button"> Close Details </button>
 			</div>
 		{/if}
 	</div>
@@ -291,15 +292,6 @@
 		color: #333;
 	}
 
-	.cache-badge {
-		padding: 0.125rem 0.5rem;
-		background: #e7f3ff;
-		color: #0066cc;
-		border-radius: 12px;
-		font-size: 0.75rem;
-		font-weight: 500;
-	}
-
 	.refresh-button {
 		background: none;
 		border: none;
@@ -337,18 +329,6 @@
 	.value {
 		color: #333;
 		font-weight: 600;
-	}
-
-	.amount {
-		color: #28a745;
-	}
-
-	.status {
-		padding: 0.125rem 0.5rem;
-		background: #d4edda;
-		color: #155724;
-		border-radius: 4px;
-		font-size: 0.875rem;
 	}
 
 	.links-section {
