@@ -20,7 +20,7 @@
 	let budget = $state(data.budget || null);
 	let budgets = $state(data.budgets || []);
 	let merchants = $state(new SvelteSet(data.merchants || []));
-	
+
 	// Merchant management state
 	let selectedMerchant = $state('');
 	let isAdding = $state(false);
@@ -42,13 +42,19 @@
 
 	// Derived state for UI
 	let availableIcons = $derived(getAvailableIcons());
-	let sortedMerchants = $derived(Array.from(merchants).sort((a, b) => 
-		a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase())
-	));
-	
+	let sortedMerchants = $derived(
+		Array.from(merchants)
+			.filter((merchant) => merchant && merchant.merchant)
+			.sort((a, b) => a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase()))
+	);
+
 	// Derived set of assigned merchant names for reactive filtering
 	let assignedMerchantNames = $derived(
-		new Set(Array.from(merchants).map(m => m.merchant.toLowerCase()))
+		new Set(
+			Array.from(merchants)
+				.filter((m) => m && m.merchant)
+				.map((m) => m.merchant.toLowerCase())
+		)
 	);
 
 	async function addMerchant() {
@@ -58,41 +64,41 @@
 			}
 			return;
 		}
-		
+
 		// Check if merchant already exists
-		const merchantExists = Array.from(merchants).some(merchant => 
-			merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
+		const merchantExists = Array.from(merchants).some(
+			(merchant) => merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
 		);
 		if (merchantExists) {
 			addError = 'This merchant is already assigned to this budget';
 			return;
 		}
-		
+
 		try {
 			isAdding = true;
 			addError = '';
-			
+
 			const response = await fetch(`/projects/ccbilling/budgets/${budget.id}/merchants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ merchant: selectedMerchant.trim() })
 			});
-			
+
 			if (!response.ok) {
 				const error = await response.json();
 				addError = error.error || 'Failed to add merchant';
 				return;
 			}
-			
+
 			// Add to reactive collection
 			merchants.add({
 				merchant: selectedMerchant.trim(),
 				merchant_normalized: selectedMerchant.trim()
 			});
-			
+
 			// Reset form
 			selectedMerchant = '';
-			
+
 			// Wait for DOM updates to complete, then refresh the merchant list
 			await tick();
 			merchantPickerRef?.refreshMerchantList();
@@ -105,7 +111,7 @@
 
 	async function removeMerchant(merchantName) {
 		if (isDeleting) return;
-		
+
 		deletingMerchant = merchantName;
 		isDeleting = true;
 
@@ -118,7 +124,9 @@
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				alert(`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`);
+				alert(
+					`Failed to remove merchant "${merchantName}": ${response.status} ${response.statusText}\n${errorText}`
+				);
 				return;
 			}
 
@@ -129,7 +137,7 @@
 					break;
 				}
 			}
-			
+
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
 			merchantPickerRef?.refreshMerchantList();
@@ -226,7 +234,9 @@
 			<h1 class="text-4xl font-bold">{budget?.name || 'Loading...'}</h1>
 		</div>
 		<div>
-			<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg">Back to Budgets</Button>
+			<Button href="/projects/ccbilling/budgets" variant="secondary" size="lg"
+				>Back to Budgets</Button
+			>
 		</div>
 	</div>
 
@@ -258,8 +268,15 @@
 						<button
 							type="button"
 							onclick={() => handleIconSelect(icon)}
-							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon === icon ? 'bg-blue-600' : isUsed ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
-							title={isUsed ? `${getIconDescription(icon)} (used by ${usedByBudget})` : getIconDescription(icon)}
+							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon ===
+							icon
+								? 'bg-blue-600'
+								: isUsed
+									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+									: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
+							title={isUsed
+								? `${getIconDescription(icon)} (used by ${usedByBudget})`
+								: getIconDescription(icon)}
 							aria-label={`Select ${getIconDescription(icon)} icon`}
 							disabled={isUsed || isSavingName}
 						>
@@ -288,13 +305,13 @@
 			<h3 class="text-lg font-semibold text-white mb-4">Add Merchant</h3>
 			<div class="space-y-4">
 				<div>
-									<MerchantPicker
-					{selectedMerchant}
-					onSelect={(merchant) => (selectedMerchant = merchant)}
-					placeholder="Choose a merchant to assign to this budget..."
-					assignedMerchants={assignedMerchantNames}
-					bind:this={merchantPickerRef}
-				/>
+					<MerchantPicker
+						{selectedMerchant}
+						onSelect={(merchant) => (selectedMerchant = merchant)}
+						placeholder="Choose a merchant to assign to this budget..."
+						assignedMerchants={assignedMerchantNames}
+						bind:this={merchantPickerRef}
+					/>
 				</div>
 				{#if addError}
 					<p class="text-red-400 text-sm">{addError}</p>
@@ -331,7 +348,9 @@
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
 							<div>
-								<p class="text-white font-medium">{merchant.merchant_normalized || merchant.merchant}</p>
+								<p class="text-white font-medium">
+									{merchant.merchant_normalized || merchant.merchant}
+								</p>
 								<p class="text-gray-400 text-sm">
 									Charges from this merchant will be auto-assigned to "{budget?.name ||
 										'this budget'}"
@@ -340,10 +359,14 @@
 							<button
 								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
-								disabled={isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
+								disabled={isDeleting &&
+									deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
 								style="cursor: pointer;"
 							>
-								{isDeleting && deletingMerchant === (merchant.merchant_normalized || merchant.merchant) ? 'Removing...' : 'Remove'}
+								{isDeleting &&
+								deletingMerchant === (merchant.merchant_normalized || merchant.merchant)
+									? 'Removing...'
+									: 'Remove'}
 							</button>
 						</div>
 					{/each}
@@ -374,7 +397,12 @@
 					>
 						Cancel
 					</Button>
-					<Button type="button" variant="danger" disabled={isDeletingBudget} onclick={handleDeleteBudget}>
+					<Button
+						type="button"
+						variant="danger"
+						disabled={isDeletingBudget}
+						onclick={handleDeleteBudget}
+					>
 						{isDeletingBudget ? 'Deleting...' : 'Delete'}
 					</Button>
 				</div>
