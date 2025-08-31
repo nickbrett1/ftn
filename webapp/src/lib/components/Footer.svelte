@@ -36,9 +36,6 @@
 		// Check initial auth status with a small delay to ensure cookie is set
 		setTimeout(checkAuthStatus, 100);
 
-		// Set up periodic auth status check (every 5 seconds)
-		const authCheckInterval = setInterval(checkAuthStatus, 5000);
-
 		const deploymentsTooltips = tippy('#deployments', {
 			content: 'View Deployments & Preview Environments'
 		});
@@ -48,7 +45,6 @@
 
 		// Clean up tooltips when component unmounts
 		return () => {
-			clearInterval(authCheckInterval);
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
 				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
