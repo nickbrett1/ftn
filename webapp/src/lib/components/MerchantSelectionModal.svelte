@@ -31,9 +31,9 @@
 			}
 
 			const data = await response.json();
-			
+
 			// Validate that we received an array of strings
-			if (Array.isArray(data) && data.every(item => typeof item === 'string')) {
+			if (Array.isArray(data) && data.every((item) => typeof item === 'string')) {
 				merchants = sortMerchants(data);
 				// Initialize filtered merchants based on current search term
 				if (searchTerm.trim()) {
@@ -69,7 +69,7 @@
 				filteredMerchants = merchants;
 			} else {
 				// Ensure merchants is an array and contains only strings before filtering
-				if (merchants.every(m => typeof m === 'string')) {
+				if (merchants.every((m) => typeof m === 'string')) {
 					const filtered = merchants.filter((merchant) =>
 						merchant.toLowerCase().includes(searchTerm.toLowerCase())
 					);
@@ -126,11 +126,11 @@
 			searchTerm = '';
 			inputValue = '';
 			loadAllMerchants();
-			
+
 			// Focus the search input when modal opens
 			focusTimeout = setTimeout(() => {
 				try {
-					if (isMounted) {
+					if (isMounted && typeof document !== 'undefined') {
 						const searchInput = document.querySelector('input[placeholder="Search merchants..."]');
 						if (searchInput) {
 							searchInput.focus();
@@ -140,7 +140,7 @@
 					console.error('Error focusing search input:', err);
 				}
 			}, 100);
-			
+
 			// Scroll to top of modal when it opens
 			setTimeout(() => {
 				try {
@@ -153,7 +153,7 @@
 			}, 50);
 
 			// Prevent body scroll
-			if (document && document.body) {
+			if (typeof document !== 'undefined' && document.body) {
 				document.body.style.overflow = 'hidden';
 			}
 		} else if (isMounted) {
@@ -162,9 +162,9 @@
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
 			}
-			
+
 			// Restore body scroll
-			if (document && document.body) {
+			if (typeof document !== 'undefined' && document.body) {
 				document.body.style.overflow = '';
 			}
 		}
@@ -186,7 +186,7 @@
 				clearTimeout(focusTimeout);
 			}
 			// Restore body scroll
-			if (document && document.body) {
+			if (typeof document !== 'undefined' && document.body) {
 				document.body.style.overflow = '';
 			}
 		} catch (err) {
@@ -196,8 +196,6 @@
 
 	// Remove the problematic effect that was causing infinite loops
 	// Instead, handle merchants initialization in the loadAllMerchants function
-
-
 </script>
 
 {#if isOpen}
@@ -237,10 +235,10 @@
 					value={inputValue}
 					oninput={(e) => {
 						const newValue = e.target.value || '';
-						
+
 						// Update the input display immediately
 						inputValue = newValue;
-						
+
 						// Update search term and trigger search
 						searchTerm = newValue;
 						if (isMounted && !isLoading) {
@@ -338,35 +336,35 @@
 		color: white;
 		-webkit-text-fill-color: white;
 		text-fill-color: white;
-		
+
 		/* Background and border */
 		background-color: rgb(31, 41, 55);
 		border: 1px solid rgb(75, 85, 99);
-		
+
 		/* Remove default browser styling */
 		-webkit-appearance: none;
 		appearance: none;
-		
+
 		/* Font properties */
 		font-size: 16px;
 		font-family: inherit;
 		line-height: 1.5;
-		
+
 		/* Text size adjustments */
 		-webkit-text-size-adjust: 100%;
 		text-size-adjust: 100%;
-		
+
 		/* Ensure proper display */
 		display: block;
 		width: 100%;
 		box-sizing: border-box;
-		
+
 		/* Remove any potential text hiding */
 		text-indent: 0;
 		text-align: left;
 		text-transform: none;
 		text-shadow: none;
-		
+
 		/* Ensure proper opacity */
 		opacity: 1;
 	}
@@ -439,11 +437,11 @@
 			color: white;
 			-webkit-text-fill-color: white;
 			text-fill-color: white;
-			
+
 			/* Ensure proper contrast */
 			background-color: rgb(31, 41, 55);
 			border: 1px solid rgb(75, 85, 99);
-			
+
 			/* Remove any potential hiding */
 			visibility: visible;
 			opacity: 1;
