@@ -9,7 +9,7 @@
 	interactivity();
 
 	// @ts-ignore - markerRef is managed by bind:ref
-	let markerRef;
+	let markerRef = $state();
 	let pulseIntensity = $state(0.5);
 	let pulseDirection = $state(1);
 	let tooltip = null;
