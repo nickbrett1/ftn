@@ -14,6 +14,7 @@
 	let backdropRef = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
+	let scrollTimeout = $state(null);
 
 	// Helper function to sort merchants alphabetically
 	function sortMerchants(merchantList) {
@@ -142,7 +143,7 @@
 			}, 100);
 
 			// Scroll to top of modal when it opens
-			setTimeout(() => {
+			scrollTimeout = setTimeout(() => {
 				try {
 					if (modalRef) {
 						modalRef.scrollTop = 0;
@@ -161,6 +162,10 @@
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
 				focusTimeout = null;
+			}
+			if (scrollTimeout) {
+				clearTimeout(scrollTimeout);
+				scrollTimeout = null;
 			}
 
 			// Restore body scroll
@@ -184,6 +189,11 @@
 			isMounted = false;
 			if (focusTimeout) {
 				clearTimeout(focusTimeout);
+				focusTimeout = null;
+			}
+			if (scrollTimeout) {
+				clearTimeout(scrollTimeout);
+				scrollTimeout = null;
 			}
 			// Restore body scroll
 			if (typeof document !== 'undefined' && document.body) {

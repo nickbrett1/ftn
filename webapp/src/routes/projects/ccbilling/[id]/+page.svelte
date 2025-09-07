@@ -151,6 +151,7 @@
 	let showToast = $state(false);
 	let toastMessage = $state('');
 	let toastType = $state('success'); // 'success', 'error', 'info'
+	let toastTimeout = $state(null);
 
 	// Progress tracking for parsing steps
 	const parsingSteps = [
@@ -196,13 +197,20 @@
 
 	// Toast notification functions
 	function showToastMessage(message, type = 'success') {
+		// Clear any existing timeout
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+			toastTimeout = null;
+		}
+
 		toastMessage = message;
 		toastType = type;
 		showToast = true;
 
 		// Auto-hide after 5 seconds
-		setTimeout(() => {
+		toastTimeout = setTimeout(() => {
 			showToast = false;
+			toastTimeout = null;
 		}, 5000);
 	}
 
@@ -264,6 +272,7 @@
 	// Fireworks state
 	let showFireworks = $state(false);
 	let previousUnallocatedTotal = $state(null);
+	let fireworksTimeout = $state(null);
 
 	function showCardInfo(cardName) {
 		selectedCardName = cardName;
@@ -380,8 +389,9 @@
 		) {
 			showFireworks = true;
 			// Auto-hide fireworks after animation completes
-			setTimeout(() => {
+			fireworksTimeout = setTimeout(() => {
 				showFireworks = false;
+				fireworksTimeout = null;
 			}, 15000);
 		}
 
@@ -837,6 +847,14 @@
 
 	onDestroy(() => {
 		// Cleanup when component unmounts
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+			toastTimeout = null;
+		}
+		if (fireworksTimeout) {
+			clearTimeout(fireworksTimeout);
+			fireworksTimeout = null;
+		}
 	});
 </script>
 
