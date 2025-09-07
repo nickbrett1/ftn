@@ -16,6 +16,7 @@
 	import { browser } from '$app/environment';
 
 	let isLoggedIn = $state(false);
+	let authCheckTimeout = $state(null);
 
 	// Check if this is a preview deployment
 	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
@@ -34,7 +35,7 @@
 
 	onMount(() => {
 		// Check initial auth status with a small delay to ensure cookie is set
-		setTimeout(checkAuthStatus, 100);
+		authCheckTimeout = setTimeout(checkAuthStatus, 100);
 
 		// Set up periodic auth status check (every 5 seconds)
 		const authCheckInterval = setInterval(checkAuthStatus, 5000);
@@ -49,6 +50,10 @@
 		// Clean up tooltips when component unmounts
 		return () => {
 			clearInterval(authCheckInterval);
+			if (authCheckTimeout) {
+				clearTimeout(authCheckTimeout);
+				authCheckTimeout = null;
+			}
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
 				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
@@ -120,7 +125,10 @@
 				>
 					<EnvelopeRegular />
 				</a>
-				<a href="https://github.com/nickbrett1/ftn" class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center">
+				<a
+					href="https://github.com/nickbrett1/ftn"
+					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+				>
 					<GithubBrands />
 				</a>
 				<a
@@ -134,9 +142,11 @@
 
 		<!-- Git info at bottom of footer -->
 		<div class="mt-8 pt-4 border-t border-white/10 text-xs text-white/60 text-center">
-			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: {isPreview ? 'preview' : 'production'}
+			Branch: {__GIT_BRANCH__} | Commit: {__GIT_COMMIT__} | Env: {isPreview
+				? 'preview'
+				: 'production'}
 		</div>
-		
+
 		<!-- Build time info -->
 		<div class="mt-2 text-xs text-white/40 text-center">
 			Built: {formatDate(__BUILD_TIME__, { includeTime: true, includeTimezone: true })}
