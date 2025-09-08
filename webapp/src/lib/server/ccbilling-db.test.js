@@ -555,7 +555,7 @@ describe('ccbilling-db functions', () => {
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
-				
+
 				// Check that the result includes the expected fields plus the new amazon_order_id
 				expect(result).toHaveLength(2);
 				expect(result[0]).toMatchObject({
@@ -598,7 +598,7 @@ describe('ccbilling-db functions', () => {
 					)
 				);
 				expect(mockDb.bind).toHaveBeenCalledWith(1);
-				
+
 				// Check that the result includes the expected fields plus the new fields
 				expect(result).toMatchObject({
 					id: 1,
