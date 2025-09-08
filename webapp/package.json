@@ -86,7 +86,7 @@
 		"@tsparticles/interaction-external-trail": "3.9",
 		"@tsparticles/shape-text": "^3.9.1",
 		"@tsparticles/slim": "^3.8.1",
-		"apexcharts": "^5.3.4",
+		"apexcharts": "^5.3.5",
 		"cookie": "^1.0.2",
 		"gsap": "^3.13.0",
 		"linkify-it": "^5.0.0",
