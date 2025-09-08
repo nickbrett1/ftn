@@ -19,7 +19,7 @@
 	// Core data - reactive state
 	let budget = $state(data.budget || null);
 	let budgets = $state(data.budgets || []);
-	let merchants = $state(new SvelteSet(data.merchants || []));
+	let merchants = $state(data.merchants || []);
 
 	// Merchant management state
 	let selectedMerchant = $state('');
@@ -43,18 +43,14 @@
 	// Derived state for UI
 	let availableIcons = $derived(getAvailableIcons());
 	let sortedMerchants = $derived(
-		Array.from(merchants)
+		merchants
 			.filter((merchant) => merchant && merchant.merchant)
 			.sort((a, b) => a.merchant.toLowerCase().localeCompare(b.merchant.toLowerCase()))
 	);
 
 	// Derived set of assigned merchant names for reactive filtering
 	let assignedMerchantNames = $derived(
-		new Set(
-			Array.from(merchants)
-				.filter((m) => m && m.merchant)
-				.map((m) => m.merchant.toLowerCase())
-		)
+		new Set(merchants.filter((m) => m && m.merchant).map((m) => m.merchant.toLowerCase()))
 	);
 
 	async function addMerchant() {
@@ -66,7 +62,7 @@
 		}
 
 		// Check if merchant already exists
-		const merchantExists = Array.from(merchants).some(
+		const merchantExists = merchants.some(
 			(merchant) => merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
 		);
 		if (merchantExists) {
@@ -91,10 +87,13 @@
 			}
 
 			// Add to reactive collection
-			merchants.add({
-				merchant: selectedMerchant.trim(),
-				merchant_normalized: selectedMerchant.trim()
-			});
+			merchants = [
+				...merchants,
+				{
+					merchant: selectedMerchant.trim(),
+					merchant_normalized: selectedMerchant.trim()
+				}
+			];
 
 			// Reset form
 			selectedMerchant = '';
@@ -130,14 +129,14 @@
 				return;
 			}
 
-			// Remove from reactive collection - create a new set to avoid iteration issues
-			const newMerchants = new SvelteSet();
-			for (const merchant of merchants) {
-				if (merchant.merchant !== merchantName) {
-					newMerchants.add(merchant);
-				}
-			}
-			merchants = newMerchants;
+			// Remove from reactive collection
+			merchants = merchants.filter((merchant) => {
+				const merchantKey = merchant.merchant_normalized || merchant.merchant;
+				return merchantKey !== merchantName;
+			});
+
+			// Wait for DOM updates to complete before refreshing picker
+			await tick();
 
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
@@ -333,7 +332,7 @@
 		</div>
 
 		<!-- Merchants List -->
-		{#if merchants.size === 0}
+		{#if merchants.length === 0}
 			<div class="text-center py-8 bg-gray-800 border border-gray-700 rounded-lg">
 				<p class="text-gray-300 mb-2">No merchants assigned to this budget yet.</p>
 				<p class="text-gray-400 text-sm">
@@ -342,7 +341,7 @@
 			</div>
 		{:else}
 			<div class="space-y-2 merchant-list">
-				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.size})</h3>
+				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
 				<div class="grid gap-3">
 					{#each sortedMerchants as merchant, index (merchant.merchant_normalized || merchant.merchant)}
 						<div
