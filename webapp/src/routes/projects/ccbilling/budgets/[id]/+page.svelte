@@ -27,7 +27,7 @@
 	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
-	let merchantPickerRef = null;
+	let merchantPickerRef = $state(null);
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');

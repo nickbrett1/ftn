@@ -103,8 +103,8 @@
 		await loadUnassignedMerchants();
 	}
 
-	// Export the function for parent components
-	export { refreshMerchantList };
+	// Export the function and state for parent components
+	export { refreshMerchantList, hasMerchants };
 
 	onMount(() => {
 		loadUnassignedMerchants();
@@ -139,7 +139,7 @@
 		{/if}
 
 		<!-- Merchants select -->
-		{#if !isLoading && !error}
+		{#if !isLoading && !error && hasMerchants}
 			<select
 				id="merchant-picker"
 				bind:value={localSelectedMerchant}
