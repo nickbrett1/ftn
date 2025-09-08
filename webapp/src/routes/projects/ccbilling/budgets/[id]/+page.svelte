@@ -130,13 +130,14 @@
 				return;
 			}
 
-			// Remove from reactive collection
+			// Remove from reactive collection - create a new set to avoid iteration issues
+			const newMerchants = new SvelteSet();
 			for (const merchant of merchants) {
-				if (merchant.merchant === merchantName) {
-					merchants.delete(merchant);
-					break;
+				if (merchant.merchant !== merchantName) {
+					newMerchants.add(merchant);
 				}
 			}
+			merchants = newMerchants;
 
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
@@ -343,7 +344,7 @@
 			<div class="space-y-2 merchant-list">
 				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.size})</h3>
 				<div class="grid gap-3">
-					{#each sortedMerchants as merchant (merchant.merchant_normalized || merchant.merchant)}
+					{#each sortedMerchants as merchant, index (merchant.merchant_normalized || merchant.merchant)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>
