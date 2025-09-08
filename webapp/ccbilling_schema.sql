@@ -31,7 +31,8 @@ CREATE TABLE budget_merchant (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   budget_id INTEGER NOT NULL REFERENCES budget(id),
   merchant_normalized TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(merchant_normalized)
 );
 
 CREATE TABLE statement (

@@ -197,11 +197,14 @@ export async function deleteBudget(event, id) {
 export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Use INSERT OR IGNORE to handle the unique constraint gracefully
+	// If the merchant is already assigned to a budget, this will silently ignore the insert
 	await db
 		.prepare(
-			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
+			'INSERT OR IGNORE INTO budget_merchant (budget_id, merchant_normalized) VALUES (?, ?)'
 		)
-		.bind(budget_id, merchant_normalized, merchant_normalized) // Store in both columns for compatibility
+		.bind(budget_id, merchant_normalized)
 		.run();
 }
 
