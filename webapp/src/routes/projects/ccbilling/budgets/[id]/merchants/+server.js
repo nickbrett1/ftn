@@ -1,9 +1,8 @@
 import {
-    addBudgetMerchant,
-    removeBudgetMerchant,
-    getBudgetMerchants,
-    getUnassignedMerchants,
-    getBudgetByMerchant
+	addBudgetMerchant,
+	removeBudgetMerchant,
+	getBudgetMerchants,
+	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -65,17 +64,29 @@ export async function POST(event) {
 	const { merchant, error: merchantError } = await validateMerchant(event);
 	if (merchantError) return merchantError;
 
-    // Prevent duplicates globally across budgets
-    const existingBudget = await getBudgetByMerchant(event, merchant);
-    if (existingBudget) {
-        return createJsonResponse(
-            { error: `Merchant is already assigned to budget "${existingBudget.name}"` },
-            { status: 400 }
-        );
-    }
+	// Prevent duplicates globally across budgets
+	const existingBudget = await getBudgetByMerchant(event, merchant);
+	if (existingBudget) {
+		return createJsonResponse(
+			{ error: `Merchant is already assigned to budget "${existingBudget.name}"` },
+			{ status: 400 }
+		);
+	}
 
-	await addBudgetMerchant(event, id, merchant);
-	return createJsonResponse({ success: true });
+	try {
+		await addBudgetMerchant(event, id, merchant);
+		return createJsonResponse({ success: true });
+	} catch (error) {
+		// Handle unique constraint violation
+		if (error.message && error.message.includes('UNIQUE constraint failed')) {
+			return createJsonResponse(
+				{ error: 'This merchant is already assigned to this budget' },
+				{ status: 400 }
+			);
+		}
+		// Re-throw other errors
+		throw error;
+	}
 }
 
 export async function DELETE(event) {
