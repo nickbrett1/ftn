@@ -64,6 +64,11 @@ export function normalizeMerchant(merchant) {
 		return extractBluemercuryDetails(merchant);
 	}
 
+	// Google Cloud services
+	if (merchantUpper.includes('GOOGLE') && merchantUpper.includes('CLOUD')) {
+		return extractGoogleCloudDetails(merchant);
+	}
+
 	// Default: return as-is with minimal normalization
 	return {
 		merchant_normalized: normalizeGenericMerchant(merchant),
@@ -186,7 +191,7 @@ function extractAmazonDetails(merchant) {
 
 	// First check if this contains an order ID - if so, it's a purchase, not a service
 	const hasOrderId = /\b(\d{3}-\d{7}-\d{7})\b|\b(\d{16})\b|\b(\d{10,})\b/.test(merchant);
-	
+
 	// If it has an order ID, it's a purchase, not a service
 	if (hasOrderId) {
 		return {
@@ -240,7 +245,7 @@ function extractKindleDetails(merchant) {
  */
 function extractMaidMarinesDetails(merchant) {
 	// Clean up MAIDMARINES merchant name by removing location identifiers and state codes
-	let cleanedMerchant = merchant
+	merchant
 		.replace(/MAIDMARINES\s+#\d+/i, 'MAIDMARINES') // Remove location number like "#1861813"
 		.replace(/MAIDMARINES\.C/i, 'MAIDMARINES') // Remove ".C" suffix
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
@@ -286,6 +291,25 @@ function extractBluemercuryDetails(merchant) {
 	return {
 		merchant_normalized: 'BLUEMERCURY',
 		merchant_details: cleanedMerchant || ''
+	};
+}
+
+/**
+ * Extract Google Cloud details
+ */
+function extractGoogleCloudDetails(merchant) {
+	// Clean up Google Cloud merchant name by removing transaction IDs and help URLs
+	merchant
+		.replace(/GOOGLE\s*\*\s*CLOUD\s+[A-Z0-9]+\s+g\.co\/helppay#?/i, 'GOOGLE CLOUD') // Remove transaction ID and help URL
+		.replace(/GOOGLE\s*\*\s*CLOUD\s+[A-Z0-9]+/i, 'GOOGLE CLOUD') // Remove transaction ID
+		.replace(/GOOGLE\s*\*\s*CLOUD/i, 'GOOGLE CLOUD') // Normalize asterisk format
+		.replace(/\s+g\.co\/helppay#?/i, '') // Remove help URL
+		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.trim();
+
+	return {
+		merchant_normalized: 'GOOGLE CLOUD',
+		merchant_details: ''
 	};
 }
 
@@ -344,7 +368,7 @@ function normalizeGenericMerchant(merchant) {
 
 	// Remove location suffixes (common patterns)
 	normalized = normalized.replace(/\s+[A-Z]{2}\s*$/i, ''); // Remove state codes
-	normalized = normalized.replace(/\s+[0-9]{5}\s*$/i, ''); // Remove ZIP codes
+	normalized = normalized.replace(/\s+\d{5}\s*$/i, ''); // Remove ZIP codes
 
 	return normalized;
 }

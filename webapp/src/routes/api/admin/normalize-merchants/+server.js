@@ -5,7 +5,7 @@ import { requireUser } from '$lib/server/require-user.js';
 /**
  * Admin endpoint to normalize existing merchant data
  * This processes payments and budget merchants in batches to avoid timeouts.
- * 
+ *
  * The normalization now intelligently updates only records that actually need changes,
  * ensuring consistency between payments and budget merchants while avoiding unnecessary database updates.
  */
@@ -42,15 +42,16 @@ export async function POST(event) {
 		let updatedCount = 0;
 		const errors = [];
 
-				// Process each payment
+		// Process each payment
 		for (const payment of payments) {
 			try {
 				const normalized = normalizeMerchant(payment.merchant);
-				
+
 				// Only update if normalization actually changed something
-				if (normalized.merchant_normalized !== payment.merchant_normalized || 
-					normalized.merchant_details !== (payment.merchant_details || '')) {
-					
+				if (
+					normalized.merchant_normalized !== payment.merchant_normalized ||
+					normalized.merchant_details !== (payment.merchant_details || '')
+				) {
 					await db
 						.prepare(
 							`
@@ -59,14 +60,10 @@ export async function POST(event) {
 								merchant_details = ?
 							WHERE id = ?
 						`
-							)
-							.bind(
-								normalized.merchant_normalized,
-								normalized.merchant_details || '',
-								payment.id
-							)
-							.run();
-					
+						)
+						.bind(normalized.merchant_normalized, normalized.merchant_details || '', payment.id)
+						.run();
+
 					updatedCount++;
 				}
 			} catch (error) {
@@ -91,7 +88,7 @@ export async function POST(event) {
 
 		const totalRemaining = countResult[0]?.total || 0;
 
-				// Also normalize budget_merchant records - enhanced to handle all cases
+		// Also normalize budget_merchant records - enhanced to handle all cases
 		const { results: budgetMerchants } = await db
 			.prepare(
 				`
@@ -109,7 +106,7 @@ export async function POST(event) {
 		for (const mapping of budgetMerchants) {
 			try {
 				const normalized = normalizeMerchant(mapping.merchant);
-				
+
 				// Only update if normalization actually changed something
 				if (normalized.merchant_normalized !== mapping.merchant_normalized) {
 					await db
@@ -119,10 +116,10 @@ export async function POST(event) {
 							SET merchant_normalized = ?
 							WHERE id = ?
 						`
-							)
-							.bind(normalized.merchant_normalized, mapping.id)
-							.run();
-					
+						)
+						.bind(normalized.merchant_normalized, mapping.id)
+						.run();
+
 					budgetMerchantsUpdated++;
 				}
 			} catch (error) {
@@ -142,7 +139,7 @@ export async function POST(event) {
 				const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
 				updatedCount += bulkUpdates.paymentsUpdated;
 				budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
-				
+
 				// Add any bulk update errors
 				if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
 					errors.push(...bulkUpdates.errors);
@@ -161,7 +158,6 @@ export async function POST(event) {
 				if (consistencyUpdates.errors && consistencyUpdates.errors.length > 0) {
 					errors.push(...consistencyUpdates.errors);
 				}
-
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -179,17 +175,17 @@ export async function POST(event) {
 			totalRemaining: totalRemaining - updatedCount,
 			nextOffset: offset + batchSize,
 			errors: errors.length > 0 ? errors : undefined,
-			message: totalRemaining > batchSize 
-				? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-				: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
+			message:
+				totalRemaining > batchSize
+					? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
+					: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
 		});
-
 	} catch (error) {
 		console.error('Merchant normalization failed:', error);
 		return json(
-			{ 
+			{
 				error: 'Failed to normalize merchants',
-				details: error.message 
+				details: error.message
 			},
 			{ status: 500 }
 		);
@@ -212,13 +208,13 @@ async function performBulkPatternUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE 'CAVIAR%'",
 			normalized: 'CAVIAR',
-			details: "SUBSTR(merchant, 8)" // Everything after 'CAVIAR '
+			details: 'SUBSTR(merchant, 8)' // Everything after 'CAVIAR '
 		},
 		// DoorDash
 		{
 			pattern: "merchant LIKE 'DOORDASH%'",
 			normalized: 'DOORDASH',
-			details: "SUBSTR(merchant, 10)" // Everything after 'DOORDASH '
+			details: 'SUBSTR(merchant, 10)' // Everything after 'DOORDASH '
 		},
 		// Uber Eats
 		{
@@ -230,34 +226,34 @@ async function performBulkPatternUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE 'LYFT%'",
 			normalized: 'LYFT',
-			details: "SUBSTR(merchant, 6)" // Everything after 'LYFT '
+			details: 'SUBSTR(merchant, 6)' // Everything after 'LYFT '
 		},
 		// Uber (not Uber Eats)
 		{
 			pattern: "merchant LIKE 'UBER%' AND merchant NOT LIKE '%UBER EATS%'",
 			normalized: 'UBER',
-			details: "SUBSTR(merchant, 6)" // Everything after 'UBER '
+			details: 'SUBSTR(merchant, 6)' // Everything after 'UBER '
 		},
 		// Airlines
 		{
 			pattern: "merchant LIKE '%UNITED%'",
 			normalized: 'UNITED',
-			details: "merchant"
+			details: 'merchant'
 		},
 		{
 			pattern: "merchant LIKE '%AMERICAN%'",
 			normalized: 'AMERICAN',
-			details: "merchant"
+			details: 'merchant'
 		},
 		{
 			pattern: "merchant LIKE '%DELTA%'",
 			normalized: 'DELTA',
-			details: "merchant"
+			details: 'merchant'
 		},
 		{
 			pattern: "merchant LIKE '%SOUTHWEST%'",
 			normalized: 'SOUTHWEST',
-			details: "merchant"
+			details: 'merchant'
 		},
 		// Gas stations
 		{
@@ -280,6 +276,12 @@ async function performBulkPatternUpdates(db, batchSize) {
 			pattern: "merchant LIKE 'BLUEMERCURY%'",
 			normalized: 'BLUEMERCURY',
 			details: ''
+		},
+		// Google Cloud
+		{
+			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
+			normalized: 'GOOGLE CLOUD',
+			details: ''
 		}
 	];
 
@@ -299,25 +301,19 @@ async function performBulkPatternUpdates(db, batchSize) {
 			} else {
 				detailsField = "''";
 			}
-			
-					const sql = `
+
+			const sql = `
 			UPDATE payment 
 			SET merchant_normalized = ?,
 				merchant_details = ${detailsField}
 			WHERE (${update.pattern})
 			AND (merchant_normalized != ? OR merchant_normalized IS NULL)
 		`;
-			
-			const result = await db
-				.prepare(sql)
-				.bind(update.normalized, update.normalized)
-				.run();
-			
+
+			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
+
 			const updated = result.changes || 0;
 			totalUpdated += updated;
-
-
-			
 		} catch (error) {
 			errors.push({
 				type: 'bulk_update',
@@ -404,6 +400,11 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE 'BLUEMERCURY%'",
 			normalized: 'BLUEMERCURY'
+		},
+		// Google Cloud
+		{
+			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
+			normalized: 'GOOGLE CLOUD'
 		}
 	];
 
@@ -418,15 +419,11 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 				WHERE (${update.pattern})
 				AND (merchant_normalized != ? OR merchant_normalized IS NULL)
 			`;
-			
-			const result = await db
-				.prepare(sql)
-				.bind(update.normalized, update.normalized)
-				.run();
-			
+
+			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
+
 			const updated = result.changes || 0;
 			totalUpdated += updated;
-			
 		} catch (error) {
 			errors.push({
 				type: 'budget_merchant_bulk_update',
@@ -476,10 +473,10 @@ async function ensurePaymentBudgetConsistency(db) {
 						SET merchant_normalized = ?
 						WHERE id = ?
 					`
-						)
-						.bind(mapping.payment_normalized, mapping.id)
-						.run();
-				
+					)
+					.bind(mapping.payment_normalized, mapping.id)
+					.run();
+
 				updated++;
 			} catch (error) {
 				errors.push({
@@ -496,17 +493,17 @@ async function ensurePaymentBudgetConsistency(db) {
 		return { updated, errors };
 	} catch (error) {
 		console.error('Payment-budget consistency check failed:', error);
-		return { 
-			updated: 0, 
-			errors: [{ 
-				type: 'consistency_check_failure', 
-				error: error.message 
-			}] 
+		return {
+			updated: 0,
+			errors: [
+				{
+					type: 'consistency_check_failure',
+					error: error.message
+				}
+			]
 		};
 	}
 }
-
-
 
 /**
  * Get normalization status
@@ -614,17 +611,17 @@ export async function GET(event) {
 			samples,
 			unitedInfo,
 			pendingMerchants,
-			message: stats.processed_payments === stats.total_payments 
-				? 'All merchants have been processed!' 
-				: `${stats.total_payments - stats.processed_payments} payments still need processing`
+			message:
+				stats.processed_payments === stats.total_payments
+					? 'All merchants have been processed!'
+					: `${stats.total_payments - stats.processed_payments} payments still need processing`
 		});
-
 	} catch (error) {
 		console.error('Failed to get normalization status:', error);
 		return json(
-			{ 
+			{
 				error: 'Failed to get status',
-				details: error.message 
+				details: error.message
 			},
 			{ status: 500 }
 		);
