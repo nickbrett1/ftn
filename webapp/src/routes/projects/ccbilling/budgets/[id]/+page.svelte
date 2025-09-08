@@ -343,7 +343,7 @@
 			<div class="space-y-2 merchant-list">
 				<h3 class="text-lg font-semibold text-white">Assigned Merchants ({merchants.length})</h3>
 				<div class="grid gap-3">
-					{#each sortedMerchants as merchant, index (merchant.merchant_normalized || merchant.merchant)}
+					{#each sortedMerchants as merchant, index (`${merchant.merchant_normalized || merchant.merchant}-${index}`)}
 						<div
 							class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
 						>

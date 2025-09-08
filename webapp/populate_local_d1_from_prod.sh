@@ -1,11 +1,54 @@
 #!/bin/bash
 
 # Configuration
-DB_NAME="wdi"
 # Output migration file (D1 migration naming convention: XXXX_description.sql)
 BOOTSTRAP_SQL_DIR="migrations" # Keeping the directory name as 'migrations' for now, as D1 might expect it.
-BOOTSTRAP_SQL_FILE="$BOOTSTRAP_SQL_DIR/0000_bootstrap_schema_and_sample_data.sql"
 SAMPLE_SIZE=500 # Number of sample rows to fetch per table
+
+# Function to display usage information
+show_usage() {
+    echo "Usage: $0 DATABASE_NAME"
+    echo ""
+    echo "Arguments:"
+    echo "  DATABASE_NAME    Database to populate from production (wdi or ccbilling)"
+    echo "                   Required: Must specify either 'wdi' or 'ccbilling'"
+    echo ""
+    echo "Examples:"
+    echo "  $0 ccbilling          # Populate ccbilling database"
+    echo "  $0 wdi                # Populate wdi database"
+    echo ""
+    echo "This script fetches schema and sample data from the remote D1 database"
+    echo "and applies it to the local D1 database."
+}
+
+# Parse command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    show_usage
+    exit 0
+fi
+
+# Check if database name argument is provided
+if [ -z "$1" ]; then
+    echo "Error: Database name is required."
+    echo ""
+    show_usage
+    exit 1
+fi
+
+# Set database name from argument
+DB_NAME="$1"
+
+# Validate database name
+if [ "$DB_NAME" != "wdi" ] && [ "$DB_NAME" != "ccbilling" ]; then
+    echo "Error: Invalid database name '$DB_NAME'."
+    echo "Valid options are: wdi, ccbilling"
+    echo ""
+    show_usage
+    exit 1
+fi
+
+# Set database-specific bootstrap SQL file
+BOOTSTRAP_SQL_FILE="$BOOTSTRAP_SQL_DIR/0000_bootstrap_schema_and_sample_data_${DB_NAME}.sql"
 
 # --- Script Start ---
 
