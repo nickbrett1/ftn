@@ -198,10 +198,8 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 	await db
-		.prepare(
-			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
-		)
-		.bind(budget_id, merchant_normalized, merchant_normalized) // Store in both columns for compatibility
+		.prepare('INSERT INTO budget_merchant (budget_id, merchant_normalized) VALUES (?, ?)')
+		.bind(budget_id, merchant_normalized)
 		.run();
 }
 
