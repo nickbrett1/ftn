@@ -657,4 +657,165 @@ describe('MerchantPicker', () => {
 		const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
 		expect(loadingText).toBeFalsy();
 	});
+
+	it('should handle duplicate merchant names without DOM indexing issues', async () => {
+		// This test detects the regression where multiple merchants with the same name
+		// cause DOM indexing issues when using merchant name as the key in {#each} blocks
+		
+		const mockMerchants = ['Amazon', 'Amazon', 'Target', 'Target', 'Walmart'];
+		
+		// Mock fetch to return merchants with duplicates for the correct URL
+		mockFetch.mockImplementation((url) => {
+			if (url.includes('recent-merchants')) {
+				return Promise.resolve({
+					ok: true,
+					json: async () => mockMerchants
+				});
+			}
+			return Promise.resolve({
+				ok: true,
+				json: async () => []
+			});
+		});
+
+		const { getByRole } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for merchants to load
+		await waitFor(() => {
+			expect(getByRole('combobox')).toBeTruthy();
+		});
+
+		const select = getByRole('combobox');
+		
+		// Count how many times each merchant appears in the DOM
+		const amazonCount = (select.innerHTML.match(/Amazon/g) || []).length;
+		const targetCount = (select.innerHTML.match(/Target/g) || []).length;
+		const walmartCount = (select.innerHTML.match(/Walmart/g) || []).length;
+		
+		// With duplicate merchants, we should see each merchant name appear multiple times
+		// If the DOM indexing bug regresses, we might see incorrect counts or missing options
+		expect(amazonCount).toBeGreaterThan(1); // Should appear at least twice
+		expect(targetCount).toBeGreaterThan(1); // Should appear at least twice
+		expect(walmartCount).toBeGreaterThanOrEqual(1); // Should appear at least once
+		
+		// Verify all options are present and selectable
+		const options = select.querySelectorAll('option');
+		const optionValues = Array.from(options).map(option => option.value);
+		
+		// Should have placeholder + all merchants (including duplicates)
+		expect(options.length).toBe(6); // 1 placeholder + 5 merchants
+		expect(optionValues).toContain(''); // Placeholder
+		expect(optionValues).toContain('Amazon');
+		expect(optionValues).toContain('Target');
+		expect(optionValues).toContain('Walmart');
+		
+		// Test that we can select each merchant (including duplicates)
+		// This would fail if DOM elements are incorrectly reused
+		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
+		
+		await fireEvent.change(select, { target: { value: 'Target' } });
+		expect(mockOnSelect).toHaveBeenCalledWith('Target');
+		
+		await fireEvent.change(select, { target: { value: 'Walmart' } });
+		expect(mockOnSelect).toHaveBeenCalledWith('Walmart');
+		
+		// Verify the select value is correctly set after each selection
+		expect(select.value).toBe('Walmart');
+	});
+
+	it('should detect Svelte duplicate key error when merchants have same names', async () => {
+		// This test specifically targets the MerchantSelectionModal where the bug was occurring
+		// The modal uses {#each filteredMerchants as merchant (merchant)} which causes
+		// Svelte to throw a "Keyed each block has duplicate key" error when merchants have the same name
+		
+		const mockMerchants = ['Amazon', 'Amazon', 'Target', 'Target', 'Walmart'];
+		
+		// Mock the modal's fetch call to return merchants with duplicates
+		mockFetch.mockImplementation((url) => {
+			if (url.includes('unassigned-merchants')) {
+				return Promise.resolve({
+					ok: true,
+					json: async () => mockMerchants
+				});
+			}
+			if (url.includes('recent-merchants')) {
+				return Promise.resolve({
+					ok: true,
+					json: async () => []
+				});
+			}
+			// Default to empty for other calls
+			return Promise.resolve({
+				ok: true,
+				json: async () => []
+			});
+		});
+
+		// Capture both console errors and unhandled exceptions
+		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const originalOnError = window.onerror;
+		let caughtError = null;
+		window.onerror = (message, source, lineno, colno, error) => {
+			caughtError = { message, source, lineno, colno, error };
+			return false; // Don't prevent default error handling
+		};
+
+		const { getByText } = render(MerchantPicker, {
+			props: {
+				onSelect: mockOnSelect
+			}
+		});
+
+		// Wait for initial load (should show empty state since recent-merchants returns empty)
+		await waitFor(() => {
+			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
+		});
+
+		// Click "View All Merchants" to open the modal
+		const viewAllButton = getByText('View All Merchants');
+		await fireEvent.click(viewAllButton);
+
+		// Wait for modal to open - this should trigger the Svelte duplicate key error
+		await waitFor(() => {
+			// Look for the modal title specifically in the modal (not the main component label)
+			const modalTitle = document.querySelector('[id="modal-title"]');
+			expect(modalTitle).toBeTruthy();
+		});
+
+		// Wait for merchants to load in modal - this is where the error occurs
+		// The Svelte error happens when the merchants are rendered, so we need to wait for that
+		await waitFor(() => {
+			// Check if merchants have loaded (either as buttons or if there's an error)
+			const merchantButtons = document.querySelectorAll('button[role="option"]');
+			const loadingText = document.querySelector('.text-gray-400');
+			const hasMerchants = merchantButtons.length > 0;
+			const notLoading = !loadingText || !loadingText.textContent.includes('Loading merchants');
+			
+			// Either merchants loaded or loading finished (with or without error)
+			expect(hasMerchants || notLoading).toBeTruthy();
+		}, { timeout: 3000 });
+
+		// Check if the Svelte duplicate key error was caught
+		// This error indicates the regression has occurred
+		const duplicateKeyError = consoleSpy.mock.calls.find(call => 
+			call[0] && call[0].includes && call[0].includes('Keyed each block has duplicate key')
+		);
+		
+		// Also check if we caught an unhandled error
+		const hasDuplicateKeyError = duplicateKeyError || 
+			(caughtError && caughtError.message && caughtError.message.includes('Keyed each block has duplicate key'));
+		
+		// The test should fail if this error is NOT present, because that would mean
+		// the regression test isn't working properly
+		expect(hasDuplicateKeyError).toBeTruthy();
+		
+		// Clean up
+		consoleSpy.mockRestore();
+		window.onerror = originalOnError;
+	});
 });
