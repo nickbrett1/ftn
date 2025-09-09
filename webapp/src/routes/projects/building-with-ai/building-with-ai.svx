@@ -24,7 +24,8 @@ Over the past year, my relationship with AI coding assistants has evolved dramat
 
 <!-- Placeholder for meme image -->
 <div class="mx-auto my-4 max-w-md text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
-	<p class="text-gray-400">[Meme placeholder: "Me coding on my phone while the AI agent does the heavy lifting"]</p>
+	<p class="text-gray-400">[Meme suggestion: "This is fine" dog sitting in burning room, but the room is labeled "My codebase" and the fire is labeled "AI agent making changes"]</p>
+	<p class="text-sm text-gray-500 mt-2">Alternative: "Distracted boyfriend" meme with "Me" looking at "AI Agent" while "Manual Coding" looks disappointed</p>
 </div>
 
 The ccbilling project is a comprehensive personal finance management system that automates the tedious process of reviewing monthly credit card statements. It parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
@@ -32,6 +33,24 @@ The ccbilling project is a comprehensive personal finance management system that
 **Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**. This represents a substantial application that would have taken significantly longer to build without AI assistance.
 
 Here's the high-level architecture of the system:
+
+<div class="mb-4 p-4 bg-gray-800 rounded-lg">
+	<h4 class="text-sm font-semibold text-gray-300 mb-2">Architecture Legend:</h4>
+	<div class="flex flex-wrap gap-4 text-sm">
+		<div class="flex items-center gap-2">
+			<div class="w-4 h-4 bg-gray-700 border border-white rounded"></div>
+			<span class="text-gray-300">Core Application Components</span>
+		</div>
+		<div class="flex items-center gap-2">
+			<div class="w-4 h-4 bg-green-600 border border-white rounded"></div>
+			<span class="text-gray-300">External APIs & Services</span>
+		</div>
+		<div class="flex items-center gap-2">
+			<div class="w-4 h-4 bg-red-600 border border-white rounded"></div>
+			<span class="text-gray-300">CI/CD & DevOps Pipeline</span>
+		</div>
+	</div>
+</div>
 
 <div class="mermaid-container">
 
@@ -53,9 +72,9 @@ graph TD;
     M --> N["SonarCloud Quality"];
     N --> O["Preview Deployments"];
 
-    classDef mainNode fill:#222,stroke:#cccccc,stroke-width:2px;
-    classDef apiNode fill:#166534,stroke:#cccccc,stroke-width:2px;
-    classDef storageNode fill:#7c2d12,stroke:#cccccc,stroke-width:2px;
+    classDef mainNode fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef apiNode fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef storageNode fill:#dc2626,stroke:#ffffff,stroke-width:2px,color:#ffffff;
 
     class A,B,C,D,E,F,G,H,I mainNode;
     class J,K apiNode;
@@ -96,8 +115,8 @@ graph LR;
     F --> G["Component Building"];
     G --> H["Project Leadership"];
 
-    classDef phase fill:#222,stroke:#cccccc,stroke-width:2px;
-    classDef capability fill:#166534,stroke:#cccccc,stroke-width:2px;
+    classDef phase fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef capability fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
 
     class A,B,C,D phase;
     class E,F,G,H capability;
@@ -175,14 +194,14 @@ A perfect example of this was when the agent tried to implement reactive state u
 let count = $state(0);
 
 function increment() {
-  count = count + 1; // This assignment breaks reactivity!
+	count = count + 1; // This assignment breaks reactivity!
 }
 
 // ✅ Correct approach with $state
 let count = $state(0);
 
 function increment() {
-  count++; // Direct mutation maintains reactivity
+	count++; // Direct mutation maintains reactivity
 }
 ```
 
