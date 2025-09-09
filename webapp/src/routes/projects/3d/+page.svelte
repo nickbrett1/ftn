@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import FinancialDashboard3D from '$lib/components/FinancialDashboard3D.svelte';
+	import NYCSkylineDiorama from '$lib/components/NYCSkylineDiorama.svelte';
 </script>
 
 <div class="min-h-screen bg-zinc-900">
@@ -10,22 +10,22 @@
 	<div class="container mx-auto px-4 py-8">
 		<div class="text-center mb-8">
 			<h1 class="text-4xl font-bold text-white mb-4 [text-shadow:_0_0_15px_#fff,_0_0_20px_#0fa,_0_0_30px_#0fa,_0_0_40px_#0fa,_0_0_80px_#0fa,_0_0_90px_#0fa,_0_0_100px_#0fa,_0_0_150px_#0fa]">
-				3D Financial Dashboard
+				New York City Skyline
 			</h1>
 			<p class="text-xl text-zinc-300 max-w-3xl mx-auto">
-				Interactive 3D financial dashboard with live market data, portfolio performance charts, 
-				and real-time metrics floating in space. Experience fintech visualization at its finest.
+				The financial capital of the world. Explore this 3D diorama of Manhattan's iconic skyline, 
+				featuring the world's most important financial institutions and landmarks.
 			</p>
 		</div>
 		
 		<div class="w-full h-[80vh] bg-black rounded-lg overflow-hidden border border-zinc-700 shadow-2xl">
 			{#if browser}
-				<FinancialDashboard3D />
+				<NYCSkylineDiorama />
 			{:else}
 				<div class="w-full h-full flex items-center justify-center">
 					<div class="text-center text-white">
 						<div class="w-16 h-16 border-4 border-blue-400 border-t-transparent animate-spin mx-auto mb-4"></div>
-						<div class="text-lg mb-2">Loading Dashboard</div>
+						<div class="text-lg mb-2">Loading Skyline</div>
 						<div class="text-sm text-zinc-400">Please wait while the 3D components initialize...</div>
 					</div>
 				</div>
@@ -34,7 +34,7 @@
 		
 		<div class="mt-8 text-center">
 			<p class="text-zinc-400 text-sm">
-				💡 Live market data • Interactive 3D charts • Real-time portfolio tracking • Drag to explore
+				💡 Iconic NYC landmarks • Day/night cycle • Financial district highlights • Drag to explore
 			</p>
 		</div>
 	</div>
