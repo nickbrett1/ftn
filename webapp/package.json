@@ -68,7 +68,7 @@
 		"safe-regex2": "^5.0.0",
 		"sharp": "^0.34.3",
 		"shiki": "^3.12.2",
-		"svelte": "^5.38.8",
+		"svelte": "^5.38.10",
 		"svelte-awesome-icons": "^2.0.2",
 		"svelte-preprocess": "^6.0.3",
 		"tailwindcss": "^4.1.13",
