@@ -1,5 +1,7 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+	import Img from '@zerodevx/svelte-img';
+	import distractedBoyfriendMeme from "$lib/images/distractedboyfriendmeme.jpg?as=run";
 
 	const { data } = $props();
 
@@ -23,10 +25,7 @@ January 2025
 Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as simple tab completions with GitHub Copilot has transformed into a collaborative partnership where AI agents handle entire components of my applications. This article chronicles my experience building the [ccbilling project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/ccbilling) - a personal finance tool for reviewing credit card statements - using Cursor's agent mode.
 
 <!-- Placeholder for meme image -->
-<div class="mx-auto my-4 max-w-md text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
-	<p class="text-gray-400">[Meme suggestion: "This is fine" dog sitting in burning room, but the room is labeled "My codebase" and the fire is labeled "AI agent making changes"]</p>
-	<p class="text-sm text-gray-500 mt-2">Alternative: "Distracted boyfriend" meme with "Me" looking at "AI Agent" while "Manual Coding" looks disappointed</p>
-</div>
+<Img src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
 
 The ccbilling project is a comprehensive personal finance management system that automates the tedious process of reviewing monthly credit card statements. It parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
 
