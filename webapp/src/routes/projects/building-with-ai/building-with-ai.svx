@@ -33,54 +33,59 @@ The ccbilling project is a comprehensive personal finance management system that
 
 Here's the high-level architecture of the system:
 
-<div class="mb-4 p-4 bg-gray-800 rounded-lg">
-	<h4 class="text-sm font-semibold text-gray-300 mb-2">Architecture Legend:</h4>
-	<div class="flex flex-wrap gap-4 text-sm">
-		<div class="flex items-center gap-2">
-			<div class="w-4 h-4 bg-gray-700 border border-white rounded"></div>
-			<span class="text-gray-300">Core Application Components</span>
-		</div>
-		<div class="flex items-center gap-2">
-			<div class="w-4 h-4 bg-green-600 border border-white rounded"></div>
-			<span class="text-gray-300">External APIs & Services</span>
-		</div>
-		<div class="flex items-center gap-2">
-			<div class="w-4 h-4 bg-red-600 border border-white rounded"></div>
-			<span class="text-gray-300">CI/CD & DevOps Pipeline</span>
-		</div>
-	</div>
-</div>
-
 <div class="mermaid-container">
 
 ```mermaid
 graph TD;
-    A["PDF Statement Upload"] --> B["Cloudflare R2 Storage"];
-    B --> C["Statement Parser Factory"];
-    C --> D["Provider-Specific Parsers&#10;(Chase, Amex, etc.)"];
-    D --> E["D1 Database&#10;(Charges, Budgets, Cycles)"];
-    E --> F["SvelteKit Frontend"];
-    F --> G["Budget Management UI"];
-    F --> H["Charge Allocation"];
-    F --> I["Billing Cycle Reports"];
+    subgraph "Frontend Tier"
+        A["SvelteKit Frontend"]
+        B["Budget Management UI"]
+        C["Charge Allocation"]
+        D["Billing Cycle Reports"]
+    end
 
-    J["LLAMA API"] --> K["Merchant Classification"];
-    K --> E;
+    subgraph "Backend Tier"
+        E["Server Routes&#10;(API Endpoints)"]
+        F["Statement Parser Factory"]
+        G["Provider-Specific Parsers&#10;(Chase, Amex, etc.)"]
+        H["Merchant Classification"]
+    end
 
-    L["CircleCI Pipeline"] --> M["Automated Testing"];
-    M --> N["SonarCloud Quality"];
-    N --> O["Preview Deployments"];
+    subgraph "Data Tier"
+        I["D1 Database&#10;(Charges, Budgets, Cycles)"]
+        J["Cloudflare R2 Storage&#10;(PDF Statements)"]
+    end
 
-    classDef mainNode fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef apiNode fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef storageNode fill:#dc2626,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    subgraph "External Services"
+        K["LLAMA API"]
+    end
 
-    class A,B,C,D,E,F,G,H,I mainNode;
-    class J,K apiNode;
-    class L,M,N,O storageNode;
+    A --> E
+    E --> I
+    E --> J
+    K --> H
+    H --> I
+
+    classDef frontend fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef backend fill:#374151,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef storage fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+    classDef external fill:#7c3aed,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+
+    class A,B,C,D frontend;
+    class E,F,G,H backend;
+    class I,J storage;
+    class K external;
 ```
 
 </div>
+
+**Key Infrastructure Components:**
+
+- **CircleCI Pipeline**: Automated testing and deployment pipeline that runs on every commit
+- **SonarCloud Quality Checks**: Comprehensive code quality analysis and security scanning
+- **Preview Deployments**: Independent branch deployments accessible through the `/deploys` route for safe experimentation
+
+These DevOps tools proved crucial for working effectively with AI agents, as they provided structured feedback and safe environments for iteration.
 
 <!-- Placeholder for screenshots -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
