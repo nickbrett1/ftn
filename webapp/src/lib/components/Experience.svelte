@@ -24,7 +24,7 @@
 			title: 'Data Engineering Strategic Engagement',
 			workplace: 'Data Engineering @ Two Sigma',
 			body: [
-				"As a senior individual contributor I worked across the Two Sigma Data Engineering department to define and drive the strategic direction for an important external partnership. This work included a multi-year forward evaluation of the Data Engineering's technical capabilities and needs, with a mapping to the capabilities of the partner and a plan for how the partnership could succeed."
+				"As a senior individual contributor I worked across the Two Sigma Data Engineering department to define and drive the strategic direction for an important external partnership. This work included a multi-year forward evaluation of the Data Engineering departments' technical capabilities and needs, with a mapping to the capabilities of the partner and a plan for how the partnership could succeed."
 			],
 			logo: { Icon: TwoSigma, tooltip: 'Two Sigma', link: 'https://www.twosigma.com' }
 		},
