@@ -9,13 +9,22 @@
 
 	const work = [
 		{
+			from: 'Sept 2025',
+			to: 'Current',
+			title: 'Head of Fast Forecasting Engineering',
+			workplace: 'Trading Engineering @ Two Sigma',
+			body: [
+				'Responsible for a team of Trading Engineers and Quantitative Software Engineers that partner with multiple Two Sigma quant teams to produce short-horizon forecasts and features.'
+			],
+			logo: { Icon: TwoSigma, tooltip: 'Two Sigma', link: 'https://www.twosigma.com' }
+		},
+		{
 			from: 'Feb 2025',
-			to: 'Present',
-			title: 'Senior Vice President: Strategic Initiatives',
+			to: 'Sept 2025',
+			title: 'Data Engineering Strategic Engagement',
 			workplace: 'Data Engineering @ Two Sigma',
 			body: [
-				"I'm currently focused on various strategic initiatives across the Two Sigma Data Engineering department.Main effort is centered on improving tooling used by quantitative modelers to produce short-term horizon alpha generative forecasts.",
-				'This work combines a mix of deep technical data expertise, strong product-sense and an ability to collaborate widely across the organization.'
+				"As a senior individual contributor I worked across the Two Sigma Data Engineering department to define and drive the strategic direction for an important external partnership. This work included a multi-year forward evaluation of the Data Engineering's technical capabilities and needs, with a mapping to the capabilities of the partner and a plan for how the partnership could succeed."
 			],
 			logo: { Icon: TwoSigma, tooltip: 'Two Sigma', link: 'https://www.twosigma.com' }
 		},

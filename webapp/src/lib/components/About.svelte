@@ -37,9 +37,9 @@
 			Currently I'm at
 			<a class="link-yellow underline underline-offset-2" href="https://www.twosigma.com"
 				>Two Sigma</a
-			> in the Data Engineering department focused on on improving tooling used by quantitative modelers
-			to produce short-term horizon alpha generative forecasts from the more than 144 Petabytes of data
-			that the firm stores.
+			> in the Trading Engineering department responsible for a team of Trading Engineers and Quantitative
+			Software Engineers that partner with multiple Two Sigma quant teams to produce short-horizon forecasts
+			and features from the more than 144 Petabytes of data that the firm stores.
 		</p>
 		<p class="mt-8 text-sm leading-normal text-white sm:text-base">
 			Here you'll find details on personal projects, including <a
