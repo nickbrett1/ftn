@@ -42,6 +42,12 @@
 		});
 		return entries;
 	}
+
+	function getCycleTotalAmount(cycleId) {
+		// Calculate the sum of all allocations for this cycle
+		const totals = getTotalsForCycle(cycleId);
+		return totals.reduce((sum, [, amount]) => sum + amount, 0);
+	}
 </script>
 
 <Header />
@@ -82,6 +88,12 @@
 												<span class="text-white tabular-nums">{formatCurrency(total)}</span>
 											</div>
 										{/each}
+										{#if getTotalsForCycle(cycle.id).length > 0}
+											<div class="flex justify-between gap-4 pt-2 mt-2 border-t border-gray-600">
+												<span class="text-gray-200 font-medium">Total</span>
+												<span class="text-white font-semibold tabular-nums">{formatCurrency(getCycleTotalAmount(cycle.id))}</span>
+											</div>
+										{/if}
 									</div>
 								</div>
 								<div class="text-gray-400">
