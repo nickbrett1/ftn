@@ -184,6 +184,9 @@ else
         # Print names for clarity, handling potential multi-line output from jq
         echo "$LOCAL_TABLE_NAMES_CLEANUP" | sed 's/^/  - /'
         
+        echo "Disabling foreign key constraints for table cleanup..."
+        npx wrangler d1 execute "$DB_NAME" --local --command "PRAGMA foreign_keys=OFF;" --yes
+        
         echo "$LOCAL_TABLE_NAMES_CLEANUP" | while IFS= read -r LOCAL_TABLE_NAME_TO_DROP; do
             if [ -n "$LOCAL_TABLE_NAME_TO_DROP" ]; then # Ensure name is not empty
                 echo "Dropping local table: \"$LOCAL_TABLE_NAME_TO_DROP\"..."
@@ -192,6 +195,9 @@ else
                 fi
             fi
         done
+        
+        echo "Re-enabling foreign key constraints..."
+        npx wrangler d1 execute "$DB_NAME" --local --command "PRAGMA foreign_keys=ON;" --yes
         echo "Local table cleanup complete."
     elif echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -e '.[0].results' > /dev/null 2>&1; then
         echo "No user tables found in local database '$DB_NAME' to clean up (results array was present but empty)."
