@@ -20,6 +20,12 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
+# Ensure curl is available for API calls
+if ! command -v curl &> /dev/null; then
+    echo "Error: curl could not be found. Please install curl for API calls." >&2
+    exit 1
+fi
+
 # Function to discover R2 buckets from wrangler.jsonc
 discover_buckets() {
     local config_file="$1"
@@ -29,7 +35,7 @@ discover_buckets() {
         return 1
     fi
     
-    echo "Discovering R2 buckets from $config_file..."
+    echo "Discovering R2 buckets from $config_file..." >&2
     
     # Extract bucket names from both root level and production environment
     # Using jq to parse JSONC (which jq handles fine despite comments)
@@ -59,21 +65,39 @@ sync_bucket() {
     local bucket_temp_dir="$TEMP_DIR/$bucket_name"
     mkdir -p "$bucket_temp_dir"
     
-    # List all objects in the production bucket
+    # List all objects in the production bucket using our API endpoint
     echo "Listing objects in production R2 bucket '$bucket_name'..."
+    local objects_json="$bucket_temp_dir/objects.json"
     local objects_list="$bucket_temp_dir/objects.txt"
     
-    if npx wrangler r2 object list "$bucket_name" --remote > "$objects_list" 2>/dev/null; then
-        local object_count=$(wc -l < "$objects_list" 2>/dev/null || echo "0")
-        echo "Found $object_count objects in production bucket '$bucket_name'."
+    # Call our API endpoint to list objects
+    if curl -s "https://ftn.pages.dev/api/r2/list-objects?bucket=$bucket_name" > "$objects_json" 2>/dev/null; then
+        # Check if the API call was successful
+        if jq -e '.error' "$objects_json" >/dev/null 2>&1; then
+            local error_msg=$(jq -r '.error' "$objects_json" 2>/dev/null || echo "Unknown error")
+            echo "Error from API: $error_msg"
+            echo "Skipping sync for bucket '$bucket_name'."
+            echo ""
+            return 0
+        fi
         
-        if [ "$object_count" -eq 0 ]; then
-            echo "No objects found in production bucket '$bucket_name'. Skipping sync."
+        # Extract object keys from JSON response
+        if jq -r '.objects[]?.key // empty' "$objects_json" > "$objects_list" 2>/dev/null; then
+            local object_count=$(wc -l < "$objects_list" 2>/dev/null || echo "0")
+            echo "Found $object_count objects in production bucket '$bucket_name'."
+            
+            if [ "$object_count" -eq 0 ]; then
+                echo "No objects found in production bucket '$bucket_name'. Skipping sync."
+                echo ""
+                return 0
+            fi
+        else
+            echo "Warning: Could not parse objects list from API response. Skipping sync."
             echo ""
             return 0
         fi
     else
-        echo "Warning: Could not list objects in production bucket '$bucket_name' or bucket is empty. Skipping sync."
+        echo "Warning: Could not fetch objects list from API for bucket '$bucket_name'. Skipping sync."
         echo ""
         return 0
     fi
@@ -82,16 +106,8 @@ sync_bucket() {
     local success_count=0
     local error_count=0
     
-    while IFS= read -r line; do
-        # Skip empty lines and header lines
-        if [[ -z "$line" || "$line" == *"Key"* || "$line" == *"---"* ]]; then
-            continue
-        fi
-        
-        # Extract object key (first column, properly handling spaces in filenames)
-        # Use tab or multiple spaces as delimiter, take everything up to the first delimiter
-        local object_key=$(echo "$line" | sed 's/[[:space:]]\{2,\}.*//' | sed 's/\t.*//')
-        
+    while IFS= read -r object_key; do
+        # Skip empty lines
         if [[ -z "$object_key" ]]; then
             continue
         fi

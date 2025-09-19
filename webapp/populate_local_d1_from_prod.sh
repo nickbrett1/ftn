@@ -184,20 +184,29 @@ else
         # Print names for clarity, handling potential multi-line output from jq
         echo "$LOCAL_TABLE_NAMES_CLEANUP" | sed 's/^/  - /'
         
-        echo "Disabling foreign key constraints for table cleanup..."
-        npx wrangler d1 execute "$DB_NAME" --local --command "PRAGMA foreign_keys=OFF;" --yes
+        echo "Dropping all local tables in a single transaction..."
         
+        # Build a single SQL command with all DROP TABLE statements
+        DROP_SQL="PRAGMA foreign_keys=OFF;"
         echo "$LOCAL_TABLE_NAMES_CLEANUP" | while IFS= read -r LOCAL_TABLE_NAME_TO_DROP; do
             if [ -n "$LOCAL_TABLE_NAME_TO_DROP" ]; then # Ensure name is not empty
-                echo "Dropping local table: \"$LOCAL_TABLE_NAME_TO_DROP\"..."
-                if ! npx wrangler d1 execute "$DB_NAME" --local --command "DROP TABLE IF EXISTS \"$LOCAL_TABLE_NAME_TO_DROP\";" --yes; then
-                    echo "Warning: Failed to drop local table \"$LOCAL_TABLE_NAME_TO_DROP\". It might have already been dropped or another issue occurred with wrangler."
-                fi
+                echo "Adding DROP TABLE for: \"$LOCAL_TABLE_NAME_TO_DROP\""
+                DROP_SQL="$DROP_SQL DROP TABLE IF EXISTS \"$LOCAL_TABLE_NAME_TO_DROP\";"
             fi
         done
+        DROP_SQL="$DROP_SQL PRAGMA foreign_keys=ON;"
         
-        echo "Re-enabling foreign key constraints..."
-        npx wrangler d1 execute "$DB_NAME" --local --command "PRAGMA foreign_keys=ON;" --yes
+        # Execute all DROP TABLE statements in a single command
+        if ! npx wrangler d1 execute "$DB_NAME" --local --command "$DROP_SQL" --yes; then
+            echo "Warning: Failed to drop some local tables. Attempting individual drops..."
+            # Fallback: try dropping tables individually without foreign key constraints
+            echo "$LOCAL_TABLE_NAMES_CLEANUP" | while IFS= read -r LOCAL_TABLE_NAME_TO_DROP; do
+                if [ -n "$LOCAL_TABLE_NAME_TO_DROP" ]; then
+                    echo "Fallback: Dropping local table: \"$LOCAL_TABLE_NAME_TO_DROP\"..."
+                    npx wrangler d1 execute "$DB_NAME" --local --command "PRAGMA foreign_keys=OFF; DROP TABLE IF EXISTS \"$LOCAL_TABLE_NAME_TO_DROP\"; PRAGMA foreign_keys=ON;" --yes || echo "Warning: Failed to drop table \"$LOCAL_TABLE_NAME_TO_DROP\""
+                fi
+            done
+        fi
         echo "Local table cleanup complete."
     elif echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -e '.[0].results' > /dev/null 2>&1; then
         echo "No user tables found in local database '$DB_NAME' to clean up (results array was present but empty)."
