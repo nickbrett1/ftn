@@ -566,7 +566,7 @@ export async function getAllUnassignedMerchants(event) {
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {Promise<Array<string>>}
  */
-export async function getUnassignedMerchants(event) {
+export async function getRecentUnassignedMerchants(event) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
 
@@ -593,8 +593,43 @@ export async function getUnassignedMerchants(event) {
 
 		return results.map((row) => row.merchant_normalized);
 	} catch (error) {
-		console.error('Error in getUnassignedMerchants:', error);
+		console.error('Error in getRecentUnassignedMerchants:', error);
 		throw new Error(`Failed to fetch recent merchants: ${error.message}`);
+	}
+}
+
+/**
+ * Return ALL merchants from statements that are unassigned to any budget.
+ * This function returns all unassigned merchants, not just the recent 20.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {Promise<Array<string>>}
+ */
+export async function getUnassignedMerchants(event) {
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) throw new Error('CCBILLING_DB binding not found');
+
+	try {
+		// Get ALL merchants from statements that are not assigned to ANY budget
+		const { results } = await db
+			.prepare(
+				`
+                SELECT DISTINCT p.merchant_normalized
+                FROM payment p
+                JOIN statement s ON p.statement_id = s.id
+                WHERE p.merchant_normalized IS NOT NULL
+                  AND NOT EXISTS (
+                    SELECT 1 FROM budget_merchant bm 
+                    WHERE bm.merchant_normalized = p.merchant_normalized
+                  )
+                ORDER BY p.merchant_normalized ASC
+            `
+			)
+			.all();
+
+		return results.map((row) => row.merchant_normalized);
+	} catch (error) {
+		console.error('Error in getUnassignedMerchants:', error);
+		throw new Error(`Failed to fetch all unassigned merchants: ${error.message}`);
 	}
 }
 
