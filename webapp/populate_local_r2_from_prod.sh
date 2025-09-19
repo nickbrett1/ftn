@@ -70,8 +70,10 @@ sync_bucket() {
     local objects_json="$bucket_temp_dir/objects.json"
     local objects_list="$bucket_temp_dir/objects.txt"
     
-    # Call our API endpoint to list objects
-    if curl -s "https://ftn.pages.dev/api/r2/list-objects?bucket=$bucket_name" > "$objects_json" 2>/dev/null; then
+    # Call our API endpoint to list objects from production
+    local api_url="https://ftn-production.nick-brett1.workers.dev/api/r2/list-objects?bucket=$bucket_name"
+    
+    if curl -s "$api_url" > "$objects_json" 2>/dev/null; then
         # Check if the API call was successful
         if jq -e '.error' "$objects_json" >/dev/null 2>&1; then
             local error_msg=$(jq -r '.error' "$objects_json" 2>/dev/null || echo "Unknown error")
