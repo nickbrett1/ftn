@@ -3,7 +3,7 @@ import { GET } from './+server.js';
 
 // Mock the database module
 vi.mock('$lib/server/ccbilling-db.js', () => ({
-	getUnassignedMerchants: vi.fn()
+	getRecentUnassignedMerchants: vi.fn()
 }));
 
 // Mock the auth module
@@ -11,16 +11,16 @@ vi.mock('$lib/server/require-user.js', () => ({
 	requireUser: vi.fn()
 }));
 
-import { getUnassignedMerchants } from '$lib/server/ccbilling-db.js';
+import { getRecentUnassignedMerchants } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/budgets/recent-merchants', () => {
-	let mockGetUnassignedMerchants;
+	let mockGetRecentUnassignedMerchants;
 	let mockRequireUser;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockGetUnassignedMerchants = getUnassignedMerchants;
+		mockGetRecentUnassignedMerchants = getRecentUnassignedMerchants;
 		mockRequireUser = requireUser;
 	});
 
@@ -29,14 +29,14 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 		const mockEvent = { platform: { env: { CCBILLING_DB: {} } } };
 
 		mockRequireUser.mockResolvedValue(mockEvent);
-		mockGetUnassignedMerchants.mockResolvedValue(mockMerchants);
+		mockGetRecentUnassignedMerchants.mockResolvedValue(mockMerchants);
 
 		const response = await GET(mockEvent);
 		const data = await response.json();
 
 		expect(response.status).toBe(200);
 		expect(data).toEqual(mockMerchants);
-		expect(mockGetUnassignedMerchants).toHaveBeenCalledWith(mockEvent);
+		expect(mockGetRecentUnassignedMerchants).toHaveBeenCalledWith(mockEvent);
 	});
 
 	it('should return 401 when user is not authenticated', async () => {
@@ -48,14 +48,14 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 		const response = await GET(mockEvent);
 
 		expect(response.status).toBe(401);
-		expect(mockGetUnassignedMerchants).not.toHaveBeenCalled();
+		expect(mockGetRecentUnassignedMerchants).not.toHaveBeenCalled();
 	});
 
 	it('should handle database errors gracefully', async () => {
 		const mockEvent = { platform: { env: { CCBILLING_DB: {} } } };
 
 		mockRequireUser.mockResolvedValue(mockEvent);
-		mockGetUnassignedMerchants.mockRejectedValue(new Error('Database error'));
+		mockGetRecentUnassignedMerchants.mockRejectedValue(new Error('Database error'));
 
 		await expect(GET(mockEvent)).rejects.toThrow('Database error');
 	});

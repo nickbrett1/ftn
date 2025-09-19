@@ -28,7 +28,8 @@ import {
 	bulkAssignPayments,
 	deletePaymentsForStatement,
 	getAllUnassignedMerchants,
-	getUnassignedMerchants
+	getUnassignedMerchants,
+	getRecentUnassignedMerchants
 } from './ccbilling-db.js';
 
 describe('ccbilling-db functions', () => {
@@ -336,7 +337,7 @@ describe('ccbilling-db functions', () => {
 		});
 
 		describe('getUnassignedMerchants', () => {
-			it('should return recent unassigned merchants from the past month', async () => {
+			it('should return all unassigned merchants', async () => {
 				const mockMerchants = [
 					{ merchant_normalized: 'Amazon' },
 					{ merchant_normalized: 'Target' },
@@ -345,6 +346,40 @@ describe('ccbilling-db functions', () => {
 				mockDb.all.mockResolvedValue({ results: mockMerchants });
 
 				const result = await getUnassignedMerchants(mockEvent);
+
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					expect.stringContaining('JOIN statement s ON p.statement_id = s.id')
+				);
+				expect(mockDb.prepare).toHaveBeenCalledWith(
+					expect.stringContaining('ORDER BY p.merchant_normalized ASC')
+				);
+				// Should NOT have date filter or LIMIT for all merchants
+				expect(mockDb.prepare).not.toHaveBeenCalledWith(
+					expect.stringContaining("AND s.uploaded_at >= datetime('now', '-30 days')")
+				);
+				expect(mockDb.prepare).not.toHaveBeenCalledWith(expect.stringContaining('LIMIT'));
+				expect(result).toEqual(['Amazon', 'Target', 'Walmart']);
+			});
+
+			it('should throw error when CCBILLING_DB not found', async () => {
+				const eventWithoutDb = { platform: { env: {} } };
+
+				await expect(getUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
+					'CCBILLING_DB binding not found'
+				);
+			});
+		});
+
+		describe('getRecentUnassignedMerchants', () => {
+			it('should return recent unassigned merchants from the past month', async () => {
+				const mockMerchants = [
+					{ merchant_normalized: 'Amazon' },
+					{ merchant_normalized: 'Target' },
+					{ merchant_normalized: 'Walmart' }
+				];
+				mockDb.all.mockResolvedValue({ results: mockMerchants });
+
+				const result = await getRecentUnassignedMerchants(mockEvent);
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					expect.stringContaining('JOIN statement s ON p.statement_id = s.id')
@@ -359,7 +394,7 @@ describe('ccbilling-db functions', () => {
 			it('should throw error when CCBILLING_DB not found', async () => {
 				const eventWithoutDb = { platform: { env: {} } };
 
-				await expect(getUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
+				await expect(getRecentUnassignedMerchants(eventWithoutDb)).rejects.toThrow(
 					'CCBILLING_DB binding not found'
 				);
 			});
