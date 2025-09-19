@@ -2,20 +2,20 @@ import { json } from '@sveltejs/kit';
 
 /**
  * R2 Object List API Endpoint
- * 
+ *
  * This endpoint lists all objects in a specified R2 bucket.
  * It's designed to be used by the populate_local_r2_from_prod.sh script
  * to discover objects that need to be synced from production to local.
- * 
+ *
  * Usage:
  * GET /api/r2/list-objects?bucket=ccbilling
  * GET /api/r2/list-objects?bucket=wdi
- * 
+ *
  * Query Parameters:
  * - bucket: The name of the R2 bucket to list objects from (required)
  * - prefix: Optional prefix to filter objects (optional)
  * - limit: Maximum number of objects to return (optional, default: 1000)
- * 
+ *
  * Returns:
  * {
  *   "objects": [
@@ -64,7 +64,7 @@ export async function GET(event) {
 		const result = await bucket.list(listOptions);
 
 		// Format the response to include useful object information
-		const objects = result.objects.map(obj => ({
+		const objects = result.objects.map((obj) => ({
 			key: obj.key,
 			size: obj.size,
 			etag: obj.etag,
@@ -88,13 +88,15 @@ export async function GET(event) {
 		};
 
 		return json(response, { headers });
-
 	} catch (error) {
 		console.error('Error listing R2 objects:', error);
-		return json({ 
-			error: 'Failed to list objects', 
-			details: error.message 
-		}, { status: 500 });
+		return json(
+			{
+				error: 'Failed to list objects',
+				details: error.message
+			},
+			{ status: 500 }
+		);
 	}
 }
 
