@@ -370,5 +370,6 @@ function normalizeGenericMerchant(merchant) {
 	normalized = normalized.replace(/\s+[A-Z]{2}\s*$/i, ''); // Remove state codes
 	normalized = normalized.replace(/\s+\d{5}\s*$/i, ''); // Remove ZIP codes
 
-	return normalized;
+	// Convert to uppercase to ensure case-insensitive matching
+	return normalized.toUpperCase();
 }

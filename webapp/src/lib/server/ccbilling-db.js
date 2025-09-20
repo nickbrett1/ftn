@@ -197,11 +197,15 @@ export async function deleteBudget(event, id) {
 export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Normalize the merchant name to ensure case-insensitive matching
+	const normalized = normalizeMerchant(merchant_normalized);
+	
 	await db
 		.prepare(
 			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
 		)
-		.bind(budget_id, merchant_normalized, merchant_normalized)
+		.bind(budget_id, normalized.merchant_normalized, normalized.merchant_normalized)
 		.run();
 }
 
@@ -214,9 +218,13 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 export async function removeBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Normalize the merchant name to ensure case-insensitive matching
+	const normalized = normalizeMerchant(merchant_normalized);
+	
 	await db
 		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
-		.bind(budget_id, merchant_normalized)
+		.bind(budget_id, normalized.merchant_normalized)
 		.run();
 }
 
@@ -642,6 +650,10 @@ export async function getUnassignedMerchants(event) {
 export async function getBudgetByMerchant(event, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
+	
+	// Normalize the merchant name to ensure case-insensitive matching
+	const normalized = normalizeMerchant(merchant_normalized);
+	
 	const result = await db
 		.prepare(
 			`
@@ -651,7 +663,7 @@ export async function getBudgetByMerchant(event, merchant_normalized) {
             WHERE bm.merchant_normalized = ?
         `
 		)
-		.bind(merchant_normalized)
+		.bind(normalized.merchant_normalized)
 		.first();
 	return result || null;
 }
