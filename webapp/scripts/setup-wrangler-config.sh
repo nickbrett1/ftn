@@ -102,7 +102,7 @@ echo "✅ Config '$DOPPLER_CONFIG_TO_USE' is accessible"
 
 # Run doppler to get environment variables and execute the configuration generation
 echo "📥 Fetching environment variables from Doppler config '$DOPPLER_CONFIG_TO_USE'..."
-if ! doppler run $DOPPLER_ARGS -- bash -c '
+if doppler run $DOPPLER_ARGS -- bash -c '
     set -e  # Exit on any error
     
     echo "🔍 Checking required environment variables..."
