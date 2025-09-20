@@ -58,7 +58,7 @@
 
 ## Data Model / API
 
-- There is a first-pass schema defined [here](../webapp/ccbilling_schema.sql)
+- There is a first-pass schema defined [here](../webapp/scripts/ccbilling_schema.sql)
 
 ## References
 
