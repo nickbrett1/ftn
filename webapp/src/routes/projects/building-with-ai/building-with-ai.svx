@@ -17,17 +17,18 @@
 
 <h1 class="!mb-0 no-underline">Building with AI Agents: Lessons from a 14,500-Line Project</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool</p>
-January 2025
+September 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
 
-Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as simple tab completions with GitHub Copilot has transformed into a collaborative partnership where AI agents handle entire components of my applications. This article chronicles my experience building the [ccbilling project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/ccbilling) - a personal finance tool for reviewing credit card statements - using Cursor's agent mode.
+Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as simple tab completions with GitHub Copilot has transformed into a collaborative partnership where AI agents handle entire components of my applications. My latest project, [a personal finance tool for reviewing credit card statements](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/ccbilling) with ~14.5k lines of code was built with the help of [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
 
-<!-- Placeholder for meme image -->
+
+
 <Img src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
 
-The ccbilling project is a comprehensive personal finance management system that automates the tedious process of reviewing monthly credit card statements. It parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
+The project is a comprehensive personal finance management system that automates the tedious process of reviewing monthly credit card statements. It parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
 
 **Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**. This represents a substantial application that would have taken significantly longer to build without AI assistance.
 
