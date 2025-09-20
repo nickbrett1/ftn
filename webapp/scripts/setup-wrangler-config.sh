@@ -41,10 +41,10 @@ if [ -n "$DOPPLER_CONFIG" ]; then
     echo "🔍 Config length: ${#DOPPLER_CONFIG} characters"
     echo "🔍 Config starts with: ${DOPPLER_CONFIG:0:3}..."
 else
-    # Default to prd config for production builds
-    DOPPLER_CONFIG_TO_USE="prd"
-    DOPPLER_ARGS="--config prd"
-    echo "🎯 Using Doppler config: prd (default)"
+    # Default to stg config for staging/production builds
+    DOPPLER_CONFIG_TO_USE="stg"
+    DOPPLER_ARGS="--config stg"
+    echo "🎯 Using Doppler config: stg (default)"
 fi
 
 # Validate that the config exists and is accessible
