@@ -28,7 +28,15 @@ export async function GET(event) {
 		}
 
 		// Download the PDF from R2
-		const pdfObject = await bucket.get(statement.r2_key);
+		// Try the original key first
+		let pdfObject = await bucket.get(statement.r2_key);
+
+		// If not found, try with URL encoding (spaces become %20)
+		if (!pdfObject) {
+			const encodedKey = statement.r2_key.replace(/ /g, '%20');
+			pdfObject = await bucket.get(encodedKey);
+		}
+
 		if (!pdfObject) {
 			return json({ error: 'PDF not found in R2' }, { status: 404 });
 		}

@@ -1,5 +1,6 @@
 #!/bin/bash
-set -euo pipefail
+set -uo pipefail
+# Removed -e flag to prevent premature exit on errors
 
 # Configuration
 WRANGLER_CONFIG="$(dirname "$0")/wrangler.jsonc"
@@ -107,6 +108,7 @@ sync_bucket() {
     # Process each object
     local success_count=0
     local error_count=0
+    local current_count=0
     
     while IFS= read -r object_key; do
         # Skip empty lines
@@ -114,7 +116,9 @@ sync_bucket() {
             continue
         fi
         
-        echo "Syncing object: $object_key"
+        ((current_count++))
+        local progress_percentage=$((current_count * 100 / object_count))
+        echo "[$current_count/$object_count - ${progress_percentage}%] Syncing: $object_key"
         
         # Create local path for the object
         local temp_file="$bucket_temp_dir/$(basename "$object_key")"
@@ -123,14 +127,14 @@ sync_bucket() {
         if npx wrangler r2 object get "$bucket_name/$object_key" --file="$temp_file" --remote 2>/dev/null; then
             # Upload to local simulation
             if npx wrangler r2 object put "$bucket_name/$object_key" --file="$temp_file" --local 2>/dev/null; then
-                echo "  ✓ Successfully synced: $object_key"
+                echo "  ✓ Successfully synced ($current_count/$object_count): $object_key"
                 ((success_count++))
             else
-                echo "  ✗ Failed to upload to local: $object_key"
+                echo "  ✗ Failed to upload to local ($current_count/$object_count): $object_key"
                 ((error_count++))
             fi
         else
-            echo "  ✗ Failed to download from production: $object_key"
+            echo "  ✗ Failed to download from production ($current_count/$object_count): $object_key"
             ((error_count++))
         fi
         
@@ -140,7 +144,10 @@ sync_bucket() {
     done < "$objects_list"
     
     echo ""
-    echo "Bucket '$bucket_name' sync completed: $success_count successful, $error_count errors"
+    local total_processed=$((success_count + error_count))
+    local completion_percentage=$((total_processed * 100 / object_count))
+    echo "Bucket '$bucket_name' sync completed: $success_count successful, $error_count errors ($completion_percentage% complete)"
+    echo "Total objects processed: $total_processed/$object_count"
     echo ""
 }
 
