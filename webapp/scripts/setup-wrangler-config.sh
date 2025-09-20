@@ -103,29 +103,39 @@ echo "✅ Config '$DOPPLER_CONFIG_TO_USE' is accessible"
 # Run doppler to get environment variables and execute the configuration generation
 echo "📥 Fetching environment variables from Doppler config '$DOPPLER_CONFIG_TO_USE'..."
 if ! doppler run $DOPPLER_ARGS -- bash -c '
+    set -e  # Exit on any error
+    
+    echo "🔍 Checking required environment variables..."
+    
     # Check if required environment variables are set
     if [ -z "$KV_NAMESPACE_ID" ]; then
-        echo "Error: KV_NAMESPACE_ID environment variable is not set in Doppler"
+        echo "❌ Error: KV_NAMESPACE_ID environment variable is not set in Doppler config"
         exit 1
     fi
+    echo "✅ KV_NAMESPACE_ID is set: ${KV_NAMESPACE_ID:0:10}..."
 
     if [ -z "$D1_WDI_DATABASE_ID" ]; then
-        echo "Error: D1_WDI_DATABASE_ID environment variable is not set in Doppler"
+        echo "❌ Error: D1_WDI_DATABASE_ID environment variable is not set in Doppler config"
         exit 1
     fi
+    echo "✅ D1_WDI_DATABASE_ID is set: ${D1_WDI_DATABASE_ID:0:10}..."
 
     if [ -z "$D1_CCBILLING_DATABASE_ID" ]; then
-        echo "Error: D1_CCBILLING_DATABASE_ID environment variable is not set in Doppler"
+        echo "❌ Error: D1_CCBILLING_DATABASE_ID environment variable is not set in Doppler config"
         exit 1
     fi
+    echo "✅ D1_CCBILLING_DATABASE_ID is set: ${D1_CCBILLING_DATABASE_ID:0:10}..."
 
     # Create wrangler.jsonc from template with substitutions
-    echo "Generating wrangler.jsonc from template..."
-    sed \
+    echo "📝 Generating wrangler.jsonc from template..."
+    if ! sed \
         -e "s/KV_NAMESPACE_ID_PLACEHOLDER/$KV_NAMESPACE_ID/g" \
         -e "s/D1_WDI_DATABASE_ID_PLACEHOLDER/$D1_WDI_DATABASE_ID/g" \
         -e "s/D1_CCBILLING_DATABASE_ID_PLACEHOLDER/$D1_CCBILLING_DATABASE_ID/g" \
-        wrangler.template.jsonc > wrangler.jsonc
+        wrangler.template.jsonc > wrangler.jsonc; then
+        echo "❌ Error: Failed to generate wrangler.jsonc from template"
+        exit 1
+    fi
 
     echo "✅ Wrangler configuration generated successfully"
     echo "📁 Generated: wrangler.jsonc"
@@ -138,5 +148,6 @@ else
     echo "  2. Token doesn't have access to config '$DOPPLER_CONFIG_TO_USE'"
     echo "  3. Missing required environment variables in Doppler config"
     echo "  4. Network connectivity issues"
+    echo "  5. Template file issues or sed command failure"
     exit 1
 fi 
