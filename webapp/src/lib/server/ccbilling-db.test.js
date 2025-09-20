@@ -270,7 +270,7 @@ describe('ccbilling-db functions', () => {
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon', 'Amazon');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'AMAZON', 'AMAZON');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
@@ -284,7 +284,7 @@ describe('ccbilling-db functions', () => {
 				expect(mockDb.prepare).toHaveBeenCalledWith(
 					'DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'Amazon');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'AMAZON');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});
