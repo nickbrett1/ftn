@@ -9,10 +9,21 @@ echo "Setting up Wrangler configuration..."
 
 # Check if doppler CLI is available
 if ! command -v doppler &> /dev/null; then
-    echo "Error: Doppler CLI is not installed or not in PATH"
+    echo "❌ Error: Doppler CLI is not installed or not in PATH"
     echo "Please install Doppler CLI: https://docs.doppler.com/docs/install-cli"
     exit 1
 fi
+
+# Check Doppler authentication status
+echo "🔍 Checking Doppler authentication..."
+if ! doppler whoami &> /dev/null; then
+    echo "❌ Error: Not authenticated with Doppler"
+    echo "Please run: doppler login"
+    exit 1
+fi
+
+echo "✅ Doppler authentication confirmed"
+echo "👤 Current Doppler user: $(doppler whoami 2>/dev/null || echo 'Unable to determine')"
 
 # Check if wrangler.template.jsonc exists
 if [ ! -f "wrangler.template.jsonc" ]; then
@@ -21,19 +32,32 @@ if [ ! -f "wrangler.template.jsonc" ]; then
 fi
 
 # Build doppler args if a config override is provided
+DOPPLER_CONFIG_TO_USE=""
 DOPPLER_ARGS=""
 if [ -n "$DOPPLER_CONFIG" ]; then
+    DOPPLER_CONFIG_TO_USE="$DOPPLER_CONFIG"
     DOPPLER_ARGS="--config $DOPPLER_CONFIG"
-    echo "Using Doppler config: $DOPPLER_CONFIG"
+    echo "🎯 Using Doppler config: $DOPPLER_CONFIG (from environment variable)"
 else
     # Default to prd config for production builds
+    DOPPLER_CONFIG_TO_USE="prd"
     DOPPLER_ARGS="--config prd"
-    echo "Using Doppler config: prd (default)"
+    echo "🎯 Using Doppler config: prd (default)"
 fi
 
+# Validate that the config exists and is accessible
+echo "🔍 Validating access to Doppler config '$DOPPLER_CONFIG_TO_USE'..."
+if ! doppler configs get --project webapp --config "$DOPPLER_CONFIG_TO_USE" &> /dev/null; then
+    echo "❌ Error: Cannot access Doppler config '$DOPPLER_CONFIG_TO_USE' in project 'webapp'"
+    echo "Available configs for this token:"
+    doppler configs list --project webapp || echo "Failed to list configs - check your token permissions"
+    exit 1
+fi
+echo "✅ Config '$DOPPLER_CONFIG_TO_USE' is accessible"
+
 # Run doppler to get environment variables and execute the configuration generation
-echo "Fetching environment variables from Doppler..."
-doppler run $DOPPLER_ARGS -- bash -c '
+echo "📥 Fetching environment variables from Doppler config '$DOPPLER_CONFIG_TO_USE'..."
+if ! doppler run $DOPPLER_ARGS -- bash -c '
     # Check if required environment variables are set
     if [ -z "$KV_NAMESPACE_ID" ]; then
         echo "Error: KV_NAMESPACE_ID environment variable is not set in Doppler"
@@ -60,4 +84,14 @@ doppler run $DOPPLER_ARGS -- bash -c '
 
     echo "✅ Wrangler configuration generated successfully"
     echo "📁 Generated: wrangler.jsonc"
-' 
+'; then
+    echo "✅ Wrangler configuration setup completed successfully"
+else
+    echo "❌ Error: Failed to fetch environment variables from Doppler or generate wrangler.jsonc"
+    echo "This could be due to:"
+    echo "  1. Invalid Doppler token"
+    echo "  2. Token doesn't have access to config '$DOPPLER_CONFIG_TO_USE'"
+    echo "  3. Missing required environment variables in Doppler config"
+    echo "  4. Network connectivity issues"
+    exit 1
+fi 
