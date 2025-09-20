@@ -11,7 +11,6 @@
 	let isAuthenticated = false;
 	let lastUpdated = null;
 	let autoRefreshInterval = null;
-	let refreshing = false;
 	let fetchingWorkerInfo = false;
 
 	onMount(async () => {
@@ -125,36 +124,6 @@
 		}
 	}
 
-	async function manualRefresh() {
-		if (refreshing) return;
-		
-		refreshing = true;
-		try {
-			const response = await fetch('/api/deploys');
-			if (response.ok) {
-				const newDeployments = await response.json();
-				// Preserve existing worker info when updating deployments
-				deployments = newDeployments.map(newDeployment => {
-					const existingDeployment = deployments.find(d => d.name === newDeployment.name);
-					return {
-						...newDeployment,
-						workerInfo: existingDeployment?.workerInfo || null,
-						workerInfoError: existingDeployment?.workerInfoError || null
-					};
-				});
-				// Only fetch worker info for deployments that don't have it yet
-				await fetchWorkerInfo();
-				lastUpdated = new Date();
-				updatePageUrl();
-			} else {
-				error = `Failed to fetch deployments: ${response.status} ${response.statusText}`;
-			}
-		} catch (err) {
-			error = 'Error fetching deployments: ' + err.message;
-		} finally {
-			refreshing = false;
-		}
-	}
 
 	async function showDeploymentNotification(title, body, icon = '🚀') {
 		if ('Notification' in window && Notification.permission === 'granted') {
@@ -282,22 +251,6 @@
 				<p class="text-gray-400 text-lg">No deployments found</p>
 			</div>
 		{:else}
-			<!-- Refresh Button -->
-			<div class="mb-6 flex justify-end">
-				<button
-					onclick={manualRefresh}
-					disabled={refreshing}
-					class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-				>
-					{#if refreshing}
-						<span class="animate-spin">⏳</span>
-						Refreshing...
-					{:else}
-						🔄 Refresh
-					{/if}
-				</button>
-			</div>
-
 			<div class="grid gap-4">
 				{#each deployments as deployment}
 					<div class="bg-gray-800/20 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
