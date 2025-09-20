@@ -31,13 +31,13 @@ if [ ! -f "wrangler.template.jsonc" ]; then
     exit 1
 fi
 
-# Build doppler args - use a different variable name to avoid confusion with DOPPLER_CONFIG (which is the token)
+# Build doppler args - DOPPLER_CONFIG is the token, DOPPLER_ENVIRONMENT is the config name
 DOPPLER_CONFIG_TO_USE=""
 DOPPLER_ARGS=""
-if [ -n "$DOPPLER_CONFIG_NAME" ]; then
-    DOPPLER_CONFIG_TO_USE="$DOPPLER_CONFIG_NAME"
-    DOPPLER_ARGS="--config $DOPPLER_CONFIG_NAME"
-    echo "🎯 Using Doppler config: $DOPPLER_CONFIG_NAME (from DOPPLER_CONFIG_NAME environment variable)"
+if [ -n "$DOPPLER_ENVIRONMENT" ]; then
+    DOPPLER_CONFIG_TO_USE="$DOPPLER_ENVIRONMENT"
+    DOPPLER_ARGS="--config $DOPPLER_ENVIRONMENT"
+    echo "🎯 Using Doppler config: $DOPPLER_ENVIRONMENT (from DOPPLER_ENVIRONMENT environment variable)"
 else
     # Default to stg config for staging/production builds
     DOPPLER_CONFIG_TO_USE="stg"
@@ -45,11 +45,17 @@ else
     echo "🎯 Using Doppler config: stg (default)"
 fi
 
-# Debug: Show if DOPPLER_CONFIG (token) is set
+# Debug: Show environment variables
 if [ -n "$DOPPLER_CONFIG" ]; then
     echo "🔑 Doppler token is set via DOPPLER_CONFIG (${#DOPPLER_CONFIG} characters)"
 else
     echo "🔑 No Doppler token found in DOPPLER_CONFIG environment variable"
+fi
+
+if [ -n "$DOPPLER_ENVIRONMENT" ]; then
+    echo "🌍 Doppler environment is set via DOPPLER_ENVIRONMENT: $DOPPLER_ENVIRONMENT"
+else
+    echo "🌍 No Doppler environment found in DOPPLER_ENVIRONMENT, using default"
 fi
 
 # Validate that the config exists and is accessible
