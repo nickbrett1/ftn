@@ -4,7 +4,7 @@ import { json } from '@sveltejs/kit';
  * R2 Object List API Endpoint
  *
  * This endpoint lists all objects in a specified R2 bucket.
- * It's designed to be used by the populate_local_r2_from_prod.sh script
+ * It's designed to be used by the scripts/populate_local_r2_from_prod.sh script
  * to discover objects that need to be synced from production to local.
  *
  * Usage:

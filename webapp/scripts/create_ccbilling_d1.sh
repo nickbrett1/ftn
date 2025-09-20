@@ -7,7 +7,7 @@
 #
 # Usage:
 #   # First, ensure wrangler config is set up:
-#   doppler run -- ./setup-wrangler-config.sh
+#   doppler run -- ./scripts/setup-wrangler-config.sh
 #   # Then run this script:
 #   bash create_ccbilling_d1.sh
 #
@@ -36,7 +36,7 @@ fi
 
 # Check if wrangler.jsonc exists
 if [ ! -f "wrangler.jsonc" ]; then
-  echo "ERROR: wrangler.jsonc not found. Please run 'doppler run -- ./setup-wrangler-config.sh' first."
+  echo "ERROR: wrangler.jsonc not found. Please run 'doppler run -- ./scripts/setup-wrangler-config.sh' first."
   exit 1
 fi
 

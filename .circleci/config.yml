@@ -48,7 +48,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./setup-wrangler-config.sh
+            cd webapp && ./scripts/setup-wrangler-config.sh
 
       - run:
           name: Build app
@@ -83,7 +83,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./setup-wrangler-config.sh
+            cd webapp && ./scripts/setup-wrangler-config.sh
       - run:
           name: Run tests
           command: |
@@ -136,7 +136,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./setup-wrangler-config.sh
+            cd webapp && ./scripts/setup-wrangler-config.sh
 
       - run:
           name: Install Lighthouse CLI (if not cached)
@@ -175,7 +175,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./setup-wrangler-config.sh
+            cd webapp && ./scripts/setup-wrangler-config.sh
 
       - run:
           name: Install jq
@@ -221,7 +221,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./setup-wrangler-config.sh
+            cd webapp && ./scripts/setup-wrangler-config.sh
 
       - run:
           name: Install jq

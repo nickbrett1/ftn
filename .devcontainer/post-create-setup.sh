@@ -48,4 +48,4 @@ git config --global --add safe.directory /workspaces/ftn
 
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"
-echo "    cd /workspaces/ftn/webapp && bash cloud-login.sh"
+echo "    cd /workspaces/ftn/webapp && bash scripts/cloud-login.sh"
