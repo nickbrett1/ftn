@@ -31,7 +31,7 @@ if [ ! -f "wrangler.template.jsonc" ]; then
     exit 1
 fi
 
-# Build doppler args - DOPPLER_CONFIG is the token, DOPPLER_ENVIRONMENT is the config name
+# Build doppler args - DOPPLER_TOKEN is the token, DOPPLER_ENVIRONMENT is the config name
 DOPPLER_CONFIG_TO_USE=""
 DOPPLER_ARGS=""
 if [ -n "$DOPPLER_ENVIRONMENT" ]; then
@@ -45,11 +45,16 @@ else
     echo "🎯 Using Doppler config: stg (default)"
 fi
 
+# Add token to args if available
+if [ -n "$DOPPLER_TOKEN" ]; then
+    DOPPLER_ARGS="$DOPPLER_ARGS --token $DOPPLER_TOKEN"
+fi
+
 # Debug: Show environment variables
-if [ -n "$DOPPLER_CONFIG" ]; then
-    echo "🔑 Doppler token is set via DOPPLER_CONFIG (${#DOPPLER_CONFIG} characters)"
+if [ -n "$DOPPLER_TOKEN" ]; then
+    echo "🔑 Doppler token is set via DOPPLER_TOKEN (${#DOPPLER_TOKEN} characters)"
 else
-    echo "🔑 No Doppler token found in DOPPLER_CONFIG environment variable"
+    echo "🔑 No Doppler token found in DOPPLER_TOKEN environment variable"
 fi
 
 if [ -n "$DOPPLER_ENVIRONMENT" ]; then
@@ -60,7 +65,11 @@ fi
 
 # Validate that the config exists and is accessible
 echo "🔍 Validating access to Doppler config '$DOPPLER_CONFIG_TO_USE'..."
-if ! doppler configs get --project webapp --config "$DOPPLER_CONFIG_TO_USE" &> /dev/null; then
+VALIDATION_ARGS="--project webapp --config $DOPPLER_CONFIG_TO_USE"
+if [ -n "$DOPPLER_TOKEN" ]; then
+    VALIDATION_ARGS="$VALIDATION_ARGS --token $DOPPLER_TOKEN"
+fi
+if ! doppler configs get $VALIDATION_ARGS &> /dev/null; then
     echo "❌ Error: Cannot access Doppler config '$DOPPLER_CONFIG_TO_USE' in project 'webapp'"
     echo ""
     echo "🔍 Debugging information:"
@@ -69,7 +78,11 @@ if ! doppler configs get --project webapp --config "$DOPPLER_CONFIG_TO_USE" &> /
     echo "  - Requested config: $DOPPLER_CONFIG_TO_USE"
     echo ""
     echo "📋 Attempting to list available configs:"
-    if doppler configs --project webapp 2>/dev/null; then
+    LIST_ARGS="--project webapp"
+    if [ -n "$DOPPLER_TOKEN" ]; then
+        LIST_ARGS="$LIST_ARGS --token $DOPPLER_TOKEN"
+    fi
+    if doppler configs $LIST_ARGS 2>/dev/null; then
         echo "✅ Successfully listed configs above"
     else
         echo "❌ Failed to list configs. This service token may have limited permissions."
