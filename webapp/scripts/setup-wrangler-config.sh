@@ -31,20 +31,25 @@ if [ ! -f "wrangler.template.jsonc" ]; then
     exit 1
 fi
 
-# Build doppler args if a config override is provided
+# Build doppler args - use a different variable name to avoid confusion with DOPPLER_CONFIG (which is the token)
 DOPPLER_CONFIG_TO_USE=""
 DOPPLER_ARGS=""
-if [ -n "$DOPPLER_CONFIG" ]; then
-    DOPPLER_CONFIG_TO_USE="$DOPPLER_CONFIG"
-    DOPPLER_ARGS="--config $DOPPLER_CONFIG"
-    echo "🎯 Using Doppler config: $DOPPLER_CONFIG (from environment variable)"
-    echo "🔍 Config length: ${#DOPPLER_CONFIG} characters"
-    echo "🔍 Config starts with: ${DOPPLER_CONFIG:0:3}..."
+if [ -n "$DOPPLER_CONFIG_NAME" ]; then
+    DOPPLER_CONFIG_TO_USE="$DOPPLER_CONFIG_NAME"
+    DOPPLER_ARGS="--config $DOPPLER_CONFIG_NAME"
+    echo "🎯 Using Doppler config: $DOPPLER_CONFIG_NAME (from DOPPLER_CONFIG_NAME environment variable)"
 else
     # Default to stg config for staging/production builds
     DOPPLER_CONFIG_TO_USE="stg"
     DOPPLER_ARGS="--config stg"
     echo "🎯 Using Doppler config: stg (default)"
+fi
+
+# Debug: Show if DOPPLER_CONFIG (token) is set
+if [ -n "$DOPPLER_CONFIG" ]; then
+    echo "🔑 Doppler token is set via DOPPLER_CONFIG (${#DOPPLER_CONFIG} characters)"
+else
+    echo "🔑 No Doppler token found in DOPPLER_CONFIG environment variable"
 fi
 
 # Validate that the config exists and is accessible
