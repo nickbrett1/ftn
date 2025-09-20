@@ -25,6 +25,10 @@ DOPPLER_ARGS=""
 if [ -n "$DOPPLER_CONFIG" ]; then
     DOPPLER_ARGS="--config $DOPPLER_CONFIG"
     echo "Using Doppler config: $DOPPLER_CONFIG"
+else
+    # Default to prd config for production builds
+    DOPPLER_ARGS="--config prd"
+    echo "Using Doppler config: prd (default)"
 fi
 
 # Run doppler to get environment variables and execute the configuration generation

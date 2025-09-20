@@ -9,7 +9,7 @@ if command -v doppler &> /dev/null; then
     echo "INFO: Logging into Doppler..."
     doppler login --no-check-version --no-timeout --yes
     echo "INFO: Setting up Doppler..."
-    doppler setup --no-interactive --project webapp --config prd
+    doppler setup --no-interactive --project webapp --config dev
   fi
 else
   echo "Doppler CLI not found. Skipping Doppler login."
@@ -28,6 +28,6 @@ script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callb
 echo
 # Setup Wrangler configuration with environment variables
 echo "Setting up Wrangler configuration..."
-doppler run --project webapp --config prd -- ./scripts/setup-wrangler-config.sh
+doppler run --project webapp --config dev -- ./scripts/setup-wrangler-config.sh
 
 echo "Cloud login script finished." 
