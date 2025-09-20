@@ -38,6 +38,8 @@ if [ -n "$DOPPLER_CONFIG" ]; then
     DOPPLER_CONFIG_TO_USE="$DOPPLER_CONFIG"
     DOPPLER_ARGS="--config $DOPPLER_CONFIG"
     echo "🎯 Using Doppler config: $DOPPLER_CONFIG (from environment variable)"
+    echo "🔍 Config length: ${#DOPPLER_CONFIG} characters"
+    echo "🔍 Config starts with: ${DOPPLER_CONFIG:0:3}..."
 else
     # Default to prd config for production builds
     DOPPLER_CONFIG_TO_USE="prd"
@@ -49,8 +51,27 @@ fi
 echo "🔍 Validating access to Doppler config '$DOPPLER_CONFIG_TO_USE'..."
 if ! doppler configs get --project webapp --config "$DOPPLER_CONFIG_TO_USE" &> /dev/null; then
     echo "❌ Error: Cannot access Doppler config '$DOPPLER_CONFIG_TO_USE' in project 'webapp'"
-    echo "Available configs for this token:"
-    doppler configs list --project webapp || echo "Failed to list configs - check your token permissions"
+    echo ""
+    echo "🔍 Debugging information:"
+    echo "  - Token type: Service token (CircleCI)"
+    echo "  - Project: webapp"
+    echo "  - Requested config: $DOPPLER_CONFIG_TO_USE"
+    echo ""
+    echo "📋 Attempting to list available configs:"
+    if doppler configs --project webapp 2>/dev/null; then
+        echo "✅ Successfully listed configs above"
+    else
+        echo "❌ Failed to list configs. This service token may have limited permissions."
+        echo "💡 Common issues:"
+        echo "   1. The config '$DOPPLER_CONFIG_TO_USE' doesn't exist"
+        echo "   2. The service token doesn't have access to this config"
+        echo "   3. The config name is being passed incorrectly"
+    fi
+    echo ""
+    echo "🔧 To fix this:"
+    echo "   1. Check that the config '$DOPPLER_CONFIG_TO_USE' exists in the Doppler dashboard"
+    echo "   2. Ensure the CircleCI service token has access to this config"
+    echo "   3. Verify the DOPPLER_CONFIG environment variable is set correctly"
     exit 1
 fi
 echo "✅ Config '$DOPPLER_CONFIG_TO_USE' is accessible"
