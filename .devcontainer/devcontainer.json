@@ -3,7 +3,7 @@
 {
   "name": "Node.js",
   // Updated to Node.js 22
-  "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:22-bookworm", // Using Debian Bookworm (GLIBC 2.36)
+  // Using Debian Bookworm (GLIBC 2.36) via custom Dockerfile
   "build": { "dockerfile": "Dockerfile", "context": ".." },
 
   "features": {
@@ -82,12 +82,12 @@
     },
     // Add VS Code settings for the container
     "settings": {
-      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/24.0.1-tem"
+      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
     }
   },
 
   "containerEnv": {
-    "JDK_HOME": "/usr/local/sdkman/candidates/java/24.0.1-tem"
+    "JDK_HOME": "/usr/local/sdkman/candidates/java/current"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
