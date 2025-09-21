@@ -139,7 +139,7 @@ graph LR;
 <LessonsCarousel />
 </div>
 
-### 1. Planning Upfront Works Well {#lesson-1}
+<h3 id="lesson-1">1. Planning Upfront Works Well</h3>
 
 The most successful AI agent interactions started with clear structure and requirements. I began the ccbilling project with a comprehensive [requirements document](https://github.com/nickbrett1/ftn/blob/main/docs/ccbilling.md) that outlined the data model, user flows, and technical constraints. This gave the agent a solid foundation to work from.
 
@@ -147,7 +147,7 @@ I also asked the agent to create a [comprehensive TODO file](https://github.com/
 
 **Key Insight:** The clearer your initial requirements and architecture, the more effectively AI agents can contribute to implementation.
 
-### 2. Automated Checks Are More Valuable {#lesson-2}
+<h3 id="lesson-2">2. Automated Checks Are More Valuable</h3>
 
 With AI agents generating significant portions of code, automated quality checks become essential rather than optional. I leveraged [SonarCloud](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem) for comprehensive code quality analysis, which proved invaluable for catching issues that human code review might miss.
 
@@ -155,7 +155,7 @@ The automated CI/CD pipeline on [CircleCI](https://github.com/nickbrett1/ftn/blo
 
 **Key Insight:** Automation isn't just about speed - it's about providing AI agents with structured, actionable feedback they can act upon.
 
-### 3. Coding on Just a Phone Is Doable {#lesson-3}
+<h3 id="lesson-3">3. Coding on Just a Phone Is Doable</h3>
 
 One of the most surprising discoveries was Cursor's agent mode webapp, which allows you to operate the AI agent outside of the IDE through a web interface. The agent spins up a VM to make changes to your branch, enabling development from anywhere.
 
@@ -163,7 +163,7 @@ This capability fundamentally changed my development workflow. Like the introduc
 
 **Key Insight:** The future of development isn't tied to a specific device or location - AI agents enable truly mobile development workflows.
 
-### 4. Environment Iteration Becomes Critical {#lesson-4}
+<h3 id="lesson-4">4. Environment Iteration Becomes Critical</h3>
 
 Given the ability to code from anywhere, having an environment that supports rapid iteration becomes even more important. While this is straightforward on desktop, I found I needed to invest in creating [preview deployments for all branches](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/deploys) accessible through the `/deploys` route.
 
@@ -171,7 +171,7 @@ This preview system allowed me to see what the agent was building without riskin
 
 **Key Insight:** When AI agents can work autonomously, you need systems that let you observe and iterate on their work safely.
 
-### 5. UI Changes Remained Difficult {#lesson-5}
+<h3 id="lesson-5">5. UI Changes Remained Difficult</h3>
 
 Despite AI agents' capabilities, UI changes proved challenging. Describing placement and styling in natural language is inherently imprecise, and without a consistent design language, the agent struggled with visual consistency.
 
@@ -179,7 +179,7 @@ I addressed this by introducing a standardized [Button component](https://github
 
 **Key Insight:** AI agents excel at logic and structure but struggle with subjective visual decisions. Clear design systems and component libraries are essential.
 
-### 6. There Were Bugs to Work Around {#lesson-6}
+<h3 id="lesson-6">6. There Were Bugs to Work Around</h3>
 
 AI agents aren't perfect, and I encountered several technical issues that required workarounds. For example, my use of zsh with powerlevel10k caused Cursor to hang when running terminal commands. I solved this by adding conditional logic to my [.zshrc configuration](https://github.com/nickbrett1/ftn/blob/main/.devcontainer/.zshrc):
 
@@ -196,7 +196,7 @@ Similarly, Cursor would hang when running tests in watch mode, so I introduced a
 
 **Key Insight:** AI agents introduce new failure modes that require creative workarounds and clear documentation.
 
-### 7. Newer Frameworks Are Challenging {#lesson-7}
+<h3 id="lesson-7">7. Newer Frameworks Are Challenging</h3>
 
 The agent struggled significantly with Svelte 5's runes mode and its approach to UI reactivity. The newer the framework or feature, the less training data the agent has access to, making it harder to generate correct code.
 
@@ -224,7 +224,7 @@ However, once I had a body of examples in my own codebase that the agent could r
 
 **Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
 
-### 8. More Software Will Be Written {#lesson-8}
+<h3 id="lesson-8">8. More Software Will Be Written</h3>
 
 There's an ongoing debate about what AI agents mean for the programming profession. I'm relatively optimistic: I believe this will make it much easier to create new software, but that there's so much demand for software that we'll see significantly more of it written.
 
@@ -232,7 +232,7 @@ The ccbilling tool is a perfect example - it's a useful personal finance applica
 
 **Key Insight:** AI agents don't replace programmers - they enable more people to create more software to solve more problems.
 
-### 9. Quality Can Actually Improve {#lesson-9}
+<h3 id="lesson-9">9. Quality Can Actually Improve</h3>
 
 A common concern is that AI-generated code will lower software quality. In my experience, when used well, the opposite can be true. I was able to use agents to implement many quality-enhancing systems that I wouldn't have had time to build otherwise.
 
@@ -240,7 +240,7 @@ For example, the preview deployment system, comprehensive test coverage, and aut
 
 **Key Insight:** AI agents can raise software quality by implementing best practices and enabling architectural experimentation that would be too time-consuming otherwise.
 
-### 10. Surprisingly Fun {#lesson-10}
+<h3 id="lesson-10">10. Surprisingly Fun</h3>
 
 Perhaps most unexpectedly, working with AI agents was genuinely enjoyable. The back-and-forth on approaches mimicked the collaborative feeling of working with other developers. While agents can be somewhat fawning in their responses, there's something genuinely satisfying about having a conversation about code architecture and then watching it come to life.
 
