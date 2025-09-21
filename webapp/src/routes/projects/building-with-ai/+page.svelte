@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Building with AI Agents: Lessons from a 14,500-Line Project</title>
+	<title>Building with AI Agents: 10 Key Lessons from a 14,500-Line Project</title>
 	<meta
 		name="description"
 		content="What I learned using Cursor's agent mode to build a personal finance tool - insights into AI-assisted development workflows."
