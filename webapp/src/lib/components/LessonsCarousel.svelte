@@ -88,7 +88,7 @@
 		currentIndex = (currentIndex - 1 + lessons.length) % lessons.length;
 	}
 
-	function goToLesson(index: number) {
+	function goToLesson(index) {
 		currentIndex = index;
 	}
 
