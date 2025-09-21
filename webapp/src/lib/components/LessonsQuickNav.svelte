@@ -1,12 +1,4 @@
 <script>
-	/**
-	 * @typedef {Object} QuickNavItem
-	 * @property {string} id
-	 * @property {string} title
-	 * @property {number} number
-	 */
-
-	/** @type {QuickNavItem[]} */
 	const lessonItems = [
 		{ id: 'lesson-1', title: 'Planning Upfront Works Well', number: 1 },
 		{ id: 'lesson-2', title: 'Automated Checks Are More Valuable', number: 2 },
@@ -20,7 +12,7 @@
 		{ id: 'lesson-10', title: 'Surprisingly Fun', number: 10 }
 	];
 
-	function scrollToLesson(lessonId: string) {
+	function scrollToLesson(lessonId) {
 		const element = document.getElementById(lessonId);
 		if (element) {
 			element.scrollIntoView({ behavior: 'smooth', block: 'start' });
