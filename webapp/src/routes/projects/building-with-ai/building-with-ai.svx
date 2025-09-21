@@ -32,6 +32,7 @@ To give a sense of the scale of the work the project was relatively small, but n
 
 Here's the high-level architecture of the system:
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div class="mermaid-container">
 
 ```mermaid
@@ -106,6 +107,7 @@ My journey with AI coding assistants has followed a clear progression:
 
 This evolution represents a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation.
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div class="mermaid-container">
 
 ```mermaid
