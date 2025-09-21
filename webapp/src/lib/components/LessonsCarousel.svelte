@@ -2,16 +2,6 @@
 	import { onMount } from 'svelte';
 	import Button from './Button.svelte';
 
-	/**
-	 * @typedef {Object} Lesson
-	 * @property {number} id
-	 * @property {string} title
-	 * @property {string} summary
-	 * @property {string} insight
-	 * @property {string} content
-	 */
-
-	/** @type {Lesson[]} */
 	const lessons = [
 		{
 			id: 1,
