@@ -183,6 +183,7 @@ I addressed this by introducing a standardized [Button component](https://github
 
 AI agents aren't perfect, and I encountered several technical issues that required workarounds. For example, my use of zsh with powerlevel10k caused Cursor to hang when running terminal commands. I solved this by adding conditional logic to my [.zshrc configuration](https://github.com/nickbrett1/ftn/blob/main/.devcontainer/.zshrc):
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 ```bash
 # Set Oh My Zsh theme conditionally to avoid Cursor hanging issues
 if [[ "$PAGER" == "sh -c \"head -n 10000 | cat\"" ]]; then
@@ -202,6 +203,7 @@ The agent struggled significantly with Svelte 5's runes mode and its approach to
 
 A perfect example of this was when the agent tried to implement reactive state using Svelte 5's `$state` rune. The agent would often make the mistake of directly assigning to a `$state` variable, which breaks reactivity:
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 ```javascript
 // ❌ What the agent would generate (incorrect)
 let count = $state(0);

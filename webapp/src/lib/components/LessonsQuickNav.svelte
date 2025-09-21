@@ -1,11 +1,13 @@
 <script>
-	interface QuickNavItem {
-		id: string;
-		title: string;
-		number: number;
-	}
+	/**
+	 * @typedef {Object} QuickNavItem
+	 * @property {string} id
+	 * @property {string} title
+	 * @property {number} number
+	 */
 
-	const lessonItems: QuickNavItem[] = [
+	/** @type {QuickNavItem[]} */
+	const lessonItems = [
 		{ id: 'lesson-1', title: 'Planning Upfront Works Well', number: 1 },
 		{ id: 'lesson-2', title: 'Automated Checks Are More Valuable', number: 2 },
 		{ id: 'lesson-3', title: 'Coding on Just a Phone Is Doable', number: 3 },
