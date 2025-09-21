@@ -2,15 +2,17 @@
 	import { onMount } from 'svelte';
 	import Button from './Button.svelte';
 
-	interface Lesson {
-		id: number;
-		title: string;
-		summary: string;
-		insight: string;
-		content: string;
-	}
+	/**
+	 * @typedef {Object} Lesson
+	 * @property {number} id
+	 * @property {string} title
+	 * @property {string} summary
+	 * @property {string} insight
+	 * @property {string} content
+	 */
 
-	const lessons: Lesson[] = [
+	/** @type {Lesson[]} */
+	const lessons = [
 		{
 			id: 1,
 			title: "Planning Upfront Works Well",
