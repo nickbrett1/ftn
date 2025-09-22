@@ -15,69 +15,87 @@
 	}
 </style>
 
-<h1 class="!mb-0 no-underline">Building with AI Agents: 10 Key Lessons from a 14,500-Line Project</h1>
+<h1 class="!mb-0 no-underline">Building with AI Agents: 10 Thoughts from a 14,500-Line Project</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool - insights into AI-assisted development workflows</p>
 September 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
 
-Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as flirtations through simple tab completions with GitHub Copilot has transformed into a deep partnership where AI agents handle entire components of my applications. I've been building software for more than 20 years, and so I wanted to draw a few thoughts from a recent person project that was almost exclusively built / 'vibe coded' using [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
+Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as flirtations through simple tab completions with GitHub Copilot has transformed into a marriage where AI agents handle entire components of my applications. I've been building software for more than 20 years, and so I wanted to draw a few thoughts from a recent personal project that was built using [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
 
 <Img src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
 
-To give a sense of the scale of the work the project was relatively small, but non-trivial, with the goal of developing a system to automate a piece of my own finance management by removing the tedious process of reviewing monthly credit card statements (yes I do this). The system parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets. As a personal, self-contained project, it seemed like the perfect candidate for exploring AI agent capabilities.
+To give a sense of the scale of the work, this project had the goal of developing a system to automate a piece of my own finance management by removing the tedious process of reviewing monthly credit card statements (yes I do this). The system parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets.
 
 **Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**. This represents a substantial application that would have taken significantly longer to build without AI assistance.
 
-Here's the high-level architecture of the system:
+Here's a detailed breakdown of where the complexity lies within the 14,500 lines of code:
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div class="mermaid-container">
+## Code Distribution by System Area
 
-```mermaid
-graph TD;
-    subgraph "Frontend Tier"
-        A["SvelteKit Frontend"]
-        B["Budget Management UI"]
-        C["Charge Allocation"]
-        D["Billing Cycle Reports"]
-    end
+### 1. UI Components & Frontend Logic
 
-    subgraph "Backend Tier"
-        E["Server Routes&#10;(API Endpoints)"]
-        F["Statement Parser Factory"]
-        G["Provider-Specific Parsers&#10;(Chase, Amex, etc.)"]
-        H["Merchant Classification"]
-    end
+**63 Svelte files • 8,665 lines of code**
 
-    subgraph "Data Tier"
-        I["D1 Database&#10;(Charges, Budgets, Cycles)"]
-        J["Cloudflare R2 Storage&#10;(PDF Statements)"]
-    end
+The user interface represents the largest portion of the codebase, encompassing all interactive elements and presentation logic. This includes:
 
-    subgraph "External Services"
-        K["LLAMA API"]
-    end
+- **Core Application Pages**: Billing cycle management, budget allocation interfaces, and charge categorization screens
+- **Reusable Components**: Buttons, modals, forms, and data visualization components using ApexCharts
+- **Layout & Navigation**: Header, footer, mobile navigation, and responsive design components
+- **Specialized UI**: PDF upload interfaces, merchant selection modals, and auto-association update dialogs
 
-    A --> E
-    E --> I
-    E --> J
-    K --> H
-    H --> I
+The high line count reflects the complexity of financial data visualization and the need for responsive, accessible interfaces across multiple device types.
 
-    classDef frontend fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef backend fill:#374151,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef storage fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef external fill:#7c3aed,stroke:#ffffff,stroke-width:2px,color:#ffffff;
+### 2. Backend Logic & API Orchestration
 
-    class A,B,C,D frontend;
-    class E,F,G,H backend;
-    class I,J storage;
-    class K external;
-```
+**106 JavaScript files • 7,359 lines of code**
 
-</div>
+The server-side logic ties together all application functionality through SvelteKit's server routes and API endpoints:
+
+- **API Routes**: RESTful endpoints for CRUD operations on budgets, charges, billing cycles, and credit cards
+- **Business Logic**: Charge allocation algorithms, merchant auto-association rules, and budget calculation logic
+- **Authentication & Authorization**: User session management and route protection
+- **Data Validation**: Input sanitization and business rule enforcement
+- **Integration Orchestration**: Coordinating between PDF parsing, database operations, and external API calls
+
+### 3. Input/Output Data Processing
+
+**Multiple parser files • 2,713 lines of code**
+
+This category handles the complex task of extracting structured data from unstructured sources:
+
+- **PDF Statement Parsers**: Provider-specific parsers for Chase, Wells Fargo, and American Express statements using regex-based text extraction
+- **Parser Factory Pattern**: Dynamic parser selection based on statement format detection
+- **LLAMA API Integration**: AI-powered merchant description normalization and categorization
+- **Data Transformation**: Converting parsed text into structured database records
+- **Error Handling**: Robust parsing failure recovery and manual override capabilities
+
+### 4. Database Access & Data Layer
+
+**Multiple database integration files • 1,923 lines of code**
+
+All persistent data operations are handled through this layer:
+
+- **Cloudflare D1 Integration**: SQLite database operations for charges, budgets, billing cycles, and user data
+- **Cloudflare R2 Storage**: PDF statement storage and retrieval with secure access patterns
+- **Database Migrations**: Schema evolution and data transformation scripts
+- **Query Optimization**: Efficient data retrieval patterns for dashboard and reporting features
+- **Data Integrity**: Foreign key relationships and business rule enforcement at the database level
+
+### 5. CI/CD Infrastructure & DevOps
+
+**15+ configuration files • 300+ lines of configuration**
+
+The development and deployment pipeline ensures code quality and reliable releases:
+
+- **CircleCI Pipeline**: Automated testing, building, and deployment with parallel job execution
+- **SonarCloud Integration**: Comprehensive code quality analysis, security scanning, and technical debt tracking
+- **Preview Deployments**: Automatic branch-based deployments accessible through `/deploys` route for safe iteration
+- **Quality Gates**: Automated test coverage enforcement, linting, and performance monitoring
+- **Dependency Management**: Automated security vulnerability scanning and update management
+
+This infrastructure proved crucial for working effectively with AI agents, providing structured feedback loops and safe experimentation environments.
 
 **Key Infrastructure Components:**
 
@@ -96,7 +114,6 @@ These DevOps tools proved crucial for working effectively with AI agents, as the
 		<p class="text-gray-400">[Screenshot 2: Statement parsing interface with charge allocation]</p>
 	</div>
 </div>
-
 
 ## The Evolution of AI Agent Use
 
@@ -177,6 +194,7 @@ I addressed this by introducing a standardized [Button component](https://github
 AI agents aren't perfect, and I encountered several technical issues that required workarounds. For example, my use of zsh with powerlevel10k caused Cursor to hang when running terminal commands. I solved this by adding conditional logic to my [.zshrc configuration](https://github.com/nickbrett1/ftn/blob/main/.devcontainer/.zshrc):
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
 ```bash
 # Set Oh My Zsh theme conditionally to avoid Cursor hanging issues
 if [[ "$PAGER" == "sh -c \"head -n 10000 | cat\"" ]]; then
@@ -197,6 +215,7 @@ The agent struggled significantly with Svelte 5's runes mode and its approach to
 A perfect example of this was when the agent tried to implement reactive state using Svelte 5's `$state` rune. The agent would often make the mistake of directly assigning to a `$state` variable, which breaks reactivity:
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
 ```javascript
 // ❌ What the agent would generate (incorrect)
 let count = $state(0);
