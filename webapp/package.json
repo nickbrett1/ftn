@@ -93,7 +93,7 @@
 		"linkify-it": "^5.0.0",
 		"llama-api-client": "^0.2.2",
 		"most-visible": "^2.0.0",
-		"nanoid": "^5.1.5",
+		"nanoid": "^5.1.6",
 		"pdfjs-dist": "^5.4.149",
 		"three": "^0.180.0",
 		"tippy.js": "^6.3.7",
