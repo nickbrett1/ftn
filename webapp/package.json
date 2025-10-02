@@ -35,7 +35,7 @@
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.86.6",
 		"@sveltejs/adapter-auto": "^6.1.0",
-		"@sveltejs/adapter-cloudflare": "^7.2.3",
+		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.43.7",
 		"@tailwindcss/postcss": "^4.1.14",
