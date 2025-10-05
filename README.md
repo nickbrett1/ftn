@@ -85,7 +85,7 @@ Automated credit card statement processing and budget management system:
 
 ## 🚀 Preview Deployments
 
-Available for all non-main branch commits with latest commit under https://ftn-preview.nick-brett1.workers.dev
+Available for non-main branch commits under https://ftn-preview.nick-brett1.workers.dev
 
 ## 🎯 Focus
 
