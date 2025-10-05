@@ -2,6 +2,8 @@
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import Img from '@zerodevx/svelte-img';
 	import distractedBoyfriendMeme from "$lib/images/distractedboyfriendmeme.jpg?as=run";
+	import mainDashboardScreenshot from "$lib/images/main-dashboard-screenshot.png?as=run";
+	import chargeListingScreenshot from "$lib/images/charge-listing-screenshot.png?as=run";
 
 	const { data } = $props();
 
@@ -28,168 +30,90 @@ Over the past year, my relationship with AI coding assistants has evolved dramat
 
 To give a sense of the scale of the work, this project had the goal of developing a system to automate a piece of my own finance management by removing the tedious process of reviewing monthly credit card statements (yes I do this). The system parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets.
 
-**Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**. This represents a substantial application that would have taken significantly longer to build without AI assistance.
-
-Here's a detailed breakdown of where the complexity lies within the 14,500 lines of code:
+**Project Scale:** The final codebase spans approximately **14,500 lines of code**, with **72% JavaScript/TypeScript** and **28% Svelte components**.
 
 ## Code Distribution by System Area
 
-### 1. UI Components & Frontend Logic
+There are five main areas to the code:
 
-**63 Svelte files • 8,665 lines of code**
+**Frontend (60% at ~8,700 lines):** 63 Svelte components handling the user interface, from billing cycle dashboards to PDF upload interfaces. The complexity stems from the data visualization and the desire for responsive design across devices.
 
-The user interface represents the largest portion of the codebase, encompassing all interactive elements and presentation logic. This includes:
+**Backend APIs (35% at ~5,100 lines):** 37 JavaScript files powering SvelteKit server routes, business logic, and API orchestration between parsing, database, and external services.
 
-- **Core Application Pages**: Billing cycle management, budget allocation interfaces, and charge categorization screens
-- **Reusable Components**: Buttons, modals, forms, and data visualization components using ApexCharts
-- **Layout & Navigation**: Header, footer, mobile navigation, and responsive design components
-- **Specialized UI**: PDF upload interfaces, merchant selection modals, and auto-association update dialogs
+**Data Processing (4% at ~600 lines):** PDF statement parsers for different formats, plus logic to normalize merchant names. This handles the core challenge of extracting structured data from unstructured PDF statements.
 
-The high line count reflects the complexity of financial data visualization and the need for responsive, accessible interfaces across multiple device types.
+**Database Layer (1% at ~100 lines):** Cloudflare D1 (SQLite) and R2 storage integration, migrations, and query optimization for persistent data operations.
 
-### 2. Backend Logic & API Orchestration
+## Screenshots
 
-**106 JavaScript files • 7,359 lines of code**
-
-The server-side logic ties together all application functionality through SvelteKit's server routes and API endpoints:
-
-- **API Routes**: RESTful endpoints for CRUD operations on budgets, charges, billing cycles, and credit cards
-- **Business Logic**: Charge allocation algorithms, merchant auto-association rules, and budget calculation logic
-- **Authentication & Authorization**: User session management and route protection
-- **Data Validation**: Input sanitization and business rule enforcement
-- **Integration Orchestration**: Coordinating between PDF parsing, database operations, and external API calls
-
-### 3. Input/Output Data Processing
-
-**Multiple parser files • 2,713 lines of code**
-
-This category handles the complex task of extracting structured data from unstructured sources:
-
-- **PDF Statement Parsers**: Provider-specific parsers for Chase, Wells Fargo, and American Express statements using regex-based text extraction
-- **Parser Factory Pattern**: Dynamic parser selection based on statement format detection
-- **LLAMA API Integration**: AI-powered merchant description normalization and categorization
-- **Data Transformation**: Converting parsed text into structured database records
-- **Error Handling**: Robust parsing failure recovery and manual override capabilities
-
-### 4. Database Access & Data Layer
-
-**Multiple database integration files • 1,923 lines of code**
-
-All persistent data operations are handled through this layer:
-
-- **Cloudflare D1 Integration**: SQLite database operations for charges, budgets, billing cycles, and user data
-- **Cloudflare R2 Storage**: PDF statement storage and retrieval with secure access patterns
-- **Database Migrations**: Schema evolution and data transformation scripts
-- **Query Optimization**: Efficient data retrieval patterns for dashboard and reporting features
-- **Data Integrity**: Foreign key relationships and business rule enforcement at the database level
-
-### 5. CI/CD Infrastructure & DevOps
-
-**15+ configuration files • 300+ lines of configuration**
-
-The development and deployment pipeline ensures code quality and reliable releases:
-
-- **CircleCI Pipeline**: Automated testing, building, and deployment with parallel job execution
-- **SonarCloud Integration**: Comprehensive code quality analysis, security scanning, and technical debt tracking
-- **Preview Deployments**: Automatic branch-based deployments accessible through `/deploys` route for safe iteration
-- **Quality Gates**: Automated test coverage enforcement, linting, and performance monitoring
-- **Dependency Management**: Automated security vulnerability scanning and update management
-
-This infrastructure proved crucial for working effectively with AI agents, providing structured feedback loops and safe experimentation environments.
-
-**Key Infrastructure Components:**
-
-- **CircleCI Pipeline**: Automated testing and deployment pipeline that runs on every commit
-- **SonarCloud Quality Checks**: Comprehensive code quality analysis and security scanning
-- **Preview Deployments**: Independent branch deployments accessible through the `/deploys` route for safe experimentation
-
-These DevOps tools proved crucial for working effectively with AI agents, as they provided structured feedback and safe environments for iteration.
-
-<!-- Placeholder for screenshots -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
-	<div class="text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
-		<p class="text-gray-400">[Screenshot 1: Main dashboard showing billing cycles and budgets]</p>
+	<div class="text-center">
+		<Img src={mainDashboardScreenshot} alt="Main dashboard showing billing cycles and budgets" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
+		<p class="text-sm text-gray-400 mt-2">Main dashboard showing different billing cycles, each contains statements for multiple credit cards</p>
 	</div>
-	<div class="text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
-		<p class="text-gray-400">[Screenshot 2: Statement parsing interface with charge allocation]</p>
+	<div class="text-center">
+		<Img src={chargeListingScreenshot} alt="Statement parsing interface with charge allocation" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
+		<p class="text-sm text-gray-400 mt-2">Charge listing view, where charges across multiple cards can be viewed and assigned to budgets</p>
 	</div>
 </div>
 
-## The Evolution of AI Agent Use
+## The Evolution of My AI Agent Use
 
-My journey with AI coding assistants has followed a clear progression:
+My journey with AI coding assistants has, like many others, gone something like this:
 
-1. **GitHub Copilot (Early 2023):** Basic tab completions and simple function suggestions
-2. **Gemini Integration (Mid 2023):** Writing larger scripts and files for my [dbt-duckdb project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/dbt-duckdb)
-3. **Cursor Agent Mode (Late 2023):** Full component development and architectural decisions
+1. **GitHub Copilot (Late 2024):** I started with basic tab completions and simple function suggestions
+2. **Gemini Integration (Early 2025):** After 3-6 months I began using AI to help write entire scripts and files for my [dbt-duckdb project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/dbt-duckdb)
+3. **Cursor Agent Mode (Mid 2025):** More recently, with this project, I embraced 'the vibe' and started to use AI for component development
 
-This evolution represents a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation.
-
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div class="mermaid-container">
-
-```mermaid
-graph LR;
-    A["GitHub Copilot&#10;Tab Completions"] --> B["Gemini&#10;Script Generation"];
-    B --> C["Cursor Agent Mode&#10;Component Development"];
-    C --> D["Full Project&#10;Architecture"];
-
-    E["Simple Assistance"] --> F["File-Level Help"];
-    F --> G["Component Building"];
-    G --> H["Project Leadership"];
-
-    classDef phase fill:#1f2937,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-    classDef capability fill:#059669,stroke:#ffffff,stroke-width:2px,color:#ffffff;
-
-    class A,B,C,D phase;
-    class E,F,G,H capability;
-```
-
-</div>
+This evolution represents a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation. Here's what I've learned.
 
 ## 10 Key Lessons Learned
 
 ### 1. Planning Upfront Works Well
 
+> **Key Insight:** The clearer you define the initial requirements and architecture, the more effective AI agents can be.
+
 The most successful AI agent interactions started with clear structure and requirements. I began the ccbilling project with a comprehensive [requirements document](https://github.com/nickbrett1/ftn/blob/main/docs/ccbilling.md) that outlined the data model, user flows, and technical constraints. This gave the agent a solid foundation to work from.
 
-I also asked the agent to create a [comprehensive TODO file](https://github.com/nickbrett1/ftn/blob/main/.cursor/ccbilling-todo.md) that tracked progress and provided clear next steps. This pattern of structured, spec-driven development is exactly what [Amazon's new IDE Kiro](https://kiro.dev/) is designed around - though I'm still on their waitlist to try it firsthand.
+I also asked the agent to create a [comprehensive TODO file](https://github.com/nickbrett1/ftn/blob/main/.cursor/ccbilling-todo.md) that tracked progress and provided clear next steps. I think this approach is becoming highly standardized, with tools like [Amazon's new IDE Kiro](https://kiro.dev/) designed around it.
 
-**Key Insight:** The clearer your initial requirements and architecture, the more effectively AI agents can contribute to implementation.
+Whenever I didn't do this, or tried to cut corners, I found the agent getting lost or producing poor quality output that took a long time to iterate on to get to an acceptable place.
 
 ### 2. Automated Checks Are More Valuable
 
-With AI agents generating significant portions of code, automated quality checks become essential rather than optional. I leveraged [SonarCloud](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem) for comprehensive code quality analysis, which proved invaluable for catching issues that human code review might miss.
+> **Key Insight:** Automation isn't just about speed - it's about providing AI agents with structured, actionable feedback they can use.
 
-The automated CI/CD pipeline on [CircleCI](https://github.com/nickbrett1/ftn/blob/main/.circleci/config.yml) enforced test coverage and quality standards, providing structured feedback that the agent could use to address problems. This created a virtuous cycle where the agent would generate code, tests would identify issues, and the agent would fix them based on the structured error output.
+With AI agents generating significant portions of code, automated quality checks become essential rather than optional. I leveraged [SonarCloud](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem) for comprehensive code quality analysis, which helped the AI agent act more autonomously by preventing deployments even getting to human review unless they had passed the automated checks.
 
-**Key Insight:** Automation isn't just about speed - it's about providing AI agents with structured, actionable feedback they can act upon.
+To do this, I used a CI/CD pipeline on [CircleCI](https://github.com/nickbrett1/ftn/blob/main/.circleci/config.yml) that enforced test coverage and quality standards, providing structured feedback that the agent could use to address problems. This created a virtuous cycle where the agent would generate code, tests would identify issues, and the agent would fix them based on the structured error output.
 
 ### 3. Coding on Just a Phone Is Doable
 
-One of the most surprising discoveries was Cursor's agent mode webapp, which allows you to operate the AI agent outside of the IDE through a web interface. The agent spins up a VM to make changes to your branch, enabling development from anywhere.
+> **Key Insight:** The future of development isn't tied to a specific device or location - AI agents enable code anywhere workflows.
 
-This capability fundamentally changed my development workflow. Like the introduction of mobile phones, it means I can now code from anywhere - which is both empowering and potentially dangerous for work-life balance. But for personal projects like ccbilling, it's been a massive productivity booster.
+One of the most surprising discoveries was Cursor's agent mode webapp, which allowed me to operate the AI agent outside of the IDE through a web interface. The agent spins up a VM to make changes to a branch, enabling development from anywhere.
 
-**Key Insight:** The future of development isn't tied to a specific device or location - AI agents enable truly mobile development workflows.
+This capability fundamentally changed my development workflow. It suddenly went I could do real coding from anywhere - which is both empowering and potentially dangerous for work-life balance. But for personal projects like ccbilling, it's been a massive boost.
 
 ### 4. Environment Iteration Becomes Critical
 
-Given the ability to code from anywhere, having an environment that supports rapid iteration becomes even more important. While this is straightforward on desktop, I found I needed to invest in creating [preview deployments for all branches](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/deploys) accessible through the `/deploys` route.
+> **Key Insight:** When AI agents can work autonomously, you need systems that let you observe and iterate on their work safely.
 
-This preview system allowed me to see what the agent was building without risking my main site, creating a safe space for experimentation and iteration. The investment in this infrastructure paid dividends in development velocity.
+Given the ability to code from anywhere, having an environment that supports rapid iteration became really important. While this is straightforward on desktop, where I can just run my app locally with any changes. When I was working just using the Cursor webapp, I needed to invest in creating [preview deployments for branches](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/deploys), accessible through a special `/deploys` route.
 
-**Key Insight:** When AI agents can work autonomously, you need systems that let you observe and iterate on their work safely.
+This preview system allowed me to see what the agent was building when I was just interacting with it through my phone, without risking my main site by having it commit to the main branch. The investment in infrastructure to create a safe space for experimentation and iteration paid dividends in development velocity.
 
 ### 5. UI Changes Remained Difficult
 
+> **Key Insight:** AI agents excel at logic and structure but struggle with subjective visual decisions. Clear design systems and component libraries help.
+
 Despite AI agents' capabilities, UI changes proved challenging. Describing placement and styling in natural language is inherently imprecise, and without a consistent design language, the agent struggled with visual consistency.
 
-I addressed this by introducing a standardized [Button component](https://github.com/nickbrett1/ftn/blob/main/webapp/src/lib/components/Button.svelte) with clear style variants and documenting my [style guidelines in the context file](https://github.com/nickbrett1/ftn/blob/main/.cursor/context.md). The more structured and consistent your UI components, the easier it is for agents to work with them.
-
-**Key Insight:** AI agents excel at logic and structure but struggle with subjective visual decisions. Clear design systems and component libraries are essential.
+I addressed this by introducing a standardized [Button component](https://github.com/nickbrett1/ftn/blob/main/webapp/src/lib/components/Button.svelte) with clear style variants and documenting my [style guidelines in the context file](https://github.com/nickbrett1/ftn/blob/main/.cursor/context.md). The more structured and consistent I made my UI components, the easier it is for agents to work with them.
 
 ### 6. There Were Bugs to Work Around
+
+> **Key Insight:** AI agents introduce new failure modes that require creative workarounds and clear documentation.
 
 AI agents aren't perfect, and I encountered several technical issues that required workarounds. For example, my use of zsh with powerlevel10k caused Cursor to hang when running terminal commands. I solved this by adding conditional logic to my [.zshrc configuration](https://github.com/nickbrett1/ftn/blob/main/.devcontainer/.zshrc):
 
@@ -204,15 +128,15 @@ else
 fi
 ```
 
-Similarly, Cursor would hang when running tests in watch mode, so I introduced a special `npm run test:once` command and documented this in my context file to guide the agent.
-
-**Key Insight:** AI agents introduce new failure modes that require creative workarounds and clear documentation.
+Similarly, Cursor would hang when running tests from my desktop, so I needed to introduce a special command (`npm run test:once`) for it to use to run tests, which again needed to be documented in my context file to guide the agent.
 
 ### 7. Newer Frameworks Are Challenging
 
-The agent struggled significantly with Svelte 5's runes mode and its approach to UI reactivity. The newer the framework or feature, the less training data the agent has access to, making it harder to generate correct code.
+> **Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
 
-A perfect example of this was when the agent tried to implement reactive state using Svelte 5's `$state` rune. The agent would often make the mistake of directly assigning to a `$state` variable, which breaks reactivity:
+The agent struggled significantly with Svelte 5's runes mode and its approach to UI reactivity. This relatively new version of the framework, released in October 2024, meant there was less training data for the agent, making it harder to generate correct code.
+
+A concrete example of this was when the agent tried to implement reactive state using Svelte 5's `$state` rune. The agent would often make the mistake of directly assigning to a `$state` variable, which breaks reactivity:
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
@@ -234,31 +158,29 @@ function increment() {
 
 The agent's confusion stemmed from its training on older Svelte patterns where you would reassign variables. With runes, the reactive system expects direct mutation rather than reassignment, which is a subtle but critical difference that the agent initially missed.
 
-However, once I had a body of examples in my own codebase that the agent could reference and copy from, its performance improved dramatically. This suggests that creating internal examples and patterns is crucial when working with cutting-edge technologies.
-
-**Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
+However, once I had a body of examples in my own codebase that the agent could reference and copy from, its performance improved dramatically. As a result I learned that sometimes creating internal examples and patterns was crucial when working with newer APIs.
 
 ### 8. More Software Will Be Written
+
+> **Key Insight:** AI agents don't replace programmers - they enable more people to create more software to solve more problems.
 
 There's an ongoing debate about what AI agents mean for the programming profession. I'm relatively optimistic: I believe this will make it much easier to create new software, but that there's so much demand for software that we'll see significantly more of it written.
 
 The ccbilling tool is a perfect example - it's a useful personal finance application that I would never have built without AI assistance. The barrier to entry for creating software has been dramatically lowered, which means more people can solve more problems.
 
-**Key Insight:** AI agents don't replace programmers - they enable more people to create more software to solve more problems.
-
 ### 9. Quality Can Actually Improve
+
+> **Key Insight:** AI agents can raise software quality by implementing best practices and enabling architectural experimentation that would be too time-consuming otherwise.
 
 A common concern is that AI-generated code will lower software quality. In my experience, when used well, the opposite can be true. I was able to use agents to implement many quality-enhancing systems that I wouldn't have had time to build otherwise.
 
 For example, the preview deployment system, comprehensive test coverage, and automated quality checks all contribute to higher software quality. The agent also enabled me to quickly try different approaches to solving problems, allowing me to choose the best solution rather than being stuck with the first working implementation.
 
-**Key Insight:** AI agents can raise software quality by implementing best practices and enabling architectural experimentation that would be too time-consuming otherwise.
-
 ### 10. Surprisingly Fun
 
-Perhaps most unexpectedly, working with AI agents was genuinely enjoyable. The back-and-forth on approaches mimicked the collaborative feeling of working with other developers. While agents can be somewhat fawning in their responses, there's something genuinely satisfying about having a conversation about code architecture and then watching it come to life.
+> **Key Insight:** AI agents can make development more collaborative and engaging, not less human.
 
-**Key Insight:** AI agents can make development more collaborative and engaging, not less human.
+Perhaps most unexpectedly, working with AI agents was at times genuinely enjoyable. The back-and-forth on approaches mimicked the collaborative feeling of working with other developers. While agents can be somewhat fawning in their responses, there's something genuinely satisfying about having a conversation about code architecture and then watching it come to life.
 
 ## The Trade-off: Knowledge vs. Velocity
 
