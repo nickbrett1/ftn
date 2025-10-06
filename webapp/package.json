@@ -94,7 +94,7 @@
 		"llama-api-client": "^0.3.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.6",
-		"pdfjs-dist": "^5.4.149",
+		"pdfjs-dist": "^5.4.296",
 		"three": "^0.180.0",
 		"tippy.js": "^6.3.7",
 		"tsparticles": "^3.9.1"
