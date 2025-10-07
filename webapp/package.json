@@ -75,7 +75,7 @@
 		"tailwindcss": "^4.1.13",
 		"typescript": "^5.9.3",
 		"vite": "^7.1.9",
-		"vite-imagetools": "^8.0.0",
+		"vite-imagetools": "^9.0.0",
 		"vitest": "^3.2.4",
 		"wrangler": "^4.42.1"
 	},
