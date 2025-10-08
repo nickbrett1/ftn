@@ -1,5 +1,4 @@
 <script>
-	import Navbar from '$lib/components/Navbar.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import ArticleContent from './dbt-duckdb.svx';
 	const { data } = $props();
@@ -14,7 +13,6 @@
 </svelte:head>
 
 <Header />
-<Navbar active="projects" />
 
 <article class="container mx-auto p-4 space-y-8 max-w-6xl prose prose-invert lg:prose-xl">
 	<ArticleContent {data} />
