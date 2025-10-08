@@ -7,7 +7,7 @@
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
-		SitemapSolid
+		RobotSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -21,6 +21,18 @@
 			These are some of my personal projects, tools, code and writings.
 		</div>
 
+		<Card onclick={() => (window.location.href = '/projects/building-with-ai')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow">Building with AI Agents</span>
+					<RobotSolid class="size-10" aria-label="AI Agents Project" />
+				</div>
+				<p class="grow pt-5">
+					10 thoughts on AI-assisted development from building a personal finance tool using
+					Cursor's agent mode.
+				</p>
+			</div>
+		</Card>
 		<Card onclick={() => (window.location.href = '/projects/dbt-duckdb')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
@@ -49,25 +61,6 @@
 				</p>
 			</div>
 		</Card>
-		<HoverFadeCard>
-			{#snippet initial()}
-				<div class="flex flex-col grow">
-					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">Making of fintechnick.com</span>
-						<SitemapSolid class="size-10" aria-label="Making of FinTechNick" />
-					</div>
-					<p class="grow pt-5">
-						As a 'data person', building a website using modern front-end technologies and patterns
-						was a challenge. Here I share my approach and lessons learned.
-					</p>
-				</div>
-			{/snippet}
-			{#snippet onHover()}
-				<div class="flex flex-col items-center grow">
-					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
-				</div>
-			{/snippet}
-		</HoverFadeCard>
 		<HoverFadeCard>
 			{#snippet initial()}
 				<div class="flex flex-col grow">
