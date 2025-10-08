@@ -19,7 +19,7 @@
 
 <h1 class="!mb-0 no-underline">Building with AI Agents: 10 Thoughts from a 14,500-Line Project</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool - insights into AI-assisted development workflows</p>
-September 2025
+October 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
@@ -186,14 +186,10 @@ Perhaps most unexpectedly, working with AI agents was at times genuinely enjoyab
 
 As exciting as this new approach is, I do feel like something is lost by not knowing every detail of the codebase as thoroughly as when I'd written it all myself. There's a certain confidence that comes from having written every line, and some debugging scenarios become more challenging when you're not intimately familiar with the implementation details.
 
-However, I believe this trade-off is inevitable and that the positives outweigh the negatives. The ability to build more ambitious projects, implement better architectures, and focus on higher-level problem-solving more than compensates for the loss of deep implementation knowledge.
+However, I believe this trade-off is inevitable and that the positives outweigh the negatives. The ability to build more ambitious projects, implement better architectures, and focus on higher-level problem-solving compensates for the loss of deep implementation knowledge.
 
 ## Looking Forward
 
-The ccbilling project represents a significant milestone in my journey with AI-assisted development. What started as a personal finance tool has become a case study in how AI agents can transform the development process. The combination of structured requirements, automated quality checks, and collaborative AI agents has created a development workflow that's both more productive and more enjoyable.
+As AI agents continue to evolve, I'm excited to see how they'll further transform software development. The key right now I believe is not to treat them as replacements for human developers, but as collaborative partners that can amplify our capabilities and enable us to build better software, faster.
 
-As AI agents continue to evolve, I'm excited to see how they'll further transform software development. The key, I've learned, is not to treat them as replacements for human developers, but as collaborative partners that can amplify our capabilities and enable us to build better software, faster.
-
-For those interested in exploring this approach, I'd recommend starting with a well-defined, self-contained project like ccbilling. The combination of clear requirements, automated testing, and AI assistance can create a powerful development environment that scales from personal projects to production systems.
-
-The future of software development isn't humans versus AI - it's humans and AI working together to solve problems that neither could solve alone.
+For those interested in exploring this approach, I'd recommend starting with a well-defined, self-contained project. The combination of clear requirements, automated testing, and AI assistance can create a powerful development environment.
