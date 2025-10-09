@@ -24,7 +24,7 @@ October 2025
 
 ## Introduction
 
-Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as flirtations through simple tab completions with GitHub Copilot has transformed into a marriage where AI agents handle entire components of my applications. I've been building software for more than 20 years, and so I wanted to draw a few thoughts from a recent personal project that was built using [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
+Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as flirtations through simple tab completions with GitHub Copilot has transformed into something more like a marriage where I'm comfortable with AI agents handling entire components of my applications. I've been building software for more than 20 years, and so I wanted to draw out a few thoughts about the experience from a recent personal project that was built using [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
 
 <Img src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
 
@@ -36,11 +36,11 @@ To give a sense of the scale of the work, this project had the goal of developin
 
 There are five main areas to the code:
 
-**Frontend (60% at ~8,700 lines):** 63 Svelte components handling the user interface, from billing cycle dashboards to PDF upload interfaces. The complexity stems from the data visualization and the desire for responsive design across devices.
+**Frontend (60% at ~8,700 lines):** 63 Svelte components handling the user interface, from billing cycle dashboards to PDF upload interfaces.
 
 **Backend APIs (35% at ~5,100 lines):** 37 JavaScript files powering SvelteKit server routes, business logic, and API orchestration between parsing, database, and external services.
 
-**Data Processing (4% at ~600 lines):** PDF statement parsers for different formats, plus logic to normalize merchant names. This handles the core challenge of extracting structured data from unstructured PDF statements.
+**Data Processing (4% at ~600 lines):** PDF statement parsers for different formats, plus logic to normalize merchant names.
 
 **Database Layer (1% at ~100 lines):** Cloudflare D1 (SQLite) and R2 storage integration, migrations, and query optimization for persistent data operations.
 
@@ -49,7 +49,7 @@ There are five main areas to the code:
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
 	<div class="text-center">
 		<Img src={mainDashboardScreenshot} alt="Main dashboard showing billing cycles and budgets" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
-		<p class="text-sm text-gray-400 mt-2">Main dashboard showing different billing cycles, each contains statements for multiple credit cards</p>
+		<p class="text-sm text-gray-400 mt-2">Main dashboard showing different billing cycles; each contains statements for multiple credit cards</p>
 	</div>
 	<div class="text-center">
 		<Img src={chargeListingScreenshot} alt="Statement parsing interface with charge allocation" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
@@ -61,11 +61,11 @@ There are five main areas to the code:
 
 My journey with AI coding assistants has, like many others, gone something like this:
 
-1. **GitHub Copilot (Late 2024):** I started with basic tab completions and simple function suggestions
-2. **Gemini Integration (Early 2025):** After 3-6 months I began using AI to help write entire scripts and files for my [dbt-duckdb project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/dbt-duckdb)
-3. **Cursor Agent Mode (Mid 2025):** More recently, with this project, I embraced 'the vibe' and started to use AI for component development
+1. **Tab Completions (Late 2024):** I started using GitHub Copilot with basic tab completions and simple function suggestions
+2. **Entire Scripts and fFiles (Early 2025):** After 3-6 months I was using Google Gemini to help write entire scripts and files for my [dbt-duckdb project](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/dbt-duckdb)
+3. **Agent Mode (Mid 2025):** More recently, with this project, I embraced 'the vibe' and started to use Cursor's agent mode for component development
 
-This evolution represents a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation. Here's what I've learned.
+This evolution follows a fundamental shift from AI as a coding assistant to AI as a collaborative development partner. For the ccbilling project, I specifically leveraged Cursor's 'Auto' model, which intelligently selects the best underlying AI model for any given query - whether that's Claude Sonnet for complex reasoning or GPT-4 for code generation. Here's what I've learned.
 
 ## 10 Key Lessons Learned
 
