@@ -18,7 +18,7 @@
 </style>
 
 <h1 class="!mb-0 no-underline">Building with AI Agents: 10 Thoughts from a 14,500-Line Project</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool - insights into AI-assisted development workflows</p>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Cursor's agent mode to build a personal finance tool</p>
 October 2025
 <ProjectLinkButton href={projectUrl} />
 
