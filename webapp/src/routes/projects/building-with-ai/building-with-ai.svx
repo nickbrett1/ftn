@@ -93,7 +93,7 @@ To do this, I used a CI/CD pipeline on [CircleCI](https://github.com/nickbrett1/
 
 One of the most surprising discoveries was Cursor's agent mode webapp, which allowed me to operate the AI agent outside of the IDE through a web interface. The agent spins up a VM to make changes to a branch, enabling development from anywhere.
 
-This capability fundamentally changed my development workflow. It suddenly went I could do real coding from anywhere - which is both empowering and potentially dangerous for work-life balance. But for personal projects like ccbilling, it's been a massive boost.
+This capability fundamentally changed my development workflow. It suddenly meant I could do real coding from anywhere - which is both empowering and potentially dangerous for work-life balance. But for personal projects like ccbilling, it's been a massive boost.
 
 ### 4. Environment Iteration Becomes Critical
 
