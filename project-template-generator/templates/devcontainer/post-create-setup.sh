@@ -1,0 +1,60 @@
+#!/bin/bash
+set -e # Exit immediately if a command exits with a non-zero status.
+
+echo "INFO: Starting custom container setup script..."
+
+CURRENT_USER=$(whoami)
+USER_HOME_DIR="$HOME"
+
+echo "INFO: Creating Oh My Zsh custom directories..."
+mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
+
+if [ -f "/workspaces/{{projectName}}/.devcontainer/.zshrc" ]; then
+    echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
+    cp "/workspaces/{{projectName}}/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.zshrc"
+else
+    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.zshrc not found, skipping copy."
+fi
+
+if [ -f "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" ]; then
+    echo "INFO: Copying .p10k.zsh to $USER_HOME_DIR/.p10k.zsh"
+    cp "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" "$USER_HOME_DIR/.p10k.zsh"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
+else
+    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.p10k.zsh not found, skipping copy."
+fi
+
+echo "INFO: Installing Playwright and its Chromium dependencies..."
+npx --yes playwright install --with-deps chromium
+echo "INFO: Playwright Chromium installation complete."
+
+echo "INFO: Configuring git safe directory..."
+git config --global --add safe.directory /workspaces/{{projectName}}
+
+{{#if cloudflare}}
+# Cloudflare Wrangler login
+WEBAPP_DIR="/workspaces/{{projectName}}/{{#if sveltekit}}webapp{{else}}src{{/if}}"
+if [ -d "$WEBAPP_DIR" ]; then
+  echo "INFO: {{#if sveltekit}}Webapp{{else}}Source{{/if}} directory found at $WEBAPP_DIR. Checking Wrangler login status..."
+  ( # Start a subshell to localize the cd
+      cd "$WEBAPP_DIR"
+      npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\.0\.0\.0/localhost/g'
+      echo "INFO: Wrangler login process initiated."
+  ) # End subshell
+else
+  echo "INFO: {{#if sveltekit}}Webapp{{else}}Source{{/if}} directory not found at $WEBAPP_DIR, skipping Wrangler login."
+fi
+{{/if}}
+
+echo "INFO: Custom container setup script finished."
+echo "\n⚠️  To complete cloud login, run:"
+{{#if cloudflare}}
+echo "    cd /workspaces/{{projectName}}/{{#if sveltekit}}webapp{{else}}src{{/if}} && bash scripts/cloud-login.sh"
+{{/if}}
+{{#if gcs}}
+echo "    gcloud auth login"
+{{/if}}
+{{#if aws}}
+echo "    aws configure"
+{{/if}}

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Template Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .integration-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .integration-section h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .result h3 {
+            color: #155724;
+            margin-bottom: 1rem;
+        }
+
+        .result ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .result li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #c3e6cb;
+        }
+
+        .result li:last-child {
+            border-bottom: none;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Project Template Generator</h1>
+            <p>Generate new projects with common infrastructure patterns from ftn</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🐳</div>
+                <h3>DevContainer</h3>
+                <p>Complete development environment with Node.js, zsh, and VS Code extensions</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Doppler</h3>
+                <p>Secrets management and environment variable configuration</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>CircleCI</h3>
+                <p>Automated CI/CD pipeline with build, test, and deploy stages</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <h3>Cloud Deploy</h3>
+                <p>Support for Cloudflare, Google Cloud, and AWS deployment</p>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <form id="projectForm">
+                <div class="form-grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="projectName">Project Name *</label>
+                            <input type="text" id="projectName" name="projectName" required 
+                                   placeholder="my-awesome-project">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="3" 
+                                      placeholder="A brief description of your project"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="author">Author</label>
+                            <input type="text" id="author" name="author" 
+                                   placeholder="Your Name">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group">
+                            <label for="projectType">Project Type</label>
+                            <select id="projectType" name="projectType">
+                                <option value="webapp">Web Application (with UI)</option>
+                                <option value="api">API/Backend Service</option>
+                                <option value="library">Library/Package</option>
+                                <option value="fullstack">Full-stack Application</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="framework">Framework</label>
+                            <select id="framework" name="framework">
+                                <option value="sveltekit">SvelteKit</option>
+                                <option value="nextjs">Next.js</option>
+                                <option value="express">Express.js</option>
+                                <option value="fastify">Fastify</option>
+                                <option value="none">Vanilla JS/TS</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cloudProvider">Cloud Provider</label>
+                            <select id="cloudProvider" name="cloudProvider">
+                                <option value="cloudflare">Cloudflare Workers</option>
+                                <option value="gcs">Google Cloud Platform</option>
+                                <option value="aws">Amazon Web Services</option>
+                                <option value="none">Local Development Only</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="database">Database</label>
+                            <select id="database" name="database">
+                                <option value="d1">Cloudflare D1 (SQLite)</option>
+                                <option value="postgresql">PostgreSQL</option>
+                                <option value="mysql">MySQL</option>
+                                <option value="mongodb">MongoDB</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="testingFramework">Testing Framework</label>
+                            <select id="testingFramework" name="testingFramework">
+                                <option value="jest-playwright">Jest + Playwright</option>
+                                <option value="vitest-playwright">Vitest + Playwright</option>
+                                <option value="jest">Jest only</option>
+                                <option value="vitest">Vitest only</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group">
+                            <label for="sentryOrg">Sentry Organization</label>
+                            <input type="text" id="sentryOrg" name="sentryOrg" 
+                                   placeholder="your-org">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="includeSonarCloud" name="includeSonarCloud" checked>
+                                <label for="includeSonarCloud">Include SonarCloud for code quality</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="includeDoppler" name="includeDoppler" checked>
+                                <label for="includeDoppler">Include Doppler for secrets management</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-section">
+                    <h3>🔗 Integrations (Optional)</h3>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="createGitHubRepo" name="createGitHubRepo">
+                            <label for="createGitHubRepo">Create GitHub repository</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="setupCircleCI" name="setupCircleCI">
+                            <label for="setupCircleCI">Set up CircleCI project</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="githubTokenGroup" style="display: none;">
+                        <label for="githubToken">GitHub Personal Access Token</label>
+                        <input type="password" id="githubToken" name="githubToken" 
+                               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                        <small>Required for GitHub repository creation. Create one at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="privateRepo" name="privateRepo">
+                            <label for="privateRepo">Create private repository</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="generateBtn">
+                    🚀 Generate Project
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generating your project...</p>
+            </div>
+
+            <div class="result" id="result">
+                <h3>✅ Project Generated Successfully!</h3>
+                <ul id="nextSteps"></ul>
+            </div>
+
+            <div class="error" id="error">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('projectForm');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            const generateBtn = document.getElementById('generateBtn');
+            const githubTokenGroup = document.getElementById('githubTokenGroup');
+            const createGitHubRepo = document.getElementById('createGitHubRepo');
+
+            // Show/hide GitHub token field based on checkbox
+            createGitHubRepo.addEventListener('change', function() {
+                githubTokenGroup.style.display = this.checked ? 'block' : 'none';
+            });
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Hide previous results
+                result.style.display = 'none';
+                error.style.display = 'none';
+                
+                // Show loading
+                loading.style.display = 'block';
+                generateBtn.disabled = true;
+
+                try {
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    // Convert checkboxes to booleans
+                    data.includeSonarCloud = formData.has('includeSonarCloud');
+                    data.includeDoppler = formData.has('includeDoppler');
+                    data.createGitHubRepo = formData.has('createGitHubRepo');
+                    data.setupCircleCI = formData.has('setupCircleCI');
+                    data.privateRepo = formData.has('privateRepo');
+
+                    // Build configuration object
+                    const config = {
+                        projectName: data.projectName,
+                        description: data.description || `A ${data.projectName} project`,
+                        author: data.author || 'Developer',
+                        projectType: data.projectType,
+                        framework: data.framework,
+                        cloudProvider: data.cloudProvider,
+                        database: data.database,
+                        testingFramework: data.testingFramework,
+                        sentryOrg: data.sentryOrg || 'your-org',
+                        includeSonarCloud: data.includeSonarCloud,
+                        includeDoppler: data.includeDoppler,
+                        // Derived configurations
+                        sveltekit: data.framework === 'sveltekit',
+                        nextjs: data.framework === 'nextjs',
+                        express: data.framework === 'express',
+                        fastify: data.framework === 'fastify',
+                        cloudflare: data.cloudProvider === 'cloudflare',
+                        gcs: data.cloudProvider === 'gcs',
+                        aws: data.cloudProvider === 'aws',
+                        jest: data.testingFramework.includes('jest'),
+                        vitest: data.testingFramework.includes('vitest'),
+                        playwright: data.testingFramework.includes('playwright'),
+                        forwardPorts: getForwardPorts(data.framework),
+                        year: new Date().getFullYear()
+                    };
+
+                    const options = {
+                        createGitHubRepo: data.createGitHubRepo,
+                        setupCircleCI: data.setupCircleCI,
+                        githubToken: data.githubToken,
+                        privateRepo: data.privateRepo
+                    };
+
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            projectName: data.projectName,
+                            config,
+                            options
+                        })
+                    });
+
+                    const responseData = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(responseData.error || 'Failed to generate project');
+                    }
+
+                    // Show success
+                    loading.style.display = 'none';
+                    result.style.display = 'block';
+                    
+                    const nextStepsList = document.getElementById('nextSteps');
+                    nextStepsList.innerHTML = responseData.nextSteps.map(step => `<li>${step}</li>`).join('');
+
+                } catch (err) {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    document.getElementById('errorMessage').textContent = err.message;
+                } finally {
+                    generateBtn.disabled = false;
+                }
+            });
+
+            function getForwardPorts(framework) {
+                const portMap = {
+                    'sveltekit': '5173, 4173',
+                    'nextjs': '3000, 3001',
+                    'express': '3000, 3001',
+                    'fastify': '3000, 3001',
+                    'none': '3000'
+                };
+                return portMap[framework] || '3000';
+            }
+        });
+    </script>
+</body>
+</html>

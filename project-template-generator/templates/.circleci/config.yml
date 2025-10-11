@@ -1,0 +1,307 @@
+version: 2.1
+
+orbs:
+  ggshield: gitguardian/ggshield@volatile
+  browser-tools: circleci/browser-tools@1.5.3
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+  doppler: conpago/doppler@1.3.5
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and {{#if sveltekit}}svelte-kit{{else}}{{#if nextjs}}next{{else}}build{{/if}}{{/if}} cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - restore_cache:
+          name: Restore Playwright cache
+          keys:
+            - playwright-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - playwright-{{ .Branch }}-
+            - playwright-
+      - run:
+          name: Install modules
+          command: |
+            {{#if sveltekit}}cd webapp{{/if}}
+            # Clear any existing corrupted installation
+            rm -rf node_modules package-lock.json
+            # Install dependencies with optimized rollup installation
+            npm install
+            # Install rollup and native module in one step
+            npm install rollup @rollup/rollup-linux-x64-gnu --force
+      - run:
+          name: Install Playwright Chromium (if not cached)
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npx playwright install --with-deps chromium
+      - save_cache:
+          name: Cache Playwright
+          paths:
+            - ~/.cache/ms-playwright
+          key: playwright-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+      - doppler/install
+      {{#if cloudflare}}
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}./scripts/setup-wrangler-config.sh
+      {{/if}}
+
+      - run:
+          name: Build app
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run build
+      - save_cache:
+          name: Update node_modules cache
+          paths:
+            - {{#if sveltekit}}webapp/{{/if}}node_modules
+          key: node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+      - persist_to_workspace:
+          root: {{#if sveltekit}}webapp{{else}}.
+          paths:
+            - {{#if sveltekit}}.svelte-kit{{else}}dist{{/if}}
+
+  code_test:
+    docker:
+      - image: cimg/node:current
+    resource_class: large # Increase to large for more memory and CPU resources
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: {{#if sveltekit}}webapp{{else}}.
+      - doppler/install
+      {{#if cloudflare}}
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}./scripts/setup-wrangler-config.sh
+      {{/if}}
+      - run:
+          name: Run tests
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+      - run:
+          name: Check memory usage
+          command: |
+            echo "Memory usage after tests:"
+            free -h
+            echo "Disk usage:"
+            df -h
+          when: always
+      - store_test_results:
+          path: ./{{#if sveltekit}}webapp/{{/if}}reports/
+      # Temporarily disable SonarCloud scan to debug exit code issue
+      # - sonarcloud/scan
+
+  browser_test:
+    environment:
+      SENTRY_ORG: {{sentryOrg}}
+      SENTRY_PROJECT: {{projectName}}
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
+      LIGHTHOUSE_ENABLED: "true"
+    docker:
+      - image: cimg/node:current-browsers
+    steps:
+      - run: sudo apt-get update
+      - browser-tools/install-chrome:
+          replace-existing: true
+      - browser-tools/install-chromedriver
+      - restore_cache:
+          name: Restore Lighthouse CLI cache
+          keys:
+            - lighthouse-cli-{{ .Branch }}-
+            - lighthouse-cli-
+      - checkout
+      - restore_cache:
+          name: Restore node_modules and {{#if sveltekit}}svelte-kit{{else}}{{#if nextjs}}next{{else}}build{{/if}}{{/if}} cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: {{#if sveltekit}}webapp{{else}}.
+      - doppler/install
+      {{#if cloudflare}}
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}./scripts/setup-wrangler-config.sh
+      {{/if}}
+
+      - run:
+          name: Install Lighthouse CLI (if not cached)
+          command: |
+            sudo npm install -g @lhci/cli@0.9.x
+      - save_cache:
+          name: Cache Lighthouse CLI
+          paths:
+            - /usr/local/lib/node_modules/@lhci
+          key: lighthouse-cli-{{ .Branch }}-
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run lighthouse-staging
+
+  deploy:
+    environment:
+      SENTRY_ORG: {{sentryOrg}}
+      SENTRY_PROJECT: {{projectName}}
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: {{#if sveltekit}}webapp{{else}}.
+      - doppler/install
+      {{#if cloudflare}}
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}./scripts/setup-wrangler-config.sh
+
+      - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (production)
+          command: |
+            {{#if sveltekit}}cd webapp
+            {{/if}}echo "Attempting to sync secrets to Cloudflare production environment..."
+            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production; then
+              echo "✅ Secrets successfully synced to Cloudflare production"
+            else
+              echo "❌ Error: Failed to sync secrets to Cloudflare production. This is critical for production deployments."
+              exit 1
+            fi
+      - run:
+          name: Deploying to Cloudflare
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy
+      {{/if}}
+      {{#if gcs}}
+      - run:
+          name: Deploy to Google Cloud
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy:gcs
+      {{/if}}
+      {{#if aws}}
+      - run:
+          name: Deploy to AWS
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy:aws
+      {{/if}}
+
+  deploy-preview:
+    environment:
+      SENTRY_ORG: {{sentryOrg}}
+      SENTRY_PROJECT: {{projectName}}
+      SENTRY_ENVIRONMENT: preview
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:current
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v6-fresh-{{ .Branch }}-{{ checksum "{{#if sveltekit}}webapp/{{/if}}package-lock.json" }}
+            - node-v6-fresh-{{ .Branch }}-
+            - node-v6-fresh-
+      - attach_workspace:
+          at: {{#if sveltekit}}webapp{{else}}.
+      - doppler/install
+      {{#if cloudflare}}
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}./scripts/setup-wrangler-config.sh
+
+      - run:
+          name: Install jq
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Sync Doppler secrets to Cloudflare (preview)
+          command: |
+            {{#if sveltekit}}cd webapp
+            {{/if}}echo "Attempting to sync secrets to Cloudflare preview environment..."
+            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview; then
+              echo "✅ Secrets successfully synced to Cloudflare preview"
+            else
+              echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview. This may be due to script settings conflicts."
+              echo "Continuing with deployment as this is not critical for preview environments..."
+            fi
+      - run:
+          name: Deploying preview to Cloudflare
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy-preview
+      {{/if}}
+      {{#if gcs}}
+      - run:
+          name: Deploy preview to Google Cloud
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy-preview:gcs
+      {{/if}}
+      {{#if aws}}
+      - run:
+          name: Deploy preview to AWS
+          command: |
+            {{#if sveltekit}}cd webapp && {{/if}}npm run deploy-preview:aws
+      {{/if}}
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
+      - build
+      - code_test:
+          requires:
+            - build
+          context: SonarCloud
+      - browser_test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - browser_test
+            - code_test
+          filters:
+            branches:
+              only: main
+      - deploy-preview:
+          requires:
+            - browser_test
+            - code_test
+          filters:
+            branches:
+              ignore: main
