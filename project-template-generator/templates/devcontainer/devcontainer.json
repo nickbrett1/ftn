@@ -1,0 +1,100 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/javascript-node
+{
+  "name": "{{projectName}} - Node.js",
+  // Updated to Node.js 22
+  // Using Debian Bookworm (GLIBC 2.36) via custom Dockerfile
+  "build": { "dockerfile": "Dockerfile", "context": ".." },
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true, // Runs apt-get update and upgrade
+      "username": "node", // Configure for the 'node' user
+      "uid": "1000",
+      "gid": "1000"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      // For default-jre
+      "version": "24",
+      "installMaven": "false",
+      "installGradle": "false"
+    },
+    "ghcr.io/itsmechlark/features/doppler:2": {} // For Doppler CLI
+  },
+
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"], // Moved from build.runArgs
+  "forwardPorts": [{{forwardPorts}}],
+  // Configure tool-specific properties.
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "pejmannikram.vscode-auto-scroll",
+        "mgmcdermott.vscode-language-babel",
+        "naumovs.color-highlight",
+        "GitHub.vscode-pull-request-github",
+        "ecmel.vscode-html-css",
+        "oderwat.indent-rainbow",
+        "esbenp.prettier-vscode",
+        "humao.rest-client",
+        "actboy168.tasks",
+        "jeremyrajan.webpack",
+        "DigitalBrainstem.javascript-ejs-support",
+        "redhat.vscode-yaml",
+        "leonzalion.vscode-ejs",
+        "ritwickdey.LiveServer",
+        "mkxml.vscode-filesize",
+        "wix.vscode-import-cost",
+        "tonybaloney.vscode-pets",
+        "marvinhagemeister.theme-afterglow-remastered",
+        "naumovs.theme-oceanicnext",
+        "eamodio.gitlens",
+        "SonarSource.sonarlint-vscode",
+        "christian-kohler.npm-intellisense",
+        "donjayamanne.githistory",
+        "shyykoserhiy.git-autoconfig",
+        "THEARC.doppler",
+        "nicollasr.vscode-streamdeck",
+        "mhutchie.git-graph",
+        "fudd.toggle-zen-mode",
+        "yatki.vscode-surround",
+        "mutantdino.resourcemonitor",
+        "unifiedjs.vscode-mdx",
+        "bradlc.vscode-tailwindcss",
+        {{#if sveltekit}}"svelte.svelte-vscode",{{/if}}
+        {{#if nextjs}}"ms-vscode.vscode-typescript-next",{{/if}}
+        {{#if react}}"ms-vscode.vscode-react-native",{{/if}}
+        "ms-playwright.playwright",
+        "GraphQL.vscode-graphql-syntax",
+        "alefragnani.project-manager",
+        "cesium.gltf-vscode",
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot-nightly",
+        "tamasfe.even-better-toml",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker",
+        "google.geminicodeassist",
+        "saoudrizwan.claude-dev"
+      ]
+    },
+    // Add VS Code settings for the container
+    "settings": {
+      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
+    }
+  },
+
+  "containerEnv": {
+    "JDK_HOME": "/usr/local/sdkman/candidates/java/current"
+  },
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-create-setup.sh"
+
+  // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+  // "remoteUser": "root"
+}

@@ -1,0 +1,63 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "pejmannikram.vscode-auto-scroll",
+    "mgmcdermott.vscode-language-babel",
+    "naumovs.color-highlight",
+    "GitHub.vscode-pull-request-github",
+    "ecmel.vscode-html-css",
+    "oderwat.indent-rainbow",
+    "esbenp.prettier-vscode",
+    "humao.rest-client",
+    "actboy168.tasks",
+    "jeremyrajan.webpack",
+    "DigitalBrainstem.javascript-ejs-support",
+    "redhat.vscode-yaml",
+    "leonzalion.vscode-ejs",
+    "ritwickdey.LiveServer",
+    "mkxml.vscode-filesize",
+    "wix.vscode-import-cost",
+    "tonybaloney.vscode-pets",
+    "marvinhagemeister.theme-afterglow-remastered",
+    "naumovs.theme-oceanicnext",
+    "eamodio.gitlens",
+    {{#if includeSonarCloud}}
+    "SonarSource.sonarlint-vscode",
+    {{/if}}
+    "christian-kohler.npm-intellisense",
+    "donjayamanne.githistory",
+    "shyykoserhiy.git-autoconfig",
+    {{#if includeDoppler}}
+    "THEARC.doppler",
+    {{/if}}
+    "nicollasr.vscode-streamdeck",
+    "mhutchie.git-graph",
+    "fudd.toggle-zen-mode",
+    "yatki.vscode-surround",
+    "mutantdino.resourcemonitor",
+    "unifiedjs.vscode-mdx",
+    "bradlc.vscode-tailwindcss",
+    {{#if sveltekit}}
+    "svelte.svelte-vscode",
+    {{/if}}
+    {{#if nextjs}}
+    "ms-vscode.vscode-typescript-next",
+    {{/if}}
+    {{#if react}}
+    "ms-vscode.vscode-react-native",
+    {{/if}}
+    {{#if playwright}}
+    "ms-playwright.playwright",
+    {{/if}}
+    "GraphQL.vscode-graphql-syntax",
+    "alefragnani.project-manager",
+    "cesium.gltf-vscode",
+    "ms-azuretools.vscode-docker",
+    "GitHub.copilot-nightly",
+    "tamasfe.even-better-toml",
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "google.geminicodeassist",
+    "saoudrizwan.claude-dev"
+  ]
+}
