@@ -22,10 +22,6 @@ fi
 echo "📦 Installing wrangler 4.42.2 for secret syncing..."
 npm install wrangler@4.42.2 --no-save
 
-# Set environment variables for Doppler
-export DOPPLER_PROJECT="webapp"
-export DOPPLER_CONFIG="stg"
-
 echo "🔍 Fetching secrets from Doppler..."
 if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler@4.42.2 secret bulk --env production; then
     echo "✅ Secrets successfully synced to Cloudflare production using wrangler 4.42.2"
