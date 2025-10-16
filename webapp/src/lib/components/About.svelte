@@ -20,7 +20,7 @@
 			organizations, with teams from Tokyo to New York, Dubai to Sydney; and taken high impact
 			individual contributor roles to be a hands-on leader for new initiatives. For most of my
 			career I've worked as an Engineer, but for several years I ran a Product Management team, and
-			today look to marry all the skills needed to
+			today I look to marry all the skills needed to
 			<strong class="font-extrabold text-green-400"
 				>build the right data products in the right way.</strong
 			>
