@@ -29,9 +29,59 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+Verify compliance with `.specify/memory/constitution.md` principles:
+
+### Pre-Implementation Gates (Required Before Starting)
+
+- [ ] **Specification Complete**: User stories with acceptance criteria defined (Principle III)
+- [ ] **Tests Planned**: Test scenarios identified following TDD approach (Principle II)
+- [ ] **Performance Budget**: Performance targets defined (<1.5s FCP, <2.5s LCP) (Principle IV)
+- [ ] **Security Review**: Security implications assessed, especially for auth/data handling (Principle V)
+- [ ] **Accessibility Review**: WCAG 2.1 AA requirements identified (Principle III)
+
+### Code Quality Standards (Principle I)
+
+- [ ] TypeScript strict mode enabled with no `any` types without justification
+- [ ] Linting configured (ESLint, Prettier) and enforced in CI
+- [ ] SonarCloud integration configured with Quality Gate requirement
+- [ ] Code review process documented
+
+### Testing Standards (Principle II - NON-NEGOTIABLE)
+
+- [ ] TDD approach confirmed: Tests written → User approval → Implementation
+- [ ] Minimum 85% coverage target set
+- [ ] Test types planned: Unit, Integration, Contract tests
+- [ ] Test performance requirements: <5s per unit suite, <30s per integration suite
+- [ ] Security testing planned for auth/validation flows
+
+### UX Consistency (Principle III)
+
+- [ ] Design system components identified (TailwindCSS tokens, Storybook components)
+- [ ] Responsive design tested (320px–2560px viewports)
+- [ ] Accessibility requirements defined (semantic HTML, ARIA, keyboard navigation)
+- [ ] Error handling and user feedback patterns designed
+- [ ] Performance budgets: FCP <1.5s, LCP <2.5s, CLS <0.1, TTI <3.5s
+
+### Performance Requirements (Principle IV)
+
+- [ ] Lighthouse CI configured with ≥95 score requirement
+- [ ] Bundle size budget: <200KB initial JS, <500KB total
+- [ ] API response time targets: p95 <200ms reads, <500ms writes
+- [ ] Caching strategy defined
+- [ ] Performance monitoring configured (RUM, synthetic monitoring)
+
+### Security & Compliance (Principle V - NON-NEGOTIABLE)
+
+- [ ] Authentication/authorization approach defined
+- [ ] Data encryption strategy (at rest and in transit)
+- [ ] PII/sensitive data handling compliant with GDPR
+- [ ] Security scanning enabled (GitGuardian, dependency scanning)
+- [ ] Audit logging planned for data access and mutations
+- [ ] Security headers configured (CSP, HSTS, etc.)
+
+**Violation Justification**: Use Complexity Tracking section below if any gate cannot be satisfied
 
 ## Project Structure
 
@@ -48,6 +98,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -96,9 +147,9 @@ directories captured above]
 
 ## Complexity Tracking
 
-*Fill ONLY if Constitution Check has violations that must be justified*
+_Fill ONLY if Constitution Check has violations that must be justified_
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
