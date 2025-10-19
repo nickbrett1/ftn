@@ -2,18 +2,27 @@
   ============================================================================
   SYNC IMPACT REPORT
   ============================================================================
-  Version Change: NONE → 1.0.0
-  Change Type: Initial Constitution Ratification
+  Version Change: 1.7.0 → 1.8.0
+  Change Type: Minor Amendment - New Principle Added
 
   Modified Principles:
-    - NEW: I. Code Quality Standards
-    - NEW: II. Testing Standards
-    - NEW: III. User Experience Consistency
-    - NEW: IV. Performance Requirements
-    - NEW: V. Security & Compliance
+    - EXISTING: I. Code Quality Standards
+    - EXISTING: II. Testing Standards
+    - EXISTING: III. User Experience Consistency
+    - EXISTING: IV. Performance Requirements
+    - EXISTING: V. Security & Compliance
+    - EXISTING: VI. Site Consistency & Component Standards
+    - EXISTING: VII. Database Schema Management Standards
+    - EXISTING: VIII. Cloudflare Services Integration Standards
+    - EXISTING: IX. Code Organization Standards
+    - EXISTING: X. Simple Logging Standards
+    - EXISTING: XI. Error Handling Standards
+    - EXISTING: XII. Code Quality Assurance Standards
+    - EXISTING: XIII. Linter Compliance Standards
+    - NEW: XIV. Development Environment Standards
 
   Added Sections:
-    - Core Principles (all 5 principles)
+    - Core Principles (all 11 principles)
     - Development Standards
     - Quality Gates
     - Governance
@@ -34,6 +43,12 @@
     - Testing standards match tasks-template.md TDD emphasis
     - Performance requirements align with existing project metrics (>95 Lighthouse, >85% coverage)
     - UX principles match spec-template.md user story requirements
+    - Site consistency principle ensures component reuse and design system adherence
+    - Database schema management principle standardizes initial schema creation patterns
+    - Cloudflare services integration principle standardizes direct D1/R2 usage patterns
+    - Code organization principle standardizes lib/ folder structure and execution context
+    - Simple logging principle standardizes console.* usage with emoji prefixes
+    - Error handling principle standardizes RouteUtils.handleError() usage and user-friendly messages
   ============================================================================
 -->
 
@@ -165,6 +180,207 @@ Security requirements are NON-NEGOTIABLE:
 
 **Rationale**: Financial applications are high-value targets for attackers. Proactive security measures, continuous scanning, and compliance adherence protect users and the business. Security must be built in, not bolted on.
 
+### VI. Site Consistency & Component Standards
+
+**All pages must maintain consistent styling and use established component patterns.**
+
+Site consistency requirements are MANDATORY:
+
+- **Header and Footer Components**: All pages MUST use the established header and footer components
+  - No custom headers or footers without explicit architectural approval
+  - Navigation consistency maintained across all pages
+  - Footer content and links standardized
+- **Page Layout Standards**:
+  - Consistent page structure and spacing using TailwindCSS design tokens
+  - Standardized content containers and responsive breakpoints
+  - Uniform typography hierarchy (h1, h2, h3) across all pages
+- **Component Reusability**:
+  - All UI elements must use existing component library components
+  - New components must be added to Storybook documentation
+  - No duplicate component implementations allowed
+- **Brand Consistency**:
+  - Logo placement and sizing standardized
+  - Color scheme adherence to established palette
+  - Consistent button styles, form elements, and interactive components
+- **Navigation Patterns**:
+  - Breadcrumb navigation for multi-level pages
+  - Consistent menu structure and behavior
+  - Standardized page transitions and loading states
+
+**Rationale**: Consistent user experience builds trust and reduces cognitive load. Standardized components ensure maintainability and prevent design drift. Professional fintech applications require polished, cohesive interfaces that reinforce brand credibility.
+
+### VII. Database Schema Management Standards
+
+**Database schema creation and management must follow established patterns for consistency and maintainability.**
+
+Database schema requirements are MANDATORY:
+
+- **Initial Schema Creation**: All new features with database requirements MUST create schema files in `webapp/scripts/`
+  - Schema files MUST be named `{feature-name}_schema.sql` (e.g., `genproj_schema.sql`)
+  - Schema files MUST include comprehensive header comments with usage instructions
+  - Schema files MUST be version-controlled and documented
+- **Schema File Structure**:
+  - Header comments MUST include feature name, usage instructions, and setup steps
+  - All tables MUST include proper foreign key constraints and indexes
+  - Performance indexes MUST be created for all query patterns
+  - Comments MUST explain complex relationships and business logic
+- **Migration vs Schema Separation**:
+  - `webapp/migrations/` is ONLY for schema changes between versions
+  - `webapp/scripts/` is for initial schema creation and setup
+  - No initial schema creation in migrations folder
+- **Database Setup Documentation**:
+  - Schema files MUST include D1 database creation commands
+  - Schema files MUST include schema initialization commands
+  - Setup instructions MUST be copy-pasteable and tested
+- **Schema Validation**:
+  - All schema files MUST be tested with actual D1 database creation
+  - Foreign key constraints MUST be validated
+  - Index performance MUST be verified with EXPLAIN QUERY PLAN
+  - Schema files MUST be linted for SQL best practices
+
+**Rationale**: Consistent database schema management prevents confusion between initial setup and migrations. Clear separation ensures maintainability and reduces setup errors. Standardized patterns enable rapid feature development while maintaining data integrity and performance.
+
+### VIII. Cloudflare Services Integration Standards
+
+**Cloudflare D1 and R2 services must be used directly without wrapper utilities, following established patterns.**
+
+Cloudflare services requirements are MANDATORY:
+
+- **Direct D1 Usage**: Database operations MUST use D1 directly via `platform.env.DB`
+  - No wrapper utilities or abstraction layers for D1 operations
+  - Direct usage of `db.prepare()`, `stmt.first()`, `stmt.all()`, `stmt.run()` methods
+  - Error handling implemented at the service level, not in wrapper utilities
+  - Database connections accessed through SvelteKit's `platform.env` context
+- **Direct R2 Usage**: Object storage operations MUST use R2 directly via `platform.env.R2_*`
+  - No wrapper utilities or abstraction layers for R2 operations
+  - Direct usage of `bucket.get()`, `bucket.put()`, `bucket.list()`, `bucket.delete()` methods
+  - R2 buckets accessed through SvelteKit's `platform.env` context with descriptive names
+  - Object metadata and custom headers handled directly in service methods
+- **Service-Level Integration**:
+  - Database and storage operations MUST be implemented within service classes
+  - Service classes handle error handling, retry logic, and business logic
+  - No generic "database client" or "storage client" utilities
+  - Each feature's services implement their own D1/R2 integration patterns
+- **Environment Configuration**:
+  - D1 databases MUST be configured in `wrangler.toml` with descriptive names
+  - R2 buckets MUST be configured in `wrangler.toml` with descriptive names
+  - Environment bindings MUST follow the pattern `R2_{FEATURE_NAME}` for buckets
+  - Database bindings MUST follow the pattern `DB_{FEATURE_NAME}` for databases
+- **Testing and Development**:
+  - Local development MUST use `--local` flag for D1 operations
+  - Production operations MUST use `--remote` flag for D1 operations
+  - R2 operations MUST work seamlessly in both local and production environments
+  - Service classes MUST be testable with mocked `platform.env` objects
+
+**Rationale**: Direct usage of Cloudflare services eliminates unnecessary abstraction layers and follows the established patterns in the FTN codebase. Service-level integration provides better error handling, clearer business logic, and easier testing. This approach reduces complexity while maintaining consistency with existing project patterns.
+
+### IX. Code Organization Standards
+
+**Code must be organized in standardized lib/ folders based on execution context and reusability.**
+
+Code organization requirements are MANDATORY:
+
+- **lib/components/**: Reusable Svelte components ONLY
+  - All `.svelte` files MUST be placed in `lib/components/`
+  - Components MUST be reusable across multiple features/pages
+  - Feature-specific components MUST be organized in subfolders (e.g., `lib/components/genproj/`)
+  - Shared components MUST be placed directly in `lib/components/`
+  - Components MUST follow SvelteKit component conventions and best practices
+- **lib/client/**: Reusable client-side code that are NOT Svelte components
+  - Code that MUST run in the browser (authentication, localStorage, DOM manipulation)
+  - Client-side utilities, helpers, and services
+  - Browser-specific APIs and Web APIs
+  - Code that cannot run on the server due to browser dependencies
+  - Examples: `lib/client/google-auth.js`, `lib/client/local-storage.js`
+- **lib/server/**: Reusable server-side code ONLY
+  - Code that MUST run on the server (database operations, file system access)
+  - Server-side utilities, helpers, and services
+  - Node.js-specific APIs and server-only dependencies
+  - Code that cannot run in the browser due to server dependencies
+  - Examples: `lib/server/require-user.js`, `lib/server/database-helpers.js`
+- **lib/utils/**: Reusable code that can run anywhere (universal/isomorphic)
+  - Pure functions with no browser or server dependencies
+  - Utility functions that work in both client and server contexts
+  - Data transformation, validation, formatting, and calculation functions
+  - Code that can be safely imported and used anywhere
+  - Examples: `lib/utils/date-utils.js`, `lib/utils/validation.js`, `lib/utils/formatting.js`
+- **Folder Structure Enforcement**:
+  - NO code outside of these four lib/ folders unless absolutely necessary
+  - Feature-specific code MUST be organized in appropriate lib/ subfolders
+  - Import paths MUST reflect the execution context requirements
+  - Code MUST be placed in the most restrictive folder that supports its requirements
+
+**Rationale**: Consistent code organization improves maintainability, prevents execution context errors, and makes the codebase easier to navigate. Clear separation between client/server/universal code prevents runtime errors and ensures proper code splitting. This organization pattern scales well as the project grows and makes it easier for developers to find and reuse code.
+
+### X. Simple Logging Standards
+
+**Logging must use simple, consistent patterns without wrapper utilities or complex abstractions.**
+
+Logging requirements are MANDATORY:
+
+- **Native Console Methods**: Use standard `console.log()`, `console.error()`, `console.warn()`, `console.info()` methods
+  - NO wrapper utilities or logging libraries unless absolutely necessary
+  - NO complex logging abstractions or configuration systems
+  - Direct usage of browser/Node.js console methods
+  - Simple, readable logging statements
+- **Consistent Emoji Prefixes**: Use emoji prefixes for visual log categorization
+  - ✅ for success messages and completed operations
+  - ❌ for errors and failures
+  - ⚠️ for warnings and potential issues
+  - 🔍 for debugging and discovery messages
+  - 🔄 for progress and state changes
+  - 📝 for information and data logging
+- **Context-Aware Messages**: Include relevant context in log messages
+  - Include function/component names in log messages
+  - Include relevant data/parameters when helpful for debugging
+  - Use descriptive, human-readable messages
+  - Avoid overly technical jargon in user-facing logs
+- **Appropriate Log Levels**: Use appropriate console methods for different situations
+  - `console.error()` for actual errors and exceptions
+  - `console.warn()` for warnings and non-critical issues
+  - `console.log()` for general information and debugging
+  - `console.info()` for important system information
+- **No Logging Utilities**: Avoid creating custom logging utilities or wrappers
+  - Use console methods directly in service classes and components
+  - Implement logging at the point of use, not through abstractions
+  - Keep logging simple and maintainable
+
+**Rationale**: Simple logging patterns are easier to maintain, debug, and understand. Native console methods provide sufficient functionality without additional complexity. Consistent emoji prefixes improve log readability and make debugging faster. Direct usage prevents abstraction overhead and keeps logging statements clear and maintainable.
+
+### XI. Error Handling Standards
+
+**Error handling must use existing patterns and avoid creating unnecessary wrapper utilities.**
+
+Error handling requirements are MANDATORY:
+
+- **Use Existing Error Handling**: Leverage existing `RouteUtils.handleError()` for server-side error handling
+  - Use `RouteUtils.handleError(error, context, options)` for API endpoints
+  - Include relevant context in error messages
+  - Return appropriate HTTP status codes
+  - Provide user-friendly error messages
+- **Client-Side Error Handling**: Implement error handling directly in components and services
+  - Use try-catch blocks for async operations
+  - Display user-friendly error messages in UI
+  - Handle different error types appropriately
+  - Provide fallback options when possible
+- **No Error Handler Utilities**: Avoid creating custom error handling utilities or wrappers
+  - Implement error handling at the point of use
+  - Use existing patterns and utilities
+  - Keep error handling simple and maintainable
+  - Avoid over-engineering error handling systems
+- **User-Friendly Messages**: Transform technical errors into user-friendly messages
+  - Replace technical terms with user-friendly language
+  - Provide actionable error messages when possible
+  - Include helpful context for users
+  - Avoid exposing internal system details
+- **Consistent Error Patterns**: Follow consistent error handling patterns across the codebase
+  - Use similar error handling approaches in similar contexts
+  - Maintain consistency with existing error handling
+  - Follow established patterns for different error types
+  - Ensure error handling is predictable and maintainable
+
+**Rationale**: Using existing error handling patterns reduces complexity and maintains consistency. Avoiding wrapper utilities prevents over-engineering and keeps error handling simple. User-friendly error messages improve user experience and reduce support burden. Consistent patterns make the codebase easier to maintain and debug.
+
 ## Development Standards
 
 ### Code Review Requirements
@@ -278,4 +494,109 @@ All technical decisions must be documented in Architecture Decision Records (ADR
 - Make tradeoffs between competing principles
 - Impact system architecture or data models
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-15 | **Last Amended**: 2025-10-15
+- Explicitly forbids custom error handling utilities or wrappers.
+
+### XII. Code Quality Assurance Standards
+
+**Mandate**: All generated code MUST pass SonarQube quality gates with zero warnings or errors.
+
+**Requirements**:
+
+- **Zero SonarQube Issues**: No warnings, bugs, vulnerabilities, or code smells allowed
+- **Cognitive Complexity**: Functions must not exceed 15 cognitive complexity points
+- **Code Duplication**: Maximum 3% code duplication threshold
+- **Test Coverage**: Minimum 85% line coverage for all generated code
+- **Security Hotspots**: Zero security hotspots in generated code
+- **Maintainability Rating**: A rating required for all generated code
+- **Reliability Rating**: A rating required for all generated code
+- **Security Rating**: A rating required for all generated code
+
+**Implementation Standards**:
+
+- Use `String.replaceAll()` instead of `String.replace()` with global regex
+- Use `RegExp.exec()` instead of `String.match()` for better performance
+- Use optional chaining (`?.`) instead of logical AND (`&&`) for property access
+- Use `Number.isNaN()` instead of `isNaN()` for type safety
+- Avoid unused variables and parameters
+- Handle exceptions properly or don't catch them at all
+- Use descriptive variable names to avoid reserved keyword conflicts
+- Prefer array methods over multiple `Array.push()` calls
+
+**Acceptable Exception Patterns**:
+
+- **Token Validation**: Catch blocks that intentionally set default values for authentication token validation are acceptable
+- **Required ESLint Comments**: Use `// eslint-disable-next-line sonarjs/no-useless-catch` with explanatory comments
+- **Documentation**: All disabled warnings must include clear comments explaining why the pattern is acceptable
+- **Logging**: Include appropriate logging when handling exceptions to maintain observability
+- **SQL Schema Constraints**: Database constraints that would duplicate literals can be handled at the application level with clear documentation
+
+**Quality Gates**:
+
+- **Blocking**: Any SonarQube issue prevents code generation
+- **Automated**: SonarQube analysis runs on every code generation
+- **Reporting**: Quality metrics included in generation reports
+- **Documentation**: Quality standards documented in generated README files
+
+### XIII. Linter Compliance Standards
+
+**Core Principle**: All generated code must pass linter validation without warnings or errors.
+
+**Implementation Standards**:
+
+- **Zero Tolerance**: No linter warnings or errors in generated code
+- **Pre-Generation Validation**: Linter checks must pass before code generation
+- **Real-Time Feedback**: Linter errors must be fixed immediately during development
+- **Automated Enforcement**: CI/CD pipelines must enforce linter compliance
+
+**Linter Rules**:
+
+- **ESLint**: All JavaScript/TypeScript code must pass ESLint validation
+- **Svelte**: All Svelte components must pass Svelte linter validation
+- **CSS**: All CSS must pass style linter validation
+- **Accessibility**: All components must pass accessibility linter checks
+
+**Exception Handling**:
+
+- **Required Comments**: All disabled linter rules must include explanatory comments
+- **Documentation**: Disabled rules must be documented with justification
+- **Review Required**: Any linter rule disabling requires code review approval
+- **Temporary Only**: Linter rule disabling must be temporary with clear resolution plan
+
+**Acceptable Exception Patterns**:
+
+- **Tailwind CSS Directives**: `@plugin` and other Tailwind-specific at-rules are acceptable with `/* stylelint-disable-next-line at-rule-no-unknown */` comments
+- **Framework-Specific Rules**: CSS linter rules that conflict with framework requirements (Tailwind, PostCSS plugins) are acceptable with proper documentation
+
+**Quality Gates**:
+
+- **Blocking**: Any linter failure prevents code generation
+- **Automated**: Linter analysis runs on every code generation
+- **Reporting**: Linter compliance metrics included in generation reports
+- **Documentation**: Linter standards documented in generated README files
+
+### XIV. Development Environment Standards
+
+**Core Principle**: Development server should always be running to enable immediate testing and debugging.
+
+**Implementation Standards**:
+
+- **Always Running**: Development server must be running at all times during development
+- **No Manual Startup**: No need to run development server separately - it should be automatically available
+- **Immediate Testing**: Changes should be immediately testable without server restart
+- **Hot Reload**: All changes should trigger automatic reload and recompilation
+
+**Development Workflow**:
+
+- **Continuous Development**: Server runs continuously during development sessions
+- **Instant Feedback**: Code changes are immediately reflected in the browser
+- **Error Visibility**: Development errors are immediately visible in browser and console
+- **No Interruption**: Development flow should not be interrupted by server management
+
+**Quality Gates**:
+
+- **Blocking**: Development cannot proceed without running development server
+- **Automated**: Development server startup should be automated and seamless
+- **Documentation**: Development environment setup documented in README files
+- **Consistency**: All team members use the same development server configuration
+
+**Version**: 1.8.0 | **Ratified**: 2025-10-15 | **Last Amended**: 2025-01-15

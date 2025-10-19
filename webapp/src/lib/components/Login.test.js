@@ -21,12 +21,13 @@ describe('Login correctly', () => {
 
 	it('logs in', async () => {
 		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
-		const { goto } = await import('$app/navigation');
 
 		// Mock isUserAuthenticated to return false (not logged in)
 		isUserAuthenticated.mockReturnValue(false);
 
-		render(Login);
+		render(Login, {
+			children: () => '<button>Login</button>'
+		});
 		const button = screen.getByRole('button');
 
 		// Click the button
@@ -43,7 +44,9 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
 
-		render(Login);
+		render(Login, {
+			children: () => '<button>Login</button>'
+		});
 		const button = screen.getByRole('button');
 
 		// Click the button

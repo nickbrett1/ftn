@@ -3,7 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('MerchantPicker', () => {
 	const mockOnSelect = vi.fn();
@@ -36,14 +36,14 @@ describe('MerchantPicker', () => {
 
 	it('should render merchants when API call succeeds', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
 		});
 
-		const { getByRole, getByText } = render(MerchantPicker, {
+		const { getByRole } = render(MerchantPicker, {
 			props: {
 				onSelect: mockOnSelect
 			}
@@ -83,7 +83,7 @@ describe('MerchantPicker', () => {
 
 	it('should call onSelect when a merchant is selected from dropdown', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -109,7 +109,7 @@ describe('MerchantPicker', () => {
 
 	it('should show selected merchant when selectedMerchant prop is provided', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -131,7 +131,7 @@ describe('MerchantPicker', () => {
 
 	it('should use custom placeholder when provided', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -154,7 +154,7 @@ describe('MerchantPicker', () => {
 	it('should display merchants returned from server (server-side filtering)', async () => {
 		// Server now returns only unassigned merchants, so we don't need client-side filtering
 		const mockMerchants = ['Best Buy', 'Target']; // Only unassigned merchants
-		
+
 		// Mock fetch to return unassigned merchants only
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -173,7 +173,7 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		
+
 		// Check that only unassigned merchants are displayed (server-side filtering)
 		expect(select.innerHTML).toContain('Target');
 		expect(select.innerHTML).toContain('Best Buy');
@@ -182,7 +182,7 @@ describe('MerchantPicker', () => {
 	it('should show "No merchants available" when server returns empty array', async () => {
 		// Server returns empty array when all merchants are assigned
 		const mockMerchants = [];
-		
+
 		// Mock fetch to return empty array
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -203,7 +203,7 @@ describe('MerchantPicker', () => {
 
 	it('should handle normal merchant loading', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -264,7 +264,7 @@ describe('MerchantPicker', () => {
 	it('should not cause infinite loop when selecting merchant and refreshing list', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let onSelectCallCount = 0;
-		
+
 		// Mock fetch to return merchants initially
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -289,19 +289,19 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		
+
 		// Select a merchant - this should trigger onSelect exactly once
 		// and not cause an infinite loop when the DOM is updated
 		await fireEvent.change(select, { target: { value: 'Amazon' } });
-		
+
 		// Wait a bit to ensure any async operations complete
-		await new Promise(resolve => setTimeout(resolve, 200));
-		
+		await new Promise((resolve) => setTimeout(resolve, 200));
+
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
 		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
-		
+
 		// The select should still have the correct value
 		expect(select.value).toBe('Amazon');
 	});
@@ -310,7 +310,7 @@ describe('MerchantPicker', () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let onSelectCallCount = 0;
 		let maxCalls = 10; // Safety limit to prevent actual infinite loop in test
-		
+
 		// Mock fetch to return merchants initially
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -336,21 +336,21 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		
+
 		// Select a merchant
 		await fireEvent.change(select, { target: { value: 'Amazon' } });
-		
+
 		// Wait for the 100ms timeout and any subsequent DOM updates
-		await new Promise(resolve => setTimeout(resolve, 300));
-		
+		await new Promise((resolve) => setTimeout(resolve, 300));
+
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
 		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
-		
+
 		// Verify the select value is still correct after all updates
 		expect(select.value).toBe('Amazon');
-		
+
 		// This test would fail if the infinite loop bug returns because:
 		// 1. onSelect would be called multiple times (violating the count check)
 		// 2. The test would throw an error if onSelect is called more than maxCalls times
@@ -361,7 +361,7 @@ describe('MerchantPicker', () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let onSelectCallCount = 0;
 		let maxCalls = 5; // Lower safety limit to catch loops faster
-		
+
 		// Mock fetch to return merchants initially
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -375,16 +375,18 @@ describe('MerchantPicker', () => {
 		let selectedMerchant = '';
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
-			
+
 			if (onSelectCallCount > maxCalls) {
-				throw new Error(`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`);
+				throw new Error(
+					`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`
+				);
 			}
-			
-			// Simulate parent component behavior: 
+
+			// Simulate parent component behavior:
 			// First, the parent sets selectedMerchant to the selected value
 			selectedMerchant = merchant;
 			rerender({ selectedMerchant, onSelect: mockOnSelect });
-			
+
 			// Then, after a brief delay, the parent resets it to empty
 			setTimeout(() => {
 				selectedMerchant = '';
@@ -405,19 +407,19 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		
+
 		// Select a merchant - this should trigger onSelect exactly once
 		// even though the parent resets selectedMerchant = '' after onSelect
 		await fireEvent.change(select, { target: { value: 'Amazon' } });
-		
+
 		// Wait for the 100ms timeout and any subsequent DOM updates
-		await new Promise(resolve => setTimeout(resolve, 500)); // Longer wait
-		
+		await new Promise((resolve) => setTimeout(resolve, 500)); // Longer wait
+
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
 		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
-		
+
 		// The select should be reset to empty (as the parent intended)
 		expect(select.value).toBe('');
 	});
@@ -426,7 +428,7 @@ describe('MerchantPicker', () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let onSelectCallCount = 0;
 		let maxCalls = 3; // Very low limit to catch loops quickly
-		
+
 		// Mock fetch to return merchants initially
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -438,15 +440,17 @@ describe('MerchantPicker', () => {
 		let selectedMerchant = '';
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
-			
+
 			if (onSelectCallCount > maxCalls) {
-				throw new Error(`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`);
+				throw new Error(
+					`Infinite loop detected! onSelect called ${onSelectCallCount} times (limit: ${maxCalls})`
+				);
 			}
-			
+
 			// Simulate parent component behavior: first set to selected value, then reset
 			selectedMerchant = merchant;
 			rerender({ selectedMerchant, onSelect: mockOnSelect });
-			
+
 			// Then immediately reset to empty
 			selectedMerchant = '';
 			rerender({ selectedMerchant, onSelect: mockOnSelect });
@@ -465,74 +469,35 @@ describe('MerchantPicker', () => {
 		});
 
 		const select = getByRole('combobox');
-		
+
 		// Select a merchant - this should trigger onSelect exactly once
 		await fireEvent.change(select, { target: { value: 'Amazon' } });
-		
+
 		// Wait for any async operations
-		await new Promise(resolve => setTimeout(resolve, 200));
-		
+		await new Promise((resolve) => setTimeout(resolve, 200));
+
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
 		expect(mockOnSelect).toHaveBeenCalledWith('Amazon');
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
-		
+
 		// The select should be reset to empty (as the parent intended)
 		expect(select.value).toBe('');
 	});
 
-	// This test demonstrates how the infinite loop bug would be caught
-	// It's commented out because it would fail with our current fix
-	// Uncomment and remove the isUpdatingUI flag to see it fail
-	/*
-	it('would fail if infinite loop bug returns (demonstration)', async () => {
-		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		let onSelectCallCount = 0;
-		
-		mockFetch.mockResolvedValue({
-			ok: true,
-			json: async () => mockMerchants
-		});
-
-		const mockOnSelect = vi.fn(() => {
-			onSelectCallCount++;
-			// Without the isUpdatingUI flag, this would be called multiple times
-			// causing the test to fail
-		});
-
-		const { getByRole } = render(MerchantPicker, {
-			props: {
-				onSelect: mockOnSelect
-			}
-		});
-
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
-
-		const select = getByRole('combobox');
-		await fireEvent.change(select, { target: { value: 'Amazon' } });
-		await new Promise(resolve => setTimeout(resolve, 300));
-		
-		// This would fail if the infinite loop bug returns:
-		// expect(onSelectCallCount).toBe(1); // Would be > 1
-		// expect(mockOnSelect).toHaveBeenCalledTimes(1); // Would be > 1
-	});
-	*/
-
 	it('should handle race condition when refreshMerchantList is called during initial load', async () => {
 		// This test exposes the race condition where refreshMerchantList() is called
 		// while the initial loadUnassignedMerchants() is still in progress
-		
+
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let resolveInitialLoad;
-		let initialLoadPromise = new Promise(resolve => {
+		let initialLoadPromise = new Promise((resolve) => {
 			resolveInitialLoad = resolve;
 		});
-		
+
 		// Mock fetch to return a promise that we can control
 		mockFetch.mockImplementation(() => initialLoadPromise);
-		
+
 		const { getByText, component } = render(MerchantPicker, {
 			props: {
 				onSelect: vi.fn()
@@ -541,28 +506,33 @@ describe('MerchantPicker', () => {
 
 		// Verify we're in loading state
 		expect(getByText('Loading recent merchants...')).toBeTruthy();
-		
+
 		// Call refreshMerchantList while initial load is still in progress
 		// This should NOT cause the UI to get stuck in loading state
 		const refreshPromise = component.refreshMerchantList();
-		
+
 		// Now resolve the initial load
 		resolveInitialLoad({
 			ok: true,
 			json: async () => mockMerchants
 		});
-		
+
 		// Wait for both operations to complete
 		await Promise.all([initialLoadPromise, refreshPromise]);
-		
+
 		// The UI should not be stuck in loading state
 		// It should show the merchants or empty state, not "Loading recent merchants..."
-		await waitFor(() => {
-			// Should either show merchants or empty state, but NOT loading
-			const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
-			expect(loadingText).toBeFalsy();
-		}, { timeout: 2000 });
-		
+		await waitFor(
+			() => {
+				// Should either show merchants or empty state, but NOT loading
+				const loadingText = document
+					.querySelector('div')
+					?.textContent?.includes('Loading recent merchants...');
+				expect(loadingText).toBeFalsy();
+			},
+			{ timeout: 2000 }
+		);
+
 		// Verify the component is in a valid state (not stuck)
 		const combobox = document.querySelector('select');
 		expect(combobox).toBeTruthy();
@@ -571,10 +541,10 @@ describe('MerchantPicker', () => {
 	it('should prevent multiple concurrent loadUnassignedMerchants calls', async () => {
 		// This test verifies that multiple concurrent calls to loadUnassignedMerchants
 		// are properly handled and don't cause race conditions
-		
+
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let fetchCallCount = 0;
-		
+
 		// Mock fetch to track how many times it's called
 		mockFetch.mockImplementation(() => {
 			fetchCallCount++;
@@ -583,7 +553,7 @@ describe('MerchantPicker', () => {
 				json: async () => mockMerchants
 			});
 		});
-		
+
 		const { component } = render(MerchantPicker, {
 			props: {
 				onSelect: vi.fn()
@@ -594,9 +564,9 @@ describe('MerchantPicker', () => {
 		await waitFor(() => {
 			expect(document.querySelector('select')).toBeTruthy();
 		});
-		
+
 		const initialFetchCount = fetchCallCount;
-		
+
 		// Make multiple rapid calls to refreshMerchantList
 		const promises = [
 			component.refreshMerchantList(),
@@ -604,9 +574,9 @@ describe('MerchantPicker', () => {
 			component.refreshMerchantList(),
 			component.refreshMerchantList()
 		];
-		
+
 		await Promise.all(promises);
-		
+
 		// Should only make one additional fetch call, not 4
 		// The race condition protection should prevent multiple concurrent calls
 		expect(fetchCallCount).toBe(initialFetchCount + 1);
@@ -615,16 +585,16 @@ describe('MerchantPicker', () => {
 	it('should handle refreshMerchantList being called before initial load completes', async () => {
 		// This test simulates the exact race condition described in the issue:
 		// User clicks remove merchant before combo box has loaded
-		
+
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		let resolveInitialLoad;
-		let initialLoadPromise = new Promise(resolve => {
+		let initialLoadPromise = new Promise((resolve) => {
 			resolveInitialLoad = resolve;
 		});
-		
+
 		// Mock fetch to return a controlled promise
 		mockFetch.mockImplementation(() => initialLoadPromise);
-		
+
 		const { component } = render(MerchantPicker, {
 			props: {
 				onSelect: vi.fn()
@@ -632,29 +602,36 @@ describe('MerchantPicker', () => {
 		});
 
 		// Verify we're in loading state
-		expect(document.querySelector('div')?.textContent?.includes('Loading recent merchants...')).toBeTruthy();
-		
+		expect(
+			document.querySelector('div')?.textContent?.includes('Loading recent merchants...')
+		).toBeTruthy();
+
 		// Simulate the race condition: refreshMerchantList called before initial load completes
 		// This is what happens when user clicks remove merchant before combo box loads
 		const refreshPromise = component.refreshMerchantList();
-		
+
 		// Resolve the initial load
 		resolveInitialLoad({
 			ok: true,
 			json: async () => mockMerchants
 		});
-		
+
 		// Wait for operations to complete
 		await Promise.all([initialLoadPromise, refreshPromise]);
-		
+
 		// The component should be in a valid state, not stuck
-		await waitFor(() => {
-			const combobox = document.querySelector('select');
-			expect(combobox).toBeTruthy();
-		}, { timeout: 2000 });
-		
+		await waitFor(
+			() => {
+				const combobox = document.querySelector('select');
+				expect(combobox).toBeTruthy();
+			},
+			{ timeout: 2000 }
+		);
+
 		// Should not be stuck in loading state
-		const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
+		const loadingText = document
+			.querySelector('div')
+			?.textContent?.includes('Loading recent merchants...');
 		expect(loadingText).toBeFalsy();
 	});
 });

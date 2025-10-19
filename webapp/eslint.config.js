@@ -69,7 +69,8 @@ export default [
 			'!.env.example',
 			'*.svx',
 			'package-lock.json',
-			'**/*.stories.js'
+			'**/*.stories.js',
+			'**/contracts/api.yaml'
 		]
 	}
 ];

@@ -345,7 +345,6 @@
 		/* Essential text visibility properties */
 		color: white;
 		-webkit-text-fill-color: white;
-		text-fill-color: white;
 
 		/* Background and border */
 		background-color: rgb(31, 41, 55);
@@ -446,7 +445,6 @@
 			/* Ensure text is visible */
 			color: white;
 			-webkit-text-fill-color: white;
-			text-fill-color: white;
 
 			/* Ensure proper contrast */
 			background-color: rgb(31, 41, 55);

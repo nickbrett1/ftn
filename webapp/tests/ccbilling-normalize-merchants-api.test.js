@@ -15,7 +15,6 @@ describe('Merchant Normalization API', () => {
 	let mockEvent;
 	let mockPlatform;
 	let mockRequireUser;
-	let mockNormalizeMerchant;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -31,7 +30,7 @@ describe('Merchant Normalization API', () => {
 					bind: vi.fn().mockReturnThis(),
 					run: vi.fn().mockResolvedValue({ changes: 5 }),
 					all: vi.fn().mockResolvedValue({ results: [] }),
-					first: vi.fn().mockResolvedValue({ 
+					first: vi.fn().mockResolvedValue({
 						total_payments: 100,
 						normalized_payments: 50,
 						processed_payments: 75,
@@ -59,7 +58,6 @@ describe('Merchant Normalization API', () => {
 
 		// Get mocked functions
 		mockRequireUser = (await import('$lib/server/require-user.js')).requireUser;
-		mockNormalizeMerchant = (await import('$lib/utils/merchant-normalizer.js')).normalizeMerchant;
 	});
 
 	describe('POST endpoint', () => {
@@ -77,7 +75,7 @@ describe('Merchant Normalization API', () => {
 
 			const result = await POST(mockEvent);
 			const data = await result.json();
-			
+
 			expect(result.status).toBe(500);
 			expect(data.error).toBe('Database not available');
 		});
@@ -87,7 +85,7 @@ describe('Merchant Normalization API', () => {
 
 			const result = await POST(mockEvent);
 			const data = await result.json();
-			
+
 			expect(data.paymentsUpdated).toBeDefined();
 			expect(typeof data.paymentsUpdated).toBe('number');
 		});
@@ -108,7 +106,7 @@ describe('Merchant Normalization API', () => {
 
 			const result = await GET(mockEvent);
 			const data = await result.json();
-			
+
 			expect(result.status).toBe(500);
 			expect(data.error).toBe('Database not available');
 		});
@@ -118,7 +116,7 @@ describe('Merchant Normalization API', () => {
 
 			const result = await GET(mockEvent);
 			const data = await result.json();
-			
+
 			expect(data.payments).toBeDefined();
 			expect(data.payments.total).toBe(100);
 			expect(data.payments.normalized).toBe(50);
@@ -131,11 +129,13 @@ describe('Merchant Normalization API', () => {
 
 		it('should handle database errors gracefully', async () => {
 			mockRequireUser.mockResolvedValue(null);
-			mockEvent.platform.env.CCBILLING_DB.first = vi.fn().mockRejectedValue(new Error('Database error'));
+			mockEvent.platform.env.CCBILLING_DB.first = vi
+				.fn()
+				.mockRejectedValue(new Error('Database error'));
 
 			const result = await GET(mockEvent);
 			const data = await result.json();
-			
+
 			expect(result.status).toBe(500);
 			expect(data.error).toBe('Failed to get status');
 			expect(data.details).toBe('Database error');
@@ -148,7 +148,7 @@ describe('Merchant Normalization API', () => {
 
 			const result = await POST(mockEvent);
 			const data = await result.json();
-			
+
 			// Should have processed some payments
 			expect(data.paymentsUpdated).toBeDefined();
 			expect(typeof data.paymentsUpdated).toBe('number');

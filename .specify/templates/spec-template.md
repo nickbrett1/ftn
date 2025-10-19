@@ -11,6 +11,12 @@
 - **Principle III**: UX Consistency (user-centered design, accessibility)
 - **Principle IV**: Performance Requirements (measurable success criteria)
 - **Principle V**: Security & Compliance (data protection, audit requirements)
+- **Principle VI**: Site Consistency & Component Standards (header/footer, design system)
+- **Principle VII**: Database Schema Management Standards (schema creation patterns)
+- **Principle VIII**: Cloudflare Services Integration Standards (direct D1/R2 usage)
+- **Principle IX**: Code Organization Standards (lib/ folder structure)
+- **Principle X**: Simple Logging Standards (console.\* with emoji prefixes)
+- **Principle XI**: Error Handling Standards (RouteUtils.handleError, user-friendly messages)
 
 ## User Scenarios & Testing _(mandatory)_
 

@@ -3,7 +3,6 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		CreditCardSolid,
 		UserSecretSolid
 	} from 'svelte-awesome-icons';
 
@@ -46,6 +45,9 @@
 		const loginTooltips = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
+		const genprojTooltips = tippy('#genproj', {
+			content: 'Project Generation Tool'
+		});
 
 		// Clean up tooltips when component unmounts
 		return () => {
@@ -65,6 +67,12 @@
 				loginTooltips.forEach((tooltip) => tooltip.destroy());
 			} else {
 				loginTooltips.destroy();
+			}
+
+			if (Array.isArray(genprojTooltips)) {
+				genprojTooltips.forEach((tooltip) => tooltip.destroy());
+			} else {
+				genprojTooltips.destroy();
 			}
 		};
 	});
@@ -101,21 +109,38 @@
 				<!-- Credit Card Billing Tool icon -->
 				{#if isLoggedIn}
 					<!-- User is logged in, show clickable icon that goes directly to billing -->
-					<CreditCardSolid
+					<button
 						id="login"
 						onclick={handleCreditCardClick}
-						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
+						class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
 						title="Credit Card Billing Tool"
-					/>
+					>
+						💳
+					</button>
 				{:else}
 					<!-- User is not logged in, show login modal -->
 					<Login loginCallback={loginStateUpdated}>
-						<CreditCardSolid
+						<button
 							id="login"
-							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
-						/>
+							class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
+							title="Credit Card Billing Tool"
+						>
+							💳
+						</button>
 					</Login>
 				{/if}
+
+				<!-- Project Generation Tool icon -->
+				<button
+					id="genproj"
+					onclick={() => {
+						goto('/projects/genproj');
+					}}
+					class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
+					title="Project Generation Tool"
+				>
+					🛠️
+				</button>
 			</div>
 
 			<div class="flex gap-4">

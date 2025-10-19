@@ -11,7 +11,7 @@
 	function checkAuthStatus() {
 		const wasLoggedIn = loggedIn;
 		loggedIn = isUserAuthenticated();
-		
+
 		// Only call callback if state actually changed
 		if (wasLoggedIn !== loggedIn) {
 			loginCallback?.(loggedIn);
@@ -21,10 +21,10 @@
 	onMount(async () => {
 		// Check initial auth status
 		checkAuthStatus();
-		
+
 		// Set up periodic auth status check (every 2 seconds)
 		const authCheckInterval = setInterval(checkAuthStatus, 2000);
-		
+
 		return () => {
 			clearInterval(authCheckInterval);
 		};
@@ -41,6 +41,6 @@
 	}
 </script>
 
-<button onclick={onClick}>
+<div onclick={onClick} onkeydown={(e) => e.key === 'Enter' && onClick()} role="button" tabindex="0">
 	{@render children?.()}
-</button>
+</div>

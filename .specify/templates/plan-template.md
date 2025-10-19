@@ -81,6 +81,58 @@ Verify compliance with `.specify/memory/constitution.md` principles:
 - [ ] Audit logging planned for data access and mutations
 - [ ] Security headers configured (CSP, HSTS, etc.)
 
+### Site Consistency & Component Standards (Principle VI)
+
+- [ ] Header and footer components identified and documented
+- [ ] Page layout standards defined (containers, spacing, breakpoints)
+- [ ] Component library requirements identified (Storybook documentation)
+- [ ] Brand consistency requirements (logo, colors, typography)
+- [ ] Navigation patterns defined (breadcrumbs, menus, transitions)
+- [ ] No custom headers/footers without architectural approval
+
+### Database Schema Management Standards (Principle VII)
+
+- [ ] Database schema file created in `webapp/scripts/{feature-name}_schema.sql`
+- [ ] Schema file includes comprehensive header comments with usage instructions
+- [ ] All tables include proper foreign key constraints and performance indexes
+- [ ] Database setup commands documented and tested
+- [ ] Schema validation completed with actual D1 database creation
+- [ ] No initial schema creation in migrations folder
+
+### Cloudflare Services Integration Standards (Principle VIII)
+
+- [ ] D1 database operations use direct `platform.env.DB` access without wrapper utilities
+- [ ] R2 storage operations use direct `platform.env.R2_*` access without wrapper utilities
+- [ ] Service classes implement D1/R2 integration with proper error handling
+- [ ] Environment bindings follow naming patterns (`DB_{FEATURE}`, `R2_{FEATURE}`)
+- [ ] Local development uses `--local` flag, production uses `--remote` flag
+- [ ] Service classes are testable with mocked `platform.env` objects
+
+### Code Organization Standards (Principle IX)
+
+- [ ] Svelte components placed in `lib/components/` with feature-specific subfolders
+- [ ] Client-side code placed in `lib/client/` (browser-only, not components)
+- [ ] Server-side code placed in `lib/server/` (server-only, database operations)
+- [ ] Universal utilities placed in `lib/utils/` (can run anywhere)
+- [ ] Import paths reflect execution context requirements
+- [ ] Code placed in most restrictive folder that supports requirements
+
+### Simple Logging Standards (Principle X)
+
+- [ ] Native console methods used (`console.log()`, `console.error()`, `console.warn()`)
+- [ ] Consistent emoji prefixes used (✅, ❌, ⚠️, 🔍, 🔄, 📝)
+- [ ] Context-aware messages included in log statements
+- [ ] Appropriate log levels used for different situations
+- [ ] No custom logging utilities or wrapper functions created
+
+### Error Handling Standards (Principle XI)
+
+- [ ] Existing `RouteUtils.handleError()` used for server-side error handling
+- [ ] Client-side error handling implemented directly in components/services
+- [ ] User-friendly error messages provided (no technical jargon)
+- [ ] Consistent error handling patterns followed across codebase
+- [ ] No custom error handler utilities or wrappers created
+
 **Violation Justification**: Use Complexity Tracking section below if any gate cannot be satisfied
 
 ## Project Structure

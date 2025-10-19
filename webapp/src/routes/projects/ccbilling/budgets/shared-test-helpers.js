@@ -10,11 +10,11 @@ import { tick } from 'svelte';
 // ========== COMMON SETUP ==========
 export const setupTest = () => {
 	vi.clearAllMocks();
-	global.fetch = vi.fn().mockResolvedValue({
+	globalThis.fetch = vi.fn().mockResolvedValue({
 		ok: true,
 		json: () => Promise.resolve({ success: true })
 	});
-	return global.fetch;
+	return globalThis.fetch;
 };
 
 export const setupMocks = () => {
@@ -38,10 +38,13 @@ export const createBudgetData = (budgets = []) => ({ budgets });
 export const createDetailData = (budget, merchants = []) => ({ budget, merchants });
 
 // ========== API HELPERS ==========
-export const mockApiSuccess = (data = { success: true }) => ({
-	ok: true,
-	json: () => Promise.resolve(data)
-});
+export const mockApiSuccess = (data) => {
+	const responseData = data || { success: true };
+	return {
+		ok: true,
+		json: () => Promise.resolve(responseData)
+	};
+};
 
 export const mockApiError = (error = 'An error occurred', status = 400) => ({
 	ok: false,
@@ -91,17 +94,17 @@ export const clickButton = async (button) => {
 // ========== COMMON TEST SCENARIOS ==========
 export const testBasicRendering = (Component, props, expectedContent) => {
 	const { container } = render(Component, { props });
-	expectedContent.forEach(content => {
+	for (const content of expectedContent) {
 		expect(container.innerHTML).toContain(content);
-	});
+	}
 	return container;
 };
 
 export const testEmptyState = (Component, props, expectedEmptyContent) => {
 	const { container } = render(Component, { props });
-	expectedEmptyContent.forEach(content => {
+	for (const content of expectedEmptyContent) {
 		expect(container.innerHTML).toContain(content);
-	});
+	}
 	return container;
 };
 
@@ -236,7 +239,7 @@ export const testBudgetCRUD = {
 				if (saveButton) {
 					await clickButton(saveButton);
 					
-					expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'PUT', { name: budgetName });
+					expectApiCall(globalThis.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'PUT', { name: budgetName });
 				}
 			}
 		}
@@ -255,7 +258,7 @@ export const testBudgetCRUD = {
 			if (confirmButton) {
 				await clickButton(confirmButton);
 				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'DELETE');
+				expectApiCall(globalThis.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'DELETE');
 			}
 		}
 		
@@ -285,7 +288,7 @@ export const testMerchantCRUD = {
 			if (confirmButton) {
 				await clickButton(confirmButton);
 				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budget.id}/merchants`, 'DELETE', 
+				expectApiCall(globalThis.fetch, `/projects/ccbilling/budgets/${props.data.budget.id}/merchants`, 'DELETE', 
 					{ merchant: props.data.merchants[0].merchant });
 			}
 		}
@@ -302,20 +305,20 @@ export const runValidationTests = (testFn) => {
 		{ input: 'Valid', expected: true, name: 'valid' }
 	];
 	
-	cases.forEach(({ input, expected, name }) => {
+	for (const { input, expected, name } of cases) {
 		testFn(input, expected, name);
-	});
+	}
 };
 
 // ========== COMMON ASSERTIONS ==========
 export const expectElementsPresent = (container, elements) => {
-	elements.forEach(element => {
+	for (const element of elements) {
 		expect(container.innerHTML).toContain(element);
-	});
+	}
 };
 
 export const expectElementsAbsent = (container, elements) => {
-	elements.forEach(element => {
+	for (const element of elements) {
 		expect(container.innerHTML).not.toContain(element);
-	});
+	}
 };

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+/* stylelint-disable-next-line at-rule-no-unknown */
 @plugin "@tailwindcss/typography";
 
 html {
@@ -76,11 +77,9 @@ main a:not([class*='text-']):not(.not-prose):hover,
 }
 
 /* General styles for external links to ensure proper mobile behavior */
-a[target="_blank"] {
+a[target='_blank'] {
 	-webkit-touch-callout: default;
 	-webkit-user-select: text;
 	user-select: text;
 	touch-action: manipulation;
 }
-
-

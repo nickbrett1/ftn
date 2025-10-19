@@ -1,0 +1,607 @@
+openapi: 3.0.3
+info:
+  title: Project Generation Tool API
+  description: API for generating development projects with selected capabilities
+  version: 1.0.0
+  contact:
+    name: Fintech Nick
+    email: nick@fintechnick.com
+
+servers:
+  - url: https://fintechnick.com
+    description: Production server
+  - url: https://preview.fintechnick.com
+    description: Preview server
+
+paths:
+  /projects/genproj/api/capabilities:
+    get:
+      summary: Get available capabilities
+      description: Returns all available project capabilities with their definitions
+      operationId: getCapabilities
+      tags:
+        - Capabilities
+      responses:
+        "200":
+          description: List of available capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  capabilities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CapabilityDefinition"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/preview:
+    post:
+      summary: Generate project preview
+      description: Generates a preview of files and configurations based on selected capabilities
+      operationId: generatePreview
+      tags:
+        - Preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectConfigurationRequest"
+      responses:
+        "200":
+          description: Generated preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/generate:
+    post:
+      summary: Generate project
+      description: Generates the complete project with all files and external service configurations
+      operationId: generateProject
+      tags:
+        - Generation
+      security:
+        - GoogleAuth: []
+        - GitHubAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectConfigurationRequest"
+      responses:
+        "200":
+          description: Project generation initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/auth/github:
+    post:
+      summary: Authenticate with GitHub
+      description: Initiates GitHub OAuth authentication flow
+      operationId: authenticateGitHub
+      tags:
+        - Authentication
+      security:
+        - GoogleAuth: []
+      responses:
+        "200":
+          description: GitHub authentication initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                  state:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/auth/github/callback:
+    get:
+      summary: GitHub OAuth callback
+      description: Handles GitHub OAuth callback and stores authentication token
+      operationId: handleGitHubCallback
+      tags:
+        - Authentication
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GitHub authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/auth/circleci:
+    post:
+      summary: Authenticate with CircleCI
+      description: Stores CircleCI API token for project creation
+      operationId: authenticateCircleCI
+      tags:
+        - Authentication
+      security:
+        - GoogleAuth: []
+        - GitHubAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: CircleCI API token
+      responses:
+        "200":
+          description: CircleCI authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/auth/doppler:
+    post:
+      summary: Authenticate with Doppler
+      description: Stores Doppler API token for project creation
+      operationId: authenticateDoppler
+      tags:
+        - Authentication
+      security:
+        - GoogleAuth: []
+        - GitHubAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Doppler API token
+      responses:
+        "200":
+          description: Doppler authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/genproj/api/auth/sonarcloud:
+    post:
+      summary: Authenticate with SonarCloud
+      description: Stores SonarCloud API token for project creation
+      operationId: authenticateSonarCloud
+      tags:
+        - Authentication
+      security:
+        - GoogleAuth: []
+        - GitHubAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: SonarCloud API token
+      responses:
+        "200":
+          description: SonarCloud authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  securitySchemes:
+    GoogleAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            openid: OpenID Connect
+            email: Email access
+            profile: Profile access
+    GitHubAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://github.com/login/oauth/authorize
+          tokenUrl: https://github.com/login/oauth/access_token
+          scopes:
+            repo: Repository access
+            user: User information
+
+  schemas:
+    CapabilityDefinition:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - category
+        - dependencies
+        - conflicts
+        - requiresAuth
+        - configurationSchema
+        - templates
+      properties:
+        id:
+          type: string
+          description: Unique capability identifier
+        name:
+          type: string
+          description: Human-readable name
+        description:
+          type: string
+          description: Detailed description
+        category:
+          type: string
+          enum:
+            - devcontainer
+            - ci-cd
+            - code-quality
+            - secrets
+            - deployment
+            - monitoring
+        dependencies:
+          type: array
+          items:
+            type: string
+          description: Required capabilities
+        conflicts:
+          type: array
+          items:
+            type: string
+          description: Conflicting capabilities
+        requiresAuth:
+          type: array
+          items:
+            type: string
+          description: Required authentication services
+        configurationSchema:
+          type: object
+          description: JSON Schema for configuration validation
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateReference"
+        externalService:
+          $ref: "#/components/schemas/ExternalServiceConfig"
+
+    TemplateReference:
+      type: object
+      required:
+        - id
+        - filePath
+        - templateId
+      properties:
+        id:
+          type: string
+        filePath:
+          type: string
+        templateId:
+          type: string
+        variables:
+          type: object
+          additionalProperties: true
+
+    ExternalServiceConfig:
+      type: object
+      required:
+        - service
+        - projectCreation
+        - fallbackInstructions
+      properties:
+        service:
+          type: string
+          enum:
+            - github
+            - circleci
+            - doppler
+            - sonarcloud
+        projectCreation:
+          type: boolean
+        fallbackInstructions:
+          type: string
+
+    ProjectConfigurationRequest:
+      type: object
+      required:
+        - projectName
+        - selectedCapabilities
+        - configuration
+      properties:
+        projectName:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: "^[a-zA-Z0-9-]+$"
+        repositoryUrl:
+          type: string
+          format: uri
+          pattern: '^https://github\\.com/[^/]+/[^/]+/?$'
+        selectedCapabilities:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        configuration:
+          type: object
+          additionalProperties: true
+
+    PreviewResponse:
+      type: object
+      required:
+        - artifacts
+        - externalServiceChanges
+        - summary
+      properties:
+        artifacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeneratedArtifact"
+        externalServiceChanges:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExternalServiceChange"
+        summary:
+          $ref: "#/components/schemas/ProjectSummary"
+
+    GeneratedArtifact:
+      type: object
+      required:
+        - id
+        - filePath
+        - content
+        - capabilityId
+      properties:
+        id:
+          type: string
+        filePath:
+          type: string
+        content:
+          type: string
+        capabilityId:
+          type: string
+        isExecutable:
+          type: boolean
+          default: false
+
+    ExternalServiceChange:
+      type: object
+      required:
+        - service
+        - action
+        - description
+      properties:
+        service:
+          type: string
+          enum:
+            - github
+            - circleci
+            - doppler
+            - sonarcloud
+        action:
+          type: string
+          enum:
+            - create-project
+            - configure-webhook
+            - setup-integration
+        description:
+          type: string
+        requiresAuth:
+          type: boolean
+        fallbackInstructions:
+          type: string
+
+    ProjectSummary:
+      type: object
+      required:
+        - totalFiles
+        - capabilities
+        - estimatedSetupTime
+      properties:
+        totalFiles:
+          type: integer
+        capabilities:
+          type: array
+          items:
+            type: string
+        estimatedSetupTime:
+          type: string
+        externalServices:
+          type: array
+          items:
+            type: string
+
+    GenerationResponse:
+      type: object
+      required:
+        - projectId
+        - status
+        - repositoryUrl
+      properties:
+        projectId:
+          type: string
+        status:
+          type: string
+          enum:
+            - generating
+            - completed
+            - failed
+        repositoryUrl:
+          type: string
+          format: uri
+        artifacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeneratedArtifact"
+        externalServiceIntegrations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExternalServiceIntegration"
+        errorMessage:
+          type: string
+
+    ExternalServiceIntegration:
+      type: object
+      required:
+        - service
+        - status
+      properties:
+        service:
+          type: string
+          enum:
+            - github
+            - circleci
+            - doppler
+            - sonarcloud
+        status:
+          type: string
+          enum:
+            - pending
+            - creating
+            - completed
+            - failed
+        serviceProjectId:
+          type: string
+        errorMessage:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              requestId:
+                type: string
+
+tags:
+  - name: Capabilities
+    description: Project capability management
+  - name: Preview
+    description: Project preview generation
+  - name: Generation
+    description: Project generation and creation
+  - name: Authentication
+    description: External service authentication

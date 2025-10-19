@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/svelte';
 import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
 // Mock fetch globally
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('MerchantSelectionModal', () => {
 	const mockOnClose = vi.fn();
@@ -12,7 +12,7 @@ describe('MerchantSelectionModal', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Ensure fetch is properly mocked
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 	it('should not render when isOpen is false', () => {
