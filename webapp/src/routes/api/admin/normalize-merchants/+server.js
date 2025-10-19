@@ -339,6 +339,13 @@ async function performBulkPatternUpdates(db, batchSize) {
 /**
  * Perform bulk pattern-based updates for budget merchants
  * This ensures budget merchant mappings stay in sync with payment normalization
+ * 
+ * Handles UNIQUE constraint violations by:
+ * 1. Grouping merchants by budget_id
+ * 2. If budget already has the normalized merchant, remove all matching merchants
+ * 3. If budget doesn't have the normalized merchant, update the first one and remove duplicates
+ * 
+ * This prevents the UNIQUE constraint error: budget_merchant.budget_id, budget_merchant.merchant_normalized
  */
 async function performBudgetMerchantBulkUpdates(db, batchSize) {
 	const updates = [
@@ -420,21 +427,91 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 	];
 
 	let totalUpdated = 0;
+	let totalRemoved = 0;
 	const errors = [];
 
 	for (const update of updates) {
 		try {
-			const sql = `
-				UPDATE budget_merchant 
-				SET merchant_normalized = ?
-				WHERE (${update.pattern})
-				AND (merchant_normalized != ? OR merchant_normalized IS NULL)
-			`;
+			// First, find all budget merchants that match this pattern and would be normalized
+			const { results: matchingMerchants } = await db
+				.prepare(
+					`
+					SELECT id, budget_id, merchant, merchant_normalized
+					FROM budget_merchant 
+					WHERE (${update.pattern})
+					AND (merchant_normalized != ? OR merchant_normalized IS NULL)
+					ORDER BY budget_id, id
+				`
+				)
+				.bind(update.normalized)
+				.all();
 
-			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
+			// Group by budget_id to handle duplicates
+			const budgetGroups = {};
+			for (const merchant of matchingMerchants) {
+				if (!budgetGroups[merchant.budget_id]) {
+					budgetGroups[merchant.budget_id] = [];
+				}
+				budgetGroups[merchant.budget_id].push(merchant);
+			}
 
-			const updated = result.changes || 0;
-			totalUpdated += updated;
+			// Process each budget group
+			for (const [budgetId, merchants] of Object.entries(budgetGroups)) {
+				try {
+					// Check if this budget already has the normalized merchant
+					const { results: existingNormalized } = await db
+						.prepare(
+							`
+							SELECT id FROM budget_merchant 
+							WHERE budget_id = ? AND merchant_normalized = ?
+						`
+						)
+						.bind(budgetId, update.normalized)
+						.all();
+
+					if (existingNormalized.length > 0) {
+						// Budget already has the normalized merchant, remove all matching merchants
+						for (const merchant of merchants) {
+							await db
+								.prepare('DELETE FROM budget_merchant WHERE id = ?')
+								.bind(merchant.id)
+								.run();
+							totalRemoved++;
+						}
+					} else {
+						// Update the first merchant to the normalized form, remove the rest
+						const [firstMerchant, ...remainingMerchants] = merchants;
+						
+						// Update the first one
+						await db
+							.prepare(
+								'UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?'
+							)
+							.bind(update.normalized, firstMerchant.id)
+							.run();
+						totalUpdated++;
+
+						// Remove the rest
+						for (const merchant of remainingMerchants) {
+							await db
+								.prepare('DELETE FROM budget_merchant WHERE id = ?')
+								.bind(merchant.id)
+								.run();
+							totalRemoved++;
+						}
+					}
+				} catch (budgetError) {
+					// Log the specific budget error but continue with other budgets
+					console.error(`Error processing budget ${budgetId} for pattern ${update.pattern}:`, budgetError);
+					errors.push({
+						type: 'budget_merchant_budget_error',
+						budgetId: parseInt(budgetId),
+						pattern: update.pattern,
+						normalized: update.normalized,
+						error: budgetError.message
+					});
+				}
+			}
 		} catch (error) {
 			errors.push({
 				type: 'budget_merchant_bulk_update',
@@ -447,6 +524,7 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 
 	return {
 		updated: totalUpdated,
+		removed: totalRemoved,
 		errors
 	};
 }
