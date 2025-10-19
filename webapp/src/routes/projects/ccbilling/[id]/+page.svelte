@@ -610,6 +610,64 @@
 		};
 	}
 
+	// Helper function to check if an auto-association exists for a merchant
+	function getAutoAssociationForMerchant(charge) {
+		if (!charge) return null;
+		
+		// Try normalized merchant first, then fall back to original merchant name
+		let autoAssociation = null;
+		
+		if (charge.merchant_normalized) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant_normalized
+			);
+		}
+		
+		// If no auto-association found by normalized name, try original merchant name
+		if (!autoAssociation && charge.merchant) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant
+			);
+		}
+		
+		return autoAssociation;
+	}
+
+	// Helper function to check if auto-association button should be shown
+	function shouldShowAutoAssociationButton(charge) {
+		if (!charge || !charge.allocated_to) return false;
+		
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		// Don't show button if auto-association already matches current allocation
+		if (autoAssociation && autoAssociation.budget_name === charge.allocated_to) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	// Helper function to get button text and styling based on auto-association state
+	function getAutoAssociationButtonInfo(charge) {
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		if (autoAssociation) {
+			return {
+				text: 'Change Auto-association',
+				tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
+				title: 'Change auto-association',
+				class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
+			};
+		} else {
+			return {
+				text: 'Create Auto-association',
+				tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
+				title: 'Create auto-association',
+				class: 'bg-green-700 text-green-200 hover:bg-green-600'
+			};
+		}
+	}
+
 	// Auto-association creation functions
 	function createAutoAssociation(chargeId, allocation) {
 		const charge = localData.charges.find((c) => c.id === chargeId);
