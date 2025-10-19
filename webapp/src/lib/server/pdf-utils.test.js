@@ -176,7 +176,8 @@ describe('ServerPDFUtils', () => {
 		it('should throw error for file too large', () => {
 			const mockFile = {
 				size: 11 * 1024 * 1024, // 11MB
-				type: 'application/pdf'
+				type: 'application/pdf',
+				arrayBuffer: vi.fn()
 			};
 
 			expect(() => ServerPDFUtils.validatePDFFile(mockFile)).toThrow('PDF file too large. Maximum size: 10MB');
@@ -185,7 +186,8 @@ describe('ServerPDFUtils', () => {
 		it('should throw error for invalid file type', () => {
 			const mockFile = {
 				size: 1024,
-				type: 'text/plain'
+				type: 'text/plain',
+				arrayBuffer: vi.fn()
 			};
 
 			expect(() => ServerPDFUtils.validatePDFFile(mockFile)).toThrow('Invalid file type. Only PDF files are supported.');
