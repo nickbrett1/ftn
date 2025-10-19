@@ -58,6 +58,38 @@ describe('Merchant Normalizer', () => {
 		});
 	});
 
+	describe('PlayStation Network normalization', () => {
+		it('should normalize PlayStation Network with transaction code', () => {
+			const result = normalizeMerchant('PlayStation Network 12345-67890');
+			expect(result.merchant_normalized).toBe('PLAYSTATION NETWORK');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize PlayStation Network with different case', () => {
+			const result = normalizeMerchant('playstation network 98765-43210');
+			expect(result.merchant_normalized).toBe('PLAYSTATION NETWORK');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize PlayStation Network with mixed case', () => {
+			const result = normalizeMerchant('Playstation Network 11111-22222');
+			expect(result.merchant_normalized).toBe('PLAYSTATION NETWORK');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize PlayStation Network with alphanumeric code', () => {
+			const result = normalizeMerchant('PLAYSTATION NETWORK ABC123-DEF456');
+			expect(result.merchant_normalized).toBe('PLAYSTATION NETWORK');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize PlayStation Network with just numbers', () => {
+			const result = normalizeMerchant('PlayStation Network 123456789');
+			expect(result.merchant_normalized).toBe('PLAYSTATION NETWORK');
+			expect(result.merchant_details).toBe('');
+		});
+	});
+
 	describe('Generic merchant normalization', () => {
 		it('should handle null input', () => {
 			const result = normalizeMerchant(null);
