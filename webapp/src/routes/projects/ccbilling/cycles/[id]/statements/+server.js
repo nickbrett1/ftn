@@ -13,7 +13,7 @@ import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 import { ParserFactory } from '$lib/utils/ccbilling-parsers/parser-factory.js';
-import { PDFUtils } from '$lib/client/pdf-utils.js';
+import { ServerPDFUtils } from '$lib/server/pdf-utils.js';
 
 /**
  * Generate a cryptographically secure random hex string for file keys
@@ -154,7 +154,7 @@ export async function POST(event) {
 
 				// Parse the PDF using the parser factory
 				const parserFactory = new ParserFactory();
-				const parsedData = await PDFUtils.parseStatement(file, parserFactory, {
+				const parsedData = await ServerPDFUtils.parseStatement(file, parserFactory, {
 					preserveLineBreaks: true
 				});
 
