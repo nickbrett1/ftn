@@ -177,6 +177,7 @@
 		chargeId: null
 	});
 
+
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
 		// Force reactivity by creating new references
@@ -608,6 +609,68 @@
 			isDeletionRequest: false
 		};
 	}
+
+	// Auto-association creation functions
+	function createAutoAssociation(chargeId, allocation) {
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		if (!charge || !allocation) return;
+
+		// Check if there's already an auto-association for this merchant
+		const existingAutoAssociation = localData.autoAssociations.find(
+			(aa) => aa.merchant_normalized === (charge.merchant_normalized || charge.merchant)
+		);
+
+		if (existingAutoAssociation) {
+			// Show update modal for existing auto-association
+			setModalData({
+				merchantName: charge.merchant,
+				currentAllocation: charge.allocated_to || 'Unallocated',
+				newAllocation: allocation,
+				autoAssociationBudget: existingAutoAssociation.budget_name,
+				chargeId: chargeId,
+				isDeletionRequest: false
+			});
+		} else {
+			// No existing auto-association, create it directly
+			handleCreateAutoAssociationDirect(chargeId, allocation);
+		}
+	}
+
+	async function handleCreateAutoAssociationDirect(chargeId, allocation) {
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		if (!charge) {
+			console.error('Charge not found for auto-association creation');
+			return;
+		}
+
+		try {
+			const response = await fetch('/projects/ccbilling/auto-associations', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					merchant: charge.merchant_normalized || charge.merchant,
+					newBudgetName: allocation
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to create auto-association');
+			}
+
+			// Refresh the auto-associations data
+			await invalidate(`cycle-${data.cycleId}`);
+
+			// Show success message
+			showToastMessage(`Auto-association created for ${charge.merchant} → ${allocation}`, 'success');
+		} catch (error) {
+			console.error('Error creating auto-association:', error);
+			alert(`Failed to create auto-association: ${error.message}`);
+		}
+	}
+
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -1423,21 +1486,45 @@
 															{getAllocationIcon(budgetOption, localData.budgets)}
 														</button>
 													{/each}
+													<!-- Auto-association button -->
+													{#if charge.allocated_to}
+														<button
+															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
+															data-allocation-tooltip="Create auto-association for this merchant"
+															title="Create auto-association"
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
 												</div>
 											{:else}
 												<!-- Single click button for many budgets -->
-												<button
-													class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-													data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-													title={`${charge.allocated_to || 'Unallocated'}`}
-													onclick={() =>
-														updateChargeAllocation(
-															charge.id,
-															getNextAllocation(charge.allocated_to, localData.budgets)
-														)}
-												>
-													{getAllocationIcon(charge.allocated_to, localData.budgets)}
-												</button>
+												<div class="flex gap-1">
+													<button
+														class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+														data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+														title={`${charge.allocated_to || 'Unallocated'}`}
+														onclick={() =>
+															updateChargeAllocation(
+																charge.id,
+																getNextAllocation(charge.allocated_to, localData.budgets)
+															)}
+													>
+														{getAllocationIcon(charge.allocated_to, localData.budgets)}
+													</button>
+													<!-- Auto-association button -->
+													{#if charge.allocated_to}
+														<button
+															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
+															data-allocation-tooltip="Create auto-association for this merchant"
+															title="Create auto-association"
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
+												</div>
 											{/if}
 										</div>
 									</div>
@@ -1542,21 +1629,45 @@
 															{getAllocationIcon(budgetOption, localData.budgets)}
 														</button>
 													{/each}
+													<!-- Auto-association button -->
+													{#if charge.allocated_to}
+														<button
+															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
+															data-allocation-tooltip="Create auto-association for this merchant"
+															title="Create auto-association"
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
 												</div>
 											{:else}
 												<!-- Single click button for many budgets -->
-												<button
-													class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-													data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-													title={`${charge.allocated_to || 'Unallocated'}`}
-													onclick={() =>
-														updateChargeAllocation(
-															charge.id,
-															getNextAllocation(charge.allocated_to, localData.budgets)
-														)}
-												>
-													{getAllocationIcon(charge.allocated_to, localData.budgets)}
-												</button>
+												<div class="flex gap-1">
+													<button
+														class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+														data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+														title={`${charge.allocated_to || 'Unallocated'}`}
+														onclick={() =>
+															updateChargeAllocation(
+																charge.id,
+																getNextAllocation(charge.allocated_to, localData.budgets)
+															)}
+													>
+														{getAllocationIcon(charge.allocated_to, localData.budgets)}
+													</button>
+													<!-- Auto-association button -->
+													{#if charge.allocated_to}
+														<button
+															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
+															data-allocation-tooltip="Create auto-association for this merchant"
+															title="Create auto-association"
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
+												</div>
 											{/if}
 										</td>
 										<td class="text-right py-2">
@@ -1683,6 +1794,7 @@
 			on:skip={handleSkipAutoAssociation}
 			on:close={closeAutoAssociationModal}
 		/>
+
 
 		<!-- Cycle Information -->
 	</div>
