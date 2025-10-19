@@ -17,7 +17,8 @@
 	// Create a local reactive copy of the data for mutations
 	let localData = $state({
 		...data,
-		charges: [...data.charges]
+		charges: [...data.charges],
+		autoAssociations: data.autoAssociations || []
 	});
 
 	// Update localData when data prop changes (e.g., after invalidate())
@@ -28,7 +29,7 @@
 		localData.charges = [...data.charges];
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
-		localData.autoAssociations = data.autoAssociations;
+		localData.autoAssociations = data.autoAssociations || [];
 	});
 
 	// Watch for changes in charges to check for fireworks
@@ -435,7 +436,7 @@
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
 
-		if (charge.merchant_normalized) {
+		if (charge.merchant_normalized && localData.autoAssociations) {
 			// First try to find by normalized merchant name
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant_normalized
@@ -443,7 +444,7 @@
 		}
 
 		// If no auto-association found by normalized name, try original merchant name
-		if (!autoAssociation && charge.merchant) {
+		if (!autoAssociation && charge.merchant && localData.autoAssociations) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant
 			);
@@ -610,13 +611,71 @@
 		};
 	}
 
+	// Helper function to check if an auto-association exists for a merchant
+	function getAutoAssociationForMerchant(charge) {
+		if (!charge || !localData.autoAssociations) return null;
+		
+		// Try normalized merchant first, then fall back to original merchant name
+		let autoAssociation = null;
+		
+		if (charge.merchant_normalized) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant_normalized
+			);
+		}
+		
+		// If no auto-association found by normalized name, try original merchant name
+		if (!autoAssociation && charge.merchant) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant
+			);
+		}
+		
+		return autoAssociation;
+	}
+
+	// Helper function to check if auto-association button should be shown
+	function shouldShowAutoAssociationButton(charge) {
+		if (!charge || !charge.allocated_to || !localData.autoAssociations) return false;
+		
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		// Don't show button if auto-association already matches current allocation
+		if (autoAssociation && autoAssociation.budget_name === charge.allocated_to) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	// Helper function to get button text and styling based on auto-association state
+	function getAutoAssociationButtonInfo(charge) {
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		if (autoAssociation) {
+			return {
+				text: 'Change Auto-association',
+				tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
+				title: 'Change auto-association',
+				class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
+			};
+		} else {
+			return {
+				text: 'Create Auto-association',
+				tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
+				title: 'Create auto-association',
+				class: 'bg-green-700 text-green-200 hover:bg-green-600'
+			};
+		}
+	}
+
 	// Auto-association creation functions
 	function createAutoAssociation(chargeId, allocation) {
 		const charge = localData.charges.find((c) => c.id === chargeId);
 		if (!charge || !allocation) return;
 
 		// Check if there's already an auto-association for this merchant
-		const existingAutoAssociation = localData.autoAssociations.find(
+		const existingAutoAssociation = localData.autoAssociations?.find(
 			(aa) => aa.merchant_normalized === (charge.merchant_normalized || charge.merchant)
 		);
 
@@ -1487,11 +1546,12 @@
 														</button>
 													{/each}
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1514,11 +1574,12 @@
 														{getAllocationIcon(charge.allocated_to, localData.budgets)}
 													</button>
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1630,11 +1691,12 @@
 														</button>
 													{/each}
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1657,11 +1719,12 @@
 														{getAllocationIcon(charge.allocated_to, localData.budgets)}
 													</button>
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗

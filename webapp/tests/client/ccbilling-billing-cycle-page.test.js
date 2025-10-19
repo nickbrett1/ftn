@@ -107,7 +107,8 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{ id: 1, name: 'Shopping', icon: '🛍️' },
 				{ id: 2, name: 'Food', icon: '🍕' },
 				{ id: 3, name: 'Transportation', icon: '🚗' }
-			]
+			],
+			autoAssociations: []
 		};
 
 		mockProps = {
