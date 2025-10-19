@@ -229,10 +229,13 @@
 	// Budget filter state
 	let selectedBudgetFilter = $state('all'); // 'all' or budget name
 
+	// Auto-association filter state
+	let selectedAutoAssociationFilter = $state('all'); // 'all', 'with_auto_association', or 'without_auto_association'
+
 	// Sort state
 	let selectedSortBy = $state('date'); // 'date' or 'merchant'
 
-	// Filtered charges based on selected card, budget, and sort
+	// Filtered charges based on selected card, budget, auto-association, and sort
 	function getFilteredCharges() {
 		let filtered = localData.charges;
 
@@ -250,6 +253,19 @@
 					return !charge.allocated_to;
 				}
 				return charge.allocated_to === selectedBudgetFilter;
+			});
+		}
+
+		// Apply auto-association filter
+		if (selectedAutoAssociationFilter !== 'all') {
+			filtered = filtered.filter((charge) => {
+				const hasAutoAssociation = getAutoAssociationForMerchant(charge) !== null;
+				if (selectedAutoAssociationFilter === 'with_auto_association') {
+					return hasAutoAssociation;
+				} else if (selectedAutoAssociationFilter === 'without_auto_association') {
+					return !hasAutoAssociation;
+				}
+				return true;
 			});
 		}
 
@@ -631,7 +647,7 @@
 			);
 		}
 		
-		return autoAssociation;
+		return autoAssociation || null; // Ensure we return null instead of undefined
 	}
 
 	// Helper function to check if auto-association button should be shown
@@ -1364,6 +1380,15 @@
 									: selectedBudgetFilter}
 							</div>
 						{/if}
+						{#if selectedAutoAssociationFilter !== 'all'}
+							<div
+								class="text-purple-400 text-sm bg-purple-900/20 border border-purple-700 rounded px-2 py-1"
+							>
+								Filtered by: {selectedAutoAssociationFilter === 'with_auto_association'
+									? 'With Auto-Association'
+									: 'Without Auto-Association'}
+							</div>
+						{/if}
 					</div>
 
 					<!-- Credit Card Filter and Sort Options -->
@@ -1420,6 +1445,31 @@
 						</div>
 
 						<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+							<label for="auto-association-filter" class="text-gray-300 text-sm font-medium"
+								>Filter by auto-association:</label
+							>
+							<div class="flex items-center gap-2">
+								<select
+									id="auto-association-filter"
+									bind:value={selectedAutoAssociationFilter}
+									class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
+								>
+									<option value="all">All Charges</option>
+									<option value="with_auto_association">With Auto-Association</option>
+									<option value="without_auto_association">Without Auto-Association</option>
+								</select>
+								{#if selectedAutoAssociationFilter !== 'all'}
+									<button
+										onclick={() => (selectedAutoAssociationFilter = 'all')}
+										class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+									>
+										Clear Filter
+									</button>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 							<label for="sort-by" class="text-gray-300 text-sm font-medium">Sort by:</label>
 							<select
 								id="sort-by"
@@ -1434,7 +1484,7 @@
 				</div>
 
 				<!-- Credit Card Summary (when no filters are active) -->
-				{#if selectedCardFilter === 'all' && selectedBudgetFilter === 'all' && localData.creditCards.length > 1}
+				{#if selectedCardFilter === 'all' && selectedBudgetFilter === 'all' && selectedAutoAssociationFilter === 'all' && localData.creditCards.length > 1}
 					<div class="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
 						<h4 class="text-sm font-medium text-gray-300 mb-3">Charges by Credit Card:</h4>
 						<div class="flex flex-wrap gap-3">
@@ -1748,7 +1798,7 @@
 							</tbody>
 						</table>
 					</div>
-				{:else if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all'}
+				{:else if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all' || selectedAutoAssociationFilter !== 'all'}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg mb-2">No charges found with current filters</div>
 						<div class="text-gray-500 text-sm mb-4">Try adjusting your filters or clear them</div>
@@ -1756,6 +1806,7 @@
 							onclick={() => {
 								selectedCardFilter = 'all';
 								selectedBudgetFilter = 'all';
+								selectedAutoAssociationFilter = 'all';
 							}}
 							class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
 						>
@@ -1954,6 +2005,15 @@
 							Filtered by: {selectedBudgetFilter === '__unallocated__'
 								? 'Unallocated'
 								: selectedBudgetFilter}
+						</div>
+					{/if}
+					{#if selectedAutoAssociationFilter !== 'all'}
+						<div
+							class="text-purple-400 text-sm bg-purple-900/20 border border-purple-700 rounded px-2 py-1"
+						>
+							Filtered by: {selectedAutoAssociationFilter === 'with_auto_association'
+								? 'With Auto-Association'
+								: 'Without Auto-Association'}
 						</div>
 					{/if}
 				</div>
