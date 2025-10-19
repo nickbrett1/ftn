@@ -1,19 +1,9 @@
 import { 
 	listStatements, 
-	createStatement, 
-	createPayment,
-	deletePaymentsForStatement,
-	listCreditCards,
-	updateStatementCreditCard,
-	updateStatementDate,
-	getBillingCycle,
-	getBudgetByMerchant
+	createStatement
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
-import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
-import { ParserFactory } from '$lib/utils/ccbilling-parsers/parser-factory.js';
-import { PDFUtils } from '$lib/client/pdf-utils.js';
 
 /**
  * Generate a cryptographically secure random hex string for file keys
@@ -140,124 +130,7 @@ export async function POST(event) {
 			throw new Error(`Failed to create statement in database: ${dbError.message}`);
 		}
 
-		// Now parse the statement automatically
-		let parseResult = null;
-		try {
-			console.log('🔍 Starting automatic parsing for statement ID:', statementId);
-			
-			// Get the billing cycle information for year context
-			const billingCycleInfo = await getBillingCycle(event, cycleId);
-			if (!billingCycleInfo) {
-				console.warn('⚠️ Billing cycle not found, skipping parsing');
-			} else {
-				console.log('📅 Billing cycle:', billingCycleInfo.start_date, 'to', billingCycleInfo.end_date);
-
-				// Parse the PDF using the parser factory
-				const parserFactory = new ParserFactory();
-				const parsedData = await PDFUtils.parseStatement(file, parserFactory, {
-					preserveLineBreaks: true
-				});
-
-				console.log('📄 PDF parsed successfully, parsed data:', parsedData);
-
-				// Get all available credit cards for identification
-				const availableCreditCards = await listCreditCards(event);
-				console.log('💳 Available credit cards for identification:', availableCreditCards.length);
-
-				// Identify credit card from the parsed data
-				const identifiedCreditCard = identifyCreditCardFromParsedData(
-					parsedData.last4,
-					availableCreditCards
-				);
-
-				if (identifiedCreditCard) {
-					console.log('💳 Identified credit card:', `${identifiedCreditCard.name} (****${identifiedCreditCard.last4})`);
-					
-					// Update statement with identified credit card
-					await updateStatementCreditCard(event, statementId, identifiedCreditCard.id);
-					
-					// Update statement with parsed statement date if available
-					if (parsedData.statement_date) {
-						console.log('📅 Updating statement with parsed date:', parsedData.statement_date);
-						await updateStatementDate(event, statementId, parsedData.statement_date);
-					}
-
-					// Create payment records from parsed charges
-					const charges = parsedData.charges || [];
-					console.log('💳 Parsed charges:', charges.length, 'charges found');
-
-					for (const charge of charges) {
-						console.log('💰 Creating charge:', charge.merchant, '$' + charge.amount);
-
-						// Determine the correct year for the transaction date
-						const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
-
-						// Determine auto-allocation based on current merchant → budget mapping
-						let allocatedTo = charge.allocated_to || null;
-						try {
-							if (charge.merchant) {
-								const normalized = normalizeMerchant(charge.merchant);
-								const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
-								if (budget) {
-									allocatedTo = budget.name;
-								}
-							}
-						} catch (e) {
-							console.warn('Auto-association lookup failed for merchant', charge.merchant, e?.message);
-						}
-
-						// Check if this is an Amazon charge and capture full statement text
-						const isAmazon = charge.merchant && (
-							charge.merchant.toUpperCase().includes('AMAZON') || 
-							charge.merchant.toUpperCase().includes('AMZN')
-						);
-						
-						// For Amazon charges, try to get the full statement text from the parsed data
-						let fullStatementText = null;
-						if (isAmazon && charge.full_statement_text) {
-							fullStatementText = charge.full_statement_text;
-						} else if (isAmazon && charge.merchant_details) {
-							// Fallback: use merchant_details if available
-							fullStatementText = charge.merchant_details;
-						}
-
-						await createPayment(
-							event,
-							statementId,
-							charge.merchant,
-							charge.amount,
-							allocatedTo,
-							transactionDate, // Use the corrected transaction date
-							charge.is_foreign_currency || false,
-							charge.foreign_currency_amount || null,
-							charge.foreign_currency_type || null,
-							charge.flight_details || null,
-							fullStatementText
-						);
-					}
-
-					parseResult = {
-						success: true,
-						charges_found: charges.length,
-						message: 'Statement uploaded and parsed successfully'
-					};
-				} else {
-					console.warn('⚠️ Could not identify credit card from statement');
-					parseResult = {
-						success: false,
-						error: parsedData.last4 
-							? `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`
-							: 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
-					};
-				}
-			}
-		} catch (parseError) {
-			console.error('❌ Error parsing statement:', parseError);
-			parseResult = {
-				success: false,
-				error: `Failed to parse statement: ${parseError.message}`
-			};
-		}
+		// Statement uploaded successfully - parsing will be handled client-side
 
 		const response = {
 			success: true,
@@ -265,7 +138,7 @@ export async function POST(event) {
 			r2_key: r2_key,
 			size: file.size,
 			statement_id: statementId,
-			parse_result: parseResult
+			message: 'Statement uploaded successfully. Please parse it to extract charges.'
 		};
 
 		return json(response);
@@ -275,75 +148,3 @@ export async function POST(event) {
 	}
 }
 
-/**
- * Identify credit card from parsed data
- * @param {string} last4 - Last 4 digits from parsed data
- * @param {Array} availableCreditCards - Available credit cards
- * @returns {Object|null} - Identified credit card or null
- */
-function identifyCreditCardFromParsedData(last4, availableCreditCards) {
-	if (!last4 || last4.trim() === '') {
-		console.warn('⚠️ No last4 digits found in parsed data');
-		return null;
-	}
-
-	const matchingCard = availableCreditCards.find((card) => card.last4 === last4);
-
-	if (matchingCard) {
-		console.log('✅ Credit card identified successfully');
-		return matchingCard;
-	} else {
-		console.warn(`⚠️ No matching card found for last4: ${last4}`);
-		return null;
-	}
-}
-
-/**
- * Determine the correct year for a transaction date based on billing cycle context
- * @param {string} transactionDate - Transaction date (may be MM/DD format)
- * @param {Object} billingCycle - Billing cycle object with start_date and end_date
- * @returns {string} - Transaction date with correct year in YYYY-MM-DD format
- */
-function determineTransactionDateWithYear(transactionDate, billingCycle) {
-	if (!transactionDate) return null;
-
-	// If the date already has a year (YYYY-MM-DD format), return as is
-	if (transactionDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-		return transactionDate;
-	}
-
-	// If it's in MM/DD format, we need to determine the year
-	const mmddMatch = transactionDate.match(/^(\d{1,2})\/(\d{1,2})$/);
-	if (!mmddMatch) {
-		// If it's not MM/DD format, try to parse it as is
-		return transactionDate;
-	}
-
-	const month = parseInt(mmddMatch[1], 10);
-	const day = parseInt(mmddMatch[2], 10);
-
-	// Extract year from billing cycle end date (closing date)
-	const billingCycleYear = new Date(billingCycle.end_date).getFullYear();
-
-	// Create a date with the billing cycle year
-	let transactionYear = billingCycleYear;
-	const transactionDateWithYear = new Date(transactionYear, month - 1, day);
-
-	// Check if this date falls within the billing cycle
-	const billingCycleStart = new Date(billingCycle.start_date);
-	const billingCycleEnd = new Date(billingCycle.end_date);
-
-	// If the date with the billing cycle year is after the billing cycle end,
-	// it might be from the previous year
-	if (transactionDateWithYear > billingCycleEnd) {
-		transactionYear = billingCycleYear - 1;
-	}
-	// If the date with the billing cycle year is before the billing cycle start,
-	// it might be from the next year
-	else if (transactionDateWithYear < billingCycleStart) {
-		transactionYear = billingCycleYear + 1;
-	}
-
-	// Format the final date
-	return `${transactionYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-}
