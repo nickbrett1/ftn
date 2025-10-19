@@ -69,6 +69,11 @@ export function normalizeMerchant(merchant) {
 		return extractGoogleCloudDetails(merchant);
 	}
 
+	// PlayStation Network services
+	if (merchantUpper.includes('PLAYSTATION') && merchantUpper.includes('NETWORK')) {
+		return extractPlayStationNetworkDetails(merchant);
+	}
+
 	// Default: return as-is with minimal normalization
 	return {
 		merchant_normalized: normalizeGenericMerchant(merchant),
@@ -309,6 +314,24 @@ function extractGoogleCloudDetails(merchant) {
 
 	return {
 		merchant_normalized: 'GOOGLE CLOUD',
+		merchant_details: ''
+	};
+}
+
+/**
+ * Extract PlayStation Network details
+ */
+function extractPlayStationNetworkDetails(merchant) {
+	// Clean up PlayStation Network merchant name by removing transaction IDs and codes
+	// Pattern: "PlayStation Network" followed by numbers and dashes
+	let cleanedMerchant = merchant
+		.replace(/PLAYSTATION\s+NETWORK\s+[0-9-]+/i, 'PLAYSTATION NETWORK') // Remove transaction codes like "12345-67890"
+		.replace(/PLAYSTATION\s+NETWORK\s+[A-Z0-9-]+/i, 'PLAYSTATION NETWORK') // Remove any alphanumeric codes
+		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.trim();
+
+	return {
+		merchant_normalized: 'PLAYSTATION NETWORK',
 		merchant_details: ''
 	};
 }
