@@ -17,7 +17,8 @@
 	// Create a local reactive copy of the data for mutations
 	let localData = $state({
 		...data,
-		charges: [...data.charges]
+		charges: [...data.charges],
+		autoAssociations: data.autoAssociations || []
 	});
 
 	// Update localData when data prop changes (e.g., after invalidate())
@@ -28,7 +29,7 @@
 		localData.charges = [...data.charges];
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
-		localData.autoAssociations = data.autoAssociations;
+		localData.autoAssociations = data.autoAssociations || [];
 	});
 
 	// Watch for changes in charges to check for fireworks
@@ -435,7 +436,7 @@
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
 
-		if (charge.merchant_normalized) {
+		if (charge.merchant_normalized && localData.autoAssociations) {
 			// First try to find by normalized merchant name
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant_normalized
@@ -443,7 +444,7 @@
 		}
 
 		// If no auto-association found by normalized name, try original merchant name
-		if (!autoAssociation && charge.merchant) {
+		if (!autoAssociation && charge.merchant && localData.autoAssociations) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant
 			);
@@ -612,7 +613,7 @@
 
 	// Helper function to check if an auto-association exists for a merchant
 	function getAutoAssociationForMerchant(charge) {
-		if (!charge) return null;
+		if (!charge || !localData.autoAssociations) return null;
 		
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
@@ -635,7 +636,7 @@
 
 	// Helper function to check if auto-association button should be shown
 	function shouldShowAutoAssociationButton(charge) {
-		if (!charge || !charge.allocated_to) return false;
+		if (!charge || !charge.allocated_to || !localData.autoAssociations) return false;
 		
 		const autoAssociation = getAutoAssociationForMerchant(charge);
 		
@@ -674,7 +675,7 @@
 		if (!charge || !allocation) return;
 
 		// Check if there's already an auto-association for this merchant
-		const existingAutoAssociation = localData.autoAssociations.find(
+		const existingAutoAssociation = localData.autoAssociations?.find(
 			(aa) => aa.merchant_normalized === (charge.merchant_normalized || charge.merchant)
 		);
 
