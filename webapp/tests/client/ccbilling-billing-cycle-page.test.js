@@ -412,15 +412,15 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			expect(container.textContent).toContain('Total: $55.50'); // 50 + 5.50
 		});
 
-		it('should not show total amount when no filter is active', async () => {
+		it('should show total amount when no filter is active', async () => {
 			const { container } = render(BillingCyclePage, mockProps);
 			await tick();
 
-			// Should not show total when showing all charges
-			expect(container.textContent).not.toContain('Total: $');
+			// Should show total when showing all charges
+			expect(container.textContent).toContain('Total: $175.50'); // 50 + 5.50 + 45 + 75
 		});
 
-		it('should not show total amount when filtering by budget', async () => {
+		it('should show total amount when filtering by budget', async () => {
 			const { container } = render(BillingCyclePage, mockProps);
 			await tick();
 
@@ -436,8 +436,8 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			expect(container.textContent).not.toContain('Food: $');
 			expect(container.textContent).not.toContain('Transportation: $');
 			
-			// Should NOT show total since it would be redundant with single budget
-			expect(container.textContent).not.toContain('Total: $');
+			// Should show total for filtered charges
+			expect(container.textContent).toContain('Total: $125.00');
 		});
 	});
 
