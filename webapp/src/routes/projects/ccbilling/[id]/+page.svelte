@@ -177,13 +177,6 @@
 		chargeId: null
 	});
 
-	// Auto-association creation modal state
-	let showAutoAssociationCreateModal = $state(false);
-	let autoAssociationCreateData = $state({
-		merchantName: '',
-		allocation: '',
-		chargeId: null
-	});
 
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
@@ -628,7 +621,7 @@
 		);
 
 		if (existingAutoAssociation) {
-			// Show update modal instead
+			// Show update modal for existing auto-association
 			setModalData({
 				merchantName: charge.merchant,
 				currentAllocation: charge.allocated_to || 'Unallocated',
@@ -638,23 +631,13 @@
 				isDeletionRequest: false
 			});
 		} else {
-			// Show create modal
-			autoAssociationCreateData = {
-				merchantName: charge.merchant,
-				allocation: allocation,
-				chargeId: chargeId
-			};
-			showAutoAssociationCreateModal = true;
+			// No existing auto-association, create it directly
+			handleCreateAutoAssociationDirect(chargeId, allocation);
 		}
 	}
 
-	async function handleCreateAutoAssociation() {
-		if (!autoAssociationCreateData.chargeId) {
-			console.error('No charge ID found for auto-association creation');
-			return;
-		}
-
-		const charge = localData.charges.find((c) => c.id === autoAssociationCreateData.chargeId);
+	async function handleCreateAutoAssociationDirect(chargeId, allocation) {
+		const charge = localData.charges.find((c) => c.id === chargeId);
 		if (!charge) {
 			console.error('Charge not found for auto-association creation');
 			return;
@@ -668,7 +651,7 @@
 				},
 				body: JSON.stringify({
 					merchant: charge.merchant_normalized || charge.merchant,
-					newBudgetName: autoAssociationCreateData.allocation
+					newBudgetName: allocation
 				})
 			});
 
@@ -680,25 +663,14 @@
 			// Refresh the auto-associations data
 			await invalidate(`cycle-${data.cycleId}`);
 
-			// Close the modal
-			closeAutoAssociationCreateModal();
-
 			// Show success message
-			showToastMessage(`Auto-association created for ${charge.merchant} → ${autoAssociationCreateData.allocation}`, 'success');
+			showToastMessage(`Auto-association created for ${charge.merchant} → ${allocation}`, 'success');
 		} catch (error) {
 			console.error('Error creating auto-association:', error);
 			alert(`Failed to create auto-association: ${error.message}`);
 		}
 	}
 
-	function closeAutoAssociationCreateModal() {
-		showAutoAssociationCreateModal = false;
-		autoAssociationCreateData = {
-			merchantName: '',
-			allocation: '',
-			chargeId: null
-		};
-	}
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -1823,47 +1795,6 @@
 			on:close={closeAutoAssociationModal}
 		/>
 
-		<!-- Auto-Association Create Modal -->
-		{#if showAutoAssociationCreateModal}
-			<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-				<div class="bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-w-md w-full p-6">
-					<div class="flex items-center mb-4">
-						<div class="flex-shrink-0">
-							<svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-								/>
-							</svg>
-						</div>
-						<h3 class="ml-3 text-lg font-medium text-white">Create Auto-Association?</h3>
-					</div>
-
-					<div class="mb-6">
-						<p class="text-sm text-gray-300 mb-4">
-							Create an auto-association rule for <strong>{autoAssociationCreateData.merchantName}</strong> to automatically allocate future charges to <strong>{autoAssociationCreateData.allocation}</strong>?
-						</p>
-						<p class="text-sm text-gray-300">
-							This will automatically assign all future charges from this merchant to the selected budget.
-						</p>
-					</div>
-
-					<div class="flex flex-col sm:flex-row gap-3">
-						<Button
-							onclick={handleCreateAutoAssociation}
-							class="flex-1 bg-green-600 hover:bg-green-700 text-white"
-						>
-							Create Auto-Association
-						</Button>
-						<Button onclick={closeAutoAssociationCreateModal} class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800">
-							Cancel
-						</Button>
-					</div>
-				</div>
-			</div>
-		{/if}
 
 		<!-- Cycle Information -->
 	</div>
