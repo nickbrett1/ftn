@@ -282,6 +282,12 @@ async function performBulkPatternUpdates(db, batchSize) {
 			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
 			normalized: 'GOOGLE CLOUD',
 			details: ''
+		},
+		// PlayStation Network
+		{
+			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
+			normalized: 'PLAYSTATION NETWORK',
+			details: ''
 		}
 	];
 
@@ -405,6 +411,11 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
 			normalized: 'GOOGLE CLOUD'
+		},
+		// PlayStation Network
+		{
+			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
+			normalized: 'PLAYSTATION NETWORK'
 		}
 	];
 
