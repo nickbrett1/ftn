@@ -1545,11 +1545,12 @@
 														</button>
 													{/each}
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1572,11 +1573,12 @@
 														{getAllocationIcon(charge.allocated_to, localData.budgets)}
 													</button>
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1688,11 +1690,12 @@
 														</button>
 													{/each}
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
@@ -1715,11 +1718,12 @@
 														{getAllocationIcon(charge.allocated_to, localData.budgets)}
 													</button>
 													<!-- Auto-association button -->
-													{#if charge.allocated_to}
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
 														<button
-															class="p-1 text-sm rounded transition-colors bg-green-700 text-green-200 hover:bg-green-600"
-															data-allocation-tooltip="Create auto-association for this merchant"
-															title="Create auto-association"
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
 														>
 															🔗
