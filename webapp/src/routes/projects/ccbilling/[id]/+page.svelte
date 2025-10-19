@@ -143,10 +143,6 @@
 	let uploadError = $state('');
 	let selectedFile = $state(null);
 
-	// Parse statement state
-	let parsingStatements = $state(new Set());
-	let parsingProgress = $state(new Map()); // Track progress for each statement
-	let parseError = $state('');
 
 	// Toast notification state
 	let showToast = $state(false);
@@ -217,11 +213,6 @@
 	}
 
 	// Cancel parsing function
-	function cancelParsing(statementId) {
-		parsingStatements.delete(statementId);
-		parsingProgress.delete(statementId);
-		showToastMessage('Parsing cancelled', 'info');
-	}
 
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
@@ -785,6 +776,8 @@
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 
+			showToastMessage('Uploading and parsing statement...', 'info');
+
 			const uploadResponse = await fetch(`/projects/ccbilling/cycles/${data.cycleId}/statements`, {
 				method: 'POST',
 				body: formData
@@ -797,6 +790,17 @@
 			}
 			const responseData = await uploadResponse.json();
 
+			// Check if parsing was successful
+			if (responseData.parse_result) {
+				if (responseData.parse_result.success) {
+					showToastMessage(`Statement uploaded and parsed successfully! Found ${responseData.parse_result.charges_found} charges.`, 'success');
+				} else {
+					showToastMessage(`Statement uploaded but parsing failed: ${responseData.parse_result.error}`, 'warning');
+				}
+			} else {
+				showToastMessage('Statement uploaded successfully!', 'success');
+			}
+
 			// Reset form
 			selectedFile = null;
 			showUploadForm = false;
@@ -806,137 +810,12 @@
 		} catch (err) {
 			console.error('❌ Upload failed:', err);
 			uploadError = err.message;
+			showToastMessage(`Upload failed: ${err.message}`, 'error');
 		} finally {
 			isUploading = false;
 		}
 	}
 
-	async function parseStatement(statementId) {
-		if (parsingStatements.has(statementId)) return;
-
-		parsingStatements.add(statementId);
-		parseError = ''; // Clear previous errors
-
-		// Add timeout to prevent hanging
-		const timeoutPromise = new Promise((_, reject) => {
-			setTimeout(
-				() => reject(new Error('Parsing timed out after 60 seconds. Please try again.')),
-				60000
-			);
-		});
-
-		// Add cancellation support
-		let isCancelled = false;
-		const cancelToken = { cancelled: false };
-
-		// Show info toast when starting
-		showToastMessage('Starting to parse statement...', 'info');
-
-		try {
-			console.log('🔄 Starting to parse statement:', statementId);
-			parsingProgress.set(statementId, { step: 0, message: 'Starting...' });
-
-			// Race between the actual parsing and the timeout
-			const result = await Promise.race([
-				(async () => {
-					// First, get the statement details to download the PDF
-					parsingProgress.set(statementId, { step: 1, message: 'Getting statement details...' });
-					const statementResponse = await fetch(`/projects/ccbilling/statements/${statementId}`);
-					if (!statementResponse.ok) {
-						throw new Error('Failed to get statement details');
-					}
-					const statement = await statementResponse.json();
-					console.log('📄 Statement details retrieved:', statement.filename);
-
-					// Download the PDF from R2
-					parsingProgress.set(statementId, { step: 2, message: 'Downloading PDF...' });
-					console.log('⬇️ Downloading PDF...');
-					const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
-					if (!pdfResponse.ok) {
-						throw new Error('Failed to download PDF');
-					}
-					const pdfBlob = await pdfResponse.blob();
-					const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
-					console.log('📄 PDF downloaded, size:', pdfBlob.size, 'bytes');
-
-					// Parse the PDF on the client-side
-					parsingProgress.set(statementId, { step: 3, message: 'Parsing PDF...' });
-					console.log('🔍 Starting PDF parsing...');
-					const { PDFService } = await import('$lib/client/ccbilling-pdf-service.js');
-					const pdfService = new PDFService();
-
-					const parsedData = await pdfService.parseStatement(pdfFile);
-					console.log('✅ PDF parsed successfully, parsed data:', parsedData);
-
-					// Send the parsed data to the server
-					parsingProgress.set(statementId, { step: 4, message: 'Processing on server...' });
-					console.log('📤 Sending parsed data to server...');
-					const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							parsedData: parsedData
-						})
-					});
-
-					if (!parseResponse.ok) {
-						const errorData = await parseResponse.json();
-						throw new Error(errorData.error || 'Failed to parse statement');
-					}
-					console.log('✅ Server processing completed successfully');
-
-					// Use invalidate() to refresh the data instead of reloading
-					parsingProgress.set(statementId, { step: 5, message: 'Refreshing data...' });
-					await invalidate(`cycle-${data.cycleId}`);
-					console.log('🔄 Data refreshed successfully');
-
-					// Show success toast
-					showToastMessage('Statement parsed successfully!', 'success');
-
-					return { success: true };
-				})(),
-				timeoutPromise
-			]);
-
-			// Clear parsing state before invalidating
-			parsingStatements.delete(statementId);
-			parsingProgress.delete(statementId);
-		} catch (err) {
-			console.error('❌ Error parsing statement:', err);
-			// Format error messages to be more user-friendly
-			let userFriendlyError = err.message;
-
-			// Replace technical terms with user-friendly language
-			userFriendlyError = userFriendlyError.replace(/last4/g, 'Last 4 Digits');
-			userFriendlyError = userFriendlyError.replace(
-				/No matching credit card found for last4: (\d+)/,
-				'No matching credit card found for Last 4 Digits: $1'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/No credit card information found in the statement/,
-				'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to download PDF/,
-				'Failed to download the statement file. Please try again.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to parse statement/,
-				'Failed to process the statement. Please try again.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to get statement details/,
-				'Failed to get statement details. Please try again.'
-			);
-
-			parseError = userFriendlyError;
-			showToastMessage(`Failed to parse statement: ${userFriendlyError}`, 'error');
-		} finally {
-			// Ensure parsing state is cleared even if invalidation fails
-			parsingStatements.delete(statementId);
-			parsingProgress.delete(statementId);
-		}
-	}
 
 	async function deleteStatement(statementId) {
 		if (deletingStatements.has(statementId)) return;
@@ -1124,33 +1003,6 @@
 			</div>
 		{/if}
 
-		<!-- Parse error dialog -->
-		{#if parseError}
-			<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
-				<div
-					class="bg-gray-900 border border-red-500 rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl"
-				>
-					<div class="flex items-center mb-4">
-						<div class="flex-shrink-0">
-							<div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-								<span class="text-white text-sm font-bold">!</span>
-							</div>
-						</div>
-						<div class="ml-3">
-							<h3 class="text-lg font-semibold text-white">Parse Error</h3>
-						</div>
-					</div>
-					<div class="bg-gray-800 border border-gray-700 rounded p-4 mb-6">
-						<p class="text-gray-200 text-sm leading-relaxed">{parseError}</p>
-					</div>
-					<div class="flex justify-end">
-						<Button type="button" variant="secondary" onclick={() => (parseError = '')}
-							>Close</Button
-						>
-					</div>
-				</div>
-			</div>
-		{/if}
 
 		<!-- Statements Section -->
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
@@ -1174,14 +1026,14 @@
 							showUploadForm = true;
 						}}
 					>
-						Upload Statement
+						Upload & Parse Statement
 					</Button>
 				{/if}
 			</div>
 
 			{#if showUploadForm}
 				<div class="bg-gray-700 border border-gray-600 rounded-lg p-4 mb-4">
-					<h4 class="text-white font-medium mb-3">Upload New Statement</h4>
+					<h4 class="text-white font-medium mb-3">Upload & Parse New Statement</h4>
 					{#if uploadError}
 						<div class="bg-red-900 border border-red-700 text-red-200 px-3 py-2 rounded mb-3">
 							{uploadError}
@@ -1220,7 +1072,7 @@
 						</div>
 						<div>
 							<p class="text-gray-400 text-sm">
-								Credit card will be automatically identified from the statement during processing.
+								Statement will be automatically parsed and charges extracted. Credit card will be identified during processing.
 							</p>
 						</div>
 						<Button
@@ -1229,7 +1081,7 @@
 							disabled={isUploading}
 							onclick={handleFileUpload}
 						>
-							{isUploading ? 'Uploading...' : 'Upload Statement'}
+							{isUploading ? 'Uploading & Parsing...' : 'Upload & Parse Statement'}
 						</Button>
 					</div>
 				</div>
@@ -1238,7 +1090,7 @@
 			{#if data.statements.length === 0}
 				<p class="text-gray-300">No statements uploaded yet.</p>
 				<p class="text-gray-400 text-sm mt-2">
-					Upload credit card statements to begin processing charges.
+					Upload credit card statements to automatically parse and process charges.
 				</p>
 			{:else}
 				<div class="space-y-3 w-full">
@@ -1272,58 +1124,17 @@
 								<div
 									class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center"
 								>
-									{#if !isStatementParsed(statement.id)}
-										<div class="flex flex-col space-y-2">
-											<Button
-												type="button"
-												variant="success"
-												size="sm"
-												disabled={parsingStatements.has(statement.id)}
-												onclick={() => parseStatement(statement.id)}
-											>
-												{#if parsingStatements.has(statement.id)}
-													<div class="flex items-center space-x-2">
-														<div
-															class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-														></div>
-														<span>Parsing...</span>
-													</div>
-												{:else}
-													Parse
-												{/if}
-											</Button>
-											{#if parsingStatements.has(statement.id) && parsingProgress.get(statement.id)}
-												{@const progress = parsingProgress.get(statement.id)}
-												<div
-													class="text-xs text-blue-400 bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
-												>
-													{progress.message}
-												</div>
-												<div class="w-full bg-gray-700 rounded-full h-1">
-													<div
-														class="bg-blue-500 h-1 rounded-full transition-all duration-300"
-														style="width: {Math.round((progress.step / 5) * 100)}%"
-													></div>
-												</div>
-												<div class="text-xs text-gray-400 text-center">
-													Step {progress.step} of 5
-												</div>
-												<Button
-													type="button"
-													variant="secondary"
-													size="sm"
-													onclick={() => cancelParsing(statement.id)}
-													class="mt-2"
-												>
-													Cancel
-												</Button>
-											{/if}
-										</div>
-									{:else}
+									{#if isStatementParsed(statement.id)}
 										<div
 											class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded"
 										>
 											✓ Parsed
+										</div>
+									{:else}
+										<div
+											class="text-yellow-400 text-sm font-medium px-3 py-1 bg-yellow-900/20 border border-yellow-700 rounded"
+										>
+											⚠ Not Parsed
 										</div>
 									{/if}
 									<Button
@@ -1816,7 +1627,7 @@
 				{:else}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg">No charges found</div>
-						<div class="text-gray-500 text-sm">Upload and parse statements to see charges</div>
+						<div class="text-gray-500 text-sm">Upload statements to automatically parse and see charges</div>
 					</div>
 				{/if}
 			</div>
