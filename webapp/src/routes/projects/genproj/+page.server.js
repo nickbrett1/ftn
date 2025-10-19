@@ -23,10 +23,6 @@ import { validateCapabilitySelection } from '$lib/utils/capability-resolver.js';
  */
 export async function load({ params, url, platform }) {
 	try {
-		console.log('🔍 Loading genproj page data');
-		console.log('📊 Capabilities count:', Object.keys(capabilities).length);
-		console.log('📊 Categories count:', Object.keys(capabilityCategories).length);
-
 		// Get query parameters
 		const selectedParam = url.searchParams.get('selected');
 		const validateParam = url.searchParams.get('validate') === 'true';
@@ -47,8 +43,6 @@ export async function load({ params, url, platform }) {
 		if (validateParam && selectedCapabilities.length > 0) {
 			pageData.validation = validateCapabilitySelection(selectedCapabilities);
 		}
-
-		console.log(`✅ Loaded genproj page data: ${pageData.capabilities.length} capabilities`);
 
 		return pageData;
 	} catch (err) {

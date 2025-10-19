@@ -16,7 +16,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
-	import { capabilityStore } from '$lib/client/capability-store.js';
+	import { capabilityActions } from '$lib/client/capability-store.js';
+	import Button from '$lib/components/Button.svelte';
 
 	// Props from server-side load function
 	export let data;
@@ -31,9 +32,8 @@
 	// Initialize store with server data
 	onMount(() => {
 		if (selectedCapabilities.length > 0) {
-			capabilityStore.setSelectedCapabilities(selectedCapabilities);
+			capabilityActions.setSelectedCapabilities(selectedCapabilities);
 		}
-		console.log(`✅ Initialized with ${capabilities.length} capabilities from server`);
 	});
 
 	/**
@@ -45,9 +45,7 @@
 		selectedCapabilities = newSelection;
 
 		// Update store
-		capabilityStore.setSelectedCapabilities(newSelection);
-
-		console.log(`📝 Updated capability selection: ${newSelection.length} capabilities`);
+		capabilityActions.setSelectedCapabilities(newSelection);
 	}
 
 	/**
@@ -55,8 +53,7 @@
 	 */
 	function handleClearSelection() {
 		selectedCapabilities = [];
-		capabilityStore.setSelectedCapabilities([]);
-		console.log('🗑️ Cleared capability selection');
+		capabilityActions.setSelectedCapabilities([]);
 	}
 
 	/**
@@ -68,7 +65,6 @@
 			return;
 		}
 
-		console.log(`➡️ Continuing to configuration with ${selectedCapabilities.length} capabilities`);
 		goto('/projects/genproj/configure');
 	}
 
@@ -76,7 +72,6 @@
 	 * Handles skip to preview (for demo purposes)
 	 */
 	function handleSkipToPreview() {
-		console.log('⏭️ Skipping to preview mode');
 		goto('/projects/genproj/preview');
 	}
 </script>
@@ -95,9 +90,9 @@
 		<div class="flex items-center justify-center min-h-96">
 			<div class="text-center max-w-md">
 				<div
-					class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
+					class="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4"
 				>
-					<svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -106,15 +101,9 @@
 						/>
 					</svg>
 				</div>
-				<h3 class="text-lg font-semibold text-gray-900 mb-2">Failed to Load Capabilities</h3>
-				<p class="text-gray-600 mb-4">{error}</p>
-				<button
-					type="button"
-					class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-					on:click={() => window.location.reload()}
-				>
-					Try Again
-				</button>
+				<h3 class="text-lg font-semibold text-white mb-2">Failed to Load Capabilities</h3>
+				<p class="text-gray-300 mb-4">{error}</p>
+				<Button variant="primary" onclick={() => window.location.reload()}>Try Again</Button>
 			</div>
 		</div>
 	{:else}
@@ -122,65 +111,58 @@
 		<div class="space-y-8">
 			<!-- Introduction -->
 			<div class="text-center max-w-4xl mx-auto">
-				<h1 class="text-4xl font-bold text-gray-900 mb-4">Generate Your Perfect Project</h1>
-				<p class="text-xl text-gray-600 mb-8">
+				<h1 class="text-4xl font-bold text-white mb-4">Generate Your Perfect Project</h1>
+				<p class="text-xl text-gray-300 mb-8">
 					Choose the capabilities you want to include in your new project. We'll generate all the
 					necessary files and configurations for you.
 				</p>
 
 				<!-- Quick Stats -->
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-					<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-						<div class="text-2xl font-bold text-blue-600 mb-2">
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+						<div class="text-2xl font-bold text-green-400 mb-2">
 							{capabilities.length}
 						</div>
-						<div class="text-gray-600">Available Capabilities</div>
+						<div class="text-gray-300">Available Capabilities</div>
 					</div>
-					<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-						<div class="text-2xl font-bold text-green-600 mb-2">
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+						<div class="text-2xl font-bold text-green-400 mb-2">
 							{Object.keys(categories).length}
 						</div>
-						<div class="text-gray-600">Categories</div>
+						<div class="text-gray-300">Categories</div>
 					</div>
-					<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-						<div class="text-2xl font-bold text-purple-600 mb-2">
+					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+						<div class="text-2xl font-bold text-green-400 mb-2">
 							{selectedCapabilities.length}
 						</div>
-						<div class="text-gray-600">Selected</div>
+						<div class="text-gray-300">Selected</div>
 					</div>
 				</div>
 			</div>
 
 			<!-- Capability Selector -->
 			<CapabilitySelector
-				bind:selectedCapabilities
+				{selectedCapabilities}
 				on:capabilitiesChanged={handleCapabilitiesChanged}
 				on:clearSelection={handleClearSelection}
 			/>
 
 			<!-- Action Buttons -->
 			<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-				<button
-					type="button"
-					class="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+				<Button
+					variant="success"
+					size="lg"
 					disabled={selectedCapabilities.length === 0}
-					on:click={handleContinue}
+					onclick={handleContinue}
 				>
-					Continue to Configuration
-					<span class="ml-2">→</span>
-				</button>
+					Continue to Configuration →
+				</Button>
 
-				<button
-					type="button"
-					class="px-8 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
-					on:click={handleSkipToPreview}
-				>
-					Skip to Preview
-				</button>
+				<Button variant="secondary" size="lg" onclick={handleSkipToPreview}>Skip to Preview</Button>
 			</div>
 
 			<!-- Help Text -->
-			<div class="text-center text-sm text-gray-500 max-w-2xl mx-auto">
+			<div class="text-center text-sm text-gray-300 max-w-2xl mx-auto">
 				<p>
 					💡 <strong>Tip:</strong> You can preview what will be generated before committing to create
 					your project. No authentication is required for browsing capabilities or previewing generated

@@ -36,10 +36,6 @@ import { RouteUtils } from '$lib/server/route-utils.js';
  */
 export async function GET({ url, platform }) {
 	try {
-		console.log('🔍 Fetching capabilities for genproj');
-		console.log('📊 Capabilities count:', Object.keys(capabilities).length);
-		console.log('📊 Categories count:', Object.keys(capabilityCategories).length);
-
 		// Parse query parameters
 		const selectedParam = url.searchParams.get('selected');
 		const validateParam = url.searchParams.get('validate') === 'true';
@@ -65,8 +61,6 @@ export async function GET({ url, platform }) {
 		if (summaryParam && selectedCapabilities.length > 0) {
 			responseData.summary = getCapabilitySelectionSummary(selectedCapabilities);
 		}
-
-		console.log(`✅ Returned ${responseData.capabilities.length} capabilities`);
 
 		return json(responseData, {
 			headers: {
@@ -95,8 +89,6 @@ export async function GET({ url, platform }) {
  */
 export async function POST({ request, platform }) {
 	try {
-		console.log('🔍 Validating capability selection');
-
 		const body = await request.json();
 		const { selectedCapabilities = [], includeSummary = false } = body;
 
@@ -122,10 +114,6 @@ export async function POST({ request, platform }) {
 		if (includeSummary) {
 			responseData.summary = getCapabilitySelectionSummary(selectedCapabilities);
 		}
-
-		console.log(
-			`✅ Validated ${selectedCapabilities.length} capabilities: ${validation.isValid ? 'valid' : 'invalid'}`
-		);
 
 		return json(responseData);
 	} catch (error) {
