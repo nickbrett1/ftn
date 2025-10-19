@@ -47,18 +47,18 @@ export class ServerPDFUtils {
 		try {
 			console.log('📄 Parsing PDF file on server...');
 
-			// Convert file to buffer
-			let buffer;
-			if (pdfFile instanceof File) {
-				const arrayBuffer = await pdfFile.arrayBuffer();
-				buffer = Buffer.from(arrayBuffer);
-			} else if (pdfFile instanceof ArrayBuffer) {
-				buffer = Buffer.from(pdfFile);
-			} else if (Buffer.isBuffer(pdfFile)) {
-				buffer = pdfFile;
-			} else {
-				throw new Error('Invalid PDF file format');
-			}
+		// Convert file to buffer
+		let buffer;
+		if (pdfFile instanceof File || (pdfFile && typeof pdfFile.arrayBuffer === 'function')) {
+			const arrayBuffer = await pdfFile.arrayBuffer();
+			buffer = Buffer.from(arrayBuffer);
+		} else if (pdfFile instanceof ArrayBuffer) {
+			buffer = Buffer.from(pdfFile);
+		} else if (Buffer.isBuffer(pdfFile)) {
+			buffer = pdfFile;
+		} else {
+			throw new Error('Invalid PDF file format');
+		}
 
 			// Extract text using pdf-parse
 			const text = await this.extractTextFromPDF(buffer, options);
@@ -114,8 +114,12 @@ export class ServerPDFUtils {
 
 		// Check file size
 		let fileSize = 0;
-		if (pdfFile instanceof File) {
+		let isFile = false;
+		
+		// Check if it's a File object (including mock objects with File-like properties)
+		if (pdfFile instanceof File || (pdfFile && typeof pdfFile.arrayBuffer === 'function' && 'size' in pdfFile && 'type' in pdfFile)) {
 			fileSize = pdfFile.size;
+			isFile = true;
 		} else if (Buffer.isBuffer(pdfFile)) {
 			fileSize = pdfFile.length;
 		} else if (pdfFile instanceof ArrayBuffer) {
@@ -129,7 +133,7 @@ export class ServerPDFUtils {
 		}
 
 		// Check file type for File objects
-		if (pdfFile instanceof File) {
+		if (isFile) {
 			const mimeType = pdfFile.type;
 			if (mimeType !== 'application/pdf') {
 				throw new Error('Invalid file type. Only PDF files are supported.');
