@@ -5,6 +5,7 @@
 	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
 	import Fireworks from '$lib/components/Fireworks.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
+	import { PDFService } from '$lib/client/ccbilling-pdf-service.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
@@ -776,8 +777,9 @@
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 
-			showToastMessage('Uploading and parsing statement...', 'info');
+			showToastMessage('Uploading statement...', 'info');
 
+			// Step 1: Upload PDF to server
 			const uploadResponse = await fetch(`/projects/ccbilling/cycles/${data.cycleId}/statements`, {
 				method: 'POST',
 				body: formData
@@ -788,18 +790,12 @@
 				console.error('❌ Upload failed with status:', uploadResponse.status, errorData);
 				throw new Error(errorData.error || 'Failed to upload statement');
 			}
-			const responseData = await uploadResponse.json();
+			const uploadData = await uploadResponse.json();
 
-			// Check if parsing was successful
-			if (responseData.parse_result) {
-				if (responseData.parse_result.success) {
-					showToastMessage(`Statement uploaded and parsed successfully! Found ${responseData.parse_result.charges_found} charges.`, 'success');
-				} else {
-					showToastMessage(`Statement uploaded but parsing failed: ${responseData.parse_result.error}`, 'warning');
-				}
-			} else {
-				showToastMessage('Statement uploaded successfully!', 'success');
-			}
+			showToastMessage('Statement uploaded! Now parsing...', 'info');
+
+			// Step 2: Parse the PDF client-side
+			await parseStatementClientSide(uploadData.statement_id, selectedFile);
 
 			// Reset form
 			selectedFile = null;
@@ -808,14 +804,51 @@
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
 		} catch (err) {
-			console.error('❌ Upload failed:', err);
+			console.error('❌ Upload/parse failed:', err);
 			uploadError = err.message;
-			showToastMessage(`Upload failed: ${err.message}`, 'error');
+			showToastMessage(`Upload/parse failed: ${err.message}`, 'error');
 		} finally {
 			isUploading = false;
 		}
 	}
 
+	async function parseStatementClientSide(statementId, pdfFile) {
+		try {
+			// Initialize PDF service
+			const pdfService = new PDFService();
+			
+			// Parse the PDF file client-side
+			const parsedData = await pdfService.parseStatement(pdfFile);
+			
+			console.log('📄 PDF parsed successfully:', parsedData);
+			
+			// Send parsed data to server
+			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					parsedData: parsedData
+				})
+			});
+
+			if (!parseResponse.ok) {
+				const errorData = await parseResponse.json();
+				console.error('❌ Parse failed with status:', parseResponse.status, errorData);
+				throw new Error(errorData.error || 'Failed to parse statement');
+			}
+
+			const parseResult = await parseResponse.json();
+			console.log('✅ Statement parsed successfully:', parseResult);
+			
+			showToastMessage(`Statement parsed successfully! Found ${parseResult.charges_found} charges.`, 'success');
+			
+		} catch (err) {
+			console.error('❌ Parse failed:', err);
+			throw new Error(`Failed to parse statement: ${err.message}`);
+		}
+	}
 
 	async function deleteStatement(statementId) {
 		if (deletingStatements.has(statementId)) return;
