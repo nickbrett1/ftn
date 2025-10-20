@@ -148,6 +148,38 @@ describe('Merchant Normalizer', () => {
 		});
 	});
 
+	describe('DIG INN normalization', () => {
+		it('should normalize DIG INN with 67th street address', () => {
+			const result = normalizeMerchant('TST* DIG INN- 100 W 67TH NEW YORK');
+			expect(result.merchant_normalized).toBe('DIG INN');
+			expect(result.merchant_details).toBe('DIG INN');
+		});
+
+		it('should normalize DIG INN with 67 street address (no TH)', () => {
+			const result = normalizeMerchant('TST* DIG INN- 100 W 67 NEW YORK');
+			expect(result.merchant_normalized).toBe('DIG INN');
+			expect(result.merchant_details).toBe('DIG INN');
+		});
+
+		it('should normalize DIG INN with different case', () => {
+			const result = normalizeMerchant('tst* dig inn- 100 w 67th new york');
+			expect(result.merchant_normalized).toBe('DIG INN');
+			expect(result.merchant_details).toBe('DIG INN');
+		});
+
+		it('should normalize DIG INN with asterisk separator', () => {
+			const result = normalizeMerchant('TST* DIG INN* 100 W 67TH NEW YORK');
+			expect(result.merchant_normalized).toBe('DIG INN');
+			expect(result.merchant_details).toBe('DIG INN');
+		});
+
+		it('should normalize DIG INN with other address details', () => {
+			const result = normalizeMerchant('TST* DIG INN- 123 MAIN ST NEW YORK');
+			expect(result.merchant_normalized).toBe('DIG INN');
+			expect(result.merchant_details).toBe('DIG INN');
+		});
+	});
+
 	describe('Generic merchant normalization', () => {
 		it('should handle null input', () => {
 			const result = normalizeMerchant(null);

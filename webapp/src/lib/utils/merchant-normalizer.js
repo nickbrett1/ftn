@@ -79,6 +79,11 @@ export function normalizeMerchant(merchant) {
 		return extractPlayStationNetworkDetails(merchant);
 	}
 
+	// DIG INN restaurant
+	if (merchantUpper.includes('DIG INN')) {
+		return extractDigInnDetails(merchant);
+	}
+
 	// Default: return as-is with minimal normalization
 	return {
 		merchant_normalized: normalizeGenericMerchant(merchant),
@@ -362,6 +367,24 @@ function extractPlayStationNetworkDetails(merchant) {
 	return {
 		merchant_normalized: 'PLAYSTATION NETWORK',
 		merchant_details: ''
+	};
+}
+
+/**
+ * Extract DIG INN details
+ */
+function extractDigInnDetails(merchant) {
+	// Clean up DIG INN merchant name by normalizing address formats
+	// Both "DIG INN- 100 W 67 NEW YORK" and "DIG INN- 100 W 67TH NEW YORK" should normalize to "DIG INN"
+	let cleanedMerchant = merchant
+		.replace(/DIG\s+INN\s*[-*]\s*100\s+W\s+67(TH)?\s+NEW\s+YORK/i, 'DIG INN') // Normalize both address formats
+		.replace(/DIG\s+INN\s*[-*]\s*.+/i, 'DIG INN') // Remove any other address details after DIG INN
+		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.trim();
+
+	return {
+		merchant_normalized: 'DIG INN',
+		merchant_details: cleanedMerchant || ''
 	};
 }
 
