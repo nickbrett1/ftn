@@ -371,7 +371,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 			SET merchant_normalized = ?,
 				merchant_details = ${detailsField}
 			WHERE (${update.pattern})
-			AND (merchant_normalized != ? OR merchant_normalized IS NULL)
+			AND merchant_normalized IS NULL
 		`;
 
 			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
