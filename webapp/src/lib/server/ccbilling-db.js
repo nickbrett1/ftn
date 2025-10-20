@@ -244,7 +244,13 @@ export async function getBudgetMerchants(event, budget_id) {
 		.prepare('SELECT * FROM budget_merchant WHERE budget_id = ? ORDER BY merchant_normalized ASC')
 		.bind(budget_id)
 		.all();
-	return results;
+	
+	// Transform the results to match the expected UI structure
+	return results.map(row => ({
+		...row,
+		merchant: row.merchant_normalized, // Add merchant field for UI compatibility
+		merchant_normalized: row.merchant_normalized
+	}));
 }
 
 /**
