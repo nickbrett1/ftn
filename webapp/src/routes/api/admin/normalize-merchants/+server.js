@@ -855,12 +855,39 @@ async function consolidateStoreVariations(db) {
 			// For each normalized group, consolidate if there are multiple variations
 			for (const [normalizedName, variations] of normalizedGroups) {
 				if (variations.length > 1) {
-					// Update all variations to use the normalized name
-					for (const variation of variations) {
-						if (variation !== normalizedName) {
+					// Check if the normalized name already exists in this budget
+					const existingEntry = await db
+						.prepare('SELECT id FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
+						.bind(budgetId, normalizedName)
+						.first();
+					
+					if (existingEntry) {
+						// The normalized name already exists, delete all other variations
+						for (const variation of variations) {
+							if (variation !== normalizedName) {
+								await db
+									.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
+									.bind(budgetId, variation)
+									.run();
+								consolidatedCount++;
+							}
+						}
+					} else {
+						// The normalized name doesn't exist, update the first variation and delete the rest
+						const [firstVariation, ...otherVariations] = variations;
+						
+						// Update the first variation to the normalized name
+						await db
+							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE budget_id = ? AND merchant_normalized = ?')
+							.bind(normalizedName, budgetId, firstVariation)
+							.run();
+						consolidatedCount++;
+						
+						// Delete the other variations
+						for (const variation of otherVariations) {
 							await db
-								.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE budget_id = ? AND merchant_normalized = ?')
-								.bind(normalizedName, budgetId, variation)
+								.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
+								.bind(budgetId, variation)
 								.run();
 							consolidatedCount++;
 						}
