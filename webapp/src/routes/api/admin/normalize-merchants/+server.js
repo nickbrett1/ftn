@@ -47,6 +47,17 @@ export async function POST(event) {
 			try {
 				const normalized = normalizeMerchant(payment.merchant);
 
+				// Debug logging for PINKBERRY
+				if (payment.merchant && payment.merchant.includes('PINKBERRY')) {
+					console.log('PINKBERRY Payment:', {
+						id: payment.id,
+						merchant: payment.merchant,
+						current_normalized: payment.merchant_normalized,
+						new_normalized: normalized.merchant_normalized,
+						will_update: normalized.merchant_normalized !== payment.merchant_normalized
+					});
+				}
+
 				// Only update if normalization actually changed something
 				if (
 					normalized.merchant_normalized !== payment.merchant_normalized ||
@@ -199,6 +210,19 @@ export async function POST(event) {
 			}
 		}
 
+		// Debug: Check PINKBERRY data
+		const { results: pinkberryData } = await db
+			.prepare(
+				`
+				SELECT merchant, merchant_normalized, COUNT(*) as count
+				FROM payment 
+				WHERE merchant LIKE '%PINKBERRY%' OR merchant_normalized LIKE '%PINKBERRY%'
+				GROUP BY merchant, merchant_normalized
+				ORDER BY merchant
+				`
+			)
+			.all();
+
 		return json({
 			success: true,
 			paymentsProcessed: payments.length,
@@ -207,6 +231,9 @@ export async function POST(event) {
 			totalRemaining: totalRemaining - updatedCount,
 			nextOffset: offset + batchSize,
 			errors: errors.length > 0 ? errors : undefined,
+			debug: {
+				pinkberryData
+			},
 			message:
 				totalRemaining > batchSize
 					? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
