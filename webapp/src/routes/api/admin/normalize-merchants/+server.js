@@ -184,6 +184,12 @@ export async function POST(event) {
 				if (consistencyUpdates.errors && consistencyUpdates.errors.length > 0) {
 					errors.push(...consistencyUpdates.errors);
 				}
+
+				// Handle store number variations that normalize to the same merchant
+				// This ensures that PINKBERRY 15012 NEW YORK and PINKBERRY 15038 NEW YORK
+				// don't create duplicate entries in budget_merchant
+				const consolidatedUpdates = await consolidateStoreVariations(db);
+				budgetMerchantsUpdated += consolidatedUpdates;
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -775,4 +781,86 @@ export async function GET(event) {
 			{ status: 500 }
 		);
 	}
+}
+
+/**
+ * Consolidate store variations that normalize to the same merchant name
+ * This handles cases like PINKBERRY 15012 NEW YORK and PINKBERRY 15038 NEW YORK
+ * that both normalize to PINKBERRY, ensuring only one entry exists per budget
+ */
+async function consolidateStoreVariations(db) {
+	let consolidatedCount = 0;
+	
+	try {
+		// Find all budget_merchant entries that have store number patterns
+		// and group them by budget_id and normalized merchant name
+		const { results: storeVariations } = await db
+			.prepare(
+				`
+				SELECT budget_id, merchant_normalized, COUNT(*) as count
+				FROM budget_merchant 
+				WHERE merchant_normalized LIKE '% %' 
+				  AND merchant_normalized REGEXP '.* [0-9]{4,} .*'
+				GROUP BY budget_id, merchant_normalized
+				HAVING COUNT(*) > 1
+				`
+			)
+			.all();
+
+		// For each group with duplicates, keep only the first entry and remove the rest
+		for (const variation of storeVariations) {
+			const { results: duplicates } = await db
+				.prepare(
+					`
+					SELECT id FROM budget_merchant 
+					WHERE budget_id = ? AND merchant_normalized = ?
+					ORDER BY id
+					`
+				)
+				.bind(variation.budget_id, variation.merchant_normalized)
+				.all();
+
+			// Keep the first entry, remove the rest
+			if (duplicates.length > 1) {
+				const idsToDelete = duplicates.slice(1).map(d => d.id);
+				
+				for (const id of idsToDelete) {
+					await db
+						.prepare('DELETE FROM budget_merchant WHERE id = ?')
+						.bind(id)
+						.run();
+					consolidatedCount++;
+				}
+			}
+		}
+
+		// Also handle the case where we have entries like "PINKBERRY 15012 NEW YORK" 
+		// that should be normalized to "PINKBERRY" but might create duplicates
+		const { results: normalizedDuplicates } = await db
+			.prepare(
+				`
+				SELECT bm1.budget_id, bm1.merchant_normalized, bm1.id as id1, bm2.id as id2
+				FROM budget_merchant bm1
+				JOIN budget_merchant bm2 ON bm1.budget_id = bm2.budget_id 
+					AND bm1.merchant_normalized = bm2.merchant_normalized
+					AND bm1.id < bm2.id
+				`
+			)
+			.all();
+
+		// Remove the duplicate entries
+		for (const duplicate of normalizedDuplicates) {
+			await db
+				.prepare('DELETE FROM budget_merchant WHERE id = ?')
+				.bind(duplicate.id2)
+				.run();
+			consolidatedCount++;
+		}
+
+	} catch (error) {
+		console.error('Error consolidating store variations:', error);
+		throw error;
+	}
+
+	return consolidatedCount;
 }
