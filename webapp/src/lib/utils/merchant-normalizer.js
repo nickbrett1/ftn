@@ -207,11 +207,12 @@ function extractFlightDetails(merchant) {
 	}
 
 	// Extract route information if present
-	const routeMatch = merchant.match(/([A-Z]{3})\s*[-*]\s*([A-Z]{3})/i);
+	// Look for patterns like "JFK LAX", "JFK-LAX", or "JFK*LAX"
+	const routeMatch = merchant.match(/\b([A-Z]{3})\s*[-*\s]\s*([A-Z]{3})\b/i);
 	const route = routeMatch ? `${routeMatch[1]}-${routeMatch[2]}` : '';
 
 	return {
-		merchant_normalized: airline || 'AIRLINE',
+		merchant_normalized: airline || 'UNKNOWN AIRLINE',
 		merchant_details: route || merchant
 	};
 }
