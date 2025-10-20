@@ -122,6 +122,38 @@ describe('Merchant Normalizer', () => {
 		});
 	});
 
+	describe('Hotel transaction normalization', () => {
+		it('should normalize hotel with SA TORRE MALLORCA LLUCMAJOR', () => {
+			const result = normalizeMerchant('HOTEL SA TORRE MALLORCA LLUCMAJOR');
+			expect(result.merchant_normalized).toBe('HOTEL SA TORRE MALLORCA LLUCMAJOR');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize hotel with state code', () => {
+			const result = normalizeMerchant('HOTEL MARRIOTT NY');
+			expect(result.merchant_normalized).toBe('HOTEL MARRIOTT');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize resort', () => {
+			const result = normalizeMerchant('RESORT PARADISE LLC');
+			expect(result.merchant_normalized).toBe('RESORT PARADISE');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize inn', () => {
+			const result = normalizeMerchant('COUNTRY INN & SUITES');
+			expect(result.merchant_normalized).toBe('COUNTRY INN & SUITES');
+			expect(result.merchant_details).toBe('');
+		});
+
+		it('should normalize accommodation', () => {
+			const result = normalizeMerchant('ACCOMMODATION SERVICES INC');
+			expect(result.merchant_normalized).toBe('ACCOMMODATION SERVICES');
+			expect(result.merchant_details).toBe('');
+		});
+	});
+
 	describe('Flight transaction normalization', () => {
 		it('should normalize specific airline names', () => {
 			const result = normalizeMerchant('UNITED AIRLINES 123.45');

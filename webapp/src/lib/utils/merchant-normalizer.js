@@ -34,6 +34,11 @@ export function normalizeMerchant(merchant) {
 		return extractRideSharingDetails(merchant);
 	}
 
+	// Hotels and accommodation
+	if (isHotelTransaction(merchantUpper)) {
+		return extractHotelDetails(merchant);
+	}
+
 	// Airlines and travel
 	if (isFlightTransaction(merchantUpper)) {
 		return extractFlightDetails(merchant);
@@ -366,6 +371,51 @@ function extractPlayStationNetworkDetails(merchant) {
 }
 
 /**
+ * Check if transaction is a hotel
+ */
+function isHotelTransaction(merchantUpper) {
+	const hotelIndicators = [
+		'HOTEL',
+		'RESORT',
+		'INN',
+		'SUITE',
+		'LODGE',
+		'ACCOMMODATION',
+		'STAY'
+	];
+
+	// Check for generic hotel indicators
+	if (hotelIndicators.some((indicator) => merchantUpper.includes(indicator))) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Extract hotel details
+ */
+function extractHotelDetails(merchant) {
+	const merchantUpper = merchant.toUpperCase();
+	
+	// Clean up hotel merchant name by removing common suffixes and location codes
+	let cleanedMerchant = merchant
+		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
+		.replace(/\s+\d{5}\s*$/i, '') // Remove ZIP codes
+		.replace(/\s+LLC\b/i, '') // Remove LLC
+		.replace(/\s+INC\b/i, '') // Remove INC
+		.replace(/\s+CORP\b/i, '') // Remove CORP
+		.replace(/\s+CO\b/i, '') // Remove CO
+		.replace(/^THE\s+/i, '') // Remove "THE" prefix
+		.trim();
+
+	return {
+		merchant_normalized: cleanedMerchant.toUpperCase(),
+		merchant_details: ''
+	};
+}
+
+/**
  * Check if transaction is a flight
  */
 function isFlightTransaction(merchantUpper) {
@@ -375,7 +425,6 @@ function isFlightTransaction(merchantUpper) {
 		'AIRPORT',
 		'TICKET',
 		'TRAVEL',
-		'HOTEL',
 		'CAR RENTAL',
 		'TRANSPORTATION'
 	];
