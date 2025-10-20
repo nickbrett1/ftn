@@ -39,6 +39,11 @@ export function normalizeMerchant(merchant) {
 		return extractFlightDetails(merchant);
 	}
 
+	// British Airways specific handling
+	if (merchantUpper.includes('BRITISH')) {
+		return extractBritishAirwaysDetails(merchant);
+	}
+
 	// Amazon and similar marketplaces
 	if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
 		return extractAmazonDetails(merchant);
@@ -143,6 +148,29 @@ function extractRideSharingDetails(merchant) {
 
 	return {
 		merchant_normalized: 'RIDE SHARING',
+		merchant_details: merchant
+	};
+}
+
+/**
+ * Extract British Airways details
+ */
+function extractBritishAirwaysDetails(merchant) {
+	const merchantUpper = merchant.toUpperCase();
+	
+	// Check if this is a British Airways transaction
+	if (merchantUpper.includes('BRITISH')) {
+		// Extract any additional details from the merchant name
+		// For patterns like "BRITISH AWYS1252218268543 WWW.BRITISHAI"
+		// we want to normalize to "BRITISH AIRWAYS" but keep the original as details
+		return {
+			merchant_normalized: 'BRITISH AIRWAYS',
+			merchant_details: merchant
+		};
+	}
+	
+	return {
+		merchant_normalized: 'BRITISH AIRWAYS',
 		merchant_details: merchant
 	};
 }
