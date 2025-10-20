@@ -268,9 +268,9 @@ describe('ccbilling-db functions', () => {
 				await addBudgetMerchant(mockEvent, 1, 'Amazon');
 
 				expect(mockDb.prepare).toHaveBeenCalledWith(
-					'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
+					'INSERT INTO budget_merchant (budget_id, merchant_normalized) VALUES (?, ?)'
 				);
-				expect(mockDb.bind).toHaveBeenCalledWith(1, 'AMAZON', 'AMAZON');
+				expect(mockDb.bind).toHaveBeenCalledWith(1, 'AMAZON');
 				expect(mockDb.run).toHaveBeenCalled();
 			});
 		});

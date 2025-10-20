@@ -203,9 +203,9 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	
 	await db
 		.prepare(
-			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
+			'INSERT INTO budget_merchant (budget_id, merchant_normalized) VALUES (?, ?)'
 		)
-		.bind(budget_id, normalized.merchant_normalized, normalized.merchant_normalized)
+		.bind(budget_id, normalized.merchant_normalized)
 		.run();
 }
 
@@ -222,6 +222,9 @@ export async function removeBudgetMerchant(event, budget_id, merchant_normalized
 	// Normalize the merchant name to ensure case-insensitive matching
 	const normalized = normalizeMerchant(merchant_normalized);
 	
+	// Delete ALL entries for this merchant that normalize to the same name
+	// This handles cases where there might be multiple variations (e.g., PINKBERRY 15012 NEW YORK, PINKBERRY 15038 NEW YORK)
+	// that all normalize to the same merchant name (PINKBERRY)
 	await db
 		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
 		.bind(budget_id, normalized.merchant_normalized)
