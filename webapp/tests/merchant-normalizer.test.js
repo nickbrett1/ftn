@@ -122,6 +122,32 @@ describe('Merchant Normalizer', () => {
 		});
 	});
 
+	describe('Flight transaction normalization', () => {
+		it('should normalize specific airline names', () => {
+			const result = normalizeMerchant('UNITED AIRLINES 123.45');
+			expect(result.merchant_normalized).toBe('UNITED');
+			expect(result.merchant_details).toBe('UNITED AIRLINES 123.45');
+		});
+
+		it('should normalize unknown airline to UNKNOWN AIRLINE', () => {
+			const result = normalizeMerchant('SOME AIRLINE COMPANY');
+			expect(result.merchant_normalized).toBe('UNKNOWN AIRLINE');
+			expect(result.merchant_details).toBe('SOME AIRLINE COMPANY');
+		});
+
+		it('should normalize flight transaction with airport codes', () => {
+			const result = normalizeMerchant('FLIGHT JFK LAX');
+			expect(result.merchant_normalized).toBe('UNKNOWN AIRLINE');
+			expect(result.merchant_details).toBe('JFK-LAX');
+		});
+
+		it('should normalize travel-related transaction', () => {
+			const result = normalizeMerchant('TRAVEL AGENCY BOOKING');
+			expect(result.merchant_normalized).toBe('UNKNOWN AIRLINE');
+			expect(result.merchant_details).toBe('TRAVEL AGENCY BOOKING');
+		});
+	});
+
 	describe('Generic merchant normalization', () => {
 		it('should handle null input', () => {
 			const result = normalizeMerchant(null);
