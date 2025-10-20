@@ -26,18 +26,53 @@ export async function POST(event) {
 		const offset = body.offset || 0;
 
 		// Get payments to normalize (process all since we're always updating)
-		const { results: payments } = await db
-			.prepare(
+		// If this is the first batch (offset = 0), prioritize PINKBERRY entries
+		let payments;
+		if (offset === 0) {
+			// First get PINKBERRY entries
+			const { results: pinkberryPayments } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, merchant_details
+					FROM payment 
+					WHERE merchant LIKE '%PINKBERRY%'
+					ORDER BY id
+					`
+				)
+				.all();
+			
+			// Then get other payments to fill the batch
+			const remaining = batchSize - pinkberryPayments.length;
+			const { results: otherPayments } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, merchant_details
+					FROM payment 
+					WHERE merchant IS NOT NULL AND merchant NOT LIKE '%PINKBERRY%'
+					ORDER BY id
+					LIMIT ?
 				`
-				SELECT id, merchant, merchant_normalized, merchant_details
-				FROM payment 
-				WHERE merchant IS NOT NULL
-				ORDER BY id
-				LIMIT ? OFFSET ?
-			`
-			)
-			.bind(batchSize, offset)
-			.all();
+				)
+				.bind(remaining)
+				.all();
+			
+			payments = [...pinkberryPayments, ...otherPayments];
+		} else {
+			// Regular batch processing
+			const { results: regularPayments } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, merchant_details
+					FROM payment 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
+					LIMIT ? OFFSET ?
+				`
+				)
+				.bind(batchSize, offset)
+				.all();
+			payments = regularPayments;
+		}
 
 		let updatedCount = 0;
 		const errors = [];
@@ -201,6 +236,10 @@ export async function POST(event) {
 				// don't create duplicate entries in budget_merchant
 				const consolidatedUpdates = await consolidateStoreVariations(db);
 				budgetMerchantsUpdated += consolidatedUpdates;
+
+				// Force normalize all PINKBERRY entries specifically
+				const pinkberryUpdates = await forceNormalizePinkberry(db);
+				updatedCount += pinkberryUpdates;
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -945,4 +984,56 @@ async function consolidateStoreVariations(db) {
 	}
 
 	return consolidatedCount;
+}
+
+/**
+ * Force normalize all PINKBERRY entries in the payment table
+ * This ensures all PINKBERRY variations are properly normalized
+ */
+async function forceNormalizePinkberry(db) {
+	let updatedCount = 0;
+	
+	try {
+		// Get all PINKBERRY entries
+		const { results: pinkberryEntries } = await db
+			.prepare(
+				`
+				SELECT id, merchant, merchant_normalized, merchant_details
+				FROM payment 
+				WHERE merchant LIKE '%PINKBERRY%'
+				`
+			)
+			.all();
+
+		// Normalize each entry
+		for (const entry of pinkberryEntries) {
+			const normalized = normalizeMerchant(entry.merchant);
+			
+			// Update if normalization changed something
+			if (
+				normalized.merchant_normalized !== entry.merchant_normalized ||
+				normalized.merchant_details !== (entry.merchant_details || '')
+			) {
+				await db
+					.prepare(
+						`
+						UPDATE payment 
+						SET merchant_normalized = ?,
+							merchant_details = ?
+						WHERE id = ?
+					`
+					)
+					.bind(normalized.merchant_normalized, normalized.merchant_details || '', entry.id)
+					.run();
+				
+				updatedCount++;
+				console.log(`Updated PINKBERRY entry ${entry.id}: "${entry.merchant}" -> "${normalized.merchant_normalized}"`);
+			}
+		}
+	} catch (error) {
+		console.error('Error force normalizing PINKBERRY entries:', error);
+		throw error;
+	}
+
+	return updatedCount;
 }

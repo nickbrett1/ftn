@@ -503,7 +503,7 @@ function extractAppleDetails(merchant) {
  * Check if merchant has store number pattern (e.g., PINKBERRY 15012 NEW YORK)
  */
 function hasStoreNumberPattern(merchantUpper) {
-	// Pattern: MERCHANT_NAME [STORE_NUMBER] [LOCATION]
+	// Pattern: MERCHANT_NAME [STORE_NUMBER] [LOCATION] - location can be multiple words
 	const storeNumberPattern = /^(.+?)\s+(\d{4,})\s+(.+)$/;
 	return storeNumberPattern.test(merchantUpper);
 }
