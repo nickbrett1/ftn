@@ -92,9 +92,9 @@ export async function POST(event) {
 		const { results: budgetMerchants } = await db
 			.prepare(
 				`
-				SELECT id, merchant, merchant_normalized, budget_id
+				SELECT id, merchant_normalized, budget_id
 				FROM budget_merchant 
-				WHERE merchant IS NOT NULL
+				WHERE merchant_normalized IS NOT NULL
 				ORDER BY id
 				LIMIT ?
 			`
@@ -103,30 +103,56 @@ export async function POST(event) {
 			.all();
 
 		let budgetMerchantsUpdated = 0;
+		const processedMappings = new Map(); // Track processed budget_id + normalized_merchant combinations
+		
 		for (const mapping of budgetMerchants) {
 			try {
-				const normalized = normalizeMerchant(mapping.merchant);
+				const normalized = normalizeMerchant(mapping.merchant_normalized);
+				const key = `${mapping.budget_id}-${normalized.merchant_normalized}`;
 
 				// Only update if normalization actually changed something
 				if (normalized.merchant_normalized !== mapping.merchant_normalized) {
-					await db
-						.prepare(
+					// Check if we've already processed this budget_id + normalized_merchant combination
+					if (processedMappings.has(key)) {
+						// This is a duplicate - remove it
+						await db
+							.prepare('DELETE FROM budget_merchant WHERE id = ?')
+							.bind(mapping.id)
+							.run();
+						budgetMerchantsUpdated++;
+					} else {
+						// Update the merchant_normalized field
+						await db
+							.prepare(
+								`
+								UPDATE budget_merchant 
+								SET merchant_normalized = ?
+								WHERE id = ?
 							`
-							UPDATE budget_merchant 
-							SET merchant_normalized = ?
-							WHERE id = ?
-						`
-						)
-						.bind(normalized.merchant_normalized, mapping.id)
-						.run();
-
-					budgetMerchantsUpdated++;
+							)
+							.bind(normalized.merchant_normalized, mapping.id)
+							.run();
+						processedMappings.set(key, true);
+						budgetMerchantsUpdated++;
+					}
+				} else {
+					// No normalization change, but still track to detect duplicates
+					if (processedMappings.has(key)) {
+						// This is a duplicate - remove it
+						await db
+							.prepare('DELETE FROM budget_merchant WHERE id = ?')
+							.bind(mapping.id)
+							.run();
+						budgetMerchantsUpdated++;
+					} else {
+						processedMappings.set(key, true);
+					}
 				}
 			} catch (error) {
 				errors.push({
 					type: 'budget_merchant',
 					id: mapping.id,
-					merchant: mapping.merchant,
+					merchant: mapping.merchant_normalized,
 					error: error.message
 				});
 			}
