@@ -374,7 +374,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 			AND merchant_normalized IS NULL
 		`;
 
-			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
+			const result = await db.prepare(sql).bind(update.normalized).run();
 
 			const updated = result.changes || 0;
 			totalUpdated += updated;
