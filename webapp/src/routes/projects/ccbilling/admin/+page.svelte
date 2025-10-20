@@ -12,6 +12,11 @@
 	let dedupeError = null;
 	let dedupePreview = null;
 
+	let consolidating = false;
+	let consolidateResults = null;
+	let consolidateError = null;
+	let consolidatePreview = null;
+
 	async function runNormalization() {
 		normalizing = true;
 		error = null;
@@ -77,10 +82,52 @@
 		}
 	}
 
+	async function loadConsolidatePreview() {
+		consolidateError = null;
+		consolidatePreview = null;
+
+		try {
+			const response = await fetch('/api/admin/consolidate-merchants');
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			consolidatePreview = await response.json();
+		} catch (err) {
+			consolidateError = err.message;
+		}
+	}
+
+	async function runConsolidation() {
+		consolidating = true;
+		consolidateError = null;
+		consolidateResults = null;
+
+		try {
+			const response = await fetch('/api/admin/consolidate-merchants', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ dryRun: false })
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			consolidateResults = await response.json();
+			// Refresh preview after consolidation
+			loadConsolidatePreview();
+		} catch (err) {
+			consolidateError = err.message;
+		} finally {
+			consolidating = false;
+		}
+	}
+
 	// Load preview on component mount
 	import { onMount } from 'svelte';
 	onMount(() => {
 		loadDedupePreview();
+		loadConsolidatePreview();
 	});
 </script>
 
@@ -258,6 +305,118 @@
 											{/if}
 											{#if error.canonical}
 												<div class="text-yellow-200">Canonical: {error.canonical}</div>
+											{/if}
+											{#if error.variants && error.variants.length > 0}
+												<div class="text-yellow-200">Variants: {error.variants.join(', ')}</div>
+											{/if}
+											<div class="text-yellow-100 text-xs mt-1">{error.error}</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Merchant Consolidation Section -->
+		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mt-8">
+			<h2 class="text-xl font-semibold mb-4">Merchant Consolidation</h2>
+
+			<p class="text-gray-300 mb-6">
+				Find and merge similar merchants that represent the same business but have variations in naming, 
+				store numbers, phone numbers, or address formats. This helps consolidate duplicate merchant records 
+				like "PINKBERRY 15012 NEW YORK" and "PINKBERRY 15038 NEW YORK" into a single "PINKBERRY" record.
+			</p>
+
+			{#if consolidatePreview}
+				<div class="mb-6 p-4 bg-gray-700 border border-gray-600 rounded-lg">
+					<h3 class="text-lg font-medium mb-3">Similarity Analysis</h3>
+
+					{#if consolidatePreview.groupsFound === 0}
+						<div class="text-green-300">
+							✅ No similar merchants found for consolidation! Your merchant data is clean.
+						</div>
+					{:else}
+						<div class="text-yellow-300 mb-4">
+							⚠️ Found {consolidatePreview.groupsFound} groups of similar merchants affecting:
+							<ul class="list-disc list-inside mt-2 text-sm">
+								<li>{consolidatePreview.totalPaymentsAffected} total records</li>
+								<li>{consolidatePreview.totalVariants} merchant variants</li>
+							</ul>
+						</div>
+
+						{#if consolidatePreview.groups && consolidatePreview.groups.length > 0}
+							<div class="text-sm">
+								<h4 class="font-medium mb-2">Examples of similar merchants (showing first 5):</h4>
+								{#each consolidatePreview.groups.slice(0, 5) as group}
+									<div class="mb-2 p-2 bg-gray-600 rounded">
+										<div class="font-medium text-blue-300">
+											{group.pattern.replace('_', ' ').toUpperCase()} - Confidence: {Math.round(group.confidence * 100)}%
+										</div>
+										<div class="text-xs text-gray-300">
+											Will consolidate: {group.variants.map((v) => v.merchant_normalized).join(', ')}
+											→ <span class="text-green-300">{group.canonical}</span>
+										</div>
+										<div class="text-xs text-gray-400">
+											Total usage: {group.variants.reduce((sum, v) => sum + v.count, 0)} records
+										</div>
+									</div>
+								{/each}
+								{#if consolidatePreview.groups.length > 5}
+									<div class="text-xs text-gray-400">
+										... and {consolidatePreview.groups.length - 5} more groups
+									</div>
+								{/if}
+							</div>
+						{/if}
+					{/if}
+				</div>
+			{/if}
+
+			<div class="flex gap-4">
+				<Button onclick={loadConsolidatePreview} variant="secondary" size="lg">Refresh Analysis</Button>
+
+				{#if consolidatePreview && consolidatePreview.groupsFound > 0}
+					<Button onclick={runConsolidation} variant="warning" size="lg" disabled={consolidating}>
+						{consolidating ? 'Consolidating...' : 'Run Consolidation'}
+					</Button>
+				{/if}
+			</div>
+
+			{#if consolidateError}
+				<div class="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
+					<div class="text-red-300">
+						❌ Error: {consolidateError}
+						{#if consolidateError.includes('401')}
+							<div class="mt-2 text-red-200 text-sm">
+								This appears to be an authentication error. You may need to log in again.
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			{#if consolidateResults}
+				<div class="mt-6 p-4 bg-green-900 border border-green-700 rounded-lg">
+					<div class="text-green-300">✅ Consolidation completed successfully!</div>
+					<div class="mt-3 text-sm text-green-200">
+						<div>Merchant groups processed: {consolidateResults.groupsProcessed}</div>
+						<div>Payment records updated: {consolidateResults.paymentsUpdated}</div>
+						<div>Budget assignments updated: {consolidateResults.budgetMerchantsUpdated}</div>
+						<div>Duplicate budget assignments removed: {consolidateResults.budgetMerchantsRemoved}</div>
+						{#if consolidateResults.errors && consolidateResults.errors.length > 0}
+							<div class="mt-2 text-yellow-200">
+								<div class="font-medium mb-2">⚠️ Warnings: {consolidateResults.errors.length} issues encountered</div>
+								<div class="text-sm space-y-2 max-h-40 overflow-y-auto">
+									{#each consolidateResults.errors as error}
+										<div class="bg-yellow-900/30 border border-yellow-700 rounded p-2">
+											{#if error.canonical}
+												<div class="font-medium text-yellow-300">Canonical: {error.canonical}</div>
+											{/if}
+											{#if error.pattern}
+												<div class="text-yellow-200">Pattern: {error.pattern.replace('_', ' ').toUpperCase()}</div>
 											{/if}
 											{#if error.variants && error.variants.length > 0}
 												<div class="text-yellow-200">Variants: {error.variants.join(', ')}</div>
