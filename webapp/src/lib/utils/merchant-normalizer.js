@@ -34,6 +34,12 @@ export function normalizeMerchant(merchant) {
 		return extractRideSharingDetails(merchant);
 	}
 
+	// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
+	// This needs to come before hotel check to avoid false positives
+	if (hasAddressPattern(merchantUpper)) {
+		return extractAddressDetails(merchant);
+	}
+
 	// Hotels and accommodation
 	if (isHotelTransaction(merchantUpper)) {
 		return extractHotelDetails(merchant);
@@ -67,6 +73,16 @@ export function normalizeMerchant(merchant) {
 	// JACADI clothing store
 	if (merchantUpper.includes('JACADI')) {
 		return extractJacadiDetails(merchant);
+	}
+
+	// Apple services
+	if (merchantUpper.includes('APPLE') || merchantUpper.includes('ITUNES')) {
+		return extractAppleDetails(merchant);
+	}
+
+	// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
+	if (hasStoreNumberPattern(merchantUpper)) {
+		return extractStoreNumberDetails(merchant);
 	}
 
 	// BLUEMERCURY beauty store
@@ -452,6 +468,103 @@ function isFlightTransaction(merchantUpper) {
 	];
 
 	return airlines.some((airline) => merchantUpper.includes(airline));
+}
+
+/**
+ * Extract Apple service details
+ */
+function extractAppleDetails(merchant) {
+	const merchantUpper = merchant.toUpperCase();
+	
+	// Apple Store purchases
+	if (merchantUpper.includes('APPLE STORE')) {
+		return {
+			merchant_normalized: 'APPLE',
+			merchant_details: merchant
+		};
+	}
+	
+	// Apple services (iTunes, App Store, etc.)
+	if (merchantUpper.includes('ITUNES') || merchantUpper.includes('APP STORE')) {
+		return {
+			merchant_normalized: 'APPLE',
+			merchant_details: merchant
+		};
+	}
+	
+	// Generic Apple transactions
+	return {
+		merchant_normalized: 'APPLE',
+		merchant_details: merchant
+	};
+}
+
+/**
+ * Check if merchant has store number pattern (e.g., PINKBERRY 15012 NEW YORK)
+ */
+function hasStoreNumberPattern(merchantUpper) {
+	// Pattern: MERCHANT_NAME [STORE_NUMBER] [LOCATION]
+	const storeNumberPattern = /^(.+?)\s+(\d{4,})\s+(.+)$/;
+	return storeNumberPattern.test(merchantUpper);
+}
+
+/**
+ * Extract store number details
+ */
+function extractStoreNumberDetails(merchant) {
+	const merchantUpper = merchant.toUpperCase();
+	const storeNumberMatch = merchantUpper.match(/^(.+?)\s+(\d{4,})\s+(.+)$/);
+	
+	if (storeNumberMatch) {
+		const [, baseName, storeNumber, location] = storeNumberMatch;
+		return {
+			merchant_normalized: baseName.trim(),
+			merchant_details: `${storeNumber} ${location.trim()}`
+		};
+	}
+	
+	return {
+		merchant_normalized: merchant,
+		merchant_details: ''
+	};
+}
+
+/**
+ * Check if merchant has address pattern (e.g., TST* DIG INN- 100 W 67 NEW YORK)
+ */
+function hasAddressPattern(merchantUpper) {
+	// Pattern: PREFIX MERCHANT- ADDRESS LOCATION
+	// More flexible pattern that looks for common address indicators
+	const addressPattern = /^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/;
+	return addressPattern.test(merchantUpper);
+}
+
+/**
+ * Extract address details
+ */
+function extractAddressDetails(merchant) {
+	const merchantUpper = merchant.toUpperCase();
+	const addressMatch = merchantUpper.match(/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/);
+	
+	if (addressMatch) {
+		const [, prefix, businessName, streetNumber, streetName, streetSuffix, location] = addressMatch;
+		// Remove the dash from business name if present
+		const cleanBusinessName = businessName.replace(/-$/, '').trim();
+		
+		// Reconstruct the address with the original suffix if it exists
+		const originalSuffix = merchant.match(/\d+(TH|ST|ND|RD)/i);
+		const suffix = originalSuffix ? originalSuffix[1] : '';
+		
+		return {
+			merchant_normalized: cleanBusinessName,
+			merchant_details: `${streetNumber} ${streetName} ${streetSuffix}${suffix} ${location.trim()}`
+		};
+	}
+	
+	return {
+		merchant_normalized: merchant,
+		merchant_details: ''
+	};
 }
 
 /**

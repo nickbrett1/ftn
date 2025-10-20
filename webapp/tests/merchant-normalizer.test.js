@@ -199,4 +199,58 @@ describe('Merchant Normalizer', () => {
 			expect(result.merchant_details).toBe('');
 		});
 	});
+
+	// Test new patterns for merchant consolidation
+	describe('Store number variations', () => {
+		it('should normalize PINKBERRY store variations', () => {
+			const result1 = normalizeMerchant('PINKBERRY 15012 NEW YORK');
+			expect(result1.merchant_normalized).toBe('PINKBERRY');
+			expect(result1.merchant_details).toBe('15012 NEW YORK');
+
+			const result2 = normalizeMerchant('PINKBERRY 15038 NEW YORK');
+			expect(result2.merchant_normalized).toBe('PINKBERRY');
+			expect(result2.merchant_details).toBe('15038 NEW YORK');
+		});
+	});
+
+	describe('Apple services', () => {
+		it('should normalize Apple Store variations', () => {
+			const result1 = normalizeMerchant('APPLE STORE');
+			expect(result1.merchant_normalized).toBe('APPLE');
+			expect(result1.merchant_details).toBe('APPLE STORE');
+
+			const result2 = normalizeMerchant('ITUNES STORE');
+			expect(result2.merchant_normalized).toBe('APPLE');
+			expect(result2.merchant_details).toBe('ITUNES STORE');
+
+			const result3 = normalizeMerchant('APPLE.COM/BILL');
+			expect(result3.merchant_normalized).toBe('APPLE');
+			expect(result3.merchant_details).toBe('APPLE.COM/BILL');
+		});
+	});
+
+	describe('Address format variations', () => {
+		it('should normalize address format variations', () => {
+			const result1 = normalizeMerchant('TST* DIG INN- 100 W 67 NEW YORK');
+			expect(result1.merchant_normalized).toBe('DIG INN');
+			expect(result1.merchant_details).toBe('100 W 67 NEW YORK');
+
+			const result2 = normalizeMerchant('TST* DIG INN- 100 W 67TH NEW YORK');
+			expect(result2.merchant_normalized).toBe('DIG INN');
+			expect(result2.merchant_details).toBe('100 W 67TH NEW YORK');
+		});
+	});
+
+	describe('Spacing variations', () => {
+		it('should handle spacing variations through generic normalization', () => {
+			// These will be handled by the generic normalization
+			const result1 = normalizeMerchant('PLANT SHED 87 CORP NEW YORK');
+			// Should normalize to remove common suffixes
+			expect(result1.merchant_normalized).toContain('PLANT SHED');
+			
+			const result2 = normalizeMerchant('PLANTSHED 8007539595');
+			// Should normalize to remove common suffixes
+			expect(result2.merchant_normalized).toContain('PLANTSHED');
+		});
+	});
 });

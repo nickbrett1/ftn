@@ -299,7 +299,16 @@ async function performBulkPatternUpdates(db, batchSize) {
 			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
 			normalized: 'PLAYSTATION NETWORK',
 			details: ''
-		}
+		},
+		// Apple services
+		{
+			pattern: "merchant LIKE '%APPLE%'",
+			normalized: 'APPLE',
+			details: 'merchant'
+		},
+		// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
+		// This will be handled by the merchant normalizer function instead of SQL patterns
+		// since SQLite doesn't have good regex support
 	];
 
 	let totalUpdated = 0;
@@ -443,6 +452,11 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
 			normalized: 'PLAYSTATION NETWORK'
+		},
+		// Apple services
+		{
+			pattern: "merchant LIKE '%APPLE%'",
+			normalized: 'APPLE'
 		}
 	];
 
