@@ -77,6 +77,7 @@
 		}
 	}
 
+
 	// Load preview on component mount
 	import { onMount } from 'svelte';
 	onMount(() => {
