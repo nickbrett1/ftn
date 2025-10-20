@@ -58,6 +58,38 @@ describe('Merchant Normalizer', () => {
 		});
 	});
 
+	describe('British Airways normalization', () => {
+		it('should normalize British Airways with transaction code', () => {
+			const result = normalizeMerchant('BRITISH AWYS1252218268543 WWW.BRITISHAI');
+			expect(result.merchant_normalized).toBe('BRITISH AIRWAYS');
+			expect(result.merchant_details).toBe('BRITISH AWYS1252218268543 WWW.BRITISHAI');
+		});
+
+		it('should normalize British Airways with different transaction code', () => {
+			const result = normalizeMerchant('BRITISH AWYS1252218268544 WWW.BRITISHAI');
+			expect(result.merchant_normalized).toBe('BRITISH AIRWAYS');
+			expect(result.merchant_details).toBe('BRITISH AWYS1252218268544 WWW.BRITISHAI');
+		});
+
+		it('should normalize British Airways with different case', () => {
+			const result = normalizeMerchant('british awys1252218268543 www.britishai');
+			expect(result.merchant_normalized).toBe('BRITISH AIRWAYS');
+			expect(result.merchant_details).toBe('british awys1252218268543 www.britishai');
+		});
+
+		it('should normalize British Airways with mixed case', () => {
+			const result = normalizeMerchant('British Awys1252218268543 Www.Britishai');
+			expect(result.merchant_normalized).toBe('BRITISH AIRWAYS');
+			expect(result.merchant_details).toBe('British Awys1252218268543 Www.Britishai');
+		});
+
+		it('should normalize British Airways with just BRITISH', () => {
+			const result = normalizeMerchant('BRITISH AIRWAYS');
+			expect(result.merchant_normalized).toBe('BRITISH AIRWAYS');
+			expect(result.merchant_details).toBe('BRITISH AIRWAYS');
+		});
+	});
+
 	describe('PlayStation Network normalization', () => {
 		it('should normalize PlayStation Network with transaction code', () => {
 			const result = normalizeMerchant('PlayStation Network 12345-67890');
