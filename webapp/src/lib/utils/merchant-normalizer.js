@@ -183,7 +183,7 @@ function extractFlightDetails(merchant) {
 	const route = routeMatch ? `${routeMatch[1]}-${routeMatch[2]}` : '';
 
 	return {
-		merchant_normalized: airline || 'AIRLINE',
+		merchant_normalized: airline || 'UNKNOWN AIRLINE',
 		merchant_details: route || merchant
 	};
 }
