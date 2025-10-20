@@ -24,7 +24,7 @@
 			<LinkedinInBrands aria-label="LinkedIn" />
 		</a>
 		<a href="https://github.com/nickbrett1/ftn" class="p-1 text-white flex items-center size-[48px]">
-			<GithubBrands />
+			<GithubBrands aria-label="GitHub" />
 		</a>
 		<a
 			href="mailto:nick@fintechnick.com"

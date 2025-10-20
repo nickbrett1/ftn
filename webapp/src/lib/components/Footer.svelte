@@ -94,6 +94,7 @@
 						goto('/deploys');
 					}}
 					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
+					aria-label="View Deployments & Preview Environments"
 				>
 					🚀
 				</button>
@@ -105,6 +106,7 @@
 						id="login"
 						onclick={handleCreditCardClick}
 						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
+						aria-label="Credit Card Billing Tool"
 						title="Credit Card Billing Tool"
 					/>
 				{:else}
@@ -113,6 +115,7 @@
 						<CreditCardSolid
 							id="login"
 							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							aria-label="Credit Card Billing Tool"
 						/>
 					</Login>
 				{/if}
@@ -122,20 +125,23 @@
 				<a
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					aria-label="Email"
 				>
-					<EnvelopeRegular />
+					<EnvelopeRegular aria-label="Email" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					aria-label="GitHub"
 				>
-					<GithubBrands />
+					<GithubBrands aria-label="GitHub" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					aria-label="LinkedIn"
 				>
-					<LinkedinInBrands />
+					<LinkedinInBrands aria-label="LinkedIn" />
 				</a>
 			</div>
 		</div>
