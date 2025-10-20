@@ -24,7 +24,12 @@
 	let availableMerchants = $derived(
 		allUnassignedMerchants.filter((merchant) => {
 			const normalized = normalizeMerchant(merchant);
-			return !assignedMerchants.has(normalized.merchant_normalized.toLowerCase());
+			const isAssigned = assignedMerchants.has(normalized.merchant_normalized.toLowerCase());
+			// Debug logging for ABW ENTERPRISES
+			if (merchant.includes('ABW') || merchant.includes('abw')) {
+				console.log('ABW Debug - Merchant:', merchant, 'Normalized:', normalized.merchant_normalized.toLowerCase(), 'Assigned:', isAssigned, 'AssignedMerchants:', Array.from(assignedMerchants));
+			}
+			return !isAssigned;
 		})
 	);
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));
