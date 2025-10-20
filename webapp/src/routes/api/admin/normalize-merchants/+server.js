@@ -255,6 +255,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 			normalized: 'SOUTHWEST',
 			details: 'merchant'
 		},
+		{
+			pattern: "merchant LIKE '%BRITISH%'",
+			normalized: 'BRITISH AIRWAYS',
+			details: 'merchant'
+		},
 		// Update existing AIRLINE records to UNKNOWN AIRLINE
 		{
 			pattern: "merchant_normalized = 'AIRLINE'",
@@ -401,6 +406,10 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE '%SOUTHWEST%'",
 			normalized: 'SOUTHWEST'
+		},
+		{
+			pattern: "merchant LIKE '%BRITISH%'",
+			normalized: 'BRITISH AIRWAYS'
 		},
 		// Update existing AIRLINE records to UNKNOWN AIRLINE
 		{
