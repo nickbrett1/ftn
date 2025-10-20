@@ -255,6 +255,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 			normalized: 'SOUTHWEST',
 			details: 'merchant'
 		},
+		{
+			pattern: "merchant LIKE '%BRITISH%'",
+			normalized: 'BRITISH AIRWAYS',
+			details: 'merchant'
+		},
 		// Gas stations
 		{
 			pattern: "merchant LIKE '%SHELL%'",
@@ -395,6 +400,10 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 		{
 			pattern: "merchant LIKE '%SOUTHWEST%'",
 			normalized: 'SOUTHWEST'
+		},
+		{
+			pattern: "merchant LIKE '%BRITISH%'",
+			normalized: 'BRITISH AIRWAYS'
 		},
 		// Gas stations
 		{
