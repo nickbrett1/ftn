@@ -127,21 +127,21 @@
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 					aria-label="Email"
 				>
-					<EnvelopeRegular aria-label="Email" />
+					<EnvelopeRegular />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 					aria-label="GitHub"
 				>
-					<GithubBrands aria-label="GitHub" />
+					<GithubBrands />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
 					aria-label="LinkedIn"
 				>
-					<LinkedinInBrands aria-label="LinkedIn" />
+					<LinkedinInBrands />
 				</a>
 			</div>
 		</div>

@@ -1417,6 +1417,7 @@
 												<button
 													class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
 													title={`Card: ${charge.card_name}`}
+													aria-label={`Show card info for ${charge.card_name}`}
 													onclick={() => showCardInfo(charge.card_name)}
 												>
 													💳
@@ -1447,6 +1448,7 @@
 															data-allocation-tooltip={buttonInfo.tooltip}
 															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+															aria-label="Create auto association"
 														>
 															🔗
 														</button>
@@ -1475,6 +1477,7 @@
 															data-allocation-tooltip={buttonInfo.tooltip}
 															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+															aria-label="Create auto association"
 														>
 															🔗
 														</button>
@@ -1592,6 +1595,7 @@
 															data-allocation-tooltip={buttonInfo.tooltip}
 															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+															aria-label="Create auto association"
 														>
 															🔗
 														</button>
@@ -1620,6 +1624,7 @@
 															data-allocation-tooltip={buttonInfo.tooltip}
 															title={buttonInfo.title}
 															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+															aria-label="Create auto association"
 														>
 															🔗
 														</button>

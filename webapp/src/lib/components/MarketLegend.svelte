@@ -14,6 +14,7 @@
 		<button
 			onclick={toggleVisibility}
 			class="text-zinc-400 hover:text-white transition-colors"
+			aria-label={isVisible ? 'Hide legend' : 'Show legend'}
 		>
 			{isVisible ? '−' : '+'}
 		</button>

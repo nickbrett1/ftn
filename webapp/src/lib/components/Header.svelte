@@ -20,17 +20,19 @@
 			href="https://www.linkedin.com/in/nick-brett/"
 			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
 			rel="noopener noreferrer"
+			aria-label="LinkedIn"
 		>
-			<LinkedinInBrands aria-label="LinkedIn" />
+			<LinkedinInBrands />
 		</a>
-		<a href="https://github.com/nickbrett1/ftn" class="p-1 text-white flex items-center size-[48px]">
-			<GithubBrands aria-label="GitHub" />
+		<a href="https://github.com/nickbrett1/ftn" class="p-1 text-white flex items-center size-[48px]" aria-label="GitHub">
+			<GithubBrands />
 		</a>
 		<a
 			href="mailto:nick@fintechnick.com"
 			class="p-1 text-white hover:text-green-400 flex items-center size-[48px]"
+			aria-label="Email"
 		>
-			<EnvelopeRegular aria-label="Email" />
+			<EnvelopeRegular />
 		</a>
 	</nav>
 </div>

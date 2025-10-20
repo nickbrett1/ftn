@@ -6,7 +6,7 @@
 	const bubble = createBubbler();
 </script>
 
-<button onclick={bubble('click')} class="glowing-btn text-green-300"
+<button onclick={bubble('click')} class="glowing-btn text-green-300" aria-label="Hello button"
 	><span class="glowing-txt">HEL<span class="faulty-letter">L</span>O</span></button
 >
 

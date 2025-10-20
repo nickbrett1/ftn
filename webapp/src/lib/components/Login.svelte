@@ -41,6 +41,6 @@
 	}
 </script>
 
-<button onclick={onClick}>
+<button onclick={onClick} aria-label="Login or access billing tool">
 	{@render children?.()}
 </button>
