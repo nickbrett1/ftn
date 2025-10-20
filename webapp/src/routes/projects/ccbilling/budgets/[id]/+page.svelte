@@ -1,5 +1,4 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { tick } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
@@ -98,9 +97,6 @@
 			// Reset form
 			selectedMerchant = '';
 
-			// Invalidate server-side data to ensure consistency
-			await invalidateAll();
-
 			// Wait for DOM updates to complete, then refresh the merchant list
 			await tick();
 			merchantPickerRef?.refreshMerchantList();
@@ -137,9 +133,6 @@
 				const merchantKey = merchant.merchant_normalized || merchant.merchant;
 				return merchantKey !== merchantName;
 			});
-
-			// Invalidate server-side data to ensure consistency
-			await invalidateAll();
 
 			// Wait for DOM updates to complete before refreshing picker
 			await tick();
