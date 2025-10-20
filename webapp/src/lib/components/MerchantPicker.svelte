@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
+	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 	const {
 		selectedMerchant = '',
@@ -19,8 +20,12 @@
 	let isLoadingInProgress = $state(false); // Track if a load operation is in progress
 
 	// Derived state - filter out currently assigned merchants
+	// Use normalizeMerchant to ensure consistent comparison
 	let availableMerchants = $derived(
-		allUnassignedMerchants.filter((merchant) => !assignedMerchants.has(merchant.toLowerCase()))
+		allUnassignedMerchants.filter((merchant) => {
+			const normalized = normalizeMerchant(merchant);
+			return !assignedMerchants.has(normalized.merchant_normalized.toLowerCase());
+		})
 	);
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));
 	let hasMerchants = $derived(availableMerchants.length > 0);
