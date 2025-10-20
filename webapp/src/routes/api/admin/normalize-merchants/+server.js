@@ -855,39 +855,33 @@ async function consolidateStoreVariations(db) {
 			// For each normalized group, consolidate if there are multiple variations
 			for (const [normalizedName, variations] of normalizedGroups) {
 				if (variations.length > 1) {
-					// Check if the normalized name already exists in this budget
-					const existingEntry = await db
-						.prepare('SELECT id FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
-						.bind(budgetId, normalizedName)
-						.first();
+					// Get all IDs for these variations
+					const { results: variationIds } = await db
+						.prepare(
+							`
+							SELECT id FROM budget_merchant 
+							WHERE budget_id = ? AND merchant_normalized IN (${variations.map(() => '?').join(',')})
+							ORDER BY id
+							`
+						)
+						.bind(budgetId, ...variations)
+						.all();
 					
-					if (existingEntry) {
-						// The normalized name already exists, delete all other variations
-						for (const variation of variations) {
-							if (variation !== normalizedName) {
-								await db
-									.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
-									.bind(budgetId, variation)
-									.run();
-								consolidatedCount++;
-							}
-						}
-					} else {
-						// The normalized name doesn't exist, update the first variation and delete the rest
-						const [firstVariation, ...otherVariations] = variations;
+					if (variationIds.length > 1) {
+						// Keep the first entry, delete the rest
+						const [keepId, ...deleteIds] = variationIds.map(r => r.id);
 						
-						// Update the first variation to the normalized name
+						// Update the first entry to the normalized name
 						await db
-							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE budget_id = ? AND merchant_normalized = ?')
-							.bind(normalizedName, budgetId, firstVariation)
+							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?')
+							.bind(normalizedName, keepId)
 							.run();
-						consolidatedCount++;
 						
-						// Delete the other variations
-						for (const variation of otherVariations) {
+						// Delete all other entries
+						for (const deleteId of deleteIds) {
 							await db
-								.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
-								.bind(budgetId, variation)
+								.prepare('DELETE FROM budget_merchant WHERE id = ?')
+								.bind(deleteId)
 								.run();
 							consolidatedCount++;
 						}
