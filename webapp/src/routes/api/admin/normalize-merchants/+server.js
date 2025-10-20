@@ -26,18 +26,37 @@ export async function POST(event) {
 		const offset = body.offset || 0;
 
 		// Get payments to normalize (process all since we're always updating)
-		const { results: payments } = await db
-			.prepare(
+		// If offset is 0, process all records; otherwise process in batches
+		let payments;
+		if (offset === 0) {
+			// Process all records at once for the first run
+			const { results: allPayments } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, merchant_details
+					FROM payment 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
 				`
-				SELECT id, merchant, merchant_normalized, merchant_details
-				FROM payment 
-				WHERE merchant IS NOT NULL
-				ORDER BY id
-				LIMIT ? OFFSET ?
-			`
-			)
-			.bind(batchSize, offset)
-			.all();
+				)
+				.all();
+			payments = allPayments;
+		} else {
+			// Process in batches for subsequent runs
+			const { results: batchPayments } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, merchant_details
+					FROM payment 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
+					LIMIT ? OFFSET ?
+				`
+				)
+				.bind(batchSize, offset)
+				.all();
+			payments = batchPayments;
+		}
 
 		let updatedCount = 0;
 		const errors = [];
@@ -89,18 +108,37 @@ export async function POST(event) {
 		const totalRemaining = countResult[0]?.total || 0;
 
 		// Also normalize budget_merchant records - enhanced to handle all cases
-		const { results: budgetMerchants } = await db
-			.prepare(
+		// If offset is 0, process all records; otherwise process in batches
+		let budgetMerchants;
+		if (offset === 0) {
+			// Process all budget merchant records at once for the first run
+			const { results: allBudgetMerchants } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, budget_id
+					FROM budget_merchant 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
 				`
-				SELECT id, merchant, merchant_normalized, budget_id
-				FROM budget_merchant 
-				WHERE merchant IS NOT NULL
-				ORDER BY id
-				LIMIT ?
-			`
-			)
-			.bind(batchSize)
-			.all();
+				)
+				.all();
+			budgetMerchants = allBudgetMerchants;
+		} else {
+			// Process in batches for subsequent runs
+			const { results: batchBudgetMerchants } = await db
+				.prepare(
+					`
+					SELECT id, merchant, merchant_normalized, budget_id
+					FROM budget_merchant 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
+					LIMIT ?
+				`
+				)
+				.bind(batchSize)
+				.all();
+			budgetMerchants = batchBudgetMerchants;
+		}
 
 		let budgetMerchantsUpdated = 0;
 		for (const mapping of budgetMerchants) {
@@ -132,7 +170,7 @@ export async function POST(event) {
 			}
 		}
 
-		// If this is the first batch (offset = 0), also do bulk pattern-based updates
+		// If this is the first run (offset = 0), also do bulk pattern-based updates
 		// This is more efficient for known merchant patterns
 		if (offset === 0) {
 			try {
@@ -172,11 +210,13 @@ export async function POST(event) {
 			paymentsProcessed: payments.length,
 			paymentsUpdated: updatedCount,
 			budgetMerchantsUpdated,
-			totalRemaining: totalRemaining - updatedCount,
-			nextOffset: offset + batchSize,
+			totalRemaining: offset === 0 ? 0 : totalRemaining - updatedCount,
+			nextOffset: offset === 0 ? 0 : offset + batchSize,
 			errors: errors.length > 0 ? errors : undefined,
 			message:
-				totalRemaining > batchSize
+				offset === 0
+					? 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
+					: totalRemaining > batchSize
 					? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
 					: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
 		});
@@ -309,6 +349,10 @@ async function performBulkPatternUpdates(db, batchSize) {
 		// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
 		// This will be handled by the merchant normalizer function instead of SQL patterns
 		// since SQLite doesn't have good regex support
+		
+		// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
+		// These will be handled by the merchant normalizer function instead of SQL patterns
+		// since SQLite doesn't have good regex support for complex address patterns
 	];
 
 	let totalUpdated = 0;
