@@ -1,6 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import Button from './Button.svelte';
+	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
 

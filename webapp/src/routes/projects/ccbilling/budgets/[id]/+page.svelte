@@ -13,6 +13,7 @@
 		isIconUsedByOtherBudget,
 		getBudgetNameUsingIcon
 	} from '$lib/utils/budget-icons.js';
+	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 	const { data } = $props();
 
@@ -49,8 +50,9 @@
 	);
 
 	// Derived set of assigned merchant names for reactive filtering
+	// Use merchant_normalized for consistent comparison
 	let assignedMerchantNames = $derived(
-		new Set(merchants.filter((m) => m && m.merchant).map((m) => m.merchant.toLowerCase()))
+		new Set(merchants.filter((m) => m && (m.merchant_normalized || m.merchant)).map((m) => (m.merchant_normalized || m.merchant).toLowerCase()))
 	);
 
 	async function addMerchant() {
@@ -61,9 +63,13 @@
 			return;
 		}
 
-		// Check if merchant already exists
+		// Check if merchant already exists using normalized names
+		const normalizedSelected = normalizeMerchant(selectedMerchant.trim());
 		const merchantExists = merchants.some(
-			(merchant) => merchant.merchant.toLowerCase() === selectedMerchant.trim().toLowerCase()
+			(merchant) => {
+				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
+				return normalizedExisting.merchant_normalized.toLowerCase() === normalizedSelected.merchant_normalized.toLowerCase();
+			}
 		);
 		if (merchantExists) {
 			addError = 'This merchant is already assigned to this budget';
@@ -86,12 +92,13 @@
 				return;
 			}
 
-			// Add to reactive collection
+			// Add to reactive collection using normalized name
+			const normalizedMerchant = normalizeMerchant(selectedMerchant.trim());
 			merchants = [
 				...merchants,
 				{
 					merchant: selectedMerchant.trim(),
-					merchant_normalized: selectedMerchant.trim()
+					merchant_normalized: normalizedMerchant.merchant_normalized
 				}
 			];
 
@@ -129,10 +136,11 @@
 				return;
 			}
 
-			// Remove from reactive collection
+			// Remove from reactive collection using normalized names
+			const normalizedToRemove = normalizeMerchant(merchantName);
 			merchants = merchants.filter((merchant) => {
-				const merchantKey = merchant.merchant_normalized || merchant.merchant;
-				return merchantKey !== merchantName;
+				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
+				return normalizedExisting.merchant_normalized.toLowerCase() !== normalizedToRemove.merchant_normalized.toLowerCase();
 			});
 
 			// Wait for DOM updates to complete before refreshing picker
@@ -349,7 +357,7 @@
 						>
 							<div>
 								<p class="text-white font-medium">
-									{merchant.merchant_normalized || merchant.merchant}
+									{merchant.merchant}
 								</p>
 								<p class="text-gray-400 text-sm">
 									Charges from this merchant will be auto-assigned to "{budget?.name ||
@@ -357,14 +365,14 @@
 								</p>
 							</div>
 							<button
-								onclick={() => removeMerchant(merchant.merchant_normalized || merchant.merchant)}
+								onclick={() => removeMerchant(merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
 								disabled={isDeleting &&
-									deletingMerchant === (merchant.merchant_normalized || merchant.merchant)}
+									deletingMerchant === merchant.merchant}
 								style="cursor: pointer;"
 							>
 								{isDeleting &&
-								deletingMerchant === (merchant.merchant_normalized || merchant.merchant)
+								deletingMerchant === merchant.merchant
 									? 'Removing...'
 									: 'Remove'}
 							</button>
