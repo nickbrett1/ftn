@@ -190,12 +190,22 @@ export async function POST(event) {
 					errors.push(...budgetBulkUpdates.errors);
 				}
 
-				// Ensure consistency between payments and budget merchants
-				const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
-				budgetMerchantsUpdated += consistencyUpdates.updated;
-				if (consistencyUpdates.errors && consistencyUpdates.errors.length > 0) {
-					errors.push(...consistencyUpdates.errors);
-				}
+		// Ensure consistency between payments and budget merchants
+		const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
+		budgetMerchantsUpdated += consistencyUpdates.updated;
+		if (consistencyUpdates.errors && consistencyUpdates.errors.length > 0) {
+			errors.push(...consistencyUpdates.errors);
+		}
+
+		// Check for merchants that are assigned to budgets but still appear as unassigned
+		const assignmentCheck = await checkAssignmentConsistency(db);
+		if (assignmentCheck.inconsistencies && assignmentCheck.inconsistencies.length > 0) {
+			errors.push({
+				type: 'assignment_inconsistency',
+				message: `Found ${assignmentCheck.inconsistencies.length} merchants assigned to budgets but appearing as unassigned`,
+				inconsistencies: assignmentCheck.inconsistencies.slice(0, 10) // Limit to first 10 for reporting
+			});
+		}
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -610,19 +620,22 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 /**
  * Ensure consistency between payments and budget merchants
  * This updates budget merchant mappings to match the normalized values from payments
+ * 
+ * The key improvement: instead of matching on exact merchant names, we now:
+ * 1. Get all unique normalized merchant names from payments
+ * 2. For each normalized name, find all budget merchants that should normalize to the same value
+ * 3. Update budget merchants to use the canonical normalized form from payments
  */
 async function ensurePaymentBudgetConsistency(db) {
 	try {
-		// Find budget merchants that have inconsistent normalization with payments
-		const { results: inconsistentMappings } = await db
+		// Get all unique normalized merchant names from payments
+		const { results: paymentNormalized } = await db
 			.prepare(
 				`
-				SELECT DISTINCT bm.id, bm.merchant, bm.merchant_normalized, p.merchant_normalized as payment_normalized
-				FROM budget_merchant bm
-				JOIN payment p ON bm.merchant = p.merchant
-				WHERE bm.merchant_normalized != p.merchant_normalized
-				  AND p.merchant_normalized IS NOT NULL
-				LIMIT 100
+				SELECT DISTINCT merchant_normalized
+				FROM payment 
+				WHERE merchant_normalized IS NOT NULL
+				ORDER BY merchant_normalized
 			`
 			)
 			.all();
@@ -630,30 +643,55 @@ async function ensurePaymentBudgetConsistency(db) {
 		let updated = 0;
 		const errors = [];
 
-		for (const mapping of inconsistentMappings) {
-			try {
-				// Update budget merchant to match payment normalization
-				await db
-					.prepare(
-						`
-						UPDATE budget_merchant 
-						SET merchant_normalized = ?
-						WHERE id = ?
+		// For each normalized merchant name from payments, check budget merchants
+		for (const paymentMerchant of paymentNormalized) {
+			const normalizedName = paymentMerchant.merchant_normalized;
+			
+			// Find all budget merchants that should normalize to this name
+			const { results: budgetMerchants } = await db
+				.prepare(
 					`
-					)
-					.bind(mapping.payment_normalized, mapping.id)
-					.run();
+					SELECT id, merchant, merchant_normalized
+					FROM budget_merchant 
+					WHERE merchant IS NOT NULL
+					ORDER BY id
+				`
+				)
+				.all();
 
-				updated++;
-			} catch (error) {
-				errors.push({
-					type: 'consistency_update',
-					id: mapping.id,
-					merchant: mapping.merchant,
-					oldNormalized: mapping.merchant_normalized,
-					newNormalized: mapping.payment_normalized,
-					error: error.message
-				});
+			// Check each budget merchant to see if it should normalize to this payment merchant
+			for (const budgetMerchant of budgetMerchants) {
+				try {
+					const normalized = normalizeMerchant(budgetMerchant.merchant);
+					
+					// If this budget merchant should normalize to the same value as the payment merchant
+					// but currently has a different normalized value, update it
+					if (normalized.merchant_normalized === normalizedName && 
+						budgetMerchant.merchant_normalized !== normalizedName) {
+						
+						await db
+							.prepare(
+								`
+								UPDATE budget_merchant 
+								SET merchant_normalized = ?
+								WHERE id = ?
+							`
+							)
+							.bind(normalizedName, budgetMerchant.id)
+							.run();
+
+						updated++;
+					}
+				} catch (error) {
+					errors.push({
+						type: 'consistency_update',
+						id: budgetMerchant.id,
+						merchant: budgetMerchant.merchant,
+						oldNormalized: budgetMerchant.merchant_normalized,
+						newNormalized: normalizedName,
+						error: error.message
+					});
+				}
 			}
 		}
 
@@ -668,6 +706,80 @@ async function ensurePaymentBudgetConsistency(db) {
 					error: error.message
 				}
 			]
+		};
+	}
+}
+
+/**
+ * Check for merchants that are assigned to budgets but still appear as unassigned
+ * This helps identify normalization inconsistencies that cause the modal bug
+ */
+async function checkAssignmentConsistency(db) {
+	try {
+		// Get all merchants that are assigned to budgets
+		const { results: assignedMerchants } = await db
+			.prepare(
+				`
+				SELECT DISTINCT merchant_normalized
+				FROM budget_merchant 
+				WHERE merchant_normalized IS NOT NULL
+				ORDER BY merchant_normalized
+			`
+			)
+			.all();
+
+		const inconsistencies = [];
+
+		// For each assigned merchant, check if it appears in the unassigned query
+		for (const assigned of assignedMerchants) {
+			const normalizedName = assigned.merchant_normalized;
+			
+			// Check if this merchant appears in the unassigned merchants query
+			const { results: unassignedCheck } = await db
+				.prepare(
+					`
+					SELECT DISTINCT p.merchant_normalized
+					FROM payment p
+					JOIN statement s ON p.statement_id = s.id
+					WHERE p.merchant_normalized = ?
+					  AND NOT EXISTS (
+						SELECT 1 FROM budget_merchant bm 
+						WHERE LOWER(bm.merchant_normalized) = LOWER(p.merchant_normalized)
+					  )
+					LIMIT 1
+				`
+				)
+				.bind(normalizedName)
+				.all();
+
+			if (unassignedCheck.length > 0) {
+				// This merchant is assigned but still appears as unassigned
+				// Get more details about the assignment
+				const { results: assignmentDetails } = await db
+					.prepare(
+						`
+						SELECT bm.id, bm.merchant, bm.merchant_normalized, bm.budget_id
+						FROM budget_merchant bm
+						WHERE bm.merchant_normalized = ?
+						LIMIT 5
+					`
+					)
+					.bind(normalizedName)
+					.all();
+
+				inconsistencies.push({
+					merchant_normalized: normalizedName,
+					assignments: assignmentDetails
+				});
+			}
+		}
+
+		return { inconsistencies };
+	} catch (error) {
+		console.error('Assignment consistency check failed:', error);
+		return {
+			inconsistencies: [],
+			error: error.message
 		};
 	}
 }
@@ -788,6 +900,99 @@ export async function GET(event) {
 		return json(
 			{
 				error: 'Failed to get status',
+				details: error.message
+			},
+			{ status: 500 }
+		);
+	}
+}
+
+/**
+ * Debug endpoint to check specific merchant assignments
+ */
+export async function PUT(event) {
+	// Require authentication
+	const authResult = await requireUser(event);
+	if (authResult instanceof Response) return authResult;
+
+	const db = event.platform?.env?.CCBILLING_DB;
+	if (!db) {
+		return json({ error: 'Database not available' }, { status: 500 });
+	}
+
+	try {
+		const body = await event.request.json();
+		const merchantName = body.merchant;
+
+		if (!merchantName) {
+			return json({ error: 'Merchant name required' }, { status: 400 });
+		}
+
+		// Normalize the merchant name
+		const normalized = normalizeMerchant(merchantName);
+
+		// Check if this merchant is assigned to any budget
+		const { results: assignments } = await db
+			.prepare(
+				`
+				SELECT bm.id, bm.merchant, bm.merchant_normalized, bm.budget_id
+				FROM budget_merchant bm
+				WHERE LOWER(bm.merchant_normalized) = LOWER(?)
+				ORDER BY bm.budget_id
+			`
+			)
+			.bind(normalized.merchant_normalized)
+			.all();
+
+		// Check if this merchant appears in the unassigned query
+		const { results: unassignedCheck } = await db
+			.prepare(
+				`
+				SELECT DISTINCT p.merchant_normalized, p.merchant
+				FROM payment p
+				JOIN statement s ON p.statement_id = s.id
+				WHERE LOWER(p.merchant_normalized) = LOWER(?)
+				  AND NOT EXISTS (
+					SELECT 1 FROM budget_merchant bm 
+					WHERE LOWER(bm.merchant_normalized) = LOWER(p.merchant_normalized)
+				  )
+				LIMIT 5
+			`
+			)
+			.bind(normalized.merchant_normalized)
+			.all();
+
+		// Get all variations of this merchant in the database
+		const { results: allVariations } = await db
+			.prepare(
+				`
+				SELECT DISTINCT p.merchant, p.merchant_normalized, 'payment' as source
+				FROM payment p
+				WHERE LOWER(p.merchant_normalized) = LOWER(?)
+				UNION ALL
+				SELECT DISTINCT bm.merchant, bm.merchant_normalized, 'budget_merchant' as source
+				FROM budget_merchant bm
+				WHERE LOWER(bm.merchant_normalized) = LOWER(?)
+				ORDER BY source, merchant
+			`
+			)
+			.bind(normalized.merchant_normalized, normalized.merchant_normalized)
+			.all();
+
+		return json({
+			merchant: merchantName,
+			normalized: normalized.merchant_normalized,
+			assignments: assignments,
+			appearsAsUnassigned: unassignedCheck.length > 0,
+			unassignedVariations: unassignedCheck,
+			allVariations: allVariations,
+			isInconsistent: assignments.length > 0 && unassignedCheck.length > 0
+		});
+	} catch (error) {
+		console.error('Debug check failed:', error);
+		return json(
+			{
+				error: 'Debug check failed',
 				details: error.message
 			},
 			{ status: 500 }
