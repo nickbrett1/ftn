@@ -54,12 +54,6 @@
 	let assignedMerchantNames = $derived(
 		new Set(merchants.filter((m) => m && (m.merchant_normalized || m.merchant)).map((m) => (m.merchant_normalized || m.merchant).toLowerCase()))
 	);
-	
-	// Debug logging
-	$effect(() => {
-		console.log('Assigned merchants debug:', Array.from(assignedMerchantNames));
-		console.log('Merchants data:', merchants);
-	});
 
 	async function addMerchant() {
 		if (isAdding || !selectedMerchant?.trim()) {
