@@ -618,21 +618,38 @@ export async function getUnassignedMerchants(event) {
 
 	try {
 		// Get ALL merchants from statements that are not assigned to ANY budget
-		const { results } = await db
+		// First, let's get all assigned merchants for debugging
+		const { results: assignedMerchants } = await db
+			.prepare(
+				`
+				SELECT DISTINCT merchant_normalized
+				FROM budget_merchant 
+				WHERE merchant_normalized IS NOT NULL
+				ORDER BY merchant_normalized
+			`
+			)
+			.all();
+		
+		console.log(`Found ${assignedMerchants.length} assigned merchants:`, assignedMerchants.map(m => m.merchant_normalized).slice(0, 10));
+
+		// Use a more explicit approach: get all payment merchants, then filter out assigned ones
+		const { results: allPaymentMerchants } = await db
 			.prepare(
 				`
                 SELECT DISTINCT p.merchant_normalized
                 FROM payment p
                 JOIN statement s ON p.statement_id = s.id
                 WHERE p.merchant_normalized IS NOT NULL
-                  AND NOT EXISTS (
-                    SELECT 1 FROM budget_merchant bm 
-                    WHERE LOWER(bm.merchant_normalized) = LOWER(p.merchant_normalized)
-                  )
                 ORDER BY p.merchant_normalized ASC
             `
 			)
 			.all();
+
+		// Filter out assigned merchants using JavaScript for more reliable comparison
+		const assignedMerchantSetForFiltering = new Set(assignedMerchants.map(m => m.merchant_normalized.toLowerCase()));
+		const results = allPaymentMerchants.filter(merchant => 
+			!assignedMerchantSetForFiltering.has(merchant.merchant_normalized.toLowerCase())
+		);
 
 
 		return results.map((row) => row.merchant_normalized);

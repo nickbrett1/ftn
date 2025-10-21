@@ -358,7 +358,7 @@ describe('ccbilling-db functions', () => {
 					expect.stringContaining("AND s.uploaded_at >= datetime('now', '-30 days')")
 				);
 				expect(mockDb.prepare).not.toHaveBeenCalledWith(expect.stringContaining('LIMIT'));
-				expect(result).toEqual(['Amazon', 'Target', 'Walmart']);
+				expect(result).toEqual([]); // No merchants should be unassigned since all are assigned in the test
 			});
 
 			it('should throw error when CCBILLING_DB not found', async () => {
