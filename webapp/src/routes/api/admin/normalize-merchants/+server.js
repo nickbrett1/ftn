@@ -206,6 +206,16 @@ export async function POST(event) {
 				inconsistencies: assignmentCheck.inconsistencies.slice(0, 10) // Limit to first 10 for reporting
 			});
 		}
+
+		// Check for duplicate merchant variations that could cause the modal bug
+		const duplicateCheck = await checkDuplicateMerchantVariations(db);
+		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
+			errors.push({
+				type: 'duplicate_merchant_variations',
+				message: `Found ${duplicateCheck.duplicateVariations.length} merchants with multiple variations having different assignment statuses`,
+				duplicateVariations: duplicateCheck.duplicateVariations.slice(0, 10) // Limit to first 10 for reporting
+			});
+		}
 			} catch (bulkError) {
 				console.error('Bulk pattern updates failed:', bulkError);
 				errors.push({
@@ -785,6 +795,66 @@ async function checkAssignmentConsistency(db) {
 }
 
 /**
+ * Check for merchants that normalize to the same value but have different assignment statuses
+ * This is likely the root cause of the modal bug
+ */
+async function checkDuplicateMerchantVariations(db) {
+	try {
+		// Find merchants that normalize to the same value but have different assignment statuses
+		const { results: duplicateVariations } = await db
+			.prepare(
+				`
+				WITH normalized_merchants AS (
+					SELECT DISTINCT 
+						p.merchant,
+						p.merchant_normalized,
+						'payment' as source,
+						CASE 
+							WHEN EXISTS (
+								SELECT 1 FROM budget_merchant bm 
+								WHERE LOWER(bm.merchant_normalized) = LOWER(p.merchant_normalized)
+							) THEN 1 
+							ELSE 0 
+						END as is_assigned
+					FROM payment p
+					JOIN statement s ON p.statement_id = s.id
+					WHERE p.merchant_normalized IS NOT NULL
+					
+					UNION ALL
+					
+					SELECT DISTINCT 
+						bm.merchant,
+						bm.merchant_normalized,
+						'budget_merchant' as source,
+						1 as is_assigned
+					FROM budget_merchant bm
+					WHERE bm.merchant_normalized IS NOT NULL
+				)
+				SELECT 
+					merchant_normalized,
+					COUNT(DISTINCT merchant) as variation_count,
+					COUNT(DISTINCT is_assigned) as assignment_status_count,
+					GROUP_CONCAT(DISTINCT merchant, ' | ') as variations,
+					GROUP_CONCAT(DISTINCT is_assigned) as assignment_statuses
+				FROM normalized_merchants
+				GROUP BY merchant_normalized
+				HAVING variation_count > 1 AND assignment_status_count > 1
+				ORDER BY merchant_normalized
+			`
+			)
+			.all();
+
+		return { duplicateVariations };
+	} catch (error) {
+		console.error('Duplicate merchant variations check failed:', error);
+		return {
+			duplicateVariations: [],
+			error: error.message
+		};
+	}
+}
+
+/**
  * Get normalization status
  */
 export async function GET(event) {
@@ -979,6 +1049,12 @@ export async function PUT(event) {
 			.bind(normalized.merchant_normalized, normalized.merchant_normalized)
 			.all();
 
+		// Check for duplicate variations of this merchant
+		const duplicateCheck = await checkDuplicateMerchantVariations(db);
+		const merchantDuplicates = duplicateCheck.duplicateVariations?.filter(
+			dup => dup.merchant_normalized.toLowerCase() === normalized.merchant_normalized.toLowerCase()
+		) || [];
+
 		return json({
 			merchant: merchantName,
 			normalized: normalized.merchant_normalized,
@@ -986,7 +1062,9 @@ export async function PUT(event) {
 			appearsAsUnassigned: unassignedCheck.length > 0,
 			unassignedVariations: unassignedCheck,
 			allVariations: allVariations,
-			isInconsistent: assignments.length > 0 && unassignedCheck.length > 0
+			isInconsistent: assignments.length > 0 && unassignedCheck.length > 0,
+			hasDuplicateVariations: merchantDuplicates.length > 0,
+			duplicateVariations: merchantDuplicates
 		});
 	} catch (error) {
 		console.error('Debug check failed:', error);

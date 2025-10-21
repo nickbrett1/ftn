@@ -646,10 +646,15 @@ export async function getUnassignedMerchants(event) {
 			.all();
 
 		// Filter out assigned merchants using JavaScript for more reliable comparison
+		// This handles the case where different merchant variations normalize to the same value
 		const assignedMerchantSetForFiltering = new Set(assignedMerchants.map(m => m.merchant_normalized.toLowerCase()));
-		const results = allPaymentMerchants.filter(merchant => 
-			!assignedMerchantSetForFiltering.has(merchant.merchant_normalized.toLowerCase())
-		);
+		const results = allPaymentMerchants.filter(merchant => {
+			// Normalize this payment merchant and check if the normalized value is assigned
+			const normalizedMerchant = normalizeMerchant(merchant.merchant_normalized);
+			const isAssigned = assignedMerchantSetForFiltering.has(normalizedMerchant.merchant_normalized.toLowerCase());
+			
+			return !isAssigned;
+		});
 
 
 		return results.map((row) => row.merchant_normalized);
