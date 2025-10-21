@@ -627,12 +627,13 @@ export async function getUnassignedMerchants(event) {
                 WHERE p.merchant_normalized IS NOT NULL
                   AND NOT EXISTS (
                     SELECT 1 FROM budget_merchant bm 
-                    WHERE bm.merchant_normalized = p.merchant_normalized
+                    WHERE LOWER(bm.merchant_normalized) = LOWER(p.merchant_normalized)
                   )
                 ORDER BY p.merchant_normalized ASC
             `
 			)
 			.all();
+
 
 		return results.map((row) => row.merchant_normalized);
 	} catch (error) {
