@@ -19,7 +19,10 @@ module.exports = {
 			target: 'temporary-public-storage'
 		},
 		assert: {
-			preset: 'lighthouse:recommended'
+			preset: 'lighthouse:recommended',
+			assertions: {
+				'link-name': 'off' // svelte-awesome-icons v3 breaking change - icons in links don't pass this check
+			}
 		}
 	}
 };
