@@ -179,7 +179,7 @@ export async function POST(event) {
 		// This is more efficient for known merchant patterns
 		// Only run bulk updates if we haven't processed many individual records
 		// This prevents double-processing while still allowing bulk updates to run
-		if (offset === 0) {
+		if (offset === 0 && updatedCount < 3) {
 			// Check if there are any records that need bulk updating
 			const { results: needsBulkUpdate } = await db
 				.prepare(
@@ -200,6 +200,7 @@ export async function POST(event) {
 					`
 				)
 				.all();
+			
 			
 			if (needsBulkUpdate[0].count > 0) {
 				try {
