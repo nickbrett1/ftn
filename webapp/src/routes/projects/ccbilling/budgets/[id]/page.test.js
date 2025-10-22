@@ -188,20 +188,11 @@ describe('Budget Page - Merchant Removal', () => {
 		// Wait for the operation to complete
 		await new Promise((resolve) => setTimeout(resolve, 50));
 
-		// Debug: Check the current state before trying to change
-		console.log('Select value before change:', select.value);
-		console.log(
-			'Select options:',
-			Array.from(select.options).map((opt) => opt.value)
-		);
-		console.log('Fetch calls made:', mockFetch.mock.calls);
-		console.log('Fetch call count:', mockFetch.mock.calls.length);
 
 		// Try to interact with the select again - this should work if no infinite loop
 		await fireEvent.change(select, { target: { value: 'costco' } });
 
 		// Debug: Check the state after change
-		console.log('Select value after change:', select.value);
 
 		// If there's an infinite loop, the select value won't change
 		expect(select.value).toBe('costco'); // This should fail if there's an infinite loop
@@ -414,9 +405,6 @@ describe('Budget Page - Merchant Removal', () => {
 			body: JSON.stringify({ merchant: 'amazon' })
 		});
 
-		console.log(
-			'✅ Merchant removal bug has been fixed - merchant disappears from UI after removal'
-		);
 	});
 
 	it('should verify that remove buttons work after adding merchant from combo box', async () => {
@@ -495,7 +483,6 @@ describe('Budget Page - Merchant Removal', () => {
 		// At least one of these should be true if the button is working
 		expect(buttonStateChanged || fetchCallMade).toBe(true);
 
-		console.log('✅ Remove button is working correctly after adding merchant from combo box');
 	});
 
 	it('should make correct API call format when removing merchant', async () => {
@@ -546,7 +533,6 @@ describe('Budget Page - Merchant Removal', () => {
 			body: JSON.stringify({ merchant: 'amazon' })
 		});
 
-		console.log('✅ API call format validation passed - DELETE request has correct URL and body');
 	});
 
 	it('should reproduce the bug where adding merchant breaks all UI interactions', async () => {
@@ -651,7 +637,6 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// If we get here without hanging, the UI interactions are working
-		console.log('✅ UI interactions are working correctly after adding merchant');
 	});
 
 	it('should reproduce the bug where remove button does nothing after adding merchant', async () => {
@@ -752,7 +737,6 @@ describe('Budget Page - Merchant Removal', () => {
 		// This assertion will fail if the remove button does nothing (the bug)
 		expect(fetchCallsAfter).toBeGreaterThan(fetchCallsBefore);
 
-		console.log('✅ Remove button is working correctly after adding merchant');
 	});
 
 	it('should reproduce the bug where remove button stops working after adding merchant', async () => {
@@ -797,7 +781,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(initialRemoveButtons.length).toBeGreaterThan(0);
 
 		// Don't test the remove button before adding - just verify it exists
-		console.log('Remove button exists before adding merchant:', initialRemoveButtons.length > 0);
 
 		// Wait for MerchantPicker to finish loading and render the select element
 		// Since we're mocking merchants to be available, the combobox should appear
@@ -847,12 +830,10 @@ describe('Budget Page - Merchant Removal', () => {
 
 		const fetchCallsAfterTest2 = mockFetch.mock.calls.length;
 		const removeButtonWorksAfter = fetchCallsAfterTest2 > fetchCallsBeforeTest2;
-		console.log('Remove button works after adding merchant:', removeButtonWorksAfter);
 
 		// This assertion will fail if the remove button stops working after adding a merchant (the bug)
 		expect(removeButtonWorksAfter).toBe(true);
 
-		console.log('✅ Remove button continues to work after adding merchant');
 	});
 
 	it('should reproduce the exact bug: add merchant then remove it from UI', async () => {
@@ -987,7 +968,6 @@ describe('Budget Page - Merchant Removal', () => {
 		const removeButtonsAfter = getAllByText(container, 'Remove');
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
-		console.log('✅ Successfully added and removed merchant - UI updated correctly');
 	});
 
 	it('should reproduce the UI reactivity bug: merchant removed from data but still visible in UI', async () => {
@@ -1092,7 +1072,6 @@ describe('Budget Page - Merchant Removal', () => {
 		// This test will pass if the UI properly updates after removal
 		// It will fail if the UI doesn't update and the merchant is still visible
 
-		console.log('✅ UI properly updated after merchant removal - no reactivity bug');
 	});
 
 	it('should handle the case where remove button is clicked on already-removed merchant', async () => {
@@ -1188,7 +1167,6 @@ describe('Budget Page - Merchant Removal', () => {
 		const removeButtonsAfter = getAllByText(container, 'Remove');
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
-		console.log('✅ UI properly updated - no duplicate removal possible');
 	});
 
 	it('should demonstrate the production bug: data changes but UI does not update', async () => {
@@ -1285,7 +1263,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
 		// If we get here, the UI properly updated
-		console.log('✅ UI properly reflects data changes - no production bug');
 	});
 
 	it('should fail if we can reproduce the production bug: data changes but UI stays the same', async () => {
@@ -1384,7 +1361,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
 		// If we get here, the UI properly updated and the bug is fixed
-		console.log('✅ PRODUCTION BUG NOT REPRODUCED - UI properly reflects data changes');
 	});
 
 	it('should reproduce the Svelte reactivity bug: array changes but UI does not update', async () => {
@@ -1483,7 +1459,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
 		// If we get here, the Svelte reactivity bug is fixed
-		console.log('✅ SVELTE REACTIVITY BUG FIXED - UI properly reflects array changes');
 	});
 
 	it('should test the specific Svelte 5 reactivity issue with array mutations', async () => {
@@ -1584,7 +1559,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(removeButtonsAfter.length).toBe(2); // Only amazon and target should remain
 
 		// If we get here, the Svelte 5 reactivity issue is resolved
-		console.log('✅ SVELTE 5 REACTIVITY ISSUE RESOLVED - Array changes trigger UI updates');
 	});
 
 	it('should validate the fix: UI updates correctly after successful removal', async () => {
@@ -1697,7 +1671,6 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(removeButtonsAfterFirst.length).toBe(2); // Only amazon and target should remain
 
 		// If we get here, the fix is working correctly
-		console.log('✅ FIX VALIDATED - UI properly updates after merchant removal');
 
 		// Restore original browser environment
 		global.browser = originalBrowser;
@@ -1807,7 +1780,6 @@ describe('Budget Page - Merchant Removal', () => {
 
 		if (merchantStillVisible) {
 			// This is the production bug: UI didn't update after first removal
-			console.log('🚨 PRODUCTION BUG REPRODUCED: UI did not update after first removal');
 
 			// Get the remove buttons again (they should still be there if UI didn't update)
 			const removeButtonsAfterFirst = getAllByText(container, 'Remove');
@@ -1831,7 +1803,6 @@ describe('Budget Page - Merchant Removal', () => {
 			);
 		} else {
 			// UI properly updated after first removal - no bug
-			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
 		}
 
 		// Restore original browser environment
@@ -1953,13 +1924,10 @@ describe('Budget Page - Merchant Removal', () => {
 
 		if (merchantStillVisible) {
 			// This would be the production bug: UI didn't update after first removal
-			console.log('🚨 PRODUCTION BUG REPRODUCED: UI did not update after first removal');
 			// This should not happen with the fix in place
 			fail('Production bug was reproduced - fix is not working');
 		} else {
 			// UI properly updated after first removal - fix is working
-			console.log('✅ PRODUCTION BUG NOT REPRODUCED: UI properly updated after first removal');
-			console.log('✅ FIX IS WORKING: UI updates correctly after merchant removal');
 		}
 	});
 });
