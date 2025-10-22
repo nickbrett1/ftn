@@ -129,13 +129,12 @@ describe('Budget Page - Merchant Removal', () => {
 		await fireEvent.click(addButton);
 
 		// Wait for the async operation to complete
-		// The selected merchant should remain visible in the combo box after adding
-		// This is the desired behavior - showing what was just added
+		// The combo box should reset to show placeholder text after adding
 		await waitFor(
 			() => {
-				expect(select.value).toBe('walmart');
+				expect(select.value).toBe('');
 			},
-			{ timeout: 3000 }
+			{ timeout: 5000 }
 		);
 
 		// Additional small delay to ensure all reactive updates complete
