@@ -14,10 +14,18 @@ globalThis.__llamaCreateMock = vi.fn();
 
 // Mock llama-api-client default export
 vi.mock('llama-api-client', () => {
-	const Default = vi.fn().mockImplementation(() => ({
-		chat: { completions: { create: (...args) => globalThis.__llamaCreateMock(...args) } }
-	}));
-	return { default: Default };
+	class MockLlamaClient {
+		constructor() {
+			return {
+				chat: { 
+					completions: { 
+						create: (...args) => globalThis.__llamaCreateMock(...args) 
+					} 
+				}
+			};
+		}
+	}
+	return { default: MockLlamaClient };
 });
 
 import { getPayment } from '$lib/server/ccbilling-db.js';

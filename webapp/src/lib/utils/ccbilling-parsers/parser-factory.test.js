@@ -5,19 +5,27 @@ import { WellsFargoParser } from './wells-fargo-parser.js';
 
 // Mock the parsers
 vi.mock('./chase-parser.js', () => ({
-	ChaseParser: vi.fn().mockImplementation(() => ({
-		providerName: 'Chase',
-		canParse: vi.fn(),
-		parse: vi.fn()
-	}))
+	ChaseParser: class MockChaseParser {
+		constructor() {
+			return {
+				providerName: 'Chase',
+				canParse: vi.fn(),
+				parse: vi.fn()
+			};
+		}
+	}
 }));
 
 vi.mock('./wells-fargo-parser.js', () => ({
-	WellsFargoParser: vi.fn().mockImplementation(() => ({
-		providerName: 'Wells Fargo',
-		canParse: vi.fn(),
-		parse: vi.fn()
-	}))
+	WellsFargoParser: class MockWellsFargoParser {
+		constructor() {
+			return {
+				providerName: 'Wells Fargo',
+				canParse: vi.fn(),
+				parse: vi.fn()
+			};
+		}
+	}
 }));
 
 describe('ParserFactory', () => {
