@@ -21,7 +21,7 @@
 
 	// Derived state - filter out currently assigned merchants
 	// Use normalizeMerchant to ensure consistent comparison
-	// But always include the currently selected merchant to avoid it disappearing from the combo box
+	// Always include the currently selected merchant to avoid it disappearing from the combo box
 	let availableMerchants = $derived(
 		allUnassignedMerchants.filter((merchant) => {
 			const normalized = normalizeMerchant(merchant);

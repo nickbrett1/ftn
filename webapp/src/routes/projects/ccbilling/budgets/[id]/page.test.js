@@ -128,10 +128,11 @@ describe('Budget Page - Merchant Removal', () => {
 		const addButton = getByRole('button', { name: 'Add Merchant' });
 		await fireEvent.click(addButton);
 
-		// Wait for the async operation to complete and the select value to be reset
+		// Wait for the async operation to complete
+		// The selected merchant should remain visible in the combo box after adding
 		await waitFor(
 			() => {
-				expect(select.value).toBe('');
+				expect(select.value).toBe('walmart');
 			},
 			{ timeout: 3000 }
 		);
