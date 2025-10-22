@@ -106,9 +106,10 @@
 			await tick();
 			merchantPickerRef?.refreshMerchantList();
 
-			// Don't reset selectedMerchant immediately - let it remain visible in the combo box
-			// It will be cleared when the user selects a different merchant or refreshes the page
-			// This provides better UX by showing what was just added
+			// Reset selectedMerchant to show placeholder text after DOM updates
+			setTimeout(() => {
+				selectedMerchant = '';
+			}, 50);
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
