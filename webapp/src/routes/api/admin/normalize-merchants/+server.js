@@ -67,10 +67,15 @@ export async function POST(event) {
 				const normalized = normalizeMerchant(payment.merchant);
 
 				// Only update if normalization actually changed something
+				// Handle null merchant_details properly
+				const currentDetails = payment.merchant_details || '';
+				const newDetails = normalized.merchant_details || '';
+				
 				if (
 					normalized.merchant_normalized !== payment.merchant_normalized ||
-					normalized.merchant_details !== (payment.merchant_details || '')
+					newDetails !== currentDetails
 				) {
+					
 					await db
 						.prepare(
 							`
@@ -172,7 +177,9 @@ export async function POST(event) {
 
 		// If this is the first run (offset = 0), also do bulk pattern-based updates
 		// This is more efficient for known merchant patterns
-		if (offset === 0) {
+		// Only run bulk updates if we haven't processed many individual records
+		// This prevents double-processing while still allowing bulk updates to run
+		if (offset === 0 && updatedCount < 10) {
 			try {
 				const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
 				updatedCount += bulkUpdates.paymentsUpdated;
@@ -398,6 +405,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 				merchant_details = ${detailsField}
 			WHERE (${update.pattern})
 			AND (merchant_normalized != ? OR merchant_normalized IS NULL)
+			AND merchant IS NOT NULL
 		`;
 
 			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
