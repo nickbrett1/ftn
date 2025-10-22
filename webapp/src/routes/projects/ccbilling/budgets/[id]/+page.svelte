@@ -107,9 +107,8 @@
 			merchantPickerRef?.refreshMerchantList();
 
 			// Reset selectedMerchant to show placeholder text after DOM updates
-			setTimeout(() => {
-				selectedMerchant = '';
-			}, 50);
+			await tick();
+			selectedMerchant = '';
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {
