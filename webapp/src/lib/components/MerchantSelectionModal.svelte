@@ -1,8 +1,9 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import Button from './Button.svelte';
+	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
-	const { isOpen = false, onClose = () => {}, onSelect = () => {} } = $props();
+	const { isOpen = false, onClose = () => {}, onSelect = () => {}, assignedMerchants = new Set() } = $props();
 
 	let merchants = $state([]);
 	let filteredMerchants = $state([]);
@@ -35,7 +36,12 @@
 
 			// Validate that we received an array of strings
 			if (Array.isArray(data) && data.every((item) => typeof item === 'string')) {
-				merchants = sortMerchants(data);
+				// Filter out assigned merchants using normalized names
+				const unassignedMerchants = data.filter((merchant) => {
+					const normalized = normalizeMerchant(merchant);
+					return !assignedMerchants.has(normalized.merchant_normalized.toLowerCase());
+				});
+				merchants = sortMerchants(unassignedMerchants);
 				// Initialize filtered merchants based on current search term
 				if (searchTerm.trim()) {
 					handleSearch();

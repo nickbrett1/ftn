@@ -18,7 +18,6 @@ export const GET = RouteUtils.createRouteHandler(
 		const { params } = event;
 		const statement_id = parseInt(params.id);
 
-		console.log('🔍 Debug: Getting statement details for ID:', statement_id);
 
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);

@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import MerchantSelectionModal from './MerchantSelectionModal.svelte';
+	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 	const {
 		selectedMerchant = '',
@@ -19,8 +20,15 @@
 	let isLoadingInProgress = $state(false); // Track if a load operation is in progress
 
 	// Derived state - filter out currently assigned merchants
+	// Use normalizeMerchant to ensure consistent comparison
+	// Always include the currently selected merchant to avoid it disappearing from the combo box
 	let availableMerchants = $derived(
-		allUnassignedMerchants.filter((merchant) => !assignedMerchants.has(merchant.toLowerCase()))
+		allUnassignedMerchants.filter((merchant) => {
+			const normalized = normalizeMerchant(merchant);
+			const isAssigned = assignedMerchants.has(normalized.merchant_normalized.toLowerCase());
+			const isCurrentlySelected = merchant === localSelectedMerchant;
+			return !isAssigned || isCurrentlySelected;
+		})
 	);
 	let displayMerchants = $derived(availableMerchants.slice(0, 20));
 	let hasMerchants = $derived(availableMerchants.length > 0);
@@ -75,6 +83,11 @@
 		localSelectedMerchant = merchant;
 		onSelect(merchant);
 		showModal = false;
+		
+		// If the selected merchant is not in the recent merchants list, add it
+		if (!allUnassignedMerchants.includes(merchant)) {
+			allUnassignedMerchants = [merchant, ...allUnassignedMerchants];
+		}
 	}
 
 	// Sync local state with parent prop
@@ -166,4 +179,5 @@
 	isOpen={showModal}
 	onClose={() => (showModal = false)}
 	onSelect={handleModalSelect}
+	{assignedMerchants}
 />
