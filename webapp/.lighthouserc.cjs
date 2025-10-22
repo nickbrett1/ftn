@@ -23,7 +23,8 @@ module.exports = {
 				'valid-source-maps': 'off', // Sometimes fails due to timeouts: https://github.com/GoogleChrome/lighthouse/issues/6512
 				'csp-xss': 'off', // Disable because if unsafe-inline is present, nonces aren't generated (https://github.com/sveltejs/kit/pull/11613)
 				'color-contrast': 'off', // Neon flickering triggers this
-				'aria-valid-attr-value': 'off' // Melt adds some invalid aria tags
+				'aria-valid-attr-value': 'off', // Melt adds some invalid aria tags
+				'link-name': 'off' // svelte-awesome-icons v3 breaking change - icons in links don't pass this check
 			}
 		}
 	}
