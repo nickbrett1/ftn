@@ -202,21 +202,25 @@ export async function POST(event) {
 				.all();
 			
 			if (needsBulkUpdate[0].count > 0) {
-			try {
-				const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
-				updatedCount += bulkUpdates.paymentsUpdated;
-				budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
+				try {
+					const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
+					updatedCount += bulkUpdates.paymentsUpdated;
+					budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
 
-				// Add any bulk update errors
-				if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
-					errors.push(...bulkUpdates.errors);
-				}
+					// Add any bulk update errors
+					if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
+						errors.push(...bulkUpdates.errors);
+					}
 
-				// Also do bulk updates for budget merchants
-				const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db, batchSize);
-				budgetMerchantsUpdated += budgetBulkUpdates.updated;
-				if (budgetBulkUpdates.errors && budgetBulkUpdates.errors.length > 0) {
-					errors.push(...budgetBulkUpdates.errors);
+					// Also do bulk updates for budget merchants
+					const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db, batchSize);
+					budgetMerchantsUpdated += budgetBulkUpdates.updated;
+					if (budgetBulkUpdates.errors && budgetBulkUpdates.errors.length > 0) {
+						errors.push(...budgetBulkUpdates.errors);
+					}
+				} catch (error) {
+					console.error('Error during bulk updates:', error);
+					errors.push(`Bulk update error: ${error.message}`);
 				}
 			}
 		}
@@ -246,14 +250,6 @@ export async function POST(event) {
 				message: `Found ${duplicateCheck.duplicateVariations.length} merchants with multiple variations having different assignment statuses`,
 				duplicateVariations: duplicateCheck.duplicateVariations.slice(0, 10) // Limit to first 10 for reporting
 			});
-		}
-			} catch (bulkError) {
-				console.error('Bulk pattern updates failed:', bulkError);
-				errors.push({
-					type: 'bulk_update_failure',
-					error: bulkError.message
-				});
-			}
 		}
 
 		return json({
