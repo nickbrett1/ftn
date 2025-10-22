@@ -630,7 +630,6 @@ export async function getUnassignedMerchants(event) {
 			)
 			.all();
 		
-		console.log(`Found ${assignedMerchants.length} assigned merchants:`, assignedMerchants.map(m => m.merchant_normalized).slice(0, 10));
 
 		// Use a more explicit approach: get all payment merchants, then filter out assigned ones
 		const { results: allPaymentMerchants } = await db
