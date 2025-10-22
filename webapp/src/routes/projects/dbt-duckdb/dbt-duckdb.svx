@@ -233,7 +233,7 @@ Its core capabilities include:
   ```
 
   <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/agg_wdi_data_points_by_year.sql" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View Code
+    <GithubBrands size="1.2em" color="white" ariaLabel="GitHub" /> View Code
   </a>
 
 - **Dependency Management:** dbt automatically understands and manages the dependencies between transformation steps (called "models").
@@ -249,7 +249,7 @@ Its core capabilities include:
   ```
 
   <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/marts/_wdi_marts.yml" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View Code
+    <GithubBrands size="1.2em" color="white" ariaLabel="GitHub" /> View Code
   </a>
 
 - **Documentation & Lineage:** Automatically generate comprehensive documentation and a visual lineage graph, showing how data flows through your pipeline. See [here](./dbt-duckdb/docs) for the generated documentation for the project.
@@ -284,7 +284,7 @@ Its key advantages for our use case are:
   ```
 
   <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/populate.py" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View Code
+    <GithubBrands size="1.2em" color="white" ariaLabel="GitHub" /> View Code
   </a>
 
 ### The Combined Architecture
@@ -344,7 +344,7 @@ wdi:
 ```
 
   <a href="https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/profiles.yml" target="_blank" rel="noopener noreferrer" title="View Code" style="display: inline-flex; align-items: center; gap: 0.3em; line-height: 1;">
-    <GithubBrands size="1.2em" color="white" /> View Code
+    <GithubBrands size="1.2em" color="white" ariaLabel="GitHub" /> View Code
   </a>
 
 3.  **dbt Orchestration:** `dbt-core` executes the SQL models we've defined. These models perform transformations (cleaning, joining, aggregating) on the data within DuckDB. This is represented by the transition from DuckDB acting as a reader of raw data to DuckDB holding transformed data, orchestrated by dbt. dbt manages the order of execution based on dependencies.
