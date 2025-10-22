@@ -108,7 +108,7 @@
 
 			// Don't reset selectedMerchant immediately - let it remain visible in the combo box
 			// It will be cleared when the user selects a different merchant or refreshes the page
-			// selectedMerchant = ''; // COMMENTED OUT
+			// This provides better UX by showing what was just added
 		} catch (error) {
 			addError = 'Network error occurred';
 		} finally {

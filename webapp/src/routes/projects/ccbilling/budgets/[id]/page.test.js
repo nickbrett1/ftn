@@ -130,6 +130,7 @@ describe('Budget Page - Merchant Removal', () => {
 
 		// Wait for the async operation to complete
 		// The selected merchant should remain visible in the combo box after adding
+		// This is the desired behavior - showing what was just added
 		await waitFor(
 			() => {
 				expect(select.value).toBe('walmart');
