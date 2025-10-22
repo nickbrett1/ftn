@@ -107,6 +107,7 @@
 						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
 						title="Credit Card Billing Tool"
 						ariaLabel="Credit Card Billing Tool"
+						focusable="true"
 					/>
 				{:else}
 					<!-- User is not logged in, show login modal -->
@@ -115,6 +116,7 @@
 							id="login"
 							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
 							ariaLabel="Credit Card Billing Tool"
+							focusable="true"
 						/>
 					</Login>
 				{/if}
@@ -125,19 +127,19 @@
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<EnvelopeRegular ariaLabel="Email" />
+					<EnvelopeRegular ariaLabel="Email" focusable="true" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<GithubBrands ariaLabel="GitHub" />
+					<GithubBrands ariaLabel="GitHub" focusable="true" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<LinkedinInBrands ariaLabel="LinkedIn" />
+					<LinkedinInBrands ariaLabel="LinkedIn" focusable="true" />
 				</a>
 			</div>
 		</div>
