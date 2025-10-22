@@ -106,6 +106,7 @@
 						onclick={handleCreditCardClick}
 						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
 						title="Credit Card Billing Tool"
+						ariaLabel="Credit Card Billing Tool"
 					/>
 				{:else}
 					<!-- User is not logged in, show login modal -->
@@ -113,6 +114,7 @@
 						<CreditCardSolid
 							id="login"
 							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							ariaLabel="Credit Card Billing Tool"
 						/>
 					</Login>
 				{/if}
@@ -123,19 +125,19 @@
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<EnvelopeRegular />
+					<EnvelopeRegular ariaLabel="Email" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<GithubBrands />
+					<GithubBrands ariaLabel="GitHub" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<LinkedinInBrands />
+					<LinkedinInBrands ariaLabel="LinkedIn" />
 				</a>
 			</div>
 		</div>
