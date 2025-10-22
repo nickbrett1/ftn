@@ -179,7 +179,29 @@ export async function POST(event) {
 		// This is more efficient for known merchant patterns
 		// Only run bulk updates if we haven't processed many individual records
 		// This prevents double-processing while still allowing bulk updates to run
-		if (offset === 0 && updatedCount < 10) {
+		if (offset === 0) {
+			// Check if there are any records that need bulk updating
+			const { results: needsBulkUpdate } = await db
+				.prepare(
+					`
+					SELECT COUNT(*) as count
+					FROM payment 
+					WHERE merchant IS NOT NULL 
+					AND (merchant_normalized IS NULL OR merchant_normalized = '')
+					AND (merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%' OR 
+						 merchant LIKE 'CAVIAR%' OR merchant LIKE 'DOORDASH%' OR
+						 merchant LIKE '%UBER EATS%' OR merchant LIKE 'LYFT%' OR
+						 merchant LIKE 'UBER%' OR merchant LIKE '%UNITED%' OR
+						 merchant LIKE '%AMERICAN%' OR merchant LIKE '%DELTA%' OR
+						 merchant LIKE '%SOUTHWEST%' OR merchant LIKE '%BRITISH%' OR
+						 merchant LIKE '%SHELL%' OR merchant LIKE '%EXXON%' OR
+						 merchant LIKE '%CHEVRON%' OR merchant LIKE 'BLUEMERCURY%' OR
+						 merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%')
+					`
+				)
+				.all();
+			
+			if (needsBulkUpdate[0].count > 0) {
 			try {
 				const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
 				updatedCount += bulkUpdates.paymentsUpdated;
@@ -196,6 +218,8 @@ export async function POST(event) {
 				if (budgetBulkUpdates.errors && budgetBulkUpdates.errors.length > 0) {
 					errors.push(...budgetBulkUpdates.errors);
 				}
+			}
+		}
 
 		// Ensure consistency between payments and budget merchants
 		const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
