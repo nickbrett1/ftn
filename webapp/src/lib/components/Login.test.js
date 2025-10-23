@@ -25,14 +25,21 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return false (not logged in)
 		isUserAuthenticated.mockReturnValue(false);
 
-		render(Login);
-		const button = screen.getByRole('button');
+		const component = mount(Login, {
+			target: document.body
+		});
+
+		const button = document.querySelector('button');
 
 		// Click the button
-		fireEvent.click(button);
+		button.click();
+
+		flushSync();
 
 		// Should call the shared Google auth utility
 		expect(initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
+		
+		unmount(component);
 	});
 
 	it('redirects to ccbilling if already logged in', async () => {
