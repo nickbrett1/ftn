@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BaseParser } from './base-parser.js';
 import { ParsingUtils } from '../parsing-utils.js';
 
@@ -7,6 +7,13 @@ describe('BaseParser', () => {
 
 	beforeEach(() => {
 		parser = new BaseParser();
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('parseDate', () => {

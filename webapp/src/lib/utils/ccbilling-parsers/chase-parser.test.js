@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChaseParser } from './chase-parser.js';
 import { ParsingUtils } from '../parsing-utils.js';
 
@@ -7,6 +7,13 @@ describe('ChaseParser', () => {
 
 	beforeEach(() => {
 		parser = new ChaseParser();
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('constructor', () => {

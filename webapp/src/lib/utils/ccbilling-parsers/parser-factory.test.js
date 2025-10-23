@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ParserFactory } from './parser-factory.js';
 import { ChaseParser } from './chase-parser.js';
 import { WellsFargoParser } from './wells-fargo-parser.js';
@@ -38,6 +38,13 @@ describe('ParserFactory', () => {
 		factory = new ParserFactory();
 		mockChaseParser = factory.parsers[0];
 		mockWellsFargoParser = factory.parsers[1];
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('constructor', () => {

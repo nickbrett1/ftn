@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
 import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
@@ -16,6 +16,13 @@ describe('MerchantSelectionModal', () => {
 			ok: true,
 			json: vi.fn().mockResolvedValue([])
 		});
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	it('should not render when isOpen is false', () => {

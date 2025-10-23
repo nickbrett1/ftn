@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initiateGoogleAuth, getRedirectUri, isUserAuthenticated } from './google-auth.js';
 
 // Mock SvelteKit navigation
@@ -21,6 +21,13 @@ describe('Google Auth Utils', () => {
 		});
 		// Reset window.google
 		delete window.google;
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('getRedirectUri', () => {

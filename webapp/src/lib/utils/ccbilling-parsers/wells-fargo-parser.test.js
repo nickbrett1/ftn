@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WellsFargoParser } from './wells-fargo-parser.js';
 import { ParsingUtils } from '../parsing-utils.js';
 
@@ -7,6 +7,13 @@ describe('WellsFargoParser', () => {
 
 	beforeEach(() => {
 		parser = new WellsFargoParser();
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('constructor', () => {

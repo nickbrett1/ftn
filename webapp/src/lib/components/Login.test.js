@@ -1,4 +1,4 @@
-import { expect, vi, describe, it, beforeEach } from 'vitest';
+import { expect, vi, describe, it, beforeEach, afterEach } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
 import Login from './Login.svelte';
 
@@ -16,6 +16,13 @@ vi.mock('$app/navigation', () => ({
 describe('Login correctly', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	it('logs in', async () => {
