@@ -2,12 +2,15 @@ import { vi } from 'vitest';
 
 // Mock svelte-awesome-icons to avoid .svelte file loading issues
 vi.mock('svelte-awesome-icons', () => {
-	// Create a mock component factory
+	// Create a mock component that returns a simple function
 	const createMockIcon = (name) => {
-		return class MockIcon {
-			constructor() {
-				this.name = name;
-			}
+		return function MockIcon() {
+			return {
+				$$: {},
+				$set: vi.fn(),
+				$on: vi.fn(),
+				$destroy: vi.fn()
+			};
 		};
 	};
 
