@@ -26,7 +26,9 @@ vi.mock('svelte-awesome-icons', () => {
 		CalendarSolid: createMockIcon('CalendarSolid'),
 		CheckCircleSolid: createMockIcon('CheckCircleSolid'),
 		ChartLineSolid: createMockIcon('ChartLineSolid'),
-		FileInvoiceDollarSolid: createMockIcon('FileInvoiceDollarSolid')
+		FileInvoiceDollarSolid: createMockIcon('FileInvoiceDollarSolid'),
+		UserSecretSolid: createMockIcon('UserSecretSolid'),
+		RobotSolid: createMockIcon('RobotSolid')
 	};
 });
 
