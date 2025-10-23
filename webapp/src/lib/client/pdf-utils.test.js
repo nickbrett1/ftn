@@ -228,7 +228,16 @@ describe('PDFUtils', () => {
 
 		it('should handle PDF loading errors', async () => {
 			const loadingError = new Error('Failed to load PDF');
-			mockLoadingTask.promise = Promise.reject(loadingError);
+			
+			// Create a new mock loading task with a rejected promise
+			const mockLoadingTaskWithError = {
+				get promise() {
+					return Promise.reject(loadingError);
+				}
+			};
+			
+			// Mock getDocument to return the error loading task
+			mockGetDocument.mockReturnValue(mockLoadingTaskWithError);
 
 			await expect(PDFUtils.parsePDFFile(mockFile)).rejects.toThrow(
 				'PDF parsing failed: Failed to load PDF'
@@ -236,6 +245,7 @@ describe('PDFUtils', () => {
 		});
 
 		it('should handle text extraction errors', async () => {
+			// Mock the page to reject when getTextContent is called
 			mockPage.getTextContent.mockRejectedValue(new Error('Text extraction failed'));
 
 			await expect(PDFUtils.parsePDFFile(mockFile)).rejects.toThrow(

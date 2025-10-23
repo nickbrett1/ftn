@@ -263,40 +263,46 @@ describe('Google Auth Utils', () => {
 		it('should initialize Google Identity Services when script loads', async () => {
 			const { goto } = await import('$app/navigation');
 			
+			// Mock Google Identity Services before calling initiateGoogleAuth
+			window.google = {
+				accounts: {
+					id: {
+						initialize: vi.fn()
+					},
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
+			
 			// Mock script loading
 			const mockScript = {
 				src: '',
 				nonce: '',
-				onload: vi.fn(),
-				onerror: vi.fn()
+				onload: null,
+				onerror: null
 			};
 			
 			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
 			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script load and initialize Google GIS immediately
-				window.google = {
-					accounts: {
-						id: {
-							initialize: vi.fn()
-						},
-						oauth2: {
-							initCodeClient: vi.fn(() => ({
-								requestCode: vi.fn()
-							}))
-						}
+				// Call the actual onload function
+				setTimeout(() => {
+					if (mockScript.onload) {
+						mockScript.onload();
 					}
-				};
-				// Call onload after setting up google
-				setTimeout(() => mockScript.onload(), 0);
+				}, 0);
 			});
 
 			await initiateGoogleAuth('/projects/ccbilling');
 			
-			// Wait a bit for the async operations
-			await new Promise(resolve => setTimeout(resolve, 10));
+			// Wait for all async operations to complete
+			await new Promise(resolve => setTimeout(resolve, 50));
 			
 			expect(window.google.accounts.id.initialize).toHaveBeenCalled();
 			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+			expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
 		});
 
 		it('should handle state mismatch in OAuth callback', async () => {
