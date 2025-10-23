@@ -34,6 +34,7 @@ describe('/projects/ccbilling/cycles API', () => {
 		// Clear all mocks and timers to prevent leaks
 		vi.clearAllMocks();
 		vi.clearAllTimers();
+		vi.unstubAllGlobals();
 	});
 
 	describe('GET endpoint', () => {
