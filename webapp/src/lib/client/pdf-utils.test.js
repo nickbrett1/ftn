@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PDFUtils } from './pdf-utils.js';
+
+// Create a mock function that can be controlled
+const mockGetDocument = vi.hoisted(() => vi.fn());
 
 // Mock pdfjs-dist for dynamic imports
 vi.mock('pdfjs-dist', () => ({
 	GlobalWorkerOptions: {
 		workerSrc: ''
 	},
-	getDocument: vi.fn(),
+	getDocument: mockGetDocument,
 	version: '5.4.54'
 }));
 
@@ -15,12 +17,13 @@ vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
 	GlobalWorkerOptions: {
 		workerSrc: ''
 	},
-	getDocument: vi.fn(),
+	getDocument: mockGetDocument,
 	version: '5.4.54'
 }));
 
 // Import the mocked module
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDFUtils } from './pdf-utils.js';
 
 describe('PDFUtils', () => {
 	let mockPdfDocument;
@@ -192,14 +195,14 @@ describe('PDFUtils', () => {
 			};
 			
 			// Set up the mock for both regular and legacy imports
-			pdfjsLib.getDocument.mockReturnValue(mockLoadingTask);
+			mockGetDocument.mockReturnValue(mockLoadingTask);
 		});
 
 		it('should parse PDF file successfully', async () => {
 			const result = await PDFUtils.parsePDFFile(mockFile);
 
 			expect(mockFile.arrayBuffer).toHaveBeenCalled();
-			expect(pdfjsLib.getDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
+			expect(mockGetDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
 			expect(result).toContain('Statement Date: 2024-01-31');
 		});
 
@@ -211,7 +214,7 @@ describe('PDFUtils', () => {
 
 			const result = await PDFUtils.parsePDFFile(mockBuffer);
 
-			expect(pdfjsLib.getDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
+			expect(mockGetDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
 			expect(result).toContain('Statement Date: 2024-01-31');
 		});
 
