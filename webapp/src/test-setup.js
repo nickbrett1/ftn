@@ -21,6 +21,7 @@ vi.mock('svelte-awesome-icons', () => {
 		EnvelopeRegular: createMockIcon('EnvelopeRegular'),
 		EnvelopeOpenRegular: createMockIcon('EnvelopeOpenRegular'),
 		CreditCardRegular: createMockIcon('CreditCardRegular'),
+		CreditCardSolid: createMockIcon('CreditCardSolid'),
 		BuildingSolid: createMockIcon('BuildingSolid'),
 		CalendarSolid: createMockIcon('CalendarSolid'),
 		CheckCircleSolid: createMockIcon('CheckCircleSolid'),
