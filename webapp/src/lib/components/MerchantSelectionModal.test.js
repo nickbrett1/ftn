@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte';
+import { mount, unmount, flushSync } from 'svelte';
 import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
 // Mock fetch globally
@@ -16,7 +16,8 @@ describe('MerchantSelectionModal', () => {
 	});
 
 	it('should not render when isOpen is false', () => {
-		const { container } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: false,
 				onClose: mockOnClose,
@@ -24,11 +25,14 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		expect(container.querySelector('.fixed')).toBeNull();
+		expect(document.querySelector('.fixed')).toBeNull();
+		
+		unmount(component);
 	});
 
 	it('should render when isOpen is true', () => {
-		const { getByText, getByPlaceholderText } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -36,12 +40,15 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		expect(getByText('Select Merchant')).toBeTruthy();
-		expect(getByPlaceholderText('Search merchants...')).toBeTruthy();
+		expect(document.body.textContent).toContain('Select Merchant');
+		expect(document.querySelector('input[placeholder="Search merchants..."]')).toBeTruthy();
+		
+		unmount(component);
 	});
 
 	it('should call onClose when close button is clicked', async () => {
-		const { getByText } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -49,14 +56,21 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		const closeButton = getByText('×');
-		await fireEvent.click(closeButton);
+		// Find the close button by looking for the × character
+		const buttons = document.querySelectorAll('button');
+		const closeButton = Array.from(buttons).find(btn => btn.textContent.includes('×'));
+		closeButton.click();
+
+		flushSync();
 
 		expect(mockOnClose).toHaveBeenCalled();
+		
+		unmount(component);
 	});
 
 	it('should call onClose when cancel button is clicked', async () => {
-		const { getByText } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -64,14 +78,19 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		const cancelButton = getByText('Cancel');
-		await fireEvent.click(cancelButton);
+		const cancelButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Cancel'));
+		cancelButton.click();
+
+		flushSync();
 
 		expect(mockOnClose).toHaveBeenCalled();
+		
+		unmount(component);
 	});
 
 	it('should show loading state initially', () => {
-		const { getByText } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -79,11 +98,14 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		expect(getByText('Loading merchants...')).toBeTruthy();
+		expect(document.body.textContent).toContain('Loading merchants...');
+		
+		unmount(component);
 	});
 
 	it('should show search input', () => {
-		const { getByPlaceholderText } = render(MerchantSelectionModal, {
+		const component = mount(MerchantSelectionModal, {
+			target: document.body,
 			props: {
 				isOpen: true,
 				onClose: mockOnClose,
@@ -91,6 +113,8 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		expect(getByPlaceholderText('Search merchants...')).toBeTruthy();
+		expect(document.querySelector('input[placeholder="Search merchants..."]')).toBeTruthy();
+		
+		unmount(component);
 	});
 });

@@ -1,6 +1,5 @@
 import { expect, vi, describe, it, beforeEach } from 'vitest';
-import { render } from '@testing-library/svelte';
-import { screen, fireEvent } from '@testing-library/dom';
+import { mount, unmount, flushSync } from 'svelte';
 import Login from './Login.svelte';
 
 // Mock the shared Google auth utility
