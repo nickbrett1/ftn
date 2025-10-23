@@ -66,16 +66,18 @@ export default defineConfig(({ command, mode }) => {
 					resources: 'usable'
 				}
 			},
-			// Configure for Svelte 5 runes
-			define: {
-				'import.meta.vitest': 'undefined'
-			},
-			// Configure file handling for Svelte files
-			server: {
-				fs: {
-					allow: ['..']
-				}
-			},
+		// Configure for Svelte 5 runes
+		define: {
+			'import.meta.vitest': 'undefined'
+		},
+		// Configure file handling for tests
+		assetsInclude: ['**/*.svelte'],
+		// Handle .svelte files in node_modules for tests
+		resolve: {
+			alias: {
+				'svelte-awesome-icons': 'svelte-awesome-icons'
+			}
+		},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
