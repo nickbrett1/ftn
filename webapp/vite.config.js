@@ -110,10 +110,12 @@ export default defineConfig(({ command, mode }) => {
 			clearMocks: true,
 			mockReset: true,
 			// Add explicit reporter configuration for both console and JUnit output
-			reporter: ['default', 'junit'],
+			reporter: ['verbose', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'
-			}
+			},
+			// Enable detailed logging to help debug hanging tests
+			logHeapUsage: true
 		},
 		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 		resolve: process.env.VITEST

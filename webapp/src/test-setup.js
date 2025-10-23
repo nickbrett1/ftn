@@ -286,9 +286,21 @@ vi.mock('@zerodevx/svelte-img', () => ({
 	SvelteImg: mockIconComponent
 }));
 
-// Global afterEach to ensure cleanup happens even if tests forget
-if (typeof afterEach !== 'undefined') {
-	afterEach(() => {
+// Global test lifecycle logging for debugging hangs
+if (typeof beforeEach !== 'undefined' && typeof afterEach !== 'undefined') {
+	let currentTestName = '';
+	
+	beforeEach((context) => {
+		currentTestName = context?.task?.name || 'unknown';
+		const suiteName = context?.task?.suite?.name || 'unknown';
+		console.log(`🧪 [TEST START] ${suiteName} > ${currentTestName}`);
+	});
+	
+	afterEach((context) => {
+		currentTestName = context?.task?.name || 'unknown';
+		const suiteName = context?.task?.suite?.name || 'unknown';
+		console.log(`✅ [TEST END] ${suiteName} > ${currentTestName}`);
+		
 		// Force cleanup of any remaining timers
 		vi.clearAllTimers();
 		// Clear any remaining mocks
