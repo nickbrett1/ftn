@@ -11,13 +11,17 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn(
-		(data, options) =>
-			new Response(JSON.stringify(data), {
-				headers: { 'Content-Type': 'application/json' },
-				...options
-			})
-	)
+	json: vi.fn((data, options) => {
+		const responseBody = JSON.stringify(data);
+		const response = new Response(responseBody, {
+			headers: { 'Content-Type': 'application/json' },
+			status: options?.status || 200,
+			...options
+		});
+		// Ensure the json() method returns the parsed data
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Import the mocked functions

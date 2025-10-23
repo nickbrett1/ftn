@@ -5,7 +5,14 @@ import { GET } from './+server.js';
 vi.mock('$lib/server/ccbilling-db.js', () => ({ getPayment: vi.fn() }));
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+	json: vi.fn((data, opts) => {
+		const response = new Response(JSON.stringify(data), {
+			status: opts?.status || 200,
+			...opts
+		});
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Expose a controllable create() fn for the llama client mock

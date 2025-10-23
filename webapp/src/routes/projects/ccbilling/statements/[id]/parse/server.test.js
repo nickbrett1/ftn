@@ -96,13 +96,16 @@ vi.mock('$lib/server/route-utils.js', () => ({
 }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn(
-		(data, options) =>
-			new Response(JSON.stringify(data), {
-				headers: { 'Content-Type': 'application/json' },
-				...options
-			})
-	)
+	json: vi.fn((data, options) => {
+		const responseBody = JSON.stringify(data);
+		const response = new Response(responseBody, {
+			headers: { 'Content-Type': 'application/json' },
+			status: options?.status || 200,
+			...options
+		});
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Import the mocked functions
