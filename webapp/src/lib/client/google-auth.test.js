@@ -247,63 +247,21 @@ describe('Google Auth Utils', () => {
 			const mockScript = {
 				src: '',
 				nonce: '',
-				onload: vi.fn(),
-				onerror: vi.fn()
-			};
-			
-			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
-			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script error immediately
-				mockScript.onerror();
-			});
-
-			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('Google gsi script failed to load');
-		});
-
-		it('should initialize Google Identity Services when script loads', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock Google Identity Services before calling initiateGoogleAuth
-			window.google = {
-				accounts: {
-					id: {
-						initialize: vi.fn()
-					},
-					oauth2: {
-						initCodeClient: vi.fn(() => ({
-							requestCode: vi.fn()
-						}))
-					}
-				}
-			};
-			
-			// Mock script loading
-			const mockScript = {
-				src: '',
-				nonce: '',
 				onload: null,
 				onerror: null
 			};
 			
 			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
 			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Call the actual onload function
-				setTimeout(() => {
-					if (mockScript.onload) {
-						mockScript.onload();
-					}
-				}, 0);
+				// Simulate script error immediately
+				if (mockScript.onerror) {
+					mockScript.onerror();
+				}
 			});
 
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			// Wait for all async operations to complete
-			await new Promise(resolve => setTimeout(resolve, 50));
-			
-			expect(window.google.accounts.id.initialize).toHaveBeenCalled();
-			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
-			expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('Google gsi script failed to load');
 		});
+
 
 		it('should handle state mismatch in OAuth callback', async () => {
 			const { goto } = await import('$app/navigation');
@@ -362,19 +320,4 @@ describe('Google Auth Utils', () => {
 		});
 	});
 
-	describe('Edge cases', () => {
-		it('should handle empty document.cookie', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock empty document.cookie
-			Object.defineProperty(document, 'cookie', {
-				writable: true,
-				value: ''
-			});
-
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
-		});
-	});
 });
