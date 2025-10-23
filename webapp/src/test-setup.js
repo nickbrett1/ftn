@@ -27,7 +27,7 @@ vi.mock('svelte-awesome-icons', () => {
 	};
 
 	// Export all the icons that are used in the codebase
-	return {
+	const icons = {
 		LinkedinInBrands: createMockIcon('LinkedinInBrands'),
 		GithubBrands: createMockIcon('GithubBrands'),
 		EnvelopeRegular: createMockIcon('EnvelopeRegular'),
@@ -46,6 +46,8 @@ vi.mock('svelte-awesome-icons', () => {
 		ToolboxSolid: createMockIcon('ToolboxSolid'),
 		PlaneDepartureSolid: createMockIcon('PlaneDepartureSolid')
 	};
+	
+	return icons;
 });
 
 // Mock SvelteKit modules
@@ -103,11 +105,13 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn()
-}));
+global.IntersectionObserver = class MockIntersectionObserver {
+	constructor() {
+		this.observe = vi.fn();
+		this.unobserve = vi.fn();
+		this.disconnect = vi.fn();
+	}
+};
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
