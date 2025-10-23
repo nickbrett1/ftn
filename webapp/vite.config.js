@@ -60,24 +60,6 @@ export default defineConfig(({ command, mode }) => {
 			// Add explicit setup and teardown to prevent race conditions
 			setupFiles: ['src/test-setup.js'],
 			teardownTimeout: 10000, // 10 seconds for cleanup
-			// Configure for Svelte 5
-			environmentOptions: {
-				jsdom: {
-					resources: 'usable'
-				}
-			},
-		// Configure for Svelte 5 runes
-		define: {
-			'import.meta.vitest': 'undefined'
-		},
-		// Configure file handling for tests
-		assetsInclude: ['**/*.svelte'],
-		// Handle .svelte files in node_modules for tests
-		resolve: {
-			alias: {
-				'svelte-awesome-icons': 'svelte-awesome-icons'
-			}
-		},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -95,39 +77,23 @@ export default defineConfig(({ command, mode }) => {
 					'src/**/*.{js,ts}'
 				]
 			},
+			server: {},
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Run everything in a single thread with no isolation
-			pool: 'threads',
+			// Pool options for test execution
+			pool: 'forks',
 			poolOptions: {
-				threads: {
-					singleThread: true
+				forks: {
+					// Reverted from singleFork and isolate for better performance
 				}
 			},
-			// Disable all automatic cleanup and isolation
-			restoreMocks: false,
-			clearMocks: false,
-			mockReset: false,
-			isolate: false,
-			// Disable file parallelization
-			fileParallelism: false,
 			// Add explicit reporter configuration for both console and JUnit output
-			reporter: ['verbose', 'junit'],
+			reporter: ['default', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'
-			},
-			// Enable detailed logging to help debug hanging tests
-			logHeapUsage: true
+			}
 		},
-		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
-		resolve: process.env.VITEST
-			? {
-					conditions: ['browser'],
-					// Handle .svelte files from node_modules
-					extensions: ['.svelte', '.js', '.ts', '.json']
-				}
-			: undefined,
 		ssr: {
 			noExternal: ['three']
 		},
