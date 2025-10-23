@@ -1,8 +1,7 @@
 import { expect, describe, it, vi } from 'vitest';
 import ResizeObserver from 'resize-observer-polyfill';
 
-import { render } from '@testing-library/svelte';
-import { screen } from '@testing-library/dom';
+import { mount, unmount, flushSync } from 'svelte';
 import App from './+page.svelte';
 
 describe('App', () => {
@@ -13,8 +12,14 @@ describe('App', () => {
 	Element.prototype.animate = () => ({ cancel: vi.fn(), finished: Promise.resolve() });
 
 	it('renders the app', () => {
-		render(App);
+		const component = mount(App, {
+			target: document.body
+		});
 
-		expect(screen.getByText('Fintech Nick'));
+		flushSync();
+
+		expect(document.body.textContent).toContain('Fintech Nick');
+
+		unmount(component);
 	});
 });
