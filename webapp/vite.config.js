@@ -70,12 +70,6 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				'import.meta.vitest': 'undefined'
 			},
-			// Configure for Svelte 5 runes testing
-			server: {
-				fs: {
-					allow: ['..']
-				}
-			},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -110,6 +104,12 @@ export default defineConfig(({ command, mode }) => {
 				junit: './reports/junit.xml'
 			}
 		},
+		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
+		resolve: process.env.VITEST
+			? {
+					conditions: ['browser']
+				}
+			: undefined,
 		ssr: {
 			noExternal: ['three']
 		},

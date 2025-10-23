@@ -18,8 +18,8 @@ export class PDFUtils {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker
 				if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-					// Use a mock worker in test environment
-					pdfjsLib.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,';
+					// Use legacy build in test environment to avoid worker issues
+					pdfjsLib.GlobalWorkerOptions.workerSrc = null;
 					console.log('📄 PDF.js worker disabled for test environment');
 				} else {
 					pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -99,10 +99,16 @@ export class PDFUtils {
 
 		try {
 			// Import PDF.js only when needed
-			const pdfjsLib = await import('pdfjs-dist');
+			// Use legacy build in test environment to avoid worker issues
+			const pdfjsLib = typeof process !== 'undefined' && process.env.NODE_ENV === 'test' 
+				? await import('pdfjs-dist/legacy/build/pdf.mjs')
+				: await import('pdfjs-dist');
 
 			// Configure worker if not already done
-			if (pdfjsLib.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
+			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+				// Legacy build doesn't need worker configuration
+				console.log('📄 Using PDF.js legacy build for test environment');
+			} else if (pdfjsLib.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
 				pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 			}
 

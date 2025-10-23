@@ -1,8 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PDFUtils } from './pdf-utils.js';
 
-// Mock pdfjs-dist
+// Mock pdfjs-dist for dynamic imports
 vi.mock('pdfjs-dist', () => ({
+	GlobalWorkerOptions: {
+		workerSrc: ''
+	},
+	getDocument: vi.fn(),
+	version: '5.4.54'
+}));
+
+// Mock pdfjs-dist/legacy/build/pdf.mjs for dynamic imports
+vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
 	GlobalWorkerOptions: {
 		workerSrc: ''
 	},
@@ -181,6 +190,8 @@ describe('PDFUtils', () => {
 			mockLoadingTask = {
 				promise: Promise.resolve(mockPdfDocument)
 			};
+			
+			// Set up the mock for both regular and legacy imports
 			pdfjsLib.getDocument.mockReturnValue(mockLoadingTask);
 		});
 

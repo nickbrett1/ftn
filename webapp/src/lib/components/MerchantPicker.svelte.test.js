@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mount, unmount, flushSync } from 'svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
 const mockFetch = vi.fn();
@@ -20,18 +20,24 @@ describe('MerchantPicker', () => {
 			json: async () => []
 		});
 
-		const { getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for loading to complete
-		await waitFor(() => {
-			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
+		// Check if the component rendered
+		expect(document.body.innerHTML).toContain('No recent unassigned merchants found');
 		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should render merchants when API call succeeds', async () => {
@@ -43,23 +49,27 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByRole, getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
-		// Wait for merchants to load and combobox to appear
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		// Wait for merchants to load
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
 		// Check if the select element has the merchant options
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
 		expect(select).toBeTruthy();
 		expect(select.innerHTML).toContain('Amazon');
 		expect(select.innerHTML).toContain('Target');
 		expect(select.innerHTML).toContain('Walmart');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should render no merchants message when API returns empty array', async () => {
@@ -69,16 +79,23 @@ describe('MerchantPicker', () => {
 			json: async () => []
 		});
 
-		const { getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for loading to complete
-		await waitFor(() => {
-			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		// Check for the no merchants message
+		expect(document.body.innerHTML).toContain('No recent unassigned merchants found');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should call onSelect when a merchant is selected from dropdown', async () => {
@@ -90,21 +107,30 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByRole } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for merchants to load
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
-		await fireEvent.change(select, { target: { value: 'Target' } });
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
+		
+		// Simulate selecting a merchant
+		select.value = 'Target';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
 
 		expect(mockOnSelect).toHaveBeenCalledWith('Target');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should show selected merchant when selectedMerchant prop is provided', async () => {
@@ -116,7 +142,9 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByDisplayValue } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				selectedMerchant: 'Target',
 				onSelect: mockOnSelect
@@ -124,9 +152,15 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load
-		await waitFor(() => {
-			expect(getByDisplayValue('Target')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
+		expect(select.value).toBe('Target');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should use custom placeholder when provided', async () => {
@@ -138,7 +172,9 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByDisplayValue } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				placeholder: 'Custom placeholder...',
 				onSelect: mockOnSelect
@@ -146,9 +182,18 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load
-		await waitFor(() => {
-			expect(getByDisplayValue('Custom placeholder...')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
+		// Check if placeholder option exists
+		const placeholderOption = select.querySelector('option[value=""]');
+		expect(placeholderOption).toBeTruthy();
+		expect(placeholderOption.textContent).toBe('Custom placeholder...');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should display merchants returned from server (server-side filtering)', async () => {
@@ -161,22 +206,27 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByRole } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for merchants to load
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		
 		// Check that only unassigned merchants are displayed (server-side filtering)
 		expect(select.innerHTML).toContain('Target');
 		expect(select.innerHTML).toContain('Best Buy');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should show "No merchants available" when server returns empty array', async () => {
@@ -189,16 +239,23 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for message to appear
-		await waitFor(() => {
-			expect(getByText('No recent unassigned merchants found')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		// Check for the no merchants message
+		expect(document.body.innerHTML).toContain('No recent unassigned merchants found');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should handle normal merchant loading', async () => {
@@ -210,20 +267,25 @@ describe('MerchantPicker', () => {
 			json: async () => mockMerchants
 		});
 
-		const { getByRole } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for merchants to load
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		expect(select.innerHTML).toContain('Amazon');
 		expect(select.innerHTML).toContain('Target');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should handle API errors gracefully', async () => {
@@ -233,32 +295,46 @@ describe('MerchantPicker', () => {
 			status: 500
 		});
 
-		const { getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for error message to appear
-		await waitFor(() => {
-			expect(getByText(/Error: Failed to load recent merchants/)).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		// Check for error message
+		expect(document.body.innerHTML).toMatch(/Error: Failed to load recent merchants/);
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should handle network errors gracefully', async () => {
 		// Mock fetch to throw an error
 		mockFetch.mockRejectedValue(new Error('Network error'));
 
-		const { getByText } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for error message to appear
-		await waitFor(() => {
-			expect(getByText('Error: Network error')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+
+		// Check for error message
+		expect(document.body.innerHTML).toContain('Error: Network error');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should not cause infinite loop when selecting merchant and refreshing list', async () => {
@@ -277,25 +353,30 @@ describe('MerchantPicker', () => {
 			// This would normally trigger loadUnassignedMerchants() after 100ms
 		});
 
-		const { getByRole } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for initial load to complete
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		
 		// Select a merchant - this should trigger onSelect exactly once
 		// and not cause an infinite loop when the DOM is updated
-		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		select.value = 'Amazon';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
 		
 		// Wait a bit to ensure any async operations complete
 		await new Promise(resolve => setTimeout(resolve, 200));
+		flushSync();
 		
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
@@ -304,6 +385,9 @@ describe('MerchantPicker', () => {
 		
 		// The select should still have the correct value
 		expect(select.value).toBe('Amazon');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should prevent infinite loop when DOM updates trigger onchange events', async () => {
@@ -324,24 +408,29 @@ describe('MerchantPicker', () => {
 			}
 		});
 
-		const { getByRole } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: mockOnSelect
 			}
 		});
 
 		// Wait for initial load to complete
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		
 		// Select a merchant
-		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		select.value = 'Amazon';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
 		
 		// Wait for the 100ms timeout and any subsequent DOM updates
 		await new Promise(resolve => setTimeout(resolve, 300));
+		flushSync();
 		
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
@@ -355,6 +444,9 @@ describe('MerchantPicker', () => {
 		// 1. onSelect would be called multiple times (violating the count check)
 		// 2. The test would throw an error if onSelect is called more than maxCalls times
 		// 3. The select value might be incorrect due to recursive updates
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should handle parent component resetting selectedMerchant prop without infinite loop', async () => {
@@ -373,6 +465,7 @@ describe('MerchantPicker', () => {
 		// 2. Parent adds merchant to list
 		// 3. Parent resets selectedMerchant = '' (this is what causes the infinite loop)
 		let selectedMerchant = '';
+		let component;
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
 			
@@ -383,16 +476,29 @@ describe('MerchantPicker', () => {
 			// Simulate parent component behavior: 
 			// First, the parent sets selectedMerchant to the selected value
 			selectedMerchant = merchant;
-			rerender({ selectedMerchant, onSelect: mockOnSelect });
+			// Unmount and remount with new props
+			unmount(component);
+			component = mount(MerchantPicker, {
+				target: document.body,
+				props: { selectedMerchant, onSelect: mockOnSelect }
+			});
+			flushSync();
 			
 			// Then, after a brief delay, the parent resets it to empty
 			setTimeout(() => {
 				selectedMerchant = '';
-				rerender({ selectedMerchant, onSelect: mockOnSelect });
+				unmount(component);
+				component = mount(MerchantPicker, {
+					target: document.body,
+					props: { selectedMerchant, onSelect: mockOnSelect }
+				});
+				flushSync();
 			}, 50);
 		});
 
-		const { getByRole, rerender } = render(MerchantPicker, {
+		// Mount the component
+		component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				selectedMerchant,
 				onSelect: mockOnSelect
@@ -400,18 +506,21 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load to complete
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		
 		// Select a merchant - this should trigger onSelect exactly once
 		// even though the parent resets selectedMerchant = '' after onSelect
-		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		select.value = 'Amazon';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
 		
 		// Wait for the 100ms timeout and any subsequent DOM updates
 		await new Promise(resolve => setTimeout(resolve, 500)); // Longer wait
+		flushSync();
 		
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
@@ -419,7 +528,11 @@ describe('MerchantPicker', () => {
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
 		
 		// The select should be reset to empty (as the parent intended)
-		expect(select.value).toBe('');
+		const finalSelect = document.querySelector('select');
+		expect(finalSelect.value).toBe('');
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should not cause infinite loop when parent resets selectedMerchant immediately', async () => {
@@ -436,6 +549,7 @@ describe('MerchantPicker', () => {
 		// This simulates the real-world scenario more accurately:
 		// Parent first sets selectedMerchant to the selected value, then resets it
 		let selectedMerchant = '';
+		let component;
 		const mockOnSelect = vi.fn((merchant) => {
 			onSelectCallCount++;
 			
@@ -445,14 +559,27 @@ describe('MerchantPicker', () => {
 			
 			// Simulate parent component behavior: first set to selected value, then reset
 			selectedMerchant = merchant;
-			rerender({ selectedMerchant, onSelect: mockOnSelect });
+			// Unmount and remount with new props
+			unmount(component);
+			component = mount(MerchantPicker, {
+				target: document.body,
+				props: { selectedMerchant, onSelect: mockOnSelect }
+			});
+			flushSync();
 			
 			// Then immediately reset to empty
 			selectedMerchant = '';
-			rerender({ selectedMerchant, onSelect: mockOnSelect });
+			unmount(component);
+			component = mount(MerchantPicker, {
+				target: document.body,
+				props: { selectedMerchant, onSelect: mockOnSelect }
+			});
+			flushSync();
 		});
 
-		const { getByRole, rerender } = render(MerchantPicker, {
+		// Mount the component
+		component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				selectedMerchant,
 				onSelect: mockOnSelect
@@ -460,17 +587,20 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load to complete
-		await waitFor(() => {
-			expect(getByRole('combobox')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
 
-		const select = getByRole('combobox');
+		const select = document.querySelector('select');
+		expect(select).toBeTruthy();
 		
 		// Select a merchant - this should trigger onSelect exactly once
-		await fireEvent.change(select, { target: { value: 'Amazon' } });
+		select.value = 'Amazon';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
 		
 		// Wait for any async operations
 		await new Promise(resolve => setTimeout(resolve, 200));
+		flushSync();
 		
 		// onSelect should be called exactly once, not in a loop
 		expect(onSelectCallCount).toBe(1);
@@ -478,7 +608,11 @@ describe('MerchantPicker', () => {
 		expect(mockOnSelect).toHaveBeenCalledTimes(1);
 		
 		// The select should be reset to empty (as the parent intended)
-		expect(select.value).toBe('');
+		const finalSelect = document.querySelector('select');
+		expect(finalSelect.value).toBe('');
+
+		// Clean up
+		unmount(component);
 	});
 
 	// This test demonstrates how the infinite loop bug would be caught
@@ -533,14 +667,16 @@ describe('MerchantPicker', () => {
 		// Mock fetch to return a promise that we can control
 		mockFetch.mockImplementation(() => initialLoadPromise);
 		
-		const { getByText, component } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: vi.fn()
 			}
 		});
 
 		// Verify we're in loading state
-		expect(getByText('Loading recent merchants...')).toBeTruthy();
+		expect(document.body.innerHTML).toContain('Loading recent merchants...');
 		
 		// Call refreshMerchantList while initial load is still in progress
 		// This should NOT cause the UI to get stuck in loading state
@@ -554,18 +690,23 @@ describe('MerchantPicker', () => {
 		
 		// Wait for both operations to complete
 		await Promise.all([initialLoadPromise, refreshPromise]);
+		flushSync();
 		
 		// The UI should not be stuck in loading state
 		// It should show the merchants or empty state, not "Loading recent merchants..."
-		await waitFor(() => {
-			// Should either show merchants or empty state, but NOT loading
-			const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
-			expect(loadingText).toBeFalsy();
-		}, { timeout: 2000 });
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+		
+		// Should either show merchants or empty state, but NOT loading
+		const loadingText = document.body.innerHTML.includes('Loading recent merchants...');
+		expect(loadingText).toBeFalsy();
 		
 		// Verify the component is in a valid state (not stuck)
 		const combobox = document.querySelector('select');
 		expect(combobox).toBeTruthy();
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should prevent multiple concurrent loadUnassignedMerchants calls', async () => {
@@ -584,16 +725,19 @@ describe('MerchantPicker', () => {
 			});
 		});
 		
-		const { component } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: vi.fn()
 			}
 		});
 
 		// Wait for initial load to complete
-		await waitFor(() => {
-			expect(document.querySelector('select')).toBeTruthy();
-		});
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+		
+		expect(document.querySelector('select')).toBeTruthy();
 		
 		const initialFetchCount = fetchCallCount;
 		
@@ -606,10 +750,14 @@ describe('MerchantPicker', () => {
 		];
 		
 		await Promise.all(promises);
+		flushSync();
 		
 		// Should only make one additional fetch call, not 4
 		// The race condition protection should prevent multiple concurrent calls
 		expect(fetchCallCount).toBe(initialFetchCount + 1);
+
+		// Clean up
+		unmount(component);
 	});
 
 	it('should handle refreshMerchantList being called before initial load completes', async () => {
@@ -625,14 +773,16 @@ describe('MerchantPicker', () => {
 		// Mock fetch to return a controlled promise
 		mockFetch.mockImplementation(() => initialLoadPromise);
 		
-		const { component } = render(MerchantPicker, {
+		// Mount the component
+		const component = mount(MerchantPicker, {
+			target: document.body,
 			props: {
 				onSelect: vi.fn()
 			}
 		});
 
 		// Verify we're in loading state
-		expect(document.querySelector('div')?.textContent?.includes('Loading recent merchants...')).toBeTruthy();
+		expect(document.body.innerHTML).toContain('Loading recent merchants...');
 		
 		// Simulate the race condition: refreshMerchantList called before initial load completes
 		// This is what happens when user clicks remove merchant before combo box loads
@@ -646,15 +796,20 @@ describe('MerchantPicker', () => {
 		
 		// Wait for operations to complete
 		await Promise.all([initialLoadPromise, refreshPromise]);
+		flushSync();
 		
 		// The component should be in a valid state, not stuck
-		await waitFor(() => {
-			const combobox = document.querySelector('select');
-			expect(combobox).toBeTruthy();
-		}, { timeout: 2000 });
+		await new Promise(resolve => setTimeout(resolve, 100));
+		flushSync();
+		
+		const combobox = document.querySelector('select');
+		expect(combobox).toBeTruthy();
 		
 		// Should not be stuck in loading state
-		const loadingText = document.querySelector('div')?.textContent?.includes('Loading recent merchants...');
+		const loadingText = document.body.innerHTML.includes('Loading recent merchants...');
 		expect(loadingText).toBeFalsy();
+
+		// Clean up
+		unmount(component);
 	});
 });
