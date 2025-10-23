@@ -1,7 +1,7 @@
-import { vi } from "vitest";
+import { vi } from 'vitest';
 
 // Mock SvelteKit modules
-vi.mock("$app/navigation", () => ({
+vi.mock('$app/navigation', () => ({
 	afterNavigate: vi.fn(),
 	beforeNavigate: vi.fn(),
 	onNavigate: vi.fn(),
@@ -12,14 +12,14 @@ vi.mock("$app/navigation", () => ({
 	preloadCode: vi.fn()
 }));
 
-vi.mock("$app/environment", () => ({
+vi.mock('$app/environment', () => ({
 	browser: false,
 	dev: false,
 	prerendering: false,
-	version: "test"
+	version: 'test'
 }));
 
-vi.mock("$app/stores", () => ({
+vi.mock('$app/stores', () => ({
 	page: {
 		subscribe: vi.fn(() => ({ unsubscribe: vi.fn() }))
 	},
@@ -32,17 +32,17 @@ vi.mock("$app/stores", () => ({
 }));
 
 // Mock window.location for tests
-Object.defineProperty(window, "location", {
+Object.defineProperty(window, 'location', {
 	value: {
-		hash: "",
-		href: "http://localhost:3000",
-		pathname: "/",
-		search: "",
-		hostname: "localhost",
-		host: "localhost:3000",
-		port: "3000",
-		protocol: "http:",
-		origin: "http://localhost:3000"
+		hash: '',
+		href: 'http://localhost:3000',
+		pathname: '/',
+		search: '',
+		hostname: 'localhost',
+		host: 'localhost:3000',
+		port: '3000',
+		protocol: 'http:',
+		origin: 'http://localhost:3000'
 	},
 	writable: true
 });
@@ -62,7 +62,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
 	writable: true,
 	value: vi.fn().mockImplementation(query => ({
 		matches: false,
@@ -77,7 +77,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Add browser-like behavior for better production simulation
-Object.defineProperty(window, "requestAnimationFrame", {
+Object.defineProperty(window, 'requestAnimationFrame', {
 	writable: true,
 	value: vi.fn().mockImplementation(callback => {
 		setTimeout(callback, 16);
@@ -85,13 +85,13 @@ Object.defineProperty(window, "requestAnimationFrame", {
 	})
 });
 
-Object.defineProperty(window, "cancelAnimationFrame", {
+Object.defineProperty(window, 'cancelAnimationFrame', {
 	writable: true,
 	value: vi.fn()
 });
 
 // Mock performance.now for timing-sensitive code
-Object.defineProperty(window, "performance", {
+Object.defineProperty(window, 'performance', {
 	writable: true,
 	value: {
 		now: vi.fn(() => Date.now())

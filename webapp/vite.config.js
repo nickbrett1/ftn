@@ -24,7 +24,7 @@ const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
-	const 		plugins = [
+	const plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
