@@ -16,8 +16,15 @@ export class PDFUtils {
 		import('pdfjs-dist')
 			.then((pdfjsLib) => {
 				// Use the local worker file that gets copied during build
-				pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-				console.log('📄 PDF.js worker configured with local file');
+				// In test environment, use a mock worker or disable worker
+				if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+					// Use a mock worker in test environment
+					pdfjsLib.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,';
+					console.log('📄 PDF.js worker disabled for test environment');
+				} else {
+					pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+					console.log('📄 PDF.js worker configured with local file');
+				}
 			})
 			.catch((error) => {
 				console.warn('PDF.js not available:', error);
