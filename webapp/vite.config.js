@@ -93,7 +93,6 @@ export default defineConfig(({ command, mode }) => {
 					'src/**/*.{js,ts}'
 				]
 			},
-			server: {},
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
