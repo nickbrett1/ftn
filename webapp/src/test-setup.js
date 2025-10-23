@@ -41,7 +41,10 @@ vi.mock('svelte-awesome-icons', () => {
 		FileInvoiceDollarSolid: createMockIcon('FileInvoiceDollarSolid'),
 		UserSecretSolid: createMockIcon('UserSecretSolid'),
 		RobotSolid: createMockIcon('RobotSolid'),
-		DatabaseSolid: createMockIcon('DatabaseSolid')
+		DatabaseSolid: createMockIcon('DatabaseSolid'),
+		PenToSquareRegular: createMockIcon('PenToSquareRegular'),
+		ToolboxSolid: createMockIcon('ToolboxSolid'),
+		PlaneDepartureSolid: createMockIcon('PlaneDepartureSolid')
 	};
 });
 
