@@ -70,7 +70,9 @@ export default defineConfig(({ command, mode }) => {
 			},
 			// Configure for Svelte 5 runes
 			define: {
-				'import.meta.vitest': 'undefined'
+				'import.meta.vitest': 'undefined',
+				// Allow Svelte 5 runes in test environment
+				'__svelte_5_rune_testing': 'true'
 			},
 			// Add transform configuration for .svelte files
 			transformMode: {

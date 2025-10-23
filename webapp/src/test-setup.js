@@ -190,26 +190,21 @@ if (typeof globalThis !== 'undefined') {
 	globalThis.__svelte_5_rune_testing = true;
 }
 
-// Mock Svelte 5 runes for testing
-// This is a workaround for the rune_outside_svelte error
-const originalModule = globalThis.Module;
-globalThis.Module = {
-	...originalModule,
-	rune_outside_svelte: () => {
-		// Allow runes in test environment
-		return false;
-	}
-};
-
-// Override the Svelte rune check to allow runes in test environment
-const originalRuneOutsideSvelte = globalThis.Module?.rune_outside_svelte;
-if (originalRuneOutsideSvelte) {
-	globalThis.Module.rune_outside_svelte = () => false;
-}
-
 // Mock the Svelte internal client to allow runes in test environment
 vi.mock('svelte/internal/client', async () => {
 	const actual = await vi.importActual('svelte/internal/client');
+	return {
+		...actual,
+		// Override the rune check
+		rune_outside_svelte: () => false,
+		// Add missing exports
+		FILENAME: 'test.svelte'
+	};
+});
+
+// Mock the Svelte index client to allow runes in test environment
+vi.mock('svelte', async () => {
+	const actual = await vi.importActual('svelte');
 	return {
 		...actual,
 		// Override the rune check
