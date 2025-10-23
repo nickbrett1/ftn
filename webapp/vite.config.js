@@ -66,18 +66,18 @@ export default defineConfig(({ command, mode }) => {
 					resources: 'usable'
 				}
 			},
-			// Configure for Svelte 5 runes
-			define: {
-				'import.meta.vitest': 'undefined'
-			},
-			// Configure file handling for tests
-			assetsInclude: ['**/*.svelte'],
-			// Handle .svelte files in node_modules for tests
-			resolve: {
-				alias: {
-					'svelte-awesome-icons': 'svelte-awesome-icons'
-				}
-			},
+		// Configure for Svelte 5 runes
+		define: {
+			'import.meta.vitest': 'undefined'
+		},
+		// Configure file handling for tests
+		assetsInclude: ['**/*.svelte'],
+		// Handle .svelte files in node_modules for tests
+		resolve: {
+			alias: {
+				'svelte-awesome-icons': 'svelte-awesome-icons'
+			}
+		},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -95,7 +95,6 @@ export default defineConfig(({ command, mode }) => {
 					'src/**/*.{js,ts}'
 				]
 			},
-			server: {},
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
@@ -115,7 +114,9 @@ export default defineConfig(({ command, mode }) => {
 		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 		resolve: process.env.VITEST
 			? {
-					conditions: ['browser']
+					conditions: ['browser'],
+					// Handle .svelte files from node_modules
+					extensions: ['.svelte', '.js', '.ts', '.json']
 				}
 			: undefined,
 		ssr: {

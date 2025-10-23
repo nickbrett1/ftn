@@ -1,7 +1,57 @@
-import { vi } from "vitest";
+import { vi } from 'vitest';
+
+// Mock @zerodevx/svelte-img to avoid .svelte file loading issues
+vi.mock('@zerodevx/svelte-img', () => ({
+	default: function MockSvelteImg() {
+		return {
+			$$: {},
+			$set: vi.fn(),
+			$on: vi.fn(),
+			$destroy: vi.fn()
+		};
+	}
+}));
+
+// Mock svelte-awesome-icons to avoid .svelte file loading issues
+vi.mock('svelte-awesome-icons', () => {
+	// Create a mock component that returns a simple function
+	const createMockIcon = (name) => {
+		return function MockIcon() {
+			return {
+				$$: {},
+				$set: vi.fn(),
+				$on: vi.fn(),
+				$destroy: vi.fn()
+			};
+		};
+	};
+
+	// Export all the icons that are used in the codebase
+	const icons = {
+		LinkedinInBrands: createMockIcon('LinkedinInBrands'),
+		GithubBrands: createMockIcon('GithubBrands'),
+		EnvelopeRegular: createMockIcon('EnvelopeRegular'),
+		EnvelopeOpenRegular: createMockIcon('EnvelopeOpenRegular'),
+		CreditCardRegular: createMockIcon('CreditCardRegular'),
+		CreditCardSolid: createMockIcon('CreditCardSolid'),
+		BuildingSolid: createMockIcon('BuildingSolid'),
+		CalendarSolid: createMockIcon('CalendarSolid'),
+		CheckCircleSolid: createMockIcon('CheckCircleSolid'),
+		ChartLineSolid: createMockIcon('ChartLineSolid'),
+		FileInvoiceDollarSolid: createMockIcon('FileInvoiceDollarSolid'),
+		UserSecretSolid: createMockIcon('UserSecretSolid'),
+		RobotSolid: createMockIcon('RobotSolid'),
+		DatabaseSolid: createMockIcon('DatabaseSolid'),
+		PenToSquareRegular: createMockIcon('PenToSquareRegular'),
+		ToolboxSolid: createMockIcon('ToolboxSolid'),
+		PlaneDepartureSolid: createMockIcon('PlaneDepartureSolid')
+	};
+	
+	return icons;
+});
 
 // Mock SvelteKit modules
-vi.mock("$app/navigation", () => ({
+vi.mock('$app/navigation', () => ({
 	afterNavigate: vi.fn(),
 	beforeNavigate: vi.fn(),
 	onNavigate: vi.fn(),
@@ -12,14 +62,14 @@ vi.mock("$app/navigation", () => ({
 	preloadCode: vi.fn()
 }));
 
-vi.mock("$app/environment", () => ({
+vi.mock('$app/environment', () => ({
 	browser: false,
 	dev: false,
 	prerendering: false,
-	version: "test"
+	version: 'test'
 }));
 
-vi.mock("$app/stores", () => ({
+vi.mock('$app/stores', () => ({
 	page: {
 		subscribe: vi.fn(() => ({ unsubscribe: vi.fn() }))
 	},
@@ -32,17 +82,17 @@ vi.mock("$app/stores", () => ({
 }));
 
 // Mock window.location for tests
-Object.defineProperty(window, "location", {
+Object.defineProperty(window, 'location', {
 	value: {
-		hash: "",
-		href: "http://localhost:3000",
-		pathname: "/",
-		search: "",
-		hostname: "localhost",
-		host: "localhost:3000",
-		port: "3000",
-		protocol: "http:",
-		origin: "http://localhost:3000"
+		hash: '',
+		href: 'http://localhost:3000',
+		pathname: '/',
+		search: '',
+		hostname: 'localhost',
+		host: 'localhost:3000',
+		port: '3000',
+		protocol: 'http:',
+		origin: 'http://localhost:3000'
 	},
 	writable: true
 });
@@ -55,14 +105,16 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn()
-}));
+global.IntersectionObserver = class MockIntersectionObserver {
+	constructor() {
+		this.observe = vi.fn();
+		this.unobserve = vi.fn();
+		this.disconnect = vi.fn();
+	}
+};
 
 // Mock matchMedia
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
 	writable: true,
 	value: vi.fn().mockImplementation(query => ({
 		matches: false,
@@ -77,7 +129,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Add browser-like behavior for better production simulation
-Object.defineProperty(window, "requestAnimationFrame", {
+Object.defineProperty(window, 'requestAnimationFrame', {
 	writable: true,
 	value: vi.fn().mockImplementation(callback => {
 		setTimeout(callback, 16);
@@ -85,13 +137,13 @@ Object.defineProperty(window, "requestAnimationFrame", {
 	})
 });
 
-Object.defineProperty(window, "cancelAnimationFrame", {
+Object.defineProperty(window, 'cancelAnimationFrame', {
 	writable: true,
 	value: vi.fn()
 });
 
 // Mock performance.now for timing-sensitive code
-Object.defineProperty(window, "performance", {
+Object.defineProperty(window, 'performance', {
 	writable: true,
 	value: {
 		now: vi.fn(() => Date.now())

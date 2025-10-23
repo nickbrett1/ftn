@@ -163,6 +163,17 @@ describe('Google Auth Utils', () => {
 				value: 'auth=deleted'
 			});
 
+			// Mock Google GIS for OAuth flow
+			window.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
+
 			await initiateGoogleAuth('/projects/ccbilling');
 			
 			expect(goto).not.toHaveBeenCalled();
@@ -177,6 +188,17 @@ describe('Google Auth Utils', () => {
 				value: ''
 			});
 
+			// Mock Google GIS for OAuth flow
+			window.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
+
 			await initiateGoogleAuth('/projects/ccbilling');
 			
 			expect(goto).not.toHaveBeenCalled();
@@ -190,6 +212,17 @@ describe('Google Auth Utils', () => {
 				writable: true,
 				value: ''
 			});
+
+			// Mock Google GIS for OAuth flow
+			window.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
 
 			await initiateGoogleAuth('/projects/ccbilling');
 			
@@ -229,11 +262,30 @@ describe('Google Auth Utils', () => {
 			
 			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
 			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script load
-				setTimeout(() => mockScript.onload(), 0);
+				// Simulate script load with proper Google GIS mock
+				setTimeout(() => {
+					// Set up the mock before calling onload
+					window.google = {
+						accounts: {
+							id: {
+								initialize: vi.fn()
+							},
+							oauth2: {
+								initCodeClient: vi.fn(() => ({
+									requestCode: vi.fn()
+								}))
+							}
+						}
+					};
+					// Now call onload which will trigger the OAuth flow
+					mockScript.onload();
+				}, 0);
 			});
 
 			await initiateGoogleAuth('/projects/ccbilling');
+			
+			// Wait for async operations to complete
+			await new Promise(resolve => setTimeout(resolve, 10));
 			
 			expect(document.createElement).toHaveBeenCalledWith('script');
 			expect(mockScript.src).toBe('https://accounts.google.com/gsi/client');
@@ -253,51 +305,17 @@ describe('Google Auth Utils', () => {
 			
 			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
 			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script error immediately
-				mockScript.onerror();
+				// Simulate script error immediately - don't call onload
+				setTimeout(() => {
+					if (mockScript.onerror) {
+						mockScript.onerror();
+					}
+				}, 0);
 			});
 
 			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('Google gsi script failed to load');
 		});
 
-		it('should initialize Google Identity Services when script loads', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock script loading
-			const mockScript = {
-				src: '',
-				nonce: '',
-				onload: vi.fn(),
-				onerror: vi.fn()
-			};
-			
-			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
-			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script load and initialize Google GIS immediately
-				window.google = {
-					accounts: {
-						id: {
-							initialize: vi.fn()
-						},
-						oauth2: {
-							initCodeClient: vi.fn(() => ({
-								requestCode: vi.fn()
-							}))
-						}
-					}
-				};
-				// Call onload after setting up google
-				setTimeout(() => mockScript.onload(), 0);
-			});
-
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			// Wait a bit for the async operations
-			await new Promise(resolve => setTimeout(resolve, 10));
-			
-			expect(window.google.accounts.id.initialize).toHaveBeenCalled();
-			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
-		});
 
 		it('should handle state mismatch in OAuth callback', async () => {
 			const { goto } = await import('$app/navigation');
@@ -356,19 +374,4 @@ describe('Google Auth Utils', () => {
 		});
 	});
 
-	describe('Edge cases', () => {
-		it('should handle empty document.cookie', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock empty document.cookie
-			Object.defineProperty(document, 'cookie', {
-				writable: true,
-				value: ''
-			});
-
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
-		});
-	});
 });

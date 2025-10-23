@@ -11,8 +11,11 @@ describe('MerchantSelectionModal', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Ensure fetch is properly mocked
-		global.fetch = vi.fn();
+		// Mock fetch to return a proper response
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: vi.fn().mockResolvedValue([])
+		});
 	});
 
 	it('should not render when isOpen is false', () => {
