@@ -22,9 +22,11 @@ vi.mock('tippy.js', () => ({
 
 // Mock LinkifyIt
 vi.mock('linkify-it', () => ({
-	default: vi.fn().mockImplementation(() => ({
-		match: vi.fn(() => [])
-	}))
+	default: class MockLinkifyIt {
+		match() {
+			return [];
+		}
+	}
 }));
 
 describe('Billing Cycle Page - Credit Card Filtering', () => {

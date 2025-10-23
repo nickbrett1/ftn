@@ -38,9 +38,11 @@ vi.mock('tippy.js', () => ({
 }));
 
 vi.mock('linkify-it', () => ({
-	default: vi.fn().mockImplementation(() => ({
-		match: vi.fn(() => [])
-	}))
+	default: class MockLinkifyIt {
+		match() {
+			return [];
+		}
+	}
 }));
 
 // Mock fetch for API calls
