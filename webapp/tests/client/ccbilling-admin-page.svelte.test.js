@@ -37,7 +37,8 @@ describe('CCBilling Admin Page', () => {
 		
 		expect(document.body.textContent).toContain('Admin Tools');
 		expect(document.body.textContent).toContain('Database Normalization');
-		expect(document.body.textContent).toContain('Run the merchant normalization process across all payment records and budget-to-merchant auto-association mappings. This will ensure all merchant names are consistently normalized and budget assignments stay in sync.');
+		expect(document.body.textContent).toContain('Run the merchant normalization process');
+		expect(document.body.textContent).toContain('budget assignments stay in sync');
 	});
 
 	it('should have the correct page structure', () => {
@@ -65,8 +66,9 @@ describe('CCBilling Admin Page', () => {
 		const contentArea = document.querySelector('.bg-gray-800.border.border-gray-700.rounded-lg.p-6');
 		expect(contentArea).toBeTruthy();
 		
-		// Check that the description text is present
-		expect(document.body.textContent).toContain('Run the merchant normalization process across all payment records and budget-to-merchant auto-association mappings. This will ensure all merchant names are consistently normalized and budget assignments stay in sync.');
+		// Check that the description text is present (split across lines)
+		expect(document.body.textContent).toContain('Run the merchant normalization process');
+		expect(document.body.textContent).toContain('budget assignments stay in sync');
 	});
 
 	it('should have the correct layout structure', () => {

@@ -115,7 +115,8 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: specialBudgets } }
 		});
 
-		expect(document.body.innerHTML).toContain('Food & Dining');
-		expect(document.body.innerHTML).toContain('Transportation & Travel');
+		// HTML encodes & as &amp;
+		expect(document.body.innerHTML).toContain('Food &amp; Dining');
+		expect(document.body.innerHTML).toContain('Transportation &amp; Travel');
 	});
 });

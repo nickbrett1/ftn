@@ -1,5 +1,17 @@
 import { vi } from 'vitest';
 
+// Mock @zerodevx/svelte-img to avoid .svelte file loading issues
+vi.mock('@zerodevx/svelte-img', () => ({
+	default: function MockSvelteImg() {
+		return {
+			$$: {},
+			$set: vi.fn(),
+			$on: vi.fn(),
+			$destroy: vi.fn()
+		};
+	}
+}));
+
 // Mock svelte-awesome-icons to avoid .svelte file loading issues
 vi.mock('svelte-awesome-icons', () => {
 	// Create a mock component that returns a simple function

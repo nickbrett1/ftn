@@ -196,7 +196,8 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 			props: { data: differentData }
 		});
 
-		expect(document.body.innerHTML).toContain('Travel & Vacation');
+		// HTML encodes & as &amp;
+		expect(document.body.innerHTML).toContain('Travel &amp; Vacation');
 	});
 
 	it('handles component lifecycle', () => {
