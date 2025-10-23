@@ -299,7 +299,7 @@ describe('Google Auth Utils', () => {
 		it('should handle state mismatch in OAuth callback', async () => {
 			const { goto } = await import('$app/navigation');
 			
-			// Mock Google GIS with state mismatch
+			// Mock Google GIS with state mismatch - ensure it's set up before calling initiateGoogleAuth
 			window.google = {
 				accounts: {
 					id: {
@@ -325,6 +325,9 @@ describe('Google Auth Utils', () => {
 				return { requestCode: vi.fn() };
 			});
 
+			// Ensure the mock is properly set up before calling the function
+			expect(window.google.accounts.oauth2).toBeDefined();
+			
 			// The function doesn't reject, it just calls the callback
 			await initiateGoogleAuth('/projects/ccbilling');
 			
