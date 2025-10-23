@@ -56,19 +56,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 		// Charge found by default
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-		// Clean up global mock
-		if (globalThis.__llamaCreateMock) {
-			globalThis.__llamaCreateMock.mockClear();
-		}
-	});
-
-	it('returns model text on success', async () => {
+	});it('returns model text on success', async () => {
 		const modelResponse = {
 			choices: [
 				{

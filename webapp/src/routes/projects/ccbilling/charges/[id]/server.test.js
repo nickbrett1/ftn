@@ -46,15 +46,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			{ id: 2, name: 'Tas' },
 			{ id: 3, name: 'Both' }
 		]);
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return a specific charge', async () => {
 			const mockCharge = {
 				id: 1,

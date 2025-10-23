@@ -29,15 +29,7 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return credit card by id', async () => {
 			const mockCard = { id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' };
 			getCreditCard.mockResolvedValue(mockCard);

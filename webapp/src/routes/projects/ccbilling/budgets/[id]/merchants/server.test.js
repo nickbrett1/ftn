@@ -30,15 +30,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return list of merchants for budget', async () => {
 			const mockMerchants = [
 				{ merchant: 'Whole Foods', budget_id: 1 },

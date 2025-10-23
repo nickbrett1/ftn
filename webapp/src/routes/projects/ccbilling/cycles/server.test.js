@@ -28,16 +28,7 @@ describe('/projects/ccbilling/cycles API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-		vi.unstubAllGlobals();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return list of billing cycles', async () => {
 			const mockCycles = [
 				{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31' },

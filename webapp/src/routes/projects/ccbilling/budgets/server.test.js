@@ -27,15 +27,7 @@ describe('/projects/ccbilling/budgets API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return list of budgets', async () => {
 			const mockBudgets = [
 				{ id: 1, name: 'Groceries', created_at: '2024-01-01' },

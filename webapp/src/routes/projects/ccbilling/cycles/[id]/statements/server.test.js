@@ -56,15 +56,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return statements for a billing cycle', async () => {
 			const mockStatements = [
 				{ id: 1, filename: 'statement1.pdf', credit_card_id: 1 },
