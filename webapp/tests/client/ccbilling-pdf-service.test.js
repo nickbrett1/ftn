@@ -37,6 +37,10 @@ describe('PDFService', () => {
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
 		mockParserFactory = parserFactoryModule.ParserFactory;
 
+		// Reset mock implementations to default behavior
+		mockPDFUtils.validatePDFFile.mockImplementation(() => {});
+		mockPDFUtils.parseStatement.mockResolvedValue({ success: true });
+
 		pdfService = new PDFService();
 	});
 
