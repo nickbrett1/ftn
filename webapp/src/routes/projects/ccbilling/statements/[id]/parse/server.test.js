@@ -15,55 +15,56 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
-vi.mock('$lib/server/route-utils.js', () => ({
-	RouteUtils: {
-		createRouteHandler: vi.fn((handler, options) => {
-			// Mock the createRouteHandler to directly call the handler
-			return async (event) => {
-				// Mock authentication
-				const { requireUser } = await import('$lib/server/require-user.js');
-				await requireUser(event);
+vi.mock('$lib/server/route-utils.js', () => {
+	// Create a simpler mock that doesn't use dynamic imports
+	return {
+		RouteUtils: {
+			createRouteHandler: vi.fn((handler, options) => {
+				// Mock the createRouteHandler to directly call the handler
+				return async (event) => {
+					// Don't call requireUser here - let the tests mock it themselves
+					// This avoids dynamic import issues
+					
+					// Mock parameter validation
+					if (options?.requiredParams && options.requiredParams.length > 0) {
+						const { id } = event.params;
+						if (options.validators && options.validators.id) {
+							const validation = options.validators.id(id);
+							if (validation !== true) {
+								return new Response(JSON.stringify({ success: false, error: validation }), {
+									status: 400,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						}
+					}
 
-				// Mock parameter validation
-				if (options.requiredParams && options.requiredParams.length > 0) {
-					const { id } = event.params;
-					if (options.validators && options.validators.id) {
-						const validation = options.validators.id(id);
-						if (validation !== true) {
-							return new Response(JSON.stringify({ success: false, error: validation }), {
+					// Mock body parsing for POST requests
+					let parsedBody = null;
+					if (
+						options?.requiredBody &&
+						options.requiredBody.length > 0 &&
+						event.request?.method === 'POST'
+					) {
+						try {
+							parsedBody = await event.request.json();
+						} catch (error) {
+							console.error('Error parsing request body:', error);
+							return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
 								status: 400,
 								headers: { 'Content-Type': 'application/json' }
 							});
 						}
 					}
-				}
 
-				// Mock body parsing for POST requests
-				let parsedBody = null;
-				if (
-					options.requiredBody &&
-					options.requiredBody.length > 0 &&
-					event.request.method === 'POST'
-				) {
-					try {
-						parsedBody = await event.request.json();
-					} catch (error) {
-						console.error('Error parsing request body:', error);
-						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
-							status: 400,
-							headers: { 'Content-Type': 'application/json' }
-						});
+					// Call the handler with the appropriate parameters
+					if (options?.requiredBody && options.requiredBody.length > 0) {
+						return await handler(event, parsedBody);
+					} else {
+						return await handler(event);
 					}
-				}
-
-				// Call the handler with the appropriate parameters
-				if (options.requiredBody && options.requiredBody.length > 0) {
-					return await handler(event, parsedBody);
-				} else {
-					return await handler(event);
-				}
-			};
-		}),
+				};
+			}),
 		createErrorResponse: vi.fn((message, options = {}) => {
 			return new Response(JSON.stringify({ success: false, error: message }), {
 				status: options.status || 400,

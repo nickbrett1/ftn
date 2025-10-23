@@ -287,19 +287,34 @@ vi.mock('@zerodevx/svelte-img', () => ({
 }));
 
 // Global test lifecycle logging for debugging hangs
-if (typeof beforeEach !== 'undefined' && typeof afterEach !== 'undefined') {
+if (typeof beforeAll !== 'undefined' && typeof afterAll !== 'undefined' && typeof beforeEach !== 'undefined' && typeof afterEach !== 'undefined') {
+	let currentTestFile = '';
 	let currentTestName = '';
+	
+	beforeAll((context) => {
+		currentTestFile = context?.task?.file?.name || context?.task?.suite?.file?.name || 'unknown';
+		console.log(`\n📂 [FILE START] ${currentTestFile}`);
+	});
+	
+	afterAll((context) => {
+		currentTestFile = context?.task?.file?.name || context?.task?.suite?.file?.name || 'unknown';
+		console.log(`📁 [FILE END] ${currentTestFile}`);
+		
+		// Clear module cache after each file to prevent hangs from dynamic imports
+		vi.resetModules();
+		console.log(`♻️  [MODULE CACHE CLEARED] ${currentTestFile}\n`);
+	});
 	
 	beforeEach((context) => {
 		currentTestName = context?.task?.name || 'unknown';
 		const suiteName = context?.task?.suite?.name || 'unknown';
-		console.log(`🧪 [TEST START] ${suiteName} > ${currentTestName}`);
+		console.log(`  🧪 [TEST START] ${suiteName} > ${currentTestName}`);
 	});
 	
 	afterEach((context) => {
 		currentTestName = context?.task?.name || 'unknown';
 		const suiteName = context?.task?.suite?.name || 'unknown';
-		console.log(`✅ [TEST END] ${suiteName} > ${currentTestName}`);
+		console.log(`  ✅ [TEST END] ${suiteName} > ${currentTestName}`);
 		
 		// Force cleanup of any remaining timers
 		vi.clearAllTimers();
