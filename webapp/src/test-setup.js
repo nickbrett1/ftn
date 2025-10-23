@@ -1,5 +1,31 @@
 import { vi } from 'vitest';
 
+// Mock svelte-awesome-icons to avoid .svelte file loading issues
+vi.mock('svelte-awesome-icons', () => {
+	// Create a mock component factory
+	const createMockIcon = (name) => {
+		return class MockIcon {
+			constructor() {
+				this.name = name;
+			}
+		};
+	};
+
+	// Export all the icons that are used in the codebase
+	return {
+		LinkedinInBrands: createMockIcon('LinkedinInBrands'),
+		GithubBrands: createMockIcon('GithubBrands'),
+		EnvelopeRegular: createMockIcon('EnvelopeRegular'),
+		EnvelopeOpenRegular: createMockIcon('EnvelopeOpenRegular'),
+		CreditCardRegular: createMockIcon('CreditCardRegular'),
+		BuildingSolid: createMockIcon('BuildingSolid'),
+		CalendarSolid: createMockIcon('CalendarSolid'),
+		CheckCircleSolid: createMockIcon('CheckCircleSolid'),
+		ChartLineSolid: createMockIcon('ChartLineSolid'),
+		FileInvoiceDollarSolid: createMockIcon('FileInvoiceDollarSolid')
+	};
+});
+
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
 	afterNavigate: vi.fn(),
