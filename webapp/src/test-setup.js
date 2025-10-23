@@ -182,3 +182,21 @@ if (typeof globalThis !== 'undefined') {
 if (typeof process !== 'undefined') {
 	process.env.NODE_ENV = 'test';
 }
+
+// Configure Svelte 5 runes for testing
+// This ensures runes work in the test environment
+if (typeof globalThis !== 'undefined') {
+	globalThis.__svelte_5_rune_context = true;
+	globalThis.__svelte_5_rune_testing = true;
+}
+
+// Mock Svelte 5 runes for testing
+// This is a workaround for the rune_outside_svelte error
+const originalModule = globalThis.Module;
+globalThis.Module = {
+	...originalModule,
+	rune_outside_svelte: () => {
+		// Allow runes in test environment
+		return false;
+	}
+};

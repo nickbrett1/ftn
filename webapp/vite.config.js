@@ -70,6 +70,12 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				'import.meta.vitest': 'undefined'
 			},
+			// Configure for Svelte 5 runes testing
+			server: {
+				fs: {
+					allow: ['..']
+				}
+			},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
