@@ -286,12 +286,13 @@ vi.mock('@zerodevx/svelte-img', () => ({
 	SvelteImg: mockIconComponent
 }));
 
-// Global test lifecycle cleanup - simplified to avoid hangs
-if (typeof afterEach !== 'undefined') {
-	afterEach(() => {
-		// Force cleanup of any remaining timers
-		vi.clearAllTimers();
-		// Clear any remaining mocks
-		vi.clearAllMocks();
-	});
-}
+// DISABLED: Global test lifecycle cleanup - was causing hangs during file transitions
+// The cleanup in individual test files should be sufficient
+// if (typeof afterEach !== 'undefined') {
+// 	afterEach(() => {
+// 		// Force cleanup of any remaining timers
+// 		vi.clearAllTimers();
+// 		// Clear any remaining mocks
+// 		vi.clearAllMocks();
+// 	});
+// }

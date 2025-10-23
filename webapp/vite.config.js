@@ -105,10 +105,10 @@ export default defineConfig(({ command, mode }) => {
 					singleFork: false
 				}
 			},
-			// Enable mock restoration to prevent test pollution
-			restoreMocks: true,
-			clearMocks: true,
-			mockReset: true,
+			// Disable automatic mock cleanup - was causing hangs
+			restoreMocks: false,
+			clearMocks: false,
+			mockReset: false,
 			// Disable module isolation which can cause hangs
 			isolate: false,
 			// Add explicit reporter configuration for both console and JUnit output
