@@ -285,3 +285,13 @@ vi.mock('svelte-awesome-icons/A2Solid.svelte', () => mockIconComponent);
 vi.mock('@zerodevx/svelte-img', () => ({
 	SvelteImg: mockIconComponent
 }));
+
+// Global afterEach to ensure cleanup happens even if tests forget
+if (typeof afterEach !== 'undefined') {
+	afterEach(() => {
+		// Force cleanup of any remaining timers
+		vi.clearAllTimers();
+		// Clear any remaining mocks
+		vi.clearAllMocks();
+	});
+}
