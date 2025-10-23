@@ -1,5 +1,43 @@
 import { vi } from "vitest";
 
+// Mock svelte-awesome-icons to prevent .svelte file import issues
+vi.mock("svelte-awesome-icons", () => ({
+	GithubBrands: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'github-icon');
+		return div;
+	}),
+	LinkedinInBrands: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'linkedin-icon');
+		return div;
+	}),
+	EnvelopeRegular: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'envelope-icon');
+		return div;
+	}),
+	CreditCardSolid: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'credit-card-icon');
+		return div;
+	}),
+	UserSecretSolid: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'user-secret-icon');
+		return div;
+	})
+}));
+
+// Mock @zerodevx/svelte-img to prevent .svelte file import issues
+vi.mock("@zerodevx/svelte-img", () => ({
+	default: vi.fn().mockImplementation(() => {
+		const div = document.createElement('div');
+		div.setAttribute('data-testid', 'svelte-img');
+		return div;
+	})
+}));
+
 // Mock SvelteKit modules
 vi.mock("$app/navigation", () => ({
 	afterNavigate: vi.fn(),
@@ -200,3 +238,19 @@ globalThis.Module = {
 		return false;
 	}
 };
+
+// Mock Svelte 5 runes to prevent rune_outside_svelte errors
+// Patch the Svelte module to allow runes in test environment
+vi.mock('svelte', async () => {
+	const actual = await vi.importActual('svelte');
+	return {
+		...actual,
+		// Override the rune_outside_svelte function to always return false in tests
+		rune_outside_svelte: () => false
+	};
+});
+
+// Mock the Svelte internal client module to allow runes in test environment
+vi.mock('svelte/src/internal/client/errors.js', () => ({
+	rune_outside_svelte: () => false
+}));

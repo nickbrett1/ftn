@@ -1,5 +1,46 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
+
+// Mock all components before importing AdminPage
+vi.mock('$lib/components/Header.svelte', () => ({
+	default: vi.fn().mockImplementation(() => {
+		const header = document.createElement('header');
+		header.innerHTML = '<div>Mock Header</div>';
+		return header;
+	})
+}));
+
+vi.mock('$lib/components/Footer.svelte', () => ({
+	default: vi.fn().mockImplementation(() => {
+		const footer = document.createElement('footer');
+		footer.innerHTML = '<div>Mock Footer</div>';
+		return footer;
+	})
+}));
+
+vi.mock('$lib/components/Button.svelte', () => ({
+	default: vi.fn().mockImplementation(({ children, onclick, class: className, href, variant, size, disabled }) => {
+		const button = document.createElement('button');
+		button.textContent = children;
+		button.onclick = onclick || (() => {});
+		if (className) button.className = className;
+		if (href) button.href = href;
+		if (variant) button.setAttribute('data-variant', variant);
+		if (size) button.setAttribute('data-size', size);
+		if (disabled) button.disabled = disabled;
+		return button;
+	})
+}));
+
+vi.mock('$lib/components/Login.svelte', () => ({
+	default: vi.fn().mockImplementation(({ children, loginCallback }) => {
+		const div = document.createElement('div');
+		div.innerHTML = children || '<div>Mock Login</div>';
+		return div;
+	})
+}));
+
+// Import AdminPage after mocking
 import AdminPage from '../../src/routes/projects/ccbilling/admin/+page.svelte';
 
 // Mock the Button component (using the exact working mock from billing cycle test)
@@ -10,6 +51,24 @@ vi.mock('$lib/components/Button.svelte', () => ({
 		button.onclick = onclick || (() => {});
 		if (className) button.className = className;
 		return button;
+	})
+}));
+
+// Mock the Footer component to avoid Svelte 5 runes issues
+vi.mock('$lib/components/Footer.svelte', () => ({
+	default: vi.fn().mockImplementation(() => {
+		const footer = document.createElement('footer');
+		footer.innerHTML = '<div>Mock Footer</div>';
+		return footer;
+	})
+}));
+
+// Mock the Header component to avoid any potential issues
+vi.mock('$lib/components/Header.svelte', () => ({
+	default: vi.fn().mockImplementation(() => {
+		const header = document.createElement('header');
+		header.innerHTML = '<div>Mock Header</div>';
+		return header;
 	})
 }));
 

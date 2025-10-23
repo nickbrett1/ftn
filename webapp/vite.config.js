@@ -27,7 +27,12 @@ export default defineConfig(({ command, mode }) => {
 	const plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
-		sveltekit(),
+		sveltekit({
+			// Configure Svelte for testing
+			compilerOptions: {
+				runes: true
+			}
+		}),
 		svelteTesting(),
 		imagetools({
 			defaultDirectives: isDev
@@ -68,7 +73,19 @@ export default defineConfig(({ command, mode }) => {
 			},
 			// Configure for Svelte 5 runes
 			define: {
-				'import.meta.vitest': 'undefined'
+				'import.meta.vitest': 'undefined',
+				'__svelte_5_rune_context': 'true',
+				'__svelte_5_rune_testing': 'true'
+			},
+			// Configure Svelte for testing
+			compilerOptions: {
+				runes: true
+			},
+			// Handle .svelte files from node_modules
+			server: {
+				fs: {
+					allow: ['..']
+				}
 			},
 			coverage: {
 				reporter: ['text', 'lcov'],
@@ -107,11 +124,12 @@ export default defineConfig(({ command, mode }) => {
 		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 		resolve: process.env.VITEST
 			? {
-					conditions: ['browser']
+					conditions: ['browser'],
+					extensions: ['.js', '.ts', '.svelte', '.json']
 				}
 			: undefined,
 		ssr: {
-			noExternal: ['three']
+			noExternal: ['three', 'svelte-awesome-icons', '@zerodevx/svelte-img']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {
@@ -121,7 +139,7 @@ export default defineConfig(({ command, mode }) => {
 			devSourcemap: true
 		},
 		optimizeDeps: {
-			exclude: ['saos']
+			exclude: ['saos', 'svelte-awesome-icons']
 		},
 		define: {
 			__GIT_COMMIT__: JSON.stringify(gitInfo.commitHash),
