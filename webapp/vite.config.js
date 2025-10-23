@@ -24,7 +24,7 @@ const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
-	const plugins = [
+	const 		plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
@@ -70,6 +70,12 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				'import.meta.vitest': 'undefined'
 			},
+			// Configure file handling for Svelte files
+			server: {
+				fs: {
+					allow: ['..']
+				}
+			},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -107,7 +113,9 @@ export default defineConfig(({ command, mode }) => {
 		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 		resolve: process.env.VITEST
 			? {
-					conditions: ['browser']
+					conditions: ['browser'],
+					// Handle .svelte files from node_modules
+					extensions: ['.svelte', '.js', '.ts', '.json']
 				}
 			: undefined,
 		ssr: {
