@@ -49,15 +49,26 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
 
-		render(Login);
-		const button = screen.getByRole('button');
+		const component = mount(Login, {
+			target: document.body
+		});
+
+		// Wait for onMount to run and check auth status
+		await new Promise(resolve => setTimeout(resolve, 10));
+		flushSync();
+
+		const button = document.querySelector('button');
 
 		// Click the button
-		fireEvent.click(button);
+		button.click();
+
+		flushSync();
 
 		// Should redirect to ccbilling
 		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
 		// Should not call initiateGoogleAuth
 		expect(initiateGoogleAuth).not.toHaveBeenCalled();
+		
+		unmount(component);
 	});
 });
