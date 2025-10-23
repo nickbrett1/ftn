@@ -6,6 +6,7 @@ import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { execSync } from 'child_process';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 // Get git info at build time
 function getGitInfo() {
@@ -24,7 +25,8 @@ const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
 	const isDev = command === 'serve' && mode === 'development';
-	const plugins = [
+	const isTest = process.env.VITEST;
+	const 		plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
@@ -70,6 +72,12 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				'import.meta.vitest': 'undefined'
 			},
+			// Add transform configuration for .svelte files
+			transformMode: {
+				web: [/\.[jt]sx?$/, /\.svelte$/]
+			},
+			// Configure how to handle different file types
+			assetsInclude: ['**/*.svelte'],
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -107,7 +115,15 @@ export default defineConfig(({ command, mode }) => {
 		// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 		resolve: process.env.VITEST
 			? {
-					conditions: ['browser']
+					conditions: ['browser'],
+					// Add .svelte extension handling for node_modules
+					extensions: ['.js', '.ts', '.svelte', '.json'],
+					// Handle svelte-awesome-icons and other packages with .svelte files
+					alias: {
+						// Mock svelte-awesome-icons to avoid .svelte file compilation issues
+						'svelte-awesome-icons': '/workspace/webapp/src/test-mocks/svelte-awesome-icons.js',
+						'@zerodevx/svelte-img': '/workspace/webapp/src/test-mocks/svelte-img.js'
+					}
 				}
 			: undefined,
 		ssr: {

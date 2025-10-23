@@ -200,3 +200,32 @@ globalThis.Module = {
 		return false;
 	}
 };
+
+// Override the Svelte rune check to allow runes in test environment
+const originalRuneOutsideSvelte = globalThis.Module?.rune_outside_svelte;
+if (originalRuneOutsideSvelte) {
+	globalThis.Module.rune_outside_svelte = () => false;
+}
+
+// Mock the Svelte internal client to allow runes in test environment
+vi.mock('svelte/internal/client', async () => {
+	const actual = await vi.importActual('svelte/internal/client');
+	return {
+		...actual,
+		// Override the rune check
+		rune_outside_svelte: () => false
+	};
+});
+
+// Mock svelte-awesome-icons to avoid .svelte file compilation issues
+vi.mock('svelte-awesome-icons', () => ({
+	LinkedinInBrands: vi.fn(),
+	EnvelopeRegular: vi.fn(),
+	EnvelopeOpenRegular: vi.fn(),
+	// Add other icons as needed
+}));
+
+// Mock @zerodevx/svelte-img to avoid .svelte file compilation issues
+vi.mock('@zerodevx/svelte-img', () => ({
+	SvelteImg: vi.fn()
+}));
