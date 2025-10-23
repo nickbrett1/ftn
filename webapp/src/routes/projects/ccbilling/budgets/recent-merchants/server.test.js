@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
 // Mock the database module
@@ -22,6 +22,12 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 		vi.clearAllMocks();
 		mockGetRecentUnassignedMerchants = getRecentUnassignedMerchants;
 		mockRequireUser = requireUser;
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
 	});
 
 	it('should return recent merchants when user is authenticated', async () => {

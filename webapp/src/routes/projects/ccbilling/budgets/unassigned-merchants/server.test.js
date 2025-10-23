@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
 // Mock the database functions
@@ -23,6 +23,12 @@ describe('Unassigned Merchants API', () => {
 
 		mockGetUnassignedMerchants = dbModule.getUnassignedMerchants;
 		mockRequireUser = authModule.requireUser;
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
 	});
 
 	it('should return unassigned merchants when authenticated', async () => {

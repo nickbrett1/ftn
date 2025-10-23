@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
 // Mock DB and auth
@@ -56,6 +56,16 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 		// Charge found by default
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		// Clean up global mock
+		if (globalThis.__llamaCreateMock) {
+			globalThis.__llamaCreateMock.mockClear();
+		}
 	});
 
 	it('returns model text on success', async () => {

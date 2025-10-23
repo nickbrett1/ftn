@@ -98,13 +98,16 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30000,
 			hookTimeout: 30000,
-			// Pool options for test execution
-			pool: 'forks',
+			// Pool options for test execution - use threads with isolate for better stability
+			pool: 'threads',
 			poolOptions: {
-				forks: {
-					// Reverted from singleFork and isolate for better performance
+				threads: {
+					singleThread: true
 				}
 			},
+			// Enable mock restoration to prevent test pollution
+			restoreMocks: true,
+			clearMocks: true,
 			// Add explicit reporter configuration for both console and JUnit output
 			reporter: ['default', 'junit'],
 			outputFile: {

@@ -30,6 +30,12 @@ describe('/src/routes/projects/dbt-duckdb/docs/+server.js', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+	});
+
 	// Restore console.error after all tests
 	afterAll(() => {
 		vi.restoreAllMocks();

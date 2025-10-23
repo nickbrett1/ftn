@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { POST, GET } from './+server.js';
 
 // Mock the dependencies
@@ -137,6 +137,12 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
 	});
 
 	describe('GET endpoint', () => {
