@@ -200,3 +200,36 @@ globalThis.Module = {
 		return false;
 	}
 };
+
+// Mock svelte-awesome-icons to prevent file extension issues
+// This is a more comprehensive mock that handles the file extension issue
+const mockIconComponent = () => '<div data-testid="mock-icon">Icon</div>';
+
+// Mock the entire svelte-awesome-icons module
+vi.mock('svelte-awesome-icons', () => {
+	const icons = {};
+	
+	// Create a proxy that returns a mock component function for any icon name
+	return new Proxy(icons, {
+		get(target, prop) {
+			if (typeof prop === 'string') {
+				return mockIconComponent;
+			}
+			return target[prop];
+		},
+		has(target, prop) {
+			// Always return true for any property access
+			return true;
+		}
+	});
+});
+
+// Mock the specific icon files that might be imported
+vi.mock('svelte-awesome-icons/A0Solid.svelte', () => mockIconComponent);
+vi.mock('svelte-awesome-icons/A1Solid.svelte', () => mockIconComponent);
+vi.mock('svelte-awesome-icons/A2Solid.svelte', () => mockIconComponent);
+
+// Mock @zerodevx/svelte-img to prevent file extension issues
+vi.mock('@zerodevx/svelte-img', () => ({
+	SvelteImg: mockIconComponent
+}));

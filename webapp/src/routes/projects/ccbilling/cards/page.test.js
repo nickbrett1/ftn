@@ -1,169 +1,324 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { load } from './+page.server.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte';
+import CardsPage from './+page.svelte';
 
-// Mock the dependencies
-vi.mock('$lib/server/ccbilling-db.js', () => ({
-	listCreditCards: vi.fn()
+// Mock fetch
+global.fetch = vi.fn();
+
+// Mock SvelteKit modules
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn(),
+	invalidateAll: vi.fn()
 }));
 
-vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
+// Mock location.reload
+Object.defineProperty(window, 'location', {
+	value: { reload: vi.fn() },
+	writable: true
+});
 
-// Import the mocked functions
-import { listCreditCards } from '$lib/server/ccbilling-db.js';
-import { requireUser } from '$lib/server/require-user.js';
+// Mock confirm
+global.confirm = vi.fn();
 
-describe('/projects/ccbilling/cards page server', () => {
-	let mockEvent;
+// Mock alert
+global.alert = vi.fn();
+
+describe('Credit Cards Page - Svelte Coverage', () => {
+	const mockCreditCards = [
+		{ id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01T00:00:00Z' },
+		{ id: 2, name: 'Amex Gold', last4: '5678', created_at: '2024-01-02T00:00:00Z' },
+		{ id: 3, name: 'Discover It', last4: '9012', created_at: '2024-01-03T00:00:00Z' }
+	];
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		mockEvent = {};
-
-		// Mock requireUser to return success by default
-		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+		fetch.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ success: true })
+		});
+		confirm.mockReturnValue(true);
 	});
 
-	describe('load function', () => {
-		it('should return credit cards data', async () => {
-			const mockCards = [
-				{ id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' },
-				{ id: 2, name: 'Amex Gold', last4: '5678', created_at: '2024-01-02' },
-				{ id: 3, name: 'Discover It', last4: '9012', created_at: '2024-01-03' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
+	afterEach(() => {
+		cleanup();
+	});
 
-			const result = await load(mockEvent);
+	describe('Basic Rendering', () => {
+		it('renders and executes component with credit cards', () => {
+			const { container, getAllByText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
 
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
+			// Verify basic rendering to ensure component executed
+			expect(container).toBeTruthy();
+			expect(container.innerHTML.length).toBeGreaterThan(100);
+			// Check for card names and last4
+			expect(container.innerHTML).toContain('Chase Freedom');
+			expect(container.innerHTML).toContain('Amex Gold');
+			expect(container.innerHTML).toContain('Discover It');
+			// Check that there are as many card rows as cards
+			const cardRows = container.querySelectorAll('.bg-gray-800.border-gray-700.rounded-lg.p-6');
+			expect(cardRows.length).toBe(mockCreditCards.length);
+			// Optionally, simulate a click and check navigation (mock goToCardDetail if needed)
+		});
+
+		it('renders empty state branch', () => {
+			const { container } = render(CardsPage, {
+				props: { data: { creditCards: [] } }
+			});
+
+			// This executes the empty state branch
+			expect(container).toBeTruthy();
+			expect(container.innerHTML).toContain('No credit cards added yet');
+			expect(container.innerHTML).toContain('Add your first credit card');
+		});
+	});
+
+	describe('Add Card Functionality', () => {
+		it('shows add form when Add Credit Card button is clicked', async () => {
+			const { container, getByText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Verify form is shown
+			expect(container.innerHTML).toContain('Add New Credit Card');
+			expect(container.innerHTML).toContain('Card Name:');
+			expect(container.innerHTML).toContain('Last 4 Digits:');
+		});
+
+		it('hides add form when Cancel is clicked', async () => {
+			const { container, getByText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form first
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+			expect(container.innerHTML).toContain('Add New Credit Card');
+
+			// Cancel form
+			const cancelButton = getByText('Cancel');
+			await fireEvent.click(cancelButton);
+
+			// Verify form is hidden
+			expect(container.innerHTML).not.toContain('Add New Credit Card');
+		});
+
+		it('validates card name is required', async () => {
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill only last4, leave name empty
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(last4Input, { target: { value: '1234' } });
+
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Verify error message
+			expect(container.innerHTML).toContain('Please enter both card name and last 4 digits');
+		});
+
+		it('validates last4 is required', async () => {
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill only name, leave last4 empty
+			const nameInput = getByLabelText('Card Name:');
+			await fireEvent.input(nameInput, { target: { value: 'Test Card' } });
+
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Verify error message
+			expect(container.innerHTML).toContain('Please enter both card name and last 4 digits');
+		});
+
+		it('validates last4 must be exactly 4 digits', async () => {
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill form with invalid last4
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'Test Card' } });
+			await fireEvent.input(last4Input, { target: { value: '123' } });
+
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Verify error message
+			expect(container.innerHTML).toContain('Last 4 digits must be exactly 4 numbers');
+		});
+
+		it('validates last4 must be numeric', async () => {
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill form with non-numeric last4
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'Test Card' } });
+			await fireEvent.input(last4Input, { target: { value: 'abcd' } });
+
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Verify error message
+			expect(container.innerHTML).toContain('Last 4 digits must be exactly 4 numbers');
+		});
+
+		it('successfully adds a card with valid data', async () => {
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill form with valid data
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
+			await fireEvent.input(last4Input, { target: { value: '9999' } });
+
+			// Add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Verify API call
+			expect(fetch).toHaveBeenCalledWith('/projects/ccbilling/cards', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: 'New Card',
+					last4: '9999'
+				})
 			});
 		});
 
-		it('should redirect if user not authenticated', async () => {
-			const redirectResponse = new Response(null, { status: 302 });
-			requireUser.mockResolvedValue(redirectResponse);
+		it('handles API error when adding card', async () => {
+			fetch.mockResolvedValue({
+				ok: false,
+				json: () => Promise.resolve({ error: 'Card already exists' })
+			});
 
-			await expect(load(mockEvent)).rejects.toThrow();
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
+
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Fill form with valid data
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
+			await fireEvent.input(last4Input, { target: { value: '9999' } });
+
+			// Add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Wait for error to be displayed
+			await waitFor(() => {
+				expect(container.innerHTML).toContain('Card already exists');
+			});
 		});
+	});
 
-		it('should handle empty credit card list', async () => {
-			listCreditCards.mockResolvedValue([]);
+	describe('Error Handling', () => {
+		it('handles network errors gracefully', async () => {
+			fetch.mockRejectedValue(new Error('Network error'));
 
-			const result = await load(mockEvent);
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
+			});
 
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: []
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
+
+			// Wait for form to appear and fill form
+			await waitFor(() => {
+				expect(getByLabelText('Card Name:')).toBeTruthy();
+			});
+
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
+			await fireEvent.input(last4Input, { target: { value: '9999' } });
+
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
+
+			// Wait for error to be displayed
+			await waitFor(() => {
+				expect(container.innerHTML).toContain('Network error');
 			});
 		});
 
-		it('should handle database errors gracefully', async () => {
-			listCreditCards.mockRejectedValue(new Error('Database connection failed'));
-
-			await expect(load(mockEvent)).rejects.toThrow('Database connection failed');
-		});
-
-		it('should handle single credit card', async () => {
-			const mockCards = [
-				{ id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
-
-			const result = await load(mockEvent);
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
+		it('handles malformed JSON responses', async () => {
+			fetch.mockResolvedValue({
+				ok: false,
+				json: () => Promise.reject(new Error('Invalid JSON'))
 			});
-		});
 
-		it('should handle large number of credit cards', async () => {
-			const mockCards = Array.from({ length: 100 }, (_, i) => ({
-				id: i + 1,
-				name: `Card ${i + 1}`,
-				last4: String(1000 + i).slice(-4),
-				created_at: '2024-01-01'
-			}));
-			listCreditCards.mockResolvedValue(mockCards);
-
-			const result = await load(mockEvent);
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
+			const { container, getByText, getByLabelText } = render(CardsPage, {
+				props: { data: { creditCards: mockCreditCards } }
 			});
-		});
 
-		it('should handle credit cards with special characters in names', async () => {
-			const mockCards = [
-				{ id: 1, name: 'Chase Freedom & Unlimited', last4: '1234', created_at: '2024-01-01' },
-				{ id: 2, name: 'Amex Gold & Platinum', last4: '5678', created_at: '2024-01-02' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
+			// Show form
+			const addButton = getByText('Add Credit Card');
+			await fireEvent.click(addButton);
 
-			const result = await load(mockEvent);
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
+			// Wait for form to appear and fill form
+			await waitFor(() => {
+				expect(getByLabelText('Card Name:')).toBeTruthy();
 			});
-		});
 
-		it('should handle credit cards with long names', async () => {
-			const longName = 'A'.repeat(200);
-			const mockCards = [
-				{ id: 1, name: longName, last4: '1234', created_at: '2024-01-01' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
+			const nameInput = getByLabelText('Card Name:');
+			const last4Input = getByLabelText('Last 4 Digits:');
+			await fireEvent.input(nameInput, { target: { value: 'New Card' } });
+			await fireEvent.input(last4Input, { target: { value: '9999' } });
 
-			const result = await load(mockEvent);
+			// Try to add card
+			const addCardButton = getByText('Add Card');
+			await fireEvent.click(addCardButton);
 
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
-			});
-		});
-
-		it('should handle credit cards with various last4 formats', async () => {
-			const mockCards = [
-				{ id: 1, name: 'Card 1', last4: '1234', created_at: '2024-01-01' },
-				{ id: 2, name: 'Card 2', last4: '567', created_at: '2024-01-02' },
-				{ id: 3, name: 'Card 3', last4: '89', created_at: '2024-01-03' },
-				{ id: 4, name: 'Card 4', last4: '0', created_at: '2024-01-04' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
-
-			const result = await load(mockEvent);
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
-			});
-		});
-
-		it('should handle credit cards with missing optional fields', async () => {
-			const mockCards = [
-				{ id: 1, name: 'Card 1', last4: '1234' },
-				{ id: 2, name: 'Card 2', last4: '5678', created_at: '2024-01-02' },
-				{ id: 3, name: 'Card 3', last4: '9012', updated_at: '2024-01-03' }
-			];
-			listCreditCards.mockResolvedValue(mockCards);
-
-			const result = await load(mockEvent);
-
-			expect(requireUser).toHaveBeenCalledWith(mockEvent);
-			expect(listCreditCards).toHaveBeenCalledWith(mockEvent);
-			expect(result).toEqual({
-				creditCards: mockCards
+			// Wait for error to be displayed
+			await waitFor(() => {
+				expect(container.innerHTML).toContain('Invalid JSON');
 			});
 		});
 	});

@@ -70,6 +70,14 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				'import.meta.vitest': 'undefined'
 			},
+			// Configure file handling for tests
+			assetsInclude: ['**/*.svelte'],
+			// Handle .svelte files in node_modules for tests
+			resolve: {
+				alias: {
+					'svelte-awesome-icons': 'svelte-awesome-icons'
+				}
+			},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
