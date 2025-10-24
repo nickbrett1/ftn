@@ -1,5 +1,37 @@
 import { vi } from 'vitest';
 
+// Mock svelte-awesome-icons to avoid .svelte file extension errors
+vi.mock('svelte-awesome-icons', () => {
+	const createMockIcon = () => function MockIcon() {
+		return {
+			$$: {},
+			$set: vi.fn(),
+			$on: vi.fn(),
+			$destroy: vi.fn()
+		};
+	};
+
+	return {
+		LinkedinInBrands: createMockIcon(),
+		GithubBrands: createMockIcon(),
+		EnvelopeRegular: createMockIcon(),
+		EnvelopeOpenRegular: createMockIcon(),
+		CreditCardRegular: createMockIcon(),
+		CreditCardSolid: createMockIcon(),
+		BuildingSolid: createMockIcon(),
+		CalendarSolid: createMockIcon(),
+		CheckCircleSolid: createMockIcon(),
+		ChartLineSolid: createMockIcon(),
+		FileInvoiceDollarSolid: createMockIcon(),
+		UserSecretSolid: createMockIcon(),
+		RobotSolid: createMockIcon(),
+		DatabaseSolid: createMockIcon(),
+		PenToSquareRegular: createMockIcon(),
+		ToolboxSolid: createMockIcon(),
+		PlaneDepartureSolid: createMockIcon()
+	};
+});
+
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
 	afterNavigate: vi.fn(),
