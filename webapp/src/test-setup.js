@@ -1,5 +1,23 @@
 import { vi } from 'vitest';
 
+// Configure for Svelte 5 runes
+if (typeof globalThis !== 'undefined') {
+	globalThis.__svelte_5_rune_context = true;
+	globalThis.__svelte_5_rune_testing = true;
+}
+
+// Mock @zerodevx/svelte-img to avoid .svelte file extension errors
+vi.mock('@zerodevx/svelte-img', () => ({
+	default: function MockSvelteImg() {
+		return {
+			$$: {},
+			$set: vi.fn(),
+			$on: vi.fn(),
+			$destroy: vi.fn()
+		};
+	}
+}));
+
 // Mock svelte-awesome-icons to avoid .svelte file extension errors
 vi.mock('svelte-awesome-icons', () => {
 	const createMockIcon = () => function MockIcon() {
