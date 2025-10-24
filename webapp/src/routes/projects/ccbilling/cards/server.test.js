@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, POST } from './+server.js';
 
 // Mock the dependencies
@@ -27,9 +27,7 @@ describe('/projects/ccbilling/cards API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return list of credit cards', async () => {
 			const mockCards = [
 				{ id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' },

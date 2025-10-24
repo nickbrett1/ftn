@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, PUT } from './+server.js';
 
 // Mock the dependencies
@@ -10,7 +10,14 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+	json: vi.fn((data, opts) => {
+		const response = new Response(JSON.stringify(data), {
+			status: opts?.status || 200,
+			...opts
+		});
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Import the mocked functions
@@ -39,9 +46,7 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			{ id: 2, name: 'Tas' },
 			{ id: 3, name: 'Both' }
 		]);
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return a specific charge', async () => {
 			const mockCharge = {
 				id: 1,

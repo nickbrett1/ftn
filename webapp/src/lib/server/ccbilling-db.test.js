@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getUnassignedMerchants } from './ccbilling-db.js';
 
 describe('Duplicate Merchant Variations Test', () => {
@@ -16,6 +16,13 @@ describe('Duplicate Merchant Variations Test', () => {
 		mockEvent = {
 			platform: { env: { CCBILLING_DB: mockDb } }
 		};
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	it('should handle duplicate merchant variations correctly', async () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, PUT, DELETE } from './+server.js';
 
 // Mock the dependencies
@@ -29,9 +29,7 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return budget details', async () => {
 			const mockBudget = { id: 1, name: 'Groceries', created_at: '2024-01-01' };
 			getBudget.mockResolvedValue(mockBudget);

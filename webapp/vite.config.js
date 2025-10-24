@@ -60,6 +60,12 @@ export default defineConfig(({ command, mode }) => {
 			// Add explicit setup and teardown to prevent race conditions
 			setupFiles: ['src/test-setup.js'],
 			teardownTimeout: 10000, // 10 seconds for cleanup
+			// Configure for Svelte 5
+			environmentOptions: {
+				jsdom: {
+					resources: 'usable'
+				}
+			},
 			coverage: {
 				reporter: ['text', 'lcov'],
 				// Simplify coverage configuration for better CI stability
@@ -87,6 +93,10 @@ export default defineConfig(({ command, mode }) => {
 				forks: {
 					// Reverted from singleFork and isolate for better performance
 				}
+			},
+			// Configure for Svelte 5 runes
+			define: {
+				'import.meta.vitest': 'undefined'
 			},
 			// Add explicit reporter configuration for both console and JUnit output
 			reporter: ['default', 'junit'],

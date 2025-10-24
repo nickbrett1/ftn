@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mount, unmount } from 'svelte';
 import AdminPage from '../../src/routes/projects/ccbilling/admin/+page.svelte';
 
-// Mock the Button component (using the exact working mock from billing cycle test)
+// Mock the Button component
 vi.mock('$lib/components/Button.svelte', () => ({
 	default: vi.fn().mockImplementation(({ children, onclick, class: className }) => {
 		const button = document.createElement('button');
@@ -17,24 +17,38 @@ vi.mock('$lib/components/Button.svelte', () => ({
 global.fetch = vi.fn();
 
 describe('CCBilling Admin Page', () => {
+	let component;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
+	afterEach(() => {
+		if (component) {
+			unmount(component);
+			component = null;
+		}
+	});
+
 	it('should render the admin page with correct title and description', () => {
-		render(AdminPage);
+		component = mount(AdminPage, {
+			target: document.body
+		});
 		
-		expect(screen.getByText('Admin Tools')).toBeTruthy();
-		expect(screen.getByText('Database Normalization')).toBeTruthy();
-		expect(screen.getByText('Run the merchant normalization process across all payment records and budget-to-merchant auto-association mappings. This will ensure all merchant names are consistently normalized and budget assignments stay in sync.')).toBeTruthy();
+		expect(document.body.textContent).toContain('Admin Tools');
+		expect(document.body.textContent).toContain('Database Normalization');
+		expect(document.body.textContent).toContain('Run the merchant normalization process');
+		expect(document.body.textContent).toContain('budget assignments stay in sync');
 	});
 
 	it('should have the correct page structure', () => {
-		render(AdminPage);
+		component = mount(AdminPage, {
+			target: document.body
+		});
 		
 		// Check that the main elements are present
-		expect(screen.getByText('Admin Tools')).toBeTruthy();
-		expect(screen.getByText('Database Normalization')).toBeTruthy();
+		expect(document.body.textContent).toContain('Admin Tools');
+		expect(document.body.textContent).toContain('Database Normalization');
 		
 		// Check that the page has the expected layout classes
 		const main = document.querySelector('main');
@@ -44,18 +58,23 @@ describe('CCBilling Admin Page', () => {
 	});
 
 	it('should have the expected page content structure', () => {
-		render(AdminPage);
+		component = mount(AdminPage, {
+			target: document.body
+		});
 		
 		// Check that the main content area exists
 		const contentArea = document.querySelector('.bg-gray-800.border.border-gray-700.rounded-lg.p-6');
 		expect(contentArea).toBeTruthy();
 		
-			// Check that the description text is present
-	expect(screen.getByText('Run the merchant normalization process across all payment records and budget-to-merchant auto-association mappings. This will ensure all merchant names are consistently normalized and budget assignments stay in sync.')).toBeTruthy();
+		// Check that the description text is present (split across lines)
+		expect(document.body.textContent).toContain('Run the merchant normalization process');
+		expect(document.body.textContent).toContain('budget assignments stay in sync');
 	});
 
 	it('should have the correct layout structure', () => {
-		render(AdminPage);
+		component = mount(AdminPage, {
+			target: document.body
+		});
 		
 		// Check that the page has the expected layout structure
 		const headerSection = document.querySelector('.flex.items-center.justify-between.mb-8');

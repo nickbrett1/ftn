@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, POST } from './+server.js';
 import { json } from '@sveltejs/kit';
 
@@ -11,13 +11,17 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn(
-		(data, options) =>
-			new Response(JSON.stringify(data), {
-				headers: { 'Content-Type': 'application/json' },
-				...options
-			})
-	)
+	json: vi.fn((data, options) => {
+		const responseBody = JSON.stringify(data);
+		const response = new Response(responseBody, {
+			headers: { 'Content-Type': 'application/json' },
+			status: options?.status || 200,
+			...options
+		});
+		// Ensure the json() method returns the parsed data
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Import the mocked functions
@@ -52,9 +56,7 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return statements for a billing cycle', async () => {
 			const mockStatements = [
 				{ id: 1, filename: 'statement1.pdf', credit_card_id: 1 },
