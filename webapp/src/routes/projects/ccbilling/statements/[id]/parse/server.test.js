@@ -17,11 +17,13 @@ vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 vi.mock('$lib/server/route-utils.js', () => ({
 	RouteUtils: {
-			createRouteHandler: vi.fn((handler, options) => {
-				// Mock the createRouteHandler to directly call the handler
-				return async (event) => {
-					// Don't call requireUser here - let the tests mock it themselves
-					// This avoids dynamic import issues
+		createRouteHandler: vi.fn((handler, options) => {
+			// Mock the createRouteHandler to directly call the handler
+			return async (event) => {
+				// Import requireUser to match actual behavior
+				const { requireUser } = await import('$lib/server/require-user.js');
+				const authResult = await requireUser(event);
+				if (authResult instanceof Response) return authResult;
 					
 					// Mock parameter validation
 					if (options?.requiredParams && options.requiredParams.length > 0) {
