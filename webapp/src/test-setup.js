@@ -1,9 +1,8 @@
 import { vi } from 'vitest';
 
-// Configure for Svelte 5 runes
-if (typeof globalThis !== 'undefined') {
-	globalThis.__svelte_5_rune_context = true;
-	globalThis.__svelte_5_rune_testing = true;
+// Set NODE_ENV to test for proper rune handling
+if (typeof process !== 'undefined') {
+	process.env.NODE_ENV = 'test';
 }
 
 // Mock @zerodevx/svelte-img to avoid .svelte file extension errors

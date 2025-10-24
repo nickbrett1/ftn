@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, fireEvent, waitFor } from '@testing-library/svelte/svelte5';
 import { tick } from 'svelte';
 
 /**

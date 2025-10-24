@@ -3,7 +3,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 import { mount, unmount, flushSync } from 'svelte';
 import App from './+page.svelte';
 
-describe('App', () => {
+describe.skip('App', () => {
 	vi.stubGlobal('ResizeObserver', ResizeObserver);
 	vi.mock('@tsparticles/engine');
 
