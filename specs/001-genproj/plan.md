@@ -84,7 +84,50 @@ Verify compliance with `.specify/memory/constitution.md` principles:
 - [x] Navigation patterns defined (breadcrumbs, menus, transitions)
 - [x] No custom headers/footers without architectural approval
 
-**Violation Justification**: All gates satisfied - no violations detected
+### Database Schema Management Standards (Principle VII)
+
+- [x] Database schema file created in `webapp/scripts/genproj_schema.sql`
+- [x] Schema file includes comprehensive header comments with usage instructions
+- [x] All tables include proper foreign key constraints and performance indexes
+- [x] Database setup commands documented and tested
+- [x] Schema validation completed with actual D1 database creation
+- [x] No initial schema creation in migrations folder
+
+### Cloudflare Services Integration Standards (Principle VIII)
+
+- [x] D1 database operations use direct `platform.env.DB` access without wrapper utilities
+- [x] R2 storage operations use direct `platform.env.R2_*` access without wrapper utilities
+- [x] Service classes implement D1/R2 integration with proper error handling
+- [x] Environment bindings follow naming patterns (`DB_{FEATURE}`, `R2_{FEATURE}`)
+- [x] Local development uses `--local` flag, production uses `--remote` flag
+- [x] Service classes are testable with mocked `platform.env` objects
+
+### Code Organization Standards (Principle IX)
+
+- [x] Svelte components placed in `lib/components/` with feature-specific subfolders
+- [x] Client-side code placed in `lib/client/` (browser-only, not components)
+- [x] Server-side code placed in `lib/server/` (server-only, database operations)
+- [x] Universal utilities placed in `lib/utils/` (can run anywhere)
+- [x] Import paths reflect execution context requirements
+- [x] Code placed in most restrictive folder that supports requirements
+
+### Simple Logging Standards (Principle X)
+
+- [x] Native console methods used (`console.log()`, `console.error()`, `console.warn()`)
+- [x] Consistent emoji prefixes used (✅, ❌, ⚠️, 🔍, 🔄, 📝)
+- [x] Context-aware messages included in log statements
+- [x] Appropriate log levels used for different situations
+- [x] No custom logging utilities or wrapper functions created
+
+### Error Handling Standards (Principle XI)
+
+- [x] Existing `RouteUtils.handleError()` used for server-side error handling
+- [x] Client-side error handling implemented directly in components/services
+- [x] User-friendly error messages provided (no technical jargon)
+- [x] Consistent error handling patterns followed across codebase
+- [x] No custom error handler utilities or wrappers created
+
+**Violation Justification**: Use Complexity Tracking section below if any gate cannot be satisfied
 
 ## Project Structure
 
@@ -173,7 +216,4 @@ webapp/
 
 _Fill ONLY if Constitution Check has violations that must be justified_
 
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
+**Violation Justification**: All gates satisfied - no violations detected
