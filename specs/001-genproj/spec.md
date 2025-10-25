@@ -30,21 +30,22 @@ As a developer visiting the FTN portfolio, I want to see what project generation
 
 ---
 
-### User Story 2 - Configure Project and Preview Generated Output (Priority: P1)
+### User Story 2 - Two-Tab Interface for Configuration and Preview (Priority: P1)
 
-As a developer, I want to configure my project capabilities and switch to preview mode at any time to see what would be generated based on my current selections, without needing any authentication.
+As a developer, I want a clean two-tab interface where I can configure my project capabilities in one tab and preview the generated output in another tab, with easy switching between them without needing any authentication.
 
-**Why this priority**: This is the core value proposition - providing full transparency and control over what will be generated before any authentication or changes are made, with seamless navigation between configuration and preview modes.
+**Why this priority**: This is the core value proposition - providing full transparency and control over what will be generated before any authentication or changes are made, with a simple, non-linear interface that doesn't overcomplicate the process with unnecessary steps.
 
-**Independent Test**: Can be fully tested by selecting capabilities, providing configuration details, switching to preview mode to see the output, then switching back to modify capabilities and seeing the preview update accordingly.
+**Independent Test**: Can be fully tested by selecting capabilities in the "Capabilities" tab, switching to the "Preview" tab to see the output, then switching back to modify capabilities and seeing the preview update accordingly.
 
 **Acceptance Scenarios**:
 
-1. **Given** I am browsing the tool, **When** I select project capabilities and provide configuration details, **Then** I can switch to preview mode to see all files that would be generated
-2. **Given** I have selected capabilities with external services, **When** I switch to preview mode, **Then** I see descriptions of all external service changes that would be made
-3. **Given** I am viewing the preview mode, **When** I want to modify capabilities, **Then** I can switch back to configuration mode without losing my settings
-4. **Given** I modify capabilities in configuration mode, **When** I switch back to preview mode, **Then** the preview updates to reflect my changes
-5. **Given** I am satisfied with the preview, **When** I click "Generate Project", **Then** I am prompted for required authentication
+1. **Given** I am browsing the tool, **When** I see the two-tab interface with "Capabilities" and "Preview" tabs, **Then** I understand I can configure in one tab and preview in the other
+2. **Given** I am in the Capabilities tab, **When** I select project capabilities and provide configuration details, **Then** I can switch to the Preview tab to see all files that would be generated
+3. **Given** I have selected capabilities with external services, **When** I switch to the Preview tab, **Then** I see descriptions of all external service changes that would be made
+4. **Given** I am viewing the Preview tab, **When** I want to modify capabilities, **Then** I can switch back to the Capabilities tab without losing my settings
+5. **Given** I modify capabilities in the Capabilities tab, **When** I switch back to the Preview tab, **Then** the preview updates to reflect my changes
+6. **Given** I am satisfied with the preview, **When** I click "Generate Project", **Then** I am prompted for required authentication
 
 ---
 
@@ -213,32 +214,33 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-006**: System MUST require Doppler authentication (API token) only when secrets management capability is selected and user confirms generation
 - **FR-007**: System MUST require SonarCloud authentication (API token) only when code quality capability is selected and user confirms generation
 - **FR-008**: System MUST allow users to select from available capabilities with dependency resolution
-- **FR-009**: System MUST provide a preview mode that shows all generated files and external service changes without making actual changes
-- **FR-010**: System MUST allow seamless navigation between configuration and preview modes without losing user settings
-- **FR-011**: System MUST automatically update preview mode content when capabilities or configuration changes are made
-- **FR-012**: System MUST provide clear visual indicators for switching between configuration and preview modes
-- **FR-013**: System MUST enable users to switch to preview mode at any time to see current configuration results
-- **FR-014**: System MUST generate GitHub repository or accept existing repository URL only after user confirms the preview and completes authentication
-- **FR-015**: System MUST create devcontainer.json and Dockerfile based on selected capabilities
-- **FR-016**: System MUST generate appropriate VS Code extensions configuration based on selected capabilities
-- **FR-017**: System MUST create post-create-setup.sh script with git safe directory configuration
-- **FR-018**: System MUST generate dependabot.yml when dependency management is selected
-- **FR-019**: System MUST create CircleCI project and configuration when CI/CD capability is selected with authentication
-- **FR-020**: System MUST create Doppler project and configuration when secrets management capability is selected with authentication
-- **FR-021**: System MUST create SonarCloud project and configuration when code quality capability is selected with authentication
-- **FR-022**: System MUST generate Cloudflare Wrangler configuration when selected
-- **FR-023**: System MUST create comprehensive README.md documenting all selected capabilities, setup instructions, and usage guidelines
-- **FR-024**: System MUST include in README.md: project overview, selected capabilities list, development environment setup, external service configurations, and next steps
-- **FR-025**: System MUST handle capability dependencies (e.g., Java required for SonarLint)
-- **FR-026**: System MUST provide clear error messages when external service integration fails
-- **FR-027**: System MUST validate project names and repository URLs before generation
-- **FR-028**: System MUST generate appropriate package.json dependencies based on selected capabilities
-- **FR-029**: System MUST create proper directory structure for selected project type
-- **FR-030**: System MUST include security headers and best practices in generated configurations
-- **FR-031**: System MUST display celebratory firework particle animation upon successful project generation
-- **FR-032**: System MUST provide smooth, performant animation that works across different devices and browsers
-- **FR-033**: System MUST include accessibility options to disable animations for users with motion sensitivity
-- **FR-034**: System MUST use JavaScript (not TypeScript) for all implementation code
+- **FR-009**: System MUST provide a two-tab interface with "Capabilities" and "Preview" tabs
+- **FR-010**: System MUST show all generated files and external service changes in the Preview tab without making actual changes
+- **FR-011**: System MUST allow seamless navigation between Capabilities and Preview tabs without losing user settings
+- **FR-012**: System MUST automatically update Preview tab content when capabilities or configuration changes are made
+- **FR-013**: System MUST provide clear visual indicators showing which tab is currently active
+- **FR-014**: System MUST enable users to switch to Preview tab at any time to see current configuration results
+- **FR-015**: System MUST generate GitHub repository or accept existing repository URL only after user confirms the preview and completes authentication
+- **FR-016**: System MUST create devcontainer.json and Dockerfile based on selected capabilities
+- **FR-017**: System MUST generate appropriate VS Code extensions configuration based on selected capabilities
+- **FR-018**: System MUST create post-create-setup.sh script with git safe directory configuration
+- **FR-019**: System MUST generate dependabot.yml when dependency management is selected
+- **FR-020**: System MUST create CircleCI project and configuration when CI/CD capability is selected with authentication
+- **FR-021**: System MUST create Doppler project and configuration when secrets management capability is selected with authentication
+- **FR-022**: System MUST create SonarCloud project and configuration when code quality capability is selected with authentication
+- **FR-023**: System MUST generate Cloudflare Wrangler configuration when selected
+- **FR-024**: System MUST create comprehensive README.md documenting all selected capabilities, setup instructions, and usage guidelines
+- **FR-025**: System MUST include in README.md: project overview, selected capabilities list, development environment setup, external service configurations, and next steps
+- **FR-026**: System MUST handle capability dependencies (e.g., Java required for SonarLint)
+- **FR-027**: System MUST provide clear error messages when external service integration fails
+- **FR-028**: System MUST validate project names and repository URLs before generation
+- **FR-029**: System MUST generate appropriate package.json dependencies based on selected capabilities
+- **FR-030**: System MUST create proper directory structure for selected project type
+- **FR-031**: System MUST include security headers and best practices in generated configurations
+- **FR-032**: System MUST display celebratory firework particle animation upon successful project generation
+- **FR-033**: System MUST provide smooth, performant animation that works across different devices and browsers
+- **FR-034**: System MUST include accessibility options to disable animations for users with motion sensitivity
+- **FR-035**: System MUST use JavaScript (not TypeScript) for all implementation code
 
 ### Key Entities _(include if feature involves data)_
 
@@ -272,6 +274,6 @@ As a developer who has successfully generated a project, I want to see a delight
 - **SC-018**: Users can successfully set up development environment using only README.md instructions 95% of the time
 - **SC-019**: Celebration animation displays successfully on 99% of supported browsers and devices
 - **SC-020**: Users report 90% satisfaction with the celebration animation and overall project generation experience
-- **SC-021**: Users can switch between configuration and preview modes in under 1 second without losing settings
-- **SC-022**: Preview mode updates automatically within 2 seconds when capabilities or configuration changes are made
-- **SC-023**: Users can access preview mode at any time during configuration without additional steps
+- **SC-021**: Users can switch between Capabilities and Preview tabs in under 1 second without losing settings
+- **SC-022**: Preview tab updates automatically within 2 seconds when capabilities or configuration changes are made
+- **SC-023**: Users can access Preview tab at any time during configuration without additional steps
