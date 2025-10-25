@@ -114,19 +114,18 @@
 						onclick={handleCreditCardClick}
 						class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
 						title="Credit Card Billing Tool"
-					>
-						💳
-					</button>
+						ariaLabel="Credit Card Billing Tool"
+						focusable="true"
+					/>
 				{:else}
 					<!-- User is not logged in, show login modal -->
 					<Login loginCallback={loginStateUpdated}>
 						<button
 							id="login"
-							class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-							title="Credit Card Billing Tool"
-						>
-							💳
-						</button>
+							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							ariaLabel="Credit Card Billing Tool"
+							focusable="true"
+						/>
 					</Login>
 				{/if}
 
@@ -148,19 +147,19 @@
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<EnvelopeRegular />
+					<EnvelopeRegular ariaLabel="Email" focusable="true" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<GithubBrands />
+					<GithubBrands ariaLabel="GitHub" focusable="true" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
 				>
-					<LinkedinInBrands />
+					<LinkedinInBrands ariaLabel="LinkedIn" focusable="true" />
 				</a>
 			</div>
 		</div>

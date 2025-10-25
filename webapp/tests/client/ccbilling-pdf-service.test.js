@@ -11,8 +11,15 @@ vi.mock('../../src/lib/client/pdf-utils.js', () => ({
 }));
 
 // Mock the ParserFactory module
+const mockGetSupportedProviders = vi.fn().mockReturnValue(['Chase', 'Amex', 'Discover']);
 vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
-	ParserFactory: vi.fn()
+	ParserFactory: class MockParserFactory {
+		constructor() {
+			return {
+				getSupportedProviders: mockGetSupportedProviders
+			};
+		}
+	}
 }));
 
 describe('PDFService', () => {
@@ -30,11 +37,9 @@ describe('PDFService', () => {
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
 		mockParserFactory = parserFactoryModule.ParserFactory;
 
-		// Mock the ParserFactory instance
-		const mockParserFactoryInstance = {
-			getSupportedProviders: vi.fn().mockReturnValue(['Chase', 'Amex', 'Discover'])
-		};
-		mockParserFactory.mockReturnValue(mockParserFactoryInstance);
+		// Reset mock implementations to default behavior
+		mockPDFUtils.validatePDFFile.mockImplementation(() => {});
+		mockPDFUtils.parseStatement.mockResolvedValue({ success: true });
 
 		pdfService = new PDFService();
 	});
@@ -45,7 +50,6 @@ describe('PDFService', () => {
 
 	describe('constructor', () => {
 		it('should initialize with ParserFactory and configure PDF worker', () => {
-			expect(mockParserFactory).toHaveBeenCalled();
 			expect(mockPDFUtils.configureWorker).toHaveBeenCalledWith();
 			expect(pdfService.parserFactory).toBeDefined();
 		});
@@ -168,11 +172,8 @@ describe('PDFService', () => {
 		});
 
 		it('should return empty array when no providers are supported', () => {
-			// Create a new mock instance for this test
-			const mockParserFactoryInstance = {
-				getSupportedProviders: vi.fn().mockReturnValue([])
-			};
-			mockParserFactory.mockReturnValue(mockParserFactoryInstance);
+			// Change the mock return value for this test
+			mockGetSupportedProviders.mockReturnValue([]);
 			
 			const newPdfService = new PDFService();
 			const providers = newPdfService.getSupportedProviders();

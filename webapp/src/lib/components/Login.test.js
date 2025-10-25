@@ -1,6 +1,5 @@
-import { expect, vi, describe, it, beforeEach } from 'vitest';
-import { render } from '@testing-library/svelte';
-import { screen, fireEvent } from '@testing-library/dom';
+import { expect, vi, describe, it, beforeEach, afterEach } from 'vitest';
+import { mount, unmount, flushSync } from 'svelte';
 import Login from './Login.svelte';
 
 // Mock the shared Google auth utility
@@ -19,22 +18,34 @@ describe('Login correctly', () => {
 		vi.clearAllMocks();
 	});
 
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
+	});
+
 	it('logs in', async () => {
 		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
 
 		// Mock isUserAuthenticated to return false (not logged in)
 		isUserAuthenticated.mockReturnValue(false);
 
-		render(Login, {
-			children: () => '<button>Login</button>'
+		const component = mount(Login, {
+			target: document.body
 		});
-		const button = screen.getByRole('button');
+
+		const button = document.querySelector('button');
 
 		// Click the button
-		fireEvent.click(button);
+		button.click();
+
+		flushSync();
 
 		// Should call the shared Google auth utility
 		expect(initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
+
+		unmount(component);
 	});
 
 	it('redirects to ccbilling if already logged in', async () => {
@@ -44,17 +55,26 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
 
-		render(Login, {
-			children: () => '<button>Login</button>'
+		const component = mount(Login, {
+			target: document.body
 		});
-		const button = screen.getByRole('button');
+
+		// Wait for onMount to run and check auth status
+		await new Promise((resolve) => setTimeout(resolve, 10));
+		flushSync();
+
+		const button = document.querySelector('button');
 
 		// Click the button
-		fireEvent.click(button);
+		button.click();
+
+		flushSync();
 
 		// Should redirect to ccbilling
 		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
 		// Should not call initiateGoogleAuth
 		expect(initiateGoogleAuth).not.toHaveBeenCalled();
+
+		unmount(component);
 	});
 });

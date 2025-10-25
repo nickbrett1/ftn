@@ -1,15 +1,18 @@
 import { expect, describe, it } from 'vitest';
-import { render } from '@testing-library/svelte';
-import { screen } from '@testing-library/dom';
+import { mount, unmount, flushSync } from 'svelte';
 import Home from './+page.svelte';
 import { load } from './+page.server.js';
 import { redirect } from '@sveltejs/kit';
 
 describe('Home', () => {
 	it('renders', () => {
-		render(Home);
+		const component = mount(Home, {
+			target: document.body
+		});
 
-		expect(screen.getByText('Galactic Unicorn'));
+		expect(document.body.textContent).toContain('Galactic Unicorn');
+		
+		unmount(component);
 	});
 
 	it('redirects to notauthorised if not logged in', async () => {

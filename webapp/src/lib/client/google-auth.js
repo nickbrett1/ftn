@@ -52,7 +52,7 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
 		await requestCodeWithGIS();
 	} else {
 		// Load Google GIS script and then request code
-		loadGoogleGISAndRequestCode();
+		await loadGoogleGISAndRequestCode();
 	}
 }
 
@@ -60,6 +60,11 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
  * Request authorization code using Google Identity Services
  */
 async function requestCodeWithGIS() {
+	// Check if Google GIS is properly loaded
+	if (!window.google?.accounts?.oauth2) {
+		throw new Error('Google Identity Services not properly loaded');
+	}
+
 	const { nanoid } = await import('nanoid');
 	const state = nanoid();
 
@@ -87,26 +92,39 @@ async function requestCodeWithGIS() {
  * Load Google GIS script and then request authorization code
  */
 function loadGoogleGISAndRequestCode() {
-	const script = document.createElement('script');
-	script.src = 'https://accounts.google.com/gsi/client';
-	script.nonce = '%sveltekit.nonce%';
-	script.onload = () => {
-		// Initialize Google Identity Services
-		window.google.accounts.id.initialize({
-			client_id: GOOGLE_CLIENT_ID,
-			callback: (response) => {
-				if (!response.credential || !response.clientId) {
-					throw new Error('Failed to initialize google sign in');
+	return new Promise((resolve, reject) => {
+		const script = document.createElement('script');
+		script.src = 'https://accounts.google.com/gsi/client';
+		script.nonce = '%sveltekit.nonce%';
+		script.onload = () => {
+			try {
+				// Check if Google GIS is properly loaded
+				if (!window.google?.accounts?.id) {
+					reject(new Error('Google Identity Services failed to load properly'));
+					return;
 				}
+				
+				// Initialize Google Identity Services
+				window.google.accounts.id.initialize({
+					client_id: GOOGLE_CLIENT_ID,
+					callback: (response) => {
+						if (!response.credential || !response.clientId) {
+							reject(new Error('Failed to initialize google sign in'));
+						}
+					}
+				});
+
+				// Request authorization code
+				requestCodeWithGIS();
+				resolve();
+			} catch (error) {
+				reject(error);
 			}
-		});
+		};
+		script.onerror = () => {
+			reject(new Error('Google gsi script failed to load'));
+		};
 
-		// Request authorization code
-		requestCodeWithGIS();
-	};
-	script.onerror = () => {
-		throw new Error('Google gsi script failed to load');
-	};
-
-	document.body.appendChild(script);
+		document.body.appendChild(script);
+	});
 }

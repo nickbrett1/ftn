@@ -1,17 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PDFUtils } from './pdf-utils.js';
 
-// Mock pdfjs-dist
+// Create a mock function that can be controlled
+const mockGetDocument = vi.hoisted(() => vi.fn());
+
+// Mock pdfjs-dist for dynamic imports
 vi.mock('pdfjs-dist', () => ({
 	GlobalWorkerOptions: {
 		workerSrc: ''
 	},
-	getDocument: vi.fn(),
+	getDocument: mockGetDocument,
+	version: '5.4.54'
+}));
+
+// Mock pdfjs-dist/legacy/build/pdf.mjs for dynamic imports
+vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
+	GlobalWorkerOptions: {
+		workerSrc: ''
+	},
+	getDocument: mockGetDocument,
 	version: '5.4.54'
 }));
 
 // Import the mocked module
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDFUtils } from './pdf-utils.js';
 
 describe('PDFUtils', () => {
 	let mockPdfDocument;
@@ -181,14 +193,16 @@ describe('PDFUtils', () => {
 			mockLoadingTask = {
 				promise: Promise.resolve(mockPdfDocument)
 			};
-			pdfjsLib.getDocument.mockReturnValue(mockLoadingTask);
+			
+			// Set up the mock for both regular and legacy imports
+			mockGetDocument.mockReturnValue(mockLoadingTask);
 		});
 
 		it('should parse PDF file successfully', async () => {
 			const result = await PDFUtils.parsePDFFile(mockFile);
 
 			expect(mockFile.arrayBuffer).toHaveBeenCalled();
-			expect(pdfjsLib.getDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
+			expect(mockGetDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
 			expect(result).toContain('Statement Date: 2024-01-31');
 		});
 
@@ -200,7 +214,7 @@ describe('PDFUtils', () => {
 
 			const result = await PDFUtils.parsePDFFile(mockBuffer);
 
-			expect(pdfjsLib.getDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
+			expect(mockGetDocument).toHaveBeenCalledWith({ data: mockArrayBuffer });
 			expect(result).toContain('Statement Date: 2024-01-31');
 		});
 
@@ -214,7 +228,16 @@ describe('PDFUtils', () => {
 
 		it('should handle PDF loading errors', async () => {
 			const loadingError = new Error('Failed to load PDF');
-			mockLoadingTask.promise = Promise.reject(loadingError);
+			
+			// Create a new mock loading task with a rejected promise
+			const mockLoadingTaskWithError = {
+				get promise() {
+					return Promise.reject(loadingError);
+				}
+			};
+			
+			// Mock getDocument to return the error loading task
+			mockGetDocument.mockReturnValue(mockLoadingTaskWithError);
 
 			await expect(PDFUtils.parsePDFFile(mockFile)).rejects.toThrow(
 				'PDF parsing failed: Failed to load PDF'
@@ -222,6 +245,7 @@ describe('PDFUtils', () => {
 		});
 
 		it('should handle text extraction errors', async () => {
+			// Mock the page to reject when getTextContent is called
 			mockPage.getTextContent.mockRejectedValue(new Error('Text extraction failed'));
 
 			await expect(PDFUtils.parsePDFFile(mockFile)).rejects.toThrow(

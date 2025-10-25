@@ -29,7 +29,7 @@ describe('Merchant Normalization API', () => {
 					prepare: vi.fn().mockReturnThis(),
 					bind: vi.fn().mockReturnThis(),
 					run: vi.fn().mockResolvedValue({ changes: 5 }),
-					all: vi.fn().mockResolvedValue({ results: [] }),
+					all: vi.fn().mockResolvedValue({ results: [{ count: 5 }] }),
 					first: vi.fn().mockResolvedValue({
 						total_payments: 100,
 						normalized_payments: 50,

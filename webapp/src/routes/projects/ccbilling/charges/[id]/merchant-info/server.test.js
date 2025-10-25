@@ -1,11 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
 // Mock DB and auth
 vi.mock('$lib/server/ccbilling-db.js', () => ({ getPayment: vi.fn() }));
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, opts) => new Response(JSON.stringify(data), opts))
+	json: vi.fn((data, opts) => {
+		const response = new Response(JSON.stringify(data), {
+			status: opts?.status || 200,
+			...opts
+		});
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Expose a controllable create() fn for the llama client mock
@@ -14,10 +21,18 @@ globalThis.__llamaCreateMock = vi.fn();
 
 // Mock llama-api-client default export
 vi.mock('llama-api-client', () => {
-	const Default = vi.fn().mockImplementation(() => ({
-		chat: { completions: { create: (...args) => globalThis.__llamaCreateMock(...args) } }
-	}));
-	return { default: Default };
+	class MockLlamaClient {
+		constructor() {
+			return {
+				chat: { 
+					completions: { 
+						create: (...args) => globalThis.__llamaCreateMock(...args) 
+					} 
+				}
+			};
+		}
+	}
+	return { default: MockLlamaClient };
 });
 
 import { getPayment } from '$lib/server/ccbilling-db.js';
@@ -41,9 +56,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 		// Charge found by default
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
-	});
-
-	it('returns model text on success', async () => {
+	});it('returns model text on success', async () => {
 		const modelResponse = {
 			choices: [
 				{

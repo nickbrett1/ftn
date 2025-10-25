@@ -5,6 +5,7 @@
 	import AutoAssociationUpdateModal from '$lib/components/AutoAssociationUpdateModal.svelte';
 	import Fireworks from '$lib/components/Fireworks.svelte';
 	import { getAllocationIcon, getNextAllocation } from '$lib/utils/budget-icons.js';
+	import { PDFService } from '$lib/client/ccbilling-pdf-service.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
@@ -17,7 +18,8 @@
 	// Create a local reactive copy of the data for mutations
 	let localData = $state({
 		...data,
-		charges: [...data.charges]
+		charges: [...data.charges],
+		autoAssociations: data.autoAssociations || []
 	});
 
 	// Update localData when data prop changes (e.g., after invalidate())
@@ -28,7 +30,7 @@
 		localData.charges = [...data.charges];
 		localData.creditCards = data.creditCards;
 		localData.budgets = data.budgets;
-		localData.autoAssociations = data.autoAssociations;
+		localData.autoAssociations = data.autoAssociations || [];
 	});
 
 	// Watch for changes in charges to check for fireworks
@@ -142,10 +144,6 @@
 	let uploadError = $state('');
 	let selectedFile = $state(null);
 
-	// Parse statement state
-	let parsingStatements = $state(new Set());
-	let parsingProgress = $state(new Map()); // Track progress for each statement
-	let parseError = $state('');
 
 	// Toast notification state
 	let showToast = $state(false);
@@ -176,6 +174,7 @@
 		autoAssociationBudget: '',
 		chargeId: null
 	});
+
 
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
@@ -215,11 +214,6 @@
 	}
 
 	// Cancel parsing function
-	function cancelParsing(statementId) {
-		parsingStatements.delete(statementId);
-		parsingProgress.delete(statementId);
-		showToastMessage('Parsing cancelled', 'info');
-	}
 
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
@@ -227,10 +221,13 @@
 	// Budget filter state
 	let selectedBudgetFilter = $state('all'); // 'all' or budget name
 
+	// Auto-association filter state
+	let selectedAutoAssociationFilter = $state('all'); // 'all', 'with_auto_association', or 'without_auto_association'
+
 	// Sort state
 	let selectedSortBy = $state('date'); // 'date' or 'merchant'
 
-	// Filtered charges based on selected card, budget, and sort
+	// Filtered charges based on selected card, budget, auto-association, and sort
 	function getFilteredCharges() {
 		let filtered = localData.charges;
 
@@ -248,6 +245,19 @@
 					return !charge.allocated_to;
 				}
 				return charge.allocated_to === selectedBudgetFilter;
+			});
+		}
+
+		// Apply auto-association filter
+		if (selectedAutoAssociationFilter !== 'all') {
+			filtered = filtered.filter((charge) => {
+				const hasAutoAssociation = getAutoAssociationForMerchant(charge) !== null;
+				if (selectedAutoAssociationFilter === 'with_auto_association') {
+					return hasAutoAssociation;
+				} else if (selectedAutoAssociationFilter === 'without_auto_association') {
+					return !hasAutoAssociation;
+				}
+				return true;
 			});
 		}
 
@@ -434,7 +444,7 @@
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
 
-		if (charge.merchant_normalized) {
+		if (charge.merchant_normalized && localData.autoAssociations) {
 			// First try to find by normalized merchant name
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant_normalized
@@ -442,7 +452,7 @@
 		}
 
 		// If no auto-association found by normalized name, try original merchant name
-		if (!autoAssociation && charge.merchant) {
+		if (!autoAssociation && charge.merchant && localData.autoAssociations) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant
 			);
@@ -609,6 +619,126 @@
 		};
 	}
 
+	// Helper function to check if an auto-association exists for a merchant
+	function getAutoAssociationForMerchant(charge) {
+		if (!charge || !localData.autoAssociations) return null;
+		
+		// Try normalized merchant first, then fall back to original merchant name
+		let autoAssociation = null;
+		
+		if (charge.merchant_normalized) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant_normalized
+			);
+		}
+		
+		// If no auto-association found by normalized name, try original merchant name
+		if (!autoAssociation && charge.merchant) {
+			autoAssociation = localData.autoAssociations.find(
+				(aa) => aa.merchant_normalized === charge.merchant
+			);
+		}
+		
+		return autoAssociation || null; // Ensure we return null instead of undefined
+	}
+
+	// Helper function to check if auto-association button should be shown
+	function shouldShowAutoAssociationButton(charge) {
+		if (!charge || !charge.allocated_to || !localData.autoAssociations) return false;
+		
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		// Don't show button if auto-association already matches current allocation
+		if (autoAssociation && autoAssociation.budget_name === charge.allocated_to) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	// Helper function to get button text and styling based on auto-association state
+	function getAutoAssociationButtonInfo(charge) {
+		const autoAssociation = getAutoAssociationForMerchant(charge);
+		
+		if (autoAssociation) {
+			return {
+				text: 'Change Auto-association',
+				tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
+				title: 'Change auto-association',
+				class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
+			};
+		} else {
+			return {
+				text: 'Create Auto-association',
+				tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
+				title: 'Create auto-association',
+				class: 'bg-green-700 text-green-200 hover:bg-green-600'
+			};
+		}
+	}
+
+	// Auto-association creation functions
+	function createAutoAssociation(chargeId, allocation) {
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		if (!charge || !allocation) return;
+
+		// Check if there's already an auto-association for this merchant
+		const existingAutoAssociation = localData.autoAssociations?.find(
+			(aa) => aa.merchant_normalized === (charge.merchant_normalized || charge.merchant)
+		);
+
+		if (existingAutoAssociation) {
+			// Show update modal for existing auto-association
+			setModalData({
+				merchantName: charge.merchant,
+				currentAllocation: charge.allocated_to || 'Unallocated',
+				newAllocation: allocation,
+				autoAssociationBudget: existingAutoAssociation.budget_name,
+				chargeId: chargeId,
+				isDeletionRequest: false
+			});
+		} else {
+			// No existing auto-association, create it directly
+			handleCreateAutoAssociationDirect(chargeId, allocation);
+		}
+	}
+
+	async function handleCreateAutoAssociationDirect(chargeId, allocation) {
+		const charge = localData.charges.find((c) => c.id === chargeId);
+		if (!charge) {
+			console.error('Charge not found for auto-association creation');
+			return;
+		}
+
+		try {
+			const response = await fetch('/projects/ccbilling/auto-associations', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					merchant: charge.merchant_normalized || charge.merchant,
+					newBudgetName: allocation
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to create auto-association');
+			}
+
+			// Refresh the auto-associations data
+			await invalidate(`cycle-${data.cycleId}`);
+
+			// Show success message
+			showToastMessage(`Auto-association created for ${charge.merchant} → ${allocation}`, 'success');
+		} catch (error) {
+			console.error('Error creating auto-association:', error);
+			alert(`Failed to create auto-association: ${error.message}`);
+		}
+	}
+
+
 	async function handleDelete() {
 		isDeleting = true;
 		deleteError = '';
@@ -647,6 +777,9 @@
 			const formData = new FormData();
 			formData.append('file', selectedFile);
 
+			showToastMessage('Uploading statement...', 'info');
+
+			// Step 1: Upload PDF to server
 			const uploadResponse = await fetch(`/projects/ccbilling/cycles/${data.cycleId}/statements`, {
 				method: 'POST',
 				body: formData
@@ -657,7 +790,12 @@
 				console.error('❌ Upload failed with status:', uploadResponse.status, errorData);
 				throw new Error(errorData.error || 'Failed to upload statement');
 			}
-			const responseData = await uploadResponse.json();
+			const uploadData = await uploadResponse.json();
+
+			showToastMessage('Statement uploaded! Now parsing...', 'info');
+
+			// Step 2: Parse the PDF client-side
+			await parseStatementClientSide(uploadData.statement_id, selectedFile);
 
 			// Reset form
 			selectedFile = null;
@@ -666,137 +804,49 @@
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
 		} catch (err) {
-			console.error('❌ Upload failed:', err);
+			console.error('❌ Upload/parse failed:', err);
 			uploadError = err.message;
+			showToastMessage(`Upload/parse failed: ${err.message}`, 'error');
 		} finally {
 			isUploading = false;
 		}
 	}
 
-	async function parseStatement(statementId) {
-		if (parsingStatements.has(statementId)) return;
-
-		parsingStatements.add(statementId);
-		parseError = ''; // Clear previous errors
-
-		// Add timeout to prevent hanging
-		const timeoutPromise = new Promise((_, reject) => {
-			setTimeout(
-				() => reject(new Error('Parsing timed out after 60 seconds. Please try again.')),
-				60000
-			);
-		});
-
-		// Add cancellation support
-		let isCancelled = false;
-		const cancelToken = { cancelled: false };
-
-		// Show info toast when starting
-		showToastMessage('Starting to parse statement...', 'info');
-
+	async function parseStatementClientSide(statementId, pdfFile) {
 		try {
-			console.log('🔄 Starting to parse statement:', statementId);
-			parsingProgress.set(statementId, { step: 0, message: 'Starting...' });
+			// Initialize PDF service
+			const pdfService = new PDFService();
+			
+			// Parse the PDF file client-side
+			const parsedData = await pdfService.parseStatement(pdfFile);
+			
+			console.log('📄 PDF parsed successfully:', parsedData);
+			
+			// Send parsed data to server
+			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					parsedData: parsedData
+				})
+			});
 
-			// Race between the actual parsing and the timeout
-			const result = await Promise.race([
-				(async () => {
-					// First, get the statement details to download the PDF
-					parsingProgress.set(statementId, { step: 1, message: 'Getting statement details...' });
-					const statementResponse = await fetch(`/projects/ccbilling/statements/${statementId}`);
-					if (!statementResponse.ok) {
-						throw new Error('Failed to get statement details');
-					}
-					const statement = await statementResponse.json();
-					console.log('📄 Statement details retrieved:', statement.filename);
+			if (!parseResponse.ok) {
+				const errorData = await parseResponse.json();
+				console.error('❌ Parse failed with status:', parseResponse.status, errorData);
+				throw new Error(errorData.error || 'Failed to parse statement');
+			}
 
-					// Download the PDF from R2
-					parsingProgress.set(statementId, { step: 2, message: 'Downloading PDF...' });
-					console.log('⬇️ Downloading PDF...');
-					const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
-					if (!pdfResponse.ok) {
-						throw new Error('Failed to download PDF');
-					}
-					const pdfBlob = await pdfResponse.blob();
-					const pdfFile = new File([pdfBlob], statement.filename, { type: 'application/pdf' });
-					console.log('📄 PDF downloaded, size:', pdfBlob.size, 'bytes');
-
-					// Parse the PDF on the client-side
-					parsingProgress.set(statementId, { step: 3, message: 'Parsing PDF...' });
-					console.log('🔍 Starting PDF parsing...');
-					const { PDFService } = await import('$lib/client/ccbilling-pdf-service.js');
-					const pdfService = new PDFService();
-
-					const parsedData = await pdfService.parseStatement(pdfFile);
-					console.log('✅ PDF parsed successfully, parsed data:', parsedData);
-
-					// Send the parsed data to the server
-					parsingProgress.set(statementId, { step: 4, message: 'Processing on server...' });
-					console.log('📤 Sending parsed data to server...');
-					const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							parsedData: parsedData
-						})
-					});
-
-					if (!parseResponse.ok) {
-						const errorData = await parseResponse.json();
-						throw new Error(errorData.error || 'Failed to parse statement');
-					}
-					console.log('✅ Server processing completed successfully');
-
-					// Use invalidate() to refresh the data instead of reloading
-					parsingProgress.set(statementId, { step: 5, message: 'Refreshing data...' });
-					await invalidate(`cycle-${data.cycleId}`);
-					console.log('🔄 Data refreshed successfully');
-
-					// Show success toast
-					showToastMessage('Statement parsed successfully!', 'success');
-
-					return { success: true };
-				})(),
-				timeoutPromise
-			]);
-
-			// Clear parsing state before invalidating
-			parsingStatements.delete(statementId);
-			parsingProgress.delete(statementId);
+			const parseResult = await parseResponse.json();
+			console.log('✅ Statement parsed successfully:', parseResult);
+			
+			showToastMessage(`Statement parsed successfully! Found ${parseResult.charges_found} charges.`, 'success');
+			
 		} catch (err) {
-			console.error('❌ Error parsing statement:', err);
-			// Format error messages to be more user-friendly
-			let userFriendlyError = err.message;
-
-			// Replace technical terms with user-friendly language
-			userFriendlyError = userFriendlyError.replace(/last4/g, 'Last 4 Digits');
-			userFriendlyError = userFriendlyError.replace(
-				/No matching credit card found for last4: (\d+)/,
-				'No matching credit card found for Last 4 Digits: $1'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/No credit card information found in the statement/,
-				'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to download PDF/,
-				'Failed to download the statement file. Please try again.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to parse statement/,
-				'Failed to process the statement. Please try again.'
-			);
-			userFriendlyError = userFriendlyError.replace(
-				/Failed to get statement details/,
-				'Failed to get statement details. Please try again.'
-			);
-
-			parseError = userFriendlyError;
-			showToastMessage(`Failed to parse statement: ${userFriendlyError}`, 'error');
-		} finally {
-			// Ensure parsing state is cleared even if invalidation fails
-			parsingStatements.delete(statementId);
-			parsingProgress.delete(statementId);
+			console.error('❌ Parse failed:', err);
+			throw new Error(`Failed to parse statement: ${err.message}`);
 		}
 	}
 
@@ -986,33 +1036,6 @@
 			</div>
 		{/if}
 
-		<!-- Parse error dialog -->
-		{#if parseError}
-			<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
-				<div
-					class="bg-gray-900 border border-red-500 rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl"
-				>
-					<div class="flex items-center mb-4">
-						<div class="flex-shrink-0">
-							<div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-								<span class="text-white text-sm font-bold">!</span>
-							</div>
-						</div>
-						<div class="ml-3">
-							<h3 class="text-lg font-semibold text-white">Parse Error</h3>
-						</div>
-					</div>
-					<div class="bg-gray-800 border border-gray-700 rounded p-4 mb-6">
-						<p class="text-gray-200 text-sm leading-relaxed">{parseError}</p>
-					</div>
-					<div class="flex justify-end">
-						<Button type="button" variant="secondary" onclick={() => (parseError = '')}
-							>Close</Button
-						>
-					</div>
-				</div>
-			</div>
-		{/if}
 
 		<!-- Statements Section -->
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
@@ -1036,14 +1059,14 @@
 							showUploadForm = true;
 						}}
 					>
-						Upload Statement
+						Upload & Parse Statement
 					</Button>
 				{/if}
 			</div>
 
 			{#if showUploadForm}
 				<div class="bg-gray-700 border border-gray-600 rounded-lg p-4 mb-4">
-					<h4 class="text-white font-medium mb-3">Upload New Statement</h4>
+					<h4 class="text-white font-medium mb-3">Upload & Parse New Statement</h4>
 					{#if uploadError}
 						<div class="bg-red-900 border border-red-700 text-red-200 px-3 py-2 rounded mb-3">
 							{uploadError}
@@ -1082,7 +1105,7 @@
 						</div>
 						<div>
 							<p class="text-gray-400 text-sm">
-								Credit card will be automatically identified from the statement during processing.
+								Statement will be automatically parsed and charges extracted. Credit card will be identified during processing.
 							</p>
 						</div>
 						<Button
@@ -1091,7 +1114,7 @@
 							disabled={isUploading}
 							onclick={handleFileUpload}
 						>
-							{isUploading ? 'Uploading...' : 'Upload Statement'}
+							{isUploading ? 'Uploading & Parsing...' : 'Upload & Parse Statement'}
 						</Button>
 					</div>
 				</div>
@@ -1100,7 +1123,7 @@
 			{#if data.statements.length === 0}
 				<p class="text-gray-300">No statements uploaded yet.</p>
 				<p class="text-gray-400 text-sm mt-2">
-					Upload credit card statements to begin processing charges.
+					Upload credit card statements to automatically parse and process charges.
 				</p>
 			{:else}
 				<div class="space-y-3 w-full">
@@ -1134,58 +1157,17 @@
 								<div
 									class="flex flex-row space-x-2 justify-start sm:justify-end items-start sm:items-center"
 								>
-									{#if !isStatementParsed(statement.id)}
-										<div class="flex flex-col space-y-2">
-											<Button
-												type="button"
-												variant="success"
-												size="sm"
-												disabled={parsingStatements.has(statement.id)}
-												onclick={() => parseStatement(statement.id)}
-											>
-												{#if parsingStatements.has(statement.id)}
-													<div class="flex items-center space-x-2">
-														<div
-															class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-														></div>
-														<span>Parsing...</span>
-													</div>
-												{:else}
-													Parse
-												{/if}
-											</Button>
-											{#if parsingStatements.has(statement.id) && parsingProgress.get(statement.id)}
-												{@const progress = parsingProgress.get(statement.id)}
-												<div
-													class="text-xs text-blue-400 bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
-												>
-													{progress.message}
-												</div>
-												<div class="w-full bg-gray-700 rounded-full h-1">
-													<div
-														class="bg-blue-500 h-1 rounded-full transition-all duration-300"
-														style="width: {Math.round((progress.step / 5) * 100)}%"
-													></div>
-												</div>
-												<div class="text-xs text-gray-400 text-center">
-													Step {progress.step} of 5
-												</div>
-												<Button
-													type="button"
-													variant="secondary"
-													size="sm"
-													onclick={() => cancelParsing(statement.id)}
-													class="mt-2"
-												>
-													Cancel
-												</Button>
-											{/if}
-										</div>
-									{:else}
+									{#if isStatementParsed(statement.id)}
 										<div
 											class="text-green-400 text-sm font-medium px-3 py-1 bg-green-900/20 border border-green-700 rounded"
 										>
 											✓ Parsed
+										</div>
+									{:else}
+										<div
+											class="text-yellow-400 text-sm font-medium px-3 py-1 bg-yellow-900/20 border border-yellow-700 rounded"
+										>
+											⚠ Not Parsed
 										</div>
 									{/if}
 									<Button
@@ -1240,6 +1222,15 @@
 								Filtered by: {selectedBudgetFilter === '__unallocated__'
 									? 'Unallocated'
 									: selectedBudgetFilter}
+							</div>
+						{/if}
+						{#if selectedAutoAssociationFilter !== 'all'}
+							<div
+								class="text-purple-400 text-sm bg-purple-900/20 border border-purple-700 rounded px-2 py-1"
+							>
+								Filtered by: {selectedAutoAssociationFilter === 'with_auto_association'
+									? 'With Auto-Association'
+									: 'Without Auto-Association'}
 							</div>
 						{/if}
 					</div>
@@ -1298,6 +1289,31 @@
 						</div>
 
 						<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+							<label for="auto-association-filter" class="text-gray-300 text-sm font-medium"
+								>Filter by auto-association:</label
+							>
+							<div class="flex items-center gap-2">
+								<select
+									id="auto-association-filter"
+									bind:value={selectedAutoAssociationFilter}
+									class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
+								>
+									<option value="all">All Charges</option>
+									<option value="with_auto_association">With Auto-Association</option>
+									<option value="without_auto_association">Without Auto-Association</option>
+								</select>
+								{#if selectedAutoAssociationFilter !== 'all'}
+									<button
+										onclick={() => (selectedAutoAssociationFilter = 'all')}
+										class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+									>
+										Clear Filter
+									</button>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 							<label for="sort-by" class="text-gray-300 text-sm font-medium">Sort by:</label>
 							<select
 								id="sort-by"
@@ -1312,7 +1328,7 @@
 				</div>
 
 				<!-- Credit Card Summary (when no filters are active) -->
-				{#if selectedCardFilter === 'all' && selectedBudgetFilter === 'all' && localData.creditCards.length > 1}
+				{#if selectedCardFilter === 'all' && selectedBudgetFilter === 'all' && selectedAutoAssociationFilter === 'all' && localData.creditCards.length > 1}
 					<div class="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
 						<h4 class="text-sm font-medium text-gray-300 mb-3">Charges by Credit Card:</h4>
 						<div class="flex flex-wrap gap-3">
@@ -1423,21 +1439,47 @@
 															{getAllocationIcon(budgetOption, localData.budgets)}
 														</button>
 													{/each}
+													<!-- Auto-association button -->
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
+														<button
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
 												</div>
 											{:else}
 												<!-- Single click button for many budgets -->
-												<button
-													class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-													data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-													title={`${charge.allocated_to || 'Unallocated'}`}
-													onclick={() =>
-														updateChargeAllocation(
-															charge.id,
-															getNextAllocation(charge.allocated_to, localData.budgets)
-														)}
-												>
-													{getAllocationIcon(charge.allocated_to, localData.budgets)}
-												</button>
+												<div class="flex gap-1">
+													<button
+														class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+														data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+														title={`${charge.allocated_to || 'Unallocated'}`}
+														onclick={() =>
+															updateChargeAllocation(
+																charge.id,
+																getNextAllocation(charge.allocated_to, localData.budgets)
+															)}
+													>
+														{getAllocationIcon(charge.allocated_to, localData.budgets)}
+													</button>
+													<!-- Auto-association button -->
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
+														<button
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
+												</div>
 											{/if}
 										</div>
 									</div>
@@ -1542,21 +1584,47 @@
 															{getAllocationIcon(budgetOption, localData.budgets)}
 														</button>
 													{/each}
+													<!-- Auto-association button -->
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
+														<button
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
 												</div>
 											{:else}
 												<!-- Single click button for many budgets -->
-												<button
-													class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-													data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
-													title={`${charge.allocated_to || 'Unallocated'}`}
-													onclick={() =>
-														updateChargeAllocation(
-															charge.id,
-															getNextAllocation(charge.allocated_to, localData.budgets)
-														)}
-												>
-													{getAllocationIcon(charge.allocated_to, localData.budgets)}
-												</button>
+												<div class="flex gap-1">
+													<button
+														class="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+														data-allocation-tooltip={`Current: ${charge.allocated_to || 'Unallocated'}. Click to cycle through options.`}
+														title={`${charge.allocated_to || 'Unallocated'}`}
+														onclick={() =>
+															updateChargeAllocation(
+																charge.id,
+																getNextAllocation(charge.allocated_to, localData.budgets)
+															)}
+													>
+														{getAllocationIcon(charge.allocated_to, localData.budgets)}
+													</button>
+													<!-- Auto-association button -->
+													{#if shouldShowAutoAssociationButton(charge)}
+														{@const buttonInfo = getAutoAssociationButtonInfo(charge)}
+														<button
+															class="p-1 text-sm rounded transition-colors {buttonInfo.class}"
+															data-allocation-tooltip={buttonInfo.tooltip}
+															title={buttonInfo.title}
+															onclick={() => createAutoAssociation(charge.id, charge.allocated_to)}
+														>
+															🔗
+														</button>
+													{/if}
+												</div>
 											{/if}
 										</td>
 										<td class="text-right py-2">
@@ -1574,7 +1642,7 @@
 							</tbody>
 						</table>
 					</div>
-				{:else if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all'}
+				{:else if selectedCardFilter !== 'all' || selectedBudgetFilter !== 'all' || selectedAutoAssociationFilter !== 'all'}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg mb-2">No charges found with current filters</div>
 						<div class="text-gray-500 text-sm mb-4">Try adjusting your filters or clear them</div>
@@ -1582,6 +1650,7 @@
 							onclick={() => {
 								selectedCardFilter = 'all';
 								selectedBudgetFilter = 'all';
+								selectedAutoAssociationFilter = 'all';
 							}}
 							class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
 						>
@@ -1591,7 +1660,7 @@
 				{:else}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg">No charges found</div>
-						<div class="text-gray-500 text-sm">Upload and parse statements to see charges</div>
+						<div class="text-gray-500 text-sm">Upload statements to automatically parse and see charges</div>
 					</div>
 				{/if}
 			</div>
@@ -1683,6 +1752,7 @@
 			on:skip={handleSkipAutoAssociation}
 			on:close={closeAutoAssociationModal}
 		/>
+
 
 		<!-- Cycle Information -->
 	</div>
@@ -1781,6 +1851,15 @@
 								: selectedBudgetFilter}
 						</div>
 					{/if}
+					{#if selectedAutoAssociationFilter !== 'all'}
+						<div
+							class="text-purple-400 text-sm bg-purple-900/20 border border-purple-700 rounded px-2 py-1"
+						>
+							Filtered by: {selectedAutoAssociationFilter === 'with_auto_association'
+								? 'With Auto-Association'
+								: 'Without Auto-Association'}
+						</div>
+					{/if}
 				</div>
 				<div class="flex flex-wrap items-center gap-4">
 					{#each getFilteredAllocationTotals() as [allocation, total]}
@@ -1802,13 +1881,11 @@
 							</span>
 						</div>
 					{/each}
-					{#if selectedCardFilter !== 'all' && selectedBudgetFilter === 'all'}
-						<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
-							Total: ${getFilteredCharges()
-								.reduce((sum, charge) => sum + charge.amount, 0)
-								.toFixed(2)}
-						</div>
-					{/if}
+					<div class="text-gray-400 text-sm border-l border-gray-600 pl-4">
+						Total: ${getFilteredCharges()
+							.reduce((sum, charge) => sum + charge.amount, 0)
+							.toFixed(2)}
+					</div>
 				</div>
 			</div>
 		</div>

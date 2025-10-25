@@ -487,7 +487,8 @@ export class ChaseParser extends BaseParser {
 				'JETBLUE',
 				'SPIRIT',
 				'FRONTIER',
-				'ALASKA'
+				'ALASKA',
+				'BRITISH AIRWAYS'
 			];
 			for (const airline of airlines) {
 				if (merchant.toUpperCase().includes(airline)) {

@@ -1,23 +1,31 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ParserFactory } from './parser-factory.js';
 import { ChaseParser } from './chase-parser.js';
 import { WellsFargoParser } from './wells-fargo-parser.js';
 
 // Mock the parsers
 vi.mock('./chase-parser.js', () => ({
-	ChaseParser: vi.fn().mockImplementation(() => ({
-		providerName: 'Chase',
-		canParse: vi.fn(),
-		parse: vi.fn()
-	}))
+	ChaseParser: class MockChaseParser {
+		constructor() {
+			return {
+				providerName: 'Chase',
+				canParse: vi.fn(),
+				parse: vi.fn()
+			};
+		}
+	}
 }));
 
 vi.mock('./wells-fargo-parser.js', () => ({
-	WellsFargoParser: vi.fn().mockImplementation(() => ({
-		providerName: 'Wells Fargo',
-		canParse: vi.fn(),
-		parse: vi.fn()
-	}))
+	WellsFargoParser: class MockWellsFargoParser {
+		constructor() {
+			return {
+				providerName: 'Wells Fargo',
+				canParse: vi.fn(),
+				parse: vi.fn()
+			};
+		}
+	}
 }));
 
 describe('ParserFactory', () => {
@@ -30,6 +38,13 @@ describe('ParserFactory', () => {
 		factory = new ParserFactory();
 		mockChaseParser = factory.parsers[0];
 		mockWellsFargoParser = factory.parsers[1];
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	describe('constructor', () => {

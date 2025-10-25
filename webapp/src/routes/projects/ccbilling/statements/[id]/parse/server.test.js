@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { POST, GET } from './+server.js';
 
 // Mock the dependencies
@@ -20,50 +20,51 @@ vi.mock('$lib/server/route-utils.js', () => ({
 		createRouteHandler: vi.fn((handler, options) => {
 			// Mock the createRouteHandler to directly call the handler
 			return async (event) => {
-				// Mock authentication
+				// Import requireUser to match actual behavior
 				const { requireUser } = await import('$lib/server/require-user.js');
-				await requireUser(event);
+				const authResult = await requireUser(event);
+				if (authResult instanceof Response) return authResult;
+					
+					// Mock parameter validation
+					if (options?.requiredParams && options.requiredParams.length > 0) {
+						const { id } = event.params;
+						if (options.validators && options.validators.id) {
+							const validation = options.validators.id(id);
+							if (validation !== true) {
+								return new Response(JSON.stringify({ success: false, error: validation }), {
+									status: 400,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						}
+					}
 
-				// Mock parameter validation
-				if (options.requiredParams && options.requiredParams.length > 0) {
-					const { id } = event.params;
-					if (options.validators && options.validators.id) {
-						const validation = options.validators.id(id);
-						if (validation !== true) {
-							return new Response(JSON.stringify({ success: false, error: validation }), {
+					// Mock body parsing for POST requests
+					let parsedBody = null;
+					if (
+						options?.requiredBody &&
+						options.requiredBody.length > 0 &&
+						event.request?.method === 'POST'
+					) {
+						try {
+							parsedBody = await event.request.json();
+						} catch (error) {
+							console.error('Error parsing request body:', error);
+							return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
 								status: 400,
 								headers: { 'Content-Type': 'application/json' }
 							});
 						}
 					}
-				}
 
-				// Mock body parsing for POST requests
-				let parsedBody = null;
-				if (
-					options.requiredBody &&
-					options.requiredBody.length > 0 &&
-					event.request.method === 'POST'
-				) {
-					try {
-						parsedBody = await event.request.json();
-					} catch (error) {
-						console.error('Error parsing request body:', error);
-						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
-							status: 400,
-							headers: { 'Content-Type': 'application/json' }
-						});
+					// Call the handler with the appropriate parameters
+					if (options?.requiredBody && options.requiredBody.length > 0) {
+						return await handler(event, parsedBody);
+					} else {
+						return await handler(event);
 					}
-				}
-
-				// Call the handler with the appropriate parameters
-				if (options.requiredBody && options.requiredBody.length > 0) {
-					return await handler(event, parsedBody);
-				} else {
-					return await handler(event);
-				}
-			};
-		}),
+				};
+			}),
 		createErrorResponse: vi.fn((message, options = {}) => {
 			return new Response(JSON.stringify({ success: false, error: message }), {
 				status: options.status || 400,
@@ -96,13 +97,16 @@ vi.mock('$lib/server/route-utils.js', () => ({
 }));
 
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn(
-		(data, options) =>
-			new Response(JSON.stringify(data), {
-				headers: { 'Content-Type': 'application/json' },
-				...options
-			})
-	)
+	json: vi.fn((data, options) => {
+		const responseBody = JSON.stringify(data);
+		const response = new Response(responseBody, {
+			headers: { 'Content-Type': 'application/json' },
+			status: options?.status || 200,
+			...options
+		});
+		response.json = vi.fn().mockResolvedValue(data);
+		return response;
+	})
 }));
 
 // Import the mocked functions
@@ -134,9 +138,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return statement details', async () => {
 			const mockStatement = {
 				id: 1,

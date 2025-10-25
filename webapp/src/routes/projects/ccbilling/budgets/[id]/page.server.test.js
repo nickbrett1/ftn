@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { redirect } from '@sveltejs/kit';
 import { load } from './+page.server.js';
 
@@ -30,6 +30,13 @@ describe('Budget Detail Page Server', () => {
 
 		// Mock requireUser to return user by default
 		requireUser.mockResolvedValue({ email: 'test@test.com' });
+	});
+
+	afterEach(() => {
+		// Clear all mocks and timers to prevent leaks
+		vi.clearAllMocks();
+		vi.clearAllTimers();
+		vi.restoreAllMocks();
 	});
 
 	it('loads budget and merchants successfully', async () => {

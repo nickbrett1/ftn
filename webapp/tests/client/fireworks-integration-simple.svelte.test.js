@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mount, unmount, flushSync } from 'svelte';
 
 // Mock the components
 vi.mock('$lib/components/Button.svelte', () => ({
@@ -39,9 +38,11 @@ vi.mock('tippy.js', () => ({
 }));
 
 vi.mock('linkify-it', () => ({
-	default: vi.fn().mockImplementation(() => ({
-		match: vi.fn(() => [])
-	}))
+	default: class MockLinkifyIt {
+		match() {
+			return [];
+		}
+	}
 }));
 
 // Mock fetch for API calls
@@ -52,7 +53,7 @@ import BillingCyclePage from '../../src/routes/projects/ccbilling/[id]/+page.sve
 
 describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 	let mockData;
-	let mockProps;
+	let component;
 
 	beforeEach(() => {
 		// Mock data with unallocated charges
@@ -104,10 +105,6 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			autoAssociations: []
 		};
 
-		mockProps = {
-			data: mockData
-		};
-
 		// Mock successful fetch responses
 		global.fetch.mockResolvedValue({
 			ok: true,
@@ -118,32 +115,56 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 	});
 
+	afterEach(() => {
+		if (component) {
+			unmount(component);
+			component = null;
+		}
+	});
+
 	it('should render the billing cycle page with charges', async () => {
-		const { container } = render(BillingCyclePage, mockProps);
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: mockData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
 		// Should render the page with charges
-		expect(container.textContent).toContain('Billing Cycle:');
-		expect(container.textContent).toContain('Amazon');
-		expect(container.textContent).toContain('Starbucks');
+		expect(document.body.textContent).toContain('Amazon');
+		expect(document.body.textContent).toContain('Starbucks');
 	});
 
 	it('should display unallocated total correctly', async () => {
-		const { container } = render(BillingCyclePage, mockProps);
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: mockData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
 		// Check that unallocated total is displayed correctly
 		// Both charges are unallocated, so total should be 25.50 + 15.75 = 41.25
-		expect(container.textContent).toContain('$41.25');
-		expect(container.textContent).toContain('Unallocated');
+		expect(document.body.textContent).toContain('$41.25');
+		expect(document.body.textContent).toContain('Unallocated');
 	});
 
 	it('should have test fireworks button for manual testing', async () => {
-		const { container } = render(BillingCyclePage, mockProps);
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: mockData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
 		// Debug: log all button texts to see what's available
-		const allButtons = Array.from(container.querySelectorAll('button'));
+		const allButtons = Array.from(document.querySelectorAll('button'));
 		const buttonTexts = allButtons.map(btn => btn.textContent);
 		console.log('Available buttons:', buttonTexts);
 		
@@ -157,20 +178,35 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 	});
 
 	it('should calculate unallocated total correctly', async () => {
-		const { container } = render(BillingCyclePage, mockProps);
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: mockData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
 		// Check that unallocated total is displayed correctly
 		// Both charges are unallocated, so total should be 25.50 + 15.75 = 41.25
-		expect(container.textContent).toContain('$41.25');
-		expect(container.textContent).toContain('Unallocated');
+		expect(document.body.textContent).toContain('$41.25');
+		expect(document.body.textContent).toContain('Unallocated');
 	});
 
 	it('should check for fireworks when charges are updated', async () => {
-		const { component } = render(BillingCyclePage, mockProps);
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: mockData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
-		// Trigger a data update that should check for fireworks
+		// In Svelte 5, we can't directly set component.data
+		// Instead, we'll remount with updated data
+		unmount(component);
+		
 		const updatedData = {
 			...mockData,
 			charges: mockData.charges.map(charge => ({
@@ -179,8 +215,14 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			}))
 		};
 		
-		component.data = updatedData;
-		await tick();
+		component = mount(BillingCyclePage, {
+			target: document.body,
+			props: { data: updatedData }
+		});
+
+		await vi.waitFor(() => {
+			expect(document.body.textContent).toContain('Billing Cycle:');
+		}, { timeout: 1000 });
 		
 		// The test passes if no errors are thrown during the update
 		// This verifies that the fireworks checking logic runs without crashing

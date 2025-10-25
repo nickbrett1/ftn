@@ -1,4 +1,7 @@
-import { listStatements, createStatement } from '$lib/server/ccbilling-db.js';
+import { 
+	listStatements, 
+	createStatement
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
 
@@ -127,12 +130,15 @@ export async function POST(event) {
 			throw new Error(`Failed to create statement in database: ${dbError.message}`);
 		}
 
+		// Statement uploaded successfully - parsing will be handled client-side
+
 		const response = {
 			success: true,
 			filename: file.name,
 			r2_key: r2_key,
 			size: file.size,
-			statement_id: statementId
+			statement_id: statementId,
+			message: 'Statement uploaded successfully. Please parse it to extract charges.'
 		};
 
 		return json(response);
@@ -141,3 +147,4 @@ export async function POST(event) {
 		return json({ error: 'Failed to upload statement' }, { status: 500 });
 	}
 }
+

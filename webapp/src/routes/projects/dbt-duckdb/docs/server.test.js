@@ -28,9 +28,7 @@ describe('/src/routes/projects/dbt-duckdb/docs/+server.js', () => {
 		vi.clearAllMocks();
 		// Spy on console.error to check if it's called
 		vi.spyOn(console, 'error').mockImplementation(() => {});
-	});
-
-	// Restore console.error after all tests
+	});// Restore console.error after all tests
 	afterAll(() => {
 		vi.restoreAllMocks();
 	});

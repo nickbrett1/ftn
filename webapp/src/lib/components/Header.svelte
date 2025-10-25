@@ -21,16 +21,16 @@
 			class="p-1 text-white hover:text-sky-600 flex items-center size-[48px]"
 			rel="noopener noreferrer"
 		>
-			<LinkedinInBrands aria-label="LinkedIn" />
+			<LinkedinInBrands aria-label="LinkedIn" focusable="true" />
 		</a>
 		<a href="https://github.com/nickbrett1/ftn" class="p-1 text-white flex items-center size-[48px]">
-			<GithubBrands />
+			<GithubBrands ariaLabel="GitHub" focusable="true" />
 		</a>
 		<a
 			href="mailto:nick@fintechnick.com"
 			class="p-1 text-white hover:text-green-400 flex items-center size-[48px]"
 		>
-			<EnvelopeRegular aria-label="Email" />
+			<EnvelopeRegular aria-label="Email" focusable="true" />
 		</a>
 	</nav>
 </div>
