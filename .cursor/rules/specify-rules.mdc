@@ -20,9 +20,9 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9, SvelteKit 2.47, Node.js 20+: Follow standard conventions
 
 ## Recent Changes
+- 001-genproj: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
 - 001-here-s-my: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
 - 001-here-s-my: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
-- 001-here-s-my: Added TypeScript 5.9, SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

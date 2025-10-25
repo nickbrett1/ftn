@@ -1,197 +1,272 @@
 <!--
-	genproj/+page.svelte
-	
-	Main page for the genproj tool - User Story 1.
-	Displays all available project capabilities and enables selection.
-	
-	Features:
-	- Capability browsing without authentication
-	- Real-time capability selection
-	- Dependency resolution
-	- Responsive design
-	- Accessibility support
+  @fileoverview Main genproj page component
+  @description Two-tab interface for capability selection and preview
 -->
 
 <script>
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
-	import { capabilityActions } from '$lib/client/capability-store.js';
-	import Button from '$lib/components/Button.svelte';
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
+  import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
+  import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
+  import { logger } from '$lib/utils/logging.js';
 
-	// Props from server-side load function
-	export let data;
+  // Reactive state
+  let activeTab = 'capabilities';
+  let capabilities = [];
+  let selectedCapabilities = [];
+  let projectName = '';
+  let repositoryUrl = '';
+  let configuration = {};
+  let loading = true;
+  let error = null;
 
-	// Reactive state
-	let loading = false;
-	let error = null;
-	let capabilities = data?.capabilities || [];
-	let categories = data?.categories || {};
-	let selectedCapabilities = data?.selectedCapabilities || [];
+  // Tab management
+  function switchTab(tab) {
+    activeTab = tab;
+    logger.info('Tab switched', { tab });
+  }
 
-	// Initialize store with server data
-	onMount(() => {
-		if (selectedCapabilities.length > 0) {
-			capabilityActions.setSelectedCapabilities(selectedCapabilities);
-		}
-	});
+  // Capability selection handlers
+  function handleCapabilityToggle(capabilityId, selected) {
+    if (selected) {
+      selectedCapabilities = [...selectedCapabilities, capabilityId];
+    } else {
+      selectedCapabilities = selectedCapabilities.filter(id => id !== capabilityId);
+      // Remove configuration for deselected capability
+      delete configuration[capabilityId];
+    }
+    logger.info('Capability toggled', { capabilityId, selected });
+  }
 
-	/**
-	 * Handles capability selection changes
-	 * @param {CustomEvent} event - Event containing capability changes
-	 */
-	function handleCapabilitiesChanged(event) {
-		const { selectedCapabilities: newSelection } = event.detail;
-		selectedCapabilities = newSelection;
+  function handleConfigurationChange(capabilityId, config) {
+    configuration[capabilityId] = config;
+    logger.info('Configuration changed', { capabilityId, config });
+  }
 
-		// Update store
-		capabilityActions.setSelectedCapabilities(newSelection);
-	}
+  // Project configuration handlers
+  function handleProjectNameChange(event) {
+    projectName = event.target.value;
+    logger.info('Project name changed', { projectName });
+  }
 
-	/**
-	 * Handles clear selection action
-	 */
-	function handleClearSelection() {
-		selectedCapabilities = [];
-		capabilityActions.setSelectedCapabilities([]);
-	}
+  function handleRepositoryUrlChange(event) {
+    repositoryUrl = event.target.value;
+    logger.info('Repository URL changed', { repositoryUrl });
+  }
 
-	/**
-	 * Handles continue to configuration
-	 */
-	function handleContinue() {
-		if (selectedCapabilities.length === 0) {
-			alert('Please select at least one capability to continue.');
-			return;
-		}
+  // Load capabilities on mount
+  onMount(async () => {
+    try {
+      loading = true;
+      const response = await fetch('/projects/genproj/api/capabilities');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load capabilities: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      capabilities = data.capabilities;
+      
+      logger.success('Capabilities loaded', { count: capabilities.length });
+    } catch (err) {
+      error = err.message;
+      logger.error('Failed to load capabilities', { error: err.message });
+    } finally {
+      loading = false;
+    }
+  });
 
-		goto('/projects/genproj/configure');
-	}
-
-	/**
-	 * Handles skip to preview (for demo purposes)
-	 */
-	function handleSkipToPreview() {
-		goto('/projects/genproj/preview');
-	}
+  // Generate project handler
+  function handleGenerateProject() {
+    logger.info('Generate project requested', {
+      projectName,
+      selectedCapabilities,
+      configuration,
+    });
+    
+    // TODO: Implement project generation
+    alert('Project generation will be implemented in the next phase');
+  }
 </script>
 
 <svelte:head>
-	<title>Project Generator - Choose Capabilities</title>
-	<meta
-		name="description"
-		content="Select the capabilities you want to include in your new project. Choose from development tools, CI/CD, testing, and more."
-	/>
+  <title>Project Generator - FTN</title>
+  <meta name="description" content="Generate new development projects with selected capabilities" />
 </svelte:head>
 
-<div class="genproj-page">
-	{#if error}
-		<!-- Error State -->
-		<div class="flex items-center justify-center min-h-96">
-			<div class="text-center max-w-md">
-				<div
-					class="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4"
-				>
-					<svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-						/>
-					</svg>
-				</div>
-				<h3 class="text-lg font-semibold text-white mb-2">Failed to Load Capabilities</h3>
-				<p class="text-gray-300 mb-4">{error}</p>
-				<Button variant="primary" onclick={() => window.location.reload()}>Try Again</Button>
-			</div>
-		</div>
-	{:else}
-		<!-- Main Content -->
-		<div class="space-y-8">
-			<!-- Introduction -->
-			<div class="text-center max-w-4xl mx-auto">
-				<h1 class="text-4xl font-bold text-white mb-4">Generate Your Perfect Project</h1>
-				<p class="text-xl text-gray-300 mb-8">
-					Choose the capabilities you want to include in your new project. We'll generate all the
-					necessary files and configurations for you.
-				</p>
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-6">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Project Generator</h1>
+          <p class="mt-2 text-gray-600">
+            Configure and generate new development projects with selected capabilities
+          </p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button
+            data-testid="login-button"
+            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            on:click={() => window.location.href = '/auth/google'}
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-				<!-- Quick Stats -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-						<div class="text-2xl font-bold text-green-400 mb-2">
-							{capabilities.length}
-						</div>
-						<div class="text-gray-300">Available Capabilities</div>
-					</div>
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-						<div class="text-2xl font-bold text-green-400 mb-2">
-							{Object.keys(categories).length}
-						</div>
-						<div class="text-gray-300">Categories</div>
-					</div>
-					<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-						<div class="text-2xl font-bold text-green-400 mb-2">
-							{selectedCapabilities.length}
-						</div>
-						<div class="text-gray-300">Selected</div>
-					</div>
-				</div>
-			</div>
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {#if loading}
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-gray-600">Loading capabilities...</span>
+      </div>
+    {:else if error}
+      <div class="bg-red-50 border border-red-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error loading capabilities</h3>
+            <div class="mt-2 text-sm text-red-700">
+              <p>{error}</p>
+            </div>
+            <div class="mt-4">
+              <button
+                data-testid="retry-button"
+                class="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm hover:bg-red-200 transition-colors"
+                on:click={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {:else}
+      <!-- Project Configuration Form -->
+      <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Configuration</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Project Name -->
+          <div>
+            <label for="project-name" class="block text-sm font-medium text-gray-700 mb-2">
+              Project Name *
+            </label>
+            <input
+              id="project-name"
+              data-testid="project-name-input"
+              type="text"
+              bind:value={projectName}
+              on:input={handleProjectNameChange}
+              placeholder="my-awesome-project"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Project name"
+            />
+            {#if projectName && projectName.length < 3}
+              <p data-testid="project-name-error" class="mt-1 text-sm text-red-600">
+                Project name must be at least 3 characters long
+              </p>
+            {/if}
+          </div>
 
-			<!-- Capability Selector -->
-			<CapabilitySelector
-				{selectedCapabilities}
-				on:capabilitiesChanged={handleCapabilitiesChanged}
-				on:clearSelection={handleClearSelection}
-			/>
+          <!-- Repository URL -->
+          <div>
+            <label for="repository-url" class="block text-sm font-medium text-gray-700 mb-2">
+              Repository URL (optional)
+            </label>
+            <input
+              id="repository-url"
+              data-testid="repository-url-input"
+              type="url"
+              bind:value={repositoryUrl}
+              on:input={handleRepositoryUrlChange}
+              placeholder="https://github.com/user/repo"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Repository URL"
+            />
+            {#if repositoryUrl && !repositoryUrl.includes('github.com')}
+              <p data-testid="repository-url-error" class="mt-1 text-sm text-red-600">
+                Repository URL must be a valid GitHub URL
+              </p>
+            {/if}
+          </div>
+        </div>
+      </div>
 
-			<!-- Action Buttons -->
-			<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-				<Button
-					variant="success"
-					size="lg"
-					disabled={selectedCapabilities.length === 0}
-					onclick={handleContinue}
-				>
-					Continue to Configuration →
-				</Button>
+      <!-- Tab Navigation -->
+      <div class="bg-white rounded-lg shadow-sm border mb-8">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              data-testid="capabilities-tab"
+              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'capabilities' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+              on:click={() => switchTab('capabilities')}
+              role="tab"
+              aria-selected={activeTab === 'capabilities'}
+            >
+              Capabilities
+            </button>
+            <button
+              data-testid="preview-tab"
+              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'preview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+              on:click={() => switchTab('preview')}
+              role="tab"
+              aria-selected={activeTab === 'preview'}
+            >
+              Preview
+            </button>
+          </nav>
+        </div>
 
-				<Button variant="secondary" size="lg" onclick={handleSkipToPreview}>Skip to Preview</Button>
-			</div>
+        <!-- Tab Content -->
+        <div class="p-6">
+          {#if activeTab === 'capabilities'}
+            <CapabilitySelector
+              data-testid="capability-selector"
+              {capabilities}
+              {selectedCapabilities}
+              {configuration}
+              on:capabilityToggle={handleCapabilityToggle}
+              on:configurationChange={handleConfigurationChange}
+            />
+          {:else if activeTab === 'preview'}
+            <PreviewMode
+              data-testid="preview-content"
+              {projectName}
+              {repositoryUrl}
+              {selectedCapabilities}
+              {configuration}
+              {capabilities}
+            />
+          {/if}
+        </div>
+      </div>
 
-			<!-- Help Text -->
-			<div class="text-center text-sm text-gray-300 max-w-2xl mx-auto">
-				<p>
-					💡 <strong>Tip:</strong> You can preview what will be generated before committing to create
-					your project. No authentication is required for browsing capabilities or previewing generated
-					files.
-				</p>
-			</div>
-		</div>
-	{/if}
+      <!-- Generate Button -->
+      <div class="flex justify-center">
+        <button
+          data-testid="generate-button"
+          class="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={!projectName || projectName.length < 3 || selectedCapabilities.length === 0}
+          on:click={handleGenerateProject}
+          aria-label="Generate project"
+        >
+          Generate Project
+        </button>
+      </div>
+    {/if}
+  </main>
 </div>
 
 <style>
-	.genproj-page {
-		min-height: calc(100vh - 200px);
-	}
-
-	/* Smooth transitions */
-
-	/* Responsive adjustments */
-	@media (max-width: 768px) {
-		.genproj-page {
-			padding: 1rem;
-		}
-
-		h1 {
-			font-size: 2rem;
-		}
-
-		p {
-			font-size: 1rem;
-		}
-	}
+  /* Additional styles if needed */
 </style>

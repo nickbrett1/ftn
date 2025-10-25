@@ -1,384 +1,472 @@
 /**
- * Project Configuration Validation Utility
- *
- * Provides validation functions for project configurations, capability selections,
- * and external service configurations in the genproj tool.
- *
- * @fileoverview Universal validation utilities for genproj project configurations
+ * @fileoverview Base validation utilities for genproj feature
+ * @description Validation functions for project configurations and user inputs
  */
 
 /**
- * @typedef {Object} ProjectConfiguration
- * @property {string} projectName - Name of the project
- * @property {string} [repositoryUrl] - Optional existing repository URL
- * @property {string[]} capabilities - Array of selected capability IDs
- * @property {Object} configuration - Capability-specific configuration
- */
-
-/**
- * @typedef {Object} ValidationResult
- * @property {boolean} isValid - Whether the validation passed
- * @property {string[]} errors - Array of error messages
- * @property {string[]} warnings - Array of warning messages
- */
-
-/**
- * Validates project name format and rules
- * @param {string} projectName - The project name to validate
- * @param {string[]} errors - Array to collect errors
- * @param {string[]} warnings - Array to collect warnings
- */
-function validateProjectNameFormat(projectName, errors, warnings) {
-	// GitHub repository name rules
-	if (projectName.length > 100) {
-		errors.push('Project name must be 100 characters or less');
-	}
-
-	if (projectName.length < 1) {
-		errors.push('Project name must be at least 1 character');
-	}
-
-	// Must start and end with alphanumeric character
-	if (!/^[a-zA-Z0-9]/.test(projectName)) {
-		errors.push('Project name must start with a letter or number');
-	}
-
-	if (!/[a-zA-Z0-9]$/.test(projectName)) {
-		errors.push('Project name must end with a letter or number');
-	}
-
-	// Can contain hyphens, underscores, and dots
-	if (!/^[a-zA-Z0-9._-]+$/.test(projectName)) {
-		errors.push('Project name can only contain letters, numbers, hyphens, underscores, and dots');
-	}
-}
-
-/**
- * Validates project name against reserved names
- * @param {string} projectName - The project name to validate
- * @param {string[]} errors - Array to collect errors
- */
-function validateReservedNames(projectName, errors) {
-	const reservedNames = [
-		'con',
-		'prn',
-		'aux',
-		'nul',
-		'com1',
-		'com2',
-		'com3',
-		'com4',
-		'com5',
-		'com6',
-		'com7',
-		'com8',
-		'com9',
-		'lpt1',
-		'lpt2',
-		'lpt3',
-		'lpt4',
-		'lpt5',
-		'lpt6',
-		'lpt7',
-		'lpt8',
-		'lpt9'
-	];
-
-	if (reservedNames.includes(projectName.toLowerCase())) {
-		errors.push('Project name cannot be a reserved system name');
-	}
-}
-
-/**
- * Adds best practice warnings for project names
- * @param {string} projectName - The project name to validate
- * @param {string[]} warnings - Array to collect warnings
- */
-function addProjectNameWarnings(projectName, warnings) {
-	// Warnings for best practices
-	if (projectName.includes('_') && projectName.includes('-')) {
-		warnings.push('Consider using consistent naming convention (either hyphens or underscores)');
-	}
-
-	if (projectName.length > 50) {
-		warnings.push('Consider using a shorter project name for better readability');
-	}
-}
-
-/**
- * Validates a project name according to GitHub repository naming conventions
- * @param {string} projectName - The project name to validate
- * @returns {ValidationResult} Validation result with errors/warnings
+ * Validate project name
+ * @param {string} projectName - Project name to validate
+ * @returns {Object} Validation result
  */
 export function validateProjectName(projectName) {
-	const errors = [];
-	const warnings = [];
+  if (!projectName || typeof projectName !== 'string') {
+    return { valid: false, error: 'Project name is required' };
+  }
 
-	if (!projectName) {
-		errors.push('Project name is required');
-		return { isValid: false, errors, warnings };
-	}
+  if (projectName.length < 3) {
+    return { valid: false, error: 'Project name must be at least 3 characters long' };
+  }
 
-	// Validate format and rules
-	validateProjectNameFormat(projectName, errors, warnings);
+  if (projectName.length > 50) {
+    return { valid: false, error: 'Project name must be no more than 50 characters long' };
+  }
 
-	// Check for reserved names
-	validateReservedNames(projectName, errors);
+  // Allow alphanumeric characters, hyphens, and underscores
+  const validPattern = /^[a-zA-Z0-9-_]+$/;
+  if (!validPattern.test(projectName)) {
+    return { valid: false, error: 'Project name can only contain letters, numbers, hyphens, and underscores' };
+  }
 
-	// Add best practice warnings
-	addProjectNameWarnings(projectName, warnings);
+  // Check for reserved names
+  const reservedNames = ['admin', 'api', 'app', 'www', 'mail', 'ftp', 'root', 'test', 'dev', 'staging', 'prod'];
+  if (reservedNames.includes(projectName.toLowerCase())) {
+    return { valid: false, error: 'Project name is reserved and cannot be used' };
+  }
 
-	return {
-		isValid: errors.length === 0,
-		errors,
-		warnings
-	};
+  return { valid: true };
 }
 
 /**
- * Validates a GitHub repository URL
- * @param {string} repositoryUrl - The repository URL to validate
- * @returns {ValidationResult} Validation result with errors/warnings
+ * Validate repository URL
+ * @param {string} repositoryUrl - Repository URL to validate
+ * @returns {Object} Validation result
  */
 export function validateRepositoryUrl(repositoryUrl) {
-	const errors = [];
-	const warnings = [];
+  if (!repositoryUrl) {
+    return { valid: true }; // Optional field
+  }
 
-	if (!repositoryUrl) {
-		// Repository URL is optional - user can create new repo
-		return { isValid: true, errors, warnings };
-	}
+  if (typeof repositoryUrl !== 'string') {
+    return { valid: false, error: 'Repository URL must be a string' };
+  }
 
-	// GitHub URL patterns
-	const githubUrlPattern = /^https:\/\/github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+(?:\/)?$/;
-	const githubSshPattern = /^git@github\.com:[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\.git$/;
+  // GitHub URL pattern
+  const githubPattern = /^https:\/\/github\.com\/[^\/]+\/[^\/]+\/?$/;
+  if (!githubPattern.test(repositoryUrl)) {
+    return { valid: false, error: 'Repository URL must be a valid GitHub URL (https://github.com/owner/repo)' };
+  }
 
-	if (!githubUrlPattern.test(repositoryUrl) && !githubSshPattern.test(repositoryUrl)) {
-		errors.push(
-			'Repository URL must be a valid GitHub URL (https://github.com/owner/repo or git@github.com:owner/repo.git)'
-		);
-	}
-
-	// Extract owner and repo name for additional validation
-	const httpsRegex = /^https:\/\/github\.com\/([a-zA-Z0-9._-]+)\/([a-zA-Z0-9._-]+)/;
-	const sshRegex = /^git@github\.com:([a-zA-Z0-9._-]+)\/([a-zA-Z0-9._-]+)\.git$/;
-	const httpsMatch = httpsRegex.exec(repositoryUrl);
-	const sshMatch = sshRegex.exec(repositoryUrl);
-
-	const match = httpsMatch || sshMatch;
-	if (match) {
-		const [, owner, repo] = match;
-
-		// Validate owner and repo names
-		const ownerValidation = validateProjectName(owner);
-		if (!ownerValidation.isValid) {
-			errors.push(`Repository owner name is invalid: ${ownerValidation.errors.join(', ')}`);
-		}
-
-		const repoValidation = validateProjectName(repo);
-		if (!repoValidation.isValid) {
-			errors.push(`Repository name is invalid: ${repoValidation.errors.join(', ')}`);
-		}
-	}
-
-	return {
-		isValid: errors.length === 0,
-		errors,
-		warnings
-	};
+  return { valid: true };
 }
 
 /**
- * Validates capability array format
- * @param {string[]} capabilities - Array of selected capability IDs
- * @param {string[]} errors - Array to collect errors
- * @param {string[]} warnings - Array to collect warnings
- * @returns {boolean} Whether validation passed
+ * Validate selected capabilities
+ * @param {string[]} selectedCapabilities - Selected capability IDs
+ * @returns {Object} Validation result
  */
-function validateCapabilityArray(capabilities, errors, warnings) {
-	if (!Array.isArray(capabilities)) {
-		errors.push('Capabilities must be an array');
-		return false;
-	}
+export function validateSelectedCapabilities(selectedCapabilities) {
+  if (!Array.isArray(selectedCapabilities)) {
+    return { valid: false, error: 'Selected capabilities must be an array' };
+  }
 
-	if (capabilities.length === 0) {
-		warnings.push('No capabilities selected - consider adding some project features');
-	}
+  if (selectedCapabilities.length === 0) {
+    return { valid: false, error: 'At least one capability must be selected' };
+  }
 
-	return true;
+  if (selectedCapabilities.length > 20) {
+    return { valid: false, error: 'Too many capabilities selected (maximum 20)' };
+  }
+
+  // Check for valid capability IDs
+  const validCapabilityIds = [
+    'devcontainer-node', 'devcontainer-python', 'devcontainer-java',
+    'circleci', 'github-actions', 'sonarcloud', 'sonarlint',
+    'doppler', 'cloudflare-wrangler', 'dependabot',
+    'lighthouse-ci', 'playwright', 'spec-kit'
+  ];
+
+  for (const capabilityId of selectedCapabilities) {
+    if (!validCapabilityIds.includes(capabilityId)) {
+      return { valid: false, error: `Invalid capability ID: ${capabilityId}` };
+    }
+  }
+
+  // Check for duplicates
+  const uniqueCapabilities = new Set(selectedCapabilities);
+  if (uniqueCapabilities.size !== selectedCapabilities.length) {
+    return { valid: false, error: 'Duplicate capabilities are not allowed' };
+  }
+
+  return { valid: true };
 }
 
 /**
- * Validates capability IDs against definitions
- * @param {string[]} capabilities - Array of selected capability IDs
- * @param {Object} capabilityDefinitions - Available capability definitions
- * @param {string[]} errors - Array to collect errors
+ * Validate capability configuration
+ * @param {Object} configuration - Capability configuration
+ * @param {string[]} selectedCapabilities - Selected capability IDs
+ * @returns {Object} Validation result
  */
-function validateCapabilityIds(capabilities, capabilityDefinitions, errors) {
-	const validCapabilityIds = Object.keys(capabilityDefinitions);
-	const invalidCapabilities = capabilities.filter((cap) => !validCapabilityIds.includes(cap));
+export function validateCapabilityConfiguration(configuration, selectedCapabilities) {
+  if (!configuration || typeof configuration !== 'object') {
+    return { valid: false, error: 'Configuration must be an object' };
+  }
 
-	if (invalidCapabilities.length > 0) {
-		errors.push(`Invalid capabilities: ${invalidCapabilities.join(', ')}`);
-	}
+  // Validate each capability's configuration
+  for (const capabilityId of selectedCapabilities) {
+    const capabilityConfig = configuration[capabilityId];
+    
+    if (capabilityConfig !== undefined && typeof capabilityConfig !== 'object') {
+      return { valid: false, error: `Configuration for ${capabilityId} must be an object` };
+    }
+
+    // Validate specific capability configurations
+    const validationResult = validateSpecificCapabilityConfig(capabilityId, capabilityConfig);
+    if (!validationResult.valid) {
+      return validationResult;
+    }
+  }
+
+  return { valid: true };
 }
 
 /**
- * Validates capability dependencies
- * @param {string[]} capabilities - Array of selected capability IDs
- * @param {Object} capabilityDefinitions - Available capability definitions
- * @param {string[]} errors - Array to collect errors
+ * Validate specific capability configuration
+ * @param {string} capabilityId - Capability ID
+ * @param {Object} config - Capability configuration
+ * @returns {Object} Validation result
  */
-function validateCapabilityDependencies(capabilities, capabilityDefinitions, errors) {
-	for (const capabilityId of capabilities) {
-		const capability = capabilityDefinitions[capabilityId];
-		if (!capability) continue;
+function validateSpecificCapabilityConfig(capabilityId, config) {
+  if (!config) {
+    return { valid: true }; // Optional configuration
+  }
 
-		if (capability.dependencies) {
-			for (const dependency of capability.dependencies) {
-				if (!capabilities.includes(dependency)) {
-					const dependencyName = capabilityDefinitions[dependency]?.name || dependency;
-					errors.push(
-						`Capability '${capability.name}' requires '${dependencyName}' to be selected`
-					);
-				}
-			}
-		}
-	}
+  switch (capabilityId) {
+    case 'devcontainer-node':
+      return validateDevContainerNodeConfig(config);
+    case 'devcontainer-python':
+      return validateDevContainerPythonConfig(config);
+    case 'devcontainer-java':
+      return validateDevContainerJavaConfig(config);
+    case 'circleci':
+      return validateCircleCIConfig(config);
+    case 'github-actions':
+      return validateGitHubActionsConfig(config);
+    case 'sonarcloud':
+      return validateSonarCloudConfig(config);
+    case 'doppler':
+      return validateDopplerConfig(config);
+    case 'cloudflare-wrangler':
+      return validateCloudflareWranglerConfig(config);
+    case 'dependabot':
+      return validateDependabotConfig(config);
+    case 'lighthouse-ci':
+      return validateLighthouseCIConfig(config);
+    case 'playwright':
+      return validatePlaywrightConfig(config);
+    case 'spec-kit':
+      return validateSpecKitConfig(config);
+    default:
+      return { valid: true }; // Unknown capability, allow any config
+  }
 }
 
 /**
- * Validates capability conflicts
- * @param {string[]} capabilities - Array of selected capability IDs
- * @param {Object} capabilityDefinitions - Available capability definitions
- * @param {string[]} errors - Array to collect errors
+ * Validate DevContainer Node configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
  */
-function validateCapabilityConflicts(capabilities, capabilityDefinitions, errors) {
-	for (const capabilityId of capabilities) {
-		const capability = capabilityDefinitions[capabilityId];
-		if (!capability) continue;
+function validateDevContainerNodeConfig(config) {
+  const validNodeVersions = ['18', '20', '22'];
+  const validPackageManagers = ['npm', 'yarn', 'pnpm'];
 
-		if (capability.conflicts) {
-			for (const conflict of capability.conflicts) {
-				if (capabilities.includes(conflict)) {
-					const conflictName = capabilityDefinitions[conflict]?.name || conflict;
-					errors.push(`Capability '${capability.name}' conflicts with '${conflictName}'`);
-				}
-			}
-		}
-	}
+  if (config.nodeVersion && !validNodeVersions.includes(config.nodeVersion)) {
+    return { valid: false, error: 'Invalid Node.js version' };
+  }
+
+  if (config.packageManager && !validPackageManagers.includes(config.packageManager)) {
+    return { valid: false, error: 'Invalid package manager' };
+  }
+
+  return { valid: true };
 }
 
 /**
- * Validates capability selections and their dependencies
- * @param {string[]} capabilities - Array of selected capability IDs
- * @param {Object} capabilityDefinitions - Available capability definitions
- * @returns {ValidationResult} Validation result with errors/warnings
+ * Validate DevContainer Python configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
  */
-export function validateCapabilities(capabilities, capabilityDefinitions) {
-	const errors = [];
-	const warnings = [];
+function validateDevContainerPythonConfig(config) {
+  const validPythonVersions = ['3.9', '3.10', '3.11', '3.12'];
+  const validPackageManagers = ['pip', 'poetry', 'pipenv'];
 
-	// Validate array format
-	if (!validateCapabilityArray(capabilities, errors, warnings)) {
-		return { isValid: false, errors, warnings };
-	}
+  if (config.pythonVersion && !validPythonVersions.includes(config.pythonVersion)) {
+    return { valid: false, error: 'Invalid Python version' };
+  }
 
-	// Validate capability IDs
-	validateCapabilityIds(capabilities, capabilityDefinitions, errors);
+  if (config.packageManager && !validPackageManagers.includes(config.packageManager)) {
+    return { valid: false, error: 'Invalid package manager' };
+  }
 
-	// Validate dependencies
-	validateCapabilityDependencies(capabilities, capabilityDefinitions, errors);
-
-	// Validate conflicts
-	validateCapabilityConflicts(capabilities, capabilityDefinitions, errors);
-
-	return {
-		isValid: errors.length === 0,
-		errors,
-		warnings
-	};
+  return { valid: true };
 }
 
 /**
- * Validates a complete project configuration
- * @param {ProjectConfiguration} config - The project configuration to validate
- * @param {Object} capabilityDefinitions - Available capability definitions
- * @returns {ValidationResult} Validation result with errors/warnings
+ * Validate DevContainer Java configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
  */
-export function validateProjectConfiguration(config, capabilityDefinitions) {
-	const errors = [];
-	const warnings = [];
+function validateDevContainerJavaConfig(config) {
+  const validJavaVersions = ['11', '17', '21'];
+  const validBuildTools = ['maven', 'gradle'];
 
-	// Validate project name
-	const nameValidation = validateProjectName(config.projectName);
-	errors.push(...nameValidation.errors);
-	warnings.push(...nameValidation.warnings);
+  if (config.javaVersion && !validJavaVersions.includes(config.javaVersion)) {
+    return { valid: false, error: 'Invalid Java version' };
+  }
 
-	// Validate repository URL
-	const urlValidation = validateRepositoryUrl(config.repositoryUrl);
-	errors.push(...urlValidation.errors);
-	warnings.push(...urlValidation.warnings);
+  if (config.buildTool && !validBuildTools.includes(config.buildTool)) {
+    return { valid: false, error: 'Invalid build tool' };
+  }
 
-	// Validate capabilities
-	const capabilitiesValidation = validateCapabilities(config.capabilities, capabilityDefinitions);
-	errors.push(...capabilitiesValidation.errors);
-	warnings.push(...capabilitiesValidation.warnings);
-
-	// Validate capability-specific configuration
-	if (config.configuration && typeof config.configuration === 'object') {
-		for (const capabilityId of config.capabilities) {
-			const capability = capabilityDefinitions[capabilityId];
-			if (!capability) continue;
-
-			const capabilityConfig = config.configuration[capabilityId];
-			if (capabilityConfig && capability.validateConfiguration) {
-				const configValidation = capability.validateConfiguration(capabilityConfig);
-				if (!configValidation.isValid) {
-					errors.push(
-						`Configuration for '${capability.name}': ${configValidation.errors.join(', ')}`
-					);
-				}
-				warnings.push(
-					...configValidation.warnings.map((w) => `Configuration for '${capability.name}': ${w}`)
-				);
-			}
-		}
-	}
-
-	return {
-		isValid: errors.length === 0,
-		errors,
-		warnings
-	};
+  return { valid: true };
 }
 
 /**
- * Sanitizes a project name to make it GitHub-compatible
- * @param {string} projectName - The project name to sanitize
+ * Validate CircleCI configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateCircleCIConfig(config) {
+  const validNodeVersions = ['18', '20', '22'];
+  const validDeployTargets = ['cloudflare', 'vercel', 'aws'];
+
+  if (config.nodeVersion && !validNodeVersions.includes(config.nodeVersion)) {
+    return { valid: false, error: 'Invalid Node.js version' };
+  }
+
+  if (config.deployTarget && !validDeployTargets.includes(config.deployTarget)) {
+    return { valid: false, error: 'Invalid deploy target' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate GitHub Actions configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateGitHubActionsConfig(config) {
+  const validNodeVersions = ['18', '20', '22'];
+  const validDeployTargets = ['cloudflare', 'vercel', 'aws'];
+
+  if (config.nodeVersion && !validNodeVersions.includes(config.nodeVersion)) {
+    return { valid: false, error: 'Invalid Node.js version' };
+  }
+
+  if (config.deployTarget && !validDeployTargets.includes(config.deployTarget)) {
+    return { valid: false, error: 'Invalid deploy target' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate SonarCloud configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateSonarCloudConfig(config) {
+  const validLanguages = ['javascript', 'typescript', 'python', 'java'];
+  const validQualityGates = ['default', 'strict'];
+
+  if (config.language && !validLanguages.includes(config.language)) {
+    return { valid: false, error: 'Invalid language' };
+  }
+
+  if (config.qualityGate && !validQualityGates.includes(config.qualityGate)) {
+    return { valid: false, error: 'Invalid quality gate' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Doppler configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateDopplerConfig(config) {
+  const validProjectTypes = ['web', 'api', 'mobile'];
+
+  if (config.environments && !Array.isArray(config.environments)) {
+    return { valid: false, error: 'Environments must be an array' };
+  }
+
+  if (config.projectType && !validProjectTypes.includes(config.projectType)) {
+    return { valid: false, error: 'Invalid project type' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Cloudflare Wrangler configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateCloudflareWranglerConfig(config) {
+  const validWorkerTypes = ['web', 'api', 'scheduled'];
+
+  if (config.workerType && !validWorkerTypes.includes(config.workerType)) {
+    return { valid: false, error: 'Invalid worker type' };
+  }
+
+  if (config.compatibilityDate && typeof config.compatibilityDate !== 'string') {
+    return { valid: false, error: 'Compatibility date must be a string' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Dependabot configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateDependabotConfig(config) {
+  const validEcosystems = ['npm', 'yarn', 'pip', 'maven', 'gradle', 'docker', 'github-actions'];
+  const validSchedules = ['daily', 'weekly', 'monthly'];
+
+  if (config.ecosystems && !Array.isArray(config.ecosystems)) {
+    return { valid: false, error: 'Ecosystems must be an array' };
+  }
+
+  if (config.updateSchedule && !validSchedules.includes(config.updateSchedule)) {
+    return { valid: false, error: 'Invalid update schedule' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Lighthouse CI configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateLighthouseCIConfig(config) {
+  if (config.thresholds && typeof config.thresholds === 'object') {
+    const validThresholds = ['performance', 'accessibility', 'bestPractices', 'seo'];
+    
+    for (const [key, value] of Object.entries(config.thresholds)) {
+      if (!validThresholds.includes(key)) {
+        return { valid: false, error: `Invalid threshold: ${key}` };
+      }
+      
+      if (typeof value !== 'number' || value < 0 || value > 100) {
+        return { valid: false, error: `Threshold ${key} must be a number between 0 and 100` };
+      }
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Playwright configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validatePlaywrightConfig(config) {
+  const validBrowsers = ['chromium', 'firefox', 'webkit'];
+
+  if (config.browsers && !Array.isArray(config.browsers)) {
+    return { valid: false, error: 'Browsers must be an array' };
+  }
+
+  if (config.testDir && typeof config.testDir !== 'string') {
+    return { valid: false, error: 'Test directory must be a string' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate Spec Kit configuration
+ * @param {Object} config - Configuration object
+ * @returns {Object} Validation result
+ */
+function validateSpecKitConfig(config) {
+  const validFormats = ['markdown', 'yaml', 'json'];
+
+  if (config.specFormat && !validFormats.includes(config.specFormat)) {
+    return { valid: false, error: 'Invalid spec format' };
+  }
+
+  if (config.includeTemplates && typeof config.includeTemplates !== 'boolean') {
+    return { valid: false, error: 'Include templates must be a boolean' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validate complete project configuration
+ * @param {Object} config - Complete project configuration
+ * @returns {Object} Validation result
+ */
+export function validateProjectConfiguration(config) {
+  const errors = [];
+
+  // Validate project name
+  const nameValidation = validateProjectName(config.projectName);
+  if (!nameValidation.valid) {
+    errors.push(nameValidation.error);
+  }
+
+  // Validate repository URL
+  const urlValidation = validateRepositoryUrl(config.repositoryUrl);
+  if (!urlValidation.valid) {
+    errors.push(urlValidation.error);
+  }
+
+  // Validate selected capabilities
+  const capabilitiesValidation = validateSelectedCapabilities(config.selectedCapabilities);
+  if (!capabilitiesValidation.valid) {
+    errors.push(capabilitiesValidation.error);
+  }
+
+  // Validate capability configuration
+  const configValidation = validateCapabilityConfiguration(config.configuration, config.selectedCapabilities);
+  if (!configValidation.valid) {
+    errors.push(configValidation.error);
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Sanitize project name for file system usage
+ * @param {string} projectName - Project name to sanitize
  * @returns {string} Sanitized project name
  */
 export function sanitizeProjectName(projectName) {
-	if (!projectName) return '';
+  if (!projectName) return '';
+  
+  return projectName
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
-	// Convert to lowercase and replace spaces with hyphens
-	let sanitized = projectName.toLowerCase().replaceAll(/\s+/g, '-');
-
-	// Remove invalid characters
-	sanitized = sanitized.replaceAll(/[^a-z0-9._-]/g, '');
-
-	// Ensure it starts and ends with alphanumeric
-	sanitized = sanitized.replace(/^[^a-z0-9]+/, '').replace(/[^a-z0-9]+$/, '');
-
-	// Limit length
-	if (sanitized.length > 100) {
-		sanitized = sanitized.substring(0, 100);
-	}
-
-	// Ensure it's not empty
-	if (!sanitized) {
-		sanitized = 'project';
-	}
-
-	return sanitized;
+/**
+ * Generate project slug from project name
+ * @param {string} projectName - Project name
+ * @returns {string} Project slug
+ */
+export function generateProjectSlug(projectName) {
+  return sanitizeProjectName(projectName);
 }

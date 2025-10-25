@@ -1,465 +1,472 @@
 /**
- * File Generation Utility
- *
- * Provides utilities for generating project files, templates, and configurations
- * based on selected capabilities in the genproj tool.
- *
- * @fileoverview Universal file generation utilities for genproj
+ * @fileoverview Template engine with Handlebars for file generation
+ * @description Handlebars-based template engine for generating project files
  */
 
-/**
- * @typedef {Object} FileTemplate
- * @property {string} path - File path relative to project root
- * @property {string} content - File content (can include template variables)
- * @property {string} [description] - Description of what this file does
- * @property {boolean} [executable] - Whether the file should be executable
- */
+import { platform } from '$app/environment';
 
 /**
- * @typedef {Object} GenerationContext
- * @property {string} projectName - Name of the project
- * @property {string} [repositoryUrl] - Repository URL if provided
- * @property {string[]} capabilities - Selected capabilities
- * @property {Object} configuration - Capability-specific configuration
- * @property {Object} metadata - Additional metadata (timestamps, user info, etc.)
+ * Template engine class using Handlebars
  */
+export class TemplateEngine {
+  constructor() {
+    this.templates = new Map();
+    this.partials = new Map();
+    this.helpers = new Map();
+    this.r2Bucket = platform?.env?.R2_GENPROJ;
+  }
 
-/**
- * Template variable replacement utility
- * @param {string} template - Template string with {{variable}} placeholders
- * @param {Object} variables - Object containing variable values
- * @returns {string} Processed template with variables replaced
- */
-export function processTemplate(template, variables) {
-	if (template && typeof template === 'string') {
-		// Replace {{variable}} patterns
-		return template.replaceAll(/\{\{(\w+)\}\}/g, (match, variableName) => {
-			const value = variables[variableName];
-			return value === undefined ? match : String(value);
-		});
-	}
-	return '';
+  /**
+   * Initialize template engine
+   * @returns {Promise<boolean>} True if initialized successfully
+   */
+  async initialize() {
+    try {
+      // Register built-in helpers
+      this.registerBuiltInHelpers();
+      
+      // Load templates from R2 bucket
+      await this.loadTemplatesFromR2();
+      
+      console.log('✅ Template engine initialized');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to initialize template engine:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Register built-in Handlebars helpers
+   */
+  registerBuiltInHelpers() {
+    // Conditional helper
+    this.registerHelper('if_eq', function(a, b, options) {
+      if (a === b) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    });
+
+    // String manipulation helpers
+    this.registerHelper('uppercase', function(str) {
+      return str ? str.toUpperCase() : '';
+    });
+
+    this.registerHelper('lowercase', function(str) {
+      return str ? str.toLowerCase() : '';
+    });
+
+    this.registerHelper('capitalize', function(str) {
+      return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    });
+
+    this.registerHelper('kebab-case', function(str) {
+      return str ? str.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '') : '';
+    });
+
+    this.registerHelper('snake_case', function(str) {
+      return str ? str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '') : '';
+    });
+
+    // Array helpers
+    this.registerHelper('join', function(array, separator) {
+      return Array.isArray(array) ? array.join(separator || ', ') : '';
+    });
+
+    this.registerHelper('length', function(array) {
+      return Array.isArray(array) ? array.length : 0;
+    });
+
+    // Date helpers
+    this.registerHelper('date', function(format) {
+      const now = new Date();
+      switch (format) {
+        case 'iso':
+          return now.toISOString();
+        case 'year':
+          return now.getFullYear();
+        case 'month':
+          return now.getMonth() + 1;
+        case 'day':
+          return now.getDate();
+        default:
+          return now.toLocaleDateString();
+      }
+    });
+
+    // JSON helpers
+    this.registerHelper('json', function(obj) {
+      return JSON.stringify(obj, null, 2);
+    });
+
+    this.registerHelper('json_compact', function(obj) {
+      return JSON.stringify(obj);
+    });
+
+    // Conditional helpers
+    this.registerHelper('unless_eq', function(a, b, options) {
+      if (a !== b) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    });
+
+    // Math helpers
+    this.registerHelper('add', function(a, b) {
+      return (a || 0) + (b || 0);
+    });
+
+    this.registerHelper('subtract', function(a, b) {
+      return (a || 0) - (b || 0);
+    });
+
+    // String helpers
+    this.registerHelper('replace', function(str, search, replace) {
+      return str ? str.replace(new RegExp(search, 'g'), replace) : '';
+    });
+
+    this.registerHelper('truncate', function(str, length) {
+      return str && str.length > length ? str.substring(0, length) + '...' : str;
+    });
+
+    // Environment helpers
+    this.registerHelper('env', function(key) {
+      return process.env[key] || '';
+    });
+
+    // Project-specific helpers
+    this.registerHelper('project_slug', function(name) {
+      return name ? name.toLowerCase().replace(/[^a-z0-9-_]/g, '-') : '';
+    });
+
+    this.registerHelper('package_name', function(name) {
+      return name ? name.toLowerCase().replace(/[^a-z0-9-_]/g, '-') : '';
+    });
+
+    this.registerHelper('class_name', function(name) {
+      return name ? name.replace(/[-_]/g, '').replace(/\b\w/g, l => l.toUpperCase()) : '';
+    });
+
+    this.registerHelper('constant_name', function(name) {
+      return name ? name.toUpperCase().replace(/[^A-Z0-9_]/g, '_') : '';
+    });
+  }
+
+  /**
+   * Register a custom helper
+   * @param {string} name - Helper name
+   * @param {Function} fn - Helper function
+   */
+  registerHelper(name, fn) {
+    this.helpers.set(name, fn);
+  }
+
+  /**
+   * Load templates from R2 bucket
+   * @returns {Promise<void>}
+   */
+  async loadTemplatesFromR2() {
+    if (!this.r2Bucket) {
+      console.warn('⚠️ R2 bucket not available, using fallback templates');
+      return;
+    }
+
+    try {
+      // List all objects in the bucket
+      const objects = await this.r2Bucket.list();
+      
+      for (const object of objects.objects) {
+        if (object.key.endsWith('.hbs')) {
+          const content = await this.r2Bucket.get(object.key);
+          if (content) {
+            const templateContent = await content.text();
+            this.templates.set(object.key, templateContent);
+            console.log(`✅ Loaded template: ${object.key}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load templates from R2:', error);
+    }
+  }
+
+  /**
+   * Get template by ID
+   * @param {string} templateId - Template identifier
+   * @returns {Promise<string|null>} Template content
+   */
+  async getTemplate(templateId) {
+    // Check if template is already loaded
+    if (this.templates.has(templateId)) {
+      return this.templates.get(templateId);
+    }
+
+    // Try to load from R2 bucket
+    if (this.r2Bucket) {
+      try {
+        const object = await this.r2Bucket.get(templateId);
+        if (object) {
+          const content = await object.text();
+          this.templates.set(templateId, content);
+          return content;
+        }
+      } catch (error) {
+        console.error(`❌ Failed to load template ${templateId}:`, error);
+      }
+    }
+
+    // Return fallback template
+    return this.getFallbackTemplate(templateId);
+  }
+
+  /**
+   * Get fallback template for common templates
+   * @param {string} templateId - Template identifier
+   * @returns {string|null} Fallback template content
+   */
+  getFallbackTemplate(templateId) {
+    const fallbackTemplates = {
+      'devcontainer-node-json': `{
+  "name": "{{projectName}}",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint"
+      ]
+    }
+  },
+  "forwardPorts": [3000, 5173],
+  "postCreateCommand": "{{#if_eq packageManager "npm"}}npm install{{/if_eq}}{{#if_eq packageManager "yarn"}}yarn install{{/if_eq}}{{#if_eq packageManager "pnpm"}}pnpm install{{/if_eq}}"
+}`,
+      'devcontainer-python-json': `{
+  "name": "{{projectName}}",
+  "image": "mcr.microsoft.com/devcontainers/python:{{pythonVersion}}",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter"
+      ]
+    }
+  },
+  "postCreateCommand": "{{#if_eq packageManager "pip"}}pip install -r requirements.txt{{/if_eq}}{{#if_eq packageManager "poetry"}}poetry install{{/if_eq}}{{#if_eq packageManager "pipenv"}}pipenv install{{/if_eq}}"
+}`,
+      'circleci-config': `version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/node:{{nodeVersion}}
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm test
+      - run: npm run lint
+
+  deploy:
+    docker:
+      - image: cimg/node:{{nodeVersion}}
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run build
+      {{#if_eq deployTarget "cloudflare"}}- run: npx wrangler deploy{{/if_eq}}
+      {{#if_eq deployTarget "vercel"}}- run: npx vercel deploy --prod{{/if_eq}}
+
+workflows:
+  test-and-deploy:
+    jobs:
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main`,
+    };
+
+    return fallbackTemplates[templateId] || null;
+  }
+
+  /**
+   * Compile template with Handlebars
+   * @param {string} templateContent - Template content
+   * @param {Object} data - Template data
+   * @returns {string} Compiled template
+   */
+  compileTemplate(templateContent, data) {
+    try {
+      // Simple Handlebars-like compilation
+      let compiled = templateContent;
+
+      // Replace variables
+      compiled = compiled.replace(/\{\{([^}]+)\}\}/g, (match, expression) => {
+        const trimmed = expression.trim();
+        
+        // Handle helpers
+        if (trimmed.includes(' ')) {
+          const parts = trimmed.split(' ');
+          const helperName = parts[0];
+          const helper = this.helpers.get(helperName);
+          
+          if (helper) {
+            const args = parts.slice(1).map(arg => {
+              // Try to evaluate as variable
+              try {
+                return this.evaluateExpression(arg, data);
+              } catch {
+                return arg; // Return as string if not a variable
+              }
+            });
+            
+            return helper.apply(data, args);
+          }
+        }
+        
+        // Handle simple variables
+        return this.evaluateExpression(trimmed, data);
+      });
+
+      // Handle conditionals
+      compiled = this.compileConditionals(compiled, data);
+      
+      // Handle loops
+      compiled = this.compileLoops(compiled, data);
+
+      return compiled;
+    } catch (error) {
+      console.error('❌ Template compilation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Evaluate expression in data context
+   * @param {string} expression - Expression to evaluate
+   * @param {Object} data - Data context
+   * @returns {any} Evaluated value
+   */
+  evaluateExpression(expression, data) {
+    const parts = expression.split('.');
+    let value = data;
+    
+    for (const part of parts) {
+      if (value && typeof value === 'object' && part in value) {
+        value = value[part];
+      } else {
+        return '';
+      }
+    }
+    
+    return value || '';
+  }
+
+  /**
+   * Compile conditional blocks
+   * @param {string} template - Template content
+   * @param {Object} data - Data context
+   * @returns {string} Compiled template
+   */
+  compileConditionals(template, data) {
+    // Handle {{#if}} blocks
+    template = template.replace(/\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, condition, content) => {
+      const value = this.evaluateExpression(condition.trim(), data);
+      return value ? content : '';
+    });
+
+    // Handle {{#unless}} blocks
+    template = template.replace(/\{\{#unless\s+([^}]+)\}\}([\s\S]*?)\{\{\/unless\}\}/g, (match, condition, content) => {
+      const value = this.evaluateExpression(condition.trim(), data);
+      return !value ? content : '';
+    });
+
+    return template;
+  }
+
+  /**
+   * Compile loop blocks
+   * @param {string} template - Template content
+   * @param {Object} data - Data context
+   * @returns {string} Compiled template
+   */
+  compileLoops(template, data) {
+    // Handle {{#each}} blocks
+    template = template.replace(/\{\{#each\s+([^}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, arrayPath, content) => {
+      const array = this.evaluateExpression(arrayPath.trim(), data);
+      if (!Array.isArray(array)) return '';
+      
+      return array.map((item, index) => {
+        const itemData = { ...data, this: item, index };
+        return this.compileTemplate(content, itemData);
+      }).join('');
+    });
+
+    return template;
+  }
+
+  /**
+   * Generate file from template
+   * @param {string} templateId - Template identifier
+   * @param {Object} data - Template data
+   * @returns {Promise<string>} Generated file content
+   */
+  async generateFile(templateId, data) {
+    try {
+      const templateContent = await this.getTemplate(templateId);
+      if (!templateContent) {
+        throw new Error(`Template not found: ${templateId}`);
+      }
+
+      const generatedContent = this.compileTemplate(templateContent, data);
+      console.log(`✅ Generated file from template: ${templateId}`);
+      return generatedContent;
+    } catch (error) {
+      console.error(`❌ Failed to generate file from template ${templateId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate multiple files from templates
+   * @param {Array} templateRequests - Array of template requests
+   * @returns {Promise<Array>} Generated files
+   */
+  async generateFiles(templateRequests) {
+    const results = [];
+    
+    for (const request of templateRequests) {
+      try {
+        const content = await this.generateFile(request.templateId, request.data);
+        results.push({
+          templateId: request.templateId,
+          filePath: request.filePath,
+          content,
+          success: true,
+        });
+      } catch (error) {
+        results.push({
+          templateId: request.templateId,
+          filePath: request.filePath,
+          error: error.message,
+          success: false,
+        });
+      }
+    }
+    
+    return results;
+  }
 }
 
-/**
- * Generates a package.json file based on selected capabilities
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate} Generated package.json file template
- */
-export function generatePackageJson(context) {
-	const { projectName, capabilities } = context;
-
-	// Base package.json structure
-	const packageJson = {
-		name: projectName.toLowerCase().replaceAll(/[^a-z0-9-]/g, '-'),
-		version: '0.0.1',
-		private: true,
-		scripts: {
-			dev: 'vite dev',
-			build: 'vite build',
-			preview: 'vite preview',
-			check: 'svelte-kit sync && svelte-check --tsconfig ./tsconfig.json',
-			'check:watch': 'svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch'
-		},
-		devDependencies: {},
-		dependencies: {}
-	};
-
-	// Add dependencies based on capabilities
-	if (capabilities.includes('sveltekit')) {
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			'@sveltejs/adapter-auto': '^3.0.0',
-			'@sveltejs/kit': '^2.0.0',
-			svelte: '^4.2.0',
-			vite: '^5.0.0'
-		};
-	}
-
-	if (capabilities.includes('tailwindcss')) {
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			tailwindcss: '^3.4.0',
-			autoprefixer: '^10.4.0',
-			postcss: '^8.4.0'
-		};
-	}
-
-	if (capabilities.includes('typescript')) {
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			'@sveltejs/adapter-auto': '^3.0.0',
-			'@sveltejs/kit': '^2.0.0',
-			svelte: '^4.2.0',
-			vite: '^5.0.0',
-			typescript: '^5.0.0',
-			'@types/node': '^20.0.0'
-		};
-	}
-
-	if (capabilities.includes('testing')) {
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			vitest: '^1.0.0',
-			'@testing-library/svelte': '^4.0.0',
-			'@testing-library/jest-dom': '^6.0.0'
-		};
-	}
-
-	if (capabilities.includes('playwright')) {
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			'@playwright/test': '^1.40.0'
-		};
-	}
-
-	return {
-		path: 'package.json',
-		content: JSON.stringify(packageJson, null, 2),
-		description: 'Node.js package configuration with dependencies for selected capabilities'
-	};
-}
-
-/**
- * Generates a README.md file based on selected capabilities
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate} Generated README.md file template
- */
-export function generateReadme(context) {
-	const { projectName, capabilities, repositoryUrl } = context;
-
-	const readmeContent = `# ${projectName}
-
-${repositoryUrl ? `Repository: ${repositoryUrl}` : 'A new project generated with genproj'}
-
-## Overview
-
-This project was generated using the genproj tool with the following capabilities:
-
-${capabilities.map((cap) => `- ${cap}`).join('\n')}
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+ 
-- npm or yarn
-
-### Installation
-
-\`\`\`bash
-npm install
-\`\`\`
-
-### Development
-
-\`\`\`bash
-npm run dev
-\`\`\`
-
-### Building
-
-\`\`\`bash
-npm run build
-\`\`\`
-
-## Project Structure
-
-\`\`\`
-${projectName}/
-├── src/                 # Source code
-├── static/              # Static assets
-├── tests/               # Test files
-├── package.json         # Dependencies and scripts
-└── README.md           # This file
-\`\`\`
-
-## Capabilities
-
-${capabilities
-	.map((cap) => {
-		const capabilityDescriptions = {
-			sveltekit: 'SvelteKit framework for web applications',
-			tailwindcss: 'TailwindCSS for utility-first styling',
-			typescript: 'TypeScript for type safety',
-			testing: 'Vitest and Testing Library for unit testing',
-			playwright: 'Playwright for end-to-end testing',
-			devcontainer: 'DevContainer for consistent development environment',
-			circleci: 'CircleCI for continuous integration',
-			sonarcloud: 'SonarCloud for code quality analysis',
-			doppler: 'Doppler for secrets management'
-		};
-		return `### ${cap}
-${capabilityDescriptions[cap] || 'Additional project capability'}`;
-	})
-	.join('\n\n')}
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-`;
-
-	return {
-		path: 'README.md',
-		content: readmeContent,
-		description: 'Project documentation with setup instructions and capability overview'
-	};
-}
-
-/**
- * Generates a .gitignore file based on selected capabilities
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate} Generated .gitignore file template
- */
-export function generateGitignore(context) {
-	const { capabilities } = context;
-
-	let gitignoreContent = `# Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build outputs
-dist/
-build/
-.svelte-kit/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-`;
-
-	// Add capability-specific ignores
-	if (capabilities.includes('typescript')) {
-		gitignoreContent += `
-# TypeScript
-*.tsbuildinfo
-`;
-	}
-
-	if (capabilities.includes('testing')) {
-		gitignoreContent += `
-# Test coverage
-coverage/
-test-results/
-playwright-report/
-`;
-	}
-
-	if (capabilities.includes('devcontainer')) {
-		gitignoreContent += `
-# DevContainer
-.devcontainer/
-`;
-	}
-
-	return {
-		path: '.gitignore',
-		content: gitignoreContent,
-		description: 'Git ignore patterns for selected project capabilities'
-	};
-}
-
-/**
- * Generates a devcontainer.json file for development environment
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate} Generated devcontainer.json file template
- */
-export function generateDevcontainer(context) {
-	const { capabilities } = context;
-
-	const devcontainer = {
-		name: context.projectName,
-		image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
-		features: {},
-		customizations: {
-			vscode: {
-				extensions: [
-					'svelte.svelte-vscode',
-					'bradlc.vscode-tailwindcss',
-					'esbenp.prettier-vscode',
-					'ms-vscode.vscode-typescript-next'
-				],
-				settings: {
-					'editor.formatOnSave': true,
-					'editor.defaultFormatter': 'esbenp.prettier-vscode'
-				}
-			}
-		},
-		postCreateCommand: 'npm install',
-		remoteUser: 'node'
-	};
-
-	// Add features based on capabilities
-	if (capabilities.includes('java')) {
-		devcontainer.features['ghcr.io/devcontainers/features/java:1'] = {
-			version: '17'
-		};
-	}
-
-	if (capabilities.includes('python')) {
-		devcontainer.features['ghcr.io/devcontainers/features/python:1'] = {
-			version: '3.11'
-		};
-	}
-
-	// Add SonarLint if Java is selected
-	if (capabilities.includes('sonarlint') && capabilities.includes('java')) {
-		devcontainer.customizations.vscode.extensions.push('SonarSource.sonarlint-vscode');
-		devcontainer.customizations.vscode.settings['sonarlint.ls.javaHome'] =
-			'/usr/local/sdkman/candidates/java/current';
-	}
-
-	return {
-		path: '.devcontainer/devcontainer.json',
-		content: JSON.stringify(devcontainer, null, 2),
-		description: 'DevContainer configuration for consistent development environment'
-	};
-}
-
-/**
- * Generates a Dockerfile for containerization
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate} Generated Dockerfile template
- */
-export function generateDockerfile(context) {
-	let dockerfileContent = `FROM node:20-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Expose port
-EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
-`;
-
-	return {
-		path: 'Dockerfile',
-		content: dockerfileContent,
-		description: 'Dockerfile for containerizing the application'
-	};
-}
-
-/**
- * Generates all project files based on selected capabilities
- * @param {GenerationContext} context - Generation context
- * @returns {FileTemplate[]} Array of generated file templates
- */
-export function generateAllFiles(context) {
-	const files = [];
-
-	// Always generate these files
-	files.push(generatePackageJson(context), generateReadme(context), generateGitignore(context));
-
-	// Generate capability-specific files
-	if (context.capabilities.includes('devcontainer')) {
-		files.push(generateDevcontainer(context));
-	}
-
-	if (context.capabilities.includes('docker')) {
-		files.push(generateDockerfile(context));
-	}
-
-	// Add more capability-specific file generation here
-	// if (context.capabilities.includes('circleci')) {
-	//     files.push(generateCircleCIConfig(context));
-	// }
-
-	return files;
-}
+// Export singleton instance
+export const templateEngine = new TemplateEngine();

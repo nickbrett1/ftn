@@ -1,395 +1,425 @@
-# Implementation Tasks: Project Generation Tool (genproj)
+# Tasks: Project Generation Tool (genproj)
 
-**Feature Branch**: `001-genproj`  
-**Created**: 2025-01-15  
-**Status**: Ready for Implementation  
-**Input**: Feature specification from `/specs/001-genproj/spec.md`
+**Input**: Design documents from `/specs/001-genproj/`
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-## Summary
+**Constitution Compliance**: All tasks must adhere to principles in `.specify/memory/constitution.md`:
 
-A comprehensive project generation tool that allows developers to configure and generate new development projects with selected capabilities (DevContainer, CircleCI, SonarCloud, Doppler, etc.) through a web UI. The tool provides preview functionality without authentication, then handles multi-service authentication and project creation when users confirm generation.
+- **Principle I**: Code Quality Standards (linting, type safety, code review)
+- **Principle II**: Testing Standards (TDD mandatory - tests before implementation)
+- **Principle III**: UX Consistency (accessibility, responsive design, design system)
+- **Principle IV**: Performance Requirements (bundle size, response times, monitoring)
+- **Principle V**: Security & Compliance (encryption, audit logging, security scanning)
+- **Principle VI**: Site Consistency & Component Standards (header/footer, component reuse)
+- **Principle VII**: Database Schema Management Standards (schema creation patterns)
+- **Principle VIII**: Cloudflare Services Integration Standards (direct D1/R2 usage)
+- **Principle IX**: Code Organization Standards (lib/ folder structure)
+- **Principle X**: Simple Logging Standards (console.\* with emoji prefixes)
+- **Principle XI**: Error Handling Standards (RouteUtils.handleError, user-friendly messages)
 
-## Implementation Strategy
+**Tests**: Following Principle II (Testing Standards), TDD is MANDATORY. Tests must be written FIRST, approved by user, and FAIL before implementation begins. Test coverage must meet 85% minimum threshold.
 
-**MVP Scope**: User Story 1 (Browse Available Capabilities) - enables immediate value demonstration  
-**Incremental Delivery**: Each user story is independently testable and deployable  
-**Parallel Opportunities**: Multiple components can be developed simultaneously within each story
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-## Phase 1: Setup & Infrastructure
+## Format: `[ID] [P?] [Story] Description`
 
-### Story Goal
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
 
-Establish project foundation with database, authentication integration, and core infrastructure.
+## Path Conventions
 
-### Independent Test Criteria
+- **Web app**: `webapp/src/`, `webapp/tests/` at repository root
+- Paths shown below follow the SvelteKit structure from plan.md
 
-- Database schema created and accessible
-- Existing Google auth integration verified
-- Core service classes instantiate without errors
-- Template storage system functional
+## Phase 1: Setup (Shared Infrastructure)
 
-### Implementation Tasks
+**Purpose**: Project initialization and basic structure
 
-- [x] T001 Create database schema in webapp/scripts/genproj_schema.sql
-- [x] T002 [P] Create project configuration validation utility in webapp/src/lib/utils/validation.js
-- [x] T003 [P] Create file generation utility in webapp/src/lib/utils/file-generator.js
-- [x] T004 [P] Create authentication helper utilities in webapp/src/lib/utils/auth-helpers.js
+- [x] T001 Create genproj database schema in webapp/scripts/genproj_schema.sql
+- [x] T002 [P] Create genproj route structure in webapp/src/routes/projects/genproj/
+- [x] T003 [P] Setup R2 bucket for template storage configuration
+- [x] T004 [P] Configure external API service integrations (GitHub, CircleCI, Doppler, SonarCloud)
+- [x] T005 Initialize capability definitions in webapp/src/lib/config/capabilities.js
 
-## Phase 2: Foundational Services
+---
 
-### Story Goal
+## Phase 2: Foundational (Blocking Prerequisites)
 
-Implement core service classes for external API integrations and project generation.
+**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-### Independent Test Criteria
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- All service classes instantiate and can make test API calls
-- Error handling works correctly for API failures
-- Rate limiting and retry logic functional
-- Service classes can be mocked for testing
+- [x] T006 Setup Cloudflare D1 database connection and initialization
+- [x] T007 [P] Implement authentication state management extending existing Google auth
+- [x] T008 [P] Create base validation utilities in webapp/src/lib/utils/validation.js
+- [x] T009 [P] Setup error handling infrastructure using RouteUtils.handleError
+- [x] T010 [P] Create logging utilities with emoji prefixes in webapp/src/lib/utils/logging.js
+- [x] T011 [P] Setup template engine with Handlebars in webapp/src/lib/utils/file-generator.js
+- [x] T012 Create base project configuration model in webapp/src/lib/models/project-config.js
 
-### Implementation Tasks
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
-- [x] T005 [P] Create GitHub API service in webapp/src/lib/server/github-api.js
-- [x] T006 [P] Create CircleCI API service in webapp/src/lib/server/circleci-api.js
-- [x] T007 [P] Create Doppler API service in webapp/src/lib/server/doppler-api.js
-- [x] T008 [P] Create SonarCloud API service in webapp/src/lib/server/sonarcloud-api.js
-- [x] T009 [P] Create project generator service in webapp/src/lib/server/project-generator.js
-- [x] T010 [P] Create capability configuration service in webapp/src/lib/server/capability-config.js
-- [x] T011 [P] Create template engine service in webapp/src/lib/server/template-engine.js
-- [x] T012 [P] Create external service integration service in webapp/src/lib/server/external-service-integration.js
+---
 
-## Phase 3: User Story 1 - Browse Available Capabilities (P1)
+## Phase 3: User Story 1 - Browse Available Capabilities (Priority: P1) 🎯 MVP
 
-### Story Goal
+**Goal**: Display all available project capabilities to unauthenticated users with clear descriptions
 
-Display all available project capabilities to unauthenticated users with clear descriptions and enable capability selection.
+**Independent Test**: Visit `/projects/genproj` without authentication and verify all capability options are visible with descriptions, even though generation is disabled
 
-### Independent Test Criteria
+### Tests for User Story 1 ⚠️
 
-- Unauthenticated users can view all capabilities
-- Capability descriptions are clear and informative
-- Capability selection works without authentication
-- Dependency resolution prevents invalid combinations
-- UI is responsive and accessible
+**NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-### Implementation Tasks
+- [x] T013 [P] [US1] Contract test for capabilities endpoint in webapp/tests/contract/test_capabilities_api.js
+- [x] T014 [P] [US1] Integration test for capability browsing in webapp/tests/integration/test_capability_browsing.js
+- [x] T015 [P] [US1] E2E test for unauthenticated capability viewing in webapp/tests/e2e/genproj_capabilities.spec.js
 
-- [x] T015 [US1] Create capability definitions configuration in webapp/src/lib/utils/capabilities.js
-- [x] T016 [US1] Create CapabilitySelector component in webapp/src/lib/components/genproj/CapabilitySelector.svelte
-- [x] T017 [US1] Create capability dependency resolver in webapp/src/lib/utils/capability-resolver.js
-- [x] T018 [US1] Create capabilities API endpoint in webapp/src/routes/projects/genproj/api/capabilities/+server.js
-- [x] T019 [US1] Create main genproj page layout in webapp/src/routes/projects/genproj/+layout.svelte
-- [x] T020 [US1] Create main genproj page component in webapp/src/routes/projects/genproj/+page.svelte
-- [x] T021 [US1] Create genproj page server logic in webapp/src/routes/projects/genproj/+page.server.js
-- [x] T022 [US1] Create capability selection state management in webapp/src/lib/client/capability-store.js
+### Implementation for User Story 1
 
-## Phase 4: User Story 2 - Configure Project and Preview Generated Output (P1)
+- [x] T016 [P] [US1] Create capabilities API endpoint in webapp/src/routes/projects/genproj/api/capabilities/+server.js
+- [x] T017 [P] [US1] Create main genproj page component in webapp/src/routes/projects/genproj/+page.svelte
+- [x] T018 [P] [US1] Create CapabilitySelector component in webapp/src/lib/components/genproj/CapabilitySelector.svelte
+- [x] T019 [US1] Implement capability loading and display logic
+- [x] T020 [US1] Add login prompt when generation attempted without auth
+- [x] T021 [US1] Add logging for capability browsing operations
 
-### Story Goal
+**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
-Allow users to configure project capabilities and switch to preview mode to see generated files and external service changes without authentication.
+---
 
-### Independent Test Criteria
+## Phase 4: User Story 2 - Two-Tab Interface for Configuration and Preview (Priority: P1)
 
-- Users can configure project details and capabilities
-- Preview mode shows accurate file generation
-- Seamless switching between configuration and preview modes
-- Preview updates automatically when configuration changes
-- No authentication required for preview functionality
+**Goal**: Provide clean two-tab interface where users can configure capabilities in one tab and preview generated output in another tab
 
-### Implementation Tasks
+**Independent Test**: Select capabilities in "Capabilities" tab, switch to "Preview" tab to see output, then switch back to modify capabilities and see preview update accordingly
 
-- [ ] T025 [US2] Create ConfigurationForm component in webapp/src/lib/components/genproj/ConfigurationForm.svelte
-- [ ] T026 [US2] Create PreviewMode component in webapp/src/lib/components/genproj/PreviewMode.svelte
-- [ ] T027 [US2] Create mode switching logic in webapp/src/lib/utils/mode-switcher.js
-- [ ] T028 [US2] Create preview generation service in webapp/src/lib/server/preview-generator.js
-- [ ] T029 [US2] Create preview API endpoint in webapp/src/routes/projects/genproj/api/preview/+server.js
-- [ ] T030 [US2] Create project configuration state management in webapp/src/lib/client/project-config-store.js
-- [ ] T031 [US2] Create preview state management in webapp/src/lib/client/preview-store.js
-- [ ] T032 [US2] Create template files for all capability types in webapp/src/lib/server/templates/
+### Tests for User Story 2 ⚠️
 
-## Phase 5: User Story 3 - Authenticate for Project Generation (P1)
+- [ ] T022 [P] [US2] Contract test for preview endpoint in webapp/tests/contract/test_preview_api.js
+- [ ] T023 [P] [US2] Integration test for tab switching in webapp/tests/integration/test_tab_interface.js
+- [ ] T024 [P] [US2] E2E test for two-tab workflow in webapp/tests/e2e/genproj_tabs.spec.js
 
-### Story Goal
+### Implementation for User Story 2
 
-Implement progressive authentication flow that only requires authentication when users confirm project generation.
+- [ ] T025 [P] [US2] Create preview API endpoint in webapp/src/routes/projects/genproj/api/preview/+server.js
+- [ ] T026 [P] [US2] Create ConfigurationForm component in webapp/src/lib/components/genproj/ConfigurationForm.svelte
+- [ ] T027 [P] [US2] Create PreviewMode component in webapp/src/lib/components/genproj/PreviewMode.svelte
+- [ ] T028 [US2] Implement tab switching logic and state management
+- [ ] T029 [US2] Implement preview generation service in webapp/src/lib/services/project-generator.js
+- [ ] T030 [US2] Add real-time preview updates when capabilities change
+- [ ] T031 [US2] Add visual indicators for active tab
+- [ ] T032 [US2] Add logging for tab switching and preview operations
 
-### Independent Test Criteria
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
-- Google authentication reuses existing system
-- GitHub OAuth flow works correctly
-- External service authentication (CircleCI, Doppler, SonarCloud) functional
-- Authentication state persists across page refreshes
-- Clear error handling for authentication failures
+---
 
-### Implementation Tasks
+## Phase 5: User Story 3 - Authenticate for Project Generation (Priority: P1)
 
-- [ ] T033 [US3] Create AuthFlow component in webapp/src/lib/components/genproj/AuthFlow.svelte
-- [ ] T034 [US3] Create GitHub OAuth initiation endpoint in webapp/src/routes/projects/genproj/api/auth/github/+server.js
-- [ ] T035 [US3] Create GitHub OAuth callback endpoint in webapp/src/routes/projects/genproj/api/auth/github/callback/+server.js
-- [ ] T036 [US3] Create CircleCI authentication endpoint in webapp/src/routes/projects/genproj/api/auth/circleci/+server.js
-- [ ] T037 [US3] Create Doppler authentication endpoint in webapp/src/routes/projects/genproj/api/auth/doppler/+server.js
-- [ ] T038 [US3] Create SonarCloud authentication endpoint in webapp/src/routes/projects/genproj/api/auth/sonarcloud/+server.js
-- [ ] T039 [US3] Create authentication state management in webapp/src/lib/client/auth-store.js
-- [ ] T040 [US3] Create authentication middleware in webapp/src/lib/server/auth.js
+**Goal**: Handle progressive authentication with required services only when user confirms project generation
 
-## Phase 6: User Story 4 - Generate Project with Confirmed Configuration (P1)
+**Independent Test**: Configure a project, preview it, then authenticate with required services and verify project generation
 
-### Story Goal
+### Tests for User Story 3 ⚠️
 
-Generate complete project with all files and external service configurations based on confirmed preview.
+- [ ] T033 [P] [US3] Contract test for GitHub auth endpoint in webapp/tests/contract/test_github_auth.js
+- [ ] T034 [P] [US3] Contract test for external service auth endpoints in webapp/tests/contract/test_external_auth.js
+- [ ] T035 [P] [US3] Integration test for progressive auth flow in webapp/tests/integration/test_progressive_auth.js
+- [ ] T036 [P] [US3] E2E test for authentication workflow in webapp/tests/e2e/genproj_auth.spec.js
 
-### Independent Test Criteria
+### Implementation for User Story 3
 
-- All files are generated correctly in GitHub repository
-- External service projects are created and configured
-- Generated files match preview exactly
-- Error handling provides clear feedback for failures
-- Success state triggers celebration animation
+- [ ] T037 [P] [US3] Create GitHub OAuth endpoint in webapp/src/routes/projects/genproj/api/auth/github/+server.js
+- [ ] T038 [P] [US3] Create GitHub callback handler in webapp/src/routes/projects/genproj/api/auth/github/callback/+server.js
+- [ ] T039 [P] [US3] Create CircleCI auth endpoint in webapp/src/routes/projects/genproj/api/auth/circleci/+server.js
+- [ ] T040 [P] [US3] Create Doppler auth endpoint in webapp/src/routes/projects/genproj/api/auth/doppler/+server.js
+- [ ] T041 [P] [US3] Create SonarCloud auth endpoint in webapp/src/routes/projects/genproj/api/auth/sonarcloud/+server.js
+- [ ] T042 [US3] Create AuthFlow component in webapp/src/lib/components/genproj/AuthFlow.svelte
+- [ ] T043 [US3] Implement authentication state management
+- [ ] T044 [US3] Add encrypted token storage in D1
+- [ ] T045 [US3] Add logging for authentication operations
 
-### Implementation Tasks
+**Checkpoint**: All user stories should now be independently functional
 
-- [ ] T041 [US4] Create project generation API endpoint in webapp/src/routes/projects/genproj/api/generate/+server.js
-- [ ] T042 [US4] Create GitHub repository creation service in webapp/src/lib/server/github-repository-service.js
-- [ ] T043 [US4] Create file commit service in webapp/src/lib/server/file-commit-service.js
-- [ ] T044 [US4] Create external service project creation orchestrator in webapp/src/lib/server/service-orchestrator.js
-- [ ] T045 [US4] Create project generation state management in webapp/src/lib/client/generation-store.js
-- [ ] T046 [US4] Create generation progress tracking in webapp/src/lib/utils/generation-tracker.js
-- [ ] T047 [US4] Create comprehensive README.md template in webapp/src/lib/server/templates/readme/README.md.hbs
-- [ ] T048 [US4] Create project generation validation service in webapp/src/lib/server/generation-validator.js
+---
 
-## Phase 7: User Story 5 - Authenticate with CircleCI for Project Creation (P2)
+## Phase 6: User Story 4 - Generate Project with Confirmed Configuration (Priority: P1)
 
-### Story Goal
+**Goal**: Generate complete project with all files and external service configurations after authentication
 
-Enable CircleCI project creation automation with proper authentication and integration.
+**Independent Test**: Confirm a preview and verify all files are generated and external services are configured exactly as previewed
 
-### Independent Test Criteria
+### Tests for User Story 4 ⚠️
 
-- CircleCI authentication works with API tokens
-- CircleCI projects are created automatically
-- CircleCI configuration files are generated correctly
-- GitHub webhooks are configured for CircleCI integration
-- Error handling provides fallback instructions
+- [ ] T046 [P] [US4] Contract test for generation endpoint in webapp/tests/contract/test_generation_api.js
+- [ ] T047 [P] [US4] Integration test for project generation in webapp/tests/integration/test_project_generation.js
+- [ ] T048 [P] [US4] E2E test for complete generation workflow in webapp/tests/e2e/genproj_generation.spec.js
 
-### Implementation Tasks
+### Implementation for User Story 4
 
-- [ ] T049 [US5] Create CircleCI project creation service in webapp/src/lib/server/circleci-project-service.js
-- [ ] T050 [US5] Create CircleCI configuration templates in webapp/src/lib/server/templates/circleci/
-- [ ] T051 [US5] Create GitHub webhook setup service in webapp/src/lib/server/github-webhook-service.js
-- [ ] T052 [US5] Create CircleCI integration validation in webapp/src/lib/server/circleci-validator.js
-- [ ] T053 [US5] Create CircleCI error handling and fallback instructions in webapp/src/lib/utils/circleci-fallback.js
+- [ ] T049 [P] [US4] Create generation API endpoint in webapp/src/routes/projects/genproj/api/generate/+server.js
+- [ ] T050 [P] [US4] Implement GitHub API service in webapp/src/lib/services/github-api.js
+- [ ] T051 [P] [US4] Implement CircleCI API service in webapp/src/lib/services/circleci-api.js
+- [ ] T052 [P] [US4] Implement Doppler API service in webapp/src/lib/services/doppler-api.js
+- [ ] T053 [P] [US4] Implement SonarCloud API service in webapp/src/lib/services/sonarcloud-api.js
+- [ ] T054 [US4] Implement file generation and repository creation
+- [ ] T055 [US4] Implement external service project creation
+- [ ] T056 [US4] Add comprehensive error handling and fallback instructions
+- [ ] T057 [US4] Add logging for generation operations
 
-## Phase 8: User Story 6 - Generate Comprehensive Project Documentation (P2)
+---
 
-### Story Goal
+## Phase 7: User Story 5 - Authenticate with CircleCI for Project Creation (Priority: P2)
 
-Create comprehensive README.md that documents all selected capabilities and provides clear setup instructions.
+**Goal**: Connect CircleCI account for automatic CI/CD pipeline creation
 
-### Independent Test Criteria
+**Independent Test**: Authenticate with CircleCI, select CI/CD capability, and verify CircleCI project is created and linked to GitHub repository
 
-- README.md contains all selected capabilities
-- Setup instructions are clear and complete
-- External service configurations are documented
-- Usage guidelines are provided
-- Documentation is accurate and up-to-date
+### Tests for User Story 5 ⚠️
 
-### Implementation Tasks
+- [ ] T058 [P] [US5] Integration test for CircleCI project creation in webapp/tests/integration/test_circleci_integration.js
+- [ ] T059 [P] [US5] E2E test for CircleCI workflow in webapp/tests/e2e/genproj_circleci.spec.js
 
-- [ ] T054 [US6] Create README.md template engine in webapp/src/lib/server/readme-generator.js
-- [ ] T055 [US6] Create capability documentation templates in webapp/src/lib/server/templates/readme/capabilities/
-- [ ] T056 [US6] Create setup instruction templates in webapp/src/lib/server/templates/readme/setup/
-- [ ] T057 [US6] Create external service documentation templates in webapp/src/lib/server/templates/readme/services/
-- [ ] T058 [US6] Create README.md validation service in webapp/src/lib/server/readme-validator.js
+### Implementation for User Story 5
 
-## Phase 9: User Story 7 - Authenticate with Doppler for Secrets Management (P2)
+- [ ] T060 [P] [US5] Create CircleCI project templates in webapp/src/lib/templates/circleci/
+- [ ] T061 [US5] Implement CircleCI project creation logic
+- [ ] T062 [US5] Add CircleCI configuration file generation
+- [ ] T063 [US5] Add GitHub webhook setup for CircleCI
+- [ ] T064 [US5] Add logging for CircleCI operations
 
-### Story Goal
+---
 
-Enable Doppler project creation automation with proper authentication and secrets management integration.
+## Phase 8: User Story 6 - Generate Comprehensive Project Documentation (Priority: P2)
 
-### Independent Test Criteria
+**Goal**: Create comprehensive README.md documenting all selected capabilities and setup instructions
 
-- Doppler authentication works with API tokens
-- Doppler projects are created automatically
-- Doppler configuration files are generated correctly
-- GitHub integration is configured for Doppler
-- Error handling provides fallback instructions
+**Independent Test**: Generate a project and verify the README.md contains all selected capabilities, setup instructions, and usage guidelines
 
-### Implementation Tasks
+### Tests for User Story 6 ⚠️
 
-- [ ] T059 [US7] Create Doppler project creation service in webapp/src/lib/server/doppler-project-service.js
-- [ ] T060 [US7] Create Doppler configuration templates in webapp/src/lib/server/templates/doppler/
-- [ ] T061 [US7] Create Doppler integration validation in webapp/src/lib/server/doppler-validator.js
-- [ ] T062 [US7] Create Doppler error handling and fallback instructions in webapp/src/lib/utils/doppler-fallback.js
+- [ ] T065 [P] [US6] Integration test for README generation in webapp/tests/integration/test_readme_generation.js
+- [ ] T066 [P] [US6] E2E test for documentation workflow in webapp/tests/e2e/genproj_documentation.spec.js
 
-## Phase 10: User Story 8 - Authenticate with SonarCloud for Code Quality (P2)
+### Implementation for User Story 6
 
-### Story Goal
+- [ ] T067 [P] [US6] Create README templates in webapp/src/lib/templates/readme/
+- [ ] T068 [US6] Implement README generation logic
+- [ ] T069 [US6] Add capability-specific documentation sections
+- [ ] T070 [US6] Add external service setup instructions
+- [ ] T071 [US6] Add logging for documentation generation
 
-Enable SonarCloud project creation automation with proper authentication and code quality integration.
+---
 
-### Independent Test Criteria
+## Phase 9: User Story 7 - Authenticate with Doppler for Secrets Management (Priority: P2)
 
-- SonarCloud authentication works with API tokens
-- SonarCloud projects are created automatically
-- SonarCloud configuration files are generated correctly
-- GitHub integration is configured for SonarCloud
-- Error handling provides fallback instructions
+**Goal**: Connect Doppler account for automatic secrets management setup
 
-### Implementation Tasks
+**Independent Test**: Authenticate with Doppler, select secrets management capability, and verify Doppler project is created and configured
 
-- [ ] T063 [US8] Create SonarCloud project creation service in webapp/src/lib/server/sonarcloud-project-service.js
-- [ ] T064 [US8] Create SonarCloud configuration templates in webapp/src/lib/server/templates/sonarcloud/
-- [ ] T065 [US8] Create SonarCloud integration validation in webapp/src/lib/server/sonarcloud-validator.js
-- [ ] T066 [US8] Create SonarCloud error handling and fallback instructions in webapp/src/lib/utils/sonarcloud-fallback.js
+### Tests for User Story 7 ⚠️
 
-## Phase 11: User Story 9 - Handle External Service Integration (P2)
+- [ ] T072 [P] [US7] Integration test for Doppler project creation in webapp/tests/integration/test_doppler_integration.js
+- [ ] T073 [P] [US7] E2E test for Doppler workflow in webapp/tests/e2e/genproj_doppler.spec.js
 
-### Story Goal
+### Implementation for User Story 7
 
-Automatically configure external services when possible, or provide clear instructions when manual setup is required.
+- [ ] T074 [P] [US7] Create Doppler project templates in webapp/src/lib/templates/doppler/
+- [ ] T075 [US7] Implement Doppler project creation logic
+- [ ] T076 [US7] Add Doppler configuration file generation
+- [ ] T077 [US7] Add logging for Doppler operations
 
-### Independent Test Criteria
+---
 
-- External services are configured automatically when authentication is available
-- Clear instructions are provided when automatic configuration fails
-- Integration status is tracked and reported
-- Error recovery mechanisms work correctly
-- User feedback is clear and actionable
+## Phase 10: User Story 8 - Authenticate with SonarCloud for Code Quality (Priority: P2)
 
-### Implementation Tasks
+**Goal**: Connect SonarCloud account for automatic code quality analysis setup
 
-- [ ] T067 [US9] Create external service integration orchestrator in webapp/src/lib/server/integration-orchestrator.js
-- [ ] T068 [US9] Create integration status tracking service in webapp/src/lib/server/integration-tracker.js
-- [ ] T069 [US9] Create fallback instruction generator in webapp/src/lib/server/fallback-generator.js
-- [ ] T070 [US9] Create integration error recovery service in webapp/src/lib/server/integration-recovery.js
-- [ ] T071 [US9] Create integration status UI component in webapp/src/lib/components/genproj/IntegrationStatus.svelte
+**Independent Test**: Authenticate with SonarCloud, select code quality capability, and verify SonarCloud project is created and configured
 
-## Phase 12: User Story 10 - Celebrate Successful Project Generation (P3)
+### Tests for User Story 8 ⚠️
 
-### Story Goal
+- [ ] T078 [P] [US8] Integration test for SonarCloud project creation in webapp/tests/integration/test_sonarcloud_integration.js
+- [ ] T079 [P] [US8] E2E test for SonarCloud workflow in webapp/tests/e2e/genproj_sonarcloud.spec.js
 
-Display delightful celebration animation upon successful project generation using tsparticles.
+### Implementation for User Story 8
 
-### Independent Test Criteria
+- [ ] T080 [P] [US8] Create SonarCloud project templates in webapp/src/lib/templates/sonarcloud/
+- [ ] T081 [US8] Implement SonarCloud project creation logic
+- [ ] T082 [US8] Add SonarCloud configuration file generation
+- [ ] T083 [US8] Add logging for SonarCloud operations
 
-- Celebration animation displays correctly on successful generation
-- Animation is performant and smooth
-- Accessibility options work (motion sensitivity)
-- Animation works across different devices and browsers
-- User satisfaction with celebration experience
+---
 
-### Implementation Tasks
+## Phase 11: User Story 9 - Handle External Service Integration (Priority: P2)
 
-- [ ] T072 [US10] Create CelebrationAnimation component in webapp/src/lib/components/genproj/CelebrationAnimation.svelte
-- [ ] T073 [US10] Create tsparticles configuration for celebration in webapp/src/lib/utils/celebration-particles.js
-- [ ] T074 [US10] Create celebration animation controller in webapp/src/lib/utils/celebration-controller.js
-- [ ] T075 [US10] Create accessibility controls for animation in webapp/src/lib/utils/accessibility-controls.js
-- [ ] T076 [US10] Create celebration animation performance monitor in webapp/src/lib/utils/celebration-monitor.js
+**Goal**: Automatically configure external services when possible, or provide clear instructions when manual setup is required
+
+**Independent Test**: Select capabilities that require external services and verify appropriate configuration files are generated or clear setup instructions are provided
+
+### Tests for User Story 9 ⚠️
+
+- [ ] T084 [P] [US9] Integration test for external service integration in webapp/tests/integration/test_external_service_integration.js
+- [ ] T085 [P] [US9] E2E test for external service workflow in webapp/tests/e2e/genproj_external_services.spec.js
+
+### Implementation for User Story 9
+
+- [ ] T086 [P] [US9] Create external service integration service in webapp/src/lib/services/external-service-integration.js
+- [ ] T087 [US9] Implement fallback instruction generation
+- [ ] T088 [US9] Add error handling for service failures
+- [ ] T089 [US9] Add logging for external service operations
+
+---
+
+## Phase 12: User Story 10 - Celebrate Successful Project Generation (Priority: P3)
+
+**Goal**: Display delightful celebration animation upon successful project generation
+
+**Independent Test**: Complete project generation and verify the firework particle animation displays correctly with appropriate timing and visual appeal
+
+### Tests for User Story 10 ⚠️
+
+- [ ] T090 [P] [US10] Integration test for celebration animation in webapp/tests/integration/test_celebration_animation.js
+- [ ] T091 [P] [US10] E2E test for celebration workflow in webapp/tests/e2e/genproj_celebration.spec.js
+
+### Implementation for User Story 10
+
+- [ ] T092 [P] [US10] Create CelebrationAnimation component in webapp/src/lib/components/genproj/CelebrationAnimation.svelte
+- [ ] T093 [US10] Implement tsparticles integration for firework effects
+- [ ] T094 [US10] Add accessibility options for motion sensitivity
+- [ ] T095 [US10] Add performance optimization for animation
+- [ ] T096 [US10] Add logging for celebration operations
+
+---
 
 ## Phase 13: Polish & Cross-Cutting Concerns
 
-### Story Goal
+**Purpose**: Improvements that affect multiple user stories
 
-Implement comprehensive testing, error handling, performance optimization, and accessibility features.
+- [ ] T097 [P] Documentation updates in webapp/docs/genproj/
+- [ ] T098 Code cleanup and refactoring across all components
+- [ ] T099 Performance optimization across all stories
+- [ ] T100 [P] Additional unit tests in webapp/tests/unit/
+- [ ] T101 Security hardening and audit logging
+- [ ] T102 Run quickstart.md validation
+- [ ] T103 Accessibility improvements across all components
+- [ ] T104 Bundle size optimization and code splitting
 
-### Independent Test Criteria
+---
 
-- All components have unit tests with >85% coverage
-- Integration tests cover API endpoints and external service interactions
-- E2E tests cover complete user workflows
-- Performance meets targets (<1.5s FCP, <2.5s LCP)
-- Accessibility meets WCAG 2.1 AA standards
-- Error handling provides clear user feedback
+## Dependencies & Execution Order
 
-### Implementation Tasks
+### Phase Dependencies
 
-- [ ] T077 [P] Create unit tests for all components in webapp/tests/unit/components/
-- [ ] T078 [P] Create unit tests for all services in webapp/tests/unit/services/
-- [ ] T079 [P] Create unit tests for all utilities in webapp/tests/unit/utils/
-- [ ] T080 [P] Create integration tests for API endpoints in webapp/tests/integration/api/
-- [ ] T081 [P] Create integration tests for authentication flows in webapp/tests/integration/auth/
-- [ ] T082 [P] Create E2E tests for complete user workflows in webapp/tests/e2e/genproj.spec.js
-- [ ] T083 [P] Create performance monitoring and optimization in webapp/src/lib/utils/performance-monitor.js
-- [ ] T084 [P] Create accessibility testing and validation in webapp/src/lib/utils/accessibility-validator.js
-- [ ] T085 [P] Create comprehensive error boundary components in webapp/src/lib/components/ErrorBoundary.svelte
-- [ ] T086 [P] Create logging and monitoring integration in webapp/src/lib/utils/monitoring.js
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User stories can then proceed in parallel (if staffed)
+  - Or sequentially in priority order (P1 → P2 → P3)
+- **Polish (Final Phase)**: Depends on all desired user stories being complete
 
-## Dependencies
+### User Story Dependencies
 
-### User Story Completion Order
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - Depends on US1 for capability display
+- **User Story 3 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 4 (P1)**: Can start after Foundational (Phase 2) - Depends on US2 for preview functionality
+- **User Stories 5-9 (P2)**: Can start after US4 completion - Each is independently testable
+- **User Story 10 (P3)**: Can start after US4 completion - Depends on successful generation
 
+### Within Each User Story
+
+- Tests (if included) MUST be written and FAIL before implementation
+- Models before services
+- Services before endpoints
+- Core implementation before integration
+- Story complete before moving to next priority
+
+### Parallel Opportunities
+
+- All Setup tasks marked [P] can run in parallel
+- All Foundational tasks marked [P] can run in parallel (within Phase 2)
+- Once Foundational phase completes, User Stories 1, 3 can start in parallel
+- User Stories 2, 4 can start after US1 completion
+- User Stories 5-9 can run in parallel after US4 completion
+- All tests for a user story marked [P] can run in parallel
+- Models within a story marked [P] can run in parallel
+- Different user stories can be worked on in parallel by different team members
+
+---
+
+## Parallel Example: User Story 1
+
+```bash
+# Launch all tests for User Story 1 together:
+Task: "Contract test for capabilities endpoint in webapp/tests/contract/test_capabilities_api.js"
+Task: "Integration test for capability browsing in webapp/tests/integration/test_capability_browsing.js"
+Task: "E2E test for unauthenticated capability viewing in webapp/tests/e2e/genproj_capabilities.spec.js"
+
+# Launch all components for User Story 1 together:
+Task: "Create capabilities API endpoint in webapp/src/routes/projects/genproj/api/capabilities/+server.js"
+Task: "Create main genproj page component in webapp/src/routes/projects/genproj/+page.svelte"
+Task: "Create CapabilitySelector component in webapp/src/lib/components/genproj/CapabilitySelector.svelte"
 ```
-Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) → Phase 5 (US3) → Phase 6 (US4)
-                                                                                              ↓
-Phase 7 (US5) ← Phase 8 (US6) ← Phase 9 (US7) ← Phase 10 (US8) ← Phase 11 (US9) ← Phase 12 (US10)
-```
 
-### Parallel Execution Examples
+---
 
-**Phase 1**: T002, T003, T004 can run in parallel  
-**Phase 2**: T005, T006, T007, T008, T009, T010, T011, T012 can run in parallel  
-**Phase 3**: T013, T014, T015, T016, T017, T018, T019, T020 can run in parallel  
-**Phase 4**: T025, T026, T027, T028, T029, T030, T031, T032 can run in parallel  
-**Phase 5**: T033, T034, T035, T036, T037, T038, T039, T040 can run in parallel  
-**Phase 6**: T041, T042, T043, T044, T045, T046, T047, T048 can run in parallel  
-**Phase 7**: T049, T050, T051, T052, T053 can run in parallel  
-**Phase 8**: T054, T055, T056, T057, T058 can run in parallel  
-**Phase 9**: T059, T060, T061, T062 can run in parallel  
-**Phase 10**: T063, T064, T065, T066 can run in parallel  
-**Phase 11**: T067, T068, T069, T070, T071 can run in parallel  
-**Phase 12**: T072, T073, T074, T075, T076 can run in parallel  
-**Phase 13**: T077, T078, T079, T080, T081, T082, T083, T084, T085, T086 can run in parallel
+## Implementation Strategy
 
-## Task Summary
+### MVP First (User Stories 1-4 Only)
 
-- **Total Tasks**: 82 (reduced by 2 - removed unnecessary error handling and logging utilities)
-- **Tasks per User Story**:
-  - US1: 8 tasks
-  - US2: 8 tasks
-  - US3: 8 tasks
-  - US4: 8 tasks
-  - US5: 5 tasks
-  - US6: 5 tasks
-  - US7: 4 tasks
-  - US8: 4 tasks
-  - US9: 5 tasks
-  - US10: 5 tasks
-- **Setup/Infrastructure**: 12 tasks (reduced by 2)
-- **Polish/Testing**: 10 tasks
+1. Complete Phase 1: Setup
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+3. Complete Phase 3: User Story 1 (Browse Capabilities)
+4. Complete Phase 4: User Story 2 (Two-Tab Interface)
+5. Complete Phase 5: User Story 3 (Authentication)
+6. Complete Phase 6: User Story 4 (Project Generation)
+7. **STOP and VALIDATE**: Test all MVP stories independently
+8. Deploy/demo if ready
 
-## Parallel Opportunities Identified
+### Incremental Delivery
 
-- **High Parallelism**: Phases 1, 2, 3, 4, 5, 6, and 13 have maximum parallel execution
-- **Medium Parallelism**: Phases 7, 8, 9, 10, 11, 12 have moderate parallel execution
-- **Sequential Dependencies**: User stories must complete in order due to authentication and generation dependencies
+1. Complete Setup + Foundational → Foundation ready
+2. Add User Story 1 → Test independently → Deploy/Demo (Basic capability browsing)
+3. Add User Story 2 → Test independently → Deploy/Demo (Two-tab interface)
+4. Add User Story 3 → Test independently → Deploy/Demo (Authentication)
+5. Add User Story 4 → Test independently → Deploy/Demo (Full MVP!)
+6. Add User Stories 5-9 → Test independently → Deploy/Demo (External services)
+7. Add User Story 10 → Test independently → Deploy/Demo (Celebration)
+8. Each story adds value without breaking previous stories
 
-## Independent Test Criteria Summary
+### Parallel Team Strategy
 
-- **US1**: Unauthenticated capability browsing and selection
-- **US2**: Configuration and preview mode switching without authentication
-- **US3**: Progressive authentication flow for required services
-- **US4**: Complete project generation with file creation and external service setup
-- **US5**: CircleCI project creation and GitHub integration
-- **US6**: Comprehensive README.md generation with all capabilities documented
-- **US7**: Doppler project creation and secrets management integration
-- **US8**: SonarCloud project creation and code quality integration
-- **US9**: External service integration with fallback instructions
-- **US10**: Celebration animation with tsparticles and accessibility controls
+With multiple developers:
 
-## Suggested MVP Scope
+1. Team completes Setup + Foundational together
+2. Once Foundational is done:
+   - Developer A: User Story 1 (Capabilities)
+   - Developer B: User Story 3 (Authentication)
+3. Once US1 is done:
+   - Developer A: User Story 2 (Two-Tab Interface)
+   - Developer B: User Story 4 (Project Generation)
+4. Once US4 is done:
+   - Developer A: User Stories 5-6 (CircleCI, Documentation)
+   - Developer B: User Stories 7-8 (Doppler, SonarCloud)
+   - Developer C: User Stories 9-10 (External Services, Celebration)
+5. Stories complete and integrate independently
 
-**MVP**: User Story 1 (Browse Available Capabilities)  
-**Rationale**: Provides immediate value demonstration and enables user engagement without authentication barriers. This creates a strong foundation for iterative development of remaining features.
+---
 
-## Format Validation
+## Notes
 
-✅ **ALL tasks follow the required checklist format**: `- [ ] [TaskID] [P?] [Story?] Description with file path`
-
-- **Checkbox**: All tasks start with `- [ ]`
-- **Task ID**: Sequential numbering (T001-T086)
-- **Parallel Marker**: [P] included where tasks can run in parallel
-- **Story Label**: [US1]-[US10] included for user story phase tasks
-- **File Paths**: All tasks include specific file paths for implementation
+- [P] tasks = different files, no dependencies
+- [Story] label maps task to specific user story for traceability
+- Each user story should be independently completable and testable
+- Verify tests fail before implementing
+- Commit after each task or logical group
+- Stop at any checkpoint to validate story independently
+- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- Follow SvelteKit conventions for file structure
+- Use existing Google authentication system
+- Implement two-tab interface as specified in updated spec
+- All external service integrations should be optional and gracefully degrade
+- Celebration animation should be accessible and performant
