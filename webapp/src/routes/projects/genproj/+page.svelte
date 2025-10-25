@@ -179,15 +179,6 @@
 	}
 
 	/* Smooth transitions */
-	button {
-		transition: all 0.2s ease-in-out;
-	}
-
-	/* Focus styles for accessibility */
-	button:focus-visible {
-		outline: 2px solid #3b82f6;
-		outline-offset: 2px;
-	}
 
 	/* Responsive adjustments */
 	@media (max-width: 768px) {

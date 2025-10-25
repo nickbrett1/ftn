@@ -31,14 +31,24 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return false (not logged in)
 		isUserAuthenticated.mockReturnValue(false);
 
+		const childrenSnippet = () => ({});
+
 		const component = mount(Login, {
-			target: document.body
+			target: document.body,
+			props: {
+				loginCallback: vi.fn(),
+				children: childrenSnippet
+			}
 		});
 
-		const button = document.querySelector('button');
+		flushSync();
 
-		// Click the button
-		button.click();
+		// Find the clickable div element instead of a button
+		const clickableDiv = document.querySelector('[role="button"]');
+		expect(clickableDiv).not.toBeNull();
+
+		// Click the div
+		clickableDiv.click();
 
 		flushSync();
 
@@ -55,18 +65,26 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
 
+		const childrenSnippet = () => ({});
+
 		const component = mount(Login, {
-			target: document.body
+			target: document.body,
+			props: {
+				loginCallback: vi.fn(),
+				children: childrenSnippet
+			}
 		});
 
 		// Wait for onMount to run and check auth status
 		await new Promise((resolve) => setTimeout(resolve, 10));
 		flushSync();
 
-		const button = document.querySelector('button');
+		// Find the clickable div element instead of a button
+		const clickableDiv = document.querySelector('[role="button"]');
+		expect(clickableDiv).not.toBeNull();
 
-		// Click the button
-		button.click();
+		// Click the div
+		clickableDiv.click();
 
 		flushSync();
 

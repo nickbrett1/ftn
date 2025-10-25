@@ -3,7 +3,7 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		UserSecretSolid
+		CreditCardSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -114,18 +114,22 @@
 						onclick={handleCreditCardClick}
 						class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
 						title="Credit Card Billing Tool"
-						ariaLabel="Credit Card Billing Tool"
+						aria-label="Credit Card Billing Tool"
 						focusable="true"
-					/>
+					>
+						<CreditCardSolid ariaLabel="Credit Card Billing Tool" focusable="true" />
+					</button>
 				{:else}
 					<!-- User is not logged in, show login modal -->
 					<Login loginCallback={loginStateUpdated}>
 						<button
 							id="login"
-							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
-							ariaLabel="Credit Card Billing Tool"
+							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px] flex items-center justify-center"
+							aria-label="Credit Card Billing Tool"
 							focusable="true"
-						/>
+						>
+							<CreditCardSolid ariaLabel="Credit Card Billing Tool" focusable="true" />
+						</button>
 					</Login>
 				{/if}
 
