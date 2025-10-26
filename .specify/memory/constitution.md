@@ -2,8 +2,8 @@
   ============================================================================
   SYNC IMPACT REPORT
   ============================================================================
-  Version Change: 1.8.0 → 1.9.0
-  Change Type: Minor Amendment - New Principle Added
+  Version Change: 1.9.0 → 1.18.0
+  Change Type: Minor Amendment - New Principles Added
 
   Modified Principles:
     - EXISTING: I. Code Quality Standards
@@ -20,7 +20,16 @@
     - EXISTING: XII. Code Quality Assurance Standards
     - EXISTING: XIII. Linter Compliance Standards
     - EXISTING: XIV. Development Environment Standards
-    - NEW: XV. Design System Consistency Standards
+    - EXISTING: XV. Design System Consistency Standards
+    - NEW: XVI. Text Readability Standards
+    - NEW: XVII. Information Visibility Standards
+    - NEW: XVIII. Information Economy Standards
+    - NEW: XIX. Conditional Content Display Standards
+    - NEW: XX. Default Value Standards
+    - NEW: XXI. Consistent Navigation Standards
+    - NEW: XXII. Page Title Consistency Standards
+    - NEW: XXIII. Grammar and Capitalization Standards
+    - NEW: XXIV. Disabled State Communication Standards
 
   Added Sections:
     - Core Principles (all 11 principles)
@@ -653,4 +662,132 @@ All technical decisions must be documented in Architecture Decision Records (ADR
 - **Documentation**: All design patterns must be documented and accessible
 - **Consistency**: All team members must use the same design system components
 
-**Version**: 1.9.0 | **Ratified**: 2025-10-15 | **Last Amended**: 2025-01-15
+### XVI. Text Readability Standards
+
+**Core Principle**: All text must maintain sufficient contrast ratios for readability across all themes and color schemes.
+
+**Readability Requirements**:
+
+- **Minimum Contrast**: All text must meet WCAG 2.1 AA contrast requirements (4.5:1 for normal text, 3:1 for large text)
+- **Background Contrast**: Text color must contrast with background color - never use black text on black backgrounds or light text on light backgrounds
+- **Theme Consistency**: All text colors must align with the established theme (light text on dark backgrounds, or dark text on light backgrounds)
+- **Error Prevention**: Never use similar colors for text and background (e.g., black on very dark gray, white on very light gray)
+- **Testing**: All text combinations must be tested for visibility and readability
+
+**Rationale**: Readable text is fundamental to user experience. Insufficient contrast makes content inaccessible and unusable. Financial applications require clear, readable interfaces for user trust and decision-making.
+
+### XVII. Information Visibility Standards
+
+**Core Principle**: Important information and options must be visible by default and not hidden behind mouse interactions.
+
+**Visibility Requirements**:
+
+- **Default Visibility**: All important information, options, and descriptions must be visible by default without requiring mouse hover or interaction
+- **No Hidden Information**: Never use opacity-0 or similar techniques to hide content that users need to make decisions
+- **Hover as Enhancement**: Mouse hover should only enhance or provide additional details, never reveal critical information
+- **Accessibility**: Hidden information creates barriers for users who cannot or do not use mouse interactions
+- **User Decision Making**: Users must be able to evaluate all options and understand all features without interaction
+
+**Rationale**: Important information hidden behind hover states creates poor user experience and accessibility barriers. Users must be able to see and understand all options without moving their mouse around. This is especially critical for decision-making interfaces where users need to compare options.
+
+### XVIII. Information Economy Standards
+
+**Core Principle**: Avoid visual repetition of information to reduce cognitive load and maintain clean interfaces.
+
+**Economy Requirements**:
+
+- **No Redundant Labels**: Don't repeat information that is already visible in section headings, card titles, or parent elements
+- **Single Source Display**: Display categories, types, or classifications at the section level, not on every individual item
+- **Hierarchical Information**: Use visual hierarchy instead of repeated badges or labels to convey information structure
+- **Clean Interfaces**: Remove decorative elements that duplicate functional information
+- **User Scanning**: Optimize for quick scanning by avoiding visual noise from repeated information
+
+**Rationale**: Repetitive information creates visual clutter and cognitive load. Users can process hierarchical information more efficiently when it's presented once at the appropriate level. Clean interfaces allow users to focus on what matters without filtering out redundancy.
+
+### XIX. Conditional Content Display Standards
+
+**Core Principle**: Headers, labels, and section titles should only be displayed when they have associated content to display.
+
+**Conditional Display Requirements**:
+
+- **No Empty Headers**: Don't show section headers or labels when the content they describe is empty or unavailable
+- **Content First**: Only show organizational elements (headers, dividers, section titles) when they precede actual content
+- **No Placeholder Text**: Don't show "No items" or similar placeholder text - simply omit the section entirely
+- **Clean Interfaces**: Avoid showing empty sections that frustrate users looking for information
+- **Structural Clarity**: If a section has no content, the entire section should be hidden, not just the content below the header
+
+**Rationale**: Empty headers create confusion and visual noise. Users expect headers to precede content. Showing empty sections wastes screen space and creates false expectations. Clean interfaces hide unnecessary structure.
+
+### XX. Default Value Standards
+
+**Core Principle**: All input fields and configuration options should have sensible defaults to reduce user effort and ensure consistency.
+
+**Default Value Requirements**:
+
+- **Every Field Has a Default**: All configuration fields (inputs, selects, checkboxes) should have reasonable default values
+- **Sensible Defaults**: Defaults should be the most commonly useful option that works for most use cases
+- **User Customization**: Users can always override defaults, but never required to provide values for standard configurations
+- **Consistency**: Defaults should align across related capabilities to avoid conflicting or incompatible configurations
+- **Best Practices**: Defaults should follow industry best practices and security standards
+
+**Rationale**: Providing defaults reduces cognitive load and typing effort. Users can quickly generate projects with useful defaults and customize only what they need to change. Empty fields force users to research options and increase the chance of errors.
+
+### XXI. Consistent Navigation Standards
+
+**Core Principle**: All pages must use standard header and footer components when they exist to provide consistent site-wide navigation and branding.
+
+**Navigation Consistency Requirements**:
+
+- **Standard Components**: Use existing Header and Footer components on all pages unless there's a specific design requirement
+- **No Custom Navigation**: Don't create custom headers/footers when standard components exist
+- **Site Consistency**: Users should see consistent navigation and branding across all pages
+- **Accessibility**: Standard components maintain consistent accessibility features across the site
+- **Maintainability**: Changes to navigation are made once in the component, not on every page
+
+**Rationale**: Consistent navigation is fundamental to good UX. Users build mental models based on consistent header/footer positioning. Custom navigation on each page creates confusion, accessibility issues, and maintenance burden. Standard components ensure consistency and make updates easier.
+
+### XXII. Page Title Consistency Standards
+
+**Core Principle**: Page titles must follow the existing format and structure established in the project to maintain consistency and user familiarity.
+
+**Title Consistency Requirements**:
+
+- **Follow Existing Patterns**: New page titles should match the format used by existing pages in the same section
+- **Descriptive But Concise**: Titles should clearly describe the page content without unnecessary suffixes like "- FTN" or "- Fintech Nick"
+- **Section Consistency**: Pages within the same section (e.g., /projects/\*) should follow similar patterns
+- **Main and Sub Pages**: Main pages have simple titles, sub-pages may include context (e.g., "Admin Tools - CC Billing")
+- **No Brand Suffixes**: Don't add site/brand name to titles unless part of the established pattern
+
+**Rationale**: Consistent page titles help users understand page hierarchy and maintain context. Following established patterns reduces cognitive load and makes the site feel more cohesive. Deviating from patterns creates confusion and makes the site feel inconsistent.
+
+### XXIII. Grammar and Capitalization Standards
+
+**Core Principle**: All text displayed in the UI must be grammatically correct and use proper capitalization according to English standards.
+
+**Grammar Requirements**:
+
+- **Proper Capitalization**: Multi-word labels use proper title case with spaces (e.g., "Node Version" not "NodeVersion" or "nodeversion")
+- **Grammatical Correctness**: All sentences, labels, and descriptions must follow correct English grammar
+- **Consistent Formatting**: Similar elements use consistent capitalization and formatting throughout the application
+- **Professional Presentation**: Text errors undermine trust and professionalism
+- **Accessibility**: Clear, well-formatted text is essential for understanding
+
+**Rationale**: Grammatical errors and improper capitalization create a poor user experience and damage credibility. Users expect professional, polished interfaces. Proper grammar and capitalization demonstrate attention to detail and respect for users. Clear formatting improves readability and accessibility.
+
+### XXIV. Disabled State Communication Standards
+
+**Core Principle**: When buttons or controls are disabled, users must clearly understand why they cannot interact with them.
+
+**Disabled State Requirements**:
+
+- **Visual Clarity**: Disabled buttons must be visually distinct from enabled buttons without requiring hover or click
+- **Obvious State**: The disabled appearance should be immediately obvious (different color, reduced opacity, etc.)
+- **Clear Explanation**: Disabled buttons must explain why they're disabled (via tooltip, nearby text, or aria-label)
+- **Actionable Guidance**: Messages should tell users what they need to do to enable the control
+- **No Mystery**: Users should never wonder why something is disabled
+- **Accessible**: Explanations must be available to screen readers via aria-describedby or similar
+- **Consistent Placement**: Tooltips or messages should appear in consistent locations
+
+**Rationale**: Disabled buttons without visual distinction or explanation frustrate users. Users shouldn't have to hover or click to determine if something is disabled. Visual clarity (different colors, reduced opacity) combined with clear explanations helps users understand what action is needed and builds trust. This is especially important for disabled form controls that prevent progress. Users should be able to glance at a button and immediately know if they can interact with it.
+
+**Version**: 1.18.0 | **Ratified**: 2025-10-15 | **Last Amended**: 2025-01-26

@@ -50,7 +50,9 @@ describe('Auth', () => {
 			}
 		});
 
-		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/projects/ccbilling');
+		// With the new approach, we return HTML that redirects client-side
+		expect(res.status).toBe(200);
+		expect(res.headers.get('Content-Type')).toBe('text/html');
 	});
 
 	it('redirect to notauthorised if not in KV', async () => {
@@ -316,12 +318,13 @@ describe('Auth', () => {
 				}
 			});
 
-			const setCookieHeader = res.headers.get('Set-Cookie');
-			expect(setCookieHeader).toContain('auth=');
-			expect(setCookieHeader).toContain('Expires=');
-			expect(setCookieHeader).toContain('Path=/');
-			expect(setCookieHeader).toContain('Secure');
-			expect(setCookieHeader).toContain('SameSite=Lax');
+			const html = await res.text();
+			// The cookie is now set via JavaScript in the HTML response
+			expect(html).toContain('document.cookie');
+			expect(html).toContain('auth=');
+			expect(html).toContain('Path=/');
+			expect(html).toContain('Secure');
+			expect(html).toContain('SameSite=Lax');
 		});
 
 		it('should use correct redirect status code', async () => {
@@ -337,7 +340,7 @@ describe('Auth', () => {
 				}
 			});
 
-			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
+			expect(res.status).toBe(200); // Returns HTML with client-side redirect
 		});
 
 		it('should redirect unauthorized users with correct status code', async () => {

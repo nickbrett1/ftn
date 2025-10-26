@@ -5,7 +5,7 @@
 
 import { genprojDb } from '../server/genproj-database.js';
 import { validateProjectConfiguration } from './validation.js';
-import { logger } from './logging.js';
+import { logger } from '$lib/utils/logging.js';
 
 /**
  * Project configuration model class

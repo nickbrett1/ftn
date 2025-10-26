@@ -5,7 +5,7 @@
 
 import { json } from '@sveltejs/kit';
 import { capabilities } from '$lib/config/capabilities.js';
-import { handleGenprojError, withErrorHandling } from '$lib/utils/genproj-errors.js';
+import { withErrorHandling } from '$lib/utils/genproj-errors.js';
 import { logger } from '$lib/utils/logging.js';
 
 /**
@@ -14,11 +14,6 @@ import { logger } from '$lib/utils/logging.js';
  */
 export const GET = withErrorHandling(async ({ url, request }) => {
 	try {
-		logger.info('Capabilities API requested', {
-			url: url.toString(),
-			userAgent: request.headers.get('user-agent')
-		});
-
 		// Return capabilities with additional metadata
 		const response = {
 			capabilities,
@@ -28,11 +23,6 @@ export const GET = withErrorHandling(async ({ url, request }) => {
 				timestamp: new Date().toISOString()
 			}
 		};
-
-		logger.success('Capabilities API response sent', {
-			capabilityCount: capabilities.length,
-			categories: response.metadata.categories
-		});
 
 		return json(response);
 	} catch (error) {
@@ -49,11 +39,6 @@ export const POST = withErrorHandling(async ({ request }) => {
 	try {
 		const body = await request.json();
 		const { selectedCapabilities, configuration } = body;
-
-		logger.info('Capability validation requested', {
-			selectedCapabilities,
-			configurationKeys: Object.keys(configuration || {})
-		});
 
 		// Validate selected capabilities
 		if (!Array.isArray(selectedCapabilities)) {
@@ -126,11 +111,6 @@ export const POST = withErrorHandling(async ({ request }) => {
 				conflicts: validation.conflicts
 			}
 		};
-
-		logger.success('Capability validation completed', {
-			selectedCapabilities,
-			requiredAuth
-		});
 
 		return json(response);
 	} catch (error) {

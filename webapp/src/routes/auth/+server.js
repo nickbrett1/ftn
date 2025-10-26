@@ -101,12 +101,41 @@ export async function GET({ request, platform }) {
 			expiration: kvExpiration
 		});
 
-		return new Response(null, {
-			// Changed from empty string to null for clarity
-			status: HTML_TEMPORARY_REDIRECT,
+		// Return an HTML page that sets the cookie via document.cookie and redirects
+		// We use client-side redirect to read localStorage for the redirect path
+		const html = `
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Authenticating...</title>
+</head>
+<body>
+	<script>
+		console.log('Auth callback: Reading from localStorage...');
+		
+		// Get redirect path from localStorage or use default
+		const redirectPath = localStorage.getItem('auth_redirect_path') || '/projects/ccbilling';
+		
+		console.log('Auth callback: Redirect path is', redirectPath);
+		
+		// Set the auth cookie (must be done client-side to work with http://localhost)
+		document.cookie = 'auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax';
+		
+		console.log('Auth callback: Cookie set, redirecting to', redirectPath);
+		
+		// Clean up localStorage
+		localStorage.removeItem('auth_redirect_path');
+		
+		// Redirect to the intended page
+		window.location.href = redirectPath;
+	</script>
+</body>
+</html>`;
+
+		return new Response(html, {
+			status: 200,
 			headers: {
-				Location: `${url.origin}/projects/ccbilling`,
-				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax`
+				'Content-Type': 'text/html'
 			}
 		});
 	} catch (e) {

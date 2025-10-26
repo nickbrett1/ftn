@@ -8,20 +8,17 @@
  */
 
 import { error } from '@sveltejs/kit';
-import {
-	CAPABILITIES as capabilities,
-	CAPABILITY_CATEGORIES as capabilityCategories
-} from '$lib/utils/capabilities.js';
-import { validateCapabilitySelection } from '$lib/utils/capability-resolver.js';
+import { capabilities } from '$lib/config/capabilities.js';
 
 /**
  * Loads initial data for the genproj page
  * @param {Object} params - Route parameters
  * @param {Object} url - URL object with searchParams
  * @param {Object} platform - Platform context (Cloudflare Workers)
+ * @param {Object} cookies - Cookie context
  * @returns {Object} Page data
  */
-export async function load({ params, url, platform }) {
+export async function load({ params, url, platform, cookies }) {
 	try {
 		// Get query parameters
 		const selectedParam = url.searchParams.get('selected');
@@ -31,17 +28,25 @@ export async function load({ params, url, platform }) {
 			? selectedParam.split(',').filter((id) => id.trim())
 			: [];
 
+		// Check if user is authenticated
+		const authCookie = cookies.get('auth');
+		const isAuthenticated =
+			authCookie && authCookie !== 'deleted' && platform.env.KV
+				? await platform.env.KV.get(authCookie).then((token) => !!token)
+				: false;
+
 		// Prepare initial data
 		const pageData = {
-			capabilities: Object.values(capabilities),
-			categories: capabilityCategories,
+			capabilities: capabilities,
 			selectedCapabilities,
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
+			isAuthenticated
 		};
 
 		// Add validation if requested
 		if (validateParam && selectedCapabilities.length > 0) {
-			pageData.validation = validateCapabilitySelection(selectedCapabilities);
+			// TODO: Add validation logic if needed
+			pageData.validation = { valid: true, errors: [] };
 		}
 
 		return pageData;

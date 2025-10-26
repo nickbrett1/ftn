@@ -27,13 +27,25 @@
 
 	// Category display names
 	const categoryNames = {
-		devcontainer: 'Development Containers',
+		devcontainer: 'Development Container Support',
+		'project-structure': 'Project Structure',
 		'ci-cd': 'CI/CD',
 		'code-quality': 'Code Quality',
 		secrets: 'Secrets Management',
 		deployment: 'Deployment',
 		monitoring: 'Monitoring & Testing'
 	};
+
+	// Category display order
+	const categoryOrder = [
+		'devcontainer',
+		'project-structure',
+		'ci-cd',
+		'code-quality',
+		'secrets',
+		'deployment',
+		'monitoring'
+	];
 
 	// Handle capability toggle
 	function handleCapabilityToggle(capabilityId, event) {
@@ -45,6 +57,17 @@
 	function handleConfigurationChange(capabilityId, field, value) {
 		const currentConfig = configuration[capabilityId] || {};
 		const newConfig = { ...currentConfig, [field]: value };
+		dispatch('configurationChange', { capabilityId, config: newConfig });
+	}
+
+	// Handle nested configuration change
+	function handleNestedConfigurationChange(capabilityId, field, nestedField, value) {
+		const currentConfig = configuration[capabilityId] || {};
+		const currentNested = currentConfig[field] || {};
+		const newConfig = {
+			...currentConfig,
+			[field]: { ...currentNested, [nestedField]: value }
+		};
 		dispatch('configurationChange', { capabilityId, config: newConfig });
 	}
 
@@ -71,6 +94,15 @@
 	// Get active conflicts
 	function getActiveConflicts(capability) {
 		return capability.conflicts.filter((conflict) => selectedCapabilities.includes(conflict));
+	}
+
+	// Check if capability is required by another selected capability
+	function isRequiredByOther(capability) {
+		return (
+			capabilities.filter(
+				(c) => selectedCapabilities.includes(c.id) && c.dependencies?.includes(capability.id)
+			).length > 0
+		);
 	}
 
 	// Render configuration field
@@ -125,9 +157,10 @@
 </script>
 
 <div data-testid="capability-list" class="space-y-8">
-	{#each Object.entries(capabilityGroups) as [category, categoryCapabilities]}
+	{#each categoryOrder.filter((cat) => capabilityGroups[cat]) as category}
+		{@const categoryCapabilities = capabilityGroups[category]}
 		<div data-testid="category-{category}" class="space-y-4">
-			<h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+			<h3 class="text-lg font-semibold text-white border-b border-gray-700 pb-2">
 				{categoryNames[category] || category}
 			</h3>
 
@@ -135,19 +168,45 @@
 				{#each categoryCapabilities as capability}
 					<div
 						data-testid="capability-card"
-						class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow {selectedCapabilities.includes(
+						class="border border-gray-700 rounded-lg p-4 transition-colors {selectedCapabilities.includes(
 							capability.id
 						)
-							? 'ring-2 ring-blue-500 bg-blue-50'
-							: 'bg-white'}"
+							? 'ring-2 ring-green-400 bg-green-900 bg-opacity-20 hover:bg-green-900 hover:bg-opacity-30'
+							: 'bg-gray-800 hover:bg-gray-700'}"
 					>
 						<!-- Capability Header -->
 						<div class="flex items-start justify-between mb-3">
 							<div class="flex-1">
-								<h4 data-testid="capability-name" class="font-medium text-gray-900">
-									{capability.name}
-								</h4>
-								<p data-testid="capability-description" class="text-sm text-gray-600 mt-1">
+								{#if capability.url}
+									<h4 data-testid="capability-name" class="font-medium text-white">
+										<a
+											href={capability.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="hover:text-green-400 hover:underline transition-colors"
+										>
+											{capability.name}
+											<svg
+												class="inline-block ml-1 w-3 h-3 text-gray-400"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+												/>
+											</svg>
+										</a>
+									</h4>
+								{:else}
+									<h4 data-testid="capability-name" class="font-medium text-white">
+										{capability.name}
+									</h4>
+								{/if}
+								<p data-testid="capability-description" class="text-sm text-gray-300 mt-1">
 									{capability.description}
 								</p>
 							</div>
@@ -158,113 +217,136 @@
 									type="checkbox"
 									class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 									checked={selectedCapabilities.includes(capability.id)}
+									disabled={!selectedCapabilities.includes(capability.id) &&
+										isRequiredByOther(capability)}
 									on:change={(e) => handleCapabilityToggle(capability.id, e)}
 								/>
 							</div>
 						</div>
 
-						<!-- Capability Category -->
-						<div class="mb-3">
-							<span
-								data-testid="capability-category"
-								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-							>
-								{categoryNames[capability.category] || capability.category}
-							</span>
-						</div>
+						<!-- Capability Details (always visible) -->
+						<div data-testid="capability-details" class="space-y-3">
+							<!-- Dependencies -->
+							{#if hasDependencies(capability)}
+								<div class="text-sm">
+									<span class="font-medium text-gray-300">Dependencies:</span>
+									<ul class="mt-1 space-y-1">
+										{#each capability.dependencies as depId}
+											{@const dep = capabilities.find((c) => c.id === depId)}
+											<li class="flex items-center">
+												<span class="text-gray-400">{dep?.name || depId}</span>
+												{#if !selectedCapabilities.includes(depId)}
+													<span class="ml-2 text-red-400 text-xs">(missing)</span>
+												{/if}
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{/if}
 
-						<!-- Capability Details (shown on hover/selection) -->
-						<div data-testid="capability-details" class="space-y-3 opacity-0 hover:opacity-100 transition-opacity duration-200 {selectedCapabilities.includes(capability.id) ? 'opacity-100' : ''}">
-								<!-- Dependencies -->
-								{#if hasDependencies(capability)}
-									<div class="text-sm">
-										<span class="font-medium text-gray-700">Dependencies:</span>
-										<ul class="mt-1 space-y-1">
-											{#each capability.dependencies as depId}
-												{@const dep = capabilities.find((c) => c.id === depId)}
-												<li class="flex items-center">
-													<span class="text-gray-600">{dep?.name || depId}</span>
-													{#if !selectedCapabilities.includes(depId)}
-														<span class="ml-2 text-red-600 text-xs">(missing)</span>
-													{/if}
-												</li>
-											{/each}
-										</ul>
-									</div>
-								{/if}
+							<!-- Conflicts -->
+							{#if hasConflicts(capability)}
+								<div class="text-sm">
+									<span class="font-medium text-gray-300">Incompatible with:</span>
+									<ul class="mt-1 space-y-1">
+										{#each capability.conflicts as conflictId}
+											{@const conflict = capabilities.find((c) => c.id === conflictId)}
+											<li class="flex items-center">
+												<span class="text-gray-400">{conflict?.name || conflictId}</span>
+												{#if selectedCapabilities.includes(conflictId)}
+													<span class="ml-2 text-red-400 text-xs">(selected)</span>
+												{/if}
+											</li>
+										{/each}
+									</ul>
+									<p class="mt-1 text-xs text-gray-500">
+										These options cannot be used together. Please choose one.
+									</p>
+								</div>
+							{/if}
 
-								<!-- Conflicts -->
-								{#if hasConflicts(capability)}
-									<div class="text-sm">
-										<span class="font-medium text-gray-700">Conflicts with:</span>
-										<ul class="mt-1 space-y-1">
-											{#each capability.conflicts as conflictId}
-												{@const conflict = capabilities.find((c) => c.id === conflictId)}
-												<li class="flex items-center">
-													<span class="text-gray-600">{conflict?.name || conflictId}</span>
-													{#if selectedCapabilities.includes(conflictId)}
-														<span class="ml-2 text-red-600 text-xs">(conflict)</span>
-													{/if}
-												</li>
-											{/each}
-										</ul>
-									</div>
-								{/if}
-
-								<!-- Authentication Requirements -->
-								{#if requiresAuth(capability)}
-									<div class="text-sm">
-										<span class="font-medium text-gray-700">Requires:</span>
-										<div class="mt-1 flex flex-wrap gap-1">
-											{#each capability.requiresAuth as authService}
-												<span
-													data-testid="auth-service-{authService}"
-													class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
-												>
-													{authService}
-												</span>
-											{/each}
-										</div>
-									</div>
-								{/if}
-
-								<!-- Configuration Options -->
-								{#if capability.configurationSchema?.properties}
-									<div data-testid="capability-config" class="space-y-2">
-										<span class="font-medium text-gray-700 text-sm">Configuration:</span>
-										{#each Object.entries(capability.configurationSchema.properties) as [field, rules]}
-											<div>
-												<label class="block text-xs font-medium text-gray-600 mb-1">
-													{field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-												</label>
-												<div class="text-sm">
-													{#if rules.enum}
-														<select
-															class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-															data-testid="config-{field.replace(/_/g, '-')}"
-															value={configuration[capability.id]?.[field] || rules.default || ''}
-															on:change={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.value)}
-														>
-															{#each rules.enum as option}
-																<option value={option}>{option}</option>
+							<!-- Configuration Options -->
+							{#if capability.configurationSchema?.properties && Object.keys(capability.configurationSchema.properties).length > 0}
+								<div data-testid="capability-config" class="space-y-2">
+									<span class="font-medium text-gray-300 text-sm">Configuration:</span>
+									{#each Object.entries(capability.configurationSchema.properties) as [field, rules]}
+										<div>
+											<label
+												class="block text-xs font-medium text-gray-400 mb-1"
+												for="config-{capability.id}-{field}"
+											>
+												{field
+													.replace(/([A-Z])/g, ' $1')
+													.replace(/_/g, ' ')
+													.replace(/\b\w/g, (l) => l.toUpperCase())
+													.trim()}
+											</label>
+											<div class="text-sm">
+												{#if rules.enum}
+													<select
+														id="config-{capability.id}-{field}"
+														class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
+														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+														value={configuration[capability.id]?.[field] || rules.default || ''}
+														on:change={(e) =>
+															handleConfigurationChange(capability.id, field, e.target.value)}
+													>
+														{#each rules.enum as option}
+															<option value={option}>{option}</option>
+														{/each}
+													</select>
+												{:else if rules.type === 'boolean'}
+													<input
+														id="config-{capability.id}-{field}"
+														type="checkbox"
+														class="rounded border-gray-600 bg-gray-900 text-green-600 focus:ring-green-400"
+														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+														checked={configuration[capability.id]?.[field] !== undefined
+															? configuration[capability.id]?.[field]
+															: (rules.default ?? false)}
+														on:change={(e) =>
+															handleConfigurationChange(capability.id, field, e.target.checked)}
+													/>
+												{:else if rules.type === 'array'}
+													{#if rules.items?.enum}
+														<!-- Multi-select checkboxes for enum arrays -->
+														<div class="space-y-1">
+															{#each rules.items.enum as option}
+																<label class="flex items-center text-xs">
+																	<input
+																		type="checkbox"
+																		class="mr-2 rounded border-gray-600 bg-gray-900 text-green-600 focus:ring-green-400"
+																		checked={(
+																			configuration[capability.id]?.[field] ||
+																			rules.default ||
+																			[]
+																		).includes(option)}
+																		on:change={(e) => {
+																			const current =
+																				configuration[capability.id]?.[field] ||
+																				rules.default ||
+																				[];
+																			const updated = e.target.checked
+																				? [...current, option]
+																				: current.filter((item) => item !== option);
+																			handleConfigurationChange(capability.id, field, updated);
+																		}}
+																	/>
+																	<span class="text-gray-300">{option}</span>
+																</label>
 															{/each}
-														</select>
-													{:else if rules.type === 'boolean'}
+														</div>
+													{:else}
 														<input
-															type="checkbox"
-															class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-															data-testid="config-{field.replace(/_/g, '-')}"
-															checked={configuration[capability.id]?.[field] || false}
-															on:change={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.checked)}
-														/>
-													{:else if rules.type === 'array'}
-														<input
+															id="config-{capability.id}-{field}"
 															type="text"
-															class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-															data-testid="config-{field.replace(/_/g, '-')}"
-															value={(configuration[capability.id]?.[field] || []).join(', ')}
+															class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
+															data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+															value={(
+																configuration[capability.id]?.[field] ||
+																rules.default ||
+																[]
+															).join(', ')}
 															placeholder="comma-separated values"
 															on:change={(e) =>
 																handleConfigurationChange(
@@ -276,21 +358,63 @@
 																		.filter((s) => s)
 																)}
 														/>
-													{:else}
-														<input
-															type={rules.type || 'text'}
-															class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-															data-testid="config-{field.replace(/_/g, '-')}"
-															value={configuration[capability.id]?.[field] || rules.default || ''}
-															on:change={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.value)}
-														/>
 													{/if}
-												</div>
+												{:else if rules.type === 'object'}
+													<!-- Nested object - render properties recursively -->
+													<div class="ml-4 space-y-2 border-l-2 border-gray-700 pl-3">
+														{#each Object.entries(rules.properties || {}) as [nestedField, nestedRules]}
+															<div>
+																<label
+																	class="block text-xs font-medium text-gray-500 mb-1"
+																	for="config-{capability.id}-{field}-{nestedField}"
+																>
+																	{nestedField
+																		.replace(/([A-Z])/g, ' $1')
+																		.replace(/_/g, ' ')
+																		.replace(/\b\w/g, (l) => l.toUpperCase())
+																		.trim()}
+																</label>
+																{#if nestedRules.type === 'number'}
+																	<input
+																		id="config-{capability.id}-{field}-{nestedField}"
+																		type="number"
+																		min={nestedRules.minimum}
+																		max={nestedRules.maximum}
+																		class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
+																		data-testid="config-{field}-{nestedField
+																			.replace(/([A-Z])/g, '-$1')
+																			.toLowerCase()}"
+																		value={configuration[capability.id]?.[field]?.[nestedField] ||
+																			nestedRules.default ||
+																			''}
+																		on:change={(e) =>
+																			handleNestedConfigurationChange(
+																				capability.id,
+																				field,
+																				nestedField,
+																				e.target.value
+																			)}
+																	/>
+																{/if}
+															</div>
+														{/each}
+													</div>
+												{:else}
+													<input
+														id="config-{capability.id}-{field}"
+														type={rules.type || 'text'}
+														class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
+														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+														value={configuration[capability.id]?.[field] || rules.default || ''}
+														on:change={(e) =>
+															handleConfigurationChange(capability.id, field, e.target.value)}
+													/>
+												{/if}
 											</div>
-										{/each}
-									</div>
-								{/if}
+										</div>
+									{/each}
+								</div>
+							{/if}
 						</div>
 					</div>
 				{/each}
@@ -303,7 +427,7 @@
 {#if selectedCapabilities.some((id) => capabilities.find((c) => c.id === id)?.dependencies?.length > 0)}
 	<div
 		data-testid="dependency-warning"
-		class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6"
+		class="bg-yellow-900 bg-opacity-20 border border-yellow-500 rounded-md p-4 mt-6"
 	>
 		<div class="flex">
 			<div class="flex-shrink-0">
@@ -316,14 +440,14 @@
 				</svg>
 			</div>
 			<div class="ml-3">
-				<h3 class="text-sm font-medium text-yellow-800">Missing Dependencies</h3>
-				<div class="mt-2 text-sm text-yellow-700">
+				<h3 class="text-sm font-medium text-yellow-300">Missing Dependencies</h3>
+				<div class="mt-2 text-sm text-yellow-200">
 					<p>Some selected capabilities have dependencies that are not selected.</p>
 				</div>
 				<div class="mt-4">
 					<button
 						data-testid="add-dependency-button"
-						class="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm hover:bg-yellow-200 transition-colors"
+						class="bg-yellow-600 text-yellow-50 px-3 py-2 rounded-md text-sm hover:bg-yellow-700 transition-colors border border-yellow-400"
 						on:click={() => {
 							// TODO: Implement auto-add dependencies
 							logger.info('Add dependencies requested');
@@ -341,7 +465,10 @@
 {#if selectedCapabilities.some((id) => capabilities
 		.find((c) => c.id === id)
 		?.conflicts?.some((conflict) => selectedCapabilities.includes(conflict)))}
-	<div data-testid="conflict-warning" class="bg-red-50 border border-red-200 rounded-md p-4 mt-6">
+	<div
+		data-testid="conflict-warning"
+		class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4 mt-6"
+	>
 		<div class="flex">
 			<div class="flex-shrink-0">
 				<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -353,67 +480,24 @@
 				</svg>
 			</div>
 			<div class="ml-3">
-				<h3 class="text-sm font-medium text-red-800">Capability Conflicts</h3>
-				<div class="mt-2 text-sm text-red-700">
-					<p>Some selected capabilities conflict with each other.</p>
+				<h3 class="text-sm font-medium text-red-300">Incompatible Options Selected</h3>
+				<div class="mt-2 text-sm text-red-200">
+					<p>
+						Some selected options are incompatible and cannot be used together. Please deselect
+						conflicting options to continue.
+					</p>
 				</div>
 				<div class="mt-4">
 					<button
 						data-testid="resolve-conflict-button"
-						class="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm hover:bg-red-200 transition-colors"
+						class="bg-red-600 text-red-50 px-3 py-2 rounded-md text-sm hover:bg-red-700 transition-colors border border-red-400"
 						on:click={() => {
 							// TODO: Implement conflict resolution
 							logger.info('Resolve conflicts requested');
 						}}
 					>
-						Resolve Conflicts
+						Deselect Conflicting Options
 					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Authentication Requirements -->
-{#if selectedCapabilities.some((id) => capabilities.find((c) => c.id === id)?.requiresAuth?.length > 0)}
-	<div
-		data-testid="auth-requirements"
-		class="bg-blue-50 border border-blue-200 rounded-md p-4 mt-6"
-	>
-		<div class="flex">
-			<div class="flex-shrink-0">
-				<svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-					<path
-						fill-rule="evenodd"
-						d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-						clip-rule="evenodd"
-					/>
-				</svg>
-			</div>
-			<div class="ml-3">
-				<h3 class="text-sm font-medium text-blue-800">Authentication Required</h3>
-				<div class="mt-2 text-sm text-blue-700">
-					<p>Some selected capabilities require authentication with external services:</p>
-					<ul class="mt-2 space-y-1">
-						{#each selectedCapabilities as capabilityId}
-							{@const capability = capabilities.find((c) => c.id === capabilityId)}
-							{#if capability?.requiresAuth?.length > 0}
-								<li class="flex items-center">
-									<span class="font-medium">{capability.name}:</span>
-									<div class="ml-2 flex flex-wrap gap-1">
-										{#each capability.requiresAuth as authService}
-											<span
-												data-testid="auth-service-{authService}"
-												class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-											>
-												{authService}
-											</span>
-										{/each}
-									</div>
-								</li>
-							{/if}
-						{/each}
-					</ul>
 				</div>
 			</div>
 		</div>

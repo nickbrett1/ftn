@@ -16,9 +16,20 @@ export const LOG_LEVELS = {
 /**
  * Current log level (can be set via environment)
  */
-const currentLogLevel = process.env.GENPROJ_LOG_LEVEL 
-  ? LOG_LEVELS[process.env.GENPROJ_LOG_LEVEL.toUpperCase()] 
-  : LOG_LEVELS.INFO;
+const currentLogLevel = (() => {
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    // In browser, use a default level or check for a global variable
+    return LOG_LEVELS.INFO;
+  }
+  
+  // In Node.js environment, check environment variable
+  if (typeof process !== 'undefined' && process.env?.GENPROJ_LOG_LEVEL) {
+    return LOG_LEVELS[process.env.GENPROJ_LOG_LEVEL.toUpperCase()] || LOG_LEVELS.INFO;
+  }
+  
+  return LOG_LEVELS.INFO;
+})();
 
 /**
  * Emoji prefixes for different log types
