@@ -36,18 +36,24 @@ As a developer visiting the FTN portfolio, I want to see what project generation
 
 As a developer, I want a clean two-tab interface where I can configure my project capabilities in one tab and preview the generated output in another tab, with easy switching between them without needing any authentication.
 
-**Why this priority**: This is the core value proposition - providing full transparency and control over what will be generated before any authentication or changes are made, with a simple, non-linear interface that doesn't overcomplicate the process with unnecessary steps.
+**Why this priority**: This is the core value proposition - providing full transparency and control over what will be generated before any authentication or changes are made, with a simple, non-linear interface that doesn't over complicate the process with unnecessary steps.
+
+**Important Behavior**: The preview functionality uses placeholder project names when no project name is provided, allowing users to explore the tool and see what would be generated. However, actual project generation requires a valid project name (minimum 3 characters) to ensure proper file naming and project initialization.
+
+**Automatic Configuration**: When any devcontainer support capability is selected (Node.js, Python, etc.), the system automatically includes zsh configuration (.zshrc with Oh My Zsh and Powerlevel10k theme) matching the FTN development environment standards.
 
 **Independent Test**: Can be fully tested by selecting capabilities in the "Capabilities" tab, switching to the "Preview" tab to see the output, then switching back to modify capabilities and seeing the preview update accordingly.
 
 **Acceptance Scenarios**:
 
 1. **Given** I am browsing the tool, **When** I see the two-tab interface with "Capabilities" and "Preview" tabs, **Then** I understand I can configure in one tab and preview in the other
-2. **Given** I am in the Capabilities tab, **When** I select project capabilities and provide configuration details, **Then** I can switch to the Preview tab to see all files that would be generated
-3. **Given** I have selected capabilities with external services, **When** I switch to the Preview tab, **Then** I see descriptions of all external service changes that would be made
-4. **Given** I am viewing the Preview tab, **When** I want to modify capabilities, **Then** I can switch back to the Capabilities tab without losing my settings
-5. **Given** I modify capabilities in the Capabilities tab, **When** I switch back to the Preview tab, **Then** the preview updates to reflect my changes
-6. **Given** I am satisfied with the preview, **When** I click "Generate Project", **Then** I am prompted for required authentication
+2. **Given** I am in the Capabilities tab without entering a project name, **When** I select project capabilities and switch to the Preview tab, **Then** I see a preview with placeholder project name "my-project" or similar
+3. **Given** I am in the Capabilities tab, **When** I select project capabilities and enter a project name, **Then** I can switch to the Preview tab to see all files that would be generated with the actual project name
+4. **Given** I have selected capabilities with external services, **When** I switch to the Preview tab, **Then** I see descriptions of all external service changes that would be made
+5. **Given** I am viewing the Preview tab, **When** I want to modify capabilities, **Then** I can switch back to the Capabilities tab without losing my settings
+6. **Given** I modify capabilities in the Capabilities tab, **When** I switch back to the Preview tab, **Then** the preview updates to reflect my changes
+7. **Given** I am satisfied with the preview but have not entered a project name, **When** I click "Generate Project", **Then** I see an error requiring a valid project name before proceeding
+8. **Given** I have entered a valid project name and am satisfied with the preview, **When** I click "Generate Project", **Then** I am prompted for required authentication
 
 ---
 
@@ -222,12 +228,20 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-043**: System MUST prevent deselection of capabilities that are required by other selected capabilities
 - **FR-009**: System MUST provide a two-tab interface with "Capabilities" and "Preview" tabs
 - **FR-010**: System MUST show all generated files and external service changes in the Preview tab without making actual changes
+- **FR-010a**: System MUST display file previews in a collapsed summary view by default, showing the first 20 lines or 500 characters
+- **FR-010b**: System MUST allow users to expand individual files to view their full contents in the Preview tab
+- **FR-010c**: System MUST display a clear visual indicator (e.g., "Show more") when file content is truncated
+- **FR-010d**: System MUST handle large files gracefully without performance degradation
 - **FR-011**: System MUST allow seamless navigation between Capabilities and Preview tabs without losing user settings
 - **FR-012**: System MUST automatically update Preview tab content when capabilities or configuration changes are made
 - **FR-013**: System MUST provide clear visual indicators showing which tab is currently active
 - **FR-014**: System MUST enable users to switch to Preview tab at any time to see current configuration results
 - **FR-015**: System MUST create a new GitHub repository if no repository URL is provided, or accept and write to an existing repository URL if provided, only after user confirms the preview and completes authentication
 - **FR-016**: System MUST create devcontainer.json and Dockerfile based on selected capabilities for VS Code
+- **FR-016a**: System MUST automatically include zsh configuration (.zshrc and .p10k.zsh) whenever any devcontainer support capability is selected
+- **FR-016b**: System MUST configure post-create-setup.sh to install and configure Oh My Zsh with Powerlevel10k theme and zsh-autosuggestions/zsh-syntax-highlighting plugins
+- **FR-016c**: System MUST configure .zshrc with Cursor-specific terminal handling to avoid command detection issues
+- **FR-016d**: System MUST configure Powerlevel10k theme with appropriate settings matching the FTN development environment
 - **FR-017**: System MUST generate VS Code-specific configuration files (settings.json, extensions.json) based on selected capabilities
 - **FR-018**: System MUST create post-create-setup.sh script with git safe directory configuration
 - **FR-019**: System MUST generate dependabot.yml when dependency management is selected with ecosystems automatically determined from selected devcontainer languages

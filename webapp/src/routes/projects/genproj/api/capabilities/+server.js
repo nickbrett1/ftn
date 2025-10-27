@@ -50,10 +50,8 @@ export const POST = withErrorHandling(async ({ request }) => {
 		}
 
 		// Check for valid capability IDs
-		const validCapabilityIds = capabilities.map((c) => c.id);
-		const invalidCapabilities = selectedCapabilities.filter(
-			(id) => !validCapabilityIds.includes(id)
-		);
+		const validCapabilityIds = new Set(capabilities.map((c) => c.id));
+		const invalidCapabilities = selectedCapabilities.filter((id) => !validCapabilityIds.has(id));
 
 		if (invalidCapabilities.length > 0) {
 			return json(
@@ -163,6 +161,35 @@ function validateCapabilitySelection(selectedCapabilities) {
 }
 
 /**
+ * Validate configuration field against schema rules
+ * @param {string} capabilityId - Capability ID
+ * @param {string} field - Field name
+ * @param {*} value - Field value
+ * @param {Object} rules - Validation rules
+ * @returns {string[]} Array of error messages
+ */
+function validateField(capabilityId, field, value, rules) {
+	const errors = [];
+
+	if (rules.required && (value === undefined || value === null || value === '')) {
+		errors.push(`${capabilityId}.${field} is required`);
+		return errors;
+	}
+
+	if (value !== undefined && value !== null) {
+		if (rules.type && typeof value !== rules.type) {
+			errors.push(`${capabilityId}.${field} must be a ${rules.type}`);
+		}
+
+		if (rules.enum && !rules.enum.includes(value)) {
+			errors.push(`${capabilityId}.${field} must be one of: ${rules.enum.join(', ')}`);
+		}
+	}
+
+	return errors;
+}
+
+/**
  * Validate capability configuration
  * @param {string[]} selectedCapabilities - Selected capability IDs
  * @param {Object} configuration - Capability configuration
@@ -183,21 +210,8 @@ function validateCapabilityConfiguration(selectedCapabilities, configuration) {
 		if (schema && schema.properties) {
 			for (const [field, rules] of Object.entries(schema.properties)) {
 				const value = capabilityConfig[field];
-
-				if (rules.required && (value === undefined || value === null || value === '')) {
-					errors.push(`${capabilityId}.${field} is required`);
-					continue;
-				}
-
-				if (value !== undefined && value !== null) {
-					if (rules.type && typeof value !== rules.type) {
-						errors.push(`${capabilityId}.${field} must be a ${rules.type}`);
-					}
-
-					if (rules.enum && !rules.enum.includes(value)) {
-						errors.push(`${capabilityId}.${field} must be one of: ${rules.enum.join(', ')}`);
-					}
-				}
+				const fieldErrors = validateField(capabilityId, field, value, rules);
+				errors.push(...fieldErrors);
 			}
 		}
 	}
@@ -219,7 +233,9 @@ function getRequiredAuthServices(selectedCapabilities) {
 	for (const capabilityId of selectedCapabilities) {
 		const capability = capabilities.find((cap) => cap.id === capabilityId);
 		if (capability) {
-			capability.requiresAuth.forEach((service) => required.add(service));
+			for (const service of capability.requiresAuth) {
+				required.add(service);
+			}
 		}
 	}
 

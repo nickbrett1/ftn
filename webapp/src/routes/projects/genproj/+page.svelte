@@ -244,7 +244,9 @@
 					<!-- Project Name -->
 					<div>
 						<label for="project-name" class="block text-sm font-medium text-gray-300 mb-2">
-							Project Name *
+							Project Name <span class="text-xs text-gray-400"
+								>(optional for preview, required for generation)</span
+							>
 						</label>
 						<input
 							id="project-name"
@@ -252,7 +254,7 @@
 							type="text"
 							bind:value={projectName}
 							oninput={handleProjectNameChange}
-							placeholder="my-awesome-project"
+							placeholder="my-project"
 							class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
 							aria-label="Project name"
 						/>

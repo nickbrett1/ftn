@@ -97,6 +97,7 @@
     "OLAP",
     "oncreated",
     "pasteable",
+    "pipenv",
     "POWERLEVEL",
     "predev",
     "pytest",
@@ -156,5 +157,6 @@
   ],
   "files.associations": {
     "*.svx": "markdown"
-  }
+  },
+  "cSpell.ignorePaths": ["**/.p10k.zsh"]
 }

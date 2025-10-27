@@ -18,10 +18,29 @@
 	let previewData = null;
 	let loading = false;
 	let error = null;
+	let expandedFiles = {};
+
+	// Toggle file expansion
+	function toggleFile(filePath) {
+		expandedFiles[filePath] = !expandedFiles[filePath];
+		expandedFiles = { ...expandedFiles }; // Trigger reactivity
+	}
+
+	// Get truncated content
+	function getTruncatedContent(content, maxLength = 500) {
+		if (!content) return '';
+		if (content.length <= maxLength) return content;
+		return content.substring(0, maxLength);
+	}
+
+	// Check if content is truncated
+	function isTruncated(content, maxLength = 500) {
+		return content && content.length > maxLength;
+	}
 
 	// Generate preview data
 	async function generatePreview() {
-		if (!projectName || selectedCapabilities.length === 0) {
+		if (selectedCapabilities.length === 0) {
 			return;
 		}
 
@@ -35,7 +54,7 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					projectName,
+					projectName: effectiveProjectName,
 					repositoryUrl,
 					selectedCapabilities,
 					configuration
@@ -46,10 +65,12 @@
 				throw new Error(`Failed to generate preview: ${response.status}`);
 			}
 
-			previewData = await response.json();
+			const data = await response.json();
+			previewData = data;
 			logger.success('Preview generated', {
-				projectName,
-				capabilityCount: selectedCapabilities.length
+				projectName: effectiveProjectName,
+				capabilityCount: selectedCapabilities.length,
+				usingPlaceholder: !projectName
 			});
 		} catch (err) {
 			error = err.message;
@@ -60,7 +81,10 @@
 	}
 
 	// Generate preview when dependencies change
-	$: if (projectName && selectedCapabilities.length > 0) {
+	// Use placeholder project name if none is provided
+	$: effectiveProjectName = projectName || 'my-project';
+
+	$: if (selectedCapabilities.length > 0) {
 		generatePreview();
 	}
 
@@ -68,15 +92,6 @@
 	function getCapabilityName(capabilityId) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		return capability?.name || capabilityId;
-	}
-
-	// Format file size
-	function formatFileSize(bytes) {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	}
 </script>
 
@@ -113,7 +128,10 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 				<div>
 					<span class="font-medium text-blue-300">Project Name:</span>
-					<span class="ml-2 text-blue-200">{projectName}</span>
+					<span class="ml-2 text-blue-200">{effectiveProjectName}</span>
+					{#if !projectName}
+						<span class="ml-2 text-yellow-400 text-xs">(placeholder)</span>
+					{/if}
 				</div>
 				{#if repositoryUrl}
 					<div>
@@ -195,38 +213,51 @@
 									<div>
 										<div class="font-medium text-white">{file.filePath}</div>
 										<div class="text-sm text-gray-400">
-											{getCapabilityName(file.capabilityId)} • {formatFileSize(file.content.length)}
-											bytes
+											{getCapabilityName(file.capabilityId)}
 										</div>
 									</div>
 								</div>
-								<div class="flex items-center space-x-2">
-									{#if file.isExecutable}
+								{#if file.isExecutable}
+									<div class="flex items-center">
 										<span
 											class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900 bg-opacity-30 text-green-300 border border-green-600"
 										>
 											Executable
 										</span>
-									{/if}
-									<button
-										class="text-green-400 hover:text-green-300 text-sm font-medium"
-										on:click={() => {
-											// TODO: Implement file preview modal
-											logger.info('File preview requested', { filePath: file.filePath });
-										}}
-									>
-										Preview
-									</button>
-								</div>
+									</div>
+								{/if}
 							</div>
 						</div>
 
 						<!-- File Content Preview -->
 						<div class="p-4">
-							<pre
-								class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
-									>{file.content.substring(0, 500)}{file.content.length > 500 ? '...' : ''}</code
-								></pre>
+							{#if expandedFiles[file.filePath]}
+								<pre
+									class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
+										>{file.content}</code
+									></pre>
+								{#if isTruncated(file.content)}
+									<button
+										class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
+										on:click={() => toggleFile(file.filePath)}
+									>
+										Show less
+									</button>
+								{/if}
+							{:else}
+								<pre
+									class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
+										>{getTruncatedContent(file.content)}</code
+									></pre>
+								{#if isTruncated(file.content)}
+									<button
+										class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
+										on:click={() => toggleFile(file.filePath)}
+									>
+										Show more... ({file.content.length} total characters)
+									</button>
+								{/if}
+							{/if}
 						</div>
 					</div>
 				{/each}

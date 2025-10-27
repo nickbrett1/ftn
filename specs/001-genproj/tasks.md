@@ -97,20 +97,20 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T022 [P] [US2] Contract test for preview endpoint in webapp/tests/contract/test_preview_api.js
-- [ ] T023 [P] [US2] Integration test for tab switching in webapp/tests/integration/test_tab_interface.js
-- [ ] T024 [P] [US2] E2E test for two-tab workflow in webapp/tests/e2e/genproj_tabs.spec.js
+- [x] T022 [P] [US2] Contract test for preview endpoint in webapp/tests/contract/test_preview_api.js
+- [x] T023 [P] [US2] Integration test for tab switching in webapp/tests/integration/test_tab_interface.js
+- [x] T024 [P] [US2] E2E test for two-tab workflow in webapp/tests/e2e/genproj_tabs.spec.js
 
 ### Implementation for User Story 2
 
-- [ ] T025 [P] [US2] Create preview API endpoint in webapp/src/routes/projects/genproj/api/preview/+server.js
-- [ ] T026 [P] [US2] Create ConfigurationForm component in webapp/src/lib/components/genproj/ConfigurationForm.svelte
-- [ ] T027 [P] [US2] Create PreviewMode component in webapp/src/lib/components/genproj/PreviewMode.svelte
-- [ ] T028 [US2] Implement tab switching logic and state management
-- [ ] T029 [US2] Implement preview generation service in webapp/src/lib/services/project-generator.js
-- [ ] T030 [US2] Add real-time preview updates when capabilities change
-- [ ] T031 [US2] Add visual indicators for active tab
-- [ ] T032 [US2] Add logging for tab switching and preview operations
+- [x] T025 [P] [US2] Create preview API endpoint in webapp/src/routes/projects/genproj/api/preview/+server.js
+- [x] T026 [P] [US2] Create ConfigurationForm component in webapp/src/lib/components/genproj/ConfigurationForm.svelte
+- [x] T027 [P] [US2] Create PreviewMode component in webapp/src/lib/components/genproj/PreviewMode.svelte
+- [x] T028 [US2] Implement tab switching logic and state management
+- [x] T029 [US2] Implement preview generation service in webapp/src/lib/services/project-generator.js
+- [x] T030 [US2] Add real-time preview updates when capabilities change
+- [x] T031 [US2] Add visual indicators for active tab
+- [x] T032 [US2] Add logging for tab switching and preview operations
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

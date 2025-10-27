@@ -14,7 +14,7 @@ vi.mock('$lib/components/Button.svelte', () => ({
 }));
 
 // Mock fetch globally
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('CCBilling Admin Page', () => {
 	let component;
@@ -34,7 +34,7 @@ describe('CCBilling Admin Page', () => {
 		component = mount(AdminPage, {
 			target: document.body
 		});
-		
+
 		expect(document.body.textContent).toContain('Admin Tools');
 		expect(document.body.textContent).toContain('Database Normalization');
 		expect(document.body.textContent).toContain('Run the merchant normalization process');
@@ -45,11 +45,11 @@ describe('CCBilling Admin Page', () => {
 		component = mount(AdminPage, {
 			target: document.body
 		});
-		
+
 		// Check that the main elements are present
 		expect(document.body.textContent).toContain('Admin Tools');
 		expect(document.body.textContent).toContain('Database Normalization');
-		
+
 		// Check that the page has the expected layout classes
 		const main = document.querySelector('main');
 		expect(main).toBeTruthy();
@@ -61,11 +61,13 @@ describe('CCBilling Admin Page', () => {
 		component = mount(AdminPage, {
 			target: document.body
 		});
-		
+
 		// Check that the main content area exists
-		const contentArea = document.querySelector('.bg-gray-800.border.border-gray-700.rounded-lg.p-6');
+		const contentArea = document.querySelector(
+			'.bg-gray-800.border.border-gray-700.rounded-lg.p-6'
+		);
 		expect(contentArea).toBeTruthy();
-		
+
 		// Check that the description text is present (split across lines)
 		expect(document.body.textContent).toContain('Run the merchant normalization process');
 		expect(document.body.textContent).toContain('budget assignments stay in sync');
@@ -75,11 +77,11 @@ describe('CCBilling Admin Page', () => {
 		component = mount(AdminPage, {
 			target: document.body
 		});
-		
+
 		// Check that the page has the expected layout structure
 		const headerSection = document.querySelector('.flex.items-center.justify-between.mb-8');
 		expect(headerSection).toBeTruthy();
-		
+
 		// Check that the title is in the header section
 		const title = headerSection.querySelector('h1');
 		expect(title).toBeTruthy();
