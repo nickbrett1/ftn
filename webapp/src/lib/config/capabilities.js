@@ -122,7 +122,7 @@ export const capabilities = [
 	{
 		id: 'devcontainer-java',
 		name: 'Java DevContainer Support',
-		description: 'Adds Java runtime and Maven to your development container',
+		description: 'Adds Java runtime to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
 		category: 'devcontainer',
 		dependencies: [],
@@ -360,23 +360,7 @@ export const capabilities = [
 				includeConstitution: { type: 'boolean', default: true }
 			}
 		},
-		templates: [
-			{
-				id: 'spec-template',
-				filePath: '.specify/templates/spec-template.md',
-				templateId: 'spec-template'
-			},
-			{
-				id: 'tasks-template',
-				filePath: '.specify/templates/tasks-template.md',
-				templateId: 'tasks-template'
-			},
-			{
-				id: 'claude-template',
-				filePath: '.specify/templates/CLAUDE-template.md',
-				templateId: 'claude-template'
-			}
-		]
+		templates: []
 	}
 ];
 

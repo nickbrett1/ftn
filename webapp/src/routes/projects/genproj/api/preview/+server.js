@@ -296,6 +296,9 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 		(id) => capabilities.find((c) => c.id === id)?.category === 'devcontainer'
 	);
 
+	// Track if spec-kit is selected
+	const hasSpecKit = selectedCapabilities.includes('spec-kit');
+
 	// Generate files for each selected capability
 	const fileMap = new Map();
 
@@ -317,6 +320,46 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 
 	// Convert map to array
 	files.push(...fileMap.values());
+
+	// Add speckit installation to Dockerfile if spec-kit is selected and devcontainer exists
+	if (hasSpecKit && devcontainerCapabilities.length > 0) {
+		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		if (dockerfile) {
+			// Add uv installation and speckit if not already present
+			if (
+				!dockerfile.content.includes('uv tool install') &&
+				!dockerfile.content.includes('speckit')
+			) {
+				// Find where to inject the installation (before WORKDIR)
+				const workdirIndex = dockerfile.content.indexOf('WORKDIR');
+
+				if (workdirIndex > -1) {
+					// Check if uv is already installed
+					const needsUv = !dockerfile.content.includes('uv/install.sh');
+
+					// Get the line before WORKDIR
+					const lines = dockerfile.content.split('\n');
+					const insertIndex = lines.findIndex((line) => line.includes('WORKDIR'));
+
+					if (insertIndex > 0) {
+						// Build the installation commands
+						const uvCommands = needsUv
+							? ['', '# Install uv', 'RUN curl -LsSf https://astral.sh/uv/install.sh | sh', '']
+							: [];
+						const installCommands = [
+							...uvCommands,
+							'# Install speckit via uv',
+							'RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git'
+						];
+
+						// Insert before WORKDIR
+						lines.splice(insertIndex, 0, ...installCommands);
+						dockerfile.content = lines.join('\n');
+					}
+				}
+			}
+		}
+	}
 
 	// Generate README.md
 	const readmeContent = generateReadme(projectName, selectedCapabilities);
@@ -356,10 +399,16 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 /**
  * Adds files to the file map, handling conflicts especially for devcontainer files
  */
-function addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName) {
+function addFilesToMap(
+	fileMap,
+	capabilityFiles,
+	devcontainerCapabilities,
+	configuration,
+	projectName
+) {
 	for (const file of capabilityFiles) {
 		const existingFile = fileMap.get(file.filePath);
-		
+
 		// No conflict, just add the file
 		if (!existingFile || !file.filePath.includes('.devcontainer/')) {
 			fileMap.set(file.filePath, file);
@@ -367,10 +416,22 @@ function addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, confi
 		}
 
 		// Handle devcontainer conflicts
-		if (devcontainerCapabilities.length > 1 && file.filePath === '.devcontainer/devcontainer.json') {
-			handleDevcontainerMerge(file, existingFile, devcontainerCapabilities, configuration, projectName);
+		if (
+			devcontainerCapabilities.length > 1 &&
+			file.filePath === '.devcontainer/devcontainer.json'
+		) {
+			handleDevcontainerMerge(
+				file,
+				existingFile,
+				devcontainerCapabilities,
+				configuration,
+				projectName
+			);
 			fileMap.set(file.filePath, file);
-		} else if (devcontainerCapabilities.length > 1 && file.filePath === '.devcontainer/Dockerfile') {
+		} else if (
+			devcontainerCapabilities.length > 1 &&
+			file.filePath === '.devcontainer/Dockerfile'
+		) {
 			file.content = mergeDockerfiles(existingFile.content, file.content);
 			file.capabilityId = 'devcontainer-merged';
 			fileMap.set(file.filePath, file);
@@ -384,7 +445,13 @@ function addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, confi
 /**
  * Handles merging of devcontainer.json files
  */
-function handleDevcontainerMerge(file, existingFile, devcontainerCapabilities, configuration, projectName) {
+function handleDevcontainerMerge(
+	file,
+	existingFile,
+	devcontainerCapabilities,
+	configuration,
+	projectName
+) {
 	try {
 		file.content = mergeDevcontainerConfigs(
 			existingFile.content,
@@ -414,17 +481,31 @@ function mergeDevcontainerConfigs(
 	let existing;
 	let newConfigObj;
 
+	// Helper to strip comments from JSON strings
+	const stripComments = (str) => {
+		if (typeof str !== 'string') return str;
+		// Remove single-line comments
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		return str.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+	};
+
 	try {
-		existing = typeof existingConfig === 'string' ? JSON.parse(existingConfig) : existingConfig;
+		const contentToParse =
+			typeof existingConfig === 'string' ? stripComments(existingConfig) : existingConfig;
+		existing = typeof existingConfig === 'string' ? JSON.parse(contentToParse) : existingConfig;
 	} catch (e) {
 		console.error('Failed to parse existing config:', e);
+		console.error('Config content:', existingConfig.substring(0, 200));
 		throw new Error('Invalid existing devcontainer configuration');
 	}
 
 	try {
-		newConfigObj = typeof newConfig === 'string' ? JSON.parse(newConfig) : newConfig;
+		const contentToParse = typeof newConfig === 'string' ? stripComments(newConfig) : newConfig;
+		newConfigObj = typeof newConfig === 'string' ? JSON.parse(contentToParse) : newConfig;
 	} catch (e) {
 		console.error('Failed to parse new config:', e);
+		console.error('Config content:', newConfig.substring(0, 200));
 		throw new Error('Invalid new devcontainer configuration');
 	}
 
@@ -457,6 +538,7 @@ function mergeDevcontainerConfigs(
 	const merged = {
 		name: projectName || 'Project',
 		image,
+		runArgs: ['--sysctl', 'net.ipv6.conf.all.disable_ipv6=1'],
 		features,
 		customizations: {
 			vscode: {
@@ -477,6 +559,14 @@ function mergeDevcontainerConfigs(
  */
 function buildFeatures(hasNode, hasPython, hasJava) {
 	const features = {
+		'ghcr.io/devcontainers/features/common-utils:2': {
+			installZsh: true,
+			configureZshAsDefaultShell: true,
+			installOhMyZsh: true,
+			username: 'node',
+			uid: '1000',
+			gid: '1000'
+		},
 		'ghcr.io/devcontainers/features/git:1': {}
 	};
 
@@ -519,7 +609,16 @@ function getFallbackTemplate(templateId, context) {
 		'devcontainer-node-json': `{
   "name": "{{projectName}}",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}",
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "username": "node",
+      "uid": "1000",
+      "gid": "1000"
+    },
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "customizations": {
@@ -539,14 +638,24 @@ function getFallbackTemplate(templateId, context) {
 RUN apt-get update && apt-get install -y \\
     git \\
     curl \\
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \\
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /workspace
 `,
 		'devcontainer-python-json': `{
   "name": "{{projectName}}",
   "image": "mcr.microsoft.com/devcontainers/python:{{pythonVersion}}",
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "username": "node",
+      "uid": "1000",
+      "gid": "1000"
+    },
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "customizations": {
@@ -560,12 +669,53 @@ WORKDIR /workspace
   },
   "postCreateCommand": "bash .devcontainer/setup.sh"
 }`,
+		'devcontainer-java-json': `{
+  "name": "{{projectName}}",
+  "image": "mcr.microsoft.com/devcontainers/java:{{javaVersion}}",
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "username": "node",
+      "uid": "1000",
+      "gid": "1000"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "{{javaVersion}}",
+      "jdkDistro": "ms"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle"
+      ]
+    }
+  },
+  "forwardPorts": [8080, 9090],
+  "postCreateCommand": "bash .devcontainer/setup.sh"
+}`,
 		'devcontainer-python-dockerfile': `FROM mcr.microsoft.com/devcontainers/python:{{pythonVersion}}
 
 RUN apt-get update && apt-get install -y \\
     git \\
     curl \\
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \\
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+WORKDIR /workspace
+`,
+		'devcontainer-java-dockerfile': `FROM mcr.microsoft.com/devcontainers/java:{{javaVersion}}
+
+RUN apt-get update && apt-get install -y \\
+    git \\
+    curl \\
+    && rm -rf /var/lib/apt/lists/* \\
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /workspace
 `,
