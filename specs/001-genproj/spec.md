@@ -246,6 +246,21 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-018**: System MUST create post-create-setup.sh script with git safe directory configuration
 - **FR-019**: System MUST generate dependabot.yml when dependency management is selected with ecosystems automatically determined from selected devcontainer languages
 - **FR-020**: System MUST create CircleCI project and configuration when CI/CD capability is selected with authentication (v1 only supports CircleCI, GitHub Actions planned for future versions)
+- **FR-020a**: CircleCI config MUST use the `build_test_deploy` workflow by default
+- **FR-020b**: CircleCI config MUST include `ggshield/scan` job with proper base_revision and revision parameters
+- **FR-020c**: CircleCI build job MUST run checkout as the first step
+- **FR-020d**: CircleCI config MUST restore node_modules cache if devcontainer-node capability is selected
+- **FR-020e**: CircleCI config MUST restore python dependencies cache if devcontainer-python capability is selected
+- **FR-020f**: CircleCI build job MUST run `npm install` if devcontainer-node is selected
+- **FR-020g**: CircleCI build job MUST run `pip install` if devcontainer-python is selected
+- **FR-020h**: CircleCI config MUST include Playwright cache and install if Playwright capability is selected
+- **FR-020i**: CircleCI build job MUST install Doppler CLI if Doppler capability is selected
+- **FR-020j**: CircleCI build job MUST install Wrangler if Cloudflare deployment is selected
+- **FR-020k**: CircleCI build job MUST run appropriate build commands (npm run build for node, equivalent for python) based on selected containers
+- **FR-020l**: CircleCI config MUST include code_test job with SonarCloud context if SonarCloud capability is selected
+- **FR-020m**: CircleCI code_test job MUST run appropriate test commands based on selected containers
+- **FR-020n**: CircleCI config MUST include browser_test job with Lighthouse if Lighthouse capability is selected
+- **FR-020o**: CircleCI config MUST include deploy and deploy-preview jobs if Cloudflare/Wrangler capability is selected
 - **FR-021**: System MUST create Doppler project and configuration when secrets management capability is selected with authentication
 - **FR-022**: System MUST create SonarCloud project and configuration when code quality capability is selected with authentication
 - **FR-023**: System MUST generate Cloudflare Wrangler configuration when selected with today's date as the compatibility date

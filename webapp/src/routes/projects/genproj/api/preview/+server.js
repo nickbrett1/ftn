@@ -289,7 +289,7 @@ function generateCapabilityServices(capability, capabilityId, existingServices) 
 function generatePreview({ projectName, repositoryUrl, selectedCapabilities, configuration }) {
 	const files = [];
 	const externalServices = [];
-	const context = { projectName, repositoryUrl };
+	const context = { projectName, repositoryUrl, selectedCapabilities };
 
 	// Track which devcontainer capabilities are selected
 	const devcontainerCapabilities = selectedCapabilities.filter(
@@ -325,39 +325,140 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 	if (hasSpecKit && devcontainerCapabilities.length > 0) {
 		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
 		if (dockerfile) {
-			// Add uv installation and speckit if not already present
-			if (
-				!dockerfile.content.includes('uv tool install') &&
-				!dockerfile.content.includes('speckit')
-			) {
-				// Find where to inject the installation (before WORKDIR)
-				const workdirIndex = dockerfile.content.indexOf('WORKDIR');
+			// Add speckit if not already present
+			if (!dockerfile.content.includes('speckit')) {
+				// Get all lines
+				const lines = dockerfile.content.split('\n');
 
-				if (workdirIndex > -1) {
-					// Check if uv is already installed
-					const needsUv = !dockerfile.content.includes('uv/install.sh');
-
-					// Get the line before WORKDIR
-					const lines = dockerfile.content.split('\n');
-					const insertIndex = lines.findIndex((line) => line.includes('WORKDIR'));
-
-					if (insertIndex > 0) {
-						// Build the installation commands
-						const uvCommands = needsUv
-							? ['', '# Install uv', 'RUN curl -LsSf https://astral.sh/uv/install.sh | sh', '']
-							: [];
-						const installCommands = [
-							...uvCommands,
-							'# Install speckit via uv',
-							'RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git'
-						];
-
-						// Insert before WORKDIR
-						lines.splice(insertIndex, 0, ...installCommands);
-						dockerfile.content = lines.join('\n');
+				// Find where to insert: after "ENV PATH=..." and before "Switch back to root"
+				let insertIndex = -1;
+				for (let i = 0; i < lines.length; i++) {
+					// Look for the line that has ENV PATH with .local/bin
+					if (lines[i].includes('ENV PATH') && lines[i].includes('.local/bin')) {
+						// Insert after this line
+						insertIndex = i + 1;
+						break;
 					}
 				}
+
+				if (insertIndex > 0) {
+					// Build the installation commands (as node user)
+					const installCommands = [
+						'',
+						'# Install speckit via uv',
+						'RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git'
+					];
+
+					// Insert after the PATH line
+					lines.splice(insertIndex, 0, ...installCommands);
+					dockerfile.content = lines.join('\n');
+				}
 			}
+		}
+	}
+
+	// Add SonarLint extension to devcontainer.json if sonarlint is selected
+	const hasSonarLint = selectedCapabilities.includes('sonarlint');
+	if (hasSonarLint && devcontainerCapabilities.length > 0) {
+		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		if (devcontainerJson) {
+			try {
+				const config = JSON.parse(devcontainerJson.content);
+				if (config.customizations?.vscode?.extensions) {
+					const extensions = new Set(config.customizations.vscode.extensions);
+					extensions.add('SonarSource.sonarlint-vscode');
+					config.customizations.vscode.extensions = Array.from(extensions);
+					devcontainerJson.content = JSON.stringify(config, null, 2);
+				}
+			} catch (e) {
+				console.error('Failed to parse devcontainer.json:', e);
+			}
+		}
+	}
+
+	// Generate cloud-login.sh script if doppler or cloudflare are selected
+	const hasDoppler = selectedCapabilities.includes('doppler');
+	const hasCloudflare = selectedCapabilities.includes('cloudflare-wrangler');
+	if (hasDoppler || hasCloudflare) {
+		// Build custom cloud-login.sh based on selected services
+		let cloudLoginContent = '#!/bin/bash\nset -e\n';
+
+		if (hasDoppler) {
+			cloudLoginContent += `\n# Doppler login/setup
+if command -v doppler &> /dev/null; then
+  if doppler whoami &> /dev/null; then
+    echo "Already logged in to Doppler."
+  else
+    echo "INFO: Logging into Doppler..."
+    doppler login --no-check-version --no-timeout --yes
+    echo "INFO: Setting up Doppler..."
+    doppler setup --no-interactive --project ${projectName || 'project'} --config dev
+  fi
+else
+  echo "Doppler CLI not found. Skipping Doppler login."
+fi
+`;
+		}
+
+		if (hasCloudflare) {
+			cloudLoginContent += `\necho
+# Cloudflare Wrangler login
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+  echo "Wrangler CLI not found. Installing globally with npm..."
+  npm install -g wrangler
+fi
+
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
+`;
+
+			if (hasDoppler) {
+				cloudLoginContent += `\necho
+# Setup Wrangler configuration with environment variables
+echo "Setting up Wrangler configuration..."
+doppler run --project ${projectName || 'project'} --config dev -- ./scripts/setup-wrangler-config.sh
+`;
+			}
+		}
+
+		cloudLoginContent += '\necho "Cloud login script finished."\n';
+
+		// Determine capability ID for the file
+		let capabilityId;
+		if (hasDoppler && hasCloudflare) {
+			capabilityId = 'doppler+cloudflare';
+		} else if (hasDoppler) {
+			capabilityId = 'doppler';
+		} else {
+			capabilityId = 'cloudflare-wrangler';
+		}
+
+		files.push({
+			filePath: 'scripts/cloud-login.sh',
+			content: cloudLoginContent,
+			capabilityId,
+			isExecutable: true
+		});
+
+		// Update setup.sh to mention cloud-login.sh
+		const setupSh = files.find((f) => f.filePath === '.devcontainer/setup.sh');
+		if (setupSh) {
+			// Add message at the end about running cloud-login.sh
+			const message = `echo "INFO: Custom container setup script finished."
+echo ""
+echo "⚠️  To complete cloud login, run:"
+echo "    bash scripts/cloud-login.sh"
+`;
+			// Replace the old "Setup complete!" line with the new message
+			const setupLines = setupSh.content.split('\n');
+			// Find and replace the last "Setup complete!" line
+			for (let i = setupLines.length - 1; i >= 0; i--) {
+				if (setupLines[i].includes('Setup complete!')) {
+					setupLines[i] = message;
+					break;
+				}
+			}
+			setupSh.content = setupLines.join('\n');
 		}
 	}
 
@@ -599,12 +700,319 @@ function mergeDockerfiles(existingDockerfile, newDockerfile) {
 }
 
 /**
+ * Generates smart CircleCI configuration based on selected capabilities
+ * @param {Object} context - Template context with selectedCapabilities
+ * @returns {string} CircleCI YAML configuration
+ */
+// eslint-disable-next-line unicorn/prefer-module, complexity, sonarjs/cognitive-complexity
+function generateCircleCIConfig(context) {
+	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
+	const selectedCapabilities = context.selectedCapabilities || [];
+
+	// Determine what capabilities are present
+	const hasNode = selectedCapabilities.includes('devcontainer-node');
+	const hasPython = selectedCapabilities.includes('devcontainer-python');
+	const hasPlaywright = selectedCapabilities.includes('playwright');
+	const hasDoppler = selectedCapabilities.includes('doppler');
+	const hasCloudflare = selectedCapabilities.includes('cloudflare');
+	const hasSonarCloud = selectedCapabilities.includes('sonarcloud');
+	const hasLighthouse = selectedCapabilities.includes('lighthouse');
+
+	// Determine docker image
+	const dockerImage = hasPython ? 'cimg/python:current' : 'cimg/node:current';
+
+	// Build orbs section
+	const orbs = ['ggshield: gitguardian/ggshield@volatile'];
+	if (hasSonarCloud) {
+		orbs.push('sonarcloud: sonarsource/sonarcloud@2.0.0');
+	}
+	if (hasDoppler) {
+		orbs.push('doppler: conpago/doppler@1.3.5');
+	}
+	let indentedOrbs = orbs.map((orb) => `  ${orb}`).join('\n');
+
+	// Build jobs
+	const jobs = [];
+
+	// Build job
+	const buildSteps = ['      - checkout'];
+
+	// Add cache restoration
+	if (hasNode) {
+		buildSteps.push('      - restore_cache:');
+		buildSteps.push('          name: Restore node_modules');
+		buildSteps.push('          keys:');
+		buildSteps.push('            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}');
+		buildSteps.push('            - node-{{ .Branch }}-');
+		buildSteps.push('            - node-');
+	}
+
+	if (hasPython) {
+		buildSteps.push('      - restore_cache:');
+		buildSteps.push('          name: Restore Python cache');
+		buildSteps.push('          keys:');
+		buildSteps.push('            - python-{{ .Branch }}-{{ checksum "webapp/requirements.txt" }}');
+		buildSteps.push('            - python-{{ .Branch }}-');
+	}
+
+	// Add Playwright cache if needed
+	if (hasPlaywright) {
+		buildSteps.push('      - restore_cache:');
+		buildSteps.push('          name: Restore Playwright cache');
+		buildSteps.push('          keys:');
+		buildSteps.push(
+			'            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
+		);
+		buildSteps.push('            - playwright-{{ .Branch }}-');
+		buildSteps.push('            - playwright-');
+	}
+
+	// Add install steps
+	if (hasNode) {
+		buildSteps.push('      - run:');
+		buildSteps.push('          name: Install modules');
+		buildSteps.push('          command: npm install');
+	}
+
+	if (hasPython) {
+		buildSteps.push('      - run:');
+		buildSteps.push('          name: Install Python dependencies');
+		buildSteps.push('          command: pip install -r requirements.txt');
+	}
+
+	// Install Playwright if needed
+	if (hasPlaywright) {
+		buildSteps.push('      - run:');
+		buildSteps.push('          name: Install Playwright Chromium');
+		buildSteps.push('          command: npx playwright install --with-deps chromium');
+
+		buildSteps.push('      - save_cache:');
+		buildSteps.push('          name: Cache Playwright');
+		buildSteps.push('          paths:');
+		buildSteps.push('            - ~/.cache/ms-playwright');
+		buildSteps.push(
+			'          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
+		);
+	}
+
+	// Install Doppler if needed
+	if (hasDoppler) {
+		buildSteps.push('      - doppler/install');
+	}
+
+	// Install Wrangler if needed
+	if (hasCloudflare) {
+		buildSteps.push('      - run:');
+		buildSteps.push('          name: Setup Wrangler configuration');
+		buildSteps.push('          command: ./scripts/setup-wrangler-config.sh');
+	}
+
+	// Build step
+	if (hasNode) {
+		buildSteps.push('      - run:');
+		buildSteps.push('          name: Build app');
+		buildSteps.push('          command: npm run build');
+	}
+
+	// Save cache
+	if (hasNode) {
+		buildSteps.push('      - save_cache:');
+		buildSteps.push('          name: Update node_modules cache');
+		buildSteps.push('          paths:');
+		buildSteps.push('            - node_modules');
+		buildSteps.push('          key: node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}');
+	}
+
+	// Build job YAML
+	const buildJob = `  build:
+    docker:
+      - image: ${dockerImage}
+    steps:
+${buildSteps.map((step) => step).join('\n')}`;
+
+	jobs.push(buildJob);
+
+	// Code test job
+	const codeTestSteps = ['      - checkout'];
+
+	if (hasNode) {
+		codeTestSteps.push('      - restore_cache:');
+		codeTestSteps.push('          name: Restore node_modules');
+		codeTestSteps.push('          keys:');
+		codeTestSteps.push(
+			'            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
+		);
+		codeTestSteps.push('            - node-{{ .Branch }}-');
+		codeTestSteps.push('            - node-');
+	}
+
+	if (hasDoppler) {
+		codeTestSteps.push('      - doppler/install');
+	}
+
+	if (hasCloudflare) {
+		codeTestSteps.push('      - run:');
+		codeTestSteps.push('          name: Setup Wrangler configuration');
+		codeTestSteps.push('          command: ./scripts/setup-wrangler-config.sh');
+	}
+
+	codeTestSteps.push('      - run:');
+	codeTestSteps.push('          name: Run tests');
+	codeTestSteps.push('          command: npm run test');
+
+	// Add SonarCloud scan
+	if (hasSonarCloud) {
+		codeTestSteps.push('      - sonarcloud/scan');
+	}
+
+	const codeTestJob = `  code_test:
+    docker:
+      - image: ${dockerImage}
+    steps:
+${codeTestSteps.map((step) => step).join('\n')}
+${hasSonarCloud ? '    context: SonarCloud' : ''}`;
+
+	jobs.push(codeTestJob);
+
+	// Browser test job (if Lighthouse is selected)
+	if (hasLighthouse) {
+		const browserTestSteps = [
+			'      - checkout',
+			'      - restore_cache:',
+			'          name: Restore Lighthouse CLI cache',
+			'          keys:',
+			'            - lighthouse-cli-{{ .Branch }}-',
+			'            - lighthouse-cli-',
+			'      - run:',
+			'          name: Install Lighthouse CLI',
+			'          command: sudo npm install -g @lhci/cli@0.9.x',
+			'      - save_cache:',
+			'          name: Cache Lighthouse CLI',
+			'          paths:',
+			'            - /usr/local/lib/node_modules/@lhci',
+			'          key: lighthouse-cli-{{ .Branch }}-',
+			'      - run:',
+			'          name: Run Lighthouse checks',
+			'          command: npm run lighthouse'
+		];
+
+		const browserTestJob = `  browser_test:
+    docker:
+      - image: cimg/node:current-browsers
+    steps:
+${browserTestSteps.map((step) => step).join('\n')}`;
+
+		jobs.push(browserTestJob);
+	}
+
+	// Deploy jobs (if Cloudflare is selected)
+	if (hasCloudflare) {
+		const deploySteps = [
+			'      - checkout',
+			'      - restore_cache:',
+			'          name: Restore node_modules',
+			'          keys:',
+			'            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}',
+			'            - node-{{ .Branch }}-',
+			'            - node-',
+			'      - doppler/install',
+			'      - run:',
+			'          name: Setup Wrangler configuration',
+			'          command: ./scripts/setup-wrangler-config.sh',
+			'      - run:',
+			'          name: Deploying to Cloudflare',
+			'          command: npm run deploy'
+		];
+
+		const deployJob = `  deploy:
+    docker:
+      - image: cimg/node:current
+    steps:
+${deploySteps.map((step) => step).join('\n')}`;
+
+		jobs.push(deployJob);
+
+		// Deploy preview job
+		const deployPreviewSteps = [...deploySteps];
+		deployPreviewSteps[deployPreviewSteps.length - 1] = '          command: npm run deploy-preview';
+
+		const deployPreviewJob = `  deploy-preview:
+    docker:
+      - image: cimg/node:current
+    steps:
+${deployPreviewSteps.map((step) => step).join('\n')}`;
+
+		jobs.push(deployPreviewJob);
+	}
+
+	// Build workflows
+	const workflowJobs = ['      - ggshield/scan:'];
+	workflowJobs.push('          name: ggshield-scan');
+	workflowJobs.push('          base_revision: << pipeline.git.base_revision >>');
+	workflowJobs.push('          revision: <<pipeline.git.revision>>');
+	workflowJobs.push('      - build');
+	workflowJobs.push('      - code_test:');
+	workflowJobs.push('          requires:');
+	workflowJobs.push('            - build');
+	if (hasSonarCloud) {
+		workflowJobs.push('          context: SonarCloud');
+	}
+
+	if (hasLighthouse) {
+		workflowJobs.push('      - browser_test:');
+		workflowJobs.push('          requires:');
+		workflowJobs.push('            - build');
+	}
+
+	if (hasCloudflare) {
+		workflowJobs.push('      - deploy:');
+		workflowJobs.push('          requires:');
+		if (hasLighthouse) {
+			workflowJobs.push('            - browser_test');
+		}
+		workflowJobs.push('            - code_test');
+		workflowJobs.push('          filters:');
+		workflowJobs.push('            branches:');
+		workflowJobs.push('              only: main');
+
+		workflowJobs.push('      - deploy-preview:');
+		workflowJobs.push('          requires:');
+		if (hasLighthouse) {
+			workflowJobs.push('            - browser_test');
+		}
+		workflowJobs.push('            - code_test');
+		workflowJobs.push('          filters:');
+		workflowJobs.push('            branches:');
+		workflowJobs.push('              ignore: main');
+	}
+
+	return `version: 2.1
+
+orbs:
+${indentedOrbs}
+
+jobs:
+${jobs.join('\n\n')}
+
+workflows:
+  build_test_deploy:
+    jobs:
+${workflowJobs.map((step) => step).join('\n')}`;
+	/* eslint-enable unicorn/no-array-push-push */
+}
+
+/**
  * Gets fallback template content by template ID
  * @param {string} templateId - Template ID
  * @param {Object} context - Template context
  * @returns {string|null} Template content
  */
 function getFallbackTemplate(templateId, context) {
+	// Handle CircleCI config generation
+	if (templateId === 'circleci-config') {
+		return generateCircleCIConfig(context);
+	}
+
 	const fallbackTemplates = {
 		'devcontainer-node-json': `{
   "name": "{{projectName}}",
@@ -635,11 +1043,22 @@ function getFallbackTemplate(templateId, context) {
 }`,
 		'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
 
+# Install system dependencies and uv
 RUN apt-get update && apt-get install -y \\
     git \\
     curl \\
     && rm -rf /var/lib/apt/lists/* \\
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+# Switch to node user for installing user-specific tools
+USER node
+ENV USER_HOME_DIR=/home/node
+
+# Add uv tools to PATH for node user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
+
+# Switch back to root
+USER root
 
 WORKDIR /workspace
 `,
@@ -701,40 +1120,46 @@ WORKDIR /workspace
 }`,
 		'devcontainer-python-dockerfile': `FROM mcr.microsoft.com/devcontainers/python:{{pythonVersion}}
 
+# Install system dependencies and uv
 RUN apt-get update && apt-get install -y \\
     git \\
     curl \\
     && rm -rf /var/lib/apt/lists/* \\
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+# Switch to node user for installing user-specific tools
+USER node
+ENV USER_HOME_DIR=/home/node
+
+# Add uv tools to PATH for node user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
+
+# Switch back to root
+USER root
 
 WORKDIR /workspace
 `,
 		'devcontainer-java-dockerfile': `FROM mcr.microsoft.com/devcontainers/java:{{javaVersion}}
 
+# Install system dependencies and uv
 RUN apt-get update && apt-get install -y \\
     git \\
     curl \\
     && rm -rf /var/lib/apt/lists/* \\
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+# Switch to node user for installing user-specific tools
+USER node
+ENV USER_HOME_DIR=/home/node
+
+# Add uv tools to PATH for node user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
+
+# Switch back to root
+USER root
 
 WORKDIR /workspace
 `,
-		'circleci-config': `version: 2.1
-
-jobs:
-  test:
-    docker:
-      - image: cimg/node:22
-    steps:
-      - checkout
-      - run: npm install
-      - run: npm test
-      - run: npm run lint
-
-workflows:
-  test-and-deploy:
-    jobs:
-      - test`,
 		'devcontainer-zshrc': `plugins=(git web-search zsh-autosuggestions zsh-syntax-highlighting)
 
 export ZSH=$HOME/.oh-my-zsh
@@ -876,6 +1301,44 @@ CURRENT_DIR=$(pwd)
 git config --global --add safe.directory "$CURRENT_DIR"
 
 echo "Setup complete!"
+`,
+		'doppler-config': `setup:
+  project: {{projectName}}
+  config: dev
+`,
+		'cloud-login-sh': `#!/bin/bash
+set -e
+
+# Doppler login/setup
+if command -v doppler &> /dev/null; then
+  if doppler whoami &> /dev/null; then
+    echo "Already logged in to Doppler."
+  else
+    echo "INFO: Logging into Doppler..."
+    doppler login --no-check-version --no-timeout --yes
+    echo "INFO: Setting up Doppler..."
+    doppler setup --no-interactive --project {{projectName}} --config dev
+  fi
+else
+  echo "Doppler CLI not found. Skipping Doppler login."
+fi
+
+echo
+# Cloudflare Wrangler login
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+  echo "Wrangler CLI not found. Installing globally with npm..."
+  npm install -g wrangler
+fi
+
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
+
+echo
+# Setup Wrangler configuration with environment variables
+echo "Setting up Wrangler configuration..."
+doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh
+
+echo "Cloud login script finished."
 `
 	};
 
@@ -949,5 +1412,5 @@ Follow the setup instructions for each selected capability.
 
 ## Generated
 
-Generated on ${new Date().toLocaleDateString()} using genproj.`;
+Generated using genproj.`;
 }
