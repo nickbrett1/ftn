@@ -64,7 +64,7 @@ Automated credit card statement processing and budget management system:
 - **Serverless**: Cloudflare Workers for global edge distribution
 - **Database**: D1 SQLite for ACID compliance and performance
 - **Authentication**: Secure session management with encrypted cookies
-- **API Design**: RESTful endpoints with TypeScript validation
+- **API Design**: RESTful endpoints
 - **Monitoring**: Real-time error tracking and performance metrics
 
 ### **Security & Compliance**
