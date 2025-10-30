@@ -104,6 +104,18 @@ jobs:
           name: Debug Sonar token presence
           command: |
             echo "SONAR_TOKEN present? ${SONAR_TOKEN:+yes}"
+      - run:
+          name: Debug Sonar token validity and project access
+          command: |
+            echo "Validating SONAR_TOKEN..."
+            curl -s -u "$SONAR_TOKEN:" https://sonarcloud.io/api/authentication/validate || true
+            echo
+            echo "Resolving org/project from sonar-project.properties..."
+            ORG=$(grep -E '^sonar.organization=' sonar-project.properties | cut -d'=' -f2)
+            PROJECT=$(grep -E '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2)
+            echo "Org: ${ORG:-unset}, Project: ${PROJECT:-unset}"
+            echo "Checking project visibility to token..."
+            curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/projects/search?organization=$ORG&projects=$PROJECT" || true
       - sonarcloud/scan
 
   browser_test:
