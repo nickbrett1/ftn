@@ -376,6 +376,27 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 		}
 	}
 
+	// Add Doppler CLI installation to Dockerfile if doppler is selected
+	if (selectedCapabilities.includes('doppler') && devcontainerCapabilities.length > 0) {
+		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		if (dockerfile && !dockerfile.content.includes('cli.doppler.com/install.sh')) {
+			const lines = dockerfile.content.split('\n');
+			// Insert the install just before switching to USER node, so it runs as root
+			let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER node'));
+			const dopplerInstall = [
+				'',
+				'# Install Doppler CLI',
+				'RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh'
+			];
+			if (insertIndex > -1) {
+				lines.splice(insertIndex, 0, ...dopplerInstall);
+			} else {
+				lines.push(...dopplerInstall);
+			}
+			dockerfile.content = lines.join('\n');
+		}
+	}
+
 	// Generate cloud-login.sh script if doppler or cloudflare are selected
 	const hasDoppler = selectedCapabilities.includes('doppler');
 	const hasCloudflare = selectedCapabilities.includes('cloudflare-wrangler');

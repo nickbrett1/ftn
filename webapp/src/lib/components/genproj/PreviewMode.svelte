@@ -148,7 +148,11 @@
 				{/if}
 				<div>
 					<span class="font-medium text-blue-300">Capabilities:</span>
-					<span class="ml-2 text-blue-200">{selectedCapabilities.length}</span>
+					<span class="ml-2 text-blue-200">
+						{selectedCapabilities.length > 0
+							? selectedCapabilities.map((id) => getCapabilityName(id)).join(', ')
+							: 'None'}
+					</span>
 				</div>
 				<div>
 					<span class="font-medium text-blue-300">Files to Generate:</span>
