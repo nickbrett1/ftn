@@ -100,6 +100,10 @@ jobs:
           when: always
       - store_test_results:
           path: ./webapp/reports/
+      - run:
+          name: Debug Sonar token presence
+          command: |
+            echo "SONAR_TOKEN present? ${SONAR_TOKEN:+yes}"
       - sonarcloud/scan
 
   browser_test:
