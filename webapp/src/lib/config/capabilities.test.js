@@ -47,12 +47,15 @@ describe('Capabilities Config', () => {
 		});
 
 		it('should detect missing dependencies', () => {
-			// sonarlint requires sonarcloud
+			// sonarlint requires sonarcloud and devcontainer-java
 			const result = validateCapabilityDependencies(['sonarlint']);
 			expect(result.valid).toBe(false);
-			expect(result.missing).toHaveLength(1);
+			expect(result.missing).toHaveLength(2);
 			expect(result.missing[0].capability).toBe('sonarlint');
-			expect(result.missing[0].dependency).toBe('sonarcloud');
+			// Check that both dependencies are present (order may vary)
+			const dependencyIds = result.missing.map((m) => m.dependency);
+			expect(dependencyIds).toContain('sonarcloud');
+			expect(dependencyIds).toContain('devcontainer-java');
 		});
 
 		it('should detect conflicts', () => {
@@ -63,7 +66,12 @@ describe('Capabilities Config', () => {
 		});
 
 		it('should return valid when dependencies are satisfied', () => {
-			const result = validateCapabilityDependencies(['sonarlint', 'sonarcloud']);
+			// sonarlint requires sonarcloud and devcontainer-java
+			const result = validateCapabilityDependencies([
+				'sonarlint',
+				'sonarcloud',
+				'devcontainer-java'
+			]);
 			expect(result.valid).toBe(true);
 			expect(result.missing).toEqual([]);
 		});
@@ -141,4 +149,3 @@ describe('Capabilities Config', () => {
 		});
 	});
 });
-
