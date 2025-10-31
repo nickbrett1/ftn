@@ -269,14 +269,16 @@ export const capabilities = [
 		description: 'Cloudflare Workers development and deployment configuration',
 		url: 'https://developers.cloudflare.com/workers',
 		category: 'deployment',
-		dependencies: [],
+		dependencies: ['devcontainer-node'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
 			properties: {}
 		},
-		templates: [{ id: 'wrangler-config', filePath: 'wrangler.toml', templateId: 'wrangler-config' }]
+		templates: [
+			{ id: 'wrangler-config', filePath: 'wrangler.jsonc', templateId: 'wrangler-config' }
+		]
 	},
 	{
 		id: 'dependabot',

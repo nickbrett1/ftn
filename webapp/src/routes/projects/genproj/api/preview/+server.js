@@ -596,7 +596,8 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 	}
 
 	// Generate README.md
-	const readmeContent = generateReadme(projectName, selectedCapabilities);
+	const hasCloudLogin = hasDoppler || hasCloudflare;
+	const readmeContent = generateReadme(projectName, selectedCapabilities, hasCloudLogin);
 	files.push({
 		filePath: 'README.md',
 		content: readmeContent,
@@ -1836,6 +1837,23 @@ echo "Cloud login script finished."
 		// Minimal SonarLint VS Code settings to avoid generating an empty file
 		'sonarlint-vscode-config': `{
 	"sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
+}`,
+		// Cloudflare Wrangler configuration (JSONC format)
+		'wrangler-config': `{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "{{projectName}}",
+	"compatibility_date": "2024-05-30",
+	"compatibility_flags": ["nodejs_compat_v2"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	}
 }`
 	};
 
@@ -1888,14 +1906,15 @@ function generateFileContent(template, context) {
  * Generates README content
  * @param {string} projectName - Project name
  * @param {string[]} selectedCapabilities - Selected capability IDs
+ * @param {boolean} hasCloudLogin - Whether cloud-login.sh script is generated
  * @returns {string} README content
  */
-function generateReadme(projectName, selectedCapabilities) {
+function generateReadme(projectName, selectedCapabilities, hasCloudLogin = false) {
 	const selectedCaps = selectedCapabilities
 		.map((id) => capabilities.find((c) => c.id === id))
 		.filter(Boolean);
 
-	return `# ${projectName}
+	let content = `# ${projectName}
 
 This project was generated using genproj.
 
@@ -1905,9 +1924,27 @@ ${selectedCaps.map((cap) => `- **${cap.name}**: ${cap.description}`).join('\n')}
 
 ## Setup
 
-Follow the setup instructions for each selected capability.
+Follow the setup instructions for each selected capability.`;
+
+	if (hasCloudLogin) {
+		content += `
+
+### Cloud Services Login
+
+After the container is set up, run the cloud login script to authenticate with cloud services:
+
+\`\`\`bash
+bash scripts/cloud-login.sh
+\`\`\`
+
+This script will help you log in to Doppler and/or Cloudflare Wrangler as needed.`;
+	}
+
+	content += `
 
 ## Generated
 
 Generated using genproj.`;
+
+	return content;
 }
