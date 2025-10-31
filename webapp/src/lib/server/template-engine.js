@@ -73,11 +73,14 @@ export class TemplateEngineService {
 			},
 
 			// Helper to generate random string
+			// Uses crypto.getRandomValues() for cryptographically secure random generation
 			randomString: (length = 8) => {
 				const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+				const randomBytes = new Uint8Array(length);
+				crypto.getRandomValues(randomBytes);
 				let result = '';
 				for (let i = 0; i < length; i++) {
-					result += chars.charAt(Math.floor(Math.random() * chars.length));
+					result += chars.charAt(randomBytes[i] % chars.length);
 				}
 				return result;
 			},

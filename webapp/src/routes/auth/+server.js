@@ -6,6 +6,12 @@ try {
 	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
 } catch (error) {
 	// During build time, these might not be available
+	// Set default values to prevent undefined errors
+	// This catch block intentionally handles build-time compatibility by setting fallback values
+	console.warn(
+		'[AUTH_HANDLER] Environment variables not available at build time, using placeholders',
+		error instanceof Error ? error.message : String(error)
+	);
 	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
 	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
 }
@@ -28,9 +34,9 @@ const tokenExchange = async (url, code) => {
 		redirect_uri: `${url.origin}/auth`
 	};
 
-	Object.entries(params).forEach(([key, value]) => {
+	for (const [key, value] of Object.entries(params)) {
 		body.append(key, value);
-	});
+	}
 
 	const response = await fetch('https://oauth2.googleapis.com/token', {
 		method: 'POST',

@@ -197,10 +197,10 @@ export async function deleteBudget(event, id) {
 export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	
+
 	// Normalize the merchant name to ensure case-insensitive matching
 	const normalized = normalizeMerchant(merchant_normalized);
-	
+
 	await db
 		.prepare(
 			'INSERT INTO budget_merchant (budget_id, merchant_normalized, merchant) VALUES (?, ?, ?)'
@@ -218,10 +218,10 @@ export async function addBudgetMerchant(event, budget_id, merchant_normalized) {
 export async function removeBudgetMerchant(event, budget_id, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	
+
 	// Normalize the merchant name to ensure case-insensitive matching
 	const normalized = normalizeMerchant(merchant_normalized);
-	
+
 	await db
 		.prepare('DELETE FROM budget_merchant WHERE budget_id = ? AND merchant_normalized = ?')
 		.bind(budget_id, normalized.merchant_normalized)
@@ -383,24 +383,32 @@ export async function deleteStatement(event, id) {
 /**
  * Create a new payment/charge.
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {number} statement_id
- * @param {string} merchant
- * @param {number} amount
- * @param {string} allocated_to
- * @param {string} transaction_date
+ * @param {Object} paymentData - Payment data object
+ * @param {number} paymentData.statement_id
+ * @param {string} paymentData.merchant
+ * @param {number} paymentData.amount
+ * @param {string} paymentData.allocated_to
+ * @param {string} [paymentData.transaction_date]
+ * @param {boolean} [paymentData.is_foreign_currency]
+ * @param {number} [paymentData.foreign_currency_amount]
+ * @param {string} [paymentData.foreign_currency_type]
+ * @param {Object} [paymentData.flight_details]
+ * @param {string} [paymentData.full_statement_text]
  */
 export async function createPayment(
 	event,
-	statement_id,
-	merchant,
-	amount,
-	allocated_to,
-	transaction_date = null,
-	is_foreign_currency = false,
-	foreign_currency_amount = null,
-	foreign_currency_type = null,
-	flight_details = null,
-	full_statement_text = null
+	{
+		statement_id,
+		merchant,
+		amount,
+		allocated_to,
+		transaction_date = null,
+		is_foreign_currency = false,
+		foreign_currency_amount = null,
+		foreign_currency_type = null,
+		flight_details = null,
+		full_statement_text = null
+	}
 ) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
@@ -629,7 +637,6 @@ export async function getUnassignedMerchants(event) {
 			`
 			)
 			.all();
-		
 
 		// Use a more explicit approach: get all payment merchants, then filter out assigned ones
 		const { results: allPaymentMerchants } = await db
@@ -646,15 +653,18 @@ export async function getUnassignedMerchants(event) {
 
 		// Filter out assigned merchants using JavaScript for more reliable comparison
 		// This handles the case where different merchant variations normalize to the same value
-		const assignedMerchantSetForFiltering = new Set(assignedMerchants.map(m => m.merchant_normalized.toLowerCase()));
-		const results = allPaymentMerchants.filter(merchant => {
+		const assignedMerchantSetForFiltering = new Set(
+			assignedMerchants.map((m) => m.merchant_normalized.toLowerCase())
+		);
+		const results = allPaymentMerchants.filter((merchant) => {
 			// Normalize this payment merchant and check if the normalized value is assigned
 			const normalizedMerchant = normalizeMerchant(merchant.merchant_normalized);
-			const isAssigned = assignedMerchantSetForFiltering.has(normalizedMerchant.merchant_normalized.toLowerCase());
-			
+			const isAssigned = assignedMerchantSetForFiltering.has(
+				normalizedMerchant.merchant_normalized.toLowerCase()
+			);
+
 			return !isAssigned;
 		});
-
 
 		return results.map((row) => row.merchant_normalized);
 	} catch (error) {
@@ -672,10 +682,10 @@ export async function getUnassignedMerchants(event) {
 export async function getBudgetByMerchant(event, merchant_normalized) {
 	const db = event.platform?.env?.CCBILLING_DB;
 	if (!db) throw new Error('CCBILLING_DB binding not found');
-	
+
 	// Normalize the merchant name to ensure case-insensitive matching
 	const normalized = normalizeMerchant(merchant_normalized);
-	
+
 	const result = await db
 		.prepare(
 			`

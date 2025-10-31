@@ -30,6 +30,16 @@
 		activeTab = tab;
 	}
 
+	// Map devcontainer capabilities to SonarCloud languages
+	function getSonarCloudLanguageForDevcontainer(devcontainerId) {
+		const mapping = {
+			'devcontainer-node': 'javascript',
+			'devcontainer-python': 'python',
+			'devcontainer-java': 'java'
+		};
+		return mapping[devcontainerId];
+	}
+
 	// Capability selection handlers
 	function handleCapabilityToggle(event) {
 		const { capabilityId, selected } = event.detail;
@@ -48,6 +58,44 @@
 					}
 				}
 			}
+
+			// Auto-select SonarCloud language if devcontainer capability is selected
+			// Update configuration even if SonarCloud isn't selected yet
+			const sonarCloudLanguage = getSonarCloudLanguageForDevcontainer(capabilityId);
+			if (sonarCloudLanguage) {
+				const sonarCloudConfig = configuration['sonarcloud'] || { languages: ['javascript'] };
+				const currentLanguages = sonarCloudConfig.languages || [];
+				if (!currentLanguages.includes(sonarCloudLanguage)) {
+					configuration['sonarcloud'] = {
+						...sonarCloudConfig,
+						languages: [...currentLanguages, sonarCloudLanguage]
+					};
+				}
+			}
+
+			// If SonarCloud is being selected, auto-select languages for any already-selected devcontainer capabilities
+			if (capabilityId === 'sonarcloud') {
+				const sonarCloudConfig = configuration['sonarcloud'] || { languages: ['javascript'] };
+				const currentLanguages = sonarCloudConfig.languages || [];
+				const devcontainerLanguages = [];
+
+				// Check all devcontainer capabilities that are already selected
+				for (const selectedId of selectedCapabilities) {
+					const lang = getSonarCloudLanguageForDevcontainer(selectedId);
+					if (lang && !devcontainerLanguages.includes(lang)) {
+						devcontainerLanguages.push(lang);
+					}
+				}
+
+				// Merge devcontainer languages with existing languages, avoiding duplicates
+				const allLanguages = [...new Set([...currentLanguages, ...devcontainerLanguages])];
+				if (allLanguages.length > 0) {
+					configuration['sonarcloud'] = {
+						...sonarCloudConfig,
+						languages: allLanguages
+					};
+				}
+			}
 		} else {
 			// Check if this capability is required by any other selected capability
 			const isRequiredBy =
@@ -58,6 +106,25 @@
 			if (isRequiredBy) {
 				// Don't allow deselection if another selected capability depends on it
 				return;
+			}
+
+			// Remove SonarCloud language if devcontainer capability is deselected
+			// Update configuration even if SonarCloud isn't selected yet
+			const sonarCloudLanguage = getSonarCloudLanguageForDevcontainer(capabilityId);
+			if (sonarCloudLanguage) {
+				const sonarCloudConfig = configuration['sonarcloud'];
+				if (sonarCloudConfig && sonarCloudConfig.languages) {
+					const updatedLanguages = sonarCloudConfig.languages.filter(
+						(lang) => lang !== sonarCloudLanguage
+					);
+					// Only update if languages array would not be empty, otherwise keep default
+					if (updatedLanguages.length > 0) {
+						configuration['sonarcloud'] = {
+							...sonarCloudConfig,
+							languages: updatedLanguages
+						};
+					}
+				}
 			}
 
 			selectedCapabilities = selectedCapabilities.filter((id) => id !== capabilityId);

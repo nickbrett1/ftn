@@ -230,7 +230,9 @@ function generateCapabilityFiles({ capabilityId, capability, configuration, cont
 			...context,
 			capabilityId,
 			capability,
-			configuration: configWithDefaults
+			configuration: configWithDefaults,
+			// Preserve full configuration object for template generation functions
+			fullConfiguration: context.configuration || {}
 		});
 
 		files.push({
@@ -286,20 +288,22 @@ function generateCapabilityServices(capability, capabilityId, existingServices) 
 	return services;
 }
 
-function generatePreview({ projectName, repositoryUrl, selectedCapabilities, configuration }) {
-	const files = [];
-	const externalServices = [];
-	const context = { projectName, repositoryUrl, selectedCapabilities };
-
-	// Track which devcontainer capabilities are selected
-	const devcontainerCapabilities = selectedCapabilities.filter(
-		(id) => capabilities.find((c) => c.id === id)?.category === 'devcontainer'
-	);
-
-	// Track if spec-kit is selected
-	const hasSpecKit = selectedCapabilities.includes('spec-kit');
-
-	// Generate files for each selected capability
+/**
+ * Generate files for all selected capabilities
+ * @param {Array} selectedCapabilities - Selected capabilities
+ * @param {Object} configuration - Configuration object
+ * @param {Object} context - Template context
+ * @param {Array} devcontainerCapabilities - Devcontainer capabilities
+ * @param {string} projectName - Project name
+ * @returns {Array} Array of generated files
+ */
+function generateCapabilityFilesMap(
+	selectedCapabilities,
+	configuration,
+	context,
+	devcontainerCapabilities,
+	projectName
+) {
 	const fileMap = new Map();
 
 	for (const capabilityId of selectedCapabilities) {
@@ -311,101 +315,129 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 			capabilityId,
 			capability,
 			configuration: capabilityConfig,
-			context
+			context: { ...context, configuration }
 		});
 
 		// Handle file conflicts, especially for devcontainer files
 		addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName);
 	}
 
-	// Convert map to array
-	files.push(...fileMap.values());
+	return Array.from(fileMap.values());
+}
 
-	// Add speckit installation to Dockerfile if spec-kit is selected and devcontainer exists
-	if (hasSpecKit && devcontainerCapabilities.length > 0) {
-		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
-		if (dockerfile) {
-			// Add speckit if not already present
-			if (!dockerfile.content.includes('speckit')) {
-				// Get all lines
-				const lines = dockerfile.content.split('\n');
+/**
+ * Add speckit installation to Dockerfile
+ * @param {Array} files - Files array
+ * @param {boolean} hasSpecKit - Whether spec-kit is selected
+ * @param {Array} devcontainerCapabilities - Devcontainer capabilities
+ * @returns {void}
+ */
+function addSpeckitToDockerfile(files, hasSpecKit, devcontainerCapabilities) {
+	if (!hasSpecKit || devcontainerCapabilities.length === 0) {
+		return;
+	}
 
-				// Find where to insert: after "ENV PATH=..." and before "Switch back to root"
-				let insertIndex = -1;
-				for (let i = 0; i < lines.length; i++) {
-					// Look for the line that has ENV PATH with .local/bin
-					if (lines[i].includes('ENV PATH') && lines[i].includes('.local/bin')) {
-						// Insert after this line
-						insertIndex = i + 1;
-						break;
-					}
-				}
+	const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+	if (!dockerfile || dockerfile.content.includes('speckit')) {
+		return;
+	}
 
-				if (insertIndex > 0) {
-					// Build the installation commands (as node user)
-					const installCommands = [
-						'',
-						'# Install speckit via uv',
-						'RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git'
-					];
+	const lines = dockerfile.content.split('\n');
+	let insertIndex = -1;
 
-					// Insert after the PATH line
-					lines.splice(insertIndex, 0, ...installCommands);
-					dockerfile.content = lines.join('\n');
-				}
-			}
+	for (let i = 0; i < lines.length; i++) {
+		if (lines[i].includes('ENV PATH') && lines[i].includes('.local/bin')) {
+			insertIndex = i + 1;
+			break;
 		}
 	}
 
-	// Add SonarLint extension to devcontainer.json if sonarlint is selected
-	const hasSonarLint = selectedCapabilities.includes('sonarlint');
-	if (hasSonarLint && devcontainerCapabilities.length > 0) {
-		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
-		if (devcontainerJson) {
-			try {
-				const config = JSON.parse(devcontainerJson.content);
-				if (config.customizations?.vscode?.extensions) {
-					const extensions = new Set(config.customizations.vscode.extensions);
-					extensions.add('SonarSource.sonarlint-vscode');
-					config.customizations.vscode.extensions = Array.from(extensions);
-					devcontainerJson.content = JSON.stringify(config, null, 2);
-				}
-			} catch (e) {
-				console.error('Failed to parse devcontainer.json:', e);
-			}
-		}
+	if (insertIndex > 0) {
+		const installCommands = [
+			'',
+			'# Install speckit via uv',
+			'RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git'
+		];
+		lines.splice(insertIndex, 0, ...installCommands);
+		dockerfile.content = lines.join('\n');
+	}
+}
+
+/**
+ * Add SonarLint extension to devcontainer.json
+ * @param {Array} files - Files array
+ * @param {boolean} hasSonarLint - Whether sonarlint is selected
+ * @param {Array} devcontainerCapabilities - Devcontainer capabilities
+ * @returns {void}
+ */
+function addSonarLintToDevcontainer(files, hasSonarLint, devcontainerCapabilities) {
+	if (!hasSonarLint || devcontainerCapabilities.length === 0) {
+		return;
 	}
 
-	// Add Doppler CLI installation to Dockerfile if doppler is selected
-	if (selectedCapabilities.includes('doppler') && devcontainerCapabilities.length > 0) {
-		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
-		if (dockerfile && !dockerfile.content.includes('cli.doppler.com/install.sh')) {
-			const lines = dockerfile.content.split('\n');
-			// Insert the install just before switching to USER node, so it runs as root
-			let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER node'));
-			const dopplerInstall = [
-				'',
-				'# Install Doppler CLI',
-				'RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh'
-			];
-			if (insertIndex > -1) {
-				lines.splice(insertIndex, 0, ...dopplerInstall);
-			} else {
-				lines.push(...dopplerInstall);
-			}
-			dockerfile.content = lines.join('\n');
-		}
+	const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+	if (!devcontainerJson) {
+		return;
 	}
 
-	// Generate cloud-login.sh script if doppler or cloudflare are selected
-	const hasDoppler = selectedCapabilities.includes('doppler');
-	const hasCloudflare = selectedCapabilities.includes('cloudflare-wrangler');
-	if (hasDoppler || hasCloudflare) {
-		// Build custom cloud-login.sh based on selected services
-		let cloudLoginContent = '#!/bin/bash\nset -e\n';
+	try {
+		const config = JSON.parse(devcontainerJson.content);
+		if (config.customizations?.vscode?.extensions) {
+			const extensions = new Set(config.customizations.vscode.extensions);
+			extensions.add('SonarSource.sonarlint-vscode');
+			config.customizations.vscode.extensions = Array.from(extensions);
+			devcontainerJson.content = JSON.stringify(config, null, 2);
+		}
+	} catch (e) {
+		console.error('Failed to parse devcontainer.json:', e);
+	}
+}
 
-		if (hasDoppler) {
-			cloudLoginContent += `\n# Doppler login/setup
+/**
+ * Add Doppler CLI installation to Dockerfile
+ * @param {Array} files - Files array
+ * @param {Array} selectedCapabilities - Selected capabilities
+ * @param {Array} devcontainerCapabilities - Devcontainer capabilities
+ * @returns {void}
+ */
+function addDopplerToDockerfile(files, selectedCapabilities, devcontainerCapabilities) {
+	if (!selectedCapabilities.includes('doppler') || devcontainerCapabilities.length === 0) {
+		return;
+	}
+
+	const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+	if (!dockerfile || dockerfile.content.includes('cli.doppler.com/install.sh')) {
+		return;
+	}
+
+	const lines = dockerfile.content.split('\n');
+	let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER node'));
+	const dopplerInstall = [
+		'',
+		'# Install Doppler CLI',
+		'RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh'
+	];
+
+	if (insertIndex > -1) {
+		lines.splice(insertIndex, 0, ...dopplerInstall);
+	} else {
+		lines.push(...dopplerInstall);
+	}
+	dockerfile.content = lines.join('\n');
+}
+
+/**
+ * Generate cloud-login.sh script content
+ * @param {boolean} hasDoppler - Whether Doppler is selected
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @param {string} projectName - Project name
+ * @returns {string} Cloud login script content
+ */
+function generateCloudLoginScript(hasDoppler, hasCloudflare, projectName) {
+	let cloudLoginContent = '#!/bin/bash\nset -e\n';
+
+	if (hasDoppler) {
+		cloudLoginContent += `\n# Doppler login/setup
 if command -v doppler &> /dev/null; then
   if doppler whoami &> /dev/null; then
     echo "Already logged in to Doppler."
@@ -419,10 +451,10 @@ else
   echo "Doppler CLI not found. Skipping Doppler login."
 fi
 `;
-		}
+	}
 
-		if (hasCloudflare) {
-			cloudLoginContent += `\necho
+	if (hasCloudflare) {
+		cloudLoginContent += `\necho
 # Cloudflare Wrangler login
 # Check if wrangler is installed
 if ! command -v wrangler &> /dev/null; then
@@ -433,26 +465,125 @@ fi
 script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
 `;
 
-			if (hasDoppler) {
-				cloudLoginContent += `\necho
+		if (hasDoppler) {
+			cloudLoginContent += `\necho
 # Setup Wrangler configuration with environment variables
 echo "Setting up Wrangler configuration..."
 doppler run --project ${projectName || 'project'} --config dev -- ./scripts/setup-wrangler-config.sh
 `;
-			}
 		}
+	}
 
-		cloudLoginContent += '\necho "Cloud login script finished."\n';
+	cloudLoginContent += '\necho "Cloud login script finished."\n';
+	return cloudLoginContent;
+}
 
-		// Determine capability ID for the file
-		let capabilityId;
-		if (hasDoppler && hasCloudflare) {
-			capabilityId = 'doppler+cloudflare';
-		} else if (hasDoppler) {
-			capabilityId = 'doppler';
-		} else {
-			capabilityId = 'cloudflare-wrangler';
+/**
+ * Determine capability ID for cloud-login.sh
+ * @param {boolean} hasDoppler - Whether Doppler is selected
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @returns {string} Capability ID
+ */
+function getCloudLoginCapabilityId(hasDoppler, hasCloudflare) {
+	if (hasDoppler && hasCloudflare) {
+		return 'doppler+cloudflare';
+	}
+	if (hasDoppler) {
+		return 'doppler';
+	}
+	return 'cloudflare-wrangler';
+}
+
+/**
+ * Update setup.sh to mention cloud-login.sh
+ * @param {Array} files - Files array
+ * @returns {void}
+ */
+function updateSetupScript(files) {
+	const setupSh = files.find((f) => f.filePath === '.devcontainer/setup.sh');
+	if (!setupSh) {
+		return;
+	}
+
+	const message = `echo "INFO: Custom container setup script finished."
+echo ""
+echo "⚠️  To complete cloud login, run:"
+echo "    bash scripts/cloud-login.sh"
+`;
+
+	const setupLines = setupSh.content.split('\n');
+	for (let i = setupLines.length - 1; i >= 0; i--) {
+		if (setupLines[i].includes('Setup complete!')) {
+			setupLines[i] = message;
+			break;
 		}
+	}
+	setupSh.content = setupLines.join('\n');
+}
+
+/**
+ * Generate external services for all selected capabilities
+ * @param {Array} selectedCapabilities - Selected capabilities
+ * @param {Array} externalServices - Existing external services
+ * @returns {Array} Array of external services
+ */
+function generateAllExternalServices(selectedCapabilities, externalServices) {
+	const services = [];
+
+	for (const capabilityId of selectedCapabilities) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (!capability) continue;
+
+		const capabilityServices = generateCapabilityServices(
+			capability,
+			capabilityId,
+			externalServices
+		);
+		services.push(...capabilityServices);
+	}
+
+	return services;
+}
+
+function generatePreview({ projectName, repositoryUrl, selectedCapabilities, configuration }) {
+	const files = [];
+	const externalServices = [];
+	const context = { projectName, repositoryUrl, selectedCapabilities, configuration };
+
+	// Track which devcontainer capabilities are selected
+	const devcontainerCapabilities = selectedCapabilities.filter(
+		(id) => capabilities.find((c) => c.id === id)?.category === 'devcontainer'
+	);
+
+	// Track if spec-kit is selected
+	const hasSpecKit = selectedCapabilities.includes('spec-kit');
+
+	// Generate files for each selected capability
+	const generatedFiles = generateCapabilityFilesMap(
+		selectedCapabilities,
+		configuration,
+		context,
+		devcontainerCapabilities,
+		projectName
+	);
+	files.push(...generatedFiles);
+
+	// Add speckit installation to Dockerfile if spec-kit is selected and devcontainer exists
+	addSpeckitToDockerfile(files, hasSpecKit, devcontainerCapabilities);
+
+	// Add SonarLint extension to devcontainer.json if sonarlint is selected
+	const hasSonarLint = selectedCapabilities.includes('sonarlint');
+	addSonarLintToDevcontainer(files, hasSonarLint, devcontainerCapabilities);
+
+	// Add Doppler CLI installation to Dockerfile if doppler is selected
+	addDopplerToDockerfile(files, selectedCapabilities, devcontainerCapabilities);
+
+	// Generate cloud-login.sh script if doppler or cloudflare are selected
+	const hasDoppler = selectedCapabilities.includes('doppler');
+	const hasCloudflare = selectedCapabilities.includes('cloudflare-wrangler');
+	if (hasDoppler || hasCloudflare) {
+		const cloudLoginContent = generateCloudLoginScript(hasDoppler, hasCloudflare, projectName);
+		const capabilityId = getCloudLoginCapabilityId(hasDoppler, hasCloudflare);
 
 		files.push({
 			filePath: 'scripts/cloud-login.sh',
@@ -461,26 +592,7 @@ doppler run --project ${projectName || 'project'} --config dev -- ./scripts/setu
 			isExecutable: true
 		});
 
-		// Update setup.sh to mention cloud-login.sh
-		const setupSh = files.find((f) => f.filePath === '.devcontainer/setup.sh');
-		if (setupSh) {
-			// Add message at the end about running cloud-login.sh
-			const message = `echo "INFO: Custom container setup script finished."
-echo ""
-echo "⚠️  To complete cloud login, run:"
-echo "    bash scripts/cloud-login.sh"
-`;
-			// Replace the old "Setup complete!" line with the new message
-			const setupLines = setupSh.content.split('\n');
-			// Find and replace the last "Setup complete!" line
-			for (let i = setupLines.length - 1; i >= 0; i--) {
-				if (setupLines[i].includes('Setup complete!')) {
-					setupLines[i] = message;
-					break;
-				}
-			}
-			setupSh.content = setupLines.join('\n');
-		}
+		updateSetupScript(files);
 	}
 
 	// Generate README.md
@@ -493,17 +605,8 @@ echo "    bash scripts/cloud-login.sh"
 	});
 
 	// Generate external service changes
-	for (const capabilityId of selectedCapabilities) {
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (!capability) continue;
-
-		const capabilityServices = generateCapabilityServices(
-			capability,
-			capabilityId,
-			externalServices
-		);
-		externalServices.push(...capabilityServices);
-	}
+	const services = generateAllExternalServices(selectedCapabilities, externalServices);
+	externalServices.push(...services);
 
 	return {
 		files,
@@ -721,13 +824,499 @@ function mergeDockerfiles(existingDockerfile, newDockerfile) {
 }
 
 /**
+ * Get full configuration from context
+ * @param {Object} fullConfiguration - Full configuration object
+ * @param {Object} context - Template context
+ * @param {Object} configuration - Fallback configuration
+ * @returns {Object} Full configuration object
+ */
+function getFullConfig(fullConfiguration, context, configuration) {
+	if (fullConfiguration && Object.keys(fullConfiguration).length > 0) {
+		return fullConfiguration;
+	}
+	return context.configuration || configuration || {};
+}
+
+/**
+ * Parse project key and organization from repository URL
+ * @param {string} projectName - Project name
+ * @param {string} repositoryUrl - Repository URL
+ * @returns {Object} Object with projectKey and organization
+ */
+function parseProjectInfo(projectName, repositoryUrl) {
+	// Note: replace() with global flag is acceptable for regex patterns
+	// eslint-disable-next-line unicorn/prefer-string-replace-all
+	let projectKey = projectName?.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
+	// eslint-disable-next-line unicorn/prefer-string-replace-all
+	let organization = projectName?.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
+
+	if (repositoryUrl) {
+		const githubMatch = repositoryUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+		if (githubMatch) {
+			const owner = githubMatch[1];
+			const repo = githubMatch[2].replace(/\.git$/, '');
+			projectKey = `${owner}_${repo}`;
+			organization = owner;
+		}
+	}
+
+	return { projectKey, organization };
+}
+
+/**
+ * Build source paths based on selected capabilities
+ * @param {Array} selectedCapabilities - Selected capabilities
+ * @returns {Array} Array of source paths
+ */
+function buildSourcePaths(selectedCapabilities) {
+	const hasSvelteKit = selectedCapabilities.includes('sveltekit');
+	const hasNode = selectedCapabilities.includes('devcontainer-node');
+	const hasPython = selectedCapabilities.includes('devcontainer-python');
+	const hasJava = selectedCapabilities.includes('devcontainer-java');
+
+	const sourcePaths = [];
+
+	if (hasSvelteKit || hasNode) {
+		sourcePaths.push('webapp/src/routes', 'webapp/src/lib');
+	}
+	if (hasPython) {
+		sourcePaths.push('src');
+	}
+	if (hasJava) {
+		sourcePaths.push('src/main/java');
+	}
+
+	// Default to src if no specific paths found
+	if (sourcePaths.length === 0) {
+		sourcePaths.push('src');
+	}
+
+	return sourcePaths;
+}
+
+/**
+ * Build coverage report paths based on languages
+ * @param {Array} languages - Supported languages
+ * @returns {Array} Array of coverage report paths
+ */
+function buildCoverageReportPaths(languages) {
+	const coverageReportPaths = [];
+
+	if (languages.includes('javascript') || languages.includes('typescript')) {
+		coverageReportPaths.push('./coverage/lcov.info');
+	}
+	if (languages.includes('python')) {
+		coverageReportPaths.push('./coverage.xml');
+	}
+	if (languages.includes('java')) {
+		coverageReportPaths.push('./target/site/jacoco/jacoco.xml');
+	}
+
+	return coverageReportPaths;
+}
+
+/**
+ * Generates sonar-project.properties based on project configuration
+ * @param {Object} context - Template context with projectName, repositoryUrl, selectedCapabilities, configuration
+ * @returns {string} sonar-project.properties content
+ */
+function generateSonarProjectProperties(context) {
+	const {
+		projectName,
+		repositoryUrl,
+		selectedCapabilities = [],
+		fullConfiguration = {},
+		configuration = {}
+	} = context;
+
+	const fullConfig = getFullConfig(fullConfiguration, context, configuration);
+	const sonarcloudConfig = fullConfig.sonarcloud || configuration || {};
+	const languages = sonarcloudConfig.languages || ['javascript'];
+
+	const { projectKey, organization } = parseProjectInfo(projectName, repositoryUrl);
+	const sourcePaths = buildSourcePaths(selectedCapabilities);
+	const coverageReportPaths = buildCoverageReportPaths(languages);
+
+	// Build exclusions (similar to FTN example)
+	const coverageExclusions = [
+		'**/tests/**',
+		'**/*.test.js',
+		'**/*.spec.js',
+		'**/*.test.ts',
+		'**/*.spec.ts',
+		'**/*test-utils.js',
+		'**/*test-helpers.js',
+		'**/*-test-utils.js',
+		'**/*-test-helpers.js',
+		'**/shared-test-*.js',
+		'**/test-*.js'
+	];
+
+	const generalExclusions = [
+		'**/*.test.js',
+		'**/*.spec.js',
+		'**/*test-utils.js',
+		'**/*test-helpers.js',
+		'**/shared-test-*.js'
+	];
+
+	// Build the properties file
+	let content = `sonar.projectKey=${projectKey}\n`;
+	content += `sonar.organization=${organization}\n`;
+
+	// Add language-specific coverage report paths
+	for (const reportPath of coverageReportPaths) {
+		if (reportPath.includes('lcov.info')) {
+			content += `sonar.javascript.lcov.reportPaths=${reportPath}\n`;
+		} else if (reportPath.includes('coverage.xml')) {
+			content += `sonar.python.coverage.reportPaths=${reportPath}\n`;
+		} else if (reportPath.includes('jacoco.xml')) {
+			content += `sonar.java.coverage.reportPaths=${reportPath}\n`;
+		}
+	}
+
+	content += '\n';
+	content += '# This is the name and version displayed in the SonarCloud UI.\n';
+	content += `#sonar.projectName=${projectName || 'Project'}\n`;
+	content += '#sonar.projectVersion=1.0\n';
+	content += '\n';
+	content +=
+		'# Path is relative to the sonar-project.properties file. Replace "\\" by "/" on Windows.\n';
+	content += `sonar.sources=${sourcePaths.join(',')}\n`;
+	content += '\n';
+	content += '# Encoding of the source code. Default is default system encoding\n';
+	content += '#sonar.sourceEncoding=UTF-8\n';
+	content += '\n';
+	content += '# Exclude test files, test utilities, and test directories from coverage analysis\n';
+	content += `sonar.coverage.exclusions=${coverageExclusions.join(',')}\n`;
+	content += '\n';
+	content += '# Also exclude test utilities from general analysis (not just coverage)\n';
+	content += `sonar.exclusions=${generalExclusions.join(',')}\n`;
+
+	return content;
+}
+
+/**
  * Generates smart CircleCI configuration based on selected capabilities
  * @param {Object} context - Template context with selectedCapabilities
  * @returns {string} CircleCI YAML configuration
  */
-// eslint-disable-next-line unicorn/prefer-module, complexity, sonarjs/cognitive-complexity
+/**
+ * Add cache restoration steps for Node
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addNodeCacheRestore(buildSteps) {
+	const cacheSteps = [
+		'      - restore_cache:',
+		'          name: Restore node_modules',
+		'          keys:',
+		'            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}',
+		'            - node-{{ .Branch }}-',
+		'            - node-'
+	];
+	buildSteps.push(...cacheSteps);
+}
+
+/**
+ * Add cache restoration steps for Python
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addPythonCacheRestore(buildSteps) {
+	const cacheSteps = [
+		'      - restore_cache:',
+		'          name: Restore Python cache',
+		'          keys:',
+		'            - python-{{ .Branch }}-{{ checksum "webapp/requirements.txt" }}',
+		'            - python-{{ .Branch }}-'
+	];
+	buildSteps.push(...cacheSteps);
+}
+
+/**
+ * Add Playwright cache restoration steps
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addPlaywrightCacheRestore(buildSteps) {
+	const cacheSteps = [
+		'      - restore_cache:',
+		'          name: Restore Playwright cache',
+		'          keys:',
+		'            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}',
+		'            - playwright-{{ .Branch }}-',
+		'            - playwright-'
+	];
+	buildSteps.push(...cacheSteps);
+}
+
+/**
+ * Add install steps for Node
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addNodeInstallSteps(buildSteps) {
+	const installSteps = [
+		'      - run:',
+		'          name: Install modules',
+		'          command: npm install'
+	];
+	buildSteps.push(...installSteps);
+}
+
+/**
+ * Add install steps for Python
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addPythonInstallSteps(buildSteps) {
+	const installSteps = [
+		'      - run:',
+		'          name: Install Python dependencies',
+		'          command: pip install -r requirements.txt'
+	];
+	buildSteps.push(...installSteps);
+}
+
+/**
+ * Add Playwright installation and cache steps
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addPlaywrightInstallSteps(buildSteps) {
+	const playwrightSteps = [
+		'      - run:',
+		'          name: Install Playwright Chromium',
+		'          command: npx playwright install --with-deps chromium',
+		'      - save_cache:',
+		'          name: Cache Playwright',
+		'          paths:',
+		'            - ~/.cache/ms-playwright',
+		'          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
+	];
+	buildSteps.push(...playwrightSteps);
+}
+
+/**
+ * Add Node cache save steps
+ * @param {Array} buildSteps - Build steps array
+ * @returns {void}
+ */
+function addNodeCacheSave(buildSteps) {
+	const cacheSteps = [
+		'      - save_cache:',
+		'          name: Update node_modules cache',
+		'          paths:',
+		'            - node_modules',
+		'          key: node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
+	];
+	buildSteps.push(...cacheSteps);
+}
+
+/**
+ * Add code test steps for Node
+ * @param {Array} codeTestSteps - Code test steps array
+ * @returns {void}
+ */
+function addNodeCodeTestSteps(codeTestSteps) {
+	const nodeSteps = [
+		'      - restore_cache:',
+		'          name: Restore node_modules',
+		'          keys:',
+		'            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}',
+		'            - node-{{ .Branch }}-',
+		'            - node-'
+	];
+	codeTestSteps.push(...nodeSteps);
+}
+
+/**
+ * Add workflow job steps
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @param {boolean} hasLighthouse - Whether Lighthouse is selected
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @param {boolean} hasSonarCloud - Whether SonarCloud is selected
+ * @returns {void}
+ */
+/**
+ * Add initial workflow steps
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @returns {void}
+ */
+function addInitialWorkflowSteps(workflowJobs) {
+	const initialSteps = [
+		'      - ggshield/scan:',
+		'          name: ggshield-scan',
+		'          base_revision: << pipeline.git.base_revision >>',
+		'          revision: <<pipeline.git.revision>>',
+		'      - build',
+		'      - code_test:',
+		'          requires:',
+		'            - build'
+	];
+	workflowJobs.push(...initialSteps);
+}
+
+/**
+ * Add SonarCloud context to workflow
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @param {boolean} hasSonarCloud - Whether SonarCloud is selected
+ * @returns {void}
+ */
+function addSonarCloudContext(workflowJobs, hasSonarCloud) {
+	if (hasSonarCloud) {
+		workflowJobs.push('          context: SonarCloud');
+	}
+}
+
+/**
+ * Add Lighthouse browser test to workflow
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @param {boolean} hasLighthouse - Whether Lighthouse is selected
+ * @returns {void}
+ */
+function addLighthouseWorkflow(workflowJobs, hasLighthouse) {
+	if (hasLighthouse) {
+		const lighthouseSteps = ['      - browser_test:', '          requires:', '            - build'];
+		workflowJobs.push(...lighthouseSteps);
+	}
+}
+
+/**
+ * Add Cloudflare deploy workflows
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @param {boolean} hasLighthouse - Whether Lighthouse is selected
+ * @returns {void}
+ */
+function addCloudflareWorkflows(workflowJobs, hasCloudflare, hasLighthouse) {
+	if (!hasCloudflare) {
+		return;
+	}
+
+	const deploySteps = ['      - deploy:', '          requires:'];
+	if (hasLighthouse) {
+		deploySteps.push('            - browser_test');
+	}
+	deploySteps.push(
+		'            - code_test',
+		'          filters:',
+		'            branches:',
+		'              only: main'
+	);
+	workflowJobs.push(...deploySteps);
+
+	const deployPreviewSteps = ['      - deploy-preview:', '          requires:'];
+	if (hasLighthouse) {
+		deployPreviewSteps.push('            - browser_test');
+	}
+	deployPreviewSteps.push(
+		'            - code_test',
+		'          filters:',
+		'            branches:',
+		'              ignore: main'
+	);
+	workflowJobs.push(...deployPreviewSteps);
+}
+
+/**
+ * Build code test job
+ * @param {string} dockerImage - Docker image
+ * @param {boolean} hasNode - Whether Node is selected
+ * @param {boolean} hasDoppler - Whether Doppler is selected
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @param {boolean} hasSonarCloud - Whether SonarCloud is selected
+ * @returns {string} Code test job YAML
+ */
+function buildCodeTestJob(dockerImage, hasNode, hasDoppler, hasCloudflare, hasSonarCloud) {
+	const codeTestSteps = ['      - checkout'];
+
+	if (hasNode) {
+		addNodeCodeTestSteps(codeTestSteps);
+	}
+
+	if (hasDoppler) {
+		codeTestSteps.push('      - doppler/install');
+	}
+
+	if (hasCloudflare) {
+		const wranglerSteps = [
+			'      - run:',
+			'          name: Setup Wrangler configuration',
+			'          command: ./scripts/setup-wrangler-config.sh'
+		];
+		codeTestSteps.push(...wranglerSteps);
+	}
+
+	const testSteps = [
+		'      - run:',
+		'          name: Run tests',
+		'          command: npm run test'
+	];
+	codeTestSteps.push(...testSteps);
+
+	// Add SonarCloud scan
+	if (hasSonarCloud) {
+		codeTestSteps.push('      - sonarcloud/scan');
+	}
+
+	return `  code_test:
+    docker:
+      - image: ${dockerImage}
+    steps:
+${codeTestSteps.map((step) => step).join('\n')}
+${hasSonarCloud ? '    context: SonarCloud' : ''}`;
+}
+
+/**
+ * Build browser test job
+ * @returns {string} Browser test job YAML
+ */
+function buildBrowserTestJob() {
+	const browserTestSteps = [
+		'      - checkout',
+		'      - restore_cache:',
+		'          name: Restore Lighthouse CLI cache',
+		'          keys:',
+		'            - lighthouse-cli-{{ .Branch }}-',
+		'            - lighthouse-cli-',
+		'      - run:',
+		'          name: Install Lighthouse CLI',
+		'          command: sudo npm install -g @lhci/cli@0.9.x',
+		'      - save_cache:',
+		'          name: Cache Lighthouse CLI',
+		'          paths:',
+		'            - /usr/local/lib/node_modules/@lhci',
+		'          key: lighthouse-cli-{{ .Branch }}-',
+		'      - run:',
+		'          name: Run Lighthouse checks',
+		'          command: npm run lighthouse'
+	];
+
+	return `  browser_test:
+    docker:
+      - image: cimg/node:current-browsers
+    steps:
+${browserTestSteps.map((step) => step).join('\n')}`;
+}
+
+/**
+ * Add workflow job steps
+ * @param {Array} workflowJobs - Workflow jobs array
+ * @param {boolean} hasLighthouse - Whether Lighthouse is selected
+ * @param {boolean} hasCloudflare - Whether Cloudflare is selected
+ * @param {boolean} hasSonarCloud - Whether SonarCloud is selected
+ * @returns {void}
+ */
+function addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSonarCloud) {
+	addInitialWorkflowSteps(workflowJobs);
+	addSonarCloudContext(workflowJobs, hasSonarCloud);
+	addLighthouseWorkflow(workflowJobs, hasLighthouse);
+	addCloudflareWorkflows(workflowJobs, hasCloudflare, hasLighthouse);
+}
+
 function generateCircleCIConfig(context) {
-	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
 	const selectedCapabilities = context.selectedCapabilities || [];
 
 	// Determine what capabilities are present
@@ -760,60 +1349,30 @@ function generateCircleCIConfig(context) {
 
 	// Add cache restoration
 	if (hasNode) {
-		buildSteps.push('      - restore_cache:');
-		buildSteps.push('          name: Restore node_modules');
-		buildSteps.push('          keys:');
-		buildSteps.push('            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}');
-		buildSteps.push('            - node-{{ .Branch }}-');
-		buildSteps.push('            - node-');
+		addNodeCacheRestore(buildSteps);
 	}
 
 	if (hasPython) {
-		buildSteps.push('      - restore_cache:');
-		buildSteps.push('          name: Restore Python cache');
-		buildSteps.push('          keys:');
-		buildSteps.push('            - python-{{ .Branch }}-{{ checksum "webapp/requirements.txt" }}');
-		buildSteps.push('            - python-{{ .Branch }}-');
+		addPythonCacheRestore(buildSteps);
 	}
 
 	// Add Playwright cache if needed
 	if (hasPlaywright) {
-		buildSteps.push('      - restore_cache:');
-		buildSteps.push('          name: Restore Playwright cache');
-		buildSteps.push('          keys:');
-		buildSteps.push(
-			'            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
-		);
-		buildSteps.push('            - playwright-{{ .Branch }}-');
-		buildSteps.push('            - playwright-');
+		addPlaywrightCacheRestore(buildSteps);
 	}
 
 	// Add install steps
 	if (hasNode) {
-		buildSteps.push('      - run:');
-		buildSteps.push('          name: Install modules');
-		buildSteps.push('          command: npm install');
+		addNodeInstallSteps(buildSteps);
 	}
 
 	if (hasPython) {
-		buildSteps.push('      - run:');
-		buildSteps.push('          name: Install Python dependencies');
-		buildSteps.push('          command: pip install -r requirements.txt');
+		addPythonInstallSteps(buildSteps);
 	}
 
 	// Install Playwright if needed
 	if (hasPlaywright) {
-		buildSteps.push('      - run:');
-		buildSteps.push('          name: Install Playwright Chromium');
-		buildSteps.push('          command: npx playwright install --with-deps chromium');
-
-		buildSteps.push('      - save_cache:');
-		buildSteps.push('          name: Cache Playwright');
-		buildSteps.push('          paths:');
-		buildSteps.push('            - ~/.cache/ms-playwright');
-		buildSteps.push(
-			'          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
-		);
+		addPlaywrightInstallSteps(buildSteps);
 	}
 
 	// Install Doppler if needed
@@ -823,25 +1382,27 @@ function generateCircleCIConfig(context) {
 
 	// Install Wrangler if needed
 	if (hasCloudflare) {
-		buildSteps.push('      - run:');
-		buildSteps.push('          name: Setup Wrangler configuration');
-		buildSteps.push('          command: ./scripts/setup-wrangler-config.sh');
+		const wranglerSteps = [
+			'      - run:',
+			'          name: Setup Wrangler configuration',
+			'          command: ./scripts/setup-wrangler-config.sh'
+		];
+		buildSteps.push(...wranglerSteps);
 	}
 
 	// Build step
 	if (hasNode) {
-		buildSteps.push('      - run:');
-		buildSteps.push('          name: Build app');
-		buildSteps.push('          command: npm run build');
+		const buildAppSteps = [
+			'      - run:',
+			'          name: Build app',
+			'          command: npm run build'
+		];
+		buildSteps.push(...buildAppSteps);
 	}
 
 	// Save cache
 	if (hasNode) {
-		buildSteps.push('      - save_cache:');
-		buildSteps.push('          name: Update node_modules cache');
-		buildSteps.push('          paths:');
-		buildSteps.push('            - node_modules');
-		buildSteps.push('          key: node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}');
+		addNodeCacheSave(buildSteps);
 	}
 
 	// Build job YAML
@@ -854,75 +1415,18 @@ ${buildSteps.map((step) => step).join('\n')}`;
 	jobs.push(buildJob);
 
 	// Code test job
-	const codeTestSteps = ['      - checkout'];
-
-	if (hasNode) {
-		codeTestSteps.push('      - restore_cache:');
-		codeTestSteps.push('          name: Restore node_modules');
-		codeTestSteps.push('          keys:');
-		codeTestSteps.push(
-			'            - node-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}'
-		);
-		codeTestSteps.push('            - node-{{ .Branch }}-');
-		codeTestSteps.push('            - node-');
-	}
-
-	if (hasDoppler) {
-		codeTestSteps.push('      - doppler/install');
-	}
-
-	if (hasCloudflare) {
-		codeTestSteps.push('      - run:');
-		codeTestSteps.push('          name: Setup Wrangler configuration');
-		codeTestSteps.push('          command: ./scripts/setup-wrangler-config.sh');
-	}
-
-	codeTestSteps.push('      - run:');
-	codeTestSteps.push('          name: Run tests');
-	codeTestSteps.push('          command: npm run test');
-
-	// Add SonarCloud scan
-	if (hasSonarCloud) {
-		codeTestSteps.push('      - sonarcloud/scan');
-	}
-
-	const codeTestJob = `  code_test:
-    docker:
-      - image: ${dockerImage}
-    steps:
-${codeTestSteps.map((step) => step).join('\n')}
-${hasSonarCloud ? '    context: SonarCloud' : ''}`;
-
+	const codeTestJob = buildCodeTestJob(
+		dockerImage,
+		hasNode,
+		hasDoppler,
+		hasCloudflare,
+		hasSonarCloud
+	);
 	jobs.push(codeTestJob);
 
 	// Browser test job (if Lighthouse is selected)
 	if (hasLighthouse) {
-		const browserTestSteps = [
-			'      - checkout',
-			'      - restore_cache:',
-			'          name: Restore Lighthouse CLI cache',
-			'          keys:',
-			'            - lighthouse-cli-{{ .Branch }}-',
-			'            - lighthouse-cli-',
-			'      - run:',
-			'          name: Install Lighthouse CLI',
-			'          command: sudo npm install -g @lhci/cli@0.9.x',
-			'      - save_cache:',
-			'          name: Cache Lighthouse CLI',
-			'          paths:',
-			'            - /usr/local/lib/node_modules/@lhci',
-			'          key: lighthouse-cli-{{ .Branch }}-',
-			'      - run:',
-			'          name: Run Lighthouse checks',
-			'          command: npm run lighthouse'
-		];
-
-		const browserTestJob = `  browser_test:
-    docker:
-      - image: cimg/node:current-browsers
-    steps:
-${browserTestSteps.map((step) => step).join('\n')}`;
-
+		const browserTestJob = buildBrowserTestJob();
 		jobs.push(browserTestJob);
 	}
 
@@ -967,45 +1471,8 @@ ${deployPreviewSteps.map((step) => step).join('\n')}`;
 	}
 
 	// Build workflows
-	const workflowJobs = ['      - ggshield/scan:'];
-	workflowJobs.push('          name: ggshield-scan');
-	workflowJobs.push('          base_revision: << pipeline.git.base_revision >>');
-	workflowJobs.push('          revision: <<pipeline.git.revision>>');
-	workflowJobs.push('      - build');
-	workflowJobs.push('      - code_test:');
-	workflowJobs.push('          requires:');
-	workflowJobs.push('            - build');
-	if (hasSonarCloud) {
-		workflowJobs.push('          context: SonarCloud');
-	}
-
-	if (hasLighthouse) {
-		workflowJobs.push('      - browser_test:');
-		workflowJobs.push('          requires:');
-		workflowJobs.push('            - build');
-	}
-
-	if (hasCloudflare) {
-		workflowJobs.push('      - deploy:');
-		workflowJobs.push('          requires:');
-		if (hasLighthouse) {
-			workflowJobs.push('            - browser_test');
-		}
-		workflowJobs.push('            - code_test');
-		workflowJobs.push('          filters:');
-		workflowJobs.push('            branches:');
-		workflowJobs.push('              only: main');
-
-		workflowJobs.push('      - deploy-preview:');
-		workflowJobs.push('          requires:');
-		if (hasLighthouse) {
-			workflowJobs.push('            - browser_test');
-		}
-		workflowJobs.push('            - code_test');
-		workflowJobs.push('          filters:');
-		workflowJobs.push('            branches:');
-		workflowJobs.push('              ignore: main');
-	}
+	const workflowJobs = [];
+	addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSonarCloud);
 
 	return `version: 2.1
 
@@ -1019,7 +1486,7 @@ workflows:
   build_test_deploy:
     jobs:
 ${workflowJobs.map((step) => step).join('\n')}`;
-	/* eslint-enable unicorn/no-array-push-push */
+	/* eslint-enable unicorn/no-array-push-push, sonarjs/no-array-push-push */
 }
 
 /**
@@ -1032,6 +1499,11 @@ function getFallbackTemplate(templateId, context) {
 	// Handle CircleCI config generation
 	if (templateId === 'circleci-config') {
 		return generateCircleCIConfig(context);
+	}
+
+	// Handle SonarCloud config generation
+	if (templateId === 'sonarcloud-config') {
+		return generateSonarProjectProperties(context);
 	}
 
 	const fallbackTemplates = {
@@ -1360,7 +1832,11 @@ echo "Setting up Wrangler configuration..."
 doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh
 
 echo "Cloud login script finished."
-`
+`,
+		// Minimal SonarLint VS Code settings to avoid generating an empty file
+		'sonarlint-vscode-config': `{
+	"sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
+}`
 	};
 
 	return fallbackTemplates[templateId] || null;

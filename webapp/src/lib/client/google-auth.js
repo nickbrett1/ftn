@@ -15,8 +15,9 @@ export function getRedirectUri() {
 
 	// For production/preview, use the current origin dynamically
 	// This ensures preview deployments redirect back to the preview domain
-	if (typeof window !== 'undefined') {
-		return `${window.location.origin}/auth`;
+	const windowOrigin = globalThis.window?.location?.origin;
+	if (windowOrigin) {
+		return `${windowOrigin}/auth`;
 	}
 
 	// Fallback for SSR
@@ -31,7 +32,8 @@ export function isUserAuthenticated() {
 	if (typeof document === 'undefined') {
 		return false;
 	}
-	const match = document.cookie.match(/(^| )auth=([^;]+)/);
+	const regex = /(^| )auth=([^;]+)/;
+	const match = regex.exec(document.cookie);
 	const result = match !== null && match[2] !== 'deleted';
 	return result;
 }
@@ -56,9 +58,12 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
 	console.log('User not authenticated, storing redirect path:', redirectPath);
 
 	// Store the redirect path in localStorage so we can retrieve it after auth
-	if (typeof window !== 'undefined' && window.localStorage) {
-		window.localStorage.setItem('auth_redirect_path', redirectPath);
-		console.log('Stored value in localStorage:', window.localStorage.getItem('auth_redirect_path'));
+	if (globalThis.window?.localStorage) {
+		globalThis.window.localStorage.setItem('auth_redirect_path', redirectPath);
+		console.log(
+			'Stored value in localStorage:',
+			globalThis.window.localStorage.getItem('auth_redirect_path')
+		);
 	} else {
 		console.error('window or localStorage not available');
 		return;
@@ -67,7 +72,7 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
 	console.log('Checking if Google GIS is loaded...');
 
 	// Check if Google GIS is already loaded
-	if (window.google?.accounts?.oauth2) {
+	if (globalThis.window?.google?.accounts?.oauth2) {
 		console.log('Google GIS already loaded, using it');
 		// Use the existing GIS client if available
 		await requestCodeWithGIS();
@@ -83,7 +88,7 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
  */
 async function requestCodeWithGIS() {
 	// Check if Google GIS is properly loaded
-	if (!window.google?.accounts?.oauth2) {
+	if (!globalThis.window?.google?.accounts?.oauth2) {
 		throw new Error('Google Identity Services not properly loaded');
 	}
 
@@ -94,7 +99,7 @@ async function requestCodeWithGIS() {
 	// The redirect path is already stored in localStorage by initiateGoogleAuth
 	const redirectUri = getRedirectUri();
 
-	const client = window.google.accounts.oauth2.initCodeClient({
+	const client = globalThis.window.google.accounts.oauth2.initCodeClient({
 		client_id: GOOGLE_CLIENT_ID,
 		scope: 'openid profile email',
 		ux_mode: 'redirect',
@@ -125,13 +130,13 @@ function loadGoogleGISAndRequestCode() {
 		script.onload = () => {
 			try {
 				// Check if Google GIS is properly loaded
-				if (!window.google?.accounts?.id) {
+				if (!globalThis.window?.google?.accounts?.id) {
 					reject(new Error('Google Identity Services failed to load properly'));
 					return;
 				}
 
 				// Initialize Google Identity Services
-				window.google.accounts.id.initialize({
+				globalThis.window.google.accounts.id.initialize({
 					client_id: GOOGLE_CLIENT_ID,
 					callback: (response) => {
 						if (!response.credential || !response.clientId) {
