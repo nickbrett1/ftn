@@ -222,7 +222,7 @@ export const capabilities = [
 		description: 'VS Code extension configuration for SonarLint code quality analysis',
 		url: 'https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode',
 		category: 'code-quality',
-		dependencies: ['sonarcloud'],
+		dependencies: ['sonarcloud', 'devcontainer-java'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
