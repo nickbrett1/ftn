@@ -27,6 +27,10 @@ export function getRedirectUri() {
  * Check if user is currently authenticated
  */
 export function isUserAuthenticated() {
+	// Check if we're in a browser environment
+	if (typeof document === 'undefined') {
+		return false;
+	}
 	const match = document.cookie.match(/(^| )auth=([^;]+)/);
 	const result = match !== null && match[2] !== 'deleted';
 	return result;
