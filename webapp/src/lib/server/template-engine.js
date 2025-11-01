@@ -229,11 +229,12 @@ export class TemplateEngineService {
 				const spaceIndex = tagContent.indexOf(' ');
 				const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
 				const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+				const hasArgs = argsString.length > 0;
 
 				const helper = this.helpers[name];
-				if (helper) {
+				if (helper && hasArgs) {
 					try {
-						const parsedArgs = argsString ? this.parseHelperArgs(argsString, context) : [];
+						const parsedArgs = this.parseHelperArgs(argsString, context);
 						const helperResult = helper(...parsedArgs);
 						replacement = helperResult === undefined ? '' : String(helperResult);
 					} catch (error) {

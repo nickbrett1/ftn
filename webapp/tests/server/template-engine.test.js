@@ -31,13 +31,14 @@ describe('TemplateEngineService', () => {
 		const context = {
 			projectName: 'My Project',
 			capabilities: ['sveltekit', 'tailwindcss'],
-			configuration: { sveltekit: { adapter: 'auto' } }
+			configuration: { sveltekit: { adapter: 'auto' } },
+			timestamp: '2025-11-01T00:00:00.000Z'
 		};
 
 		const result = engine.processTemplate(template, context);
 
 		expect(result).toContain('Project My Project my_project');
-		expect(result).toMatch(/\d{4}-\d{2}-\d{2}T/); // timestamp inserted
+		expect(result).toContain('2025-11-01T00:00:00.000Z');
 		expect(result).toContain('BBBB'); // deterministic random string
 	});
 
