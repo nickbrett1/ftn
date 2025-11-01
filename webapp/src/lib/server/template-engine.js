@@ -198,61 +198,66 @@ export class TemplateEngineService {
 	 * @returns {string} Processed template
 	 */
 	processTemplate(templateContent, context) {
-		if (!templateContent) {
+		if (templateContent == null) {
 			return '';
 		}
 
+		if (templateContent.length === 0) {
+			return '';
+		}
+
+		const TAG_OPEN = '{{';
+		const TAG_CLOSE = '}}';
 		let result = '';
-		let index = 0;
+		let cursor = 0;
 
-		while (index < templateContent.length) {
-			const start = templateContent.indexOf('{{', index);
-
+		while (cursor < templateContent.length) {
+			const start = templateContent.indexOf(TAG_OPEN, cursor);
 			if (start === -1) {
-				result += templateContent.slice(index);
+				result += templateContent.slice(cursor);
 				break;
 			}
 
-			result += templateContent.slice(index, start);
-
-			const end = templateContent.indexOf('}}', start + 2);
+			result += templateContent.slice(cursor, start);
+			const end = templateContent.indexOf(TAG_CLOSE, start + TAG_OPEN.length);
 			if (end === -1) {
-				// Unmatched braces - append the rest and exit
 				result += templateContent.slice(start);
 				break;
 			}
 
-			const tagContent = templateContent.slice(start + 2, end).trim();
-			let replacement = `{{${tagContent}}}`;
-
-			if (tagContent.length > 0) {
-				const spaceIndex = tagContent.indexOf(' ');
-				const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
-				const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
-				const hasArgs = argsString.length > 0;
-
-				const helper = this.helpers[name];
-				if (helper && hasArgs) {
-					try {
-						const parsedArgs = this.parseHelperArgs(argsString, context);
-						const helperResult = helper(...parsedArgs);
-						replacement = helperResult === undefined ? '' : String(helperResult);
-					} catch (error) {
-						console.error(`❌ Template helper error: ${error.message}`);
-					}
-				} else {
-					const value = this.getNestedValue(context, name);
-					if (value !== undefined) {
-						replacement = String(value);
-					}
-				}
-			}
-
-			result += replacement;
-			index = end + 2;
+			const rawTagContent = templateContent.slice(start + TAG_OPEN.length, end);
+			result += this.renderTag(rawTagContent, context);
+			cursor = end + TAG_CLOSE.length;
 		}
 
 		return result;
+	}
+
+	renderTag(rawTagContent, context) {
+		const tagContent = rawTagContent.trim();
+		if (tagContent.length === 0) {
+			return `{{${rawTagContent}}}`;
+		}
+
+		const spaceIndex = tagContent.indexOf(' ');
+		const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
+		const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+		const helper = this.helpers[name];
+		const hasArgs = argsString.length > 0;
+
+		if (helper && hasArgs) {
+			try {
+				const parsedArgs = this.parseHelperArgs(argsString, context);
+				const helperResult = helper(...parsedArgs);
+				return helperResult === undefined ? '' : String(helperResult);
+			} catch (error) {
+				console.error(`❌ Template helper error: ${error.message}`);
+				return '';
+			}
+		}
+
+		const value = this.getNestedValue(context, name);
+		return value !== undefined ? String(value) : `{{${rawTagContent}}}`;
 	}
 
 	/**

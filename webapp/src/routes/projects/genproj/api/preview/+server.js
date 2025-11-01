@@ -268,7 +268,7 @@ function generateCapabilityServices(capability, capabilityId, existingServices) 
 	}
 
 	// Add auth requirements
-	if (capability.requiresAuth && capability.requiresAuth.length > 0) {
+	if ((capability.requiresAuth?.length ?? 0) > 0) {
 		for (const service of capability.requiresAuth) {
 			if (
 				!existingServices.some((s) => s.service === service) &&

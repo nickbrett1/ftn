@@ -18,7 +18,7 @@ export const LOG_LEVELS = {
  */
 const currentLogLevel = (() => {
   // Check if we're in a browser environment
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis !== 'undefined' && globalThis.window) {
     // In browser, use a default level or check for a global variable
     return LOG_LEVELS.INFO;
   }
@@ -211,14 +211,6 @@ class GenprojLogger {
    */
   _log(level, emoji, message, data) {
     const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level,
-      context: this.context,
-      message,
-      ...data,
-    };
-
     // Format log message
     const formattedMessage = `${emoji} [${timestamp}] [${this.context}] ${message}`;
     

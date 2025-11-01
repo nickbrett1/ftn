@@ -45,8 +45,22 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Add validation if requested
 		if (validateParam && selectedCapabilities.length > 0) {
-			// TODO: Add validation logic if needed
-			pageData.validation = { valid: true, errors: [] };
+			const findCapability = (id) => capabilities.find((cap) => cap.id === id);
+			const errors = selectedCapabilities
+				.filter((id) => !findCapability(id))
+				.map((id) => `Unknown capability: ${id}`);
+			const requiredAuth = Array.from(
+				new Set(
+					selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? [])
+				)
+			);
+
+			pageData.validation = {
+				valid: errors.length === 0,
+				errors,
+				warnings: [],
+				requiredAuth
+			};
 		}
 
 		return pageData;

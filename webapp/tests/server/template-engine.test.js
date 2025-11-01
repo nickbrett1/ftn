@@ -79,4 +79,29 @@ describe('TemplateEngineService', () => {
 
 		expect(args).toEqual(['Hello World', 'kebab', 5]);
 	});
+
+	it('returns empty string for null or empty templates', () => {
+		expect(engine.processTemplate(null, {})).toBe('');
+		expect(engine.processTemplate('', {})).toBe('');
+	});
+
+	it('preserves placeholder when helper or value is missing', () => {
+		const result = engine.processTemplate('Value: {{unknown}}', {});
+		expect(result).toBe('Value: {{unknown}}');
+	});
+
+	it('gracefully handles missing closing braces', () => {
+		const result = engine.processTemplate('Hello {{name', { name: 'World' });
+		expect(result).toBe('Hello {{name');
+	});
+
+	it('swallows helper errors and continues rendering', () => {
+		engine.helpers.fail = () => {
+			throw new Error('boom');
+		};
+
+		const output = engine.processTemplate('Before {{fail "x"}} After', {});
+		expect(output).toBe('Before  After');
+		delete engine.helpers.fail;
+	});
 });

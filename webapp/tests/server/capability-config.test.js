@@ -38,6 +38,63 @@ describe('CapabilityConfigurationService', () => {
 		expect(result.errors).toContain('Unknown capability: unknown-cap');
 	});
 
+	it('handles circular dependencies gracefully', () => {
+		const custom = new CapabilityConfigurationService();
+		custom.capabilities.cycleA = {
+			id: 'cycleA',
+			name: 'Cycle A',
+			description: '',
+			category: 'test',
+			dependencies: ['cycleB'],
+			conflicts: [],
+			configuration: {},
+			requiresAuth: false,
+			authService: null
+		};
+		custom.capabilities.cycleB = {
+			id: 'cycleB',
+			name: 'Cycle B',
+			description: '',
+			category: 'test',
+			dependencies: ['cycleA'],
+			conflicts: [],
+			configuration: {},
+			requiresAuth: false,
+			authService: null
+		};
+
+		const result = custom.validateCapabilitySelection(['cycleA']);
+		expect(result.errors).toEqual([]);
+		expect(result.resolvedCapabilities.sort()).toEqual(['cycleA', 'cycleB']);
+	});
+
+	it('detects conflicting capabilities', () => {
+		const custom = new CapabilityConfigurationService();
+		custom.capabilities.conflicting = {
+			id: 'conflicting',
+			name: 'Conflicting Capability',
+			description: '',
+			category: 'test',
+			dependencies: [],
+			conflicts: ['sveltekit'],
+			configuration: {},
+			requiresAuth: false,
+			authService: null
+		};
+
+		const result = custom.validateCapabilitySelection(['sveltekit', 'conflicting']);
+		expect(result.isValid).toBe(false);
+		expect(result.errors).toContain(
+			"Capability 'Conflicting Capability' conflicts with 'SvelteKit'"
+		);
+	});
+
+	it('ignores dependencies that are already selected', () => {
+		const result = service.validateCapabilitySelection(['sonarlint', 'java']);
+		expect(result.missingDependencies).toEqual([]);
+		expect(result.warnings).not.toContain('Some dependencies will be automatically added');
+	});
+
 	it('filters capabilities requiring authentication', () => {
 		const requiringAuth = service.getCapabilitiesRequiringAuth([
 			'circleci',

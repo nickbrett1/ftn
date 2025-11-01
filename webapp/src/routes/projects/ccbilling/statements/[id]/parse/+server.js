@@ -284,8 +284,8 @@ function extractBillingCycleFromCharges(charges) {
 	}
 
 	return {
-		start_date: dates[0],
-		end_date: dates[dates.length - 1]
+		start_date: dates.at(0),
+		end_date: dates.at(-1)
 	};
 }
 

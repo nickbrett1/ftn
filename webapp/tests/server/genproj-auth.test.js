@@ -137,6 +137,35 @@ describe('GenprojAuthManager', () => {
 		expect(manager.isSonarCloudAuthenticated()).toBe(true);
 	});
 
+	it('exposes authentication details and handles missing user updates', async () => {
+		manager.authState = {
+			github: { authenticated: true, username: 'dev' },
+			circleci: { authenticated: false },
+			doppler: null,
+			sonarcloud: undefined
+		};
+
+		expect(manager.getGitHubAuth()).toEqual({ authenticated: true, username: 'dev' });
+		expect(manager.getCircleCIAuth()).toEqual({ authenticated: false });
+		expect(manager.getDopplerAuth()).toBeNull();
+		expect(manager.getSonarCloudAuth()).toBeNull();
+
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const updateResult = await manager.updateGitHubAuth({ username: 'dev' });
+		expect(updateResult).toBe(false);
+		errorSpy.mockRestore();
+	});
+
+	it('handles update failures gracefully', async () => {
+		manager.currentUser = user;
+		mockDb.updateAuthenticationState.mockRejectedValue(new Error('boom'));
+
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const result = await manager.updateDopplerAuth({ token: 'x', expiresAt: '2099-01-01' });
+		expect(result).toBe(false);
+		errorSpy.mockRestore();
+	});
+
 	it('reports required authentication and missing providers', () => {
 		manager.currentUser = user;
 		manager.authState = {

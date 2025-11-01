@@ -313,59 +313,69 @@ export class CapabilityConfigurationService {
 	 */
 	validateCapabilitySelection(selectedCapabilities) {
 		const resolved = new Set();
+		const visitStack = new Set();
 		const errors = [];
 		const warnings = [];
 
-		// Add explicit dependencies
-		const addDependencies = (capabilityId) => {
+		const getCapability = (capabilityId) => {
 			const capability = this.capabilities[capabilityId];
 			if (!capability) {
 				errors.push(`Unknown capability: ${capabilityId}`);
+			}
+			return capability;
+		};
+
+		const addCapabilityWithDependencies = (capabilityId) => {
+			if (resolved.has(capabilityId) || visitStack.has(capabilityId)) {
 				return;
 			}
 
-			// Add dependencies first
-			for (const dependency of capability.dependencies) {
-				if (!resolved.has(dependency)) {
-					addDependencies(dependency);
+			visitStack.add(capabilityId);
+			const capability = getCapability(capabilityId);
+			if (capability) {
+				for (const dependency of capability.dependencies) {
+					addCapabilityWithDependencies(dependency);
 				}
+				resolved.add(capabilityId);
 			}
-
-			// Add the capability itself
-			resolved.add(capabilityId);
+			visitStack.delete(capabilityId);
 		};
 
-		// Process all selected capabilities
 		for (const capabilityId of selectedCapabilities) {
-			addDependencies(capabilityId);
+			addCapabilityWithDependencies(capabilityId);
 		}
 
-		// Check for conflicts
-		for (const capabilityId of resolved) {
-			const capability = this.capabilities[capabilityId];
-			for (const conflict of capability.conflicts) {
-				if (resolved.has(conflict)) {
+		const collectConflicts = () => {
+			for (const capabilityId of resolved) {
+				const capability = this.capabilities[capabilityId];
+				if (!capability?.conflicts?.length) continue;
+				for (const conflictId of capability.conflicts) {
+					if (!resolved.has(conflictId)) continue;
+					const conflicting = this.capabilities[conflictId];
 					errors.push(
-						`Capability '${capability.name}' conflicts with '${this.capabilities[conflict].name}'`
+						`Capability '${capability.name}' conflicts with '${conflicting?.name || conflictId}'`
 					);
 				}
 			}
-		}
+		};
 
-		// Check for missing dependencies
+		collectConflicts();
+
 		const missingDependencies = [];
 		for (const capabilityId of selectedCapabilities) {
 			const capability = this.capabilities[capabilityId];
-			if (!capability) {
+			if (!capability?.dependencies?.length) {
 				continue;
 			}
+
 			for (const dependency of capability.dependencies) {
-				if (!selectedCapabilities.includes(dependency)) {
-					missingDependencies.push({
-						capability: capability.name,
-						dependency: this.capabilities[dependency]?.name || dependency
-					});
+				if (selectedCapabilities.includes(dependency)) {
+					continue;
 				}
+				missingDependencies.push({
+					capability: capability.name,
+					dependency: this.capabilities[dependency]?.name || dependency
+				});
 			}
 		}
 
