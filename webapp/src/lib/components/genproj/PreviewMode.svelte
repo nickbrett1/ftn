@@ -4,7 +4,6 @@
 -->
 
 <script>
-	import { onMount } from 'svelte';
 	import { logger } from '$lib/utils/logging.js';
 
 	// Props
@@ -19,6 +18,23 @@
 	let loading = false;
 	let error = null;
 	let expandedFiles = {};
+	let latestPreviewRequestId = 0;
+	let previewInputs;
+
+	function cloneConfiguration(config) {
+		if (!config || typeof config !== 'object') {
+			return {};
+		}
+		try {
+			return structuredClone(config);
+		} catch (cloneError) {
+			try {
+				return JSON.parse(JSON.stringify(config));
+			} catch (fallbackError) {
+				return {};
+			}
+		}
+	}
 
 	// Toggle file expansion
 	function toggleFile(filePath) {
@@ -39,10 +55,18 @@
 	}
 
 	// Generate preview data
-	async function generatePreview() {
-		if (selectedCapabilities.length === 0) {
+	async function generatePreview(inputs) {
+		if (!inputs || inputs.selectedCapabilities.length === 0) {
 			return;
 		}
+
+		const requestId = ++latestPreviewRequestId;
+		const payload = {
+			projectName: inputs.projectName,
+			repositoryUrl: inputs.repositoryUrl,
+			selectedCapabilities: inputs.selectedCapabilities,
+			configuration: inputs.configuration
+		};
 
 		try {
 			loading = true;
@@ -53,12 +77,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					projectName: effectiveProjectName,
-					repositoryUrl,
-					selectedCapabilities,
-					configuration
-				})
+				body: JSON.stringify(payload)
 			});
 
 			if (!response.ok) {
@@ -66,17 +85,26 @@
 			}
 
 			const data = await response.json();
+			if (requestId !== latestPreviewRequestId) {
+				return;
+			}
+
 			previewData = data;
 			logger.success('Preview generated', {
-				projectName: effectiveProjectName,
-				capabilityCount: selectedCapabilities.length,
+				projectName: payload.projectName,
+				capabilityCount: payload.selectedCapabilities.length,
 				usingPlaceholder: !projectName
 			});
 		} catch (err) {
+			if (requestId !== latestPreviewRequestId) {
+				return;
+			}
 			error = err.message;
 			logger.error('Failed to generate preview', { error: err.message });
 		} finally {
-			loading = false;
+			if (requestId === latestPreviewRequestId) {
+				loading = false;
+			}
 		}
 	}
 
@@ -84,8 +112,18 @@
 	// Use placeholder project name if none is provided
 	$: effectiveProjectName = projectName || 'my-project';
 
-	$: if (selectedCapabilities.length > 0) {
-		generatePreview();
+	$: previewInputs = {
+		projectName: effectiveProjectName,
+		repositoryUrl,
+		selectedCapabilities: [...selectedCapabilities],
+		configuration: cloneConfiguration(configuration)
+	};
+
+	$: if (previewInputs.selectedCapabilities.length > 0) {
+		generatePreview(previewInputs);
+	} else {
+		previewData = null;
+		error = null;
 	}
 
 	// Get capability name by ID
