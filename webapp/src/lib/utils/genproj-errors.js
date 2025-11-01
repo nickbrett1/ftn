@@ -191,34 +191,31 @@ export function validateRequest(data, schema) {
       continue;
     }
 
-    const checks = [
-      [rules.type, typeof value !== rules.type, `${field} must be a ${rules.type}`],
-      [
-        rules.minLength,
-        typeof value === 'string' && value.length < rules.minLength,
-        `${field} must be at least ${rules.minLength} characters`
-      ],
-      [
-        rules.maxLength,
-        typeof value === 'string' && value.length > rules.maxLength,
-        `${field} must be no more than ${rules.maxLength} characters`
-      ],
-      [
-        rules.pattern,
-        typeof value === 'string' && !rules.pattern.test(value),
-        `${field} format is invalid`
-      ],
-      [
-        rules.enum,
-        !rules.enum?.includes(value),
-        `${field} must be one of: ${rules.enum?.join(', ')}`
-      ]
-    ];
-
-    for (const [ruleEnabled, condition, message] of checks) {
-      if (ruleEnabled && condition) {
+    const applyCheck = (condition, message) => {
+      if (condition) {
         errors.push(new ValidationError(message, field));
       }
+    };
+
+    applyCheck(rules.type && typeof value !== rules.type, `${field} must be a ${rules.type}`);
+
+    if (typeof value === 'string') {
+      applyCheck(
+        rules.minLength !== undefined && value.length < rules.minLength,
+        `${field} must be at least ${rules.minLength} characters`
+      );
+      applyCheck(
+        rules.maxLength !== undefined && value.length > rules.maxLength,
+        `${field} must be no more than ${rules.maxLength} characters`
+      );
+      applyCheck(
+        Boolean(rules.pattern) && !rules.pattern.test(value),
+        `${field} format is invalid`
+      );
+    }
+
+    if (Array.isArray(rules.enum) && !rules.enum.includes(value)) {
+      applyCheck(true, `${field} must be one of: ${rules.enum.join(', ')}`);
     }
   }
 

@@ -9,10 +9,6 @@
 
 import { error } from '@sveltejs/kit';
 import { capabilities } from '$lib/config/capabilities.js';
-import {
-	validateCapabilitySelection,
-	getRequiredAuthServices
-} from '$lib/utils/capability-resolver.js';
 
 /**
  * Loads initial data for the genproj page
@@ -49,12 +45,21 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Add validation if requested
 		if (validateParam && selectedCapabilities.length > 0) {
-			const validation = validateCapabilitySelection(selectedCapabilities);
+			const capabilityIndex = new Map(capabilities.map((cap) => [cap.id, cap]));
+			const errors = selectedCapabilities
+				.filter((id) => !capabilityIndex.has(id))
+				.map((id) => `Unknown capability: ${id}`);
+			const requiredAuth = Array.from(
+				new Set(
+					selectedCapabilities.flatMap((id) => capabilityIndex.get(id)?.requiresAuth ?? [])
+				)
+			);
+
 			pageData.validation = {
-				valid: validation.isValid,
-				errors: validation.errors,
-				warnings: validation.warnings,
-				requiredAuth: getRequiredAuthServices(selectedCapabilities)
+				valid: errors.length === 0,
+				errors,
+				warnings: [],
+				requiredAuth
 			};
 		}
 

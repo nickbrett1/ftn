@@ -258,7 +258,13 @@ export class GenprojAuthManager {
    * @returns {string[]} Required authentication services
    */
   getRequiredAuthServices(selectedCapabilities) {
-    return resolveRequiredAuthServices(selectedCapabilities);
+    const required = new Set(resolveRequiredAuthServices(selectedCapabilities));
+
+    if (selectedCapabilities.includes('github-actions')) {
+      required.add('github');
+    }
+
+    return Array.from(required);
   }
 
   /**
