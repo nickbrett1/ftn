@@ -356,6 +356,9 @@ export class CapabilityConfigurationService {
 		const missingDependencies = [];
 		for (const capabilityId of selectedCapabilities) {
 			const capability = this.capabilities[capabilityId];
+			if (!capability) {
+				continue;
+			}
 			for (const dependency of capability.dependencies) {
 				if (!selectedCapabilities.includes(dependency)) {
 					missingDependencies.push({

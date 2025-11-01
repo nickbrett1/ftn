@@ -202,32 +202,57 @@ export class TemplateEngineService {
 			return '';
 		}
 
-		// Simple template processing - replace {{variable}} patterns
-		let processed = templateContent;
+		let result = '';
+		let index = 0;
 
-		// Replace basic variables
-		processed = processed.replaceAll(/\{\{(\w+)\}\}/g, (match, variableName) => {
-			const value = this.getNestedValue(context, variableName);
-			return value === undefined ? match : String(value);
-		});
+		while (index < templateContent.length) {
+			const start = templateContent.indexOf('{{', index);
 
-		// Replace helper functions
-		processed = processed.replaceAll(/\{\{(\w+)\s+([^}]+)\}\}/g, (match, helperName, args) => {
-			const helper = this.helpers[helperName];
-			if (helper) {
-				try {
-					// Parse arguments (simple parsing for basic cases)
-					const parsedArgs = this.parseHelperArgs(args, context);
-					return helper(...parsedArgs);
-				} catch (error) {
-					console.error(`❌ Template helper error: ${error.message}`);
-					return match;
+			if (start === -1) {
+				result += templateContent.slice(index);
+				break;
+			}
+
+			result += templateContent.slice(index, start);
+
+			const end = templateContent.indexOf('}}', start + 2);
+			if (end === -1) {
+				// Unmatched braces - append the rest and exit
+				result += templateContent.slice(start);
+				break;
+			}
+
+			const tagContent = templateContent.slice(start + 2, end).trim();
+			let replacement = `{{${tagContent}}}`;
+
+			if (tagContent.length > 0) {
+				const spaceIndex = tagContent.indexOf(' ');
+				const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
+				const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+				const hasArgs = argsString.length > 0;
+
+				const helper = this.helpers[name];
+				if (helper && hasArgs) {
+					try {
+						const parsedArgs = this.parseHelperArgs(argsString, context);
+						const helperResult = helper(...parsedArgs);
+						replacement = helperResult === undefined ? '' : String(helperResult);
+					} catch (error) {
+						console.error(`❌ Template helper error: ${error.message}`);
+					}
+				} else {
+					const value = this.getNestedValue(context, name);
+					if (value !== undefined) {
+						replacement = String(value);
+					}
 				}
 			}
-			return match;
-		});
 
-		return processed;
+			result += replacement;
+			index = end + 2;
+		}
+
+		return result;
 	}
 
 	/**
