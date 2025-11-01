@@ -70,10 +70,7 @@ describe('TemplateEngine', () => {
 	it('loads templates from R2 bucket when available', async () => {
 		const mockBucket = {
 			list: vi.fn().mockResolvedValue({
-				objects: [
-					{ key: 'template.hbs' },
-					{ key: 'ignore.txt' }
-				]
+				objects: [{ key: 'template.hbs' }, { key: 'ignore.txt' }]
 			}),
 			get: vi.fn().mockImplementation(async (key) => {
 				if (key === 'template.hbs') {
@@ -104,7 +101,22 @@ describe('TemplateEngine', () => {
 		engine.r2Bucket = mockBucket;
 		expect(await engine.getTemplate('remote')).toBe('From bucket');
 
-		expect(await engine.getTemplate('devcontainer-node-json')).toContain('"name": "{{projectName}}"');
+		expect(await engine.getTemplate('devcontainer-node-json')).toContain(
+			'"name": "{{projectName}}"'
+		);
+		expect(await engine.getTemplate('playwright-config')).toContain('defineConfig');
+	});
+
+	it('uses fallback when remote template is comment-only', async () => {
+		const mockBucket = {
+			get: vi.fn().mockResolvedValue({
+				text: vi.fn().mockResolvedValue('// placeholder\n// TODO: fill in')
+			})
+		};
+
+		engine.r2Bucket = mockBucket;
+		const template = await engine.getTemplate('playwright-config');
+		expect(template).toContain('defineConfig');
 	});
 
 	it('compiles templates with helpers, conditionals, and loops', () => {

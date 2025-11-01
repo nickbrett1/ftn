@@ -424,7 +424,11 @@
 </div>
 
 <!-- Dependency Warnings -->
-{#if selectedCapabilities.some((id) => capabilities.find((c) => c.id === id)?.dependencies?.length > 0)}
+{#if selectedCapabilities.some((id) => {
+	const capability = capabilities.find((c) => c.id === id);
+	if (!capability?.dependencies?.length) return false;
+	return capability.dependencies.some((dep) => !selectedCapabilities.includes(dep));
+})}
 	<div
 		data-testid="dependency-warning"
 		class="bg-yellow-900 bg-opacity-20 border border-yellow-500 rounded-md p-4 mt-6"
@@ -444,17 +448,9 @@
 				<div class="mt-2 text-sm text-yellow-200">
 					<p>Some selected capabilities have dependencies that are not selected.</p>
 				</div>
-				<div class="mt-4">
-					<button
-						data-testid="add-dependency-button"
-						class="bg-yellow-600 text-yellow-50 px-3 py-2 rounded-md text-sm hover:bg-yellow-700 transition-colors border border-yellow-400"
-						on:click={() => {
-							// TODO: Implement auto-add dependencies
-							logger.info('Add dependencies requested');
-						}}
-					>
-						Add Missing Dependencies
-					</button>
+				<div class="mt-4 text-xs text-yellow-200">
+					These dependencies are added automatically. Review the selection below if adjustments are
+					needed.
 				</div>
 			</div>
 		</div>

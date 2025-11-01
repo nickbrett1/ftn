@@ -286,7 +286,7 @@ export const capabilities = [
 		description: 'Automated dependency updates and security alerts',
 		url: 'https://github.com/dependabot',
 		category: 'monitoring',
-		dependencies: [],
+		dependencies: ['devcontainer-node'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
@@ -325,7 +325,7 @@ export const capabilities = [
 			}
 		},
 		templates: [
-			{ id: 'lighthouse-config', filePath: '.lighthouserc.js', templateId: 'lighthouse-ci-config' }
+			{ id: 'lighthouse-config', filePath: '.lighthouse.cjs', templateId: 'lighthouse-ci-config' }
 		]
 	},
 	{

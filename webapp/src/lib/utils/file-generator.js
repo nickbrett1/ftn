@@ -217,14 +217,23 @@ export class TemplateEngine {
 			return this.templates.get(templateId);
 		}
 
+		const fallback = this.getFallbackTemplate(templateId);
+
 		// Try to load from R2 bucket
 		if (this.r2Bucket) {
 			try {
 				const object = await this.r2Bucket.get(templateId);
 				if (object) {
 					const content = await object.text();
-					this.templates.set(templateId, content);
-					return content;
+					if (!this.isTemplateEmpty(content)) {
+						this.templates.set(templateId, content);
+						return content;
+					}
+
+					if (fallback != null) {
+						this.templates.set(templateId, fallback);
+						return fallback;
+					}
 				}
 			} catch (error) {
 				console.error(`❌ Failed to load template ${templateId}:`, error);
@@ -232,7 +241,10 @@ export class TemplateEngine {
 		}
 
 		// Return fallback template
-		return this.getFallbackTemplate(templateId);
+		if (fallback != null) {
+			this.templates.set(templateId, fallback);
+		}
+		return fallback;
 	}
 
 	/**
@@ -308,10 +320,71 @@ workflows:
             - test
           filters:
             branches:
-              only: main`
+			  only: main`,
+			'playwright-config': `// @ts-check
+import { defineConfig, devices } from '@playwright/test';
+
+const testDir = '{{configuration.playwright.testDir}}';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173';
+
+export default defineConfig({
+	testDir: testDir || 'tests/e2e',
+	fullyParallel: true,
+	retries: process.env.CI ? 2 : 0,
+	workers: process.env.CI ? 1 : undefined,
+	reporter: [
+		['list'],
+		['html', { outputFolder: 'playwright-report', open: process.env.CI ? 'never' : 'on-failure' }]
+	],
+	use: {
+		baseURL,
+		trace: 'on-first-retry',
+		video: 'retain-on-failure'
+	},
+	projects: [
+		{
+			name: 'chromium',
+			use: { ...devices['Desktop Chrome'] }
+		},
+		{
+			name: 'firefox',
+			use: { ...devices['Desktop Firefox'] }
+		},
+		{
+			name: 'webkit',
+			use: { ...devices['Desktop Safari'] }
+		}
+	],
+	webServer: {
+		command: process.env.CI ? 'npm run build && npm run preview' : 'npm run dev',
+		url: baseURL,
+		reuseExistingServer: !process.env.CI
+	}
+});`
 		};
 
 		return fallbackTemplates[templateId] || null;
+	}
+
+	isTemplateEmpty(content) {
+		if (!content) {
+			return true;
+		}
+
+		const withoutBlockComments = content
+			.replaceAll(/\/\*[\s\S]*?\*\//g, '')
+			.replaceAll(/<!--[\s\S]*?-->/g, '');
+
+		const meaningfulLines = withoutBlockComments
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
+
+		if (meaningfulLines.length === 0) {
+			return true;
+		}
+
+		return meaningfulLines.every((line) => line.startsWith('//') || line.startsWith('#'));
 	}
 
 	/**

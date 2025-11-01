@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import {
-	LOG_LEVELS,
 	createLogger,
 	logger,
 	authLogger,
@@ -45,7 +44,10 @@ describe('logging utilities', () => {
 		);
 
 		custom.debug('hidden');
-		expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('hidden'), expect.anything());
+		expect(console.log).not.toHaveBeenCalledWith(
+			expect.stringContaining('hidden'),
+			expect.anything()
+		);
 
 		logger.warn('global warning');
 		expect(console.warn).toHaveBeenCalledWith(
@@ -63,14 +65,20 @@ describe('logging utilities', () => {
 	});
 
 	it('withTiming logs success and propagates result', async () => {
-		const timed = withTiming(async () => {
-			vi.advanceTimersByTime(50);
-			return 'ok';
-		}, 'operation', { extra: 'value' });
+		const timed = withTiming(
+			async () => {
+				vi.advanceTimersByTime(50);
+				return 'ok';
+			},
+			'operation',
+			{ extra: 'value' }
+		);
 
 		await expect(timed()).resolves.toBe('ok');
 
-		const successCall = console.log.mock.calls.find(([message]) => message.includes('Completed operation'));
+		const successCall = console.log.mock.calls.find(([message]) =>
+			message.includes('Completed operation')
+		);
 		expect(successCall?.[1]).toMatchObject({ duration: '50ms', extra: 'value' });
 	});
 
@@ -82,17 +90,23 @@ describe('logging utilities', () => {
 		}, 'operation');
 
 		await expect(timed()).rejects.toThrow(error);
-		const failureCall = console.error.mock.calls.find(([message]) => message.includes('Failed operation'));
+		const failureCall = console.error.mock.calls.find(([message]) =>
+			message.includes('Failed operation')
+		);
 		expect(failureCall?.[1]).toMatchObject({ duration: '25ms', error: 'boom' });
 	});
 
 	it('logApiCall differentiates success and failure', () => {
 		logApiCall('GET', '/items', { id: 1 }, { ok: true }, 200, 10);
-		const infoCall = console.log.mock.calls.find(([message]) => message.includes('API call: GET /items'));
+		const infoCall = console.log.mock.calls.find(([message]) =>
+			message.includes('API call: GET /items')
+		);
 		expect(infoCall?.[1]).toMatchObject({ statusCode: 200, duration: '10ms' });
 
 		logApiCall('POST', '/items', { id: 1 }, { ok: false }, 500, 30);
-		const errorCall = console.error.mock.calls.find(([message]) => message.includes('API call failed: POST /items'));
+		const errorCall = console.error.mock.calls.find(([message]) =>
+			message.includes('API call failed: POST /items')
+		);
 		expect(errorCall?.[1]).toMatchObject({ statusCode: 500, duration: '30ms' });
 	});
 
@@ -115,7 +129,9 @@ describe('logging utilities', () => {
 
 	it('setLogLevel adjusts log level without throwing', () => {
 		expect(() => setLogLevel('DEBUG')).not.toThrow();
-		const logCall = console.log.mock.calls.find(([message]) => message.includes('Log level set to: DEBUG'));
+		const logCall = console.log.mock.calls.find(([message]) =>
+			message.includes('Log level set to: DEBUG')
+		);
 		expect(logCall).toBeDefined();
 	});
 

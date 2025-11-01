@@ -56,7 +56,7 @@ function validateCapabilityConfig(capabilityId, capabilityConfig) {
 	const schema = capability.configurationSchema;
 	const errors = [];
 
-	if (!schema || !schema.properties) return errors;
+	if (!schema?.properties) return errors;
 
 	for (const [field, rules] of Object.entries(schema.properties)) {
 		// Apply default value if not provided
@@ -852,7 +852,8 @@ function parseProjectInfo(projectName, repositoryUrl) {
 	let organization = projectName?.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
 
 	if (repositoryUrl) {
-		const githubMatch = repositoryUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+		const githubPattern = /github\.com\/([^/]+)\/([^/]+)/;
+		const githubMatch = githubPattern.exec(repositoryUrl);
 		if (githubMatch) {
 			const owner = githubMatch[1];
 			const repo = githubMatch[2].replace(/\.git$/, '');
@@ -1052,6 +1053,62 @@ ${ecosystemEntries}
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+`;
+}
+
+/**
+ * Generates Lighthouse CI configuration
+ * @param {Object} context - Template context
+ * @returns {string} Lighthouse configuration content
+ */
+function generateLighthouseConfig(context) {
+	const thresholds = context.configuration?.thresholds || {};
+
+	const normalizeScore = (value, fallback) => {
+		const score = Number.isFinite(value) ? Number(value) : fallback;
+		const clamped = Math.min(100, Math.max(0, score));
+		return (clamped / 100).toFixed(2);
+	};
+
+	const performanceScore = normalizeScore(thresholds.performance, 90);
+	const accessibilityScore = normalizeScore(thresholds.accessibility, 90);
+	const bestPracticesScore = normalizeScore(thresholds.bestPractices, 90);
+	const seoScore = normalizeScore(thresholds.seo, 90);
+
+	return `module.exports = {
+	ci: {
+		collect: {
+			startServerCommand: 'npm run preview',
+			startServerReadyPattern: 'Local:.*4173',
+			url: ['http://127.0.0.1:4173'],
+			numberOfRuns: 1,
+			extends: 'lighthouse:default',
+			settings: {
+				chromeFlags: '--no-sandbox'
+			},
+			waitForServer: 5000
+		},
+		upload: {
+			target: 'temporary-public-storage'
+		},
+		assert: {
+			preset: 'lighthouse:recommended',
+			assertions: {
+				'categories:performance': ['error', { minScore: ${performanceScore} }],
+				'categories:accessibility': ['error', { minScore: ${accessibilityScore} }],
+				'categories:best-practices': ['error', { minScore: ${bestPracticesScore} }],
+				'categories:seo': ['error', { minScore: ${seoScore} }],
+				'unused-javascript': 'off',
+				'uses-text-compression': 'off',
+				'valid-source-maps': 'off',
+				'csp-xss': 'off',
+				'color-contrast': 'off',
+				'aria-valid-attr-value': 'off',
+				'link-name': 'off'
+			}
+		}
+	}
+};
 `;
 }
 
@@ -1332,26 +1389,76 @@ ${hasSonarCloud ? '    context: SonarCloud' : ''}`;
  * Build browser test job
  * @returns {string} Browser test job YAML
  */
-function buildBrowserTestJob() {
+function buildBrowserTestJob(hasNode, hasDoppler, hasCloudflare) {
 	const browserTestSteps = [
 		'      - checkout',
 		'      - restore_cache:',
 		'          name: Restore Lighthouse CLI cache',
 		'          keys:',
 		'            - lighthouse-cli-{{ .Branch }}-',
-		'            - lighthouse-cli-',
+		'            - lighthouse-cli-'
+	];
+
+	if (hasNode) {
+		browserTestSteps.push(
+			'      - restore_cache:',
+			'          name: Restore node_modules',
+			'          keys:',
+			'            - node-{{ .Branch }}-{{ checksum "package-lock.json" }}',
+			'            - node-{{ .Branch }}-',
+			'            - node-'
+		);
+	}
+
+	if (hasDoppler) {
+		browserTestSteps.push('      - doppler/install');
+	}
+
+	if (hasCloudflare) {
+		browserTestSteps.push(
+			'      - run:',
+			'          name: Setup Wrangler configuration',
+			'          command: ./scripts/setup-wrangler-config.sh'
+		);
+	}
+
+	if (hasNode) {
+		browserTestSteps.push(
+			'      - run:',
+			'          name: Install dependencies',
+			'          command: npm install'
+		);
+		browserTestSteps.push(
+			'      - save_cache:',
+			'          name: Update node_modules cache',
+			'          paths:',
+			'            - node_modules',
+			'          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}'
+		);
+		browserTestSteps.push(
+			'      - run:',
+			'          name: Build application',
+			'          command: npm run build'
+		);
+	}
+
+	browserTestSteps.push(
 		'      - run:',
 		'          name: Install Lighthouse CLI',
-		'          command: sudo npm install -g @lhci/cli@0.9.x',
+		'          command: sudo npm install -g @lhci/cli@0.9.x'
+	);
+	browserTestSteps.push(
 		'      - save_cache:',
 		'          name: Cache Lighthouse CLI',
 		'          paths:',
 		'            - /usr/local/lib/node_modules/@lhci',
-		'          key: lighthouse-cli-{{ .Branch }}-',
+		'          key: lighthouse-cli-{{ .Branch }}-'
+	);
+	browserTestSteps.push(
 		'      - run:',
 		'          name: Run Lighthouse checks',
-		'          command: npm run lighthouse'
-	];
+		'          command: lhci autorun --config .lighthouse.cjs'
+	);
 
 	return `  browser_test:
     docker:
@@ -1485,7 +1592,7 @@ ${buildSteps.map((step) => step).join('\n')}`;
 
 	// Browser test job (if Lighthouse is selected)
 	if (hasLighthouse) {
-		const browserTestJob = buildBrowserTestJob();
+		const browserTestJob = buildBrowserTestJob(hasNode, hasDoppler, hasCloudflare);
 		jobs.push(browserTestJob);
 	}
 
@@ -1568,6 +1675,11 @@ function getFallbackTemplate(templateId, context) {
 	// Handle Dependabot config generation
 	if (templateId === 'dependabot-config') {
 		return generateDependabotConfig(context);
+	}
+
+	// Handle Lighthouse CI config generation
+	if (templateId === 'lighthouse-ci-config') {
+		return generateLighthouseConfig(context);
 	}
 
 	const fallbackTemplates = {

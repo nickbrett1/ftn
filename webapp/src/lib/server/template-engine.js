@@ -257,7 +257,7 @@ export class TemplateEngineService {
 		}
 
 		const value = this.getNestedValue(context, name);
-		return value !== undefined ? String(value) : `{{${rawTagContent}}}`;
+		return value === undefined ? `{{${rawTagContent}}}` : String(value);
 	}
 
 	/**

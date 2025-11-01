@@ -40,15 +40,61 @@
 		return mapping[devcontainerId];
 	}
 
+	function isDependencyStillRequired(dependencyId) {
+		return capabilities.some((capability) => {
+			if (!capability.dependencies?.includes(dependencyId)) {
+				return false;
+			}
+			return selectedCapabilities.includes(capability.id);
+		});
+	}
+
+	function removeCapabilityAndDependents(capabilityId) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (!capability) {
+			return;
+		}
+
+		const sonarCloudLanguage = getSonarCloudLanguageForDevcontainer(capabilityId);
+		if (sonarCloudLanguage) {
+			const sonarCloudConfig = configuration['sonarcloud'];
+			if (sonarCloudConfig?.languages) {
+				const updatedLanguages = sonarCloudConfig.languages.filter(
+					(lang) => lang !== sonarCloudLanguage
+				);
+				if (updatedLanguages.length > 0) {
+					configuration['sonarcloud'] = { ...sonarCloudConfig, languages: updatedLanguages };
+				} else {
+					delete configuration['sonarcloud'];
+				}
+			}
+		}
+
+		selectedCapabilities = selectedCapabilities.filter((id) => id !== capabilityId);
+		if (configuration[capabilityId]) {
+			const { [capabilityId]: _, ...remainingConfig } = configuration;
+			configuration = remainingConfig;
+		}
+		configuration = { ...configuration };
+
+		for (const dependencyId of capability.dependencies || []) {
+			if (selectedCapabilities.includes(dependencyId) && !isDependencyStillRequired(dependencyId)) {
+				removeCapabilityAndDependents(dependencyId);
+			}
+		}
+	}
+
 	// Capability selection handlers
 	function handleCapabilityToggle(event) {
 		const { capabilityId, selected } = event.detail;
+		const capability = capabilities.find((c) => c.id === capabilityId);
+
+		if (!capability) {
+			return;
+		}
 		if (selected) {
 			// Add the selected capability
 			selectedCapabilities = [...selectedCapabilities, capabilityId];
-
-			// Find the capability to get its dependencies
-			const capability = capabilities.find((c) => c.id === capabilityId);
 
 			// Auto-select any missing dependencies
 			if (capability && capability.dependencies) {
@@ -108,28 +154,7 @@
 				return;
 			}
 
-			// Remove SonarCloud language if devcontainer capability is deselected
-			// Update configuration even if SonarCloud isn't selected yet
-			const sonarCloudLanguage = getSonarCloudLanguageForDevcontainer(capabilityId);
-			if (sonarCloudLanguage) {
-				const sonarCloudConfig = configuration['sonarcloud'];
-				if (sonarCloudConfig && sonarCloudConfig.languages) {
-					const updatedLanguages = sonarCloudConfig.languages.filter(
-						(lang) => lang !== sonarCloudLanguage
-					);
-					// Only update if languages array would not be empty, otherwise keep default
-					if (updatedLanguages.length > 0) {
-						configuration['sonarcloud'] = {
-							...sonarCloudConfig,
-							languages: updatedLanguages
-						};
-					}
-				}
-			}
-
-			selectedCapabilities = selectedCapabilities.filter((id) => id !== capabilityId);
-			// Remove configuration for deselected capability
-			delete configuration[capabilityId];
+			removeCapabilityAndDependents(capabilityId);
 		}
 	}
 

@@ -7,7 +7,7 @@
  * @fileoverview Mode switching utilities for genproj tool
  */
 
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { capabilityStore } from '$lib/client/capability-store.js';
 import { projectConfigStore } from '$lib/client/project-config-store.js';
 
@@ -40,11 +40,16 @@ export const canSwitchToMode = derived(
  * @returns {Object} Validation result for each mode
  */
 function validateModeSwitch(currentMode, capabilities, config) {
+	const selectedCapabilities = Array.isArray(capabilities?.selectedCapabilities)
+		? capabilities.selectedCapabilities
+		: [];
+	const configIsValid = Boolean(config?.isValid);
+
 	const validation = {
 		[MODES.CAPABILITIES]: true, // Always can go back to capabilities
-		[MODES.CONFIGURATION]: capabilities.selectedCapabilities.length > 0,
-		[MODES.PREVIEW]: capabilities.selectedCapabilities.length > 0 && config.isValid,
-		[MODES.GENERATION]: capabilities.selectedCapabilities.length > 0 && config.isValid
+		[MODES.CONFIGURATION]: selectedCapabilities.length > 0,
+		[MODES.PREVIEW]: selectedCapabilities.length > 0 && configIsValid,
+		[MODES.GENERATION]: selectedCapabilities.length > 0 && configIsValid
 	};
 
 	return validation;
@@ -60,8 +65,10 @@ export const modeActions = {
 	 * @returns {boolean} Whether the switch was successful
 	 */
 	switchTo(targetMode) {
-		const current = modeStore;
-		const validation = validateModeSwitch(current, capabilityStore, projectConfigStore);
+		const current = get(modeStore);
+		const capabilities = get(capabilityStore) || {};
+		const config = get(projectConfigStore) || {};
+		const validation = validateModeSwitch(current, capabilities, config);
 
 		if (!validation[targetMode]) {
 			console.warn(`⚠️ Cannot switch to ${targetMode} mode: validation failed`);
@@ -110,7 +117,7 @@ export const modeActions = {
 	 * @returns {boolean} Whether the switch was successful
 	 */
 	nextMode() {
-		const current = modeStore;
+		const current = get(modeStore);
 		const modeSequence = [MODES.CAPABILITIES, MODES.CONFIGURATION, MODES.PREVIEW, MODES.GENERATION];
 
 		const currentIndex = modeSequence.indexOf(current);
@@ -127,7 +134,7 @@ export const modeActions = {
 	 * @returns {boolean} Whether the switch was successful
 	 */
 	previousMode() {
-		const current = modeStore;
+		const current = get(modeStore);
 		const modeSequence = [MODES.CAPABILITIES, MODES.CONFIGURATION, MODES.PREVIEW, MODES.GENERATION];
 
 		const currentIndex = modeSequence.indexOf(current);
