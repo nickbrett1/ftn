@@ -198,7 +198,7 @@ export class TemplateEngineService {
 	 * @returns {string} Processed template
 	 */
 	processTemplate(templateContent, context) {
-		if (templateContent === undefined || templateContent === null) {
+		if (templateContent == null) {
 			return '';
 		}
 
