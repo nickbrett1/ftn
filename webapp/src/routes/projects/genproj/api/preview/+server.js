@@ -998,6 +998,64 @@ function generateSonarProjectProperties(context) {
 }
 
 /**
+ * Generates dependabot configuration based on selected capabilities
+ * @param {Object} context - Template context
+ * @returns {string} Dependabot configuration content
+ */
+function generateDependabotConfig(context) {
+	const { selectedCapabilities = [] } = context;
+
+	const ecosystemMappings = [
+		{ capabilityId: 'devcontainer-node', ecosystem: 'npm', directory: '/' },
+		{ capabilityId: 'devcontainer-python', ecosystem: 'pip', directory: '/' },
+		{ capabilityId: 'devcontainer-java', ecosystem: 'gradle', directory: '/' }
+	];
+
+	const ecosystems = ecosystemMappings.filter((mapping) =>
+		selectedCapabilities.includes(mapping.capabilityId)
+	);
+
+	if (ecosystems.length === 0) {
+		return `version: 2
+updates:
+  # TODO: Specify the package ecosystem (e.g., npm, pip, gradle)
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+`;
+	}
+
+	const ecosystemEntries = ecosystems
+		.map(
+			(mapping) => `  - package-ecosystem: "${mapping.ecosystem}"
+    directory: "${mapping.directory}"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5`
+		)
+		.join('\n');
+
+	return `version: 2
+updates:
+${ecosystemEntries}
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+`;
+}
+
+/**
  * Generates smart CircleCI configuration based on selected capabilities
  * @param {Object} context - Template context with selectedCapabilities
  * @returns {string} CircleCI YAML configuration
@@ -1505,6 +1563,11 @@ function getFallbackTemplate(templateId, context) {
 	// Handle SonarCloud config generation
 	if (templateId === 'sonarcloud-config') {
 		return generateSonarProjectProperties(context);
+	}
+
+	// Handle Dependabot config generation
+	if (templateId === 'dependabot-config') {
+		return generateDependabotConfig(context);
 	}
 
 	const fallbackTemplates = {
