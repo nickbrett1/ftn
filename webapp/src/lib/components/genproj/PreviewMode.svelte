@@ -4,7 +4,6 @@
 -->
 
 <script>
-	import { onMount } from 'svelte';
 	import { logger } from '$lib/utils/logging.js';
 
 	// Props
@@ -19,6 +18,24 @@
 	let loading = false;
 	let error = null;
 	let expandedFiles = {};
+	let latestPreviewRequestId = 0;
+	let previewInputs;
+	let previewVersion = 0;
+
+	function cloneConfiguration(config) {
+		if (!config || typeof config !== 'object') {
+			return {};
+		}
+		try {
+			return structuredClone(config);
+		} catch (cloneError) {
+			try {
+				return JSON.parse(JSON.stringify(config));
+			} catch (fallbackError) {
+				return {};
+			}
+		}
+	}
 
 	// Toggle file expansion
 	function toggleFile(filePath) {
@@ -39,10 +56,18 @@
 	}
 
 	// Generate preview data
-	async function generatePreview() {
-		if (selectedCapabilities.length === 0) {
+	async function generatePreview(inputs) {
+		if (!inputs || inputs.selectedCapabilities.length === 0) {
 			return;
 		}
+
+		const requestId = ++latestPreviewRequestId;
+		const payload = {
+			projectName: inputs.projectName,
+			repositoryUrl: inputs.repositoryUrl,
+			selectedCapabilities: inputs.selectedCapabilities,
+			configuration: inputs.configuration
+		};
 
 		try {
 			loading = true;
@@ -53,12 +78,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					projectName: effectiveProjectName,
-					repositoryUrl,
-					selectedCapabilities,
-					configuration
-				})
+				body: JSON.stringify(payload)
 			});
 
 			if (!response.ok) {
@@ -66,17 +86,34 @@
 			}
 
 			const data = await response.json();
-			previewData = data;
+			if (requestId !== latestPreviewRequestId) {
+				return;
+			}
+
+			previewData = {
+				...data,
+				files: Array.isArray(data.files) ? data.files.map((file) => ({ ...file })) : [],
+				externalServices: Array.isArray(data.externalServices)
+					? data.externalServices.map((service) => ({ ...service }))
+					: []
+			};
+			expandedFiles = {};
+			previewVersion += 1;
 			logger.success('Preview generated', {
-				projectName: effectiveProjectName,
-				capabilityCount: selectedCapabilities.length,
+				projectName: payload.projectName,
+				capabilityCount: payload.selectedCapabilities.length,
 				usingPlaceholder: !projectName
 			});
 		} catch (err) {
+			if (requestId !== latestPreviewRequestId) {
+				return;
+			}
 			error = err.message;
 			logger.error('Failed to generate preview', { error: err.message });
 		} finally {
-			loading = false;
+			if (requestId === latestPreviewRequestId) {
+				loading = false;
+			}
 		}
 	}
 
@@ -84,8 +121,20 @@
 	// Use placeholder project name if none is provided
 	$: effectiveProjectName = projectName || 'my-project';
 
-	$: if (selectedCapabilities.length > 0) {
-		generatePreview();
+	$: previewInputs = {
+		projectName: effectiveProjectName,
+		repositoryUrl,
+		selectedCapabilities: [...selectedCapabilities],
+		configuration: cloneConfiguration(configuration)
+	};
+
+	$: if (previewInputs.selectedCapabilities.length > 0) {
+		generatePreview(previewInputs);
+	} else {
+		previewData = null;
+		error = null;
+		expandedFiles = {};
+		previewVersion = 0;
 	}
 
 	// Get capability name by ID
@@ -163,10 +212,11 @@
 
 		<!-- Generated Files -->
 		{#if previewData.files && previewData.files.length > 0}
-			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-white">Generated Files</h3>
+			{#key previewVersion}
+				<div class="space-y-4">
+					<h3 class="text-lg font-semibold text-white">Generated Files</h3>
 
-				{#each previewData.files as file}
+					{#each previewData.files as file (file.filePath + ':' + (file.capabilityId || ''))}
 					<div class="border border-gray-700 rounded-lg overflow-hidden">
 						<div class="bg-gray-800 px-4 py-3 border-b border-gray-700">
 							<div class="flex items-center justify-between">
@@ -265,7 +315,8 @@
 						</div>
 					</div>
 				{/each}
-			</div>
+				</div>
+			{/key}
 		{/if}
 
 		<!-- External Service Changes -->
