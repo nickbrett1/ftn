@@ -240,16 +240,16 @@ describe('genproj error utilities', () => {
 		it('logs with context and includes metadata', () => {
 			const error = new ValidationError('invalid', 'field');
 			logError(error, { context: 'testing' });
-			expect(console.error).toHaveBeenCalledWith(
-				'? Genproj error logged:',
-				expect.objectContaining({
-					error: 'invalid',
-					context: 'testing',
-					code: 'VALIDATION_ERROR',
-					statusCode: 400,
-					timestamp: fixedDate.toISOString()
-				})
-			);
+			expect(console.error).toHaveBeenCalled();
+			const [message, payload] = console.error.mock.calls.at(-1);
+			expect(message).toContain('Genproj error logged:');
+			expect(payload).toMatchObject({
+				error: 'invalid',
+				context: 'testing',
+				code: 'VALIDATION_ERROR',
+				statusCode: 400,
+				timestamp: fixedDate.toISOString()
+			});
 		});
 	});
 });

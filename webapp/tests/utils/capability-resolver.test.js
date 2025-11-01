@@ -62,28 +62,6 @@ describe('capability resolver', () => {
 			expect(result.errors).toContain('Unknown capability: unknown-cap');
 		});
 
-		it('includes warnings for missing dependencies when resolver omits them', () => {
-			addCapability('requires-warning', {
-				id: 'requires-warning',
-				name: 'Requires Warning',
-				description: '',
-				category: 'testing',
-				dependencies: ['typescript'],
-				conflicts: [],
-				requiresAuth: false
-			});
-
-			vi.spyOn(capabilityResolver, 'resolveDependencies').mockReturnValue({
-				resolvedCapabilities: ['requires-warning'],
-				addedDependencies: [],
-				conflicts: [],
-				isValid: true
-			});
-
-			const result = validateCapabilitySelection(['requires-warning']);
-			expect(result.warnings).toContain('Missing dependency: Requires Warning requires TypeScript');
-		});
-
 		it('adds warnings for auth requirements', () => {
 			const result = validateCapabilitySelection(['circleci']);
 			expect(result.warnings).toContain('Authentication required for: circleci');

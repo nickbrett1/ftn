@@ -213,7 +213,7 @@ describe('validation utilities', () => {
 				...baseConfig,
 				projectName: 'in valid',
 				repositoryUrl: 'invalid',
-				selectedCapabilities: ['unknown'],
+				selectedCapabilities: ['doppler', 'unknown'],
 				configuration: { doppler: { projectType: 'desktop' } }
 			};
 

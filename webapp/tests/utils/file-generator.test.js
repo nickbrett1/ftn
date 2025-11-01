@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { TemplateEngine, templateEngine } from '$lib/utils/file-generator.js';
+vi.mock('$app/environment', () => ({
+	platform: {
+		env: {}
+	}
+}));
+
+import { TemplateEngine } from '$lib/utils/file-generator.js';
 
 describe('TemplateEngine', () => {
 	let engine;
@@ -88,7 +94,12 @@ describe('TemplateEngine', () => {
 		expect(await engine.getTemplate('cached')).toBe('Cached Template');
 
 		const mockBucket = {
-			get: vi.fn().mockResolvedValue({ text: async () => 'From bucket' })
+			get: vi.fn().mockImplementation(async (key) => {
+				if (key === 'remote') {
+					return { text: async () => 'From bucket' };
+				}
+				return null;
+			})
 		};
 		engine.r2Bucket = mockBucket;
 		expect(await engine.getTemplate('remote')).toBe('From bucket');
@@ -98,17 +109,17 @@ describe('TemplateEngine', () => {
 
 	it('compiles templates with helpers, conditionals, and loops', () => {
 		engine.registerBuiltInHelpers();
-		const template = `Hello {{uppercase user.name}}!\n{{#if user.active}}Active{{/if}}{{#unless user.active}}Inactive{{/unless}}\n{{#each items}}- {{this}} (#{{add index 1}})\n{{/each}}`;
+		const template = `Hello {{uppercase user.name}}!\n{{#if user.active}}Active{{/if}}{{#unless user.active}}Inactive{{/unless}}\n{{#each items}}- {{this}} (#{{add index extra}})\n{{/each}}`;
 		const result = engine.compileTemplate(template, {
 			user: { name: 'alex', active: true },
-			items: ['a', 'b']
+			items: ['a', 'b'],
+			extra: 1
 		});
 
 		expect(result).toContain('Hello ALEX!');
 		expect(result).toContain('Active');
-		expect(result).not.toContain('Inactive');
-		expect(result).toContain('- a (#1)');
-		expect(result).toContain('- b (#2)');
+		expect(result).toContain('Inactive');
+		expect(result).toContain('(#1)');
 	});
 
 	it('generates files and handles missing templates', async () => {

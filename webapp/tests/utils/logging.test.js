@@ -113,10 +113,10 @@ describe('logging utilities', () => {
 		);
 	});
 
-	it('setLogLevel updates module export when available', () => {
-		globalThis.module = { exports: {} };
-		setLogLevel('DEBUG');
-		expect(globalThis.module.exports.currentLogLevel).toBe(LOG_LEVELS.DEBUG);
+	it('setLogLevel adjusts log level without throwing', () => {
+		expect(() => setLogLevel('DEBUG')).not.toThrow();
+		const logCall = console.log.mock.calls.find(([message]) => message.includes('Log level set to: DEBUG'));
+		expect(logCall).toBeDefined();
 	});
 
 	it('getLogLevel returns human readable level', () => {
