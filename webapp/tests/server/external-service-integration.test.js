@@ -37,9 +37,15 @@ const { mockCircle, mockDoppler, mockSonar, CircleCIAPIMock, DopplerAPIMock, Son
 			mockCircle,
 			mockDoppler,
 			mockSonar,
-			CircleCIAPIMock: vi.fn(() => mockCircle),
-			DopplerAPIMock: vi.fn(() => mockDoppler),
-			SonarCloudAPIMock: vi.fn(() => mockSonar)
+			CircleCIAPIMock: vi.fn(function CircleCIAPIMock() {
+				return mockCircle;
+			}),
+			DopplerAPIMock: vi.fn(function DopplerAPIMock() {
+				return mockDoppler;
+			}),
+			SonarCloudAPIMock: vi.fn(function SonarCloudAPIMock() {
+				return mockSonar;
+			})
 		};
 	});
 
