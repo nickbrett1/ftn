@@ -202,34 +202,58 @@ export class TemplateEngineService {
 			return '';
 		}
 
-		const evaluateTag = (match, rawContent) => {
-			const tagContent = rawContent.trim();
-			if (!tagContent) {
-				return match;
+		const TAG_OPEN = '{{';
+		const TAG_CLOSE = '}}';
+		let result = '';
+		let cursor = 0;
+
+		while (cursor < templateContent.length) {
+			const start = templateContent.indexOf(TAG_OPEN, cursor);
+			if (start === -1) {
+				result += templateContent.slice(cursor);
+				break;
 			}
 
-			const spaceIndex = tagContent.indexOf(' ');
-			const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
-			const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
-			const helper = this.helpers[name];
-			const hasArgs = argsString.length > 0;
-
-			if (helper && hasArgs) {
-				try {
-					const parsedArgs = this.parseHelperArgs(argsString, context);
-					const helperResult = helper(...parsedArgs);
-					return helperResult === undefined ? '' : String(helperResult);
-				} catch (error) {
-					console.error(`❌ Template helper error: ${error.message}`);
-					return '';
-				}
+			result += templateContent.slice(cursor, start);
+			const end = templateContent.indexOf(TAG_CLOSE, start + TAG_OPEN.length);
+			if (end === -1) {
+				result += templateContent.slice(start);
+				break;
 			}
 
-			const value = this.getNestedValue(context, name);
-			return value !== undefined ? String(value) : match;
-		};
+			const rawTagContent = templateContent.slice(start + TAG_OPEN.length, end);
+			result += this.renderTag(rawTagContent, context);
+			cursor = end + TAG_CLOSE.length;
+		}
 
-		return templateContent.replace(/\{\{([^}]+)\}\}/g, evaluateTag);
+		return result;
+	}
+
+	renderTag(rawTagContent, context) {
+		const tagContent = rawTagContent.trim();
+		if (!tagContent) {
+			return `{{${rawTagContent}}}`;
+		}
+
+		const spaceIndex = tagContent.indexOf(' ');
+		const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
+		const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+		const helper = this.helpers[name];
+		const hasArgs = argsString.length > 0;
+
+		if (helper && hasArgs) {
+			try {
+				const parsedArgs = this.parseHelperArgs(argsString, context);
+				const helperResult = helper(...parsedArgs);
+				return helperResult === undefined ? '' : String(helperResult);
+			} catch (error) {
+				console.error(`❌ Template helper error: ${error.message}`);
+				return '';
+			}
+		}
+
+		const value = this.getNestedValue(context, name);
+		return value !== undefined ? String(value) : `{{${rawTagContent}}}`;
 	}
 
 	/**
