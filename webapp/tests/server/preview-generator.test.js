@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-let mockProcessTemplate;
+const { mockProcessTemplate } = vi.hoisted(() => ({
+	mockProcessTemplate: vi.fn((template, context) =>
+		template.replace('{{projectName}}', context.name)
+	)
+}));
 
 vi.mock('../../src/lib/utils/capabilities.js', () => ({
 	CAPABILITIES: {
@@ -38,14 +42,9 @@ vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
 	getCapabilityExecutionOrder: vi.fn(() => ['feature', 'another'])
 }));
 
-vi.mock('../../src/lib/server/template-engine.js', () => {
-	mockProcessTemplate = vi.fn((template, context) =>
-		template.replace('{{projectName}}', context.name)
-	);
-	return {
-		processTemplate: mockProcessTemplate
-	};
-});
+vi.mock('../../src/lib/server/template-engine.js', () => ({
+	processTemplate: mockProcessTemplate
+}));
 
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
 
