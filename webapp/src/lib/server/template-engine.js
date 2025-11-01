@@ -202,57 +202,34 @@ export class TemplateEngineService {
 			return '';
 		}
 
-		let result = '';
-		let index = 0;
-
-		while (index < templateContent.length) {
-			const start = templateContent.indexOf('{{', index);
-
-			if (start === -1) {
-				result += templateContent.slice(index);
-				break;
+		const evaluateTag = (match, rawContent) => {
+			const tagContent = rawContent.trim();
+			if (!tagContent) {
+				return match;
 			}
 
-			result += templateContent.slice(index, start);
+			const spaceIndex = tagContent.indexOf(' ');
+			const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
+			const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+			const helper = this.helpers[name];
+			const hasArgs = argsString.length > 0;
 
-			const end = templateContent.indexOf('}}', start + 2);
-			if (end === -1) {
-				// Unmatched braces - append the rest and exit
-				result += templateContent.slice(start);
-				break;
-			}
-
-			const tagContent = templateContent.slice(start + 2, end).trim();
-			let replacement = `{{${tagContent}}}`;
-
-			if (tagContent.length > 0) {
-				const spaceIndex = tagContent.indexOf(' ');
-				const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
-				const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
-				const hasArgs = argsString.length > 0;
-
-				const helper = this.helpers[name];
-				if (helper && hasArgs) {
-					try {
-						const parsedArgs = this.parseHelperArgs(argsString, context);
-						const helperResult = helper(...parsedArgs);
-						replacement = helperResult === undefined ? '' : String(helperResult);
-					} catch (error) {
-						console.error(`❌ Template helper error: ${error.message}`);
-					}
-				} else {
-					const value = this.getNestedValue(context, name);
-					if (value !== undefined) {
-						replacement = String(value);
-					}
+			if (helper && hasArgs) {
+				try {
+					const parsedArgs = this.parseHelperArgs(argsString, context);
+					const helperResult = helper(...parsedArgs);
+					return helperResult === undefined ? '' : String(helperResult);
+				} catch (error) {
+					console.error(`❌ Template helper error: ${error.message}`);
+					return '';
 				}
 			}
 
-			result += replacement;
-			index = end + 2;
-		}
+			const value = this.getNestedValue(context, name);
+			return value !== undefined ? String(value) : match;
+		};
 
-		return result;
+		return templateContent.replace(/\{\{([^}]+)\}\}/g, evaluateTag);
 	}
 
 	/**

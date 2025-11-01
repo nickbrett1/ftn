@@ -206,9 +206,9 @@ function validateCapabilityConfiguration(selectedCapabilities, configuration) {
 		if (capabilityConfig === undefined) continue;
 
 		// Validate configuration against schema
-		const schema = capability.configurationSchema;
-		if (schema && schema.properties) {
-			for (const [field, rules] of Object.entries(schema.properties)) {
+		const schemaProperties = capability.configurationSchema?.properties;
+		if (schemaProperties) {
+			for (const [field, rules] of Object.entries(schemaProperties)) {
 				const value = capabilityConfig[field];
 				const fieldErrors = validateField(capabilityId, field, value, rules);
 				errors.push(...fieldErrors);

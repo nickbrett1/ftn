@@ -9,6 +9,10 @@
 
 import { error } from '@sveltejs/kit';
 import { capabilities } from '$lib/config/capabilities.js';
+import {
+	validateCapabilitySelection,
+	getRequiredAuthServices
+} from '$lib/utils/capability-resolver.js';
 
 /**
  * Loads initial data for the genproj page
@@ -45,8 +49,13 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Add validation if requested
 		if (validateParam && selectedCapabilities.length > 0) {
-			// TODO: Add validation logic if needed
-			pageData.validation = { valid: true, errors: [] };
+			const validation = validateCapabilitySelection(selectedCapabilities);
+			pageData.validation = {
+				valid: validation.isValid,
+				errors: validation.errors,
+				warnings: validation.warnings,
+				requiredAuth: getRequiredAuthServices(selectedCapabilities)
+			};
 		}
 
 		return pageData;

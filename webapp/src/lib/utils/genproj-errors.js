@@ -180,31 +180,44 @@ export function validateRequest(data, schema) {
 
   for (const [field, rules] of Object.entries(schema)) {
     const value = data[field];
+    const isEmpty = value === undefined || value === null || value === '';
 
-    if (rules.required && (value === undefined || value === null || value === '')) {
+    if (rules.required && isEmpty) {
       errors.push(new ValidationError(`${field} is required`, field));
       continue;
     }
 
-    if (value !== undefined && value !== null) {
-      if (rules.type && typeof value !== rules.type) {
-        errors.push(new ValidationError(`${field} must be a ${rules.type}`, field));
-      }
+    if (isEmpty) {
+      continue;
+    }
 
-      if (rules.minLength && value.length < rules.minLength) {
-        errors.push(new ValidationError(`${field} must be at least ${rules.minLength} characters`, field));
-      }
+    const checks = [
+      [rules.type, typeof value !== rules.type, `${field} must be a ${rules.type}`],
+      [
+        rules.minLength,
+        typeof value === 'string' && value.length < rules.minLength,
+        `${field} must be at least ${rules.minLength} characters`
+      ],
+      [
+        rules.maxLength,
+        typeof value === 'string' && value.length > rules.maxLength,
+        `${field} must be no more than ${rules.maxLength} characters`
+      ],
+      [
+        rules.pattern,
+        typeof value === 'string' && !rules.pattern.test(value),
+        `${field} format is invalid`
+      ],
+      [
+        rules.enum,
+        !rules.enum?.includes(value),
+        `${field} must be one of: ${rules.enum?.join(', ')}`
+      ]
+    ];
 
-      if (rules.maxLength && value.length > rules.maxLength) {
-        errors.push(new ValidationError(`${field} must be no more than ${rules.maxLength} characters`, field));
-      }
-
-      if (rules.pattern && !rules.pattern.test(value)) {
-        errors.push(new ValidationError(`${field} format is invalid`, field));
-      }
-
-      if (rules.enum && !rules.enum.includes(value)) {
-        errors.push(new ValidationError(`${field} must be one of: ${rules.enum.join(', ')}`, field));
+    for (const [ruleEnabled, condition, message] of checks) {
+      if (ruleEnabled && condition) {
+        errors.push(new ValidationError(message, field));
       }
     }
   }
@@ -225,23 +238,17 @@ export function requireAuthentication(authState, requiredServices = []) {
     throw new AuthenticationError('User authentication required');
   }
 
-  const missingServices = [];
-  for (const service of requiredServices) {
-    switch (service) {
-      case 'github':
-        if (!authState.github) missingServices.push('GitHub');
-        break;
-      case 'circleci':
-        if (!authState.circleci) missingServices.push('CircleCI');
-        break;
-      case 'doppler':
-        if (!authState.doppler) missingServices.push('Doppler');
-        break;
-      case 'sonarcloud':
-        if (!authState.sonarcloud) missingServices.push('SonarCloud');
-        break;
-    }
-  }
+  const serviceChecks = {
+    github: ['GitHub', () => Boolean(authState.github)],
+    circleci: ['CircleCI', () => Boolean(authState.circleci)],
+    doppler: ['Doppler', () => Boolean(authState.doppler)],
+    sonarcloud: ['SonarCloud', () => Boolean(authState.sonarcloud)]
+  };
+
+  const missingServices = requiredServices
+    .map((service) => serviceChecks[service])
+    .filter((entry) => entry && !entry[1]())
+    .map(([label]) => label);
 
   if (missingServices.length > 0) {
     throw new AuthorizationError(

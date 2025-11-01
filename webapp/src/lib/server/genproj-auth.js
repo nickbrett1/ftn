@@ -4,15 +4,14 @@
  */
 
 import { genprojDb } from './genproj-database.js';
+import { getRequiredAuthServices as resolveRequiredAuthServices } from '../config/capabilities.js';
 
 /**
  * Authentication state manager for genproj feature
  */
 export class GenprojAuthManager {
-  constructor() {
-    this.currentUser = null;
-    this.authState = null;
-  }
+  currentUser = null;
+  authState = null;
 
   /**
    * Initialize authentication state
@@ -259,28 +258,7 @@ export class GenprojAuthManager {
    * @returns {string[]} Required authentication services
    */
   getRequiredAuthServices(selectedCapabilities) {
-    const required = new Set();
-    
-    // Import capabilities dynamically to avoid circular dependency
-    import('../config/capabilities.js').then(({ getRequiredAuthServices }) => {
-      return getRequiredAuthServices(selectedCapabilities);
-    });
-
-    // For now, return based on common patterns
-    if (selectedCapabilities.includes('circleci')) {
-      required.add('circleci');
-    }
-    if (selectedCapabilities.includes('doppler')) {
-      required.add('doppler');
-    }
-    if (selectedCapabilities.includes('sonarcloud')) {
-      required.add('sonarcloud');
-    }
-    if (selectedCapabilities.includes('github-actions')) {
-      required.add('github');
-    }
-
-    return Array.from(required);
+    return resolveRequiredAuthServices(selectedCapabilities);
   }
 
   /**
@@ -293,36 +271,19 @@ export class GenprojAuthManager {
     const authenticated = [];
     const missing = [];
 
+    const checks = {
+      github: () => this.isGitHubAuthenticated(),
+      circleci: () => this.isCircleCIAuthenticated(),
+      doppler: () => this.isDopplerAuthenticated(),
+      sonarcloud: () => this.isSonarCloudAuthenticated(),
+    };
+
     for (const service of required) {
-      switch (service) {
-        case 'github':
-          if (this.isGitHubAuthenticated()) {
-            authenticated.push(service);
-          } else {
-            missing.push(service);
-          }
-          break;
-        case 'circleci':
-          if (this.isCircleCIAuthenticated()) {
-            authenticated.push(service);
-          } else {
-            missing.push(service);
-          }
-          break;
-        case 'doppler':
-          if (this.isDopplerAuthenticated()) {
-            authenticated.push(service);
-          } else {
-            missing.push(service);
-          }
-          break;
-        case 'sonarcloud':
-          if (this.isSonarCloudAuthenticated()) {
-            authenticated.push(service);
-          } else {
-            missing.push(service);
-          }
-          break;
+      const isAuthenticated = checks[service]?.();
+      if (isAuthenticated) {
+        authenticated.push(service);
+      } else {
+        missing.push(service);
       }
     }
 
