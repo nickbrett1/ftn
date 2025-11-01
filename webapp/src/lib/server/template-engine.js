@@ -198,7 +198,11 @@ export class TemplateEngineService {
 	 * @returns {string} Processed template
 	 */
 	processTemplate(templateContent, context) {
-		if (!templateContent) {
+		if (templateContent === undefined || templateContent === null) {
+			return '';
+		}
+
+		if (templateContent.length === 0) {
 			return '';
 		}
 
@@ -231,7 +235,7 @@ export class TemplateEngineService {
 
 	renderTag(rawTagContent, context) {
 		const tagContent = rawTagContent.trim();
-		if (!tagContent) {
+		if (tagContent.length === 0) {
 			return `{{${rawTagContent}}}`;
 		}
 

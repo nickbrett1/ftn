@@ -341,38 +341,43 @@ export class CapabilityConfigurationService {
 			visitStack.delete(capabilityId);
 		};
 
-		selectedCapabilities.forEach(addCapabilityWithDependencies);
+		for (const capabilityId of selectedCapabilities) {
+			addCapabilityWithDependencies(capabilityId);
+		}
 
 		const collectConflicts = () => {
 			for (const capabilityId of resolved) {
 				const capability = this.capabilities[capabilityId];
 				if (!capability?.conflicts?.length) continue;
-				capability.conflicts
-					.filter((conflictId) => resolved.has(conflictId))
-					.forEach((conflictId) => {
-						const conflicting = this.capabilities[conflictId];
-						errors.push(
-							`Capability '${capability.name}' conflicts with '${conflicting?.name || conflictId}'`
-						);
-					});
+				for (const conflictId of capability.conflicts) {
+					if (!resolved.has(conflictId)) continue;
+					const conflicting = this.capabilities[conflictId];
+					errors.push(
+						`Capability '${capability.name}' conflicts with '${conflicting?.name || conflictId}'`
+					);
+				}
 			}
 		};
 
 		collectConflicts();
 
-		const missingDependencies = selectedCapabilities.flatMap((capabilityId) => {
+		const missingDependencies = [];
+		for (const capabilityId of selectedCapabilities) {
 			const capability = this.capabilities[capabilityId];
 			if (!capability?.dependencies?.length) {
-				return [];
+				continue;
 			}
 
-			return capability.dependencies
-				.filter((dependency) => !selectedCapabilities.includes(dependency))
-				.map((dependency) => ({
+			for (const dependency of capability.dependencies) {
+				if (selectedCapabilities.includes(dependency)) {
+					continue;
+				}
+				missingDependencies.push({
 					capability: capability.name,
 					dependency: this.capabilities[dependency]?.name || dependency
-				}));
-		});
+				});
+			}
+		}
 
 		if (missingDependencies.length > 0) {
 			warnings.push('Some dependencies will be automatically added');
