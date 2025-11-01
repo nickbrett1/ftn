@@ -11,7 +11,8 @@ jobs:
     docker:
       - image: cimg/node:current
     steps:
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
@@ -69,7 +70,8 @@ jobs:
       - image: cimg/node:current
     resource_class: large # Increase to large for more memory and CPU resources
     steps:
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -121,7 +123,8 @@ jobs:
           keys:
             - lighthouse-cli-{{ .Branch }}-
             - lighthouse-cli-
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
@@ -160,7 +163,8 @@ jobs:
     docker:
       - image: cimg/node:current
     steps:
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -206,7 +210,8 @@ jobs:
     docker:
       - image: cimg/node:current
     steps:
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
