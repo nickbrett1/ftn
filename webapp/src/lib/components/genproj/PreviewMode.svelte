@@ -193,9 +193,8 @@
 						>
 							{repositoryUrl}
 						</a>
-				</div>
-		{/key}
-		{/if}
+					</div>
+				{/if}
 				<div>
 					<span class="font-medium text-blue-300">Capabilities:</span>
 					<span class="ml-2 text-blue-200">
@@ -316,7 +315,8 @@
 						</div>
 					</div>
 				{/each}
-			</div>
+				</div>
+			{/key}
 		{/if}
 
 		<!-- External Service Changes -->
