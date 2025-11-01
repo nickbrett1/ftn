@@ -1426,16 +1426,12 @@ function buildBrowserTestJob(hasNode, hasDoppler, hasCloudflare) {
 		browserTestSteps.push(
 			'      - run:',
 			'          name: Install dependencies',
-			'          command: npm install'
-		);
-		browserTestSteps.push(
+			'          command: npm install',
 			'      - save_cache:',
 			'          name: Update node_modules cache',
 			'          paths:',
 			'            - node_modules',
-			'          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}'
-		);
-		browserTestSteps.push(
+			'          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}',
 			'      - run:',
 			'          name: Build application',
 			'          command: npm run build'
@@ -1445,16 +1441,12 @@ function buildBrowserTestJob(hasNode, hasDoppler, hasCloudflare) {
 	browserTestSteps.push(
 		'      - run:',
 		'          name: Install Lighthouse CLI',
-		'          command: sudo npm install -g @lhci/cli@0.9.x'
-	);
-	browserTestSteps.push(
+		'          command: sudo npm install -g @lhci/cli@0.9.x',
 		'      - save_cache:',
 		'          name: Cache Lighthouse CLI',
 		'          paths:',
 		'            - /usr/local/lib/node_modules/@lhci',
-		'          key: lighthouse-cli-{{ .Branch }}-'
-	);
-	browserTestSteps.push(
+		'          key: lighthouse-cli-{{ .Branch }}-',
 		'      - run:',
 		'          name: Run Lighthouse checks',
 		'          command: lhci autorun --config .lighthouse.cjs'
@@ -2029,7 +2021,47 @@ echo "Cloud login script finished."
 			"enabled": true
 		}
 	}
-}`
+}`,
+		'playwright-config': `// @ts-check
+import { defineConfig, devices } from '@playwright/test';
+
+const testDir = '{{testDir}}';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173';
+
+export default defineConfig({
+	testDir: testDir || 'tests/e2e',
+	fullyParallel: true,
+	retries: process.env.CI ? 2 : 0,
+	workers: process.env.CI ? 1 : undefined,
+	reporter: [
+		['list'],
+		['html', { outputFolder: 'playwright-report', open: process.env.CI ? 'never' : 'on-failure' }]
+	],
+	use: {
+		baseURL,
+		trace: 'on-first-retry',
+		video: 'retain-on-failure'
+	},
+	projects: [
+		{
+			name: 'chromium',
+			use: { ...devices['Desktop Chrome'] }
+		},
+		{
+			name: 'firefox',
+			use: { ...devices['Desktop Firefox'] }
+		},
+		{
+			name: 'webkit',
+			use: { ...devices['Desktop Safari'] }
+		}
+	],
+	webServer: {
+		command: process.env.CI ? 'npm run build && npm run preview' : 'npm run dev',
+		url: baseURL,
+		reuseExistingServer: !process.env.CI
+	}
+});`
 	};
 
 	return fallbackTemplates[templateId] || null;

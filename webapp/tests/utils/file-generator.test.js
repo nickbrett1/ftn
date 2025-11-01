@@ -83,6 +83,26 @@ describe('TemplateEngine', () => {
 		engine.r2Bucket = mockBucket;
 		await engine.loadTemplatesFromR2();
 		expect(engine.templates.get('template.hbs')).toBe('Hello {{name}}');
+		expect(engine.templates.get('template')).toBe('Hello {{name}}');
+		expect(mockBucket.list).toHaveBeenCalled();
+	});
+
+	it('replaces comment-only remote templates with fallback during load', async () => {
+		const mockBucket = {
+			list: vi.fn().mockResolvedValue({
+				objects: [{ key: 'playwright/playwright.config.js.hbs' }]
+			}),
+			get: vi.fn().mockResolvedValue({
+				text: vi
+					.fn()
+					.mockResolvedValue('// Generated file for playwright\n// Template: playwright-config')
+			})
+		};
+
+		engine.r2Bucket = mockBucket;
+		await engine.loadTemplatesFromR2();
+		expect(engine.templates.get('playwright-config')).toContain('defineConfig');
+		expect(engine.templates.get('playwright/playwright.config.js.hbs')).toContain('defineConfig');
 		expect(mockBucket.list).toHaveBeenCalled();
 	});
 

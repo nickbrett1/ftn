@@ -165,6 +165,27 @@ describe('genproj preview API POST', () => {
 		);
 	});
 
+	it('generates populated playwright config when only playwright is selected', async () => {
+		const request = {
+			json: async () => ({
+				projectName: 'Playwright Demo',
+				repositoryUrl: '',
+				selectedCapabilities: ['playwright'],
+				configuration: {}
+			})
+		};
+
+		const response = await POST({ request });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+
+		const playwrightFile = data.files.find((file) => file.filePath === 'playwright.config.js');
+		expect(playwrightFile).toBeDefined();
+		expect(playwrightFile.content).toContain('defineConfig');
+		expect(playwrightFile.content).toContain("testDir: testDir || 'tests/e2e'");
+		expect(playwrightFile.content).toContain("outputFolder: 'playwright-report'");
+	});
+
 	it('handles unexpected errors by returning a 500 response', async () => {
 		const error = new Error('Boom');
 		const request = {

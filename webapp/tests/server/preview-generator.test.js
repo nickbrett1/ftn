@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-var mockProcessTemplate;
+let mockProcessTemplate;
 
 vi.mock('../../src/lib/utils/capabilities.js', () => ({
 	CAPABILITIES: {
@@ -8,9 +8,7 @@ vi.mock('../../src/lib/utils/capabilities.js', () => ({
 			id: 'feature',
 			name: 'Feature Capability',
 			description: 'Adds feature support',
-			templates: [
-				{ path: 'src/feature.js', content: 'console.log("{{projectName}}");' }
-			],
+			templates: [{ path: 'src/feature.js', content: 'console.log("{{projectName}}");' }],
 			externalServices: [
 				{
 					type: 'github',

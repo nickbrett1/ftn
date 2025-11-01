@@ -1,51 +1,58 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockCircle = {
-	followProject: vi.fn().mockResolvedValue({
-		id: 'circle-id',
-		slug: 'org/repo',
-		organizationSlug: 'org',
-		vcsUrl: 'https://github.com/org/repo'
-	}),
-	createEnvironmentVariable: vi.fn().mockResolvedValue({}),
-	validateToken: vi.fn().mockResolvedValue(true)
-};
+const { mockCircle, mockDoppler, mockSonar, CircleCIAPIMock, DopplerAPIMock, SonarCloudAPIMock } =
+	vi.hoisted(() => {
+		const mockCircle = {
+			followProject: vi.fn().mockResolvedValue({
+				id: 'circle-id',
+				slug: 'org/repo',
+				organizationSlug: 'org',
+				vcsUrl: 'https://github.com/org/repo'
+			}),
+			createEnvironmentVariable: vi.fn().mockResolvedValue({}),
+			validateToken: vi.fn().mockResolvedValue(true)
+		};
 
-const mockDoppler = {
-	createProject: vi.fn().mockResolvedValue({ id: 'doppler', slug: 'proj' }),
-	createEnvironment: vi.fn().mockResolvedValue({ id: 'env', slug: 'dev' }),
-	setSecret: vi.fn().mockResolvedValue({}),
-	validateToken: vi.fn().mockResolvedValue(true)
-};
+		const mockDoppler = {
+			createProject: vi.fn().mockResolvedValue({ id: 'doppler', slug: 'proj' }),
+			createEnvironment: vi.fn().mockResolvedValue({ id: 'env', slug: 'dev' }),
+			setSecret: vi.fn().mockResolvedValue({}),
+			validateToken: vi.fn().mockResolvedValue(true)
+		};
 
-const mockSonar = {
-	createProject: vi.fn().mockResolvedValue({ key: 'org_repo', name: 'Repo', organization: 'org', visibility: 'public' }),
-	listQualityGates: vi.fn().mockResolvedValue([{ id: 'gate', isDefault: true }]),
-	associateQualityGate: vi.fn().mockResolvedValue({}),
-	createWebhook: vi.fn().mockResolvedValue({}),
-	validateToken: vi.fn().mockResolvedValue(true)
-};
+		const mockSonar = {
+			createProject: vi.fn().mockResolvedValue({
+				key: 'org_repo',
+				name: 'Repo',
+				organization: 'org',
+				visibility: 'public'
+			}),
+			listQualityGates: vi.fn().mockResolvedValue([{ id: 'gate', isDefault: true }]),
+			associateQualityGate: vi.fn().mockResolvedValue({}),
+			createWebhook: vi.fn().mockResolvedValue({}),
+			validateToken: vi.fn().mockResolvedValue(true)
+		};
 
-var CircleCIAPIMock;
-var DopplerAPIMock;
-var SonarCloudAPIMock;
+		return {
+			mockCircle,
+			mockDoppler,
+			mockSonar,
+			CircleCIAPIMock: vi.fn(() => mockCircle),
+			DopplerAPIMock: vi.fn(() => mockDoppler),
+			SonarCloudAPIMock: vi.fn(() => mockSonar)
+		};
+	});
 
 vi.mock('../../src/lib/server/circleci-api.js', () => ({
-	CircleCIAPIService: (CircleCIAPIMock = vi.fn(function () {
-		return mockCircle;
-	}))
+	CircleCIAPIService: CircleCIAPIMock
 }));
 
 vi.mock('../../src/lib/server/doppler-api.js', () => ({
-	DopplerAPIService: (DopplerAPIMock = vi.fn(function () {
-		return mockDoppler;
-	}))
+	DopplerAPIService: DopplerAPIMock
 }));
 
 vi.mock('../../src/lib/server/sonarcloud-api.js', () => ({
-	SonarCloudAPIService: (SonarCloudAPIMock = vi.fn(function () {
-		return mockSonar;
-	}))
+	SonarCloudAPIService: SonarCloudAPIMock
 }));
 
 import { ExternalServiceIntegrationService } from '../../src/lib/server/external-service-integration.js';
@@ -119,10 +126,7 @@ describe('ExternalServiceIntegrationService', () => {
 			sonarcloud: 'token'
 		});
 
-		const results = await service.integrateAllServices(context, [
-			'circleci',
-			'sonarcloud'
-		]);
+		const results = await service.integrateAllServices(context, ['circleci', 'sonarcloud']);
 
 		expect(results.circleci.success).toBe(true);
 		expect(results).not.toHaveProperty('doppler');

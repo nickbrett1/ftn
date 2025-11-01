@@ -192,17 +192,49 @@ export class TemplateEngine {
 			const objects = await this.r2Bucket.list();
 
 			for (const object of objects.objects) {
-				if (object.key.endsWith('.hbs')) {
-					const content = await this.r2Bucket.get(object.key);
-					if (content) {
-						const templateContent = await content.text();
-						this.templates.set(object.key, templateContent);
-						console.log(`✅ Loaded template: ${object.key}`);
-					}
-				}
+				await this.processTemplateObject(object);
 			}
 		} catch (error) {
 			console.error('❌ Failed to load templates from R2:', error);
+		}
+	}
+
+	async processTemplateObject(object) {
+		if (!object?.key?.endsWith?.('.hbs')) {
+			return;
+		}
+
+		const content = await this.r2Bucket.get(object.key);
+		if (!content) {
+			return;
+		}
+
+		const templateContent = await content.text();
+		const templateId = this.normalizeTemplateKey(object.key);
+
+		if (this.isTemplateEmpty(templateContent)) {
+			this.registerFallbackTemplate(templateId, object.key);
+			return;
+		}
+
+		this.saveTemplateVariants(templateId, object.key, templateContent);
+		console.log(`✅ Loaded template: ${object.key}`);
+	}
+
+	registerFallbackTemplate(templateId, originalKey) {
+		const fallback = this.getFallbackTemplate(templateId);
+		if (fallback == null) {
+			return;
+		}
+
+		this.saveTemplateVariants(templateId, originalKey, fallback);
+		console.warn(`⚠️ Remote template ${originalKey} was empty; using fallback`);
+	}
+
+	saveTemplateVariants(templateId, originalKey, content) {
+		this.templates.set(originalKey, content);
+		if (templateId !== originalKey) {
+			this.templates.set(templateId, content);
 		}
 	}
 
@@ -385,6 +417,31 @@ export default defineConfig({
 		}
 
 		return meaningfulLines.every((line) => line.startsWith('//') || line.startsWith('#'));
+	}
+
+	normalizeTemplateKey(key) {
+		if (!key) {
+			return key;
+		}
+
+		const withoutExtension = key.endsWith('.hbs') ? key.slice(0, -4) : key;
+		const segments = withoutExtension.split('/');
+		const baseSegment = segments.pop() || '';
+		const scopeSegment = segments.pop() || '';
+
+		const baseWithoutFileExt = baseSegment.replaceAll(
+			/\.(json|ya?ml|toml|js|ts|cjs|mjs|md)$/gi,
+			''
+		);
+		const sanitizedBase = baseWithoutFileExt.replaceAll('.', '-');
+		const scope = scopeSegment ? scopeSegment.replaceAll('.', '-') : '';
+		const fallbackBase = sanitizedBase || baseSegment.replaceAll('.', '-');
+
+		if (scope && fallbackBase.startsWith(scope)) {
+			return fallbackBase;
+		}
+
+		return scope ? `${scope}-${fallbackBase}` : fallbackBase;
 	}
 
 	/**

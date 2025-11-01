@@ -4,13 +4,10 @@ import { TemplateEngineService } from '../../src/lib/server/template-engine.js';
 
 describe('TemplateEngineService', () => {
 	let engine;
-	let getRandomValuesSpy;
 
 	beforeEach(() => {
 		engine = new TemplateEngineService();
-		getRandomValuesSpy = vi
-			.spyOn(globalThis.crypto, 'getRandomValues')
-			.mockImplementation((array) => array.fill(1));
+		vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation((array) => array.fill(1));
 	});
 
 	afterEach(() => {
