@@ -202,22 +202,56 @@ export class TemplateEngineService {
 			return '';
 		}
 
-		// Simple template processing - replace {{variable}} patterns
-		return templateContent.replaceAll(/\{\{(\w+)(?:\s+([^}]+))?\}\}/g, (match, name, args) => {
-			const helper = this.helpers[name];
-			if (helper) {
-				try {
-					const parsedArgs = args ? this.parseHelperArgs(args, context) : [];
-					return helper(...parsedArgs);
-				} catch (error) {
-					console.error(`❌ Template helper error: ${error.message}`);
-					return match;
+		let result = '';
+		let index = 0;
+
+		while (index < templateContent.length) {
+			const start = templateContent.indexOf('{{', index);
+
+			if (start === -1) {
+				result += templateContent.slice(index);
+				break;
+			}
+
+			result += templateContent.slice(index, start);
+
+			const end = templateContent.indexOf('}}', start + 2);
+			if (end === -1) {
+				// Unmatched braces - append the rest and exit
+				result += templateContent.slice(start);
+				break;
+			}
+
+			const tagContent = templateContent.slice(start + 2, end).trim();
+			let replacement = `{{${tagContent}}}`;
+
+			if (tagContent.length > 0) {
+				const spaceIndex = tagContent.indexOf(' ');
+				const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
+				const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+
+				const helper = this.helpers[name];
+				if (helper) {
+					try {
+						const parsedArgs = argsString ? this.parseHelperArgs(argsString, context) : [];
+						const helperResult = helper(...parsedArgs);
+						replacement = helperResult === undefined ? '' : String(helperResult);
+					} catch (error) {
+						console.error(`❌ Template helper error: ${error.message}`);
+					}
+				} else {
+					const value = this.getNestedValue(context, name);
+					if (value !== undefined) {
+						replacement = String(value);
+					}
 				}
 			}
 
-			const value = this.getNestedValue(context, name);
-			return value === undefined ? match : String(value);
-		});
+			result += replacement;
+			index = end + 2;
+		}
+
+		return result;
 	}
 
 	/**
