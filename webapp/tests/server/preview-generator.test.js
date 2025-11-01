@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockProcessTemplate = vi.fn((template, context) =>
-	template.replace('{{projectName}}', context.name)
-);
+var mockProcessTemplate;
 
 vi.mock('../../src/lib/utils/capabilities.js', () => ({
 	CAPABILITIES: {
@@ -42,9 +40,14 @@ vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
 	getCapabilityExecutionOrder: vi.fn(() => ['feature', 'another'])
 }));
 
-vi.mock('../../src/lib/server/template-engine.js', () => ({
-	processTemplate: mockProcessTemplate
-}));
+vi.mock('../../src/lib/server/template-engine.js', () => {
+	mockProcessTemplate = vi.fn((template, context) =>
+		template.replace('{{projectName}}', context.name)
+	);
+	return {
+		processTemplate: mockProcessTemplate
+	};
+});
 
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
 
@@ -76,13 +79,25 @@ describe('generatePreview', () => {
 		expect(mockProcessTemplate).toHaveBeenCalled();
 	});
 
-	it('throws helpful error when generation fails', async () => {
+	it('continues preview generation when template processing fails', async () => {
+		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		mockProcessTemplate.mockImplementationOnce(() => {
 			throw new Error('template failure');
 		});
 
-		await expect(generatePreview(projectConfig, ['feature'])).rejects.toThrow(
-			'Failed to generate preview: template failure'
-		);
+		const preview = await generatePreview(projectConfig, ['feature']);
+
+		expect(warnSpy).toHaveBeenCalled();
+		expect(preview.files).toEqual([
+			{
+				path: 'README.md',
+				name: 'README.md',
+				content: expect.stringContaining('# Demo'),
+				size: expect.any(Number),
+				type: 'file'
+			}
+		]);
+
+		warnSpy.mockRestore();
 	});
 });

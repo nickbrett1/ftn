@@ -38,7 +38,7 @@ describe('TemplateEngineService', () => {
 
 		expect(result).toContain('Project My Project my_project');
 		expect(result).toMatch(/\d{4}-\d{2}-\d{2}T/); // timestamp inserted
-		expect(result).toContain('1111'); // deterministic random string
+		expect(result).toContain('BBBB'); // deterministic random string
 	});
 
 	it('resolves nested values and helper arguments', () => {

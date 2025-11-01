@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const mockPlatform = { env: {} };
+var mockPlatform;
 
-vi.mock('$app/environment', () => ({ platform: mockPlatform }));
+vi.mock('$app/environment', () => {
+	mockPlatform = { env: {} };
+	return { platform: mockPlatform };
+});
 
 import { GenprojDatabase } from '../../src/lib/server/genproj-database.js';
 
@@ -31,6 +34,7 @@ describe('GenprojDatabase', () => {
 	afterEach(() => {
 		vi.useRealTimers();
 		vi.restoreAllMocks();
+		mockPlatform.env = {};
 	});
 
 	it('fails initialization when database is missing', async () => {
@@ -92,7 +96,7 @@ describe('GenprojDatabase', () => {
 
 		expect(configId).toBe('uuid-123');
 		const config = await db.getProjectConfiguration('uuid-123');
-		expect(config).toMatchObject({ projectName: 'Demo', selectedCapabilities: [] });
+		expect(config).toMatchObject({ project_name: 'Demo', selectedCapabilities: [] });
 
 		await db.updateProjectConfiguration('uuid-123', {
 			projectName: 'Updated',

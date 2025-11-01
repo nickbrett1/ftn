@@ -1,34 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockServiceFactory = (name) => {
+function mockServiceFactory(name) {
 	const validateToken = vi.fn().mockResolvedValue(true);
 
-	return vi.fn().mockImplementation((token) => ({
-		token,
-		name,
-		validateToken
-	}));
-};
+	return vi.fn(function (token) {
+		return {
+			token,
+			name,
+			validateToken
+		};
+	});
+}
 
-const githubFactory = mockServiceFactory('github');
-const circleciFactory = mockServiceFactory('circleci');
-const dopplerFactory = mockServiceFactory('doppler');
-const sonarcloudFactory = mockServiceFactory('sonarcloud');
+var githubFactory;
+var circleciFactory;
+var dopplerFactory;
+var sonarcloudFactory;
 
 vi.mock('../../src/lib/server/github-api.js', () => ({
-	GitHubAPIService: githubFactory
+	GitHubAPIService: (githubFactory = mockServiceFactory('github'))
 }));
 
 vi.mock('../../src/lib/server/circleci-api.js', () => ({
-	CircleCIAPIService: circleciFactory
+	CircleCIAPIService: (circleciFactory = mockServiceFactory('circleci'))
 }));
 
 vi.mock('../../src/lib/server/doppler-api.js', () => ({
-	DopplerAPIService: dopplerFactory
+	DopplerAPIService: (dopplerFactory = mockServiceFactory('doppler'))
 }));
 
 vi.mock('../../src/lib/server/sonarcloud-api.js', () => ({
-	SonarCloudAPIService: sonarcloudFactory
+	SonarCloudAPIService: (sonarcloudFactory = mockServiceFactory('sonarcloud'))
 }));
 
 import { initializeServices, validateAllTokens } from '../../src/lib/server/service-utils.js';
@@ -43,6 +45,10 @@ describe('service-utils', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		githubFactory.mockClear();
+		circleciFactory.mockClear();
+		dopplerFactory.mockClear();
+		sonarcloudFactory.mockClear();
 	});
 
 	it('initializes all services when tokens provided', () => {

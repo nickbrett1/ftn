@@ -203,31 +203,21 @@ export class TemplateEngineService {
 		}
 
 		// Simple template processing - replace {{variable}} patterns
-		let processed = templateContent;
-
-		// Replace basic variables
-		processed = processed.replaceAll(/\{\{(\w+)\}\}/g, (match, variableName) => {
-			const value = this.getNestedValue(context, variableName);
-			return value === undefined ? match : String(value);
-		});
-
-		// Replace helper functions
-		processed = processed.replaceAll(/\{\{(\w+)\s+([^}]+)\}\}/g, (match, helperName, args) => {
-			const helper = this.helpers[helperName];
+		return templateContent.replaceAll(/\{\{(\w+)(?:\s+([^}]+))?\}\}/g, (match, name, args) => {
+			const helper = this.helpers[name];
 			if (helper) {
 				try {
-					// Parse arguments (simple parsing for basic cases)
-					const parsedArgs = this.parseHelperArgs(args, context);
+					const parsedArgs = args ? this.parseHelperArgs(args, context) : [];
 					return helper(...parsedArgs);
 				} catch (error) {
 					console.error(`❌ Template helper error: ${error.message}`);
 					return match;
 				}
 			}
-			return match;
-		});
 
-		return processed;
+			const value = this.getNestedValue(context, name);
+			return value === undefined ? match : String(value);
+		});
 	}
 
 	/**

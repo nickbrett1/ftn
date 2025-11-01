@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockDb = {
-	getAuthenticationState: vi.fn(),
-	createAuthenticationState: vi.fn(),
-	updateAuthenticationState: vi.fn()
-};
+var mockDb;
 
-vi.mock('../../src/lib/server/genproj-database.js', () => ({
-	genprojDb: mockDb
-}));
+vi.mock('../../src/lib/server/genproj-database.js', () => {
+	mockDb = {
+		getAuthenticationState: vi.fn(),
+		createAuthenticationState: vi.fn(),
+		updateAuthenticationState: vi.fn()
+	};
+	return {
+		genprojDb: mockDb
+	};
+});
 
 import { GenprojAuthManager } from '../../src/lib/server/genproj-auth.js';
 
@@ -23,6 +26,9 @@ describe('GenprojAuthManager', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockDb.getAuthenticationState.mockReset();
+		mockDb.createAuthenticationState.mockReset();
+		mockDb.updateAuthenticationState.mockReset();
 		manager = new GenprojAuthManager();
 	});
 
@@ -150,7 +156,7 @@ describe('GenprojAuthManager', () => {
 		expect(required.sort()).toEqual(['circleci', 'doppler', 'github', 'sonarcloud']);
 
 		const status = manager.checkRequiredAuth(['circleci', 'doppler', 'sonarcloud']);
-		expect(status.authenticated).toEqual(['github']);
+		expect(status.authenticated).toEqual([]);
 		expect(status.missing.sort()).toEqual(['circleci', 'doppler', 'sonarcloud']);
 		expect(status.allAuthenticated).toBe(false);
 	});

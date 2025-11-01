@@ -30,20 +30,33 @@ vi.mock('../../src/lib/utils/file-generator.js', () => ({
 	generateAllFiles: vi.fn(() => mockFiles)
 }));
 
+var GitHubAPIMock;
+var CircleCIAPIMock;
+var DopplerAPIMock;
+var SonarCloudAPIMock;
+
 vi.mock('../../src/lib/server/github-api.js', () => ({
-	GitHubAPIService: vi.fn(() => mockGitHub)
+	GitHubAPIService: (GitHubAPIMock = vi.fn(function () {
+		return mockGitHub;
+	}))
 }));
 
 vi.mock('../../src/lib/server/circleci-api.js', () => ({
-	CircleCIAPIService: vi.fn(() => mockCircle)
+	CircleCIAPIService: (CircleCIAPIMock = vi.fn(function () {
+		return mockCircle;
+	}))
 }));
 
 vi.mock('../../src/lib/server/doppler-api.js', () => ({
-	DopplerAPIService: vi.fn(() => mockDoppler)
+	DopplerAPIService: (DopplerAPIMock = vi.fn(function () {
+		return mockDoppler;
+	}))
 }));
 
 vi.mock('../../src/lib/server/sonarcloud-api.js', () => ({
-	SonarCloudAPIService: vi.fn(() => mockSonar)
+	SonarCloudAPIService: (SonarCloudAPIMock = vi.fn(function () {
+		return mockSonar;
+	}))
 }));
 
 import { ProjectGeneratorService } from '../../src/lib/server/project-generator.js';
