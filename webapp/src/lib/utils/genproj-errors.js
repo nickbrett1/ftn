@@ -191,31 +191,31 @@ export function validateRequest(data, schema) {
       continue;
     }
 
-    const applyCheck = (condition, message) => {
-      if (condition) {
-        errors.push(new ValidationError(message, field));
-      }
-    };
-
-    applyCheck(rules.type && typeof value !== rules.type, `${field} must be a ${rules.type}`);
+    if (rules.type && typeof value !== rules.type) {
+      errors.push(new ValidationError(`${field} must be a ${rules.type}`, field));
+      continue;
+    }
 
     if (typeof value === 'string') {
-      applyCheck(
-        rules.minLength !== undefined && value.length < rules.minLength,
-        `${field} must be at least ${rules.minLength} characters`
-      );
-      applyCheck(
-        rules.maxLength !== undefined && value.length > rules.maxLength,
-        `${field} must be no more than ${rules.maxLength} characters`
-      );
-      applyCheck(
-        Boolean(rules.pattern) && !rules.pattern.test(value),
-        `${field} format is invalid`
-      );
+      if (rules.minLength !== undefined && value.length < rules.minLength) {
+        errors.push(
+          new ValidationError(`${field} must be at least ${rules.minLength} characters`, field)
+        );
+      }
+
+      if (rules.maxLength !== undefined && value.length > rules.maxLength) {
+        errors.push(
+          new ValidationError(`${field} must be no more than ${rules.maxLength} characters`, field)
+        );
+      }
+
+      if (rules.pattern instanceof RegExp && !rules.pattern.test(value)) {
+        errors.push(new ValidationError(`${field} format is invalid`, field));
+      }
     }
 
     if (Array.isArray(rules.enum) && !rules.enum.includes(value)) {
-      applyCheck(true, `${field} must be one of: ${rules.enum.join(', ')}`);
+      errors.push(new ValidationError(`${field} must be one of: ${rules.enum.join(', ')}`, field));
     }
   }
 

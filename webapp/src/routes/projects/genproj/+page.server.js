@@ -45,13 +45,13 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Add validation if requested
 		if (validateParam && selectedCapabilities.length > 0) {
-			const capabilityIndex = new Map(capabilities.map((cap) => [cap.id, cap]));
+			const findCapability = (id) => capabilities.find((cap) => cap.id === id);
 			const errors = selectedCapabilities
-				.filter((id) => !capabilityIndex.has(id))
+				.filter((id) => !findCapability(id))
 				.map((id) => `Unknown capability: ${id}`);
 			const requiredAuth = Array.from(
 				new Set(
-					selectedCapabilities.flatMap((id) => capabilityIndex.get(id)?.requiresAuth ?? [])
+					selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? [])
 				)
 			);
 
