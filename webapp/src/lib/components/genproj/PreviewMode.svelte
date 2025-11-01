@@ -20,6 +20,7 @@
 	let expandedFiles = {};
 	let latestPreviewRequestId = 0;
 	let previewInputs;
+	let previewVersion = 0;
 
 	function cloneConfiguration(config) {
 		if (!config || typeof config !== 'object') {
@@ -89,7 +90,15 @@
 				return;
 			}
 
-			previewData = data;
+			previewData = {
+				...data,
+				files: Array.isArray(data.files) ? data.files.map((file) => ({ ...file })) : [],
+				externalServices: Array.isArray(data.externalServices)
+					? data.externalServices.map((service) => ({ ...service }))
+					: []
+			};
+			expandedFiles = {};
+			previewVersion += 1;
 			logger.success('Preview generated', {
 				projectName: payload.projectName,
 				capabilityCount: payload.selectedCapabilities.length,
@@ -124,6 +133,8 @@
 	} else {
 		previewData = null;
 		error = null;
+		expandedFiles = {};
+		previewVersion = 0;
 	}
 
 	// Get capability name by ID
@@ -182,8 +193,9 @@
 						>
 							{repositoryUrl}
 						</a>
-					</div>
-				{/if}
+				</div>
+		{/key}
+		{/if}
 				<div>
 					<span class="font-medium text-blue-300">Capabilities:</span>
 					<span class="ml-2 text-blue-200">
@@ -201,10 +213,11 @@
 
 		<!-- Generated Files -->
 		{#if previewData.files && previewData.files.length > 0}
-			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-white">Generated Files</h3>
+			{#key previewVersion}
+				<div class="space-y-4">
+					<h3 class="text-lg font-semibold text-white">Generated Files</h3>
 
-				{#each previewData.files as file}
+					{#each previewData.files as file (file.filePath + ':' + (file.capabilityId || ''))}
 					<div class="border border-gray-700 rounded-lg overflow-hidden">
 						<div class="bg-gray-800 px-4 py-3 border-b border-gray-700">
 							<div class="flex items-center justify-between">
