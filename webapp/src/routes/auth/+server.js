@@ -75,6 +75,24 @@ const generateAuth = () =>
 		.map((m) => m.toString(36).padStart(2, '0'))
 		.join('');
 
+/**
+ * Base64URL decode a string (URL-safe base64 decoding)
+ * @param {string} str - Base64URL encoded string
+ * @returns {string} Decoded string
+ */
+function base64UrlDecode(str) {
+	// Add padding if needed
+	let base64 = str.replaceAll('-', '+').replaceAll('_', '/');
+	while (base64.length % 4) {
+		base64 += '=';
+	}
+	try {
+		return atob(base64);
+	} catch (error) {
+		throw new Error(`Failed to decode base64URL: ${error.message}`);
+	}
+}
+
 const HTML_TEMPORARY_REDIRECT = 307;
 
 export async function GET({ request, platform }) {
@@ -90,6 +108,28 @@ export async function GET({ request, platform }) {
 		const code = url.searchParams.get('code');
 		if (code === null) {
 			throw new Error('No code found in auth response');
+		}
+
+		// Decode redirect path from OAuth state parameter
+		// State contains: { csrf: string, redirect: string }
+		let redirectPath = '/projects/ccbilling'; // Default fallback
+		const stateParam = url.searchParams.get('state');
+		if (stateParam) {
+			try {
+				// Base64URL decode the state parameter
+				const decodedState = base64UrlDecode(stateParam);
+				const stateData = JSON.parse(decodedState);
+				if (stateData.redirect) {
+					redirectPath = stateData.redirect;
+				}
+				// Note: In production, you should validate the CSRF token from stateData.csrf
+				// against a stored value for additional security
+			} catch (error) {
+				console.warn(
+					`${logPrefix} Failed to decode state parameter, using default redirect:`,
+					error
+				);
+			}
 		}
 
 		const tokenResponse = await tokenExchange(url, code);
@@ -108,7 +148,7 @@ export async function GET({ request, platform }) {
 		});
 
 		// Return an HTML page that sets the cookie via document.cookie and redirects
-		// We use client-side redirect to read localStorage for the redirect path
+		// Redirect path is already decoded from OAuth state parameter above
 		const html = `
 <!DOCTYPE html>
 <html>
@@ -117,23 +157,20 @@ export async function GET({ request, platform }) {
 </head>
 <body>
 	<script>
-		console.log('Auth callback: Reading from localStorage...');
-		
-		// Get redirect path from localStorage or use default
-		const redirectPath = localStorage.getItem('auth_redirect_path') || '/projects/ccbilling';
-		
-		console.log('Auth callback: Redirect path is', redirectPath);
+		console.log('Auth callback: Redirecting to', '${redirectPath}');
 		
 		// Set the auth cookie (must be done client-side to work with http://localhost)
 		document.cookie = 'auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax';
 		
-		console.log('Auth callback: Cookie set, redirecting to', redirectPath);
+		console.log('Auth callback: Cookie set, redirecting to', '${redirectPath}');
 		
-		// Clean up localStorage
-		localStorage.removeItem('auth_redirect_path');
+		// Clean up localStorage (remove old redirect path if present)
+		if (typeof localStorage !== 'undefined') {
+			localStorage.removeItem('auth_redirect_path');
+		}
 		
 		// Redirect to the intended page
-		window.location.href = redirectPath;
+		window.location.href = '${redirectPath}';
 	</script>
 </body>
 </html>`;

@@ -8,6 +8,7 @@
 	import { page } from '$app/stores';
 	import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
 	import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
+	import AuthFlow from '$lib/components/genproj/AuthFlow.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
@@ -19,8 +20,8 @@
 	let activeTab = $state('capabilities');
 	let capabilities = $state(data.capabilities || []);
 	let selectedCapabilities = $state(data.selectedCapabilities || []);
-	let projectName = $state('');
-	let repositoryUrl = $state('');
+	let projectName = $state(data.projectName || '');
+	let repositoryUrl = $state(data.repositoryUrl || '');
 	let configuration = $state({});
 	let loading = $state(!data.capabilities || data.capabilities.length === 0);
 	let error = $state(null);
@@ -199,9 +200,26 @@
 	});
 
 	// Generate project handler
-	function handleGenerateProject() {
-		// Show login modal for unauthenticated users
-		showLoginModal = true;
+	async function handleGenerateProject() {
+		// If not authenticated, go directly to Google auth
+		if (!data.isAuthenticated) {
+			const redirectPath = buildGenprojRedirectPath();
+			await initiateGoogleAuth(redirectPath);
+			return;
+		}
+
+		// If authenticated, check if all required auth is complete
+		// AuthFlow component will handle this
+		showAuthFlow = true;
+	}
+
+	// Auth flow state
+	let showAuthFlow = $state(false);
+
+	function handleAuthComplete() {
+		showAuthFlow = false;
+		// Proceed with project generation
+		logger.info('All authentication complete, ready to generate project');
 	}
 
 	// Get disabled state message
@@ -223,19 +241,34 @@
 	// Demo mode banner - show only when user is not authenticated
 	let showDemoBanner = $derived(!data.isAuthenticated);
 
-	// Login modal state
-	let showLoginModal = $state(false);
-
-	function closeLoginModal() {
-		showLoginModal = false;
-	}
-
-	async function handleLogin() {
-		await initiateGoogleAuth('/projects/genproj');
-	}
-
 	async function handleSignInClick() {
-		await initiateGoogleAuth('/projects/genproj');
+		// Build redirect path with current state to preserve selections
+		const redirectPath = buildGenprojRedirectPath();
+		await initiateGoogleAuth(redirectPath);
+	}
+
+	// Build redirect path with current genproj state
+	function buildGenprojRedirectPath() {
+		const basePath = '/projects/genproj';
+		const params = new URLSearchParams();
+
+		// Preserve selected capabilities
+		if (selectedCapabilities.length > 0) {
+			params.set('selected', selectedCapabilities.join(','));
+		}
+
+		// Preserve project name if set
+		if (projectName && projectName.length >= 3) {
+			params.set('projectName', projectName);
+		}
+
+		// Preserve repository URL if set
+		if (repositoryUrl) {
+			params.set('repositoryUrl', repositoryUrl);
+		}
+
+		const queryString = params.toString();
+		return queryString ? `${basePath}?${queryString}` : basePath;
 	}
 </script>
 
@@ -466,54 +499,14 @@
 		{/if}
 	</main>
 
-	<!-- Login Modal -->
-	{#if showLoginModal}
-		<div
-			data-testid="login-modal"
-			class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50"
-		>
-			<div
-				class="relative top-20 mx-auto p-5 border border-gray-700 w-96 shadow-lg rounded-md bg-gray-800"
-			>
-				<div class="mt-3 text-center">
-					<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-						<svg
-							class="h-6 w-6 text-green-600"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-							/>
-						</svg>
-					</div>
-					<h3 class="text-lg font-medium text-white mt-2">Authentication Required</h3>
-					<div class="mt-2 px-7 py-3">
-						<p class="text-sm text-gray-300">
-							Please sign in to generate your project with the selected capabilities.
-						</p>
-					</div>
-					<div class="items-center px-4 py-3">
-						<button
-							class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 border border-green-400"
-							onclick={handleLogin}
-						>
-							Sign in with Google
-						</button>
-						<button
-							class="mt-3 px-4 py-2 bg-gray-700 text-gray-300 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-600 border border-gray-600"
-							onclick={closeLoginModal}
-						>
-							Cancel
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
+	<!-- AuthFlow Component (for authenticated users) -->
+	{#if showAuthFlow}
+		<AuthFlow
+			isAuthenticated={data.isAuthenticated}
+			{selectedCapabilities}
+			onAuthComplete={handleAuthComplete}
+			show={showAuthFlow}
+		/>
 	{/if}
 
 	<Footer />

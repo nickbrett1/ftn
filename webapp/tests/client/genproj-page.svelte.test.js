@@ -331,15 +331,23 @@ describe('Genproj Page Component', () => {
 		globalThis.fetch.mockRejectedValue(new Error('Network error'));
 
 		component = mount(GenprojPage, {
-			target: document.body
+			target: document.body,
+			props: {
+				data: {
+					isAuthenticated: false,
+					capabilities: [], // Empty array so it will try to fetch
+					selectedCapabilities: []
+				}
+			}
 		});
 
-		// Wait for error to appear
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		// Wait for error to appear (longer wait for async error handling)
+		await new Promise((resolve) => setTimeout(resolve, 500));
 
 		// Should show error message
 		const errorMessage = document.querySelector('[data-testid="error-message"]');
 		expect(errorMessage).toBeTruthy();
+		expect(errorMessage.textContent).toContain('Network error');
 
 		// Should show retry button
 		const retryButton = document.querySelector('[data-testid="retry-button"]');

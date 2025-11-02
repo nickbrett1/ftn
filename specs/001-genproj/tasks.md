@@ -124,22 +124,22 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] Contract test for GitHub auth endpoint in webapp/tests/contract/test_github_auth.js
-- [ ] T034 [P] [US3] Contract test for external service auth endpoints in webapp/tests/contract/test_external_auth.js
-- [ ] T035 [P] [US3] Integration test for progressive auth flow in webapp/tests/integration/test_progressive_auth.js
-- [ ] T036 [P] [US3] E2E test for authentication workflow in webapp/tests/e2e/genproj_auth.spec.js
+- [x] T033 [P] [US3] Contract test for GitHub auth endpoint in webapp/tests/contract/test_github_auth.js
+- [x] T034 [P] [US3] Contract test for external service auth endpoints in webapp/tests/contract/test_external_auth.js
+- [x] T035 [P] [US3] Integration test for progressive auth flow in webapp/tests/integration/test_progressive_auth.js
+- [x] T036 [P] [US3] E2E test for authentication workflow in webapp/tests/e2e/genproj_auth.spec.js
 
 ### Implementation for User Story 3
 
-- [ ] T037 [P] [US3] Create GitHub OAuth endpoint in webapp/src/routes/projects/genproj/api/auth/github/+server.js
-- [ ] T038 [P] [US3] Create GitHub callback handler in webapp/src/routes/projects/genproj/api/auth/github/callback/+server.js
-- [ ] T039 [P] [US3] Create CircleCI auth endpoint in webapp/src/routes/projects/genproj/api/auth/circleci/+server.js
-- [ ] T040 [P] [US3] Create Doppler auth endpoint in webapp/src/routes/projects/genproj/api/auth/doppler/+server.js
-- [ ] T041 [P] [US3] Create SonarCloud auth endpoint in webapp/src/routes/projects/genproj/api/auth/sonarcloud/+server.js
-- [ ] T042 [US3] Create AuthFlow component in webapp/src/lib/components/genproj/AuthFlow.svelte
-- [ ] T043 [US3] Implement authentication state management
-- [ ] T044 [US3] Add encrypted token storage in D1
-- [ ] T045 [US3] Add logging for authentication operations
+- [x] T037 [P] [US3] Create GitHub OAuth endpoint in webapp/src/routes/projects/genproj/api/auth/github/+server.js
+- [x] T038 [P] [US3] Create GitHub callback handler in webapp/src/routes/projects/genproj/api/auth/github/callback/+server.js
+- [x] T039 [P] [US3] Create CircleCI auth endpoint in webapp/src/routes/projects/genproj/api/auth/circleci/+server.js
+- [x] T040 [P] [US3] Create Doppler auth endpoint in webapp/src/routes/projects/genproj/api/auth/doppler/+server.js
+- [x] T041 [P] [US3] Create SonarCloud auth endpoint in webapp/src/routes/projects/genproj/api/auth/sonarcloud/+server.js
+- [x] T042 [US3] Create AuthFlow component in webapp/src/lib/components/genproj/AuthFlow.svelte
+- [x] T043 [US3] Implement authentication state management
+- [x] T044 [US3] Add encrypted token storage in D1
+- [x] T045 [US3] Add logging for authentication operations
 
 **Checkpoint**: All user stories should now be independently functional
 

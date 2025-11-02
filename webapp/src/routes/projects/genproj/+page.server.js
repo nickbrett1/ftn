@@ -22,6 +22,8 @@ export async function load({ params, url, platform, cookies }) {
 	try {
 		// Get query parameters
 		const selectedParam = url.searchParams.get('selected');
+		const projectNameParam = url.searchParams.get('projectName');
+		const repositoryUrlParam = url.searchParams.get('repositoryUrl');
 		const validateParam = url.searchParams.get('validate') === 'true';
 
 		const selectedCapabilities = selectedParam
@@ -39,6 +41,8 @@ export async function load({ params, url, platform, cookies }) {
 		const pageData = {
 			capabilities: capabilities,
 			selectedCapabilities,
+			projectName: projectNameParam || '',
+			repositoryUrl: repositoryUrlParam || '',
 			timestamp: new Date().toISOString(),
 			isAuthenticated
 		};
@@ -50,9 +54,7 @@ export async function load({ params, url, platform, cookies }) {
 				.filter((id) => !findCapability(id))
 				.map((id) => `Unknown capability: ${id}`);
 			const requiredAuth = Array.from(
-				new Set(
-					selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? [])
-				)
+				new Set(selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? []))
 			);
 
 			pageData.validation = {
