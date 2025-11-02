@@ -6,10 +6,10 @@
 </script>
 
 <svelte:head>
-	<title>SpecKit Driven Development</title>
+	<title>Spec Kit Driven Development</title>
 	<meta
 		name="description"
-		content="What I learned using SpecKit to build a project generation wizard"
+		content="What I learned using Spec Kit to build a project generation wizard"
 	/>
 </svelte:head>
 

@@ -14,8 +14,8 @@
 	}
 </style>
 
-<h1 class="!mb-0 no-underline">SpecKit Driven Development</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using SpecKit to build a project generation wizard</p>
+<h1 class="!mb-0 no-underline">Spec Kit Driven Development</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Spec Kit to build a project generation wizard</p>
 November 2025
 <ProjectLinkButton href={projectUrl} />
 
