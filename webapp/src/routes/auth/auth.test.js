@@ -361,6 +361,52 @@ describe('Auth', () => {
 		});
 	});
 
+	describe('OAuth State Handling', () => {
+		it('should respect redirect path from decoded state parameter', async () => {
+			const redirectPath = '/projects/genproj/overview';
+			const statePayload = {
+				csrf: 'csrf-token',
+				redirect: redirectPath
+			};
+			const encodedState = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
+
+			const res = await GET({
+				request: new Request(`https://fintechnick.com/auth?code=123&state=${encodedState}`),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('allowed'),
+							put: vi.fn().mockResolvedValue(undefined)
+						}
+					}
+				}
+			});
+
+			const html = await res.text();
+			expect(html).toContain(`window.location.href = '${redirectPath}'`);
+		});
+
+		it('should fall back to default redirect when state cannot be decoded', async () => {
+			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const res = await GET({
+				request: new Request('https://fintechnick.com/auth?code=123&state=@@@invalid@@@'),
+				platform: {
+					env: {
+						KV: {
+							get: vi.fn().mockResolvedValue('allowed'),
+							put: vi.fn().mockResolvedValue(undefined)
+						}
+					}
+				}
+			});
+
+			const html = await res.text();
+			expect(html).toContain("window.location.href = '/projects/ccbilling'");
+			expect(warnSpy).toHaveBeenCalled();
+			warnSpy.mockRestore();
+		});
+	});
+
 	describe('Token Processing', () => {
 		it('should store auth token with correct expiration', async () => {
 			const mockPut = vi.fn().mockResolvedValue(undefined);
