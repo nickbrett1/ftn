@@ -1,16 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-var mockPlatform;
-
-vi.mock('$app/environment', () => {
-	mockPlatform = { env: {} };
-	return { platform: mockPlatform };
-});
-
 import { GenprojDatabase } from '../../src/lib/server/genproj-database.js';
 
 describe('GenprojDatabase', () => {
 	let mockDb;
+	let mockPlatform;
 	let db;
 	const now = '2024-01-01T00:00:00.000Z';
 
@@ -25,8 +19,8 @@ describe('GenprojDatabase', () => {
 		mockDb = {
 			prepare: vi.fn()
 		};
-		mockPlatform.env.DB_GENPROJ = mockDb;
-		db = new GenprojDatabase();
+		mockPlatform = { env: { DB_GENPROJ: mockDb } };
+		db = new GenprojDatabase(mockPlatform);
 		vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('uuid-123');
 		vi.useFakeTimers().setSystemTime(new Date(now));
 	});
@@ -34,12 +28,11 @@ describe('GenprojDatabase', () => {
 	afterEach(() => {
 		vi.useRealTimers();
 		vi.restoreAllMocks();
-		mockPlatform.env = {};
 	});
 
 	it('fails initialization when database is missing', async () => {
-		mockPlatform.env.DB_GENPROJ = undefined;
-		db = new GenprojDatabase();
+		const emptyPlatform = { env: { DB_GENPROJ: null } };
+		db = new GenprojDatabase(emptyPlatform);
 		const result = await db.initialize();
 		expect(result).toBe(false);
 	});

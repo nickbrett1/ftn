@@ -9,6 +9,7 @@ vi.mock('../../src/lib/server/genproj-database.js', () => {
 		updateAuthenticationState: vi.fn()
 	};
 	return {
+		createGenprojDatabase: vi.fn(() => mockDb),
 		genprojDb: mockDb
 	};
 });
@@ -17,6 +18,7 @@ import { GenprojAuthManager } from '../../src/lib/server/genproj-auth.js';
 
 describe('GenprojAuthManager', () => {
 	let manager;
+	let mockPlatform;
 	const user = {
 		id: 'user-1',
 		email: 'test@example.com',
@@ -25,11 +27,13 @@ describe('GenprojAuthManager', () => {
 	};
 
 	beforeEach(() => {
+		mockPlatform = { env: { DB_GENPROJ: mockDb } };
 		vi.clearAllMocks();
 		mockDb.getAuthenticationState.mockReset();
 		mockDb.createAuthenticationState.mockReset();
 		mockDb.updateAuthenticationState.mockReset();
 		manager = new GenprojAuthManager();
+		manager.initializePlatform(mockPlatform);
 	});
 
 	it('initializes authentication state for new user', async () => {
@@ -37,12 +41,10 @@ describe('GenprojAuthManager', () => {
 			google: { authenticated: true }
 		};
 
-		mockDb.getAuthenticationState
-			.mockResolvedValueOnce(null)
-			.mockResolvedValueOnce(initialState);
+		mockDb.getAuthenticationState.mockResolvedValueOnce(null).mockResolvedValueOnce(initialState);
 		mockDb.createAuthenticationState.mockResolvedValue(true);
 
-		const result = await manager.initialize(user);
+		const result = await manager.initialize(user, mockPlatform);
 
 		expect(result).toBe(true);
 		expect(mockDb.createAuthenticationState).toHaveBeenCalledWith(user.id, {
@@ -63,19 +65,17 @@ describe('GenprojAuthManager', () => {
 
 	it('handles initialization errors gracefully', async () => {
 		mockDb.getAuthenticationState.mockRejectedValue(new Error('db failure'));
-		const result = await manager.initialize(user);
+		const result = await manager.initialize(user, mockPlatform);
 		expect(result).toBe(false);
 	});
 
 	it('updates authentication providers and tracks state', async () => {
-		mockDb.getAuthenticationState
-			.mockResolvedValueOnce(null)
-			.mockResolvedValueOnce({
-				google: { authenticated: true }
-			});
+		mockDb.getAuthenticationState.mockResolvedValueOnce(null).mockResolvedValueOnce({
+			google: { authenticated: true }
+		});
 		mockDb.createAuthenticationState.mockResolvedValue(true);
 
-		await manager.initialize(user);
+		await manager.initialize(user, mockPlatform);
 
 		mockDb.updateAuthenticationState.mockResolvedValue(true);
 		mockDb.getAuthenticationState
