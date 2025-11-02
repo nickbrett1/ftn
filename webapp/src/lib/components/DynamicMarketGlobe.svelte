@@ -5,7 +5,6 @@
 	import { OrbitControls } from '@threlte/extras';
 	import * as THREE from 'three';
 	import { generateFinancialCentersData } from '$lib/utils/financialCentersData';
-	import FinancialCenterMarker from './FinancialCenterMarker.svelte';
 	import MarketLegend from './MarketLegend.svelte';
 
 	let financialCentersData = $state([]);
@@ -41,17 +40,25 @@
 
 <div class="relative w-full h-full">
 	{#if !browser}
-		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+		<div
+			class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10"
+		>
 			<div class="text-center">
-				<div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
+				<div
+					class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full mx-auto mb-4 animate-spin"
+				></div>
 				<p class="text-lg text-white mb-2">Dynamic Market Globe</p>
 				<p class="text-sm text-zinc-400">This component requires a browser environment</p>
 			</div>
 		</div>
 	{:else if !isClient}
-		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+		<div
+			class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10"
+		>
 			<div class="text-center">
-				<div class="w-16 h-16 border-4 border-blue-400 border-t-transparent animate-spin mx-auto mb-4"></div>
+				<div
+					class="w-16 h-16 border-4 border-blue-400 border-t-transparent animate-spin mx-auto mb-4"
+				></div>
 				<p class="text-lg text-white mb-2">Initializing Market Globe</p>
 				<p class="text-sm text-zinc-400">Loading client-side components...</p>
 			</div>
@@ -62,7 +69,7 @@
 				<h2 class="text-xl font-bold mb-2">Market Data Globe</h2>
 				<p class="text-sm text-zinc-400">3D rendering failed, showing 2D representation</p>
 			</div>
-			
+
 			{#if financialCentersData && financialCentersData.length > 0}
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{#each financialCentersData as center}
@@ -73,7 +80,11 @@
 									<div class="text-sm text-zinc-400">{center.country}</div>
 								</div>
 								<div class="text-right">
-									<div class="text-sm font-medium {center.marketSentiment >= 0 ? 'text-green-400' : 'text-red-400'}">
+									<div
+										class="text-sm font-medium {center.marketSentiment >= 0
+											? 'text-green-400'
+											: 'text-red-400'}"
+									>
 										{center.marketSentiment >= 0 ? '+' : ''}{center.marketSentiment.toFixed(1)}%
 									</div>
 									<div class="text-xs text-zinc-500">{center.timezone}</div>
@@ -86,13 +97,11 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="text-center text-zinc-400">
-					No financial center data available
-				</div>
+				<div class="text-center text-zinc-400">No financial center data available</div>
 			{/if}
-			
+
 			<div class="text-center mt-6">
-				<button 
+				<button
 					class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
 					onclick={() => {
 						hasError = false;
@@ -104,9 +113,13 @@
 			</div>
 		</div>
 	{:else if !isLoaded}
-		<div class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10">
+		<div
+			class="absolute inset-0 w-full h-full flex flex-col gap-4 justify-center items-center bg-black bg-opacity-90 z-10"
+		>
 			<div class="text-center">
-				<div class="w-16 h-16 border-4 border-green-400 border-t-transparent animate-spin mx-auto mb-4"></div>
+				<div
+					class="w-16 h-16 border-4 border-green-400 border-t-transparent animate-spin mx-auto mb-4"
+				></div>
 				<p class="text-lg text-white mb-2">Loading Market Globe</p>
 				<p class="text-sm text-zinc-400">Preparing financial data visualization...</p>
 			</div>
@@ -129,44 +142,36 @@
 					hasError = true;
 					errorMessage = `Canvas error: ${error.message || 'Unknown error'}`;
 				}}
-				gl={{ 
+				gl={{
 					antialias: true,
 					alpha: false
 				}}
 			>
 				<!-- Background color -->
 				<T.Color attach="background" args={['#000011']} />
-				
+
 				<!-- Enhanced lighting for dramatic effect -->
 				<T.AmbientLight intensity={0.1} color="#ffffff" />
 				<T.DirectionalLight position={[50, 30, 20]} intensity={0.8} color="#ffffff" />
 				<T.PointLight position={[20, 15, 10]} intensity={0.6} color="#4a90e2" distance={100} />
 				<T.PointLight position={[-20, 15, -10]} intensity={0.4} color="#ffffff" distance={80} />
-				
+
 				<!-- Additional lighting for Earth details -->
 				<T.DirectionalLight position={[0, 1, 0]} intensity={0.3} color="#ffffff" />
 				<T.DirectionalLight position={[1, 0, 0]} intensity={0.2} color="#ffffff" />
-				
+
 				<!-- Sun - bright glowing sphere -->
 				<T.Mesh position={[100, 50, 50]}>
 					<T.SphereGeometry args={[15, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#ffff00"
-						emissive="#ffff00"
-						emissiveIntensity={2.0}
-					/>
+					<T.MeshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={2.0} />
 				</T.Mesh>
-				
+
 				<!-- Sun glow effect -->
 				<T.Mesh position={[100, 50, 50]}>
 					<T.SphereGeometry args={[20, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#ffff00"
-						transparent={true}
-						opacity={0.3}
-					/>
+					<T.MeshBasicMaterial color="#ffff00" transparent={true} opacity={0.3} />
 				</T.Mesh>
-				
+
 				<!-- Stars background -->
 				<T.Points>
 					<T.BufferGeometry>
@@ -193,7 +198,7 @@
 						opacity={0.8}
 					/>
 				</T.Points>
-				
+
 				<!-- Earth with realistic appearance using built-in materials -->
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10, 64, 64]} />
@@ -206,120 +211,75 @@
 						wireframe={false}
 					/>
 				</T.Mesh>
-				
+
 				<!-- Land masses using positioned shapes -->
 				<!-- North America -->
 				<T.Mesh position={[0, 7, -7]}>
 					<T.SphereGeometry args={[3, 12, 12]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- South America -->
 				<T.Mesh position={[0, -3, -8]}>
 					<T.SphereGeometry args={[2.5, 10, 10]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Europe/Asia -->
 				<T.Mesh position={[0, 7, 7]}>
 					<T.SphereGeometry args={[4, 12, 12]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Africa -->
 				<T.Mesh position={[0, 0, 7]}>
 					<T.SphereGeometry args={[3, 12, 12]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Australia -->
 				<T.Mesh position={[0, -6, 9]}>
 					<T.SphereGeometry args={[2, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Greenland -->
 				<T.Mesh position={[0, 9, -5]}>
 					<T.SphereGeometry args={[1.5, 6, 6]} />
-					<T.MeshBasicMaterial
-						color="#8B7355"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#8B7355" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Antarctica -->
 				<T.Mesh position={[0, -9, 0]}>
 					<T.SphereGeometry args={[2.5, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#ffffff"
-						transparent={true}
-						opacity={0.9}
-					/>
+					<T.MeshBasicMaterial color="#ffffff" transparent={true} opacity={0.9} />
 				</T.Mesh>
-				
+
 				<!-- Additional land features -->
 				<!-- Sahara Desert -->
 				<T.Mesh position={[0, 2, 7]}>
 					<T.SphereGeometry args={[2, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#D2B48C"
-						transparent={true}
-						opacity={0.8}
-					/>
+					<T.MeshBasicMaterial color="#D2B48C" transparent={true} opacity={0.8} />
 				</T.Mesh>
-				
+
 				<!-- Amazon Rainforest -->
 				<T.Mesh position={[0, -2, -8]}>
 					<T.SphereGeometry args={[2, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#228B22"
-						transparent={true}
-						opacity={0.8}
-					/>
+					<T.MeshBasicMaterial color="#228B22" transparent={true} opacity={0.8} />
 				</T.Mesh>
-				
+
 				<!-- Siberian Tundra -->
 				<T.Mesh position={[0, 8, 7]}>
 					<T.SphereGeometry args={[2.5, 8, 8]} />
-					<T.MeshBasicMaterial
-						color="#8FBC8F"
-						transparent={true}
-						opacity={0.8}
-					/>
+					<T.MeshBasicMaterial color="#8FBC8F" transparent={true} opacity={0.8} />
 				</T.Mesh>
-				
+
 				<!-- Cloud layer for atmosphere -->
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10.05, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#ffffff"
-						transparent={true}
-						opacity={0.2}
-						wireframe={false}
-					/>
+					<T.MeshBasicMaterial color="#ffffff" transparent={true} opacity={0.2} wireframe={false} />
 				</T.Mesh>
-				
+
 				<!-- Subtle grid lines for geographic reference -->
 				<T.LineSegments>
 					<T.BufferGeometry>
@@ -329,36 +289,52 @@
 								new Float32Array([
 									// Equator line
 									...Array.from({ length: 32 }, (_, i) => {
-										const angle = i * Math.PI / 16;
+										const angle = (i * Math.PI) / 16;
 										return [
-											10 * Math.cos(angle), 0, 10 * Math.sin(angle),
-											10 * Math.cos(angle + Math.PI / 16), 0, 10 * Math.sin(angle + Math.PI / 16)
+											10 * Math.cos(angle),
+											0,
+											10 * Math.sin(angle),
+											10 * Math.cos(angle + Math.PI / 16),
+											0,
+											10 * Math.sin(angle + Math.PI / 16)
 										];
 									}).flat(),
 									// Prime meridian
 									...Array.from({ length: 16 }, (_, i) => {
-										const angle = (i - 8) * Math.PI / 8;
+										const angle = ((i - 8) * Math.PI) / 8;
 										return [
-											10 * Math.cos(0) * Math.cos(angle), 10 * Math.sin(angle), 10 * Math.cos(0) * Math.sin(angle),
-											10 * Math.cos(0) * Math.cos(angle + Math.PI / 8), 10 * Math.sin(angle + Math.PI / 8), 10 * Math.cos(0) * Math.sin(angle + Math.PI / 8)
+											10 * Math.cos(0) * Math.cos(angle),
+											10 * Math.sin(angle),
+											10 * Math.cos(0) * Math.sin(angle),
+											10 * Math.cos(0) * Math.cos(angle + Math.PI / 8),
+											10 * Math.sin(angle + Math.PI / 8),
+											10 * Math.cos(0) * Math.sin(angle + Math.PI / 8)
 										];
 									}).flat(),
 									// Tropic of Cancer
 									...Array.from({ length: 32 }, (_, i) => {
-										const angle = i * Math.PI / 16;
-										const lat = 23.5 * Math.PI / 180;
+										const angle = (i * Math.PI) / 16;
+										const lat = (23.5 * Math.PI) / 180;
 										return [
-											10 * Math.cos(lat) * Math.cos(angle), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle),
-											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
+											10 * Math.cos(lat) * Math.cos(angle),
+											10 * Math.sin(lat),
+											10 * Math.cos(lat) * Math.sin(angle),
+											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16),
+											10 * Math.sin(lat),
+											10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
 										];
 									}).flat(),
 									// Tropic of Capricorn
 									...Array.from({ length: 32 }, (_, i) => {
-										const angle = i * Math.PI / 16;
-										const lat = -23.5 * Math.PI / 180;
+										const angle = (i * Math.PI) / 16;
+										const lat = (-23.5 * Math.PI) / 180;
 										return [
-											10 * Math.cos(lat) * Math.cos(angle), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle),
-											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16), 10 * Math.sin(lat), 10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
+											10 * Math.cos(lat) * Math.cos(angle),
+											10 * Math.sin(lat),
+											10 * Math.cos(lat) * Math.sin(angle),
+											10 * Math.cos(lat) * Math.cos(angle + Math.PI / 16),
+											10 * Math.sin(lat),
+											10 * Math.cos(lat) * Math.sin(angle + Math.PI / 16)
 										];
 									}).flat()
 								]),
@@ -366,31 +342,15 @@
 							]}
 						/>
 					</T.BufferGeometry>
-					<T.LineBasicMaterial
-						color="#2a5a8a"
-						transparent={true}
-						opacity={0.4}
-						linewidth={1}
-					/>
+					<T.LineBasicMaterial color="#2a5a8a" transparent={true} opacity={0.4} linewidth={1} />
 				</T.LineSegments>
-				
+
 				<!-- Earth atmosphere glow -->
 				<T.Mesh position={[0, 0, 0]}>
 					<T.SphereGeometry args={[10.3, 32, 32]} />
-					<T.MeshBasicMaterial
-						color="#4a90e2"
-						transparent={true}
-						opacity={0.1}
-					/>
+					<T.MeshBasicMaterial color="#4a90e2" transparent={true} opacity={0.1} />
 				</T.Mesh>
-				
-				<!-- Financial center markers on the globe -->
-				{#if financialCentersData && financialCentersData.length > 0}
-					{#each financialCentersData as center, index}
-						<FinancialCenterMarker {center} {index} />
-					{/each}
-				{/if}
-				
+
 				<!-- Camera setup -->
 				<T.PerspectiveCamera
 					position={[0, 15, 25]}
@@ -413,14 +373,16 @@
 					/>
 				</T.PerspectiveCamera>
 			</Canvas>
-			
+
 			<!-- Legend overlay -->
 			<div class="absolute top-4 right-4 z-20">
 				<MarketLegend />
 			</div>
 
 			<!-- Data info overlay -->
-			<div class="absolute bottom-4 left-4 z-20 bg-black bg-opacity-80 rounded-lg p-4 border border-zinc-700">
+			<div
+				class="absolute bottom-4 left-4 z-20 bg-black bg-opacity-80 rounded-lg p-4 border border-zinc-700"
+			>
 				<div class="text-white text-sm">
 					<div class="flex items-center gap-2 mb-2">
 						<span class="w-3 h-3 bg-green-400 rounded-full"></span>
