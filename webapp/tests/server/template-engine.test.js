@@ -46,6 +46,20 @@ describe('TemplateEngineService', () => {
 		expect(result).toBe('auto');
 	});
 
+	it('helper utilities handle capability checks and dependency lists', () => {
+		const helpers = engine.helpers;
+		expect(helpers.hasCapability(['a', 'b'], 'b')).toBe(true);
+		expect(helpers.getCapabilityConfig({ svc: { key: 'value' } }, 'svc', 'key')).toBe('value');
+		const deps = JSON.parse(helpers.generateDependencies(['sveltekit', 'tailwindcss']));
+		expect(Object.keys(deps)).toEqual(
+			expect.arrayContaining(['@sveltejs/kit', 'tailwindcss'])
+		);
+		const devDeps = JSON.parse(helpers.generateDevDependencies(['typescript', 'testing']));
+		expect(devDeps).toMatchObject({ typescript: expect.any(String), vitest: expect.any(String) });
+		expect(helpers.join(['x', 'y'], ' / ')).toBe('x / y');
+		expect(helpers.capitalize('example')).toBe('Example');
+	});
+
 	it('processes multiple templates and generates paths', () => {
 		const processed = engine.processTemplates(
 			{
@@ -67,6 +81,8 @@ describe('TemplateEngineService', () => {
 				content: '# Sample'
 			}
 		]);
+
+		expect(engine.generateFilePath('unknown', {})).toBe('unknown');
 	});
 
 	it('parses helper arguments including numbers and strings', () => {
@@ -75,6 +91,12 @@ describe('TemplateEngineService', () => {
 		});
 
 		expect(args).toEqual(['Hello World', 'kebab', 5]);
+	});
+
+	it('loads template sources and retrieves registered names', () => {
+		engine.loadTemplates({ a: 'one', b: 'two' });
+		expect(engine.getTemplate('a')).toBe('one');
+		expect(new Set(engine.getTemplateNames())).toEqual(new Set(['a', 'b']));
 	});
 
 	it('returns empty string for null or empty templates', () => {

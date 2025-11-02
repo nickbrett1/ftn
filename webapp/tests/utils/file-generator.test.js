@@ -106,6 +106,14 @@ describe('TemplateEngine', () => {
 		expect(mockBucket.list).toHaveBeenCalled();
 	});
 
+	it('warns and returns early when R2 bucket is unavailable', async () => {
+		engine.r2Bucket = null;
+		await engine.loadTemplatesFromR2();
+		expect(console.warn).toHaveBeenCalledWith(
+			expect.stringContaining('R2 bucket not available')
+		);
+	});
+
 	it('retrieves templates from cache, bucket, and fallbacks', async () => {
 		engine.templates.set('cached', 'Cached Template');
 		expect(await engine.getTemplate('cached')).toBe('Cached Template');
@@ -152,6 +160,52 @@ describe('TemplateEngine', () => {
 		expect(result).toContain('Active');
 		expect(result).toContain('Inactive');
 		expect(result).toContain('(#1)');
+	});
+
+	it('executes helper utilities and fallback logic', () => {
+		engine.registerBuiltInHelpers();
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2024-05-15T12:34:56.000Z'));
+		const helpers = engine.helpers;
+		process.env.EXAMPLE_KEY = 'example-value';
+		const originalReplaceAll = String.prototype.replaceAll;
+		String.prototype.replaceAll = function (searchValue, replaceValue) {
+			if (searchValue instanceof RegExp && !searchValue.global) {
+				return this.replace(searchValue, replaceValue);
+			}
+			return originalReplaceAll.call(this, searchValue, replaceValue);
+		};
+
+		expect(helpers.get('lowercase')('AbC')).toBe('abc');
+		expect(helpers.get('capitalize')('hello')).toBe('Hello');
+		expect(helpers.get('kebab-case')('FooBarBaz')).toBe('foo-bar-baz');
+		expect(helpers.get('snake_case')('FooBarBaz')).toBe('foo_bar_baz');
+		expect(helpers.get('join')(['a', 'b'], '|')).toBe('a|b');
+		expect(helpers.get('length')(['a', 'b', 'c'])).toBe(3);
+		expect(helpers.get('date')('iso')).toBe('2024-05-15T12:34:56.000Z');
+		expect(helpers.get('date')('year')).toBe('2024');
+		expect(helpers.get('date')('month')).toBe('5');
+		expect(helpers.get('date')('day')).toBe('15');
+		expect(helpers.get('date')()).toBe('5/15/2024');
+		expect(helpers.get('json')({ a: 1 })).toContain('\n');
+		expect(helpers.get('json_compact')({ a: 1 })).toBe('{"a":1}');
+		expect(helpers.get('unless_eq')(1, 2, { fn: () => 'ok', inverse: () => 'no' })).toBe('ok');
+		expect(helpers.get('add')(2, 3)).toBe(5);
+		expect(helpers.get('subtract')(5, 2)).toBe(3);
+		expect(helpers.get('replace')('foo-bar', 'bar', 'baz')).toBe('foo-baz');
+		expect(helpers.get('truncate')('abcdef', 3)).toBe('abc...');
+		expect(helpers.get('env')('EXAMPLE_KEY')).toBe('example-value');
+		expect(helpers.get('project_slug')('My Project')).toBe('my-project');
+		expect(helpers.get('package_name')('Pkg Name')).toBe('pkg-name');
+		expect(helpers.get('class_name')('my-class_name')).toBe('Myclassname');
+		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replace(/-/g, '_'));
+
+		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
+		engine.registerFallbackTemplate('devcontainer-node-json', 'remote/template');
+		expect(fallbackSpy).toHaveBeenCalledWith('devcontainer-node-json');
+		vi.useRealTimers();
+		delete process.env.EXAMPLE_KEY;
+		String.prototype.replaceAll = originalReplaceAll;
 	});
 
 	it('generates files and handles missing templates', async () => {

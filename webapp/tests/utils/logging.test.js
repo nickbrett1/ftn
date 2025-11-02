@@ -19,11 +19,13 @@ const fixedDate = new Date('2024-01-01T00:00:00.000Z');
 
 describe('logging utilities', () => {
 	let originalModule;
+	let originalEnv;
 
 	beforeEach(() => {
 		vi.useFakeTimers();
 		vi.setSystemTime(fixedDate);
 		originalModule = globalThis.module;
+		originalEnv = process.env.GENPROJ_LOG_LEVEL;
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 		vi.spyOn(console, 'warn').mockImplementation(() => {});
 		vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -31,6 +33,12 @@ describe('logging utilities', () => {
 
 	afterEach(() => {
 		globalThis.module = originalModule;
+		if (originalEnv === undefined) {
+			delete process.env.GENPROJ_LOG_LEVEL;
+		} else {
+			process.env.GENPROJ_LOG_LEVEL = originalEnv;
+		}
+		vi.unstubAllEnvs?.();
 		vi.restoreAllMocks();
 		vi.useRealTimers();
 	});
@@ -137,5 +145,29 @@ describe('logging utilities', () => {
 
 	it('getLogLevel returns human readable level', () => {
 		expect(getLogLevel()).toBe('INFO');
+	});
+
+	it('category-specific logger methods route to appropriate consoles', () => {
+		const custom = createLogger('categories');
+		custom.database('query', { table: 'projects' });
+		custom.api('request', { path: '/api' });
+		custom.file('write', { path: '/tmp/file.txt' });
+		custom.user('login', { userId: 'u1' });
+		custom.system('start', { pid: 123 });
+		custom.performance('benchmark', { duration: '5ms' });
+		custom.security('breach', { severity: 'high' });
+
+		expect(console.log).toHaveBeenCalledWith(
+			expect.stringContaining('[categories] query'),
+			expect.objectContaining({ table: 'projects' })
+		);
+		expect(console.log).toHaveBeenCalledWith(
+			expect.stringContaining('[categories] request'),
+			expect.any(Object)
+		);
+		expect(console.log).toHaveBeenCalledWith(
+			expect.stringContaining('[categories] breach'),
+			expect.objectContaining({ severity: 'high' })
+		);
 	});
 });
