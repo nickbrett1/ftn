@@ -3,334 +3,384 @@
  * @description Manages authentication state for genproj feature across multiple services
  */
 
-import { genprojDb } from './genproj-database.js';
+import { createGenprojDatabase } from './genproj-database.js';
 import { getRequiredAuthServices as resolveRequiredAuthServices } from '../config/capabilities.js';
 
 /**
  * Authentication state manager for genproj feature
  */
 export class GenprojAuthManager {
-  currentUser = null;
-  authState = null;
+	currentUser = null;
+	authState = null;
+	db = null;
 
-  /**
-   * Initialize authentication state
-   * @param {Object} user - Current user from existing Google auth
-   * @returns {Promise<boolean>} True if initialized successfully
-   */
-  async initialize(user) {
-    try {
-      this.currentUser = user;
-      
-      if (user?.id) {
-        this.authState = await genprojDb.getAuthenticationState(user.id);
-        
-        // Create auth state if it doesn't exist
-        if (!this.authState) {
-          await genprojDb.createAuthenticationState(user.id, {
-            google: {
-              authenticated: true,
-              email: user.email,
-              name: user.name,
-              expiresAt: user.expiresAt,
-            },
-          });
-          this.authState = await genprojDb.getAuthenticationState(user.id);
-        }
-        
-        console.log('✅ Genproj authentication initialized for user:', user.email);
-        return true;
-      } else {
-        console.log('⚠️ No authenticated user found');
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Failed to initialize genproj authentication:', error);
-      return false;
-    }
-  }
+	/**
+	 * Initialize with platform (required before using other methods)
+	 * @param {Object} platform - Platform object with env
+	 */
+	initializePlatform(platform) {
+		this.db = createGenprojDatabase(platform);
+	}
 
-  /**
-   * Check if user is authenticated with Google
-   * @returns {boolean} True if authenticated
-   */
-  isGoogleAuthenticated() {
-    return this.currentUser?.id && this.authState?.google?.authenticated;
-  }
+	/**
+	 * Initialize authentication state
+	 * @param {Object} user - Current user from existing Google auth
+	 * @param {Object} platform - Platform object with env (optional if already initialized)
+	 * @returns {Promise<boolean>} True if initialized successfully
+	 */
+	async initialize(user, platform = null) {
+		try {
+			// Initialize platform if provided
+			if (platform && !this.db) {
+				this.initializePlatform(platform);
+			}
 
-  /**
-   * Check if user is authenticated with GitHub
-   * @returns {boolean} True if authenticated
-   */
-  isGitHubAuthenticated() {
-    return this.authState?.github?.authenticated === true;
-  }
+			if (!this.db) {
+				console.error(
+					'❌ Database not initialized. Call initializePlatform() or pass platform to initialize()'
+				);
+				return false;
+			}
 
-  /**
-   * Check if user is authenticated with CircleCI
-   * @returns {boolean} True if authenticated
-   */
-  isCircleCIAuthenticated() {
-    return this.authState?.circleci?.authenticated === true;
-  }
+			this.currentUser = user;
 
-  /**
-   * Check if user is authenticated with Doppler
-   * @returns {boolean} True if authenticated
-   */
-  isDopplerAuthenticated() {
-    return this.authState?.doppler?.authenticated === true;
-  }
+			if (user?.id) {
+				this.authState = await this.db.getAuthenticationState(user.id);
 
-  /**
-   * Check if user is authenticated with SonarCloud
-   * @returns {boolean} True if authenticated
-   */
-  isSonarCloudAuthenticated() {
-    return this.authState?.sonarcloud?.authenticated === true;
-  }
+				// Create auth state if it doesn't exist
+				if (!this.authState) {
+					await this.db.createAuthenticationState(user.id, {
+						google: {
+							authenticated: true,
+							email: user.email,
+							name: user.name,
+							expiresAt: user.expiresAt
+						}
+					});
+					this.authState = await this.db.getAuthenticationState(user.id);
+				}
 
-  /**
-   * Get GitHub authentication info
-   * @returns {Object|null} GitHub auth info
-   */
-  getGitHubAuth() {
-    return this.authState?.github || null;
-  }
+				console.log('✅ Genproj authentication initialized for user:', user.email);
+				return true;
+			} else {
+				console.log('⚠️ No authenticated user found');
+				return false;
+			}
+		} catch (error) {
+			console.error('❌ Failed to initialize genproj authentication:', error);
+			return false;
+		}
+	}
 
-  /**
-   * Get CircleCI authentication info
-   * @returns {Object|null} CircleCI auth info
-   */
-  getCircleCIAuth() {
-    return this.authState?.circleci || null;
-  }
+	/**
+	 * Check if user is authenticated with Google
+	 * @returns {boolean} True if authenticated
+	 */
+	isGoogleAuthenticated() {
+		return this.currentUser?.id && this.authState?.google?.authenticated;
+	}
 
-  /**
-   * Get Doppler authentication info
-   * @returns {Object|null} Doppler auth info
-   */
-  getDopplerAuth() {
-    return this.authState?.doppler || null;
-  }
+	/**
+	 * Check if user is authenticated with GitHub
+	 * @returns {boolean} True if authenticated
+	 */
+	isGitHubAuthenticated() {
+		return this.authState?.github?.authenticated === true;
+	}
 
-  /**
-   * Get SonarCloud authentication info
-   * @returns {Object|null} SonarCloud auth info
-   */
-  getSonarCloudAuth() {
-    return this.authState?.sonarcloud || null;
-  }
+	/**
+	 * Check if user is authenticated with CircleCI
+	 * @returns {boolean} True if authenticated
+	 */
+	isCircleCIAuthenticated() {
+		return this.authState?.circleci?.authenticated === true;
+	}
 
-  /**
-   * Update GitHub authentication
-   * @param {Object} githubAuth - GitHub authentication data
-   * @returns {Promise<boolean>} True if updated successfully
-   */
-  async updateGitHubAuth(githubAuth) {
-    try {
-      if (!this.currentUser?.id) {
-        console.error('❌ No authenticated user for GitHub auth update');
-        return false;
-      }
+	/**
+	 * Check if user is authenticated with Doppler
+	 * @returns {boolean} True if authenticated
+	 */
+	isDopplerAuthenticated() {
+		return this.authState?.doppler?.authenticated === true;
+	}
 
-      const updated = await genprojDb.updateAuthenticationState(this.currentUser.id, {
-        github: {
-          authenticated: true,
-          username: githubAuth.username,
-          token: githubAuth.token, // This should be encrypted in production
-          expiresAt: githubAuth.expiresAt,
-          scopes: githubAuth.scopes || [],
-        },
-      });
+	/**
+	 * Check if user is authenticated with SonarCloud
+	 * @returns {boolean} True if authenticated
+	 */
+	isSonarCloudAuthenticated() {
+		return this.authState?.sonarcloud?.authenticated === true;
+	}
 
-      if (updated) {
-        this.authState = await genprojDb.getAuthenticationState(this.currentUser.id);
-        console.log('✅ GitHub authentication updated for user:', this.currentUser.email);
-      }
+	/**
+	 * Get GitHub authentication info
+	 * @returns {Object|null} GitHub auth info
+	 */
+	getGitHubAuth() {
+		return this.authState?.github || null;
+	}
 
-      return updated;
-    } catch (error) {
-      console.error('❌ Failed to update GitHub authentication:', error);
-      return false;
-    }
-  }
+	/**
+	 * Get CircleCI authentication info
+	 * @returns {Object|null} CircleCI auth info
+	 */
+	getCircleCIAuth() {
+		return this.authState?.circleci || null;
+	}
 
-  /**
-   * Update CircleCI authentication
-   * @param {Object} circleciAuth - CircleCI authentication data
-   * @returns {Promise<boolean>} True if updated successfully
-   */
-  async updateCircleCIAuth(circleciAuth) {
-    try {
-      if (!this.currentUser?.id) {
-        console.error('❌ No authenticated user for CircleCI auth update');
-        return false;
-      }
+	/**
+	 * Get Doppler authentication info
+	 * @returns {Object|null} Doppler auth info
+	 */
+	getDopplerAuth() {
+		return this.authState?.doppler || null;
+	}
 
-      const updated = await genprojDb.updateAuthenticationState(this.currentUser.id, {
-        circleci: {
-          authenticated: true,
-          token: circleciAuth.token, // This should be encrypted in production
-          expiresAt: circleciAuth.expiresAt,
-        },
-      });
+	/**
+	 * Get SonarCloud authentication info
+	 * @returns {Object|null} SonarCloud auth info
+	 */
+	getSonarCloudAuth() {
+		return this.authState?.sonarcloud || null;
+	}
 
-      if (updated) {
-        this.authState = await genprojDb.getAuthenticationState(this.currentUser.id);
-        console.log('✅ CircleCI authentication updated for user:', this.currentUser.email);
-      }
+	/**
+	 * Update GitHub authentication
+	 * @param {Object} githubAuth - GitHub authentication data
+	 * @returns {Promise<boolean>} True if updated successfully
+	 */
+	async updateGitHubAuth(githubAuth) {
+		try {
+			if (!this.currentUser?.id) {
+				console.error('❌ No authenticated user for GitHub auth update');
+				return false;
+			}
 
-      return updated;
-    } catch (error) {
-      console.error('❌ Failed to update CircleCI authentication:', error);
-      return false;
-    }
-  }
+			if (!this.db) {
+				console.error('❌ Database not initialized');
+				return false;
+			}
 
-  /**
-   * Update Doppler authentication
-   * @param {Object} dopplerAuth - Doppler authentication data
-   * @returns {Promise<boolean>} True if updated successfully
-   */
-  async updateDopplerAuth(dopplerAuth) {
-    try {
-      if (!this.currentUser?.id) {
-        console.error('❌ No authenticated user for Doppler auth update');
-        return false;
-      }
+			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
+				github: {
+					authenticated: true,
+					username: githubAuth.username,
+					token: githubAuth.token, // This should be encrypted in production
+					expiresAt: githubAuth.expiresAt,
+					scopes: githubAuth.scopes || []
+				}
+			});
 
-      const updated = await genprojDb.updateAuthenticationState(this.currentUser.id, {
-        doppler: {
-          authenticated: true,
-          token: dopplerAuth.token, // This should be encrypted in production
-          expiresAt: dopplerAuth.expiresAt,
-        },
-      });
+			if (updated) {
+				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+				console.log('✅ GitHub authentication updated for user:', this.currentUser.email);
+			}
 
-      if (updated) {
-        this.authState = await genprojDb.getAuthenticationState(this.currentUser.id);
-        console.log('✅ Doppler authentication updated for user:', this.currentUser.email);
-      }
+			return updated;
+		} catch (error) {
+			console.error('❌ Failed to update GitHub authentication:', error);
+			return false;
+		}
+	}
 
-      return updated;
-    } catch (error) {
-      console.error('❌ Failed to update Doppler authentication:', error);
-      return false;
-    }
-  }
+	/**
+	 * Update CircleCI authentication
+	 * @param {Object} circleciAuth - CircleCI authentication data
+	 * @returns {Promise<boolean>} True if updated successfully
+	 */
+	async updateCircleCIAuth(circleciAuth) {
+		try {
+			if (!this.currentUser?.id) {
+				console.error('❌ No authenticated user for CircleCI auth update');
+				return false;
+			}
 
-  /**
-   * Update SonarCloud authentication
-   * @param {Object} sonarcloudAuth - SonarCloud authentication data
-   * @returns {Promise<boolean>} True if updated successfully
-   */
-  async updateSonarCloudAuth(sonarcloudAuth) {
-    try {
-      if (!this.currentUser?.id) {
-        console.error('❌ No authenticated user for SonarCloud auth update');
-        return false;
-      }
+			if (!this.db) {
+				console.error('❌ Database not initialized');
+				return false;
+			}
 
-      const updated = await genprojDb.updateAuthenticationState(this.currentUser.id, {
-        sonarcloud: {
-          authenticated: true,
-          token: sonarcloudAuth.token, // This should be encrypted in production
-          expiresAt: sonarcloudAuth.expiresAt,
-        },
-      });
+			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
+				circleci: {
+					authenticated: true,
+					token: circleciAuth.token, // This should be encrypted in production
+					expiresAt: circleciAuth.expiresAt
+				}
+			});
 
-      if (updated) {
-        this.authState = await genprojDb.getAuthenticationState(this.currentUser.id);
-        console.log('✅ SonarCloud authentication updated for user:', this.currentUser.email);
-      }
+			if (updated) {
+				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+				console.log('✅ CircleCI authentication updated for user:', this.currentUser.email);
+			}
 
-      return updated;
-    } catch (error) {
-      console.error('❌ Failed to update SonarCloud authentication:', error);
-      return false;
-    }
-  }
+			return updated;
+		} catch (error) {
+			console.error('❌ Failed to update CircleCI authentication:', error);
+			return false;
+		}
+	}
 
-  /**
-   * Get required authentication services for capabilities
-   * @param {string[]} selectedCapabilities - Selected capability IDs
-   * @returns {string[]} Required authentication services
-   */
-  getRequiredAuthServices(selectedCapabilities) {
-    const required = new Set(resolveRequiredAuthServices(selectedCapabilities));
+	/**
+	 * Update Doppler authentication
+	 * @param {Object} dopplerAuth - Doppler authentication data
+	 * @returns {Promise<boolean>} True if updated successfully
+	 */
+	async updateDopplerAuth(dopplerAuth) {
+		try {
+			if (!this.currentUser?.id) {
+				console.error('❌ No authenticated user for Doppler auth update');
+				return false;
+			}
 
-    if (selectedCapabilities.includes('github-actions')) {
-      required.add('github');
-    }
+			if (!this.db) {
+				console.error('❌ Database not initialized');
+				return false;
+			}
 
-    return Array.from(required);
-  }
+			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
+				doppler: {
+					authenticated: true,
+					token: dopplerAuth.token, // This should be encrypted in production
+					expiresAt: dopplerAuth.expiresAt
+				}
+			});
 
-  /**
-   * Check if all required services are authenticated
-   * @param {string[]} selectedCapabilities - Selected capability IDs
-   * @returns {Object} Authentication status
-   */
-  checkRequiredAuth(selectedCapabilities) {
-    const required = this.getRequiredAuthServices(selectedCapabilities);
-    const authenticated = [];
-    const missing = [];
+			if (updated) {
+				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+				console.log('✅ Doppler authentication updated for user:', this.currentUser.email);
+			}
 
-    const checks = {
-      github: () => this.isGitHubAuthenticated(),
-      circleci: () => this.isCircleCIAuthenticated(),
-      doppler: () => this.isDopplerAuthenticated(),
-      sonarcloud: () => this.isSonarCloudAuthenticated(),
-    };
+			return updated;
+		} catch (error) {
+			console.error('❌ Failed to update Doppler authentication:', error);
+			return false;
+		}
+	}
 
-    for (const service of required) {
-      const isAuthenticated = checks[service]?.();
-      if (isAuthenticated) {
-        authenticated.push(service);
-      } else {
-        missing.push(service);
-      }
-    }
+	/**
+	 * Update SonarCloud authentication
+	 * @param {Object} sonarcloudAuth - SonarCloud authentication data
+	 * @returns {Promise<boolean>} True if updated successfully
+	 */
+	async updateSonarCloudAuth(sonarcloudAuth) {
+		try {
+			if (!this.currentUser?.id) {
+				console.error('❌ No authenticated user for SonarCloud auth update');
+				return false;
+			}
 
-    return {
-      authenticated,
-      missing,
-      allAuthenticated: missing.length === 0,
-    };
-  }
+			if (!this.db) {
+				console.error('❌ Database not initialized');
+				return false;
+			}
 
-  /**
-   * Get current authentication state
-   * @returns {Object} Current authentication state
-   */
-  getAuthState() {
-    return {
-      user: this.currentUser,
-      google: this.isGoogleAuthenticated(),
-      github: this.isGitHubAuthenticated(),
-      circleci: this.isCircleCIAuthenticated(),
-      doppler: this.isDopplerAuthenticated(),
-      sonarcloud: this.isSonarCloudAuthenticated(),
-    };
-  }
+			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
+				sonarcloud: {
+					authenticated: true,
+					token: sonarcloudAuth.token, // This should be encrypted in production
+					expiresAt: sonarcloudAuth.expiresAt
+				}
+			});
 
-  /**
-   * Clear authentication state
-   * @returns {Promise<boolean>} True if cleared successfully
-   */
-  async clearAuthState() {
-    try {
-      this.currentUser = null;
-      this.authState = null;
-      console.log('✅ Genproj authentication state cleared');
-      return true;
-    } catch (error) {
-      console.error('❌ Failed to clear authentication state:', error);
-      return false;
-    }
-  }
+			if (updated) {
+				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+				console.log('✅ SonarCloud authentication updated for user:', this.currentUser.email);
+			}
+
+			return updated;
+		} catch (error) {
+			console.error('❌ Failed to update SonarCloud authentication:', error);
+			return false;
+		}
+	}
+
+	/**
+	 * Get required authentication services for capabilities
+	 * @param {string[]} selectedCapabilities - Selected capability IDs
+	 * @returns {string[]} Required authentication services
+	 */
+	getRequiredAuthServices(selectedCapabilities) {
+		const required = new Set(resolveRequiredAuthServices(selectedCapabilities));
+
+		if (selectedCapabilities.includes('github-actions')) {
+			required.add('github');
+		}
+
+		return Array.from(required);
+	}
+
+	/**
+	 * Check if all required services are authenticated
+	 * @param {string[]} selectedCapabilities - Selected capability IDs
+	 * @returns {Object} Authentication status
+	 */
+	checkRequiredAuth(selectedCapabilities) {
+		const required = this.getRequiredAuthServices(selectedCapabilities);
+		const authenticated = [];
+		const missing = [];
+
+		const checks = {
+			github: () => this.isGitHubAuthenticated(),
+			circleci: () => this.isCircleCIAuthenticated(),
+			doppler: () => this.isDopplerAuthenticated(),
+			sonarcloud: () => this.isSonarCloudAuthenticated()
+		};
+
+		for (const service of required) {
+			const isAuthenticated = checks[service]?.();
+			if (isAuthenticated) {
+				authenticated.push(service);
+			} else {
+				missing.push(service);
+			}
+		}
+
+		return {
+			authenticated,
+			missing,
+			allAuthenticated: missing.length === 0
+		};
+	}
+
+	/**
+	 * Get current authentication state
+	 * @returns {Object} Current authentication state
+	 */
+	getAuthState() {
+		return {
+			user: this.currentUser,
+			google: this.isGoogleAuthenticated(),
+			github: this.isGitHubAuthenticated(),
+			circleci: this.isCircleCIAuthenticated(),
+			doppler: this.isDopplerAuthenticated(),
+			sonarcloud: this.isSonarCloudAuthenticated()
+		};
+	}
+
+	/**
+	 * Clear authentication state
+	 * @returns {Promise<boolean>} True if cleared successfully
+	 */
+	async clearAuthState() {
+		try {
+			this.currentUser = null;
+			this.authState = null;
+			console.log('✅ Genproj authentication state cleared');
+			return true;
+		} catch (error) {
+			console.error('❌ Failed to clear authentication state:', error);
+			return false;
+		}
+	}
 }
 
-// Export singleton instance
+// Export factory function to create auth manager with platform
+export function createGenprojAuth(platform) {
+	const auth = new GenprojAuthManager();
+	auth.initializePlatform(platform);
+	return auth;
+}
+
+// Export a default instance (will need platform set via initializePlatform)
+// This is primarily for backward compatibility in route handlers
 export const genprojAuth = new GenprojAuthManager();

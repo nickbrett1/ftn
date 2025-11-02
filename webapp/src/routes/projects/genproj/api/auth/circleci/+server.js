@@ -79,8 +79,8 @@ export async function POST({ request, platform }) {
 			return json({ error: 'Google authentication required' }, { status: 401 });
 		}
 
-		// Initialize auth manager
-		await genprojAuth.initialize(currentUser);
+		// Initialize auth manager with platform
+		await genprojAuth.initialize(currentUser, platform);
 
 		// Update CircleCI authentication
 		const updated = await genprojAuth.updateCircleCIAuth({

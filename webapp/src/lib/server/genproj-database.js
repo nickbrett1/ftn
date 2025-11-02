@@ -3,14 +3,25 @@
  * @description Database utilities for the genproj feature using Cloudflare D1
  */
 
-import { platform } from '$app/environment';
-
 /**
  * Database connection class for genproj feature
  */
 export class GenprojDatabase {
-	constructor() {
-		this.db = platform?.env?.DB_GENPROJ;
+	/**
+	 * @param {Object} platform - Platform object with env (passed from route handlers)
+	 */
+	constructor(platform = null) {
+		this.db = platform?.env?.DB_GENPROJ || null;
+		this.platform = platform;
+	}
+
+	/**
+	 * Initialize with platform (for use when platform is not available at construction)
+	 * @param {Object} platform - Platform object with env
+	 */
+	initializeWithPlatform(platform) {
+		this.platform = platform;
+		this.db = platform?.env?.DB_GENPROJ || null;
 	}
 
 	/**
@@ -384,5 +395,11 @@ export class GenprojDatabase {
 	}
 }
 
-// Export singleton instance
+// Export factory function to create database instance with platform
+export function createGenprojDatabase(platform) {
+	return new GenprojDatabase(platform);
+}
+
+// Export a default instance (will need platform set via initializeWithPlatform)
+// This is primarily for backward compatibility
 export const genprojDb = new GenprojDatabase();

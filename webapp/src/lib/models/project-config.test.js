@@ -18,8 +18,11 @@ const loggerMock = vi.hoisted(() => ({
 }));
 
 vi.mock('../server/genproj-database.js', () => ({
+	createGenprojDatabase: vi.fn(() => dbMocks),
 	genprojDb: dbMocks
 }));
+
+const mockDb = dbMocks;
 
 vi.mock('./validation.js', () => ({
 	validateProjectConfiguration
@@ -143,20 +146,20 @@ describe('ProjectConfiguration', () => {
 	it('loads configuration from database when present', async () => {
 		dbMocks.getProjectConfiguration.mockResolvedValue({ id: 'cfg-1', projectName: 'Loaded' });
 
-		const config = await ProjectConfiguration.load('cfg-1');
+		const config = await ProjectConfiguration.load('cfg-1', mockDb);
 		expect(config).toBeInstanceOf(ProjectConfiguration);
 		expect(config.projectName).toBe('Loaded');
 	});
 
 	it('returns null when configuration missing during load', async () => {
 		dbMocks.getProjectConfiguration.mockResolvedValue(null);
-		const config = await ProjectConfiguration.load('missing');
+		const config = await ProjectConfiguration.load('missing', mockDb);
 		expect(config).toBeNull();
 	});
 
 	it('logs and rethrows errors when load fails', async () => {
 		dbMocks.getProjectConfiguration.mockRejectedValue(new Error('d1 down'));
-		await expect(ProjectConfiguration.load('cfg-1')).rejects.toThrow('d1 down');
+		await expect(ProjectConfiguration.load('cfg-1', mockDb)).rejects.toThrow('d1 down');
 		expect(loggerMock.error).toHaveBeenCalledWith('Failed to load project configuration', {
 			id: 'cfg-1',
 			error: 'd1 down'

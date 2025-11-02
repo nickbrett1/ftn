@@ -134,8 +134,8 @@ export async function GET({ request, platform }) {
 			throw redirect(302, `${url.origin}/projects/genproj?error=google_auth_required`);
 		}
 
-		// Initialize auth manager
-		await genprojAuth.initialize(currentUser);
+		// Initialize auth manager with platform
+		await genprojAuth.initialize(currentUser, platform);
 
 		// Update GitHub authentication
 		const updated = await genprojAuth.updateGitHubAuth({
