@@ -27,7 +27,11 @@ vi.mock('@sveltejs/kit', () => ({
 vi.mock('$lib/utils/auth-helpers.js', () => helperMocks);
 
 vi.mock('$lib/server/genproj-auth.js', () => ({
-	genprojAuth: authManagerMocks
+	genprojAuth: {
+		...authManagerMocks,
+		initializePlatform: vi.fn(),
+		kv: null
+	}
 }));
 
 vi.mock('$lib/server/auth-helpers.js', () => ({
@@ -173,6 +177,9 @@ describe('Doppler Auth API', () => {
 		});
 
 		it('returns 500 when persistence fails', async () => {
+			// Mock initializePlatform to set kv property
+			const { genprojAuth } = await import('$lib/server/genproj-auth.js');
+			genprojAuth.kv = defaultPlatform.env.KV;
 			authManagerMocks.updateDopplerAuth.mockResolvedValueOnce(false);
 
 			const response = await POST({

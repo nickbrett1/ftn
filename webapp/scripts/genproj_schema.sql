@@ -1,66 +1,21 @@
--- Project Generation Tool D1 Database Schema
+-- Project Generation Tool Database Schema
 --
--- Usage:
--- 1. Create a new D1 database in Cloudflare (e.g., named 'genproj') via the dashboard or Wrangler CLI.
--- 2. Run this SQL to initialize the schema (can use the Cloudflare dashboard, Wrangler, or D1 CLI).
+-- NOTE: This file is no longer used. Genproj now uses KV storage instead of D1 database.
 --
--- This file is for initial setup, not for migration from production data.
+-- The genproj feature originally used D1 database for:
+-- - Authentication states (GitHub, CircleCI, Doppler, SonarCloud tokens)
+-- - Project configurations
+-- - Generated artifacts
+-- - External service integrations
+--
+-- As of the KV refactor, all authentication state is now stored in KV (similar to Google auth),
+-- and there is no need for persistent storage of project configurations or artifacts since
+-- genproj is a "generate once and done" tool.
+--
+-- If you need to restore D1 support in the future, this schema can serve as a reference,
+-- but the current implementation uses KV exclusively.
 
--- Project configurations
-CREATE TABLE project_configurations (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  project_name TEXT NOT NULL,
-  repository_url TEXT,
-  selected_capabilities TEXT NOT NULL, -- JSON array
-  configuration TEXT NOT NULL,        -- JSON object
-  status TEXT NOT NULL DEFAULT 'draft',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Authentication states
-CREATE TABLE authentication_states (
-  user_id TEXT PRIMARY KEY,
-  google_auth TEXT NOT NULL,           -- JSON object
-  github_auth TEXT,                    -- JSON object
-  circleci_auth TEXT,                  -- JSON object
-  doppler_auth TEXT,                   -- JSON object
-  sonarcloud_auth TEXT,                -- JSON object
-  last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Generated artifacts
-CREATE TABLE generated_artifacts (
-  id TEXT PRIMARY KEY,
-  project_config_id TEXT NOT NULL,
-  capability_id TEXT NOT NULL,
-  file_path TEXT NOT NULL,
-  content TEXT NOT NULL,
-  template_id TEXT NOT NULL,
-  variables TEXT NOT NULL,             -- JSON object
-  is_executable BOOLEAN DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (project_config_id) REFERENCES project_configurations(id)
-);
-
--- External service integrations
-CREATE TABLE external_service_integrations (
-  id TEXT PRIMARY KEY,
-  project_config_id TEXT NOT NULL,
-  service_id TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  service_project_id TEXT,
-  configuration TEXT NOT NULL,         -- JSON object
-  error_message TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  completed_at DATETIME,
-  FOREIGN KEY (project_config_id) REFERENCES project_configurations(id)
-);
-
--- Performance indexes
-CREATE INDEX idx_project_configs_user_id ON project_configurations(user_id);
-CREATE INDEX idx_project_configs_status ON project_configurations(status);
-CREATE INDEX idx_artifacts_project_config ON generated_artifacts(project_config_id);
-CREATE INDEX idx_integrations_project_config ON external_service_integrations(project_config_id);
-CREATE INDEX idx_integrations_service ON external_service_integrations(service_id);
+-- Authentication states (now stored in KV)
+-- KV key: genproj_auth_{userId}
+-- KV value: JSON with { google: {...}, github: {...}, circleci: {...}, doppler: {...}, sonarcloud: {...} }
+-- KV expiration: Based on token expiration (default 1 hour)

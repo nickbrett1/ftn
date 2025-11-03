@@ -25,6 +25,8 @@ export async function load({ params, url, platform, cookies }) {
 		const projectNameParam = url.searchParams.get('projectName');
 		const repositoryUrlParam = url.searchParams.get('repositoryUrl');
 		const validateParam = url.searchParams.get('validate') === 'true';
+		const errorParam = url.searchParams.get('error');
+		const authParam = url.searchParams.get('auth');
 
 		const selectedCapabilities = selectedParam
 			? selectedParam.split(',').filter((id) => id.trim())
@@ -44,7 +46,9 @@ export async function load({ params, url, platform, cookies }) {
 			projectName: projectNameParam || '',
 			repositoryUrl: repositoryUrlParam || '',
 			timestamp: new Date().toISOString(),
-			isAuthenticated
+			isAuthenticated,
+			error: errorParam || null,
+			authResult: authParam || null
 		};
 
 		// Add validation if requested

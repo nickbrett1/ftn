@@ -24,7 +24,9 @@
 	let repositoryUrl = $state(data.repositoryUrl || '');
 	let configuration = $state({});
 	let loading = $state(!data.capabilities || data.capabilities.length === 0);
-	let error = $state(null);
+	let error = $state(data.error || null);
+	let authError = $state(data.error || null);
+	let authResult = $state(data.authResult || null);
 
 	// Tab management
 	function switchTab(tab) {
@@ -178,24 +180,53 @@
 		// If we already have capabilities from server, don't fetch again
 		if (data.capabilities && data.capabilities.length > 0) {
 			loading = false;
-			return;
+		} else {
+			try {
+				loading = true;
+				const response = await fetch('/projects/genproj/api/capabilities');
+
+				if (!response.ok) {
+					throw new Error(`Failed to load capabilities: ${response.status}`);
+				}
+
+				const fetchData = await response.json();
+				capabilities = fetchData.capabilities;
+			} catch (err) {
+				error = err.message;
+				logger.error('Failed to load capabilities', { error: err.message });
+			} finally {
+				loading = false;
+			}
 		}
 
-		try {
-			loading = true;
-			const response = await fetch('/projects/genproj/api/capabilities');
+		// Auto-show AuthFlow if user just returned from authentication
+		// This happens when:
+		// 1. User is authenticated
+		// 2. User has selected capabilities (from URL params after redirect)
+		// 3. User has a valid project name (from URL params after redirect)
+		// Also show AuthFlow if there was an error (so user can try again)
+		if (
+			data.isAuthenticated &&
+			selectedCapabilities.length > 0 &&
+			projectName.length >= 3
+		) {
+			// Small delay to ensure page is fully rendered
+			setTimeout(() => {
+				showAuthFlow = true;
+			}, 100);
+		}
 
-			if (!response.ok) {
-				throw new Error(`Failed to load capabilities: ${response.status}`);
+		// Clear error/auth params from URL after displaying
+		if (authError || authResult) {
+			const url = new URL(window.location.href);
+			if (url.searchParams.has('error')) {
+				url.searchParams.delete('error');
+				window.history.replaceState({}, '', url.toString());
 			}
-
-			const fetchData = await response.json();
-			capabilities = fetchData.capabilities;
-		} catch (err) {
-			error = err.message;
-			logger.error('Failed to load capabilities', { error: err.message });
-		} finally {
-			loading = false;
+			if (url.searchParams.has('auth')) {
+				url.searchParams.delete('auth');
+				window.history.replaceState({}, '', url.toString());
+			}
 		}
 	});
 

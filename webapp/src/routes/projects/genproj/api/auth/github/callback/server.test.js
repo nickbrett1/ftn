@@ -40,9 +40,19 @@ async function setupModule(options = {}) {
 			metadata: { username: 'octocat' }
 		}
 	}));
-	const initializeMock = vi.fn();
+	const initializeMock = vi.fn(() => Promise.resolve(true));
 	const updateGitHubAuth = vi.fn(() => Promise.resolve(true));
 	const getCurrentUser = vi.fn(() => Promise.resolve({ id: 'user-1', email: 'user@example.com' }));
+
+	const genprojAuthMock = {
+		initialize: initializeMock,
+		updateGitHubAuth,
+		initializePlatform: vi.fn((platform) => {
+			// Set kv property when initializePlatform is called
+			genprojAuthMock.kv = platform?.env?.KV;
+		}),
+		kv: null
+	};
 
 	vi.doMock('@sveltejs/kit', () => ({ redirect: redirectMock }));
 
@@ -52,10 +62,7 @@ async function setupModule(options = {}) {
 	}));
 
 	vi.doMock('$lib/server/genproj-auth.js', () => ({
-		genprojAuth: {
-			initialize: initializeMock,
-			updateGitHubAuth
-		}
+		genprojAuth: genprojAuthMock
 	}));
 
 	vi.doMock('$lib/server/auth-helpers.js', () => ({
@@ -100,7 +107,14 @@ const createRequest = (query) =>
 const createPlatform = (overrides = {}) => ({
 	env: {
 		KV: {
-			get: vi.fn().mockResolvedValue('stored-state'),
+			get: vi.fn().mockResolvedValue(
+				JSON.stringify({
+					state: 'my-state',
+					selected: null,
+					projectName: null,
+					repositoryUrl: null
+				})
+			),
 			delete: vi.fn().mockResolvedValue(undefined),
 			...overrides
 		}
@@ -119,6 +133,9 @@ describe('GitHub Auth API - Callback', () => {
 			getCurrentUser
 		} = await setupModule();
 
+		// Mock initialize to resolve successfully
+		initializeMock.mockResolvedValue(true);
+		
 		global.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123', scope: 'repo,user:email' })
 		});
@@ -137,7 +154,7 @@ describe('GitHub Auth API - Callback', () => {
 		expect(body.get('redirect_uri')).toBe(
 			'https://example.com/projects/genproj/api/auth/github/callback'
 		);
-		expect(validateAuthState).toHaveBeenCalledWith('my-state', 'stored-state');
+		expect(validateAuthState).toHaveBeenCalledWith('my-state', 'my-state');
 		expect(platform.env.KV.delete).toHaveBeenCalledWith('github_oauth_state_my-state');
 		expect(validateGitHubToken).toHaveBeenCalledWith('token-123');
 		expect(getCurrentUser).toHaveBeenCalled();

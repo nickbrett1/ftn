@@ -1,23 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-var mockDb;
-
-vi.mock('../../src/lib/server/genproj-database.js', () => {
-	mockDb = {
-		getAuthenticationState: vi.fn(),
-		createAuthenticationState: vi.fn(),
-		updateAuthenticationState: vi.fn()
-	};
-	return {
-		createGenprojDatabase: vi.fn(() => mockDb),
-		genprojDb: mockDb
-	};
-});
-
 import { GenprojAuthManager } from '../../src/lib/server/genproj-auth.js';
 
 describe('GenprojAuthManager', () => {
 	let manager;
+	let mockKV;
 	let mockPlatform;
 	const user = {
 		id: 'user-1',
@@ -27,34 +14,30 @@ describe('GenprojAuthManager', () => {
 	};
 
 	beforeEach(() => {
-		mockPlatform = { env: { DB_GENPROJ: mockDb } };
+		mockKV = {
+			get: vi.fn(),
+			put: vi.fn(),
+			delete: vi.fn()
+		};
+		mockPlatform = { env: { KV: mockKV } };
 		vi.clearAllMocks();
-		mockDb.getAuthenticationState.mockReset();
-		mockDb.createAuthenticationState.mockReset();
-		mockDb.updateAuthenticationState.mockReset();
 		manager = new GenprojAuthManager();
 		manager.initializePlatform(mockPlatform);
 	});
 
 	it('initializes authentication state for new user', async () => {
-		const initialState = {
-			google: { authenticated: true }
-		};
-
-		mockDb.getAuthenticationState.mockResolvedValueOnce(null).mockResolvedValueOnce(initialState);
-		mockDb.createAuthenticationState.mockResolvedValue(true);
+		// Mock KV to return null (no existing state), then save new state
+		mockKV.get.mockResolvedValueOnce(null);
+		mockKV.put.mockResolvedValueOnce(undefined);
 
 		const result = await manager.initialize(user, mockPlatform);
 
 		expect(result).toBe(true);
-		expect(mockDb.createAuthenticationState).toHaveBeenCalledWith(user.id, {
-			google: {
-				authenticated: true,
-				email: user.email,
-				name: user.name,
-				expiresAt: user.expiresAt
-			}
-		});
+		expect(mockKV.put).toHaveBeenCalledWith(
+			`genproj_auth_${user.id}`,
+			expect.stringContaining('"google"'),
+			expect.objectContaining({ expiration: expect.any(Number) })
+		);
 		expect(manager.isGoogleAuthenticated()).toBe(true);
 	});
 
@@ -64,43 +47,48 @@ describe('GenprojAuthManager', () => {
 	});
 
 	it('handles initialization errors gracefully', async () => {
-		mockDb.getAuthenticationState.mockRejectedValue(new Error('db failure'));
+		// Mock KV.get to fail, which should be caught and return null
+		mockKV.get.mockRejectedValue(new Error('KV failure'));
+		// Mock KV.put to also fail, so save fails
+		mockKV.put.mockRejectedValue(new Error('KV save failure'));
 		const result = await manager.initialize(user, mockPlatform);
 		expect(result).toBe(false);
 	});
 
 	it('updates authentication providers and tracks state', async () => {
-		mockDb.getAuthenticationState.mockResolvedValueOnce(null).mockResolvedValueOnce({
-			google: { authenticated: true }
-		});
-		mockDb.createAuthenticationState.mockResolvedValue(true);
+		// Mock initial state retrieval (null - new user)
+		mockKV.get.mockResolvedValueOnce(null);
+		mockKV.put.mockResolvedValue(undefined);
 
 		await manager.initialize(user, mockPlatform);
 
-		mockDb.updateAuthenticationState.mockResolvedValue(true);
-		mockDb.getAuthenticationState
-			.mockResolvedValueOnce({
-				google: { authenticated: true },
-				github: { authenticated: true }
-			})
-			.mockResolvedValueOnce({
-				google: { authenticated: true },
-				github: { authenticated: true },
-				circleci: { authenticated: true }
-			})
-			.mockResolvedValueOnce({
-				google: { authenticated: true },
-				github: { authenticated: true },
-				circleci: { authenticated: true },
-				doppler: { authenticated: true }
-			})
-			.mockResolvedValueOnce({
-				google: { authenticated: true },
-				github: { authenticated: true },
-				circleci: { authenticated: true },
-				doppler: { authenticated: true },
-				sonarcloud: { authenticated: true }
-			});
+		// Mock existing auth state for updates
+		const existingState = {
+			google: { authenticated: true, email: user.email, name: user.name },
+			github: null,
+			circleci: null,
+			doppler: null,
+			sonarcloud: null
+		};
+
+		mockKV.get
+			.mockResolvedValueOnce(JSON.stringify(existingState)) // For GitHub update
+			.mockResolvedValueOnce(JSON.stringify({ ...existingState, github: { authenticated: true } })) // For CircleCI update
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					...existingState,
+					github: { authenticated: true },
+					circleci: { authenticated: true }
+				})
+			) // For Doppler update
+			.mockResolvedValueOnce(
+				JSON.stringify({
+					...existingState,
+					github: { authenticated: true },
+					circleci: { authenticated: true },
+					doppler: { authenticated: true }
+				})
+			); // For SonarCloud update
 
 		expect(
 			await manager.updateGitHubAuth({
@@ -139,6 +127,7 @@ describe('GenprojAuthManager', () => {
 
 	it('exposes authentication details and handles missing user updates', async () => {
 		manager.authState = {
+			google: { authenticated: true },
 			github: { authenticated: true, username: 'dev' },
 			circleci: { authenticated: false },
 			doppler: null,
@@ -158,7 +147,11 @@ describe('GenprojAuthManager', () => {
 
 	it('handles update failures gracefully', async () => {
 		manager.currentUser = user;
-		mockDb.updateAuthenticationState.mockRejectedValue(new Error('boom'));
+		manager.authState = {
+			google: { authenticated: true }
+		};
+		mockKV.get.mockResolvedValueOnce(JSON.stringify(manager.authState));
+		mockKV.put.mockRejectedValue(new Error('KV failure'));
 
 		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const result = await manager.updateDopplerAuth({ token: 'x', expiresAt: '2099-01-01' });
@@ -201,8 +194,10 @@ describe('GenprojAuthManager', () => {
 		expect(state.google).toBe(true);
 		expect(state.github).toBe(true);
 
+		mockKV.delete.mockResolvedValue(undefined);
 		expect(await manager.clearAuthState()).toBe(true);
 		expect(manager.currentUser).toBeNull();
 		expect(manager.authState).toBeNull();
+		expect(mockKV.delete).toHaveBeenCalledWith(`genproj_auth_${user.id}`);
 	});
 });

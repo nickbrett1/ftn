@@ -98,7 +98,12 @@ describe('GitHub Auth API - Initiation', () => {
 		);
 		expect(kvPut).toHaveBeenCalledWith(
 			'github_oauth_state_generated-state',
-			'generated-state',
+			JSON.stringify({
+				state: 'generated-state',
+				selected: null,
+				projectName: null,
+				repositoryUrl: null
+			}),
 			expect.objectContaining({ expiration: expect.any(Number) })
 		);
 		expect(redirectMock).toHaveBeenCalledWith(
@@ -124,7 +129,12 @@ describe('GitHub Auth API - Initiation', () => {
 		expect(generateAuthState).not.toHaveBeenCalled();
 		expect(kvPut).toHaveBeenCalledWith(
 			'github_oauth_state_provided-state',
-			'provided-state',
+			JSON.stringify({
+				state: 'provided-state',
+				selected: null,
+				projectName: null,
+				repositoryUrl: null
+			}),
 			expect.any(Object)
 		);
 	});

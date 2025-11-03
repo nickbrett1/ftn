@@ -3,23 +3,79 @@
  * @description Manages authentication state for genproj feature across multiple services
  */
 
-import { createGenprojDatabase } from './genproj-database.js';
 import { getRequiredAuthServices as resolveRequiredAuthServices } from '../config/capabilities.js';
 
 /**
  * Authentication state manager for genproj feature
+ * Uses KV storage (similar to Google auth) instead of D1 database
  */
 export class GenprojAuthManager {
 	currentUser = null;
 	authState = null;
-	db = null;
+	kv = null;
 
 	/**
 	 * Initialize with platform (required before using other methods)
 	 * @param {Object} platform - Platform object with env
 	 */
 	initializePlatform(platform) {
-		this.db = createGenprojDatabase(platform);
+		this.kv = platform?.env?.KV || null;
+	}
+
+	/**
+	 * Get KV key for user's auth state
+	 * @param {string} userId - User ID
+	 * @returns {string} KV key
+	 */
+	getAuthStateKey(userId) {
+		return `genproj_auth_${userId}`;
+	}
+
+	/**
+	 * Get authentication state from KV
+	 * @param {string} userId - User ID
+	 * @returns {Promise<Object|null>} Authentication state
+	 */
+	async getAuthenticationState(userId) {
+		if (!this.kv) {
+			return null;
+		}
+
+		try {
+			const key = this.getAuthStateKey(userId);
+			const stored = await this.kv.get(key);
+			if (!stored) {
+				return null;
+			}
+			return JSON.parse(stored);
+		} catch (error) {
+			console.error('❌ Failed to get authentication state from KV:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * Save authentication state to KV
+	 * @param {string} userId - User ID
+	 * @param {Object} authState - Authentication state
+	 * @param {number} [expirationTtl] - Expiration time in seconds (default: 1 hour)
+	 * @returns {Promise<boolean>} True if saved successfully
+	 */
+	async saveAuthenticationState(userId, authState, expirationTtl = 3600) {
+		if (!this.kv) {
+			console.error('❌ KV not initialized');
+			return false;
+		}
+
+		try {
+			const key = this.getAuthStateKey(userId);
+			const expiration = Math.floor(Date.now() / 1000) + expirationTtl;
+			await this.kv.put(key, JSON.stringify(authState), { expiration });
+			return true;
+		} catch (error) {
+			console.error('❌ Failed to save authentication state to KV:', error);
+			return false;
+		}
 	}
 
 	/**
@@ -31,41 +87,56 @@ export class GenprojAuthManager {
 	async initialize(user, platform = null) {
 		try {
 			// Initialize platform if provided
-			if (platform && !this.db) {
+			if (platform && !this.kv) {
 				this.initializePlatform(platform);
 			}
 
-			if (!this.db) {
-				console.error(
-					'❌ Database not initialized. Call initializePlatform() or pass platform to initialize()'
-				);
+			if (!this.kv) {
+				console.error('❌ KV not initialized. Call initializePlatform() or pass platform to initialize()');
 				return false;
 			}
 
 			this.currentUser = user;
 
-			if (user?.id) {
-				this.authState = await this.db.getAuthenticationState(user.id);
+		if (user?.id) {
+			try {
+				this.authState = await this.getAuthenticationState(user.id);
 
 				// Create auth state if it doesn't exist
 				if (!this.authState) {
-					await this.db.createAuthenticationState(user.id, {
+					this.authState = {
 						google: {
 							authenticated: true,
 							email: user.email,
 							name: user.name,
 							expiresAt: user.expiresAt
-						}
-					});
-					this.authState = await this.db.getAuthenticationState(user.id);
+						},
+						github: null,
+						circleci: null,
+						doppler: null,
+						sonarcloud: null
+					};
+					// Save with 1 hour expiration
+					const expirationTtl = user.expiresAt
+						? Math.floor((new Date(user.expiresAt).getTime() - Date.now()) / 1000)
+						: 3600;
+					const saved = await this.saveAuthenticationState(user.id, this.authState, expirationTtl);
+					if (!saved) {
+						console.error('❌ Failed to save authentication state to KV');
+						return false;
+					}
 				}
 
 				console.log('✅ Genproj authentication initialized for user:', user.email);
 				return true;
-			} else {
-				console.log('⚠️ No authenticated user found');
+			} catch (error) {
+				console.error('❌ Failed to get/save authentication state:', error);
 				return false;
 			}
+		} else {
+			console.log('⚠️ No authenticated user found');
+			return false;
+		}
 		} catch (error) {
 			console.error('❌ Failed to initialize genproj authentication:', error);
 			return false;
@@ -156,27 +227,40 @@ export class GenprojAuthManager {
 				return false;
 			}
 
-			if (!this.db) {
-				console.error('❌ Database not initialized');
+			if (!this.kv) {
+				console.error('❌ KV not initialized');
 				return false;
 			}
 
-			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
-				github: {
-					authenticated: true,
-					username: githubAuth.username,
-					token: githubAuth.token, // This should be encrypted in production
-					expiresAt: githubAuth.expiresAt,
-					scopes: githubAuth.scopes || []
-				}
-			});
+			// Update auth state
+			if (!this.authState) {
+				this.authState = await this.getAuthenticationState(this.currentUser.id);
+			}
 
-			if (updated) {
-				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+			if (!this.authState) {
+				console.error('❌ No existing auth state found');
+				return false;
+			}
+
+			this.authState.github = {
+				authenticated: true,
+				username: githubAuth.username,
+				token: githubAuth.token, // This should be encrypted in production
+				expiresAt: githubAuth.expiresAt,
+				scopes: githubAuth.scopes || []
+			};
+
+			// Save to KV with expiration based on token expiration
+			const expirationTtl = githubAuth.expiresAt
+				? Math.floor((new Date(githubAuth.expiresAt).getTime() - Date.now()) / 1000)
+				: 3600;
+			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+
+			if (saved) {
 				console.log('✅ GitHub authentication updated for user:', this.currentUser.email);
 			}
 
-			return updated;
+			return saved;
 		} catch (error) {
 			console.error('❌ Failed to update GitHub authentication:', error);
 			return false;
@@ -195,25 +279,38 @@ export class GenprojAuthManager {
 				return false;
 			}
 
-			if (!this.db) {
-				console.error('❌ Database not initialized');
+			if (!this.kv) {
+				console.error('❌ KV not initialized');
 				return false;
 			}
 
-			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
-				circleci: {
-					authenticated: true,
-					token: circleciAuth.token, // This should be encrypted in production
-					expiresAt: circleciAuth.expiresAt
-				}
-			});
+			// Update auth state
+			if (!this.authState) {
+				this.authState = await this.getAuthenticationState(this.currentUser.id);
+			}
 
-			if (updated) {
-				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+			if (!this.authState) {
+				console.error('❌ No existing auth state found');
+				return false;
+			}
+
+			this.authState.circleci = {
+				authenticated: true,
+				token: circleciAuth.token, // This should be encrypted in production
+				expiresAt: circleciAuth.expiresAt
+			};
+
+			// Save to KV with expiration based on token expiration
+			const expirationTtl = circleciAuth.expiresAt
+				? Math.floor((new Date(circleciAuth.expiresAt).getTime() - Date.now()) / 1000)
+				: 3600;
+			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+
+			if (saved) {
 				console.log('✅ CircleCI authentication updated for user:', this.currentUser.email);
 			}
 
-			return updated;
+			return saved;
 		} catch (error) {
 			console.error('❌ Failed to update CircleCI authentication:', error);
 			return false;
@@ -232,25 +329,38 @@ export class GenprojAuthManager {
 				return false;
 			}
 
-			if (!this.db) {
-				console.error('❌ Database not initialized');
+			if (!this.kv) {
+				console.error('❌ KV not initialized');
 				return false;
 			}
 
-			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
-				doppler: {
-					authenticated: true,
-					token: dopplerAuth.token, // This should be encrypted in production
-					expiresAt: dopplerAuth.expiresAt
-				}
-			});
+			// Update auth state
+			if (!this.authState) {
+				this.authState = await this.getAuthenticationState(this.currentUser.id);
+			}
 
-			if (updated) {
-				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+			if (!this.authState) {
+				console.error('❌ No existing auth state found');
+				return false;
+			}
+
+			this.authState.doppler = {
+				authenticated: true,
+				token: dopplerAuth.token, // This should be encrypted in production
+				expiresAt: dopplerAuth.expiresAt
+			};
+
+			// Save to KV with expiration based on token expiration
+			const expirationTtl = dopplerAuth.expiresAt
+				? Math.floor((new Date(dopplerAuth.expiresAt).getTime() - Date.now()) / 1000)
+				: 3600;
+			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+
+			if (saved) {
 				console.log('✅ Doppler authentication updated for user:', this.currentUser.email);
 			}
 
-			return updated;
+			return saved;
 		} catch (error) {
 			console.error('❌ Failed to update Doppler authentication:', error);
 			return false;
@@ -269,25 +379,38 @@ export class GenprojAuthManager {
 				return false;
 			}
 
-			if (!this.db) {
-				console.error('❌ Database not initialized');
+			if (!this.kv) {
+				console.error('❌ KV not initialized');
 				return false;
 			}
 
-			const updated = await this.db.updateAuthenticationState(this.currentUser.id, {
-				sonarcloud: {
-					authenticated: true,
-					token: sonarcloudAuth.token, // This should be encrypted in production
-					expiresAt: sonarcloudAuth.expiresAt
-				}
-			});
+			// Update auth state
+			if (!this.authState) {
+				this.authState = await this.getAuthenticationState(this.currentUser.id);
+			}
 
-			if (updated) {
-				this.authState = await this.db.getAuthenticationState(this.currentUser.id);
+			if (!this.authState) {
+				console.error('❌ No existing auth state found');
+				return false;
+			}
+
+			this.authState.sonarcloud = {
+				authenticated: true,
+				token: sonarcloudAuth.token, // This should be encrypted in production
+				expiresAt: sonarcloudAuth.expiresAt
+			};
+
+			// Save to KV with expiration based on token expiration
+			const expirationTtl = sonarcloudAuth.expiresAt
+				? Math.floor((new Date(sonarcloudAuth.expiresAt).getTime() - Date.now()) / 1000)
+				: 3600;
+			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+
+			if (saved) {
 				console.log('✅ SonarCloud authentication updated for user:', this.currentUser.email);
 			}
 
-			return updated;
+			return saved;
 		} catch (error) {
 			console.error('❌ Failed to update SonarCloud authentication:', error);
 			return false;
@@ -363,6 +486,10 @@ export class GenprojAuthManager {
 	 */
 	async clearAuthState() {
 		try {
+			if (this.currentUser?.id && this.kv) {
+				const key = this.getAuthStateKey(this.currentUser.id);
+				await this.kv.delete(key);
+			}
 			this.currentUser = null;
 			this.authState = null;
 			console.log('✅ Genproj authentication state cleared');

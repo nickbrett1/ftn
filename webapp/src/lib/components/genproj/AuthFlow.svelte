@@ -98,9 +98,31 @@
 			loading = true;
 			error = null;
 
+			// Build GitHub auth URL with current state to preserve selections
+			// We need to pass the selections through the OAuth flow so they're preserved on redirect
+			let authUrl = '/projects/genproj/api/auth/github';
+			
+			// Get current selections from parent (if available via URL)
+			if (typeof window !== 'undefined' && window.location) {
+				const url = new URL(window.location.href);
+				const selectedParam = url.searchParams.get('selected');
+				const projectNameParam = url.searchParams.get('projectName');
+				const repositoryUrlParam = url.searchParams.get('repositoryUrl');
+				
+				const params = new URLSearchParams();
+				if (selectedParam) params.set('selected', selectedParam);
+				if (projectNameParam) params.set('projectName', projectNameParam);
+				if (repositoryUrlParam) params.set('repositoryUrl', repositoryUrlParam);
+				
+				const queryString = params.toString();
+				if (queryString) {
+					authUrl += `?${queryString}`;
+				}
+			}
+
 			// Redirect to GitHub OAuth
 			if (typeof window !== 'undefined' && window.location) {
-				window.location.href = '/projects/genproj/api/auth/github';
+				window.location.href = authUrl;
 			}
 		} catch (err) {
 			logger.error('GitHub auth failed', { error: err.message });

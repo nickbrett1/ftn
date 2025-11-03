@@ -79,6 +79,9 @@ export async function POST({ request, platform }) {
 		}
 
 		// Initialize auth manager with platform
+		if (!genprojAuth.kv) {
+			genprojAuth.initializePlatform(platform);
+		}
 		await genprojAuth.initialize(currentUser, platform);
 
 		// Update Doppler authentication

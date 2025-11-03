@@ -33,6 +33,11 @@ export async function GET({ request, platform }) {
 		const url = new URL(request.url);
 		const stateParam = url.searchParams.get('state');
 
+		// Get user selections from query params to preserve through OAuth flow
+		const selectedParam = url.searchParams.get('selected');
+		const projectNameParam = url.searchParams.get('projectName');
+		const repositoryUrlParam = url.searchParams.get('repositoryUrl');
+
 		// Generate state if not provided
 		const state = stateParam || generateAuthState();
 
@@ -95,12 +100,19 @@ export async function GET({ request, platform }) {
 		}
 
 		// Store state in KV for validation during callback
+		// Also store user selections to preserve them through the OAuth flow
 		if (platform?.env?.KV) {
 			const stateKey = `github_oauth_state_${state}`;
+			const stateData = {
+				state: state,
+				selected: selectedParam || null,
+				projectName: projectNameParam || null,
+				repositoryUrl: repositoryUrlParam || null
+			};
 			// Store state with 10 minute expiration
 			const expiration = Math.floor(Date.now() / 1000) + 600;
-			await platform.env.KV.put(stateKey, state, { expiration });
-			console.log(`${logPrefix} Stored OAuth state: ${state}`);
+			await platform.env.KV.put(stateKey, JSON.stringify(stateData), { expiration });
+			console.log(`${logPrefix} Stored OAuth state with selections: ${state}`);
 		}
 
 		// Generate redirect URI
