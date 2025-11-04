@@ -10,13 +10,11 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, opts) => {
-		const response = new Response(JSON.stringify(data), {
-			status: opts?.status || 200,
-			...opts
+	json: vi.fn((data, options) => {
+		return new Response(JSON.stringify(data), {
+			status: options ? options.status : 200,
+			headers: { 'Content-Type': 'application/json' }
 		});
-		response.json = vi.fn().mockResolvedValue(data);
-		return response;
 	})
 }));
 

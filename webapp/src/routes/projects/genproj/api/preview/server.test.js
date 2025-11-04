@@ -49,9 +49,14 @@ describe('Preview API', () => {
 			const response = await POST({ request });
 			const data = await response.json();
 
-			const dockerfile = data.files.find((f) => f.filePath === '.devcontainer/Dockerfile');
-			expect(dockerfile).toBeDefined();
-			expect(dockerfile.content).toContain('docker-ce-cli');
+			const devcontainerJson = data.files.find(
+				(f) => f.filePath === '.devcontainer/devcontainer.json'
+			);
+			expect(devcontainerJson).toBeDefined();
+			const devcontainerConfig = JSON.parse(devcontainerJson.content);
+			expect(devcontainerConfig.features).toHaveProperty(
+				'ghcr.io/devcontainers/features/docker-in-docker:2'
+			);
 		});
 	});
 });

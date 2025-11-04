@@ -319,7 +319,14 @@ function generateCapabilityFilesMap(
 		});
 
 		// Handle file conflicts, especially for devcontainer files
-		addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName);
+		addFilesToMap(
+			fileMap,
+			capabilityFiles,
+			devcontainerCapabilities,
+			configuration,
+			projectName,
+			selectedCapabilities
+		);
 	}
 
 	return Array.from(fileMap.values());
@@ -630,7 +637,8 @@ function addFilesToMap(
 	capabilityFiles,
 	devcontainerCapabilities,
 	configuration,
-	projectName
+	projectName,
+	selectedCapabilities
 ) {
 	for (const file of capabilityFiles) {
 		const existingFile = fileMap.get(file.filePath);
@@ -651,7 +659,8 @@ function addFilesToMap(
 				existingFile,
 				devcontainerCapabilities,
 				configuration,
-				projectName
+				projectName,
+				selectedCapabilities
 			);
 			fileMap.set(file.filePath, file);
 		} else if (
@@ -676,7 +685,8 @@ function handleDevcontainerMerge(
 	existingFile,
 	devcontainerCapabilities,
 	configuration,
-	projectName
+	projectName,
+	selectedCapabilities
 ) {
 	try {
 		file.content = mergeDevcontainerConfigs(
@@ -684,7 +694,8 @@ function handleDevcontainerMerge(
 			file.content,
 			devcontainerCapabilities,
 			configuration,
-			projectName
+			projectName,
+			selectedCapabilities
 		);
 		file.capabilityId = 'devcontainer-merged';
 	} catch (e) {
@@ -701,7 +712,8 @@ function mergeDevcontainerConfigs(
 	newConfig,
 	devcontainerCapabilities,
 	configuration,
-	projectName
+	projectName,
+	selectedCapabilities
 ) {
 	// Parse both configs - handle if they're already objects or strings
 	let existing;
@@ -739,11 +751,24 @@ function mergeDevcontainerConfigs(
 	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
 	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
 	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
-	const hasDocker = devcontainerCapabilities.includes('docker');
+	const hasDocker = selectedCapabilities.includes('docker');
 
-	// Single capability - use existing config
-	if (!hasNode && !hasPython && !hasJava) {
-		return existingConfig;
+	if (devcontainerCapabilities.length > 0 && devcontainerCapabilities.length < 2) {
+		const singleDevcontainer = capabilities.find((c) => c.id === devcontainerCapabilities[0]);
+		const template = singleDevcontainer.templates.find((t) => t.id === 'devcontainer-json');
+		const content = getFallbackTemplate(template.templateId, {
+			projectName,
+			configuration,
+			...configuration[singleDevcontainer.id]
+		});
+		const config = JSON.parse(content);
+		if (hasDocker) {
+			config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+				version: 'latest',
+				moby: true
+			};
+		}
+		return JSON.stringify(config, null, 2);
 	}
 
 	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
@@ -790,7 +815,7 @@ function buildFeatures(hasNode, hasPython, hasJava, hasDocker) {
 			installZsh: true,
 			configureZshAsDefaultShell: true,
 			installOhMyZsh: true,
-			username: 'node',
+			username: 'vscode',
 			uid: '1000',
 			gid: '1000'
 		},
@@ -1696,7 +1721,11 @@ function getFallbackTemplate(templateId, context) {
       "uid": "1000",
       "gid": "1000"
     },
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    }
   },
   "customizations": {
     "vscode": {
@@ -1796,9 +1825,9 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
-# Switch to node user for installing user-specific tools
+# Switch to vscode user for installing user-specific tools
 USER vscode
-ENV USER_HOME_DIR=/home/node
+ENV USER_HOME_DIR=/home/vscode
 
 # Add uv tools to PATH for node user
 ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
@@ -1817,9 +1846,9 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
-# Switch to node user for installing user-specific tools
+# Switch to vscode user for installing user-specific tools
 USER vscode
-ENV USER_HOME_DIR=/home/node
+ENV USER_HOME_DIR=/home/vscode
 
 # Add uv tools to PATH for node user
 ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
