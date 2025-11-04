@@ -7,6 +7,7 @@ import { json } from '@sveltejs/kit';
 import { withErrorHandling } from '$lib/utils/genproj-errors.js';
 import { logger } from '$lib/utils/logging.js';
 import { capabilities } from '$lib/config/capabilities.js';
+import { parseDevcontainerConfig } from '$lib/utils/json-utils.js';
 
 /**
  * Validates a single field value
@@ -418,7 +419,7 @@ function addDopplerToDockerfile(files, selectedCapabilities, devcontainerCapabil
 	}
 
 	const lines = dockerfile.content.split('\n');
-	let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER node'));
+	let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER '));
 	const dopplerInstall = [
 		'',
 		'# Install Doppler CLI',
@@ -650,30 +651,30 @@ function addFilesToMap(
 
 		// Handle devcontainer files
 		if (file.filePath === '.devcontainer/devcontainer.json') {
+			let content = file.content;
+			const template = capabilities
+				.find((c) => c.id === file.capabilityId)
+				?.templates.find((t) => t.filePath === file.filePath);
+
+			if (template?.type === 'merge' && template.mergeLogic) {
+				const existingContent = fileMap.get(file.filePath)?.content || '{}';
+				content = template.mergeLogic(existingContent);
+			}
+
 			if (devcontainerCapabilities.length > 1) {
 				const existingContent = fileMap.get(file.filePath)?.content;
 				if (existingContent) {
-					file.content = mergeDevcontainerConfigs(
+					content = mergeDevcontainerConfigs(
 						existingContent,
-						file.content,
+						content,
 						devcontainerCapabilities,
 						configuration,
 						projectName,
 						selectedCapabilities
 					);
 				}
-			} else {
-				// Single devcontainer, so we need to add the docker feature
-				const config = parseDevcontainerConfig(file.content, 'new');
-				if (!config.features) {
-					config.features = {};
-				}
-				config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
-					version: 'latest',
-					moby: true
-				};
-				file.content = JSON.stringify(config, null, 2);
 			}
+			file.content = content;
 			fileMap.set(file.filePath, file);
 		} else if (
 			devcontainerCapabilities.length > 1 &&
@@ -717,81 +718,6 @@ function handleDevcontainerMerge(
 	}
 }
 
-/**
- * Merges multiple devcontainer configurations
- */
-function parseDevcontainerConfig(config, configName) {
-	if (typeof config === 'object') {
-		return config;
-	}
-	if (typeof config !== 'string') {
-		throw new Error(`Invalid ${configName} devcontainer configuration type`);
-	}
-	try {
-		// Securely strip comments without using vulnerable regex
-		let jsonString = '';
-		let inString = false;
-		let inLineComment = false;
-		let inBlockComment = false;
-		for (let i = 0; i < config.length; i++) {
-			const char = config[i];
-			const nextChar = i + 1 < config.length ? config[i + 1] : '';
-
-			if (inLineComment) {
-				if (char === '\n') {
-					inLineComment = false;
-					jsonString += char; // Preserve line breaks
-				}
-				continue;
-			}
-
-			if (inBlockComment) {
-				if (char === '*' && nextChar === '/') {
-					inBlockComment = false;
-					i++; // Skip the closing '/'
-				}
-				continue;
-			}
-
-			if (inString) {
-				if (char === '\\') {
-					jsonString += char + nextChar;
-					i++; // Skip the escaped character
-				} else {
-					if (char === '"') {
-						inString = false;
-					}
-					jsonString += char;
-				}
-				continue;
-			}
-
-			if (char === '/' && nextChar === '/') {
-				inLineComment = true;
-				i++; // Skip the second '/'
-				continue;
-			}
-
-			if (char === '/' && nextChar === '*') {
-				inBlockComment = true;
-				i++; // Skip the '*'
-				continue;
-			}
-
-			if (char === '"') {
-				inString = true;
-			}
-			jsonString += char;
-		}
-
-		return JSON.parse(jsonString);
-	} catch (e) {
-		console.error(`Failed to parse ${configName} config:`, e);
-		console.error('Config content:', config.substring(0, 200));
-		throw new Error(`Invalid ${configName} devcontainer configuration`);
-	}
-}
-
 function mergeExtensions(existing, newConfigObj) {
 	const extensions = new Set();
 	if (existing.customizations?.vscode?.extensions) {
@@ -826,11 +752,17 @@ function mergeDevcontainerConfigs(
 	const features = buildFeatures(hasNode, hasPython, hasJava);
 	const extensions = mergeExtensions(existing, newConfigObj);
 
+	const mergedFeatures = {
+		...(existing.features || {}),
+		...(newConfigObj.features || {}),
+		...features
+	};
+
 	const merged = {
 		name: projectName || 'Project',
 		image,
 		runArgs: ['--sysctl', 'net.ipv6.conf.all.disable_ipv6=1'],
-		features,
+		features: mergedFeatures,
 		customizations: {
 			vscode: {
 				extensions
@@ -841,14 +773,6 @@ function mergeDevcontainerConfigs(
 		),
 		postCreateCommand: 'bash .devcontainer/setup.sh'
 	};
-
-	// Ensure docker-in-docker is always present in merged configs
-	if (!merged.features['ghcr.io/devcontainers/features/docker-in-docker:2']) {
-		merged.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
-			version: 'latest',
-			moby: true
-		};
-	}
 
 	return JSON.stringify(merged, null, 2);
 }
@@ -866,11 +790,7 @@ function buildFeatures(hasNode, hasPython, hasJava) {
 			uid: '1000',
 			gid: '1000'
 		},
-		'ghcr.io/devcontainers/features/git:1': {},
-		'ghcr.io/devcontainers/features/docker-in-docker:2': {
-			version: 'latest',
-			moby: true
-		}
+		'ghcr.io/devcontainers/features/git:1': {}
 	};
 
 	if (hasNode) {

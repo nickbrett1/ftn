@@ -142,7 +142,8 @@ describe('Capabilities Config', () => {
 				'secrets',
 				'deployment',
 				'monitoring',
-				'project-structure'
+				'project-structure',
+				'internal'
 			];
 			for (const capability of capabilities) {
 				expect(validCategories).toContain(capability.category);

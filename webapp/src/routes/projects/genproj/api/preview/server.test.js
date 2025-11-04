@@ -37,7 +37,7 @@ describe('Preview API', () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node'],
+					selectedCapabilities: ['devcontainer-node', 'docker'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'
@@ -59,12 +59,11 @@ describe('Preview API', () => {
 			);
 		});
 
-
 		it('should merge devcontainer configurations and include Docker-in-Docker support', async () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node', 'devcontainer-python'],
+					selectedCapabilities: ['devcontainer-node', 'devcontainer-python', 'docker'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'
@@ -83,6 +82,7 @@ describe('Preview API', () => {
 				(f) => f.filePath === '.devcontainer/devcontainer.json'
 			);
 			expect(devcontainerJson).toBeDefined();
+
 			const devcontainerConfig = JSON.parse(devcontainerJson.content);
 			expect(devcontainerConfig.features).toHaveProperty(
 				'ghcr.io/devcontainers/features/docker-in-docker:2'
@@ -91,6 +91,25 @@ describe('Preview API', () => {
 			expect(devcontainerConfig.features).toHaveProperty(
 				'ghcr.io/devcontainers/features/python:1'
 			);
+		});
+
+		it('should add Doppler CLI to a Python devcontainer', async () => {
+			const request = {
+				json: async () => ({
+					projectName: 'test-project',
+					selectedCapabilities: ['devcontainer-python', 'doppler', 'docker'],
+					configuration: {
+						'devcontainer-python': {
+							pythonVersion: '3.12'
+						}
+					}
+				})
+			};
+			const response = await POST({ request });
+			const data = await response.json();
+			const dockerfile = data.files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+			expect(dockerfile).toBeDefined();
+			expect(dockerfile.content).toContain('# Install Doppler CLI');
 		});
 	});
 });
