@@ -37,7 +37,7 @@ export const capabilities = [
 		description: 'Adds Node.js runtime and npm to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
 		category: 'devcontainer',
-		dependencies: [],
+		dependencies: ['docker'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
@@ -81,7 +81,7 @@ export const capabilities = [
 		description: 'Adds Python runtime and pip to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
 		category: 'devcontainer',
-		dependencies: [],
+		dependencies: ['docker'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
@@ -125,7 +125,7 @@ export const capabilities = [
 		description: 'Adds Java runtime to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
 		category: 'devcontainer',
-		dependencies: [],
+		dependencies: ['docker'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
@@ -162,6 +162,21 @@ export const capabilities = [
 				isExecutable: true
 			}
 		]
+	},
+	{
+		id: 'docker',
+		name: 'Docker-in-Docker Support',
+		description: 'Adds Docker-in-Docker support to your development container.',
+		url: 'https://github.com/devcontainers/features/tree/main/src/docker-in-docker',
+		category: 'devcontainer',
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {}
+		},
+		templates: []
 	},
 	{
 		id: 'circleci',

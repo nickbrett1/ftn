@@ -739,6 +739,7 @@ function mergeDevcontainerConfigs(
 	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
 	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
 	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
+	const hasDocker = devcontainerCapabilities.includes('docker');
 
 	// Single capability - use existing config
 	if (!hasNode && !hasPython && !hasJava) {
@@ -746,7 +747,7 @@ function mergeDevcontainerConfigs(
 	}
 
 	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
-	const features = buildFeatures(hasNode, hasPython, hasJava);
+	const features = buildFeatures(hasNode, hasPython, hasJava, hasDocker);
 
 	// Merge customizations (VSCode extensions)
 	const extensions = new Set();
@@ -783,7 +784,7 @@ function mergeDevcontainerConfigs(
 /**
  * Builds features object for devcontainer configuration
  */
-function buildFeatures(hasNode, hasPython, hasJava) {
+function buildFeatures(hasNode, hasPython, hasJava, hasDocker) {
 	const features = {
 		'ghcr.io/devcontainers/features/common-utils:2': {
 			installZsh: true,
@@ -795,6 +796,13 @@ function buildFeatures(hasNode, hasPython, hasJava) {
 		},
 		'ghcr.io/devcontainers/features/git:1': {}
 	};
+
+	if (hasDocker) {
+		features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+			version: 'latest',
+			moby: true
+		};
+	}
 
 	if (hasNode) {
 		features['ghcr.io/devcontainers/features/node:1'] = { version: '22' };
@@ -1684,7 +1692,7 @@ function getFallbackTemplate(templateId, context) {
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1732,7 +1740,7 @@ WORKDIR /workspace
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1758,7 +1766,7 @@ WORKDIR /workspace
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1789,7 +1797,7 @@ RUN apt-get update && apt-get install -y \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Switch to node user for installing user-specific tools
-USER node
+USER vscode
 ENV USER_HOME_DIR=/home/node
 
 # Add uv tools to PATH for node user
@@ -1810,7 +1818,7 @@ RUN apt-get update && apt-get install -y \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Switch to node user for installing user-specific tools
-USER node
+USER vscode
 ENV USER_HOME_DIR=/home/node
 
 # Add uv tools to PATH for node user
