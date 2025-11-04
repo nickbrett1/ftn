@@ -32,6 +32,39 @@ export class GenprojAuthManager {
 	}
 
 	/**
+	 * Calculate expiration TTL based on user expiration or default
+	 * @param {Object} user - User object with optional expiresAt
+	 * @param {number} defaultTtl - Default TTL in seconds (default: 3600)
+	 * @returns {number} TTL in seconds
+	 */
+	calculateExpirationTtl(user, defaultTtl = 3600) {
+		if (user?.expiresAt) {
+			return Math.floor((new Date(user.expiresAt).getTime() - Date.now()) / 1000);
+		}
+		return defaultTtl;
+	}
+
+	/**
+	 * Create initial authentication state for a user
+	 * @param {Object} user - User object
+	 * @returns {Object} Initial auth state
+	 */
+	createInitialAuthState(user) {
+		return {
+			google: {
+				authenticated: true,
+				email: user.email,
+				name: user.name,
+				expiresAt: user.expiresAt
+			},
+			github: null,
+			circleci: null,
+			doppler: null,
+			sonarcloud: null
+		};
+	}
+
+	/**
 	 * Get authentication state from KV
 	 * @param {string} userId - User ID
 	 * @returns {Promise<Object|null>} Authentication state
@@ -85,60 +118,41 @@ export class GenprojAuthManager {
 	 * @returns {Promise<boolean>} True if initialized successfully
 	 */
 	async initialize(user, platform = null) {
-		try {
-			// Initialize platform if provided
-			if (platform && !this.kv) {
-				this.initializePlatform(platform);
-			}
+		// Initialize platform if provided
+		if (platform && !this.kv) {
+			this.initializePlatform(platform);
+		}
 
-			if (!this.kv) {
-				console.error('❌ KV not initialized. Call initializePlatform() or pass platform to initialize()');
-				return false;
-			}
+		if (!this.kv) {
+			console.error('❌ KV not initialized. Call initializePlatform() or pass platform to initialize()');
+			return false;
+		}
 
-			this.currentUser = user;
-
-		if (user?.id) {
-			try {
-				this.authState = await this.getAuthenticationState(user.id);
-
-				// Create auth state if it doesn't exist
-				if (!this.authState) {
-					this.authState = {
-						google: {
-							authenticated: true,
-							email: user.email,
-							name: user.name,
-							expiresAt: user.expiresAt
-						},
-						github: null,
-						circleci: null,
-						doppler: null,
-						sonarcloud: null
-					};
-					// Save with 1 hour expiration
-					const expirationTtl = user.expiresAt
-						? Math.floor((new Date(user.expiresAt).getTime() - Date.now()) / 1000)
-						: 3600;
-					const saved = await this.saveAuthenticationState(user.id, this.authState, expirationTtl);
-					if (!saved) {
-						console.error('❌ Failed to save authentication state to KV');
-						return false;
-					}
-				}
-
-				console.log('✅ Genproj authentication initialized for user:', user.email);
-				return true;
-			} catch (error) {
-				console.error('❌ Failed to get/save authentication state:', error);
-				return false;
-			}
-		} else {
+		if (!user?.id) {
 			console.log('⚠️ No authenticated user found');
 			return false;
 		}
+
+		this.currentUser = user;
+
+		try {
+			this.authState = await this.getAuthenticationState(user.id);
+
+			// Create auth state if it doesn't exist
+			if (!this.authState) {
+				this.authState = this.createInitialAuthState(user);
+				const expirationTtl = this.calculateExpirationTtl(user);
+				const saved = await this.saveAuthenticationState(user.id, this.authState, expirationTtl);
+				if (!saved) {
+					console.error('❌ Failed to save authentication state to KV');
+					return false;
+				}
+			}
+
+			console.log('✅ Genproj authentication initialized for user:', user.email);
+			return true;
 		} catch (error) {
-			console.error('❌ Failed to initialize genproj authentication:', error);
+			console.error('❌ Failed to get/save authentication state:', error);
 			return false;
 		}
 	}

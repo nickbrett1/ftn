@@ -26,6 +26,82 @@ try {
 const logPrefix = '[GITHUB_CALLBACK]';
 
 /**
+ * Build redirect URL with parameters and preserved selections
+ * @param {string} baseUrl - Base URL
+ * @param {Object} params - URL parameters object
+ * @param {Object} preservedSelections - Preserved selections object
+ * @returns {string} Complete redirect URL
+ */
+function buildRedirectUrl(baseUrl, params, preservedSelections) {
+	const url = new URL(baseUrl);
+	Object.entries(params).forEach(([key, value]) => {
+		if (value) url.searchParams.set(key, value);
+	});
+	if (preservedSelections.selected) {
+		url.searchParams.set('selected', preservedSelections.selected);
+	}
+	if (preservedSelections.projectName) {
+		url.searchParams.set('projectName', preservedSelections.projectName);
+	}
+	if (preservedSelections.repositoryUrl) {
+		url.searchParams.set('repositoryUrl', preservedSelections.repositoryUrl);
+	}
+	return url.toString();
+}
+
+/**
+ * Get preserved selections from state data
+ * @param {Object} stateData - State data object
+ * @returns {Object} Preserved selections
+ */
+function getPreservedSelections(stateData) {
+	return {
+		selected: stateData?.selected || null,
+		projectName: stateData?.projectName || null,
+		repositoryUrl: stateData?.repositoryUrl || null
+	};
+}
+
+/**
+ * Validate state parameter and get state data from KV
+ * @param {string} state - State parameter
+ * @param {Object} platform - Platform object
+ * @returns {Promise<Object>} State data and preserved selections
+ */
+async function validateAndGetStateData(state, platform) {
+	if (!platform?.env?.KV) {
+		throw new Error('KV not available');
+	}
+
+	const stateKey = `github_oauth_state_${state}`;
+	const storedStateData = await platform.env.KV.get(stateKey);
+
+	if (!storedStateData) {
+		throw new Error('Invalid or expired state parameter');
+	}
+
+	try {
+		const stateData = JSON.parse(storedStateData);
+		if (!stateData.state || !validateAuthState(state, stateData.state)) {
+			throw new Error('State mismatch');
+		}
+		return {
+			stateData,
+			preservedSelections: getPreservedSelections(stateData)
+		};
+	} catch (parseError) {
+		// Legacy format: just state string
+		if (!validateAuthState(state, storedStateData)) {
+			throw new Error('Invalid state parameter');
+		}
+		return {
+			stateData: null,
+			preservedSelections: { selected: null, projectName: null, repositoryUrl: null }
+		};
+	}
+}
+
+/**
  * Exchange GitHub authorization code for access token
  * @param {string} code - Authorization code from GitHub
  * @param {string} redirectUri - Redirect URI used in OAuth flow
@@ -66,6 +142,59 @@ async function exchangeGitHubToken(code, redirectUri) {
 }
 
 /**
+ * Handle OAuth error from GitHub
+ * @param {string} errorParam - Error parameter from GitHub
+ * @param {Object} platform - Platform object
+ * @param {URL} url - Request URL
+ * @returns {never} Throws redirect
+ */
+async function handleOAuthError(errorParam, platform, url) {
+	console.error(`${logPrefix} OAuth error from GitHub: ${errorParam}`);
+
+	let preservedSelections = { selected: null, projectName: null, repositoryUrl: null };
+	const stateParam = url.searchParams.get('state');
+
+	if (stateParam && platform?.env?.KV) {
+		const stateKey = `github_oauth_state_${stateParam}`;
+		const storedStateData = await platform.env.KV.get(stateKey);
+		if (storedStateData) {
+			try {
+				const stateData = JSON.parse(storedStateData);
+				preservedSelections = getPreservedSelections(stateData);
+			} catch (parseError) {
+				console.warn(`${logPrefix} Failed to parse state data for OAuth error handling:`, parseError);
+				// Continue with empty selections
+			}
+		}
+	}
+
+	throw redirect(302, buildRedirectUrl(`${url.origin}/projects/genproj`, { error: 'github_auth_failed' }, preservedSelections));
+}
+
+/**
+ * Handle token validation error
+ * @param {string} error - Error message
+ * @param {Object} preservedSelections - Preserved selections
+ * @param {URL} url - Request URL
+ * @returns {never} Throws redirect
+ */
+function handleTokenValidationError(error, preservedSelections, url) {
+	console.error(`${logPrefix} Token validation failed: ${error}`);
+	throw redirect(302, buildRedirectUrl(`${url.origin}/projects/genproj`, { error: 'token_validation_failed' }, preservedSelections));
+}
+
+/**
+ * Handle authentication initialization error
+ * @param {string} errorType - Type of error
+ * @param {Object} preservedSelections - Preserved selections
+ * @param {URL} url - Request URL
+ * @returns {never} Throws redirect
+ */
+function handleAuthInitializationError(errorType, preservedSelections, url) {
+	throw redirect(302, buildRedirectUrl(`${url.origin}/projects/genproj`, { error: errorType }, preservedSelections));
+}
+
+/**
  * GET handler for GitHub OAuth callback
  * @param {Object} params - Request parameters
  * @param {Object} params.request - Request object
@@ -79,99 +208,26 @@ export async function GET({ request, platform }) {
 		// Check for OAuth errors
 		const errorParam = url.searchParams.get('error');
 		if (errorParam) {
-			console.error(`${logPrefix} OAuth error from GitHub: ${errorParam}`);
-			
-			// Try to get preserved selections from state
-			let preservedSelections = {
-				selected: null,
-				projectName: null,
-				repositoryUrl: null
-			};
-			
-			const stateParam = url.searchParams.get('state');
-			if (stateParam && platform?.env?.KV) {
-				try {
-					const stateKey = `github_oauth_state_${stateParam}`;
-					const storedStateData = await platform.env.KV.get(stateKey);
-					if (storedStateData) {
-						const stateData = JSON.parse(storedStateData);
-						preservedSelections = {
-							selected: stateData.selected || null,
-							projectName: stateData.projectName || null,
-							repositoryUrl: stateData.repositoryUrl || null
-						};
-					}
-				} catch (e) {
-					// Ignore errors, just use empty selections
-				}
-			}
-			
-			// Build redirect URL with error and preserved selections
-			const redirectParams = new URLSearchParams();
-			redirectParams.set('error', 'github_auth_failed');
-			if (preservedSelections.selected) {
-				redirectParams.set('selected', preservedSelections.selected);
-			}
-			if (preservedSelections.projectName) {
-				redirectParams.set('projectName', preservedSelections.projectName);
-			}
-			if (preservedSelections.repositoryUrl) {
-				redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-			}
-			
-			throw redirect(302, `${url.origin}/projects/genproj?${redirectParams.toString()}`);
+			await handleOAuthError(errorParam, platform, url);
 		}
 
-		// Get authorization code and state
+		// Get and validate required parameters
 		const code = url.searchParams.get('code');
 		const state = url.searchParams.get('state');
 
 		if (!code) {
 			throw new Error('No authorization code received from GitHub');
 		}
-
 		if (!state) {
 			throw new Error('No state parameter received from GitHub');
 		}
 
-		// Validate state from KV and get preserved selections
-		let preservedSelections = {
-			selected: null,
-			projectName: null,
-			repositoryUrl: null
-		};
+		// Validate state and get preserved selections
+		const { preservedSelections } = await validateAndGetStateData(state, platform);
 
+		// Delete state from KV after validation
 		if (platform?.env?.KV) {
-			const stateKey = `github_oauth_state_${state}`;
-			const storedStateData = await platform.env.KV.get(stateKey);
-
-			if (!storedStateData) {
-				console.error(`${logPrefix} Invalid or expired state parameter`);
-				throw redirect(302, `${url.origin}/projects/genproj?error=invalid_state`);
-			}
-			
-			try {
-				const stateData = JSON.parse(storedStateData);
-				if (!stateData.state || !validateAuthState(state, stateData.state)) {
-					console.error(`${logPrefix} State mismatch`);
-					throw redirect(302, `${url.origin}/projects/genproj?error=invalid_state`);
-				}
-				// Extract preserved selections
-				preservedSelections = {
-					selected: stateData.selected || null,
-					projectName: stateData.projectName || null,
-					repositoryUrl: stateData.repositoryUrl || null
-				};
-			} catch (parseError) {
-				// Legacy format: just state string
-				if (!validateAuthState(state, storedStateData)) {
-					console.error(`${logPrefix} Invalid state parameter`);
-					throw redirect(302, `${url.origin}/projects/genproj?error=invalid_state`);
-				}
-			}
-
-			// Delete state from KV after validation
-			await platform.env.KV.delete(stateKey);
+			await platform.env.KV.delete(`github_oauth_state_${state}`);
 		}
 
 		// Exchange code for access token
@@ -184,86 +240,31 @@ export async function GET({ request, platform }) {
 
 		// Validate token and get user info
 		const validationResult = await validateGitHubToken(tokenResponse.access_token);
-
 		if (!validationResult.success) {
-			console.error(`${logPrefix} Token validation failed: ${validationResult.error}`);
-			
-			// Build redirect URL with error and preserved selections
-			const redirectParams = new URLSearchParams();
-			redirectParams.set('error', 'token_validation_failed');
-			if (preservedSelections.selected) {
-				redirectParams.set('selected', preservedSelections.selected);
-			}
-			if (preservedSelections.projectName) {
-				redirectParams.set('projectName', preservedSelections.projectName);
-			}
-			if (preservedSelections.repositoryUrl) {
-				redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-			}
-			
-			throw redirect(302, `${url.origin}/projects/genproj?${redirectParams.toString()}`);
+			handleTokenValidationError(validationResult.error, preservedSelections, url);
 		}
 
 		const { authState } = validationResult;
 
 		// Get current user from Google auth
 		const currentUser = await getCurrentUser(request, platform);
-
 		if (!currentUser) {
-			// Build redirect URL with error and preserved selections
-			const redirectParams = new URLSearchParams();
-			redirectParams.set('error', 'google_auth_required');
-			if (preservedSelections.selected) {
-				redirectParams.set('selected', preservedSelections.selected);
-			}
-			if (preservedSelections.projectName) {
-				redirectParams.set('projectName', preservedSelections.projectName);
-			}
-			if (preservedSelections.repositoryUrl) {
-				redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-			}
-			
-			throw redirect(302, `${url.origin}/projects/genproj?${redirectParams.toString()}`);
+			handleAuthInitializationError('google_auth_required', preservedSelections, url);
 		}
 
-		// Initialize auth manager with platform
+		// Initialize auth manager
 		if (!genprojAuth.kv) {
 			genprojAuth.initializePlatform(platform);
 		}
-		
-		// Verify KV is available
 		if (!genprojAuth.kv) {
 			console.error(`${logPrefix} KV not available. KV binding not configured in platform.env`);
-			const redirectParams = new URLSearchParams();
-			redirectParams.set('error', 'kv_not_configured');
-			if (preservedSelections.selected) {
-				redirectParams.set('selected', preservedSelections.selected);
-			}
-			if (preservedSelections.projectName) {
-				redirectParams.set('projectName', preservedSelections.projectName);
-			}
-			if (preservedSelections.repositoryUrl) {
-				redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-			}
-			throw redirect(302, `${url.origin}/projects/genproj?${redirectParams.toString()}`);
+			handleAuthInitializationError('kv_not_configured', preservedSelections, url);
 		}
-		
+
 		const initialized = await genprojAuth.initialize(currentUser, platform);
-		
 		if (!initialized) {
 			console.error(`${logPrefix} Failed to initialize authentication manager`);
-			const redirectParams = new URLSearchParams();
-			redirectParams.set('error', 'auth_init_failed');
-			if (preservedSelections.selected) {
-				redirectParams.set('selected', preservedSelections.selected);
-			}
-			if (preservedSelections.projectName) {
-				redirectParams.set('projectName', preservedSelections.projectName);
-			}
-			if (preservedSelections.repositoryUrl) {
-				redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-			}
-			throw redirect(302, `${url.origin}/projects/genproj?${redirectParams.toString()}`);
+			handleAuthInitializationError('auth_init_failed', preservedSelections, url);
 		}
 
 		// Update GitHub authentication
@@ -280,76 +281,43 @@ export async function GET({ request, platform }) {
 
 		console.log(`${logPrefix} GitHub authentication successful for user: ${currentUser.email}`);
 
-		// Build redirect path preserving user's selections
-		const redirectParams = new URLSearchParams();
-		redirectParams.set('auth', 'github_success');
-		if (preservedSelections.selected) {
-			redirectParams.set('selected', preservedSelections.selected);
-		}
-		if (preservedSelections.projectName) {
-			redirectParams.set('projectName', preservedSelections.projectName);
-		}
-		if (preservedSelections.repositoryUrl) {
-			redirectParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-		}
-
-		const redirectPath = `/projects/genproj?${redirectParams.toString()}`;
-
-		// Redirect back to genproj page with success and preserved selections
-		throw redirect(302, `${url.origin}${redirectPath}`);
+		// Redirect back to genproj page with success
+		throw redirect(302, buildRedirectUrl(`${url.origin}/projects/genproj`, { auth: 'github_success' }, preservedSelections));
 	} catch (error) {
 		// SvelteKit redirect throws, so we need to catch it
-		if (
-			error.status === 302 ||
-			error.status === 301 ||
-			error.status === 307 ||
-			error.status === 308
-		) {
+		if (error.status >= 300 && error.status < 400) {
 			throw error; // Re-throw redirects
 		}
 
 		console.error(`${logPrefix} GitHub OAuth callback error:`, error);
-		
-		// Try to preserve selections even on generic errors
-		let preservedSelections = {
-			selected: null,
-			projectName: null,
-			repositoryUrl: null
-		};
-		
-		// Get URL from request (may not be in scope if error occurred early)
-		const requestUrl = new URL(request.url);
-		const stateParam = requestUrl.searchParams.get('state');
-		
+
+		// Determine the appropriate error type based on the error message
+		let errorType = 'github_auth_failed';
+		if (error.message?.includes('Invalid') && error.message?.includes('state') ||
+		    error.message?.includes('expired state') ||
+		    error.message?.includes('state mismatch')) {
+			errorType = 'invalid_state';
+		}
+
+		// Try to preserve selections on errors
+		let preservedSelections = { selected: null, projectName: null, repositoryUrl: null };
+		const errorRequestUrl = new URL(request.url);
+		const stateParam = errorRequestUrl.searchParams.get('state');
+
 		if (stateParam && platform?.env?.KV) {
-			try {
-				const stateKey = `github_oauth_state_${stateParam}`;
-				const storedStateData = await platform.env.KV.get(stateKey);
-				if (storedStateData) {
+			const stateKey = `github_oauth_state_${stateParam}`;
+			const storedStateData = await platform.env.KV.get(stateKey);
+			if (storedStateData) {
+				try {
 					const stateData = JSON.parse(storedStateData);
-					preservedSelections = {
-						selected: stateData.selected || null,
-						projectName: stateData.projectName || null,
-						repositoryUrl: stateData.repositoryUrl || null
-					};
+					preservedSelections = getPreservedSelections(stateData);
+				} catch (parseError) {
+					console.warn(`${logPrefix} Failed to parse state data for error handling:`, parseError);
+					// Continue with empty selections
 				}
-			} catch (e) {
-				// Ignore errors, just use empty selections
 			}
 		}
-		
-		const redirectUrl = new URL('/projects/genproj', request.url);
-		redirectUrl.searchParams.set('error', 'github_auth_failed');
-		if (preservedSelections.selected) {
-			redirectUrl.searchParams.set('selected', preservedSelections.selected);
-		}
-		if (preservedSelections.projectName) {
-			redirectUrl.searchParams.set('projectName', preservedSelections.projectName);
-		}
-		if (preservedSelections.repositoryUrl) {
-			redirectUrl.searchParams.set('repositoryUrl', preservedSelections.repositoryUrl);
-		}
-		
-		throw redirect(302, redirectUrl.toString());
+
+		throw redirect(302, buildRedirectUrl(`${errorRequestUrl.origin}/projects/genproj`, { error: errorType }, preservedSelections));
 	}
 }
