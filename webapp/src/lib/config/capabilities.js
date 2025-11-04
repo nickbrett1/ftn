@@ -1,3 +1,5 @@
+import { parseDevcontainerConfig } from '$lib/utils/json-utils.js';
+
 /**
  * @fileoverview Project capability definitions for the genproj tool
  * @description Defines all available project capabilities with their requirements and dependencies
@@ -26,140 +28,145 @@
  * @property {Object} [variables] - Template variables
  */
 
+const devcontainerBase = {
+	category: 'devcontainer',
+	dependencies: ['docker'],
+	conflicts: [],
+	requiresAuth: [],
+	templates: [
+		{
+			id: 'devcontainer-json',
+			filePath: '.devcontainer/devcontainer.json'
+		},
+		{
+			id: 'dockerfile',
+			filePath: '.devcontainer/Dockerfile'
+		},
+		{
+			id: 'zshrc',
+			filePath: '.devcontainer/.zshrc',
+			templateId: 'devcontainer-zshrc'
+		},
+		{
+			id: 'p10k',
+			filePath: '.devcontainer/.p10k.zsh',
+			templateId: 'devcontainer-p10k-zsh'
+		},
+		{
+			id: 'setup-sh',
+			filePath: '.devcontainer/setup.sh',
+			templateId: 'devcontainer-setup-sh',
+			isExecutable: true
+		}
+	]
+};
+
 /**
  * Available project capabilities
  * @type {CapabilityDefinition[]}
  */
 export const capabilities = [
 	{
+		...devcontainerBase,
 		id: 'devcontainer-node',
 		name: 'Node.js DevContainer Support',
 		description: 'Adds Node.js runtime and npm to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		category: 'devcontainer',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
 			properties: {
 				nodeVersion: { type: 'string', enum: ['22', '20', '18'], default: '22' }
 			}
 		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-node-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-node-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-node-json' };
 			}
-		]
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-node-dockerfile' };
+			}
+			return t;
+		})
 	},
 	{
+		...devcontainerBase,
 		id: 'devcontainer-python',
 		name: 'Python DevContainer Support',
 		description: 'Adds Python runtime and pip to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		category: 'devcontainer',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
 			properties: {
 				pythonVersion: { type: 'string', enum: ['3.12', '3.11', '3.10', '3.9'], default: '3.12' }
 			}
 		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-python-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-python-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-python-json' };
 			}
-		]
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-python-dockerfile' };
+			}
+			return t;
+		})
 	},
 	{
+		...devcontainerBase,
 		id: 'devcontainer-java',
 		name: 'Java DevContainer Support',
 		description: 'Adds Java runtime to your development container',
 		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		category: 'devcontainer',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
 			properties: {
 				javaVersion: { type: 'string', enum: ['21', '17', '11'], default: '21' }
 			}
 		},
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-java-json' };
+			}
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-java-dockerfile' };
+			}
+			return t;
+		})
+	},
+	{
+		id: 'docker',
+		name: 'Docker-in-Docker Support',
+		description: 'Adds Docker-in-Docker support to your development container.',
+		url: 'https://github.com/devcontainers/features/tree/main/src/docker-in-docker',
+		category: 'internal',
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {}
+		},
 		templates: [
 			{
-				id: 'devcontainer-json',
+				id: 'docker-in-docker-feature',
 				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-java-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-java-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
+				type: 'merge',
+				mergeLogic: (existingContent) => {
+					if (!existingContent) return existingContent;
+					try {
+						const config = parseDevcontainerConfig(existingContent, 'docker-capability');
+						if (!config.features) {
+							config.features = {};
+						}
+						config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+							version: 'latest',
+							moby: true
+						};
+						return JSON.stringify(config, null, 2);
+					} catch (e) {
+						console.error('Failed to merge Docker-in-Docker feature:', e);
+						return existingContent;
+					}
+				}
 			}
 		]
 	},

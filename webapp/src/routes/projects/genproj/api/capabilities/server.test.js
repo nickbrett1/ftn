@@ -42,6 +42,18 @@ vi.mock('$lib/config/capabilities.js', () => ({
 				type: 'object',
 				properties: {}
 			}
+		},
+		{
+			id: 'docker',
+			name: 'Docker',
+			category: 'internal',
+			dependencies: [],
+			conflicts: [],
+			requiresAuth: [],
+			configurationSchema: {
+				type: 'object',
+				properties: {}
+			}
 		}
 	]
 }));
@@ -68,9 +80,16 @@ describe('Capabilities API', () => {
 
 			expect(data.capabilities).toBeDefined();
 			expect(data.metadata).toBeDefined();
-			expect(data.metadata.total).toBe(2);
+			expect(data.metadata.total).toBe(3);
 			expect(data.metadata.categories).toBeDefined();
 			expect(data.metadata.timestamp).toBeDefined();
+		});
+		it('should include the docker capability', async () => {
+			const response = await GET({ url: new URL('http://localhost') });
+			const data = await response.json();
+
+			const dockerCapability = data.capabilities.find((c) => c.id === 'docker');
+			expect(dockerCapability).toBeDefined();
 		});
 	});
 

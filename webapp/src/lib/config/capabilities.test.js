@@ -70,7 +70,8 @@ describe('Capabilities Config', () => {
 			const result = validateCapabilityDependencies([
 				'sonarlint',
 				'sonarcloud',
-				'devcontainer-java'
+				'devcontainer-java',
+				'docker'
 			]);
 			expect(result.valid).toBe(true);
 			expect(result.missing).toEqual([]);
@@ -141,7 +142,8 @@ describe('Capabilities Config', () => {
 				'secrets',
 				'deployment',
 				'monitoring',
-				'project-structure'
+				'project-structure',
+				'internal'
 			];
 			for (const capability of capabilities) {
 				expect(validCategories).toContain(capability.category);

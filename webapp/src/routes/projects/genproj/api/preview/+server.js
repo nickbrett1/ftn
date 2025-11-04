@@ -7,6 +7,7 @@ import { json } from '@sveltejs/kit';
 import { withErrorHandling } from '$lib/utils/genproj-errors.js';
 import { logger } from '$lib/utils/logging.js';
 import { capabilities } from '$lib/config/capabilities.js';
+import { parseDevcontainerConfig } from '$lib/utils/json-utils.js';
 
 /**
  * Validates a single field value
@@ -319,7 +320,14 @@ function generateCapabilityFilesMap(
 		});
 
 		// Handle file conflicts, especially for devcontainer files
-		addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName);
+		addFilesToMap(
+			fileMap,
+			capabilityFiles,
+			devcontainerCapabilities,
+			configuration,
+			projectName,
+			selectedCapabilities
+		);
 	}
 
 	return Array.from(fileMap.values());
@@ -411,7 +419,7 @@ function addDopplerToDockerfile(files, selectedCapabilities, devcontainerCapabil
 	}
 
 	const lines = dockerfile.content.split('\n');
-	let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER node'));
+	let insertIndex = lines.findIndex((line) => line.trim().startsWith('USER '));
 	const dopplerInstall = [
 		'',
 		'# Install Doppler CLI',
@@ -623,6 +631,97 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 }
 
 /**
+ * Handles the processing of devcontainer.json files, including merging.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
+ * @param {object} configuration - The full configuration object.
+ * @param {string} projectName - The name of the project.
+ * @param {string[]} selectedCapabilities - All selected capabilities.
+ */
+function handleDevcontainerJson(
+	file,
+	fileMap,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	let content = file.content;
+	const template = capabilities
+		.find((c) => c.id === file.capabilityId)
+		?.templates.find((t) => t.filePath === file.filePath);
+
+	if (template?.type === 'merge' && template.mergeLogic) {
+		const existingContent = fileMap.get(file.filePath)?.content || '{}';
+		content = template.mergeLogic(existingContent);
+	}
+
+	if (devcontainerCapabilities.length > 1) {
+		const existingContent = fileMap.get(file.filePath)?.content;
+		if (existingContent) {
+			content = mergeDevcontainerConfigs(
+				existingContent,
+				content,
+				devcontainerCapabilities,
+				configuration,
+				projectName,
+				selectedCapabilities
+			);
+		}
+	}
+	file.content = content;
+	fileMap.set(file.filePath, file);
+}
+
+/**
+ * Handles the processing of Dockerfiles, including merging.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ */
+function handleDockerfile(file, fileMap) {
+	const existingFile = fileMap.get(file.filePath);
+	if (existingFile) {
+		file.content = mergeDockerfiles(existingFile.content, file.content);
+		file.capabilityId = 'devcontainer-merged';
+	}
+	fileMap.set(file.filePath, file);
+}
+
+/**
+ * Processes a single devcontainer file, delegating to specific handlers.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
+ * @param {object} configuration - The full configuration object.
+ * @param {string} projectName - The name of the project.
+ * @param {string[]} selectedCapabilities - All selected capabilities.
+ */
+function processDevcontainerFile(
+	file,
+	fileMap,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	if (file.filePath === '.devcontainer/devcontainer.json') {
+		handleDevcontainerJson(
+			file,
+			fileMap,
+			devcontainerCapabilities,
+			configuration,
+			projectName,
+			selectedCapabilities
+		);
+	} else if (devcontainerCapabilities.length > 1 && file.filePath === '.devcontainer/Dockerfile') {
+		handleDockerfile(file, fileMap);
+	} else {
+		fileMap.set(file.filePath, file);
+	}
+}
+
+/**
  * Adds files to the file map, handling conflicts especially for devcontainer files
  */
 function addFilesToMap(
@@ -630,39 +729,20 @@ function addFilesToMap(
 	capabilityFiles,
 	devcontainerCapabilities,
 	configuration,
-	projectName
+	projectName,
+	selectedCapabilities
 ) {
 	for (const file of capabilityFiles) {
-		const existingFile = fileMap.get(file.filePath);
-
-		// No conflict, just add the file
-		if (!existingFile || !file.filePath.includes('.devcontainer/')) {
-			fileMap.set(file.filePath, file);
-			continue;
-		}
-
-		// Handle devcontainer conflicts
-		if (
-			devcontainerCapabilities.length > 1 &&
-			file.filePath === '.devcontainer/devcontainer.json'
-		) {
-			handleDevcontainerMerge(
+		if (file.filePath.includes('.devcontainer/')) {
+			processDevcontainerFile(
 				file,
-				existingFile,
+				fileMap,
 				devcontainerCapabilities,
 				configuration,
-				projectName
+				projectName,
+				selectedCapabilities
 			);
-			fileMap.set(file.filePath, file);
-		} else if (
-			devcontainerCapabilities.length > 1 &&
-			file.filePath === '.devcontainer/Dockerfile'
-		) {
-			file.content = mergeDockerfiles(existingFile.content, file.content);
-			file.capabilityId = 'devcontainer-merged';
-			fileMap.set(file.filePath, file);
 		} else {
-			// Keep the later file (last selected wins for non-devcontainer files)
 			fileMap.set(file.filePath, file);
 		}
 	}
@@ -676,7 +756,8 @@ function handleDevcontainerMerge(
 	existingFile,
 	devcontainerCapabilities,
 	configuration,
-	projectName
+	projectName,
+	selectedCapabilities
 ) {
 	try {
 		file.content = mergeDevcontainerConfigs(
@@ -684,7 +765,8 @@ function handleDevcontainerMerge(
 			file.content,
 			devcontainerCapabilities,
 			configuration,
-			projectName
+			projectName,
+			selectedCapabilities
 		);
 		file.capabilityId = 'devcontainer-merged';
 	} catch (e) {
@@ -693,62 +775,7 @@ function handleDevcontainerMerge(
 	}
 }
 
-/**
- * Merges multiple devcontainer configurations
- */
-function mergeDevcontainerConfigs(
-	existingConfig,
-	newConfig,
-	devcontainerCapabilities,
-	configuration,
-	projectName
-) {
-	// Parse both configs - handle if they're already objects or strings
-	let existing;
-	let newConfigObj;
-
-	// Helper to strip comments from JSON strings
-	const stripComments = (str) => {
-		if (typeof str !== 'string') return str;
-		// Remove single-line comments
-		// eslint-disable-next-line unicorn/prefer-string-replace-all
-		// eslint-disable-next-line unicorn/prefer-string-replace-all
-		return str.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-	};
-
-	try {
-		const contentToParse =
-			typeof existingConfig === 'string' ? stripComments(existingConfig) : existingConfig;
-		existing = typeof existingConfig === 'string' ? JSON.parse(contentToParse) : existingConfig;
-	} catch (e) {
-		console.error('Failed to parse existing config:', e);
-		console.error('Config content:', existingConfig.substring(0, 200));
-		throw new Error('Invalid existing devcontainer configuration');
-	}
-
-	try {
-		const contentToParse = typeof newConfig === 'string' ? stripComments(newConfig) : newConfig;
-		newConfigObj = typeof newConfig === 'string' ? JSON.parse(contentToParse) : newConfig;
-	} catch (e) {
-		console.error('Failed to parse new config:', e);
-		console.error('Config content:', newConfig.substring(0, 200));
-		throw new Error('Invalid new devcontainer configuration');
-	}
-
-	// Use a base image that supports both
-	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
-	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
-	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
-
-	// Single capability - use existing config
-	if (!hasNode && !hasPython && !hasJava) {
-		return existingConfig;
-	}
-
-	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
-	const features = buildFeatures(hasNode, hasPython, hasJava);
-
-	// Merge customizations (VSCode extensions)
+function mergeExtensions(existing, newConfigObj) {
 	const extensions = new Set();
 	if (existing.customizations?.vscode?.extensions) {
 		for (const ext of existing.customizations.vscode.extensions) {
@@ -760,15 +787,38 @@ function mergeDevcontainerConfigs(
 			extensions.add(ext);
 		}
 	}
+	return Array.from(extensions);
+}
+
+function mergeDevcontainerConfigs(
+	existingConfig,
+	newConfig,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	const existing = parseDevcontainerConfig(existingConfig, 'existing');
+	const newConfigObj = parseDevcontainerConfig(newConfig, 'new');
+
+	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
+	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
+	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
+
+	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
+	const features = buildFeatures(hasNode, hasPython, hasJava);
+	const extensions = mergeExtensions(existing, newConfigObj);
+
+	const mergedFeatures = { ...existing.features, ...newConfigObj.features, ...features };
 
 	const merged = {
 		name: projectName || 'Project',
 		image,
 		runArgs: ['--sysctl', 'net.ipv6.conf.all.disable_ipv6=1'],
-		features,
+		features: mergedFeatures,
 		customizations: {
 			vscode: {
-				extensions: Array.from(extensions)
+				extensions
 			}
 		},
 		forwardPorts: [...(existing.forwardPorts || []), ...(newConfigObj.forwardPorts || [])].filter(
@@ -789,7 +839,7 @@ function buildFeatures(hasNode, hasPython, hasJava) {
 			installZsh: true,
 			configureZshAsDefaultShell: true,
 			installOhMyZsh: true,
-			username: 'node',
+			username: 'vscode',
 			uid: '1000',
 			gid: '1000'
 		},
@@ -1684,7 +1734,7 @@ function getFallbackTemplate(templateId, context) {
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1732,7 +1782,7 @@ WORKDIR /workspace
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1758,7 +1808,7 @@ WORKDIR /workspace
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
-      "username": "node",
+      "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
@@ -1788,9 +1838,9 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
-# Switch to node user for installing user-specific tools
-USER node
-ENV USER_HOME_DIR=/home/node
+# Switch to vscode user for installing user-specific tools
+USER vscode
+ENV USER_HOME_DIR=/home/vscode
 
 # Add uv tools to PATH for node user
 ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
@@ -1809,9 +1859,9 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
-# Switch to node user for installing user-specific tools
-USER node
-ENV USER_HOME_DIR=/home/node
+# Switch to vscode user for installing user-specific tools
+USER vscode
+ENV USER_HOME_DIR=/home/vscode
 
 # Add uv tools to PATH for node user
 ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
