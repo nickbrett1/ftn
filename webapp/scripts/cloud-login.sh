@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Get the directory where the script is located
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
 # Doppler login/setup
 if command -v doppler &> /dev/null; then
   if doppler whoami &> /dev/null; then
@@ -28,6 +31,6 @@ script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callb
 echo
 # Setup Wrangler configuration with environment variables
 echo "Setting up Wrangler configuration..."
-doppler run --project webapp --config dev -- ./scripts/setup-wrangler-config.sh
+doppler run --project webapp --config dev -- "${SCRIPT_DIR}/setup-wrangler-config.sh"
 
 echo "Cloud login script finished." 
