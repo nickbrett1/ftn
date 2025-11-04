@@ -46,7 +46,7 @@ vi.mock('$lib/config/capabilities.js', () => ({
 		{
 			id: 'docker',
 			name: 'Docker',
-			category: 'devcontainer',
+			category: 'internal',
 			dependencies: [],
 			conflicts: [],
 			requiresAuth: [],

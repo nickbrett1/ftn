@@ -631,6 +631,97 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
 }
 
 /**
+ * Handles the processing of devcontainer.json files, including merging.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
+ * @param {object} configuration - The full configuration object.
+ * @param {string} projectName - The name of the project.
+ * @param {string[]} selectedCapabilities - All selected capabilities.
+ */
+function handleDevcontainerJson(
+	file,
+	fileMap,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	let content = file.content;
+	const template = capabilities
+		.find((c) => c.id === file.capabilityId)
+		?.templates.find((t) => t.filePath === file.filePath);
+
+	if (template?.type === 'merge' && template.mergeLogic) {
+		const existingContent = fileMap.get(file.filePath)?.content || '{}';
+		content = template.mergeLogic(existingContent);
+	}
+
+	if (devcontainerCapabilities.length > 1) {
+		const existingContent = fileMap.get(file.filePath)?.content;
+		if (existingContent) {
+			content = mergeDevcontainerConfigs(
+				existingContent,
+				content,
+				devcontainerCapabilities,
+				configuration,
+				projectName,
+				selectedCapabilities
+			);
+		}
+	}
+	file.content = content;
+	fileMap.set(file.filePath, file);
+}
+
+/**
+ * Handles the processing of Dockerfiles, including merging.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ */
+function handleDockerfile(file, fileMap) {
+	const existingFile = fileMap.get(file.filePath);
+	if (existingFile) {
+		file.content = mergeDockerfiles(existingFile.content, file.content);
+		file.capabilityId = 'devcontainer-merged';
+	}
+	fileMap.set(file.filePath, file);
+}
+
+/**
+ * Processes a single devcontainer file, delegating to specific handlers.
+ * @param {object} file - The file object to process.
+ * @param {Map<string, object>} fileMap - The map of files being generated.
+ * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
+ * @param {object} configuration - The full configuration object.
+ * @param {string} projectName - The name of the project.
+ * @param {string[]} selectedCapabilities - All selected capabilities.
+ */
+function processDevcontainerFile(
+	file,
+	fileMap,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	if (file.filePath === '.devcontainer/devcontainer.json') {
+		handleDevcontainerJson(
+			file,
+			fileMap,
+			devcontainerCapabilities,
+			configuration,
+			projectName,
+			selectedCapabilities
+		);
+	} else if (devcontainerCapabilities.length > 1 && file.filePath === '.devcontainer/Dockerfile') {
+		handleDockerfile(file, fileMap);
+	} else {
+		fileMap.set(file.filePath, file);
+	}
+}
+
+/**
  * Adds files to the file map, handling conflicts especially for devcontainer files
  */
 function addFilesToMap(
@@ -642,49 +733,15 @@ function addFilesToMap(
 	selectedCapabilities
 ) {
 	for (const file of capabilityFiles) {
-		const existingFile = fileMap.get(file.filePath);
-
-		if (!file.filePath.includes('.devcontainer/')) {
-			fileMap.set(file.filePath, file);
-			continue;
-		}
-
-		// Handle devcontainer files
-		if (file.filePath === '.devcontainer/devcontainer.json') {
-			let content = file.content;
-			const template = capabilities
-				.find((c) => c.id === file.capabilityId)
-				?.templates.find((t) => t.filePath === file.filePath);
-
-			if (template?.type === 'merge' && template.mergeLogic) {
-				const existingContent = fileMap.get(file.filePath)?.content || '{}';
-				content = template.mergeLogic(existingContent);
-			}
-
-			if (devcontainerCapabilities.length > 1) {
-				const existingContent = fileMap.get(file.filePath)?.content;
-				if (existingContent) {
-					content = mergeDevcontainerConfigs(
-						existingContent,
-						content,
-						devcontainerCapabilities,
-						configuration,
-						projectName,
-						selectedCapabilities
-					);
-				}
-			}
-			file.content = content;
-			fileMap.set(file.filePath, file);
-		} else if (
-			devcontainerCapabilities.length > 1 &&
-			file.filePath === '.devcontainer/Dockerfile'
-		) {
-			if (existingFile) {
-				file.content = mergeDockerfiles(existingFile.content, file.content);
-				file.capabilityId = 'devcontainer-merged';
-			}
-			fileMap.set(file.filePath, file);
+		if (file.filePath.includes('.devcontainer/')) {
+			processDevcontainerFile(
+				file,
+				fileMap,
+				devcontainerCapabilities,
+				configuration,
+				projectName,
+				selectedCapabilities
+			);
 		} else {
 			fileMap.set(file.filePath, file);
 		}
@@ -752,11 +809,7 @@ function mergeDevcontainerConfigs(
 	const features = buildFeatures(hasNode, hasPython, hasJava);
 	const extensions = mergeExtensions(existing, newConfigObj);
 
-	const mergedFeatures = {
-		...(existing.features || {}),
-		...(newConfigObj.features || {}),
-		...features
-	};
+	const mergedFeatures = { ...existing.features, ...newConfigObj.features, ...features };
 
 	const merged = {
 		name: projectName || 'Project',
