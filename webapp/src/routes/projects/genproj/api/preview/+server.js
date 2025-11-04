@@ -640,38 +640,60 @@ function addFilesToMap(
 	projectName,
 	selectedCapabilities
 ) {
+	const hasDocker = selectedCapabilities.includes('docker');
 	for (const file of capabilityFiles) {
 		const existingFile = fileMap.get(file.filePath);
 
-		// No conflict, just add the file
-		if (!existingFile || !file.filePath.includes('.devcontainer/')) {
+		if (!file.filePath.includes('.devcontainer/')) {
 			fileMap.set(file.filePath, file);
 			continue;
 		}
 
-		// Handle devcontainer conflicts
-		if (
-			devcontainerCapabilities.length > 1 &&
-			file.filePath === '.devcontainer/devcontainer.json'
-		) {
-			handleDevcontainerMerge(
-				file,
-				existingFile,
-				devcontainerCapabilities,
-				configuration,
-				projectName,
-				selectedCapabilities
-			);
+		// Handle devcontainer files
+		if (file.filePath === '.devcontainer/devcontainer.json') {
+			let config;
+			try {
+				config = JSON.parse(file.content);
+			} catch (e) {
+				console.error('Error parsing devcontainer.json, skipping docker feature addition', e);
+				fileMap.set(file.filePath, file); // Store original file and continue
+				continue;
+			}
+			if (devcontainerCapabilities.length > 1) {
+				const existingContent = fileMap.get(file.filePath)?.content;
+				if (existingContent) {
+					file.content = mergeDevcontainerConfigs(
+						existingContent,
+						file.content,
+						devcontainerCapabilities,
+						configuration,
+						projectName,
+						selectedCapabilities
+					);
+					config = JSON.parse(file.content); // Reparse after merge
+				}
+			}
+			if (hasDocker) {
+				if (!config.features) {
+					config.features = {};
+				}
+				config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+					version: 'latest',
+					moby: true
+				};
+				file.content = JSON.stringify(config, null, 2);
+			}
 			fileMap.set(file.filePath, file);
 		} else if (
 			devcontainerCapabilities.length > 1 &&
 			file.filePath === '.devcontainer/Dockerfile'
 		) {
-			file.content = mergeDockerfiles(existingFile.content, file.content);
-			file.capabilityId = 'devcontainer-merged';
+			if (existingFile) {
+				file.content = mergeDockerfiles(existingFile.content, file.content);
+				file.capabilityId = 'devcontainer-merged';
+			}
 			fileMap.set(file.filePath, file);
 		} else {
-			// Keep the later file (last selected wins for non-devcontainer files)
 			fileMap.set(file.filePath, file);
 		}
 	}
@@ -752,24 +774,6 @@ function mergeDevcontainerConfigs(
 	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
 	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
 	const hasDocker = selectedCapabilities.includes('docker');
-
-	if (devcontainerCapabilities.length > 0 && devcontainerCapabilities.length < 2) {
-		const singleDevcontainer = capabilities.find((c) => c.id === devcontainerCapabilities[0]);
-		const template = singleDevcontainer.templates.find((t) => t.id === 'devcontainer-json');
-		const content = getFallbackTemplate(template.templateId, {
-			projectName,
-			configuration,
-			...configuration[singleDevcontainer.id]
-		});
-		const config = JSON.parse(content);
-		if (hasDocker) {
-			config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
-				version: 'latest',
-				moby: true
-			};
-		}
-		return JSON.stringify(config, null, 2);
-	}
 
 	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
 	const features = buildFeatures(hasNode, hasPython, hasJava, hasDocker);
@@ -1721,11 +1725,7 @@ function getFallbackTemplate(templateId, context) {
       "uid": "1000",
       "gid": "1000"
     },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "moby": true
-    }
+    "ghcr.io/devcontainers/features/git:1": {}
   },
   "customizations": {
     "vscode": {
