@@ -70,7 +70,8 @@ describe('Capabilities Config', () => {
 			const result = validateCapabilityDependencies([
 				'sonarlint',
 				'sonarcloud',
-				'devcontainer-java'
+				'devcontainer-java',
+				'docker'
 			]);
 			expect(result.valid).toBe(true);
 			expect(result.missing).toEqual([]);
