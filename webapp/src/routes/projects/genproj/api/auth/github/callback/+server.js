@@ -146,17 +146,13 @@ async function exchangeGitHubToken(code, redirectUri) {
 }
 
 /**
- * Handle OAuth error from GitHub
- * @param {string} errorParam - Error parameter from GitHub
+ * Get preserved selections from stored state data
+ * @param {string} stateParam - State parameter
  * @param {Object} platform - Platform object
- * @param {URL} url - Request URL
- * @returns {never} Throws redirect
+ * @returns {Promise<Object>} Preserved selections
  */
-async function handleOAuthError(errorParam, platform, url) {
-	console.error(`${logPrefix} OAuth error from GitHub: ${errorParam}`);
-
+async function getPreservedSelectionsFromState(stateParam, platform) {
 	let preservedSelections = { selected: null, projectName: null, repositoryUrl: null };
-	const stateParam = url.searchParams.get('state');
 
 	if (stateParam && platform?.env?.KV) {
 		const stateKey = `github_oauth_state_${stateParam}`;
@@ -166,14 +162,24 @@ async function handleOAuthError(errorParam, platform, url) {
 				const stateData = JSON.parse(storedStateData);
 				preservedSelections = getPreservedSelections(stateData);
 			} catch (parseError) {
-				console.warn(
-					`${logPrefix} Failed to parse state data for OAuth error handling:`,
-					parseError
-				);
+				console.warn(`${logPrefix} Failed to parse state data for error handling:`, parseError);
 				// Continue with empty selections
 			}
 		}
 	}
+
+	return preservedSelections;
+}
+
+/**
+ * Handle OAuth error from GitHub
+ * @param {string} errorParam - Error parameter from GitHub
+ * @param {Object} preservedSelections - Preserved selections
+ * @param {URL} url - Request URL
+ * @returns {never} Throws redirect
+ */
+function handleOAuthError(errorParam, preservedSelections, url) {
+	console.error(`${logPrefix} OAuth error from GitHub: ${errorParam}`);
 
 	throw redirect(
 		302,
@@ -228,7 +234,11 @@ async function extractAndValidateParams(url, platform) {
 	// Check for OAuth errors
 	const errorParam = url.searchParams.get('error');
 	if (errorParam) {
-		await handleOAuthError(errorParam, platform, url);
+		const preservedSelections = await getPreservedSelectionsFromState(
+			url.searchParams.get('state'),
+			platform
+		);
+		handleOAuthError(errorParam, preservedSelections, url);
 	}
 
 	// Get and validate required parameters
@@ -357,11 +367,11 @@ async function processGitHubCallback(request, url, code, state, preservedSelecti
 /**
  * Handle errors from GitHub OAuth callback processing
  * @param {Error} error - The error that occurred
- * @param {Object} request - Request object
- * @param {Object} platform - Platform object
+ * @param {Object} preservedSelections - Preserved selections
+ * @param {URL} errorRequestUrl - Request URL
  * @returns {never} Throws redirect
  */
-async function handleCallbackError(error, request, platform) {
+function handleCallbackError(error, preservedSelections, errorRequestUrl) {
 	console.error(`${logPrefix} GitHub OAuth callback error:`, error);
 
 	// Determine the appropriate error type based on the error message
@@ -374,25 +384,6 @@ async function handleCallbackError(error, request, platform) {
 		errorMessage.includes('invalid or expired state')
 	) {
 		errorType = 'invalid_state';
-	}
-
-	// Try to preserve selections on errors
-	let preservedSelections = { selected: null, projectName: null, repositoryUrl: null };
-	const errorRequestUrl = new URL(request.url);
-	const stateParam = errorRequestUrl.searchParams.get('state');
-
-	if (stateParam && platform?.env?.KV) {
-		const stateKey = `github_oauth_state_${stateParam}`;
-		const storedStateData = await platform.env.KV.get(stateKey);
-		if (storedStateData) {
-			try {
-				const stateData = JSON.parse(storedStateData);
-				preservedSelections = getPreservedSelections(stateData);
-			} catch (parseError) {
-				console.warn(`${logPrefix} Failed to parse state data for error handling:`, parseError);
-				// Continue with empty selections
-			}
-		}
 	}
 
 	throw redirect(
@@ -446,6 +437,11 @@ export async function GET({ request, platform }) {
 			throw error; // Re-throw redirects
 		}
 
-		await handleCallbackError(error, request, platform);
+		const errorRequestUrl = new URL(request.url);
+		const preservedSelections = await getPreservedSelectionsFromState(
+			errorRequestUrl.searchParams.get('state'),
+			platform
+		);
+		handleCallbackError(error, preservedSelections, errorRequestUrl);
 	}
 }
