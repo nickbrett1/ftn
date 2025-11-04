@@ -33,11 +33,11 @@ describe('Preview API', () => {
 	});
 
 	describe('POST', () => {
-		it('should generate a Dockerfile with Docker-in-Docker support when docker capability is selected', async () => {
+		it('should generate a Dockerfile with Docker-in-Docker support when a devcontainer is selected', async () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node', 'docker'],
+					selectedCapabilities: ['devcontainer-node'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'
@@ -60,11 +60,11 @@ describe('Preview API', () => {
 		});
 
 
-		it('should merge devcontainer configurations and include Docker-in-Docker support when docker capability is selected', async () => {
+		it('should merge devcontainer configurations and include Docker-in-Docker support', async () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node', 'devcontainer-python', 'docker'],
+					selectedCapabilities: ['devcontainer-node', 'devcontainer-python'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'

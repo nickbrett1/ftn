@@ -131,21 +131,6 @@ export const capabilities = [
 		})
 	},
 	{
-		id: 'docker',
-		name: 'Docker-in-Docker Support',
-		description: 'Adds Docker-in-Docker support to your development container.',
-		url: 'https://github.com/devcontainers/features/tree/main/src/docker-in-docker',
-		category: 'devcontainer',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			type: 'object',
-			properties: {}
-		},
-		templates: []
-	},
-	{
 		id: 'circleci',
 		name: 'CircleCI CI/CD',
 		description: 'Continuous integration and deployment with CircleCI',

@@ -640,7 +640,6 @@ function addFilesToMap(
 	projectName,
 	selectedCapabilities
 ) {
-	const hasDocker = selectedCapabilities.includes('docker');
 	for (const file of capabilityFiles) {
 		const existingFile = fileMap.get(file.filePath);
 
@@ -651,14 +650,6 @@ function addFilesToMap(
 
 		// Handle devcontainer files
 		if (file.filePath === '.devcontainer/devcontainer.json') {
-			let config;
-			try {
-				config = JSON.parse(file.content);
-			} catch (e) {
-				console.error('Error parsing devcontainer.json, skipping docker feature addition', e);
-				fileMap.set(file.filePath, file); // Store original file and continue
-				continue;
-			}
 			if (devcontainerCapabilities.length > 1) {
 				const existingContent = fileMap.get(file.filePath)?.content;
 				if (existingContent) {
@@ -670,10 +661,10 @@ function addFilesToMap(
 						projectName,
 						selectedCapabilities
 					);
-					config = JSON.parse(file.content); // Reparse after merge
 				}
-			}
-			if (hasDocker) {
+			} else {
+				// Single devcontainer, so we need to add the docker feature
+				const config = parseDevcontainerConfig(file.content, 'new');
 				if (!config.features) {
 					config.features = {};
 				}
@@ -737,8 +728,62 @@ function parseDevcontainerConfig(config, configName) {
 		throw new Error(`Invalid ${configName} devcontainer configuration type`);
 	}
 	try {
-		// eslint-disable-next-line unicorn/prefer-string-replace-all
-		const jsonString = config.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+		// Securely strip comments without using vulnerable regex
+		let jsonString = '';
+		let inString = false;
+		let inLineComment = false;
+		let inBlockComment = false;
+		for (let i = 0; i < config.length; i++) {
+			const char = config[i];
+			const nextChar = i + 1 < config.length ? config[i + 1] : '';
+
+			if (inLineComment) {
+				if (char === '\n') {
+					inLineComment = false;
+					jsonString += char; // Preserve line breaks
+				}
+				continue;
+			}
+
+			if (inBlockComment) {
+				if (char === '*' && nextChar === '/') {
+					inBlockComment = false;
+					i++; // Skip the closing '/'
+				}
+				continue;
+			}
+
+			if (inString) {
+				if (char === '\\') {
+					jsonString += char + nextChar;
+					i++; // Skip the escaped character
+				} else {
+					if (char === '"') {
+						inString = false;
+					}
+					jsonString += char;
+				}
+				continue;
+			}
+
+			if (char === '/' && nextChar === '/') {
+				inLineComment = true;
+				i++; // Skip the second '/'
+				continue;
+			}
+
+			if (char === '/' && nextChar === '*') {
+				inBlockComment = true;
+				i++; // Skip the '*'
+				continue;
+			}
+
+			if (char === '"') {
+				inString = true;
+			}
+			jsonString += char;
+		}
+
 		return JSON.parse(jsonString);
 	} catch (e) {
 		console.error(`Failed to parse ${configName} config:`, e);
@@ -776,10 +821,9 @@ function mergeDevcontainerConfigs(
 	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
 	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
 	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
-	const hasDocker = selectedCapabilities.includes('docker');
 
 	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
-	const features = buildFeatures(hasNode, hasPython, hasJava, hasDocker);
+	const features = buildFeatures(hasNode, hasPython, hasJava);
 	const extensions = mergeExtensions(existing, newConfigObj);
 
 	const merged = {
@@ -798,13 +842,21 @@ function mergeDevcontainerConfigs(
 		postCreateCommand: 'bash .devcontainer/setup.sh'
 	};
 
+	// Ensure docker-in-docker is always present in merged configs
+	if (!merged.features['ghcr.io/devcontainers/features/docker-in-docker:2']) {
+		merged.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+			version: 'latest',
+			moby: true
+		};
+	}
+
 	return JSON.stringify(merged, null, 2);
 }
 
 /**
  * Builds features object for devcontainer configuration
  */
-function buildFeatures(hasNode, hasPython, hasJava, hasDocker) {
+function buildFeatures(hasNode, hasPython, hasJava) {
 	const features = {
 		'ghcr.io/devcontainers/features/common-utils:2': {
 			installZsh: true,
@@ -814,15 +866,12 @@ function buildFeatures(hasNode, hasPython, hasJava, hasDocker) {
 			uid: '1000',
 			gid: '1000'
 		},
-		'ghcr.io/devcontainers/features/git:1': {}
-	};
-
-	if (hasDocker) {
-		features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
+		'ghcr.io/devcontainers/features/git:1': {},
+		'ghcr.io/devcontainers/features/docker-in-docker:2': {
 			version: 'latest',
 			moby: true
-		};
-	}
+		}
+	};
 
 	if (hasNode) {
 		features['ghcr.io/devcontainers/features/node:1'] = { version: '22' };
