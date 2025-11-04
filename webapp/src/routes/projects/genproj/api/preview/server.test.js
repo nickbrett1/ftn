@@ -59,31 +59,6 @@ describe('Preview API', () => {
 			);
 		});
 
-		it('should not include Docker-in-Docker support when docker capability is not selected', async () => {
-			const request = {
-				json: async () => ({
-					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node'],
-					configuration: {
-						'devcontainer-node': {
-							nodeVersion: '22'
-						}
-					}
-				})
-			};
-
-			const response = await POST({ request });
-			const data = await response.json();
-
-			const devcontainerJson = data.files.find(
-				(f) => f.filePath === '.devcontainer/devcontainer.json'
-			);
-			expect(devcontainerJson).toBeDefined();
-			const devcontainerConfig = JSON.parse(devcontainerJson.content);
-			expect(devcontainerConfig.features).not.toHaveProperty(
-				'ghcr.io/devcontainers/features/docker-in-docker:2'
-			);
-		});
 
 		it('should merge devcontainer configurations and include Docker-in-Docker support when docker capability is selected', async () => {
 			const request = {

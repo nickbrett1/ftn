@@ -28,7 +28,7 @@
 
 const devcontainerBase = {
 	category: 'devcontainer',
-	dependencies: ['docker'],
+	dependencies: [],
 	conflicts: [],
 	requiresAuth: [],
 	templates: [
@@ -76,13 +76,15 @@ export const capabilities = [
 				nodeVersion: { type: 'string', enum: ['22', '20', '18'], default: '22' }
 			}
 		},
-		templates: devcontainerBase.templates.map((t) =>
-			t.id === 'devcontainer-json'
-				? { ...t, templateId: 'devcontainer-node-json' }
-				: t.id === 'dockerfile'
-				? { ...t, templateId: 'devcontainer-node-dockerfile' }
-				: t
-		)
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-node-json' };
+			}
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-node-dockerfile' };
+			}
+			return t;
+		})
 	},
 	{
 		...devcontainerBase,
@@ -96,13 +98,15 @@ export const capabilities = [
 				pythonVersion: { type: 'string', enum: ['3.12', '3.11', '3.10', '3.9'], default: '3.12' }
 			}
 		},
-		templates: devcontainerBase.templates.map((t) =>
-			t.id === 'devcontainer-json'
-				? { ...t, templateId: 'devcontainer-python-json' }
-				: t.id === 'dockerfile'
-				? { ...t, templateId: 'devcontainer-python-dockerfile' }
-				: t
-		)
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-python-json' };
+			}
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-python-dockerfile' };
+			}
+			return t;
+		})
 	},
 	{
 		...devcontainerBase,
@@ -116,13 +120,15 @@ export const capabilities = [
 				javaVersion: { type: 'string', enum: ['21', '17', '11'], default: '21' }
 			}
 		},
-		templates: devcontainerBase.templates.map((t) =>
-			t.id === 'devcontainer-json'
-				? { ...t, templateId: 'devcontainer-java-json' }
-				: t.id === 'dockerfile'
-				? { ...t, templateId: 'devcontainer-java-dockerfile' }
-				: t
-		)
+		templates: devcontainerBase.templates.map((t) => {
+			if (t.id === 'devcontainer-json') {
+				return { ...t, templateId: 'devcontainer-java-json' };
+			}
+			if (t.id === 'dockerfile') {
+				return { ...t, templateId: 'devcontainer-java-dockerfile' };
+			}
+			return t;
+		})
 	},
 	{
 		id: 'docker',

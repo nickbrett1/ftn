@@ -729,56 +729,25 @@ function handleDevcontainerMerge(
 /**
  * Merges multiple devcontainer configurations
  */
-function mergeDevcontainerConfigs(
-	existingConfig,
-	newConfig,
-	devcontainerCapabilities,
-	configuration,
-	projectName,
-	selectedCapabilities
-) {
-	// Parse both configs - handle if they're already objects or strings
-	let existing;
-	let newConfigObj;
-
-	// Helper to strip comments from JSON strings
-	const stripComments = (str) => {
-		if (typeof str !== 'string') return str;
-		// Remove single-line comments
-		// eslint-disable-next-line unicorn/prefer-string-replace-all
-		// eslint-disable-next-line unicorn/prefer-string-replace-all
-		return str.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-	};
-
-	try {
-		const contentToParse =
-			typeof existingConfig === 'string' ? stripComments(existingConfig) : existingConfig;
-		existing = typeof existingConfig === 'string' ? JSON.parse(contentToParse) : existingConfig;
-	} catch (e) {
-		console.error('Failed to parse existing config:', e);
-		console.error('Config content:', existingConfig.substring(0, 200));
-		throw new Error('Invalid existing devcontainer configuration');
+function parseDevcontainerConfig(config, configName) {
+	if (typeof config === 'object') {
+		return config;
 	}
-
-	try {
-		const contentToParse = typeof newConfig === 'string' ? stripComments(newConfig) : newConfig;
-		newConfigObj = typeof newConfig === 'string' ? JSON.parse(contentToParse) : newConfig;
-	} catch (e) {
-		console.error('Failed to parse new config:', e);
-		console.error('Config content:', newConfig.substring(0, 200));
-		throw new Error('Invalid new devcontainer configuration');
+	if (typeof config !== 'string') {
+		throw new Error(`Invalid ${configName} devcontainer configuration type`);
 	}
+	try {
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		const jsonString = config.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+		return JSON.parse(jsonString);
+	} catch (e) {
+		console.error(`Failed to parse ${configName} config:`, e);
+		console.error('Config content:', config.substring(0, 200));
+		throw new Error(`Invalid ${configName} devcontainer configuration`);
+	}
+}
 
-	// Use a base image that supports both
-	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
-	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
-	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
-	const hasDocker = selectedCapabilities.includes('docker');
-
-	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
-	const features = buildFeatures(hasNode, hasPython, hasJava, hasDocker);
-
-	// Merge customizations (VSCode extensions)
+function mergeExtensions(existing, newConfigObj) {
 	const extensions = new Set();
 	if (existing.customizations?.vscode?.extensions) {
 		for (const ext of existing.customizations.vscode.extensions) {
@@ -790,6 +759,28 @@ function mergeDevcontainerConfigs(
 			extensions.add(ext);
 		}
 	}
+	return Array.from(extensions);
+}
+
+function mergeDevcontainerConfigs(
+	existingConfig,
+	newConfig,
+	devcontainerCapabilities,
+	configuration,
+	projectName,
+	selectedCapabilities
+) {
+	const existing = parseDevcontainerConfig(existingConfig, 'existing');
+	const newConfigObj = parseDevcontainerConfig(newConfig, 'new');
+
+	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
+	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
+	const hasJava = devcontainerCapabilities.includes('devcontainer-java');
+	const hasDocker = selectedCapabilities.includes('docker');
+
+	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
+	const features = buildFeatures(hasNode, hasPython, hasJava, hasDocker);
+	const extensions = mergeExtensions(existing, newConfigObj);
 
 	const merged = {
 		name: projectName || 'Project',
@@ -798,7 +789,7 @@ function mergeDevcontainerConfigs(
 		features,
 		customizations: {
 			vscode: {
-				extensions: Array.from(extensions)
+				extensions
 			}
 		},
 		forwardPorts: [...(existing.forwardPorts || []), ...(newConfigObj.forwardPorts || [])].filter(
