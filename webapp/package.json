@@ -8,8 +8,9 @@
 	"scripts": {
 		"postinstall": "node scripts/copy-pdf-worker.js",
 		"predev": "node scripts/copy-pdf-worker.js",
-		"dev": "npm run predev && doppler run --project webapp --config dev -- vite dev",
+		"dev": "npm run predev && npm run dev:init && doppler run --project webapp --config dev -- vite dev",
 		"prebuild": "node scripts/copy-pdf-worker.js",
+		"dev:init": "if [ ! -f .svelte-kit/cloudflare/_worker.js ]; then mkdir -p .svelte-kit/cloudflare && echo 'export default { fetch: () => new Response(\"OK\") };' > .svelte-kit/cloudflare/_worker.js; fi",
 		"build": "doppler run --project webapp --config stg -- vite build",
 		"check-pdf-worker": "node scripts/check-pdf-worker.js",
 		"preview": "doppler run --project webapp --config dev -- vite preview",

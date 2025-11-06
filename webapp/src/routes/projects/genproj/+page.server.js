@@ -41,7 +41,10 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Prepare initial data
 		const pageData = {
-			capabilities: capabilities,
+			// The capabilities object contains functions which are not serializable.
+			// We create a deep clone that is serializable by converting to and from JSON.
+			// This strips out any functions from the object.
+			capabilities: JSON.parse(JSON.stringify(capabilities)),
 			selectedCapabilities,
 			projectName: projectNameParam || '',
 			repositoryUrl: repositoryUrlParam || '',
