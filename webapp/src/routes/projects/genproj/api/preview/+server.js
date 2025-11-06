@@ -1768,6 +1768,9 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
+# Install the Gemini CLI
+RUN npm install -g @google/gemini-cli
+
 # Switch to node user for installing user-specific tools
 USER node
 ENV USER_HOME_DIR=/home/node
@@ -1852,6 +1855,17 @@ RUN apt-get update && apt-get install -y \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
+# Install nodejs
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg \\
+    && mkdir -p /etc/apt/keyrings \\
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \\
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \\
+    && apt-get update \\
+    && apt-get install nodejs -y
+
+# Install the Gemini CLI
+RUN npm install -g @google/gemini-cli
+
 # Switch to vscode user for installing user-specific tools
 USER vscode
 ENV USER_HOME_DIR=/home/vscode
@@ -1872,6 +1886,17 @@ RUN apt-get update && apt-get install -y \\
     curl \\
     && rm -rf /var/lib/apt/lists/* \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+# Install nodejs
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg \\
+    && mkdir -p /etc/apt/keyrings \\
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \\
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \\
+    && apt-get update \\
+    && apt-get install nodejs -y
+
+# Install the Gemini CLI
+RUN npm install -g @google/gemini-cli
 
 # Switch to vscode user for installing user-specific tools
 USER vscode
