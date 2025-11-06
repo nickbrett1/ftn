@@ -1,5 +1,3 @@
-import { parseDevcontainerConfig } from '$lib/utils/json-utils.js';
-
 /**
  * @fileoverview Project capability definitions for the genproj tool
  * @description Defines all available project capabilities with their requirements and dependencies
