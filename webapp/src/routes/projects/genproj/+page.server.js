@@ -41,9 +41,10 @@ export async function load({ params, url, platform, cookies }) {
 
 		// Prepare initial data
 		const pageData = {
-			// The capabilities object contains functions which are not serializable.
-			// We create a deep clone that is serializable by converting to and from JSON.
-			// This strips out any functions from the object.
+			// The capabilities object contains functions which are not serializable and cannot be
+			// sent to the client. We create a deep clone that is serializable by converting to
+			// and from JSON, which safely strips out any functions from the object.
+			// `structuredClone` is not suitable here as it would throw an error.
 			capabilities: JSON.parse(JSON.stringify(capabilities)),
 			selectedCapabilities,
 			projectName: projectNameParam || '',
