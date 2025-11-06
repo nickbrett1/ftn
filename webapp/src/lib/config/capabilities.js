@@ -30,7 +30,7 @@ import { parseDevcontainerConfig } from '$lib/utils/json-utils.js';
 
 const devcontainerBase = {
 	category: 'devcontainer',
-	dependencies: ['docker'],
+	dependencies: [],
 	conflicts: [],
 	requiresAuth: [],
 	templates: [
@@ -131,44 +131,6 @@ export const capabilities = [
 			}
 			return t;
 		})
-	},
-	{
-		id: 'docker',
-		name: 'Docker-in-Docker Support',
-		description: 'Adds Docker-in-Docker support to your development container.',
-		url: 'https://github.com/devcontainers/features/tree/main/src/docker-in-docker',
-		category: 'internal',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			type: 'object',
-			properties: {}
-		},
-		templates: [
-			{
-				id: 'docker-in-docker-feature',
-				filePath: '.devcontainer/devcontainer.json',
-				type: 'merge',
-				mergeLogic: (existingContent) => {
-					if (!existingContent) return existingContent;
-					try {
-						const config = parseDevcontainerConfig(existingContent, 'docker-capability');
-						if (!config.features) {
-							config.features = {};
-						}
-						config.features['ghcr.io/devcontainers/features/docker-in-docker:2'] = {
-							version: 'latest',
-							moby: true
-						};
-						return JSON.stringify(config, null, 2);
-					} catch (e) {
-						console.error('Failed to merge Docker-in-Docker feature:', e);
-						return existingContent;
-					}
-				}
-			}
-		]
 	},
 	{
 		id: 'circleci',

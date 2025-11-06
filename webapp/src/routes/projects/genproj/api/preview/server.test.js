@@ -37,7 +37,7 @@ describe('Preview API', () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node', 'docker'],
+					selectedCapabilities: ['devcontainer-node'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'
@@ -63,7 +63,7 @@ describe('Preview API', () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-node', 'devcontainer-python', 'docker'],
+					selectedCapabilities: ['devcontainer-node', 'devcontainer-python'],
 					configuration: {
 						'devcontainer-node': {
 							nodeVersion: '22'
@@ -97,7 +97,7 @@ describe('Preview API', () => {
 			const request = {
 				json: async () => ({
 					projectName: 'test-project',
-					selectedCapabilities: ['devcontainer-python', 'doppler', 'docker'],
+					selectedCapabilities: ['devcontainer-python', 'doppler'],
 					configuration: {
 						'devcontainer-python': {
 							pythonVersion: '3.12'

@@ -843,6 +843,10 @@ function buildFeatures(hasNode, hasPython, hasJava) {
 			uid: '1000',
 			gid: '1000'
 		},
+		'ghcr.io/devcontainers/features/docker-in-docker:2': {
+			version: 'latest',
+			moby: true
+		},
 		'ghcr.io/devcontainers/features/git:1': {}
 	};
 
@@ -1725,35 +1729,38 @@ function getFallbackTemplate(templateId, context) {
 	}
 
 	const fallbackTemplates = {
-		'devcontainer-node-json': `{
-  "name": "{{projectName}}",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}",
-  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "installOhMyZsh": true,
-      "username": "vscode",
-      "uid": "1000",
-      "gid": "1000"
-    },
-    "ghcr.io/devcontainers/features/git:1": {}
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-vscode.vscode-typescript-next",
-        "esbenp.prettier-vscode",
-        "ms-vscode.vscode-eslint"
-      ]
-    }
-  },
-  "forwardPorts": [3000, 5173],
-  "postCreateCommand": "bash .devcontainer/setup.sh"
-}`,
-		'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
-
+		        'devcontainer-node-json': `{
+		  "name": "{{projectName}}",
+		  "image": "mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}",
+		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
+		  "features": {
+		    "ghcr.io/devcontainers/features/common-utils:2": {
+		      "installZsh": true,
+		      "configureZshAsDefaultShell": true,
+		      "installOhMyZsh": true,
+		      "username": "vscode",
+		      "uid": "1000",
+		      "gid": "1000"
+		    },
+		    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+		      "version": "latest",
+		      "moby": true
+		    },
+		    "ghcr.io/devcontainers/features/git:1": {}
+		  },
+		  "customizations": {
+		    "vscode": {
+		      "extensions": [
+		        "ms-vscode.vscode-typescript-next",
+		        "esbenp.prettier-vscode",
+		        "ms-vscode.vscode-eslint"
+		      ]
+		    }
+		  },
+		  "forwardPorts": [3000, 5173],
+		  "postCreateCommand": "bash .devcontainer/setup.sh"
+		}`,
+				'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
 # Install system dependencies and uv
 RUN apt-get update && apt-get install -y \\
     git \\
@@ -1773,45 +1780,52 @@ USER root
 
 WORKDIR /workspace
 `,
-		'devcontainer-python-json': `{
-  "name": "{{projectName}}",
-  "image": "mcr.microsoft.com/devcontainers/python:{{pythonVersion}}",
-  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
+		        'devcontainer-python-json': `{
+		  "name": "{{projectName}}",
+		  "image": "mcr.microsoft.com/devcontainers/python:{{pythonVersion}}",
+		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
+		  "features": {
+		    "ghcr.io/devcontainers/features/common-utils:2": {
+		      "installZsh": true,
+		      "configureZshAsDefaultShell": true,
+		      "installOhMyZsh": true,
+		      "username": "vscode",
+		      "uid": "1000",
+		      "gid": "1000"
+		    },
+		    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+				"version": "latest",
+				"moby": true
+				},
+		    "ghcr.io/devcontainers/features/git:1": {}
+		  },
+		  "customizations": {
+		    "vscode": {
+		      "extensions": [
+		        "ms-python.python",
+		        "ms-python.pylint",
+		        "ms-python.black-formatter"
+		      ]
+		    }
+		  },
+		  "postCreateCommand": "bash .devcontainer/setup.sh"
+		}`,
+		        'devcontainer-java-json': `{
+		  "name": "{{projectName}}",
+		  "image": "mcr.microsoft.com/devcontainers/java:{{javaVersion}}",
+		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
+		  "features": {
+		    "ghcr.io/devcontainers/features/common-utils:2": {
+		      "installZsh": true,      "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
       "username": "vscode",
       "uid": "1000",
       "gid": "1000"
     },
-    "ghcr.io/devcontainers/features/git:1": {}
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.pylint",
-        "ms-python.black-formatter"
-      ]
-    }
-  },
-  "postCreateCommand": "bash .devcontainer/setup.sh"
-}`,
-		'devcontainer-java-json': `{
-  "name": "{{projectName}}",
-  "image": "mcr.microsoft.com/devcontainers/java:{{javaVersion}}",
-  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "installOhMyZsh": true,
-      "username": "vscode",
-      "uid": "1000",
-      "gid": "1000"
-    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+		"version": "latest",
+		"moby": true
+		},
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/java:1": {
       "version": "{{javaVersion}}",
