@@ -27,34 +27,25 @@ describe('Login correctly', () => {
 
 	it('logs in', async () => {
 		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
+		const { goto } = await import('$app/navigation');
 
 		// Mock isUserAuthenticated to return false (not logged in)
 		isUserAuthenticated.mockReturnValue(false);
 
-		const childrenSnippet = () => ({});
-
 		const component = mount(Login, {
-			target: document.body,
-			props: {
-				loginCallback: vi.fn(),
-				children: childrenSnippet
-			}
+			target: document.body
 		});
 
-		flushSync();
+		const button = document.querySelector('button');
 
-		// Find the clickable div element instead of a button
-		const clickableDiv = document.querySelector('[role="button"]');
-		expect(clickableDiv).not.toBeNull();
-
-		// Click the div
-		clickableDiv.click();
+		// Click the button
+		button.click();
 
 		flushSync();
 
 		// Should call the shared Google auth utility
 		expect(initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
-
+		
 		unmount(component);
 	});
 
@@ -65,26 +56,18 @@ describe('Login correctly', () => {
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
 
-		const childrenSnippet = () => ({});
-
 		const component = mount(Login, {
-			target: document.body,
-			props: {
-				loginCallback: vi.fn(),
-				children: childrenSnippet
-			}
+			target: document.body
 		});
 
 		// Wait for onMount to run and check auth status
-		await new Promise((resolve) => setTimeout(resolve, 10));
+		await new Promise(resolve => setTimeout(resolve, 10));
 		flushSync();
 
-		// Find the clickable div element instead of a button
-		const clickableDiv = document.querySelector('[role="button"]');
-		expect(clickableDiv).not.toBeNull();
+		const button = document.querySelector('button');
 
-		// Click the div
-		clickableDiv.click();
+		// Click the button
+		button.click();
 
 		flushSync();
 
@@ -92,7 +75,7 @@ describe('Login correctly', () => {
 		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
 		// Should not call initiateGoogleAuth
 		expect(initiateGoogleAuth).not.toHaveBeenCalled();
-
+		
 		unmount(component);
 	});
 });

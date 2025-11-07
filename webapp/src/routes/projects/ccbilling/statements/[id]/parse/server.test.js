@@ -24,47 +24,47 @@ vi.mock('$lib/server/route-utils.js', () => ({
 				const { requireUser } = await import('$lib/server/require-user.js');
 				const authResult = await requireUser(event);
 				if (authResult instanceof Response) return authResult;
+					
+					// Mock parameter validation
+					if (options?.requiredParams && options.requiredParams.length > 0) {
+						const { id } = event.params;
+						if (options.validators && options.validators.id) {
+							const validation = options.validators.id(id);
+							if (validation !== true) {
+								return new Response(JSON.stringify({ success: false, error: validation }), {
+									status: 400,
+									headers: { 'Content-Type': 'application/json' }
+								});
+							}
+						}
+					}
 
-				// Mock parameter validation
-				if (options?.requiredParams && options.requiredParams.length > 0) {
-					const { id } = event.params;
-					if (options.validators && options.validators.id) {
-						const validation = options.validators.id(id);
-						if (validation !== true) {
-							return new Response(JSON.stringify({ success: false, error: validation }), {
+					// Mock body parsing for POST requests
+					let parsedBody = null;
+					if (
+						options?.requiredBody &&
+						options.requiredBody.length > 0 &&
+						event.request?.method === 'POST'
+					) {
+						try {
+							parsedBody = await event.request.json();
+						} catch (error) {
+							console.error('Error parsing request body:', error);
+							return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
 								status: 400,
 								headers: { 'Content-Type': 'application/json' }
 							});
 						}
 					}
-				}
 
-				// Mock body parsing for POST requests
-				let parsedBody = null;
-				if (
-					options?.requiredBody &&
-					options.requiredBody.length > 0 &&
-					event.request?.method === 'POST'
-				) {
-					try {
-						parsedBody = await event.request.json();
-					} catch (error) {
-						console.error('Error parsing request body:', error);
-						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
-							status: 400,
-							headers: { 'Content-Type': 'application/json' }
-						});
+					// Call the handler with the appropriate parameters
+					if (options?.requiredBody && options.requiredBody.length > 0) {
+						return await handler(event, parsedBody);
+					} else {
+						return await handler(event);
 					}
-				}
-
-				// Call the handler with the appropriate parameters
-				if (options?.requiredBody && options.requiredBody.length > 0) {
-					return await handler(event, parsedBody);
-				} else {
-					return await handler(event);
-				}
-			};
-		}),
+				};
+			}),
 		createErrorResponse: vi.fn((message, options = {}) => {
 			return new Response(JSON.stringify({ success: false, error: message }), {
 				status: options.status || 400,
@@ -138,8 +138,7 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});
-	describe('GET endpoint', () => {
+	});describe('GET endpoint', () => {
 		it('should return statement details', async () => {
 			const mockStatement = {
 				id: 1,
@@ -429,33 +428,29 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 			expect(createPayment).toHaveBeenCalledTimes(2);
 			expect(createPayment).toHaveBeenCalledWith(
 				mockEvent,
-				expect.objectContaining({
-					statement_id: 1,
-					merchant: 'Test Store',
-					amount: 100.5,
-					allocated_to: 'Both',
-					transaction_date: '2024-01-15', // Should be corrected to include year
-					is_foreign_currency: false,
-					foreign_currency_amount: null,
-					foreign_currency_type: null,
-					flight_details: null,
-					full_statement_text: null
-				})
+				1,
+				'Test Store',
+				100.5,
+				'Both',
+				'2024-01-15', // Should be corrected to include year
+				false,
+				null,
+				null,
+				null,
+				null
 			);
 			expect(createPayment).toHaveBeenCalledWith(
 				mockEvent,
-				expect.objectContaining({
-					statement_id: 1,
-					merchant: 'Grocery Store',
-					amount: 75.25,
-					allocated_to: 'Both',
-					transaction_date: '2024-01-20', // Should be corrected to include year
-					is_foreign_currency: false,
-					foreign_currency_amount: null,
-					foreign_currency_type: null,
-					flight_details: null,
-					full_statement_text: null
-				})
+				1,
+				'Grocery Store',
+				75.25,
+				'Both',
+				'2024-01-20', // Should be corrected to include year
+				false,
+				null,
+				null,
+				null,
+				null
 			);
 
 			expect(result.success).toBe(true);

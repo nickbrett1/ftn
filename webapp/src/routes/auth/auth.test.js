@@ -50,9 +50,7 @@ describe('Auth', () => {
 			}
 		});
 
-		// With the new approach, we return HTML that redirects client-side
-		expect(res.status).toBe(200);
-		expect(res.headers.get('Content-Type')).toBe('text/html');
+		expect(res.headers.get('Location')).toEqual('https://fintechnick.com/projects/ccbilling');
 	});
 
 	it('redirect to notauthorised if not in KV', async () => {
@@ -318,13 +316,12 @@ describe('Auth', () => {
 				}
 			});
 
-			const html = await res.text();
-			// The cookie is now set via JavaScript in the HTML response
-			expect(html).toContain('document.cookie');
-			expect(html).toContain('auth=');
-			expect(html).toContain('Path=/');
-			expect(html).toContain('Secure');
-			expect(html).toContain('SameSite=Lax');
+			const setCookieHeader = res.headers.get('Set-Cookie');
+			expect(setCookieHeader).toContain('auth=');
+			expect(setCookieHeader).toContain('Expires=');
+			expect(setCookieHeader).toContain('Path=/');
+			expect(setCookieHeader).toContain('Secure');
+			expect(setCookieHeader).toContain('SameSite=Lax');
 		});
 
 		it('should use correct redirect status code', async () => {
@@ -340,7 +337,7 @@ describe('Auth', () => {
 				}
 			});
 
-			expect(res.status).toBe(200); // Returns HTML with client-side redirect
+			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
 		});
 
 		it('should redirect unauthorized users with correct status code', async () => {
@@ -358,52 +355,6 @@ describe('Auth', () => {
 
 			expect(res.status).toBe(307); // HTML_TEMPORARY_REDIRECT
 			expect(res.headers.get('Location')).toBe('https://fintechnick.com/notauthorised');
-		});
-	});
-
-	describe('OAuth State Handling', () => {
-		it('should respect redirect path from decoded state parameter', async () => {
-			const redirectPath = '/projects/genproj/overview';
-			const statePayload = {
-				csrf: 'csrf-token',
-				redirect: redirectPath
-			};
-			const encodedState = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
-
-			const res = await GET({
-				request: new Request(`https://fintechnick.com/auth?code=123&state=${encodedState}`),
-				platform: {
-					env: {
-						KV: {
-							get: vi.fn().mockResolvedValue('allowed'),
-							put: vi.fn().mockResolvedValue(undefined)
-						}
-					}
-				}
-			});
-
-			const html = await res.text();
-			expect(html).toContain(`window.location.href = '${redirectPath}'`);
-		});
-
-		it('should fall back to default redirect when state cannot be decoded', async () => {
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-			const res = await GET({
-				request: new Request('https://fintechnick.com/auth?code=123&state=@@@invalid@@@'),
-				platform: {
-					env: {
-						KV: {
-							get: vi.fn().mockResolvedValue('allowed'),
-							put: vi.fn().mockResolvedValue(undefined)
-						}
-					}
-				}
-			});
-
-			const html = await res.text();
-			expect(html).toContain("window.location.href = '/projects/ccbilling'");
-			expect(warnSpy).toHaveBeenCalled();
-			warnSpy.mockRestore();
 		});
 	});
 

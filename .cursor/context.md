@@ -87,7 +87,6 @@ This speeds up development by avoiding the watch mode overhead when you just wan
 - Chase parser is fully implemented with comprehensive test coverage
 - ParserFactory architecture allows easy addition of new provider parsers
 - Comprehensive test coverage for all API endpoints and parsers
-- Do not create new files whose names start with `+` (e.g. `+page.server.test.js`); these prefixes are reserved for SvelteKit routing files only
 
 ## Recent Changes
 

@@ -3,7 +3,8 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		CreditCardSolid
+		CreditCardSolid,
+		UserSecretSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -45,9 +46,6 @@
 		const loginTooltips = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
-		const genprojTooltips = tippy('#genproj', {
-			content: 'Project Generation Tool'
-		});
 
 		// Clean up tooltips when component unmounts
 		return () => {
@@ -67,12 +65,6 @@
 				loginTooltips.forEach((tooltip) => tooltip.destroy());
 			} else {
 				loginTooltips.destroy();
-			}
-
-			if (Array.isArray(genprojTooltips)) {
-				genprojTooltips.forEach((tooltip) => tooltip.destroy());
-			} else {
-				genprojTooltips.destroy();
 			}
 		};
 	});
@@ -109,41 +101,25 @@
 				<!-- Credit Card Billing Tool icon -->
 				{#if isLoggedIn}
 					<!-- User is logged in, show clickable icon that goes directly to billing -->
-					<button
+					<CreditCardSolid
 						id="login"
 						onclick={handleCreditCardClick}
-						class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
+						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
 						title="Credit Card Billing Tool"
-						aria-label="Credit Card Billing Tool"
+						ariaLabel="Credit Card Billing Tool"
 						focusable="true"
-					>
-						<CreditCardSolid ariaLabel="Credit Card Billing Tool" focusable="true" />
-					</button>
+					/>
 				{:else}
 					<!-- User is not logged in, show login modal -->
 					<Login loginCallback={loginStateUpdated}>
-						<button
+						<CreditCardSolid
 							id="login"
-							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px] flex items-center justify-center"
-							aria-label="Credit Card Billing Tool"
+							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							ariaLabel="Credit Card Billing Tool"
 							focusable="true"
-						>
-							<CreditCardSolid ariaLabel="Credit Card Billing Tool" focusable="true" />
-						</button>
+						/>
 					</Login>
 				{/if}
-
-				<!-- Project Generation Tool icon -->
-				<button
-					id="genproj"
-					onclick={() => {
-						goto('/projects/genproj');
-					}}
-					class="hover:text-green-400 cursor-pointer text-green-400 text-2xl size-8 md:size-[48px] flex items-center justify-center"
-					title="Project Generation Tool"
-				>
-					🛠️
-				</button>
 			</div>
 
 			<div class="flex gap-4">

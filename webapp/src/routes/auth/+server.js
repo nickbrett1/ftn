@@ -6,12 +6,6 @@ try {
 	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
 } catch (error) {
 	// During build time, these might not be available
-	// Set default values to prevent undefined errors
-	// This catch block intentionally handles build-time compatibility by setting fallback values
-	console.warn(
-		'[AUTH_HANDLER] Environment variables not available at build time, using placeholders',
-		error instanceof Error ? error.message : String(error)
-	);
 	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
 	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
 }
@@ -34,9 +28,9 @@ const tokenExchange = async (url, code) => {
 		redirect_uri: `${url.origin}/auth`
 	};
 
-	for (const [key, value] of Object.entries(params)) {
+	Object.entries(params).forEach(([key, value]) => {
 		body.append(key, value);
-	}
+	});
 
 	const response = await fetch('https://oauth2.googleapis.com/token', {
 		method: 'POST',
@@ -75,24 +69,6 @@ const generateAuth = () =>
 		.map((m) => m.toString(36).padStart(2, '0'))
 		.join('');
 
-/**
- * Base64URL decode a string (URL-safe base64 decoding)
- * @param {string} str - Base64URL encoded string
- * @returns {string} Decoded string
- */
-function base64UrlDecode(str) {
-	// Add padding if needed
-	let base64 = str.replaceAll('-', '+').replaceAll('_', '/');
-	while (base64.length % 4) {
-		base64 += '=';
-	}
-	try {
-		return atob(base64);
-	} catch (error) {
-		throw new Error(`Failed to decode base64URL: ${error.message}`);
-	}
-}
-
 const HTML_TEMPORARY_REDIRECT = 307;
 
 export async function GET({ request, platform }) {
@@ -110,28 +86,6 @@ export async function GET({ request, platform }) {
 			throw new Error('No code found in auth response');
 		}
 
-		// Decode redirect path from OAuth state parameter
-		// State contains: { csrf: string, redirect: string }
-		let redirectPath = '/projects/ccbilling'; // Default fallback
-		const stateParam = url.searchParams.get('state');
-		if (stateParam) {
-			try {
-				// Base64URL decode the state parameter
-				const decodedState = base64UrlDecode(stateParam);
-				const stateData = JSON.parse(decodedState);
-				if (stateData.redirect) {
-					redirectPath = stateData.redirect;
-				}
-				// Note: In production, you should validate the CSRF token from stateData.csrf
-				// against a stored value for additional security
-			} catch (error) {
-				console.warn(
-					`${logPrefix} Failed to decode state parameter, using default redirect:`,
-					error
-				);
-			}
-		}
-
 		const tokenResponse = await tokenExchange(url, code);
 
 		const allowed = await validateUserFromToken(tokenResponse.access_token, platform);
@@ -147,38 +101,12 @@ export async function GET({ request, platform }) {
 			expiration: kvExpiration
 		});
 
-		// Return an HTML page that sets the cookie via document.cookie and redirects
-		// Redirect path is already decoded from OAuth state parameter above
-		const html = `
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Authenticating...</title>
-</head>
-<body>
-	<script>
-		console.log('Auth callback: Redirecting to', '${redirectPath}');
-		
-		// Set the auth cookie (must be done client-side to work with http://localhost)
-		document.cookie = 'auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax';
-		
-		console.log('Auth callback: Cookie set, redirecting to', '${redirectPath}');
-		
-		// Clean up localStorage (remove old redirect path if present)
-		if (typeof localStorage !== 'undefined') {
-			localStorage.removeItem('auth_redirect_path');
-		}
-		
-		// Redirect to the intended page
-		window.location.href = '${redirectPath}';
-	</script>
-</body>
-</html>`;
-
-		return new Response(html, {
-			status: 200,
+		return new Response(null, {
+			// Changed from empty string to null for clarity
+			status: HTML_TEMPORARY_REDIRECT,
 			headers: {
-				'Content-Type': 'text/html'
+				Location: `${url.origin}/projects/ccbilling`,
+				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax`
 			}
 		});
 	} catch (e) {

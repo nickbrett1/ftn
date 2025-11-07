@@ -1,13 +1,4 @@
 import { vi } from 'vitest';
-import { mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
-
-try {
-	const coverageTmp = resolve(process.cwd(), 'coverage/.tmp');
-	mkdirSync(coverageTmp, { recursive: true });
-} catch (error) {
-	console.warn('⚠️ Unable to ensure coverage temp directory exists:', error);
-}
 
 // Set NODE_ENV to test for proper rune handling
 if (typeof process !== 'undefined') {

@@ -14,12 +14,6 @@ description: "Task list template for feature implementation"
 - **Principle III**: UX Consistency (accessibility, responsive design, design system)
 - **Principle IV**: Performance Requirements (bundle size, response times, monitoring)
 - **Principle V**: Security & Compliance (encryption, audit logging, security scanning)
-- **Principle VI**: Site Consistency & Component Standards (header/footer, component reuse)
-- **Principle VII**: Database Schema Management Standards (schema creation patterns)
-- **Principle VIII**: Cloudflare Services Integration Standards (direct D1/R2 usage)
-- **Principle IX**: Code Organization Standards (lib/ folder structure)
-- **Principle X**: Simple Logging Standards (console.\* with emoji prefixes)
-- **Principle XI**: Error Handling Standards (RouteUtils.handleError, user-friendly messages)
 
 **Tests**: Following Principle II (Testing Standards), TDD is MANDATORY. Tests must be written FIRST, approved by user, and FAIL before implementation begins. Test coverage must meet 85% minimum threshold.
 

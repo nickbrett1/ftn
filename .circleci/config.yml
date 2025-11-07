@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.5.3
-  sonarcloud: sonarsource/sonarcloud@3.0.1
+  sonarcloud: sonarsource/sonarcloud@2.0.0
   doppler: conpago/doppler@1.3.5
 
 jobs:
@@ -70,7 +70,8 @@ jobs:
       - image: cimg/node:current
     resource_class: large # Increase to large for more memory and CPU resources
     steps:
-      - checkout
+      - checkout:
+          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -101,7 +102,8 @@ jobs:
           when: always
       - store_test_results:
           path: ./webapp/reports/
-      - sonarcloud/scan
+      # Temporarily disable SonarCloud scan to debug exit code issue
+      # - sonarcloud/scan
 
   browser_test:
     environment:
@@ -258,6 +260,7 @@ workflows:
       - code_test:
           requires:
             - build
+          context: SonarCloud
       - browser_test:
           requires:
             - build

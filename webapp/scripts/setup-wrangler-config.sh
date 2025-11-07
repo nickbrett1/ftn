@@ -1,14 +1,9 @@
 #!/bin/bash
 set -e
 
-# Get the directory where the script is located and the parent project directory
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
-export PROJECT_DIR=$(dirname "$SCRIPT_DIR")
-
 # Setup Wrangler Configuration Script
 # This script generates wrangler.jsonc from the template using environment variables
 # It should be called during development setup and CI/CD deployments
-
 
 echo "Setting up Wrangler configuration..."
 
@@ -31,8 +26,8 @@ echo "✅ Doppler authentication confirmed"
 echo "👤 Current Doppler user: $(doppler whoami 2>/dev/null || echo 'Unable to determine')"
 
 # Check if wrangler.template.jsonc exists
-if [ ! -f "${PROJECT_DIR}/wrangler.template.jsonc" ]; then
-    echo "Error: wrangler.template.jsonc not found in ${PROJECT_DIR}"
+if [ ! -f "wrangler.template.jsonc" ]; then
+    echo "Error: wrangler.template.jsonc not found in current directory"
     exit 1
 fi
 
@@ -137,7 +132,7 @@ if doppler run $DOPPLER_ARGS -- bash -c '
         -e "s/KV_NAMESPACE_ID_PLACEHOLDER/$KV_NAMESPACE_ID/g" \
         -e "s/D1_WDI_DATABASE_ID_PLACEHOLDER/$D1_WDI_DATABASE_ID/g" \
         -e "s/D1_CCBILLING_DATABASE_ID_PLACEHOLDER/$D1_CCBILLING_DATABASE_ID/g" \
-        "${PROJECT_DIR}/wrangler.template.jsonc" > "${PROJECT_DIR}/wrangler.jsonc"; then
+        wrangler.template.jsonc > wrangler.jsonc; then
         echo "❌ Error: Failed to generate wrangler.jsonc from template"
         exit 1
     fi

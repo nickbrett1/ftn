@@ -21,9 +21,6 @@
       "version": "24",
       "installMaven": "false",
       "installGradle": "false"
-    },
-    "ghcr.io/devcontainers/features/docker-from-docker": {
-      "version": "latest"
     }
     // "ghcr.io/itsmechlark/features/doppler:2": {} // For Doppler CLI - disabled due to init script issues
   },
@@ -80,14 +77,12 @@
         "usernamehw.errorlens",
         "streetsidesoftware.code-spell-checker",
         "google.geminicodeassist",
-        "saoudrizwan.claude-dev",
-        "GitHub.vscode-github-actions"
+        "saoudrizwan.claude-dev"
       ]
     },
     // Add VS Code settings for the container
     "settings": {
-      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
-      "sonarlint.analysisExcludesStandalone": "**/test/**,**/tests/**"
+      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
     }
   },
 

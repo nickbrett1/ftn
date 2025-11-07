@@ -6,12 +6,6 @@ try {
 	STATIC_LLAMA_API_MODEL = env.LLAMA_API_MODEL;
 } catch (error) {
 	// During build time, these might not be available
-	// Set default value to prevent undefined errors
-	// This catch block intentionally handles build-time compatibility by setting fallback values
-	console.warn(
-		'[LLAMA] Environment variable not available at build time, using default model',
-		error instanceof Error ? error.message : String(error)
-	);
 	STATIC_LLAMA_API_MODEL = process.env?.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 }
 import { getPayment } from '$lib/server/ccbilling-db.js';

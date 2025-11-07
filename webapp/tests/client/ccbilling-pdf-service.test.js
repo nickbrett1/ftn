@@ -12,14 +12,15 @@ vi.mock('../../src/lib/client/pdf-utils.js', () => ({
 
 // Mock the ParserFactory module
 const mockGetSupportedProviders = vi.fn().mockReturnValue(['Chase', 'Amex', 'Discover']);
-vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => {
-	const MockParserFactory = class {
+vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
+	ParserFactory: class MockParserFactory {
 		constructor() {
-			this.getSupportedProviders = mockGetSupportedProviders;
+			return {
+				getSupportedProviders: mockGetSupportedProviders
+			};
 		}
-	};
-	return { ParserFactory: MockParserFactory };
-});
+	}
+}));
 
 describe('PDFService', () => {
 	let pdfService;
@@ -27,20 +28,12 @@ describe('PDFService', () => {
 	let mockParserFactory;
 
 	beforeEach(async () => {
-		// Clear mock call history but keep implementations
-		mockPDFUtils?.validatePDFFile?.mockClear();
-		mockPDFUtils?.parseStatement?.mockClear();
-		mockGetSupportedProviders.mockClear();
-
-		// Reset mock return values
-		mockGetSupportedProviders.mockReturnValue(['Chase', 'Amex', 'Discover']);
+		vi.clearAllMocks();
 
 		// Get the mocked modules
 		const pdfUtilsModule = await import('../../src/lib/client/pdf-utils.js');
-		const parserFactoryModule = await import(
-			'../../src/lib/utils/ccbilling-parsers/parser-factory.js'
-		);
-
+		const parserFactoryModule = await import('../../src/lib/utils/ccbilling-parsers/parser-factory.js');
+		
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
 		mockParserFactory = parserFactoryModule.ParserFactory;
 
@@ -142,24 +135,18 @@ describe('PDFService', () => {
 				throw new Error('No PDF file provided');
 			});
 
-			await expect(pdfService.parseStatement(null)).rejects.toThrow(
-				'PDF parsing failed: No PDF file provided'
-			);
-			await expect(pdfService.parseStatement(undefined)).rejects.toThrow(
-				'PDF parsing failed: No PDF file provided'
-			);
+			await expect(pdfService.parseStatement(null)).rejects.toThrow('PDF parsing failed: No PDF file provided');
+			await expect(pdfService.parseStatement(undefined)).rejects.toThrow('PDF parsing failed: No PDF file provided');
 		});
 
 		it('should handle non-File objects', async () => {
 			const invalidFile = { name: 'test.pdf', type: 'application/pdf' };
-
+			
 			mockPDFUtils.validatePDFFile.mockImplementation(() => {
 				throw new Error('Invalid PDF file format');
 			});
 
-			await expect(pdfService.parseStatement(invalidFile)).rejects.toThrow(
-				'PDF parsing failed: Invalid PDF file format'
-			);
+			await expect(pdfService.parseStatement(invalidFile)).rejects.toThrow('PDF parsing failed: Invalid PDF file format');
 		});
 
 		it('should pass correct options to parseStatement', async () => {
@@ -178,22 +165,16 @@ describe('PDFService', () => {
 
 	describe('getSupportedProviders', () => {
 		it('should return list of supported providers from parser factory', () => {
-			// Verify the method exists on the parser factory
-			expect(pdfService.parserFactory.getSupportedProviders).toBeDefined();
-			expect(typeof pdfService.parserFactory.getSupportedProviders).toBe('function');
-
 			const providers = pdfService.getSupportedProviders();
 
-			// The function was called
-			expect(mockGetSupportedProviders).toHaveBeenCalled();
-			// The result should match the mock return value
+			expect(pdfService.parserFactory.getSupportedProviders).toHaveBeenCalled();
 			expect(providers).toEqual(['Chase', 'Amex', 'Discover']);
 		});
 
 		it('should return empty array when no providers are supported', () => {
 			// Change the mock return value for this test
 			mockGetSupportedProviders.mockReturnValue([]);
-
+			
 			const newPdfService = new PDFService();
 			const providers = newPdfService.getSupportedProviders();
 
@@ -244,7 +225,7 @@ describe('PDFService', () => {
 				provider: 'Chase',
 				charges: [
 					{ merchant: 'Amazon', amount: 29.99, date: '2024-01-10' },
-					{ merchant: 'Starbucks', amount: 4.5, date: '2024-01-12' }
+					{ merchant: 'Starbucks', amount: 4.50, date: '2024-01-12' }
 				],
 				summary: {
 					totalCharges: 34.49,
