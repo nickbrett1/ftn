@@ -3,7 +3,7 @@ set -uo pipefail
 # Removed -e flag to prevent premature exit on errors
 
 # Configuration
-WRANGLER_CONFIG="$(dirname "$0")/wrangler.jsonc"
+WRANGLER_CONFIG="$(dirname "$0")"/../wrangler.jsonc
 TEMP_DIR=$(mktemp -d)
 
 # Ensure the temporary directory is cleaned up on script exit (success or failure)
