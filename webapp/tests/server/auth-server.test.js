@@ -77,9 +77,10 @@ describe('Auth server route', () => {
 		const request = new Request('https://app.test/auth?code=abc123');
 		const response = await GET({ request, platform });
 
-		expect(response.status).toBe(200);
-		const body = await response.text();
-		expect(body).toContain("document.cookie = 'auth=");
+		expect(response.status).toBe(307);
+		expect(response.headers.get('location')).toBe('https://app.test/projects/ccbilling');
+		expect(response.headers.get('Set-Cookie')).toMatch(/^auth=.+; Expires=.+; Path=\/; Secure; SameSite=Lax$/);
+
 		expect(mockIsUserAllowed).toHaveBeenCalledWith('user@example.com', platform.env.KV);
 		expect(kvPut).toHaveBeenCalledTimes(1);
 

@@ -70,12 +70,10 @@ export async function GET({ request }) {
 			// Try to get the actual deployment time for preview
 			let previewDeployedAt = previewWorker.created_on || new Date().toISOString();
 			let previewVersion = 'latest';
-			let previewDeployData = null;
 			let previewLatestDeployment = null;
-			
+
 			// Build version from worker metadata first
 			let versionParts = ['preview'];
-			
 			if (previewWorker.metadata) {
 				if (previewWorker.metadata.branch) {
 					versionParts.push(previewWorker.metadata.branch);
@@ -84,11 +82,9 @@ export async function GET({ request }) {
 					versionParts.push(previewWorker.metadata.git_commit.substring(0, 8));
 				}
 			}
-			
-			// Try to get deployment information for the preview worker
+
 			try {
 				const previewDeployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/deployments`;
-				
 				const previewDeployResponse = await fetch(previewDeployUrl, {
 					headers: {
 						'Authorization': `Bearer ${apiToken}`,
@@ -97,14 +93,10 @@ export async function GET({ request }) {
 				});
 
 				if (previewDeployResponse.ok) {
-					previewDeployData = await previewDeployResponse.json();
-					
+					const previewDeployData = await previewDeployResponse.json();
 					if (previewDeployData.result && previewDeployData.result.length > 0) {
-						// Use the most recent deployment time
-						previewLatestDeployment = previewDeployData.result[0]; // Assuming sorted by most recent first
+						previewLatestDeployment = previewDeployData.result[0];
 						previewDeployedAt = previewLatestDeployment.created_on || previewDeployedAt;
-						
-						// Override version parts with deployment metadata if available
 						if (previewLatestDeployment.metadata) {
 							versionParts = ['preview'];
 							if (previewLatestDeployment.metadata.branch) {
@@ -114,46 +106,42 @@ export async function GET({ request }) {
 								versionParts.push(previewLatestDeployment.metadata.git_commit.substring(0, 8));
 							}
 						}
-					}
-				} else {
-					// Try alternative endpoint
-					try {
-						const alternativeUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/versions`;
-						
-						const altResponse = await fetch(alternativeUrl, {
-							headers: {
-								'Authorization': `Bearer ${apiToken}`,
-								'Content-Type': 'application/json'
-							}
-						});
-						
-						if (altResponse.ok) {
-							const altData = await altResponse.json();
-							
-							if (altData.result && altData.result.length > 0) {
-								const latestVersion = altData.result[0];
-								previewLatestDeployment = latestVersion;
-								previewDeployedAt = latestVersion.created_on || previewDeployedAt;
-								
-								if (latestVersion.metadata) {
-									versionParts = ['preview'];
-									if (latestVersion.metadata.branch) {
-										versionParts.push(latestVersion.metadata.branch);
-									}
-									if (latestVersion.metadata.git_commit) {
-										versionParts.push(latestVersion.metadata.git_commit.substring(0, 8));
+					} else {
+						// Try alternative endpoint if deployments call is successful but returns no results
+						try {
+							const alternativeUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-preview/versions`;
+							const altResponse = await fetch(alternativeUrl, {
+								headers: {
+									'Authorization': `Bearer ${apiToken}`,
+									'Content-Type': 'application/json'
+								}
+							});
+							if (altResponse.ok) {
+								const altData = await altResponse.json();
+								if (altData.result && altData.result.length > 0) {
+									const latestVersion = altData.result[0];
+									previewLatestDeployment = latestVersion;
+									previewDeployedAt = latestVersion.created_on || previewDeployedAt;
+									if (latestVersion.metadata) {
+										versionParts = ['preview'];
+										if (latestVersion.metadata.branch) {
+											versionParts.push(latestVersion.metadata.branch);
+										}
+										if (latestVersion.metadata.git_commit) {
+											versionParts.push(latestVersion.metadata.git_commit.substring(0, 8));
+										}
 									}
 								}
 							}
+						} catch (altError) {
+							// Alternative endpoint failed, continue with fallback
 						}
-					} catch (altError) {
-						// Alternative endpoint failed, continue with fallback
 					}
 				}
 			} catch (error) {
 				// Could not fetch preview deployment info, continue with created_on as fallback
 			}
-			
+
 			// Fallback to worker ID if no metadata
 			if (versionParts.length === 1) {
 				if (previewLatestDeployment?.id) {
@@ -162,15 +150,15 @@ export async function GET({ request }) {
 					versionParts.push(previewWorker.id.substring(0, 8));
 				}
 			}
-			
+
 			// Ensure we always have at least 2 parts
 			if (versionParts.length === 1) {
 				const timestamp = new Date().getTime().toString(36).substring(0, 6);
 				versionParts.push(timestamp);
 			}
-			
+
 			previewVersion = versionParts.join('-');
-			
+
 			deployments.push({
 				name: 'Preview Environment',
 				status: 'active',
