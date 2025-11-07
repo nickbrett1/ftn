@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
-const originalFetch = global.fetch;
+const originalFetch = globalThis.fetch;
 let randomValuesSpy;
 
 const mockIsUserAllowed = vi.fn();
@@ -26,7 +26,7 @@ describe('Auth server route', () => {
 	beforeEach(() => {
 		vi.resetModules();
 		mockIsUserAllowed.mockReset();
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 		randomValuesSpy = vi
 			.spyOn(globalThis.crypto, 'getRandomValues')
 			.mockImplementation((array) => {
@@ -42,7 +42,7 @@ describe('Auth server route', () => {
 	});
 
 	afterAll(() => {
-		global.fetch = originalFetch;
+		globalThis.fetch = originalFetch;
 	});
 
 	const loadModule = () => import('../../src/routes/auth/+server.js');
@@ -51,7 +51,7 @@ describe('Auth server route', () => {
 		const { GET } = await loadModule();
 		mockIsUserAllowed.mockResolvedValue(true);
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce(
 				createJsonResponse({
 					access_token: 'google-access-token',
@@ -95,7 +95,7 @@ describe('Auth server route', () => {
 		const { GET } = await loadModule();
 		mockIsUserAllowed.mockResolvedValue(false);
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce(
 				createJsonResponse({
 					access_token: 'blocked-token',
@@ -143,21 +143,19 @@ describe('Auth server route', () => {
 		const { GET } = await loadModule();
 		mockIsUserAllowed.mockResolvedValue(true);
 
-		global.fetch.mockResolvedValueOnce(
+		globalThis.fetch.mockResolvedValueOnce(
 			createJsonResponse({
 				error: 'invalid_grant',
 				error_description: 'invalid code'
 			})
-		);
-
-		const response = await GET({
+		);		const response = await GET({
 			request: new Request('https://app.test/auth?code=badcode'),
 			platform: { env: { KV: { put: vi.fn() } } }
 		});
 
 		expect(response.status).toBe(500);
 		expect(await response.text()).toContain('Authentication failed');
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 	it('responds with an error when the auth code parameter is missing', async () => {
