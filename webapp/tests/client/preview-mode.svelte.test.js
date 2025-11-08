@@ -3,6 +3,10 @@ import { render, waitFor, cleanup, screen } from '@testing-library/svelte';
 
 import PreviewMode from '../../src/lib/components/genproj/PreviewMode.svelte';
 
+vi.mock('$app/environment', () => ({
+	browser: true
+}));
+
 describe('PreviewMode component', () => {
 	const capability = {
 		id: 'devcontainer-node',

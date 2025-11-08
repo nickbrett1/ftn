@@ -7,6 +7,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, unmount } from 'svelte';
 import GenprojPage from '../../src/routes/projects/genproj/+page.svelte';
 
+// Mock the browser environment
+vi.mock('$app/environment', () => ({
+	browser: true
+}));
+
 // Mock fetch globally
 globalThis.fetch = vi.fn();
 
@@ -14,6 +19,7 @@ globalThis.fetch = vi.fn();
 Object.defineProperty(globalThis, 'location', {
 	value: {
 		href: '',
+		hostname: 'localhost',
 		reload: vi.fn()
 	},
 	writable: true
