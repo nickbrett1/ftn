@@ -12,35 +12,35 @@
  */
 export function formatDate(dateInput, options = {}) {
 	const { includeTime = true, includeTimezone = true } = options;
-	
+
 	if (!dateInput) return '';
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return '';
-	
+
 	if (includeTime) {
 		// Format: "August 17, 2025 at 02:32 PM EDT"
-		const dateOptions = { 
-			year: 'numeric', 
-			month: 'long', 
+		const dateOptions = {
+			year: 'numeric',
+			month: 'long',
 			day: 'numeric'
 		};
-		
-		const timeOptions = { 
+
+		const timeOptions = {
 			hour: '2-digit',
 			minute: '2-digit',
 			timeZoneName: includeTimezone ? 'short' : undefined
 		};
-		
+
 		const formattedDate = date.toLocaleDateString('en-US', dateOptions);
 		const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
-		
+
 		return `${formattedDate} at ${formattedTime}`;
 	} else {
 		// Format: "August 17, 2025"
-		const dateOptions = { 
-			year: 'numeric', 
-			month: 'long', 
+		const dateOptions = {
+			year: 'numeric',
+			month: 'long',
 			day: 'numeric'
 		};
 		return date.toLocaleDateString('en-US', dateOptions);
@@ -54,13 +54,13 @@ export function formatDate(dateInput, options = {}) {
  */
 export function formatShortDate(dateInput) {
 	if (!dateInput) return '';
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return '';
-	
+
 	const month = (date.getMonth() + 1).toString().padStart(2, '0');
 	const day = date.getDate().toString().padStart(2, '0');
-	
+
 	return `${month}/${day}`;
 }
 
@@ -71,16 +71,16 @@ export function formatShortDate(dateInput) {
  */
 export function formatMediumDate(dateInput) {
 	if (!dateInput) return '';
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return '';
-	
-	const options = { 
-		year: 'numeric', 
-		month: 'short', 
+
+	const options = {
+		year: 'numeric',
+		month: 'short',
 		day: 'numeric'
 	};
-	
+
 	return date.toLocaleDateString('en-US', options);
 }
 
@@ -92,16 +92,16 @@ export function formatMediumDate(dateInput) {
  */
 export function formatTime(dateInput, includeTimezone = true) {
 	if (!dateInput) return '';
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return '';
-	
-	const options = { 
+
+	const options = {
 		hour: '2-digit',
 		minute: '2-digit',
 		timeZoneName: includeTimezone ? 'short' : undefined
 	};
-	
+
 	return date.toLocaleTimeString('en-US', options);
 }
 
@@ -112,22 +112,22 @@ export function formatTime(dateInput, includeTimezone = true) {
  */
 export function formatRelativeTime(dateInput) {
 	if (!dateInput) return '';
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return '';
-	
+
 	const now = new Date();
 	const diffInMs = now - date;
 	const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
 	const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
 	const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-	
+
 	if (diffInMinutes < 1) return 'just now';
 	if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
 	if (diffInHours < 24) return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
 	if (diffInDays === 1) return 'yesterday';
 	if (diffInDays < 7) return `${diffInDays} days ago`;
-	
+
 	// For older dates, use the medium format
 	return formatMediumDate(dateInput);
 }
@@ -139,10 +139,10 @@ export function formatRelativeTime(dateInput) {
  */
 export function isToday(dateInput) {
 	if (!dateInput) return false;
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return false;
-	
+
 	const today = new Date();
 	return date.toDateString() === today.toDateString();
 }
@@ -154,12 +154,12 @@ export function isToday(dateInput) {
  */
 export function isYesterday(dateInput) {
 	if (!dateInput) return false;
-	
+
 	const date = new Date(dateInput);
 	if (isNaN(date.getTime())) return false;
-	
+
 	const yesterday = new Date();
 	yesterday.setDate(yesterday.getDate() - 1);
-	
+
 	return date.toDateString() === yesterday.toDateString();
 }

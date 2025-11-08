@@ -20,10 +20,10 @@ describe('Logout Server Route', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Reset fetch mock
 		global.fetch.mockReset();
-		
+
 		// Mock platform environment
 		mockPlatform = {
 			env: {
@@ -44,7 +44,7 @@ describe('Logout Server Route', () => {
 			};
 
 			const { redirect } = await import('@sveltejs/kit');
-			
+
 			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow();
 			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
@@ -57,7 +57,7 @@ describe('Logout Server Route', () => {
 			};
 
 			const { redirect } = await import('@sveltejs/kit');
-			
+
 			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow();
 			expect(redirect).toHaveBeenCalledWith(307, '/notauthorised');
 		});
@@ -176,7 +176,9 @@ describe('Logout Server Route', () => {
 
 			// The current implementation doesn't handle network errors gracefully
 			// so we expect it to throw an error
-			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow('Network error');
+			await expect(GET({ request: mockRequest, platform: mockPlatform })).rejects.toThrow(
+				'Network error'
+			);
 		});
 
 		it('should handle auth cookie with special characters', async () => {
@@ -219,7 +221,7 @@ describe('Logout Server Route', () => {
 	describe('revokeGoogleToken function', () => {
 		it('should make correct request to Google OAuth revoke endpoint', async () => {
 			const testToken = 'test_google_token';
-			
+
 			// Mock successful response
 			global.fetch.mockResolvedValue({
 				ok: true,

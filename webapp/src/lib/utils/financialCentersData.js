@@ -9,12 +9,12 @@ export function generateFinancialCentersData() {
 				name: 'New York',
 				country: 'United States',
 				latitude: 40.7128,
-				longitude: -74.0060,
+				longitude: -74.006,
 				timezone: 'EST/EDT',
 				markets: ['NYSE', 'NASDAQ', 'Bonds', 'Forex', 'Commodities'],
 				marketSentiment: 2.3,
 				importance: 3, // Highest importance
-				description: 'World\'s largest financial center, home to Wall Street'
+				description: "World's largest financial center, home to Wall Street"
 			},
 			{
 				name: 'London',
@@ -25,7 +25,7 @@ export function generateFinancialCentersData() {
 				markets: ['LSE', 'Bonds', 'Forex', 'Commodities', 'Insurance'],
 				marketSentiment: 1.8,
 				importance: 3,
-				description: 'Europe\'s leading financial hub, major forex trading center'
+				description: "Europe's leading financial hub, major forex trading center"
 			},
 			{
 				name: 'Hong Kong',
@@ -47,7 +47,7 @@ export function generateFinancialCentersData() {
 				markets: ['TSE', 'Bonds', 'Forex', 'Insurance', 'Banking'],
 				marketSentiment: 0.7,
 				importance: 2,
-				description: 'Asia\'s largest stock market, major banking center'
+				description: "Asia's largest stock market, major banking center"
 			},
 			{
 				name: 'Singapore',
@@ -58,7 +58,7 @@ export function generateFinancialCentersData() {
 				markets: ['SGX', 'Forex', 'Commodities', 'Wealth Management', 'Insurance'],
 				marketSentiment: 1.2,
 				importance: 2,
-				description: 'Southeast Asia\'s financial hub, major forex center'
+				description: "Southeast Asia's financial hub, major forex center"
 			},
 			{
 				name: 'Dubai',
@@ -80,18 +80,18 @@ export function generateFinancialCentersData() {
 				markets: ['B3', 'Stocks', 'Bonds', 'Forex', 'Commodities'],
 				marketSentiment: -1.1,
 				importance: 1,
-				description: 'Latin America\'s largest financial center'
+				description: "Latin America's largest financial center"
 			},
 			{
 				name: 'Mumbai',
 				country: 'India',
-				latitude: 19.0760,
+				latitude: 19.076,
 				longitude: 72.8777,
 				timezone: 'IST',
 				markets: ['BSE', 'NSE', 'Bonds', 'Forex', 'Insurance'],
 				marketSentiment: 1.5,
 				importance: 1,
-				description: 'India\'s financial capital, major stock exchange hub'
+				description: "India's financial capital, major stock exchange hub"
 			},
 			{
 				name: 'Sydney',
@@ -102,12 +102,12 @@ export function generateFinancialCentersData() {
 				markets: ['ASX', 'Bonds', 'Forex', 'Commodities', 'Banking'],
 				marketSentiment: 0.3,
 				importance: 1,
-				description: 'Oceania\'s financial hub, major commodity trading center'
+				description: "Oceania's financial hub, major commodity trading center"
 			}
 		];
 
 		// Add some randomization to make it more dynamic
-		const randomizedCenters = financialCenters.map(center => ({
+		const randomizedCenters = financialCenters.map((center) => ({
 			...center,
 			// Add small random variations to market sentiment
 			marketSentiment: center.marketSentiment + (Math.random() - 0.5) * 2,
@@ -128,7 +128,7 @@ export function generateFinancialCentersData() {
 				name: 'New York',
 				country: 'United States',
 				latitude: 40.7128,
-				longitude: -74.0060,
+				longitude: -74.006,
 				timezone: 'EST/EDT',
 				markets: ['NYSE', 'NASDAQ'],
 				marketSentiment: 2.3,
@@ -158,7 +158,7 @@ export function updateFinancialCentersData(currentData) {
 		return generateFinancialCentersData();
 	}
 
-	return currentData.map(center => ({
+	return currentData.map((center) => ({
 		...center,
 		// Simulate market sentiment changes
 		marketSentiment: center.marketSentiment + (Math.random() - 0.5) * 1,
@@ -176,7 +176,7 @@ export function updateFinancialCentersData(currentData) {
  */
 export function getFinancialCenterByName(name) {
 	const centers = generateFinancialCentersData();
-	return centers.find(center => center.name.toLowerCase() === name.toLowerCase()) || null;
+	return centers.find((center) => center.name.toLowerCase() === name.toLowerCase()) || null;
 }
 
 /**
@@ -187,13 +187,13 @@ export function getFinancialCenterByName(name) {
 export function getFinancialCentersByRegion(region) {
 	const centers = generateFinancialCentersData();
 	const regionMap = {
-		'americas': ['New York', 'São Paulo'],
-		'europe': ['London'],
-		'asia': ['Hong Kong', 'Tokyo', 'Singapore', 'Mumbai'],
+		americas: ['New York', 'São Paulo'],
+		europe: ['London'],
+		asia: ['Hong Kong', 'Tokyo', 'Singapore', 'Mumbai'],
 		'middle-east': ['Dubai'],
-		'oceania': ['Sydney']
+		oceania: ['Sydney']
 	};
-	
+
 	const regionCenters = regionMap[region.toLowerCase()] || [];
-	return centers.filter(center => regionCenters.includes(center.name));
+	return centers.filter((center) => regionCenters.includes(center.name));
 }

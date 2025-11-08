@@ -247,7 +247,7 @@ describe('Merchant Normalizer', () => {
 			const result1 = normalizeMerchant('PLANT SHED 87 CORP NEW YORK');
 			// Should normalize to remove common suffixes
 			expect(result1.merchant_normalized).toContain('PLANT SHED');
-			
+
 			const result2 = normalizeMerchant('PLANTSHED 8007539595');
 			// Should normalize to remove common suffixes
 			expect(result2.merchant_normalized).toContain('PLANTSHED');

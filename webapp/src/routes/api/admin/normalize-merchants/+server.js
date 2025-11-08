@@ -70,12 +70,11 @@ export async function POST(event) {
 				// Handle null merchant_details properly
 				const currentDetails = payment.merchant_details || '';
 				const newDetails = normalized.merchant_details || '';
-				
+
 				if (
 					normalized.merchant_normalized !== payment.merchant_normalized ||
 					newDetails !== currentDetails
 				) {
-					
 					await db
 						.prepare(
 							`
@@ -200,8 +199,7 @@ export async function POST(event) {
 					`
 				)
 				.all();
-			
-			
+
 			if (needsBulkUpdate[0].count > 0) {
 				try {
 					const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
@@ -265,8 +263,8 @@ export async function POST(event) {
 				offset === 0
 					? 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
 					: totalRemaining > batchSize
-					? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-					: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
+						? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
+						: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
 		});
 	} catch (error) {
 		console.error('Merchant normalization failed:', error);
@@ -387,11 +385,11 @@ async function performBulkPatternUpdates(db, batchSize) {
 			pattern: "merchant LIKE '%APPLE%'",
 			normalized: 'APPLE',
 			details: 'merchant'
-		},
+		}
 		// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
 		// This will be handled by the merchant normalizer function instead of SQL patterns
 		// since SQLite doesn't have good regex support
-		
+
 		// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
 		// These will be handled by the merchant normalizer function instead of SQL patterns
 		// since SQLite doesn't have good regex support for complex address patterns
@@ -414,7 +412,7 @@ async function performBulkPatternUpdates(db, batchSize) {
 				detailsField = "''";
 			}
 
-		const sql = `
+			const sql = `
 		UPDATE payment 
 		SET merchant_normalized = ?,
 			merchant_details = ${detailsField}
@@ -446,12 +444,12 @@ async function performBulkPatternUpdates(db, batchSize) {
 /**
  * Perform bulk pattern-based updates for budget merchants
  * This ensures budget merchant mappings stay in sync with payment normalization
- * 
+ *
  * Handles UNIQUE constraint violations by:
  * 1. Grouping merchants by budget_id
  * 2. If budget already has the normalized merchant, remove all matching merchants
  * 3. If budget doesn't have the normalized merchant, update the first one and remove duplicates
- * 
+ *
  * This prevents the UNIQUE constraint error: budget_merchant.budget_id, budget_merchant.merchant_normalized
  */
 async function performBudgetMerchantBulkUpdates(db, batchSize) {
@@ -588,37 +586,32 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 					if (existingNormalized.length > 0) {
 						// Budget already has the normalized merchant, remove all matching merchants
 						for (const merchant of merchants) {
-							await db
-								.prepare('DELETE FROM budget_merchant WHERE id = ?')
-								.bind(merchant.id)
-								.run();
+							await db.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
 							totalRemoved++;
 						}
 					} else {
 						// Update the first merchant to the normalized form, remove the rest
 						const [firstMerchant, ...remainingMerchants] = merchants;
-						
+
 						// Update the first one
 						await db
-							.prepare(
-								'UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?'
-							)
+							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?')
 							.bind(update.normalized, firstMerchant.id)
 							.run();
 						totalUpdated++;
 
 						// Remove the rest
 						for (const merchant of remainingMerchants) {
-							await db
-								.prepare('DELETE FROM budget_merchant WHERE id = ?')
-								.bind(merchant.id)
-								.run();
+							await db.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
 							totalRemoved++;
 						}
 					}
 				} catch (budgetError) {
 					// Log the specific budget error but continue with other budgets
-					console.error(`Error processing budget ${budgetId} for pattern ${update.pattern}:`, budgetError);
+					console.error(
+						`Error processing budget ${budgetId} for pattern ${update.pattern}:`,
+						budgetError
+					);
 					errors.push({
 						type: 'budget_merchant_budget_error',
 						budgetId: parseInt(budgetId),
@@ -648,7 +641,7 @@ async function performBudgetMerchantBulkUpdates(db, batchSize) {
 /**
  * Ensure consistency between payments and budget merchants
  * This updates budget merchant mappings to match the normalized values from payments
- * 
+ *
  * The key improvement: instead of matching on exact merchant names, we now:
  * 1. Get all unique normalized merchant names from payments
  * 2. For each normalized name, find all budget merchants that should normalize to the same value
@@ -674,7 +667,7 @@ async function ensurePaymentBudgetConsistency(db) {
 		// For each normalized merchant name from payments, check budget merchants
 		for (const paymentMerchant of paymentNormalized) {
 			const normalizedName = paymentMerchant.merchant_normalized;
-			
+
 			// Find all budget merchants that should normalize to this name
 			const { results: budgetMerchants } = await db
 				.prepare(
@@ -691,12 +684,13 @@ async function ensurePaymentBudgetConsistency(db) {
 			for (const budgetMerchant of budgetMerchants) {
 				try {
 					const normalized = normalizeMerchant(budgetMerchant.merchant);
-					
+
 					// If this budget merchant should normalize to the same value as the payment merchant
 					// but currently has a different normalized value, update it
-					if (normalized.merchant_normalized === normalizedName && 
-						budgetMerchant.merchant_normalized !== normalizedName) {
-						
+					if (
+						normalized.merchant_normalized === normalizedName &&
+						budgetMerchant.merchant_normalized !== normalizedName
+					) {
 						await db
 							.prepare(
 								`
@@ -761,7 +755,7 @@ async function checkAssignmentConsistency(db) {
 		// For each assigned merchant, check if it appears in the unassigned query
 		for (const assigned of assignedMerchants) {
 			const normalizedName = assigned.merchant_normalized;
-			
+
 			// Check if this merchant appears in the unassigned merchants query
 			const { results: unassignedCheck } = await db
 				.prepare(
@@ -994,4 +988,3 @@ export async function GET(event) {
 		);
 	}
 }
-

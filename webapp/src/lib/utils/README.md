@@ -13,6 +13,7 @@ Provides shared parsing utilities for credit card statement parsing, eliminating
 Parse JSON response from API with error handling and markdown cleaning.
 
 **Parameters:**
+
 - `content` (string): Raw JSON content
 - `options` (object): Parsing options
   - `cleanMarkdown` (boolean): Whether to clean markdown formatting (default: true)
@@ -24,6 +25,7 @@ Parse JSON response from API with error handling and markdown cleaning.
 Validate parsed data against required fields.
 
 **Parameters:**
+
 - `data` (object): Parsed data to validate
 - `requiredFields` (array): Array of required field names
 - `options` (object): Validation options
@@ -36,6 +38,7 @@ Validate parsed data against required fields.
 Parse an amount string and convert to number.
 
 **Parameters:**
+
 - `amountStr` (string): Amount string (e.g., "123.45", "-123.45", "$1,234.56")
 - `options` (object): Parsing options
   - `defaultValue` (number): Default value if parsing fails (default: 0)
@@ -48,6 +51,7 @@ Parse an amount string and convert to number.
 Parse date strings in various formats.
 
 **Parameters:**
+
 - `dateStr` (string): Date string to parse
 - `options` (object): Parsing options
   - `defaultYear` (number): Default year for 2-digit years (default: current year)
@@ -59,6 +63,7 @@ Parse date strings in various formats.
 Clean and normalize merchant names.
 
 **Parameters:**
+
 - `merchantName` (string): Raw merchant name
 - `options` (object): Cleaning options
   - `removeCommonSuffixes` (boolean): Remove common suffixes (default: true)
@@ -99,6 +104,7 @@ Provides generic credit card statement parsing utilities that can be used on bot
 Base class for credit card statement parsers with common functionality.
 
 **Key Methods:**
+
 - `parseDate(dateStr, options)` - Parse date strings using shared utilities
 - `parseAmount(amountStr, options)` - Parse amount strings using shared utilities
 - `parseJSONResponse(content, options)` - Parse JSON responses using shared utilities
@@ -110,6 +116,7 @@ Base class for credit card statement parsers with common functionality.
 Chase Bank credit card statement parser.
 
 **Key Methods:**
+
 - `canParse(text)` - Check if this parser can handle the given statement
 - `parse(pdfText)` - Parse Chase statement and extract required information
 - `extractLast4Digits(text)` - Extract the last 4 digits of the credit card
@@ -121,6 +128,7 @@ Chase Bank credit card statement parser.
 Factory for creating appropriate statement parsers.
 
 **Key Methods:**
+
 - `detectParser(text)` - Detect the appropriate parser for a given statement
 - `parseStatement(text)` - Parse a statement using the appropriate parser
 - `getSupportedProviders()` - Get list of supported providers
@@ -138,7 +146,7 @@ const parsedData = await factory.parseStatement(pdfText);
 // Use specific parser
 const chaseParser = new ChaseParser();
 if (chaseParser.canParse(pdfText)) {
-    const data = await chaseParser.parse(pdfText);
+	const data = await chaseParser.parse(pdfText);
 }
 ```
 
@@ -149,6 +157,7 @@ if (chaseParser.canParse(pdfText)) {
 Test if a regex pattern is safe from ReDoS attacks.
 
 **Parameters:**
+
 - `pattern` (string): The regex pattern to test
 - `testString` (string): A string that should match the pattern
 - `timeout` (number): Timeout in milliseconds (default: 1000)
@@ -196,6 +205,7 @@ These utilities use browser-specific APIs and should be imported from `$lib/clie
 ### Testing
 
 Unit tests are available for all utilities:
+
 - `parsing-utils.test.js`
 - `regex-validator.test.js`
 - `ccbilling-parsers/base-parser.test.js`

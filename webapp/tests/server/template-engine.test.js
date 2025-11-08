@@ -51,9 +51,7 @@ describe('TemplateEngineService', () => {
 		expect(helpers.hasCapability(['a', 'b'], 'b')).toBe(true);
 		expect(helpers.getCapabilityConfig({ svc: { key: 'value' } }, 'svc', 'key')).toBe('value');
 		const deps = JSON.parse(helpers.generateDependencies(['sveltekit', 'tailwindcss']));
-		expect(Object.keys(deps)).toEqual(
-			expect.arrayContaining(['@sveltejs/kit', 'tailwindcss'])
-		);
+		expect(Object.keys(deps)).toEqual(expect.arrayContaining(['@sveltejs/kit', 'tailwindcss']));
 		const devDeps = JSON.parse(helpers.generateDevDependencies(['typescript', 'testing']));
 		expect(devDeps).toMatchObject({ typescript: expect.any(String), vitest: expect.any(String) });
 		expect(helpers.join(['x', 'y'], ' / ')).toBe('x / y');

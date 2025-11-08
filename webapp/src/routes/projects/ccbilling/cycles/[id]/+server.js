@@ -14,4 +14,3 @@ export async function GET(event) {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }
-

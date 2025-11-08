@@ -3,7 +3,12 @@
 	import Button from './Button.svelte';
 	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
-	const { isOpen = false, onClose = () => {}, onSelect = () => {}, assignedMerchants = new Set() } = $props();
+	const {
+		isOpen = false,
+		onClose = () => {},
+		onSelect = () => {},
+		assignedMerchants = new Set()
+	} = $props();
 
 	let merchants = $state([]);
 	let filteredMerchants = $state([]);

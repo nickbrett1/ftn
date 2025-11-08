@@ -191,17 +191,17 @@ describe('genproj error utilities', () => {
 		});
 
 		it('translates auth, not found, server, and default errors', () => {
-			expect(() => handleExternalServiceError({ ...baseError, status: 401 }, 'github')).toThrowError(
-				AuthenticationError
-			);
+			expect(() =>
+				handleExternalServiceError({ ...baseError, status: 401 }, 'github')
+			).toThrowError(AuthenticationError);
 
-			expect(() => handleExternalServiceError({ ...baseError, status: 404 }, 'github')).toThrowError(
-				NotFoundError
-			);
+			expect(() =>
+				handleExternalServiceError({ ...baseError, status: 404 }, 'github')
+			).toThrowError(NotFoundError);
 
-			expect(() => handleExternalServiceError({ ...baseError, status: 503 }, 'github')).toThrowError(
-				ExternalServiceError
-			);
+			expect(() =>
+				handleExternalServiceError({ ...baseError, status: 503 }, 'github')
+			).toThrowError(ExternalServiceError);
 
 			expect(() => handleExternalServiceError(baseError, 'github')).toThrowError(
 				ExternalServiceError
@@ -215,9 +215,9 @@ describe('genproj error utilities', () => {
 			expect(getUserFriendlyMessage(new AuthenticationError('auth', 'github'))).toBe(
 				'Please sign in to continue'
 			);
-			expect(
-				getUserFriendlyMessage(new AuthorizationError('nope', ['GitHub', 'Doppler']))
-			).toBe('Additional authentication required: GitHub, Doppler');
+			expect(getUserFriendlyMessage(new AuthorizationError('nope', ['GitHub', 'Doppler']))).toBe(
+				'Additional authentication required: GitHub, Doppler'
+			);
 			expect(getUserFriendlyMessage(new NotFoundError('missing', 'resource'))).toBe(
 				'The requested resource was not found'
 			);

@@ -1,7 +1,4 @@
-import { 
-	listStatements, 
-	createStatement
-} from '$lib/server/ccbilling-db.js';
+import { listStatements, createStatement } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
 
@@ -147,4 +144,3 @@ export async function POST(event) {
 		return json({ error: 'Failed to upload statement' }, { status: 500 });
 	}
 }
-

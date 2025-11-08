@@ -104,20 +104,19 @@
 		>
 			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
-				<RocketSolid
+				<button
 					id="deployments"
 					onclick={() => {
 						goto('/deploys');
 					}}
-					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-[48px]"
-					title="Deployments"
-					ariaLabel="Deployments"
-					focusable="true"
-				/>
+					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-12 flex items-center justify-center"
+				>
+					🚀
+				</button>
 				<ToolsSolid
 					id="genproj"
 					onclick={handleGenprojClick}
-					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-[48px]"
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
 					title="Project Generator Tool"
 					ariaLabel="Project Generator Tool"
 					focusable="true"
@@ -128,7 +127,7 @@
 					<CreditCardSolid
 						id="login"
 						onclick={handleCreditCardClick}
-						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
+						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-12"
 						title="Credit Card Billing Tool"
 						ariaLabel="Credit Card Billing Tool"
 						focusable="true"
@@ -138,7 +137,7 @@
 					<Login loginCallback={loginStateUpdated}>
 						<CreditCardSolid
 							id="login"
-							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							class="hover:text-green-400 cursor-pointer size-8 md:size-12"
 							ariaLabel="Credit Card Billing Tool"
 							focusable="true"
 						/>
@@ -149,19 +148,19 @@
 			<div class="flex gap-4">
 				<a
 					href="mailto:nick@fintechnick.com"
-					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
 				>
 					<EnvelopeRegular ariaLabel="Email" focusable="true" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
-					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
 				>
 					<GithubBrands ariaLabel="GitHub" focusable="true" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
-					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-sky-600 size-8 md:size-12 p-1 flex items-center justify-center"
 				>
 					<LinkedinInBrands ariaLabel="LinkedIn" focusable="true" />
 				</a>

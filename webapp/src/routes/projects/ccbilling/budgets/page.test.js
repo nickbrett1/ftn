@@ -69,8 +69,12 @@ describe.skip('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: manyBudgets } }
 		});
 		const budgetLinks = many.querySelectorAll('a');
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 1'))).toBe(true);
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 5'))).toBe(true);
+		expect(Array.from(budgetLinks).some((link) => link.textContent.includes('Budget 1'))).toBe(
+			true
+		);
+		expect(Array.from(budgetLinks).some((link) => link.textContent.includes('Budget 5'))).toBe(
+			true
+		);
 	});
 
 	it('processes budget data correctly', () => {
@@ -102,8 +106,12 @@ describe.skip('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: specialBudgets } }
 		});
 		const budgetLinks = container.querySelectorAll('a');
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Food & Dining'))).toBe(true);
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Transportation & Travel'))).toBe(true);
+		expect(Array.from(budgetLinks).some((link) => link.textContent.includes('Food & Dining'))).toBe(
+			true
+		);
+		expect(
+			Array.from(budgetLinks).some((link) => link.textContent.includes('Transportation & Travel'))
+		).toBe(true);
 	});
 
 	it('handles budget display', () => {

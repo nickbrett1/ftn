@@ -154,7 +154,7 @@
 	{:else if error}
 		<div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4">
 			<div class="flex">
-				<div class="flex-shrink-0">
+				<div class="shrink-0">
 					<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
 						<path
 							fill-rule="evenodd"
@@ -218,104 +218,108 @@
 					<h3 class="text-lg font-semibold text-white">Generated Files</h3>
 
 					{#each previewData.files as file (file.filePath + ':' + (file.capabilityId || ''))}
-					<div class="border border-gray-700 rounded-lg overflow-hidden">
-						<div class="bg-gray-800 px-4 py-3 border-b border-gray-700">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center space-x-3">
-									<div class="flex-shrink-0">
-										{#if file.filePath.endsWith('.json')}
-											<svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-												<path
-													fill-rule="evenodd"
-													d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else if file.filePath.endsWith('.yml') || file.filePath.endsWith('.yaml')}
-											<svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-												<path
-													fill-rule="evenodd"
-													d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else if file.filePath.endsWith('.js') || file.filePath.endsWith('.ts')}
-											<svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-												<path
-													fill-rule="evenodd"
-													d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else if file.filePath.endsWith('.md')}
-											<svg class="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-												<path
-													fill-rule="evenodd"
-													d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else}
-											<svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-												<path
-													fill-rule="evenodd"
-													d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{/if}
-									</div>
-									<div>
-										<div class="font-medium text-white">{file.filePath}</div>
-										<div class="text-sm text-gray-400">
-											{getCapabilityName(file.capabilityId)}
+						<div class="border border-gray-700 rounded-lg overflow-hidden">
+							<div class="bg-gray-800 px-4 py-3 border-b border-gray-700">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-3">
+										<div class="shrink-0">
+											{#if file.filePath.endsWith('.json')}
+												<svg
+													class="h-5 w-5 text-yellow-500"
+													fill="currentColor"
+													viewBox="0 0 20 20"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											{:else if file.filePath.endsWith('.yml') || file.filePath.endsWith('.yaml')}
+												<svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+													<path
+														fill-rule="evenodd"
+														d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											{:else if file.filePath.endsWith('.js') || file.filePath.endsWith('.ts')}
+												<svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+													<path
+														fill-rule="evenodd"
+														d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											{:else if file.filePath.endsWith('.md')}
+												<svg class="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+													<path
+														fill-rule="evenodd"
+														d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											{:else}
+												<svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+													<path
+														fill-rule="evenodd"
+														d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											{/if}
+										</div>
+										<div>
+											<div class="font-medium text-white">{file.filePath}</div>
+											<div class="text-sm text-gray-400">
+												{getCapabilityName(file.capabilityId)}
+											</div>
 										</div>
 									</div>
+									{#if file.isExecutable}
+										<div class="flex items-center">
+											<span
+												class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900 bg-opacity-30 text-green-300 border border-green-600"
+											>
+												Executable
+											</span>
+										</div>
+									{/if}
 								</div>
-								{#if file.isExecutable}
-									<div class="flex items-center">
-										<span
-											class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900 bg-opacity-30 text-green-300 border border-green-600"
+							</div>
+
+							<!-- File Content Preview -->
+							<div class="p-4">
+								{#if expandedFiles[file.filePath]}
+									<pre
+										class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
+											>{file.content}</code
+										></pre>
+									{#if isTruncated(file.content)}
+										<button
+											class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
+											on:click={() => toggleFile(file.filePath)}
 										>
-											Executable
-										</span>
-									</div>
+											Show less
+										</button>
+									{/if}
+								{:else}
+									<pre
+										class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
+											>{getTruncatedContent(file.content)}</code
+										></pre>
+									{#if isTruncated(file.content)}
+										<button
+											class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
+											on:click={() => toggleFile(file.filePath)}
+										>
+											Show more... ({file.content.length} total characters)
+										</button>
+									{/if}
 								{/if}
 							</div>
 						</div>
-
-						<!-- File Content Preview -->
-						<div class="p-4">
-							{#if expandedFiles[file.filePath]}
-								<pre
-									class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
-										>{file.content}</code
-									></pre>
-								{#if isTruncated(file.content)}
-									<button
-										class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
-										on:click={() => toggleFile(file.filePath)}
-									>
-										Show less
-									</button>
-								{/if}
-							{:else}
-								<pre
-									class="text-sm text-gray-300 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto"><code
-										>{getTruncatedContent(file.content)}</code
-									></pre>
-								{#if isTruncated(file.content)}
-									<button
-										class="mt-2 text-blue-400 hover:text-blue-300 text-sm"
-										on:click={() => toggleFile(file.filePath)}
-									>
-										Show more... ({file.content.length} total characters)
-									</button>
-								{/if}
-							{/if}
-						</div>
-					</div>
-				{/each}
+					{/each}
 				</div>
 			{/key}
 		{/if}
@@ -329,7 +333,7 @@
 					<div class="border border-gray-700 rounded-lg p-4 bg-gray-800">
 						<div class="flex items-center justify-between mb-3">
 							<div class="flex items-center space-x-3">
-								<div class="flex-shrink-0">
+								<div class="shrink-0">
 									{#if service.service === 'github'}
 										<svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
 											<path

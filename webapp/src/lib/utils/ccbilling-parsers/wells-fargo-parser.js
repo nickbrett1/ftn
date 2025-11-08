@@ -420,7 +420,7 @@ export class WellsFargoParser extends BaseParser {
 	 */
 	isAmazonTransaction(merchant) {
 		if (!merchant) return false;
-		
+
 		const merchantUpper = merchant.toUpperCase();
 		return merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN');
 	}
@@ -442,12 +442,12 @@ export class WellsFargoParser extends BaseParser {
 		// Check the next few lines for order ID patterns
 		for (let i = currentIndex + 1; i < Math.min(currentIndex + 5, lines.length); i++) {
 			const nextLine = lines[i];
-			
+
 			// Stop if we hit another transaction line (starts with date pattern)
 			if (nextLine.match(/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/)) {
 				break;
 			}
-			
+
 			// Check if this line contains order ID information
 			if (this.containsOrderIdInfo(nextLine)) {
 				fullText += '\n' + nextLine;
@@ -464,9 +464,9 @@ export class WellsFargoParser extends BaseParser {
 	 */
 	containsOrderIdInfo(line) {
 		if (!line) return false;
-		
+
 		const lineUpper = line.toUpperCase();
-		
+
 		// Look for order ID patterns
 		const orderIdPatterns = [
 			/ORDER NUMBER/i,
@@ -476,8 +476,8 @@ export class WellsFargoParser extends BaseParser {
 			/\d{16}/, // Compact order ID format
 			/\d{10,}/ // Any long number sequence
 		];
-		
-		return orderIdPatterns.some(pattern => {
+
+		return orderIdPatterns.some((pattern) => {
 			if (typeof pattern === 'string') {
 				return lineUpper.includes(pattern);
 			}

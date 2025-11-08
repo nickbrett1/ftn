@@ -12,6 +12,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	let { data = { isAuthenticated: false } } = $props();
@@ -205,11 +206,7 @@
 		// 2. User has selected capabilities (from URL params after redirect)
 		// 3. User has a valid project name (from URL params after redirect)
 		// Also show AuthFlow if there was an error (so user can try again)
-		if (
-			data.isAuthenticated &&
-			selectedCapabilities.length > 0 &&
-			projectName.length >= 3
-		) {
+		if (data.isAuthenticated && selectedCapabilities.length > 0 && projectName.length >= 3) {
 			// Small delay to ensure page is fully rendered
 			setTimeout(() => {
 				showAuthFlow = true;
@@ -232,7 +229,7 @@
 
 	// Generate project handler
 	async function handleGenerateProject() {
-		// If not authenticated, go directly to Google auth
+		// If not authenticated, go directly to GitHub auth
 		if (!data.isAuthenticated) {
 			const redirectPath = buildGenprojRedirectPath();
 			await initiateGoogleAuth(redirectPath);
@@ -365,7 +362,7 @@
 		{:else if error}
 			<div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4">
 				<div class="flex">
-					<div class="flex-shrink-0">
+					<div class="shrink-0">
 						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
 							<path
 								fill-rule="evenodd"

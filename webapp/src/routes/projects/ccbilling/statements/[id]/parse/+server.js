@@ -18,7 +18,6 @@ export const GET = RouteUtils.createRouteHandler(
 		const { params } = event;
 		const statement_id = parseInt(params.id);
 
-
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
 		if (!statement) {
@@ -166,11 +165,11 @@ export const POST = RouteUtils.createRouteHandler(
 			}
 
 			// Check if this is an Amazon charge and capture full statement text
-			const isAmazon = charge.merchant && (
-				charge.merchant.toUpperCase().includes('AMAZON') || 
-				charge.merchant.toUpperCase().includes('AMZN')
-			);
-			
+			const isAmazon =
+				charge.merchant &&
+				(charge.merchant.toUpperCase().includes('AMAZON') ||
+					charge.merchant.toUpperCase().includes('AMZN'));
+
 			// For Amazon charges, try to get the full statement text from the parsed data
 			let fullStatementText = null;
 			if (isAmazon && charge.full_statement_text) {

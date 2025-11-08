@@ -40,7 +40,7 @@ export class PDFUtils {
 	 * @returns {Promise<string>} - Combined text from all pages
 	 */
 	static async extractTextFromPDF(pdfDocument, options = {}) {
-		const { sortByPosition = true, groupByLine = true } = options;
+		const { groupByLine = true } = options;
 		const textParts = [];
 
 		for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
@@ -100,9 +100,10 @@ export class PDFUtils {
 		try {
 			// Import PDF.js only when needed
 			// Use legacy build in test environment to avoid worker issues
-			const pdfjsLib = typeof process !== 'undefined' && process.env.NODE_ENV === 'test' 
-				? await import('pdfjs-dist/legacy/build/pdf.mjs')
-				: await import('pdfjs-dist');
+			const pdfjsLib =
+				typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+					? await import('pdfjs-dist/legacy/build/pdf.mjs')
+					: await import('pdfjs-dist');
 
 			// Configure worker if not already done
 			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {

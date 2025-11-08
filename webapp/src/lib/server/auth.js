@@ -27,7 +27,8 @@ export async function getCurrentUser(event) {
 		// Session is valid, potentially refreshed. Set the cookie again.
 		setSessionCookie(event.cookies, session.id, session.expiresAt, !dev);
 		// Since we are not storing user profile in D1, return a minimal user object
-		return { id: session.userId };
+		const user = { id: session.userId };
+		return user;
 	} else {
 		// Session is invalid or expired, delete the cookie
 		deleteSessionCookie(event.cookies, !dev);

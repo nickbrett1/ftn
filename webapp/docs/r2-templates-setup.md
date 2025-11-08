@@ -100,13 +100,13 @@ R2_GENPROJ_SECRET_ACCESS_KEY=your_secret_key
 import { platform } from '$app/environment';
 
 export async function getTemplate(templateId) {
-  const bucket = platform.env.R2_GENPROJ;
-  const object = await bucket.get(templateId);
-  return object?.text();
+	const bucket = platform.env.R2_GENPROJ;
+	const object = await bucket.get(templateId);
+	return object?.text();
 }
 
 export async function uploadTemplate(templateId, content) {
-  const bucket = platform.env.R2_GENPROJ;
-  await bucket.put(templateId, content);
+	const bucket = platform.env.R2_GENPROJ;
+	await bucket.put(templateId, content);
 }
 ```

@@ -83,7 +83,7 @@
 		localSelectedMerchant = merchant;
 		onSelect(merchant);
 		showModal = false;
-		
+
 		// If the selected merchant is not in the recent merchants list, add it
 		if (!allUnassignedMerchants.includes(merchant)) {
 			allUnassignedMerchants = [merchant, ...allUnassignedMerchants];

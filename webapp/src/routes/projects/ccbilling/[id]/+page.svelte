@@ -144,7 +144,6 @@
 	let uploadError = $state('');
 	let selectedFile = $state(null);
 
-
 	// Toast notification state
 	let showToast = $state(false);
 	let toastMessage = $state('');
@@ -174,7 +173,6 @@
 		autoAssociationBudget: '',
 		chargeId: null
 	});
-
 
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
@@ -622,44 +620,44 @@
 	// Helper function to check if an auto-association exists for a merchant
 	function getAutoAssociationForMerchant(charge) {
 		if (!charge || !localData.autoAssociations) return null;
-		
+
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
-		
+
 		if (charge.merchant_normalized) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant_normalized
 			);
 		}
-		
+
 		// If no auto-association found by normalized name, try original merchant name
 		if (!autoAssociation && charge.merchant) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant
 			);
 		}
-		
+
 		return autoAssociation || null; // Ensure we return null instead of undefined
 	}
 
 	// Helper function to check if auto-association button should be shown
 	function shouldShowAutoAssociationButton(charge) {
 		if (!charge || !charge.allocated_to || !localData.autoAssociations) return false;
-		
+
 		const autoAssociation = getAutoAssociationForMerchant(charge);
-		
+
 		// Don't show button if auto-association already matches current allocation
 		if (autoAssociation && autoAssociation.budget_name === charge.allocated_to) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	// Helper function to get button text and styling based on auto-association state
 	function getAutoAssociationButtonInfo(charge) {
 		const autoAssociation = getAutoAssociationForMerchant(charge);
-		
+
 		if (autoAssociation) {
 			return {
 				text: 'Change Auto-association',
@@ -731,13 +729,15 @@
 			await invalidate(`cycle-${data.cycleId}`);
 
 			// Show success message
-			showToastMessage(`Auto-association created for ${charge.merchant} → ${allocation}`, 'success');
+			showToastMessage(
+				`Auto-association created for ${charge.merchant} → ${allocation}`,
+				'success'
+			);
 		} catch (error) {
 			console.error('Error creating auto-association:', error);
 			alert(`Failed to create auto-association: ${error.message}`);
 		}
 	}
-
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -816,12 +816,12 @@
 		try {
 			// Initialize PDF service
 			const pdfService = new PDFService();
-			
+
 			// Parse the PDF file client-side
 			const parsedData = await pdfService.parseStatement(pdfFile);
-			
+
 			console.log('📄 PDF parsed successfully:', parsedData);
-			
+
 			// Send parsed data to server
 			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
 				method: 'POST',
@@ -841,9 +841,11 @@
 
 			const parseResult = await parseResponse.json();
 			console.log('✅ Statement parsed successfully:', parseResult);
-			
-			showToastMessage(`Statement parsed successfully! Found ${parseResult.charges_found} charges.`, 'success');
-			
+
+			showToastMessage(
+				`Statement parsed successfully! Found ${parseResult.charges_found} charges.`,
+				'success'
+			);
 		} catch (err) {
 			console.error('❌ Parse failed:', err);
 			throw new Error(`Failed to parse statement: ${err.message}`);
@@ -1036,7 +1038,6 @@
 			</div>
 		{/if}
 
-
 		<!-- Statements Section -->
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<div class="flex justify-between items-center mb-4">
@@ -1105,7 +1106,8 @@
 						</div>
 						<div>
 							<p class="text-gray-400 text-sm">
-								Statement will be automatically parsed and charges extracted. Credit card will be identified during processing.
+								Statement will be automatically parsed and charges extracted. Credit card will be
+								identified during processing.
 							</p>
 						</div>
 						<Button
@@ -1660,7 +1662,9 @@
 				{:else}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg">No charges found</div>
-						<div class="text-gray-500 text-sm">Upload statements to automatically parse and see charges</div>
+						<div class="text-gray-500 text-sm">
+							Upload statements to automatically parse and see charges
+						</div>
 					</div>
 				{/if}
 			</div>
@@ -1752,7 +1756,6 @@
 			on:skip={handleSkipAutoAssociation}
 			on:close={closeAutoAssociationModal}
 		/>
-
 
 		<!-- Cycle Information -->
 	</div>

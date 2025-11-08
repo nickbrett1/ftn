@@ -88,9 +88,7 @@ describe('Preview API', () => {
 				'ghcr.io/devcontainers/features/docker-in-docker:2'
 			);
 			expect(devcontainerConfig.features).toHaveProperty('ghcr.io/devcontainers/features/node:1');
-			expect(devcontainerConfig.features).toHaveProperty(
-				'ghcr.io/devcontainers/features/python:1'
-			);
+			expect(devcontainerConfig.features).toHaveProperty('ghcr.io/devcontainers/features/python:1');
 		});
 
 		it('should add Doppler CLI to a Python devcontainer', async () => {

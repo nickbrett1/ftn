@@ -27,7 +27,8 @@ describe('/projects/ccbilling/cards API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return list of credit cards', async () => {
 			const mockCards = [
 				{ id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' },
@@ -168,9 +169,9 @@ describe('/projects/ccbilling/cards API', () => {
 		});
 
 		it('should create card with original values (no trimming)', async () => {
-			mockEvent.request.json.mockResolvedValue({ 
-				name: '  Chase Freedom  ', 
-				last4: '  1234  ' 
+			mockEvent.request.json.mockResolvedValue({
+				name: '  Chase Freedom  ',
+				last4: '  1234  '
 			});
 			createCreditCard.mockResolvedValue({ id: 5, name: '  Chase Freedom  ', last4: '  1234  ' });
 
@@ -182,9 +183,9 @@ describe('/projects/ccbilling/cards API', () => {
 		});
 
 		it('should handle special characters in card name', async () => {
-			mockEvent.request.json.mockResolvedValue({ 
-				name: 'Amex Gold & Platinum', 
-				last4: '5678' 
+			mockEvent.request.json.mockResolvedValue({
+				name: 'Amex Gold & Platinum',
+				last4: '5678'
 			});
 			createCreditCard.mockResolvedValue({ id: 6, name: 'Amex Gold & Platinum', last4: '5678' });
 

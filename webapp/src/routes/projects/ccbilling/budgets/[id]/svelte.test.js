@@ -208,10 +208,10 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		});
 
 		expect(document.body).toBeTruthy();
-		
+
 		unmount(component);
 		component = null;
-		
+
 		// After unmount, the component should be cleaned up
 		expect(true).toBe(true);
 	});

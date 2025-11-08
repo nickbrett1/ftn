@@ -52,7 +52,11 @@
 	// Derived set of assigned merchant names for reactive filtering
 	// Use merchant_normalized for consistent comparison
 	let assignedMerchantNames = $derived(
-		new Set(merchants.filter((m) => m && (m.merchant_normalized || m.merchant)).map((m) => (m.merchant_normalized || m.merchant).toLowerCase()))
+		new Set(
+			merchants
+				.filter((m) => m && (m.merchant_normalized || m.merchant))
+				.map((m) => (m.merchant_normalized || m.merchant).toLowerCase())
+		)
 	);
 
 	async function addMerchant() {
@@ -65,12 +69,15 @@
 
 		// Check if merchant already exists using normalized names
 		const normalizedSelected = normalizeMerchant(selectedMerchant.trim());
-		const merchantExists = merchants.some(
-			(merchant) => {
-				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
-				return normalizedExisting.merchant_normalized.toLowerCase() === normalizedSelected.merchant_normalized.toLowerCase();
-			}
-		);
+		const merchantExists = merchants.some((merchant) => {
+			const normalizedExisting = normalizeMerchant(
+				merchant.merchant_normalized || merchant.merchant
+			);
+			return (
+				normalizedExisting.merchant_normalized.toLowerCase() ===
+				normalizedSelected.merchant_normalized.toLowerCase()
+			);
+		});
 		if (merchantExists) {
 			addError = 'This merchant is already assigned to this budget';
 			return;
@@ -140,8 +147,13 @@
 			// Remove from reactive collection using normalized names
 			const normalizedToRemove = normalizeMerchant(merchantName);
 			merchants = merchants.filter((merchant) => {
-				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
-				return normalizedExisting.merchant_normalized.toLowerCase() !== normalizedToRemove.merchant_normalized.toLowerCase();
+				const normalizedExisting = normalizeMerchant(
+					merchant.merchant_normalized || merchant.merchant
+				);
+				return (
+					normalizedExisting.merchant_normalized.toLowerCase() !==
+					normalizedToRemove.merchant_normalized.toLowerCase()
+				);
 			});
 
 			// Wait for DOM updates to complete before refreshing picker
@@ -368,14 +380,10 @@
 							<button
 								onclick={() => removeMerchant(merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
-								disabled={isDeleting &&
-									deletingMerchant === merchant.merchant}
+								disabled={isDeleting && deletingMerchant === merchant.merchant}
 								style="cursor: pointer;"
 							>
-								{isDeleting &&
-								deletingMerchant === merchant.merchant
-									? 'Removing...'
-									: 'Remove'}
+								{isDeleting && deletingMerchant === merchant.merchant ? 'Removing...' : 'Remove'}
 							</button>
 						</div>
 					{/each}

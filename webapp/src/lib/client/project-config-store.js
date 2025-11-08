@@ -114,4 +114,3 @@ projectConfigStore.subscribe((store) => {
 if (typeof globalThis !== 'undefined' && globalThis.window) {
 	projectConfigActions.loadFromStorage();
 }
-

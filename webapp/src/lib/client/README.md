@@ -15,6 +15,7 @@ Generates cryptographically secure random percentage values for financial-themed
 **Security Note:** Uses `crypto.getRandomValues()` for cryptographically secure random number generation, following security best practices.
 
 **Parameters:**
+
 - `count` (number): Number of values to generate (default: 50)
 - `positive` (boolean): Whether to generate positive (+) or negative (-) values (default: true)
 
@@ -25,12 +26,14 @@ Generates cryptographically secure random percentage values for financial-themed
 Creates a financial-themed particle configuration with dynamic percentage text particles.
 
 **Features:**
+
 - Green particles for positive percentages
 - Red particles for negative percentages
 - Upward movement direction
 - Random link colors
 
 **Parameters:**
+
 - `overrides` (object): Configuration overrides to merge with base config
 
 **Returns:** Complete tsParticles configuration object
@@ -40,12 +43,14 @@ Creates a financial-themed particle configuration with dynamic percentage text p
 Creates an error page particle configuration with "404" and "ERROR" text particles.
 
 **Features:**
+
 - Green "404" text particles
 - Red "ERROR" text particles
 - No movement direction (stationary drift)
 - Fewer particles for less distraction
 
 **Parameters:**
+
 - `overrides` (object): Configuration overrides to merge with base config
 
 **Returns:** Complete tsParticles configuration object
@@ -91,6 +96,7 @@ Get the appropriate redirect URI based on environment.
 Initiate Google OAuth flow using the Google Identity Services library.
 
 **Parameters:**
+
 - `redirectPath` (string): Optional path to redirect to after successful auth (defaults to '/projects/ccbilling')
 
 **Returns:** Promise that resolves when auth flow is initiated
@@ -122,6 +128,7 @@ Service for parsing credit card statements using PDF.js on the client-side.
 Parse a PDF file and extract statement information.
 
 **Parameters:**
+
 - `pdfFile` (File): PDF file from input
 
 **Returns:** Promise<Object> - Parsed statement data
@@ -153,6 +160,7 @@ Configure PDF.js worker for browser environment.
 Extract text content from all pages of a PDF document.
 
 **Parameters:**
+
 - `pdfDocument` (object): PDF.js document object
 - `options` (object): Extraction options
   - `sortByPosition` (boolean): Whether to sort text by position (default: true)
@@ -165,6 +173,7 @@ Extract text content from all pages of a PDF document.
 Parse a PDF file and extract text content.
 
 **Parameters:**
+
 - `pdfFile` (File|Buffer): PDF file or buffer
 - `options` (object): Parsing options
 
@@ -175,6 +184,7 @@ Parse a PDF file and extract text content.
 Parse a credit card statement PDF using the appropriate parser.
 
 **Parameters:**
+
 - `pdfFile` (File): PDF file to parse
 - `parserFactory` (function): Factory function to create parser instances
 - `options` (object): Parsing options
@@ -207,6 +217,7 @@ These utilities require the following browser APIs:
 ## Testing
 
 Unit tests are available for all utilities:
+
 - `particleConfig.test.js`
 - `google-auth.test.js`
 - `pdf-utils.test.js`

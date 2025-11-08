@@ -108,12 +108,12 @@ describe('CircleCI Auth API', () => {
 	});
 
 	describe('POST', () => {
-	const createRequest = (payload) =>
-		new Request('https://example.com/projects/genproj/api/auth/circleci', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
-		});
+		const createRequest = (payload) =>
+			new Request('https://example.com/projects/genproj/api/auth/circleci', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
 
 		it('returns 400 when token is missing', async () => {
 			const response = await POST({ request: createRequest({}), platform: defaultPlatform });

@@ -135,7 +135,7 @@ describe('GitHub Auth API - Callback', () => {
 
 		// Mock initialize to resolve successfully
 		initializeMock.mockResolvedValue(true);
-		
+
 		global.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123', scope: 'repo,user:email' })
 		});
@@ -143,11 +143,15 @@ describe('GitHub Auth API - Callback', () => {
 		const platform = createPlatform();
 		const request = createRequest('?code=abc123&state=my-state');
 
-		await expect(
-			GET({ request, platform })
-		).rejects.toMatchObject({ status: 302, location: 'https://example.com/projects/genproj?auth=github_success' });
+		await expect(GET({ request, platform })).rejects.toMatchObject({
+			status: 302,
+			location: 'https://example.com/projects/genproj?auth=github_success'
+		});
 
-		expect(global.fetch).toHaveBeenCalledWith('https://github.com/login/oauth/access_token', expect.any(Object));
+		expect(global.fetch).toHaveBeenCalledWith(
+			'https://github.com/login/oauth/access_token',
+			expect.any(Object)
+		);
 		const [, fetchOptions] = global.fetch.mock.calls[0];
 		const body = fetchOptions.body;
 		expect(body.get('code')).toBe('abc123');
@@ -158,7 +162,10 @@ describe('GitHub Auth API - Callback', () => {
 		expect(platform.env.KV.delete).toHaveBeenCalledWith('github_oauth_state_my-state');
 		expect(validateGitHubToken).toHaveBeenCalledWith('token-123');
 		expect(getCurrentUser).toHaveBeenCalled();
-		expect(initializeMock).toHaveBeenCalledWith({ id: 'user-1', email: 'user@example.com' }, platform);
+		expect(initializeMock).toHaveBeenCalledWith(
+			{ id: 'user-1', email: 'user@example.com' },
+			platform
+		);
 		expect(updateGitHubAuth).toHaveBeenCalledWith({
 			username: 'octocat',
 			token: 'github-app-token',

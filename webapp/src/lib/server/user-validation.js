@@ -13,7 +13,9 @@ export async function isUserAllowed(email, kv) {
 	const isAllowed = kvEntry !== null;
 
 	// Enhanced logging with development guidance
-	if (!isAllowed) {
+	if (isAllowed) {
+		console.log(`[AUTH_HANDLER] User ${email} allowed status from KV: ${isAllowed}`);
+	} else {
 		console.log(`[AUTH_HANDLER] User ${email} allowed status from KV: ${isAllowed}`);
 		console.log(`[AUTH_HANDLER] To add this user for development, run:`);
 		console.log(
@@ -22,8 +24,6 @@ export async function isUserAllowed(email, kv) {
 		console.log(
 			`[AUTH_HANDLER] Or for production: npx wrangler kv key put "${email}" "dev-user" --binding=KV`
 		);
-	} else {
-		console.log(`[AUTH_HANDLER] User ${email} allowed status from KV: ${isAllowed}`);
 	}
 
 	return isAllowed;

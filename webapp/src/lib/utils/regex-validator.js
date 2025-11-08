@@ -16,12 +16,12 @@ export async function isRegexSafe(pattern, testString, timeout = 1000) {
 		if (hasDangerousStructure(pattern)) {
 			return false;
 		}
-		
+
 		// Use Web Workers for true timeout capability (if available)
 		if (typeof Worker !== 'undefined') {
 			return await testRegexWithWorker(pattern, testString, timeout);
 		}
-		
+
 		// Fallback: Use setTimeout with Promise (less reliable but better than nothing)
 		return testRegexWithTimeout(pattern, testString, timeout);
 	} catch (error) {
@@ -43,46 +43,46 @@ function hasDangerousStructure(pattern) {
 	// (\/[gimsuy]*)$  - Group 3: matches the closing slash and optional flags
 	// Result: extracts just the pattern content without slashes or flags
 	const cleanPattern = pattern.replace(/^(\/)(.*?)(\/[gimsuy]*)$/, '$2');
-	
+
 	// Check for specific dangerous patterns that cause ReDoS
 	const dangerousPatterns = [
 		// Classic ReDoS patterns
-		/\(a\+\)\+/,         // (a+)+
-		/\(a\|aa\)\*/,       // (a|aa)*
-		/\(a\|a\+\)\*/,      // (a|a+)*
-		
+		/\(a\+\)\+/, // (a+)+
+		/\(a\|aa\)\*/, // (a|aa)*
+		/\(a\|a\+\)\*/, // (a|a+)*
+
 		// Nested quantifiers on word characters
-		/\(\\w\+\)\*/,       // (\w+)*
-		/\(\\w\+\)\+/,       // (\w+)+
-		/\(\\w\+\)\{1,\}/,   // (\w+){1,}
-		
+		/\(\\w\+\)\*/, // (\w+)*
+		/\(\\w\+\)\+/, // (\w+)+
+		/\(\\w\+\)\{1,\}/, // (\w+){1,}
+
 		// Backreferences with quantifiers
-		/\\\d+\*/,           // \1*, \2*, etc.
-		/\\\d+\+/,           // \1+, \2+, etc.
-		/\\\d+\{1,\}/,       // \1{1,}, \2{1,}, etc.
-		
+		/\\\d+\*/, // \1*, \2*, etc.
+		/\\\d+\+/, // \1+, \2+, etc.
+		/\\\d+\{1,\}/, // \1{1,}, \2{1,}, etc.
+
 		// Multiple nested quantifiers
-		/\(\\w\+\)\+\(\\w\+\)\*/,    // (\w+)+(\w+)*
-		/\(\\w\+\)\*\(\\w\+\)\+/,    // (\w+)*(\w+)+
-		
+		/\(\\w\+\)\+\(\\w\+\)\*/, // (\w+)+(\w+)*
+		/\(\\w\+\)\*\(\\w\+\)\+/, // (\w+)*(\w+)+
+
 		// Unbounded repetitions
-		/\{\d*,\}/,          // {n,} without upper bound
-		/\*\+/,              // *+ (possessive quantifier)
-		/\+\+/,              // ++ (possessive quantifier)
+		/\{\d*,\}/, // {n,} without upper bound
+		/\*\+/, // *+ (possessive quantifier)
+		/\+\+/ // ++ (possessive quantifier)
 	];
-	
+
 	for (const dangerousPattern of dangerousPatterns) {
 		if (dangerousPattern.test(cleanPattern)) {
 			return true;
 		}
 	}
-	
+
 	// Check for deeply nested groups (more than 3 levels)
 	const groupDepth = countNestedGroups(cleanPattern);
 	if (groupDepth > 3) {
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -94,10 +94,10 @@ function hasDangerousStructure(pattern) {
 function countNestedGroups(pattern) {
 	let maxDepth = 0;
 	let currentDepth = 0;
-	
+
 	for (let i = 0; i < pattern.length; i++) {
 		const char = pattern[i];
-		
+
 		if (char === '(' && pattern[i - 1] !== '\\') {
 			currentDepth++;
 			maxDepth = Math.max(maxDepth, currentDepth);
@@ -105,7 +105,7 @@ function countNestedGroups(pattern) {
 			currentDepth = Math.max(0, currentDepth - 1);
 		}
 	}
-	
+
 	return maxDepth;
 }
 
@@ -130,21 +130,21 @@ function testRegexWithWorker(pattern, testString, timeout) {
 				}
 			};
 		`;
-		
+
 		const blob = new Blob([workerCode], { type: 'application/javascript' });
 		const worker = new Worker(URL.createObjectURL(blob));
-		
+
 		const timeoutId = setTimeout(() => {
 			worker.terminate();
 			resolve(false);
 		}, timeout);
-		
-		worker.onmessage = function(e) {
+
+		worker.onmessage = function (e) {
 			clearTimeout(timeoutId);
 			worker.terminate();
 			resolve(e.data.safe);
 		};
-		
+
 		worker.postMessage({ pattern, testString });
 	});
 }
@@ -160,16 +160,16 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 	try {
 		const regex = new RegExp(pattern);
 		const startTime = Date.now();
-		
+
 		// Test the pattern
 		const result = regex.test(testString);
 		const endTime = Date.now();
-		
+
 		// If it takes too long, consider it unsafe
 		if (endTime - startTime > timeout) {
 			return false;
 		}
-		
+
 		return true;
 	} catch (error) {
 		return false;
@@ -253,7 +253,7 @@ export function createSafeRegex(pattern) {
 			console.warn(`Potentially dangerous regex pattern detected: ${pattern}`);
 			return null;
 		}
-		
+
 		return new RegExp(pattern);
 	} catch (error) {
 		console.error(`Invalid regex pattern: ${pattern}`, error);

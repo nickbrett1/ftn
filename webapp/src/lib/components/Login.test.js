@@ -43,7 +43,7 @@ describe('Login correctly', () => {
 		flushSync();
 
 		// Should initiate Google auth
-		expect(GoogleAuth.initiateGoogleAuth).toHaveBeenCalledWith(window.location.pathname, goto);
+		expect(GoogleAuth.initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
 
 		unmount(component);
 	});

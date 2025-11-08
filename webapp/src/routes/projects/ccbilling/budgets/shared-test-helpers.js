@@ -59,11 +59,10 @@ export const expectApiCall = (fetchMock, url, method, body) => {
 };
 
 // ========== UI INTERACTION HELPERS ==========
-export const findButtonByText = (container, text) => 
-	Array.from(container.querySelectorAll('button')).find(btn => 
-		btn.textContent?.includes(text));
+export const findButtonByText = (container, text) =>
+	Array.from(container.querySelectorAll('button')).find((btn) => btn.textContent?.includes(text));
 
-export const findFormInput = (container, type = 'text') => 
+export const findFormInput = (container, type = 'text') =>
 	container.querySelector(`input[type="${type}"]`);
 
 export const fillInput = async (input, value) => {
@@ -91,7 +90,7 @@ export const clickButton = async (button) => {
 // ========== COMMON TEST SCENARIOS ==========
 export const testBasicRendering = (Component, props, expectedContent) => {
 	const { container } = render(Component, { props });
-	expectedContent.forEach(content => {
+	expectedContent.forEach((content) => {
 		expect(container.innerHTML).toContain(content);
 	});
 	return container;
@@ -99,7 +98,7 @@ export const testBasicRendering = (Component, props, expectedContent) => {
 
 export const testEmptyState = (Component, props, expectedEmptyContent) => {
 	const { container } = render(Component, { props });
-	expectedEmptyContent.forEach(content => {
+	expectedEmptyContent.forEach((content) => {
 		expect(container.innerHTML).toContain(content);
 	});
 	return container;
@@ -107,7 +106,7 @@ export const testEmptyState = (Component, props, expectedEmptyContent) => {
 
 export const testFormValidation = async (Component, props, buttonText, errorMessage) => {
 	const { container } = render(Component, { props });
-	
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
@@ -116,96 +115,93 @@ export const testFormValidation = async (Component, props, buttonText, errorMess
 			expect(container.innerHTML).toContain(errorMessage);
 		});
 	}
-	
+
 	return container;
 };
 
-export const testSuccessfulSubmission = async (Component, props, {
-	buttonText,
-	inputValue,
-	expectedUrl,
-	expectedMethod,
-	expectedBody
-}) => {
+export const testSuccessfulSubmission = async (
+	Component,
+	props,
+	{ buttonText, inputValue, expectedUrl, expectedMethod, expectedBody }
+) => {
 	const fetchMock = setupTest();
 	const { container } = render(Component, { props });
-	
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			await submitForm(container);
-			
+
 			expectApiCall(fetchMock, expectedUrl, expectedMethod, expectedBody);
 		}
 	}
-	
+
 	return { container, fetchMock };
 };
 
-export const testErrorHandling = async (Component, props, {
-	buttonText,
-	inputValue,
-	errorResponse,
-	expectedError
-}) => {
+export const testErrorHandling = async (
+	Component,
+	props,
+	{ buttonText, inputValue, errorResponse, expectedError }
+) => {
 	const fetchMock = setupTest();
 	fetchMock.mockResolvedValueOnce(errorResponse);
-	
+
 	const { container } = render(Component, { props });
-	
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			await submitForm(container);
-			
+
 			await waitFor(() => {
 				expect(container.innerHTML).toContain(expectedError);
 			});
 		}
 	}
-	
+
 	return { container, fetchMock };
 };
 
-export const testLoadingState = async (Component, props, {
-	buttonText,
-	inputValue,
-	loadingText
-}) => {
+export const testLoadingState = async (
+	Component,
+	props,
+	{ buttonText, inputValue, loadingText }
+) => {
 	let resolvePromise;
-	const delayedPromise = new Promise(resolve => {
+	const delayedPromise = new Promise((resolve) => {
 		resolvePromise = resolve;
 	});
-	
+
 	const fetchMock = setupTest();
 	fetchMock.mockReturnValueOnce(delayedPromise);
-	
+
 	const { container } = render(Component, { props });
-	
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			fireEvent.submit(container.querySelector('form')); // Don't await
 			await tick();
-			
+
 			expect(container.innerHTML).toContain(loadingText);
-			
+
 			resolvePromise(mockApiSuccess());
 		}
 	}
-	
+
 	return { container, fetchMock, resolvePromise };
 };
 
@@ -220,45 +216,54 @@ export const testBudgetCRUD = {
 			expectedBody: { name: budgetName }
 		});
 	},
-	
+
 	async update(Component, props, budgetName = 'Updated Name') {
 		const { container } = render(Component, { props });
-		
+
 		const editButton = findButtonByText(container, 'Edit');
 		if (editButton) {
 			await clickButton(editButton);
-			
+
 			const input = findFormInput(container);
 			if (input) {
 				await fillInput(input, budgetName);
-				
+
 				const saveButton = findButtonByText(container, 'Save');
 				if (saveButton) {
 					await clickButton(saveButton);
-					
-					expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'PUT', { name: budgetName });
+
+					expectApiCall(
+						global.fetch,
+						`/projects/ccbilling/budgets/${props.data.budgets[0].id}`,
+						'PUT',
+						{ name: budgetName }
+					);
 				}
 			}
 		}
-		
+
 		return container;
 	},
-	
+
 	async delete(Component, props) {
 		const { container } = render(Component, { props });
-		
+
 		const deleteButton = findButtonByText(container, 'Delete');
 		if (deleteButton) {
 			await clickButton(deleteButton);
-			
+
 			const confirmButton = findButtonByText(container, 'Confirm');
 			if (confirmButton) {
 				await clickButton(confirmButton);
-				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'DELETE');
+
+				expectApiCall(
+					global.fetch,
+					`/projects/ccbilling/budgets/${props.data.budgets[0].id}`,
+					'DELETE'
+				);
 			}
 		}
-		
+
 		return container;
 	}
 };
@@ -273,23 +278,27 @@ export const testMerchantCRUD = {
 			expectedBody: { merchant: merchantName }
 		});
 	},
-	
+
 	async delete(Component, props) {
 		const { container } = render(Component, { props });
-		
+
 		const removeButton = findButtonByText(container, 'Remove');
 		if (removeButton) {
 			await clickButton(removeButton);
-			
+
 			const confirmButton = findButtonByText(container, 'Confirm');
 			if (confirmButton) {
 				await clickButton(confirmButton);
-				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budget.id}/merchants`, 'DELETE', 
-					{ merchant: props.data.merchants[0].merchant });
+
+				expectApiCall(
+					global.fetch,
+					`/projects/ccbilling/budgets/${props.data.budget.id}/merchants`,
+					'DELETE',
+					{ merchant: props.data.merchants[0].merchant }
+				);
 			}
 		}
-		
+
 		return container;
 	}
 };
@@ -301,7 +310,7 @@ export const runValidationTests = (testFn) => {
 		{ input: '   ', expected: false, name: 'whitespace' },
 		{ input: 'Valid', expected: true, name: 'valid' }
 	];
-	
+
 	cases.forEach(({ input, expected, name }) => {
 		testFn(input, expected, name);
 	});
@@ -309,13 +318,13 @@ export const runValidationTests = (testFn) => {
 
 // ========== COMMON ASSERTIONS ==========
 export const expectElementsPresent = (container, elements) => {
-	elements.forEach(element => {
+	elements.forEach((element) => {
 		expect(container.innerHTML).toContain(element);
 	});
 };
 
 export const expectElementsAbsent = (container, elements) => {
-	elements.forEach(element => {
+	elements.forEach((element) => {
 		expect(container.innerHTML).not.toContain(element);
 	});
 };

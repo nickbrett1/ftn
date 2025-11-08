@@ -47,7 +47,10 @@ describe('project-config-store', () => {
 
 	it('updates configuration using updater function', () => {
 		projectConfigActions.setConfiguration({ count: 1 });
-		projectConfigActions.updateConfiguration((current) => ({ ...current, count: (current.count || 0) + 1 }));
+		projectConfigActions.updateConfiguration((current) => ({
+			...current,
+			count: (current.count || 0) + 1
+		}));
 		const config = get(projectConfiguration);
 		expect(config).toEqual({ count: 2 });
 	});

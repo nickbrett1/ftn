@@ -22,7 +22,8 @@ describe('/projects/ccbilling/budgets/recent-merchants', () => {
 		vi.clearAllMocks();
 		mockGetRecentUnassignedMerchants = getRecentUnassignedMerchants;
 		mockRequireUser = requireUser;
-	});it('should return recent merchants when user is authenticated', async () => {
+	});
+	it('should return recent merchants when user is authenticated', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
 		const mockEvent = { platform: { env: { CCBILLING_DB: {} } } };
 

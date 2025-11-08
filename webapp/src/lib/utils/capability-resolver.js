@@ -33,12 +33,12 @@ export function resolveDependencies(selectedCapabilities) {
 	const resolvedCapabilities = new Set(selectedCapabilities);
 	const addedDependencies = [];
 	const conflicts = [];
-	
+
 	// Process each selected capability to resolve dependencies
 	for (const capabilityId of selectedCapabilities) {
 		const capability = capabilities[capabilityId];
 		if (!capability) continue;
-		
+
 		// Add dependencies
 		for (const depId of capability.dependencies) {
 			if (!resolvedCapabilities.has(depId)) {
@@ -46,7 +46,7 @@ export function resolveDependencies(selectedCapabilities) {
 				addedDependencies.push(depId);
 			}
 		}
-		
+
 		// Check for conflicts
 		for (const conflictId of capability.conflicts) {
 			if (resolvedCapabilities.has(conflictId)) {
@@ -54,7 +54,7 @@ export function resolveDependencies(selectedCapabilities) {
 			}
 		}
 	}
-	
+
 	return {
 		resolvedCapabilities: Array.from(resolvedCapabilities),
 		addedDependencies,
@@ -71,20 +71,20 @@ export function resolveDependencies(selectedCapabilities) {
 export function validateCapabilitySelection(selectedCapabilities) {
 	const errors = [];
 	const warnings = [];
-	
+
 	// Check if all capabilities exist
 	validateCapabilityExistence(selectedCapabilities, errors);
-	
+
 	// Resolve dependencies and check for conflicts
 	const resolution = resolveDependencies(selectedCapabilities);
 	validateConflicts(resolution, errors);
-	
+
 	// Check for missing dependencies
 	validateDependencies(selectedCapabilities, resolution, warnings);
-	
+
 	// Check for authentication requirements
 	validateAuthRequirements(selectedCapabilities, warnings);
-	
+
 	return {
 		isValid: errors.length === 0,
 		errors,
@@ -129,11 +129,13 @@ function validateDependencies(selectedCapabilities, resolution, warnings) {
 	for (const capabilityId of selectedCapabilities) {
 		const capability = capabilities[capabilityId];
 		if (!capability) continue;
-		
+
 		for (const depId of capability.dependencies) {
 			if (!selectedCapabilities.includes(depId) && !resolution.addedDependencies.includes(depId)) {
 				const depCapability = capabilities[depId];
-				warnings.push(`Missing dependency: ${capability.name} requires ${depCapability?.name || depId}`);
+				warnings.push(
+					`Missing dependency: ${capability.name} requires ${depCapability?.name || depId}`
+				);
 			}
 		}
 	}
@@ -157,7 +159,7 @@ function validateAuthRequirements(selectedCapabilities, warnings) {
  * @returns {string[]} Array of capability IDs that require authentication
  */
 export function getCapabilitiesRequiringAuth(selectedCapabilities) {
-	return selectedCapabilities.filter(capabilityId => {
+	return selectedCapabilities.filter((capabilityId) => {
 		const capability = capabilities[capabilityId];
 		return capability?.requiresAuth === true;
 	});
@@ -170,14 +172,14 @@ export function getCapabilitiesRequiringAuth(selectedCapabilities) {
  */
 export function getRequiredAuthServices(selectedCapabilities) {
 	const services = new Set();
-	
+
 	for (const capabilityId of selectedCapabilities) {
 		const capability = capabilities[capabilityId];
 		if (capability?.authService) {
 			services.add(capability.authService);
 		}
 	}
-	
+
 	return Array.from(services);
 }
 
@@ -190,7 +192,7 @@ export function sortCapabilitiesByDependency(capabilityIds) {
 	const sorted = [];
 	const visited = new Set();
 	const visiting = new Set();
-	
+
 	/**
 	 * Recursive function to visit capabilities and their dependencies
 	 * @param {string} capabilityId - Capability ID to visit
@@ -200,13 +202,13 @@ export function sortCapabilitiesByDependency(capabilityIds) {
 			// Circular dependency detected
 			return;
 		}
-		
+
 		if (visited.has(capabilityId)) {
 			return;
 		}
-		
+
 		visiting.add(capabilityId);
-		
+
 		const capability = capabilities[capabilityId];
 		if (capability) {
 			// Visit dependencies first
@@ -214,17 +216,17 @@ export function sortCapabilitiesByDependency(capabilityIds) {
 				visit(depId);
 			}
 		}
-		
+
 		visiting.delete(capabilityId);
 		visited.add(capabilityId);
 		sorted.push(capabilityId);
 	}
-	
+
 	// Visit all capabilities
 	for (const capabilityId of capabilityIds) {
 		visit(capabilityId);
 	}
-	
+
 	return sorted;
 }
 
@@ -252,7 +254,7 @@ export function canAddCapability(capabilityId, currentSelection) {
 			reason: 'Unknown capability'
 		};
 	}
-	
+
 	// Check if already selected
 	if (currentSelection.includes(capabilityId)) {
 		return {
@@ -260,7 +262,7 @@ export function canAddCapability(capabilityId, currentSelection) {
 			reason: 'Already selected'
 		};
 	}
-	
+
 	// Check for conflicts
 	for (const conflictId of capability.conflicts) {
 		if (currentSelection.includes(conflictId)) {
@@ -271,7 +273,7 @@ export function canAddCapability(capabilityId, currentSelection) {
 			};
 		}
 	}
-	
+
 	return {
 		canAdd: true,
 		reason: null
@@ -287,7 +289,7 @@ export function getCapabilitySelectionSummary(selectedCapabilities) {
 	const resolution = resolveDependencies(selectedCapabilities);
 	const authServices = getRequiredAuthServices(selectedCapabilities);
 	const validation = validateCapabilitySelection(selectedCapabilities);
-	
+
 	return {
 		totalSelected: selectedCapabilities.length,
 		totalResolved: resolution.resolvedCapabilities.length,

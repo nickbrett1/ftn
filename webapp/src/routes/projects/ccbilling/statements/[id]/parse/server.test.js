@@ -24,47 +24,47 @@ vi.mock('$lib/server/route-utils.js', () => ({
 				const { requireUser } = await import('$lib/server/require-user.js');
 				const authResult = await requireUser(event);
 				if (authResult instanceof Response) return authResult;
-					
-					// Mock parameter validation
-					if (options?.requiredParams && options.requiredParams.length > 0) {
-						const { id } = event.params;
-						if (options.validators && options.validators.id) {
-							const validation = options.validators.id(id);
-							if (validation !== true) {
-								return new Response(JSON.stringify({ success: false, error: validation }), {
-									status: 400,
-									headers: { 'Content-Type': 'application/json' }
-								});
-							}
-						}
-					}
 
-					// Mock body parsing for POST requests
-					let parsedBody = null;
-					if (
-						options?.requiredBody &&
-						options.requiredBody.length > 0 &&
-						event.request?.method === 'POST'
-					) {
-						try {
-							parsedBody = await event.request.json();
-						} catch (error) {
-							console.error('Error parsing request body:', error);
-							return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+				// Mock parameter validation
+				if (options?.requiredParams && options.requiredParams.length > 0) {
+					const { id } = event.params;
+					if (options.validators && options.validators.id) {
+						const validation = options.validators.id(id);
+						if (validation !== true) {
+							return new Response(JSON.stringify({ success: false, error: validation }), {
 								status: 400,
 								headers: { 'Content-Type': 'application/json' }
 							});
 						}
 					}
+				}
 
-					// Call the handler with the appropriate parameters
-					if (options?.requiredBody && options.requiredBody.length > 0) {
-						return await handler(event, parsedBody);
-					} else {
-						return await handler(event);
+				// Mock body parsing for POST requests
+				let parsedBody = null;
+				if (
+					options?.requiredBody &&
+					options.requiredBody.length > 0 &&
+					event.request?.method === 'POST'
+				) {
+					try {
+						parsedBody = await event.request.json();
+					} catch (error) {
+						console.error('Error parsing request body:', error);
+						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+							status: 400,
+							headers: { 'Content-Type': 'application/json' }
+						});
 					}
-				};
-			}),
+				}
+
+				// Call the handler with the appropriate parameters
+				if (options?.requiredBody && options.requiredBody.length > 0) {
+					return await handler(event, parsedBody);
+				} else {
+					return await handler(event);
+				}
+			};
+		}),
 		createErrorResponse: vi.fn((message, options = {}) => {
 			return new Response(JSON.stringify({ success: false, error: message }), {
 				status: options.status || 400,
@@ -138,7 +138,8 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return statement details', async () => {
 			const mockStatement = {
 				id: 1,

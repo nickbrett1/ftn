@@ -124,7 +124,9 @@ export class GenprojAuthManager {
 		}
 
 		if (!this.kv) {
-			console.error('❌ KV not initialized. Call initializePlatform() or pass platform to initialize()');
+			console.error(
+				'❌ KV not initialized. Call initializePlatform() or pass platform to initialize()'
+			);
 			return false;
 		}
 
@@ -268,7 +270,11 @@ export class GenprojAuthManager {
 			const expirationTtl = githubAuth.expiresAt
 				? Math.floor((new Date(githubAuth.expiresAt).getTime() - Date.now()) / 1000)
 				: 3600;
-			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+			const saved = await this.saveAuthenticationState(
+				this.currentUser.id,
+				this.authState,
+				expirationTtl
+			);
 
 			if (saved) {
 				console.log('✅ GitHub authentication updated for user:', this.currentUser.email);
@@ -318,7 +324,11 @@ export class GenprojAuthManager {
 			const expirationTtl = circleciAuth.expiresAt
 				? Math.floor((new Date(circleciAuth.expiresAt).getTime() - Date.now()) / 1000)
 				: 3600;
-			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+			const saved = await this.saveAuthenticationState(
+				this.currentUser.id,
+				this.authState,
+				expirationTtl
+			);
 
 			if (saved) {
 				console.log('✅ CircleCI authentication updated for user:', this.currentUser.email);
@@ -368,7 +378,11 @@ export class GenprojAuthManager {
 			const expirationTtl = dopplerAuth.expiresAt
 				? Math.floor((new Date(dopplerAuth.expiresAt).getTime() - Date.now()) / 1000)
 				: 3600;
-			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+			const saved = await this.saveAuthenticationState(
+				this.currentUser.id,
+				this.authState,
+				expirationTtl
+			);
 
 			if (saved) {
 				console.log('✅ Doppler authentication updated for user:', this.currentUser.email);
@@ -418,7 +432,11 @@ export class GenprojAuthManager {
 			const expirationTtl = sonarcloudAuth.expiresAt
 				? Math.floor((new Date(sonarcloudAuth.expiresAt).getTime() - Date.now()) / 1000)
 				: 3600;
-			const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState, expirationTtl);
+			const saved = await this.saveAuthenticationState(
+				this.currentUser.id,
+				this.authState,
+				expirationTtl
+			);
 
 			if (saved) {
 				console.log('✅ SonarCloud authentication updated for user:', this.currentUser.email);
@@ -510,6 +528,44 @@ export class GenprojAuthManager {
 			return true;
 		} catch (error) {
 			console.error('❌ Failed to clear authentication state:', error);
+			return false;
+		}
+	}
+
+	/**
+	 * Clear GitHub authentication state
+	 * @returns {Promise<boolean>} True if cleared successfully
+	 */
+	async clearGitHubAuth() {
+		try {
+			if (!this.currentUser?.id) {
+				console.error('❌ No authenticated user to clear GitHub auth for');
+				return false;
+			}
+
+			if (!this.kv) {
+				console.error('❌ KV not initialized');
+				return false;
+			}
+
+			// Load current auth state if not already loaded
+			if (!this.authState) {
+				this.authState = await this.getAuthenticationState(this.currentUser.id);
+			}
+
+			if (this.authState && this.authState.github) {
+				this.authState.github = null;
+				const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState);
+				if (saved) {
+					console.log('✅ GitHub authentication state cleared for user:', this.currentUser.email);
+				}
+				return saved;
+			} else {
+				console.log('⚠️ GitHub authentication not found for user:', this.currentUser.email);
+				return true; // Already cleared or never existed
+			}
+		} catch (error) {
+			console.error('❌ Failed to clear GitHub authentication state:', error);
 			return false;
 		}
 	}

@@ -57,11 +57,14 @@ export async function GET({ request, platform }) {
 <head>
 	<title>GitHub OAuth Not Configured</title>
 	<style>
-		body { font-family: system-ui, sans-serif; padding: 2rem; background: #1a1a1a; color: #e0e0e0; }
-		.container { max-width: 600px; margin: 0 auto; }
-		.error { background: #7c2d12; border: 1px solid #ea580c; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; }
-		.code { background: #27272a; padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.9em; margin: 0.5rem 0; }
-		a { color: #3b82f6; }
+		body { font-family: system-ui, sans-serif; padding: 2rem; background: #2d3748; color: #e2e8f0; }
+		.container { max-width: 600px; margin: 0 auto; background: #1a202c; padding: 2rem; border-radius: 0.5rem; border: 1px solid #4a5568; }
+		h1 { color: #f6e05e; margin-bottom: 1rem; }
+		.error { background: #c53030; border: 1px solid #e53e3e; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; color: #fff; }
+		.code { background: #2d3748; padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.9em; margin: 0.5rem 0; color: #a0aec0; }
+		a { color: #63b3ed; text-decoration: underline; }
+		ul { list-style-type: disc; margin-left: 1.5rem; }
+		li { margin-bottom: 0.5rem; }
 	</style>
 </head>
 <body>
@@ -69,6 +72,7 @@ export async function GET({ request, platform }) {
 		<h1>GitHub OAuth Configuration Required</h1>
 		<div class="error">
 			<p><strong>Error:</strong> ${errorMessage}</p>
+			<p>This usually means the <code>GITHUB_CLIENT_ID</code> or <code>GITHUB_CLIENT_SECRET</code> environment variables are not set correctly.</p>
 		</div>
 		<p>To configure GitHub OAuth:</p>
 		<ol>

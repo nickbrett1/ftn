@@ -27,7 +27,9 @@ describe('CircleCIAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 401, statusText: 'Unauthorized' });
-		await expect(service.makeRequest('/me')).rejects.toThrow('CircleCI API error: 401 Unauthorized');
+		await expect(service.makeRequest('/me')).rejects.toThrow(
+			'CircleCI API error: 401 Unauthorized'
+		);
 	});
 
 	it('retrieves user info and organizations', async () => {
@@ -99,12 +101,15 @@ describe('CircleCIAPIService', () => {
 			.mockResolvedValueOnce({ json: createJson })
 			.mockResolvedValueOnce({});
 
-		expect(await service.listEnvironmentVariables('github', 'org', 'repo')).toEqual([{
-			name: 'VAR'
-		}]);
-		expect(
-			await service.createEnvironmentVariable('github', 'org', 'repo', 'VAR', '123')
-		).toEqual({ name: 'VAR', value: '123' });
+		expect(await service.listEnvironmentVariables('github', 'org', 'repo')).toEqual([
+			{
+				name: 'VAR'
+			}
+		]);
+		expect(await service.createEnvironmentVariable('github', 'org', 'repo', 'VAR', '123')).toEqual({
+			name: 'VAR',
+			value: '123'
+		});
 
 		await service.deleteEnvironmentVariable('github', 'org', 'repo', 'VAR');
 	});

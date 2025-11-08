@@ -25,11 +25,10 @@ vi.mock('../../src/lib/components/Login.svelte', () => ({
 		// Mock Svelte component interface
 		$set: vi.fn(),
 		$on: vi.fn(),
-		$destroy: vi.fn(),
+		$destroy: vi.fn()
 		// Add any other properties or methods your component uses
-	  }))
+	}))
 }));
-
 
 describe('Genproj Page Component', () => {
 	let component;

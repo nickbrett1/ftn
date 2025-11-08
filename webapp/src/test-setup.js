@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { writable } from 'svelte/store';
 
 // Set NODE_ENV to test for proper rune handling
 if (typeof process !== 'undefined') {
@@ -19,14 +20,15 @@ vi.mock('@zerodevx/svelte-img', () => ({
 
 // Mock svelte-awesome-icons to avoid .svelte file extension errors
 vi.mock('svelte-awesome-icons', () => {
-	const createMockIcon = () => function MockIcon() {
-		return {
-			$$: {},
-			$set: vi.fn(),
-			$on: vi.fn(),
-			$destroy: vi.fn()
+	const createMockIcon = () =>
+		function MockIcon() {
+			return {
+				$$: {},
+				$set: vi.fn(),
+				$on: vi.fn(),
+				$destroy: vi.fn()
+			};
 		};
-	};
 
 	return {
 		LinkedinInBrands: createMockIcon(),
@@ -64,23 +66,48 @@ vi.mock('$app/navigation', () => ({
 }));
 
 vi.mock('$app/environment', () => ({
-	browser: false,  // Revert to false to avoid breaking other tests
+	browser: false, // Revert to false to avoid breaking other tests
 	dev: false,
 	prerendering: false,
 	version: 'test'
 }));
 
-vi.mock('$app/stores', () => ({
-	page: {
-		subscribe: vi.fn(() => ({ unsubscribe: vi.fn() }))
+// Create a writable store for the page data, so tests can update it
+const mockPageData = writable({
+	url: new URL('http://localhost'),
+	params: {},
+	route: {
+		id: null
 	},
-	navigating: {
-		subscribe: vi.fn(() => ({ unsubscribe: vi.fn() }))
+	status: 200,
+	error: null,
+	data: {
+		user: {
+			email: 'test@example.com',
+			name: 'Test User'
+		}
 	},
-	updated: {
-		subscribe: vi.fn(() => ({ unsubscribe: vi.fn() }))
-	}
-}));
+	form: undefined
+});
+
+vi.mock('$app/stores', async (importOriginal) => {
+	const original = await importOriginal();
+	return {
+		...original,
+		page: mockPageData // Use the writable store
+	};
+});
+
+// Export a function to allow tests to set the user
+export function setMockUser(user) {
+	mockPageData.update((current) => ({
+		...current,
+		data: {
+			...current.data,
+			user
+		}
+	}));
+}
 
 // Mock window.location for tests
 Object.defineProperty(window, 'location', {
@@ -89,7 +116,7 @@ Object.defineProperty(window, 'location', {
 		href: 'http://localhost:3000',
 		pathname: '/',
 		search: '',
-		hostname: 'localhost',  // ✅ Add hostname to fix Footer component
+		hostname: 'localhost', // ✅ Add hostname to fix Footer component
 		host: 'localhost:3000',
 		port: '3000',
 		protocol: 'http:',
@@ -115,7 +142,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
 	writable: true,
-	value: vi.fn().mockImplementation(query => ({
+	value: vi.fn().mockImplementation((query) => ({
 		matches: false,
 		media: query,
 		onchange: null,
@@ -130,7 +157,7 @@ Object.defineProperty(window, 'matchMedia', {
 // Add browser-like behavior for better production simulation
 Object.defineProperty(window, 'requestAnimationFrame', {
 	writable: true,
-	value: vi.fn().mockImplementation(callback => {
+	value: vi.fn().mockImplementation((callback) => {
 		// Simulate browser timing
 		setTimeout(callback, 16); // ~60fps
 		return 1;

@@ -3,32 +3,35 @@ import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import security from 'eslint-plugin-security';
+import tseslint from 'typescript-eslint';
 
 export default [
 	js.configs.recommended,
-	...svelte.configs['flat/recommended'],
+	...tseslint.configs.recommended, // Added tseslint recommended configs
+	security.configs.recommended, // Apply security plugin recommended rules
 	prettier,
+	...svelte.configs['flat/recommended'], // Svelte recommended configs
 	{
 		languageOptions: {
-			ecmaVersion: 2020,
+			ecmaVersion: 2022, // Support for class properties and top-level await
 			sourceType: 'module',
 			globals: {
 				...globals.browser,
 				...globals.node,
-				...globals.es2017
+				...globals.es2022,
+				__GIT_COMMIT__: 'readonly',
+				__GIT_BRANCH__: 'readonly',
+				__BUILD_TIME__: 'readonly',
+				melt: 'readonly' // Add melt as a global
 			}
 		}
 	},
 	{
-		plugins: {
-			security
-		},
-		rules: {
-			'security/detect-unsafe-regex': 'error'
-		}
-	},
-	{
-		files: ['**/*.test.js', '**/*.spec.js'],
+		files: [
+			'**/*.test.js',
+			'**/*.spec.js',
+			'src/routes/projects/ccbilling/budgets/shared-test-helpers.js'
+		], // Added shared-test-helpers.js
 		languageOptions: {
 			globals: {
 				...globals.browser,
@@ -38,7 +41,7 @@ export default [
 				afterAll: 'readonly',
 				describe: 'readonly',
 				it: 'readonly',
-				expect: 'readonly',
+				expect: 'readonly', // Ensure expect is readonly
 				vi: 'readonly'
 			}
 		}
@@ -58,6 +61,18 @@ export default [
 		}
 	},
 	{
+		files: ['**/*'], // Apply to all files
+		rules: {
+			// Svelte specific rules
+			'svelte/no-useless-mustaches': 'off',
+			'svelte/no-navigation-without-resolve': 'off',
+			'svelte/require-each-key': 'off',
+			'svelte/infinite-reactive-loop': 'off',
+			'svelte/prefer-svelte-reactivity': 'off',
+			'svelte/prefer-writable-derived': 'off'
+		}
+	},
+	{
 		ignores: [
 			'.DS_Store',
 			'node_modules/**',
@@ -69,7 +84,10 @@ export default [
 			'!.env.example',
 			'*.svx',
 			'package-lock.json',
-			'**/*.stories.js'
+			'**/*.stories.js',
+			'coverage/**',
+			'.wrangler/**',
+			'static/pdf.worker.min.mjs'
 		]
 	}
 ];

@@ -1,13 +1,17 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { get, writable } from 'svelte/store';
 
-vi.mock('$lib/client/capability-store.js', () => {
-	const capabilityStore = writable({
-		selectedCapabilities: [],
-		isValid: false
-	});
-	return { capabilityStore };
-}, { virtual: true });
+vi.mock(
+	'$lib/client/capability-store.js',
+	() => {
+		const capabilityStore = writable({
+			selectedCapabilities: [],
+			isValid: false
+		});
+		return { capabilityStore };
+	},
+	{ virtual: true }
+);
 
 async function setup({ savedMode = null } = {}) {
 	vi.resetModules();
@@ -44,13 +48,7 @@ afterEach(() => {
 
 describe('mode-switcher utilities', () => {
 	it('loads saved mode and persists switches', async () => {
-		const {
-			capabilityStore,
-			projectConfigActions,
-			currentMode,
-			modeActions,
-			MODES
-		} = await setup({
+		const { capabilityStore, projectConfigActions, currentMode, modeActions, MODES } = await setup({
 			savedMode: 'preview'
 		});
 
@@ -68,7 +66,8 @@ describe('mode-switcher utilities', () => {
 	});
 
 	it('prevents invalid mode transitions', async () => {
-		const { capabilityStore, projectConfigActions, modeActions, currentMode, MODES } = await setup();
+		const { capabilityStore, projectConfigActions, modeActions, currentMode, MODES } =
+			await setup();
 		capabilityStore.set({ selectedCapabilities: [], isValid: false });
 		projectConfigActions.setValidation({ isValid: false });
 
@@ -80,7 +79,8 @@ describe('mode-switcher utilities', () => {
 	});
 
 	it('navigates sequentially with next and previous mode helpers', async () => {
-		const { capabilityStore, projectConfigActions, modeActions, currentMode, MODES } = await setup();
+		const { capabilityStore, projectConfigActions, modeActions, currentMode, MODES } =
+			await setup();
 		capabilityStore.set({ selectedCapabilities: ['cap'], isValid: true });
 		projectConfigActions.setValidation({ isValid: true });
 
@@ -150,4 +150,3 @@ describe('mode-switcher utilities', () => {
 		expect(globalThis.localStorage.removeItem).toHaveBeenCalledWith('genproj-current-mode');
 	});
 });
-

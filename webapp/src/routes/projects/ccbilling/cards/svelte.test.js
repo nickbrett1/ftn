@@ -86,7 +86,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
+			const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
 				btn.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
@@ -105,7 +105,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form first
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
+			const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
 				btn.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
@@ -113,8 +113,8 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			expect(document.body.innerHTML).toContain('Add New Credit Card');
 
 			// Click cancel
-			const cancelButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent === 'Cancel'
+			const cancelButton = Array.from(document.querySelectorAll('button')).find(
+				(btn) => btn.textContent === 'Cancel'
 			);
 			cancelButton.click();
 			flushSync();
@@ -130,15 +130,15 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
+			const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
 				btn.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
 			flushSync();
 
 			// Try to submit without filling fields
-			const submitButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent === 'Add Card'
+			const submitButton = Array.from(document.querySelectorAll('button')).find(
+				(btn) => btn.textContent === 'Add Card'
 			);
 			submitButton.click();
 			flushSync();
@@ -154,7 +154,7 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
+			const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
 				btn.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
@@ -163,27 +163,30 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			// Fill in form fields
 			const nameInput = document.querySelector('input[placeholder="e.g., Chase Sapphire"]');
 			const last4Input = document.querySelector('input[placeholder="1234"]');
-			
+
 			if (nameInput && last4Input) {
 				nameInput.value = 'Test Card';
 				nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-				
+
 				last4Input.value = '4321';
 				last4Input.dispatchEvent(new Event('input', { bubbles: true }));
-				
+
 				flushSync();
 
 				// Submit form
-				const submitButton = Array.from(document.querySelectorAll('button')).find(btn => 
-					btn.textContent === 'Add Card'
+				const submitButton = Array.from(document.querySelectorAll('button')).find(
+					(btn) => btn.textContent === 'Add Card'
 				);
 				submitButton.click();
 				flushSync();
 
 				// Wait for API call
-				await vi.waitFor(() => {
-					expect(fetch).toHaveBeenCalled();
-				}, { timeout: 1000 });
+				await vi.waitFor(
+					() => {
+						expect(fetch).toHaveBeenCalled();
+					},
+					{ timeout: 1000 }
+				);
 			}
 		});
 	});
@@ -196,10 +199,10 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Find a delete button
-			const deleteButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+			const deleteButtons = Array.from(document.querySelectorAll('button')).filter((btn) =>
 				btn.textContent.includes('Delete')
 			);
-			
+
 			if (deleteButtons.length > 0) {
 				deleteButtons[0].click();
 				flushSync();

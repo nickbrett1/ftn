@@ -27,14 +27,14 @@ describe('SonarCloudAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Error' });
-		await expect(service.makeRequest('/fail')).rejects.toThrow(
-			'SonarCloud API error: 500 Error'
-		);
+		await expect(service.makeRequest('/fail')).rejects.toThrow('SonarCloud API error: 500 Error');
 	});
 
 	it('validates token and retrieves resources', async () => {
 		const jsonValue = { valid: true };
-		vi.spyOn(service, 'makeRequest').mockResolvedValue({ json: vi.fn().mockResolvedValue(jsonValue) });
+		vi.spyOn(service, 'makeRequest').mockResolvedValue({
+			json: vi.fn().mockResolvedValue(jsonValue)
+		});
 		expect(await service.validateToken()).toBe(true);
 
 		service.makeRequest.mockResolvedValue({ json: vi.fn().mockResolvedValue({ key: 'value' }) });
@@ -70,7 +70,9 @@ describe('SonarCloudAPIService', () => {
 
 	it('manages quality gates and webhooks', async () => {
 		const gatesPayload = { qualitygates: [{ id: '1', isDefault: true }] };
-		const webhookPayload = { webhook: { key: 'hook', name: 'Hook', url: 'https://example.com', secret: '' } };
+		const webhookPayload = {
+			webhook: { key: 'hook', name: 'Hook', url: 'https://example.com', secret: '' }
+		};
 
 		vi.spyOn(service, 'makeRequest')
 			.mockResolvedValueOnce({ json: vi.fn().mockResolvedValue(gatesPayload) })

@@ -11,7 +11,7 @@ describe('Home', () => {
 		});
 
 		expect(document.body.textContent).toContain('Galactic Unicorn');
-		
+
 		unmount(component);
 	});
 

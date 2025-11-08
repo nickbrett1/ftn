@@ -23,7 +23,8 @@ describe('Unassigned Merchants API', () => {
 
 		mockGetUnassignedMerchants = dbModule.getUnassignedMerchants;
 		mockRequireUser = authModule.requireUser;
-	});it('should return unassigned merchants when authenticated', async () => {
+	});
+	it('should return unassigned merchants when authenticated', async () => {
 		const mockMerchants = ['Walmart', 'Target', 'Grocery Store'];
 		mockRequireUser.mockResolvedValue(null); // No auth error
 		mockGetUnassignedMerchants.mockResolvedValue(mockMerchants);

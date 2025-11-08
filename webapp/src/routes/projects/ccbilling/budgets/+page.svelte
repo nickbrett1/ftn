@@ -143,7 +143,8 @@
 							<button
 								type="button"
 								onclick={() => (newBudgetIcon = icon)}
-								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {newBudgetIcon === icon
+								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {newBudgetIcon ===
+								icon
 									? 'bg-blue-600'
 									: isUsed
 										? 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -194,7 +195,10 @@
 			<h2 class="text-2xl font-semibold text-white">Your Budgets</h2>
 			<div class="grid gap-4">
 				{#each sortedBudgets as budget (budget.id)}
-					<a href={`/projects/ccbilling/budgets/${budget.id}`} class="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer">
+					<a
+						href={`/projects/ccbilling/budgets/${budget.id}`}
+						class="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer"
+					>
 						<div class="flex items-center gap-4">
 							{#if budget.icon}
 								<span class="text-2xl">{budget.icon}</span>
@@ -230,7 +234,8 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Budget?</h3>
 				<p class="text-gray-300 mb-6">
-					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be undone.
+					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be
+					undone.
 				</p>
 				{#if deleteError}
 					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">

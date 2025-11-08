@@ -53,7 +53,10 @@ describe('external service configuration helpers', () => {
 		};
 		expect(validateServiceConfig('doppler', dopplerConfig)).toEqual({ valid: true, errors: [] });
 
-		const invalid = validateServiceConfig('github', { name: 'Nope', baseUrl: 'https://bad.example' });
+		const invalid = validateServiceConfig('github', {
+			name: 'Nope',
+			baseUrl: 'https://bad.example'
+		});
 		expect(invalid.valid).toBe(false);
 		expect(invalid.errors).toContain('Invalid service name');
 		expect(invalid.errors).toContain('OAuth2 requires clientId and clientSecret');
@@ -62,4 +65,3 @@ describe('external service configuration helpers', () => {
 		expect(unknown).toEqual({ valid: false, error: 'Unknown service: made-up' });
 	});
 });
-

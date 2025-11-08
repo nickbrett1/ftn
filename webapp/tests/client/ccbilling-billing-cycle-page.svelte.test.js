@@ -62,7 +62,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.00,
+					amount: 50.0,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -72,7 +72,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 2,
 					merchant: 'Starbucks',
-					amount: 5.50,
+					amount: 5.5,
 					allocated_to: 'Food',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -82,7 +82,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 3,
 					merchant: 'Shell',
-					amount: 45.00,
+					amount: 45.0,
 					allocated_to: 'Transportation',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',
@@ -92,7 +92,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 4,
 					merchant: 'Target',
-					amount: 75.00,
+					amount: 75.0,
 					allocated_to: 'Shopping',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',
@@ -130,9 +130,12 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Charges (4 of 4)');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Charges (4 of 4)');
+				},
+				{ timeout: 1000 }
+			);
 
 			// Should show all 4 charges
 			expect(document.body.textContent).toContain('Amazon');
@@ -147,13 +150,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Filter by card:');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Filter by card:');
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
 			expect(filterSelect).toBeTruthy();
-			
+
 			// Should have "All Cards" option and both credit cards
 			expect(filterSelect.textContent).toContain('All Cards');
 			expect(filterSelect.textContent).toContain('Chase Freedom (****1234)');
@@ -166,13 +172,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select Chase Freedom (ID: 1)
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -195,13 +204,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select Amex Gold (ID: 2)
 			filterSelect.value = '2';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -224,16 +236,19 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Initially no clear filter button
 			expect(document.body.textContent).not.toContain('Clear Filter');
-			
+
 			// Select a card
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -249,13 +264,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select a card
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -263,9 +281,9 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 
 			// Should show filtered charges
 			expect(document.body.textContent).toContain('Charges (2 of 4)');
-			
+
 			// Click clear filter button
-			const clearButton = Array.from(document.querySelectorAll('button')).find(btn => 
+			const clearButton = Array.from(document.querySelectorAll('button')).find((btn) =>
 				btn.textContent.includes('Clear Filter')
 			);
 			expect(clearButton).toBeTruthy();
@@ -283,13 +301,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select a specific card first
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -297,7 +318,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 
 			// Should show filtered charges
 			expect(document.body.textContent).toContain('Charges (2 of 4)');
-			
+
 			// Select "All Cards"
 			filterSelect.value = '';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -313,9 +334,12 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Sort by:');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Sort by:');
+				},
+				{ timeout: 1000 }
+			);
 
 			const sortSelect = document.querySelector('#sort-by');
 			expect(sortSelect).toBeTruthy();
@@ -327,13 +351,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const sortSelect = document.querySelector('#sort-by');
-				expect(sortSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const sortSelect = document.querySelector('#sort-by');
+					expect(sortSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const sortSelect = document.querySelector('#sort-by');
-			
+
 			// Select merchant sort
 			sortSelect.value = 'merchant';
 			sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -350,13 +377,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const sortSelect = document.querySelector('#sort-by');
-				expect(sortSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const sortSelect = document.querySelector('#sort-by');
+					expect(sortSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const sortSelect = document.querySelector('#sort-by');
-			
+
 			// Select date sort
 			sortSelect.value = 'date';
 			sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -375,9 +405,12 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Chase Freedom');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Chase Freedom');
+				},
+				{ timeout: 1000 }
+			);
 
 			// Should show both cards in summary
 			expect(document.body.textContent).toContain('Chase Freedom');
@@ -390,13 +423,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select a card to activate filter
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -412,13 +448,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Chase Freedom');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Chase Freedom');
+				},
+				{ timeout: 1000 }
+			);
 
 			// Find and click a card summary (they might be buttons or clickable elements)
-			const cardElements = Array.from(document.querySelectorAll('button, a, [onclick]')).filter(el =>
-				el.textContent.includes('Chase Freedom')
+			const cardElements = Array.from(document.querySelectorAll('button, a, [onclick]')).filter(
+				(el) => el.textContent.includes('Chase Freedom')
 			);
 
 			if (cardElements.length > 0) {
@@ -438,9 +477,12 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				expect(document.body.textContent).toContain('Charges (4 of 4)');
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					expect(document.body.textContent).toContain('Charges (4 of 4)');
+				},
+				{ timeout: 1000 }
+			);
 
 			// Total should be 50 + 5.50 + 45 + 75 = 175.50
 			expect(document.body.textContent).toMatch(/\$175\.50/);
@@ -452,13 +494,16 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				props: { data: mockData }
 			});
 
-			await vi.waitFor(() => {
-				const filterSelect = document.querySelector('#card-filter');
-				expect(filterSelect).toBeTruthy();
-			}, { timeout: 1000 });
+			await vi.waitFor(
+				() => {
+					const filterSelect = document.querySelector('#card-filter');
+					expect(filterSelect).toBeTruthy();
+				},
+				{ timeout: 1000 }
+			);
 
 			const filterSelect = document.querySelector('#card-filter');
-			
+
 			// Select Chase Freedom (charges: $50 + $5.50 = $55.50)
 			filterSelect.value = '1';
 			filterSelect.dispatchEvent(new Event('change', { bubbles: true }));

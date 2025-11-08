@@ -43,7 +43,8 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return charges for a billing cycle', async () => {
 			const mockCharges = [
 				{ id: 1, merchant: 'Amazon', amount: 85.67, card_name: 'Chase Freedom', last4: '1234' },

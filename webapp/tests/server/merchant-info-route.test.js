@@ -46,13 +46,18 @@ describe('merchant info route', () => {
 		vi.clearAllMocks();
 	});
 
-	const loadModule = () => import('../../src/routes/projects/ccbilling/charges/[id]/merchant-info/+server.js');
+	const loadModule = () =>
+		import('../../src/routes/projects/ccbilling/charges/[id]/merchant-info/+server.js');
 
 	const buildEvent = (overrides = {}) => ({
 		params: { id: '42', ...(overrides.params ?? {}) },
-		platform: overrides.platform ?? { env: { LLAMA_API_KEY: 'api-key-123', LLAMA_API_BASE_URL: 'https://llama.api' } },
+		platform: overrides.platform ?? {
+			env: { LLAMA_API_KEY: 'api-key-123', LLAMA_API_BASE_URL: 'https://llama.api' }
+		},
 		url: overrides.url ?? new URL('https://app.test/projects/ccbilling/charges/42/merchant-info'),
-		request: overrides.request ?? new Request('https://app.test/projects/ccbilling/charges/42/merchant-info')
+		request:
+			overrides.request ??
+			new Request('https://app.test/projects/ccbilling/charges/42/merchant-info')
 	});
 
 	it('returns enriched merchant information when llama responds successfully', async () => {

@@ -2,17 +2,17 @@ import { json } from '@sveltejs/kit';
 
 /**
  * Deployment Info API Endpoint
- * 
+ *
  * This endpoint exposes build-time constants that are injected by Vite during the build process.
  * It provides a reliable way for external services (like the deployments page) to get accurate
  * deployment information including:
  * - Build time (when the code was last built and deployed)
  * - Git branch (which branch was deployed)
  * - Git commit (which commit hash was deployed)
- * 
+ *
  * Usage:
  * GET /api/deployment-info
- * 
+ *
  * Returns:
  * {
  *   "buildTime": "2024-01-15T10:30:00.000Z",
@@ -32,7 +32,7 @@ export async function GET() {
 		environment: 'production', // This will be overridden by the worker
 		lastUpdated: null
 	};
-	
+
 	// If we have build time, use it as the last updated time
 	if (deploymentInfo.buildTime) {
 		try {
@@ -41,7 +41,7 @@ export async function GET() {
 			console.warn('Could not parse build time:', deploymentInfo.buildTime);
 		}
 	}
-	
+
 	// Add CORS headers to allow cross-origin requests
 	const headers = {
 		'Access-Control-Allow-Origin': '*',
@@ -49,7 +49,7 @@ export async function GET() {
 		'Access-Control-Allow-Headers': 'Content-Type',
 		'Cache-Control': 'no-cache, no-store, must-revalidate'
 	};
-	
+
 	return json(deploymentInfo, { headers });
 }
 

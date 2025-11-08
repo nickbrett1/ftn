@@ -11,7 +11,11 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
 // Import the mocked functions
-import { listBillingCycles, createBillingCycle, deleteBillingCycle } from '$lib/server/ccbilling-db.js';
+import {
+	listBillingCycles,
+	createBillingCycle,
+	deleteBillingCycle
+} from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
 describe('/projects/ccbilling/cycles API', () => {
@@ -28,7 +32,8 @@ describe('/projects/ccbilling/cycles API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return list of billing cycles', async () => {
 			const mockCycles = [
 				{ id: 1, start_date: '2024-01-01', end_date: '2024-01-31' },

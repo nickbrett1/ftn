@@ -5,7 +5,6 @@
 	import { loadSlim } from '@tsparticles/slim';
 	import { loadTextShape } from '@tsparticles/shape-text';
 	import { createAuthParticleConfig } from '$lib/client/particleConfig.js';
-import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	// Create the particle configuration using the utility
 	const particlesConfig = createAuthParticleConfig();
@@ -90,13 +89,7 @@ import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
 				<div class="pt-2">
-					<Button
-						onclick={() => initiateGoogleAuth('/projects/ccbilling')}
-						variant="primary"
-						size="lg"
-					>
-						Try Authentication Again
-					</Button>
+					<Button href="/auth/github" variant="primary" size="lg">Authenticate with GitHub</Button>
 				</div>
 			</div>
 		</div>

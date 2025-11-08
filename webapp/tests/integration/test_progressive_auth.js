@@ -3,7 +3,6 @@
  * @description Tests the complete authentication flow for project generation
  */
 
-/* eslint-disable max-nested-callbacks */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GenprojAuthManager } from '$lib/server/genproj-auth.js';
 

@@ -5,6 +5,9 @@
 
 <script>
 	import { onMount } from 'svelte';
+	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
+	import tippy from 'tippy.js';
+	import 'tippy.js/dist/tippy.css';
 	import { logger } from '$lib/utils/logging.js';
 	import { capabilities } from '$lib/config/capabilities.js';
 
@@ -32,7 +35,7 @@
 
 	// Get required auth services for selected capabilities
 	let requiredAuthServices = $derived.by(() => {
-		const required = new Set(['github']); // GitHub is always required for project generation
+		const required = new SvelteSet(['github']); // GitHub is always required for project generation
 		for (const capabilityId of selectedCapabilities) {
 			const capability = capabilities.find((c) => c.id === capabilityId);
 			if (capability?.requiresAuth) {
@@ -101,19 +104,19 @@
 			// Build GitHub auth URL with current state to preserve selections
 			// We need to pass the selections through the OAuth flow so they're preserved on redirect
 			let authUrl = '/projects/genproj/api/auth/github';
-			
+
 			// Get current selections from parent (if available via URL)
 			if (typeof window !== 'undefined' && window.location) {
 				const url = new URL(window.location.href);
 				const selectedParam = url.searchParams.get('selected');
 				const projectNameParam = url.searchParams.get('projectName');
 				const repositoryUrlParam = url.searchParams.get('repositoryUrl');
-				
-				const params = new URLSearchParams();
+
+				const params = new SvelteURLSearchParams();
 				if (selectedParam) params.set('selected', selectedParam);
 				if (projectNameParam) params.set('projectName', projectNameParam);
 				if (repositoryUrlParam) params.set('repositoryUrl', repositoryUrlParam);
-				
+
 				const queryString = params.toString();
 				if (queryString) {
 					authUrl += `?${queryString}`;
@@ -159,7 +162,7 @@
 				throw new Error(data.error || `${serviceNames[service]} authentication failed`);
 			}
 
-			const result = await response.json();
+			await response.json();
 
 			// Update auth status
 			authStatus[service] = true;
@@ -182,15 +185,46 @@
 		}
 	}
 
-	// Get auth URL for external service (opens token creation page)
-	function getAuthUrl(service) {
-		return `/projects/genproj/api/auth/${service}`;
-	}
+	// Show help tooltip for token-based auth
+	async function showHelp(service, event) {
+		const button = event.currentTarget;
+		if (button._tippy) {
+			button._tippy.show();
+			return;
+		}
 
-	// Open auth URL in new tab
-	function openAuthUrl(service) {
-		if (typeof window !== 'undefined' && window.open) {
-			window.open(getAuthUrl(service), '_blank');
+		try {
+			const response = await fetch(`/projects/genproj/api/auth/${service}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch help content.');
+			}
+			const data = await response.json();
+			const content = `
+        <div class="text-left p-1">
+          <p>${data.instructions}</p>
+          <a href="${data.authUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline mt-2 block">
+            Create a token
+          </a>
+        </div>
+      `;
+
+			tippy(button, {
+				content,
+				allowHTML: true,
+				interactive: true,
+				trigger: 'manual',
+				placement: 'top',
+				arrow: true,
+				theme: 'light-border'
+			});
+
+			button._tippy.show();
+		} catch (err) {
+			logger.error(`Failed to show help for ${service}`, { error: err.message });
+			tippy(button, {
+				content: 'Could not load help.',
+				trigger: 'manual'
+			}).show();
 		}
 	}
 
@@ -216,7 +250,7 @@
 		} else if (authParam) {
 			// Parse which service completed
 			const service = authParam.replace('_success', '');
-			if (service && authStatus.hasOwnProperty(service)) {
+			if (service && Object.prototype.hasOwnProperty.call(authStatus, service)) {
 				authStatus[service] = true;
 				// Clear auth param from URL
 				if (typeof window !== 'undefined' && window.location && window.history) {
@@ -292,7 +326,7 @@
 
 				<!-- Auth Status List -->
 				<div class="space-y-4">
-					{#each requiredAuthServices as service}
+					{#each requiredAuthServices as service (service)}
 						{@const isAuthenticated = authStatus[service]}
 						{@const isAuthenticating = authenticatingService === service}
 						<div
@@ -353,8 +387,8 @@
 											/>
 											<button
 												class="px-3 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-600"
-												onclick={() => openAuthUrl(service)}
-												title="Open token creation page"
+												onclick={(event) => showHelp(service, event)}
+												title="Get help"
 											>
 												?
 											</button>

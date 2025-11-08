@@ -90,6 +90,7 @@
 		"apexcharts": "^5.3.6",
 		"cookie": "^1.0.2",
 		"gsap": "^3.13.0",
+		"hi-base32": "^0.5.1",
 		"linkify-it": "^5.0.0",
 		"llama-api-client": "^0.3.0",
 		"most-visible": "^2.0.0",

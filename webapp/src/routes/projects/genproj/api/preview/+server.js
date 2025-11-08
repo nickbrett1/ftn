@@ -1729,7 +1729,7 @@ function getFallbackTemplate(templateId, context) {
 	}
 
 	const fallbackTemplates = {
-		        'devcontainer-node-json': `{
+		'devcontainer-node-json': `{
 		  "name": "{{projectName}}",
 		  "image": "mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}",
 		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
@@ -1760,7 +1760,7 @@ function getFallbackTemplate(templateId, context) {
 		  "forwardPorts": [3000, 5173],
 		  "postCreateCommand": "bash .devcontainer/setup.sh"
 		}`,
-				'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
+		'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
 # Install system dependencies and uv
 RUN apt-get update && apt-get install -y \\
     git \\
@@ -1783,7 +1783,7 @@ USER root
 
 WORKDIR /workspace
 `,
-		        'devcontainer-python-json': `{
+		'devcontainer-python-json': `{
 		  "name": "{{projectName}}",
 		  "image": "mcr.microsoft.com/devcontainers/python:{{pythonVersion}}",
 		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
@@ -1813,7 +1813,7 @@ WORKDIR /workspace
 		  },
 		  "postCreateCommand": "bash .devcontainer/setup.sh"
 		}`,
-		        'devcontainer-java-json': `{
+		'devcontainer-java-json': `{
 		  "name": "{{projectName}}",
 		  "image": "mcr.microsoft.com/devcontainers/java:{{javaVersion}}",
 		  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],

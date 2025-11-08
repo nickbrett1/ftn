@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import * as cookie from 'cookie';
+import { genprojAuth } from '$lib/server/genproj-auth.js';
 
 const revokeGoogleToken = async (token) => {
 	const body = new URLSearchParams();
@@ -45,6 +46,14 @@ export async function GET({ request, platform }) {
 		return response;
 	}
 
-	await Promise.all([revokeGoogleToken(token), platform.env.KV.delete(authCookieKey)]);
+	// Initialize genprojAuth with a mock user to clear its state
+	// The authCookieKey is used as a unique identifier for the user's genproj state
+	await genprojAuth.initialize({ id: authCookieKey, email: 'unknown@example.com' }, platform);
+
+	await Promise.all([
+		revokeGoogleToken(token),
+		platform.env.KV.delete(authCookieKey),
+		genprojAuth.clearGitHubAuth() // Clear GitHub auth state
+	]);
 	return response;
 }

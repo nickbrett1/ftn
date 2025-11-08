@@ -14,7 +14,10 @@ describe('validation utilities', () => {
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });
-			expect(validateProjectName(null)).toEqual({ valid: false, error: 'Project name is required' });
+			expect(validateProjectName(null)).toEqual({
+				valid: false,
+				error: 'Project name is required'
+			});
 			expect(validateProjectName(42)).toEqual({ valid: false, error: 'Project name is required' });
 		});
 
@@ -81,9 +84,7 @@ describe('validation utilities', () => {
 				error: 'At least one capability must be selected'
 			});
 
-			expect(
-			validateSelectedCapabilities(new Array(21).fill('devcontainer-node'))
-			).toEqual({
+			expect(validateSelectedCapabilities(new Array(21).fill('devcontainer-node'))).toEqual({
 				valid: false,
 				error: 'Too many capabilities selected (maximum 20)'
 			});
@@ -177,10 +178,7 @@ describe('validation utilities', () => {
 			];
 
 			for (const testCase of cases) {
-				const result = validateCapabilityConfiguration(
-					testCase.configuration,
-					testCase.selected
-				);
+				const result = validateCapabilityConfiguration(testCase.configuration, testCase.selected);
 				expect(result).toEqual({ valid: false, error: testCase.error });
 			}
 		});

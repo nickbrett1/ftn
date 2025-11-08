@@ -98,7 +98,9 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should use custom scopes when provided', () => {
-			const url = generateGitHubAuthUrl('client-123', 'https://example.com/callback', 'state-456', ['read:user']);
+			const url = generateGitHubAuthUrl('client-123', 'https://example.com/callback', 'state-456', [
+				'read:user'
+			]);
 			expect(url).toContain('scope=read%3Auser');
 		});
 
@@ -393,4 +395,3 @@ describe('Auth Helpers', () => {
 		});
 	});
 });
-

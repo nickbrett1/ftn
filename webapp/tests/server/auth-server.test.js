@@ -27,13 +27,11 @@ describe('Auth server route', () => {
 		vi.resetModules();
 		mockIsUserAllowed.mockReset();
 		globalThis.fetch = vi.fn();
-		randomValuesSpy = vi
-			.spyOn(globalThis.crypto, 'getRandomValues')
-			.mockImplementation((array) => {
-				const values = Array.from({ length: array.length }, (_, index) => (index * 7) % 256);
-				array.set(values);
-				return array;
-			});
+		randomValuesSpy = vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation((array) => {
+			const values = Array.from({ length: array.length }, (_, index) => (index * 7) % 256);
+			array.set(values);
+			return array;
+		});
 	});
 
 	afterEach(() => {
@@ -83,7 +81,9 @@ describe('Auth server route', () => {
 
 		expect(response.status).toBe(307);
 		expect(response.headers.get('location')).toBe('https://app.test/projects/ccbilling');
-		expect(response.headers.get('Set-Cookie')).toMatch(/^auth=.+; Expires=.+; Path=\/; Secure; SameSite=Lax$/);
+		expect(response.headers.get('Set-Cookie')).toMatch(
+			/^auth=.+; Expires=.+; Path=\/; Secure; SameSite=Lax$/
+		);
 
 		expect(mockIsUserAllowed).toHaveBeenCalledWith('user@example.com', platform.env.KV);
 		expect(kvPut).toHaveBeenCalledTimes(1);
@@ -152,7 +152,8 @@ describe('Auth server route', () => {
 				error: 'invalid_grant',
 				error_description: 'invalid code'
 			})
-		);		const response = await GET({
+		);
+		const response = await GET({
 			request: new Request('https://app.test/auth?code=badcode'),
 			platform: { env: { KV: { put: vi.fn() } } }
 		});

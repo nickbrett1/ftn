@@ -22,7 +22,7 @@ describe('Google Auth Utils', () => {
                         value: ''
                 });
                 // Reset window.google
-                delete window.google;
+                delete globalThis.google;
 
                 originalCreateElement = document.createElement;
                 // Mock document.createElement to return a mock script element
@@ -212,7 +212,7 @@ describe('Google Auth Utils', () => {
 
 		                                                                        // Mock GIS not loaded
 
-		                                                                        window.google = undefined;
+		                                                                        globalThis.google = undefined;
 
 		                                                
 
@@ -238,7 +238,7 @@ describe('Google Auth Utils', () => {
 
 		                                                                        // Mock GIS loaded after script, but before onload is triggered
 
-		                                                                        window.google = {
+		                                                                        globalThis.google = {
 
 		                                                                                accounts: {
 
@@ -280,7 +280,7 @@ describe('Google Auth Utils', () => {
 
 		                                                
 
-		                                                                        expect(window.google.accounts.id.initialize).toHaveBeenCalledWith(
+		                                                                        expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledWith(
 
 		                                                                                expect.objectContaining({
 
@@ -290,7 +290,7 @@ describe('Google Auth Utils', () => {
 
 		                                                                        );
 
-		                                                                        expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+		                                                                        expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
 
 		                                                                });		it('should handle GIS script loading errors', async () => {
 			// Mock GIS not loaded
@@ -334,7 +334,7 @@ describe('Google Auth Utils', () => {
                         });
 
                         // Mock window.google.accounts.oauth2
-                        window.google = {
+                        globalThis.google = {
                                 accounts: {
                                         oauth2: {
                                                 initCodeClient: vi.fn(() => {

@@ -38,9 +38,9 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: false }
 		});
-		
+
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
-		
+
 		unmount(component);
 	});
 
@@ -49,9 +49,9 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-		
+
 		unmount(component);
 	});
 
@@ -60,10 +60,10 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		const fireworksDiv = document.querySelector('.fixed.inset-0.pointer-events-none.z-50');
 		expect(fireworksDiv).toBeTruthy();
-		
+
 		unmount(component);
 	});
 
@@ -72,18 +72,18 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Wait for async initialization
-		await new Promise(resolve => setTimeout(resolve, 10));
+		await new Promise((resolve) => setTimeout(resolve, 10));
 		flushSync();
-		
+
 		// The test passes if no errors are thrown during initialization
 		// This verifies that the component initializes without crashing
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-		
+
 		unmount(component);
 	});
 
@@ -93,31 +93,31 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: false }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Should not have container initially
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
-		
+
 		unmount(component1);
-		
+
 		// Now mount with show: true
 		const component2 = mount(Fireworks, {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Wait for async initialization
-		await new Promise(resolve => setTimeout(resolve, 10));
+		await new Promise((resolve) => setTimeout(resolve, 10));
 		flushSync();
-		
+
 		// Should now have the container
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-		
+
 		unmount(component2);
 	});
 
@@ -127,31 +127,31 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Wait for async initialization
-		await new Promise(resolve => setTimeout(resolve, 10));
+		await new Promise((resolve) => setTimeout(resolve, 10));
 		flushSync();
-		
+
 		// Should have container initially
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-		
+
 		unmount(component1);
-		
+
 		// Now mount with show: false
 		const component2 = mount(Fireworks, {
 			target: document.body,
 			props: { show: false }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Should no longer have the container
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
-		
+
 		unmount(component2);
 	});
 
@@ -160,9 +160,9 @@ describe('Fireworks Component', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		unmount(component);
-		
+
 		// Should call destroy on particles instance
 		// Note: This might not be called if particlesInstance is null during testing
 		// The important thing is that the component doesn't crash
@@ -183,14 +183,14 @@ describe('Fireworks Animation Logic', () => {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		await tick();
 		flushSync();
-		
+
 		// Should have the particle container div
 		const particleContainer = document.querySelector('.w-full.h-full');
 		expect(particleContainer).toBeTruthy();
-		
+
 		unmount(component);
 	});
 
@@ -198,15 +198,15 @@ describe('Fireworks Animation Logic', () => {
 		// Mock window dimensions
 		Object.defineProperty(window, 'innerWidth', { value: 1920 });
 		Object.defineProperty(window, 'innerHeight', { value: 1080 });
-		
+
 		const component = mount(Fireworks, {
 			target: document.body,
 			props: { show: true }
 		});
-		
+
 		// Should render the container
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-		
+
 		unmount(component);
 	});
 });

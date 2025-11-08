@@ -162,4 +162,3 @@ describe('Capabilities Utils', () => {
 		});
 	});
 });
-

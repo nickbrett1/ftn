@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 
 // Get git info at build time
 function getGitInfo() {
@@ -79,9 +79,7 @@ export default defineConfig(({ command, mode }) => {
 					'**/*.stories.{js,ts}'
 				],
 				// Include all source files
-				include: [
-					'src/**/*.{js,ts}'
-				]
+				include: ['src/**/*.{js,ts}']
 			},
 			server: {},
 			// Add timeout and memory optimizations

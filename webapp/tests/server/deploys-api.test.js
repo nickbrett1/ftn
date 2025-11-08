@@ -136,9 +136,7 @@ describe('Deploys API route', () => {
 			.mockResolvedValueOnce(
 				createJsonResponse({
 					success: true,
-					result: [
-						{ id: 'ftn-preview', created_on: '2024-02-01T00:00:00.000Z' }
-					]
+					result: [{ id: 'ftn-preview', created_on: '2024-02-01T00:00:00.000Z' }]
 				})
 			)
 			.mockResolvedValueOnce(createJsonResponse({ result: [] }))
@@ -168,7 +166,9 @@ describe('Deploys API route', () => {
 	it('throws an HttpError when required environment variables are missing', async () => {
 		const { GET } = await loadModule({});
 
-		await expect(GET({ request: new Request('https://app.test/api/deploys') })).rejects.toMatchObject({
+		await expect(
+			GET({ request: new Request('https://app.test/api/deploys') })
+		).rejects.toMatchObject({
 			status: 500
 		});
 	});
@@ -188,7 +188,9 @@ describe('Deploys API route', () => {
 			})
 		);
 
-		await expect(GET({ request: new Request('https://app.test/api/deploys') })).rejects.toMatchObject({
+		await expect(
+			GET({ request: new Request('https://app.test/api/deploys') })
+		).rejects.toMatchObject({
 			status: 500,
 			body: expect.objectContaining({
 				message: expect.stringContaining('Failed to list Cloudflare Workers')

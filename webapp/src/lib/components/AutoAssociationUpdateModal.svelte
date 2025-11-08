@@ -5,7 +5,6 @@
 	let {
 		isOpen = false,
 		merchantName = '',
-		currentAllocation = '',
 		newAllocation = '',
 		autoAssociationBudget = '',
 		isDeletionRequest = false
@@ -31,7 +30,7 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-9999 p-4"
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Escape' && handleBackdropClick(e)}
 		role="button"
@@ -40,7 +39,7 @@
 	>
 		<div class="bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-w-md w-full p-6">
 			<div class="flex items-center mb-4">
-				<div class="flex-shrink-0">
+				<div class="shrink-0">
 					<svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							stroke-linecap="round"

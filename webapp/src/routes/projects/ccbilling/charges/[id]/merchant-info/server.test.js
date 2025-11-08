@@ -16,7 +16,7 @@ vi.mock('@sveltejs/kit', () => ({
 }));
 
 // Expose a controllable create() fn for the llama client mock
-// eslint-disable-next-line no-underscore-dangle
+
 globalThis.__llamaCreateMock = vi.fn();
 
 // Mock llama-api-client default export
@@ -24,10 +24,10 @@ vi.mock('llama-api-client', () => {
 	class MockLlamaClient {
 		constructor() {
 			return {
-				chat: { 
-					completions: { 
-						create: (...args) => globalThis.__llamaCreateMock(...args) 
-					} 
+				chat: {
+					completions: {
+						create: (...args) => globalThis.__llamaCreateMock(...args)
+					}
 				}
 			};
 		}
@@ -43,7 +43,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// eslint-disable-next-line no-underscore-dangle
+
 		globalThis.__llamaCreateMock = vi.fn();
 
 		mockEvent = {
@@ -56,7 +56,8 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 		// Charge found by default
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
-	});it('returns model text on success', async () => {
+	});
+	it('returns model text on success', async () => {
 		const modelResponse = {
 			choices: [
 				{
@@ -67,7 +68,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 				}
 			]
 		};
-		// eslint-disable-next-line no-underscore-dangle
+
 		globalThis.__llamaCreateMock.mockResolvedValue(modelResponse);
 
 		const response = await GET(mockEvent);
@@ -77,7 +78,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(typeof body.text).toBe('string');
 		expect(body.text).toContain('Amazon');
 		// Ensure llama client was called with our prompt
-		// eslint-disable-next-line no-underscore-dangle
+
 		expect(globalThis.__llamaCreateMock).toHaveBeenCalledTimes(1);
 	});
 
@@ -106,7 +107,6 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	});
 
 	it('returns 200 with raw text when model output is not JSON', async () => {
-		// eslint-disable-next-line no-underscore-dangle
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			choices: [{ message: { content: 'not json' } }]
 		});
@@ -117,7 +117,6 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	});
 
 	it('returns 502 when llama client throws', async () => {
-		// eslint-disable-next-line no-underscore-dangle
 		globalThis.__llamaCreateMock.mockRejectedValue(new Error('network'));
 		const response = await GET(mockEvent);
 		const body = await response.json();

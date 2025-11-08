@@ -55,7 +55,6 @@
 		name="description"
 		content="Nick Brett's personal website and portfolio, focused on financial technology."
 	/>
-
 </svelte:head>
 
 {#if BackgroundComponent}
@@ -80,6 +79,6 @@
 	<div id="contact" class="section">
 		<Contact />
 	</div>
-	</div>
+</div>
 
 <Footer />

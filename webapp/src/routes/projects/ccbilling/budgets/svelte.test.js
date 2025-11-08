@@ -78,8 +78,12 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: manyBudgets } }
 		});
 		const budgetLinks = document.querySelectorAll('a');
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 1'))).toBe(true);
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 5'))).toBe(true);
+		expect(Array.from(budgetLinks).some((link) => link.textContent.includes('Budget 1'))).toBe(
+			true
+		);
+		expect(Array.from(budgetLinks).some((link) => link.textContent.includes('Budget 5'))).toBe(
+			true
+		);
 	});
 
 	it('processes budget data correctly', () => {

@@ -92,7 +92,10 @@ describe('capability resolver', () => {
 
 	describe('canAddCapability', () => {
 		it('rejects unknown capabilities', () => {
-			expect(canAddCapability('missing-cap', [])).toEqual({ canAdd: false, reason: 'Unknown capability' });
+			expect(canAddCapability('missing-cap', [])).toEqual({
+				canAdd: false,
+				reason: 'Unknown capability'
+			});
 		});
 
 		it('rejects already selected capability', () => {

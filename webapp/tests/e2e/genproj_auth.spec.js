@@ -6,13 +6,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, unmount } from 'svelte';
 import GenprojPage from '../../src/routes/projects/genproj/+page.svelte';
+import * as navigation from '$app/navigation'; // Import the navigation module
+import * as googleAuth from '../../src/lib/client/google-auth.js';
 
 // Mock fetch globally
 globalThis.fetch = vi.fn();
 
+// Mock Google GIS to prevent actual redirect - moved to top level
+globalThis.window.google = {
+	accounts: {
+		oauth2: {
+			initCodeClient: vi.fn(() => ({
+				requestCode: vi.fn()
+			}))
+		}
+	}
+};
+
 describe('Genproj Authentication Workflow', () => {
 	let component;
 	let container;
+
+	// Mock goto function
+	const gotoMock = vi.spyOn(navigation, 'goto');
+	const initiateGoogleAuthMock = vi.spyOn(googleAuth, 'initiateGoogleAuth');
 
 	const mockCapabilities = [
 		{
@@ -70,6 +87,7 @@ describe('Genproj Authentication Workflow', () => {
 		container = document.createElement('div');
 		document.body.appendChild(container);
 		vi.clearAllMocks();
+		gotoMock.mockClear(); // Clear mock calls before each test
 	});
 
 	afterEach(() => {
@@ -83,8 +101,8 @@ describe('Genproj Authentication Workflow', () => {
 		}
 	});
 
-	it('should redirect to Google auth when attempting to generate without authentication', async () => {
-		// Mock window.location.href to track redirects
+	it('should redirect to GitHub auth when attempting to generate without authentication', async () => {
+		// Mock window.location.href to track redirects (though goto mock will handle this)
 		let locationHref = '';
 		Object.defineProperty(globalThis, 'location', {
 			value: {
@@ -128,25 +146,15 @@ describe('Genproj Authentication Workflow', () => {
 		expect(generateButton).toBeTruthy();
 		expect(generateButton.disabled).toBe(false);
 
-		// Mock Google GIS to prevent actual redirect
-		globalThis.window.google = {
-			accounts: {
-				oauth2: {
-					initCodeClient: vi.fn(() => ({
-						requestCode: vi.fn()
-					}))
-				}
-			}
-		};
-
-		// Click generate button - should trigger Google auth directly
+		// Click generate button - should trigger GitHub auth redirect
 		generateButton.click();
 		await waitForNextTick();
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		// Verify that Google OAuth was initiated (initCodeClient should be called)
-		// Since we can't easily test the redirect, we verify the component handled the click
-		expect(globalThis.window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+		// Verify that initiateGoogleAuth was called with the correct redirect path
+		expect(initiateGoogleAuthMock).toHaveBeenCalledWith(
+			'/projects/genproj?selected=devcontainer-node&projectName=test-project'
+		);
 	});
 
 	it('should show auth flow when authenticated user tries to generate', async () => {

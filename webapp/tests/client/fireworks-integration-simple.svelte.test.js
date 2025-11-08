@@ -68,7 +68,7 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			charges: [
 				{
 					id: 1,
-					amount: 25.50,
+					amount: 25.5,
 					merchant: 'Amazon',
 					allocated_to: null, // Unallocated
 					credit_card_id: 1,
@@ -128,10 +128,13 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// Should render the page with charges
 		expect(document.body.textContent).toContain('Amazon');
 		expect(document.body.textContent).toContain('Starbucks');
@@ -143,10 +146,13 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// Check that unallocated total is displayed correctly
 		// Both charges are unallocated, so total should be 25.50 + 15.75 = 41.25
 		expect(document.body.textContent).toContain('$41.25');
@@ -159,20 +165,23 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// Debug: log all button texts to see what's available
 		const allButtons = Array.from(document.querySelectorAll('button'));
-		const buttonTexts = allButtons.map(btn => btn.textContent);
+		const buttonTexts = allButtons.map((btn) => btn.textContent);
 		console.log('Available buttons:', buttonTexts);
-		
-		const testButton = allButtons.find(button => 
-			button.textContent.includes('Test Fireworks') || 
-			button.textContent.includes('Fireworks')
+
+		const testButton = allButtons.find(
+			(button) =>
+				button.textContent.includes('Test Fireworks') || button.textContent.includes('Fireworks')
 		);
-		
+
 		// For now, just check that we have some buttons (the test button might not be rendered in test environment)
 		expect(allButtons.length).toBeGreaterThan(0);
 	});
@@ -183,10 +192,13 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// Check that unallocated total is displayed correctly
 		// Both charges are unallocated, so total should be 25.50 + 15.75 = 41.25
 		expect(document.body.textContent).toContain('$41.25');
@@ -199,31 +211,37 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// In Svelte 5, we can't directly set component.data
 		// Instead, we'll remount with updated data
 		unmount(component);
-		
+
 		const updatedData = {
 			...mockData,
-			charges: mockData.charges.map(charge => ({
+			charges: mockData.charges.map((charge) => ({
 				...charge,
 				allocated_to: 'Groceries'
 			}))
 		};
-		
+
 		component = mount(BillingCyclePage, {
 			target: document.body,
 			props: { data: updatedData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Billing Cycle:');
-		}, { timeout: 1000 });
-		
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Billing Cycle:');
+			},
+			{ timeout: 1000 }
+		);
+
 		// The test passes if no errors are thrown during the update
 		// This verifies that the fireworks checking logic runs without crashing
 		expect(true).toBe(true);

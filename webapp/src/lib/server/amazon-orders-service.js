@@ -51,14 +51,16 @@ export function extractAmazonOrderIdFromMultiLine(statementText) {
 	if (!statementText) return null;
 
 	// Split into lines and look for Amazon-related content
-	const lines = statementText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-	
+	const lines = statementText
+		.split('\n')
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+
 	// Check if any line contains Amazon identifiers
-	const hasAmazon = lines.some(line => 
-		line.toUpperCase().includes('AMAZON') || 
-		line.toUpperCase().includes('AMZN')
+	const hasAmazon = lines.some(
+		(line) => line.toUpperCase().includes('AMAZON') || line.toUpperCase().includes('AMZN')
 	);
-	
+
 	if (!hasAmazon) return null;
 
 	// Look for order ID patterns across all lines
@@ -94,7 +96,7 @@ export function extractAmazonOrderIdFromMultiLine(statementText) {
  */
 export function generateAmazonOrderUrl(orderId) {
 	if (!orderId) return null;
-	
+
 	// Standard Amazon order URL format
 	return `https://www.amazon.com/gp/your-account/order-details?orderID=${orderId}`;
 }
@@ -124,7 +126,7 @@ export function enrichAmazonCharges(charges) {
 	if (!charges || charges.length === 0) return charges;
 
 	// Extract Amazon charges and their order IDs
-	return charges.map(charge => {
+	return charges.map((charge) => {
 		const orderId = extractAmazonOrderId(charge.merchant);
 		if (orderId) {
 			return {

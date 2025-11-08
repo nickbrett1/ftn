@@ -6,8 +6,8 @@ const createRequestWithCookie = (cookieValue) => {
 	return new Request('https://example.com', {
 		headers: cookieValue
 			? {
-				cookie: `auth=${cookieValue}; other=value`
-			}
+					cookie: `auth=${cookieValue}; other=value`
+				}
 			: {}
 	});
 };

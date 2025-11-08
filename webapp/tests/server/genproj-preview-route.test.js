@@ -18,8 +18,7 @@ const capabilitiesFixture = [
 		templates: [
 			{
 				filePath: '.devcontainer/devcontainer.json',
-				content:
-					'{"customizations":{"vscode":{"extensions":["esbenp.prettier-vscode"]}}}'
+				content: '{"customizations":{"vscode":{"extensions":["esbenp.prettier-vscode"]}}}'
 			},
 			{
 				filePath: '.devcontainer/Dockerfile',
@@ -173,12 +172,7 @@ describe('genproj preview route', () => {
 			json: vi.fn().mockResolvedValue({
 				projectName: 'Demo Project',
 				repositoryUrl: 'https://github.com/acme/demo',
-				selectedCapabilities: [
-					'devcontainer-node',
-					'doppler',
-					'cloudflare-wrangler',
-					'spec-kit'
-				],
+				selectedCapabilities: ['devcontainer-node', 'doppler', 'cloudflare-wrangler', 'spec-kit'],
 				configuration: {
 					'devcontainer-node': {
 						nodeVersion: '22',
@@ -197,7 +191,9 @@ describe('genproj preview route', () => {
 
 		expect(body.metadata.projectName).toBe('Demo Project');
 		expect(body.metadata.capabilityCount).toBe(4);
-		expect(body.files.some((file) => file.filePath === '.devcontainer/devcontainer.json')).toBe(true);
+		expect(body.files.some((file) => file.filePath === '.devcontainer/devcontainer.json')).toBe(
+			true
+		);
 		expect(body.files.some((file) => file.filePath === '.devcontainer/Dockerfile')).toBe(true);
 		const cloudLoginFile = body.files.find((file) => file.filePath === 'scripts/cloud-login.sh');
 		expect(cloudLoginFile).toBeDefined();

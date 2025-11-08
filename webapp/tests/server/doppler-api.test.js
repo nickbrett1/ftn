@@ -23,9 +23,7 @@ describe('DopplerAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 403, statusText: 'Forbidden' });
-		await expect(service.makeRequest('/fail')).rejects.toThrow(
-			'Doppler API error: 403 Forbidden'
-		);
+		await expect(service.makeRequest('/fail')).rejects.toThrow('Doppler API error: 403 Forbidden');
 	});
 
 	it('supports basic CRUD operations for projects', async () => {
@@ -84,9 +82,9 @@ describe('DopplerAPIService', () => {
 		expect(await service.listEnvironments('proj')).toEqual([{ id: 'env' }]);
 		expect(await service.createEnvironment('proj', 'Dev', 'dev')).toMatchObject({ slug: 'dev' });
 		expect(await service.listSecrets('proj', 'dev')).toEqual([{ name: 'TOKEN' }]);
-		expect(
-			await service.setSecret('proj', 'dev', 'TOKEN', '123', 'comment')
-		).toMatchObject({ name: 'TOKEN' });
+		expect(await service.setSecret('proj', 'dev', 'TOKEN', '123', 'comment')).toMatchObject({
+			name: 'TOKEN'
+		});
 
 		await service.deleteSecret('proj', 'dev', 'TOKEN');
 	});

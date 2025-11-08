@@ -108,10 +108,17 @@ describe('GitHubAPIService', () => {
 			.mockResolvedValueOnce({ json: newCommitJson })
 			.mockResolvedValueOnce({});
 
-		const commit = await service.createMultipleFiles('user', 'repo', [{
-			path: 'file.txt',
-			content: 'content'
-		}], 'Initial commit');
+		const commit = await service.createMultipleFiles(
+			'user',
+			'repo',
+			[
+				{
+					path: 'file.txt',
+					content: 'content'
+				}
+			],
+			'Initial commit'
+		);
 
 		expect(commit).toEqual({ sha: 'commit-sha' });
 		const patchCall = service.makeRequest.mock.calls.at(-1);
@@ -127,7 +134,9 @@ describe('GitHubAPIService', () => {
 			.mockResolvedValueOnce({ json: reposJson })
 			.mockResolvedValueOnce({});
 
-		expect(await service.createWebhook('user', 'repo', 'https://example.com', ['push'])).toEqual({ id: 1 });
+		expect(await service.createWebhook('user', 'repo', 'https://example.com', ['push'])).toEqual({
+			id: 1
+		});
 		expect(await service.listRepositories('all', 'updated', 5)).toEqual([{ name: 'repo' }]);
 
 		await service.deleteRepository('user', 'repo');

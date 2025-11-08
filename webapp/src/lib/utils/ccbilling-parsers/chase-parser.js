@@ -44,7 +44,7 @@ export class ChaseParser extends BaseParser {
 			'AMAZON CHASE',
 			'CHASE AMAZON'
 		];
-		
+
 		const hasAmazonChaseIdentifier = amazonChaseIdentifiers.some((identifier) =>
 			textUpper.includes(identifier)
 		);
@@ -88,19 +88,19 @@ export class ChaseParser extends BaseParser {
 			/Account Number:\s*XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
 			/Account Number:\s*(\d{4})/i,
 			/XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
-			
+
 			// More comprehensive patterns from regex validator
 			/(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})/i,
-			
+
 			// Additional patterns that might be used by Amazon Chase cards
 			/Account.*?(\d{4})/i,
 			/Card.*?(\d{4})/i,
 			/Account Number.*?(\d{4})/i,
 			/Card Number.*?(\d{4})/i,
-			
+
 			// Pattern for statements that show "ending in XXXX"
 			/ending\s+in\s+(\d{4})/i,
-			
+
 			// Pattern for masked numbers with asterisks
 			/\*{4}\s*(\d{4})/i,
 			/\*+\s*(\d{4})/i
@@ -128,12 +128,12 @@ export class ChaseParser extends BaseParser {
 			/Opening\/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
-			
+
 			// Additional patterns that might be used by Amazon Chase cards
 			/Billing Cycle\s+(\d{1,2}\/\d{1,2}\/\d{2})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Billing Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Statement Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
-			
+
 			// Patterns with 4-digit years
 			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
 			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
@@ -145,7 +145,7 @@ export class ChaseParser extends BaseParser {
 			if (match) {
 				// Use the second date (closing date) if two dates are provided
 				const dateStr = match[2] || match[1];
-				
+
 				// Check if the date is in 4-digit year format
 				if (dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
 					return this.parseChaseDate4Digit(dateStr);
@@ -240,10 +240,12 @@ export class ChaseParser extends BaseParser {
 			// Check if we're exiting the SHOP WITH POINTS ACTIVITY section
 			// Look for other section headers
 			if (inShopWithPointsSection) {
-				if (line.toUpperCase().includes('INTEREST CHARGES') ||
+				if (
+					line.toUpperCase().includes('INTEREST CHARGES') ||
 					line.toUpperCase().includes('YOUR ACCOUNT MESSAGES') ||
 					line.toUpperCase().includes('ACCOUNT SUMMARY') ||
-					line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
+					line.toUpperCase().includes('ACCOUNT ACTIVITY')
+				) {
 					inShopWithPointsSection = false;
 				} else {
 					// Skip all lines while in this section
@@ -251,12 +253,12 @@ export class ChaseParser extends BaseParser {
 				}
 			}
 
-					// Only process transaction lines when we're NOT in the SHOP WITH POINTS ACTIVITY section
-		// If we have a clear ACCOUNT ACTIVITY section, use it as a boundary
-		// Otherwise, process all transaction lines (for backward compatibility with test data)
-		if (inShopWithPointsSection) {
-			continue;
-		}
+			// Only process transaction lines when we're NOT in the SHOP WITH POINTS ACTIVITY section
+			// If we have a clear ACCOUNT ACTIVITY section, use it as a boundary
+			// Otherwise, process all transaction lines (for backward compatibility with test data)
+			if (inShopWithPointsSection) {
+				continue;
+			}
 
 			// Look for date pattern at the start of a line (MM/DD)
 			const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
@@ -579,10 +581,10 @@ export class ChaseParser extends BaseParser {
 		// Check if line contains only uppercase letters and spaces, or starts with date + uppercase letters
 		// But exclude common section headers and non-currency text
 		const lineTrimmed = line.trim();
-		
+
 		// Skip if line is too short or contains common section headers
 		if (lineTrimmed.length < 3) return false;
-		
+
 		// Skip common section headers that might look like currency lines
 		const sectionHeaders = [
 			'SHOP WITH POINTS ACTIVITY',
@@ -596,25 +598,39 @@ export class ChaseParser extends BaseParser {
 			'AMOUNT',
 			'REWARDS'
 		];
-		
-		if (sectionHeaders.some(header => lineTrimmed.toUpperCase().includes(header))) {
+
+		if (sectionHeaders.some((header) => lineTrimmed.toUpperCase().includes(header))) {
 			return false;
 		}
-		
+
 		// Only match lines that look like actual currency names
 		// These should be relatively short and contain currency-related words
 		const currencyKeywords = [
-			'DOLLAR', 'POUND', 'EURO', 'YEN', 'FRANC', 'KRONE', 'KRONA', 
-			'PESO', 'REAL', 'YUAN', 'WON', 'RUBLE', 'LIRA', 'RAND', 'RUPEE'
+			'DOLLAR',
+			'POUND',
+			'EURO',
+			'YEN',
+			'FRANC',
+			'KRONE',
+			'KRONA',
+			'PESO',
+			'REAL',
+			'YUAN',
+			'WON',
+			'RUBLE',
+			'LIRA',
+			'RAND',
+			'RUPEE'
 		];
-		
-		const hasCurrencyKeyword = currencyKeywords.some(keyword => 
+
+		const hasCurrencyKeyword = currencyKeywords.some((keyword) =>
 			lineTrimmed.toUpperCase().includes(keyword)
 		);
-		
+
 		// Only return true if it has a currency keyword and matches the pattern
-		const matchesPattern = /^[A-Z\s]+$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(lineTrimmed);
-		
+		const matchesPattern =
+			/^[A-Z\s]+$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(lineTrimmed);
+
 		return matchesPattern && hasCurrencyKeyword;
 	}
 
@@ -678,13 +694,13 @@ export class ChaseParser extends BaseParser {
 	 */
 	isLikelyShopWithPointsTransaction(merchant, amount, fullLine) {
 		// Check for suspicious patterns that indicate SHOP WITH POINTS transactions
-		
+
 		// 1. Check if the line contains the specific AMZN.COM/BILLWA pattern
 		// This is a clear indicator of SHOP WITH POINTS transactions
 		if (fullLine.includes('AMZN.COM/BILLWA')) {
 			return true;
 		}
-		
+
 		// 2. Check if the amount is suspiciously large for the merchant description
 		// SHOP WITH POINTS transactions often have amounts like $1567.00 for a $15.67 purchase
 		if (amount > 1000 && merchant.toLowerCase().includes('amazon')) {
@@ -696,19 +712,15 @@ export class ChaseParser extends BaseParser {
 		// 3. Check if the line contains points-related keywords
 		const pointsKeywords = ['points', 'rewards', 'shop with points'];
 		const lineLower = fullLine.toLowerCase();
-		if (pointsKeywords.some(keyword => lineLower.includes(keyword))) {
+		if (pointsKeywords.some((keyword) => lineLower.includes(keyword))) {
 			return true;
 		}
 
 		// 4. Check if the merchant name contains suspicious patterns
 		// SHOP WITH POINTS transactions often have very generic merchant names
-		const suspiciousMerchants = [
-			'amazon.com',
-			'amazon marketplace',
-			'amazon mkpl'
-		];
-		
-		if (suspiciousMerchants.some(suspicious => merchant.toLowerCase().includes(suspicious))) {
+		const suspiciousMerchants = ['amazon.com', 'amazon marketplace', 'amazon mkpl'];
+
+		if (suspiciousMerchants.some((suspicious) => merchant.toLowerCase().includes(suspicious))) {
 			// If it's an Amazon transaction with a very large amount, it's likely points
 			if (amount > 500) {
 				return true;
@@ -736,7 +748,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	isAmazonTransaction(merchant) {
 		if (!merchant) return false;
-		
+
 		const merchantUpper = merchant.toUpperCase();
 		return merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN');
 	}
@@ -758,12 +770,12 @@ export class ChaseParser extends BaseParser {
 		// Check the next few lines for order ID patterns
 		for (let i = currentIndex + 1; i < Math.min(currentIndex + 5, lines.length); i++) {
 			const nextLine = lines[i];
-			
+
 			// Stop if we hit another transaction line (starts with date pattern)
 			if (nextLine.match(/^\d{2}\/\d{2}\s+/)) {
 				break;
 			}
-			
+
 			// Check if this line contains order ID information
 			if (this.containsOrderIdInfo(nextLine)) {
 				fullText += '\n' + nextLine;
@@ -780,9 +792,9 @@ export class ChaseParser extends BaseParser {
 	 */
 	containsOrderIdInfo(line) {
 		if (!line) return false;
-		
+
 		const lineUpper = line.toUpperCase();
-		
+
 		// Look for order ID patterns
 		const orderIdPatterns = [
 			/ORDER NUMBER/i,
@@ -792,8 +804,8 @@ export class ChaseParser extends BaseParser {
 			/\d{16}/, // Compact order ID format
 			/\d{10,}/ // Any long number sequence
 		];
-		
-		return orderIdPatterns.some(pattern => {
+
+		return orderIdPatterns.some((pattern) => {
 			if (typeof pattern === 'string') {
 				return lineUpper.includes(pattern);
 			}

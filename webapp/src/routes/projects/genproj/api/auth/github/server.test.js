@@ -11,14 +11,15 @@ const createRedirectMock = () =>
 	});
 
 const createJsonMock = () =>
-	vi.fn((data, init) =>
-		new Response(JSON.stringify(data), {
-			status: init?.status ?? 200,
-			headers: {
-				'Content-Type': 'application/json',
-				...(init?.headers ?? {})
-			}
-		})
+	vi.fn(
+		(data, init) =>
+			new Response(JSON.stringify(data), {
+				status: init?.status ?? 200,
+				headers: {
+					'Content-Type': 'application/json',
+					...(init?.headers ?? {})
+				}
+			})
 	);
 
 async function setupModule(options = {}) {
@@ -87,7 +88,10 @@ describe('GitHub Auth API - Initiation', () => {
 				request,
 				platform: { env: { KV: { put: kvPut } } }
 			})
-		).rejects.toMatchObject({ status: 302, location: 'https://github.com/login/oauth/authorize?state=test' });
+		).rejects.toMatchObject({
+			status: 302,
+			location: 'https://github.com/login/oauth/authorize?state=test'
+		});
 
 		expect(generateAuthState).toHaveBeenCalledTimes(1);
 		expect(generateGitHubAuthUrl).toHaveBeenCalledWith(
