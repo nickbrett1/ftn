@@ -1,4 +1,3 @@
-import { OAuth2RequestError } from 'arctic';
 import { github } from '$lib/server/auth';
 import { createSession, setSessionCookie } from '$lib/server/session';
 import { dev } from '$app/environment';
@@ -41,11 +40,6 @@ export async function GET(event) {
 			}
 		});
 	} catch (e) {
-		if (e instanceof OAuth2RequestError) {
-			return new Response(null, {
-				status: 400
-			});
-		}
 		return new Response(null, {
 			status: 500
 		});
