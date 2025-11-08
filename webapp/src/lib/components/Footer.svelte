@@ -4,7 +4,8 @@
 		LinkedinInBrands,
 		EnvelopeRegular,
 		CreditCardSolid,
-		ToolsSolid
+		ToolsSolid,
+		RocketSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -103,15 +104,16 @@
 		>
 			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
-				<button
+				<RocketSolid
 					id="deployments"
 					onclick={() => {
 						goto('/deploys');
 					}}
-					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-				>
-					🚀
-				</button>
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-[48px]"
+					title="Deployments"
+					ariaLabel="Deployments"
+					focusable="true"
+				/>
 				<ToolsSolid
 					id="genproj"
 					onclick={handleGenprojClick}
