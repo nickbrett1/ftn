@@ -52,7 +52,7 @@ export async function initiateGoogleAuth(redirectPath, gotoFn) {
 
         // Set a cookie to store the redirect path
         const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-        document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
+        document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/;`; // Removed secure and samesite=lax
 
         // Check if Google GIS is already loaded
         if (window.google?.accounts?.oauth2) {
@@ -104,7 +104,7 @@ function loadGoogleGISAndRequestCode() {
                 const script = document.createElement('script');
                 script.src = 'https://accounts.google.com/gsi/client';
                 script.nonce = '%sveltekit.nonce%';
-                script.onload = () => {
+                script.onload = async () => {
                         try {
                                 // Check if Google GIS is properly loaded
                                 if (!window.google?.accounts?.id) {
@@ -123,7 +123,7 @@ function loadGoogleGISAndRequestCode() {
                                 });
 
                                 // Request authorization code
-                                requestCodeWithGIS();
+                                await requestCodeWithGIS();
                                 resolve();
                         } catch (error) {
                                 reject(error);

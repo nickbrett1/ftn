@@ -1,264 +1,330 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { initiateGoogleAuth, getRedirectUri, isUserAuthenticated } from './google-auth.js';
+
+// Mock SvelteKit navigation
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 // Mock nanoid
 vi.mock('nanoid', () => ({
-        nanoid: vi.fn(() => 'mock-state-id')
+	nanoid: vi.fn(() => 'mock-state-id')
 }));
 
 describe('Google Auth Utils', () => {
-        let initiateGoogleAuth;
-        let getRedirectUri;
-        let isUserAuthenticated;
+        let originalCreateElement;
 
-        beforeEach(async () => {
+        beforeEach(() => {
                 vi.clearAllMocks();
                 // Reset document.cookie
                 Object.defineProperty(document, 'cookie', {
                         writable: true,
                         value: ''
                 });
-                // Default mock for window.google to simulate GIS loaded
-                window.google = {
-                        accounts: {
-                                id: {
-                                        initialize: vi.fn(),
-                                        renderButton: vi.fn(),
-                                        prompt: vi.fn()
-                                },
-                                oauth2: {
-                                        initCodeClient: vi.fn(() => ({
-                                                requestCode: vi.fn()
-                                        }))
-                                }
+                // Reset window.google
+                delete window.google;
+
+                originalCreateElement = document.createElement;
+                // Mock document.createElement to return a mock script element
+                vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+                        if (tagName === 'script') {
+                                const script = originalCreateElement.call(document, 'script');
+                                script.onload = null;
+                                script.onerror = null;
+                                vi.spyOn(script, 'setAttribute');
+                                vi.spyOn(script, 'remove');
+                                return script;
                         }
-                };
-
-                // Dynamically import the module under test after mocks are set up
-                ({ initiateGoogleAuth, getRedirectUri, isUserAuthenticated } = await import('./google-auth.js'));
-        });
-
-        afterEach(() => {
-                // Clear all mocks and timers to prevent leaks
-                vi.clearAllMocks();
-                vi.clearAllTimers();
-                vi.restoreAllMocks();
-        });
-
-        describe('getRedirectUri', () => {
-                it('should return development URI in development environment', () => {
-                        const originalEnv = process.env.NODE_ENV;
-                        process.env.NODE_ENV = 'development';
-
-                        const uri = getRedirectUri();
-                        expect(uri).toBe('http://127.0.0.1:5173/auth');
-
-                        process.env.NODE_ENV = originalEnv;
-                });
-
-                it('should return production URI in production environment', () => {
-                        const originalEnv = process.env.NODE_ENV;
-                        process.env.NODE_ENV = 'production';
-
-                        // Mock browser environment for production test
-                        const originalLocation = window.location;
-                        Object.defineProperty(window, 'location', {
-                                writable: true,
-                                configurable: true,
-                                value: {
-                                        origin: 'https://fintechnick.com'
-                                }
-                        });
-
-                        const uri = getRedirectUri();
-                        expect(uri).toBe('https://fintechnick.com/auth');
-
-                        // Clean up
-                        Object.defineProperty(window, 'location', {
-                                writable: true,
-                                configurable: true,
-                                value: originalLocation
-                        });
-                        process.env.NODE_ENV = originalEnv;
-                });
-
-                it('should return preview URI for preview deployments', () => {
-                        const originalEnv = process.env.NODE_ENV;
-                        process.env.NODE_ENV = 'production';
-
-                        // Mock browser environment for preview deployment
-                        const originalLocation = window.location;
-                        Object.defineProperty(window, 'location', {
-                                writable: true,
-                                configurable: true,
-                                value: {
-                                        origin: 'https://ftn-preview.nick-brett1.workers.dev'
-                                }
-                        });
-
-                        const uri = getRedirectUri();
-                        expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
-
-                        // Clean up
-                        Object.defineProperty(window, 'location', {
-                                writable: true,
-                                configurable: true,
-                                value: originalLocation
-                        });
-                        process.env.NODE_ENV = originalEnv;
+                        // For other elements, call the original createElement
+                        return originalCreateElement.call(document, tagName);
                 });
         });
 
-        describe('isUserAuthenticated', () => {
-                it('should return true when auth cookie is present and valid', () => {
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: 'auth=some-valid-token'
-                        });
+	afterEach(() => {
+		vi.restoreAllMocks();
+		vi.clearAllTimers();
+	});
 
-                        expect(isUserAuthenticated()).toBe(true);
-                });
+	describe('getRedirectUri', () => {
+		it('should return development URI in development environment', () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'development';
 
-                it('should return false when auth cookie is deleted', () => {
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: 'auth=deleted'
-                        });
+			const uri = getRedirectUri();
+			expect(uri).toBe('http://127.0.0.1:5173/auth');
 
-                        expect(isUserAuthenticated()).toBe(false);
-                });
+			process.env.NODE_ENV = originalEnv;
+		});
 
-                it('should return false when no auth cookie is present', () => {
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: ''
-                        });
+		it('should return production URI in production environment', () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'production';
 
-                        expect(isUserAuthenticated()).toBe(false);
-                });
+			// Mock browser environment for production test
+			const originalLocation = globalThis.location;
+			Object.defineProperty(globalThis, 'location', {
+				writable: true,
+				configurable: true,
+				value: {
+					origin: 'https://fintechnick.com'
+				}
+			});
 
-                it('should return false when auth cookie is malformed', () => {
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: 'invalid-cookie-format'
-                        });
+			const uri = getRedirectUri();
+			expect(uri).toBe('https://fintechnick.com/auth');
 
-                        expect(isUserAuthenticated()).toBe(false);
-                });
-        });
+			// Clean up
+			Object.defineProperty(globalThis, 'location', {
+				writable: true,
+				configurable: true,
+				value: originalLocation
+			});
+			process.env.NODE_ENV = originalEnv;
+		});
 
-        describe('initiateGoogleAuth', () => {
-                it('should redirect to ccbilling if user is already logged in', async () => {
-                        const goto = vi.fn();
+		it('should return preview URI for preview deployments', () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'production';
 
-                        // Mock logged in state
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: 'auth=some-valid-token'
-                        });
+			// Mock browser environment for preview deployment
+			const originalLocation = globalThis.location;
+			Object.defineProperty(globalThis, 'location', {
+				writable: true,
+				configurable: true,
+				value: {
+					origin: 'https://ftn-preview.nick-brett1.workers.dev'
+				}
+			});
 
-                        await initiateGoogleAuth('/projects/ccbilling', goto);
+			const uri = getRedirectUri();
+			expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
 
-                        expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
-                });
+			// Clean up
+			Object.defineProperty(globalThis, 'location', {
+				writable: true,
+				configurable: true,
+				value: originalLocation
+			});
+			process.env.NODE_ENV = originalEnv;
+		});
+	});
 
-                it('should set redirectPath cookie and request code with GIS if not logged in', async () => {
-                        // Mock not logged in state
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: ''
-                        });
+	describe('isUserAuthenticated', () => {
+		it('should return true when auth cookie is present and valid', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=some-valid-token'
+			});
 
-                        const initCodeClientMock = vi.fn(() => ({
-                                requestCode: vi.fn()
-                        }));
-                        window.google.accounts.oauth2.initCodeClient = initCodeClientMock;
+			expect(isUserAuthenticated()).toBe(true);
+		});
 
-                        await initiateGoogleAuth('/some-path');
+		it('should return false when auth cookie is deleted', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=deleted'
+			});
 
-                        expect(document.cookie).toContain('redirectPath=/some-path');
-                        expect(initCodeClientMock).toHaveBeenCalledWith(
-                                expect.objectContaining({
-                                        client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
-                                        scope: 'openid profile email',
-                                        ux_mode: 'redirect',
-                                        state: 'mock-state-id',
-                                        redirect_uri: getRedirectUri()
-                                })
-                        );
-                });
+			expect(isUserAuthenticated()).toBe(false);
+		});
 
-                it('should load GIS script if not already loaded', async () => {
-                        // Mock GIS not loaded
-                        window.google = undefined;
+		it('should return false when no auth cookie is present', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
+			});
 
-                        const appendChildSpy = vi.spyOn(document.body, 'appendChild');
-                        const script = document.createElement('script');
-                        script.src = 'https://accounts.google.com/gsi/client';
-                        script.nonce = '%sveltekit.nonce%';
+			expect(isUserAuthenticated()).toBe(false);
+		});
 
-                        // Mock script loading success
-                        appendChildSpy.mockImplementationOnce((s) => {
-                                s.onload(); // Simulate script loading
-                        });
+		it('should return false when auth cookie is malformed', () => {
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'invalid-cookie-format'
+			});
 
-                        // Mock GIS loaded after script
-                        window.google = {
-                                accounts: {
-                                        id: {
-                                                initialize: vi.fn(),
-                                                renderButton: vi.fn(),
-                                                prompt: vi.fn()
-                                        },
-                                        oauth2: {
-                                                initCodeClient: vi.fn(() => ({
-                                                        requestCode: vi.fn()
-                                                }))
-                                        }
-                                }
-                        };
+			expect(isUserAuthenticated()).toBe(false);
+		});
+	});
 
-                        await initiateGoogleAuth();
+	describe('initiateGoogleAuth', () => {
+		it('should redirect to ccbilling if user is already logged in', async () => {
+			const { goto } = await import('$app/navigation');
 
-                        expect(appendChildSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
-                        expect(window.google.accounts.id.initialize).toHaveBeenCalledWith(
-                                expect.objectContaining({
-                                        client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
-                                })
-                        );
-                        expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
-                });
+			// Mock logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=some-valid-token'
+			});
 
-                it('should handle GIS script loading errors', async () => {
-                        // Mock GIS not loaded
-                        window.google = undefined;
+			await initiateGoogleAuth('/projects/ccbilling');
 
-                        const appendChildSpy = vi.spyOn(document.body, 'appendChild');
-                        appendChildSpy.mockImplementationOnce((s) => {
-                                s.onerror(); // Simulate script loading error
-                        });
+			expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+		});
 
-                        await expect(initiateGoogleAuth()).rejects.toThrow('Google gsi script failed to load');
-                });
+		it('should redirect to default path if no path specified', async () => {
+			const { goto } = await import('$app/navigation');
 
-                it('should handle GIS initialization errors', async () => {
-                        // Mock GIS not loaded
-                        window.google = undefined;
+			// Mock logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: 'auth=some-valid-token'
+			});
 
-                        const appendChildSpy = vi.spyOn(document.body, 'appendChild');
-                        appendChildSpy.mockImplementationOnce((s) => {
-                                s.onload(); // Simulate script loading
-                        });
+			await initiateGoogleAuth();
 
-                        // Mock GIS loaded but id not initialized
-                        window.google = {
-                                accounts: {
-                                        id: undefined,
-                                        oauth2: undefined
-                                }
-                        };
+			expect(goto).toHaveBeenCalledWith(globalThis.location.pathname);
+		});
 
-                        await expect(initiateGoogleAuth()).rejects.toThrow('Google Identity Services failed to load properly');
-                });
+		it('should set redirectPath cookie and request code with GIS if not logged in', async () => {
+			// Mock not logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
+			});
+
+			// Mock globalThis.google.accounts.oauth2
+			globalThis.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
+
+			await initiateGoogleAuth('/some-path');
+
+			expect(document.cookie).toContain('redirectPath=/some-path');
+			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalledWith(
+				expect.objectContaining({
+					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
+					scope: 'openid profile email',
+					ux_mode: 'redirect',
+					state: 'mock-state-id',
+					redirect_uri: getRedirectUri()
+				})
+			);
+		});
+
+		                                                                it('should load GIS script if not already loaded', async () => {
+
+		                                                                        // Mock GIS not loaded
+
+		                                                                        window.google = undefined;
+
+		                                                
+
+		                                                                        const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+
+		                                                
+
+		                                                                        // Call initiateGoogleAuth once
+
+		                                                                        const initiateAuthPromise = initiateGoogleAuth();
+
+		                                                
+
+		                                                                        // Expect appendChild to have been called with a script element
+
+		                                                                        expect(appendChildSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
+
+		                                                                        const scriptElement = appendChildSpy.mock.calls[0][0];
+
+		                                                                        expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
+
+		                                                
+
+		                                                                        // Mock GIS loaded after script, but before onload is triggered
+
+		                                                                        window.google = {
+
+		                                                                                accounts: {
+
+		                                                                                        id: {
+
+		                                                                                                initialize: vi.fn(),
+
+		                                                                                                renderButton: vi.fn(),
+
+		                                                                                                prompt: vi.fn()
+
+		                                                                                        },
+
+		                                                                                        oauth2: {
+
+		                                                                                                initCodeClient: vi.fn(() => ({
+
+		                                                                                                        requestCode: vi.fn()
+
+		                                                                                                }))
+
+		                                                                                        }
+
+		                                                                                }
+
+		                                                                        };
+
+		                                                
+
+		                                                                        // Simulate script loading success
+
+		                                                                        scriptElement.onload();
+
+		                                                
+
+		                                                                        // Wait for the initiateAuthPromise to resolve
+
+		                                                                        await initiateAuthPromise;
+
+		                                                
+
+		                                                                        expect(window.google.accounts.id.initialize).toHaveBeenCalledWith(
+
+		                                                                                expect.objectContaining({
+
+		                                                                                        client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
+
+		                                                                                })
+
+		                                                                        );
+
+		                                                                        expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+
+		                                                                });		it('should handle GIS script loading errors', async () => {
+			// Mock GIS not loaded
+			globalThis.google = undefined;
+
+			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+			appendChildSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.onerror(); // Simulate script loading error
+			});
+
+			await expect(initiateGoogleAuth()).rejects.toThrow('Google gsi script failed to load');
+		});
+
+		it('should handle GIS initialization errors', async () => {
+			// Mock GIS not loaded
+			globalThis.google = undefined;
+
+			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+			appendChildSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.onload(); // Simulate script loading
+			});
+
+			// Mock GIS loaded but id not initialized
+			globalThis.google = {
+				accounts: {
+					id: undefined,
+					oauth2: undefined
+				}
+			};
+
+			await expect(initiateGoogleAuth()).rejects.toThrow(
+				'Google Identity Services failed to load properly'
+			);
+		});
 
                 it('should handle initCodeClient errors', async () => {
                         // Mock not logged in state
@@ -267,39 +333,45 @@ describe('Google Auth Utils', () => {
                                 value: ''
                         });
 
-                        const initCodeClientMock = vi.fn(() => ({
-                                requestCode: vi.fn()
-                        }));
-                        window.google.accounts.oauth2.initCodeClient = initCodeClientMock;
-
-                        // Simulate an error in the callback
-                        initCodeClientMock.mockImplementationOnce((options) => {
-                                options.callback({ error: 'access_denied' });
-                                return { requestCode: vi.fn() };
-                        });
+                        // Mock window.google.accounts.oauth2
+                        window.google = {
+                                accounts: {
+                                        oauth2: {
+                                                initCodeClient: vi.fn(() => {
+                                                        throw new Error('Failed to initCodeClient');
+                                                })
+                                        }
+                                }
+                        };
 
                         await expect(initiateGoogleAuth()).rejects.toThrow('Failed to initCodeClient');
                 });
 
-                it('should handle state mismatch error', async () => {
-                        // Mock not logged in state
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: ''
-                        });
+		it('should handle state mismatch error', async () => {
+			// Mock not logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
+			});
 
-                        const initCodeClientMock = vi.fn(() => ({
-                                requestCode: vi.fn()
-                        }));
-                        window.google.accounts.oauth2.initCodeClient = initCodeClientMock;
+			// Mock globalThis.google.accounts.oauth2
+			globalThis.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
 
-                        // Simulate a state mismatch in the callback
-                        initCodeClientMock.mockImplementationOnce((options) => {
-                                options.callback({ state: 'mismatched-state' });
-                                return { requestCode: vi.fn() };
-                        });
+			// Simulate a state mismatch in the callback
+			globalThis.google.accounts.oauth2.initCodeClient.mockImplementationOnce((options) => {
+				options.callback({ state: 'mismatched-state' });
+				return { requestCode: vi.fn() };
+			});
 
-                        await expect(initiateGoogleAuth()).rejects.toThrow('State mismatch');
-                });
-        });
+			await expect(initiateGoogleAuth()).rejects.toThrow('State mismatch');
+		});
+	});
 });
