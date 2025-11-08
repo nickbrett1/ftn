@@ -8,8 +8,8 @@ import {
 } from '$env/static/private';
 import { validateSession, setSessionCookie, deleteSessionCookie } from './session';
 
-console.log('GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+console.log('GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? `SET (length: ${GOOGLE_CLIENT_ID.length})` : 'NOT SET');
+console.log('GOOGLE_CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? `SET (length: ${GOOGLE_CLIENT_SECRET.length})` : 'NOT SET');
 
 export const github = new GitHub(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET);
 
