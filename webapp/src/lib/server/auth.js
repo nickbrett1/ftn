@@ -10,10 +10,12 @@ import { validateSession, setSessionCookie, deleteSessionCookie } from './sessio
 
 export const github = new GitHub(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET);
 
-if (!GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
-
-if (!GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
-
+if (!GOOGLE_CLIENT_ID) {
+	throw new Error('Must set GOOGLE_CLIENT_ID environment variable');
+}
+if (!GOOGLE_CLIENT_SECRET) {
+	throw new Error('Must set GOOGLE_CLIENT_SECRET environment variable');
+}
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, 'https://fintechnick.com/auth');
 
 /**
