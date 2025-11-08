@@ -38,7 +38,11 @@ describe('Auth', () => {
 
 	it('auth allows access if in KV', async () => {
 		const res = await GET({
-			request: new Request('https://fintechnick.com/auth?code=123'),
+			request: new Request('https://fintechnick.com/auth?code=123', {
+				headers: {
+					Cookie: 'redirectPath=/projects/ccbilling'
+				}
+			}),
 			platform: {
 				env: {
 					// Mock KV.get to simulate user being allowed

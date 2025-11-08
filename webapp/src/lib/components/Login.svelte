@@ -32,12 +32,12 @@
 
 	async function onClick() {
 		if (loggedIn) {
-			goto('/projects/ccbilling');
+			goto(window.location.pathname);
 			return;
 		}
 
 		// Use the shared Google auth utility
-		await initiateGoogleAuth('/projects/ccbilling');
+		await initiateGoogleAuth();
 	}
 </script>
 

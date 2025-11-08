@@ -37,14 +37,22 @@ export function isUserAuthenticated() {
  * This is the preferred method as it handles the OAuth flow properly
  * @param {string} redirectPath - Optional path to redirect to after successful auth (defaults to /projects/ccbilling)
  */
-export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
+export async function initiateGoogleAuth(redirectPath, gotoFn) {
+	if (!redirectPath) {
+		redirectPath = window.location.pathname;
+	}
+
 	// Check if user is already logged in
 	if (isUserAuthenticated()) {
 		// If already logged in, redirect using SvelteKit navigation
-		const { goto } = await import('$app/navigation');
+		const goto = gotoFn || (await import('$app/navigation')).goto;
 		goto(redirectPath);
 		return;
 	}
+
+	// Set a cookie to store the redirect path
+	const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
+	document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
 
 	// Check if Google GIS is already loaded
 	if (window.google?.accounts?.oauth2) {

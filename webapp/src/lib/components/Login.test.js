@@ -44,17 +44,24 @@ describe('Login correctly', () => {
 		flushSync();
 
 		// Should call the shared Google auth utility
-		expect(initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
+		expect(initiateGoogleAuth).toHaveBeenCalledWith();
 		
 		unmount(component);
 	});
 
-	it('redirects to ccbilling if already logged in', async () => {
+	it('redirects to current path if already logged in', async () => {
 		const { goto } = await import('$app/navigation');
 		const { initiateGoogleAuth, isUserAuthenticated } = await import('$lib/client/google-auth.js');
 
 		// Mock isUserAuthenticated to return true (logged in)
 		isUserAuthenticated.mockReturnValue(true);
+
+		// Mock window.location.pathname
+		const originalPathname = window.location.pathname;
+		Object.defineProperty(window, 'location', {
+			writable: true,
+			value: { pathname: '/current-page' }
+		});
 
 		const component = mount(Login, {
 			target: document.body
@@ -71,11 +78,17 @@ describe('Login correctly', () => {
 
 		flushSync();
 
-		// Should redirect to ccbilling
-		expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+		// Should redirect to current path
+		expect(goto).toHaveBeenCalledWith('/current-page');
 		// Should not call initiateGoogleAuth
 		expect(initiateGoogleAuth).not.toHaveBeenCalled();
 		
 		unmount(component);
+
+		// Restore original window.location.pathname
+		Object.defineProperty(window, 'location', {
+			writable: true,
+			value: { pathname: originalPathname }
+		});
 	});
 });

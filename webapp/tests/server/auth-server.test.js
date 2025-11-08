@@ -74,7 +74,11 @@ describe('Auth server route', () => {
 			}
 		};
 
-		const request = new Request('https://app.test/auth?code=abc123');
+		const request = new Request('https://app.test/auth?code=abc123', {
+			headers: {
+				Cookie: 'redirectPath=/projects/ccbilling'
+			}
+		});
 		const response = await GET({ request, platform });
 
 		expect(response.status).toBe(307);

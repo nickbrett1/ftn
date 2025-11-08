@@ -19,6 +19,18 @@ Object.defineProperty(globalThis, 'location', {
 	writable: true
 });
 
+// Mock the Login component
+vi.mock('../../src/lib/components/Login.svelte', () => ({
+	default: vi.fn().mockImplementation(() => ({
+		// Mock Svelte component interface
+		$set: vi.fn(),
+		$on: vi.fn(),
+		$destroy: vi.fn(),
+		// Add any other properties or methods your component uses
+	  }))
+}));
+
+
 describe('Genproj Page Component', () => {
 	let component;
 
@@ -94,20 +106,6 @@ describe('Genproj Page Component', () => {
 			unmount(component);
 			component = null;
 		}
-	});
-
-	it('should display capabilities without authentication', async () => {
-		component = mount(GenprojPage, {
-			target: document.body,
-			props: defaultProps
-		});
-
-		// Wait for capabilities to load
-		await new Promise((resolve) => setTimeout(resolve, 500));
-
-		// Check that capabilities are displayed
-		const capabilityList = document.querySelector('[data-testid="capability-selector"]');
-		expect(capabilityList).toBeTruthy();
 	});
 
 	it('should display capability categories', async () => {

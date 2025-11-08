@@ -101,11 +101,14 @@ export async function GET({ request, platform }) {
 			expiration: kvExpiration
 		});
 
+		const cookies = request.headers.get('cookie') || '';
+		const redirectPath = cookies.match(/redirectPath=([^;]+)/)?.[1] || '/';
+
 		return new Response(null, {
 			// Changed from empty string to null for clarity
 			status: HTML_TEMPORARY_REDIRECT,
 			headers: {
-				Location: `${url.origin}/projects/ccbilling`,
+				Location: `${url.origin}${redirectPath}`,
 				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax`
 			}
 		});
