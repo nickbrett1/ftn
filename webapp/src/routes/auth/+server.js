@@ -1,15 +1,13 @@
 // Try to import environment variables, with fallbacks for build time
-let GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, PUBLIC_GOOGLE_REDIRECT_URI;
+let GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET;
 try {
 	const env = await import('$env/static/private');
 	GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
 	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
-	PUBLIC_GOOGLE_REDIRECT_URI = env.PUBLIC_GOOGLE_REDIRECT_URI;
 } catch (error) {
 	// During build time, these might not be available
 	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
 	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
-	PUBLIC_GOOGLE_REDIRECT_URI = process.env?.PUBLIC_GOOGLE_REDIRECT_URI || 'placeholder';
 }
 import { isUserAllowed } from '$lib/server/user-validation.js';
 
@@ -20,7 +18,6 @@ const tokenExchange = async (url, code) => {
 
 	if (!GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
 	if (!GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
-	if (!PUBLIC_GOOGLE_REDIRECT_URI) throw new Error('Must set PUBLIC_GOOGLE_REDIRECT_URI');
 
 	const params = {
 		client_id: GOOGLE_CLIENT_ID,
@@ -28,7 +25,7 @@ const tokenExchange = async (url, code) => {
 
 		code,
 		grant_type: 'authorization_code',
-		redirect_uri: PUBLIC_GOOGLE_REDIRECT_URI
+		redirect_uri: `${url.origin}/auth`
 	};
 
 	Object.entries(params).forEach(([key, value]) => {

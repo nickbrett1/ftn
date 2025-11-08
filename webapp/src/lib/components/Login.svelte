@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	let { children } = $props();
 
@@ -10,7 +11,7 @@
 			return;
 		}
 
-		goto('/auth');
+		await initiateGoogleAuth(window.location.pathname, goto);
 	}
 </script>
 
