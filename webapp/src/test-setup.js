@@ -45,7 +45,8 @@ vi.mock('svelte-awesome-icons', () => {
 		DatabaseSolid: createMockIcon(),
 		PenToSquareRegular: createMockIcon(),
 		ToolboxSolid: createMockIcon(),
-		PlaneDepartureSolid: createMockIcon()
+		PlaneDepartureSolid: createMockIcon(),
+		ToolsSolid: createMockIcon()
 	};
 });
 
