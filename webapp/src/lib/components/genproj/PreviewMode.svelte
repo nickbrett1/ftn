@@ -4,6 +4,7 @@
 -->
 
 <script>
+	import { browser } from '$app/environment';
 	import { logger } from '$lib/utils/logging.js';
 
 	// Props
@@ -128,7 +129,7 @@
 		configuration: cloneConfiguration(configuration)
 	};
 
-	$: if (previewInputs.selectedCapabilities.length > 0) {
+	$: if (browser && previewInputs.selectedCapabilities.length > 0) {
 		generatePreview(previewInputs);
 	} else {
 		previewData = null;
