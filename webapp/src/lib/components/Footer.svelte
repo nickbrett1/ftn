@@ -4,7 +4,7 @@
 		LinkedinInBrands,
 		EnvelopeRegular,
 		CreditCardSolid,
-		UserSecretSolid
+		ToolsSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -47,6 +47,10 @@
 			content: 'Credit Card Billing Tool'
 		});
 
+		const genprojTooltips = tippy('#genproj', {
+			content: 'Project Generator Tool'
+		});
+
 		// Clean up tooltips when component unmounts
 		return () => {
 			clearInterval(authCheckInterval);
@@ -66,6 +70,12 @@
 			} else {
 				loginTooltips.destroy();
 			}
+
+			if (Array.isArray(genprojTooltips)) {
+				genprojTooltips.forEach((tooltip) => tooltip.destroy());
+			} else {
+				genprojTooltips.destroy();
+			}
 		};
 	});
 
@@ -76,6 +86,11 @@
 		} else {
 			// User is not logged in, show login modal
 		}
+	}
+
+	function handleGenprojClick() {
+		// User is already logged in, go directly to genproj page
+		goto('/projects/genproj');
 	}
 </script>
 
@@ -97,7 +112,14 @@
 				>
 					🚀
 				</button>
-
+				<ToolsSolid
+					id="genproj"
+					onclick={handleGenprojClick}
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-[48px]"
+					title="Project Generator Tool"
+					ariaLabel="Project Generator Tool"
+					focusable="true"
+				/>
 				<!-- Credit Card Billing Tool icon -->
 				{#if isLoggedIn}
 					<!-- User is logged in, show clickable icon that goes directly to billing -->
