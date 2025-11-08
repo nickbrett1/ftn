@@ -1,11 +1,11 @@
 import { redirect } from '@sveltejs/kit';
-import { generateState } from 'arctic';
+import { nanoid } from 'nanoid';
 import { github } from '$lib/server/auth';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET(event) {
-	const state = generateState();
-	const url = await github.createAuthorizationURL(state);
+	const state = nanoid();
+	const url = await github.createAuthorizationURL(state, event.url);
 
 	event.cookies.set('github_oauth_state', state, {
 		path: '/',
