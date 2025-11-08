@@ -1,9 +1,18 @@
 import { dev } from '$app/environment';
 import { GitHub, Google } from 'arctic';
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
+import {
+	GITHUB_CLIENT_ID,
+	GITHUB_CLIENT_SECRET,
+	GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET
+} from '$env/static/private';
 import { validateSession, setSessionCookie, deleteSessionCookie } from './session';
 
 export const github = new GitHub(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET);
+
+if (!GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
+
+if (!GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
 
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, 'https://fintechnick.com/auth');
 
