@@ -104,15 +104,16 @@
 		>
 			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
-				<button
+				<RocketSolid
 					id="deployments"
 					onclick={() => {
 						goto('/deploys');
 					}}
-					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-12 flex items-center justify-center"
-				>
-					🚀
-				</button>
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+					title="Deployments & Preview Environments"
+					ariaLabel="Deployments & Preview Environments"
+					focusable="true"
+				/>
 				<ToolsSolid
 					id="genproj"
 					onclick={handleGenprojClick}
