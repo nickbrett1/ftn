@@ -6,8 +6,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
-	import tippy from 'tippy.js';
-	import 'tippy.js/dist/tippy.css';
 	import { logger } from '$lib/utils/logging.js';
 	import { capabilities } from '$lib/config/capabilities.js';
 
@@ -91,6 +89,21 @@
 			error = err.message;
 		} finally {
 			loading = false;
+		}
+	}
+
+	// Open the token URL in a new tab
+	async function openTokenUrl(service) {
+		try {
+			const response = await fetch(`/projects/genproj/api/auth/${service}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch token URL.');
+			}
+			const data = await response.json();
+			window.open(data.authUrl, '_blank', 'noopener,noreferrer');
+		} catch (err) {
+			logger.error(`Failed to open token URL for ${service}`, { error: err.message });
+			error = 'Could not retrieve the token creation URL. Please try again.';
 		}
 	}
 
@@ -182,49 +195,6 @@
 		} finally {
 			loading = false;
 			authenticatingService = null;
-		}
-	}
-
-	// Show help tooltip for token-based auth
-	async function showHelp(service, event) {
-		const button = event.currentTarget;
-		if (button._tippy) {
-			button._tippy.show();
-			return;
-		}
-
-		try {
-			const response = await fetch(`/projects/genproj/api/auth/${service}`);
-			if (!response.ok) {
-				throw new Error('Failed to fetch help content.');
-			}
-			const data = await response.json();
-			const content = `
-        <div class="text-left p-1">
-          <p>${data.instructions}</p>
-          <a href="${data.authUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline mt-2 block">
-            Create a token
-          </a>
-        </div>
-      `;
-
-			tippy(button, {
-				content,
-				allowHTML: true,
-				interactive: true,
-				trigger: 'manual',
-				placement: 'top',
-				arrow: true,
-				theme: 'light-border'
-			});
-
-			button._tippy.show();
-		} catch (err) {
-			logger.error(`Failed to show help for ${service}`, { error: err.message });
-			tippy(button, {
-				content: 'Could not load help.',
-				trigger: 'manual'
-			}).show();
 		}
 	}
 
@@ -377,7 +347,7 @@
 								{:else}
 									<!-- Token Input for External Services -->
 									<div class="mt-2 space-y-2">
-										<div class="flex gap-2">
+										<div class="flex items-center gap-2">
 											<input
 												type="password"
 												placeholder={`Enter ${serviceNames[service]} token`}
@@ -387,10 +357,9 @@
 											/>
 											<button
 												class="px-3 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-600"
-												onclick={(event) => showHelp(service, event)}
-												title="Get help"
+												onclick={() => openTokenUrl(service)}
 											>
-												?
+												Create token
 											</button>
 										</div>
 										<button
