@@ -2,6 +2,106 @@ import { json } from '@sveltejs/kit';
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 import { requireUser } from '$lib/server/require-user.js';
 
+async function getPayments(db, batchSize, offset) {
+	const query = `
+		SELECT id, merchant, merchant_normalized, merchant_details
+		FROM payment
+		WHERE merchant IS NOT NULL
+		ORDER BY id
+		${offset === 0 ? '' : 'LIMIT ? OFFSET ?'}
+	`;
+	const params = offset === 0 ? [] : [batchSize, offset];
+	const { results } = await db
+		.prepare(query)
+		.bind(...params)
+		.all();
+	return results;
+}
+
+async function getBudgetMerchants(db, batchSize, offset) {
+	const query = `
+		SELECT id, merchant, merchant_normalized, budget_id
+		FROM budget_merchant
+		WHERE merchant IS NOT NULL
+		ORDER BY id
+		${offset === 0 ? '' : 'LIMIT ?'}
+	`;
+	const params = offset === 0 ? [] : [batchSize];
+	const { results } = await db
+		.prepare(query)
+		.bind(...params)
+		.all();
+	return results;
+}
+
+async function normalizePayments(db, payments) {
+	let updatedCount = 0;
+	const errors = [];
+	for (const payment of payments) {
+		try {
+			const normalized = normalizeMerchant(payment.merchant);
+			const currentDetails = payment.merchant_details || '';
+			const newDetails = normalized.merchant_details || '';
+
+			if (
+				normalized.merchant_normalized !== payment.merchant_normalized ||
+				newDetails !== currentDetails
+			) {
+				await db
+					.prepare(
+						`
+						UPDATE payment
+						SET merchant_normalized = ?,
+							merchant_details = ?
+						WHERE id = ?
+					`
+					)
+					.bind(normalized.merchant_normalized, normalized.merchant_details || '', payment.id)
+					.run();
+				updatedCount++;
+			}
+		} catch (error) {
+			errors.push({
+				id: payment.id,
+				merchant: payment.merchant,
+				error: error.message
+			});
+		}
+	}
+	return { updatedCount, errors };
+}
+
+async function normalizeBudgetMerchants(db, budgetMerchants) {
+	let budgetMerchantsUpdated = 0;
+	const errors = [];
+	for (const mapping of budgetMerchants) {
+		try {
+			const normalized = normalizeMerchant(mapping.merchant);
+			if (normalized.merchant_normalized !== mapping.merchant_normalized) {
+				await db
+					.prepare(
+						`
+						UPDATE budget_merchant
+						SET merchant_normalized = ?
+						WHERE id = ?
+					`
+					)
+					.bind(normalized.merchant_normalized, mapping.id)
+					.run();
+				budgetMerchantsUpdated++;
+			}
+		} catch (error) {
+			errors.push({
+				type: 'budget_merchant',
+				id: mapping.id,
+				merchant: mapping.merchant,
+				error: error.message
+			});
+		}
+	}
+	return { budgetMerchantsUpdated, errors };
+}
+
 /**
  * Admin endpoint to normalize existing merchant data
  * This processes payments and budget merchants in batches to avoid timeouts.
@@ -25,231 +125,65 @@ export async function POST(event) {
 		const batchSize = body.batchSize || 50;
 		const offset = body.offset || 0;
 
-		// Get payments to normalize (process all since we're always updating)
-		// If offset is 0, process all records; otherwise process in batches
-		let payments;
-		if (offset === 0) {
-			// Process all records at once for the first run
-			const { results: allPayments } = await db
-				.prepare(
-					`
-					SELECT id, merchant, merchant_normalized, merchant_details
-					FROM payment 
-					WHERE merchant IS NOT NULL
-					ORDER BY id
-				`
-				)
-				.all();
-			payments = allPayments;
-		} else {
-			// Process in batches for subsequent runs
-			const { results: batchPayments } = await db
-				.prepare(
-					`
-					SELECT id, merchant, merchant_normalized, merchant_details
-					FROM payment 
-					WHERE merchant IS NOT NULL
-					ORDER BY id
-					LIMIT ? OFFSET ?
-				`
-				)
-				.bind(batchSize, offset)
-				.all();
-			payments = batchPayments;
+		const payments = await getPayments(db, batchSize, offset);
+		let { updatedCount, errors: paymentErrors } = await normalizePayments(db, payments);
+
+		const budgetMerchants = await getBudgetMerchants(db, batchSize, offset);
+		let { budgetMerchantsUpdated, errors: budgetErrors } = await normalizeBudgetMerchants(
+			db,
+			budgetMerchants
+		);
+
+		const errors = [...paymentErrors, ...budgetErrors];
+
+		if (offset === 0 && updatedCount < 3) {
+			const bulkUpdates = await performBulkPatternUpdates(db);
+			updatedCount += bulkUpdates.paymentsUpdated;
+			budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
+			errors.push(...(bulkUpdates.errors || []));
+
+			const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db);
+			budgetMerchantsUpdated += budgetBulkUpdates.updated;
+			errors.push(...(budgetBulkUpdates.errors || []));
 		}
 
-		let updatedCount = 0;
-		const errors = [];
+		const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
+		budgetMerchantsUpdated += consistencyUpdates.updated;
+		errors.push(...(consistencyUpdates.errors || []));
 
-		// Process each payment
-		for (const payment of payments) {
-			try {
-				const normalized = normalizeMerchant(payment.merchant);
-
-				// Only update if normalization actually changed something
-				// Handle null merchant_details properly
-				const currentDetails = payment.merchant_details || '';
-				const newDetails = normalized.merchant_details || '';
-
-				if (
-					normalized.merchant_normalized !== payment.merchant_normalized ||
-					newDetails !== currentDetails
-				) {
-					await db
-						.prepare(
-							`
-							UPDATE payment 
-							SET merchant_normalized = ?,
-								merchant_details = ?
-							WHERE id = ?
-						`
-						)
-						.bind(normalized.merchant_normalized, normalized.merchant_details || '', payment.id)
-						.run();
-
-					updatedCount++;
-				}
-			} catch (error) {
-				errors.push({
-					id: payment.id,
-					merchant: payment.merchant,
-					error: error.message
-				});
-			}
+		const assignmentCheck = await checkAssignmentConsistency(db);
+		if (assignmentCheck.inconsistencies && assignmentCheck.inconsistencies.length > 0) {
+			errors.push({
+				type: 'assignment_inconsistency',
+				message: `Found ${
+					assignmentCheck.inconsistencies.length
+				} merchants assigned to budgets but appearing as unassigned`,
+				inconsistencies: assignmentCheck.inconsistencies.slice(0, 10) // Limit to first 10 for reporting
+			});
 		}
 
-		// Get total count of payments to normalize
+		const duplicateCheck = await checkDuplicateMerchantVariations(db);
+		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
+			errors.push({
+				type: 'duplicate_merchant_variations',
+				message: `Found ${
+					duplicateCheck.duplicateVariations.length
+				} merchants with multiple variations having different assignment statuses`,
+				duplicateVariations: duplicateCheck.duplicateVariations.slice(0, 10) // Limit to first 10 for reporting
+			});
+		}
+
 		const { results: countResult } = await db
 			.prepare(
 				`
 				SELECT COUNT(*) as total
-				FROM payment 
+				FROM payment
 				WHERE merchant IS NOT NULL
 			`
 			)
 			.all();
 
 		const totalRemaining = countResult[0]?.total || 0;
-
-		// Also normalize budget_merchant records - enhanced to handle all cases
-		// If offset is 0, process all records; otherwise process in batches
-		let budgetMerchants;
-		if (offset === 0) {
-			// Process all budget merchant records at once for the first run
-			const { results: allBudgetMerchants } = await db
-				.prepare(
-					`
-					SELECT id, merchant, merchant_normalized, budget_id
-					FROM budget_merchant 
-					WHERE merchant IS NOT NULL
-					ORDER BY id
-				`
-				)
-				.all();
-			budgetMerchants = allBudgetMerchants;
-		} else {
-			// Process in batches for subsequent runs
-			const { results: batchBudgetMerchants } = await db
-				.prepare(
-					`
-					SELECT id, merchant, merchant_normalized, budget_id
-					FROM budget_merchant 
-					WHERE merchant IS NOT NULL
-					ORDER BY id
-					LIMIT ?
-				`
-				)
-				.bind(batchSize)
-				.all();
-			budgetMerchants = batchBudgetMerchants;
-		}
-
-		let budgetMerchantsUpdated = 0;
-		for (const mapping of budgetMerchants) {
-			try {
-				const normalized = normalizeMerchant(mapping.merchant);
-
-				// Only update if normalization actually changed something
-				if (normalized.merchant_normalized !== mapping.merchant_normalized) {
-					await db
-						.prepare(
-							`
-							UPDATE budget_merchant 
-							SET merchant_normalized = ?
-							WHERE id = ?
-						`
-						)
-						.bind(normalized.merchant_normalized, mapping.id)
-						.run();
-
-					budgetMerchantsUpdated++;
-				}
-			} catch (error) {
-				errors.push({
-					type: 'budget_merchant',
-					id: mapping.id,
-					merchant: mapping.merchant,
-					error: error.message
-				});
-			}
-		}
-
-		// If this is the first run (offset = 0), also do bulk pattern-based updates
-		// This is more efficient for known merchant patterns
-		// Only run bulk updates if we haven't processed many individual records
-		// This prevents double-processing while still allowing bulk updates to run
-		if (offset === 0 && updatedCount < 3) {
-			// Check if there are any records that need bulk updating
-			const { results: needsBulkUpdate } = await db
-				.prepare(
-					`
-					SELECT COUNT(*) as count
-					FROM payment 
-					WHERE merchant IS NOT NULL 
-					AND (merchant_normalized IS NULL OR merchant_normalized = '')
-					AND (merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%' OR 
-						 merchant LIKE 'CAVIAR%' OR merchant LIKE 'DOORDASH%' OR
-						 merchant LIKE '%UBER EATS%' OR merchant LIKE 'LYFT%' OR
-						 merchant LIKE 'UBER%' OR merchant LIKE '%UNITED%' OR
-						 merchant LIKE '%AMERICAN%' OR merchant LIKE '%DELTA%' OR
-						 merchant LIKE '%SOUTHWEST%' OR merchant LIKE '%BRITISH%' OR
-						 merchant LIKE '%SHELL%' OR merchant LIKE '%EXXON%' OR
-						 merchant LIKE '%CHEVRON%' OR merchant LIKE 'BLUEMERCURY%' OR
-						 merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%')
-					`
-				)
-				.all();
-
-			if (needsBulkUpdate[0].count > 0) {
-				try {
-					const bulkUpdates = await performBulkPatternUpdates(db);
-					updatedCount += bulkUpdates.paymentsUpdated;
-					budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
-
-					// Add any bulk update errors
-					if (bulkUpdates.errors && bulkUpdates.errors.length > 0) {
-						errors.push(...bulkUpdates.errors);
-					}
-
-					// Also do bulk updates for budget merchants
-					const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db);
-					budgetMerchantsUpdated += budgetBulkUpdates.updated;
-					if (budgetBulkUpdates.errors && budgetBulkUpdates.errors.length > 0) {
-						errors.push(...budgetBulkUpdates.errors);
-					}
-				} catch (error) {
-					console.error('Error during bulk updates:', error);
-					errors.push(`Bulk update error: ${error.message}`);
-				}
-			}
-		}
-
-		// Ensure consistency between payments and budget merchants
-		const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
-		budgetMerchantsUpdated += consistencyUpdates.updated;
-		if (consistencyUpdates.errors && consistencyUpdates.errors.length > 0) {
-			errors.push(...consistencyUpdates.errors);
-		}
-
-		// Check for merchants that are assigned to budgets but still appear as unassigned
-		const assignmentCheck = await checkAssignmentConsistency(db);
-		if (assignmentCheck.inconsistencies && assignmentCheck.inconsistencies.length > 0) {
-			errors.push({
-				type: 'assignment_inconsistency',
-				message: `Found ${assignmentCheck.inconsistencies.length} merchants assigned to budgets but appearing as unassigned`,
-				inconsistencies: assignmentCheck.inconsistencies.slice(0, 10) // Limit to first 10 for reporting
-			});
-		}
-
-		// Check for duplicate merchant variations that could cause the modal bug
-		const duplicateCheck = await checkDuplicateMerchantVariations(db);
-		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
-			errors.push({
-				type: 'duplicate_merchant_variations',
-				message: `Found ${duplicateCheck.duplicateVariations.length} merchants with multiple variations having different assignment statuses`,
-				duplicateVariations: duplicateCheck.duplicateVariations.slice(0, 10) // Limit to first 10 for reporting
-			});
-		}
 
 		return json({
 			success: true,

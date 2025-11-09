@@ -1,4 +1,5 @@
 <script>
+	/* eslint-disable sonarjs/no-commented-code */
 	import './header.css';
 	import Button from './Button.svelte';
 

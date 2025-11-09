@@ -320,14 +320,7 @@ function generateCapabilityFilesMap(
 		});
 
 		// Handle file conflicts, especially for devcontainer files
-		addFilesToMap(
-			fileMap,
-			capabilityFiles,
-			devcontainerCapabilities,
-			configuration,
-			projectName,
-			selectedCapabilities
-		);
+		addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName);
 	}
 
 	return Array.from(fileMap.values());
@@ -637,7 +630,6 @@ function generatePreview({ projectName, repositoryUrl, selectedCapabilities, con
  * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
  * @param {object} configuration - The full configuration object.
  * @param {string} projectName - The name of the project.
- * @param {string[]} selectedCapabilities - All selected capabilities.
  */
 function handleDevcontainerJson(
 	file,
@@ -693,25 +685,16 @@ function handleDockerfile(file, fileMap) {
  * @param {string[]} devcontainerCapabilities - A list of selected devcontainer capabilities.
  * @param {object} configuration - The full configuration object.
  * @param {string} projectName - The name of the project.
- * @param {string[]} selectedCapabilities - All selected capabilities.
  */
 function processDevcontainerFile(
 	file,
 	fileMap,
 	devcontainerCapabilities,
 	configuration,
-	projectName,
-	selectedCapabilities
+	projectName
 ) {
 	if (file.filePath === '.devcontainer/devcontainer.json') {
-		handleDevcontainerJson(
-			file,
-			fileMap,
-			devcontainerCapabilities,
-			configuration,
-			projectName,
-			selectedCapabilities
-		);
+		handleDevcontainerJson(file, fileMap, devcontainerCapabilities, configuration, projectName);
 	} else if (devcontainerCapabilities.length > 1 && file.filePath === '.devcontainer/Dockerfile') {
 		handleDockerfile(file, fileMap);
 	} else {
@@ -727,19 +710,11 @@ function addFilesToMap(
 	capabilityFiles,
 	devcontainerCapabilities,
 	configuration,
-	projectName,
-	selectedCapabilities
+	projectName
 ) {
 	for (const file of capabilityFiles) {
 		if (file.filePath.includes('.devcontainer/')) {
-			processDevcontainerFile(
-				file,
-				fileMap,
-				devcontainerCapabilities,
-				configuration,
-				projectName,
-				selectedCapabilities
-			);
+			processDevcontainerFile(file, fileMap, devcontainerCapabilities, configuration, projectName);
 		} else {
 			fileMap.set(file.filePath, file);
 		}

@@ -59,6 +59,15 @@ export class RateLimitError extends GenprojError {
 	}
 }
 
+function createErrorResponseBody(code, message, details, context) {
+	return {
+		error: code,
+		message,
+		...(details && { details }),
+		timestamp: new Date().toISOString(),
+		requestId: context.requestId || crypto.randomUUID()
+	};
+}
 /**
  * Error handler for genproj API routes
  * @param {Error} error - Error to handle
@@ -68,86 +77,85 @@ export class RateLimitError extends GenprojError {
 export function handleGenprojError(error, context = {}) {
 	console.error('❌ Genproj error:', error);
 
-	// Handle known genproj errors
 	if (error instanceof GenprojError) {
 		return {
 			status: error.statusCode,
 			body: {
-				error: error.code,
-				message: error.message,
+				...createErrorResponseBody(error.code, error.message, null, context),
 				...(error.field && { field: error.field }),
 				...(error.service && { service: error.service }),
 				...(error.resource && { resource: error.resource }),
-				...(error.retryAfter && { retryAfter: error.retryAfter }),
-				timestamp: new Date().toISOString(),
-				requestId: context.requestId || crypto.randomUUID()
+				...(error.retryAfter && { retryAfter: error.retryAfter })
 			}
 		};
 	}
 
-	// Handle validation errors
-	if (error.name === 'ValidationError' || error.message?.includes('validation')) {
-		return {
-			status: 400,
-			body: {
-				error: 'VALIDATION_ERROR',
-				message: 'Invalid request data',
-				details: error.message,
-				timestamp: new Date().toISOString(),
-				requestId: context.requestId || crypto.randomUUID()
+	switch (error.name) {
+		case 'ValidationError':
+			return {
+				status: 400,
+				body: createErrorResponseBody(
+					'VALIDATION_ERROR',
+					'Invalid request data',
+					error.message,
+					context
+				)
+			};
+		default:
+			if (error.message?.includes('validation')) {
+				return {
+					status: 400,
+					body: createErrorResponseBody(
+						'VALIDATION_ERROR',
+						'Invalid request data',
+						error.message,
+						context
+					)
+				};
 			}
-		};
-	}
-
-	// Handle authentication errors
-	if (error.message?.includes('unauthorized') || error.message?.includes('authentication')) {
-		return {
-			status: 401,
-			body: {
-				error: 'AUTHENTICATION_ERROR',
-				message: 'Authentication required',
-				timestamp: new Date().toISOString(),
-				requestId: context.requestId || crypto.randomUUID()
+			if (error.message?.includes('unauthorized') || error.message?.includes('authentication')) {
+				return {
+					status: 401,
+					body: createErrorResponseBody(
+						'AUTHENTICATION_ERROR',
+						'Authentication required',
+						null,
+						context
+					)
+				};
 			}
-		};
-	}
-
-	// Handle database errors
-	if (error.message?.includes('database') || error.message?.includes('SQL')) {
-		return {
-			status: 500,
-			body: {
-				error: 'DATABASE_ERROR',
-				message: 'Database operation failed',
-				timestamp: new Date().toISOString(),
-				requestId: context.requestId || crypto.randomUUID()
+			if (error.message?.includes('database') || error.message?.includes('SQL')) {
+				return {
+					status: 500,
+					body: createErrorResponseBody(
+						'DATABASE_ERROR',
+						'Database operation failed',
+						null,
+						context
+					)
+				};
 			}
-		};
-	}
-
-	// Handle external service errors
-	if (error.message?.includes('fetch') || error.message?.includes('API')) {
-		return {
-			status: 502,
-			body: {
-				error: 'EXTERNAL_SERVICE_ERROR',
-				message: 'External service unavailable',
-				timestamp: new Date().toISOString(),
-				requestId: context.requestId || crypto.randomUUID()
+			if (error.message?.includes('fetch') || error.message?.includes('API')) {
+				return {
+					status: 502,
+					body: createErrorResponseBody(
+						'EXTERNAL_SERVICE_ERROR',
+						'External service unavailable',
+						null,
+						context
+					)
+				};
 			}
-		};
+			return {
+				status: 500,
+				body: createErrorResponseBody(
+					'INTERNAL_ERROR',
+					'An unexpected error occurred',
+					null,
+					context
+				)
+			};
 	}
-
-	// Default error handling
-	return {
-		status: 500,
-		body: {
-			error: 'INTERNAL_ERROR',
-			message: 'An unexpected error occurred',
-			timestamp: new Date().toISOString(),
-			requestId: context.requestId || crypto.randomUUID()
-		}
-	};
 }
 
 /**

@@ -217,7 +217,9 @@ describe('TemplateEngine', () => {
 	it('generates multiple files collecting errors', async () => {
 		engine.templates.set('ok', 'Hi');
 		const results = await engine.generateFiles([
+			// eslint-disable-next-line sonarjs/publicly-writable-directories
 			{ templateId: 'ok', filePath: '/tmp/ok.txt', data: {} },
+			// eslint-disable-next-line sonarjs/publicly-writable-directories
 			{ templateId: 'missing', filePath: '/tmp/missing.txt', data: {} }
 		]);
 
