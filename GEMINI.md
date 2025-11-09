@@ -33,3 +33,6 @@ JavaScript (ES2022), SvelteKit 2.47, Node.js 20+: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
+# Git Repository
+- After each commit, there is no need to run `git status` to confirm it. Assume success unless an error is reported.
