@@ -27,7 +27,7 @@ const SERVICE_CLASSES = {
  * @param {string[]} [allowedServices] - Optional list of allowed service names
  * @returns {Object} Initialized service clients
  */
-export function initializeServices(authTokens, allowedServices = undefined) {
+export function initializeServices(authTokens, allowedServices = null) {
 	const services = {};
 	const serviceList = allowedServices || Object.keys(SERVICE_CLASSES);
 

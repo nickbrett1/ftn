@@ -22,8 +22,6 @@ const createJsonResponse = (data, init = {}) =>
 		}
 	});
 
-const loadModule = () => import('../../src/routes/auth/+server.js');
-
 describe('Auth server route', () => {
 	beforeEach(() => {
 		vi.resetModules();
@@ -44,6 +42,8 @@ describe('Auth server route', () => {
 	afterAll(() => {
 		globalThis.fetch = originalFetch;
 	});
+
+	const loadModule = () => import('../../src/routes/auth/+server.js');
 
 	it('exchanges a code and sets auth cookie for allowed users', async () => {
 		const { GET } = await loadModule();

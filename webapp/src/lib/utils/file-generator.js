@@ -133,7 +133,8 @@ export class TemplateEngine {
 
 		// String helpers
 		this.registerHelper('replace', function (str, search, replace) {
-			return str ? str.replaceAll(new RegExp(search, 'g'), replace) : '';
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			return str ? str.replace(new RegExp(search, 'g'), replace) : '';
 		});
 
 		this.registerHelper('truncate', function (str, length) {
@@ -147,19 +148,23 @@ export class TemplateEngine {
 
 		// Project-specific helpers
 		this.registerHelper('project_slug', function (name) {
-			return name ? name.toLowerCase().replaceAll(/[^a-z0-9-_]/g, '-') : '';
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			return name ? name.toLowerCase().replace(/[^a-z0-9-_]/g, '-') : '';
 		});
 
 		this.registerHelper('package_name', function (name) {
-			return name ? name.toLowerCase().replaceAll(/[^a-z0-9-_]/g, '-') : '';
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			return name ? name.toLowerCase().replace(/[^a-z0-9-_]/g, '-') : '';
 		});
 
 		this.registerHelper('class_name', function (name) {
-			return name ? name.replaceAll(/[-_]/g, '').replace(/\b\w/g, (l) => l.toUpperCase()) : '';
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			return name ? name.replace(/[-_]/g, '').replace(/\b\w/g, (l) => l.toUpperCase()) : '';
 		});
 
 		this.registerHelper('constant_name', function (name) {
-			return name ? name.toUpperCase().replaceAll(/[^A-Z0-9_]/g, '_') : '';
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			return name ? name.toUpperCase().replace(/[^A-Z0-9_]/g, '_') : '';
 		});
 	}
 
@@ -451,7 +456,8 @@ export default defineConfig({
 			let compiled = templateContent;
 
 			// Replace variables
-			compiled = compiled.replaceAll(/\{\{([^}]+)\}\}/g, (match, expression) => {
+			// eslint-disable-next-line unicorn/prefer-string-replace-all
+			compiled = compiled.replace(/\{\{([^}]+)\}\}/g, (match, expression) => {
 				const trimmed = expression.trim();
 
 				// Handle helpers
@@ -520,7 +526,8 @@ export default defineConfig({
 	 */
 	compileConditionals(template, data) {
 		// Handle {{#if}} blocks
-		template = template.replaceAll(
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		template = template.replace(
 			/\{\{#if\s+([^}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
 			(match, condition, content) => {
 				const value = this.evaluateExpression(condition.trim(), data);
@@ -529,7 +536,8 @@ export default defineConfig({
 		);
 
 		// Handle {{#unless}} blocks
-		template = template.replaceAll(
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		template = template.replace(
 			/\{\{#unless\s+([^}]+)\}\}([\s\S]*?)\{\{\/unless\}\}/g,
 			(match, condition, content) => {
 				const value = this.evaluateExpression(condition.trim(), data);
@@ -548,7 +556,8 @@ export default defineConfig({
 	 */
 	compileLoops(template, data) {
 		// Handle {{#each}} blocks
-		template = template.replaceAll(
+		// eslint-disable-next-line unicorn/prefer-string-replace-all
+		template = template.replace(
 			/\{\{#each\s+([^}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
 			(match, arrayPath, content) => {
 				const array = this.evaluateExpression(arrayPath.trim(), data);

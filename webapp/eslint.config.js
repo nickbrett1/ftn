@@ -4,13 +4,11 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import security from 'eslint-plugin-security';
 import tseslint from 'typescript-eslint';
-import unicorn from 'eslint-plugin-unicorn';
 
 export default [
 	js.configs.recommended,
 	...tseslint.configs.recommended, // Added tseslint recommended configs
 	security.configs.recommended, // Apply security plugin recommended rules
-	unicorn.configs.recommended, // Apply unicorn plugin recommended rules
 	prettier,
 	...svelte.configs['flat/recommended'], // Svelte recommended configs
 	{

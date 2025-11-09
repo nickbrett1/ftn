@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { json } from '@sveltejs/kit';
-import { RouteUtilities as RouteUtils } from '../../src/lib/server/route-utilities.js';
+import { RouteUtils } from '../../src/lib/server/route-utils.js';
 
 // Mock requireUser
 vi.mock('../../src/lib/server/require-user.js', () => ({
@@ -48,22 +48,22 @@ describe('RouteUtils', () => {
 		});
 	});
 
-	describe('validateparameters', () => {
-		it('should return success when all required parameters are present', () => {
-			const parameters = { id: '123', name: 'test' };
+	describe('validateParams', () => {
+		it('should return success when all required params are present', () => {
+			const params = { id: '123', name: 'test' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(parameters, requiredFields);
+			const result = RouteUtils.validateParams(params, requiredFields);
 
 			expect(result.success).toBe(true);
-			expect(result.parameters).toBe(parameters);
+			expect(result.params).toBe(params);
 		});
 
 		it('should return error when required param is missing', () => {
-			const parameters = { id: '123' };
+			const params = { id: '123' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(parameters, requiredFields);
+			const result = RouteUtils.validateParams(params, requiredFields);
 
 			expect(result.error).toBe('Missing required parameter: name');
 			expect(result.status).toBe(400);
@@ -71,17 +71,17 @@ describe('RouteUtils', () => {
 		});
 
 		it('should return error when param is empty string', () => {
-			const parameters = { id: '123', name: '' };
+			const params = { id: '123', name: '' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(parameters, requiredFields);
+			const result = RouteUtils.validateParams(params, requiredFields);
 
 			expect(result.error).toBe('Missing required parameter: name');
 			expect(result.status).toBe(400);
 		});
 
 		it('should use custom validator when provided', () => {
-			const parameters = { id: '123', age: '25' };
+			const params = { id: '123', age: '25' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: (value) => {
@@ -93,13 +93,13 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateParams(parameters, requiredFields, { validators });
+			const result = RouteUtils.validateParams(params, requiredFields, { validators });
 
 			expect(result.success).toBe(true);
 		});
 
 		it('should return error from custom validator when validation fails', () => {
-			const parameters = { id: '123', age: '-5' };
+			const params = { id: '123', age: '-5' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: (value) => {
@@ -111,20 +111,20 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateParams(parameters, requiredFields, { validators });
+			const result = RouteUtils.validateParams(params, requiredFields, { validators });
 
 			expect(result.error).toBe('Age must be a positive number');
 			expect(result.status).toBe(400);
 		});
 
 		it('should return default error when custom validator returns false', () => {
-			const parameters = { id: '123', age: '25' };
+			const params = { id: '123', age: '25' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: () => false
 			};
 
-			const result = RouteUtils.validateParams(parameters, requiredFields, { validators });
+			const result = RouteUtils.validateParams(params, requiredFields, { validators });
 
 			expect(result.error).toBe('Invalid parameter: age');
 			expect(result.status).toBe(400);
@@ -271,9 +271,7 @@ describe('RouteUtils', () => {
 
 		it('should include data when provided', async () => {
 			const additionalData = { field: 'value' };
-			const result = RouteUtils.createErrorResponse('Error occurred', {
-				data: additionalData
-			});
+			const result = RouteUtils.createErrorResponse('Error occurred', { data: additionalData });
 
 			const jsonResult = await result.json();
 
@@ -477,7 +475,7 @@ describe('RouteUtils', () => {
 			expect(handler).not.toHaveBeenCalled();
 		});
 
-		it('should validate required parameters before calling handler', async () => {
+		it('should validate required params before calling handler', async () => {
 			const mockUser = { id: '123' };
 			requireUser.mockResolvedValue(mockUser);
 
@@ -552,8 +550,8 @@ describe('RouteUtils', () => {
 
 			// Handler is called without body parameter when requiredBody is empty
 			expect(handler).toHaveBeenCalled();
-			const callArguments = handler.mock.calls[0];
-			expect(callArguments[0]).toBe(mockEvent);
+			const callArgs = handler.mock.calls[0];
+			expect(callArgs[0]).toBe(mockEvent);
 		});
 
 		it('should handle errors thrown by handler', async () => {

@@ -12,6 +12,11 @@
  */
 export async function isRegexSafe(pattern, testString, timeout = 1000) {
 	try {
+		// First, analyze the pattern structure for known dangerous patterns
+		if (hasDangerousStructure(pattern)) {
+			return false;
+		}
+
 		// Use Web Workers for true timeout capability (if available)
 		if (typeof Worker !== 'undefined') {
 			return await testRegexWithWorker(pattern, testString, timeout);
@@ -23,6 +28,85 @@ export async function isRegexSafe(pattern, testString, timeout = 1000) {
 		// Invalid regex patterns are considered unsafe
 		return false;
 	}
+}
+
+/**
+ * Analyze regex pattern structure for dangerous patterns
+ * @param {string} pattern - The regex pattern to analyze
+ * @returns {boolean} - True if pattern has dangerous structure
+ */
+function hasDangerousStructure(pattern) {
+	// Remove regex flags and escape sequences for analysis
+	// Pattern breakdown:
+	// ^(\/)           - Group 1: matches the leading slash
+	// (.*?)           - Group 2: matches the regex pattern content (non-greedy)
+	// (\/[gimsuy]*)$  - Group 3: matches the closing slash and optional flags
+	// Result: extracts just the pattern content without slashes or flags
+	const cleanPattern = pattern.replace(/^(\/)(.*?)(\/[gimsuy]*)$/, '$2');
+
+	// Check for specific dangerous patterns that cause ReDoS
+	const dangerousPatterns = [
+		// Classic ReDoS patterns
+		/\(a\+\)\+/, // (a+)+
+		/\(a\|aa\)\*/, // (a|aa)*
+		/\(a\|a\+\)\*/, // (a|a+)*
+
+		// Nested quantifiers on word characters
+		/\(\\w\+\)\*/, // (\w+)*
+		/\(\\w\+\)\+/, // (\w+)+
+		/\(\\w\+\)\{1,\}/, // (\w+){1,}
+
+		// Backreferences with quantifiers
+		/\\\d+\*/, // \1*, \2*, etc.
+		/\\\d+\+/, // \1+, \2+, etc.
+		/\\\d+\{1,\}/, // \1{1,}, \2{1,}, etc.
+
+		// Multiple nested quantifiers
+		/\(\\w\+\)\+\(\\w\+\)\*/, // (\w+)+(\w+)*
+		/\(\\w\+\)\*\(\\w\+\)\+/, // (\w+)*(\w+)+
+
+		// Unbounded repetitions
+		/\{\d*,\}/, // {n,} without upper bound
+		/\*\+/, // *+ (possessive quantifier)
+		/\+\+/ // ++ (possessive quantifier)
+	];
+
+	for (const dangerousPattern of dangerousPatterns) {
+		if (dangerousPattern.test(cleanPattern)) {
+			return true;
+		}
+	}
+
+	// Check for deeply nested groups (more than 3 levels)
+	const groupDepth = countNestedGroups(cleanPattern);
+	if (groupDepth > 3) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Count the maximum depth of nested groups in a regex pattern
+ * @param {string} pattern - The regex pattern
+ * @returns {number} - Maximum nesting depth
+ */
+function countNestedGroups(pattern) {
+	let maxDepth = 0;
+	let currentDepth = 0;
+
+	for (let i = 0; i < pattern.length; i++) {
+		const char = pattern[i];
+
+		if (char === '(' && pattern[i - 1] !== '\\') {
+			currentDepth++;
+			maxDepth = Math.max(maxDepth, currentDepth);
+		} else if (char === ')' && pattern[i - 1] !== '\\') {
+			currentDepth = Math.max(0, currentDepth - 1);
+		}
+	}
+
+	return maxDepth;
 }
 
 /**
@@ -175,59 +259,4 @@ export function createSafeRegex(pattern) {
 		console.error(`Invalid regex pattern: ${pattern}`, error);
 		return null;
 	}
-}
-
-/**
- * Perform a structural analysis of a regex pattern to detect constructs
- * that are commonly associated with ReDoS vulnerabilities.
- *
- * @param {string} pattern - The regex pattern to analyze.
- * @returns {boolean} - True if a potentially dangerous structure is detected.
- */
-function hasDangerousStructure(pattern) {
-	// List of known dangerous patterns
-	const dangerousPatterns = [
-		'(a+)+',
-		'(\\w)*',
-		'(a|aa)*',
-		'(\\w+)+',
-		'(\\w+)*\\1'
-		// Add more known dangerous patterns here if needed
-	];
-
-	// Check if the pattern matches any of the known dangerous patterns
-	if (dangerousPatterns.includes(pattern)) {
-		return true;
-	}
-
-	// You can still keep your more general checks as a fallback
-	// 1. Nested Quantifiers: e.g., (a+)+, (a*)*
-	if (/(\([^)]*[\+\*]\)[+*])/.test(pattern)) {
-		return true;
-	}
-
-	// 2. Alternation with Overlapping Patterns: e.g., (a|aa)*
-	const alternationGroups = pattern.match(/\(([^)]*\|[^)]*)\)\*/g);
-	if (alternationGroups) {
-		for (const group of alternationGroups) {
-			const alternatives = group.slice(1, -2).split('|');
-			for (let i = 0; i < alternatives.length; i++) {
-				for (let j = i + 1; j < alternatives.length; j++) {
-					if (
-						alternatives[j].startsWith(alternatives[i]) ||
-						alternatives[i].startsWith(alternatives[j])
-					) {
-						return true;
-					}
-				}
-			}
-		}
-	}
-
-	// 3. Backreferences in Repeated Groups: e.g., (\w+)*\1
-	if (/(\\d+)\*.*\\\1/.test(pattern)) {
-		return true;
-	}
-
-	return false;
 }

@@ -34,7 +34,7 @@ export const canSwitchToMode = derived(
 
 /**
  * Validates if switching to a mode is allowed
- * @param {string} currentMode - Current mode (unused, but kept for API consistency)
+ * @param {string} currentMode - Current mode
  * @param {Object} capabilities - Capability store state
  * @param {Object} config - Project config store state
  * @returns {Object} Validation result for each mode
@@ -45,12 +45,14 @@ function validateModeSwitch(currentMode, capabilities, config) {
 		: [];
 	const configIsValid = Boolean(config?.isValid);
 
-	return {
-		[MODES.CAPABILITIES]: true,
+	const validation = {
+		[MODES.CAPABILITIES]: true, // Always can go back to capabilities
 		[MODES.CONFIGURATION]: selectedCapabilities.length > 0,
 		[MODES.PREVIEW]: selectedCapabilities.length > 0 && configIsValid,
 		[MODES.GENERATION]: selectedCapabilities.length > 0 && configIsValid
 	};
+
+	return validation;
 }
 
 /**
@@ -63,12 +65,6 @@ export const modeActions = {
 	 * @returns {boolean} Whether the switch was successful
 	 */
 	switchTo(targetMode) {
-		// Ensure targetMode is a valid, known mode to prevent object injection.
-		if (!Object.values(MODES).includes(targetMode)) {
-			console.warn(`⚠️ Attempted to switch to invalid mode: ${targetMode}`);
-			return false;
-		}
-
 		const current = get(modeStore);
 		const capabilities = get(capabilityStore) || {};
 		const config = get(projectConfigStore) || {};
@@ -208,10 +204,7 @@ export const modeNavigation = {
 			[MODES.GENERATION]: 'Generation'
 		};
 
-		if (Object.prototype.hasOwnProperty.call(displayNames, mode)) {
-			return displayNames[mode];
-		}
-		return mode;
+		return displayNames[mode] || mode;
 	},
 
 	/**
@@ -227,10 +220,7 @@ export const modeNavigation = {
 			[MODES.GENERATION]: 'Generate your project with all selected capabilities'
 		};
 
-		if (Object.prototype.hasOwnProperty.call(descriptions, mode)) {
-			return descriptions[mode];
-		}
-		return '';
+		return descriptions[mode] || '';
 	},
 
 	/**

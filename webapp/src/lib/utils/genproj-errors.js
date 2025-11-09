@@ -176,10 +176,8 @@ export function withErrorHandling(handler) {
  * @throws {ValidationError} If validation fails
  */
 export function validateRequest(data, schema) {
-	for (const field of Object.keys(schema)) {
-		const rules = schema[field];
-		const value = Object.prototype.hasOwnProperty.call(data, field) ? data[field] : undefined;
-		const error = validateFieldRules(field, rules, value);
+	for (const [field, rules] of Object.entries(schema)) {
+		const error = validateFieldRules(field, rules, data[field]);
 		if (error) {
 			throw error;
 		}
@@ -245,17 +243,17 @@ export function requireAuthentication(authState, requiredServices = []) {
 		throw new AuthenticationError('User authentication required');
 	}
 
-	const serviceChecks = [
-		{ key: 'github', label: 'GitHub', check: () => Boolean(authState.github) },
-		{ key: 'circleci', label: 'CircleCI', check: () => Boolean(authState.circleci) },
-		{ key: 'doppler', label: 'Doppler', check: () => Boolean(authState.doppler) },
-		{ key: 'sonarcloud', label: 'SonarCloud', check: () => Boolean(authState.sonarcloud) }
-	];
+	const serviceChecks = {
+		github: ['GitHub', () => Boolean(authState.github)],
+		circleci: ['CircleCI', () => Boolean(authState.circleci)],
+		doppler: ['Doppler', () => Boolean(authState.doppler)],
+		sonarcloud: ['SonarCloud', () => Boolean(authState.sonarcloud)]
+	};
 
 	const missingServices = requiredServices
-		.map((serviceKey) => serviceChecks.find((s) => s.key === serviceKey))
-		.filter((service) => service && !service.check())
-		.map((service) => service.label);
+		.map((service) => serviceChecks[service])
+		.filter((entry) => entry && !entry[1]())
+		.map(([label]) => label);
 
 	if (missingServices.length > 0) {
 		throw new AuthorizationError(
@@ -342,16 +340,9 @@ export function logError(error, context = {}) {
 		error: error.message,
 		stack: error.stack,
 		name: error.name,
+		...context,
 		timestamp: new Date().toISOString()
 	};
-
-	if (context) {
-		for (const key of Object.keys(context)) {
-			if (Object.prototype.hasOwnProperty.call(context, key)) {
-				logData[key] = context[key];
-			}
-		}
-	}
 
 	if (error instanceof GenprojError) {
 		logData.code = error.code;
