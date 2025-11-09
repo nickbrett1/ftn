@@ -5,7 +5,8 @@ import { GET, POST, DELETE } from './+server.js';
 vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getBudgetMerchants: vi.fn(),
 	addBudgetMerchant: vi.fn(),
-	removeBudgetMerchant: vi.fn()
+	removeBudgetMerchant: vi.fn(),
+	getBudgetByMerchant: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -14,7 +15,8 @@ vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 import {
 	getBudgetMerchants,
 	addBudgetMerchant,
-	removeBudgetMerchant
+	removeBudgetMerchant,
+	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -129,6 +131,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			const merchantData = { merchant: 'Amazon' };
 			mockEvent.request.json.mockResolvedValue(merchantData);
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -208,6 +211,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should add merchant with trimmed name', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '  Target  ' });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -219,6 +223,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should handle special characters in merchant names', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: "McDonald's" });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -230,6 +235,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should handle merchant names with numbers and symbols', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '7-Eleven Store #1234' });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			await POST(mockEvent);
 
@@ -240,6 +246,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			const longName = 'A'.repeat(100);
 			mockEvent.request.json.mockResolvedValue({ merchant: longName });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			await POST(mockEvent);
 
@@ -248,6 +255,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 
 		it('should handle database errors during addition', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: 'Test Merchant' });
+			getBudgetByMerchant.mockResolvedValue(null);
 			addBudgetMerchant.mockRejectedValue(new Error('Duplicate key violation'));
 
 			await expect(POST(mockEvent)).rejects.toThrow('Duplicate key violation');
@@ -260,6 +268,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 				budgetId: 999
 			});
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());

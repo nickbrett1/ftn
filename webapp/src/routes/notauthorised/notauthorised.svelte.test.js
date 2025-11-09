@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { mount, unmount } from 'svelte';
 import NotAuthorised from './+page.svelte';
 
 // Mock tsParticles

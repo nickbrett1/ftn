@@ -18,7 +18,7 @@ import { capabilities } from '$lib/config/capabilities.js';
  * @param {Object} cookies - Cookie context
  * @returns {Object} Page data
  */
-export async function load({ params, url, platform, cookies }) {
+export async function load({ url, platform, cookies }) {
 	try {
 		// Get query parameters
 		const selectedParam = url.searchParams.get('selected');

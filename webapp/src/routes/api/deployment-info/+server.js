@@ -37,7 +37,7 @@ export async function GET() {
 	if (deploymentInfo.buildTime) {
 		try {
 			deploymentInfo.lastUpdated = new Date(deploymentInfo.buildTime).toISOString();
-		} catch (e) {
+		} catch {
 			console.warn('Could not parse build time:', deploymentInfo.buildTime);
 		}
 	}

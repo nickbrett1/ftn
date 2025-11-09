@@ -15,7 +15,6 @@ describe('Merchant Normalization API', () => {
 	let mockEvent;
 	let mockPlatform;
 	let mockRequireUser;
-	let mockNormalizeMerchant;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -59,7 +58,6 @@ describe('Merchant Normalization API', () => {
 
 		// Get mocked functions
 		mockRequireUser = (await import('$lib/server/require-user.js')).requireUser;
-		mockNormalizeMerchant = (await import('$lib/utils/merchant-normalizer.js')).normalizeMerchant;
 	});
 
 	describe('POST endpoint', () => {

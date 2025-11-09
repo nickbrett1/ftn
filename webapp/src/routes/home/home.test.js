@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { mount, unmount } from 'svelte';
 import Home from './+page.svelte';
 import { load } from './+page.server.js';
 import { redirect } from '@sveltejs/kit';

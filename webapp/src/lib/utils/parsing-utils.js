@@ -128,10 +128,10 @@ export class ParsingUtils {
 
 			switch (format) {
 				case 'MM/DD/YYYY':
-					parsedDate = this.parseMMDDYYYY(dateStr, defaultYear);
+					parsedDate = this.parseMMDDYYYY(dateStr);
 					break;
 				case 'MM/DD/YY':
-					parsedDate = this.parseMMDDYY(dateStr, defaultYear);
+					parsedDate = this.parseMMDDYY(dateStr);
 					break;
 				case 'auto':
 				default:
@@ -158,10 +158,9 @@ export class ParsingUtils {
 	/**
 	 * Parse date in MM/DD/YYYY format
 	 * @param {string} dateStr - Date string
-	 * @param {number} defaultYear - Default year
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
-	static parseMMDDYYYY(dateStr, defaultYear) {
+	static parseMMDDYYYY(dateStr) {
 		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
 		if (!match) return null;
 
@@ -179,10 +178,9 @@ export class ParsingUtils {
 	/**
 	 * Parse date in MM/DD/YY format
 	 * @param {string} dateStr - Date string
-	 * @param {number} defaultYear - Default year
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
-	static parseMMDDYY(dateStr, defaultYear) {
+	static parseMMDDYY(dateStr) {
 		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
 		if (!match) return null;
 
@@ -213,8 +211,8 @@ export class ParsingUtils {
 	static parseDateAuto(dateStr, defaultYear) {
 		// Try different formats
 		const formats = [
-			() => this.parseMMDDYYYY(dateStr, defaultYear),
-			() => this.parseMMDDYY(dateStr, defaultYear),
+			() => this.parseMMDDYYYY(dateStr),
+			() => this.parseMMDDYY(dateStr),
 			() => {
 				// Try parsing MM/DD format (common in credit card statements)
 				const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);

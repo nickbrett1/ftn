@@ -219,7 +219,6 @@ export class ChaseParser extends BaseParser {
 
 		// Flag to track if we're in the SHOP WITH POINTS ACTIVITY section
 		let inShopWithPointsSection = false;
-		let inAccountActivitySection = false;
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -232,7 +231,6 @@ export class ChaseParser extends BaseParser {
 
 			// Check if we're entering the ACCOUNT ACTIVITY section (including continued)
 			if (line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
-				inAccountActivitySection = true;
 				inShopWithPointsSection = false; // Exit points section when entering account activity
 				continue;
 			}

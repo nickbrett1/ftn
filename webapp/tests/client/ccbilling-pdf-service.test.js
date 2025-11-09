@@ -25,19 +25,15 @@ vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
 describe('PDFService', () => {
 	let pdfService;
 	let mockPDFUtils;
-	let mockParserFactory;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 
 		// Get the mocked modules
 		const pdfUtilsModule = await import('../../src/lib/client/pdf-utils.js');
-		const parserFactoryModule = await import(
-			'../../src/lib/utils/ccbilling-parsers/parser-factory.js'
-		);
+		await import('../../src/lib/utils/ccbilling-parsers/parser-factory.js');
 
 		mockPDFUtils = pdfUtilsModule.PDFUtils;
-		mockParserFactory = parserFactoryModule.ParserFactory;
 
 		// Reset mock implementations to default behavior
 		mockPDFUtils.validatePDFFile.mockImplementation(() => {});

@@ -267,10 +267,9 @@ export function requireAuthentication(authState, requiredServices = []) {
  * Handle external service errors
  * @param {Error} error - Original error
  * @param {string} service - Service name
- * @param {Object} context - Additional context
  * @throws {ExternalServiceError|RateLimitError} Appropriate genproj error
  */
-export function handleExternalServiceError(error, service, context = {}) {
+export function handleExternalServiceError(error, service) {
 	console.error(`❌ External service error (${service}):`, error);
 
 	// Handle rate limiting

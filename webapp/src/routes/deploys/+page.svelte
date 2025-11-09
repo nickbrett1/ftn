@@ -3,18 +3,16 @@
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { formatDate, formatRelativeTime } from '$lib/utils/date-utils.js';
+	import { formatDate } from '$lib/utils/date-utils.js';
 
 	let deployments = [];
 	let loading = true;
 	let error = null;
-	let isAuthenticated = false;
 	let lastUpdated = null;
 	let autoRefreshInterval = null;
 	let fetchingWorkerInfo = false;
 
 	onMount(async () => {
-		isAuthenticated = true;
 		startAutoRefresh();
 		await requestNotificationPermission();
 
@@ -29,8 +27,8 @@
 			} else {
 				error = `Failed to fetch deployments: ${response.status} ${response.statusText}`;
 			}
-		} catch (err) {
-			error = 'Error fetching deployments: ' + err.message;
+		} catch (e) {
+			error = 'Error fetching deployments: ' + e.message;
 		} finally {
 			loading = false;
 		}
@@ -114,7 +112,7 @@
 						lastUpdated = new Date();
 						updatePageUrl();
 					}
-				} catch (err) {
+				} catch {
 					// Auto-refresh error handled silently
 				}
 			},
@@ -129,19 +127,9 @@
 		}
 	}
 
-	async function showDeploymentNotification(title, body, icon = '🚀') {
-		if ('Notification' in window && Notification.permission === 'granted') {
-			new Notification(title, {
-				body: body,
-				icon: icon,
-				tag: 'deployment-update'
-			});
-		}
-	}
-
 	async function requestNotificationPermission() {
 		if ('Notification' in window && Notification.permission === 'default') {
-			const permission = await Notification.requestPermission();
+			await Notification.requestPermission();
 			// Notification permission status handled silently
 		}
 	}

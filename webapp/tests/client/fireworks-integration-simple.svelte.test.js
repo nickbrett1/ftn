@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 // Mock the components
 vi.mock('$lib/components/Button.svelte', () => ({
@@ -177,7 +177,7 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 		const buttonTexts = allButtons.map((btn) => btn.textContent);
 		console.log('Available buttons:', buttonTexts);
 
-		const testButton = allButtons.find(
+		allButtons.find(
 			(button) =>
 				button.textContent.includes('Test Fireworks') || button.textContent.includes('Fireworks')
 		);

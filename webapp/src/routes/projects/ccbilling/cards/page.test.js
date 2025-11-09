@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte/svelte5';
 import CardsPage from './+page.svelte';
 
@@ -37,6 +37,9 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 			json: () => Promise.resolve({ success: true })
 		});
 		confirm.mockReturnValue(true);
+	});
+
+	afterEach(() => {
 		cleanup();
 	});
 
@@ -193,7 +196,7 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 		});
 
 		it('successfully adds a card with valid data', async () => {
-			const { container, getByText, getByLabelText } = render(CardsPage, {
+			const { getByText, getByLabelText } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 

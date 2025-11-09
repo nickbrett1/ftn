@@ -10,7 +10,6 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
-	import LinkifyIt from 'linkify-it';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -40,36 +39,6 @@
 			checkForFireworks();
 		}
 	});
-
-	// Function to format merchant name with flight details and Amazon order ID
-	function formatMerchantName(charge) {
-		// Use normalized merchant name for consistent display
-		const merchantName = charge.merchant_normalized || charge.merchant;
-
-		// Check if this is an Amazon charge with order ID
-		if (charge.amazon_order_id) {
-			return `${merchantName} (${charge.amazon_order_id})`;
-		}
-
-		// Check for flight details
-		if (charge.flight_details) {
-			const flight = charge.flight_details;
-			const airports = [];
-
-			if (flight.departure_airport) {
-				airports.push(flight.departure_airport);
-			}
-			if (flight.arrival_airport) {
-				airports.push(flight.arrival_airport);
-			}
-
-			if (airports.length > 0) {
-				return `${merchantName} (${airports.join(', ')})`;
-			}
-		}
-
-		return merchantName;
-	}
 
 	// Function to create clickable Amazon order link
 	function createAmazonOrderLink(orderId) {
@@ -150,15 +119,6 @@
 	let toastType = $state('success'); // 'success', 'error', 'info'
 	let toastTimeout = $state(null);
 
-	// Progress tracking for parsing steps
-	const parsingSteps = [
-		'Getting statement details',
-		'Downloading PDF',
-		'Parsing PDF',
-		'Processing on server',
-		'Refreshing data'
-	];
-
 	// Delete statement state
 	let deletingStatements = $state(new Set());
 	let showDeleteStatementDialog = $state(false);
@@ -186,11 +146,6 @@
 	let merchantInfoLoading = $state(false);
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
-
-	// Check if any charges exist for a statement
-	function hasChargesForStatement(statementId) {
-		return localData.charges.some((charge) => charge.statement_id === statementId);
-	}
 
 	// Toast notification functions
 	function showToastMessage(message, type = 'success') {
@@ -299,21 +254,6 @@
 		return Object.entries(totals).sort(([, a], [, b]) => b - a);
 	}
 
-	const linkify = new LinkifyIt();
-	function toSegments(text) {
-		if (!text) return [];
-		const segments = [];
-		let last = 0;
-		const matches = linkify.match(text) || [];
-		for (const m of matches) {
-			if (m.index > last) segments.push({ type: 'text', text: text.slice(last, m.index) });
-			segments.push({ type: 'link', text: m.text, href: m.url });
-			last = m.lastIndex;
-		}
-		if (last < text.length) segments.push({ type: 'text', text: text.slice(last) });
-		return segments;
-	}
-
 	async function openMerchantInfo(chargeId) {
 		merchantInfoLoading = true;
 		merchantInfoError = '';
@@ -345,28 +285,6 @@
 
 	// Allocation editing state - removed loading state to fix click issues
 	// Removed recentlyUpdated state as it was causing UI issues
-
-	// Calculate running totals and sort them
-	function getSortedAllocationTotals() {
-		const totals = localData.charges.reduce((totals, charge) => {
-			// Use a special key for unallocated items to avoid null key conversion issues
-			const allocation = charge.allocated_to || '__unallocated__';
-			if (!totals[allocation]) {
-				totals[allocation] = 0;
-			}
-			totals[allocation] += charge.amount;
-			return totals;
-		}, {});
-
-		const entries = Object.entries(totals);
-		return entries.sort(([a], [b]) => {
-			// Always put unallocated first
-			if (a === '__unallocated__') return -1;
-			if (b === '__unallocated__') return 1;
-			// Then sort budgets alphabetically
-			return a.localeCompare(b);
-		});
-	}
 
 	// Get the current unallocated total
 	function getUnallocatedTotal() {
@@ -1710,16 +1628,7 @@
 							{#if merchantInfoData.text}
 								<div class="prose prose-invert max-w-none">
 									<p class="whitespace-pre-wrap text-gray-200 text-sm">
-										{#each toSegments(merchantInfoData.text) as seg}
-											{#if seg.type === 'text'}{seg.text}{:else}
-												<a
-													href={seg.href}
-													target="_blank"
-													rel="noopener noreferrer nofollow"
-													class="underline text-blue-400 hover:text-blue-300">{seg.text}</a
-												>
-											{/if}
-										{/each}
+										{merchantInfoData.text}
 									</p>
 								</div>
 							{:else}

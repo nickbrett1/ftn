@@ -644,8 +644,7 @@ function handleDevcontainerJson(
 	fileMap,
 	devcontainerCapabilities,
 	configuration,
-	projectName,
-	selectedCapabilities
+	projectName
 ) {
 	let content = file.content;
 	const template = capabilities
@@ -665,8 +664,7 @@ function handleDevcontainerJson(
 				content,
 				devcontainerCapabilities,
 				configuration,
-				projectName,
-				selectedCapabilities
+				projectName
 			);
 		}
 	}
@@ -748,33 +746,6 @@ function addFilesToMap(
 	}
 }
 
-/**
- * Handles merging of devcontainer.json files
- */
-function handleDevcontainerMerge(
-	file,
-	existingFile,
-	devcontainerCapabilities,
-	configuration,
-	projectName,
-	selectedCapabilities
-) {
-	try {
-		file.content = mergeDevcontainerConfigs(
-			existingFile.content,
-			file.content,
-			devcontainerCapabilities,
-			configuration,
-			projectName,
-			selectedCapabilities
-		);
-		file.capabilityId = 'devcontainer-merged';
-	} catch (e) {
-		console.error('Error merging devcontainer configs:', e);
-		// Fall back to the new file content (already set)
-	}
-}
-
 function mergeExtensions(existing, newConfigObj) {
 	const extensions = new Set();
 	if (existing.customizations?.vscode?.extensions) {
@@ -795,8 +766,7 @@ function mergeDevcontainerConfigs(
 	newConfig,
 	devcontainerCapabilities,
 	configuration,
-	projectName,
-	selectedCapabilities
+	projectName
 ) {
 	const existing = parseDevcontainerConfig(existingConfig, 'existing');
 	const newConfigObj = parseDevcontainerConfig(newConfig, 'new');
@@ -872,7 +842,7 @@ function buildFeatures(hasNode, hasPython, hasJava) {
 /**
  * Merges Dockerfile contents
  */
-function mergeDockerfiles(existingDockerfile, newDockerfile) {
+function mergeDockerfiles(existingDockerfile) {
 	// For multiple devcontainers, we'll use a universal base
 	// Just return the first one since we're using features in the merged config
 	return existingDockerfile;

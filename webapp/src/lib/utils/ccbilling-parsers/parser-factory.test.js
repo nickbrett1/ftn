@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ParserFactory } from './parser-factory.js';
-import { ChaseParser } from './chase-parser.js';
-import { WellsFargoParser } from './wells-fargo-parser.js';
 
 // Mock the parsers
 vi.mock('./chase-parser.js', () => ({
