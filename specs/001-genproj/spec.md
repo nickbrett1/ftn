@@ -75,7 +75,24 @@ As a developer who has configured and previewed a project, I want to authenticat
 
 ---
 
-### User Story 4 - Generate Project with Confirmed Configuration (Priority: P1)
+### User Story 4 - Store and Reuse Authentication Tokens (Priority: P1)
+
+As a developer, I want the system to securely store my authentication tokens for external services (e.g., CircleCI, Doppler, SonarCloud) after successful authentication, so that these tokens can be automatically used as defaults for future project generations, reducing repetitive authentication steps.
+
+**Why this priority**: This feature significantly enhances user experience by minimizing repetitive authentication, streamlining the project generation process for frequent users.
+
+**Independent Test**: Can be fully tested by authenticating once for an external service, then attempting to generate a new project requiring that service without re-entering credentials, and verifying the stored token is used.
+
+**Acceptance Scenarios**:
+
+1. **Given** I successfully authenticate with an external service (e.g., CircleCI) during project generation, **When** the generation completes, **Then** my authentication token for that service is securely stored and associated with my user account.
+2. **Given** I have a securely stored authentication token for an external service, **When** I initiate a new project generation that requires that service, **Then** the stored token is automatically used for authentication without requiring me to re-enter credentials.
+3. **Given** I have stored authentication tokens, **When** I access my user settings or profile, **Then** I can view which services have stored tokens and have an option to revoke them.
+4. **Given** I revoke a stored authentication token for a service, **When** I attempt to generate a project requiring that service, **Then** I am prompted to re-authenticate for that service.
+
+---
+
+### User Story 5 - Generate Project with Confirmed Configuration (Priority: P1)
 
 As a developer who has reviewed the preview, I want to generate the complete project with all files and external service configurations so I can have a fully functional development environment.
 
@@ -91,7 +108,7 @@ As a developer who has reviewed the preview, I want to generate the complete pro
 
 ---
 
-### User Story 5 - Authenticate with CircleCI for Project Creation (Priority: P2)
+### User Story 6 - Authenticate with CircleCI for Project Creation (Priority: P2)
 
 As an authenticated developer, I want to connect my CircleCI account so the system can automatically create CircleCI projects and configure CI/CD pipelines for my generated repositories.
 
@@ -107,7 +124,7 @@ As an authenticated developer, I want to connect my CircleCI account so the syst
 
 ---
 
-### User Story 6 - Generate Comprehensive Project Documentation (Priority: P2)
+### User Story 7 - Generate Comprehensive Project Documentation (Priority: P2)
 
 As a developer generating a project, I want a comprehensive README.md that documents all selected capabilities and provides clear setup instructions so I can understand what was configured and how to use it.
 
@@ -123,7 +140,7 @@ As a developer generating a project, I want a comprehensive README.md that docum
 
 ---
 
-### User Story 7 - Authenticate with Doppler for Secrets Management (Priority: P2)
+### User Story 8 - Authenticate with Doppler for Secrets Management (Priority: P2)
 
 As an authenticated developer, I want to connect my Doppler account so the system can automatically create Doppler projects and configure secrets management for my generated repositories.
 
@@ -139,7 +156,7 @@ As an authenticated developer, I want to connect my Doppler account so the syste
 
 ---
 
-### User Story 8 - Authenticate with SonarCloud for Code Quality (Priority: P2)
+### User Story 9 - Authenticate with SonarCloud for Code Quality (Priority: P2)
 
 As an authenticated developer, I want to connect my SonarCloud account so the system can automatically create SonarCloud projects and configure code quality analysis for my generated repositories.
 
@@ -155,7 +172,7 @@ As an authenticated developer, I want to connect my SonarCloud account so the sy
 
 ---
 
-### User Story 9 - Handle External Service Integration (Priority: P2)
+### User Story 10 - Handle External Service Integration (Priority: P2)
 
 As a developer generating a project, I want the system to automatically configure external services (CircleCI, SonarCloud, Doppler) when possible, or provide clear instructions when manual setup is required.
 
@@ -172,7 +189,7 @@ As a developer generating a project, I want the system to automatically configur
 
 ---
 
-### User Story 10 - Celebrate Successful Project Generation (Priority: P3)
+### User Story 11 - Celebrate Successful Project Generation (Priority: P3)
 
 As a developer who has successfully generated a project, I want to see a delightful celebration animation to acknowledge the completion of this significant milestone.
 
@@ -202,6 +219,9 @@ As a developer who has successfully generated a project, I want to see a delight
 - How does the system handle selected capabilities with conflicting requirements?
 - What happens when invalid project names or repository URLs are provided?
 - What happens when the user's Google, GitHub, CircleCI, Doppler, or SonarCloud authentication expires during project generation?
+- What happens if a stored authentication token becomes invalid or expires?
+- What happens if a stored authentication token is revoked by the user through the external service provider?
+- What happens if a stored authentication token is compromised? How is it invalidated and how is the user notified?
 - How does the system handle GitHub API rate limiting during repository creation?
 - What happens when the user lacks sufficient GitHub permissions to create repositories?
 - What happens when CircleCI project creation succeeds but GitHub webhook setup fails?
@@ -223,6 +243,10 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-005**: System MUST require CircleCI authentication (API token) only when CI/CD capability is selected and user confirms generation
 - **FR-006**: System MUST require Doppler authentication (API token) only when secrets management capability is selected and user confirms generation
 - **FR-007**: System MUST require SonarCloud authentication (API token) only when code quality capability is selected and user confirms generation
+- **FR-045**: System MUST securely store authentication tokens for external services (CircleCI, Doppler, SonarCloud) associated with the logged-in user.
+- **FR-046**: System MUST retrieve stored authentication tokens and use them as defaults for subsequent project generations.
+- **FR-047**: System MUST provide a user interface for the user to view and revoke stored tokens.
+- **FR-048**: System MUST encrypt stored tokens at rest.
 - **FR-008**: System MUST allow users to select from available capabilities with dependency resolution
 - **FR-042**: System MUST automatically select dependencies when a user selects a capability that requires other capabilities
 - **FR-043**: System MUST prevent deselection of capabilities that are required by other selected capabilities
@@ -277,7 +301,7 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-032**: System MUST display celebratory firework particle animation upon successful project generation
 - **FR-033**: System MUST provide smooth, performant animation that works across different devices and browsers
 - **FR-034**: System MUST include accessibility options to disable animations for users with motion sensitivity
-- **FR-035**: System MUST use JavaScript (not TypeScript) for all implementation code
+
 - **FR-036**: System MUST default all tool versions to the latest stable version available
 - **FR-037**: System MUST display version options with latest version first in selection dropdowns
 - **FR-038**: System MUST only include stable, production-ready versions in capability configuration options
@@ -289,7 +313,7 @@ As a developer who has successfully generated a project, I want to see a delight
 - **Capability Definition**: Represents an available project capability with its dependencies, requirements, and generated artifacts
 - **Generated Artifact**: Represents a file or configuration that will be created based on selected capabilities
 - **External Service Integration**: Represents the connection to third-party services like CircleCI, SonarCloud, or Doppler
-- **Authentication State**: Represents the user's authentication status with Google (required), GitHub (required for repository operations), CircleCI (required for CI/CD operations), Doppler (required for secrets management), and SonarCloud (required for code quality operations)
+- **Authentication State**: Represents the user's authentication status with Google (required), GitHub (required for repository operations), CircleCI (required for CI/CD operations), Doppler (required for secrets management), and SonarCloud (required for code quality operations), including securely stored tokens for these services.
 
 ## Success Criteria _(mandatory)_
 
@@ -311,6 +335,9 @@ As a developer who has successfully generated a project, I want to see a delight
 - **SC-014**: CircleCI authentication success rate exceeds 95% for users with valid CircleCI accounts
 - **SC-015**: Doppler authentication success rate exceeds 95% for users with valid Doppler accounts
 - **SC-016**: SonarCloud authentication success rate exceeds 95% for users with valid SonarCloud accounts
+- **SC-025**: 90% of users successfully reuse stored authentication tokens for subsequent project generations without re-authenticating.
+- **SC-026**: Stored authentication tokens are encrypted at rest and protected against unauthorized access.
+- **SC-027**: Users can view and revoke stored tokens through the user interface.
 - **SC-017**: Generated README.md files contain complete documentation for all selected capabilities
 - **SC-018**: Users can successfully set up development environment using only README.md instructions 95% of the time
 - **SC-019**: Celebration animation displays successfully on 99% of supported browsers and devices
