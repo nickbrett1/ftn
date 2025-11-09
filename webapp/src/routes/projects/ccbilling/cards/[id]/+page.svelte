@@ -8,11 +8,7 @@
 
 	let editName = $state(card?.name || '');
 	let editLast4 = $state(card?.last4 || '');
-	let isSaving = $state(false);
 	let saveError = $state('');
-	let saveErrorTick = $state(0);
-
-	let showSaveError = $derived(() => !!saveError);
 
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
@@ -46,7 +42,6 @@
 		return '';
 	}
 	async function saveCardImmediate(name, last4) {
-		isSaving = true;
 		try {
 			const response = await fetch(`/projects/ccbilling/cards/${card.id}`, {
 				method: 'PUT',
@@ -54,17 +49,15 @@
 				body: JSON.stringify({ name: name.trim(), last4: last4.trim() })
 			});
 			if (!response.ok) {
-				const error = await response.json();
-				saveError = error.error || 'Failed to update card';
+				const res = await response.json();
+				saveError = res.error || 'Failed to update card';
 				await tick();
 				return;
 			}
 			// Optionally, show a success indicator
-		} catch (error) {
+		} catch {
 			saveError = 'Network error occurred';
 			await tick();
-		} finally {
-			isSaving = false;
 		}
 	}
 
@@ -76,12 +69,12 @@
 				method: 'DELETE'
 			});
 			if (!response.ok) {
-				const error = await response.json();
-				deleteError = error.error || 'Failed to delete card';
+				const res = await response.json();
+				deleteError = res.error || 'Failed to delete card';
 				return;
 			}
 			window.location.href = '/projects/ccbilling/cards';
-		} catch (error) {
+		} catch {
 			deleteError = 'Network error occurred';
 		} finally {
 			isDeleting = false;

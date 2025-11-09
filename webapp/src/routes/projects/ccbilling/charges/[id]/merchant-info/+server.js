@@ -4,7 +4,7 @@ let STATIC_LLAMA_API_MODEL;
 try {
 	const env = await import('$env/static/private');
 	STATIC_LLAMA_API_MODEL = env.LLAMA_API_MODEL;
-} catch (error) {
+} catch {
 	// During build time, these might not be available
 	STATIC_LLAMA_API_MODEL = process.env?.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 }
@@ -81,7 +81,9 @@ async function runLlamaClient(event, prompt) {
 
 				// Fallback to direct properties
 				return extractFromDirectProperties(response);
-			} catch {}
+			} catch {
+				// Ignore parsing errors and return empty string
+			}
 			return '';
 		}
 

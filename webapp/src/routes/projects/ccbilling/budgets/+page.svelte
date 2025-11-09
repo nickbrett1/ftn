@@ -6,8 +6,6 @@
 	import {
 		getAvailableIcons,
 		getIconDescription,
-		getDefaultIcon,
-		getAvailableIconsForBudget,
 		isIconUsedByOtherBudget,
 		getBudgetNameUsingIcon
 	} from '$lib/utils/budget-icons.js';
@@ -31,9 +29,6 @@
 	let budgetToDelete = $state(null);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
-
-	// Get available icons (excluding those already used by other budgets)
-	let availableIcons = $derived(getAvailableIconsForBudget(budgets));
 
 	async function addBudget() {
 		if (!newBudgetName.trim()) {
@@ -70,7 +65,7 @@
 			newBudgetIcon = '';
 			showAddForm = false;
 			window.location.reload();
-		} catch (error) {
+		} catch {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
@@ -98,7 +93,7 @@
 				return;
 			}
 			window.location.reload();
-		} catch (error) {
+		} catch {
 			deleteError = 'Network error occurred';
 		} finally {
 			isDeleting = false;

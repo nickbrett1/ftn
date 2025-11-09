@@ -12,33 +12,33 @@ vi.mock('nanoid', () => ({
 }));
 
 describe('Google Auth Utils', () => {
-        let originalCreateElement;
+	let originalCreateElement;
 
-        beforeEach(() => {
-                vi.clearAllMocks();
-                // Reset document.cookie
-                Object.defineProperty(document, 'cookie', {
-                        writable: true,
-                        value: ''
-                });
-                // Reset window.google
-                delete globalThis.google;
+	beforeEach(() => {
+		vi.clearAllMocks();
+		// Reset document.cookie
+		Object.defineProperty(document, 'cookie', {
+			writable: true,
+			value: ''
+		});
+		// Reset window.google
+		delete globalThis.google;
 
-                originalCreateElement = document.createElement;
-                // Mock document.createElement to return a mock script element
-                vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
-                        if (tagName === 'script') {
-                                const script = originalCreateElement.call(document, 'script');
-                                script.onload = null;
-                                script.onerror = null;
-                                vi.spyOn(script, 'setAttribute');
-                                vi.spyOn(script, 'remove');
-                                return script;
-                        }
-                        // For other elements, call the original createElement
-                        return originalCreateElement.call(document, tagName);
-                });
-        });
+		originalCreateElement = document.createElement;
+		// Mock document.createElement to return a mock script element
+		vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+			if (tagName === 'script') {
+				const script = originalCreateElement.call(document, 'script');
+				script.onload = null;
+				script.onerror = null;
+				vi.spyOn(script, 'setAttribute');
+				vi.spyOn(script, 'remove');
+				return script;
+			}
+			// For other elements, call the original createElement
+			return originalCreateElement.call(document, tagName);
+		});
+	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
@@ -208,91 +208,62 @@ describe('Google Auth Utils', () => {
 			);
 		});
 
-		                                                                it('should load GIS script if not already loaded', async () => {
+		it('should load GIS script if not already loaded', async () => {
+			// Mock GIS not loaded
 
-		                                                                        // Mock GIS not loaded
+			globalThis.google = undefined;
 
-		                                                                        globalThis.google = undefined;
+			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
 
-		                                                
+			// Call initiateGoogleAuth once
 
-		                                                                        const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+			const initiateAuthPromise = initiateGoogleAuth();
 
-		                                                
+			// Expect appendChild to have been called with a script element
 
-		                                                                        // Call initiateGoogleAuth once
+			expect(appendChildSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
 
-		                                                                        const initiateAuthPromise = initiateGoogleAuth();
+			const scriptElement = appendChildSpy.mock.calls[0][0];
 
-		                                                
+			expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
 
-		                                                                        // Expect appendChild to have been called with a script element
+			// Mock GIS loaded after script, but before onload is triggered
 
-		                                                                        expect(appendChildSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
+			globalThis.google = {
+				accounts: {
+					id: {
+						initialize: vi.fn(),
 
-		                                                                        const scriptElement = appendChildSpy.mock.calls[0][0];
+						renderButton: vi.fn(),
 
-		                                                                        expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
+						prompt: vi.fn()
+					},
 
-		                                                
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
 
-		                                                                        // Mock GIS loaded after script, but before onload is triggered
+			// Simulate script loading success
 
-		                                                                        globalThis.google = {
+			scriptElement.onload();
 
-		                                                                                accounts: {
+			// Wait for the initiateAuthPromise to resolve
 
-		                                                                                        id: {
+			await initiateAuthPromise;
 
-		                                                                                                initialize: vi.fn(),
+			expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledWith(
+				expect.objectContaining({
+					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
+				})
+			);
 
-		                                                                                                renderButton: vi.fn(),
-
-		                                                                                                prompt: vi.fn()
-
-		                                                                                        },
-
-		                                                                                        oauth2: {
-
-		                                                                                                initCodeClient: vi.fn(() => ({
-
-		                                                                                                        requestCode: vi.fn()
-
-		                                                                                                }))
-
-		                                                                                        }
-
-		                                                                                }
-
-		                                                                        };
-
-		                                                
-
-		                                                                        // Simulate script loading success
-
-		                                                                        scriptElement.onload();
-
-		                                                
-
-		                                                                        // Wait for the initiateAuthPromise to resolve
-
-		                                                                        await initiateAuthPromise;
-
-		                                                
-
-		                                                                        expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledWith(
-
-		                                                                                expect.objectContaining({
-
-		                                                                                        client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
-
-		                                                                                })
-
-		                                                                        );
-
-		                                                                        expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
-
-		                                                                });		it('should handle GIS script loading errors', async () => {
+			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+		});
+		it('should handle GIS script loading errors', async () => {
 			// Mock GIS not loaded
 			globalThis.google = undefined;
 
@@ -326,26 +297,26 @@ describe('Google Auth Utils', () => {
 			);
 		});
 
-                it('should handle initCodeClient errors', async () => {
-                        // Mock not logged in state
-                        Object.defineProperty(document, 'cookie', {
-                                writable: true,
-                                value: ''
-                        });
+		it('should handle initCodeClient errors', async () => {
+			// Mock not logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
+			});
 
-                        // Mock window.google.accounts.oauth2
-                        globalThis.google = {
-                                accounts: {
-                                        oauth2: {
-                                                initCodeClient: vi.fn(() => {
-                                                        throw new Error('Failed to initCodeClient');
-                                                })
-                                        }
-                                }
-                        };
+			// Mock window.google.accounts.oauth2
+			globalThis.google = {
+				accounts: {
+					oauth2: {
+						initCodeClient: vi.fn(() => {
+							throw new Error('Failed to initCodeClient');
+						})
+					}
+				}
+			};
 
-                        await expect(initiateGoogleAuth()).rejects.toThrow('Failed to initCodeClient');
-                });
+			await expect(initiateGoogleAuth()).rejects.toThrow('Failed to initCodeClient');
+		});
 
 		it('should handle state mismatch error', async () => {
 			// Mock not logged in state

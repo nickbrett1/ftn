@@ -1,7 +1,6 @@
 <script>
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import Button from '$lib/components/Button.svelte';
 
 	const { data } = $props();
 
@@ -14,10 +13,6 @@
 	let newCardLast4 = $state('');
 	let isAdding = $state(false);
 	let addError = $state('');
-
-	// Delete state
-	let deletingCard = $state(null);
-	let isDeleting = $state(false);
 	let deleteError = $state('');
 
 	async function addCard() {
@@ -58,34 +53,6 @@
 			addError = err.message;
 		} finally {
 			isAdding = false;
-		}
-	}
-
-	async function deleteCard(card) {
-		if (!confirm(`Are you sure you want to delete "${card.name}" (****${card.last4})?`)) {
-			return;
-		}
-
-		deletingCard = card;
-		isDeleting = true;
-		deleteError = '';
-
-		try {
-			const response = await fetch(`/projects/ccbilling/cards/${card.id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to delete credit card');
-			}
-
-			location.reload();
-		} catch (err) {
-			deleteError = 'Error deleting card: ' + err.message;
-		} finally {
-			deletingCard = null;
-			isDeleting = false;
 		}
 	}
 

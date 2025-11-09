@@ -1,12 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, DELETE } from './+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getBudgetMerchants: vi.fn(),
 	addBudgetMerchant: vi.fn(),
-	removeBudgetMerchant: vi.fn(),
-	getBudgetByMerchant: vi.fn()
+	removeBudgetMerchant: vi.fn()
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
@@ -15,8 +14,7 @@ vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 import {
 	getBudgetMerchants,
 	addBudgetMerchant,
-	removeBudgetMerchant,
-	getBudgetByMerchant
+	removeBudgetMerchant
 } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 
@@ -233,7 +231,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '7-Eleven Store #1234' });
 			addBudgetMerchant.mockResolvedValue();
 
-			const response = await POST(mockEvent);
+			await POST(mockEvent);
 
 			expect(addBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, '7-Eleven Store #1234');
 		});
@@ -243,7 +241,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: longName });
 			addBudgetMerchant.mockResolvedValue();
 
-			const response = await POST(mockEvent);
+			await POST(mockEvent);
 
 			expect(addBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, longName);
 		});
@@ -334,7 +332,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: "Trader Joe's" });
 			removeBudgetMerchant.mockResolvedValue();
 
-			const response = await DELETE(mockEvent);
+			await DELETE(mockEvent);
 
 			expect(removeBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, "Trader Joe's");
 		});
@@ -343,7 +341,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '  Costco  ' });
 			removeBudgetMerchant.mockResolvedValue();
 
-			const response = await DELETE(mockEvent);
+			await DELETE(mockEvent);
 
 			expect(removeBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, 'Costco');
 		});

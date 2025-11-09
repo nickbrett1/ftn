@@ -15,26 +15,20 @@
 	let { children, onclick, disableHoverGlow = false, class: extraClasses = '' } = $props();
 	let rect = null;
 
-	function createClientRectTracker() {
-		const action = (node) => {
-			function update() {
-				rect = node.getBoundingClientRect();
+	const clientRectTracker = (node) => {
+		function update() {
+			rect = node.getBoundingClientRect();
+		}
+
+		const handle = setInterval(update, 100);
+		update();
+
+		return {
+			destroy() {
+				clearInterval(handle);
 			}
-
-			const handle = setInterval(update, 100);
-			update();
-
-			return {
-				destroy() {
-					clearInterval(handle);
-				}
-			};
 		};
-
-		return action;
-	}
-
-	const clientRectTracker = createClientRectTracker();
+	};
 
 	let blob = $state();
 

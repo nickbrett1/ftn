@@ -436,7 +436,6 @@
 	async function updateChargeAllocation(chargeId, newAllocation) {
 		// Check if this change involves an auto-association
 		const charge = localData.charges.find((c) => c.id === chargeId);
-		const currentAllocation = charge.allocated_to;
 
 		// Find if there's an auto-association for this merchant
 		// Try normalized merchant first, then fall back to original merchant name
