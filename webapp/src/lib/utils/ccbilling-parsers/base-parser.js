@@ -121,7 +121,7 @@ export class BaseParser {
 	 * @param {string} pdfText - Text content from PDF
 	 * @returns {Object} - Parsed statement data
 	 */
-	async parse(pdfText) {
+	async parse(/* pdfText */) {
 		throw new Error('parse() method must be implemented by subclass');
 	}
 

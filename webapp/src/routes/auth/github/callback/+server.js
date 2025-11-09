@@ -39,7 +39,7 @@ export async function GET(event) {
 				Location: '/'
 			}
 		});
-	} catch (e) {
+	} catch {
 		return new Response(null, {
 			status: 500
 		});

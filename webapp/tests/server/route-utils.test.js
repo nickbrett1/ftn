@@ -212,7 +212,7 @@ describe('RouteUtils', () => {
 			vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			const result = RouteUtils.handleError(error, 'Test Context', { defaultStatus: 400 });
-			const jsonResult = await result.json();
+			await result.json();
 
 			expect(result.status).toBe(400);
 		});

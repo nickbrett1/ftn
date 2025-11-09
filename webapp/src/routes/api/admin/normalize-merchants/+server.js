@@ -202,7 +202,7 @@ export async function POST(event) {
 
 			if (needsBulkUpdate[0].count > 0) {
 				try {
-					const bulkUpdates = await performBulkPatternUpdates(db, batchSize);
+					const bulkUpdates = await performBulkPatternUpdates(db);
 					updatedCount += bulkUpdates.paymentsUpdated;
 					budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
 
@@ -212,7 +212,7 @@ export async function POST(event) {
 					}
 
 					// Also do bulk updates for budget merchants
-					const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db, batchSize);
+					const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db);
 					budgetMerchantsUpdated += budgetBulkUpdates.updated;
 					if (budgetBulkUpdates.errors && budgetBulkUpdates.errors.length > 0) {
 						errors.push(...budgetBulkUpdates.errors);
@@ -282,7 +282,7 @@ export async function POST(event) {
  * Perform bulk pattern-based updates for known merchant patterns
  * This is more efficient than processing each payment individually
  */
-async function performBulkPatternUpdates(db, batchSize) {
+async function performBulkPatternUpdates(db) {
 	const updates = [
 		// Amazon variations
 		{
@@ -452,7 +452,7 @@ async function performBulkPatternUpdates(db, batchSize) {
  *
  * This prevents the UNIQUE constraint error: budget_merchant.budget_id, budget_merchant.merchant_normalized
  */
-async function performBudgetMerchantBulkUpdates(db, batchSize) {
+async function performBudgetMerchantBulkUpdates(db) {
 	const updates = [
 		// Amazon variations
 		{

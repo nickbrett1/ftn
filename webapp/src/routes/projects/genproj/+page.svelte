@@ -5,14 +5,12 @@
 
 <script>
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
 	import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
 	import AuthFlow from '$lib/components/genproj/AuthFlow.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
-	import { goto, invalidateAll } from '$app/navigation';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
 	let { data = { isAuthenticated: false } } = $props();
@@ -76,10 +74,10 @@
 
 		selectedCapabilities = selectedCapabilities.filter((id) => id !== capabilityId);
 		if (configuration[capabilityId]) {
-			const { [capabilityId]: _, ...remainingConfig } = configuration;
+			const remainingConfig = { ...configuration };
+			delete remainingConfig[capabilityId];
 			configuration = remainingConfig;
 		}
-		configuration = { ...configuration };
 
 		for (const dependencyId of capability.dependencies || []) {
 			if (selectedCapabilities.includes(dependencyId) && !isDependencyStillRequired(dependencyId)) {

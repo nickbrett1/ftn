@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './+server.js';
-import { json } from '@sveltejs/kit';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({

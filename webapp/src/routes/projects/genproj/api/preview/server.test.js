@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './+server.js';
-import { capabilities } from '$lib/config/capabilities';
 
 // Mock dependencies
 vi.mock('@sveltejs/kit', () => ({

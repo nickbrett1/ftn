@@ -1,6 +1,4 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { tick } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -19,7 +17,6 @@
 
 	// Core data - reactive state
 	let budget = $state(data.budget || null);
-	let budgets = $state(data.budgets || []);
 	let merchants = $state(data.merchants || []);
 
 	// Merchant management state
@@ -42,7 +39,6 @@
 	let deleteBudgetError = $state('');
 
 	// Derived state for UI
-	let availableIcons = $derived(getAvailableIcons());
 	let sortedMerchants = $derived(
 		merchants
 			.filter((merchant) => merchant && merchant.merchant)
@@ -116,7 +112,7 @@
 			// Reset selectedMerchant to show placeholder text after DOM updates
 			await tick();
 			selectedMerchant = '';
-		} catch (error) {
+		} catch {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
@@ -162,8 +158,8 @@
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
 			merchantPickerRef?.refreshMerchantList();
-		} catch (error) {
-			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
+		} catch (err) {
+			alert(`Failed to remove merchant "${merchantName}": ${err.message}`);
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
@@ -198,7 +194,7 @@
 				return;
 			}
 			// No reload, just update UI
-		} catch (error) {
+		} catch {
 			nameEditError = 'Network error occurred';
 		} finally {
 			isSavingName = false;
@@ -236,7 +232,7 @@
 				return;
 			}
 			window.location.href = '/projects/ccbilling/budgets';
-		} catch (error) {
+		} catch {
 			deleteBudgetError = 'Network error occurred';
 		} finally {
 			isDeletingBudget = false;

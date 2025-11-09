@@ -3,7 +3,7 @@
  * @description Tests the capabilities API endpoint contract
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { capabilities } from '../../src/lib/config/capabilities.js';
 
 describe('Capabilities API Contract', () => {

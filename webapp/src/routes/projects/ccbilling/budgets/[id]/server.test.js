@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, PUT, DELETE } from './+server.js';
 
 // Mock the dependencies
@@ -203,7 +203,7 @@ describe('/projects/ccbilling/budgets/[id] API', () => {
 			getBudget.mockResolvedValue({ id: 1, name: 'Health' });
 			updateBudget.mockResolvedValue({ id: 1, name: 'Health & Wellness', icon: '🏥' });
 
-			const response = await PUT(mockEvent);
+			await PUT(mockEvent);
 
 			expect(updateBudget).toHaveBeenCalledWith(mockEvent, 1, 'Health & Wellness', '🏥');
 		});

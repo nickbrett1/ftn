@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, DELETE } from './+server.js';
 
 // Mock the dependencies
@@ -131,6 +131,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			const merchantData = { merchant: 'Amazon' };
 			mockEvent.request.json.mockResolvedValue(merchantData);
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -210,6 +211,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should add merchant with trimmed name', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '  Target  ' });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -221,6 +223,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should handle special characters in merchant names', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: "McDonald's" });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -232,8 +235,9 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 		it('should handle merchant names with numbers and symbols', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '7-Eleven Store #1234' });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
-			const response = await POST(mockEvent);
+			await POST(mockEvent);
 
 			expect(addBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, '7-Eleven Store #1234');
 		});
@@ -242,14 +246,16 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			const longName = 'A'.repeat(100);
 			mockEvent.request.json.mockResolvedValue({ merchant: longName });
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
-			const response = await POST(mockEvent);
+			await POST(mockEvent);
 
 			expect(addBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, longName);
 		});
 
 		it('should handle database errors during addition', async () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: 'Test Merchant' });
+			getBudgetByMerchant.mockResolvedValue(null);
 			addBudgetMerchant.mockRejectedValue(new Error('Duplicate key violation'));
 
 			await expect(POST(mockEvent)).rejects.toThrow('Duplicate key violation');
@@ -262,6 +268,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 				budgetId: 999
 			});
 			addBudgetMerchant.mockResolvedValue();
+			getBudgetByMerchant.mockResolvedValue(null);
 
 			const response = await POST(mockEvent);
 			const result = JSON.parse(await response.text());
@@ -334,7 +341,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: "Trader Joe's" });
 			removeBudgetMerchant.mockResolvedValue();
 
-			const response = await DELETE(mockEvent);
+			await DELETE(mockEvent);
 
 			expect(removeBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, "Trader Joe's");
 		});
@@ -343,7 +350,7 @@ describe('/projects/ccbilling/budgets/[id]/merchants API', () => {
 			mockEvent.request.json.mockResolvedValue({ merchant: '  Costco  ' });
 			removeBudgetMerchant.mockResolvedValue();
 
-			const response = await DELETE(mockEvent);
+			await DELETE(mockEvent);
 
 			expect(removeBudgetMerchant).toHaveBeenCalledWith(mockEvent, 1, 'Costco');
 		});

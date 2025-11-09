@@ -15,7 +15,7 @@ function formatDate(dateString) {
 	return date.toLocaleDateString('en-US', options);
 }
 
-export async function GET({ request }) {
+export async function GET() {
 	try {
 		// Temporarily removed auth check for testing
 

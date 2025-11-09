@@ -12,7 +12,7 @@ import { logger } from '$lib/utils/logging.js';
  * GET /projects/genproj/api/capabilities
  * Returns all available project capabilities
  */
-export const GET = withErrorHandling(async ({ url, request }) => {
+export const GET = withErrorHandling(async () => {
 	try {
 		// Return capabilities with additional metadata
 		const response = {

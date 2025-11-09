@@ -45,7 +45,7 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 
 	describe('Basic Rendering', () => {
 		it('renders and executes component with credit cards', () => {
-			const { container, getAllByText } = render(CardsPage, {
+			const { container } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
@@ -196,7 +196,7 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 		});
 
 		it('successfully adds a card with valid data', async () => {
-			const { container, getByText, getByLabelText } = render(CardsPage, {
+			const { getByText, getByLabelText } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 

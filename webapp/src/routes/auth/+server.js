@@ -4,7 +4,7 @@ try {
 	const env = await import('$env/static/private');
 	GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
 	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
-} catch (error) {
+} catch {
 	// During build time, these might not be available
 	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
 	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';

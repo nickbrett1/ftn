@@ -24,7 +24,7 @@ export async function isRegexSafe(pattern, testString, timeout = 1000) {
 
 		// Fallback: Use setTimeout with Promise (less reliable but better than nothing)
 		return testRegexWithTimeout(pattern, testString, timeout);
-	} catch (error) {
+	} catch {
 		// Invalid regex patterns are considered unsafe
 		return false;
 	}
@@ -162,7 +162,7 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 		const startTime = Date.now();
 
 		// Test the pattern
-		const result = regex.test(testString);
+		regex.test(testString);
 		const endTime = Date.now();
 
 		// If it takes too long, consider it unsafe
@@ -171,7 +171,7 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 		}
 
 		return true;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }

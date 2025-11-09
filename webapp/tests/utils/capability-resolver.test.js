@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
-import * as capabilityResolver from '$lib/utils/capability-resolver.js';
 import {
 	resolveDependencies,
 	validateCapabilitySelection,
