@@ -1,73 +1,89 @@
-/**
- * @fileoverview Logging utilities with emoji prefixes for genproj feature
- * @description Centralized logging with consistent emoji prefixes and context
- */
+// webapp/src/lib/utils/logging.js
+import { dev, browser } from '$app/environment';
 
-/**
- * Log levels
- */
-export const LOG_LEVELS = {
+const LOG_LEVELS = {
 	DEBUG: 0,
 	INFO: 1,
 	WARN: 2,
-	ERROR: 3
+	ERROR: 3,
+	SILENT: 4
 };
 
-/**
- * Current log level (can be set via environment)
- */
-const currentLogLevel = (() => {
-	// Check if we're in a browser environment
-	if (typeof globalThis !== 'undefined' && globalThis.window) {
-		// In browser, use a default level or check for a global variable
-		return LOG_LEVELS.INFO;
-	}
+let currentLogLevel;
+if (browser) {
+    // In the browser, process.env is not available. Default to INFO in dev, WARN in prod.
+    currentLogLevel = dev ? LOG_LEVELS.INFO : LOG_LEVELS.WARN;
+} else {
+    // On the server, use process.env if available, otherwise default.
+    currentLogLevel = LOG_LEVELS[process.env.GENPROJ_LOG_LEVEL?.toUpperCase()] ?? (dev ? LOG_LEVELS.INFO : LOG_LEVELS.WARN);
+}
 
-	// In Node.js environment, check environment variable
-	if (typeof process !== 'undefined' && process.env?.GENPROJ_LOG_LEVEL) {
-		return LOG_LEVELS[process.env.GENPROJ_LOG_LEVEL.toUpperCase()] || LOG_LEVELS.INFO;
-	}
-
-	return LOG_LEVELS.INFO;
-})();
-
-/**
- * Emoji prefixes for different log types
- */
-const EMOJI_PREFIXES = {
-	DEBUG: '🔍',
-	INFO: 'ℹ️',
-	SUCCESS: '✅',
-	WARNING: '⚠️',
-	ERROR: '❌',
-	AUTH: '🔐',
-	DATABASE: '🗄️',
-	API: '🌐',
-	FILE: '📁',
-	USER: '👤',
-	SYSTEM: '⚙️',
-	PERFORMANCE: '⚡',
-	SECURITY: '🛡️'
+const EMOJI_MAP = {
+	info: '💡',
+	warn: '⚠️',
+	error: '❌',
+	debug: '🐞',
+	auth: '🔑',
+	api: '📡',
+	database: '💾',
+	file: '📄',
+	system: '⚙️',
+	user: '👤',
+	performance: '⏱️',
+	security: '🛡️'
 };
 
-/**
- * Base logger class
- */
-class GenprojLogger {
-	constructor(context = 'genproj') {
-		this.context = context;
-	}
+const createLogger = (category) => {
+    const log = (level, message, data) => {
+		const levelValue = LOG_LEVELS[level.toUpperCase()] ?? LOG_LEVELS.INFO;
+        if (levelValue >= currentLogLevel) {
+            const emoji = EMOJI_MAP[level] || '📝';
+            const timestamp = new Date().toISOString();
+            const logMessage = `${emoji} [${timestamp}] [${category}] ${message}`;
+            
+            const consoleMethod = (level === 'warn' || level === 'security') ? console.warn : level === 'error' ? console.error : console.log;
+            
+            if (data) {
+                consoleMethod(logMessage, data);
+            } else {
+                consoleMethod(logMessage);
+            }
+        }
+    };
 
-	/**
-	 * Log debug message
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	debug(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-			this._log('DEBUG', EMOJI_PREFIXES.DEBUG, message, data);
-		}
+    const loggerInstance = {
+        info: (message, data) => log('info', message, data),
+        warn: (message, data) => log('warn', message, data),
+        error: (message, data) => log('error', message, data),
+        debug: (message, data) => log('debug', message, data),
+    };
+
+    // Add category-specific methods
+    for (const key in EMOJI_MAP) {
+        if (!loggerInstance[key]) {
+            loggerInstance[key] = (message, data) => log(key, message, data);
+        }
+    }
+
+    return loggerInstance;
+};
+
+const logger = createLogger('genproj');
+const authLogger = createLogger('genproj:auth');
+
+const setLogLevel = (level) => {
+	const newLevel = LOG_LEVELS[level.toUpperCase()];
+	if (newLevel !== undefined) {
+		currentLogLevel = newLevel;
+		logger.info(`Log level set to: ${level}`);
+	} else {
+		logger.warn(`Invalid log level: ${level}`);
 	}
+};
+
+const getLogLevel = () => {
+	return Object.keys(LOG_LEVELS).find(key => LOG_LEVELS[key] === currentLogLevel) || 'INFO';
+};
 
 	/**
 	 * Log info message
@@ -276,116 +292,64 @@ export function withTiming(function_, operation, context = {}) {
 				...context,
 				duration: `${duration}ms`
 			});
+const withTiming = (fn, operationName, data = {}) => {
+	return async (...args) => {
+		const start = Date.now();
+		try {
+			const result = await fn(...args);
+			const duration = Date.now() - start;
+			logger.info(`Completed ${operationName}`, { ...data, duration: `${duration}ms` });
 			return result;
 		} catch (error) {
-			const duration = Date.now() - startTime;
-			perfLogger.error(`Failed ${operation}`, {
-				...context,
-				duration: `${duration}ms`,
-				error: error.message
-			});
+			const duration = Date.now() - start;
+			logger.error(`Failed ${operationName}`, { ...data, duration: `${duration}ms`, error: error.message });
 			throw error;
 		}
 	};
-}
+};
 
-/**
- * Log API request/response
- * @param {string} method - HTTP method
- * @param {string} url - Request URL
- * @param {Object} requestData - Request data
- * @param {Object} responseData - Response data
- * @param {number} statusCode - Response status code
- * @param {number} duration - Request duration in ms
- */
-export function logApiCall(method, url, requestData, responseData, statusCode, duration) {
-	const logData = {
-		method,
-		url,
-		statusCode,
-		duration: `${duration}ms`,
-		requestSize: JSON.stringify(requestData).length,
-		responseSize: JSON.stringify(responseData).length
-	};
+const logApiCall = (method, path, params, response, statusCode, duration) => {
+    const message = `API call: ${method} ${path}`;
+    const logData = { ...params, statusCode, duration: `${duration}ms` };
+    if (response.ok) {
+        logger.api(message, logData);
+    } else {
+        logger.error(`API call failed: ${method} ${path}`, logData);
+    }
+};
 
-	if (statusCode >= 400) {
-		apiLogger.error(`API call failed: ${method} ${url}`, logData);
-	} else {
-		apiLogger.info(`API call: ${method} ${url}`, logData);
-	}
-}
+const logUserAction = (userId, action, details) => {
+	logger.user(`User action: ${action}`, { userId, ...details });
+};
 
-/**
- * Log user action
- * @param {string} userId - User ID
- * @param {string} action - Action performed
- * @param {Object} details - Action details
- */
-export function logUserAction(userId, action, details = {}) {
-	userLogger.info(`User action: ${action}`, {
-		userId,
-		action,
-		...details
-	});
-}
+const logSecurityEvent = (event, details) => {
+	logger.security(`Security event: ${event}`, details);
+};
 
-/**
- * Log security event
- * @param {string} event - Security event type
- * @param {Object} details - Event details
- */
-export function logSecurityEvent(event, details = {}) {
-	securityLogger.warn(`Security event: ${event}`, details);
-}
+const logDatabaseOperation = (operation, table, details) => {
+	logger.database(`Database operation: ${operation} on ${table}`, details);
+};
 
-/**
- * Log database operation
- * @param {string} operation - Database operation
- * @param {string} table - Table name
- * @param {Object} details - Operation details
- */
-export function logDatabaseOperation(operation, table, details = {}) {
-	dbLogger.info(`Database ${operation}: ${table}`, details);
-}
+const logFileOperation = (operation, path, details) => {
+	logger.file(`File operation: ${operation} on ${path}`, details);
+};
 
-/**
- * Log file operation
- * @param {string} operation - File operation
- * @param {string} filePath - File path
- * @param {Object} details - Operation details
- */
-export function logFileOperation(operation, filePath, details = {}) {
-	fileLogger.info(`File ${operation}: ${filePath}`, details);
-}
+const logSystemEvent = (event, details) => {
+	logger.system(`System event: ${event}`, details);
+};
 
-/**
- * Log system event
- * @param {string} event - System event
- * @param {Object} details - Event details
- */
-export function logSystemEvent(event, details = {}) {
-	systemLogger.info(`System event: ${event}`, details);
-}
-
-/**
- * Set log level
- * @param {string} level - Log level (DEBUG, INFO, WARN, ERROR)
- */
-export function setLogLevel(level) {
-	const newLevel = LOG_LEVELS[level.toUpperCase()];
-	if (newLevel !== undefined) {
-		Object.defineProperty(module.exports, 'currentLogLevel', {
-			value: newLevel,
-			writable: true
-		});
-		logger.info(`Log level set to: ${level}`);
-	}
-}
-
-/**
- * Get current log level
- * @returns {string} Current log level
- */
-export function getLogLevel() {
-	return Object.keys(LOG_LEVELS).find((key) => LOG_LEVELS[key] === currentLogLevel);
-}
+// Exporting all functions to be used in other modules and tests
+export {
+    createLogger,
+    logger,
+    authLogger,
+    withTiming,
+    logApiCall,
+    logUserAction,
+    logSecurityEvent,
+    logDatabaseOperation,
+    logFileOperation,
+    logSystemEvent,
+    setLogLevel,
+    getLogLevel
+};
