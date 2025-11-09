@@ -9,11 +9,11 @@ import {
 	getBillingCycle,
 	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
-import { RouteUtils } from '$lib/server/route-utilities.js';
+import { RouteUtilities } from '$lib/server/route-utilities.js';
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 /** @type {import('./$types').RequestHandler} */
-export const GET = RouteUtils.createRouteHandler(
+export const GET = RouteUtilities.createRouteHandler(
 	async (event) => {
 		const { params } = event;
 		const statement_id = parseInt(params.id);
@@ -21,7 +21,7 @@ export const GET = RouteUtils.createRouteHandler(
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
 		if (!statement) {
-			return RouteUtils.createErrorResponse('Statement not found', { status: 404 });
+			return RouteUtilities.createErrorResponse('Statement not found', { status: 404 });
 		}
 
 		console.log('📄 Statement found:', statement.filename);
@@ -40,14 +40,14 @@ export const GET = RouteUtils.createRouteHandler(
 		requiredParams: ['id'],
 		validators: {
 			id: (value) => {
-				const parsed = RouteUtils.parseInteger(value, 'statement ID', { min: 1 });
+				const parsed = RouteUtilities.parseInteger(value, 'statement ID', { min: 1 });
 				return typeof parsed === 'number' ? true : 'Invalid statement ID';
 			}
 		}
 	}
 );
 
-export const POST = RouteUtils.createRouteHandler(
+export const POST = RouteUtilities.createRouteHandler(
 	async (event, parsedBody) => {
 		const { params } = event;
 		const statement_id = parseInt(params.id);
@@ -57,7 +57,7 @@ export const POST = RouteUtils.createRouteHandler(
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
 		if (!statement) {
-			return RouteUtils.createErrorResponse('Statement not found', { status: 404 });
+			return RouteUtilities.createErrorResponse('Statement not found', { status: 404 });
 		}
 
 		console.log('📄 Statement found:', statement.filename);
@@ -65,7 +65,7 @@ export const POST = RouteUtils.createRouteHandler(
 		// Get the billing cycle information for year context
 		const billingCycleInfo = await getBillingCycle(event, statement.billing_cycle_id);
 		if (!billingCycleInfo) {
-			return RouteUtils.createErrorResponse('Billing cycle not found', { status: 404 });
+			return RouteUtilities.createErrorResponse('Billing cycle not found', { status: 404 });
 		}
 
 		console.log('📅 Billing cycle:', billingCycleInfo.start_date, 'to', billingCycleInfo.end_date);
@@ -73,7 +73,7 @@ export const POST = RouteUtils.createRouteHandler(
 		// Get the parsed data from the request body (already validated by RouteUtils)
 		const parsedData = parsedBody.parsedData;
 		if (!parsedData) {
-			return RouteUtils.createErrorResponse('No parsed data provided', { status: 400 });
+			return RouteUtilities.createErrorResponse('No parsed data provided', { status: 400 });
 		}
 
 		console.log('📄 Received parsed data from client');
@@ -211,7 +211,7 @@ export const POST = RouteUtils.createRouteHandler(
 		requiredBody: ['parsedData'],
 		validators: {
 			id: (value) => {
-				const parsed = RouteUtils.parseInteger(value, 'statement ID', { min: 1 });
+				const parsed = RouteUtilities.parseInteger(value, 'statement ID', { min: 1 });
 				return typeof parsed === 'number' ? true : 'Invalid statement ID';
 			}
 		}
