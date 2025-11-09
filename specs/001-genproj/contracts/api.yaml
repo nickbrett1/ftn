@@ -1,607 +1,184 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Project Generation Tool API
-  description: API for generating development projects with selected capabilities
+  title: Project Generation Tool - Token Management API
   version: 1.0.0
-  contact:
-    name: Fintech Nick
-    email: nick@fintechnick.com
+  description: API for managing secure storage and retrieval of authentication tokens for external services.
 
 servers:
-  - url: https://fintechnick.com
-    description: Production server
-  - url: https://preview.fintechnick.com
-    description: Preview server
+  - url: /api
+    description: Base API path
 
 paths:
-  /projects/genproj/api/capabilities:
-    get:
-      summary: Get available capabilities
-      description: Returns all available project capabilities with their definitions
-      operationId: getCapabilities
-      tags:
-        - Capabilities
-      responses:
-        "200":
-          description: List of available capabilities
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  capabilities:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/CapabilityDefinition"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/preview:
+  /auth/tokens/store:
     post:
-      summary: Generate project preview
-      description: Generates a preview of files and configurations based on selected capabilities
-      operationId: generatePreview
-      tags:
-        - Preview
+      summary: Store an encrypted authentication token
+      description: Internal API to securely store an encrypted authentication token for a user and external service after successful authentication.
+      operationId: storeAuthToken
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectConfigurationRequest"
+              type: object
+              required:
+                - userId
+                - serviceName
+                - encryptedToken
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: UUID of the user associated with the token.
+                serviceName:
+                  type: string
+                  description: Name of the external service (e.g., "CircleCI", "Doppler", "SonarCloud").
+                encryptedToken:
+                  type: string
+                  description: The encrypted authentication token string.
+                encryptedRefreshToken:
+                  type: string
+                  nullable: true
+                  description: The encrypted refresh token string (optional).
+                expiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Expiration timestamp of the authentication token (optional).
+                refreshTokenExpiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Expiration timestamp of the refresh token (optional).
       responses:
-        "200":
-          description: Generated preview
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PreviewResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '200':
+          description: Token stored successfully.
+        '400':
+          description: Invalid input.
+        '500':
+          description: Internal Server Error.
 
-  /projects/genproj/api/generate:
-    post:
-      summary: Generate project
-      description: Generates the complete project with all files and external service configurations
-      operationId: generateProject
-      tags:
-        - Generation
-      security:
-        - GoogleAuth: []
-        - GitHubAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProjectConfigurationRequest"
-      responses:
-        "200":
-          description: Project generation initiated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GenerationResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/auth/github:
-    post:
-      summary: Authenticate with GitHub
-      description: Initiates GitHub OAuth authentication flow
-      operationId: authenticateGitHub
-      tags:
-        - Authentication
-      security:
-        - GoogleAuth: []
-      responses:
-        "200":
-          description: GitHub authentication initiated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authUrl:
-                    type: string
-                    format: uri
-                  state:
-                    type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/auth/github/callback:
+  /auth/tokens/user/{userId}:
     get:
-      summary: GitHub OAuth callback
-      description: Handles GitHub OAuth callback and stores authentication token
-      operationId: handleGitHubCallback
-      tags:
-        - Authentication
+      summary: Retrieve stored authentication tokens for a user
+      description: Internal API to retrieve all stored and valid authentication tokens for a given user.
+      operationId: retrieveUserAuthTokens
       parameters:
-        - name: code
-          in: query
-          required: true
+        - in: path
+          name: userId
           schema:
             type: string
-        - name: state
-          in: query
+            format: uuid
           required: true
+          description: UUID of the user.
+      responses:
+        '200':
+          description: List of stored authentication token details.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserStoredAuthTokenInternal'
+        '404':
+          description: User not found or no tokens.
+        '500':
+          description: Internal Server Error.
+
+  /user/tokens:
+    get:
+      summary: View stored authentication token services for the logged-in user
+      description: Retrieves a list of external services for which the logged-in user has stored tokens, along with their status. Does NOT return the tokens themselves.
+      operationId: viewUserTokenServices
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of services with stored tokens.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserTokenServiceStatus'
+        '401':
+          description: Unauthorized - User not logged in.
+        '500':
+          description: Internal Server Error.
+
+  /user/tokens/{serviceName}:
+    delete:
+      summary: Revoke a stored authentication token for a service
+      description: Revokes a stored authentication token for a specific service for the logged-in user.
+      operationId: revokeUserToken
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: serviceName
           schema:
             type: string
+          required: true
+          description: Name of the external service whose token is to be revoked.
       responses:
-        "200":
-          description: GitHub authentication successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/auth/circleci:
-    post:
-      summary: Authenticate with CircleCI
-      description: Stores CircleCI API token for project creation
-      operationId: authenticateCircleCI
-      tags:
-        - Authentication
-      security:
-        - GoogleAuth: []
-        - GitHubAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  type: string
-                  description: CircleCI API token
-      responses:
-        "200":
-          description: CircleCI authentication successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/auth/doppler:
-    post:
-      summary: Authenticate with Doppler
-      description: Stores Doppler API token for project creation
-      operationId: authenticateDoppler
-      tags:
-        - Authentication
-      security:
-        - GoogleAuth: []
-        - GitHubAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  type: string
-                  description: Doppler API token
-      responses:
-        "200":
-          description: Doppler authentication successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /projects/genproj/api/auth/sonarcloud:
-    post:
-      summary: Authenticate with SonarCloud
-      description: Stores SonarCloud API token for project creation
-      operationId: authenticateSonarCloud
-      tags:
-        - Authentication
-      security:
-        - GoogleAuth: []
-        - GitHubAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  type: string
-                  description: SonarCloud API token
-      responses:
-        "200":
-          description: SonarCloud authentication successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '200':
+          description: Token revoked successfully.
+        '401':
+          description: Unauthorized - User not logged in.
+        '404':
+          description: Token for service not found.
+        '500':
+          description: Internal Server Error.
 
 components:
-  securitySchemes:
-    GoogleAuth:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://accounts.google.com/o/oauth2/auth
-          tokenUrl: https://oauth2.googleapis.com/token
-          scopes:
-            openid: OpenID Connect
-            email: Email access
-            profile: Profile access
-    GitHubAuth:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://github.com/login/oauth/authorize
-          tokenUrl: https://github.com/login/oauth/access_token
-          scopes:
-            repo: Repository access
-            user: User information
-
   schemas:
-    CapabilityDefinition:
+    UserStoredAuthTokenInternal:
       type: object
-      required:
-        - id
-        - name
-        - description
-        - category
-        - dependencies
-        - conflicts
-        - requiresAuth
-        - configurationSchema
-        - templates
       properties:
         id:
           type: string
-          description: Unique capability identifier
-        name:
+          format: uuid
+        userId:
           type: string
-          description: Human-readable name
-        description:
+          format: uuid
+        serviceName:
           type: string
-          description: Detailed description
-        category:
+        encryptedToken:
           type: string
-          enum:
-            - devcontainer
-            - ci-cd
-            - code-quality
-            - secrets
-            - deployment
-            - monitoring
-        dependencies:
-          type: array
-          items:
-            type: string
-          description: Required capabilities
-        conflicts:
-          type: array
-          items:
-            type: string
-          description: Conflicting capabilities
-        requiresAuth:
-          type: array
-          items:
-            type: string
-          description: Required authentication services
-        configurationSchema:
-          type: object
-          description: JSON Schema for configuration validation
-        templates:
-          type: array
-          items:
-            $ref: "#/components/schemas/TemplateReference"
-        externalService:
-          $ref: "#/components/schemas/ExternalServiceConfig"
-
-    TemplateReference:
-      type: object
-      required:
-        - id
-        - filePath
-        - templateId
-      properties:
-        id:
+        encryptedRefreshToken:
           type: string
-        filePath:
+          nullable: true
+        expiresAt:
           type: string
-        templateId:
+          format: date-time
+          nullable: true
+        refreshTokenExpiresAt:
           type: string
-        variables:
-          type: object
-          additionalProperties: true
-
-    ExternalServiceConfig:
-      type: object
-      required:
-        - service
-        - projectCreation
-        - fallbackInstructions
-      properties:
-        service:
-          type: string
-          enum:
-            - github
-            - circleci
-            - doppler
-            - sonarcloud
-        projectCreation:
+          format: date-time
+          nullable: true
+        isRevoked:
           type: boolean
-        fallbackInstructions:
-          type: string
-
-    ProjectConfigurationRequest:
+    UserTokenServiceStatus:
       type: object
-      required:
-        - projectName
-        - selectedCapabilities
-        - configuration
       properties:
-        projectName:
+        serviceName:
           type: string
-          minLength: 3
-          maxLength: 50
-          pattern: "^[a-zA-Z0-9-]+$"
-        repositoryUrl:
-          type: string
-          format: uri
-          pattern: '^https://github\\.com/[^/]+/[^/]+/?$'
-        selectedCapabilities:
-          type: array
-          items:
-            type: string
-          minItems: 1
-        configuration:
-          type: object
-          additionalProperties: true
-
-    PreviewResponse:
-      type: object
-      required:
-        - artifacts
-        - externalServiceChanges
-        - summary
-      properties:
-        artifacts:
-          type: array
-          items:
-            $ref: "#/components/schemas/GeneratedArtifact"
-        externalServiceChanges:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExternalServiceChange"
-        summary:
-          $ref: "#/components/schemas/ProjectSummary"
-
-    GeneratedArtifact:
-      type: object
-      required:
-        - id
-        - filePath
-        - content
-        - capabilityId
-      properties:
-        id:
-          type: string
-        filePath:
-          type: string
-        content:
-          type: string
-        capabilityId:
-          type: string
-        isExecutable:
+          description: Name of the external service.
+        hasToken:
           type: boolean
-          default: false
-
-    ExternalServiceChange:
-      type: object
-      required:
-        - service
-        - action
-        - description
-      properties:
-        service:
-          type: string
-          enum:
-            - github
-            - circleci
-            - doppler
-            - sonarcloud
-        action:
-          type: string
-          enum:
-            - create-project
-            - configure-webhook
-            - setup-integration
-        description:
-          type: string
-        requiresAuth:
+          description: True if a token is stored for this service.
+        isExpired:
           type: boolean
-        fallbackInstructions:
+          description: True if the stored token has expired.
+        isRevoked:
+          type: boolean
+          description: True if the stored token has been revoked.
+        expiresAt:
           type: string
-
-    ProjectSummary:
-      type: object
-      required:
-        - totalFiles
-        - capabilities
-        - estimatedSetupTime
-      properties:
-        totalFiles:
-          type: integer
-        capabilities:
-          type: array
-          items:
-            type: string
-        estimatedSetupTime:
-          type: string
-        externalServices:
-          type: array
-          items:
-            type: string
-
-    GenerationResponse:
-      type: object
-      required:
-        - projectId
-        - status
-        - repositoryUrl
-      properties:
-        projectId:
-          type: string
-        status:
-          type: string
-          enum:
-            - generating
-            - completed
-            - failed
-        repositoryUrl:
-          type: string
-          format: uri
-        artifacts:
-          type: array
-          items:
-            $ref: "#/components/schemas/GeneratedArtifact"
-        externalServiceIntegrations:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExternalServiceIntegration"
-        errorMessage:
-          type: string
-
-    ExternalServiceIntegration:
-      type: object
-      required:
-        - service
-        - status
-      properties:
-        service:
-          type: string
-          enum:
-            - github
-            - circleci
-            - doppler
-            - sonarcloud
-        status:
-          type: string
-          enum:
-            - pending
-            - creating
-            - completed
-            - failed
-        serviceProjectId:
-          type: string
-        errorMessage:
-          type: string
-
-  responses:
-    BadRequest:
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              message:
-                type: string
-              details:
-                type: object
-
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              message:
-                type: string
-
-    InternalServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              message:
-                type: string
-              requestId:
-                type: string
-
-tags:
-  - name: Capabilities
-    description: Project capability management
-  - name: Preview
-    description: Project preview generation
-  - name: Generation
-    description: Project generation and creation
-  - name: Authentication
-    description: External service authentication
+          format: date-time
+          nullable: true
+          description: Expiration timestamp of the token, if available.
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId # Example cookie name for session management
