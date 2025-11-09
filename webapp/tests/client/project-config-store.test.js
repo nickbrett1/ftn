@@ -171,6 +171,7 @@ describe('project-config-store module bootstrap', () => {
 		globalThis.localStorage = bootstrapStorage;
 		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
+		// eslint-disable-next-line sonarjs/pseudo-random
 		const moduleSpecifier = `../../src/lib/client/project-config-store.js?bootstrap=${Math.random()}`;
 		await import(moduleSpecifier);
 

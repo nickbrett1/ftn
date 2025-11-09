@@ -12,16 +12,12 @@
 	let autoRefreshInterval = null;
 	let fetchingWorkerInfo = false;
 
-	onMount(async () => {
-		startAutoRefresh();
-		await requestNotificationPermission();
-
+	async function fetchDeployments() {
 		try {
 			const response = await fetch('/api/deploys');
 			if (response.ok) {
 				deployments = await response.json();
-				// Fetch additional worker info for each deployment
-				await fetchWorkerInfo();
+				await fetchWorkerInfoForDeployments();
 				lastUpdated = new Date();
 				updatePageUrl();
 			} else {
@@ -32,58 +28,53 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	onMount(async () => {
+		startAutoRefresh();
+		await requestNotificationPermission();
+		await fetchDeployments();
 	});
 
 	onDestroy(() => {
 		stopAutoRefresh();
 	});
 
-	async function fetchWorkerInfo() {
-		// Fetch worker info for each deployment to get build time, branch, and commit
+	function handleFetchError(err) {
+		if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+			if (err.message.includes('CORS')) {
+				return 'CORS error: Worker does not allow cross-origin requests';
+			}
+			if (err.message.includes('net::ERR_CONNECTION_REFUSED')) {
+				return 'Connection refused: Worker may be down or endpoint not available';
+			}
+			return 'Network error: Unable to reach worker';
+		}
+		return `Failed to fetch worker info: ${err.message}`;
+	}
+
+	async function fetchWorkerInfoForDeployments() {
 		fetchingWorkerInfo = true;
 		try {
 			for (const deployment of deployments) {
-				// Skip if we already have worker info for this deployment
-				if (deployment.workerInfo || deployment.workerInfoError) {
+				if (deployment.workerInfo || deployment.workerInfoError || !deployment.url) {
 					continue;
 				}
 
-				if (deployment.url) {
-					try {
-						const deploymentInfoUrl = `${deployment.url}/api/deployment-info`;
+				try {
+					const deploymentInfoUrl = `${deployment.url}/api/deployment-info`;
+					const response = await fetch(deploymentInfoUrl, {
+						method: 'GET',
+						headers: { Accept: 'application/json' }
+					});
 
-						const response = await fetch(deploymentInfoUrl, {
-							method: 'GET',
-							headers: {
-								Accept: 'application/json'
-							}
-						});
-
-						if (response.ok) {
-							const workerInfo = await response.json();
-							deployment.workerInfo = workerInfo;
-						} else {
-							deployment.workerInfo = null;
-							deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}`;
-						}
-					} catch (err) {
-						deployment.workerInfo = null;
-
-						// Provide more specific error messages for common issues
-						if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
-							if (err.message.includes('CORS')) {
-								deployment.workerInfoError =
-									'CORS error: Worker does not allow cross-origin requests';
-							} else if (err.message.includes('net::ERR_CONNECTION_REFUSED')) {
-								deployment.workerInfoError =
-									'Connection refused: Worker may be down or endpoint not available';
-							} else {
-								deployment.workerInfoError = 'Network error: Unable to reach worker';
-							}
-						} else {
-							deployment.workerInfoError = `Failed to fetch worker info: ${err.message}`;
-						}
+					if (response.ok) {
+						deployment.workerInfo = await response.json();
+					} else {
+						deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}`;
 					}
+				} catch (err) {
+					deployment.workerInfoError = handleFetchError(err);
 				}
 			}
 		} finally {
@@ -98,7 +89,6 @@
 					const response = await fetch('/api/deploys');
 					if (response.ok) {
 						const newDeployments = await response.json();
-						// Preserve existing worker info when updating deployments
 						deployments = newDeployments.map((newDeployment) => {
 							const existingDeployment = deployments.find((d) => d.name === newDeployment.name);
 							return {
@@ -107,8 +97,7 @@
 								workerInfoError: existingDeployment?.workerInfoError || null
 							};
 						});
-						// Only fetch worker info for deployments that don't have it yet
-						await fetchWorkerInfo();
+						await fetchWorkerInfoForDeployments();
 						lastUpdated = new Date();
 						updatePageUrl();
 					}
@@ -130,7 +119,6 @@
 	async function requestNotificationPermission() {
 		if ('Notification' in window && Notification.permission === 'default') {
 			await Notification.requestPermission();
-			// Notification permission status handled silently
 		}
 	}
 
@@ -144,41 +132,32 @@
 	}
 
 	function getStatusColor(status) {
-		switch (status) {
-			case 'active':
-				return 'text-green-400';
-			case 'deploying':
-				return 'text-yellow-400';
-			case 'failed':
-				return 'text-red-400';
-			default:
-				return 'text-gray-400';
-		}
+		const colors = {
+			active: 'text-green-400',
+			deploying: 'text-yellow-400',
+			failed: 'text-red-400'
+		};
+		return colors[status] || 'text-gray-400';
 	}
 
 	function getDetailedTimeDifference(timestamp) {
 		if (!timestamp) return '';
-		const deploymentTime = new Date(timestamp);
-		const now = new Date();
-		const diffInMs = now - deploymentTime;
-
-		const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-		const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-		const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+		const diffInMinutes = Math.floor((new Date() - new Date(timestamp)) / (1000 * 60));
 
 		if (diffInMinutes < 1) return 'just now';
 		if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+
+		const diffInHours = Math.floor(diffInMinutes / 60);
 		if (diffInHours < 24) {
 			const remainingMinutes = diffInMinutes % 60;
-			if (remainingMinutes === 0) {
-				return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
-			} else {
-				return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ${remainingMinutes} minute${remainingMinutes === 1 ? '' : 's'} ago`;
-			}
+			if (remainingMinutes === 0) return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+			return `${diffInHours} hour${
+				diffInHours === 1 ? '' : 's'
+			} ${remainingMinutes} minute${remainingMinutes === 1 ? '' : 's'} ago`;
 		}
-		if (diffInDays < 7) return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
 
-		return `${diffInDays} days ago`;
+		const diffInDays = Math.floor(diffInHours / 24);
+		return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
 	}
 </script>
 

@@ -79,11 +79,7 @@ function hasDangerousStructure(pattern) {
 
 	// Check for deeply nested groups (more than 3 levels)
 	const groupDepth = countNestedGroups(cleanPattern);
-	if (groupDepth > 3) {
-		return true;
-	}
-
-	return false;
+	return groupDepth > 3;
 }
 
 /**
@@ -166,11 +162,7 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 		const endTime = Date.now();
 
 		// If it takes too long, consider it unsafe
-		if (endTime - startTime > timeout) {
-			return false;
-		}
-
-		return true;
+		return endTime - startTime <= timeout;
 	} catch {
 		return false;
 	}

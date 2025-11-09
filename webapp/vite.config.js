@@ -10,7 +10,9 @@ import { execSync } from 'node:child_process';
 // Get git info at build time
 function getGitInfo() {
 	try {
+		// eslint-disable-next-line sonarjs/no-os-command-from-path
 		const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+		// eslint-disable-next-line sonarjs/no-os-command-from-path
 		const branchName = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
 		const buildTime = new Date().toISOString();
 		return { commitHash, branchName, buildTime };

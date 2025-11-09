@@ -122,6 +122,7 @@ describe('logging utilities', () => {
 		logUserAction('user-1', 'clicked', { page: 'home' });
 		logSecurityEvent('login_failure', { userId: 'user-1' });
 		logDatabaseOperation('insert', 'projects', { id: 1 });
+		// eslint-disable-next-line sonarjs/publicly-writable-directories
 		logFileOperation('write', '/tmp/file.txt');
 		logSystemEvent('startup');
 
@@ -151,6 +152,7 @@ describe('logging utilities', () => {
 		const custom = createLogger('categories');
 		custom.database('query', { table: 'projects' });
 		custom.api('request', { path: '/api' });
+		// eslint-disable-next-line sonarjs/publicly-writable-directories
 		custom.file('write', { path: '/tmp/file.txt' });
 		custom.user('login', { userId: 'u1' });
 		custom.system('start', { pid: 123 });
