@@ -25,7 +25,10 @@ const currentLogLevel = (() => {
 
 	// In Node.js environment, check environment variable
 	if (typeof process !== 'undefined' && process.env?.GENPROJ_LOG_LEVEL) {
-		return LOG_LEVELS[process.env.GENPROJ_LOG_LEVEL.toUpperCase()] || LOG_LEVELS.INFO;
+		const level = process.env.GENPROJ_LOG_LEVEL.toUpperCase();
+		if (Object.prototype.hasOwnProperty.call(LOG_LEVELS, level)) {
+			return LOG_LEVELS[level];
+		}
 	}
 
 	return LOG_LEVELS.INFO;
@@ -269,18 +272,30 @@ export function withTiming(fn, operation, context = {}) {
 		try {
 			const result = await fn(...args);
 			const duration = Date.now() - startTime;
-			perfLogger.success(`Completed ${operation}`, {
-				...context,
-				duration: `${duration}ms`
-			});
+			const logData = { duration: `${duration}ms` };
+			if (context) {
+				for (const key of Object.keys(context)) {
+					if (Object.prototype.hasOwnProperty.call(context, key)) {
+						logData[key] = context[key];
+					}
+				}
+			}
+			perfLogger.success(`Completed ${operation}`, logData);
 			return result;
 		} catch (error) {
 			const duration = Date.now() - startTime;
-			perfLogger.error(`Failed ${operation}`, {
-				...context,
+			const logData = {
 				duration: `${duration}ms`,
 				error: error.message
-			});
+			};
+			if (context) {
+				for (const key of Object.keys(context)) {
+					if (Object.prototype.hasOwnProperty.call(context, key)) {
+						logData[key] = context[key];
+					}
+				}
+			}
+			perfLogger.error(`Failed ${operation}`, logData);
 			throw error;
 		}
 	};
@@ -319,11 +334,17 @@ export function logApiCall(method, url, requestData, responseData, statusCode, d
  * @param {Object} details - Action details
  */
 export function logUserAction(userId, action, details = {}) {
-	userLogger.info(`User action: ${action}`, {
+	const logData = {
 		userId,
-		action,
-		...details
-	});
+		action
+	};
+
+	for (const key of Object.keys(details)) {
+		if (Object.prototype.hasOwnProperty.call(details, key)) {
+			logData[key] = details[key];
+		}
+	}
+	userLogger.info(`User action: ${action}`, logData);
 }
 
 /**
@@ -369,7 +390,24 @@ export function logSystemEvent(event, details = {}) {
  * @param {string} level - Log level (DEBUG, INFO, WARN, ERROR)
  */
 export function setLogLevel(level) {
-	const newLevel = LOG_LEVELS[level.toUpperCase()];
+	let newLevel;
+	switch (level.toUpperCase()) {
+		case 'DEBUG':
+			newLevel = LOG_LEVELS.DEBUG;
+			break;
+		case 'INFO':
+			newLevel = LOG_LEVELS.INFO;
+			break;
+		case 'WARN':
+			newLevel = LOG_LEVELS.WARN;
+			break;
+		case 'ERROR':
+			newLevel = LOG_LEVELS.ERROR;
+			break;
+		default:
+			return;
+	}
+
 	if (newLevel !== undefined) {
 		Object.defineProperty(module.exports, 'currentLogLevel', {
 			value: newLevel,

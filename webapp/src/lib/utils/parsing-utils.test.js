@@ -90,7 +90,7 @@ describe('ParsingUtils', () => {
 
 			expect(() =>
 				ParsingUtils.validateParsedData(data, ['last4', 'missing'], { strict: true })
-			).toThrow('Missing required field: missing');
+			).toThrow('Missing or null required field: missing');
 		});
 
 		it('should use default required fields', () => {

@@ -181,8 +181,8 @@ describe('Merchant Normalizer', () => {
 	});
 
 	describe('Generic merchant normalization', () => {
-		it('should handle null input', () => {
-			const result = normalizeMerchant(null);
+		it('should handle undefined input', () => {
+			const result = normalizeMerchant(undefined);
 			expect(result.merchant_normalized).toBe('UNKNOWN');
 			expect(result.merchant_details).toBe('');
 		});

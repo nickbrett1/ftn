@@ -15,7 +15,7 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 
-vi.mock('$lib/server/route-utils.js', () => ({
+vi.mock('$lib/server/route-utilities.js', () => ({
 	RouteUtils: {
 		createRouteHandler: vi.fn((handler, options) => {
 			// Mock the createRouteHandler to directly call the handler

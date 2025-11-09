@@ -5,7 +5,7 @@ import { requireUser } from './require-user.js';
  * Shared route utilities for server endpoints
  * Eliminates duplication in authentication, validation, and error handling
  */
-export class RouteUtils {
+export class RouteUtilities {
 	/**
 	 * Handle authentication for a route
 	 * @param {Object} event - SvelteKit event object
@@ -21,17 +21,17 @@ export class RouteUtils {
 
 	/**
 	 * Validate route parameters
-	 * @param {Object} params - Route parameters
+	 * @param {Object} parameters - Route parameters
 	 * @param {Array} requiredFields - Array of required field names
 	 * @param {Object} options - Validation options
 	 * @param {Function} options.validators - Custom validators for each field
 	 * @returns {Object} - Validated parameters or error response
 	 */
-	static validateParams(params, requiredFields = [], options = {}) {
+	static validateParams(parameters, requiredFields = [], options = {}) {
 		const { validators = {} } = options;
 
 		for (const field of requiredFields) {
-			if (!params[field]) {
+			if (!parameters[field]) {
 				return {
 					error: `Missing required parameter: ${field}`,
 					status: 400
@@ -40,7 +40,7 @@ export class RouteUtils {
 
 			// Apply custom validator if provided
 			if (validators[field]) {
-				const validationResult = validators[field](params[field]);
+				const validationResult = validators[field](parameters[field]);
 				if (validationResult !== true) {
 					return {
 						error: validationResult || `Invalid parameter: ${field}`,
@@ -50,7 +50,7 @@ export class RouteUtils {
 			}
 		}
 
-		return { success: true, params };
+		return { success: true, parameters };
 	}
 
 	/**
@@ -137,7 +137,7 @@ export class RouteUtils {
 	 * @returns {Response} - Error response
 	 */
 	static createErrorResponse(message, options = {}) {
-		const { status = 400, data = null } = options;
+		const { status = 400, data = undefined } = options;
 
 		const response = {
 			success: false,
@@ -254,7 +254,7 @@ export class RouteUtils {
 				}
 
 				// Only parse and validate body if parameters are valid
-				let parsedBody = null;
+				let parsedBody = undefined;
 				if (requiredBody.length > 0 && ['POST', 'PUT', 'PATCH'].includes(event.request.method)) {
 					const bodyResult = await this.parseRequestBody(event.request);
 					if (!bodyResult.success) {

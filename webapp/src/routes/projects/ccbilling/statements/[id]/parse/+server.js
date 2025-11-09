@@ -9,7 +9,7 @@ import {
 	getBillingCycle,
 	getBudgetByMerchant
 } from '$lib/server/ccbilling-db.js';
-import { RouteUtils } from '$lib/server/route-utils.js';
+import { RouteUtils } from '$lib/server/route-utilities.js';
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
 /** @type {import('./$types').RequestHandler} */

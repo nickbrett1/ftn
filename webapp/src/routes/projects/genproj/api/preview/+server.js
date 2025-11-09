@@ -869,11 +869,8 @@ function getFullConfig(fullConfiguration, context, configuration) {
  * @returns {Object} Object with projectKey and organization
  */
 function parseProjectInfo(projectName, repositoryUrl) {
-	// Note: replace() with global flag is acceptable for regex patterns
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
-	let projectKey = projectName?.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
-	let organization = projectName?.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
+	let projectKey = projectName?.replaceAll(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
+	let organization = projectName?.replaceAll(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'project';
 
 	if (repositoryUrl) {
 		const githubPattern = /github\.com\/([^/]+)\/([^/]+)/;
@@ -1668,7 +1665,6 @@ workflows:
   build_test_deploy:
     jobs:
 ${workflowJobs.map((step) => step).join('\n')}`;
-	/* eslint-enable unicorn/no-array-push-push, sonarjs/no-array-push-push */
 }
 
 /**

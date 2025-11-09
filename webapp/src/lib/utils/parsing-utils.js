@@ -59,10 +59,10 @@ export class ParsingUtils {
 		}
 
 		for (const field of requiredFields) {
-			if (!data[field]) {
-				console.warn(`Missing required field: ${field}`);
+			if (!Object.prototype.hasOwnProperty.call(data, field) || data[field] === null) {
+				console.warn(`Missing or null required field: ${field}`);
 				if (strict) {
-					throw new Error(`Missing required field: ${field}`);
+					throw new Error(`Missing or null required field: ${field}`);
 				}
 				return false;
 			}

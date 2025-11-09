@@ -33,7 +33,10 @@ vi.mock('../../src/lib/server/sonarcloud-api.js', () => ({
 	SonarCloudAPIService: (sonarcloudFactory = mockServiceFactory('sonarcloud'))
 }));
 
-import { initializeServices, validateAllTokens } from '../../src/lib/server/service-utils.js';
+import {
+	initializeServices,
+	validateAllTokens
+} from '../../src/lib/server/service-utilities.js';
 
 describe('service-utils', () => {
 	const tokens = {
