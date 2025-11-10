@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { json } from '@sveltejs/kit';
-import { RouteUtils } from '../../src/lib/server/route-utils.js';
+import { RouteUtils as RouteUtilities } from '../../src/lib/server/route-utils.js';
 
 // Mock requireUser
 vi.mock('../../src/lib/server/require-user.js', () => ({
@@ -24,16 +24,19 @@ describe('RouteUtils', () => {
 				platform: { env: { KV: { get: vi.fn() } } }
 			};
 
-			const result = await RouteUtils.handleAuth(mockEvent);
+			const result = await RouteUtilities.handleAuth(mockEvent);
 
 			expect(result).toBe(mockUser);
 			expect(requireUser).toHaveBeenCalledWith(mockEvent);
 		});
 
 		it('should return error response when not authenticated', async () => {
-			const errorResponse = new Response(JSON.stringify({ error: 'Not authenticated' }), {
-				status: 401
-			});
+			const errorResponse = Response.json(
+				{ error: 'Not authenticated' },
+				{
+					status: 401
+				}
+			);
 			requireUser.mockResolvedValue(errorResponse);
 
 			const mockEvent = {
@@ -41,7 +44,7 @@ describe('RouteUtils', () => {
 				platform: { env: { KV: { get: vi.fn() } } }
 			};
 
-			const result = await RouteUtils.handleAuth(mockEvent);
+			const result = await RouteUtilities.handleAuth(mockEvent);
 
 			expect(result).toBe(errorResponse);
 			expect(requireUser).toHaveBeenCalledWith(mockEvent);
@@ -50,20 +53,20 @@ describe('RouteUtils', () => {
 
 	describe('validateParams', () => {
 		it('should return success when all required params are present', () => {
-			const params = { id: '123', name: 'test' };
+			const parameters = { id: '123', name: 'test' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(params, requiredFields);
+			const result = RouteUtilities.validateParams(parameters, requiredFields);
 
 			expect(result.success).toBe(true);
-			expect(result.params).toBe(params);
+			expect(result.params).toBe(parameters);
 		});
 
 		it('should return error when required param is missing', () => {
-			const params = { id: '123' };
+			const parameters = { id: '123' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(params, requiredFields);
+			const result = RouteUtilities.validateParams(parameters, requiredFields);
 
 			expect(result.error).toBe('Missing required parameter: name');
 			expect(result.status).toBe(400);
@@ -71,17 +74,17 @@ describe('RouteUtils', () => {
 		});
 
 		it('should return error when param is empty string', () => {
-			const params = { id: '123', name: '' };
+			const parameters = { id: '123', name: '' };
 			const requiredFields = ['id', 'name'];
 
-			const result = RouteUtils.validateParams(params, requiredFields);
+			const result = RouteUtilities.validateParams(parameters, requiredFields);
 
 			expect(result.error).toBe('Missing required parameter: name');
 			expect(result.status).toBe(400);
 		});
 
 		it('should use custom validator when provided', () => {
-			const params = { id: '123', age: '25' };
+			const parameters = { id: '123', age: '25' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: (value) => {
@@ -93,13 +96,13 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateParams(params, requiredFields, { validators });
+			const result = RouteUtilities.validateParams(parameters, requiredFields, { validators });
 
 			expect(result.success).toBe(true);
 		});
 
 		it('should return error from custom validator when validation fails', () => {
-			const params = { id: '123', age: '-5' };
+			const parameters = { id: '123', age: '-5' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: (value) => {
@@ -111,20 +114,20 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateParams(params, requiredFields, { validators });
+			const result = RouteUtilities.validateParams(parameters, requiredFields, { validators });
 
 			expect(result.error).toBe('Age must be a positive number');
 			expect(result.status).toBe(400);
 		});
 
 		it('should return default error when custom validator returns false', () => {
-			const params = { id: '123', age: '25' };
+			const parameters = { id: '123', age: '25' };
 			const requiredFields = ['id', 'age'];
 			const validators = {
 				age: () => false
 			};
 
-			const result = RouteUtils.validateParams(params, requiredFields, { validators });
+			const result = RouteUtilities.validateParams(parameters, requiredFields, { validators });
 
 			expect(result.error).toBe('Invalid parameter: age');
 			expect(result.status).toBe(400);
@@ -133,42 +136,42 @@ describe('RouteUtils', () => {
 
 	describe('parseInteger', () => {
 		it('should parse valid integer', () => {
-			const result = RouteUtils.parseInteger('123', 'id');
+			const result = RouteUtilities.parseInteger('123', 'id');
 			expect(result).toBe(123);
 		});
 
 		it('should return error when value is missing', () => {
-			const result = RouteUtils.parseInteger('', 'id');
+			const result = RouteUtilities.parseInteger('', 'id');
 			expect(result).toBe('Missing required parameter: id');
 		});
 
 		it('should return error when value is not a number', () => {
-			const result = RouteUtils.parseInteger('abc', 'id');
+			const result = RouteUtilities.parseInteger('abc', 'id');
 			expect(result).toBe('Invalid id: must be a number');
 		});
 
 		it('should validate minimum value', () => {
-			const result = RouteUtils.parseInteger('5', 'age', { min: 18 });
+			const result = RouteUtilities.parseInteger('5', 'age', { min: 18 });
 			expect(result).toBe('Invalid age: must be at least 18');
 		});
 
 		it('should validate maximum value', () => {
-			const result = RouteUtils.parseInteger('101', 'age', { max: 100 });
+			const result = RouteUtilities.parseInteger('101', 'age', { max: 100 });
 			expect(result).toBe('Invalid age: must be at most 100');
 		});
 
 		it('should accept value within min and max range', () => {
-			const result = RouteUtils.parseInteger('25', 'age', { min: 18, max: 100 });
+			const result = RouteUtilities.parseInteger('25', 'age', { min: 18, max: 100 });
 			expect(result).toBe(25);
 		});
 
 		it('should accept value at minimum boundary', () => {
-			const result = RouteUtils.parseInteger('18', 'age', { min: 18, max: 100 });
+			const result = RouteUtilities.parseInteger('18', 'age', { min: 18, max: 100 });
 			expect(result).toBe(18);
 		});
 
 		it('should accept value at maximum boundary', () => {
-			const result = RouteUtils.parseInteger('100', 'age', { min: 18, max: 100 });
+			const result = RouteUtilities.parseInteger('100', 'age', { min: 18, max: 100 });
 			expect(result).toBe(100);
 		});
 	});
@@ -178,7 +181,7 @@ describe('RouteUtils', () => {
 			const error = new Error('Something went wrong');
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const result = RouteUtils.handleError(error, 'Test Context');
+			const result = RouteUtilities.handleError(error, 'Test Context');
 
 			expect(result).toBeInstanceOf(Response);
 			expect(consoleSpy).toHaveBeenCalled();
@@ -189,7 +192,7 @@ describe('RouteUtils', () => {
 			const error = { message: 'Not found', status: 404 };
 			vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const result = RouteUtils.handleError(error, 'Test Context');
+			const result = RouteUtilities.handleError(error, 'Test Context');
 			const jsonResult = await result.json();
 
 			expect(jsonResult.error).toBe('Not found');
@@ -200,7 +203,7 @@ describe('RouteUtils', () => {
 			const error = new Error('Internal error');
 			vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const result = RouteUtils.handleError(error, 'Test Context');
+			const result = RouteUtilities.handleError(error, 'Test Context');
 			const jsonResult = await result.json();
 
 			expect(jsonResult.error).toBe('Internal error');
@@ -211,7 +214,7 @@ describe('RouteUtils', () => {
 			const error = new Error('Custom error');
 			vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const result = RouteUtils.handleError(error, 'Test Context', { defaultStatus: 400 });
+			const result = RouteUtilities.handleError(error, 'Test Context', { defaultStatus: 400 });
 			await result.json();
 
 			expect(result.status).toBe(400);
@@ -221,7 +224,7 @@ describe('RouteUtils', () => {
 			const error = new Error('Silent error');
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			RouteUtils.handleError(error, 'Test Context', { logError: false });
+			RouteUtilities.handleError(error, 'Test Context', { logError: false });
 
 			expect(consoleSpy).not.toHaveBeenCalled();
 			consoleSpy.mockRestore();
@@ -231,7 +234,7 @@ describe('RouteUtils', () => {
 	describe('createSuccessResponse', () => {
 		it('should create success response with data', async () => {
 			const data = { id: '123', name: 'test' };
-			const result = RouteUtils.createSuccessResponse(data, 'Operation successful');
+			const result = RouteUtilities.createSuccessResponse(data, 'Operation successful');
 
 			const jsonResult = await result.json();
 
@@ -243,7 +246,7 @@ describe('RouteUtils', () => {
 
 		it('should use default message when not provided', async () => {
 			const data = { id: '123' };
-			const result = RouteUtils.createSuccessResponse(data);
+			const result = RouteUtilities.createSuccessResponse(data);
 
 			const jsonResult = await result.json();
 
@@ -252,7 +255,7 @@ describe('RouteUtils', () => {
 
 		it('should use custom status', async () => {
 			const data = { id: '123' };
-			const result = RouteUtils.createSuccessResponse(data, 'Created', { status: 201 });
+			const result = RouteUtilities.createSuccessResponse(data, 'Created', { status: 201 });
 
 			expect(result.status).toBe(201);
 		});
@@ -260,7 +263,7 @@ describe('RouteUtils', () => {
 
 	describe('createErrorResponse', () => {
 		it('should create error response with message', async () => {
-			const result = RouteUtils.createErrorResponse('Something went wrong');
+			const result = RouteUtilities.createErrorResponse('Something went wrong');
 
 			const jsonResult = await result.json();
 
@@ -271,7 +274,7 @@ describe('RouteUtils', () => {
 
 		it('should include data when provided', async () => {
 			const additionalData = { field: 'value' };
-			const result = RouteUtils.createErrorResponse('Error occurred', { data: additionalData });
+			const result = RouteUtilities.createErrorResponse('Error occurred', { data: additionalData });
 
 			const jsonResult = await result.json();
 
@@ -279,7 +282,7 @@ describe('RouteUtils', () => {
 		});
 
 		it('should use custom status', async () => {
-			const result = RouteUtils.createErrorResponse('Not found', { status: 404 });
+			const result = RouteUtilities.createErrorResponse('Not found', { status: 404 });
 
 			expect(result.status).toBe(404);
 		});
@@ -290,7 +293,7 @@ describe('RouteUtils', () => {
 			const body = { name: 'test', email: 'test@example.com' };
 			const requiredFields = ['name', 'email'];
 
-			const result = RouteUtils.validateBody(body, requiredFields);
+			const result = RouteUtilities.validateBody(body, requiredFields);
 
 			expect(result.success).toBe(true);
 			expect(result.body).toBe(body);
@@ -300,7 +303,7 @@ describe('RouteUtils', () => {
 			const body = 'not an object';
 			const requiredFields = ['name'];
 
-			const result = RouteUtils.validateBody(body, requiredFields);
+			const result = RouteUtilities.validateBody(body, requiredFields);
 
 			expect(result.error).toBe('Invalid request body');
 			expect(result.status).toBe(400);
@@ -310,7 +313,7 @@ describe('RouteUtils', () => {
 			const body = null;
 			const requiredFields = ['name'];
 
-			const result = RouteUtils.validateBody(body, requiredFields);
+			const result = RouteUtilities.validateBody(body, requiredFields);
 
 			expect(result.error).toBe('Invalid request body');
 			expect(result.status).toBe(400);
@@ -320,7 +323,7 @@ describe('RouteUtils', () => {
 			const body = { name: 'test' };
 			const requiredFields = ['name', 'email'];
 
-			const result = RouteUtils.validateBody(body, requiredFields);
+			const result = RouteUtilities.validateBody(body, requiredFields);
 
 			expect(result.error).toBe('Missing required field: email');
 			expect(result.status).toBe(400);
@@ -330,7 +333,7 @@ describe('RouteUtils', () => {
 			const body = { name: 'test', email: '' };
 			const requiredFields = ['name', 'email'];
 
-			const result = RouteUtils.validateBody(body, requiredFields);
+			const result = RouteUtilities.validateBody(body, requiredFields);
 
 			expect(result.error).toBe('Missing required field: email');
 			expect(result.status).toBe(400);
@@ -348,7 +351,7 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateBody(body, requiredFields, { validators });
+			const result = RouteUtilities.validateBody(body, requiredFields, { validators });
 
 			expect(result.success).toBe(true);
 		});
@@ -365,7 +368,7 @@ describe('RouteUtils', () => {
 				}
 			};
 
-			const result = RouteUtils.validateBody(body, requiredFields, { validators });
+			const result = RouteUtilities.validateBody(body, requiredFields, { validators });
 
 			expect(result.error).toBe('Invalid email format');
 			expect(result.status).toBe(400);
@@ -381,7 +384,7 @@ describe('RouteUtils', () => {
 				body: JSON.stringify(body)
 			});
 
-			const result = await RouteUtils.parseRequestBody(request);
+			const result = await RouteUtilities.parseRequestBody(request);
 
 			expect(result.success).toBe(true);
 			expect(result.body).toEqual(body);
@@ -394,7 +397,7 @@ describe('RouteUtils', () => {
 				body: 'test'
 			});
 
-			const result = await RouteUtils.parseRequestBody(request);
+			const result = await RouteUtilities.parseRequestBody(request);
 
 			expect(result.error).toBe('Content-Type must be application/json');
 			expect(result.status).toBe(400);
@@ -406,7 +409,7 @@ describe('RouteUtils', () => {
 				body: 'test'
 			});
 
-			const result = await RouteUtils.parseRequestBody(request);
+			const result = await RouteUtilities.parseRequestBody(request);
 
 			expect(result.error).toBe('Content-Type must be application/json');
 			expect(result.status).toBe(400);
@@ -419,7 +422,7 @@ describe('RouteUtils', () => {
 				body: '{ invalid json }'
 			});
 
-			const result = await RouteUtils.parseRequestBody(request);
+			const result = await RouteUtilities.parseRequestBody(request);
 
 			expect(result.error).toBe('Invalid JSON in request body');
 			expect(result.status).toBe(400);
@@ -433,7 +436,7 @@ describe('RouteUtils', () => {
 
 			const handler = vi.fn().mockResolvedValue(json({ success: true }));
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requiredParams: ['id'],
 				requireAuth: true
 			});
@@ -451,14 +454,17 @@ describe('RouteUtils', () => {
 		});
 
 		it('should return auth error when user is not authenticated', async () => {
-			const errorResponse = new Response(JSON.stringify({ error: 'Not authenticated' }), {
-				status: 401
-			});
+			const errorResponse = Response.json(
+				{ error: 'Not authenticated' },
+				{
+					status: 401
+				}
+			);
 			requireUser.mockResolvedValue(errorResponse);
 
 			const handler = vi.fn();
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requireAuth: true
 			});
 
@@ -481,7 +487,7 @@ describe('RouteUtils', () => {
 
 			const handler = vi.fn();
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requiredParams: ['id', 'name'],
 				requireAuth: true
 			});
@@ -506,7 +512,7 @@ describe('RouteUtils', () => {
 
 			const handler = vi.fn().mockResolvedValue(json({ success: true }));
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requiredBody: ['name'],
 				requireAuth: true
 			});
@@ -534,7 +540,7 @@ describe('RouteUtils', () => {
 
 			const handler = vi.fn().mockResolvedValue(json({ success: true }));
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requiredBody: ['name'],
 				requireAuth: true
 			});
@@ -550,8 +556,8 @@ describe('RouteUtils', () => {
 
 			// Handler is called without body parameter when requiredBody is empty
 			expect(handler).toHaveBeenCalled();
-			const callArgs = handler.mock.calls[0];
-			expect(callArgs[0]).toBe(mockEvent);
+			const callArguments = handler.mock.calls[0];
+			expect(callArguments[0]).toBe(mockEvent);
 		});
 
 		it('should handle errors thrown by handler', async () => {
@@ -560,7 +566,7 @@ describe('RouteUtils', () => {
 
 			const handler = vi.fn().mockRejectedValue(new Error('Handler error'));
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requireAuth: true
 			});
 
@@ -581,7 +587,7 @@ describe('RouteUtils', () => {
 		it('should skip auth when requireAuth is false', async () => {
 			const handler = vi.fn().mockResolvedValue(json({ success: true }));
 
-			const wrappedHandler = RouteUtils.createRouteHandler(handler, {
+			const wrappedHandler = RouteUtilities.createRouteHandler(handler, {
 				requireAuth: false
 			});
 

@@ -9,8 +9,11 @@ const mockCard = {
 	created_at: '2024-01-01T00:00:00Z'
 };
 
-global.fetch = vi.fn();
-Object.defineProperty(window, 'location', { value: { reload: vi.fn(), href: '' }, writable: true });
+globalThis.fetch = vi.fn();
+Object.defineProperty(globalThis, 'location', {
+	value: { reload: vi.fn(), href: '' },
+	writable: true
+});
 
 describe('Card Detail Page', () => {
 	beforeEach(() => {
@@ -116,15 +119,15 @@ describe('Card Detail Page', () => {
 			props: { data: { card: mockCard } }
 		});
 
-		const deleteBtn = document.querySelector('[data-testid="delete-card-btn"]');
-		deleteBtn.click();
+		const deleteButton = document.querySelector('[data-testid="delete-card-btn"]');
+		deleteButton.click();
 
 		flushSync();
 
 		expect(document.querySelector('[data-testid="delete-dialog"]')).toBeTruthy();
 
-		const cancelBtn = document.querySelector('[data-testid="cancel-delete-btn"]');
-		cancelBtn.click();
+		const cancelButton = document.querySelector('[data-testid="cancel-delete-btn"]');
+		cancelButton.click();
 
 		flushSync();
 
@@ -139,13 +142,13 @@ describe('Card Detail Page', () => {
 			props: { data: { card: mockCard } }
 		});
 
-		const deleteBtn = document.querySelector('[data-testid="delete-card-btn"]');
-		deleteBtn.click();
+		const deleteButton = document.querySelector('[data-testid="delete-card-btn"]');
+		deleteButton.click();
 
 		flushSync();
 
-		const confirmBtn = document.querySelector('[data-testid="confirm-delete-btn"]');
-		confirmBtn.click();
+		const confirmButton = document.querySelector('[data-testid="confirm-delete-btn"]');
+		confirmButton.click();
 
 		flushSync();
 
@@ -203,13 +206,13 @@ describe('Card Detail Page', () => {
 			props: { data: { card: mockCard } }
 		});
 
-		const deleteBtn = document.querySelector('[data-testid="delete-card-btn"]');
-		deleteBtn.click();
+		const deleteButton = document.querySelector('[data-testid="delete-card-btn"]');
+		deleteButton.click();
 
 		flushSync();
 
-		const confirmBtn = document.querySelector('[data-testid="confirm-delete-btn"]');
-		confirmBtn.click();
+		const confirmButton = document.querySelector('[data-testid="confirm-delete-btn"]');
+		confirmButton.click();
 
 		flushSync();
 

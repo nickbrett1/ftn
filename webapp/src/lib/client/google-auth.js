@@ -104,7 +104,7 @@ function loadGoogleGISAndRequestCode() {
 		const script = document.createElement('script');
 		script.src = 'https://accounts.google.com/gsi/client';
 		script.nonce = '%sveltekit.nonce%';
-		script.onload = async () => {
+		script.addEventListener('load', async () => {
 			try {
 				// Check if Google GIS is properly loaded
 				if (!globalThis.google?.accounts?.id) {
@@ -130,11 +130,11 @@ function loadGoogleGISAndRequestCode() {
 			} catch (error) {
 				reject(error);
 			}
-		};
+		});
 		script.onerror = () => {
 			reject(new Error('Google gsi script failed to load'));
 		};
 
-		document.body.appendChild(script);
+		document.body.append(script);
 	});
 }

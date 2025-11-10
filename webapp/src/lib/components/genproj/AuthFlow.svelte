@@ -42,7 +42,7 @@
 				}
 			}
 		}
-		return Array.from(required);
+		return [...required];
 	});
 
 	// Check if all required auth is complete
@@ -84,9 +84,9 @@
 				doppler: false,
 				sonarcloud: false
 			};
-		} catch (err) {
-			logger.error('Failed to load auth status', { error: err.message });
-			error = err.message;
+		} catch (error_) {
+			logger.error('Failed to load auth status', { error: error_.message });
+			error = error_.message;
 		} finally {
 			loading = false;
 		}
@@ -101,8 +101,8 @@
 			}
 			const data = await response.json();
 			window.open(data.authUrl, '_blank', 'noopener,noreferrer');
-		} catch (err) {
-			logger.error(`Failed to open token URL for ${service}`, { error: err.message });
+		} catch (error_) {
+			logger.error(`Failed to open token URL for ${service}`, { error: error_.message });
 			error = 'Could not retrieve the token creation URL. Please try again.';
 		}
 	}
@@ -119,30 +119,30 @@
 			let authUrl = '/projects/genproj/api/auth/github';
 
 			// Get current selections from parent (if available via URL)
-			if (typeof window !== 'undefined' && window.location) {
-				const url = new URL(window.location.href);
-				const selectedParam = url.searchParams.get('selected');
-				const projectNameParam = url.searchParams.get('projectName');
-				const repositoryUrlParam = url.searchParams.get('repositoryUrl');
+			if (globalThis.window !== undefined && globalThis.location) {
+				const url = new URL(globalThis.location.href);
+				const selectedParameter = url.searchParams.get('selected');
+				const projectNameParameter = url.searchParams.get('projectName');
+				const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
 
-				const params = new SvelteURLSearchParams();
-				if (selectedParam) params.set('selected', selectedParam);
-				if (projectNameParam) params.set('projectName', projectNameParam);
-				if (repositoryUrlParam) params.set('repositoryUrl', repositoryUrlParam);
+				const parameters = new SvelteURLSearchParams();
+				if (selectedParameter) parameters.set('selected', selectedParameter);
+				if (projectNameParameter) parameters.set('projectName', projectNameParameter);
+				if (repositoryUrlParameter) parameters.set('repositoryUrl', repositoryUrlParameter);
 
-				const queryString = params.toString();
+				const queryString = parameters.toString();
 				if (queryString) {
 					authUrl += `?${queryString}`;
 				}
 			}
 
 			// Redirect to GitHub OAuth
-			if (typeof window !== 'undefined' && window.location) {
-				window.location.href = authUrl;
+			if (globalThis.window !== undefined && globalThis.location) {
+				globalThis.location.href = authUrl;
 			}
-		} catch (err) {
-			logger.error('GitHub auth failed', { error: err.message });
-			error = err.message;
+		} catch (error_) {
+			logger.error('GitHub auth failed', { error: error_.message });
+			error = error_.message;
 			loading = false;
 			authenticatingService = null;
 		}
@@ -189,9 +189,9 @@
 					onAuthComplete();
 				}, 500); // Small delay to show success
 			}
-		} catch (err) {
-			logger.error(`${serviceNames[service]} auth failed`, { error: err.message });
-			error = err.message;
+		} catch (error_) {
+			logger.error(`${serviceNames[service]} auth failed`, { error: error_.message });
+			error = error_.message;
 		} finally {
 			loading = false;
 			authenticatingService = null;
@@ -201,32 +201,32 @@
 	// Check URL for auth completion
 	function checkAuthCallback() {
 		// Skip if window.location is not available (test environment)
-		if (typeof window === 'undefined' || !window.location || !window.location.href) {
+		if (globalThis.window === undefined || !globalThis.location || !globalThis.location.href) {
 			return;
 		}
 
-		const url = new URL(window.location.href);
-		const authParam = url.searchParams.get('auth');
-		const errorParam = url.searchParams.get('error');
+		const url = new URL(globalThis.location.href);
+		const authParameter = url.searchParams.get('auth');
+		const errorParameter = url.searchParams.get('error');
 
-		if (errorParam) {
-			error = `Authentication failed: ${errorParam}`;
+		if (errorParameter) {
+			error = `Authentication failed: ${errorParameter}`;
 			// Clear error param from URL
-			if (typeof window !== 'undefined' && window.location && window.history) {
-				const newUrl = new URL(window.location.href);
+			if (globalThis.window !== undefined && globalThis.location && globalThis.history) {
+				const newUrl = new URL(globalThis.location.href);
 				newUrl.searchParams.delete('error');
-				window.history.replaceState({}, '', newUrl.toString());
+				globalThis.history.replaceState({}, '', newUrl.toString());
 			}
-		} else if (authParam) {
+		} else if (authParameter) {
 			// Parse which service completed
-			const service = authParam.replace('_success', '');
+			const service = authParameter.replace('_success', '');
 			if (service && Object.prototype.hasOwnProperty.call(authStatus, service)) {
 				authStatus[service] = true;
 				// Clear auth param from URL
-				if (typeof window !== 'undefined' && window.location && window.history) {
-					const newUrl = new URL(window.location.href);
+				if (globalThis.window !== undefined && globalThis.location && globalThis.history) {
+					const newUrl = new URL(globalThis.location.href);
 					newUrl.searchParams.delete('auth');
-					window.history.replaceState({}, '', newUrl.toString());
+					globalThis.history.replaceState({}, '', newUrl.toString());
 				}
 
 				logger.info(`${serviceNames[service]} authentication successful`);

@@ -11,11 +11,11 @@ vi.mock('$env/static/private', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: (...args) => requireUserMock(...args)
+	requireUser: (...arguments_) => requireUserMock(...arguments_)
 }));
 
 vi.mock('$lib/server/ccbilling-db.js', () => ({
-	getPayment: (...args) => getPaymentMock(...args)
+	getPayment: (...arguments_) => getPaymentMock(...arguments_)
 }));
 
 vi.mock('llama-api-client', () => ({
@@ -50,7 +50,7 @@ describe('merchant info route', () => {
 		import('../../src/routes/projects/ccbilling/charges/[id]/merchant-info/+server.js');
 
 	const buildEvent = (overrides = {}) => ({
-		params: { id: '42', ...(overrides.params ?? {}) },
+		params: { id: '42', ...overrides.params },
 		platform: overrides.platform ?? {
 			env: { LLAMA_API_KEY: 'api-key-123', LLAMA_API_BASE_URL: 'https://llama.api' }
 		},

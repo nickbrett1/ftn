@@ -22,11 +22,11 @@
 		if (milestoneElement) {
 			const observer = new IntersectionObserver(
 				(entries) => {
-					entries.forEach((entry) => {
+					for (const entry of entries) {
 						if (entry.isIntersecting) {
-							entry.target.setAttribute('data-visible', 'true');
+							entry.target.dataset.visible = 'true';
 						}
-					});
+					}
 				},
 				{
 					threshold: 0.1,

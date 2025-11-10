@@ -67,14 +67,14 @@ describe('DopplerAPIService', () => {
 			slug: 'dev',
 			project_id: 'proj'
 		};
-		const jsonEnvs = vi.fn().mockResolvedValue([{ id: 'env' }]);
-		const jsonEnv = vi.fn().mockResolvedValue(environmentPayload);
+		const jsonEnvironments = vi.fn().mockResolvedValue([{ id: 'env' }]);
+		const jsonEnvironment = vi.fn().mockResolvedValue(environmentPayload);
 		const jsonSecrets = vi.fn().mockResolvedValue([{ name: 'TOKEN' }]);
 		const jsonSecret = vi.fn().mockResolvedValue({ name: 'TOKEN', value: '123' });
 
 		vi.spyOn(service, 'makeRequest')
-			.mockResolvedValueOnce({ json: jsonEnvs })
-			.mockResolvedValueOnce({ json: jsonEnv })
+			.mockResolvedValueOnce({ json: jsonEnvironments })
+			.mockResolvedValueOnce({ json: jsonEnvironment })
 			.mockResolvedValueOnce({ json: jsonSecrets })
 			.mockResolvedValueOnce({ json: jsonSecret })
 			.mockResolvedValueOnce({});

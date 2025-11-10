@@ -25,8 +25,8 @@ describe('JSON Utils', () => {
 		});
 
 		it('should parse a valid JSON object', () => {
-			const jsonObj = { key: 'value', number: 123 };
-			const result = parseDevcontainerConfig(jsonObj, 'test');
+			const jsonObject = { key: 'value', number: 123 };
+			const result = parseDevcontainerConfig(jsonObject, 'test');
 			expect(result).toEqual({ key: 'value', number: 123 });
 		});
 
@@ -58,7 +58,7 @@ describe('JSON Utils', () => {
 		});
 
 		it('should handle escaped quotes in strings', () => {
-			const jsonString = '{"key": "value \\"with quotes\\""}';
+			const jsonString = String.raw`{"key": "value \"with quotes\""}`;
 			const result = parseDevcontainerConfig(jsonString, 'test');
 			expect(result).toEqual({ key: 'value "with quotes"' });
 		});

@@ -164,7 +164,7 @@
 				<!-- Sun - bright glowing sphere -->
 				<T.Mesh position={[100, 50, 50]}>
 					<T.SphereGeometry args={[15, 32, 32]} />
-					<T.MeshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={2.0} />
+					<T.MeshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={2} />
 				</T.Mesh>
 
 				<!-- Sun glow effect -->
@@ -179,14 +179,14 @@
 						<T.BufferAttribute
 							attach="attributes.position"
 							args={[
-								new Float32Array([
+								new Float32Array(
 									// Generate random star positions in a large sphere
-									...Array.from({ length: 1000 }, () => [
+									Array.from({ length: 1000 }, () => [
 										(Math.random() - 0.5) * 400,
 										(Math.random() - 0.5) * 400,
 										(Math.random() - 0.5) * 400
 									]).flat()
-								]),
+								),
 								3
 							]}
 						/>
@@ -289,8 +289,8 @@
 							args={[
 								new Float32Array([
 									// Equator line
-									...Array.from({ length: 32 }, (_, i) => {
-										const angle = (i * Math.PI) / 16;
+									...Array.from({ length: 32 }, (_, index) => {
+										const angle = (index * Math.PI) / 16;
 										return [
 											10 * Math.cos(angle),
 											0,
@@ -301,8 +301,8 @@
 										];
 									}).flat(),
 									// Prime meridian
-									...Array.from({ length: 16 }, (_, i) => {
-										const angle = ((i - 8) * Math.PI) / 8;
+									...Array.from({ length: 16 }, (_, index) => {
+										const angle = ((index - 8) * Math.PI) / 8;
 										return [
 											10 * Math.cos(0) * Math.cos(angle),
 											10 * Math.sin(angle),
@@ -313,8 +313,8 @@
 										];
 									}).flat(),
 									// Tropic of Cancer
-									...Array.from({ length: 32 }, (_, i) => {
-										const angle = (i * Math.PI) / 16;
+									...Array.from({ length: 32 }, (_, index) => {
+										const angle = (index * Math.PI) / 16;
 										const lat = (23.5 * Math.PI) / 180;
 										return [
 											10 * Math.cos(lat) * Math.cos(angle),
@@ -326,8 +326,8 @@
 										];
 									}).flat(),
 									// Tropic of Capricorn
-									...Array.from({ length: 32 }, (_, i) => {
-										const angle = (i * Math.PI) / 16;
+									...Array.from({ length: 32 }, (_, index) => {
+										const angle = (index * Math.PI) / 16;
 										const lat = (-23.5 * Math.PI) / 180;
 										return [
 											10 * Math.cos(lat) * Math.cos(angle),
@@ -363,7 +363,7 @@
 				<T.PerspectiveCamera
 					position={[0, 15, 25]}
 					fov={60}
-					aspect={typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9}
+					aspect={globalThis.window === undefined ? 16 / 9 : window.innerWidth / window.innerHeight}
 					near={0.1}
 					far={1000}
 					makeDefault

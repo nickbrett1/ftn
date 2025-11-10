@@ -9,8 +9,8 @@ import { generateGitHubAuthUrl, generateAuthState } from '$lib/utils/auth-helper
 // Try to import environment variables, with fallbacks for build time
 let GITHUB_CLIENT_ID;
 try {
-	const env = await import('$env/static/private');
-	GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
+	const environment = await import('$env/static/private');
+	GITHUB_CLIENT_ID = environment.GITHUB_CLIENT_ID;
 } catch (error) {
 	console.warn(
 		'[GITHUB_AUTH] Environment variables not available at build time, using placeholder',
@@ -31,26 +31,26 @@ const logPrefix = '[GITHUB_AUTH]';
 export async function GET({ request, platform }) {
 	try {
 		const url = new URL(request.url);
-		const stateParam = url.searchParams.get('state');
+		const stateParameter = url.searchParams.get('state');
 
 		// Get user selections from query params to preserve through OAuth flow
-		const selectedParam = url.searchParams.get('selected');
-		const projectNameParam = url.searchParams.get('projectName');
-		const repositoryUrlParam = url.searchParams.get('repositoryUrl');
+		const selectedParameter = url.searchParams.get('selected');
+		const projectNameParameter = url.searchParams.get('projectName');
+		const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
 
 		// Generate state if not provided
-		const state = stateParam || generateAuthState();
+		const state = stateParameter || generateAuthState();
 
 		if (!GITHUB_CLIENT_ID || GITHUB_CLIENT_ID === 'placeholder') {
 			console.error(`${logPrefix} GitHub client ID not configured`);
 
 			// In development, return a helpful HTML error page instead of JSON
-			const isDev = process.env.NODE_ENV === 'development';
-			const errorMessage = isDev
+			const isDevelopment = process.env.NODE_ENV === 'development';
+			const errorMessage = isDevelopment
 				? 'GitHub OAuth is not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables. For development, you can create a GitHub OAuth app at https://github.com/settings/developers'
 				: 'GitHub OAuth not configured';
 
-			if (isDev) {
+			if (isDevelopment) {
 				return new Response(
 					`<!DOCTYPE html>
 <html>
@@ -97,10 +97,13 @@ export async function GET({ request, platform }) {
 				);
 			}
 
-			return new Response(JSON.stringify({ error: errorMessage }), {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return Response.json(
+				{ error: errorMessage },
+				{
+					status: 500,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
 		}
 
 		// Store state in KV for validation during callback
@@ -109,9 +112,9 @@ export async function GET({ request, platform }) {
 			const stateKey = `github_oauth_state_${state}`;
 			const stateData = {
 				state: state,
-				selected: selectedParam || null,
-				projectName: projectNameParam || null,
-				repositoryUrl: repositoryUrlParam || null
+				selected: selectedParameter || null,
+				projectName: projectNameParameter || null,
+				repositoryUrl: repositoryUrlParameter || null
 			};
 			// Store state with 10 minute expiration
 			const expiration = Math.floor(Date.now() / 1000) + 600;
@@ -142,8 +145,8 @@ export async function GET({ request, platform }) {
 		}
 
 		console.error(`${logPrefix} GitHub OAuth initiation error:`, error);
-		return new Response(
-			JSON.stringify({ error: error.message || 'GitHub OAuth initiation failed' }),
+		return Response.json(
+			{ error: error.message || 'GitHub OAuth initiation failed' },
 			{
 				status: 500,
 				headers: { 'Content-Type': 'application/json' }

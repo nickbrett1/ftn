@@ -29,8 +29,8 @@
 			}
 
 			results = await response.json();
-		} catch (err) {
-			error = err.message;
+		} catch (error_) {
+			error = error_.message;
 		} finally {
 			normalizing = false;
 		}
@@ -46,8 +46,8 @@
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			dedupePreview = await response.json();
-		} catch (err) {
-			dedupeError = err.message;
+		} catch (error_) {
+			dedupeError = error_.message;
 		}
 	}
 
@@ -70,8 +70,8 @@
 			dedupeResults = await response.json();
 			// Refresh preview after deduplication
 			loadDedupePreview();
-		} catch (err) {
-			dedupeError = err.message;
+		} catch (error_) {
+			dedupeError = error_.message;
 		} finally {
 			deduplicating = false;
 		}

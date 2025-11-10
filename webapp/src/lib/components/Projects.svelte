@@ -21,7 +21,7 @@
 			These are some of my personal projects, tools, code and writings.
 		</div>
 
-		<Card onclick={() => (window.location.href = '/projects/building-with-ai')}>
+		<Card onclick={() => (globalThis.location.href = '/projects/building-with-ai')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow">Building with AI Agents</span>
@@ -33,7 +33,7 @@
 				</p>
 			</div>
 		</Card>
-		<Card onclick={() => (window.location.href = '/projects/dbt-duckdb')}>
+		<Card onclick={() => (globalThis.location.href = '/projects/dbt-duckdb')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow"
@@ -47,7 +47,9 @@
 				</p>
 			</div>
 		</Card>
-		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/data-science-on-gcp/')}>
+		<Card
+			onclick={() => (globalThis.location = 'https://github.com/nickbrett1/data-science-on-gcp/')}
+		>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow"
@@ -79,7 +81,7 @@
 				</div>
 			{/snippet}
 		</HoverFadeCard>
-		<Card onclick={() => (window.location = 'https://github.com/nickbrett1/')}>
+		<Card onclick={() => (globalThis.location = 'https://github.com/nickbrett1/')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow">My Code</span>
@@ -88,7 +90,7 @@
 				<p class="grow pt-5">Here you'll find all of my code. Feel free to embrace and extend.</p>
 			</div>
 		</Card>
-		<Card onclick={() => (window.location = 'https://medium.com/the-management-code')}>
+		<Card onclick={() => (globalThis.location = 'https://medium.com/the-management-code')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
 					<span class="text-xl font-bold leading-none pt-2 grow">My Writings</span>

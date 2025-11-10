@@ -114,7 +114,7 @@ export function generateFinancialCentersData() {
 			// Add some market activity indicators
 			marketActivity: Math.random() * 100,
 			// Add trading volume
-			tradingVolume: Math.random() * 1000000000000 + 100000000000 // 100B to 1.1T
+			tradingVolume: Math.random() * 1_000_000_000_000 + 100_000_000_000 // 100B to 1.1T
 		}));
 
 		console.log('FinancialCentersData: Generated', randomizedCenters.length, 'financial centers');

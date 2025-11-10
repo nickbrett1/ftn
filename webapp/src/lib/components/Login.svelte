@@ -7,7 +7,7 @@
 
 	async function onClick() {
 		if ($page.data.user) {
-			goto(window.location.pathname);
+			goto(globalThis.location.pathname);
 			return;
 		}
 

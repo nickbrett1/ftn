@@ -12,7 +12,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const billing_cycle_id = parseInt(params.id);
+	const billing_cycle_id = Number.parseInt(params.id);
 
 	if (isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
@@ -33,7 +33,7 @@ export async function POST(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params, request } = event;
-	const billing_cycle_id = parseInt(params.id);
+	const billing_cycle_id = Number.parseInt(params.id);
 
 	if (isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });

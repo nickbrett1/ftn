@@ -2,11 +2,11 @@
 	import { browser } from '$app/environment';
 
 	// Get git info from build-time constants
-	const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'unknown';
-	const branchName = typeof __GIT_BRANCH__ !== 'undefined' ? __GIT_BRANCH__ : 'unknown';
+	const commitHash = typeof __GIT_COMMIT__ === 'undefined' ? 'unknown' : __GIT_COMMIT__;
+	const branchName = typeof __GIT_BRANCH__ === 'undefined' ? 'unknown' : __GIT_BRANCH__;
 
 	// Check if this is a preview deployment
-	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
+	const isPreview = $derived(browser && globalThis.location.hostname.includes('preview'));
 </script>
 
 <!-- Deployment info - small and discrete -->

@@ -96,14 +96,14 @@ function validateRequest(body) {
 
 	// For preview API, we apply a default project name if none provided
 	// The actual project generation (not preview) will require a real user-entered name
-	if (!projectName || projectName.trim().length < 3) {
-		// Apply default for preview only
-		if (projectName) {
-			// Only reject if they provided something but it's too short
-			return json({ error: 'Project name must be at least 3 characters' }, { status: 400 });
-		}
-		// If empty, we'll use default in the request body (handled in the calling function)
+	if (
+		(!projectName || projectName.trim().length < 3) && // Apply default for preview only
+		projectName
+	) {
+		// Only reject if they provided something but it's too short
+		return json({ error: 'Project name must be at least 3 characters' }, { status: 400 });
 	}
+	// If empty, we'll use default in the request body (handled in the calling function)
 
 	if (!Array.isArray(selectedCapabilities) || selectedCapabilities.length === 0) {
 		return json({ error: 'At least one capability must be selected' }, { status: 400 });
@@ -323,7 +323,7 @@ function generateCapabilityFilesMap(
 		addFilesToMap(fileMap, capabilityFiles, devcontainerCapabilities, configuration, projectName);
 	}
 
-	return Array.from(fileMap.values());
+	return [...fileMap.values()];
 }
 
 /**
@@ -346,9 +346,9 @@ function addSpeckitToDockerfile(files, hasSpecKit, devcontainerCapabilities) {
 	const lines = dockerfile.content.split('\n');
 	let insertIndex = -1;
 
-	for (let i = 0; i < lines.length; i++) {
-		if (lines[i].includes('ENV PATH') && lines[i].includes('.local/bin')) {
-			insertIndex = i + 1;
+	for (const [index, line] of lines.entries()) {
+		if (line.includes('ENV PATH') && line.includes('.local/bin')) {
+			insertIndex = index + 1;
 			break;
 		}
 	}
@@ -386,11 +386,11 @@ function addSonarLintToDevcontainer(files, hasSonarLint, devcontainerCapabilitie
 		if (config.customizations?.vscode?.extensions) {
 			const extensions = new Set(config.customizations.vscode.extensions);
 			extensions.add('SonarSource.sonarlint-vscode');
-			config.customizations.vscode.extensions = Array.from(extensions);
+			config.customizations.vscode.extensions = [...extensions];
 			devcontainerJson.content = JSON.stringify(config, null, 2);
 		}
-	} catch (e) {
-		console.error('Failed to parse devcontainer.json:', e);
+	} catch (error) {
+		console.error('Failed to parse devcontainer.json:', error);
 	}
 }
 
@@ -513,9 +513,9 @@ echo "    bash scripts/cloud-login.sh"
 `;
 
 	const setupLines = setupSh.content.split('\n');
-	for (let i = setupLines.length - 1; i >= 0; i--) {
-		if (setupLines[i].includes('Setup complete!')) {
-			setupLines[i] = message;
+	for (let index = setupLines.length - 1; index >= 0; index--) {
+		if (setupLines[index].includes('Setup complete!')) {
+			setupLines[index] = message;
 			break;
 		}
 	}
@@ -721,19 +721,19 @@ function addFilesToMap(
 	}
 }
 
-function mergeExtensions(existing, newConfigObj) {
+function mergeExtensions(existing, newConfigObject) {
 	const extensions = new Set();
 	if (existing.customizations?.vscode?.extensions) {
-		for (const ext of existing.customizations.vscode.extensions) {
-			extensions.add(ext);
+		for (const extension of existing.customizations.vscode.extensions) {
+			extensions.add(extension);
 		}
 	}
-	if (newConfigObj.customizations?.vscode?.extensions) {
-		for (const ext of newConfigObj.customizations.vscode.extensions) {
-			extensions.add(ext);
+	if (newConfigObject.customizations?.vscode?.extensions) {
+		for (const extension of newConfigObject.customizations.vscode.extensions) {
+			extensions.add(extension);
 		}
 	}
-	return Array.from(extensions);
+	return [...extensions];
 }
 
 function mergeDevcontainerConfigs(
@@ -744,7 +744,7 @@ function mergeDevcontainerConfigs(
 	projectName
 ) {
 	const existing = parseDevcontainerConfig(existingConfig, 'existing');
-	const newConfigObj = parseDevcontainerConfig(newConfig, 'new');
+	const newConfigObject = parseDevcontainerConfig(newConfig, 'new');
 
 	const hasNode = devcontainerCapabilities.includes('devcontainer-node');
 	const hasPython = devcontainerCapabilities.includes('devcontainer-python');
@@ -752,9 +752,9 @@ function mergeDevcontainerConfigs(
 
 	const image = 'mcr.microsoft.com/devcontainers/base:ubuntu';
 	const features = buildFeatures(hasNode, hasPython, hasJava);
-	const extensions = mergeExtensions(existing, newConfigObj);
+	const extensions = mergeExtensions(existing, newConfigObject);
 
-	const mergedFeatures = { ...existing.features, ...newConfigObj.features, ...features };
+	const mergedFeatures = { ...existing.features, ...newConfigObject.features, ...features };
 
 	const merged = {
 		name: projectName || 'Project',
@@ -766,9 +766,10 @@ function mergeDevcontainerConfigs(
 				extensions
 			}
 		},
-		forwardPorts: [...(existing.forwardPorts || []), ...(newConfigObj.forwardPorts || [])].filter(
-			(v, i, a) => a.indexOf(v) === i
-		),
+		forwardPorts: [
+			...(existing.forwardPorts || []),
+			...(newConfigObject.forwardPorts || [])
+		].filter((v, index, a) => a.indexOf(v) === index),
 		postCreateCommand: 'bash .devcontainer/setup.sh'
 	};
 
@@ -1467,7 +1468,7 @@ ${browserTestSteps.map((step) => step).join('\n')}`;
  * @returns {void}
  */
 function addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSonarCloud) {
-	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
+	/* eslint-disable sonarjs/no-array-push-push */
 	addInitialWorkflowSteps(workflowJobs);
 	addSonarCloudContext(workflowJobs, hasSonarCloud);
 	addLighthouseWorkflow(workflowJobs, hasLighthouse);
@@ -1475,7 +1476,7 @@ function addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSona
 }
 
 function generateCircleCIConfig(context) {
-	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
+	/* eslint-disable sonarjs/no-array-push-push */
 	const selectedCapabilities = context.selectedCapabilities || [];
 
 	// Determine what capabilities are present
@@ -1645,7 +1646,7 @@ workflows:
   build_test_deploy:
     jobs:
 ${workflowJobs.map((step) => step).join('\n')}`;
-	/* eslint-enable unicorn/no-array-push-push, sonarjs/no-array-push-push */
+	/* eslint-enable sonarjs/no-array-push-push */
 }
 
 /**
@@ -1707,12 +1708,12 @@ function getFallbackTemplate(templateId, context) {
 		  "forwardPorts": [3000, 5173],
 		  "postCreateCommand": "bash .devcontainer/setup.sh"
 		}`,
-		'devcontainer-node-dockerfile': `FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
+		'devcontainer-node-dockerfile': String.raw`FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}
 # Install system dependencies and uv
-RUN apt-get update && apt-get install -y \\
-    git \\
-    curl \\
-    && rm -rf /var/lib/apt/lists/* \\
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install the Gemini CLI
@@ -1793,21 +1794,21 @@ WORKDIR /workspace
   "forwardPorts": [8080, 9090],
   "postCreateCommand": "bash .devcontainer/setup.sh"
 }`,
-		'devcontainer-python-dockerfile': `FROM mcr.microsoft.com/devcontainers/python:{{pythonVersion}}
+		'devcontainer-python-dockerfile': String.raw`FROM mcr.microsoft.com/devcontainers/python:{{pythonVersion}}
 
 # Install system dependencies and uv
-RUN apt-get update && apt-get install -y \\
-    git \\
-    curl \\
-    && rm -rf /var/lib/apt/lists/* \\
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install nodejs
-RUN apt-get update && apt-get install -y ca-certificates curl gnupg \\
-    && mkdir -p /etc/apt/keyrings \\
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \\
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \\
-    && apt-get update \\
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
     && apt-get install nodejs -y
 
 # Install the Gemini CLI
@@ -1825,21 +1826,21 @@ USER root
 
 WORKDIR /workspace
 `,
-		'devcontainer-java-dockerfile': `FROM mcr.microsoft.com/devcontainers/java:{{javaVersion}}
+		'devcontainer-java-dockerfile': String.raw`FROM mcr.microsoft.com/devcontainers/java:{{javaVersion}}
 
 # Install system dependencies and uv
-RUN apt-get update && apt-get install -y \\
-    git \\
-    curl \\
-    && rm -rf /var/lib/apt/lists/* \\
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install nodejs
-RUN apt-get update && apt-get install -y ca-certificates curl gnupg \\
-    && mkdir -p /etc/apt/keyrings \\
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \\
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \\
-    && apt-get update \\
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
     && apt-get install nodejs -y
 
 # Install the Gemini CLI
@@ -1857,12 +1858,12 @@ USER root
 
 WORKDIR /workspace
 `,
-		'devcontainer-zshrc': `plugins=(git web-search zsh-autosuggestions zsh-syntax-highlighting)
+		'devcontainer-zshrc': String.raw`plugins=(git web-search zsh-autosuggestions zsh-syntax-highlighting)
 
 export ZSH=$HOME/.oh-my-zsh
 
 # Set Oh My Zsh theme conditionally to avoid Cursor hanging issues
-if [[ "$PAGER" == "sh -c \\"head -n 10000 | cat\\"" ]]; then
+if [[ "$PAGER" == "sh -c \"head -n 10000 | cat\"" ]]; then
   ZSH_THEME=""  # Disable Powerlevel10k for Cursor chat terminals only
 else
   ZSH_THEME="powerlevel10k/powerlevel10k"
@@ -2003,7 +2004,7 @@ echo "Setup complete!"
   project: {{projectName}}
   config: dev
 `,
-		'cloud-login-sh': `#!/bin/bash
+		'cloud-login-sh': String.raw`#!/bin/bash
 set -e
 
 # Doppler login/setup
@@ -2028,7 +2029,7 @@ if ! command -v wrangler &> /dev/null; then
   npm install -g wrangler
 fi
 
-script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\.0\.0\.0/localhost/g'" /dev/null
 
 echo
 # Setup Wrangler configuration with environment variables

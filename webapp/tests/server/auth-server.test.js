@@ -11,11 +11,11 @@ vi.mock('$env/static/private', () => ({
 }));
 
 vi.mock('$lib/server/user-validation.js', () => ({
-	isUserAllowed: (...args) => mockIsUserAllowed(...args)
+	isUserAllowed: (...arguments_) => mockIsUserAllowed(...arguments_)
 }));
 
 const createJsonResponse = (data, init = {}) =>
-	new Response(JSON.stringify(data), {
+	Response.json(data, {
 		status: init.status ?? 200,
 		headers: {
 			'Content-Type': 'application/json'
@@ -63,7 +63,7 @@ describe('Auth server route', () => {
 				})
 			);
 
-		const kvPut = vi.fn().mockResolvedValue(undefined);
+		const kvPut = vi.fn().mockResolvedValue();
 		const platform = {
 			env: {
 				KV: {

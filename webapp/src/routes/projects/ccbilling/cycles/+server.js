@@ -9,7 +9,7 @@ export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 	const cycles = await listBillingCycles(event);
-	return new Response(JSON.stringify(cycles), {
+	return Response.json(cycles, {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }
@@ -20,12 +20,15 @@ export async function POST(event) {
 	const data = await event.request.json();
 	const { start_date, end_date } = data;
 	if (!start_date || !end_date) {
-		return new Response(JSON.stringify({ error: 'Missing start_date or end_date' }), {
-			status: 400
-		});
+		return Response.json(
+			{ error: 'Missing start_date or end_date' },
+			{
+				status: 400
+			}
+		);
 	}
 	await createBillingCycle(event, start_date, end_date);
-	return new Response(JSON.stringify({ success: true }));
+	return Response.json({ success: true });
 }
 
 export async function DELETE(event) {
@@ -34,8 +37,8 @@ export async function DELETE(event) {
 	const data = await event.request.json();
 	const { id } = data;
 	if (!id) {
-		return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 });
+		return Response.json({ error: 'Missing id' }, { status: 400 });
 	}
 	await deleteBillingCycle(event, id);
-	return new Response(JSON.stringify({ success: true }));
+	return Response.json({ success: true });
 }

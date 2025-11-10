@@ -33,8 +33,8 @@ export function generateAuthState(length = 32) {
 	const randomBytes = new Uint8Array(length);
 	crypto.getRandomValues(randomBytes);
 	let result = '';
-	for (let i = 0; i < length; i++) {
-		result += chars.charAt(randomBytes[i] % chars.length);
+	for (let index = 0; index < length; index++) {
+		result += chars.charAt(randomBytes[index] % chars.length);
 	}
 	return result;
 }
@@ -63,7 +63,7 @@ export function generateGitHubAuthUrl(
 	state,
 	scopes = ['repo', 'user:email']
 ) {
-	const params = new URLSearchParams({
+	const parameters = new URLSearchParams({
 		client_id: clientId,
 		redirect_uri: redirectUri,
 		scope: scopes.join(' '),
@@ -71,7 +71,7 @@ export function generateGitHubAuthUrl(
 		response_type: 'code'
 	});
 
-	return `https://github.com/login/oauth/authorize?${params.toString()}`;
+	return `https://github.com/login/oauth/authorize?${parameters.toString()}`;
 }
 
 /**
@@ -81,12 +81,12 @@ export function generateGitHubAuthUrl(
  * @returns {string} CircleCI token creation URL
  */
 export function generateCircleCIAuthUrl(redirectUri, state) {
-	const params = new URLSearchParams({
+	const parameters = new URLSearchParams({
 		redirect_uri: redirectUri,
 		state: state
 	});
 
-	return `https://app.circleci.com/settings/user/tokens?${params.toString()}`;
+	return `https://app.circleci.com/settings/user/tokens?${parameters.toString()}`;
 }
 
 /**
@@ -96,12 +96,12 @@ export function generateCircleCIAuthUrl(redirectUri, state) {
  * @returns {string} Doppler token creation URL
  */
 export function generateDopplerAuthUrl(redirectUri, state) {
-	const params = new URLSearchParams({
+	const parameters = new URLSearchParams({
 		redirect_uri: redirectUri,
 		state: state
 	});
 
-	return `https://dashboard.doppler.com/security/tokens?${params.toString()}`;
+	return `https://dashboard.doppler.com/security/tokens?${parameters.toString()}`;
 }
 
 /**
@@ -111,12 +111,12 @@ export function generateDopplerAuthUrl(redirectUri, state) {
  * @returns {string} SonarCloud token creation URL
  */
 export function generateSonarCloudAuthUrl(redirectUri, state) {
-	const params = new URLSearchParams({
+	const parameters = new URLSearchParams({
 		redirect_uri: redirectUri,
 		state: state
 	});
 
-	return `https://sonarcloud.io/account/security?${params.toString()}`;
+	return `https://sonarcloud.io/account/security?${parameters.toString()}`;
 }
 
 /**
@@ -302,19 +302,24 @@ export async function validateSonarCloudToken(token) {
  */
 export async function validateServiceToken(service, token) {
 	switch (service) {
-		case 'github':
+		case 'github': {
 			return validateGitHubToken(token);
-		case 'circleci':
+		}
+		case 'circleci': {
 			return validateCircleCIToken(token);
-		case 'doppler':
+		}
+		case 'doppler': {
 			return validateDopplerToken(token);
-		case 'sonarcloud':
+		}
+		case 'sonarcloud': {
 			return validateSonarCloudToken(token);
-		default:
+		}
+		default: {
 			return {
 				success: false,
 				error: `Unknown service: ${service}`
 			};
+		}
 	}
 }
 

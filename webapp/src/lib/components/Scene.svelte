@@ -22,11 +22,11 @@
 	fov={50}
 	aspect={window.innerWidth / window.innerHeight}
 	near={0.1}
-	far={10000}
+	far={10_000}
 	makeDefault
-	oncreate={(ref) => {
-		camera = ref;
-		ref.lookAt(0, 0, 0);
+	oncreate={(reference) => {
+		camera = reference;
+		reference.lookAt(0, 0, 0);
 	}}
 >
 	<OrbitControls enableDamping />
@@ -52,10 +52,10 @@
 			console.log(e.object);
 			//		let outlineMaterial1 = new T.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 
-			e.object.geometry.material.color.set(0x00ff00);
+			e.object.geometry.material.color.set(0x00_ff_00);
 			e.stopPropagation();
 		} else {
-			e.object.material.color.set(0xffffff);
+			e.object.material.color.set(0xff_ff_ff);
 		}
 	}}
 />

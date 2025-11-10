@@ -11,9 +11,9 @@ import { getCurrentUser } from '$lib/server/auth-helpers.js';
 // Try to import environment variables, with fallbacks for build time
 let GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET;
 try {
-	const env = await import('$env/static/private');
-	GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
-	GITHUB_CLIENT_SECRET = env.GITHUB_CLIENT_SECRET;
+	const environment = await import('$env/static/private');
+	GITHUB_CLIENT_ID = environment.GITHUB_CLIENT_ID;
+	GITHUB_CLIENT_SECRET = environment.GITHUB_CLIENT_SECRET;
 } catch (error) {
 	console.warn(
 		'[GITHUB_CALLBACK] Environment variables not available at build time, using placeholders',
@@ -32,9 +32,9 @@ const logPrefix = '[GITHUB_CALLBACK]';
  * @param {Object} preservedSelections - Preserved selections object
  * @returns {string} Complete redirect URL
  */
-function buildRedirectUrl(baseUrl, params, preservedSelections) {
+function buildRedirectUrl(baseUrl, parameters, preservedSelections) {
 	const url = new URL(baseUrl);
-	for (const [key, value] of Object.entries(params)) {
+	for (const [key, value] of Object.entries(parameters)) {
 		if (value) url.searchParams.set(key, value);
 	}
 	if (preservedSelections.selected) {
@@ -151,11 +151,11 @@ async function exchangeGitHubToken(code, redirectUri) {
  * @param {Object} platform - Platform object
  * @returns {Promise<Object>} Preserved selections
  */
-async function getPreservedSelectionsFromState(stateParam, platform) {
+async function getPreservedSelectionsFromState(stateParameter, platform) {
 	let preservedSelections = { selected: null, projectName: null, repositoryUrl: null };
 
-	if (stateParam && platform?.env?.KV) {
-		const stateKey = `github_oauth_state_${stateParam}`;
+	if (stateParameter && platform?.env?.KV) {
+		const stateKey = `github_oauth_state_${stateParameter}`;
 		const storedStateData = await platform.env.KV.get(stateKey);
 		if (storedStateData) {
 			try {
@@ -178,8 +178,8 @@ async function getPreservedSelectionsFromState(stateParam, platform) {
  * @param {URL} url - Request URL
  * @returns {never} Throws redirect
  */
-function handleOAuthError(errorParam, preservedSelections, url) {
-	console.error(`${logPrefix} OAuth error from GitHub: ${errorParam}`);
+function handleOAuthError(errorParameter, preservedSelections, url) {
+	console.error(`${logPrefix} OAuth error from GitHub: ${errorParameter}`);
 
 	throw redirect(
 		302,
@@ -230,15 +230,15 @@ function handleAuthInitializationError(errorType, preservedSelections, url) {
  * @param {Object} platform - Platform object
  * @returns {Promise<Object>} Validation result with code, state, and preserved selections
  */
-async function extractAndValidateParams(url, platform) {
+async function extractAndValidateParameters(url, platform) {
 	// Check for OAuth errors
-	const errorParam = url.searchParams.get('error');
-	if (errorParam) {
+	const errorParameter = url.searchParams.get('error');
+	if (errorParameter) {
 		const preservedSelections = await getPreservedSelectionsFromState(
 			url.searchParams.get('state'),
 			platform
 		);
-		handleOAuthError(errorParam, preservedSelections, url);
+		handleOAuthError(errorParameter, preservedSelections, url);
 	}
 
 	// Get and validate required parameters
@@ -408,7 +408,7 @@ export async function GET({ request, platform }) {
 		const url = new URL(request.url);
 
 		// Extract and validate request parameters
-		const { code, state, preservedSelections } = await extractAndValidateParams(url, platform);
+		const { code, state, preservedSelections } = await extractAndValidateParameters(url, platform);
 
 		// Process the callback and update authentication
 		const { currentUser } = await processGitHubCallback(

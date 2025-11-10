@@ -14,7 +14,7 @@ describe('validation utilities', () => {
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });
-			expect(validateProjectName(null)).toEqual({
+			expect(validateProjectName(undefined)).toEqual({
 				valid: false,
 				error: 'Project name is required'
 			});
@@ -52,7 +52,7 @@ describe('validation utilities', () => {
 
 	describe('validateRepositoryUrl', () => {
 		it('allows empty values', () => {
-			expect(validateRepositoryUrl(undefined)).toEqual({ valid: true });
+			expect(validateRepositoryUrl()).toEqual({ valid: true });
 		});
 
 		it('rejects non-string values', () => {
@@ -84,7 +84,9 @@ describe('validation utilities', () => {
 				error: 'At least one capability must be selected'
 			});
 
-			expect(validateSelectedCapabilities(new Array(21).fill('devcontainer-node'))).toEqual({
+			expect(
+				validateSelectedCapabilities(Array.from({ length: 21 }).fill('devcontainer-node'))
+			).toEqual({
 				valid: false,
 				error: 'Too many capabilities selected (maximum 20)'
 			});
@@ -107,7 +109,7 @@ describe('validation utilities', () => {
 
 	describe('validateCapabilityConfiguration', () => {
 		it('requires configuration object', () => {
-			expect(validateCapabilityConfiguration(null, ['doppler'])).toEqual({
+			expect(validateCapabilityConfiguration(undefined, ['doppler'])).toEqual({
 				valid: false,
 				error: 'Configuration must be an object'
 			});
@@ -237,7 +239,7 @@ describe('validation utilities', () => {
 		it('sanitizes project names consistently', () => {
 			expect(sanitizeProjectName('My Cool Project!')).toBe('my-cool-project');
 			expect(sanitizeProjectName('--Already--Clean--')).toBe('already-clean');
-			expect(sanitizeProjectName(null)).toBe('');
+			expect(sanitizeProjectName(undefined)).toBe('');
 		});
 
 		it('generateProjectSlug delegates to sanitizeProjectName', () => {

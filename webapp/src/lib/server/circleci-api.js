@@ -163,12 +163,12 @@ export class CircleCIAPIService {
 	 * @returns {Promise<Object>} Pipelines information
 	 */
 	async listPipelines(vcsType, organizationSlug, projectSlug, pageToken = null) {
-		const params = new URLSearchParams();
+		const parameters = new URLSearchParams();
 		if (pageToken) {
-			params.append('page-token', pageToken);
+			parameters.append('page-token', pageToken);
 		}
 
-		const endpoint = `/project/${vcsType}/${organizationSlug}/${projectSlug}/pipeline${params.toString() ? '?' + params.toString() : ''}`;
+		const endpoint = `/project/${vcsType}/${organizationSlug}/${projectSlug}/pipeline${parameters.toString() ? '?' + parameters.toString() : ''}`;
 		const response = await this.makeRequest(endpoint);
 		return response.json();
 	}
@@ -243,7 +243,7 @@ export class CircleCIAPIService {
 	async createEnvironmentVariable(vcsType, organizationSlug, projectSlug, name, value) {
 		console.log(`🔄 Creating CircleCI environment variable: ${name}`);
 
-		const envVarData = {
+		const environmentVariableData = {
 			name,
 			value
 		};
@@ -252,15 +252,15 @@ export class CircleCIAPIService {
 			`/project/${vcsType}/${organizationSlug}/${projectSlug}/envvar`,
 			{
 				method: 'POST',
-				body: JSON.stringify(envVarData)
+				body: JSON.stringify(environmentVariableData)
 			}
 		);
 
-		const envVar = await response.json();
+		const environmentVariable = await response.json();
 
 		console.log(`✅ CircleCI environment variable created: ${name}`);
 
-		return envVar;
+		return environmentVariable;
 	}
 
 	/**

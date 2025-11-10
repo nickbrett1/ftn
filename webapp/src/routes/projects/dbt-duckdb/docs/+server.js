@@ -29,10 +29,14 @@ export const GET = async ({ platform }) => {
 		headers.set('content-type', 'text/html; charset=utf-8');
 
 		return new Response(object.body, { headers });
-	} catch (e) {
-		const errorMessage = e instanceof Error && e.message ? e.message : String(e);
+	} catch (error_) {
+		const errorMessage =
+			error_ instanceof Error && error_.message ? error_.message : String(error_);
 		// Log the raw error object for more detailed debugging information
-		console.error(`Error fetching ${objectKey} from R2. Details: ${errorMessage}. Raw error:`, e);
-		throw error(e?.status || 500, `Failed to retrieve file from R2: ${errorMessage}`);
+		console.error(
+			`Error fetching ${objectKey} from R2. Details: ${errorMessage}. Raw error:`,
+			error_
+		);
+		throw error(error_?.status || 500, `Failed to retrieve file from R2: ${errorMessage}`);
 	}
 };

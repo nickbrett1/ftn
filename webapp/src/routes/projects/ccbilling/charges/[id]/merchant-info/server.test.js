@@ -5,10 +5,10 @@ import { GET } from './+server.js';
 vi.mock('$lib/server/ccbilling-db.js', () => ({ getPayment: vi.fn() }));
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, opts) => {
-		const response = new Response(JSON.stringify(data), {
-			status: opts?.status || 200,
-			...opts
+	json: vi.fn((data, options) => {
+		const response = Response.json(data, {
+			status: options?.status || 200,
+			...options
 		});
 		response.json = vi.fn().mockResolvedValue(data);
 		return response;
@@ -26,7 +26,7 @@ vi.mock('llama-api-client', () => {
 			return {
 				chat: {
 					completions: {
-						create: (...args) => globalThis.__llamaCreateMock(...args)
+						create: (...arguments_) => globalThis.__llamaCreateMock(...arguments_)
 					}
 				}
 			};

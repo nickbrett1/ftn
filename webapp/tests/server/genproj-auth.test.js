@@ -28,7 +28,7 @@ describe('GenprojAuthManager', () => {
 	it('initializes authentication state for new user', async () => {
 		// Mock KV to return null (no existing state), then save new state
 		mockKV.get.mockResolvedValueOnce(null);
-		mockKV.put.mockResolvedValueOnce(undefined);
+		mockKV.put.mockResolvedValueOnce();
 
 		const result = await manager.initialize(user, mockPlatform);
 
@@ -58,7 +58,7 @@ describe('GenprojAuthManager', () => {
 	it('updates authentication providers and tracks state', async () => {
 		// Mock initial state retrieval (null - new user)
 		mockKV.get.mockResolvedValueOnce(null);
-		mockKV.put.mockResolvedValue(undefined);
+		mockKV.put.mockResolvedValue();
 
 		await manager.initialize(user, mockPlatform);
 
@@ -194,7 +194,7 @@ describe('GenprojAuthManager', () => {
 		expect(state.google).toBe(true);
 		expect(state.github).toBe(true);
 
-		mockKV.delete.mockResolvedValue(undefined);
+		mockKV.delete.mockResolvedValue();
 		expect(await manager.clearAuthState()).toBe(true);
 		expect(manager.currentUser).toBeNull();
 		expect(manager.authState).toBeNull();

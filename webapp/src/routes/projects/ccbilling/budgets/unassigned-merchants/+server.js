@@ -6,7 +6,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const merchants = await getUnassignedMerchants(event);
-	return new Response(JSON.stringify(merchants), {
+	return Response.json(merchants, {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }

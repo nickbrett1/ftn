@@ -18,7 +18,7 @@ vi.mock('$lib/utils/logging.js', () => ({
 }));
 
 vi.mock('$lib/utils/genproj-errors.js', () => ({
-	withErrorHandling: (fn) => fn
+	withErrorHandling: (function_) => function_
 }));
 
 import { logger } from '$lib/utils/logging.js';

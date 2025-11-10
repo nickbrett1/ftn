@@ -7,9 +7,9 @@ vi.mock('@sveltejs/kit', () => ({
 	 * @param {string} message
 	 */
 	error: (status, message) => {
-		const err = new Error(message);
-		err.status = status;
-		return err;
+		const error = new Error(message);
+		error.status = status;
+		return error;
 	}
 }));
 
@@ -52,7 +52,7 @@ describe('genproj +page.server load', () => {
 	});
 
 	it('returns unauthenticated state when no auth cookie or KV binding', async () => {
-		const cookies = { get: vi.fn().mockReturnValue(undefined) };
+		const cookies = { get: vi.fn().mockReturnValue() };
 		const platform = { env: {} };
 		const url = new URL('https://example.com/projects/genproj?selected=&validate=false');
 

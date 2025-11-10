@@ -117,9 +117,9 @@ export function parseDevcontainerConfig(config, configName) {
 		}
 
 		return JSON.parse(state.jsonString);
-	} catch (e) {
-		console.error(`Failed to parse ${configName} config:`, e);
-		console.error('Config content:', config.substring(0, 200));
+	} catch (error) {
+		console.error(`Failed to parse ${configName} config:`, error);
+		console.error('Config content:', config.slice(0, 200));
 		throw new Error(`Invalid ${configName} devcontainer configuration`);
 	}
 }

@@ -73,7 +73,7 @@
 				deleteError = res.error || 'Failed to delete card';
 				return;
 			}
-			window.location.href = '/projects/ccbilling/cards';
+			globalThis.location.href = '/projects/ccbilling/cards';
 		} catch {
 			deleteError = 'Network error occurred';
 		} finally {

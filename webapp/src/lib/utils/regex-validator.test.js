@@ -13,9 +13,9 @@ describe('Regex Validator - ReDoS Prevention', () => {
 	describe('isRegexSafe', () => {
 		it('should identify safe regex patterns', async () => {
 			const safePatterns = [
-				{ pattern: '^\\d{4}$', testString: '1234' },
+				{ pattern: String.raw`^\d{4}$`, testString: '1234' },
 				{ pattern: '^[a-z]+$', testString: 'hello' },
-				{ pattern: '\\$\\d+\\.\\d{2}', testString: '$123.45' }
+				{ pattern: String.raw`\$\d+\.\d{2}`, testString: '$123.45' }
 			];
 
 			for (const { pattern, testString } of safePatterns) {
@@ -27,10 +27,10 @@ describe('Regex Validator - ReDoS Prevention', () => {
 		it('should identify dangerous regex patterns', async () => {
 			const dangerousPatterns = [
 				{ pattern: '(a+)+', testString: 'a'.repeat(100) },
-				{ pattern: '(\\w+)*', testString: 'test' },
+				{ pattern: String.raw`(\w+)*`, testString: 'test' },
 				{ pattern: '(a|aa)*', testString: 'a'.repeat(50) },
-				{ pattern: '(\\w+)+', testString: 'test' },
-				{ pattern: '(\\w+)*\\1', testString: 'test' }
+				{ pattern: String.raw`(\w+)+`, testString: 'test' },
+				{ pattern: String.raw`(\w+)*\1`, testString: 'test' }
 			];
 
 			for (const { pattern, testString } of dangerousPatterns) {
@@ -125,30 +125,30 @@ describe('Regex Validator - ReDoS Prevention', () => {
 
 	describe('createSafeRegex', () => {
 		it('should create safe regex patterns', () => {
-			const safePatterns = ['^\\d{4}$', '[a-z]+', '\\$\\d+\\.\\d{2}'];
+			const safePatterns = [String.raw`^\d{4}$`, '[a-z]+', String.raw`\$\d+\.\d{2}`];
 
-			safePatterns.forEach((pattern) => {
+			for (const pattern of safePatterns) {
 				const regex = createSafeRegex(pattern);
 				expect(regex).toBeInstanceOf(RegExp);
-			});
+			}
 		});
 
 		it('should reject dangerous regex patterns', () => {
-			const dangerousPatterns = ['(a+)+', '(\\w+)*', '(a|aa)*', '(\\w+)+'];
+			const dangerousPatterns = ['(a+)+', String.raw`(\w+)*`, '(a|aa)*', String.raw`(\w+)+`];
 
-			dangerousPatterns.forEach((pattern) => {
+			for (const pattern of dangerousPatterns) {
 				const regex = createSafeRegex(pattern);
 				expect(regex).toBeNull();
-			});
+			}
 		});
 
 		it('should handle invalid regex patterns', () => {
 			const invalidPatterns = ['[unclosed', '(unclosed', '\\', '[a-z', '(a|b'];
 
-			invalidPatterns.forEach((pattern) => {
+			for (const pattern of invalidPatterns) {
 				const regex = createSafeRegex(pattern);
 				expect(regex).toBeNull();
-			});
+			}
 		});
 	});
 
@@ -156,14 +156,14 @@ describe('Regex Validator - ReDoS Prevention', () => {
 		it('should validate patterns used in the codebase', async () => {
 			const codebasePatterns = [
 				{ pattern: 'auth=([^;]+)', testString: 'auth=abc123; other=xyz' },
-				{ pattern: '(\\d{1,2}\\/\\d{1,2}\\/\\d{4})', testString: '12/25/2023' },
-				{ pattern: '(\\$[\\d,]+\\.\\d{2})', testString: '$123.45' },
+				{ pattern: String.raw`(\d{1,2}\/\d{1,2}\/\d{4})`, testString: '12/25/2023' },
+				{ pattern: String.raw`(\$[\d,]+\.\d{2})`, testString: '$123.45' },
 				{
-					pattern: '(?:card|account)\\s+(?:number|#)[:\\s]*\\*{0,4}(\\d{4})',
+					pattern: String.raw`(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})`,
 					testString: 'card number: ****1234'
 				},
 				{
-					pattern: '(?:billing|statement)\\s+(?:period|cycle|date)[:\\s]*([^.\\n]+)',
+					pattern: String.raw`(?:billing|statement)\s+(?:period|cycle|date)[:\s]*([^.\n]+)`,
 					testString: 'billing period: January 2024'
 				}
 			];

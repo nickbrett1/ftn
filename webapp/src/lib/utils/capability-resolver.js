@@ -56,7 +56,7 @@ export function resolveDependencies(selectedCapabilities) {
 	}
 
 	return {
-		resolvedCapabilities: Array.from(resolvedCapabilities),
+		resolvedCapabilities: [...resolvedCapabilities],
 		addedDependencies,
 		conflicts,
 		isValid: conflicts.length === 0
@@ -180,7 +180,7 @@ export function getRequiredAuthServices(selectedCapabilities) {
 		}
 	}
 
-	return Array.from(services);
+	return [...services];
 }
 
 /**

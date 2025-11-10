@@ -9,7 +9,7 @@
 	interactivity();
 
 	// @ts-ignore - markerRef is managed by bind:ref
-	let markerRef = $state();
+	let markerReference = $state();
 	let pulseIntensity = $state(0.5);
 	let pulseDirection = $state(1);
 	let tooltip = null;
@@ -25,7 +25,7 @@
 			pointer-events: none;
 			font-family: 'Inter', sans-serif;
 		`;
-		document.body.appendChild(tooltip);
+		document.body.append(tooltip);
 
 		// Generate market data for this financial center
 		generateMarketData();
@@ -36,7 +36,7 @@
 
 	onDestroy(() => {
 		if (tooltip) {
-			document.body.removeChild(tooltip);
+			tooltip.remove();
 		}
 	});
 
@@ -46,25 +46,25 @@
 		marketData = marketTypes.map((type) => ({
 			type,
 			change: (Math.random() - 0.5) * 4, // -2% to +2%
-			volume: Math.random() * 1000000000 + 100000000 // 100M to 1.1B
+			volume: Math.random() * 1_000_000_000 + 100_000_000 // 100M to 1.1B
 		}));
 	}
 
 	function animate() {
-		if (!markerRef) return;
+		if (!markerReference) return;
 
 		// Pulse effect
 		pulseIntensity += pulseDirection * 0.02;
-		if (pulseIntensity >= 1.0) {
+		if (pulseIntensity >= 1) {
 			pulseDirection = -1;
 		} else if (pulseIntensity <= 0.3) {
 			pulseDirection = 1;
 		}
 
 		// Update material properties for dynamic effect
-		if (markerRef.material) {
-			markerRef.material.emissiveIntensity = pulseIntensity;
-			markerRef.material.opacity = 0.7 + pulseIntensity * 0.3;
+		if (markerReference.material) {
+			markerReference.material.emissiveIntensity = pulseIntensity;
+			markerReference.material.opacity = 0.7 + pulseIntensity * 0.3;
 		}
 
 		requestAnimationFrame(animate);
@@ -156,11 +156,7 @@
 	}
 
 	function getMarkerEmissive() {
-		if (center.marketSentiment >= 0) {
-			return '#00ff88';
-		} else {
-			return '#ff0088';
-		}
+		return center.marketSentiment >= 0 ? '#00ff88' : '#ff0088';
 	}
 
 	// Determine marker size based on market importance
@@ -173,7 +169,7 @@
 
 <!-- Financial center marker positioned on the globe -->
 <T.Mesh
-	bind:ref={markerRef}
+	bind:ref={markerReference}
 	position={getGlobePosition()}
 	userData={center}
 	onPointerMove={handlePointerMove}

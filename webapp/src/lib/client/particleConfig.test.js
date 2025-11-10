@@ -22,23 +22,23 @@ describe('ParticleConfig', () => {
 		it('should generate positive percentage values', () => {
 			const values = generatePercentageValues(5, true);
 			expect(values).toHaveLength(5);
-			values.forEach((value) => {
+			for (const value of values) {
 				expect(value).toMatch(/^\+[\d.]+%$/);
-				const numValue = parseFloat(value.slice(1, -1));
-				expect(numValue).toBeGreaterThanOrEqual(0);
-				expect(numValue).toBeLessThanOrEqual(15);
-			});
+				const numberValue = Number.parseFloat(value.slice(1, -1));
+				expect(numberValue).toBeGreaterThanOrEqual(0);
+				expect(numberValue).toBeLessThanOrEqual(15);
+			}
 		});
 
 		it('should generate negative percentage values', () => {
 			const values = generatePercentageValues(5, false);
 			expect(values).toHaveLength(5);
-			values.forEach((value) => {
+			for (const value of values) {
 				expect(value).toMatch(/^-[\d.]+%$/);
-				const numValue = parseFloat(value.slice(1, -1));
-				expect(numValue).toBeGreaterThanOrEqual(0);
-				expect(numValue).toBeLessThanOrEqual(15);
-			});
+				const numberValue = Number.parseFloat(value.slice(1, -1));
+				expect(numberValue).toBeGreaterThanOrEqual(0);
+				expect(numberValue).toBeLessThanOrEqual(15);
+			}
 		});
 
 		it('should generate default number of values', () => {
@@ -194,14 +194,14 @@ describe('ParticleConfig', () => {
 			const errorConfig = createErrorParticleConfig();
 			const authConfig = createAuthParticleConfig();
 
-			[financialConfig, errorConfig, authConfig].forEach((config) => {
+			for (const config of [financialConfig, errorConfig, authConfig]) {
 				expect(config).toHaveProperty('fullScreen.enable', true);
 				expect(config).toHaveProperty('fpsLimit', 60);
 				expect(config).toHaveProperty('detectRetina', true);
 				expect(config).toHaveProperty('interactivity.detect_on', 'canvas');
 				expect(config).toHaveProperty('interactivity.events.onClick.enable', false);
 				expect(config).toHaveProperty('interactivity.events.onHover.enable', true);
-			});
+			}
 		});
 	});
 
@@ -210,14 +210,14 @@ describe('ParticleConfig', () => {
 			const overrides = {
 				particles: {
 					number: { value: 5 },
-					opacity: { value: { min: 0.5, max: 1.0 } }
+					opacity: { value: { min: 0.5, max: 1 } }
 				}
 			};
 
 			const config = createFinancialParticleConfig(overrides);
 			expect(config.particles.number.value).toBe(5);
 			expect(config.particles.opacity.value.min).toBe(0.5);
-			expect(config.particles.opacity.value.max).toBe(1.0);
+			expect(config.particles.opacity.value.max).toBe(1);
 			// Should preserve other properties
 			expect(config.particles.shape.type).toBe('text');
 		});

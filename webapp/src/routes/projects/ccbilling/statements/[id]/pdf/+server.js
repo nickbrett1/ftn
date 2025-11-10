@@ -8,7 +8,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const statement_id = parseInt(params.id);
+	const statement_id = Number.parseInt(params.id);
 
 	if (isNaN(statement_id)) {
 		return json({ error: 'Invalid statement ID' }, { status: 400 });
@@ -33,7 +33,7 @@ export async function GET(event) {
 
 		// If not found, try with URL encoding (spaces become %20)
 		if (!pdfObject) {
-			const encodedKey = statement.r2_key.replace(/ /g, '%20');
+			const encodedKey = statement.r2_key.replaceAll(' ', '%20');
 			pdfObject = await bucket.get(encodedKey);
 		}
 

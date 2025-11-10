@@ -5,12 +5,14 @@ import globals from 'globals';
 import security from 'eslint-plugin-security';
 import tseslint from 'typescript-eslint';
 import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
 
 export default [
 	js.configs.recommended,
 	...tseslint.configs.recommended, // Added tseslint recommended configs
 	security.configs.recommended, // Apply security plugin recommended rules
 	sonarjs.configs.recommended,
+	unicorn.configs['flat/recommended'],
 	prettier,
 	...svelte.configs['flat/recommended'], // Svelte recommended configs
 	{

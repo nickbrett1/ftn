@@ -357,9 +357,9 @@ export class SonarCloudAPIService {
 		projectKey,
 		metrics = ['bugs', 'vulnerabilities', 'code_smells', 'coverage', 'duplicated_lines_density']
 	) {
-		const metricsParam = metrics.join(',');
+		const metricsParameter = metrics.join(',');
 		const response = await this.makeRequest(
-			`/measures/component?component=${projectKey}&metricKeys=${metricsParam}`
+			`/measures/component?component=${projectKey}&metricKeys=${metricsParameter}`
 		);
 		return response.json();
 	}

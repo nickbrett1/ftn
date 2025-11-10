@@ -25,21 +25,21 @@ function getGitInfo() {
 const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
-	const isDev = command === 'serve' && mode === 'development';
+	const isDevelopment = command === 'serve' && mode === 'development';
 	const plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
 		svelteTesting(),
 		imagetools({
-			defaultDirectives: isDev
+			defaultDirectives: isDevelopment
 				? new URLSearchParams(`?width=480&format=webp`) // Faster for dev
 				: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		})
 	];
 
 	// Cloudflare plugin doesn't work for production builds. It also is only needed for development to access D1, KV, etc...
-	if (isDev) {
+	if (isDevelopment) {
 		plugins.push(...cloudflare());
 	}
 	return {
@@ -61,7 +61,7 @@ export default defineConfig(({ command, mode }) => {
 			environment: 'jsdom',
 			// Add explicit setup and teardown to prevent race conditions
 			setupFiles: ['src/test-setup.js'],
-			teardownTimeout: 10000, // 10 seconds for cleanup
+			teardownTimeout: 10_000, // 10 seconds for cleanup
 			// Configure for Svelte 5
 			environmentOptions: {
 				jsdom: {
@@ -85,8 +85,8 @@ export default defineConfig(({ command, mode }) => {
 			},
 			server: {},
 			// Add timeout and memory optimizations
-			testTimeout: 30000,
-			hookTimeout: 30000,
+			testTimeout: 30_000,
+			hookTimeout: 30_000,
 			// Pool options for test execution
 			pool: 'forks',
 			poolOptions: {

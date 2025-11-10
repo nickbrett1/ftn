@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-const originalNodeEnv = process.env.NODE_ENV;
-const originalFetch = global.fetch;
+const originalNodeEnvironment = process.env.NODE_ENV;
+const originalFetch = globalThis.fetch;
 
 const createRedirectMock = () =>
 	vi.fn((status, location) => {
@@ -78,7 +78,7 @@ async function setupModule(options = {}) {
 		}
 	}));
 
-	global.fetch = vi.fn();
+	globalThis.fetch = vi.fn();
 
 	const module = await import('./+server.js');
 
@@ -96,8 +96,8 @@ async function setupModule(options = {}) {
 afterEach(() => {
 	delete process.env.GITHUB_CLIENT_ID;
 	delete process.env.GITHUB_CLIENT_SECRET;
-	process.env.NODE_ENV = originalNodeEnv;
-	global.fetch = originalFetch;
+	process.env.NODE_ENV = originalNodeEnvironment;
+	globalThis.fetch = originalFetch;
 	vi.resetModules();
 });
 
@@ -115,7 +115,7 @@ const createPlatform = (overrides = {}) => ({
 					repositoryUrl: null
 				})
 			),
-			delete: vi.fn().mockResolvedValue(undefined),
+			delete: vi.fn().mockResolvedValue(),
 			...overrides
 		}
 	}
@@ -136,7 +136,7 @@ describe('GitHub Auth API - Callback', () => {
 		// Mock initialize to resolve successfully
 		initializeMock.mockResolvedValue(true);
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123', scope: 'repo,user:email' })
 		});
 
@@ -148,11 +148,11 @@ describe('GitHub Auth API - Callback', () => {
 			location: 'https://example.com/projects/genproj?auth=github_success'
 		});
 
-		expect(global.fetch).toHaveBeenCalledWith(
+		expect(globalThis.fetch).toHaveBeenCalledWith(
 			'https://github.com/login/oauth/access_token',
 			expect.any(Object)
 		);
-		const [, fetchOptions] = global.fetch.mock.calls[0];
+		const [, fetchOptions] = globalThis.fetch.mock.calls[0];
 		const body = fetchOptions.body;
 		expect(body.get('code')).toBe('abc123');
 		expect(body.get('redirect_uri')).toBe(
@@ -245,7 +245,7 @@ describe('GitHub Auth API - Callback', () => {
 
 	it('redirects when token exchange returns an error', async () => {
 		const { GET } = await setupModule();
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			json: async () => ({ error: 'bad_verification_code' })
 		});
 
@@ -262,7 +262,7 @@ describe('GitHub Auth API - Callback', () => {
 
 	it('redirects when GitHub token validation fails', async () => {
 		const { GET, validateGitHubToken } = await setupModule();
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123' })
 		});
 		validateGitHubToken.mockResolvedValueOnce({ success: false, error: 'bad-token' });
@@ -280,7 +280,7 @@ describe('GitHub Auth API - Callback', () => {
 
 	it('redirects when Google authentication is missing', async () => {
 		const { GET, getCurrentUser } = await setupModule();
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123' })
 		});
 		getCurrentUser.mockResolvedValueOnce(null);
@@ -298,7 +298,7 @@ describe('GitHub Auth API - Callback', () => {
 
 	it('redirects when persistence fails', async () => {
 		const { GET, updateGitHubAuth } = await setupModule();
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			json: async () => ({ access_token: 'token-123' })
 		});
 		updateGitHubAuth.mockResolvedValueOnce(false);
@@ -329,7 +329,7 @@ describe('GitHub Auth API - Callback', () => {
 
 	it('redirects when token exchange request throws', async () => {
 		const { GET } = await setupModule();
-		global.fetch.mockRejectedValueOnce(new Error('Network failure'));
+		globalThis.fetch.mockRejectedValueOnce(new Error('Network failure'));
 
 		await expect(
 			GET({

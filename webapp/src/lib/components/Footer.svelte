@@ -20,7 +20,7 @@
 	let authCheckTimeout = $state(null);
 
 	// Check if this is a preview deployment
-	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
+	const isPreview = $derived(browser && globalThis.location.hostname.includes('preview'));
 
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
@@ -61,19 +61,19 @@
 			}
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
-				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
+				for (const tooltip of deploymentsTooltips) tooltip.destroy();
 			} else {
 				deploymentsTooltips.destroy();
 			}
 
 			if (Array.isArray(loginTooltips)) {
-				loginTooltips.forEach((tooltip) => tooltip.destroy());
+				for (const tooltip of loginTooltips) tooltip.destroy();
 			} else {
 				loginTooltips.destroy();
 			}
 
 			if (Array.isArray(genprojTooltips)) {
-				genprojTooltips.forEach((tooltip) => tooltip.destroy());
+				for (const tooltip of genprojTooltips) tooltip.destroy();
 			} else {
 				genprojTooltips.destroy();
 			}

@@ -457,7 +457,7 @@ export function getRequiredAuthServices(capabilities) {
 			services.add(capability.authService);
 		}
 	}
-	return Array.from(services);
+	return [...services];
 }
 
 /**

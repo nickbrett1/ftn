@@ -7,7 +7,7 @@ vi.mock('$lib/components/Button.svelte', () => ({
 	default: vi.fn().mockImplementation(({ children, onclick, class: className }) => {
 		const button = document.createElement('button');
 		button.textContent = children;
-		button.onclick = onclick || (() => {});
+		button.addEventListener('click', onclick || (() => {}));
 		if (className) button.className = className;
 		return button;
 	})
@@ -62,7 +62,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.0,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -82,7 +82,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 3,
 					merchant: 'Shell',
-					amount: 45.0,
+					amount: 45,
 					allocated_to: 'Transportation',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',
@@ -92,7 +92,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 				{
 					id: 4,
 					merchant: 'Target',
-					amount: 75.0,
+					amount: 75,
 					allocated_to: 'Shopping',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',
@@ -113,7 +113,7 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 		};
 
 		// Mock fetch for merchant info
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 	afterEach(() => {
@@ -283,8 +283,8 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			expect(document.body.textContent).toContain('Charges (2 of 4)');
 
 			// Click clear filter button
-			const clearButton = Array.from(document.querySelectorAll('button')).find((btn) =>
-				btn.textContent.includes('Clear Filter')
+			const clearButton = [...document.querySelectorAll('button')].find((button) =>
+				button.textContent.includes('Clear Filter')
 			);
 			expect(clearButton).toBeTruthy();
 			clearButton.click();
@@ -456,8 +456,8 @@ describe('Billing Cycle Page - Credit Card Filtering', () => {
 			);
 
 			// Find and click a card summary (they might be buttons or clickable elements)
-			const cardElements = Array.from(document.querySelectorAll('button, a, [onclick]')).filter(
-				(el) => el.textContent.includes('Chase Freedom')
+			const cardElements = [...document.querySelectorAll('button, a, [onclick]')].filter(
+				(element) => element.textContent.includes('Chase Freedom')
 			);
 
 			if (cardElements.length > 0) {

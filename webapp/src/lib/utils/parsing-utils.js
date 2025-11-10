@@ -2,7 +2,7 @@
  * Shared parsing utilities for credit card statement parsing
  * Eliminates duplication in parsing logic across different services
  */
-export class ParsingUtils {
+export const ParsingUtils = {
 	/**
 	 * Parse JSON response from API with error handling
 	 * @param {string} content - Raw JSON content
@@ -10,7 +10,7 @@ export class ParsingUtils {
 	 * @param {boolean} options.cleanMarkdown - Whether to clean markdown formatting (default: true)
 	 * @returns {Object} - Parsed JSON object
 	 */
-	static parseJSONResponse(content, options = {}) {
+	parseJSONResponse(content, options = {}) {
 		const { cleanMarkdown = true } = options;
 
 		if (!content || typeof content !== 'string') {
@@ -38,7 +38,7 @@ export class ParsingUtils {
 			console.error('Raw content:', content);
 			throw new Error(`JSON parsing failed: ${error.message}`);
 		}
-	}
+	},
 
 	/**
 	 * Validate parsed data against required fields
@@ -48,7 +48,7 @@ export class ParsingUtils {
 	 * @param {boolean} options.strict - Whether to throw error on missing fields (default: false)
 	 * @returns {boolean} - True if valid
 	 */
-	static validateParsedData(data, requiredFields = [], options = {}) {
+	validateParsedData(data, requiredFields = [], options = {}) {
 		const { strict = false } = options;
 
 		if (!data || typeof data !== 'object') {
@@ -69,7 +69,7 @@ export class ParsingUtils {
 		}
 
 		return true;
-	}
+	},
 
 	/**
 	 * Parse an amount string and convert to number
@@ -79,20 +79,20 @@ export class ParsingUtils {
 	 * @param {boolean} options.allowNegative - Whether to allow negative amounts (default: true)
 	 * @returns {number} - Parsed amount as number
 	 */
-	static parseAmount(amountStr, options = {}) {
+	parseAmount(amountString, options = {}) {
 		const { defaultValue = 0, allowNegative = true } = options;
 
-		if (!amountStr) return defaultValue;
+		if (!amountString) return defaultValue;
 
 		// Remove currency symbols, commas, and parentheses
-		let cleanAmount = amountStr.replace(/[$,()]/g, '');
+		let cleanAmount = amountString.replaceAll(/[$,()]/g, '');
 
 		// Handle negative amounts in parentheses
 		const isNegative =
 			cleanAmount.includes('(') || cleanAmount.includes(')') || cleanAmount.startsWith('-');
-		cleanAmount = cleanAmount.replace(/[()]/g, '');
+		cleanAmount = cleanAmount.replaceAll(/[()]/g, '');
 
-		const amount = parseFloat(cleanAmount);
+		const amount = Number.parseFloat(cleanAmount);
 
 		if (isNaN(amount)) {
 			return defaultValue;
@@ -107,7 +107,7 @@ export class ParsingUtils {
 		}
 
 		return finalAmount;
-	}
+	},
 
 	/**
 	 * Parse a date string and convert to YYYY-MM-DD format
@@ -118,30 +118,33 @@ export class ParsingUtils {
 	 * @param {boolean} options.strict - Whether to throw error on invalid dates (default: false)
 	 * @returns {string|null} - Date in YYYY-MM-DD format or null if invalid
 	 */
-	static parseDate(dateStr, options = {}) {
+	parseDate(dateString, options = {}) {
 		const { format = 'auto', defaultYear = new Date().getFullYear(), strict = false } = options;
 
-		if (!dateStr) return null;
+		if (!dateString) return null;
 
 		try {
 			let parsedDate;
 
 			switch (format) {
-				case 'MM/DD/YYYY':
-					parsedDate = this.parseMMDDYYYY(dateStr);
+				case 'MM/DD/YYYY': {
+					parsedDate = this.parseMMDDYYYY(dateString);
 					break;
-				case 'MM/DD/YY':
-					parsedDate = this.parseMMDDYY(dateStr);
+				}
+				case 'MM/DD/YY': {
+					parsedDate = this.parseMMDDYY(dateString);
 					break;
+				}
 				case 'auto':
-				default:
-					parsedDate = this.parseDateAuto(dateStr, defaultYear);
+				default: {
+					parsedDate = this.parseDateAuto(dateString, defaultYear);
 					break;
+				}
 			}
 
 			if (!parsedDate) {
 				if (strict) {
-					throw new Error(`Invalid date format: ${dateStr}`);
+					throw new Error(`Invalid date format: ${dateString}`);
 				}
 				return null;
 			}
@@ -153,54 +156,50 @@ export class ParsingUtils {
 			}
 			return null;
 		}
-	}
+	},
 
 	/**
 	 * Parse date in MM/DD/YYYY format
 	 * @param {string} dateStr - Date string
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
-	static parseMMDDYYYY(dateStr) {
-		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+	parseMMDDYYYY(dateString) {
+		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
 		if (!match) return null;
 
-		const month = parseInt(match[1], 10);
-		const day = parseInt(match[2], 10);
-		const year = parseInt(match[3], 10);
+		const month = Number.parseInt(match[1], 10);
+		const day = Number.parseInt(match[2], 10);
+		const year = Number.parseInt(match[3], 10);
 
 		if (month < 1 || month > 12 || day < 1 || day > 31) {
 			return null;
 		}
 
 		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-	}
+	},
 
 	/**
 	 * Parse date in MM/DD/YY format
 	 * @param {string} dateStr - Date string
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
-	static parseMMDDYY(dateStr) {
-		const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+	parseMMDDYY(dateString) {
+		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
 		if (!match) return null;
 
-		const month = parseInt(match[1], 10);
-		const day = parseInt(match[2], 10);
-		let year = parseInt(match[3], 10);
+		const month = Number.parseInt(match[1], 10);
+		const day = Number.parseInt(match[2], 10);
+		let year = Number.parseInt(match[3], 10);
 
 		// Convert 2-digit year to 4-digit year
-		if (year < 50) {
-			year += 2000;
-		} else {
-			year += 1900;
-		}
+		year += year < 50 ? 2000 : 1900;
 
 		if (month < 1 || month > 12 || day < 1 || day > 31) {
 			return null;
 		}
 
 		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-	}
+	},
 
 	/**
 	 * Auto-detect and parse date format
@@ -208,17 +207,17 @@ export class ParsingUtils {
 	 * @param {number} defaultYear - Default year
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
-	static parseDateAuto(dateStr, defaultYear) {
+	parseDateAuto(dateString, defaultYear) {
 		// Try different formats
 		const formats = [
-			() => this.parseMMDDYYYY(dateStr),
-			() => this.parseMMDDYY(dateStr),
+			() => this.parseMMDDYYYY(dateString),
+			() => this.parseMMDDYY(dateString),
 			() => {
 				// Try parsing MM/DD format (common in credit card statements)
-				const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
+				const mmddMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
 				if (mmddMatch) {
-					const month = parseInt(mmddMatch[1], 10);
-					const day = parseInt(mmddMatch[2], 10);
+					const month = Number.parseInt(mmddMatch[1], 10);
+					const day = Number.parseInt(mmddMatch[2], 10);
 
 					if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
 						return `${defaultYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -228,9 +227,9 @@ export class ParsingUtils {
 			},
 			() => {
 				// Try parsing as ISO date (only if it's not MM/DD format)
-				const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
+				const mmddMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
 				if (!mmddMatch) {
-					const date = new Date(dateStr);
+					const date = new Date(dateString);
 					if (!isNaN(date.getTime())) {
 						return date.toISOString().split('T')[0];
 					}
@@ -247,7 +246,7 @@ export class ParsingUtils {
 		}
 
 		return null;
-	}
+	},
 
 	/**
 	 * Clean and validate merchant name
@@ -257,7 +256,7 @@ export class ParsingUtils {
 	 * @param {boolean} options.normalizeCase - Normalize case (default: true)
 	 * @returns {string} - Cleaned merchant name
 	 */
-	static cleanMerchantName(merchantName, options = {}) {
+	cleanMerchantName(merchantName, options = {}) {
 		const { removeCommonSuffixes = true, normalizeCase = true } = options;
 
 		if (!merchantName || typeof merchantName !== 'string') {
@@ -285,11 +284,11 @@ export class ParsingUtils {
 
 		// Normalize case
 		if (normalizeCase) {
-			cleaned = cleaned.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+			cleaned = cleaned.toLowerCase().replaceAll(/\b\w/g, (l) => l.toUpperCase());
 		}
 
 		return cleaned.trim();
-	}
+	},
 
 	/**
 	 * Extract numeric value from string
@@ -298,22 +297,22 @@ export class ParsingUtils {
 	 * @param {number} options.defaultValue - Default value if extraction fails (default: 0)
 	 * @returns {number} - Extracted numeric value
 	 */
-	static extractNumeric(str, options = {}) {
+	extractNumeric(string_, options = {}) {
 		const { defaultValue = 0 } = options;
 
-		if (!str || typeof str !== 'string') {
+		if (!string_ || typeof string_ !== 'string') {
 			return defaultValue;
 		}
 
 		// Match numbers with optional commas and decimals
-		const match = str.match(/\d{1,3}(?:,\d{3})*(?:\.\d+)?/);
+		const match = string_.match(/\d{1,3}(?:,\d{3})*(?:\.\d+)?/);
 		if (!match) {
 			return defaultValue;
 		}
 
 		// Remove commas and parse
-		const cleanValue = match[0].replace(/,/g, '');
-		const value = parseFloat(cleanValue);
+		const cleanValue = match[0].replaceAll(',', '');
+		const value = Number.parseFloat(cleanValue);
 		return isNaN(value) ? defaultValue : value;
 	}
-}
+};

@@ -85,7 +85,7 @@ describe('Genproj Authentication Workflow', () => {
 
 	beforeEach(() => {
 		container = document.createElement('div');
-		document.body.appendChild(container);
+		document.body.append(container);
 		vi.clearAllMocks();
 		gotoMock.mockClear(); // Clear mock calls before each test
 	});
@@ -130,8 +130,8 @@ describe('Genproj Authentication Workflow', () => {
 		// Select a capability to enable the generate button
 		const checkboxes = document.querySelectorAll('[data-testid="capability-checkbox"]');
 		expect(checkboxes.length).toBeGreaterThan(0);
-		const nodeCheckbox = Array.from(checkboxes).find(
-			(cb) => cb.dataset.capabilityId === 'devcontainer-node'
+		const nodeCheckbox = [...checkboxes].find(
+			(callback) => callback.dataset.capabilityId === 'devcontainer-node'
 		);
 		if (nodeCheckbox) {
 			nodeCheckbox.click();
@@ -158,7 +158,7 @@ describe('Genproj Authentication Workflow', () => {
 	});
 
 	it('should show auth flow when authenticated user tries to generate', async () => {
-		const authenticatedProps = {
+		const authenticatedProperties = {
 			data: {
 				isAuthenticated: true,
 				capabilities: mockCapabilities,
@@ -166,7 +166,7 @@ describe('Genproj Authentication Workflow', () => {
 			}
 		};
 
-		component = mount(GenprojPage, { target: container, props: authenticatedProps });
+		component = mount(GenprojPage, { target: container, props: authenticatedProperties });
 		await waitForNextTick();
 
 		// Set up project name
@@ -189,7 +189,7 @@ describe('Genproj Authentication Workflow', () => {
 	});
 
 	it('should redirect to GitHub OAuth when GitHub auth button is clicked', async () => {
-		const authenticatedProps = {
+		const authenticatedProperties = {
 			data: {
 				isAuthenticated: true,
 				capabilities: mockCapabilities,
@@ -211,7 +211,7 @@ describe('Genproj Authentication Workflow', () => {
 			writable: true
 		});
 
-		component = mount(GenprojPage, { target: container, props: authenticatedProps });
+		component = mount(GenprojPage, { target: container, props: authenticatedProperties });
 		await waitForNextTick();
 
 		// This test would require the AuthFlow component to be shown and GitHub button clicked
@@ -220,7 +220,7 @@ describe('Genproj Authentication Workflow', () => {
 	});
 
 	it('should handle external service token authentication', async () => {
-		const authenticatedProps = {
+		const authenticatedProperties = {
 			data: {
 				isAuthenticated: true,
 				capabilities: mockCapabilities,
@@ -239,7 +239,7 @@ describe('Genproj Authentication Workflow', () => {
 				})
 		});
 
-		component = mount(GenprojPage, { target: container, props: authenticatedProps });
+		component = mount(GenprojPage, { target: container, props: authenticatedProperties });
 		await waitForNextTick();
 
 		// Verify component renders
@@ -248,7 +248,7 @@ describe('Genproj Authentication Workflow', () => {
 	});
 
 	it('should display authentication status for required services', async () => {
-		const authenticatedProps = {
+		const authenticatedProperties = {
 			data: {
 				isAuthenticated: true,
 				capabilities: mockCapabilities,
@@ -256,7 +256,7 @@ describe('Genproj Authentication Workflow', () => {
 			}
 		};
 
-		component = mount(GenprojPage, { target: container, props: authenticatedProps });
+		component = mount(GenprojPage, { target: container, props: authenticatedProperties });
 		await waitForNextTick();
 
 		// Verify component renders

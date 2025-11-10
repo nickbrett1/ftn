@@ -23,8 +23,8 @@
 			} else {
 				error = `Failed to fetch deployments: ${response.status} ${response.statusText}`;
 			}
-		} catch (e) {
-			error = 'Error fetching deployments: ' + e.message;
+		} catch (error_) {
+			error = 'Error fetching deployments: ' + error_.message;
 		} finally {
 			loading = false;
 		}
@@ -40,17 +40,17 @@
 		stopAutoRefresh();
 	});
 
-	function handleFetchError(err) {
-		if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
-			if (err.message.includes('CORS')) {
+	function handleFetchError(error_) {
+		if (error_.name === 'TypeError' && error_.message.includes('Failed to fetch')) {
+			if (error_.message.includes('CORS')) {
 				return 'CORS error: Worker does not allow cross-origin requests';
 			}
-			if (err.message.includes('net::ERR_CONNECTION_REFUSED')) {
+			if (error_.message.includes('net::ERR_CONNECTION_REFUSED')) {
 				return 'Connection refused: Worker may be down or endpoint not available';
 			}
 			return 'Network error: Unable to reach worker';
 		}
-		return `Failed to fetch worker info: ${err.message}`;
+		return `Failed to fetch worker info: ${error_.message}`;
 	}
 
 	async function fetchWorkerInfoForDeployments() {
@@ -73,8 +73,8 @@
 					} else {
 						deployment.workerInfoError = `Failed to fetch worker info: ${response.status} ${response.statusText}`;
 					}
-				} catch (err) {
-					deployment.workerInfoError = handleFetchError(err);
+				} catch (error_) {
+					deployment.workerInfoError = handleFetchError(error_);
 				}
 			}
 		} finally {
@@ -117,16 +117,16 @@
 	}
 
 	async function requestNotificationPermission() {
-		if ('Notification' in window && Notification.permission === 'default') {
+		if ('Notification' in globalThis && Notification.permission === 'default') {
 			await Notification.requestPermission();
 		}
 	}
 
 	function updatePageUrl() {
 		if (!loading && !error && deployments.length > 0) {
-			const url = new URL(window.location);
+			const url = new URL(globalThis.location);
 			url.searchParams.set('deployments', deployments.length.toString());
-			window.history.replaceState({}, '', url);
+			globalThis.history.replaceState({}, '', url);
 			document.title = `🚀 ${deployments.length} Deployments - Fintech Nick`;
 		}
 	}
@@ -142,7 +142,7 @@
 
 	function getDetailedTimeDifference(timestamp) {
 		if (!timestamp) return '';
-		const diffInMinutes = Math.floor((new Date() - new Date(timestamp)) / (1000 * 60));
+		const diffInMinutes = Math.floor((Date.now() - new Date(timestamp)) / (1000 * 60));
 
 		if (diffInMinutes < 1) return 'just now';
 		if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;

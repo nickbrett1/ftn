@@ -3,7 +3,7 @@ import { mount, unmount, flushSync } from 'svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('MerchantPicker', () => {
 	const mockOnSelect = vi.fn();
@@ -392,8 +392,8 @@ describe('MerchantPicker', () => {
 
 		// Simulate multiple DOM updates
 		const select = document.querySelector('select');
-		for (let i = 0; i < 5; i++) {
-			select.value = mockMerchants[i % mockMerchants.length];
+		for (let index = 0; index < 5; index++) {
+			select.value = mockMerchants[index % mockMerchants.length];
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 			flushSync();
 		}
@@ -493,8 +493,8 @@ describe('MerchantPicker', () => {
 		// In Svelte 5, we can only test by selecting values via the UI
 		// Rapidly change the select value
 		const select = document.querySelector('select');
-		for (let i = 0; i < 10; i++) {
-			select.value = mockMerchants[i % mockMerchants.length];
+		for (let index = 0; index < 10; index++) {
+			select.value = mockMerchants[index % mockMerchants.length];
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 			flushSync();
 		}

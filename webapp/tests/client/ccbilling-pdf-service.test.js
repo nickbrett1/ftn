@@ -24,20 +24,20 @@ vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
 
 describe('PDFService', () => {
 	let pdfService;
-	let mockPDFUtils;
+	let mockPDFUtilities;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 
 		// Get the mocked modules
-		const pdfUtilsModule = await import('../../src/lib/client/pdf-utils.js');
+		const pdfUtilitiesModule = await import('../../src/lib/client/pdf-utils.js');
 		await import('../../src/lib/utils/ccbilling-parsers/parser-factory.js');
 
-		mockPDFUtils = pdfUtilsModule.PDFUtils;
+		mockPDFUtilities = pdfUtilitiesModule.PDFUtils;
 
 		// Reset mock implementations to default behavior
-		mockPDFUtils.validatePDFFile.mockImplementation(() => {});
-		mockPDFUtils.parseStatement.mockResolvedValue({ success: true });
+		mockPDFUtilities.validatePDFFile.mockImplementation(() => {});
+		mockPDFUtilities.parseStatement.mockResolvedValue({ success: true });
 
 		pdfService = new PDFService();
 	});
@@ -48,7 +48,7 @@ describe('PDFService', () => {
 
 	describe('constructor', () => {
 		it('should initialize with ParserFactory and configure PDF worker', () => {
-			expect(mockPDFUtils.configureWorker).toHaveBeenCalledWith();
+			expect(mockPDFUtilities.configureWorker).toHaveBeenCalledWith();
 			expect(pdfService.parserFactory).toBeDefined();
 		});
 	});
@@ -63,7 +63,7 @@ describe('PDFService', () => {
 			});
 
 			// Mock successful parsing
-			mockPDFUtils.parseStatement.mockResolvedValue({
+			mockPDFUtilities.parseStatement.mockResolvedValue({
 				provider: 'Chase',
 				charges: [
 					{ merchant: 'Walmart', amount: 45.67, date: '2024-01-15' },
@@ -79,8 +79,8 @@ describe('PDFService', () => {
 		it('should successfully parse a valid PDF file', async () => {
 			const result = await pdfService.parseStatement(mockPdfFile);
 
-			expect(mockPDFUtils.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
-			expect(mockPDFUtils.parseStatement).toHaveBeenCalledWith(
+			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
+			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
 				mockPdfFile,
 				pdfService.parserFactory,
 				{
@@ -104,7 +104,7 @@ describe('PDFService', () => {
 
 		it('should throw error when PDF validation fails', async () => {
 			const validationError = new Error('Invalid PDF file format');
-			mockPDFUtils.validatePDFFile.mockImplementation(() => {
+			mockPDFUtilities.validatePDFFile.mockImplementation(() => {
 				throw validationError;
 			});
 
@@ -112,31 +112,31 @@ describe('PDFService', () => {
 				'PDF parsing failed: Invalid PDF file format'
 			);
 
-			expect(mockPDFUtils.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
-			expect(mockPDFUtils.parseStatement).not.toHaveBeenCalled();
+			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
+			expect(mockPDFUtilities.parseStatement).not.toHaveBeenCalled();
 		});
 
 		it('should throw error when PDF parsing fails', async () => {
 			const parsingError = new Error('Failed to extract text from PDF');
-			mockPDFUtils.parseStatement.mockRejectedValue(parsingError);
+			mockPDFUtilities.parseStatement.mockRejectedValue(parsingError);
 
 			await expect(pdfService.parseStatement(mockPdfFile)).rejects.toThrow(
 				'PDF parsing failed: Failed to extract text from PDF'
 			);
 
-			expect(mockPDFUtils.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
-			expect(mockPDFUtils.parseStatement).toHaveBeenCalled();
+			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
+			expect(mockPDFUtilities.parseStatement).toHaveBeenCalled();
 		});
 
 		it('should handle null or undefined PDF file', async () => {
-			mockPDFUtils.validatePDFFile.mockImplementation(() => {
+			mockPDFUtilities.validatePDFFile.mockImplementation(() => {
 				throw new Error('No PDF file provided');
 			});
 
 			await expect(pdfService.parseStatement(null)).rejects.toThrow(
 				'PDF parsing failed: No PDF file provided'
 			);
-			await expect(pdfService.parseStatement(undefined)).rejects.toThrow(
+			await expect(pdfService.parseStatement()).rejects.toThrow(
 				'PDF parsing failed: No PDF file provided'
 			);
 		});
@@ -144,7 +144,7 @@ describe('PDFService', () => {
 		it('should handle non-File objects', async () => {
 			const invalidFile = { name: 'test.pdf', type: 'application/pdf' };
 
-			mockPDFUtils.validatePDFFile.mockImplementation(() => {
+			mockPDFUtilities.validatePDFFile.mockImplementation(() => {
 				throw new Error('Invalid PDF file format');
 			});
 
@@ -156,7 +156,7 @@ describe('PDFService', () => {
 		it('should pass correct options to parseStatement', async () => {
 			await pdfService.parseStatement(mockPdfFile);
 
-			expect(mockPDFUtils.parseStatement).toHaveBeenCalledWith(
+			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
 				mockPdfFile,
 				pdfService.parserFactory,
 				{
@@ -194,7 +194,7 @@ describe('PDFService', () => {
 			});
 
 			const originalError = new Error('Original error message');
-			mockPDFUtils.parseStatement.mockRejectedValue(originalError);
+			mockPDFUtilities.parseStatement.mockRejectedValue(originalError);
 
 			await expect(pdfService.parseStatement(mockPdfFile)).rejects.toThrow(
 				'PDF parsing failed: Original error message'
@@ -211,7 +211,7 @@ describe('PDFService', () => {
 
 			const originalError = new Error();
 			originalError.message = undefined;
-			mockPDFUtils.parseStatement.mockRejectedValue(originalError);
+			mockPDFUtilities.parseStatement.mockRejectedValue(originalError);
 
 			await expect(pdfService.parseStatement(mockPdfFile)).rejects.toThrow(
 				'PDF parsing failed: undefined'
@@ -237,13 +237,13 @@ describe('PDFService', () => {
 				}
 			};
 
-			mockPDFUtils.parseStatement.mockResolvedValue(expectedResult);
+			mockPDFUtilities.parseStatement.mockResolvedValue(expectedResult);
 
 			const result = await pdfService.parseStatement(mockPdfFile);
 
 			expect(result).toEqual(expectedResult);
-			expect(mockPDFUtils.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
-			expect(mockPDFUtils.parseStatement).toHaveBeenCalledWith(
+			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
+			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
 				mockPdfFile,
 				pdfService.parserFactory,
 				{
@@ -261,7 +261,7 @@ describe('PDFService', () => {
 				type: 'application/pdf'
 			});
 
-			mockPDFUtils.parseStatement
+			mockPDFUtilities.parseStatement
 				.mockResolvedValueOnce({ provider: 'Chase', charges: [] })
 				.mockResolvedValueOnce({ provider: 'Amex', charges: [] });
 
@@ -270,7 +270,7 @@ describe('PDFService', () => {
 
 			expect(result1).toEqual({ provider: 'Chase', charges: [] });
 			expect(result2).toEqual({ provider: 'Amex', charges: [] });
-			expect(mockPDFUtils.parseStatement).toHaveBeenCalledTimes(2);
+			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledTimes(2);
 		});
 	});
 });

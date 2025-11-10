@@ -8,9 +8,9 @@ export async function GET(event) {
 	const { id } = event.params;
 	const cycle = await getBillingCycle(event, id);
 	if (!cycle) {
-		return new Response(JSON.stringify({ error: 'Billing cycle not found' }), { status: 404 });
+		return Response.json({ error: 'Billing cycle not found' }, { status: 404 });
 	}
-	return new Response(JSON.stringify(cycle), {
+	return Response.json(cycle, {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }

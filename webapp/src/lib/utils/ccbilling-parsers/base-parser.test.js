@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BaseParser } from './base-parser.js';
-import { ParsingUtils } from '../parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../parsing-utils.js';
 
 describe('BaseParser', () => {
 	let parser;
@@ -31,7 +31,7 @@ describe('BaseParser', () => {
 		});
 
 		it('should use ParsingUtils.parseDate', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseDate');
+			const spy = vi.spyOn(ParsingUtilities, 'parseDate');
 			parser.parseDate('01/15');
 			expect(spy).toHaveBeenCalledWith('01/15', {});
 			spy.mockRestore();
@@ -57,7 +57,7 @@ describe('BaseParser', () => {
 		});
 
 		it('should use ParsingUtils.parseAmount', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseAmount');
+			const spy = vi.spyOn(ParsingUtilities, 'parseAmount');
 			parser.parseAmount('$123.45');
 			expect(spy).toHaveBeenCalledWith('$123.45', {});
 			spy.mockRestore();
@@ -103,7 +103,7 @@ describe('BaseParser', () => {
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
-			const spy = vi.spyOn(ParsingUtils, 'validateParsedData');
+			const spy = vi.spyOn(ParsingUtilities, 'validateParsedData');
 			const data = { last4: '1234', statement_date: '2024-01-15', charges: [] };
 			parser.validateParsedData(data);
 			expect(spy).toHaveBeenCalledWith(data, ['last4', 'statement_date', 'charges'], {});
@@ -181,7 +181,7 @@ describe('BaseParser', () => {
 
 	describe('parseJSONResponse', () => {
 		it('should use ParsingUtils.parseJSONResponse', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseJSONResponse');
+			const spy = vi.spyOn(ParsingUtilities, 'parseJSONResponse');
 			parser.parseJSONResponse('{"test": "data"}');
 			expect(spy).toHaveBeenCalledWith('{"test": "data"}', {});
 			spy.mockRestore();
@@ -190,7 +190,7 @@ describe('BaseParser', () => {
 
 	describe('cleanMerchantName', () => {
 		it('should use ParsingUtils.cleanMerchantName', () => {
-			const spy = vi.spyOn(ParsingUtils, 'cleanMerchantName');
+			const spy = vi.spyOn(ParsingUtilities, 'cleanMerchantName');
 			parser.cleanMerchantName('Test Merchant LLC');
 			expect(spy).toHaveBeenCalledWith('Test Merchant LLC', {});
 			spy.mockRestore();
@@ -199,7 +199,7 @@ describe('BaseParser', () => {
 
 	describe('extractNumeric', () => {
 		it('should use ParsingUtils.extractNumeric', () => {
-			const spy = vi.spyOn(ParsingUtils, 'extractNumeric');
+			const spy = vi.spyOn(ParsingUtilities, 'extractNumeric');
 			parser.extractNumeric('Amount: $123.45');
 			expect(spy).toHaveBeenCalledWith('Amount: $123.45', {});
 			spy.mockRestore();

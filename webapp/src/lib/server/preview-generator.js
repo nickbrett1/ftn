@@ -191,26 +191,27 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @returns {Array<ExternalService>} Array of external service changes
  */
 function generateExternalServiceChanges(projectConfig, executionOrder) {
-	const services = [];
+	const services = [
+		{
+			type: 'github',
+			name: 'GitHub Repository',
+			actions: [
+				{
+					type: 'create',
+					description: projectConfig.repositoryUrl
+						? `Link to existing repository: ${projectConfig.repositoryUrl}`
+						: `Create new repository: ${projectConfig.name}`
+				},
+				{
+					type: 'configure',
+					description: `Set repository visibility: ${projectConfig.isPrivate ? 'Private' : 'Public'}`
+				}
+			],
+			requiresAuth: true
+		}
+	];
 
 	// GitHub service (always required)
-	services.push({
-		type: 'github',
-		name: 'GitHub Repository',
-		actions: [
-			{
-				type: 'create',
-				description: projectConfig.repositoryUrl
-					? `Link to existing repository: ${projectConfig.repositoryUrl}`
-					: `Create new repository: ${projectConfig.name}`
-			},
-			{
-				type: 'configure',
-				description: `Set repository visibility: ${projectConfig.isPrivate ? 'Private' : 'Public'}`
-			}
-		],
-		requiresAuth: true
-	});
 
 	// Generate service changes for each capability
 	for (const capabilityId of executionOrder) {

@@ -70,14 +70,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -87,14 +87,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -104,14 +104,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -145,14 +145,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 

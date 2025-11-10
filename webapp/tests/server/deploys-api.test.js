@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
-const originalFetch = global.fetch;
+const originalFetch = globalThis.fetch;
 
 const createJsonResponse = (data, init = {}) =>
-	new Response(JSON.stringify(data), {
+	Response.json(data, {
 		status: init.status ?? 200,
 		headers: {
 			'Content-Type': 'application/json'
@@ -13,7 +13,7 @@ const createJsonResponse = (data, init = {}) =>
 describe('Deploys API route', () => {
 	beforeEach(() => {
 		vi.resetModules();
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 	afterEach(() => {
@@ -21,12 +21,12 @@ describe('Deploys API route', () => {
 	});
 
 	afterAll(() => {
-		global.fetch = originalFetch;
+		globalThis.fetch = originalFetch;
 	});
 
-	const loadModule = async (envValues) => {
+	const loadModule = async (environmentValues) => {
 		vi.doMock('$env/dynamic/private', () => ({
-			env: envValues
+			env: environmentValues
 		}));
 
 		return import('../../src/routes/api/deploys/+server.js');
@@ -57,7 +57,7 @@ describe('Deploys API route', () => {
 			CLOUDFLARE_DEPLOYS_TOKEN: apiToken
 		});
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce(
 				createJsonResponse({
 					success: true,
@@ -128,7 +128,7 @@ describe('Deploys API route', () => {
 			CLOUDFLARE_DEPLOYS_TOKEN: 'token'
 		});
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce(
 				createJsonResponse({
 					success: true,
@@ -179,7 +179,7 @@ describe('Deploys API route', () => {
 			CLOUDFLARE_DEPLOYS_TOKEN: apiToken
 		});
 
-		global.fetch.mockResolvedValueOnce(
+		globalThis.fetch.mockResolvedValueOnce(
 			new Response('Service unavailable', {
 				status: 503,
 				statusText: 'Service Unavailable'

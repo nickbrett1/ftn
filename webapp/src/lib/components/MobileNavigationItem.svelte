@@ -14,7 +14,7 @@
 			});
 
 			// Update URL hash
-			window.history.pushState(null, '', `#${targetId}`);
+			globalThis.history.pushState(null, '', `#${targetId}`);
 		}
 
 		// Close the mobile menu immediately

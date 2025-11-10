@@ -96,12 +96,12 @@ export class DopplerAPIService {
 	 * @returns {Promise<Object>} Projects information
 	 */
 	async listProjects(page = 1, perPage = 20) {
-		const params = new URLSearchParams({
+		const parameters = new URLSearchParams({
 			page: page.toString(),
 			per_page: perPage.toString()
 		});
 
-		const response = await this.makeRequest(`/projects?${params.toString()}`);
+		const response = await this.makeRequest(`/projects?${parameters.toString()}`);
 		return response.json();
 	}
 
@@ -313,13 +313,13 @@ export class DopplerAPIService {
 	 * @returns {Promise<Object>} Activity logs
 	 */
 	async getActivityLogs(projectSlug, page = 1, perPage = 20) {
-		const params = new URLSearchParams({
+		const parameters = new URLSearchParams({
 			page: page.toString(),
 			per_page: perPage.toString()
 		});
 
 		const response = await this.makeRequest(
-			`/projects/${projectSlug}/activity?${params.toString()}`
+			`/projects/${projectSlug}/activity?${parameters.toString()}`
 		);
 		return response.json();
 	}

@@ -13,7 +13,7 @@ vi.mock(
 	{ virtual: true }
 );
 
-async function setup({ savedMode = null } = {}) {
+async function setup({ savedMode = undefined } = {}) {
 	vi.resetModules();
 
 	globalThis.localStorage = {

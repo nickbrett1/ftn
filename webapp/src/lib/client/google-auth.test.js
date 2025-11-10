@@ -47,17 +47,17 @@ describe('Google Auth Utils', () => {
 
 	describe('getRedirectUri', () => {
 		it('should return development URI in development environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'development';
 
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
 
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return production URI in production environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
 
 			// Mock browser environment for production test
@@ -79,11 +79,11 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return preview URI for preview deployments', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
 
 			// Mock browser environment for preview deployment
@@ -105,7 +105,7 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 	});
 

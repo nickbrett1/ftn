@@ -23,10 +23,10 @@ vi.mock('$app/stores', () => ({
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 // Mock window.alert
-global.alert = vi.fn();
+globalThis.alert = vi.fn();
 
 describe('Budget Page - Merchant Removal', () => {
 	let component;
@@ -107,8 +107,8 @@ describe('Budget Page - Merchant Removal', () => {
 		);
 
 		// Find the Remove button
-		const removeButtons = Array.from(document.querySelectorAll('button')).filter((btn) =>
-			btn.textContent.includes('Remove')
+		const removeButtons = [...document.querySelectorAll('button')].filter((button) =>
+			button.textContent.includes('Remove')
 		);
 
 		if (removeButtons.length > 0) {
@@ -156,8 +156,8 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(select.value).toBe('walmart');
 
 		// Find and click the Add Merchant button
-		const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
-			btn.textContent.includes('Add Merchant')
+		const addButton = [...document.querySelectorAll('button')].find((button) =>
+			button.textContent.includes('Add Merchant')
 		);
 
 		if (addButton) {
@@ -203,8 +203,8 @@ describe('Budget Page - Merchant Removal', () => {
 		);
 
 		const select = document.querySelector('select');
-		const addButton = Array.from(document.querySelectorAll('button')).find((btn) =>
-			btn.textContent.includes('Add Merchant')
+		const addButton = [...document.querySelectorAll('button')].find((button) =>
+			button.textContent.includes('Add Merchant')
 		);
 
 		// Simulate rapid user interactions

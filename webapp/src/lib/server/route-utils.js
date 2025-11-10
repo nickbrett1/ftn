@@ -5,19 +5,19 @@ import { requireUser } from './require-user.js';
  * Shared route utilities for server endpoints
  * Eliminates duplication in authentication, validation, and error handling
  */
-export class RouteUtils {
+export const RouteUtils = {
 	/**
 	 * Handle authentication for a route
 	 * @param {Object} event - SvelteKit event object
 	 * @returns {Object|Response} - User object or error response
 	 */
-	static async handleAuth(event) {
+	async handleAuth(event) {
 		const authResult = await requireUser(event);
 		if (authResult instanceof Response) {
 			return authResult;
 		}
 		return authResult;
-	}
+	},
 
 	/**
 	 * Validate route parameters
@@ -27,11 +27,11 @@ export class RouteUtils {
 	 * @param {Function} options.validators - Custom validators for each field
 	 * @returns {Object} - Validated parameters or error response
 	 */
-	static validateParams(params, requiredFields = [], options = {}) {
+	validateParams(parameters, requiredFields = [], options = {}) {
 		const { validators = {} } = options;
 
 		for (const field of requiredFields) {
-			if (!params[field]) {
+			if (!parameters[field]) {
 				return {
 					error: `Missing required parameter: ${field}`,
 					status: 400
@@ -40,7 +40,7 @@ export class RouteUtils {
 
 			// Apply custom validator if provided
 			if (validators[field]) {
-				const validationResult = validators[field](params[field]);
+				const validationResult = validators[field](parameters[field]);
 				if (validationResult !== true) {
 					return {
 						error: validationResult || `Invalid parameter: ${field}`,
@@ -50,8 +50,8 @@ export class RouteUtils {
 			}
 		}
 
-		return { success: true, params };
-	}
+		return { success: true, params: parameters };
+	},
 
 	/**
 	 * Parse and validate integer parameter
@@ -62,28 +62,28 @@ export class RouteUtils {
 	 * @param {number} [options.max] - Maximum value
 	 * @returns {number|string} - Parsed integer or error message
 	 */
-	static parseInteger(value, paramName, options = {}) {
+	parseInteger(value, parameterName, options = {}) {
 		const { min, max } = options;
 
 		if (!value) {
-			return `Missing required parameter: ${paramName}`;
+			return `Missing required parameter: ${parameterName}`;
 		}
 
-		const parsed = parseInt(value, 10);
+		const parsed = Number.parseInt(value, 10);
 		if (isNaN(parsed)) {
-			return `Invalid ${paramName}: must be a number`;
+			return `Invalid ${parameterName}: must be a number`;
 		}
 
 		if (min !== undefined && parsed < min) {
-			return `Invalid ${paramName}: must be at least ${min}`;
+			return `Invalid ${parameterName}: must be at least ${min}`;
 		}
 
 		if (max !== undefined && parsed > max) {
-			return `Invalid ${paramName}: must be at most ${max}`;
+			return `Invalid ${parameterName}: must be at most ${max}`;
 		}
 
 		return parsed;
-	}
+	},
 
 	/**
 	 * Handle errors in route handlers
@@ -94,7 +94,7 @@ export class RouteUtils {
 	 * @param {number} options.defaultStatus - Default HTTP status code (default: 500)
 	 * @returns {Response} - Error response
 	 */
-	static handleError(error, context = 'Unknown', options = {}) {
+	handleError(error, context = 'Unknown', options = {}) {
 		const { logError = true, defaultStatus = 500 } = options;
 
 		if (logError) {
@@ -105,7 +105,7 @@ export class RouteUtils {
 		const message = error.message || 'Internal server error';
 
 		return json({ error: message }, { status });
-	}
+	},
 
 	/**
 	 * Create a success response
@@ -115,7 +115,7 @@ export class RouteUtils {
 	 * @param {number} options.status - HTTP status code (default: 200)
 	 * @returns {Response} - Success response
 	 */
-	static createSuccessResponse(data, message = 'Success', options = {}) {
+	createSuccessResponse(data, message = 'Success', options = {}) {
 		const { status = 200 } = options;
 
 		return json(
@@ -126,7 +126,7 @@ export class RouteUtils {
 			},
 			{ status }
 		);
-	}
+	},
 
 	/**
 	 * Create an error response
@@ -136,7 +136,7 @@ export class RouteUtils {
 	 * @param {Object} options.data - Additional error data
 	 * @returns {Response} - Error response
 	 */
-	static createErrorResponse(message, options = {}) {
+	createErrorResponse(message, options = {}) {
 		const { status = 400, data = null } = options;
 
 		const response = {
@@ -149,7 +149,7 @@ export class RouteUtils {
 		}
 
 		return json(response, { status });
-	}
+	},
 
 	/**
 	 * Validate request body
@@ -159,7 +159,7 @@ export class RouteUtils {
 	 * @param {Function} options.validators - Custom validators for each field
 	 * @returns {Object} - Validation result
 	 */
-	static validateBody(body, requiredFields = [], options = {}) {
+	validateBody(body, requiredFields = [], options = {}) {
 		const { validators = {} } = options;
 
 		if (!body || typeof body !== 'object') {
@@ -190,7 +190,7 @@ export class RouteUtils {
 		}
 
 		return { success: true, body };
-	}
+	},
 
 	/**
 	 * Parse JSON request body with error handling
@@ -199,7 +199,7 @@ export class RouteUtils {
 	 * @param {number} options.maxSize - Maximum body size in bytes (default: 1MB)
 	 * @returns {Promise<Object>} - Parsed body or error
 	 */
-	static async parseRequestBody(request, options = {}) {
+	async parseRequestBody(request, options = {}) {
 		const { maxSize = 1024 * 1024 } = options; // 1MB default
 
 		try {
@@ -213,13 +213,13 @@ export class RouteUtils {
 
 			const body = await request.json();
 			return { success: true, body };
-		} catch (error) {
+		} catch {
 			return {
 				error: 'Invalid JSON in request body',
 				status: 400
 			};
 		}
-	}
+	},
 
 	/**
 	 * Create a standardized route handler wrapper
@@ -230,8 +230,12 @@ export class RouteUtils {
 	 * @param {boolean} options.requireAuth - Whether authentication is required (default: true)
 	 * @returns {Function} - Wrapped route handler
 	 */
-	static createRouteHandler(handler, options = {}) {
-		const { requiredParams = [], requiredBody = [], requireAuth = true } = options;
+	createRouteHandler(handler, options = {}) {
+		const {
+			requiredParams: requiredParameters = [],
+			requiredBody = [],
+			requireAuth = true
+		} = options;
 
 		return async (event) => {
 			try {
@@ -244,11 +248,15 @@ export class RouteUtils {
 				}
 
 				// Validate parameters first
-				if (requiredParams.length > 0) {
-					const paramValidation = this.validateParams(event.params, requiredParams, options);
-					if (!paramValidation.success) {
-						return this.createErrorResponse(paramValidation.error, {
-							status: paramValidation.status
+				if (requiredParameters.length > 0) {
+					const parameterValidation = this.validateParams(
+						event.params,
+						requiredParameters,
+						options
+					);
+					if (!parameterValidation.success) {
+						return this.createErrorResponse(parameterValidation.error, {
+							status: parameterValidation.status
 						});
 					}
 				}
@@ -272,14 +280,10 @@ export class RouteUtils {
 				}
 
 				// Call the actual handler with parsed body (if any)
-				if (requiredBody.length > 0) {
-					return await handler(event, parsedBody);
-				} else {
-					return await handler(event);
-				}
+				return await (requiredBody.length > 0 ? handler(event, parsedBody) : handler(event));
 			} catch (error) {
 				return this.handleError(error, handler.name);
 			}
 		};
 	}
-}
+};

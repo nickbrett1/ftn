@@ -3,7 +3,7 @@ import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte/sve
 import CardsPage from './+page.svelte';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
@@ -12,16 +12,16 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Mock location.reload
-Object.defineProperty(window, 'location', {
+Object.defineProperty(globalThis, 'location', {
 	value: { reload: vi.fn() },
 	writable: true
 });
 
 // Mock confirm
-global.confirm = vi.fn();
+globalThis.confirm = vi.fn();
 
 // Mock alert
-global.alert = vi.fn();
+globalThis.alert = vi.fn();
 
 describe.skip('Credit Cards Page - Svelte Coverage', () => {
 	const mockCreditCards = [

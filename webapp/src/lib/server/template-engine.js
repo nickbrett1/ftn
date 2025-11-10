@@ -54,16 +54,20 @@ export class TemplateEngineService {
 			// Helper to format project name for different contexts
 			formatProjectName: (projectName, format = 'kebab') => {
 				switch (format) {
-					case 'kebab':
+					case 'kebab': {
 						return projectName.toLowerCase().replaceAll(/[^a-z0-9]/g, '-');
-					case 'camel':
+					}
+					case 'camel': {
 						return projectName
 							.replaceAll(/[^a-zA-Z0-9]/g, '')
 							.replace(/^[a-z]/, (c) => c.toUpperCase());
-					case 'snake':
+					}
+					case 'snake': {
 						return projectName.toLowerCase().replaceAll(/[^a-z0-9]/g, '_');
-					default:
+					}
+					default: {
 						return projectName;
+					}
 				}
 			},
 
@@ -79,8 +83,8 @@ export class TemplateEngineService {
 				const randomBytes = new Uint8Array(length);
 				crypto.getRandomValues(randomBytes);
 				let result = '';
-				for (let i = 0; i < length; i++) {
-					result += chars.charAt(randomBytes[i] % chars.length);
+				for (let index = 0; index < length; index++) {
+					result += chars.charAt(randomBytes[index] % chars.length);
 				}
 				return result;
 			},
@@ -91,8 +95,8 @@ export class TemplateEngineService {
 			},
 
 			// Helper to capitalize first letter
-			capitalize: (str) => {
-				return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+			capitalize: (string_) => {
+				return string_ ? string_.charAt(0).toUpperCase() + string_.slice(1) : '';
 			},
 
 			// Helper to generate package.json dependencies
@@ -135,7 +139,7 @@ export class TemplateEngineService {
 
 			// Helper to generate devDependencies
 			generateDevDependencies: (capabilities) => {
-				const devDependencyMap = {
+				const developmentDependencyMap = {
 					sveltekit: {
 						'@sveltejs/adapter-auto': '^3.0.0',
 						'@sveltejs/kit': '^2.0.0',
@@ -161,14 +165,14 @@ export class TemplateEngineService {
 					}
 				};
 
-				const allDevDeps = {};
+				const allDevelopmentDeps = {};
 				for (const capability of capabilities) {
-					if (devDependencyMap[capability]) {
-						Object.assign(allDevDeps, devDependencyMap[capability]);
+					if (developmentDependencyMap[capability]) {
+						Object.assign(allDevelopmentDeps, developmentDependencyMap[capability]);
 					}
 				}
 
-				return JSON.stringify(allDevDeps, null, 2);
+				return JSON.stringify(allDevelopmentDeps, null, 2);
 			}
 		};
 	}
@@ -198,7 +202,7 @@ export class TemplateEngineService {
 	 * @returns {string} Processed template
 	 */
 	processTemplate(templateContent, context) {
-		if (templateContent == null) {
+		if (templateContent == undefined) {
 			return '';
 		}
 
@@ -241,14 +245,14 @@ export class TemplateEngineService {
 
 		const spaceIndex = tagContent.indexOf(' ');
 		const name = spaceIndex === -1 ? tagContent : tagContent.slice(0, spaceIndex);
-		const argsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
+		const argumentsString = spaceIndex === -1 ? '' : tagContent.slice(spaceIndex + 1).trim();
 		const helper = this.helpers[name];
-		const hasArgs = argsString.length > 0;
+		const hasArguments = argumentsString.length > 0;
 
-		if (helper && hasArgs) {
+		if (helper && hasArguments) {
 			try {
-				const parsedArgs = this.parseHelperArgs(argsString, context);
-				const helperResult = helper(...parsedArgs);
+				const parsedArguments = this.parseHelperArgs(argumentsString, context);
+				const helperResult = helper(...parsedArguments);
 				return helperResult === undefined ? '' : String(helperResult);
 			} catch (error) {
 				console.error(`❌ Template helper error: ${error.message}`);
@@ -267,7 +271,7 @@ export class TemplateEngineService {
 	 * @returns {*} Value at path or undefined
 	 */
 	getNestedValue(context, path) {
-		return path.split('.').reduce((obj, key) => obj?.[key], context);
+		return path.split('.').reduce((object, key) => object?.[key], context);
 	}
 
 	/**
@@ -276,31 +280,31 @@ export class TemplateEngineService {
 	 * @param {TemplateContext} context - Template context
 	 * @returns {Array} Parsed arguments
 	 */
-	parseHelperArgs(args, context) {
+	parseHelperArgs(arguments_, context) {
 		// Simple argument parsing - split by comma and trim
-		return args.split(',').map((arg) => {
-			arg = arg.trim();
+		return arguments_.split(',').map((argument) => {
+			argument = argument.trim();
 
 			// If it's a quoted string, remove quotes
 			if (
-				(arg.startsWith('"') && arg.endsWith('"')) ||
-				(arg.startsWith("'") && arg.endsWith("'"))
+				(argument.startsWith('"') && argument.endsWith('"')) ||
+				(argument.startsWith("'") && argument.endsWith("'"))
 			) {
-				return arg.slice(1, -1);
+				return argument.slice(1, -1);
 			}
 
 			// If it's a variable reference, resolve it
-			if (arg.startsWith('@')) {
-				return this.getNestedValue(context, arg.slice(1));
+			if (argument.startsWith('@')) {
+				return this.getNestedValue(context, argument.slice(1));
 			}
 
 			// Try to parse as number
-			if (!Number.isNaN(Number(arg))) {
-				return Number(arg);
+			if (!Number.isNaN(Number(argument))) {
+				return Number(argument);
 			}
 
 			// Return as string
-			return arg;
+			return argument;
 		});
 	}
 
@@ -372,7 +376,7 @@ export class TemplateEngineService {
 	 * @returns {string[]} Array of template names
 	 */
 	getTemplateNames() {
-		return Array.from(this.templates.keys());
+		return [...this.templates.keys()];
 	}
 
 	/**

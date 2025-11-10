@@ -284,9 +284,9 @@ function extractKindleDetails(merchant) {
 	// Clean up Kindle merchant name by removing service identifiers and phone numbers
 	const cleanedMerchant = merchant
 		.replace(/KINDLE\s+SVCS\*[A-Z0-9]+/i, 'KINDLE') // Remove service identifier like "N60LH2CQ0"
-		.replace(/\d{3}-\d{3}-\d{4}/g, '') // Remove phone numbers like "888-802-3080"
+		.replaceAll(/\d{3}-\d{3}-\d{4}/g, '') // Remove phone numbers like "888-802-3080"
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "WA"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -304,7 +304,7 @@ function extractMaidMarinesDetails(merchant) {
 		.replace(/MAIDMARINES\s+#\d+/i, 'MAIDMARINES') // Remove location number like "#1861813"
 		.replace(/MAIDMARINES\.C/i, 'MAIDMARINES') // Remove ".C" suffix
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -322,7 +322,7 @@ function extractJacadiDetails(merchant) {
 		.replace(/JACADI\s+#\d+/i, 'JACADI') // Remove store number like "#1710"
 		.replace(/\s+NEW\s+YORK/i, '') // Remove "NEW YORK" location
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -340,7 +340,7 @@ function extractBluemercuryDetails(merchant) {
 		.replace(/BLUEMERCURY\s+#\d+/i, 'BLUEMERCURY') // Remove store number like "#1710"
 		.replace(/\s+NEW\s+YORK/i, '') // Remove "NEW YORK" location
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -359,7 +359,7 @@ function extractGoogleCloudDetails(merchant) {
 		.replace(/GOOGLE\s*\*\s*CLOUD\s+[A-Z0-9]+/i, 'GOOGLE CLOUD') // Remove transaction ID
 		.replace(/GOOGLE\s*\*\s*CLOUD/i, 'GOOGLE CLOUD') // Normalize asterisk format
 		.replace(/\s+g\.co\/helppay#?/i, '') // Remove help URL
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -377,7 +377,7 @@ function extractPlayStationNetworkDetails(merchant) {
 	merchant
 		.replace(/PLAYSTATION\s+NETWORK\s+[0-9-]+/i, 'PLAYSTATION NETWORK') // Remove transaction codes like "12345-67890"
 		.replace(/PLAYSTATION\s+NETWORK\s+[A-Z0-9-]+/i, 'PLAYSTATION NETWORK') // Remove any alphanumeric codes
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {

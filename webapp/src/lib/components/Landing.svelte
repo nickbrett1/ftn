@@ -37,7 +37,7 @@
 
 <div class="flex justify-center items-center grow">
 	<div class="text-white">
-		{#each lines as line, i (i)}
+		{#each lines as line, index_ (index_)}
 			{#if animate}
 				<div
 					class="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-10xl font-black text-center max-h-[8vh] text-nowrap"
@@ -47,11 +47,11 @@
 							class="inline-block m-1"
 							in:fly={{
 								y: 100,
-								delay: LINE_DELAY * i,
+								delay: LINE_DELAY * index_,
 								easing: backOut
 							}}
 						>
-							{#if i == 0}
+							{#if index_ == 0}
 								DO YOU <span
 									class="relative glitch bg-linear-to-r from-emerald-300 via-green-400 to-emerald-500 text-transparent bg-clip-text"
 									onmouseover={mouseOver}
@@ -77,11 +77,11 @@
 										</div>
 									{/if}
 								</span>
-							{:else if i == lines.length - 2}
+							{:else if index_ == lines.length - 2}
 								{#key index}
 									<p
 										style="color: {index == 0 ? 'white' : '#6ee7b7'}"
-										transition:slide={{ delay: LINE_DELAY * i }}
+										transition:slide={{ delay: LINE_DELAY * index_ }}
 									>
 										{questionLine[index]}
 									</p>

@@ -15,10 +15,10 @@ export async function load(event) {
 
 	// Calculate default dates
 	const today = new Date();
-	const todayStr = today.toISOString().split('T')[0];
+	const todayString = today.toISOString().split('T')[0];
 
-	let defaultStartDate = todayStr;
-	let defaultEndDate = todayStr;
+	let defaultStartDate = todayString;
+	let defaultEndDate = todayString;
 
 	// If there are existing cycles, set start date to day after most recent cycle's end date
 	if (existingCycles && existingCycles.length > 0) {

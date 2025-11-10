@@ -15,11 +15,11 @@ const getCurrentUserMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@sveltejs/kit', () => ({
 	json: (data, init) =>
-		new Response(JSON.stringify(data), {
+		Response.json(data, {
 			status: init?.status ?? 200,
 			headers: {
 				'Content-Type': 'application/json',
-				...(init?.headers ?? {})
+				...init?.headers
 			}
 		})
 }));

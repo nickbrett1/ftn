@@ -59,7 +59,7 @@ vi.mock('$lib/config/capabilities.js', () => ({
 }));
 
 vi.mock('$lib/utils/genproj-errors.js', () => ({
-	withErrorHandling: (fn) => fn
+	withErrorHandling: (function_) => function_
 }));
 
 vi.mock('$lib/utils/logging.js', () => ({

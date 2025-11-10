@@ -5,7 +5,7 @@ import Fireworks from '../../src/lib/components/Fireworks.svelte';
 
 // Mock tsparticles
 vi.mock('@tsparticles/slim', () => ({
-	loadSlim: vi.fn().mockResolvedValue(undefined)
+	loadSlim: vi.fn().mockResolvedValue()
 }));
 
 vi.mock('@tsparticles/engine', () => ({
@@ -25,8 +25,8 @@ describe('Fireworks Component', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Mock window dimensions
-		Object.defineProperty(window, 'innerWidth', { value: 1920 });
-		Object.defineProperty(window, 'innerHeight', { value: 1080 });
+		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
+		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
 	});
 
 	afterEach(() => {
@@ -174,8 +174,8 @@ describe('Fireworks Animation Logic', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Mock window dimensions
-		Object.defineProperty(window, 'innerWidth', { value: 1920 });
-		Object.defineProperty(window, 'innerHeight', { value: 1080 });
+		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
+		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
 	});
 
 	it('should create particle container when rendered', async () => {
@@ -196,8 +196,8 @@ describe('Fireworks Animation Logic', () => {
 
 	it('should handle window dimensions correctly', () => {
 		// Mock window dimensions
-		Object.defineProperty(window, 'innerWidth', { value: 1920 });
-		Object.defineProperty(window, 'innerHeight', { value: 1080 });
+		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
+		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
 
 		const component = mount(Fireworks, {
 			target: document.body,

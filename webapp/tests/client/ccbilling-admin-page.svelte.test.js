@@ -7,14 +7,14 @@ vi.mock('$lib/components/Button.svelte', () => ({
 	default: vi.fn().mockImplementation(({ children, onclick, class: className }) => {
 		const button = document.createElement('button');
 		button.textContent = children;
-		button.onclick = onclick || (() => {});
+		button.addEventListener('click', onclick || (() => {}));
 		if (className) button.className = className;
 		return button;
 	})
 }));
 
 // Mock fetch globally
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('CCBilling Admin Page', () => {
 	let component;

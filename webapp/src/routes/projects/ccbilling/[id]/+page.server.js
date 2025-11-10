@@ -17,7 +17,7 @@ export async function load(event) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
 	}
 
-	const cycleId = parseInt(event.params.id);
+	const cycleId = Number.parseInt(event.params.id);
 
 	// Declare dependency so invalidate() can rerun this load function
 	event.depends(`cycle-${cycleId}`);

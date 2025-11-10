@@ -461,7 +461,7 @@ export class GenprojAuthManager {
 			required.add('github');
 		}
 
-		return Array.from(required);
+		return [...required];
 	}
 
 	/**

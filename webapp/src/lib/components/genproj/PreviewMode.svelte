@@ -29,10 +29,10 @@
 		}
 		try {
 			return structuredClone(config);
-		} catch (cloneError) {
+		} catch {
 			try {
 				return JSON.parse(JSON.stringify(config));
-			} catch (fallbackError) {
+			} catch {
 				return {};
 			}
 		}
@@ -48,7 +48,7 @@
 	function getTruncatedContent(content, maxLength = 500) {
 		if (!content) return '';
 		if (content.length <= maxLength) return content;
-		return content.substring(0, maxLength);
+		return content.slice(0, Math.max(0, maxLength));
 	}
 
 	// Check if content is truncated
@@ -105,12 +105,12 @@
 				capabilityCount: payload.selectedCapabilities.length,
 				usingPlaceholder: !projectName
 			});
-		} catch (err) {
+		} catch (error_) {
 			if (requestId !== latestPreviewRequestId) {
 				return;
 			}
-			error = err.message;
-			logger.error('Failed to generate preview', { error: err.message });
+			error = error_.message;
+			logger.error('Failed to generate preview', { error: error_.message });
 		} finally {
 			if (requestId === latestPreviewRequestId) {
 				loading = false;

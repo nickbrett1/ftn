@@ -58,8 +58,8 @@
 
 			// Redirect to the main billing cycles page
 			await goto('/projects/ccbilling');
-		} catch (err) {
-			error = err.message;
+		} catch (error_) {
+			error = error_.message;
 		} finally {
 			isSubmitting = false;
 		}

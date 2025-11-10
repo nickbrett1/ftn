@@ -76,7 +76,7 @@ describe('TemplateEngine', () => {
 				if (key === 'template.hbs') {
 					return { text: async () => 'Hello {{name}}' };
 				}
-				return null;
+				return undefined;
 			})
 		};
 
@@ -107,7 +107,7 @@ describe('TemplateEngine', () => {
 	});
 
 	it('warns and returns early when R2 bucket is unavailable', async () => {
-		engine.r2Bucket = null;
+		engine.r2Bucket = undefined;
 		await engine.loadTemplatesFromR2();
 		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('R2 bucket not available'));
 	});
@@ -121,7 +121,7 @@ describe('TemplateEngine', () => {
 				if (key === 'remote') {
 					return { text: async () => 'From bucket' };
 				}
-				return null;
+				return undefined;
 			})
 		};
 		engine.r2Bucket = mockBucket;
@@ -196,7 +196,7 @@ describe('TemplateEngine', () => {
 		expect(helpers.get('project_slug')('My Project')).toBe('my-project');
 		expect(helpers.get('package_name')('Pkg Name')).toBe('pkg-name');
 		expect(helpers.get('class_name')('my-class_name')).toBe('Myclassname');
-		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replace(/-/g, '_'));
+		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replaceAll('-', '_'));
 
 		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
 		engine.registerFallbackTemplate('devcontainer-node-json', 'remote/template');

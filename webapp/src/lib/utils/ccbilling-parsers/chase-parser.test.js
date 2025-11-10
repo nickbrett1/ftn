@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChaseParser } from './chase-parser.js';
-import { ParsingUtils } from '../parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../parsing-utils.js';
 
 describe('ChaseParser', () => {
 	let parser;
@@ -213,9 +213,9 @@ describe('ChaseParser', () => {
 
 			// Should NOT include any of the point redemption amounts
 			const pointRedemptionAmounts = [15.67, 5.4, 12.43];
-			pointRedemptionAmounts.forEach((amount) => {
+			for (const amount of pointRedemptionAmounts) {
 				expect(charges.some((c) => c.amount === amount)).toBe(false);
-			});
+			}
 		});
 
 		it('should handle ACCOUNT ACTIVITY (CONTINUED) section boundary correctly', () => {
@@ -362,21 +362,21 @@ describe('ChaseParser', () => {
 
 	describe('inherited methods', () => {
 		it('should use ParsingUtils.parseDate', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseDate');
+			const spy = vi.spyOn(ParsingUtilities, 'parseDate');
 			parser.parseDate('01/15');
 			expect(spy).toHaveBeenCalledWith('01/15', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.parseAmount', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseAmount');
+			const spy = vi.spyOn(ParsingUtilities, 'parseAmount');
 			parser.parseAmount('$123.45');
 			expect(spy).toHaveBeenCalledWith('$123.45', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
-			const spy = vi.spyOn(ParsingUtils, 'validateParsedData');
+			const spy = vi.spyOn(ParsingUtilities, 'validateParsedData');
 			const data = { last4: '1234', statement_date: '2024-01-15', charges: [] };
 			parser.validateParsedData(data);
 			expect(spy).toHaveBeenCalledWith(data, ['last4', 'statement_date', 'charges'], {});

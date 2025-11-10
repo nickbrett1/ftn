@@ -41,7 +41,7 @@ describe('NotAuthorised Page', () => {
 			target: document.body
 		});
 
-		const titles = Array.from(document.querySelectorAll('h1')).filter((h1) =>
+		const titles = [...document.querySelectorAll('h1')].filter((h1) =>
 			h1.textContent.includes('ACCESS DENIED')
 		);
 		expect(titles.length).toBe(3); // Main title + 2 glitch layers
@@ -149,7 +149,7 @@ describe('NotAuthorised Page', () => {
 		});
 
 		// Check for responsive typography
-		const title = Array.from(document.querySelectorAll('h1')).find((h1) =>
+		const title = [...document.querySelectorAll('h1')].find((h1) =>
 			h1.className.includes('text-6xl')
 		);
 		expect(title).toBeTruthy();
@@ -162,7 +162,7 @@ describe('NotAuthorised Page', () => {
 		});
 
 		// Check for color classes indicating the error/warning theme
-		const title = Array.from(document.querySelectorAll('h1')).find((h1) =>
+		const title = [...document.querySelectorAll('h1')].find((h1) =>
 			h1.textContent.includes('ACCESS DENIED')
 		);
 		expect(title.className).toContain('text-red-400');
