@@ -102,7 +102,6 @@ jobs:
           when: always
       - store_test_results:
           path: ./webapp/reports/
-      # Temporarily disable SonarCloud scan to debug exit code issue
       - sonarcloud/scan
 
   browser_test:
