@@ -92,7 +92,7 @@ describe('Crypto Utils', () => {
 	describe('Cryptographic properties', () => {
 		it('should generate sufficiently random values for hex strings', () => {
 			const results = new Set();
-			for (let i = 0; i < 100; i++) {
+			for (let index = 0; index < 100; index++) {
 				results.add(generateSecureRandomHex());
 			}
 			// All values should be unique (very high probability with random crypto)
@@ -101,7 +101,7 @@ describe('Crypto Utils', () => {
 
 		it('should generate sufficiently random values for auth tokens', () => {
 			const results = new Set();
-			for (let i = 0; i < 100; i++) {
+			for (let index = 0; index < 100; index++) {
 				results.add(generateSecureAuthToken());
 			}
 			// All values should be unique (very high probability with random crypto)

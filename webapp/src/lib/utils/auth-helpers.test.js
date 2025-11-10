@@ -77,7 +77,7 @@ describe('Auth Helpers', () => {
 
 		it('should reject undefined states', () => {
 			expect(validateAuthState(undefined, 'state')).toBeFalsy();
-			expect(validateAuthState('state', undefined)).toBeFalsy();
+			expect(validateAuthState('state')).toBeFalsy();
 		});
 
 		it('should reject empty strings', () => {
@@ -142,15 +142,15 @@ describe('Auth Helpers', () => {
 
 	describe('validateGitHubToken', () => {
 		beforeEach(() => {
-			global.fetch = vi.fn();
+			globalThis.fetch = vi.fn();
 		});
 
 		it('should validate valid GitHub token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({
 					login: 'testuser',
-					id: 12345,
+					id: 12_345,
 					email: 'test@example.com'
 				})
 			});
@@ -166,7 +166,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should reject invalid GitHub token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized'
@@ -180,7 +180,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should handle network errors', async () => {
-			global.fetch.mockRejectedValueOnce(new Error('Network error'));
+			globalThis.fetch.mockRejectedValueOnce(new Error('Network error'));
 
 			const result = await validateGitHubToken('token');
 
@@ -191,11 +191,11 @@ describe('Auth Helpers', () => {
 
 	describe('validateCircleCIToken', () => {
 		beforeEach(() => {
-			global.fetch = vi.fn();
+			globalThis.fetch = vi.fn();
 		});
 
 		it('should validate valid CircleCI token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({
 					name: 'Test User',
@@ -213,7 +213,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should reject invalid CircleCI token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized'
@@ -228,11 +228,11 @@ describe('Auth Helpers', () => {
 
 	describe('validateDopplerToken', () => {
 		beforeEach(() => {
-			global.fetch = vi.fn();
+			globalThis.fetch = vi.fn();
 		});
 
 		it('should validate valid Doppler token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({
 					name: 'Test User',
@@ -250,7 +250,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should reject invalid Doppler token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized'
@@ -265,11 +265,11 @@ describe('Auth Helpers', () => {
 
 	describe('validateSonarCloudToken', () => {
 		beforeEach(() => {
-			global.fetch = vi.fn();
+			globalThis.fetch = vi.fn();
 		});
 
 		it('should validate valid SonarCloud token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({
 					valid: true
@@ -285,7 +285,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should reject invalid SonarCloud token', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized'
@@ -300,11 +300,11 @@ describe('Auth Helpers', () => {
 
 	describe('validateServiceToken', () => {
 		beforeEach(() => {
-			global.fetch = vi.fn();
+			globalThis.fetch = vi.fn();
 		});
 
 		it('should route to GitHub validator', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({ login: 'testuser', id: 123 })
 			});
@@ -316,7 +316,7 @@ describe('Auth Helpers', () => {
 		});
 
 		it('should route to CircleCI validator', async () => {
-			global.fetch.mockResolvedValueOnce({
+			globalThis.fetch.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({ name: 'Test', id: '123' })
 			});

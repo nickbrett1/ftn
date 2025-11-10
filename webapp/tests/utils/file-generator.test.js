@@ -196,7 +196,7 @@ describe('TemplateEngine', () => {
 		expect(helpers.get('project_slug')('My Project')).toBe('my-project');
 		expect(helpers.get('package_name')('Pkg Name')).toBe('pkg-name');
 		expect(helpers.get('class_name')('my-class_name')).toBe('Myclassname');
-		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replace(/-/g, '_'));
+		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replaceAll('-', '_'));
 
 		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
 		engine.registerFallbackTemplate('devcontainer-node-json', 'remote/template');

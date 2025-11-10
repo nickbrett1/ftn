@@ -8,18 +8,18 @@ export async function load({ platform }) {
 			totalIndicators: 0
 		};
 	}
-	const db = platform.env.DB;
+	const database = platform.env.DB;
 
 	try {
 		// 1. Get the total number of countries
-		const totalCountriesStmt = db.prepare(`
+		const totalCountriesStmt = database.prepare(`
 			SELECT COUNT(*) as count
 			FROM dim_country
 		`);
 		const totalCountriesResult = await totalCountriesStmt.first('count');
 
 		// 2. Get the number of reported data points per year
-		const dataPointsPerYearStmt = db.prepare(`
+		const dataPointsPerYearStmt = database.prepare(`
 			SELECT year, data_points_count
 			FROM agg_wdi_data_points_by_year
 			ORDER BY year ASC
@@ -27,7 +27,7 @@ export async function load({ platform }) {
 		const dataPointsPerYearResult = await dataPointsPerYearStmt.all();
 
 		// 3. Get the total number of indicators
-		const totalIndicatorsStmt = db.prepare(`
+		const totalIndicatorsStmt = database.prepare(`
 			SELECT COUNT(*) as count
 			FROM dim_indicator
 		`);
@@ -54,10 +54,10 @@ export async function load({ platform }) {
 			dataPointsPerYearChart: dataPointsChart,
 			totalIndicators: totalIndicatorsResult || 0
 		};
-	} catch (e) {
-		console.error('Error fetching WDI coverage data from D1:', e);
+	} catch (error) {
+		console.error('Error fetching WDI coverage data from D1:', error);
 		return {
-			error: `Failed to fetch data: ${e.message}`,
+			error: `Failed to fetch data: ${error.message}`,
 			totalCountries: 0,
 			dataPointsPerYearChart: null,
 			totalIndicators: 0

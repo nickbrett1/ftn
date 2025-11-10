@@ -24,10 +24,10 @@ const logPrefix = '[SONARCLOUD_AUTH]';
 export async function GET({ request }) {
 	try {
 		const url = new URL(request.url);
-		const stateParam = url.searchParams.get('state');
+		const stateParameter = url.searchParams.get('state');
 
 		// Generate state if not provided
-		const state = stateParam || generateAuthState();
+		const state = stateParameter || generateAuthState();
 
 		// Generate SonarCloud auth URL (token creation page)
 		const redirectUri = `${url.origin}/projects/genproj/api/auth/sonarcloud/callback`;

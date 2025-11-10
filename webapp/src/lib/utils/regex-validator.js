@@ -91,13 +91,13 @@ function countNestedGroups(pattern) {
 	let maxDepth = 0;
 	let currentDepth = 0;
 
-	for (let i = 0; i < pattern.length; i++) {
-		const char = pattern[i];
+	for (let index = 0; index < pattern.length; index++) {
+		const char = pattern[index];
 
-		if (char === '(' && pattern[i - 1] !== '\\') {
+		if (char === '(' && pattern[index - 1] !== '\\') {
 			currentDepth++;
 			maxDepth = Math.max(maxDepth, currentDepth);
-		} else if (char === ')' && pattern[i - 1] !== '\\') {
+		} else if (char === ')' && pattern[index - 1] !== '\\') {
 			currentDepth = Math.max(0, currentDepth - 1);
 		}
 	}
@@ -175,18 +175,24 @@ function testRegexWithTimeout(pattern, testString, timeout) {
  */
 export function createSafeDateRegex(format) {
 	switch (format) {
-		case 'MM/DD/YYYY':
+		case 'MM/DD/YYYY': {
 			return /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-		case 'YYYY-MM-DD':
+		}
+		case 'YYYY-MM-DD': {
 			return /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
-		case 'MM-DD-YYYY':
+		}
+		case 'MM-DD-YYYY': {
 			return /^(\d{1,2})-(\d{1,2})-(\d{4})$/;
-		case 'MM/DD/YY':
+		}
+		case 'MM/DD/YY': {
 			return /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/;
-		case 'MM-DD-YY':
+		}
+		case 'MM-DD-YY': {
 			return /^(\d{1,2})-(\d{1,2})-(\d{2})$/;
-		default:
+		}
+		default: {
 			throw new Error(`Unsupported date format: ${format}`);
+		}
 	}
 }
 
@@ -219,8 +225,8 @@ export function createSafeBillingCycleRegex() {
  * @param {string} str
  * @returns {string}
  */
-function escapeRegex(str) {
-	return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function escapeRegex(string_) {
+	return String(string_).replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -230,7 +236,7 @@ function escapeRegex(str) {
  */
 export function createSafeCookieRegex(cookieName) {
 	const escaped = escapeRegex(cookieName || '');
-	return new RegExp(`(?:^|;\\s*)${escaped}=([^;]+)`);
+	return new RegExp(String.raw`(?:^|;\s*)${escaped}=([^;]+)`);
 }
 
 /**

@@ -48,7 +48,7 @@ describe('Auth', () => {
 					// Mock KV.get to simulate user being allowed
 					KV: {
 						get: vi.fn().mockResolvedValue('some_value_indicating_existence'), // User's email exists in KV
-						put: vi.fn().mockResolvedValue(undefined)
+						put: vi.fn().mockResolvedValue()
 					}
 				}
 			}
@@ -65,7 +65,7 @@ describe('Auth', () => {
 					// Mock KV.get to simulate user not being allowed
 					KV: {
 						get: vi.fn().mockResolvedValue(null), // User's email does not exist in KV
-						put: vi.fn().mockResolvedValue(undefined) // KV.put shouldn't be called in this path
+						put: vi.fn().mockResolvedValue() // KV.put shouldn't be called in this path
 					}
 				}
 			}
@@ -314,7 +314,7 @@ describe('Auth', () => {
 					env: {
 						KV: {
 							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
-							put: vi.fn().mockResolvedValue(undefined)
+							put: vi.fn().mockResolvedValue()
 						}
 					}
 				}
@@ -335,7 +335,7 @@ describe('Auth', () => {
 					env: {
 						KV: {
 							get: vi.fn().mockResolvedValue('some_value_indicating_existence'),
-							put: vi.fn().mockResolvedValue(undefined)
+							put: vi.fn().mockResolvedValue()
 						}
 					}
 				}
@@ -351,7 +351,7 @@ describe('Auth', () => {
 					env: {
 						KV: {
 							get: vi.fn().mockResolvedValue(null),
-							put: vi.fn().mockResolvedValue(undefined)
+							put: vi.fn().mockResolvedValue()
 						}
 					}
 				}
@@ -364,7 +364,7 @@ describe('Auth', () => {
 
 	describe('Token Processing', () => {
 		it('should store auth token with correct expiration', async () => {
-			const mockPut = vi.fn().mockResolvedValue(undefined);
+			const mockPut = vi.fn().mockResolvedValue();
 			const expires_in = 3600; // 1 hour
 
 			await GET({

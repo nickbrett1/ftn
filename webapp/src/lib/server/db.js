@@ -10,12 +10,12 @@ const DB_KEY = 'DB';
  */
 export function getDb(platform) {
 	if (building) {
-		const db = getContext(DB_KEY);
-		if (db) return db;
+		const database = getContext(DB_KEY);
+		if (database) return database;
 
-		const newDb = {};
-		setContext(DB_KEY, newDb);
-		return newDb;
+		const newDatabase = {};
+		setContext(DB_KEY, newDatabase);
+		return newDatabase;
 	}
 	if (dev) {
 		return drizzle(platform.env.DB, { schema });

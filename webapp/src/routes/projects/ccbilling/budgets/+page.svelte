@@ -15,7 +15,7 @@
 	// Use synchronous destructuring to get data immediately
 	const { budgets = [] } = data;
 	// Sort budgets alphabetically by name
-	const sortedBudgets = budgets.slice().sort((a, b) => a.name.localeCompare(b.name));
+	const sortedBudgets = [...budgets].sort((a, b) => a.name.localeCompare(b.name));
 
 	// Add budget state
 	let showAddForm = $state(false);
@@ -64,7 +64,7 @@
 			newBudgetName = '';
 			newBudgetIcon = '';
 			showAddForm = false;
-			window.location.reload();
+			globalThis.location.reload();
 		} catch {
 			addError = 'Network error occurred';
 		} finally {
@@ -92,7 +92,7 @@
 				deleteError = error.error || 'Failed to delete budget';
 				return;
 			}
-			window.location.reload();
+			globalThis.location.reload();
 		} catch {
 			deleteError = 'Network error occurred';
 		} finally {

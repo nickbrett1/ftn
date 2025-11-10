@@ -134,7 +134,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.0,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -227,7 +227,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.0,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -352,7 +352,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.0,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -362,7 +362,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 2,
 					merchant: 'Shell',
-					amount: 45.0,
+					amount: 45,
 					allocated_to: 'Transportation',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',

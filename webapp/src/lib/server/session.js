@@ -9,7 +9,7 @@ import * as base32 from 'hi-base32';
 function encodeBase32LowerCaseNoPadding(bytes) {
 	const encoded = base32.encode(bytes).toLowerCase();
 	// Remove padding characters if any
-	return encoded.replace(/=/g, '');
+	return encoded.replaceAll('=', '');
 }
 
 function generateSessionId() {
@@ -154,13 +154,13 @@ export async function invalidateAllSessions(kv, userId) {
  * @param {boolean} isProd
  * @returns {void}
  */
-export function setSessionCookie(cookies, sessionId, expiresAt, isProd) {
+export function setSessionCookie(cookies, sessionId, expiresAt, isProduction) {
 	cookies.set('session', sessionId, {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
 		expires: expiresAt,
-		secure: isProd
+		secure: isProduction
 	});
 }
 
@@ -169,12 +169,12 @@ export function setSessionCookie(cookies, sessionId, expiresAt, isProd) {
  * @param {boolean} isProd
  * @returns {void}
  */
-export function deleteSessionCookie(cookies, isProd) {
+export function deleteSessionCookie(cookies, isProduction) {
 	cookies.set('session', '', {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
 		maxAge: 0,
-		secure: isProd
+		secure: isProduction
 	});
 }

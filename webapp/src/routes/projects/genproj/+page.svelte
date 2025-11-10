@@ -146,10 +146,9 @@
 			}
 		} else {
 			// Check if this capability is required by any other selected capability
-			const isRequiredBy =
-				capabilities.filter(
-					(c) => selectedCapabilities.includes(c.id) && c.dependencies?.includes(capabilityId)
-				).length > 0;
+			const isRequiredBy = capabilities.some(
+				(c) => selectedCapabilities.includes(c.id) && c.dependencies?.includes(capabilityId)
+			);
 
 			if (isRequiredBy) {
 				// Don't allow deselection if another selected capability depends on it
@@ -190,9 +189,9 @@
 
 				const fetchData = await response.json();
 				capabilities = fetchData.capabilities;
-			} catch (err) {
-				error = err.message;
-				logger.error('Failed to load capabilities', { error: err.message });
+			} catch (error_) {
+				error = error_.message;
+				logger.error('Failed to load capabilities', { error: error_.message });
 			} finally {
 				loading = false;
 			}
@@ -213,14 +212,14 @@
 
 		// Clear error/auth params from URL after displaying
 		if (authError || authResult) {
-			const url = new URL(window.location.href);
+			const url = new URL(globalThis.location.href);
 			if (url.searchParams.has('error')) {
 				url.searchParams.delete('error');
-				window.history.replaceState({}, '', url.toString());
+				globalThis.history.replaceState({}, '', url.toString());
 			}
 			if (url.searchParams.has('auth')) {
 				url.searchParams.delete('auth');
-				window.history.replaceState({}, '', url.toString());
+				globalThis.history.replaceState({}, '', url.toString());
 			}
 		}
 	});
@@ -276,24 +275,24 @@
 	// Build redirect path with current genproj state
 	function buildGenprojRedirectPath() {
 		const basePath = '/projects/genproj';
-		const params = new URLSearchParams();
+		const parameters = new URLSearchParams();
 
 		// Preserve selected capabilities
 		if (selectedCapabilities.length > 0) {
-			params.set('selected', selectedCapabilities.join(','));
+			parameters.set('selected', selectedCapabilities.join(','));
 		}
 
 		// Preserve project name if set
 		if (projectName && projectName.length >= 3) {
-			params.set('projectName', projectName);
+			parameters.set('projectName', projectName);
 		}
 
 		// Preserve repository URL if set
 		if (repositoryUrl) {
-			params.set('repositoryUrl', repositoryUrl);
+			parameters.set('repositoryUrl', repositoryUrl);
 		}
 
-		const queryString = params.toString();
+		const queryString = parameters.toString();
 		return queryString ? `${basePath}?${queryString}` : basePath;
 	}
 </script>
@@ -378,7 +377,7 @@
 							<button
 								data-testid="retry-button"
 								class="bg-red-600 text-red-50 px-3 py-2 rounded-md text-sm hover:bg-red-700 transition-colors border border-red-400"
-								onclick={() => window.location.reload()}
+								onclick={() => globalThis.location.reload()}
 							>
 								Retry
 							</button>

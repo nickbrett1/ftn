@@ -153,8 +153,8 @@ export const envVarNames = {
  * @param {string} varType - Variable type (clientId, clientSecret, apiToken, etc.)
  * @returns {string|undefined} Environment variable name
  */
-export function getEnvVarName(serviceName, varType) {
-	return envVarNames[serviceName]?.[varType];
+export function getEnvVarName(serviceName, variableType) {
+	return envVarNames[serviceName]?.[variableType];
 }
 
 /**
@@ -185,10 +185,8 @@ export function validateServiceConfig(serviceName, config) {
 		if (!config.auth?.clientId || !config.auth?.clientSecret) {
 			errors.push('OAuth2 requires clientId and clientSecret');
 		}
-	} else if (serviceConfig.auth.type === 'api_token') {
-		if (!config.auth?.apiToken) {
-			errors.push('API token authentication requires apiToken');
-		}
+	} else if (serviceConfig.auth.type === 'api_token' && !config.auth?.apiToken) {
+		errors.push('API token authentication requires apiToken');
 	}
 
 	return {

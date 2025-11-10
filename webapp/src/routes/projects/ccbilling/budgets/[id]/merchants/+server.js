@@ -17,9 +17,12 @@ function validateBudgetId(event) {
 	const id = Number(event.params.id);
 	if (!id || id <= 0) {
 		return {
-			error: new Response(JSON.stringify({ error: 'Missing or invalid budget id' }), {
-				status: 400
-			})
+			error: Response.json(
+				{ error: 'Missing or invalid budget id' },
+				{
+					status: 400
+				}
+			)
 		};
 	}
 	return { id };
@@ -30,14 +33,14 @@ async function validateMerchant(event) {
 	const { merchant } = data;
 	if (!merchant || !merchant.trim()) {
 		return {
-			error: new Response(JSON.stringify({ error: 'Missing merchant name' }), { status: 400 })
+			error: Response.json({ error: 'Missing merchant name' }, { status: 400 })
 		};
 	}
 	return { merchant: merchant.trim() };
 }
 
 function createJsonResponse(data, options = {}) {
-	return new Response(JSON.stringify(data), {
+	return Response.json(data, {
 		headers: { 'Content-Type': 'application/json' },
 		...options
 	});

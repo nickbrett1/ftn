@@ -20,7 +20,7 @@
 	type="button"
 	aria-label={data.tooltip}
 	onclick={() => {
-		window.location = data.link;
+		globalThis.location = data.link;
 	}}
 >
 	<data.Icon />

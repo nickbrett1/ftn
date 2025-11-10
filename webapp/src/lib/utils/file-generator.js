@@ -49,30 +49,30 @@ export class TemplateEngine {
 		});
 
 		// String manipulation helpers
-		this.registerHelper('uppercase', function (str) {
-			return str ? str.toUpperCase() : '';
+		this.registerHelper('uppercase', function (string_) {
+			return string_ ? string_.toUpperCase() : '';
 		});
 
-		this.registerHelper('lowercase', function (str) {
-			return str ? str.toLowerCase() : '';
+		this.registerHelper('lowercase', function (string_) {
+			return string_ ? string_.toLowerCase() : '';
 		});
 
-		this.registerHelper('capitalize', function (str) {
-			return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+		this.registerHelper('capitalize', function (string_) {
+			return string_ ? string_.charAt(0).toUpperCase() + string_.slice(1) : '';
 		});
 
-		this.registerHelper('kebab-case', function (str) {
-			return str
-				? str
+		this.registerHelper('kebab-case', function (string_) {
+			return string_
+				? string_
 						.replaceAll(/([A-Z])/g, '-$1')
 						.toLowerCase()
 						.replaceAll(/^-/, '')
 				: '';
 		});
 
-		this.registerHelper('snake_case', function (str) {
-			return str
-				? str
+		this.registerHelper('snake_case', function (string_) {
+			return string_
+				? string_
 						.replaceAll(/([A-Z])/g, '_$1')
 						.toLowerCase()
 						.replaceAll(/^_/, '')
@@ -92,26 +92,31 @@ export class TemplateEngine {
 		this.registerHelper('date', function (format) {
 			const now = new Date();
 			switch (format) {
-				case 'iso':
+				case 'iso': {
 					return now.toISOString();
-				case 'year':
+				}
+				case 'year': {
 					return String(now.getFullYear());
-				case 'month':
+				}
+				case 'month': {
 					return String(now.getMonth() + 1);
-				case 'day':
+				}
+				case 'day': {
 					return String(now.getDate());
-				default:
+				}
+				default: {
 					return now.toLocaleDateString();
+				}
 			}
 		});
 
 		// JSON helpers
-		this.registerHelper('json', function (obj) {
-			return JSON.stringify(obj, null, 2);
+		this.registerHelper('json', function (object) {
+			return JSON.stringify(object, null, 2);
 		});
 
-		this.registerHelper('json_compact', function (obj) {
-			return JSON.stringify(obj);
+		this.registerHelper('json_compact', function (object) {
+			return JSON.stringify(object);
 		});
 
 		// Conditional helpers
@@ -132,13 +137,15 @@ export class TemplateEngine {
 		});
 
 		// String helpers
-		this.registerHelper('replace', function (str, search, replace) {
+		this.registerHelper('replace', function (string_, search, replace) {
 			// eslint-disable-next-line unicorn/prefer-string-replace-all
-			return str ? str.replace(new RegExp(search, 'g'), replace) : '';
+			return string_ ? string_.replace(new RegExp(search, 'g'), replace) : '';
 		});
 
-		this.registerHelper('truncate', function (str, length) {
-			return str && str.length > length ? str.substring(0, length) + '...' : str;
+		this.registerHelper('truncate', function (string_, length) {
+			return string_ && string_.length > length
+				? string_.slice(0, Math.max(0, length)) + '...'
+				: string_;
 		});
 
 		// Environment helpers
@@ -173,8 +180,8 @@ export class TemplateEngine {
 	 * @param {string} name - Helper name
 	 * @param {Function} fn - Helper function
 	 */
-	registerHelper(name, fn) {
-		this.helpers.set(name, fn);
+	registerHelper(name, function_) {
+		this.helpers.set(name, function_);
 	}
 
 	/**
@@ -223,7 +230,7 @@ export class TemplateEngine {
 
 	registerFallbackTemplate(templateId, originalKey) {
 		const fallback = this.getFallbackTemplate(templateId);
-		if (fallback == null) {
+		if (fallback == undefined) {
 			return;
 		}
 
@@ -262,7 +269,7 @@ export class TemplateEngine {
 						return content;
 					}
 
-					if (fallback != null) {
+					if (fallback != undefined) {
 						this.templates.set(templateId, fallback);
 						return fallback;
 					}
@@ -273,7 +280,7 @@ export class TemplateEngine {
 		}
 
 		// Return fallback template
-		if (fallback != null) {
+		if (fallback != undefined) {
 			this.templates.set(templateId, fallback);
 		}
 		return fallback;
@@ -429,11 +436,11 @@ export default defineConfig({
 		const baseSegment = segments.pop() || '';
 		const scopeSegment = segments.pop() || '';
 
-		const baseWithoutFileExt = baseSegment.replaceAll(
+		const baseWithoutFileExtension = baseSegment.replaceAll(
 			/\.(json|ya?ml|toml|js|ts|cjs|mjs|md)$/gi,
 			''
 		);
-		const sanitizedBase = baseWithoutFileExt.replaceAll('.', '-');
+		const sanitizedBase = baseWithoutFileExtension.replaceAll('.', '-');
 		const scope = scopeSegment ? scopeSegment.replaceAll('.', '-') : '';
 		const fallbackBase = sanitizedBase || baseSegment.replaceAll('.', '-');
 
@@ -467,16 +474,16 @@ export default defineConfig({
 					const helper = this.helpers.get(helperName);
 
 					if (helper) {
-						const args = parts.slice(1).map((arg) => {
+						const arguments_ = parts.slice(1).map((argument) => {
 							// Try to evaluate as variable
 							try {
-								return this.evaluateExpression(arg, data);
+								return this.evaluateExpression(argument, data);
 							} catch {
-								return arg; // Return as string if not a variable
+								return argument; // Return as string if not a variable
 							}
 						});
 
-						return helper.apply(data, args);
+						return helper.apply(data, arguments_);
 					}
 				}
 

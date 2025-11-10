@@ -91,7 +91,7 @@ export function handleGenprojError(error, context = {}) {
 	}
 
 	switch (error.name) {
-		case 'ValidationError':
+		case 'ValidationError': {
 			return {
 				status: 400,
 				body: createErrorResponseBody(
@@ -101,7 +101,8 @@ export function handleGenprojError(error, context = {}) {
 					context
 				)
 			};
-		default:
+		}
+		default: {
 			if (error.message?.includes('validation')) {
 				return {
 					status: 400,
@@ -155,6 +156,7 @@ export function handleGenprojError(error, context = {}) {
 					context
 				)
 			};
+		}
 	}
 }
 

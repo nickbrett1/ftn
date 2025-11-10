@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getUnassignedMerchants } from './ccbilling-db.js';
 
 describe('Duplicate Merchant Variations Test', () => {
-	let mockDb;
+	let mockDatabase;
 	let mockEvent;
 
 	beforeEach(() => {
-		mockDb = {
+		mockDatabase = {
 			prepare: vi.fn().mockReturnValue({
 				all: vi.fn(),
 				bind: vi.fn().mockReturnThis()
@@ -14,7 +14,7 @@ describe('Duplicate Merchant Variations Test', () => {
 		};
 
 		mockEvent = {
-			platform: { env: { CCBILLING_DB: mockDb } }
+			platform: { env: { CCBILLING_DB: mockDatabase } }
 		};
 	});
 
@@ -31,7 +31,7 @@ describe('Duplicate Merchant Variations Test', () => {
 		// Both normalize to the same value but have different assignment statuses
 
 		// Mock assigned merchants query
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
 					{ merchant_normalized: 'ABW ENTERPRISES' },
@@ -42,7 +42,7 @@ describe('Duplicate Merchant Variations Test', () => {
 		});
 
 		// Mock all payment merchants query
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
 					{ merchant_normalized: 'ABW ENTERPRISES' }, // This one is assigned
@@ -62,7 +62,7 @@ describe('Duplicate Merchant Variations Test', () => {
 		expect(result).toEqual(['WALMART']);
 
 		// Verify the correct queries were made
-		expect(mockDb.prepare).toHaveBeenCalledTimes(2);
+		expect(mockDatabase.prepare).toHaveBeenCalledTimes(2);
 	});
 
 	it('should demonstrate the bug: duplicate variations cause assigned merchants to appear as unassigned', async () => {
@@ -74,14 +74,14 @@ describe('Duplicate Merchant Variations Test', () => {
 		// 5. But the user sees this as "ABW ENTERPRISES" being available again
 
 		// Mock assigned merchants (only "ABW ENTERPRISES" is assigned)
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [{ merchant_normalized: 'ABW ENTERPRISES' }]
 			})
 		});
 
 		// Mock payment merchants (both variations exist)
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
 					{ merchant_normalized: 'ABW ENTERPRISES' }, // Assigned

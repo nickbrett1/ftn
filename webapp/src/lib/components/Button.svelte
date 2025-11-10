@@ -32,7 +32,7 @@
 	const classes = `${defaultClasses} ${customClass}`.trim();
 
 	// Remove class from rest to avoid conflicts, but keep event handlers
-	// eslint-disable-next-line no-unused-vars
+
 	const { class: _class, ...restWithoutClass } = rest;
 </script>
 

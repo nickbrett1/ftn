@@ -3,7 +3,7 @@ import { mount, unmount, flushSync } from 'svelte';
 import MerchantSelectionModal from './MerchantSelectionModal.svelte';
 
 // Mock fetch globally
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('MerchantSelectionModal', () => {
 	const mockOnClose = vi.fn();
@@ -12,7 +12,7 @@ describe('MerchantSelectionModal', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Mock fetch to return a proper response
-		global.fetch = vi.fn().mockResolvedValue({
+		globalThis.fetch = vi.fn().mockResolvedValue({
 			ok: true,
 			json: vi.fn().mockResolvedValue([])
 		});
@@ -68,7 +68,7 @@ describe('MerchantSelectionModal', () => {
 
 		// Find the close button by looking for the × character
 		const buttons = document.querySelectorAll('button');
-		const closeButton = Array.from(buttons).find((btn) => btn.textContent.includes('×'));
+		const closeButton = [...buttons].find((button) => button.textContent.includes('×'));
 		closeButton.click();
 
 		flushSync();
@@ -88,8 +88,8 @@ describe('MerchantSelectionModal', () => {
 			}
 		});
 
-		const cancelButton = Array.from(document.querySelectorAll('button')).find((btn) =>
-			btn.textContent.includes('Cancel')
+		const cancelButton = [...document.querySelectorAll('button')].find((button) =>
+			button.textContent.includes('Cancel')
 		);
 		cancelButton.click();
 

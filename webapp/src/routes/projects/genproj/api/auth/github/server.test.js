@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-const originalNodeEnv = process.env.NODE_ENV;
+const originalNodeEnvironment = process.env.NODE_ENV;
 
 const createRedirectMock = () =>
 	vi.fn((status, location) => {
@@ -11,26 +11,25 @@ const createRedirectMock = () =>
 	});
 
 const createJsonMock = () =>
-	vi.fn(
-		(data, init) =>
-			new Response(JSON.stringify(data), {
-				status: init?.status ?? 200,
-				headers: {
-					'Content-Type': 'application/json',
-					...(init?.headers ?? {})
-				}
-			})
+	vi.fn((data, init) =>
+		Response.json(data, {
+			status: init?.status ?? 200,
+			headers: {
+				'Content-Type': 'application/json',
+				...init?.headers
+			}
+		})
 	);
 
 async function setupModule(options = {}) {
-	const { clientId, nodeEnv = 'test' } = options;
+	const { clientId, nodeEnv: nodeEnvironment = 'test' } = options;
 	const resolvedClientId = Object.prototype.hasOwnProperty.call(options, 'clientId')
 		? clientId
 		: 'client-id';
 	vi.resetModules();
 	delete process.env.GITHUB_CLIENT_ID;
 	delete process.env.GITHUB_CLIENT_SECRET;
-	process.env.NODE_ENV = nodeEnv;
+	process.env.NODE_ENV = nodeEnvironment;
 	if (resolvedClientId !== undefined) {
 		process.env.GITHUB_CLIENT_ID = resolvedClientId;
 	}
@@ -72,7 +71,7 @@ async function setupModule(options = {}) {
 afterEach(() => {
 	delete process.env.GITHUB_CLIENT_ID;
 	delete process.env.GITHUB_CLIENT_SECRET;
-	process.env.NODE_ENV = originalNodeEnv;
+	process.env.NODE_ENV = originalNodeEnvironment;
 	vi.resetModules();
 });
 

@@ -226,9 +226,9 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 
 			// Call multiple times to ensure uniqueness
 			const keys = [];
-			for (let i = 0; i < 5; i++) {
+			for (let index = 0; index < 5; index++) {
 				await POST(mockEvent);
-				const call = mockR2Bucket.put.mock.calls[i];
+				const call = mockR2Bucket.put.mock.calls[index];
 				keys.push(call[0]);
 			}
 
@@ -237,9 +237,9 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 			expect(uniqueKeys.size).toBe(5);
 
 			// Keys should follow the expected pattern
-			keys.forEach((key) => {
+			for (const key of keys) {
 				expect(key).toMatch(/^statements\/1\/\d+-[a-f0-9]{12}-statement\.pdf$/);
-			});
+			}
 		});
 	});
 });

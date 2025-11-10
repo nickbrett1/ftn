@@ -24,10 +24,10 @@ const logPrefix = '[CIRCLECI_AUTH]';
 export async function GET({ request }) {
 	try {
 		const url = new URL(request.url);
-		const stateParam = url.searchParams.get('state');
+		const stateParameter = url.searchParams.get('state');
 
 		// Generate state if not provided
-		const state = stateParam || generateAuthState();
+		const state = stateParameter || generateAuthState();
 
 		// Generate CircleCI auth URL (token creation page)
 		const redirectUri = `${url.origin}/projects/genproj/api/auth/circleci/callback`;

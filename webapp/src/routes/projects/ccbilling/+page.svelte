@@ -10,7 +10,7 @@
 	import { formatDate } from '$lib/utils/date-utils.js';
 
 	function formatCurrency(amount) {
-		if (amount == null) return '';
+		if (amount == undefined) return '';
 		return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 	}
 
@@ -27,14 +27,14 @@
 		}
 
 		// Remove entries that total exactly to zero
-		for (const [key, total] of Array.from(map.entries())) {
+		for (const [key, total] of map.entries()) {
 			if (total === 0) {
 				map.delete(key);
 			}
 		}
 
 		// Sort: unallocated first, then alphabetical by budget name
-		const entries = Array.from(map.entries());
+		const entries = [...map.entries()];
 		entries.sort(([a], [b]) => {
 			if (a === '__unallocated__') return -1;
 			if (b === '__unallocated__') return 1;

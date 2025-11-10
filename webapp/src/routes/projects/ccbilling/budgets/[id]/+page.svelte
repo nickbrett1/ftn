@@ -25,7 +25,7 @@
 	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
-	let merchantPickerRef = $state(null);
+	let merchantPickerReference = $state(null);
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');
@@ -107,7 +107,7 @@
 
 			// Wait for DOM updates to complete, then refresh the merchant list
 			await tick();
-			merchantPickerRef?.refreshMerchantList();
+			merchantPickerReference?.refreshMerchantList();
 
 			// Reset selectedMerchant to show placeholder text after DOM updates
 			await tick();
@@ -157,9 +157,9 @@
 
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
-			merchantPickerRef?.refreshMerchantList();
-		} catch (err) {
-			alert(`Failed to remove merchant "${merchantName}": ${err.message}`);
+			merchantPickerReference?.refreshMerchantList();
+		} catch (error) {
+			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
 			deletingMerchant = null;
 			isDeleting = false;
@@ -231,7 +231,7 @@
 				deleteBudgetError = error.error || 'Failed to delete budget';
 				return;
 			}
-			window.location.href = '/projects/ccbilling/budgets';
+			globalThis.location.href = '/projects/ccbilling/budgets';
 		} catch {
 			deleteBudgetError = 'Network error occurred';
 		} finally {
@@ -327,7 +327,7 @@
 						onSelect={(merchant) => (selectedMerchant = merchant)}
 						placeholder="Choose a merchant to assign to this budget..."
 						assignedMerchants={assignedMerchantNames}
-						bind:this={merchantPickerRef}
+						bind:this={merchantPickerReference}
 					/>
 				</div>
 				{#if addError}

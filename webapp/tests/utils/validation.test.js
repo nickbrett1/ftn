@@ -52,7 +52,7 @@ describe('validation utilities', () => {
 
 	describe('validateRepositoryUrl', () => {
 		it('allows empty values', () => {
-			expect(validateRepositoryUrl(undefined)).toEqual({ valid: true });
+			expect(validateRepositoryUrl()).toEqual({ valid: true });
 		});
 
 		it('rejects non-string values', () => {
@@ -84,7 +84,9 @@ describe('validation utilities', () => {
 				error: 'At least one capability must be selected'
 			});
 
-			expect(validateSelectedCapabilities(new Array(21).fill('devcontainer-node'))).toEqual({
+			expect(
+				validateSelectedCapabilities(Array.from({ length: 21 }).fill('devcontainer-node'))
+			).toEqual({
 				valid: false,
 				error: 'Too many capabilities selected (maximum 20)'
 			});

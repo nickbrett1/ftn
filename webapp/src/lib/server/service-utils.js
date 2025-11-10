@@ -57,7 +57,6 @@ export async function validateAllTokens(authTokens, services) {
 			try {
 				results[service] = await services[service].validateToken();
 			} catch (error) {
-				// eslint-disable-next-line sonarjs/no-useless-catch
 				// Intentionally catch and ignore errors to set default value for token validation
 				console.log(`⚠️ Token validation failed for ${service}: ${error.message}`);
 				results[service] = false;

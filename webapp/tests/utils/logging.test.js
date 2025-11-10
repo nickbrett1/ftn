@@ -19,13 +19,13 @@ const fixedDate = new Date('2024-01-01T00:00:00.000Z');
 
 describe('logging utilities', () => {
 	let originalModule;
-	let originalEnv;
+	let originalEnvironment;
 
 	beforeEach(() => {
 		vi.useFakeTimers();
 		vi.setSystemTime(fixedDate);
 		originalModule = globalThis.module;
-		originalEnv = process.env.GENPROJ_LOG_LEVEL;
+		originalEnvironment = process.env.GENPROJ_LOG_LEVEL;
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 		vi.spyOn(console, 'warn').mockImplementation(() => {});
 		vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -33,10 +33,10 @@ describe('logging utilities', () => {
 
 	afterEach(() => {
 		globalThis.module = originalModule;
-		if (originalEnv === undefined) {
+		if (originalEnvironment === undefined) {
 			delete process.env.GENPROJ_LOG_LEVEL;
 		} else {
-			process.env.GENPROJ_LOG_LEVEL = originalEnv;
+			process.env.GENPROJ_LOG_LEVEL = originalEnvironment;
 		}
 		vi.unstubAllEnvs?.();
 		vi.restoreAllMocks();

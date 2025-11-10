@@ -26,9 +26,9 @@ export async function GET() {
 	// This endpoint exposes the build-time constants that are injected by Vite
 	// It provides a reliable way for external services to get deployment information
 	const deploymentInfo = {
-		buildTime: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : null,
-		gitBranch: typeof __GIT_BRANCH__ !== 'undefined' ? __GIT_BRANCH__ : null,
-		gitCommit: typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : null,
+		buildTime: typeof __BUILD_TIME__ === 'undefined' ? null : __BUILD_TIME__,
+		gitBranch: typeof __GIT_BRANCH__ === 'undefined' ? null : __GIT_BRANCH__,
+		gitCommit: typeof __GIT_COMMIT__ === 'undefined' ? null : __GIT_COMMIT__,
 		environment: 'production', // This will be overridden by the worker
 		lastUpdated: null
 	};

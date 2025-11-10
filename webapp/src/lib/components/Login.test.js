@@ -10,10 +10,12 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Mock initiateGoogleAuth
-vi.spyOn(GoogleAuth, 'initiateGoogleAuth').mockImplementation(async (redirectPath, gotoFn) => {
-	const goto = gotoFn || (await import('$app/navigation')).goto;
-	goto('/mock-google-auth-redirect'); // Simulate Google auth redirect
-});
+vi.spyOn(GoogleAuth, 'initiateGoogleAuth').mockImplementation(
+	async (redirectPath, gotoFunction) => {
+		const goto = gotoFunction || (await import('$app/navigation')).goto;
+		goto('/mock-google-auth-redirect'); // Simulate Google auth redirect
+	}
+);
 
 describe('Login correctly', () => {
 	beforeEach(() => {

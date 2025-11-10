@@ -73,12 +73,12 @@ async function getWorkerDetails(accountId, apiToken, workerId, environment) {
 			versionParts.push(worker.latestDeployment.metadata.branch);
 		}
 		if (worker.latestDeployment.metadata.git_commit) {
-			versionParts.push(worker.latestDeployment.metadata.git_commit.substring(0, 8));
+			versionParts.push(worker.latestDeployment.metadata.git_commit.slice(0, 8));
 		}
 	}
 
 	if (versionParts.length === 1) {
-		const timestamp = Date.now().toString(36).substring(0, 6);
+		const timestamp = Date.now().toString(36).slice(0, 6);
 		versionParts.push(timestamp);
 	}
 
@@ -103,13 +103,13 @@ export async function GET() {
 		const apiToken = env.CLOUDFLARE_DEPLOYS_TOKEN;
 
 		if (!accountId || !apiToken) {
-			const missingVars = [];
-			if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
-			if (!apiToken) missingVars.push('CLOUDFLARE_DEPLOYS_TOKEN');
+			const missingVariables = [];
+			if (!accountId) missingVariables.push('CLOUDFLARE_ACCOUNT_ID');
+			if (!apiToken) missingVariables.push('CLOUDFLARE_DEPLOYS_TOKEN');
 
 			throw error(
 				500,
-				`Missing Cloudflare environment variables: ${missingVars.join(
+				`Missing Cloudflare environment variables: ${missingVariables.join(
 					', '
 				)}. Please check your environment configuration.`
 			);
@@ -184,13 +184,13 @@ export async function GET() {
 		}
 
 		return json(deployments);
-	} catch (err) {
-		if (err.status) {
-			throw err; // Re-throw SvelteKit errors
+	} catch (error_) {
+		if (error_.status) {
+			throw error_; // Re-throw SvelteKit errors
 		}
 
 		// Give more specific error information
-		const errorMessage = err.message || 'Unknown error occurred';
+		const errorMessage = error_.message || 'Unknown error occurred';
 
 		throw error(500, `Deploys API error: ${errorMessage}`);
 	}

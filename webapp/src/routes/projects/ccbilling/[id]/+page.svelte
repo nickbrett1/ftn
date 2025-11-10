@@ -185,7 +185,7 @@
 		// Apply credit card filter
 		if (selectedCardFilter !== 'all') {
 			filtered = filtered.filter(
-				(charge) => charge.credit_card_id === parseInt(selectedCardFilter)
+				(charge) => charge.credit_card_id === Number.parseInt(selectedCardFilter)
 			);
 		}
 
@@ -244,10 +244,10 @@
 	function getFilteredAllocationTotals() {
 		const totals = {};
 
-		getFilteredCharges().forEach((charge) => {
+		for (const charge of getFilteredCharges()) {
 			const allocation = charge.allocated_to || '__unallocated__';
 			totals[allocation] = (totals[allocation] || 0) + charge.amount;
-		});
+		}
 
 		return Object.entries(totals).sort(([, a], [, b]) => b - a);
 	}
@@ -274,8 +274,8 @@
 				// Fallback to empty text if nothing usable
 				merchantInfoData = { merchant: data.merchant || '', text: '' };
 			}
-		} catch (e) {
-			merchantInfoError = e.message;
+		} catch (error) {
+			merchantInfoError = error.message;
 		} finally {
 			merchantInfoLoading = false;
 		}
@@ -316,7 +316,7 @@
 			fireworksTimeout = setTimeout(() => {
 				showFireworks = false;
 				fireworksTimeout = null;
-			}, 15000);
+			}, 15_000);
 		}
 
 		previousUnallocatedTotal = currentUnallocatedTotal;
@@ -334,9 +334,9 @@
 
 		// Add budgets in alphabetical order
 		const sortedBudgets = [...localData.budgets].sort((a, b) => a.name.localeCompare(b.name));
-		sortedBudgets.forEach((budget) => {
+		for (const budget of sortedBudgets) {
 			options.push({ value: budget.name, label: budget.name });
-		});
+		}
 
 		return options;
 	});
@@ -573,21 +573,19 @@
 	function getAutoAssociationButtonInfo(charge) {
 		const autoAssociation = getAutoAssociationForMerchant(charge);
 
-		if (autoAssociation) {
-			return {
-				text: 'Change Auto-association',
-				tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
-				title: 'Change auto-association',
-				class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
-			};
-		} else {
-			return {
-				text: 'Create Auto-association',
-				tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
-				title: 'Create auto-association',
-				class: 'bg-green-700 text-green-200 hover:bg-green-600'
-			};
-		}
+		return autoAssociation
+			? {
+					text: 'Change Auto-association',
+					tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
+					title: 'Change auto-association',
+					class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
+				}
+			: {
+					text: 'Create Auto-association',
+					tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
+					title: 'Create auto-association',
+					class: 'bg-green-700 text-green-200 hover:bg-green-600'
+				};
 	}
 
 	// Auto-association creation functions
@@ -670,8 +668,8 @@
 			// Invalidate the cache to ensure fresh data is loaded
 			await invalidate('/projects/ccbilling');
 			await goto('/projects/ccbilling');
-		} catch (err) {
-			deleteError = err.message;
+		} catch (error) {
+			deleteError = error.message;
 		} finally {
 			isDeleting = false;
 			showDeleteDialog = false;
@@ -718,10 +716,10 @@
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
-		} catch (err) {
-			console.error('❌ Upload/parse failed:', err);
-			uploadError = err.message;
-			showToastMessage(`Upload/parse failed: ${err.message}`, 'error');
+		} catch (error) {
+			console.error('❌ Upload/parse failed:', error);
+			uploadError = error.message;
+			showToastMessage(`Upload/parse failed: ${error.message}`, 'error');
 		} finally {
 			isUploading = false;
 		}
@@ -761,9 +759,9 @@
 				`Statement parsed successfully! Found ${parseResult.charges_found} charges.`,
 				'success'
 			);
-		} catch (err) {
-			console.error('❌ Parse failed:', err);
-			throw new Error(`Failed to parse statement: ${err.message}`);
+		} catch (error) {
+			console.error('❌ Parse failed:', error);
+			throw new Error(`Failed to parse statement: ${error.message}`);
 		}
 	}
 
@@ -790,8 +788,8 @@
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
-		} catch (err) {
-			console.error('Error deleting statement:', err);
+		} catch (error) {
+			console.error('Error deleting statement:', error);
 		} finally {
 			deletingStatements.delete(statementId);
 			showDeleteStatementDialog = false;
@@ -807,7 +805,7 @@
 	onMount(() => {
 		// Initialize tooltips for allocation buttons
 		tippy('[data-allocation-tooltip]', {
-			content: (reference) => reference.getAttribute('data-allocation-tooltip'),
+			content: (reference) => reference.dataset.allocationTooltip,
 			placement: 'top'
 		});
 	});
@@ -867,8 +865,8 @@
 								throw new Error(e.error || 'Failed to refresh auto-associations');
 							}
 							await invalidate(`cycle-${data.cycleId}`);
-						} catch (err) {
-							alert(err.message);
+						} catch (error) {
+							alert(error.message);
 						}
 					}}
 				>
@@ -1011,7 +1009,7 @@
 									<Button
 										variant="secondary"
 										size="sm"
-										onclick={() => document.getElementById('pdf-file-input').click()}
+										onclick={() => document.querySelector('#pdf-file-input').click()}
 										class="sm:ml-2"
 									>
 										Browse
@@ -1128,7 +1126,7 @@
 								class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
 							>
 								Filtered by: {localData.creditCards.find(
-									(card) => card.id === parseInt(selectedCardFilter)
+									(card) => card.id === Number.parseInt(selectedCardFilter)
 								)?.name}
 							</div>
 						{/if}
@@ -1747,7 +1745,7 @@
 							class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
 						>
 							Filtered by: {localData.creditCards.find(
-								(card) => card.id === parseInt(selectedCardFilter)
+								(card) => card.id === Number.parseInt(selectedCardFilter)
 							)?.name}
 						</div>
 					{/if}

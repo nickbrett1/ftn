@@ -98,10 +98,8 @@
 
 	// Check if capability is required by another selected capability
 	function isRequiredByOther(capability) {
-		return (
-			capabilities.filter(
-				(c) => selectedCapabilities.includes(c.id) && c.dependencies?.includes(capability.id)
-			).length > 0
+		return capabilities.some(
+			(c) => selectedCapabilities.includes(c.id) && c.dependencies?.includes(capability.id)
 		);
 	}
 
@@ -113,7 +111,7 @@
 			return `
         <select 
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          data-testid="config-${field.replace(/_/g, '-')}"
+          data-testid="config-${field.replaceAll('_', '-')}"
           onchange="handleConfigChange('${capability.id}', '${field}', this.value)"
         >
           ${rules.enum
@@ -132,7 +130,7 @@
         <input 
           type="checkbox" 
           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          data-testid="config-${field.replace(/_/g, '-')}"
+          data-testid="config-${field.replaceAll('_', '-')}"
           ${value ? 'checked' : ''}
           onchange="handleConfigChange('${capability.id}', '${field}', this.checked)"
         />
@@ -143,7 +141,7 @@
       <input 
         type="${rules.type || 'text'}" 
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        data-testid="config-${field.replace(/_/g, '-')}"
+        data-testid="config-${field.replaceAll('_', '-')}"
         value="${value}"
         onchange="handleConfigChange('${capability.id}', '${field}', this.value)"
       />
@@ -276,9 +274,9 @@
 												for="config-{capability.id}-{field}"
 											>
 												{field
-													.replace(/([A-Z])/g, ' $1')
-													.replace(/_/g, ' ')
-													.replace(/\b\w/g, (l) => l.toUpperCase())
+													.replaceAll(/([A-Z])/g, ' $1')
+													.replaceAll('_', ' ')
+													.replaceAll(/\b\w/g, (l) => l.toUpperCase())
 													.trim()}
 											</label>
 											<div class="text-sm">
@@ -286,7 +284,7 @@
 													<select
 														id="config-{capability.id}-{field}"
 														class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
-														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+														data-testid="config-{field.replaceAll(/([A-Z])/g, '-$1').toLowerCase()}"
 														value={configuration[capability.id]?.[field] || rules.default || ''}
 														on:change={(e) =>
 															handleConfigurationChange(capability.id, field, e.target.value)}
@@ -300,10 +298,10 @@
 														id="config-{capability.id}-{field}"
 														type="checkbox"
 														class="rounded border-gray-600 bg-gray-900 text-green-600 focus:ring-green-400"
-														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
-														checked={configuration[capability.id]?.[field] !== undefined
-															? configuration[capability.id]?.[field]
-															: (rules.default ?? false)}
+														data-testid="config-{field.replaceAll(/([A-Z])/g, '-$1').toLowerCase()}"
+														checked={configuration[capability.id]?.[field] === undefined
+															? (rules.default ?? false)
+															: configuration[capability.id]?.[field]}
 														on:change={(e) =>
 															handleConfigurationChange(capability.id, field, e.target.checked)}
 													/>
@@ -341,7 +339,9 @@
 															id="config-{capability.id}-{field}"
 															type="text"
 															class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
-															data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+															data-testid="config-{field
+																.replaceAll(/([A-Z])/g, '-$1')
+																.toLowerCase()}"
 															value={(
 																configuration[capability.id]?.[field] ||
 																rules.default ||
@@ -355,7 +355,7 @@
 																	e.target.value
 																		.split(',')
 																		.map((s) => s.trim())
-																		.filter((s) => s)
+																		.filter(Boolean)
 																)}
 														/>
 													{/if}
@@ -369,9 +369,9 @@
 																	for="config-{capability.id}-{field}-{nestedField}"
 																>
 																	{nestedField
-																		.replace(/([A-Z])/g, ' $1')
-																		.replace(/_/g, ' ')
-																		.replace(/\b\w/g, (l) => l.toUpperCase())
+																		.replaceAll(/([A-Z])/g, ' $1')
+																		.replaceAll('_', ' ')
+																		.replaceAll(/\b\w/g, (l) => l.toUpperCase())
 																		.trim()}
 																</label>
 																{#if nestedRules.type === 'number'}
@@ -382,7 +382,7 @@
 																		max={nestedRules.maximum}
 																		class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
 																		data-testid="config-{field}-{nestedField
-																			.replace(/([A-Z])/g, '-$1')
+																			.replaceAll(/([A-Z])/g, '-$1')
 																			.toLowerCase()}"
 																		value={configuration[capability.id]?.[field]?.[nestedField] ||
 																			nestedRules.default ||
@@ -404,7 +404,7 @@
 														id="config-{capability.id}-{field}"
 														type={rules.type || 'text'}
 														class="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-green-400"
-														data-testid="config-{field.replace(/([A-Z])/g, '-$1').toLowerCase()}"
+														data-testid="config-{field.replaceAll(/([A-Z])/g, '-$1').toLowerCase()}"
 														value={configuration[capability.id]?.[field] || rules.default || ''}
 														on:change={(e) =>
 															handleConfigurationChange(capability.id, field, e.target.value)}

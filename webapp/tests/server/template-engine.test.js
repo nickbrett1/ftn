@@ -52,8 +52,11 @@ describe('TemplateEngineService', () => {
 		expect(helpers.getCapabilityConfig({ svc: { key: 'value' } }, 'svc', 'key')).toBe('value');
 		const deps = JSON.parse(helpers.generateDependencies(['sveltekit', 'tailwindcss']));
 		expect(Object.keys(deps)).toEqual(expect.arrayContaining(['@sveltejs/kit', 'tailwindcss']));
-		const devDeps = JSON.parse(helpers.generateDevDependencies(['typescript', 'testing']));
-		expect(devDeps).toMatchObject({ typescript: expect.any(String), vitest: expect.any(String) });
+		const developmentDeps = JSON.parse(helpers.generateDevDependencies(['typescript', 'testing']));
+		expect(developmentDeps).toMatchObject({
+			typescript: expect.any(String),
+			vitest: expect.any(String)
+		});
 		expect(helpers.join(['x', 'y'], ' / ')).toBe('x / y');
 		expect(helpers.capitalize('example')).toBe('Example');
 	});
@@ -84,11 +87,11 @@ describe('TemplateEngineService', () => {
 	});
 
 	it('parses helper arguments including numbers and strings', () => {
-		const args = engine.parseHelperArgs("@projectName, 'kebab', 5", {
+		const arguments_ = engine.parseHelperArgs("@projectName, 'kebab', 5", {
 			projectName: 'Hello World'
 		});
 
-		expect(args).toEqual(['Hello World', 'kebab', 5]);
+		expect(arguments_).toEqual(['Hello World', 'kebab', 5]);
 	});
 
 	it('loads template sources and retrieves registered names', () => {

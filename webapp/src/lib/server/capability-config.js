@@ -387,7 +387,7 @@ export class CapabilityConfigurationService {
 			isValid: errors.length === 0,
 			errors,
 			warnings,
-			resolvedCapabilities: Array.from(resolved),
+			resolvedCapabilities: [...resolved],
 			missingDependencies
 		};
 	}
@@ -417,7 +417,7 @@ export class CapabilityConfigurationService {
 				services.add(capability.authService);
 			}
 		}
-		return Array.from(services);
+		return [...services];
 	}
 
 	/**

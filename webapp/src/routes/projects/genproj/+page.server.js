@@ -21,15 +21,15 @@ import { capabilities } from '$lib/config/capabilities.js';
 export async function load({ url, platform, cookies }) {
 	try {
 		// Get query parameters
-		const selectedParam = url.searchParams.get('selected');
-		const projectNameParam = url.searchParams.get('projectName');
-		const repositoryUrlParam = url.searchParams.get('repositoryUrl');
-		const validateParam = url.searchParams.get('validate') === 'true';
-		const errorParam = url.searchParams.get('error');
-		const authParam = url.searchParams.get('auth');
+		const selectedParameter = url.searchParams.get('selected');
+		const projectNameParameter = url.searchParams.get('projectName');
+		const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
+		const validateParameter = url.searchParams.get('validate') === 'true';
+		const errorParameter = url.searchParams.get('error');
+		const authParameter = url.searchParams.get('auth');
 
-		const selectedCapabilities = selectedParam
-			? selectedParam.split(',').filter((id) => id.trim())
+		const selectedCapabilities = selectedParameter
+			? selectedParameter.split(',').filter((id) => id.trim())
 			: [];
 
 		// Check if user is authenticated
@@ -47,23 +47,23 @@ export async function load({ url, platform, cookies }) {
 			// `structuredClone` is not suitable here as it would throw an error.
 			capabilities: JSON.parse(JSON.stringify(capabilities)),
 			selectedCapabilities,
-			projectName: projectNameParam || '',
-			repositoryUrl: repositoryUrlParam || '',
+			projectName: projectNameParameter || '',
+			repositoryUrl: repositoryUrlParameter || '',
 			timestamp: new Date().toISOString(),
 			isAuthenticated,
-			error: errorParam || null,
-			authResult: authParam || null
+			error: errorParameter || null,
+			authResult: authParameter || null
 		};
 
 		// Add validation if requested
-		if (validateParam && selectedCapabilities.length > 0) {
+		if (validateParameter && selectedCapabilities.length > 0) {
 			const findCapability = (id) => capabilities.find((cap) => cap.id === id);
 			const errors = selectedCapabilities
 				.filter((id) => !findCapability(id))
 				.map((id) => `Unknown capability: ${id}`);
-			const requiredAuth = Array.from(
-				new Set(selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? []))
-			);
+			const requiredAuth = [
+				...new Set(selectedCapabilities.flatMap((id) => findCapability(id)?.requiresAuth ?? []))
+			];
 
 			pageData.validation = {
 				valid: errors.length === 0,
@@ -74,8 +74,8 @@ export async function load({ url, platform, cookies }) {
 		}
 
 		return pageData;
-	} catch (err) {
-		console.error('❌ Error loading genproj page data:', err);
+	} catch (error_) {
+		console.error('❌ Error loading genproj page data:', error_);
 		throw error(500, 'Failed to load page data');
 	}
 }

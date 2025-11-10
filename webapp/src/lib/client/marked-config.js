@@ -26,8 +26,8 @@ renderer.code = (code, infostring, escaped) => {
 				ignoreIllegals: true
 			}).value;
 			return `<pre class="hljs"><code>${highlightedCode}</code></pre>`;
-		} catch (e) {
-			console.error('Highlighting error:', e);
+		} catch (error) {
+			console.error('Highlighting error:', error);
 		}
 	}
 	// Fallback for unknown languages or if highlighting fails, using original renderer

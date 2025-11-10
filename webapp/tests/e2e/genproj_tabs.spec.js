@@ -94,7 +94,7 @@ describe('Genproj Two-Tab Workflow', () => {
 	beforeEach(() => {
 		// Create a container for the component
 		container = document.createElement('div');
-		document.body.appendChild(container);
+		document.body.append(container);
 
 		vi.clearAllMocks();
 		// Mock preview API response
@@ -147,8 +147,8 @@ describe('Genproj Two-Tab Workflow', () => {
 		expect(checkboxes.length).toBeGreaterThan(0);
 
 		// Find the Node.js capability checkbox
-		const nodeCheckbox = Array.from(checkboxes).find(
-			(cb) => cb.dataset.capabilityId === 'devcontainer-node'
+		const nodeCheckbox = [...checkboxes].find(
+			(callback) => callback.dataset.capabilityId === 'devcontainer-node'
 		);
 		expect(nodeCheckbox).toBeTruthy();
 
@@ -183,8 +183,8 @@ describe('Genproj Two-Tab Workflow', () => {
 		expect(document.querySelector('[data-testid="capability-selector"]')).toBeTruthy();
 
 		// Step 7: Modify capability selection and view updated preview
-		const pythonCheckbox = Array.from(checkboxes).find(
-			(cb) => cb.dataset.capabilityId === 'devcontainer-python'
+		const pythonCheckbox = [...checkboxes].find(
+			(callback) => callback.dataset.capabilityId === 'devcontainer-python'
 		);
 		expect(pythonCheckbox).toBeTruthy();
 
@@ -212,8 +212,8 @@ describe('Genproj Two-Tab Workflow', () => {
 
 		// Select first capability
 		const checkboxes = document.querySelectorAll('[data-testid="capability-checkbox"]');
-		const nodeCheckbox = Array.from(checkboxes).find(
-			(cb) => cb.dataset.capabilityId === 'devcontainer-node'
+		const nodeCheckbox = [...checkboxes].find(
+			(callback) => callback.dataset.capabilityId === 'devcontainer-node'
 		);
 		nodeCheckbox.click();
 		await waitForNextTick();
@@ -236,8 +236,8 @@ describe('Genproj Two-Tab Workflow', () => {
 
 		// Select additional capability - re-query checkboxes after tab switch
 		const checkboxesAfterSwitch = document.querySelectorAll('[data-testid="capability-checkbox"]');
-		const pythonCheckbox = Array.from(checkboxesAfterSwitch).find(
-			(cb) => cb.dataset.capabilityId === 'devcontainer-python'
+		const pythonCheckbox = [...checkboxesAfterSwitch].find(
+			(callback) => callback.dataset.capabilityId === 'devcontainer-python'
 		);
 		pythonCheckbox.click();
 		await waitForNextTick();

@@ -248,8 +248,8 @@ export const modePersistence = {
 		try {
 			localStorage.setItem('genproj-current-mode', mode);
 			console.log(`💾 Saved mode: ${mode}`);
-		} catch (err) {
-			console.warn('⚠️ Failed to save mode to localStorage:', err);
+		} catch (error) {
+			console.warn('⚠️ Failed to save mode to localStorage:', error);
 		}
 	},
 
@@ -264,8 +264,8 @@ export const modePersistence = {
 				console.log(`📂 Loaded mode: ${savedMode}`);
 				return savedMode;
 			}
-		} catch (err) {
-			console.warn('⚠️ Failed to load mode from localStorage:', err);
+		} catch (error) {
+			console.warn('⚠️ Failed to load mode from localStorage:', error);
 		}
 		return null;
 	},
@@ -277,8 +277,8 @@ export const modePersistence = {
 		try {
 			localStorage.removeItem('genproj-current-mode');
 			console.log('🗑️ Cleared saved mode');
-		} catch (err) {
-			console.warn('⚠️ Failed to clear saved mode:', err);
+		} catch (error) {
+			console.warn('⚠️ Failed to clear saved mode:', error);
 		}
 	}
 };

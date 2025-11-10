@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 import { requireUser } from '$lib/server/require-user.js';
 
-async function getPayments(db, batchSize, offset) {
+async function getPayments(database, batchSize, offset) {
 	const query = `
 		SELECT id, merchant, merchant_normalized, merchant_details
 		FROM payment
@@ -10,15 +10,15 @@ async function getPayments(db, batchSize, offset) {
 		ORDER BY id
 		${offset === 0 ? '' : 'LIMIT ? OFFSET ?'}
 	`;
-	const params = offset === 0 ? [] : [batchSize, offset];
-	const { results } = await db
+	const parameters = offset === 0 ? [] : [batchSize, offset];
+	const { results } = await database
 		.prepare(query)
-		.bind(...params)
+		.bind(...parameters)
 		.all();
 	return results;
 }
 
-async function getBudgetMerchants(db, batchSize, offset) {
+async function getBudgetMerchants(database, batchSize, offset) {
 	const query = `
 		SELECT id, merchant, merchant_normalized, budget_id
 		FROM budget_merchant
@@ -26,15 +26,15 @@ async function getBudgetMerchants(db, batchSize, offset) {
 		ORDER BY id
 		${offset === 0 ? '' : 'LIMIT ?'}
 	`;
-	const params = offset === 0 ? [] : [batchSize];
-	const { results } = await db
+	const parameters = offset === 0 ? [] : [batchSize];
+	const { results } = await database
 		.prepare(query)
-		.bind(...params)
+		.bind(...parameters)
 		.all();
 	return results;
 }
 
-async function normalizePayments(db, payments) {
+async function normalizePayments(database, payments) {
 	let updatedCount = 0;
 	const errors = [];
 	for (const payment of payments) {
@@ -47,7 +47,7 @@ async function normalizePayments(db, payments) {
 				normalized.merchant_normalized !== payment.merchant_normalized ||
 				newDetails !== currentDetails
 			) {
-				await db
+				await database
 					.prepare(
 						`
 						UPDATE payment
@@ -71,14 +71,14 @@ async function normalizePayments(db, payments) {
 	return { updatedCount, errors };
 }
 
-async function normalizeBudgetMerchants(db, budgetMerchants) {
+async function normalizeBudgetMerchants(database, budgetMerchants) {
 	let budgetMerchantsUpdated = 0;
 	const errors = [];
 	for (const mapping of budgetMerchants) {
 		try {
 			const normalized = normalizeMerchant(mapping.merchant);
 			if (normalized.merchant_normalized !== mapping.merchant_normalized) {
-				await db
+				await database
 					.prepare(
 						`
 						UPDATE budget_merchant
@@ -114,8 +114,8 @@ export async function POST(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 
-	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) {
 		return json({ error: 'Database not available' }, { status: 500 });
 	}
 
@@ -125,33 +125,33 @@ export async function POST(event) {
 		const batchSize = body.batchSize || 50;
 		const offset = body.offset || 0;
 
-		const payments = await getPayments(db, batchSize, offset);
-		let { updatedCount, errors: paymentErrors } = await normalizePayments(db, payments);
+		const payments = await getPayments(database, batchSize, offset);
+		let { updatedCount, errors: paymentErrors } = await normalizePayments(database, payments);
 
-		const budgetMerchants = await getBudgetMerchants(db, batchSize, offset);
+		const budgetMerchants = await getBudgetMerchants(database, batchSize, offset);
 		let { budgetMerchantsUpdated, errors: budgetErrors } = await normalizeBudgetMerchants(
-			db,
+			database,
 			budgetMerchants
 		);
 
 		const errors = [...paymentErrors, ...budgetErrors];
 
 		if (offset === 0 && updatedCount < 3) {
-			const bulkUpdates = await performBulkPatternUpdates(db);
+			const bulkUpdates = await performBulkPatternUpdates(database);
 			updatedCount += bulkUpdates.paymentsUpdated;
 			budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
 			errors.push(...(bulkUpdates.errors || []));
 
-			const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(db);
+			const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(database);
 			budgetMerchantsUpdated += budgetBulkUpdates.updated;
 			errors.push(...(budgetBulkUpdates.errors || []));
 		}
 
-		const consistencyUpdates = await ensurePaymentBudgetConsistency(db);
+		const consistencyUpdates = await ensurePaymentBudgetConsistency(database);
 		budgetMerchantsUpdated += consistencyUpdates.updated;
 		errors.push(...(consistencyUpdates.errors || []));
 
-		const assignmentCheck = await checkAssignmentConsistency(db);
+		const assignmentCheck = await checkAssignmentConsistency(database);
 		if (assignmentCheck.inconsistencies && assignmentCheck.inconsistencies.length > 0) {
 			errors.push({
 				type: 'assignment_inconsistency',
@@ -162,7 +162,7 @@ export async function POST(event) {
 			});
 		}
 
-		const duplicateCheck = await checkDuplicateMerchantVariations(db);
+		const duplicateCheck = await checkDuplicateMerchantVariations(database);
 		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
 			errors.push({
 				type: 'duplicate_merchant_variations',
@@ -173,7 +173,7 @@ export async function POST(event) {
 			});
 		}
 
-		const { results: countResult } = await db
+		const { results: countResult } = await database
 			.prepare(
 				`
 				SELECT COUNT(*) as total
@@ -216,7 +216,7 @@ export async function POST(event) {
  * Perform bulk pattern-based updates for known merchant patterns
  * This is more efficient than processing each payment individually
  */
-async function performBulkPatternUpdates(db) {
+async function performBulkPatternUpdates(database) {
 	const updates = [
 		// Amazon variations
 		{
@@ -355,7 +355,7 @@ async function performBulkPatternUpdates(db) {
 		AND merchant IS NOT NULL
 	`;
 
-			const result = await db.prepare(sql).bind(update.normalized, update.normalized).run();
+			const result = await database.prepare(sql).bind(update.normalized, update.normalized).run();
 
 			const updated = result.changes || 0;
 			totalUpdated += updated;
@@ -386,7 +386,7 @@ async function performBulkPatternUpdates(db) {
  *
  * This prevents the UNIQUE constraint error: budget_merchant.budget_id, budget_merchant.merchant_normalized
  */
-async function performBudgetMerchantBulkUpdates(db) {
+async function performBudgetMerchantBulkUpdates(database) {
 	const updates = [
 		// Amazon variations
 		{
@@ -481,7 +481,7 @@ async function performBudgetMerchantBulkUpdates(db) {
 	for (const update of updates) {
 		try {
 			// First, find all budget merchants that match this pattern and would be normalized
-			const { results: matchingMerchants } = await db
+			const { results: matchingMerchants } = await database
 				.prepare(
 					`
 					SELECT id, budget_id, merchant, merchant_normalized
@@ -507,7 +507,7 @@ async function performBudgetMerchantBulkUpdates(db) {
 			for (const [budgetId, merchants] of Object.entries(budgetGroups)) {
 				try {
 					// Check if this budget already has the normalized merchant
-					const { results: existingNormalized } = await db
+					const { results: existingNormalized } = await database
 						.prepare(
 							`
 							SELECT id FROM budget_merchant 
@@ -520,7 +520,10 @@ async function performBudgetMerchantBulkUpdates(db) {
 					if (existingNormalized.length > 0) {
 						// Budget already has the normalized merchant, remove all matching merchants
 						for (const merchant of merchants) {
-							await db.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
+							await database
+								.prepare('DELETE FROM budget_merchant WHERE id = ?')
+								.bind(merchant.id)
+								.run();
 							totalRemoved++;
 						}
 					} else {
@@ -528,7 +531,7 @@ async function performBudgetMerchantBulkUpdates(db) {
 						const [firstMerchant, ...remainingMerchants] = merchants;
 
 						// Update the first one
-						await db
+						await database
 							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?')
 							.bind(update.normalized, firstMerchant.id)
 							.run();
@@ -536,7 +539,10 @@ async function performBudgetMerchantBulkUpdates(db) {
 
 						// Remove the rest
 						for (const merchant of remainingMerchants) {
-							await db.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
+							await database
+								.prepare('DELETE FROM budget_merchant WHERE id = ?')
+								.bind(merchant.id)
+								.run();
 							totalRemoved++;
 						}
 					}
@@ -548,7 +554,7 @@ async function performBudgetMerchantBulkUpdates(db) {
 					);
 					errors.push({
 						type: 'budget_merchant_budget_error',
-						budgetId: parseInt(budgetId),
+						budgetId: Number.parseInt(budgetId),
 						pattern: update.pattern,
 						normalized: update.normalized,
 						error: budgetError.message
@@ -581,10 +587,10 @@ async function performBudgetMerchantBulkUpdates(db) {
  * 2. For each normalized name, find all budget merchants that should normalize to the same value
  * 3. Update budget merchants to use the canonical normalized form from payments
  */
-async function ensurePaymentBudgetConsistency(db) {
+async function ensurePaymentBudgetConsistency(database) {
 	try {
 		// Get all unique normalized merchant names from payments
-		const { results: paymentNormalized } = await db
+		const { results: paymentNormalized } = await database
 			.prepare(
 				`
 				SELECT DISTINCT merchant_normalized
@@ -603,7 +609,7 @@ async function ensurePaymentBudgetConsistency(db) {
 			const normalizedName = paymentMerchant.merchant_normalized;
 
 			// Find all budget merchants that should normalize to this name
-			const { results: budgetMerchants } = await db
+			const { results: budgetMerchants } = await database
 				.prepare(
 					`
 					SELECT id, merchant, merchant_normalized
@@ -625,7 +631,7 @@ async function ensurePaymentBudgetConsistency(db) {
 						normalized.merchant_normalized === normalizedName &&
 						budgetMerchant.merchant_normalized !== normalizedName
 					) {
-						await db
+						await database
 							.prepare(
 								`
 								UPDATE budget_merchant 
@@ -670,10 +676,10 @@ async function ensurePaymentBudgetConsistency(db) {
  * Check for merchants that are assigned to budgets but still appear as unassigned
  * This helps identify normalization inconsistencies that cause the modal bug
  */
-async function checkAssignmentConsistency(db) {
+async function checkAssignmentConsistency(database) {
 	try {
 		// Get all merchants that are assigned to budgets
-		const { results: assignedMerchants } = await db
+		const { results: assignedMerchants } = await database
 			.prepare(
 				`
 				SELECT DISTINCT merchant_normalized
@@ -691,7 +697,7 @@ async function checkAssignmentConsistency(db) {
 			const normalizedName = assigned.merchant_normalized;
 
 			// Check if this merchant appears in the unassigned merchants query
-			const { results: unassignedCheck } = await db
+			const { results: unassignedCheck } = await database
 				.prepare(
 					`
 					SELECT DISTINCT p.merchant_normalized
@@ -711,7 +717,7 @@ async function checkAssignmentConsistency(db) {
 			if (unassignedCheck.length > 0) {
 				// This merchant is assigned but still appears as unassigned
 				// Get more details about the assignment
-				const { results: assignmentDetails } = await db
+				const { results: assignmentDetails } = await database
 					.prepare(
 						`
 						SELECT bm.id, bm.merchant, bm.merchant_normalized, bm.budget_id
@@ -744,10 +750,10 @@ async function checkAssignmentConsistency(db) {
  * Check for merchants that normalize to the same value but have different assignment statuses
  * This is likely the root cause of the modal bug
  */
-async function checkDuplicateMerchantVariations(db) {
+async function checkDuplicateMerchantVariations(database) {
 	try {
 		// Find merchants that normalize to the same value but have different assignment statuses
-		const { results: duplicateVariations } = await db
+		const { results: duplicateVariations } = await database
 			.prepare(
 				`
 				WITH normalized_merchants AS (
@@ -808,14 +814,14 @@ export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 
-	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) {
 		return json({ error: 'Database not available' }, { status: 500 });
 	}
 
 	try {
 		// Get statistics
-		const stats = await db
+		const stats = await database
 			.prepare(
 				`
 				SELECT 
@@ -830,7 +836,7 @@ export async function GET(event) {
 			)
 			.first();
 
-		const budgetStats = await db
+		const budgetStats = await database
 			.prepare(
 				`
 				SELECT 
@@ -842,7 +848,7 @@ export async function GET(event) {
 			.first();
 
 		// Get sample normalizations
-		const { results: samples } = await db
+		const { results: samples } = await database
 			.prepare(
 				`
 				SELECT 
@@ -861,7 +867,7 @@ export async function GET(event) {
 			.all();
 
 		// Get UNITED airlines specific information
-		const { results: unitedInfo } = await db
+		const { results: unitedInfo } = await database
 			.prepare(
 				`
 				SELECT 
@@ -876,7 +882,7 @@ export async function GET(event) {
 			.all();
 
 		// Get merchants that still need normalization
-		const { results: pendingMerchants } = await db
+		const { results: pendingMerchants } = await database
 			.prepare(
 				`
 				SELECT 

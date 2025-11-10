@@ -14,7 +14,7 @@
 			Have a project in mind? Drop me a note and I'll get back to you as soon as I can.
 		</div>
 
-		<HoverFadeCard onclick={() => (window.location.href = 'mailto:nick@fintechnick.com')}>
+		<HoverFadeCard onclick={() => (globalThis.location.href = 'mailto:nick@fintechnick.com')}>
 			{#snippet initial()}
 				<div class="flex flex-col items-center grow">
 					<EnvelopeRegular aria-label="Email" class="size-20 grow" />
@@ -29,7 +29,7 @@
 			{/snippet}
 		</HoverFadeCard>
 
-		<Card onclick={() => (window.location = 'https://www.linkedin.com/in/nick-brett/')}>
+		<Card onclick={() => (globalThis.location = 'https://www.linkedin.com/in/nick-brett/')}>
 			<div class="flex flex-col items-center grow hover:text-sky-600">
 				<LinkedinInBrands aria-label="LinkedIn" class="size-20 grow" />
 				<span class="text-xl leading-none content-center pt-2 grow">LinkedIn</span>

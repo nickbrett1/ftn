@@ -142,8 +142,8 @@ export const capabilityActions = {
 				};
 				localStorage.setItem('genproj-capabilities', JSON.stringify(data));
 				console.log('💾 Persisted capability selection to localStorage');
-			} catch (err) {
-				console.warn('⚠️ Failed to persist capability selection:', err);
+			} catch (error) {
+				console.warn('⚠️ Failed to persist capability selection:', error);
 			}
 			return store;
 		});
@@ -160,8 +160,8 @@ export const capabilityActions = {
 				capabilityActions.setSelectedCapabilities(data.selectedCapabilities || []);
 				console.log('📂 Loaded capability selection from localStorage');
 			}
-		} catch (err) {
-			console.warn('⚠️ Failed to load capability selection from localStorage:', err);
+		} catch (error) {
+			console.warn('⚠️ Failed to load capability selection from localStorage:', error);
 		}
 	},
 
@@ -172,8 +172,8 @@ export const capabilityActions = {
 		try {
 			localStorage.removeItem('genproj-capabilities');
 			console.log('🗑️ Cleared capability selection from localStorage');
-		} catch (err) {
-			console.warn('⚠️ Failed to clear capability selection from localStorage:', err);
+		} catch (error) {
+			console.warn('⚠️ Failed to clear capability selection from localStorage:', error);
 		}
 	}
 };

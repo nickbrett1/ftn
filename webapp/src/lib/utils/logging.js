@@ -216,14 +216,17 @@ class GenprojLogger {
 
 		// Use appropriate console method
 		switch (level) {
-			case 'ERROR':
+			case 'ERROR': {
 				console.error(formattedMessage, data);
 				break;
-			case 'WARN':
+			}
+			case 'WARN': {
 				console.warn(formattedMessage, data);
 				break;
-			default:
+			}
+			default: {
 				console.log(formattedMessage, data);
+			}
 		}
 	}
 }
@@ -261,13 +264,13 @@ export const securityLogger = createLogger('genproj:security');
  * @param {Object} context - Additional context
  * @returns {Function} Wrapped function with timing
  */
-export function withTiming(fn, operation, context = {}) {
-	return async (...args) => {
+export function withTiming(function_, operation, context = {}) {
+	return async (...arguments_) => {
 		const startTime = Date.now();
 		perfLogger.info(`Starting ${operation}`, context);
 
 		try {
-			const result = await fn(...args);
+			const result = await function_(...arguments_);
 			const duration = Date.now() - startTime;
 			perfLogger.success(`Completed ${operation}`, {
 				...context,

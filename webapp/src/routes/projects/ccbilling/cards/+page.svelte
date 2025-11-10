@@ -49,15 +49,15 @@
 			newCardLast4 = '';
 			showAddForm = false;
 			location.reload();
-		} catch (err) {
-			addError = err.message;
+		} catch (error) {
+			addError = error.message;
 		} finally {
 			isAdding = false;
 		}
 	}
 
 	function goToCardDetail(card) {
-		window.location.href = `/projects/ccbilling/cards/${card.id}`;
+		globalThis.location.href = `/projects/ccbilling/cards/${card.id}`;
 	}
 </script>
 

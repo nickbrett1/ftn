@@ -384,5 +384,5 @@ function getRequiredAuthServices(selectedCapabilities) {
 		}
 	}
 
-	return Array.from(required);
+	return [...required];
 }

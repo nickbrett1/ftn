@@ -1,4 +1,4 @@
-import { PDFUtils } from './pdf-utils.js';
+import { PDFUtils as PDFUtilities } from './pdf-utils.js';
 import { ParserFactory } from '../utils/ccbilling-parsers/parser-factory.js';
 
 /**
@@ -9,7 +9,7 @@ export class PDFService {
 	constructor() {
 		this.parserFactory = new ParserFactory();
 		// Configure PDF.js worker for browser environment
-		PDFUtils.configureWorker();
+		PDFUtilities.configureWorker();
 	}
 
 	/**
@@ -20,10 +20,10 @@ export class PDFService {
 	async parseStatement(pdfFile) {
 		try {
 			// Validate PDF file
-			PDFUtils.validatePDFFile(pdfFile);
+			PDFUtilities.validatePDFFile(pdfFile);
 
 			// Use shared PDF parsing logic
-			const parsedData = await PDFUtils.parseStatement(pdfFile, this.parserFactory, {
+			const parsedData = await PDFUtilities.parseStatement(pdfFile, this.parserFactory, {
 				groupByLine: true,
 				sortByPosition: true
 			});

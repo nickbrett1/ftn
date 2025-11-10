@@ -6,7 +6,7 @@ vi.mock('$lib/components/Button.svelte', () => ({
 	default: vi.fn().mockImplementation(({ children, onclick, class: className }) => {
 		const button = document.createElement('button');
 		button.textContent = children;
-		button.onclick = onclick || (() => {});
+		button.addEventListener('click', onclick || (() => {}));
 		if (className) button.className = className;
 		return button;
 	})
@@ -15,8 +15,8 @@ vi.mock('$lib/components/Button.svelte', () => ({
 vi.mock('$lib/components/Fireworks.svelte', () => ({
 	default: vi.fn().mockImplementation(({ show = false }) => {
 		const div = document.createElement('div');
-		div.setAttribute('data-testid', 'fireworks');
-		div.setAttribute('data-show', show.toString());
+		div.dataset.testid = 'fireworks';
+		div.dataset.show = show.toString();
 		div.textContent = show ? 'Fireworks Active' : 'Fireworks Inactive';
 		return div;
 	})
@@ -25,7 +25,7 @@ vi.mock('$lib/components/Fireworks.svelte', () => ({
 vi.mock('$lib/components/AutoAssociationUpdateModal.svelte', () => ({
 	default: vi.fn().mockImplementation(() => {
 		const div = document.createElement('div');
-		div.setAttribute('data-testid', 'auto-association-modal');
+		div.dataset.testid = 'auto-association-modal';
 		return div;
 	})
 }));
@@ -46,7 +46,7 @@ vi.mock('linkify-it', () => ({
 }));
 
 // Mock fetch for API calls
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Import the component after mocking
 import BillingCyclePage from '../../src/routes/projects/ccbilling/[id]/+page.svelte';
@@ -106,7 +106,7 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 		};
 
 		// Mock successful fetch responses
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			json: () => Promise.resolve({ success: true })
 		});
@@ -173,8 +173,8 @@ describe('Billing Cycle Page - Fireworks Integration (Simple)', () => {
 		);
 
 		// Debug: log all button texts to see what's available
-		const allButtons = Array.from(document.querySelectorAll('button'));
-		const buttonTexts = allButtons.map((btn) => btn.textContent);
+		const allButtons = [...document.querySelectorAll('button')];
+		const buttonTexts = allButtons.map((button) => button.textContent);
 		console.log('Available buttons:', buttonTexts);
 
 		allButtons.find(

@@ -168,32 +168,45 @@ function validateSpecificCapabilityConfig(capabilityId, config) {
 	}
 
 	switch (capabilityId) {
-		case 'devcontainer-node':
-			return validateDevContainerNodeConfig(config);
-		case 'devcontainer-python':
-			return validateDevContainerPythonConfig(config);
-		case 'devcontainer-java':
-			return validateDevContainerJavaConfig(config);
-		case 'circleci':
+		case 'devcontainer-node': {
+			return validateDevelopmentContainerNodeConfig(config);
+		}
+		case 'devcontainer-python': {
+			return validateDevelopmentContainerPythonConfig(config);
+		}
+		case 'devcontainer-java': {
+			return validateDevelopmentContainerJavaConfig(config);
+		}
+		case 'circleci': {
 			return validateCircleCIConfig(config);
-		case 'github-actions':
+		}
+		case 'github-actions': {
 			return validateGitHubActionsConfig(config);
-		case 'sonarcloud':
+		}
+		case 'sonarcloud': {
 			return validateSonarCloudConfig(config);
-		case 'doppler':
+		}
+		case 'doppler': {
 			return validateDopplerConfig(config);
-		case 'cloudflare-wrangler':
+		}
+		case 'cloudflare-wrangler': {
 			return validateCloudflareWranglerConfig(config);
-		case 'dependabot':
+		}
+		case 'dependabot': {
 			return validateDependabotConfig(config);
-		case 'lighthouse-ci':
+		}
+		case 'lighthouse-ci': {
 			return validateLighthouseCIConfig(config);
-		case 'playwright':
+		}
+		case 'playwright': {
 			return validatePlaywrightConfig(config);
-		case 'spec-kit':
+		}
+		case 'spec-kit': {
 			return validateSpecKitConfig(config);
-		default:
-			return { valid: true }; // Unknown capability, allow any config
+		}
+		default: {
+			return { valid: true };
+		} // Unknown capability, allow any config
 	}
 }
 
@@ -202,7 +215,7 @@ function validateSpecificCapabilityConfig(capabilityId, config) {
  * @param {Object} config - Configuration object
  * @returns {Object} Validation result
  */
-function validateDevContainerNodeConfig(config) {
+function validateDevelopmentContainerNodeConfig(config) {
 	const validNodeVersions = ['18', '20', '22'];
 	const validPackageManagers = ['npm', 'yarn', 'pnpm'];
 
@@ -222,7 +235,7 @@ function validateDevContainerNodeConfig(config) {
  * @param {Object} config - Configuration object
  * @returns {Object} Validation result
  */
-function validateDevContainerPythonConfig(config) {
+function validateDevelopmentContainerPythonConfig(config) {
 	const validPythonVersions = ['3.9', '3.10', '3.11', '3.12'];
 	const validPackageManagers = ['pip', 'poetry', 'pipenv'];
 
@@ -242,7 +255,7 @@ function validateDevContainerPythonConfig(config) {
  * @param {Object} config - Configuration object
  * @returns {Object} Validation result
  */
-function validateDevContainerJavaConfig(config) {
+function validateDevelopmentContainerJavaConfig(config) {
 	const validJavaVersions = ['11', '17', '21'];
 	const validBuildTools = ['maven', 'gradle'];
 

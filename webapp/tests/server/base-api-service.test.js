@@ -50,7 +50,7 @@ describe('BaseAPIService', () => {
 	});
 
 	it('returns true when token validation succeeds', async () => {
-		const validateMethod = vi.fn().mockResolvedValue(undefined);
+		const validateMethod = vi.fn().mockResolvedValue();
 		const result = await service.validateToken(validateMethod);
 
 		expect(validateMethod).toHaveBeenCalled();

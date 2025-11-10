@@ -37,10 +37,10 @@ describe('genproj error utilities', () => {
 
 	describe('error classes', () => {
 		it('preserves message, code, and status', () => {
-			const err = new GenprojError('boom', 'GENPROJ', 418);
-			expect(err.message).toBe('boom');
-			expect(err.code).toBe('GENPROJ');
-			expect(err.statusCode).toBe(418);
+			const error = new GenprojError('boom', 'GENPROJ', 418);
+			expect(error.message).toBe('boom');
+			expect(error.code).toBe('GENPROJ');
+			expect(error.statusCode).toBe(418);
 		});
 
 		it('sets subclass-specific fields', () => {

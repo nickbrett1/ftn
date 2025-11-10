@@ -18,10 +18,10 @@ describe('Unassigned Merchants API', () => {
 		vi.clearAllMocks();
 
 		// Import the mocked functions
-		const dbModule = await import('$lib/server/ccbilling-db.js');
+		const databaseModule = await import('$lib/server/ccbilling-db.js');
 		const authModule = await import('$lib/server/require-user.js');
 
-		mockGetUnassignedMerchants = dbModule.getUnassignedMerchants;
+		mockGetUnassignedMerchants = databaseModule.getUnassignedMerchants;
 		mockRequireUser = authModule.requireUser;
 	});
 	it('should return unassigned merchants when authenticated', async () => {

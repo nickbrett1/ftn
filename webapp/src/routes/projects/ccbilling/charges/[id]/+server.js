@@ -8,7 +8,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const charge_id = parseInt(params.id);
+	const charge_id = Number.parseInt(params.id);
 
 	if (isNaN(charge_id)) {
 		return json({ error: 'Invalid charge ID' }, { status: 400 });
@@ -32,7 +32,7 @@ export async function PUT(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params, request } = event;
-	const charge_id = parseInt(params.id);
+	const charge_id = Number.parseInt(params.id);
 
 	if (isNaN(charge_id)) {
 		return json({ error: 'Invalid charge ID' }, { status: 400 });
@@ -63,8 +63,8 @@ export async function PUT(event) {
 			}
 
 			// Use current values for fields not provided
-			const updateMerchant = merchant !== undefined ? merchant : currentCharge.merchant;
-			const updateAmount = amount !== undefined ? parseFloat(amount) : currentCharge.amount;
+			const updateMerchant = merchant === undefined ? currentCharge.merchant : merchant;
+			const updateAmount = amount === undefined ? currentCharge.amount : Number.parseFloat(amount);
 
 			await updatePayment(event, charge_id, updateMerchant, updateAmount, allocated_to);
 		} else {
@@ -74,7 +74,7 @@ export async function PUT(event) {
 			}
 
 			// Validate amount is a number
-			const parsedAmount = parseFloat(amount);
+			const parsedAmount = Number.parseFloat(amount);
 			if (isNaN(parsedAmount)) {
 				return json({ error: 'Amount must be a valid number' }, { status: 400 });
 			}

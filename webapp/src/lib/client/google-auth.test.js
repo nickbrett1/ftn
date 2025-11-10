@@ -29,8 +29,6 @@ describe('Google Auth Utils', () => {
 		vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
 			if (tagName === 'script') {
 				const script = originalCreateElement.call(document, 'script');
-				script.onload = null;
-				script.onerror = null;
 				vi.spyOn(script, 'setAttribute');
 				vi.spyOn(script, 'remove');
 				return script;
@@ -47,17 +45,17 @@ describe('Google Auth Utils', () => {
 
 	describe('getRedirectUri', () => {
 		it('should return development URI in development environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'development';
 
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
 
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return production URI in production environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
 
 			// Mock browser environment for production test
@@ -79,11 +77,11 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return preview URI for preview deployments', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
 
 			// Mock browser environment for preview deployment
@@ -105,7 +103,7 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 	});
 
@@ -213,7 +211,7 @@ describe('Google Auth Utils', () => {
 
 			globalThis.google = undefined;
 
-			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+			const appendSpy = vi.spyOn(document.body, 'append');
 
 			// Call initiateGoogleAuth once
 
@@ -221,9 +219,9 @@ describe('Google Auth Utils', () => {
 
 			// Expect appendChild to have been called with a script element
 
-			expect(appendChildSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
+			expect(appendSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
 
-			const scriptElement = appendChildSpy.mock.calls[0][0];
+			const scriptElement = appendSpy.mock.calls[0][0];
 
 			expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
 
@@ -248,8 +246,7 @@ describe('Google Auth Utils', () => {
 			};
 
 			// Simulate script loading success
-
-			scriptElement.onload();
+			scriptElement.dispatchEvent(new Event('load'));
 
 			// Wait for the initiateAuthPromise to resolve
 
@@ -267,9 +264,9 @@ describe('Google Auth Utils', () => {
 			// Mock GIS not loaded
 			globalThis.google = undefined;
 
-			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
-			appendChildSpy.mockImplementationOnce((scriptElement) => {
-				scriptElement.onerror(); // Simulate script loading error
+			const appendSpy = vi.spyOn(document.body, 'append');
+			appendSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.dispatchEvent(new Event('error')); // Simulate script loading error
 			});
 
 			await expect(initiateGoogleAuth()).rejects.toThrow('Google gsi script failed to load');
@@ -279,9 +276,9 @@ describe('Google Auth Utils', () => {
 			// Mock GIS not loaded
 			globalThis.google = undefined;
 
-			const appendChildSpy = vi.spyOn(document.body, 'appendChild');
-			appendChildSpy.mockImplementationOnce((scriptElement) => {
-				scriptElement.onload(); // Simulate script loading
+			const appendSpy = vi.spyOn(document.body, 'append');
+			appendSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.dispatchEvent(new Event('load')); // Simulate script loading
 			});
 
 			// Mock GIS loaded but id not initialized

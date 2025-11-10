@@ -39,7 +39,7 @@ describe('Progressive Authentication Flow Integration', () => {
 	it('should initialize with Google authentication', async () => {
 		// Arrange
 		mockKV.get.mockResolvedValueOnce(null); // No existing state
-		mockKV.put.mockResolvedValueOnce(undefined); // Save new state
+		mockKV.put.mockResolvedValueOnce(); // Save new state
 
 		// Act
 		const initialized = await authManager.initialize(mockUser, mockPlatform);
@@ -119,7 +119,7 @@ describe('Progressive Authentication Flow Integration', () => {
 			google: { authenticated: true, email: mockUser.email, name: mockUser.name }
 		};
 		mockKV.get.mockResolvedValueOnce(JSON.stringify(existingState));
-		mockKV.put.mockResolvedValueOnce(undefined);
+		mockKV.put.mockResolvedValueOnce();
 
 		const githubAuth = {
 			username: 'testuser',

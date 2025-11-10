@@ -195,9 +195,9 @@ export class GitHubAPIService {
 		console.log(`🔄 Creating ${files.length} files in ${owner}/${repo}`);
 
 		// Get the latest commit SHA
-		const refResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/main`);
-		const refData = await refResponse.json();
-		const latestCommitSha = refData.object.sha;
+		const referenceResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/main`);
+		const referenceData = await referenceResponse.json();
+		const latestCommitSha = referenceData.object.sha;
 
 		// Get the tree SHA
 		const commitResponse = await this.makeRequest(
@@ -300,13 +300,13 @@ export class GitHubAPIService {
 	 * @returns {Promise<Object[]>} Array of repositories
 	 */
 	async listRepositories(type = 'all', sort = 'updated', perPage = 30) {
-		const params = new URLSearchParams({
+		const parameters = new URLSearchParams({
 			type,
 			sort,
 			per_page: perPage.toString()
 		});
 
-		const response = await this.makeRequest(`/user/repos?${params.toString()}`);
+		const response = await this.makeRequest(`/user/repos?${parameters.toString()}`);
 		return response.json();
 	}
 

@@ -31,10 +31,13 @@ vi.mock('$lib/server/route-utils.js', () => ({
 					if (options.validators && options.validators.id) {
 						const validation = options.validators.id(id);
 						if (validation !== true) {
-							return new Response(JSON.stringify({ success: false, error: validation }), {
-								status: 400,
-								headers: { 'Content-Type': 'application/json' }
-							});
+							return Response.json(
+								{ success: false, error: validation },
+								{
+									status: 400,
+									headers: { 'Content-Type': 'application/json' }
+								}
+							);
 						}
 					}
 				}
@@ -50,45 +53,49 @@ vi.mock('$lib/server/route-utils.js', () => ({
 						parsedBody = await event.request.json();
 					} catch (error) {
 						console.error('Error parsing request body:', error);
-						return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
-							status: 400,
-							headers: { 'Content-Type': 'application/json' }
-						});
+						return Response.json(
+							{ success: false, error: 'Invalid JSON' },
+							{
+								status: 400,
+								headers: { 'Content-Type': 'application/json' }
+							}
+						);
 					}
 				}
 
 				// Call the handler with the appropriate parameters
-				if (options?.requiredBody && options.requiredBody.length > 0) {
-					return await handler(event, parsedBody);
-				} else {
-					return await handler(event);
-				}
+				return await (options?.requiredBody && options.requiredBody.length > 0
+					? handler(event, parsedBody)
+					: handler(event));
 			};
 		}),
 		createErrorResponse: vi.fn((message, options = {}) => {
-			return new Response(JSON.stringify({ success: false, error: message }), {
-				status: options.status || 400,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return Response.json(
+				{ success: false, error: message },
+				{
+					status: options.status || 400,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
 		}),
-		parseInteger: vi.fn((value, paramName, options = {}) => {
+		parseInteger: vi.fn((value, parameterName, options = {}) => {
 			const { min, max } = options;
 
 			if (!value) {
-				return `Missing required parameter: ${paramName}`;
+				return `Missing required parameter: ${parameterName}`;
 			}
 
-			const parsed = parseInt(value, 10);
+			const parsed = Number.parseInt(value, 10);
 			if (isNaN(parsed)) {
-				return `Invalid ${paramName}: must be a number`;
+				return `Invalid ${parameterName}: must be a number`;
 			}
 
 			if (min !== undefined && parsed < min) {
-				return `Invalid ${paramName}: must be at least ${min}`;
+				return `Invalid ${parameterName}: must be at least ${min}`;
 			}
 
 			if (max !== undefined && parsed > max) {
-				return `Invalid ${paramName}: must be at most ${max}`;
+				return `Invalid ${parameterName}: must be at most ${max}`;
 			}
 
 			return parsed;

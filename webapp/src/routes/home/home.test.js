@@ -19,14 +19,14 @@ describe('Home', () => {
 		expect.assertions(1);
 		try {
 			await load({ cookies: { get: () => null }, platform: {} });
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
-			} catch (redirect) {
-				expected = redirect;
+			} catch (error_) {
+				expected = error_;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -51,14 +51,14 @@ describe('Home', () => {
 					env: { KV: { get: () => null } }
 				}
 			});
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
-			} catch (redirect) {
-				expected = redirect;
+			} catch (error_) {
+				expected = error_;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 });

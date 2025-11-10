@@ -11,8 +11,8 @@ export async function POST(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 
-	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) {
 		return json({ error: 'Database not available' }, { status: 500 });
 	}
 
@@ -21,7 +21,7 @@ export async function POST(event) {
 		const dryRun = body.dryRun !== false; // Default to dry run unless explicitly disabled
 
 		// Find all duplicate merchants that only differ in case
-		const duplicates = await findCaseDuplicates(db);
+		const duplicates = await findCaseDuplicates(database);
 
 		if (dryRun) {
 			return json({
@@ -34,7 +34,7 @@ export async function POST(event) {
 		}
 
 		// Perform the actual deduplication
-		const results = await deduplicateMerchants(db, duplicates);
+		const results = await deduplicateMerchants(database, duplicates);
 
 		return json({
 			success: true,
@@ -61,9 +61,9 @@ export async function POST(event) {
 /**
  * Find merchants that are duplicates when compared case-insensitively
  */
-async function findCaseDuplicates(db) {
+async function findCaseDuplicates(database) {
 	// Find all unique merchant_normalized values that have case variations
-	const { results: potentialDuplicates } = await db
+	const { results: potentialDuplicates } = await database
 		.prepare(
 			`
 			SELECT 
@@ -107,12 +107,12 @@ async function findCaseDuplicates(db) {
 		// Get usage counts for each variant
 		const variantDetails = [];
 		for (const variant of variants) {
-			const paymentCount = await db
+			const paymentCount = await database
 				.prepare('SELECT COUNT(*) as count FROM payment WHERE merchant_normalized = ?')
 				.bind(variant)
 				.first();
 
-			const budgetCount = await db
+			const budgetCount = await database
 				.prepare('SELECT COUNT(*) as count FROM budget_merchant WHERE merchant_normalized = ?')
 				.bind(variant)
 				.first();
@@ -139,7 +139,7 @@ async function findCaseDuplicates(db) {
 /**
  * Perform the actual deduplication by updating all records to use canonical forms
  */
-async function deduplicateMerchants(db, duplicates) {
+async function deduplicateMerchants(database, duplicates) {
 	let paymentsUpdated = 0;
 	let budgetMerchantsUpdated = 0;
 	let budgetMerchantsRemoved = 0;
@@ -154,7 +154,7 @@ async function deduplicateMerchants(db, duplicates) {
 		try {
 			// Update payments to use canonical form
 			for (const variant of nonCanonicalVariants) {
-				const result = await db
+				const result = await database
 					.prepare('UPDATE payment SET merchant_normalized = ? WHERE merchant_normalized = ?')
 					.bind(canonical, variant)
 					.run();
@@ -163,7 +163,7 @@ async function deduplicateMerchants(db, duplicates) {
 
 			// Handle budget_merchant duplicates more carefully
 			// First, get all budget assignments for the canonical form
-			const { results: existingBudgets } = await db
+			const { results: existingBudgets } = await database
 				.prepare('SELECT DISTINCT budget_id FROM budget_merchant WHERE merchant_normalized = ?')
 				.bind(canonical)
 				.all();
@@ -173,7 +173,7 @@ async function deduplicateMerchants(db, duplicates) {
 			// For each non-canonical variant
 			for (const variant of nonCanonicalVariants) {
 				// Get budget assignments for this variant
-				const { results: variantBudgets } = await db
+				const { results: variantBudgets } = await database
 					.prepare('SELECT budget_id FROM budget_merchant WHERE merchant_normalized = ?')
 					.bind(variant)
 					.all();
@@ -181,7 +181,7 @@ async function deduplicateMerchants(db, duplicates) {
 				for (const budget of variantBudgets) {
 					if (existingBudgetIds.has(budget.budget_id)) {
 						// Budget already has canonical form, just remove the variant
-						await db
+						await database
 							.prepare(
 								'DELETE FROM budget_merchant WHERE merchant_normalized = ? AND budget_id = ?'
 							)
@@ -190,7 +190,7 @@ async function deduplicateMerchants(db, duplicates) {
 						budgetMerchantsRemoved++;
 					} else {
 						// Update the variant to canonical form
-						await db
+						await database
 							.prepare(
 								'UPDATE budget_merchant SET merchant_normalized = ? WHERE merchant_normalized = ? AND budget_id = ?'
 							)
@@ -227,14 +227,14 @@ export async function GET(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) return authResult;
 
-	const db = event.platform?.env?.CCBILLING_DB;
-	if (!db) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) {
 		return json({ error: 'Database not available' }, { status: 500 });
 	}
 
 	try {
 		// Find case duplicates for preview
-		const duplicates = await findCaseDuplicates(db);
+		const duplicates = await findCaseDuplicates(database);
 
 		// Get summary statistics
 		const totalVariants = duplicates.reduce((sum, group) => sum + group.totalVariants, 0);

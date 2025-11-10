@@ -12,30 +12,31 @@ function mockServiceFactory(name) {
 	});
 }
 
-var githubFactory;
-var circleciFactory;
-var dopplerFactory;
-var sonarcloudFactory;
+const githubFactory = mockServiceFactory('github');
+const circleciFactory = mockServiceFactory('circleci');
+const dopplerFactory = mockServiceFactory('doppler');
+const sonarcloudFactory = mockServiceFactory('sonarcloud');
 
-vi.mock('../../src/lib/server/github-api.js', () => ({
-	GitHubAPIService: (githubFactory = mockServiceFactory('github'))
+vi.doMock('../../src/lib/server/github-api.js', () => ({
+	GitHubAPIService: githubFactory
 }));
 
-vi.mock('../../src/lib/server/circleci-api.js', () => ({
-	CircleCIAPIService: (circleciFactory = mockServiceFactory('circleci'))
+vi.doMock('../../src/lib/server/circleci-api.js', () => ({
+	CircleCIAPIService: circleciFactory
 }));
 
-vi.mock('../../src/lib/server/doppler-api.js', () => ({
-	DopplerAPIService: (dopplerFactory = mockServiceFactory('doppler'))
+vi.doMock('../../src/lib/server/doppler-api.js', () => ({
+	DopplerAPIService: dopplerFactory
 }));
 
-vi.mock('../../src/lib/server/sonarcloud-api.js', () => ({
-	SonarCloudAPIService: (sonarcloudFactory = mockServiceFactory('sonarcloud'))
+vi.doMock('../../src/lib/server/sonarcloud-api.js', () => ({
+	SonarCloudAPIService: sonarcloudFactory
 }));
 
-import { initializeServices, validateAllTokens } from '../../src/lib/server/service-utils.js';
-
-describe('service-utils', () => {
+describe('service-utils', async () => {
+	const { initializeServices, validateAllTokens } = await import(
+		'../../src/lib/server/service-utils.js'
+	);
 	const tokens = {
 		github: 'gh',
 		circleci: 'cc',
@@ -89,7 +90,7 @@ describe('service-utils', () => {
 	});
 
 	it('marks services without tokens as invalid', async () => {
-		const results = await validateAllTokens({ github: null }, {});
+		const results = await validateAllTokens({ github: undefined }, {});
 		expect(results).toEqual({ github: false });
 	});
 });
