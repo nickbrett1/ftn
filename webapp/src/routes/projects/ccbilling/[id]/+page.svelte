@@ -166,8 +166,6 @@
 		}, 5000);
 	}
 
-	// Cancel parsing function
-
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
 

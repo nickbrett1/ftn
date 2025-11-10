@@ -501,13 +501,10 @@ export function sanitizeProjectName(projectName) {
 
 	// Note: replaceAll() doesn't support regex patterns, so we use replace() with global flag
 	// This is acceptable per SonarQube standards for regex-based replacements
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
-	let sanitized = projectName.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
-	sanitized = sanitized.replace(/-+/g, '-');
+	let sanitized = projectName.toLowerCase().replaceAll(/[^a-z0-9-_]/g, '-');
+	sanitized = sanitized.replaceAll(/-+/g, '-');
 	// Group regex parts to make precedence explicit: (^[-])|([-]$)
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
-	return sanitized.replace(/(^-)|(-$)/g, '');
+	return sanitized.replaceAll(/(^-)|(-$)/g, '');
 }
 
 /**
