@@ -181,7 +181,7 @@
 		} else {
 			try {
 				loading = true;
-				const response = await fetch('/projects/genproj/api/capabilities');
+				const response = await fetch('/api/projects/genproj/capabilities');
 
 				if (!response.ok) {
 					throw new Error(`Failed to load capabilities: ${response.status}`);
