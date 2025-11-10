@@ -100,8 +100,8 @@ describe('TemplateEngineService', () => {
 		expect(new Set(engine.getTemplateNames())).toEqual(new Set(['a', 'b']));
 	});
 
-	it('returns empty string for undefined or empty templates', () => {
-		expect(engine.processTemplate(undefined, {})).toBe('');
+	it('returns empty string for null or empty templates', () => {
+		expect(engine.processTemplate(null, {})).toBe('');
 		expect(engine.processTemplate('', {})).toBe('');
 	});
 

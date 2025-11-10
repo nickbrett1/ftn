@@ -76,7 +76,7 @@ describe('TemplateEngine', () => {
 				if (key === 'template.hbs') {
 					return { text: async () => 'Hello {{name}}' };
 				}
-				return undefined;
+				return null;
 			})
 		};
 
@@ -107,7 +107,7 @@ describe('TemplateEngine', () => {
 	});
 
 	it('warns and returns early when R2 bucket is unavailable', async () => {
-		engine.r2Bucket = undefined;
+		engine.r2Bucket = null;
 		await engine.loadTemplatesFromR2();
 		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('R2 bucket not available'));
 	});
@@ -121,7 +121,7 @@ describe('TemplateEngine', () => {
 				if (key === 'remote') {
 					return { text: async () => 'From bucket' };
 				}
-				return undefined;
+				return null;
 			})
 		};
 		engine.r2Bucket = mockBucket;

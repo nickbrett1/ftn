@@ -14,7 +14,7 @@ describe('validation utilities', () => {
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });
-			expect(validateProjectName(undefined)).toEqual({
+			expect(validateProjectName(null)).toEqual({
 				valid: false,
 				error: 'Project name is required'
 			});
@@ -109,7 +109,7 @@ describe('validation utilities', () => {
 
 	describe('validateCapabilityConfiguration', () => {
 		it('requires configuration object', () => {
-			expect(validateCapabilityConfiguration(undefined, ['doppler'])).toEqual({
+			expect(validateCapabilityConfiguration(null, ['doppler'])).toEqual({
 				valid: false,
 				error: 'Configuration must be an object'
 			});
@@ -239,7 +239,7 @@ describe('validation utilities', () => {
 		it('sanitizes project names consistently', () => {
 			expect(sanitizeProjectName('My Cool Project!')).toBe('my-cool-project');
 			expect(sanitizeProjectName('--Already--Clean--')).toBe('already-clean');
-			expect(sanitizeProjectName(undefined)).toBe('');
+			expect(sanitizeProjectName(null)).toBe('');
 		});
 
 		it('generateProjectSlug delegates to sanitizeProjectName', () => {
