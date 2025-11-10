@@ -1467,6 +1467,7 @@ ${browserTestSteps.map((step) => step).join('\n')}`;
  * @returns {void}
  */
 function addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSonarCloud) {
+	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
 	addInitialWorkflowSteps(workflowJobs);
 	addSonarCloudContext(workflowJobs, hasSonarCloud);
 	addLighthouseWorkflow(workflowJobs, hasLighthouse);
@@ -1474,6 +1475,7 @@ function addWorkflowJobSteps(workflowJobs, hasLighthouse, hasCloudflare, hasSona
 }
 
 function generateCircleCIConfig(context) {
+	/* eslint-disable unicorn/no-array-push-push, sonarjs/no-array-push-push */
 	const selectedCapabilities = context.selectedCapabilities || [];
 
 	// Determine what capabilities are present
