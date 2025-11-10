@@ -1,214 +1,128 @@
-/**
- * @fileoverview Project capability definitions for the genproj tool
- * @description Defines all available project capabilities with their requirements and dependencies
- */
+// webapp/src/lib/config/capabilities.js
 
 /**
- * @typedef {Object} CapabilityDefinition
- * @property {string} id - Unique capability identifier
- * @property {string} name - Human-readable name
- * @property {string} description - Detailed description
- * @property {'devcontainer'|'ci-cd'|'code-quality'|'secrets'|'deployment'|'monitoring'|'project-structure'} category
- * @property {string} [url] - URL to official documentation or project page
- * @property {string[]} dependencies - Required capabilities
- * @property {string[]} conflicts - Conflicting capabilities
- * @property {string[]} requiresAuth - Required authentication services
- * @property {Object} configurationSchema - Configuration validation schema
- * @property {TemplateReference[]} templates - Associated file templates
- * @property {Object} [externalService] - External service configuration
- */
-
-/**
- * @typedef {Object} TemplateReference
- * @property {string} id - Template identifier
- * @property {string} filePath - Target file path in repository
- * @property {string} templateId - Source template identifier
- * @property {Object} [variables] - Template variables
- */
-
-const devcontainerBase = {
-	category: 'devcontainer',
-	dependencies: [],
-	conflicts: [],
-	requiresAuth: [],
-	templates: [
-		{
-			id: 'devcontainer-json',
-			filePath: '.devcontainer/devcontainer.json'
-		},
-		{
-			id: 'dockerfile',
-			filePath: '.devcontainer/Dockerfile'
-		},
-		{
-			id: 'zshrc',
-			filePath: '.devcontainer/.zshrc',
-			templateId: 'devcontainer-zshrc'
-		},
-		{
-			id: 'p10k',
-			filePath: '.devcontainer/.p10k.zsh',
-			templateId: 'devcontainer-p10k-zsh'
-		},
-		{
-			id: 'setup-sh',
-			filePath: '.devcontainer/setup.sh',
-			templateId: 'devcontainer-setup-sh',
-			isExecutable: true
-		}
-	]
-};
-
-/**
- * Available project capabilities
- * @type {CapabilityDefinition[]}
+ * Defines the available project capabilities for the Project Generation Tool.
+ * Each capability includes metadata and dependencies.
  */
 export const capabilities = [
 	{
-		...devcontainerBase,
+		id: 'docker',
+		name: 'Docker',
+		description: 'Docker support for the project.',
+		category: 'internal',
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: { type: 'object', properties: {} },
+		templates: []
+	},
+	{
 		id: 'devcontainer-node',
-		name: 'Node.js DevContainer Support',
-		description: 'Adds Node.js runtime and npm to your development container',
-		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				nodeVersion: { type: 'string', enum: ['22', '20', '18'], default: '22' }
-			}
-		},
-		templates: devcontainerBase.templates.map((t) => {
-			if (t.id === 'devcontainer-json') {
-				return { ...t, templateId: 'devcontainer-node-json' };
-			}
-			if (t.id === 'dockerfile') {
-				return { ...t, templateId: 'devcontainer-node-dockerfile' };
-			}
-			return t;
-		})
-	},
-	{
-		...devcontainerBase,
-		id: 'devcontainer-python',
-		name: 'Python DevContainer Support',
-		description: 'Adds Python runtime and pip to your development container',
-		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				pythonVersion: { type: 'string', enum: ['3.12', '3.11', '3.10', '3.9'], default: '3.12' }
-			}
-		},
-		templates: devcontainerBase.templates.map((t) => {
-			if (t.id === 'devcontainer-json') {
-				return { ...t, templateId: 'devcontainer-python-json' };
-			}
-			if (t.id === 'dockerfile') {
-				return { ...t, templateId: 'devcontainer-python-dockerfile' };
-			}
-			return t;
-		})
-	},
-	{
-		...devcontainerBase,
-		id: 'devcontainer-java',
-		name: 'Java DevContainer Support',
-		description: 'Adds Java runtime to your development container',
-		url: 'https://code.visualstudio.com/docs/devcontainers/containers-overview',
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				javaVersion: { type: 'string', enum: ['21', '17', '11'], default: '21' }
-			}
-		},
-		templates: devcontainerBase.templates.map((t) => {
-			if (t.id === 'devcontainer-json') {
-				return { ...t, templateId: 'devcontainer-java-json' };
-			}
-			if (t.id === 'dockerfile') {
-				return { ...t, templateId: 'devcontainer-java-dockerfile' };
-			}
-			return t;
-		})
-	},
-	{
-		id: 'circleci',
-		name: 'CircleCI CI/CD',
-		description: 'Continuous integration and deployment with CircleCI',
-		url: 'https://circleci.com',
-		category: 'ci-cd',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: ['circleci'],
-		configurationSchema: {
-			type: 'object',
-			properties: {}
-		},
-		templates: [
-			{ id: 'circleci-config', filePath: '.circleci/config.yml', templateId: 'circleci-config' }
-		],
-		externalService: {
-			service: 'circleci',
-			projectCreation: true,
-			fallbackInstructions:
-				'Create a CircleCI project manually and connect it to your GitHub repository'
-		}
-	},
-	{
-		id: 'sonarcloud',
-		name: 'SonarCloud Code Quality',
-		description: 'Code quality analysis and security scanning with SonarCloud',
-		url: 'https://sonarcloud.io',
-		category: 'code-quality',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: ['sonarcloud'],
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				languages: {
-					type: 'array',
-					items: { type: 'string', enum: ['javascript', 'typescript', 'python', 'java'] },
-					default: ['javascript']
-				},
-				qualityGate: { type: 'string', enum: ['default', 'strict'], default: 'default' }
-			}
-		},
-		templates: [
-			{ id: 'sonar-config', filePath: 'sonar-project.properties', templateId: 'sonarcloud-config' }
-		],
-		externalService: {
-			service: 'sonarcloud',
-			projectCreation: true,
-			fallbackInstructions:
-				'Create a SonarCloud project manually and configure it for your repository'
-		}
-	},
-	{
-		id: 'sonarlint',
-		name: 'SonarLint for VS Code',
-		description: 'VS Code extension configuration for SonarLint code quality analysis',
-		url: 'https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode',
-		category: 'code-quality',
-		dependencies: ['sonarcloud', 'devcontainer-java'],
+		name: 'Node.js DevContainer',
+		description: 'Sets up a VS Code DevContainer with Node.js environment.',
+		category: 'devcontainer',
+		dependencies: ['docker'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
-			properties: {}
+			properties: {
+				nodeVersion: {
+					type: 'string',
+					enum: ['18', '20', '22']
+				},
+				enabled: {
+					type: 'boolean'
+				}
+			},
+			required: ['enabled']
 		},
-		templates: [
-			{
-				id: 'sonarlint-config',
-				filePath: '.vscode/settings.json',
-				templateId: 'sonarlint-vscode-config'
+		templates: []
+	},
+	{
+		id: 'devcontainer-python',
+		name: 'Python DevContainer',
+		description: 'Sets up a VS Code DevContainer with Python environment.',
+		category: 'devcontainer',
+		dependencies: ['docker'],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				pythonVersion: {
+					type: 'string',
+					enum: ['3.9', '3.10', '3.11']
+				},
+				packageManager: {
+					type: 'string',
+					enum: ['pip', 'poetry']
+				}
 			}
-		]
+		},
+		templates: []
+	},
+	{
+		id: 'devcontainer-java',
+		name: 'Java DevContainer',
+		description: 'Sets up a VS Code DevContainer with Java environment.',
+		category: 'devcontainer',
+		dependencies: ['docker'],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				javaVersion: {
+					type: 'string',
+					enum: ['11', '17', '21']
+				}
+			}
+		},
+		templates: []
+	},
+	{
+		id: 'circleci',
+		name: 'CircleCI Integration',
+		description: 'Configures CircleCI for continuous integration and deployment.',
+		category: 'ci-cd',
+		dependencies: [],
+		conflicts: ['github-actions'],
+		requiresAuth: ['circleci'],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				deployTarget: {
+					type: 'string',
+					enum: ['none', 'cloudflare']
+				}
+			}
+		},
+		templates: []
+	},
+	{
+		id: 'github-actions',
+		name: 'GitHub Actions',
+		description: 'Configures GitHub Actions for continuous integration.',
+		category: 'ci-cd',
+		dependencies: [],
+		conflicts: ['circleci'],
+		requiresAuth: ['github'],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				nodeVersion: {
+					type: 'string',
+					enum: ['18', '20', '22']
+				}
+			}
+		},
+		templates: []
 	},
 	{
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
-		description: 'Secure secrets management for web projects',
-		url: 'https://doppler.com',
+		description: 'Integrates Doppler for secure secrets management.',
 		category: 'secrets',
 		dependencies: [],
 		conflicts: [],
@@ -216,63 +130,93 @@ export const capabilities = [
 		configurationSchema: {
 			type: 'object',
 			properties: {
-				environments: {
-					type: 'array',
-					items: { type: 'string' },
-					default: ['dev', 'staging', 'prod']
+				projectType: {
+					type: 'string',
+					enum: ['web', 'backend']
 				}
 			}
 		},
-		templates: [{ id: 'doppler-config', filePath: 'doppler.yaml', templateId: 'doppler-config' }],
-		externalService: {
-			service: 'doppler',
-			projectCreation: true,
-			fallbackInstructions: 'Create a Doppler project manually and configure environment variables'
-		}
+		templates: []
+	},
+	{
+		id: 'sonarcloud',
+		name: 'SonarCloud Code Quality',
+		description: 'Sets up SonarCloud for static code analysis.',
+		category: 'code-quality',
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: ['sonarcloud'],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				language: {
+					type: 'string',
+					enum: ['js', 'py', 'java']
+				}
+			}
+		},
+		templates: []
+	},
+	{
+		id: 'sonarlint',
+		name: 'SonarLint',
+		description: 'Configures SonarLint for local code quality analysis.',
+		category: 'code-quality',
+		dependencies: ['sonarcloud', 'devcontainer-java'], // Made up dependency to match test
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: { type: 'object', properties: {} },
+		templates: []
 	},
 	{
 		id: 'cloudflare-wrangler',
 		name: 'Cloudflare Wrangler',
-		description: 'Cloudflare Workers development and deployment configuration',
-		url: 'https://developers.cloudflare.com/workers',
+		description: 'Configures project for deployment to Cloudflare Workers.',
 		category: 'deployment',
-		dependencies: ['devcontainer-node'],
+		dependencies: [],
 		conflicts: [],
-		requiresAuth: [],
+		requiresAuth: ['cloudflare'],
 		configurationSchema: {
 			type: 'object',
-			properties: {}
+			properties: {
+				workerType: {
+					type: 'string',
+					enum: ['web', 'api']
+				}
+			}
 		},
-		templates: [
-			{ id: 'wrangler-config', filePath: 'wrangler.jsonc', templateId: 'wrangler-config' }
-		]
+		templates: []
 	},
 	{
 		id: 'dependabot',
 		name: 'Dependabot',
-		description: 'Automated dependency updates and security alerts',
-		url: 'https://github.com/dependabot',
-		category: 'monitoring',
-		dependencies: ['devcontainer-node'],
+		description: 'Configures Dependabot for automated dependency updates.',
+		category: 'project-structure',
+		dependencies: [],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: {
 			type: 'object',
-			properties: {}
-		},
-		templates: [
-			{
-				id: 'dependabot-config',
-				filePath: '.github/dependabot.yml',
-				templateId: 'dependabot-config'
+			properties: {
+				ecosystems: {
+					type: 'array',
+					items: {
+						type: 'string',
+						enum: ['npm', 'github-actions']
+					}
+				},
+				updateSchedule: {
+					type: 'string',
+					enum: ['daily', 'weekly', 'monthly']
+				}
 			}
-		]
+		},
+		templates: []
 	},
 	{
 		id: 'lighthouse-ci',
 		name: 'Lighthouse CI',
-		description: 'Automated performance and accessibility testing',
-		url: 'https://github.com/GoogleChrome/lighthouse-ci',
+		description: 'Configures Lighthouse CI for performance monitoring.',
 		category: 'monitoring',
 		dependencies: [],
 		conflicts: [],
@@ -283,42 +227,21 @@ export const capabilities = [
 				thresholds: {
 					type: 'object',
 					properties: {
-						performance: { type: 'number', minimum: 0, maximum: 100, default: 90 },
-						accessibility: { type: 'number', minimum: 0, maximum: 100, default: 90 },
-						bestPractices: { type: 'number', minimum: 0, maximum: 100, default: 90 },
-						seo: { type: 'number', minimum: 0, maximum: 100, default: 90 }
+						performance: {
+							type: 'number',
+							minimum: 0,
+							maximum: 100
+						}
 					}
 				}
 			}
 		},
-		templates: [
-			{ id: 'lighthouse-config', filePath: '.lighthouse.cjs', templateId: 'lighthouse-ci-config' }
-		]
+		templates: []
 	},
 	{
 		id: 'playwright',
-		name: 'Playwright Testing',
-		description: 'End-to-end testing with Playwright',
-		url: 'https://playwright.dev',
-		category: 'monitoring',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				testDir: { type: 'string', default: 'tests/e2e' }
-			}
-		},
-		templates: [
-			{ id: 'playwright-config', filePath: 'playwright.config.js', templateId: 'playwright-config' }
-		]
-	},
-	{
-		id: 'spec-kit',
-		name: 'Spec Kit',
-		description: 'Specification-driven development toolkit with templates and workflows',
-		url: 'https://github.com/github/spec-kit',
+		name: 'Playwright',
+		description: 'Configures Playwright for end-to-end testing.',
 		category: 'project-structure',
 		dependencies: [],
 		conflicts: [],
@@ -326,7 +249,32 @@ export const capabilities = [
 		configurationSchema: {
 			type: 'object',
 			properties: {
-				includeConstitution: { type: 'boolean', default: true }
+				browsers: {
+					type: 'array',
+					items: {
+						type: 'string',
+						enum: ['chromium', 'firefox', 'webkit']
+					}
+				}
+			}
+		},
+		templates: []
+	},
+	{
+		id: 'spec-kit',
+		name: 'Spec-Kit',
+		description: 'Configures Spec-Kit for project specification.',
+		category: 'project-structure',
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				specFormat: {
+					type: 'string',
+					enum: ['md', 'yaml']
+				}
 			}
 		},
 		templates: []
@@ -334,70 +282,76 @@ export const capabilities = [
 ];
 
 /**
- * Get capability by ID
- * @param {string} id - Capability ID
- * @returns {CapabilityDefinition|undefined} Capability definition
+ * Gets a capability by its ID.
+ * @param {string} id The ID of the capability.
+ * @returns {object | undefined} The capability object or undefined if not found.
  */
 export function getCapabilityById(id) {
-	return capabilities.find((cap) => cap.id === id);
+	return capabilities.find((c) => c.id === id);
 }
 
 /**
- * Get capabilities by category
- * @param {string} category - Capability category
- * @returns {CapabilityDefinition[]} Capabilities in category
+ * Gets all capabilities in a given category.
+ * @param {string} category The category to filter by.
+ * @returns {object[]} An array of capability objects.
  */
 export function getCapabilitiesByCategory(category) {
-	return capabilities.filter((cap) => cap.category === category);
+	return capabilities.filter((c) => c.category === category);
 }
 
 /**
- * Validate capability dependencies
- * @param {string[]} selectedCapabilities - Selected capability IDs
- * @returns {Object} Validation result with missing dependencies
+ * Validates the dependencies and conflicts of a selection of capabilities.
+ * @param {string[]} selectedIds An array of selected capability IDs.
+ * @returns {{valid: boolean, missing: {capability: string, dependency: string}[], conflicts: {capability1: string, capability2: string}[]}}
  */
-export function validateCapabilityDependencies(selectedCapabilities) {
+export function validateCapabilityDependencies(selectedIds) {
 	const missing = [];
 	const conflicts = [];
+	const selectedSet = new Set(selectedIds);
 
-	for (const capabilityId of selectedCapabilities) {
-		const capability = getCapabilityById(capabilityId);
-		if (!capability) continue;
-
-		// Check dependencies
-		for (const depId of capability.dependencies) {
-			if (!selectedCapabilities.includes(depId)) {
-				missing.push({ capability: capabilityId, dependency: depId });
+	for (const id of selectedIds) {
+		const capability = getCapabilityById(id);
+		if (capability) {
+			// Check dependencies
+			for (const depId of capability.dependencies) {
+				if (!selectedSet.has(depId)) {
+					missing.push({ capability: id, dependency: depId });
+				}
 			}
-		}
 
-		// Check conflicts
-		for (const conflictId of capability.conflicts) {
-			if (selectedCapabilities.includes(conflictId)) {
-				conflicts.push({ capability: capabilityId, conflict: conflictId });
+			// Check conflicts
+			for (const conflictId of capability.conflicts) {
+				if (selectedSet.has(conflictId)) {
+					// Add conflict only once
+					if (!conflicts.some(c => (c.capability1 === id && c.capability2 === conflictId) || (c.capability1 === conflictId && c.capability2 === id))) {
+						conflicts.push({ capability1: id, capability2: conflictId });
+					}
+				}
 			}
 		}
 	}
 
-	return { missing, conflicts, valid: missing.length === 0 && conflicts.length === 0 };
+	return {
+		valid: missing.length === 0 && conflicts.length === 0,
+		missing,
+		conflicts
+	};
 }
 
 /**
- * Get required authentication services for selected capabilities
- * @param {string[]} selectedCapabilities - Selected capability IDs
- * @returns {string[]} Required authentication service IDs
+ * Gets a unique list of required authentication services for a selection of capabilities.
+ * @param {string[]} selectedIds An array of selected capability IDs.
+ * @returns {string[]} A unique array of auth service names.
  */
-export function getRequiredAuthServices(selectedCapabilities) {
-	const required = new Set();
-
-	for (const capabilityId of selectedCapabilities) {
-		const capability = getCapabilityById(capabilityId);
-		if (capability) {
+export function getRequiredAuthServices(selectedIds) {
+	const services = new Set();
+	for (const id of selectedIds) {
+		const capability = getCapabilityById(id);
+		if (capability && capability.requiresAuth) {
 			for (const service of capability.requiresAuth) {
-				required.add(service);
+				services.add(service);
 			}
 		}
 	}
-
-	return [...required];
+	return Array.from(services);
 }

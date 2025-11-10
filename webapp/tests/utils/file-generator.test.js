@@ -100,6 +100,7 @@ describe('TemplateEngine', () => {
 		};
 
 		engine.r2Bucket = mockBucket;
+		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
 		await engine.loadTemplatesFromR2();
 		expect(engine.templates.get('playwright-config')).toContain('defineConfig');
 		expect(engine.templates.get('playwright/playwright.config.js.hbs')).toContain('defineConfig');
@@ -113,6 +114,9 @@ describe('TemplateEngine', () => {
 	});
 
 	it('retrieves templates from cache, bucket, and fallbacks', async () => {
+		vi.spyOn(engine, 'loadTemplatesFromR2').mockResolvedValue();
+		await engine.initialize();
+
 		engine.templates.set('cached', 'Cached Template');
 		expect(await engine.getTemplate('cached')).toBe('Cached Template');
 
@@ -141,13 +145,14 @@ describe('TemplateEngine', () => {
 		};
 
 		engine.r2Bucket = mockBucket;
+		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
 		const template = await engine.getTemplate('playwright-config');
 		expect(template).toContain('defineConfig');
 	});
 
 	it('compiles templates with helpers, conditionals, and loops', () => {
 		engine.registerBuiltInHelpers();
-		const template = `Hello {{uppercase user.name}}!\n{{#if user.active}}Active{{/if}}{{#unless user.active}}Inactive{{/unless}}\n{{#each items}}- {{this}} (#{{add index extra}})\n{{/each}}`;
+		const template = `Hello {{uppercase user.name}}!\n{{#if user.active}}Active{{/if}}{{#unless user.active}}Inactive{{/unless}}\n{{#each items}}- {{this}} (#{{add @index ../extra}})\n{{/each}}`;
 		const result = engine.compileTemplate(template, {
 			user: { name: 'alex', active: true },
 			items: ['a', 'b'],
@@ -156,11 +161,11 @@ describe('TemplateEngine', () => {
 
 		expect(result).toContain('Hello ALEX!');
 		expect(result).toContain('Active');
-		expect(result).toContain('Inactive');
+		expect(result).not.toContain('Inactive');
 		expect(result).toContain('(#1)');
 	});
 
-	it('executes helper utilities and fallback logic', () => {
+	it('executes helper utilities and fallback logic', async () => {
 		engine.registerBuiltInHelpers();
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date('2024-05-15T12:34:56.000Z'));
@@ -199,7 +204,8 @@ describe('TemplateEngine', () => {
 		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replaceAll('-', '_'));
 
 		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
-		engine.registerFallbackTemplate('devcontainer-node-json', 'remote/template');
+		engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
+		await engine.getTemplate('devcontainer-node-json');
 		expect(fallbackSpy).toHaveBeenCalledWith('devcontainer-node-json');
 		vi.useRealTimers();
 		delete process.env.EXAMPLE_KEY;

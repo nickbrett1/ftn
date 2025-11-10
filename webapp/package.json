@@ -93,6 +93,7 @@
 		"apexcharts": "^5.3.6",
 		"cookie": "^1.0.2",
 		"gsap": "^3.13.0",
+		"handlebars": "^4.7.8",
 		"hi-base32": "^0.5.1",
 		"linkify-it": "^5.0.0",
 		"llama-api-client": "^0.3.0",

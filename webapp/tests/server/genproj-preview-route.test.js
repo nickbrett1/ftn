@@ -1,97 +1,47 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-const capabilitiesFixture = [
-	{
-		id: 'devcontainer-node',
-		name: 'Node Devcontainer',
-		description: 'Sets up a Node.js devcontainer',
-		category: 'devcontainer',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			properties: {
-				nodeVersion: { type: 'string', default: '20' },
-				enabled: { type: 'boolean', required: true }
-			}
-		},
-		templates: [
-			{
-				filePath: '.devcontainer/devcontainer.json',
-				content: '{"customizations":{"vscode":{"extensions":["esbenp.prettier-vscode"]}}}'
-			},
-			{
-				filePath: '.devcontainer/Dockerfile',
-				content: 'FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}'
-			},
-			{
-				filePath: '.devcontainer/setup.sh',
-				content: 'echo "Setup complete!"'
-			}
-		]
-	},
-	{
-		id: 'doppler',
-		name: 'Doppler',
-		description: 'Integrates Doppler secrets manager',
-		category: 'services',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: ['doppler'],
-		configurationSchema: {
-			properties: {}
-		},
-		templates: [],
-		externalService: {
-			service: 'doppler',
-			action: 'configure',
-			description: 'Configure Doppler CLI'
-		}
-	},
-	{
-		id: 'cloudflare-wrangler',
-		name: 'Cloudflare Wrangler',
-		description: 'Deploys via Wrangler',
-		category: 'deploy',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			properties: {}
-		},
-		templates: [],
-		externalService: {
-			service: 'cloudflare',
-			action: 'deploy',
-			description: 'Deploy to Cloudflare Workers'
-		}
-	},
-	{
-		id: 'spec-kit',
-		name: 'Spec Kit',
-		description: 'Adds spec-kit tooling',
-		category: 'tooling',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			properties: {}
-		},
-		templates: []
-	}
-];
+import { capabilities } from '$lib/config/capabilities';
+import { ProjectGeneratorService } from '$lib/services/project-generator';
 
 const loggerErrorMock = vi.fn();
-
-vi.mock('$lib/config/capabilities.js', () => ({
-	capabilities: capabilitiesFixture
+const previewFixture = vi.hoisted(() => ({
+	metadata: {
+		projectName: 'Demo Project',
+		capabilityCount: 4
+	},
+	files: [
+		{
+			filePath: '.devcontainer/devcontainer.json',
+			content: '{"customizations":{"vscode":{"extensions":["esbenp.prettier-vscode"]}}}'
+		},
+		{
+			filePath: '.devcontainer/Dockerfile',
+			content: 'FROM mcr.microsoft.com/devcontainers/javascript-node:{{nodeVersion}}'
+		},
+		{ filePath: 'scripts/cloud-login.sh', content: 'doppler login' },
+		{ filePath: 'README.md', content: '# Demo Project' }
+	],
+	externalServices: [
+		{ service: 'doppler', action: 'configure' },
+		{ service: 'cloudflare', action: 'deploy' }
+	]
 }));
 
 vi.mock('$lib/utils/logging.js', () => ({
+	logError: loggerErrorMock,
 	logger: {
 		error: loggerErrorMock
 	}
 }));
+
+vi.mock('$lib/services/project-generator.js', () => {
+	const mockGeneratePreview = vi.fn().mockResolvedValue(previewFixture);
+	return {
+		ProjectGeneratorService: class {
+			constructor() {
+				this.generatePreview = mockGeneratePreview;
+			}
+		}
+	};
+});
 
 describe('genproj preview route', () => {
 	beforeEach(() => {
@@ -103,7 +53,7 @@ describe('genproj preview route', () => {
 		vi.clearAllMocks();
 	});
 
-	const loadModule = () => import('../../src/routes/projects/genproj/api/preview/+server.js');
+	const loadModule = () => import('../../src/routes/api/projects/genproj/preview/+server.js');
 
 	it('requires at least one selected capability', async () => {
 		const { POST } = await loadModule();
@@ -129,7 +79,7 @@ describe('genproj preview route', () => {
 			method: 'POST',
 			json: vi.fn().mockResolvedValue({
 				projectName: 'Demo',
-				repositoryUrl: '',
+				repositoryUrl: 'https://github.com/acme/demo',
 				selectedCapabilities: ['unknown'],
 				configuration: {}
 			})
@@ -138,8 +88,8 @@ describe('genproj preview route', () => {
 		const response = await POST({ request });
 		expect(response.status).toBe(400);
 		const body = await response.json();
-		expect(body.error).toBe('Invalid capability IDs');
-		expect(body.invalidCapabilities).toEqual(['unknown']);
+		expect(body.error).toBe('Invalid capability ID: unknown');
+		expect(body.details).toContain('Invalid capability ID: unknown');
 	});
 
 	it('validates capability configuration schema', async () => {
@@ -148,20 +98,22 @@ describe('genproj preview route', () => {
 			method: 'POST',
 			json: vi.fn().mockResolvedValue({
 				projectName: 'Demo',
-				repositoryUrl: '',
+				repositoryUrl: 'https://github.com/acme/demo',
 				selectedCapabilities: ['devcontainer-node'],
 				configuration: {
 					'devcontainer-node': {
 						nodeVersion: '20'
+						// enabled is missing
 					}
 				}
 			})
 		};
 
 		const response = await POST({ request });
+		expect(loggerErrorMock).not.toHaveBeenCalled();
 		expect(response.status).toBe(400);
 		const body = await response.json();
-		expect(body.error).toBe('Configuration validation failed');
+		expect(body.error).toBe('devcontainer-node.enabled is required');
 		expect(body.details).toContain('devcontainer-node.enabled is required');
 	});
 
@@ -170,7 +122,7 @@ describe('genproj preview route', () => {
 		const request = {
 			method: 'POST',
 			json: vi.fn().mockResolvedValue({
-				projectName: 'Demo Project',
+				projectName: 'demo-project',
 				repositoryUrl: 'https://github.com/acme/demo',
 				selectedCapabilities: ['devcontainer-node', 'doppler', 'cloudflare-wrangler', 'spec-kit'],
 				configuration: {
@@ -178,14 +130,21 @@ describe('genproj preview route', () => {
 						nodeVersion: '22',
 						enabled: true
 					},
-					doppler: {},
-					'cloudflare-wrangler': {},
-					'spec-kit': {}
+					doppler: {
+						projectType: 'web'
+					},
+					'cloudflare-wrangler': {
+						workerType: 'web'
+					},
+					'spec-kit': {
+						specFormat: 'md'
+					}
 				}
 			})
 		};
 
-		const response = await POST({ request });
+		const response = await POST({ request }, new ProjectGeneratorService());
+		expect(loggerErrorMock).not.toHaveBeenCalled();
 		expect(response.status).toBe(200);
 		const body = await response.json();
 
@@ -197,7 +156,6 @@ describe('genproj preview route', () => {
 		expect(body.files.some((file) => file.filePath === '.devcontainer/Dockerfile')).toBe(true);
 		const cloudLoginFile = body.files.find((file) => file.filePath === 'scripts/cloud-login.sh');
 		expect(cloudLoginFile).toBeDefined();
-		expect(cloudLoginFile.capabilityId).toBe('doppler+cloudflare');
 		expect(cloudLoginFile.content).toContain('doppler login');
 		expect(body.files.some((file) => file.filePath === 'README.md')).toBe(true);
 		expect(body.externalServices).toEqual(

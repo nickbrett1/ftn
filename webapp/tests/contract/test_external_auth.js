@@ -1,233 +1,47 @@
-/**
- * @fileoverview Contract test for external service auth endpoints
- * @description Tests the CircleCI, Doppler, and SonarCloud auth endpoints
- */
+// webapp/tests/contract/test_external_auth.js
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { test, expect } from '@playwright/test';
 
-describe('External Service Auth API Contract', () => {
-	let circleciAuthEndpoint;
-	let dopplerAuthEndpoint;
-	let sonarcloudAuthEndpoint;
+test.describe('External Service Auth Endpoints Contract', () => {
+    const services = ['circleci', 'doppler', 'sonarcloud'];
 
-	beforeEach(() => {
-		// Initialize test endpoints
-		circleciAuthEndpoint = '/projects/genproj/api/auth/circleci';
-		dopplerAuthEndpoint = '/projects/genproj/api/auth/doppler';
-		sonarcloudAuthEndpoint = '/projects/genproj/api/auth/sonarcloud';
-	});
+    for (const serviceName of services) {
+        test(`GET /api/projects/genproj/api/auth/${serviceName} should redirect to ${serviceName} OAuth`, async ({ request }) => {
+            const response = await request.get(`/api/projects/genproj/api/auth/${serviceName}`, {
+                maxRedirects: 0 // Do not follow redirects
+            });
 
-	afterEach(() => {
-		// Cleanup
-	});
+            expect(response.status()).toBe(302); // Expect a redirect status
+            const location = response.headers().location;
 
-	describe('CircleCI Auth', () => {
-		it('should accept GET requests to initiate CircleCI auth', async () => {
-			// Arrange
-			const url = new URL(circleciAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', 'test-state-123');
+            // Basic check for common OAuth parameters
+            expect(location).toContain('client_id=');
+            expect(location).toContain('redirect_uri=');
+            expect(location).toContain('response_type=code');
+            expect(location).toContain('scope=');
+        });
 
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET'
-			});
+        test(`GET /api/projects/genproj/api/auth/${serviceName}/callback should handle OAuth callback`, async ({ request }) => {
+            const dummyCode = `dummy_${serviceName}_code`;
+            const response = await request.get(`/api/projects/genproj/api/auth/${serviceName}/callback?code=${dummyCode}`, {
+                maxRedirects: 0 // Do not follow redirects
+            });
 
-			// Assert
-			expect(response).toBeDefined();
-			// Should redirect to CircleCI token page or return auth URL
-			expect([200, 301, 302, 307, 308]).toContain(response.status);
-		});
+            // Expect a redirect to the genproj page or a success page
+            expect(response.status()).toBe(302);
+            const location = response.headers().location;
+            expect(location).toMatch(/\/projects\/genproj|\/auth\/success/);
+        });
 
-		it('should include state parameter in CircleCI auth URL', async () => {
-			// Arrange
-			const state = 'test-state-circleci';
-			const url = new URL(circleciAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', state);
+        test(`GET /api/projects/genproj/api/auth/${serviceName}/callback should handle OAuth errors`, async ({ request }) => {
+            const errorResponse = await request.get(`/api/projects/genproj/api/auth/${serviceName}/callback?error=access_denied`, {
+                maxRedirects: 0 // Do not follow redirects
+            });
 
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET',
-				redirect: 'manual'
-			});
-
-			// Assert
-			const location = response.headers.get('location');
-			if (location) {
-				const redirectUrl = new URL(location);
-				expect(redirectUrl.searchParams.get('state')).toBe(state);
-			}
-		});
-	});
-
-	describe('Doppler Auth', () => {
-		it('should accept GET requests to initiate Doppler auth', async () => {
-			// Arrange
-			const url = new URL(dopplerAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', 'test-state-123');
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET'
-			});
-
-			// Assert
-			expect(response).toBeDefined();
-			// Should redirect to Doppler token page or return auth URL
-			expect([200, 301, 302, 307, 308]).toContain(response.status);
-		});
-
-		it('should include state parameter in Doppler auth URL', async () => {
-			// Arrange
-			const state = 'test-state-doppler';
-			const url = new URL(dopplerAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', state);
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET',
-				redirect: 'manual'
-			});
-
-			// Assert
-			const location = response.headers.get('location');
-			if (location) {
-				const redirectUrl = new URL(location);
-				expect(redirectUrl.searchParams.get('state')).toBe(state);
-			}
-		});
-	});
-
-	describe('SonarCloud Auth', () => {
-		it('should accept GET requests to initiate SonarCloud auth', async () => {
-			// Arrange
-			const url = new URL(sonarcloudAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', 'test-state-123');
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET'
-			});
-
-			// Assert
-			expect(response).toBeDefined();
-			// Should redirect to SonarCloud token page or return auth URL
-			expect([200, 301, 302, 307, 308]).toContain(response.status);
-		});
-
-		it('should include state parameter in SonarCloud auth URL', async () => {
-			// Arrange
-			const state = 'test-state-sonarcloud';
-			const url = new URL(sonarcloudAuthEndpoint, 'http://localhost:5173');
-			url.searchParams.set('state', state);
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'GET',
-				redirect: 'manual'
-			});
-
-			// Assert
-			const location = response.headers.get('location');
-			if (location) {
-				const redirectUrl = new URL(location);
-				expect(redirectUrl.searchParams.get('state')).toBe(state);
-			}
-		});
-	});
-
-	describe('Token Validation', () => {
-		it('should accept POST requests with token for CircleCI validation', async () => {
-			// Arrange
-			const url = new URL(circleciAuthEndpoint, 'http://localhost:5173');
-			const body = {
-				token: 'test-circleci-token',
-				state: 'test-state-123'
-			};
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			});
-
-			// Assert
-			expect(response).toBeDefined();
-			expect(response.status).toBeGreaterThanOrEqual(200);
-			expect(response.status).toBeLessThan(500);
-		});
-
-		it('should accept POST requests with token for Doppler validation', async () => {
-			// Arrange
-			const url = new URL(dopplerAuthEndpoint, 'http://localhost:5173');
-			const body = {
-				token: 'test-doppler-token',
-				state: 'test-state-123'
-			};
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			});
-
-			// Assert
-			expect(response).toBeDefined();
-			expect(response.status).toBeGreaterThanOrEqual(200);
-			expect(response.status).toBeLessThan(500);
-		});
-
-		it('should accept POST requests with token for SonarCloud validation', async () => {
-			// Arrange
-			const url = new URL(sonarcloudAuthEndpoint, 'http://localhost:5173');
-			const body = {
-				token: 'test-sonarcloud-token',
-				state: 'test-state-123'
-			};
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			});
-
-			// Assert
-			expect(response).toBeDefined();
-			expect(response.status).toBeGreaterThanOrEqual(200);
-			expect(response.status).toBeLessThan(500);
-		});
-
-		it('should return error if token is missing', async () => {
-			// Arrange
-			const url = new URL(circleciAuthEndpoint, 'http://localhost:5173');
-			const body = {
-				state: 'test-state-123'
-				// No token
-			};
-
-			// Act
-			const response = await fetch(url.toString(), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			});
-
-			// Assert
-			expect(response.status).toBeGreaterThanOrEqual(400);
-			const data = await response.json().catch(() => null);
-			if (data) {
-				expect(data.error).toBeDefined();
-			}
-		});
-	});
+            // Expect a redirect to an error page or the genproj page with an error message
+            expect(errorResponse.status()).toBe(302);
+            const location = errorResponse.headers().location;
+            expect(location).toMatch(/\/auth\/error|\/projects\/genproj\?error=access_denied/);
+        });
+    }
 });

@@ -59,10 +59,13 @@ describe('Capabilities Config', () => {
 		});
 
 		it('should detect conflicts', () => {
-			const result = validateCapabilityDependencies(['circleci', 'github-actions']); // Assume these conflict
-			// Since we don't have github-actions in capabilities, this will just pass
-			// We need to add actual conflict data to test
-			expect(result).toBeDefined();
+			const result = validateCapabilityDependencies(['circleci', 'github-actions']); // These conflict
+			expect(result.valid).toBe(false);
+			expect(result.conflicts).toHaveLength(1);
+			expect(result.conflicts[0]).toEqual({
+				capability1: 'circleci',
+				capability2: 'github-actions'
+			});
 		});
 
 		it('should return valid when dependencies are satisfied', () => {

@@ -4,7 +4,8 @@ import { render, waitFor, cleanup, screen } from '@testing-library/svelte';
 import PreviewMode from '../../src/lib/components/genproj/PreviewMode.svelte';
 
 vi.mock('$app/environment', () => ({
-	browser: true
+	browser: true,
+	dev: false
 }));
 
 describe('PreviewMode component', () => {
@@ -57,11 +58,10 @@ describe('PreviewMode component', () => {
 			});
 
 		const { rerender } = render(PreviewMode, {
-			projectName: '',
+			projectName: 'my-project',
 			repositoryUrl: '',
 			selectedCapabilities,
-			configuration: {},
-			capabilities: [capability]
+			configuration: {}
 		});
 
 		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1));
@@ -71,8 +71,7 @@ describe('PreviewMode component', () => {
 			projectName: 'cool-app',
 			repositoryUrl: '',
 			selectedCapabilities,
-			configuration: {},
-			capabilities: [capability]
+			configuration: {}
 		});
 
 		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));

@@ -1,21 +1,18 @@
--- Project Generation Tool Database Schema
---
--- NOTE: This file is no longer used. Genproj now uses KV storage instead of D1 database.
---
--- The genproj feature originally used D1 database for:
--- - Authentication states (GitHub, CircleCI, Doppler, SonarCloud tokens)
--- - Project configurations
--- - Generated artifacts
--- - External service integrations
---
--- As of the KV refactor, all authentication state is now stored in KV (similar to Google auth),
--- and there is no need for persistent storage of project configurations or artifacts since
--- genproj is a "generate once and done" tool.
---
--- If you need to restore D1 support in the future, this schema can serve as a reference,
--- but the current implementation uses KV exclusively.
+CREATE TABLE IF NOT EXISTS UserStoredAuthToken (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    serviceName TEXT NOT NULL,
+    encryptedToken TEXT NOT NULL,
+    encryptedRefreshToken TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    expiresAt INTEGER,
+    refreshTokenExpiresAt INTEGER,
+    isRevoked BOOLEAN DEFAULT FALSE
+);
 
--- Authentication states (now stored in KV)
--- KV key: genproj_auth_{userId}
--- KV value: JSON with { google: {...}, github: {...}, circleci: {...}, doppler: {...}, sonarcloud: {...} }
--- KV expiration: Based on token expiration (default 1 hour)
+-- Add index for userId for faster lookups
+CREATE INDEX IF NOT EXISTS idx_userstoredauthtoken_userid ON UserStoredAuthToken (userId);
+
+-- Add index for serviceName for faster lookups
+CREATE INDEX IF NOT EXISTS idx_userstoredauthtoken_servicename ON UserStoredAuthToken (serviceName);

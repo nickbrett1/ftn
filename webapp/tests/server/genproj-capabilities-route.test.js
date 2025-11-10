@@ -1,44 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-const capabilitiesFixture = [
-	{
-		id: 'cap-a',
-		name: 'Capability A',
-		description: 'First capability',
-		category: 'general',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: ['service-a'],
-		configurationSchema: {
-			properties: {
-				mode: { type: 'string', enum: ['basic', 'advanced'] },
-				enabled: { type: 'boolean', required: true }
-			}
-		},
-		templates: []
-	},
-	{
-		id: 'cap-b',
-		name: 'Capability B',
-		description: 'Second capability',
-		category: 'general',
-		dependencies: ['cap-a'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
-			properties: {
-				flag: { type: 'boolean' }
-			}
-		},
-		templates: []
-	}
-];
+import { capabilities } from '../../src/lib/config/capabilities.js';
 
 const loggerErrorMock = vi.fn();
-
-vi.mock('$lib/config/capabilities.js', () => ({
-	capabilities: capabilitiesFixture
-}));
 
 vi.mock('$lib/utils/logging.js', () => ({
 	logger: {
@@ -56,7 +19,7 @@ describe('genproj capabilities route', () => {
 		vi.clearAllMocks();
 	});
 
-	const loadModule = () => import('../../src/routes/projects/genproj/api/capabilities/+server.js');
+	const loadModule = () => import('../../src/routes/api/projects/genproj/capabilities/+server.js');
 
 	it('returns all capabilities with metadata on GET', async () => {
 		const { GET } = await loadModule();
@@ -69,8 +32,8 @@ describe('genproj capabilities route', () => {
 
 		expect(response.status).toBe(200);
 		const body = await response.json();
-		expect(body.capabilities).toEqual(capabilitiesFixture);
-		expect(body.metadata.total).toBe(capabilitiesFixture.length);
+		expect(body.capabilities).toEqual(capabilities);
+		expect(body.metadata.total).toBe(capabilities.length);
 		expect(Array.isArray(body.metadata.categories)).toBe(true);
 		expect(loggerErrorMock).not.toHaveBeenCalled();
 	});
@@ -79,7 +42,7 @@ describe('genproj capabilities route', () => {
 		const { POST } = await loadModule();
 		const request = {
 			method: 'POST',
-			json: vi.fn().mockResolvedValue({ selectedCapabilities: 'cap-a' })
+			json: vi.fn().mockResolvedValue({ selectedCapabilities: 'doppler' })
 		};
 
 		const response = await POST({ request });
@@ -108,11 +71,10 @@ describe('genproj capabilities route', () => {
 		const request = {
 			method: 'POST',
 			json: vi.fn().mockResolvedValue({
-				selectedCapabilities: ['cap-a'],
+				selectedCapabilities: ['doppler'],
 				configuration: {
-					'cap-a': {
-						mode: 'basic',
-						enabled: true
+					doppler: {
+						projectType: 'web'
 					}
 				}
 			})
@@ -122,7 +84,7 @@ describe('genproj capabilities route', () => {
 		expect(response.status).toBe(200);
 		const body = await response.json();
 		expect(body.valid).toBe(true);
-		expect(body.requiredAuth).toEqual(['service-a']);
+		expect(body.requiredAuth).toEqual(['doppler']);
 		expect(loggerErrorMock).not.toHaveBeenCalled();
 	});
 });

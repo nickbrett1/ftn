@@ -108,19 +108,19 @@ As a developer who has reviewed the preview, I want to generate the complete pro
 
 ---
 
-### User Story 6 - Authenticate with CircleCI for Project Creation (Priority: P2)
+### User Story 6 - Authenticate with External Services for Project Creation (Priority: P2)
 
-As an authenticated developer, I want to connect my CircleCI account so the system can automatically create CircleCI projects and configure CI/CD pipelines for my generated repositories.
+As an authenticated developer, I want to connect my external service accounts (e.g., CircleCI, Doppler, SonarCloud) so the system can automatically create projects and configure integrations for my generated repositories.
 
-**Why this priority**: CircleCI project creation automation eliminates manual setup steps and ensures proper integration between GitHub repositories and CI/CD pipelines.
+**Why this priority**: Automation for external services eliminates manual setup steps and ensures proper integration between the GitHub repository and required third-party services like CI/CD, secrets management, and code quality analysis.
 
-**Independent Test**: Can be fully tested by authenticating with CircleCI, selecting CI/CD capability, and verifying CircleCI project is created and linked to the GitHub repository.
+**Independent Test**: Can be fully tested by authenticating with an external service (e.g., CircleCI), selecting its corresponding capability, and verifying the external project is created and linked to the GitHub repository.
 
 **Acceptance Scenarios**:
 
-1. **Given** I am authenticated with Google and GitHub, **When** I select CircleCI capability, **Then** I am prompted to authenticate with CircleCI
-2. **Given** I authenticate with CircleCI, **When** the system verifies my access, **Then** I can proceed with automatic CircleCI project creation
-3. **Given** I have CircleCI access, **When** I generate a project, **Then** the system creates both the GitHub repository and CircleCI project
+1. **Given** I am authenticated with Google and GitHub, **When** I select a capability that requires an external service (e.g., CircleCI), **Then** I am prompted to authenticate with that service.
+2. **Given** I authenticate with an external service, **When** the system verifies my access, **Then** I can proceed with automatic project creation for that service.
+3. **Given** I have access to an external service, **When** I generate a project, **Then** the system creates both the GitHub repository and the corresponding external service project.
 
 ---
 
@@ -140,39 +140,7 @@ As a developer generating a project, I want a comprehensive README.md that docum
 
 ---
 
-### User Story 8 - Authenticate with Doppler for Secrets Management (Priority: P2)
-
-As an authenticated developer, I want to connect my Doppler account so the system can automatically create Doppler projects and configure secrets management for my generated repositories.
-
-**Why this priority**: Doppler project creation automation eliminates manual setup steps and ensures proper integration between GitHub repositories and secrets management.
-
-**Independent Test**: Can be fully tested by authenticating with Doppler, selecting secrets management capability, and verifying Doppler project is created and configured.
-
-**Acceptance Scenarios**:
-
-1. **Given** I am authenticated with Google and GitHub, **When** I select Doppler capability, **Then** I am prompted to authenticate with Doppler
-2. **Given** I authenticate with Doppler, **When** the system verifies my access, **Then** I can proceed with automatic Doppler project creation
-3. **Given** I have Doppler access, **When** I generate a project, **Then** the system creates both the GitHub repository and Doppler project
-
----
-
-### User Story 9 - Authenticate with SonarCloud for Code Quality (Priority: P2)
-
-As an authenticated developer, I want to connect my SonarCloud account so the system can automatically create SonarCloud projects and configure code quality analysis for my generated repositories.
-
-**Why this priority**: SonarCloud project creation automation eliminates manual setup steps and ensures proper integration between GitHub repositories and code quality analysis.
-
-**Independent Test**: Can be fully tested by authenticating with SonarCloud, selecting code quality capability, and verifying SonarCloud project is created and configured.
-
-**Acceptance Scenarios**:
-
-1. **Given** I am authenticated with Google and GitHub, **When** I select SonarCloud capability, **Then** I am prompted to authenticate with SonarCloud
-2. **Given** I authenticate with SonarCloud, **When** the system verifies my access, **Then** I can proceed with automatic SonarCloud project creation
-3. **Given** I have SonarCloud access, **When** I generate a project, **Then** the system creates both the GitHub repository and SonarCloud project
-
----
-
-### User Story 10 - Handle External Service Integration (Priority: P2)
+### User Story 8 - Handle External Service Integration (Priority: P2)
 
 As a developer generating a project, I want the system to automatically configure external services (CircleCI, SonarCloud, Doppler) when possible, or provide clear instructions when manual setup is required.
 
@@ -189,7 +157,7 @@ As a developer generating a project, I want the system to automatically configur
 
 ---
 
-### User Story 11 - Celebrate Successful Project Generation (Priority: P3)
+### User Story 9 - Celebrate Successful Project Generation (Priority: P3)
 
 As a developer who has successfully generated a project, I want to see a delightful celebration animation to acknowledge the completion of this significant milestone.
 
@@ -205,31 +173,22 @@ As a developer who has successfully generated a project, I want to see a delight
 
 ---
 
-### Edge Cases
+### Error Handling and Edge Cases
 
-- What happens when GitHub repository creation fails due to permissions or naming conflicts?
-- How does the system handle GitHub authentication failures or expired tokens?
-- What happens when CircleCI authentication fails or user lacks CircleCI project creation permissions?
-- How does the system handle CircleCI API failures or rate limiting during project creation?
-- What happens when Doppler authentication fails or user lacks Doppler project creation permissions?
-- How does the system handle Doppler API failures or rate limiting during project creation?
-- What happens when SonarCloud authentication fails or user lacks SonarCloud project creation permissions?
-- How does the system handle SonarCloud API failures or rate limiting during project creation?
-- What happens when external service API failures occur for other services?
-- How does the system handle selected capabilities with conflicting requirements?
-- What happens when invalid project names or repository URLs are provided?
-- What happens when the user's Google, GitHub, CircleCI, Doppler, or SonarCloud authentication expires during project generation?
-- What happens if a stored authentication token becomes invalid or expires?
-- What happens if a stored authentication token is revoked by the user through the external service provider?
-- What happens if a stored authentication token is compromised? How is it invalidated and how is the user notified?
-- How does the system handle GitHub API rate limiting during repository creation?
-- What happens when the user lacks sufficient GitHub permissions to create repositories?
-- What happens when CircleCI project creation succeeds but GitHub webhook setup fails?
-- What happens when Doppler project creation succeeds but GitHub integration fails?
-- What happens when SonarCloud project creation succeeds but GitHub integration fails?
-- What happens when the celebration animation fails to load or display properly?
-- How does the system handle celebration animation on devices with limited graphics capabilities?
-- What happens when the user navigates away during the celebration animation?
+This section defines required system behavior for known failure modes and edge cases. The goal is to provide a graceful and informative user experience, even when things go wrong.
+
+| Scenario | System Behavior | User-Facing Message |
+|---|---|---|
+| **GitHub repo creation fails (naming conflict)** | Halt generation. Display an error message in the UI next to the repository name field. | "A repository with this name already exists. Please choose a different name." |
+| **GitHub repo creation fails (permissions)** | Halt generation. Display a prominent error banner. | "Authentication error: Insufficient permissions to create a GitHub repository. Please check your account permissions and try again." |
+| **GitHub auth fails or token expires** | Invalidate the auth session. Prompt the user to re-authenticate. | "Your GitHub authentication has expired or is invalid. Please log in again to continue." |
+| **External Service auth fails (e.g., CircleCI)** | Halt generation. Display an error message specific to the service. Allow user to retry authentication or skip. | "Failed to authenticate with [Service Name]. Please check your credentials and try again, or you can proceed with generation and set it up manually later." |
+| **External Service API fails during generation** | Continue generation of other artifacts. Display a non-blocking warning with a link to manual setup instructions. | "Warning: Could not create the [Service Name] project automatically. Your other artifacts have been generated. Please follow these instructions to complete the setup manually." |
+| **Invalid project name (e.g., < 3 chars)** | Prevent generation. Display a validation error next to the input field. | "Project name must be at least 3 characters long." |
+| **Auth token becomes invalid during generation** | Halt generation immediately. Display a prominent error banner. Prompt user to re-authenticate. | "Your session has expired. Please authenticate again to complete the project generation." |
+| **Stored token is invalid or revoked** | Treat as a failed authentication. Prompt the user to re-authenticate with the specific service. | "The stored token for [Service Name] is no longer valid. Please authenticate again." |
+| **Conflicting capabilities selected** | Prevent selection of the conflicting capability. Display a tooltip explaining the conflict. | "This capability cannot be selected because it conflicts with '[Conflicting Capability Name]'." |
+| **Celebration animation fails to load** | Silently fail. Do not block the display of the final project summary. | (None) |
 
 ## Requirements _(mandatory)_
 
@@ -240,9 +199,7 @@ As a developer who has successfully generated a project, I want to see a delight
 - **FR-044**: System MUST clearly indicate when the page is in "Demo Mode" for unauthenticated users with a visible banner and login button at the top of the page
 - **FR-003**: System MUST require Google authentication only when user confirms project generation
 - **FR-004**: System MUST require GitHub authentication (OAuth) only when user confirms project generation
-- **FR-005**: System MUST require CircleCI authentication (API token) only when CI/CD capability is selected and user confirms generation
-- **FR-006**: System MUST require Doppler authentication (API token) only when secrets management capability is selected and user confirms generation
-- **FR-007**: System MUST require SonarCloud authentication (API token) only when code quality capability is selected and user confirms generation
+- **FR-005**: System MUST require authentication (e.g., API token) for any external service capability (e.g., CircleCI, Doppler, SonarCloud) only when that capability is selected and the user confirms generation.
 - **FR-045**: System MUST securely store authentication tokens for external services (CircleCI, Doppler, SonarCloud) associated with the logged-in user.
 - **FR-046**: System MUST retrieve stored authentication tokens and use them as defaults for subsequent project generations.
 - **FR-047**: System MUST provide a user interface for the user to view and revoke stored tokens.

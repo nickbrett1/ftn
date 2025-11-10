@@ -46,6 +46,9 @@ git config --global --add safe.directory /workspaces/ftn
 #   echo "INFO: Webapp directory not found at $WEBAPP_DIR, skipping Wrangler login."
 # fi
 
+echo "INFO: Adding Svelte MCP to Gemini..."
+gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
+
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"
 echo "    cd /workspaces/ftn/webapp && bash scripts/cloud-login.sh"

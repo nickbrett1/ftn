@@ -119,7 +119,7 @@ describe('validation utilities', () => {
 			const cases = [
 				{
 					selected: ['devcontainer-node'],
-					configuration: { 'devcontainer-node': { nodeVersion: '16' } },
+					configuration: { 'devcontainer-node': { nodeVersion: '16', enabled: true } },
 					error: 'Invalid Node.js version'
 				},
 				{
