@@ -102,19 +102,18 @@ describe('genproj preview route', () => {
 				selectedCapabilities: ['devcontainer-node'],
 				configuration: {
 					'devcontainer-node': {
-						nodeVersion: '20'
-						// enabled is missing
+						nodeVersion: 'invalid' // Invalid nodeVersion
 					}
 				}
 			})
 		};
 
-		const response = await POST({ request });
+		const response = await POST({ request }, new ProjectGeneratorService());
 		expect(loggerErrorMock).not.toHaveBeenCalled();
 		expect(response.status).toBe(400);
 		const body = await response.json();
-		expect(body.error).toBe('devcontainer-node.enabled is required');
-		expect(body.details).toContain('devcontainer-node.enabled is required');
+		expect(body.error).toBe('Invalid Node.js version'); // Expect the error message directly
+		expect(body.details).toContain('Invalid Node.js version'); // Check details array
 	});
 
 	it('returns preview data for a valid payload', async () => {

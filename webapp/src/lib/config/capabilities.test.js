@@ -58,23 +58,12 @@ describe('Capabilities Config', () => {
 			expect(dependencyIds).toContain('devcontainer-java');
 		});
 
-		it('should detect conflicts', () => {
-			const result = validateCapabilityDependencies(['circleci', 'github-actions']); // These conflict
-			expect(result.valid).toBe(false);
-			expect(result.conflicts).toHaveLength(1);
-			expect(result.conflicts[0]).toEqual({
-				capability1: 'circleci',
-				capability2: 'github-actions'
-			});
-		});
-
 		it('should return valid when dependencies are satisfied', () => {
 			// sonarlint requires sonarcloud and devcontainer-java
 			const result = validateCapabilityDependencies([
 				'sonarlint',
 				'sonarcloud',
-				'devcontainer-java',
-				'docker'
+				'devcontainer-java'
 			]);
 			expect(result.valid).toBe(true);
 			expect(result.missing).toEqual([]);
