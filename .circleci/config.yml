@@ -71,7 +71,6 @@ jobs:
     resource_class: large # Increase to large for more memory and CPU resources
     steps:
       - checkout:
-          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
