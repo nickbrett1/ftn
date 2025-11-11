@@ -28,6 +28,7 @@ Note: A development server is always running. Please ask the user to test change
 JavaScript (ES2022), SvelteKit 2.47, Node.js 20+: Follow standard conventions
 
 ## Recent Changes
+- 001-genproj: Added JavaScript (ES2022), Node.js 20+ + SvelteKit, Node.js crypto modules
 
 - 001-genproj: Added JavaScript (ES2022), Node.js 20+ + SvelteKit, Node.js crypto modules
 
