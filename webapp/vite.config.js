@@ -64,7 +64,7 @@ export default defineConfig(({ command, mode }) => {
 			globals: true,
 			environment: 'jsdom',
 			// Add explicit setup and teardown to prevent race conditions
-			setupFiles: ['src/test-setup.js'],
+			setupFiles: ['src/test-setup.js'], // Remove global setup file
 			teardownTimeout: 10_000, // 10 seconds for cleanup
 			// Configure for Svelte 5
 			environmentOptions: {
@@ -106,6 +106,11 @@ export default defineConfig(({ command, mode }) => {
 			reporter: ['default', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'
+			},
+			transformMode: {
+				ssr: {
+					exclude: ["/src/lib/utils/file-generator.js/"] // Exclude file-generator.js from SSR transformation
+				}
 			}
 		},
 		ssr: {

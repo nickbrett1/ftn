@@ -1,14 +1,13 @@
 // webapp/src/lib/utils/file-generator.js
 
 import Handlebars from 'handlebars';
-import { platform } from '$app/environment';
 import * as fallbackTemplates from '$lib/config/fallback-templates';
 
 export class TemplateEngine {
-	constructor() {
+	constructor(r2Bucket = undefined) { // Accept r2Bucket as an argument
 		this.templates = new Map();
 		this.helpers = new Map();
-		this.r2Bucket = platform?.env?.R2_TEMPLATES_BUCKET;
+		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
 		this.fallbackTemplateMap = new Map();
 	}
 
@@ -79,19 +78,8 @@ export class TemplateEngine {
 		for (const [name, fn] of Object.entries(helpers)) {
 			this.helpers.set(name, fn);
 			Handlebars.registerHelper(name, fn);
-		}		};
-
-		for (const [name, fn] of Object.entries(helpers)) {
-			this.helpers.set(name, fn);
-			Handlebars.registerHelper(name, fn);
 		}
 	}
-
-	async loadTemplatesFromR2() {
-		if (!this.r2Bucket) {
-			console.warn('R2 bucket not available. Skipping template loading from R2.');
-			return;
-		}
 
 	async loadTemplatesFromR2() {
 		if (!this.r2Bucket) {
@@ -118,78 +106,6 @@ export class TemplateEngine {
 							this.templates.set(fallbackName, content);
 						}
 					}
-					this.templates.set(object.key, content);
-					this.templates.set(templateName, content);
-				}
-			}
-		}
-	}
-
-	registerFallbackTemplate(name, fallbackName) {
-		this.fallbackTemplateMap.set(name, fallbackName);
-	}
-
-	getFallbackTemplate(name) {
-		const fallbackName = this.fallbackTemplateMap.get(name);
-		return fallbackTemplates[fallbackName] || null;
-	}
-
-	async getTemplate(name) {
-		if (this.templates.has(name)) {
-			return this.templates.get(name);
-		}
-
-		if (this.r2Bucket) {
-			const body = await this.r2Bucket.get(name);
-			if (body) {
-				const content = await body.text();
-				if (content.trim().startsWith('//')) {
-					const fallback = this.getFallbackTemplate(name);
-					if (fallback) {
-						this.templates.set(name, fallback);
-						return fallback;
-					}
-				} else {
-					this.templates.set(name, content);
-					return content;
-				}
-			}
-		}
-
-		const fallback = this.getFallbackTemplate(name);
-		if (fallback) {
-			this.templates.set(name, fallback);
-			return fallback;
-		}
-
-		return null;
-	}
-
-	compileTemplate(templateString, data) {
-		const template = Handlebars.compile(templateString);
-		return template(data);
-	}
-
-	async generateFile(templateId, data) {
-		const template = await this.getTemplate(templateId);
-		if (!template) {
-			throw new Error(`Template not found: ${templateId}`);
-		}
-		return this.compileTemplate(template, data);
-	}
-
-	async generateFiles(fileRequests) {
-		const results = [];
-		for (const [index, req] of fileRequests.entries()) {
-			try {
-				const content = await this.generateFile(req.templateId, { ...req.data, index });
-				results.push({ ...req, success: true, content });
-			} catch (error) {
-				results.push({ ...req, success: false, error: error.message });
-			}
-		}
-		return results;
-	}					}
 					this.templates.set(object.key, content);
 					this.templates.set(templateName, content);
 				}

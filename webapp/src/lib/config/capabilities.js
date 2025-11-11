@@ -36,7 +36,34 @@ export const capabilities = [
 			},
 			required: []
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'devcontainer-json',
+				filePath: '.devcontainer/devcontainer.json',
+				templateId: 'devcontainer-node-json'
+			},
+			{
+				id: 'dockerfile',
+				filePath: '.devcontainer/Dockerfile',
+				templateId: 'devcontainer-node-dockerfile'
+			},
+			{
+				id: 'zshrc',
+				filePath: '.devcontainer/.zshrc',
+				templateId: 'devcontainer-zshrc'
+			},
+			{
+				id: 'p10k',
+				filePath: '.devcontainer/.p10k.zsh',
+				templateId: 'devcontainer-p10k-zsh'
+			},
+			{
+				id: 'setup-sh',
+				filePath: '.devcontainer/setup.sh',
+				templateId: 'devcontainer-setup-sh',
+				isExecutable: true
+			}
+		],
 		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
@@ -61,7 +88,34 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'devcontainer-json',
+				filePath: '.devcontainer/devcontainer.json',
+				templateId: 'devcontainer-python-json'
+			},
+			{
+				id: 'dockerfile',
+				filePath: '.devcontainer/Dockerfile',
+				templateId: 'devcontainer-python-dockerfile'
+			},
+			{
+				id: 'zshrc',
+				filePath: '.devcontainer/.zshrc',
+				templateId: 'devcontainer-zshrc'
+			},
+			{
+				id: 'p10k',
+				filePath: '.devcontainer/.p10k.zsh',
+				templateId: 'devcontainer-p10k-zsh'
+			},
+			{
+				id: 'setup-sh',
+				filePath: '.devcontainer/setup.sh',
+				templateId: 'devcontainer-setup-sh',
+				isExecutable: true
+			}
+		],
 		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
@@ -82,7 +136,34 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'devcontainer-json',
+				filePath: '.devcontainer/devcontainer.json',
+				templateId: 'devcontainer-java-json'
+			},
+			{
+				id: 'dockerfile',
+				filePath: '.devcontainer/Dockerfile',
+				templateId: 'devcontainer-java-dockerfile'
+			},
+			{
+				id: 'zshrc',
+				filePath: '.devcontainer/.zshrc',
+				templateId: 'devcontainer-zshrc'
+			},
+			{
+				id: 'p10k',
+				filePath: '.devcontainer/.p10k.zsh',
+				templateId: 'devcontainer-p10k-zsh'
+			},
+			{
+				id: 'setup-sh',
+				filePath: '.devcontainer/setup.sh',
+				templateId: 'devcontainer-setup-sh',
+				isExecutable: true
+			}
+		],
 		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
@@ -119,7 +200,8 @@ export const capabilities = [
 			properties: {
 				projectType: {
 					type: 'string',
-					enum: ['web', 'backend']
+					enum: ['web'],
+					default: 'web'
 				}
 			}
 		},

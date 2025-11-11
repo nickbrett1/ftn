@@ -2,6 +2,7 @@
 import { json } from '@sveltejs/kit';
 import { generatePreview } from '$lib/server/preview-generator';
 import { logger } from '$lib/utils/logging';
+import { platform } from '$app/environment'; // Import platform
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
@@ -14,7 +15,7 @@ export async function POST({ request }) {
 			return json({ error: 'Missing projectConfig or selectedCapabilities' }, { status: 400 });
 		}
 
-		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+		const previewData = await generatePreview(projectConfig, selectedCapabilities, platform?.env?.R2_TEMPLATES_BUCKET); // Pass r2Bucket
 
 		return json(previewData, { status: 200 });
 	} catch (error) {

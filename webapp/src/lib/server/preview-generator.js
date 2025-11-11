@@ -12,7 +12,13 @@ import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
-import { processTemplate } from '$lib/server/template-engine.js';
+import { TemplateEngine } from '$lib/utils/file-generator.js'; // Import TemplateEngine
+
+async function getTemplateEngine(r2Bucket) { // Accept r2Bucket as an argument
+	const newInstance = new TemplateEngine(r2Bucket); // Pass r2Bucket
+	await newInstance.initialize();
+	return newInstance;
+}
 
 /**
  * @typedef {Object} PreviewData
@@ -44,9 +50,10 @@ import { processTemplate } from '$lib/server/template-engine.js';
  * Generates preview data for the specified project configuration
  * @param {Object} projectConfig - Project configuration object
  * @param {string[]} selectedCapabilities - Array of selected capability IDs
+ * @param {Object} r2Bucket - The R2 bucket instance for template loading
  * @returns {PreviewData} Generated preview data
  */
-export async function generatePreview(projectConfig, selectedCapabilities) {
+export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) { // Accept r2Bucket as an argument
 	try {
 		console.log('🔍 Generating preview for project:', projectConfig.name);
 
@@ -55,10 +62,10 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
 		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
 
 		// Generate files
-		const files = generatePreviewFiles(projectConfig, executionOrder);
+		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Await the call
 
 		// Generate external service changes
-		const externalServices = generateExternalServiceChanges(projectConfig, executionOrder);
+		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder);
 
 		// Create summary
 		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
@@ -85,7 +92,7 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<FileObject>} Array of file objects
  */
-function generatePreviewFiles(projectConfig, executionOrder) {
+async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) { // Make function async
 	const files = [];
 
 	// Generate files for each capability
@@ -93,7 +100,7 @@ function generatePreviewFiles(projectConfig, executionOrder) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const capabilityFiles = generateCapabilityFiles(projectConfig, capability);
+		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
 		files.push(...capabilityFiles);
 	}
 
@@ -111,29 +118,30 @@ function generatePreviewFiles(projectConfig, executionOrder) {
  * @param {Object} capability - Capability definition
  * @returns {Array<FileObject>} Array of file objects
  */
-function generateCapabilityFiles(projectConfig, capability) {
+async function generateCapabilityFiles(projectConfig, capability, r2Bucket) { // Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	// Generate capability-specific files
 	if (capability.templates) {
 		for (const template of capability.templates) {
 			try {
-				const content = processTemplate(template.content, {
+				const content = await templateEngine.generateFile(template.templateId, { // Await the call
 					...projectConfig,
 					capabilityConfig,
 					capability
 				});
 
 				files.push({
-					path: template.path,
-					name: template.path.split('/').pop(),
+					path: template.filePath, // Use filePath from template
+					name: template.filePath.split('/').pop(), // Use filePath from template
 					content,
 					size: content.length,
 					type: 'file'
 				});
 			} catch (error) {
-				console.warn(`⚠️ Failed to process template ${template.path}:`, error);
+				console.warn(`⚠️ Failed to process template ${template.templateId}:`, error); // Log templateId
 			}
 		}
 	}
@@ -190,7 +198,7 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<ExternalService>} Array of external service changes
  */
-function generateExternalServiceChanges(projectConfig, executionOrder) {
+async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) { // Make async
 	const services = [
 		{
 			type: 'github',
@@ -218,7 +226,7 @@ function generateExternalServiceChanges(projectConfig, executionOrder) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const serviceChanges = generateCapabilityServiceChanges(projectConfig, capability);
+		const serviceChanges = await generateCapabilityServiceChanges(projectConfig, capability, r2Bucket); // Await the call
 		services.push(...serviceChanges);
 	}
 
@@ -231,8 +239,9 @@ function generateExternalServiceChanges(projectConfig, executionOrder) {
  * @param {Object} capability - Capability definition
  * @returns {Array<ExternalService>} Array of service changes
  */
-function generateCapabilityServiceChanges(projectConfig, capability) {
+async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) { // Make async
 	const services = [];
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {
@@ -241,7 +250,7 @@ function generateCapabilityServiceChanges(projectConfig, capability) {
 				name: serviceConfig.name,
 				actions: serviceConfig.actions.map((action) => ({
 					type: action.type,
-					description: processTemplate(action.description, {
+					description: templateEngine.compileTemplate(action.description, { // Use compileTemplate
 						...projectConfig,
 						capability
 					})
