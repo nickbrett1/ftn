@@ -31,11 +31,8 @@ export const capabilities = [
 					type: 'string',
 					enum: ['18', '20', '22']
 				},
-				enabled: {
-					type: 'boolean'
-				}
 			},
-			required: ['enabled']
+			required: []
 		},
 		templates: []
 	},
@@ -56,7 +53,7 @@ export const capabilities = [
 				},
 				packageManager: {
 					type: 'string',
-					enum: ['pip', 'poetry']
+					enum: ['pip']
 				}
 			}
 		},
