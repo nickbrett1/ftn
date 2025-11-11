@@ -43,14 +43,14 @@ describe('logging utilities', () => {
 		setLogLevel('INFO');
 		console.log.mockClear();
 		custom.info('hello', { data: 1 });
-		
+
 		const logOutput = console.log.mock.calls[0][0];
 		expect(logOutput).toContain('[test] hello');
 
 		custom.debug('hidden');
 		const logOutputHidden = console.log.mock.calls.flat().join('');
 		expect(logOutputHidden).not.toContain('hidden');
-		
+
 		setLogLevel('DEBUG');
 		console.log.mockClear();
 		custom.debug('visible');

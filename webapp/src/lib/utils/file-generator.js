@@ -265,6 +265,6 @@ export class TemplateEngine {
 }
 
 export function renderTemplate(templateString, data) {
-    const template = Handlebars.compile(templateString);
-    return template(data);
+	const template = Handlebars.compile(templateString);
+	return template(data);
 }

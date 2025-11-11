@@ -29,6 +29,8 @@ describe('Google Auth Utils', () => {
 		vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
 			if (tagName === 'script') {
 				const script = originalCreateElement.call(document, 'script');
+				script.onload = null;
+				script.onerror = null;
 				vi.spyOn(script, 'setAttribute');
 				vi.spyOn(script, 'remove');
 				return script;
@@ -213,11 +215,7 @@ describe('Google Auth Utils', () => {
 
 			const appendSpy = vi.spyOn(document.body, 'append');
 
-			// Call initiateGoogleAuth once
-
 			const initiateAuthPromise = initiateGoogleAuth();
-
-			// Expect appendChild to have been called with a script element
 
 			expect(appendSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
 

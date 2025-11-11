@@ -68,7 +68,7 @@
 	}
 
 	// Fetch preview whenever projectConfig changes
-	$: projectConfig, fetchPreview();
+	$: (projectConfig, fetchPreview());
 </script>
 
 <div class="space-y-4">
@@ -100,7 +100,9 @@
 			</div>
 		</div>
 	{:else if previewFiles.length === 0}
-		<p class="text-gray-500 dark:text-gray-400">No capabilities selected or no preview available.</p>
+		<p class="text-gray-500 dark:text-gray-400">
+			No capabilities selected or no preview available.
+		</p>
 	{:else}
 		<h3 class="text-xl font-semibold mb-3">Generated Files Preview</h3>
 		<div class="space-y-4">
@@ -110,8 +112,7 @@
 						{file.filePath}
 					</p>
 					<pre
-						class="bg-gray-200 dark:bg-gray-800 p-2 rounded-sm text-xs overflow-auto"
-					>{file.content}</pre>
+						class="bg-gray-200 dark:bg-gray-800 p-2 rounded-sm text-xs overflow-auto">{file.content}</pre>
 				</div>
 			{/each}
 		</div>

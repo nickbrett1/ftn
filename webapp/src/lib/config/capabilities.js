@@ -323,7 +323,13 @@ export function validateCapabilityDependencies(selectedIds) {
 			for (const conflictId of capability.conflicts) {
 				if (selectedSet.has(conflictId)) {
 					// Add conflict only once
-					if (!conflicts.some(c => (c.capability1 === id && c.capability2 === conflictId) || (c.capability1 === conflictId && c.capability2 === id))) {
+					if (
+						!conflicts.some(
+							(c) =>
+								(c.capability1 === id && c.capability2 === conflictId) ||
+								(c.capability1 === conflictId && c.capability2 === id)
+						)
+					) {
 						conflicts.push({ capability1: id, capability2: conflictId });
 					}
 				}

@@ -11,11 +11,11 @@
  * @throws {Error} If the GENPROJ_DB binding is not found in the environment.
  */
 export function getGenprojDb(env) {
-    if (!env || !env.GENPROJ_DB) {
-        throw new Error('GENPROJ_DB binding not found in environment.');
-    }
-    return env.GENPROJ_DB;
-}}
+	if (!env || !env.GENPROJ_DB) {
+		throw new Error('GENPROJ_DB binding not found in environment.');
+	}
+	return env.GENPROJ_DB;
+}
 
 /**
  * Executes a SQL query against the GENPROJ_DB.
@@ -25,13 +25,16 @@ export function getGenprojDb(env) {
  * @returns {Promise<D1Result>} The result of the D1 query.
  */
 export async function executeGenprojQuery(db, sql, params = []) {
-    try {
-        const { results } = await db.prepare(sql).bind(...params).all();
-        return results;
-    } catch (error) {
-        console.error('Error executing D1 query:', error);
-        throw new Error(`Database query failed: ${error.message}`);
-    }
+	try {
+		const { results } = await db
+			.prepare(sql)
+			.bind(...params)
+			.all();
+		return results;
+	} catch (error) {
+		console.error('Error executing D1 query:', error);
+		throw new Error(`Database query failed: ${error.message}`);
+	}
 }
 
 /**
@@ -42,11 +45,14 @@ export async function executeGenprojQuery(db, sql, params = []) {
  * @returns {Promise<any | null>} The first result of the D1 query, or null if no results.
  */
 export async function getGenprojFirstResult(db, sql, params = []) {
-    try {
-        const { results } = await db.prepare(sql).bind(...params).all();
-        return results.length > 0 ? results[0] : null;
-    } catch (error) {
-        console.error('Error executing D1 query for first result:', error);
-        throw new Error(`Database query failed: ${error.message}`);
-    }
+	try {
+		const { results } = await db
+			.prepare(sql)
+			.bind(...params)
+			.all();
+		return results.length > 0 ? results[0] : null;
+	} catch (error) {
+		console.error('Error executing D1 query for first result:', error);
+		throw new Error(`Database query failed: ${error.message}`);
+	}
 }
