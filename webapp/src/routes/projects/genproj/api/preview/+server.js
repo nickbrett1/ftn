@@ -2,10 +2,7 @@
 import { json } from '@sveltejs/kit';
 import { generatePreview } from '$lib/server/preview-generator';
 import { logger } from '$lib/utils/logging';
-import { platform } from '$app/environment'; // Import platform
-
-/** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
+export async function POST({ request, platform }) {
 	try {
 		const requestBody = await request.json();
 		const { selectedCapabilities } = requestBody;
