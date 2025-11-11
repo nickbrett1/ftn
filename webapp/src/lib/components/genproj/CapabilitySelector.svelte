@@ -105,6 +105,15 @@
 		return true;
 	}
 
+	// Helper function to format camelCase strings into human-readable labels
+	function formatLabel(camelCaseString) {
+		if (!camelCaseString) return '';
+		// Add a space before all uppercase letters that are not at the beginning
+		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
+		// Capitalize the first letter of the entire string
+		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
+	}
+
 	// Helper function to check if a capability has dependencies
 	function hasDependencies(capability) {
 		return capability.dependencies && capability.dependencies.length > 0;
@@ -210,7 +219,7 @@
 															for="{capability.id}-{field}"
 															class="block text-xs font-medium text-gray-400 mb-1"
 														>
-															{field.charAt(0).toUpperCase() + field.slice(1)}:
+															{formatLabel(field)}:
 														</label>
 														{#if property.enum}
 															<select

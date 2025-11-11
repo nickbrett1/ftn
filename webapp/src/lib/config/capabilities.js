@@ -73,7 +73,8 @@ export const capabilities = [
 			properties: {
 				javaVersion: {
 					type: 'string',
-					enum: ['11', '17', '21']
+					enum: ['11', '17', '21'],
+					default: '21'
 				}
 			}
 		},
