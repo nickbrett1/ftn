@@ -139,7 +139,7 @@ export const capabilities = [
 			properties: {
 				language: {
 					type: 'string',
-					enum: ['js', 'py', 'java']
+					enum: ['JavaScript', 'Python', 'Java']
 				}
 			}
 		},
