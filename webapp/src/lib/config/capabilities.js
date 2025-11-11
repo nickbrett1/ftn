@@ -52,7 +52,8 @@ export const capabilities = [
 			properties: {
 				pythonVersion: {
 					type: 'string',
-					enum: ['3.9', '3.10', '3.11']
+					enum: ['3.9', '3.10', '3.11'],
+					default: '3.11'
 				},
 				packageManager: {
 					type: 'string',
