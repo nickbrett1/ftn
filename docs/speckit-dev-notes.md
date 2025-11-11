@@ -3,3 +3,8 @@ I'd like to create an article with a similar style (both the style of writing an
 I want you to create a first draft of this article under webapp/src/projects/speckit-dev/speckit-dev.svx
 
 Here's the structure that I propose we follow along with notes for each section to use:
+
+Stuff:
+* Ran out of money for cursor
+* Google Code Assist no good
+* Big changes no good
