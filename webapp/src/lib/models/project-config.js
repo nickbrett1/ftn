@@ -1,7 +1,7 @@
 // webapp/src/lib/models/project-config.js
 export class ProjectConfig {
-	constructor({ projectName, repositoryUrl, selectedCapabilities, configuration }) {
-		this.projectName = projectName;
+	constructor({ name, repositoryUrl, selectedCapabilities, configuration }) {
+		this.name = name;
 		this.repositoryUrl = repositoryUrl;
 		this.selectedCapabilities = selectedCapabilities;
 		this.configuration = configuration;
@@ -9,7 +9,7 @@ export class ProjectConfig {
 
 	toObject() {
 		return {
-			projectName: this.projectName,
+			name: this.name,
 			repositoryUrl: this.repositoryUrl,
 			selectedCapabilities: this.selectedCapabilities,
 			configuration: this.configuration

@@ -6,7 +6,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let projectName;
+	export let name; // Renamed from projectName
 	export let repositoryUrl;
 	export let selectedCapabilities;
 	export let configuration;
@@ -15,7 +15,7 @@
 	$: {
 		try {
 			projectConfig = new ProjectConfig({
-				projectName,
+				name, // Changed from projectName
 				repositoryUrl,
 				selectedCapabilities,
 				configuration
