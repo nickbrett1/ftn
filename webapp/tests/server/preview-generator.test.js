@@ -6,30 +6,30 @@ const { mockProcessTemplate } = vi.hoisted(() => ({
 	)
 }));
 
-vi.mock('../../src/lib/utils/capabilities.js', () => ({
-	CAPABILITIES: {
-		feature: {
+vi.mock('../../src/lib/config/capabilities.js', () => ({
+	capabilities: [
+		{
 			id: 'feature',
 			name: 'Feature Capability',
 			description: 'Adds feature support',
-			templates: [{ path: 'src/feature.js', content: 'console.log("{{projectName}}");' }],
+			templates: [{ path: 'src/feature.js', content: 'console.log("{{name}}");' }], // Use 'name' instead of 'projectName'
 			externalServices: [
 				{
 					type: 'github',
 					name: 'GitHub',
-					actions: [{ type: 'create', description: 'Setup {{projectName}} repo' }],
+					actions: [{ type: 'create', description: 'Setup {{name}} repo' }], // Use 'name' instead of 'projectName'
 					requiresAuth: true
 				}
 			]
 		},
-		another: {
+		{
 			id: 'another',
 			name: 'Another Capability',
 			description: 'Secondary feature',
 			templates: [],
 			externalServices: []
 		}
-	}
+	]
 }));
 
 vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
@@ -54,7 +54,7 @@ describe('generatePreview', () => {
 		description: 'Demo project',
 		repositoryUrl: '',
 		isPrivate: true,
-		capabilityConfigs: { feature: { enabled: true } }
+		configuration: { feature: { enabled: true } } // Changed from capabilityConfigs
 	};
 
 	beforeEach(() => {

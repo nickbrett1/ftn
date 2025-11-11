@@ -7,7 +7,7 @@
  * @fileoverview Server-side preview generation service
  */
 
-import { CAPABILITIES as capabilities } from '$lib/utils/capabilities.js';
+import { capabilities } from '$lib/config/capabilities.js';
 import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
@@ -90,7 +90,7 @@ function generatePreviewFiles(projectConfig, executionOrder) {
 
 	// Generate files for each capability
 	for (const capabilityId of executionOrder) {
-		const capability = capabilities[capabilityId];
+		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
 		const capabilityFiles = generateCapabilityFiles(projectConfig, capability);
@@ -113,7 +113,7 @@ function generatePreviewFiles(projectConfig, executionOrder) {
  */
 function generateCapabilityFiles(projectConfig, capability) {
 	const files = [];
-	const capabilityConfig = projectConfig.capabilityConfigs?.[capability.id] || {};
+	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
 
 	// Generate capability-specific files
 	if (capability.templates) {
@@ -148,7 +148,7 @@ function generateCapabilityFiles(projectConfig, capability) {
  * @returns {FileObject} README file object
  */
 function generateReadmeFile(projectConfig, executionOrder) {
-	const selectedCapabilities = executionOrder.map((id) => capabilities[id]).filter(Boolean);
+	const selectedCapabilities = executionOrder.map((id) => capabilities.find((c) => c.id === id)).filter(Boolean);
 
 	const readmeContent = `# ${projectConfig.name}
 
@@ -215,7 +215,7 @@ function generateExternalServiceChanges(projectConfig, executionOrder) {
 
 	// Generate service changes for each capability
 	for (const capabilityId of executionOrder) {
-		const capability = capabilities[capabilityId];
+		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
 		const serviceChanges = generateCapabilityServiceChanges(projectConfig, capability);
