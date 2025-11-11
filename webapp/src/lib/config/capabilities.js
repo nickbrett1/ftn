@@ -171,7 +171,8 @@ export const capabilities = [
 			properties: {
 				workerType: {
 					type: 'string',
-					enum: ['web', 'api']
+					enum: ['web'],
+					default: 'web'
 				}
 			}
 		},
