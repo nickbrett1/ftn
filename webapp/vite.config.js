@@ -92,10 +92,10 @@ export default defineConfig(({ command, mode }) => {
 			testTimeout: 30_000,
 			hookTimeout: 30_000,
 			// Pool options for test execution
-			pool: 'forks',
+			pool: 'threads', // Change to threads
 			poolOptions: {
-				forks: {
-					// Reverted from singleFork and isolate for better performance
+				threads: {
+					// Can add thread-specific options here if needed
 				}
 			},
 			// Configure for Svelte 5 runes

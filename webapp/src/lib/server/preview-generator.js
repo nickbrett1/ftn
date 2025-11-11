@@ -62,10 +62,10 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
 
 		// Generate files
-		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Await the call
+		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
 
 		// Generate external service changes
-		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder);
+		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
 
 		// Create summary
 		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
