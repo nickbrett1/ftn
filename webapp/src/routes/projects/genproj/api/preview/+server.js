@@ -6,7 +6,9 @@ import { logger } from '$lib/utils/logging';
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
 	try {
-		const { projectConfig, selectedCapabilities } = await request.json();
+		const requestBody = await request.json();
+		const { selectedCapabilities } = requestBody;
+		const projectConfig = requestBody; // The entire request body is the projectConfig
 
 		if (!projectConfig || !selectedCapabilities) {
 			return json({ error: 'Missing projectConfig or selectedCapabilities' }, { status: 400 });
