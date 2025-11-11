@@ -6,4 +6,13 @@ export class ProjectConfig {
         this.selectedCapabilities = selectedCapabilities;
         this.configuration = configuration;
     }
+
+    toObject() {
+        return {
+            projectName: this.projectName,
+            repositoryUrl: this.repositoryUrl,
+            selectedCapabilities: this.selectedCapabilities,
+            configuration: this.configuration
+        };
+    }
 }
