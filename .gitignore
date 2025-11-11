@@ -185,3 +185,5 @@ webapp/package
 webapp/static/pdf.worker.min.mjs
 
 docs/ccbillingstatementscore
+
+.gemini/tmp
