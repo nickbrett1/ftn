@@ -37,8 +37,8 @@ const EMOJI_MAP = {
 
 const createLogger = (category) => {
 	const log = (level, message, data) => {
-		const levelValue = LOG_LEVELS[level.toUpperCase()] ?? LOG_LEVELS.INFO;
-		if (levelValue >= currentLogLevel) {
+		const levelValue = LOG_LEVELS[level.toUpperCase()];
+		if (levelValue !== undefined && levelValue >= currentLogLevel) {
 			const emoji = EMOJI_MAP[level] || '📝';
 			const timestamp = new Date().toISOString();
 			const logMessage = `${emoji} [${timestamp}] [${category}] ${message}`;
@@ -77,6 +77,13 @@ const createLogger = (category) => {
 
 const logger = createLogger('genproj');
 const authLogger = createLogger('genproj:auth');
+const dbLogger = createLogger('genproj:database');
+const apiLogger = createLogger('genproj:api');
+const fileLogger = createLogger('genproj:file');
+const systemLogger = createLogger('genproj:system');
+const userLogger = createLogger('genproj:user');
+const perfLogger = createLogger('genproj:performance');
+const securityLogger = createLogger('genproj:security');
 
 const setLogLevel = (level) => {
 	const newLevel = LOG_LEVELS[level.toUpperCase()];
@@ -92,213 +99,6 @@ const getLogLevel = () => {
 	return Object.keys(LOG_LEVELS).find((key) => LOG_LEVELS[key] === currentLogLevel) || 'INFO';
 };
 
-	/**
-	 * Log info message
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	info(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('INFO', EMOJI_PREFIXES.INFO, message, data);
-		}
-	}
-
-	/**
-	 * Log success message
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	success(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('SUCCESS', EMOJI_PREFIXES.SUCCESS, message, data);
-		}
-	}
-
-	/**
-	 * Log warning message
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	warn(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.WARN) {
-			this._log('WARN', EMOJI_PREFIXES.WARNING, message, data);
-		}
-	}
-
-	/**
-	 * Log error message
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	error(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.ERROR) {
-			this._log('ERROR', EMOJI_PREFIXES.ERROR, message, data);
-		}
-	}
-
-	/**
-	 * Log authentication event
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	auth(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('AUTH', EMOJI_PREFIXES.AUTH, message, data);
-		}
-	}
-
-	/**
-	 * Log database operation
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	database(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('DATABASE', EMOJI_PREFIXES.DATABASE, message, data);
-		}
-	}
-
-	/**
-	 * Log API operation
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	api(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('API', EMOJI_PREFIXES.API, message, data);
-		}
-	}
-
-	/**
-	 * Log file operation
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	file(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('FILE', EMOJI_PREFIXES.FILE, message, data);
-		}
-	}
-
-	/**
-	 * Log user action
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	user(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('USER', EMOJI_PREFIXES.USER, message, data);
-		}
-	}
-
-	/**
-	 * Log system event
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	system(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('SYSTEM', EMOJI_PREFIXES.SYSTEM, message, data);
-		}
-	}
-
-	/**
-	 * Log performance metric
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	performance(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.INFO) {
-			this._log('PERFORMANCE', EMOJI_PREFIXES.PERFORMANCE, message, data);
-		}
-	}
-
-	/**
-	 * Log security event
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 */
-	security(message, data = {}) {
-		if (currentLogLevel <= LOG_LEVELS.WARN) {
-			this._log('SECURITY', EMOJI_PREFIXES.SECURITY, message, data);
-		}
-	}
-
-	/**
-	 * Internal log method
-	 * @param {string} level - Log level
-	 * @param {string} emoji - Emoji prefix
-	 * @param {string} message - Log message
-	 * @param {Object} data - Additional data
-	 * @private
-	 */
-	_log(level, emoji, message, data) {
-		const timestamp = new Date().toISOString();
-		// Format log message
-		const formattedMessage = `${emoji} [${timestamp}] [${this.context}] ${message}`;
-
-		// Use appropriate console method
-		switch (level) {
-			case 'ERROR': {
-				console.error(formattedMessage, data);
-				break;
-			}
-			case 'WARN': {
-				console.warn(formattedMessage, data);
-				break;
-			}
-			default: {
-				console.log(formattedMessage, data);
-			}
-		}
-	}
-}
-
-/**
- * Create logger instance with context
- * @param {string} context - Logger context
- * @returns {GenprojLogger} Logger instance
- */
-export function createLogger(context) {
-	return new GenprojLogger(context);
-}
-
-/**
- * Default genproj logger
- */
-export const logger = createLogger('genproj');
-
-/**
- * Specialized loggers for different components
- */
-export const authLogger = createLogger('genproj:auth');
-export const dbLogger = createLogger('genproj:database');
-export const apiLogger = createLogger('genproj:api');
-export const fileLogger = createLogger('genproj:file');
-export const userLogger = createLogger('genproj:user');
-export const systemLogger = createLogger('genproj:system');
-export const perfLogger = createLogger('genproj:performance');
-export const securityLogger = createLogger('genproj:security');
-
-/**
- * Log function execution time
- * @param {Function} fn - Function to measure
- * @param {string} operation - Operation name
- * @param {Object} context - Additional context
- * @returns {Function} Wrapped function with timing
- */
-export function withTiming(function_, operation, context = {}) {
-	return async (...arguments_) => {
-		const startTime = Date.now();
-		perfLogger.info(`Starting ${operation}`, context);
-
-		try {
-			const result = await function_(...arguments_);
-			const duration = Date.now() - startTime;
-			perfLogger.success(`Completed ${operation}`, {
-				...context,
-				duration: `${duration}ms`
-			});
 const withTiming = (fn, operationName, data = {}) => {
 	return async (...args) => {
 		const start = Date.now();
@@ -354,6 +154,13 @@ export {
 	createLogger,
 	logger,
 	authLogger,
+	dbLogger,
+	apiLogger,
+	fileLogger,
+	systemLogger,
+	userLogger,
+	perfLogger,
+	securityLogger,
 	withTiming,
 	logApiCall,
 	logUserAction,

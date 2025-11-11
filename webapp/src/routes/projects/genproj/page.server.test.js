@@ -24,7 +24,8 @@ describe('genproj +page.server load', () => {
 		expect(getCurrentUser).toHaveBeenCalledWith({ locals: {} });
 		expect(result).toEqual({
 			isAuthenticated: true,
-			user: { id: '123', name: 'Test User', email: 'test@example.com' }
+			user: { id: '123', name: 'test@example.com', email: 'test@example.com' },
+			capabilities: expect.any(Array)
 		});
 	});
 
@@ -34,7 +35,8 @@ describe('genproj +page.server load', () => {
 
 		expect(result).toEqual({
 			isAuthenticated: false,
-			user: null
+			user: null,
+			capabilities: expect.any(Array)
 		});
 	});
 });
