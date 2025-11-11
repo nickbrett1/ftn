@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
-
 
 const { mockProcessTemplate } = vi.hoisted(() => ({
 	mockProcessTemplate: vi.fn((template, context) =>
@@ -43,9 +42,6 @@ vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
 	})),
 	getCapabilityExecutionOrder: vi.fn(() => ['feature', 'another'])
 }));
-
-
-
 
 vi.mock('$app/environment', () => ({
 	platform: {
@@ -102,8 +98,6 @@ vi.mock('../../src/lib/utils/file-generator.js', () => ({
 	}
 }));
 
-
-
 describe('generatePreview', () => {
 	const projectConfig = {
 		name: 'Demo',
@@ -115,12 +109,8 @@ describe('generatePreview', () => {
 
 	const mockR2Bucket = {
 		list: vi.fn(() => Promise.resolve({ objects: [] })),
-		get: vi.fn(() => Promise.resolve(null))
+		get: vi.fn(() => Promise.resolve())
 	};
-
-	// beforeEach(() => {
-	// 	// mockProcessTemplate.mockClear(); // This mock is no longer used directly
-	// });
 	it('creates preview data with files, services and summary', async () => {
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
 		expect(preview.files.length).toBeGreaterThan(0);
@@ -132,7 +122,6 @@ describe('generatePreview', () => {
 			totalFiles: preview.files.length
 		});
 		expect(preview.summary.isValid).toBe(true);
-
 	});
 
 	it('continues preview generation when template processing fails', async () => {

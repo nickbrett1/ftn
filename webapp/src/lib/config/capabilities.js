@@ -32,7 +32,7 @@ export const capabilities = [
 					type: 'string',
 					enum: ['18', '20', '22'],
 					default: '22'
-				},
+				}
 			},
 			required: []
 		},
@@ -400,17 +400,15 @@ export function validateCapabilityDependencies(selectedIds) {
 
 			// Check conflicts
 			for (const conflictId of capability.conflicts) {
-				if (selectedSet.has(conflictId)) {
-					// Add conflict only once
-					if (
-						!conflicts.some(
-							(c) =>
-								(c.capability1 === id && c.capability2 === conflictId) ||
-								(c.capability1 === conflictId && c.capability2 === id)
-						)
-					) {
-						conflicts.push({ capability1: id, capability2: conflictId });
-					}
+				if (
+					selectedSet.has(conflictId) && // Add conflict only once
+					!conflicts.some(
+						(c) =>
+							(c.capability1 === id && c.capability2 === conflictId) ||
+							(c.capability1 === conflictId && c.capability2 === id)
+					)
+				) {
+					conflicts.push({ capability1: id, capability2: conflictId });
 				}
 			}
 		}
@@ -438,5 +436,5 @@ export function getRequiredAuthServices(selectedIds) {
 			}
 		}
 	}
-	return Array.from(services);
+	return [...services];
 }

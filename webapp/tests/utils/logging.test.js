@@ -8,9 +8,6 @@ import {
 	logApiCall,
 	logUserAction,
 	logSecurityEvent,
-	logDatabaseOperation,
-	logFileOperation,
-	logSystemEvent,
 	setLogLevel,
 	getLogLevel
 } from '$lib/utils/logging.js';

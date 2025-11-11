@@ -43,7 +43,7 @@ export function isValidUrl(value) {
 	try {
 		new URL(value);
 		return true;
-	} catch (e) {
+	} catch {
 		return false;
 	}
 }
@@ -111,9 +111,9 @@ export function validateSelectedCapabilities(selected) {
 	if (selected.length > 20) {
 		return { valid: false, error: 'Too many capabilities selected (maximum 20)' };
 	}
-	const capabilityIds = capabilities.map((c) => c.id);
+	const capabilityIds = new Set(capabilities.map((c) => c.id));
 	for (const id of selected) {
-		if (!capabilityIds.includes(id)) {
+		if (!capabilityIds.has(id)) {
 			return { valid: false, error: `Invalid capability ID: ${id}` };
 		}
 	}
@@ -146,9 +146,9 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 
 			if (config) {
 				if (schema.required) {
-					for (const requiredProp of schema.required) {
-						if (config[requiredProp] === undefined) {
-							errors.push(`${id}.${requiredProp} is required`);
+					for (const requiredProperty of schema.required) {
+						if (config[requiredProperty] === undefined) {
+							errors.push(`${id}.${requiredProperty} is required`);
 						}
 					}
 				}
@@ -252,9 +252,9 @@ export function sanitizeProjectName(name) {
 	}
 	return name
 		.toLowerCase()
-		.replace(/[^a-z0-9-]/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^-|-$/g, '');
+		.replaceAll(/[^a-z0-9-]/g, '-')
+		.replaceAll(/-+/g, '-')
+		.replaceAll(/^-|-$/g, '');
 }
 
 /**

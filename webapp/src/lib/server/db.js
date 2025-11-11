@@ -10,11 +10,11 @@
  * @returns {D1Database} The D1 database binding for 'GENPROJ_DB'.
  * @throws {Error} If the GENPROJ_DB binding is not found in the environment.
  */
-export function getGenprojDb(env) {
-	if (!env || !env.GENPROJ_DB) {
+export function getGenprojDb(environment) {
+	if (!environment || !environment.GENPROJ_DB) {
 		throw new Error('GENPROJ_DB binding not found in environment.');
 	}
-	return env.GENPROJ_DB;
+	return environment.GENPROJ_DB;
 }
 
 /**
@@ -24,11 +24,11 @@ export function getGenprojDb(env) {
  * @param {any[]} params Optional array of parameters for the SQL query.
  * @returns {Promise<D1Result>} The result of the D1 query.
  */
-export async function executeGenprojQuery(db, sql, params = []) {
+export async function executeGenprojQuery(database, sql, parameters = []) {
 	try {
-		const { results } = await db
+		const { results } = await database
 			.prepare(sql)
-			.bind(...params)
+			.bind(...parameters)
 			.all();
 		return results;
 	} catch (error) {
@@ -44,11 +44,11 @@ export async function executeGenprojQuery(db, sql, params = []) {
  * @param {any[]} params Optional array of parameters for the SQL query.
  * @returns {Promise<any | null>} The first result of the D1 query, or null if no results.
  */
-export async function getGenprojFirstResult(db, sql, params = []) {
+export async function getGenprojFirstResult(database, sql, parameters = []) {
 	try {
-		const { results } = await db
+		const { results } = await database
 			.prepare(sql)
-			.bind(...params)
+			.bind(...parameters)
 			.all();
 		return results.length > 0 ? results[0] : null;
 	} catch (error) {
