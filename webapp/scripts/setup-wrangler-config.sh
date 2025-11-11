@@ -126,12 +126,19 @@ if doppler run $DOPPLER_ARGS -- bash -c '
     fi
     echo "✅ D1_CCBILLING_DATABASE_ID is set: ${D1_CCBILLING_DATABASE_ID:0:10}..."
 
+    if [ -z "$D1_GENPROJ_DATABASE_ID" ]; then
+        echo "❌ Error: D1_GENPROJ_DATABASE_ID environment variable is not set in Doppler config"
+        exit 1
+    fi
+    echo "✅ D1_GENPROJ_DATABASE_ID is set: ${D1_GENPROJ_DATABASE_ID:0:10}..."
+
     # Create wrangler.jsonc from template with substitutions
     echo "📝 Generating wrangler.jsonc from template..."
     if ! sed \
         -e "s/KV_NAMESPACE_ID_PLACEHOLDER/$KV_NAMESPACE_ID/g" \
         -e "s/D1_WDI_DATABASE_ID_PLACEHOLDER/$D1_WDI_DATABASE_ID/g" \
         -e "s/D1_CCBILLING_DATABASE_ID_PLACEHOLDER/$D1_CCBILLING_DATABASE_ID/g" \
+        -e "s/D1_GENPROJ_DATABASE_ID_PLACEHOLDER/$D1_GENPROJ_DATABASE_ID/g" \
         wrangler.template.jsonc > wrangler.jsonc; then
         echo "❌ Error: Failed to generate wrangler.jsonc from template"
         exit 1
