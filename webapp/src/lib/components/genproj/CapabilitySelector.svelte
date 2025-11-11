@@ -202,6 +202,14 @@
 								</label>
 								<p class="text-gray-400 mt-1">{capability.description}</p>
 
+								{#if capability.website}
+									<p class="text-gray-500 text-xs mt-1">
+										<a href={capability.website} target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
+											Learn more
+										</a>
+									</p>
+								{/if}
+
 								{#if isRequiredByOther(capability)}
 									<p class="text-yellow-400 text-xs mt-2">
 										Required by another selected capability. Cannot deselect.

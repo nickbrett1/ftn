@@ -14,7 +14,8 @@ export const capabilities = [
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: { type: 'object', properties: {} },
-		templates: []
+		templates: [],
+		website: 'https://www.docker.com/'
 	},
 	{
 		id: 'devcontainer-node',
@@ -35,7 +36,8 @@ export const capabilities = [
 			},
 			required: []
 		},
-		templates: []
+		templates: [],
+		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
 		id: 'devcontainer-python',
@@ -58,7 +60,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
 		id: 'devcontainer-java',
@@ -78,7 +81,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	},
 	{
 		id: 'circleci',
@@ -86,7 +90,7 @@ export const capabilities = [
 		description: 'Configures CircleCI for continuous integration and deployment.',
 		category: 'ci-cd',
 		dependencies: [],
-		conflicts: ['github-actions'],
+		conflicts: [], // Removed 'github-actions' from conflicts
 		requiresAuth: ['circleci'],
 		configurationSchema: {
 			type: 'object',
@@ -97,27 +101,10 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://circleci.com/'
 	},
-	{
-		id: 'github-actions',
-		name: 'GitHub Actions',
-		description: 'Configures GitHub Actions for continuous integration.',
-		category: 'ci-cd',
-		dependencies: [],
-		conflicts: ['circleci'],
-		requiresAuth: ['github'],
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				nodeVersion: {
-					type: 'string',
-					enum: ['18', '20', '22']
-				}
-			}
-		},
-		templates: []
-	},
+	// Removed 'github-actions' capability
 	{
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
@@ -135,7 +122,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://www.doppler.com/'
 	},
 	{
 		id: 'sonarcloud',
@@ -154,18 +142,20 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://sonarcloud.io/'
 	},
 	{
 		id: 'sonarlint',
 		name: 'SonarLint',
 		description: 'Configures SonarLint for local code quality analysis.',
 		category: 'code-quality',
-		dependencies: ['sonarcloud', 'devcontainer-java'], // Made up dependency to match test
+		dependencies: ['sonarcloud', 'devcontainer-java'],
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: { type: 'object', properties: {} },
-		templates: []
+		templates: [],
+		website: 'https://www.sonarsource.com/products/sonarlint/'
 	},
 	{
 		id: 'cloudflare-wrangler',
@@ -184,7 +174,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://developers.cloudflare.com/workers/wrangler/'
 	},
 	{
 		id: 'dependabot',
@@ -201,7 +192,7 @@ export const capabilities = [
 					type: 'array',
 					items: {
 						type: 'string',
-						enum: ['npm', 'github-actions']
+						enum: ['npm'] // Removed 'github-actions' from enum
 					}
 				},
 				updateSchedule: {
@@ -210,7 +201,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://docs.github.com/en/code-security/dependabot/dependabot-overview'
 	},
 	{
 		id: 'lighthouse-ci',
@@ -229,13 +221,15 @@ export const capabilities = [
 						performance: {
 							type: 'number',
 							minimum: 0,
-							maximum: 100
+							maximum: 100,
+							default: 90 // Changed default to 90
 						}
 					}
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://github.com/GoogleChrome/lighthouse-ci'
 	},
 	{
 		id: 'playwright',
@@ -257,7 +251,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://playwright.dev/'
 	},
 	{
 		id: 'spec-kit',
@@ -276,7 +271,8 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: []
+		templates: [],
+		website: 'https://www.speckit.app/'
 	}
 ];
 
