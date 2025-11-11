@@ -29,7 +29,8 @@ export const capabilities = [
 			properties: {
 				nodeVersion: {
 					type: 'string',
-					enum: ['18', '20', '22']
+					enum: ['18', '20', '22'],
+					default: '22'
 				},
 			},
 			required: []
