@@ -51,7 +51,7 @@
 		"eslint-plugin-security": "^3.0.1",
 		"eslint-plugin-svelte": "^3.13.0",
 		"highlight.js": "^11.11.1",
-		"jsdom": "^27.1.0",
+		"jsdom": "^27.2.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.21",
 		"mdsvex": "^0.12.6",
