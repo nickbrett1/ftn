@@ -81,7 +81,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@threlte/core": "^8.2.1",
+		"@threlte/core": "^8.3.0",
 		"@threlte/extras": "^9.7.0",
 		"@tsparticles/engine": "^3.8.1",
 		"@tsparticles/interaction-external-trail": "3.9",
