@@ -96,20 +96,17 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * Generates preview files for the project
  * @param {Object} projectConfig - Project configuration
  * @param {string[]} executionOrder - Capability execution order
- * @returns {Array<FileObject>} Array of file objects
+ * @returns {Promise<Array<FileObject>>} Array of file objects
  */
 async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
-	// Make function async
-	const files = [];
-
-	// Generate files for each capability
-	for (const capabilityId of executionOrder) {
+	const fileGenerationPromises = executionOrder.map((capabilityId) => {
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (!capability) continue;
+		if (!capability) return Promise.resolve([]);
+		return generateCapabilityFiles(projectConfig, capability, r2Bucket);
+	});
 
-		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
-		files.push(...capabilityFiles);
-	}
+	const filesArrays = await Promise.all(fileGenerationPromises);
+	const files = filesArrays.flat();
 
 	// Generate README.md
 	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
@@ -123,38 +120,32 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
  * Generates files for a specific capability
  * @param {Object} projectConfig - Project configuration
  * @param {Object} capability - Capability definition
- * @returns {Array<FileObject>} Array of file objects
+ * @returns {Promise<Array<FileObject>>} Array of file objects
  */
 async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
-	// Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket);
 
 	// Generate capability-specific files
 	if (capability.templates) {
 		for (const template of capability.templates) {
 			try {
-				if (!template.filePath) {
-					console.warn(`⚠️ Template ${template.templateId} is missing a filePath.`);
-					continue;
-				}
-				const content = await templateEngine.generateFile(template.templateId, {
-					// Await the call
+				const content = templateEngine.generateFile(template.templateId, {
 					...projectConfig,
 					capabilityConfig,
 					capability
 				});
 
 				files.push({
-					path: template.filePath, // Use filePath from template
-					name: template.filePath.split('/').pop(), // Use filePath from template
+					path: template.filePath,
+					name: template.filePath.split('/').pop(),
 					content,
 					size: content.length,
 					type: 'file'
 				});
 			} catch (error) {
-				console.warn(`⚠️ Failed to process template ${template.templateId}:`, error); // Log templateId
+				console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
 			}
 		}
 	}
@@ -211,10 +202,9 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * Generates external service changes preview
  * @param {Object} projectConfig - Project configuration
  * @param {string[]} executionOrder - Capability execution order
- * @returns {Array<ExternalService>} Array of external service changes
+ * @returns {Promise<Array<ExternalService>>} Array of external service changes
  */
 async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
-	// Make async
 	const services = [
 		{
 			type: 'github',
@@ -235,22 +225,14 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		}
 	];
 
-	// GitHub service (always required)
-
-	// Generate service changes for each capability
-	for (const capabilityId of executionOrder) {
+	const serviceGenerationPromises = executionOrder.map((capabilityId) => {
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (!capability) continue;
+		if (!capability) return Promise.resolve([]);
+		return generateCapabilityServiceChanges(projectConfig, capability, r2Bucket);
+	});
 
-		const serviceChanges = generateCapabilityServiceChanges(
-			projectConfig,
-			capability,
-			r2Bucket
-		); // Await the call
-		if (serviceChanges && serviceChanges.length > 0) {
-			services.push(...serviceChanges);
-		}
-	}
+	const servicesArrays = await Promise.all(serviceGenerationPromises);
+	services.push(...servicesArrays.flat());
 
 	return services;
 }
@@ -259,15 +241,11 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * Generates service changes for a specific capability
  * @param {Object} projectConfig - Project configuration
  * @param {Object} capability - Capability definition
- * @returns {Array<ExternalService>} Array of service changes
+ * @returns {Promise<Array<ExternalService>>} Array of service changes
  */
 async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
-	// Make async
-	if (!capability.externalServices) {
-		return [];
-	}
 	const services = [];
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket);
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {
@@ -277,7 +255,6 @@ async function generateCapabilityServiceChanges(projectConfig, capability, r2Buc
 				actions: serviceConfig.actions.map((action) => ({
 					type: action.type,
 					description: templateEngine.compileTemplate(action.description, {
-						// Use compileTemplate
 						...projectConfig,
 						capability
 					})

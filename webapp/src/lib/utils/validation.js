@@ -6,15 +6,6 @@ import { capabilities, getCapabilityById } from '$lib/config/capabilities';
  */
 
 /**
- * Checks if a given string is not empty or consists only of whitespace.
- * @param {string | null | undefined} value The string to check.
- * @returns {boolean} True if the string is not empty and contains non-whitespace characters, false otherwise.
- */
-export function isNotEmpty(value) {
-	return typeof value === 'string' && value.trim().length > 0;
-}
-
-/**
  * Checks if a given value is a valid UUID format.
  * @param {string | null | undefined} value The string to check.
  * @returns {boolean} True if the string is a valid UUID, false otherwise.
@@ -54,7 +45,7 @@ export function isValidUrl(value) {
  * @returns {{valid: boolean, error?: string}}
  */
 export function validateProjectName(name) {
-	if (typeof name !== 'string' || name.trim().length === 0) {
+	if (!name || typeof name !== 'string' || name.trim().length === 0) {
 		return { valid: false, error: 'Project name is required' };
 	}
 	if (name.length < 3) {
@@ -87,7 +78,7 @@ export function validateRepositoryUrl(url) {
 	if (typeof url !== 'string') {
 		return { valid: false, error: 'Repository URL must be a string' };
 	}
-	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\.git)?$/.test(url)) {
+	if (!/^https:\/\/github\.com\/[\w-]+\/[\w.-]+$/.test(url)) {
 		return {
 			valid: false,
 			error: 'Repository URL must be a valid GitHub URL (https://github.com/owner/repo)'
@@ -125,74 +116,100 @@ export function validateSelectedCapabilities(selected) {
 }
 
 /**
+ * @typedef {import('$lib/config/capabilities').Capability} Capability
+ * @typedef {import('$lib/config/capabilities').CapabilityConfiguration} CapabilityConfiguration
+ */
+
+/**
+ * A map of capability-specific validation functions.
+ * @type {Object.<string, (config: object) => string[]>}
+ */
+const capabilityValidators = {
+	'devcontainer-node': (config) =>
+		!['18', '20', '22'].includes(config.nodeVersion) ? ['Invalid Node.js version'] : [],
+	'devcontainer-python': (config) =>
+		!['pip', 'poetry'].includes(config.packageManager) ? ['Invalid package manager'] : [],
+	'devcontainer-java': (config) =>
+		!['11', '17', '22'].includes(config.javaVersion) ? ['Invalid Java version'] : [],
+	circleci: (config) =>
+		!['none', 'cloudflare'].includes(config.deployTarget) ? ['Invalid deploy target'] : [],
+	'github-actions': (config) =>
+		!['18', '20', '22'].includes(config.nodeVersion) ? ['Invalid Node.js version'] : [],
+	sonarcloud: (config) =>
+		!['js', 'py', 'java'].includes(config.language) ? ['Invalid language'] : [],
+	doppler: (config) =>
+		!['web', 'backend'].includes(config.projectType) ? ['Invalid project type'] : [],
+	'cloudflare-wrangler': (config) =>
+		!['web', 'api'].includes(config.workerType) ? ['Invalid worker type'] : [],
+	dependabot: (config) => {
+		if (config.ecosystems && !config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))) {
+			const invalid = config.ecosystems.find((e) => !['npm', 'github-actions'].includes(e));
+			return [`Invalid ecosystem: ${invalid}`];
+		}
+		return [];
+	},
+	'lighthouse-ci': (config) => {
+		const performance = config.thresholds ? config.thresholds.performance : undefined;
+		if (performance !== undefined && (performance < 0 || performance > 100)) {
+			return ['Threshold performance must be a number between 0 and 100'];
+		}
+		return [];
+	},
+	playwright: (config) => {
+		if (config.browsers && !config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))) {
+			const invalid = config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b));
+			return [`Invalid browser: ${invalid}`];
+		}
+		return [];
+	},
+	'spec-kit': (config) =>
+		!['md', 'yaml'].includes(config.specFormat) ? ['Invalid spec format'] : []
+};
+
+/**
  * Validates capability configuration.
  * @param {any} configuration The configuration object.
  * @param {string[]} selectedCapabilities The selected capabilities.
- * @returns {{valid: boolean, error?: string}}
+ * @returns {{valid: boolean, errors: string[]}}
  */
 export function validateCapabilityConfiguration(configuration, selectedCapabilities) {
 	const errors = [];
 
 	if (configuration === null || typeof configuration !== 'object') {
-		errors.push('Configuration must be an object');
-		return { valid: false, errors };
+		return { valid: false, errors: ['Configuration must be an object'] };
 	}
 
 	for (const id of selectedCapabilities) {
 		const capability = getCapabilityById(id);
-		if (capability && capability.configurationSchema) {
-			const config = configuration[id];
-			const schema = capability.configurationSchema;
+		if (!capability || !capability.configurationSchema) {
+			continue;
+		}
 
-			if (config) {
-				if (schema.required) {
-					for (const requiredProp of schema.required) {
-						if (config[requiredProp] === undefined) {
-							errors.push(`${id}.${requiredProp} is required`);
-						}
-					}
+		const config = configuration[id];
+		if (!config) {
+			// If config is missing for a capability that has a schema, check for required properties
+			if (capability.configurationSchema.required) {
+				for (const requiredProp of capability.configurationSchema.required) {
+					errors.push(`${id}.${requiredProp} is required`);
 				}
-				// This is brittle, but necessary to match the tests without a full schema validator
-				if (id === 'devcontainer-node' && !['18', '20', '22'].includes(config.nodeVersion))
-					errors.push('Invalid Node.js version');
-				if (id === 'devcontainer-python' && !['pip', 'poetry'].includes(config.packageManager))
-					errors.push('Invalid package manager');
-				if (id === 'devcontainer-java' && !['11', '17', '22'].includes(config.javaVersion))
-					errors.push('Invalid Java version');
-				if (id === 'circleci' && !['none', 'cloudflare'].includes(config.deployTarget))
-					errors.push('Invalid deploy target');
-				if (id === 'github-actions' && !['18', '20', '22'].includes(config.nodeVersion))
-					errors.push('Invalid Node.js version');
-				if (id === 'sonarcloud' && !['js', 'py', 'java'].includes(config.language))
-					errors.push('Invalid language');
-				if (id === 'doppler' && !['web', 'backend'].includes(config.projectType))
-					errors.push('Invalid project type');
-				if (id === 'cloudflare-wrangler' && !['web', 'api'].includes(config.workerType))
-					errors.push('Invalid worker type');
-				if (
-					id === 'dependabot' &&
-					!config.ecosystems?.every((e) => ['npm', 'github-actions'].includes(e))
-				)
-					errors.push(
-						'Invalid ecosystem: ' +
-							config.ecosystems.find((e) => !['npm', 'github-actions'].includes(e))
-					);
-				if (
-					id === 'lighthouse-ci' &&
-					(config.thresholds?.performance < 0 || config.thresholds?.performance > 100)
-				)
-					errors.push('Threshold performance must be a number between 0 and 100');
-				if (
-					id === 'playwright' &&
-					!config.browsers?.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
-				)
-					errors.push(
-						'Invalid browser: ' +
-							config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
-					);
-				if (id === 'spec-kit' && !['md', 'yaml'].includes(config.specFormat))
-					errors.push('Invalid spec format');
 			}
+			continue;
+		}
+
+		// Check for required properties
+		if (capability.configurationSchema.required) {
+			for (const requiredProp of capability.configurationSchema.required) {
+				if (config[requiredProp] === undefined) {
+					errors.push(`${id}.${requiredProp} is required`);
+				}
+			}
+		}
+
+		// Run capability-specific validators
+		const validator = capabilityValidators[id];
+		if (validator) {
+			const validationErrors = validator(config);
+			errors.push(...validationErrors);
 		}
 	}
 

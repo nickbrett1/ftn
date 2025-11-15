@@ -36,7 +36,6 @@
 		if (previewData) {
 			fileTree = previewData.files || [];
 			externalServices = previewData.externalServices || [];
-			selectedFile = null;
 		}
 	}
 

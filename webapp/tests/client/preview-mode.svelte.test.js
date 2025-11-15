@@ -22,36 +22,44 @@ describe('PreviewMode component', () => {
 	it('renders a file tree and shows file content on click', async () => {
 		const selectedCapabilities = ['devcontainer-node'];
 
-		const previewData1 = {
-			files: [
-				{
-					name: 'README.md',
-					path: 'README.md',
-					content: '# my-project',
-					size: 12
-				}
-			],
-			externalServices: []
-		};
-
-		const previewData2 = {
-			files: [
-				{
-					name: 'README.md',
-					path: 'README.md',
-					content: '# cool-app',
-					size: 10
-				}
-			],
-			externalServices: []
-		};
+		globalThis.fetch
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						files: [
+							{
+								filePath: 'README.md',
+								content: '# my-project',
+								capabilityId: 'readme'
+							}
+						],
+						externalServices: []
+					})
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						files: [
+							{
+								filePath: 'README.md',
+								content: '# cool-app',
+								capabilityId: 'readme'
+							}
+						],
+						externalServices: []
+					})
+			});
 
 		const { rerender } = render(PreviewMode, {
-			previewData: previewData1,
-			loading: false,
-			error: null
+			name: 'my-project',
+			repositoryUrl: '',
+			selectedCapabilities,
+			configuration: {}
 		});
 
+		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1));
 		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
 
 		const fileNode = screen.getByText('README.md');
@@ -60,11 +68,13 @@ describe('PreviewMode component', () => {
 		await waitFor(() => expect(screen.getByText('# my-project')).toBeTruthy());
 
 		await rerender({
-			previewData: previewData2,
-			loading: false,
-			error: null
+			name: 'cool-app',
+			repositoryUrl: '',
+			selectedCapabilities,
+			configuration: {}
 		});
 
+		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));
 		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
 
 		const updatedFileNode = screen.getByText('README.md');
