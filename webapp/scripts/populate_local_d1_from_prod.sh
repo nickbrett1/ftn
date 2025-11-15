@@ -69,7 +69,7 @@ echo "" >> "$BOOTSTRAP_SQL_FILE"
 echo "Fetching table list from remote D1 database: $DB_NAME..."
 # Get table names, excluding sqlite system tables and Cloudflare internal tables
 # Output is JSON: [{"results":[{"name":"table1"},{"name":"name2"}]}]
-TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null)
+TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null || true)
 WRANGLER_EXIT_CODE=$?
 
 TABLE_NAMES="" # Initialize TABLE_NAMES
