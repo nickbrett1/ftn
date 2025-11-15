@@ -10,6 +10,7 @@ export class TemplateEngine {
 		this.helpers = new Map();
 		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
 		this.fallbackTemplateMap = new Map();
+		this.fs = {};
 	}
 
 	async initialize() {
@@ -120,7 +121,7 @@ export class TemplateEngine {
 
 	getFallbackTemplate(name) {
 		const fallbackName = this.fallbackTemplateMap.get(name);
-		return fallbackTemplates[fallbackName] || null;
+		return fallbackTemplates[fallbackName] || fallbackTemplates[name] || null;
 	}
 
 	async getTemplate(name) {
@@ -172,12 +173,23 @@ export class TemplateEngine {
 		for (const [index, req] of fileRequests.entries()) {
 			try {
 				const content = await this.generateFile(req.templateId, { ...req.data, index });
+				if (req.filePath) {
+					this.fs[req.filePath] = content;
+				}
 				results.push({ ...req, success: true, content });
 			} catch (error) {
 				results.push({ ...req, success: false, error: error.message });
 			}
 		}
 		return results;
+	}
+
+	/**
+	 * Returns the in-memory filesystem.
+	 * @returns {Record<string, string>} The in-memory filesystem.
+	 */
+	getFileSystem() {
+		return this.fs;
 	}
 }
 
