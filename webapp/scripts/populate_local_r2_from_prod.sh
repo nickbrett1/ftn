@@ -82,6 +82,9 @@ sync_bucket() {
         if jq -e '.error' "$objects_json" >/dev/null 2>&1; then
             local error_msg=$(jq -r '.error' "$objects_json" 2>/dev/null || echo "Unknown error")
             echo "Error from API: $error_msg"
+            if [[ "$error_msg" == *"Unknown bucket"* ]]; then
+                echo "Suggestion: This usually means the R2 bucket '$bucket_name' does not exist in the production environment or the API lacks permissions to access it."
+            fi
             echo "Skipping sync for bucket '$bucket_name'."
             echo ""
             return 0
