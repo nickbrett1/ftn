@@ -74,12 +74,12 @@ WRANGLER_OUTPUT=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT 
 WRANGLER_EXIT_CODE=$?
 
 TABLE_NAMES_JSON=""
-if [ "$WRANGLER_EXIT_CODE" -eq 0 ]; then
-    TABLE_NAMES_JSON="$WRANGLER_OUTPUT"
+if [ "$WRANGLER_EXIT_CODE" -ne 0 ]; then
+    # If wrangler command failed, print error and exit immediately
+    echo "Error: 'npx wrangler d1 execute' command failed with exit code $WRANGLER_EXIT_CODE when fetching table names for '$DB_NAME'. Details: $WRANGLER_OUTPUT"
+    exit 1 # Critical error, exit immediately
 else
-    # If wrangler command failed, assume no tables and provide empty JSON array
-    TABLE_NAMES_JSON="[]"
-    echo "Error: 'npx wrangler d1 execute' command failed with exit code $WRANGLER_EXIT_CODE when fetching table names for '$DB_NAME'. Assuming no tables. Details: $WRANGLER_OUTPUT"
+    TABLE_NAMES_JSON="$WRANGLER_OUTPUT"
 fi
 
 # Now process TABLE_NAMES_JSON, which is guaranteed to be valid JSON
