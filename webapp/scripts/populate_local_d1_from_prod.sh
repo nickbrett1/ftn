@@ -69,8 +69,20 @@ echo "" >> "$BOOTSTRAP_SQL_FILE"
 echo "Fetching table list from remote D1 database: $DB_NAME..."
 # Get table names, excluding sqlite system tables and Cloudflare internal tables
 # Output is JSON: [{"results":[{"name":"table1"},{"name":"name2"}]}]
-TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null || echo "[]") # Ensure it's always valid JSON array or empty array
+# Execute wrangler command and capture its output and exit code separately
+WRANGLER_OUTPUT=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null)
+WRANGLER_EXIT_CODE=$?
 
+TABLE_NAMES_JSON=""
+if [ "$WRANGLER_EXIT_CODE" -eq 0 ]; then
+    TABLE_NAMES_JSON="$WRANGLER_OUTPUT"
+else
+    # If wrangler command failed, assume no tables and provide empty JSON array
+    TABLE_NAMES_JSON="[]"
+    echo "Error: 'npx wrangler d1 execute' command failed with exit code $WRANGLER_EXIT_CODE when fetching table names for '$DB_NAME'. Assuming no tables. Details: $WRANGLER_OUTPUT"
+fi
+
+# Now process TABLE_NAMES_JSON, which is guaranteed to be valid JSON
 TABLE_NAMES=$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results[]? // empty') # Use '[]?' to handle cases where .[0].results is not an array or doesn't exist, and 'empty' to ensure no output if no tables.
 
 NUM_TABLES=0
