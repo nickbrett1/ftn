@@ -196,7 +196,6 @@ export class TemplateEngine {
 			return fallback;
 		}
 
-.
 		return null;
 	}
 

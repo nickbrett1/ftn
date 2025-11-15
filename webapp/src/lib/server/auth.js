@@ -1,6 +1,6 @@
 // webapp/src/lib/server/auth.js
 
-import { GITHUB_CLIENT_ID } from '$env/static/private';
+import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from '$env/static/private';
 
 /**
  * Placeholder for authentication logic.
