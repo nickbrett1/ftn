@@ -87,7 +87,7 @@ export function validateRepositoryUrl(url) {
 	if (typeof url !== 'string') {
 		return { valid: false, error: 'Repository URL must be a string' };
 	}
-	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(\.git)?$/.test(url)) {
+	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\.git)?$/.test(url)) {
 		return {
 			valid: false,
 			error: 'Repository URL must be a valid GitHub URL (https://github.com/owner/repo)'
@@ -171,8 +171,7 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 					errors.push('Invalid worker type');
 				if (
 					id === 'dependabot' &&
-					config.ecosystems &&
-					!config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
+					!config.ecosystems?.every((e) => ['npm', 'github-actions'].includes(e))
 				)
 					errors.push(
 						'Invalid ecosystem: ' +
@@ -180,14 +179,12 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 					);
 				if (
 					id === 'lighthouse-ci' &&
-					config.thresholds &&
-					(config.thresholds.performance < 0 || config.thresholds.performance > 100)
+					(config.thresholds?.performance < 0 || config.thresholds?.performance > 100)
 				)
 					errors.push('Threshold performance must be a number between 0 and 100');
 				if (
 					id === 'playwright' &&
-					config.browsers &&
-					!config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
+					!config.browsers?.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
 				)
 					errors.push(
 						'Invalid browser: ' +

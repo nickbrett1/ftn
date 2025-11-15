@@ -135,6 +135,10 @@ async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
 	if (capability.templates) {
 		for (const template of capability.templates) {
 			try {
+				if (!template.filePath) {
+					console.warn(`⚠️ Template ${template.templateId} is missing a filePath.`);
+					continue;
+				}
 				const content = await templateEngine.generateFile(template.templateId, {
 					// Await the call
 					...projectConfig,
@@ -238,12 +242,14 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const serviceChanges = await generateCapabilityServiceChanges(
+		const serviceChanges = generateCapabilityServiceChanges(
 			projectConfig,
 			capability,
 			r2Bucket
 		); // Await the call
-		services.push(...serviceChanges);
+		if (serviceChanges && serviceChanges.length > 0) {
+			services.push(...serviceChanges);
+		}
 	}
 
 	return services;
@@ -257,6 +263,9 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  */
 async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
 	// Make async
+	if (!capability.externalServices) {
+		return [];
+	}
 	const services = [];
 	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
