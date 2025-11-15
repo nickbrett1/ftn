@@ -73,9 +73,11 @@ sync_database() {
     fi
     
     # Capture stdout and stderr
-    # Remove '|| true' to correctly capture the exit code of D1_SCRIPT
+    # Temporarily disable -e to allow capturing the exit code of D1_SCRIPT
+    set +e
     d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1)
     d1_exit_code=$?
+    set -e
 
     # --- DEBUGGING START ---
     echo "DEBUG: d1_output for $db_name:"
