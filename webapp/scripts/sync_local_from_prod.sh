@@ -73,7 +73,8 @@ sync_database() {
     fi
     
     # Capture stdout and stderr
-    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1)
+    # Use '|| true' to prevent set -e from exiting the script if D1_SCRIPT returns non-zero
+    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1 || true)
     d1_exit_code=$?
     
     if [ "$d1_exit_code" -eq 0 ]; then
