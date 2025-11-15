@@ -27,9 +27,66 @@
 	let authError = $state(data.error || null);
 	let authResult = $state(data.authResult || null);
 
+	// Preview data state
+	let previewData = $state(null);
+	let previewLoading = $state(false);
+	let previewError = $state(null);
+
 	// Tab management
 	function switchTab(tab) {
 		activeTab = tab;
+	}
+
+	// Function to fetch and update the preview
+	async function fetchPreview() {
+		if (selectedCapabilities.length === 0 && (!projectName || projectName.length < 3)) {
+			previewData = null;
+			previewLoading = false;
+			return;
+		}
+		previewLoading = true;
+		previewError = null;
+		try {
+			const response = await fetch('/projects/genproj/api/preview', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					name: projectName,
+					repositoryUrl,
+					selectedCapabilities,
+					configuration
+				})
+			});
+
+			if (!response.ok) {
+				const errData = await response.json();
+				throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			previewData = data;
+			logger.info('Project preview generated successfully', {
+				filesCount: previewData.files?.length || 0
+			});
+		} catch (err) {
+			previewError = err.message;
+			logger.error('Failed to generate preview', { error: err.message });
+		} finally {
+			previewLoading = false;
+		}
+	}
+
+	// Reactive trigger for fetching preview when relevant data changes
+	$effect(() => {
+		fetchPreview();
+	});
+
+	// Event handlers for PreviewMode
+	function handleContinueGeneration() {
+		handleGenerateProject(); // Reuse existing function
+		logger.info('PreviewMode continue generation requested');
 	}
 
 	// Map devcontainer capabilities to SonarCloud languages
@@ -495,6 +552,10 @@
 								{selectedCapabilities}
 								{configuration}
 								{capabilities}
+								{previewData}
+								loading={previewLoading}
+								error={previewError}
+								on:continue={handleContinueGeneration}
 							/>
 						</div>
 					{/if}

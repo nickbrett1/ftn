@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, waitFor, cleanup, screen } from '@testing-library/svelte';
+import { render, waitFor, cleanup, screen, fireEvent } from '@testing-library/svelte';
 
 import PreviewMode from '../../src/lib/components/genproj/PreviewMode.svelte';
 
@@ -9,11 +9,6 @@ vi.mock('$app/environment', () => ({
 }));
 
 describe('PreviewMode component', () => {
-	const capability = {
-		id: 'devcontainer-node',
-		name: 'Node.js DevContainer'
-	};
-
 	beforeEach(() => {
 		vi.restoreAllMocks();
 		cleanup();
@@ -24,7 +19,7 @@ describe('PreviewMode component', () => {
 		cleanup();
 	});
 
-	it('regenerates preview when the project name changes', async () => {
+	it('renders a file tree and shows file content on click', async () => {
 		const selectedCapabilities = ['devcontainer-node'];
 
 		globalThis.fetch
@@ -58,23 +53,33 @@ describe('PreviewMode component', () => {
 			});
 
 		const { rerender } = render(PreviewMode, {
-			projectName: 'my-project',
+			name: 'my-project',
 			repositoryUrl: '',
 			selectedCapabilities,
 			configuration: {}
 		});
 
 		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
+
+		const fileNode = screen.getByText('README.md');
+		await fireEvent.click(fileNode);
+
 		await waitFor(() => expect(screen.getByText('# my-project')).toBeTruthy());
 
 		await rerender({
-			projectName: 'cool-app',
+			name: 'cool-app',
 			repositoryUrl: '',
 			selectedCapabilities,
 			configuration: {}
 		});
 
 		await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
+
+		const updatedFileNode = screen.getByText('README.md');
+		await fireEvent.click(updatedFileNode);
+
 		await waitFor(() => expect(screen.getByText('# cool-app')).toBeTruthy());
 	});
 });

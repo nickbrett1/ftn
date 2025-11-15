@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
 
-
 const { mockProcessTemplate } = vi.hoisted(() => ({
 	mockProcessTemplate: vi.fn((template, context) =>
 		template.replace('{{projectName}}', context.name)
@@ -43,9 +42,6 @@ vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
 	})),
 	getCapabilityExecutionOrder: vi.fn(() => ['feature', 'another'])
 }));
-
-
-
 
 vi.mock('$app/environment', () => ({
 	platform: {
@@ -102,8 +98,6 @@ vi.mock('../../src/lib/utils/file-generator.js', () => ({
 	}
 }));
 
-
-
 describe('generatePreview', () => {
 	const projectConfig = {
 		name: 'Demo',
@@ -132,7 +126,6 @@ describe('generatePreview', () => {
 			totalFiles: preview.files.length
 		});
 		expect(preview.summary.isValid).toBe(true);
-
 	});
 
 	it('continues preview generation when template processing fails', async () => {

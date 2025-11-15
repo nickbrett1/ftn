@@ -4,7 +4,8 @@ import Handlebars from 'handlebars';
 import * as fallbackTemplates from '$lib/config/fallback-templates';
 
 export class TemplateEngine {
-	constructor(r2Bucket = undefined) { // Accept r2Bucket as an argument
+	constructor(r2Bucket = undefined) {
+		// Accept r2Bucket as an argument
 		this.templates = new Map();
 		this.helpers = new Map();
 		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
