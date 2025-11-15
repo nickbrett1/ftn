@@ -21,9 +21,9 @@
 				configuration
 			});
 			error = null;
-		} catch (e) {
+		} catch (error_) {
 			projectConfig = null;
-			error = e.message;
+			error = error_.message;
 		}
 	}
 
@@ -50,8 +50,8 @@
 			});
 
 			if (!response.ok) {
-				const errData = await response.json();
-				throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+				const errorData = await response.json();
+				throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
 			}
 
 			const data = await response.json();
@@ -59,9 +59,9 @@
 			logger.info('Project preview generated successfully', {
 				filesCount: previewFiles.length
 			});
-		} catch (err) {
-			error = err.message;
-			logger.error('Failed to generate preview', { error: err.message });
+		} catch (error_) {
+			error = error_.message;
+			logger.error('Failed to generate preview', { error: error_.message });
 		} finally {
 			loading = false;
 		}

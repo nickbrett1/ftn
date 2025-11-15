@@ -535,7 +535,7 @@ function hasAddressPattern(merchantUpper) {
 function extractAddressDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
 	const addressMatch = merchantUpper.match(
-		/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/
+		/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d{1,5})(?:TH|ST|ND|RD)?\s+(.+)$/
 	);
 
 	if (addressMatch) {

@@ -9,11 +9,6 @@ vi.mock('$app/environment', () => ({
 }));
 
 describe('PreviewMode component', () => {
-	const capability = {
-		id: 'devcontainer-node',
-		name: 'Node.js DevContainer'
-	};
-
 	beforeEach(() => {
 		vi.restoreAllMocks();
 		cleanup();

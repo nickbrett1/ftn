@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import fs from 'fs';
-import { execSync } from 'child_process';
+import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 
 try {
 	// Get the current git commit hash
@@ -18,8 +18,8 @@ try {
 		let html = fs.readFileSync(htmlPath, 'utf8');
 
 		// Replace placeholders
-		html = html.replace(/%GIT_COMMIT%/g, commitHash);
-		html = html.replace(/%GIT_BRANCH%/g, branchName);
+		html = html.replaceAll('%GIT_COMMIT%', commitHash);
+		html = html.replaceAll('%GIT_BRANCH%', branchName);
 
 		// Write back to file
 		fs.writeFileSync(htmlPath, html);

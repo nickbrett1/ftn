@@ -27,13 +27,13 @@
 
 	// Category display names
 	const categoryNames = {
-		'devcontainer': 'Development Containers',
+		devcontainer: 'Development Containers',
 		'ci-cd': 'CI/CD',
 		'code-quality': 'Code Quality',
-		'secrets': 'Secrets Management',
-		'deployment': 'Deployment',
-		'monitoring': 'Monitoring & Testing',
-		'Other': 'Other Capabilities',
+		secrets: 'Secrets Management',
+		deployment: 'Deployment',
+		monitoring: 'Monitoring & Testing',
+		Other: 'Other Capabilities'
 	};
 
 	// Order of categories for display
@@ -44,7 +44,7 @@
 		'secrets',
 		'deployment',
 		'monitoring',
-		'Other',
+		'Other'
 	];
 
 	// Handlers
@@ -58,7 +58,9 @@
 			// If unchecking, ensure it's not required by another selected capability
 			const isRequired = isRequiredByOther({ id: capabilityId });
 			if (isRequired) {
-				logger.warn(`Cannot deselect ${capabilityId} as it's required by another selected capability.`);
+				logger.warn(
+					`Cannot deselect ${capabilityId} as it's required by another selected capability.`
+				);
 				event.target.checked = true; // Revert checkbox state
 				return;
 			}
@@ -72,9 +74,9 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
-				[field]: value,
-			},
+				...configuration[capabilityId],
+				[field]: value
+			}
 		};
 		dispatch('configurationChange', { capabilityId, config: updatedConfiguration[capabilityId] });
 		dispatch('update:configuration', updatedConfiguration);
@@ -84,12 +86,12 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: {
-					...(configuration[capabilityId]?.[field] || {}),
-					[nestedField]: value,
-				},
-			},
+					...configuration[capabilityId]?.[field],
+					[nestedField]: value
+				}
+			}
 		};
 		dispatch('configurationChange', { capabilityId, config: updatedConfiguration[capabilityId] });
 		dispatch('update:configuration', updatedConfiguration);
@@ -109,7 +111,7 @@
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
 		// Add a space before all uppercase letters that are not at the beginning
-		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
+		const spacedString = camelCaseString.replaceAll(/([A-Z])/g, ' $1');
 		// Capitalize the first letter of the entire string
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
 	}
@@ -136,20 +138,20 @@
 
 	// Helper to check if a capability is in conflict with any other selected capability
 	function isInConflict(capability) {
-		return capability.conflicts.some(conflictId => selectedCapabilities.includes(conflictId));
+		return capability.conflicts.some((conflictId) => selectedCapabilities.includes(conflictId));
 	}
 
 	// Helper to check if a capability is missing dependencies
 	function isMissingDependencies(capability) {
-		return capability.dependencies.some(depId => !selectedCapabilities.includes(depId));
+		return capability.dependencies.some((depId) => !selectedCapabilities.includes(depId));
 	}
 
 	// Helper to get the names of conflicting capabilities
 	function getConflictingCapabilities(capability) {
 		return capability.conflicts
-			.filter(conflictId => selectedCapabilities.includes(conflictId))
-			.map(conflictId => {
-				const conflictingCap = capabilities.find(c => c.id === conflictId);
+			.filter((conflictId) => selectedCapabilities.includes(conflictId))
+			.map((conflictId) => {
+				const conflictingCap = capabilities.find((c) => c.id === conflictId);
 				return conflictingCap ? conflictingCap.name : conflictId;
 			});
 	}
@@ -157,9 +159,9 @@
 	// Helper to get the names of missing dependencies
 	function getMissingDependencies(capability) {
 		return capability.dependencies
-			.filter(depId => !selectedCapabilities.includes(depId))
-			.map(depId => {
-				const missingCap = capabilities.find(c => c.id === depId);
+			.filter((depId) => !selectedCapabilities.includes(depId))
+			.map((depId) => {
+				const missingCap = capabilities.find((c) => c.id === depId);
 				return missingCap ? missingCap.name : depId;
 			});
 	}
@@ -176,7 +178,7 @@
 					{#each capabilityGroups[categoryId] as capability (capability.id)}
 						<div
 							class="flex items-start p-4 rounded-md transition-all duration-200 ease-in-out {selectedCapabilities.includes(
-								capability.id,
+								capability.id
 							)
 								? 'bg-green-900 bg-opacity-30 border border-green-600'
 								: 'bg-gray-900 border border-gray-700 hover:border-gray-600'}"
@@ -204,7 +206,12 @@
 
 								{#if capability.website}
 									<p class="text-gray-500 text-xs mt-1">
-										<a href={capability.website} target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
+										<a
+											href={capability.website}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="text-blue-400 hover:underline"
+										>
 											Learn more
 										</a>
 									</p>
@@ -246,7 +253,9 @@
 																type="checkbox"
 																id="{capability.id}-{field}"
 																class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer"
-																checked={configuration[capability.id]?.[field] || property.default || false}
+																checked={configuration[capability.id]?.[field] ||
+																	property.default ||
+																	false}
 																on:change={(e) =>
 																	handleConfigurationChange(capability.id, field, e.target.checked)}
 															/>
@@ -257,15 +266,16 @@
 																		<input
 																			type="checkbox"
 																			class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer"
-																			checked={configuration[capability.id]?.[field]?.includes(option) || false}
+																			checked={configuration[capability.id]?.[field]?.includes(
+																				option
+																			) || false}
 																			on:change={(e) => {
-																				const currentArray = configuration[capability.id]?.[field] || [];
+																				const currentArray =
+																					configuration[capability.id]?.[field] || [];
 																				let newArray;
-																				if (e.target.checked) {
-																					newArray = [...currentArray, option];
-																				} else {
-																					newArray = currentArray.filter((item) => item !== option);
-																				}
+																				newArray = e.target.checked
+																					? [...currentArray, option]
+																					: currentArray.filter((item) => item !== option);
 																				handleConfigurationChange(capability.id, field, newArray);
 																			}}
 																		/>
@@ -287,13 +297,15 @@
 																	class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-600 focus:outline-none focus:ring-green-400 focus:border-green-400 sm:text-sm rounded-md bg-gray-900 text-white"
 																	min={property.properties.performance.minimum}
 																	max={property.properties.performance.maximum}
-																	value={configuration[capability.id]?.thresholds?.performance || property.properties.performance.default || 0}
+																	value={configuration[capability.id]?.thresholds?.performance ||
+																		property.properties.performance.default ||
+																		0}
 																	on:change={(e) =>
 																		handleNestedConfigurationChange(
 																			capability.id,
 																			'thresholds',
 																			'performance',
-																			Number(e.target.value),
+																			Number(e.target.value)
 																		)}
 																/>
 															</div>
@@ -302,7 +314,9 @@
 																type="text"
 																id="{capability.id}-{field}"
 																class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-600 focus:outline-none focus:ring-green-400 focus:border-green-400 sm:text-sm rounded-md bg-gray-900 text-white"
-																value={configuration[capability.id]?.[field] || property.default || ''}
+																value={configuration[capability.id]?.[field] ||
+																	property.default ||
+																	''}
 																on:change={(e) =>
 																	handleConfigurationChange(capability.id, field, e.target.value)}
 															/>

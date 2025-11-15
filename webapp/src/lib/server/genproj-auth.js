@@ -482,8 +482,7 @@ export class GenprojAuthManager {
 		};
 
 		for (const service of required) {
-			const isAuthenticated = checks[service]?.();
-			if (isAuthenticated) {
+			if (checks[service]?.()) {
 				authenticated.push(service);
 			} else {
 				missing.push(service);

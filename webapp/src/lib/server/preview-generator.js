@@ -14,7 +14,8 @@ import {
 } from '$lib/utils/capability-resolver.js';
 import { TemplateEngine } from '$lib/utils/file-generator.js'; // Import TemplateEngine
 
-async function getTemplateEngine(r2Bucket) { // Accept r2Bucket as an argument
+async function getTemplateEngine(r2Bucket) {
+	// Accept r2Bucket as an argument
 	const newInstance = new TemplateEngine(r2Bucket); // Pass r2Bucket
 	await newInstance.initialize();
 	return newInstance;
@@ -53,7 +54,8 @@ async function getTemplateEngine(r2Bucket) { // Accept r2Bucket as an argument
  * @param {Object} r2Bucket - The R2 bucket instance for template loading
  * @returns {PreviewData} Generated preview data
  */
-export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) { // Accept r2Bucket as an argument
+export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) {
+	// Accept r2Bucket as an argument
 	try {
 		console.log('🔍 Generating preview for project:', projectConfig.name);
 
@@ -65,7 +67,11 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
 
 		// Generate external service changes
-		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
+		const externalServices = await generateExternalServiceChanges(
+			projectConfig,
+			executionOrder,
+			r2Bucket
+		); // Pass r2Bucket
 
 		// Create summary
 		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
@@ -92,7 +98,8 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<FileObject>} Array of file objects
  */
-async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) { // Make function async
+async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
+	// Make function async
 	const files = [];
 
 	// Generate files for each capability
@@ -118,7 +125,8 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) { /
  * @param {Object} capability - Capability definition
  * @returns {Array<FileObject>} Array of file objects
  */
-async function generateCapabilityFiles(projectConfig, capability, r2Bucket) { // Make function async
+async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
+	// Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
 	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
@@ -127,7 +135,8 @@ async function generateCapabilityFiles(projectConfig, capability, r2Bucket) { //
 	if (capability.templates) {
 		for (const template of capability.templates) {
 			try {
-				const content = await templateEngine.generateFile(template.templateId, { // Await the call
+				const content = await templateEngine.generateFile(template.templateId, {
+					// Await the call
 					...projectConfig,
 					capabilityConfig,
 					capability
@@ -156,7 +165,9 @@ async function generateCapabilityFiles(projectConfig, capability, r2Bucket) { //
  * @returns {FileObject} README file object
  */
 function generateReadmeFile(projectConfig, executionOrder) {
-	const selectedCapabilities = executionOrder.map((id) => capabilities.find((c) => c.id === id)).filter(Boolean);
+	const selectedCapabilities = executionOrder
+		.map((id) => capabilities.find((c) => c.id === id))
+		.filter(Boolean);
 
 	const readmeContent = `# ${projectConfig.name}
 
@@ -198,7 +209,8 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<ExternalService>} Array of external service changes
  */
-async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) { // Make async
+async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
+	// Make async
 	const services = [
 		{
 			type: 'github',
@@ -226,7 +238,11 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const serviceChanges = await generateCapabilityServiceChanges(projectConfig, capability, r2Bucket); // Await the call
+		const serviceChanges = await generateCapabilityServiceChanges(
+			projectConfig,
+			capability,
+			r2Bucket
+		); // Await the call
 		services.push(...serviceChanges);
 	}
 
@@ -239,7 +255,8 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * @param {Object} capability - Capability definition
  * @returns {Array<ExternalService>} Array of service changes
  */
-async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) { // Make async
+async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
+	// Make async
 	const services = [];
 	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
@@ -250,7 +267,8 @@ async function generateCapabilityServiceChanges(projectConfig, capability, r2Buc
 				name: serviceConfig.name,
 				actions: serviceConfig.actions.map((action) => ({
 					type: action.type,
-					description: templateEngine.compileTemplate(action.description, { // Use compileTemplate
+					description: templateEngine.compileTemplate(action.description, {
+						// Use compileTemplate
 						...projectConfig,
 						capability
 					})

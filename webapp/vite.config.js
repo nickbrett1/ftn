@@ -109,7 +109,7 @@ export default defineConfig(({ command, mode }) => {
 			},
 			transformMode: {
 				ssr: {
-					exclude: ["/src/lib/utils/file-generator.js/"] // Exclude file-generator.js from SSR transformation
+					exclude: ['/src/lib/utils/file-generator.js/'] // Exclude file-generator.js from SSR transformation
 				}
 			}
 		},

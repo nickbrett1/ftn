@@ -189,9 +189,9 @@
 
 				const fetchData = await response.json();
 				capabilities = fetchData;
-			} catch (err) {
-				error = err.message;
-				logger.error('Failed to load capabilities', { error: err.message });
+			} catch (error_) {
+				error = error_.message;
+				logger.error('Failed to load capabilities', { error: error_.message });
 			} finally {
 				loading = false;
 			}

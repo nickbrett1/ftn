@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
 			// if we're offline, fetch can return a value that is not a Response
 			// instead of throwing - and we can't pass this non-Response to respondWith
 			if (!(response instanceof Response)) {
-				throw new Error('invalid response from fetch');
+				throw new TypeError('invalid response from fetch');
 			}
 
 			if (response.status === 200) {
@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			return response;
-		} catch (err) {
+		} catch (error) {
 			const response = await cache.match(event.request);
 
 			if (response) {
@@ -75,7 +75,7 @@ self.addEventListener('fetch', (event) => {
 
 			// if there's no cache, then just error out
 			// as there is nothing we can do to respond to this request
-			throw err;
+			throw error;
 		}
 	}
 

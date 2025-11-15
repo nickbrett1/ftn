@@ -14,7 +14,7 @@
 	 */
 
 	/** @type {Props} */
-	let { primary = false, backgroundColor = undefined, size = 'medium', label } = $props();
+	let { primary = false, backgroundColor, size = 'medium', label } = $props();
 
 	let mode = $derived(primary ? 'storybook-button--primary' : 'storybook-button--secondary');
 

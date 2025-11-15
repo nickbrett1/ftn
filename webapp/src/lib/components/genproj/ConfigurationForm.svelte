@@ -31,11 +31,7 @@
 	// Basic validation for project name
 	let projectNameError = '';
 	$: {
-		if (!isNotEmpty(projectName)) {
-			projectNameError = 'Project name cannot be empty.';
-		} else {
-			projectNameError = '';
-		}
+		projectNameError = isNotEmpty(projectName) ? '' : 'Project name cannot be empty.';
 	}
 </script>
 

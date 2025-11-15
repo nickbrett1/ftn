@@ -12,7 +12,11 @@ export async function POST({ request, platform }) {
 			return json({ error: 'Missing projectConfig or selectedCapabilities' }, { status: 400 });
 		}
 
-		const previewData = await generatePreview(projectConfig, selectedCapabilities, platform?.env?.R2_TEMPLATES_BUCKET); // Pass r2Bucket
+		const previewData = await generatePreview(
+			projectConfig,
+			selectedCapabilities,
+			platform?.env?.R2_TEMPLATES_BUCKET
+		); // Pass r2Bucket
 
 		return json(previewData, { status: 200 });
 	} catch (error) {
