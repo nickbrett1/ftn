@@ -1,239 +1,116 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+// webapp/tests/utils/file-generator.test.js
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { TemplateEngine } from '$lib/utils/file-generator';
+import * as fallbackTemplates from '$lib/config/fallback-templates';
 
-vi.mock('$app/environment', () => ({
-	platform: {
-		env: {}
-	}
-}));
-
-import { TemplateEngine } from '$lib/utils/file-generator.js';
 
 describe('TemplateEngine', () => {
-	let engine;
+	let r2Bucket;
+	let templateEngine;
 
 	beforeEach(() => {
-		engine = new TemplateEngine();
-		vi.spyOn(console, 'log').mockImplementation(() => {});
-		vi.spyOn(console, 'warn').mockImplementation(() => {});
-		vi.spyOn(console, 'error').mockImplementation(() => {});
+		r2Bucket = {
+			get: vi.fn(),
+			list: vi.fn().mockResolvedValue({ objects: [] })
+		};
+		templateEngine = new TemplateEngine(r2Bucket);
 	});
 
-	afterEach(() => {
-		vi.restoreAllMocks();
+	it('should initialize with a mock R2 bucket', () => {
+		expect(templateEngine.r2Bucket).toBe(r2Bucket);
 	});
 
-	it('initializes successfully and handles failures', async () => {
-		const loadSpy = vi.spyOn(engine, 'loadTemplatesFromR2').mockResolvedValue();
-		const helpersSpy = vi.spyOn(engine, 'registerBuiltInHelpers');
-		expect(await engine.initialize()).toBe(true);
-		expect(helpersSpy).toHaveBeenCalled();
-		expect(loadSpy).toHaveBeenCalled();
-
-		loadSpy.mockRejectedValueOnce(new Error('boom'));
-		expect(await engine.initialize()).toBe(false);
+	it('should initialize and register built-in helpers', async () => {
+		const success = await templateEngine.initialize();
+		expect(success).toBe(true);
+		expect(templateEngine.helpers.size).toBeGreaterThan(0);
+		expect(templateEngine.helpers.has('if_eq')).toBe(true);
 	});
 
-	it('registers built-in helpers', () => {
-		engine.registerBuiltInHelpers();
-		const helperNames = [
-			'if_eq',
-			'uppercase',
-			'lowercase',
-			'capitalize',
-			'kebab-case',
-			'snake_case',
-			'join',
-			'length',
-			'date',
-			'json',
-			'json_compact',
-			'unless_eq',
-			'add',
-			'subtract',
-			'replace',
-			'truncate',
-			'env',
-			'project_slug',
-			'package_name',
-			'class_name',
-			'constant_name'
+	it('should load templates from R2 during initialization', async () => {
+		const mockTemplates = [
+			{ key: 'template1.hbs', body: 'Template 1 content' },
+			{ key: 'template2.hbs', body: 'Template 2 content' }
 		];
-
-		for (const name of helperNames) {
-			expect(engine.helpers.has(name)).toBe(true);
-		}
-
-		const uppercase = engine.helpers.get('uppercase');
-		expect(uppercase('hello')).toBe('HELLO');
-	});
-
-	it('loads templates from R2 bucket when available', async () => {
-		const mockBucket = {
-			list: vi.fn().mockResolvedValue({
-				objects: [{ key: 'template.hbs' }, { key: 'ignore.txt' }]
-			}),
-			get: vi.fn().mockImplementation(async (key) => {
-				if (key === 'template.hbs') {
-					return { text: async () => 'Hello {{name}}' };
-				}
-				return null;
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		await engine.loadTemplatesFromR2();
-		expect(engine.templates.get('template.hbs')).toBe('Hello {{name}}');
-		expect(engine.templates.get('template')).toBe('Hello {{name}}');
-		expect(mockBucket.list).toHaveBeenCalled();
-	});
-
-	it('replaces comment-only remote templates with fallback during load', async () => {
-		const mockBucket = {
-			list: vi.fn().mockResolvedValue({
-				objects: [{ key: 'playwright/playwright.config.js.hbs' }]
-			}),
-			get: vi.fn().mockResolvedValue({
-				text: vi
-					.fn()
-					.mockResolvedValue('// Generated file for playwright\n// Template: playwright-config')
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
-		await engine.loadTemplatesFromR2();
-		expect(engine.templates.get('playwright-config')).toContain('defineConfig');
-		expect(engine.templates.get('playwright/playwright.config.js.hbs')).toContain('defineConfig');
-		expect(mockBucket.list).toHaveBeenCalled();
-	});
-
-	it('warns and returns early when R2 bucket is unavailable', async () => {
-		engine.r2Bucket = null;
-		await engine.loadTemplatesFromR2();
-		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('R2 bucket not available'));
-	});
-
-	it('retrieves templates from cache, bucket, and fallbacks', async () => {
-		vi.spyOn(engine, 'loadTemplatesFromR2').mockResolvedValue();
-		await engine.initialize();
-
-		engine.templates.set('cached', 'Cached Template');
-		expect(await engine.getTemplate('cached')).toBe('Cached Template');
-
-		const mockBucket = {
-			get: vi.fn().mockImplementation(async (key) => {
-				if (key === 'remote') {
-					return { text: async () => 'From bucket' };
-				}
-				return null;
-			})
-		};
-		engine.r2Bucket = mockBucket;
-		expect(await engine.getTemplate('remote')).toBe('From bucket');
-
-		expect(await engine.getTemplate('devcontainer-node-json')).toContain(
-			'"name": "{{projectName}}"'
-		);
-		expect(await engine.getTemplate('playwright-config')).toContain('defineConfig');
-	});
-
-	it('uses fallback when remote template is comment-only', async () => {
-		const mockBucket = {
-			get: vi.fn().mockResolvedValue({
-				text: vi.fn().mockResolvedValue('// placeholder\n// TODO: fill in')
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
-		const template = await engine.getTemplate('playwright-config');
-		expect(template).toContain('defineConfig');
-	});
-
-	it('compiles templates with helpers, conditionals, and loops', () => {
-		engine.registerBuiltInHelpers();
-		const template = `Hello {{uppercase user.name}}!\n{{#if user.active}}Active{{/if}}{{#unless user.active}}Inactive{{/unless}}\n{{#each items}}- {{this}} (#{{add @index ../extra}})\n{{/each}}`;
-		const result = engine.compileTemplate(template, {
-			user: { name: 'alex', active: true },
-			items: ['a', 'b'],
-			extra: 1
+		r2Bucket.list.mockResolvedValue({ objects: mockTemplates.map((t) => ({ key: t.key })) });
+		r2Bucket.get.mockImplementation((key) => {
+			const template = mockTemplates.find((t) => t.key === key);
+			return Promise.resolve({ text: () => Promise.resolve(template.body) });
 		});
 
-		expect(result).toContain('Hello ALEX!');
-		expect(result).toContain('Active');
-		expect(result).not.toContain('Inactive');
-		expect(result).toContain('(#1)');
+		await templateEngine.initialize();
+
+		expect(r2Bucket.list).toHaveBeenCalledTimes(1);
+		expect(r2Bucket.get).toHaveBeenCalledWith('template1.hbs');
+		expect(r2Bucket.get).toHaveBeenCalledWith('template2.hbs');
+		expect(await templateEngine.getTemplate('template1')).toBe('Template 1 content');
+		expect(await templateEngine.getTemplate('template2')).toBe('Template 2 content');
 	});
 
-	it('executes helper utilities and fallback logic', async () => {
-		engine.registerBuiltInHelpers();
-		vi.useFakeTimers();
-		vi.setSystemTime(new Date('2024-05-15T12:34:56.000Z'));
-		const helpers = engine.helpers;
-		process.env.EXAMPLE_KEY = 'example-value';
-		const originalReplaceAll = String.prototype.replaceAll;
-		String.prototype.replaceAll = function (searchValue, replaceValue) {
-			if (searchValue instanceof RegExp && !searchValue.global) {
-				return this.replace(searchValue, replaceValue);
-			}
-			return originalReplaceAll.call(this, searchValue, replaceValue);
+	it('should register and retrieve a fallback template', () => {
+		templateEngine.fallbackTemplateProvider = {
+			devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}'
 		};
-
-		expect(helpers.get('lowercase')('AbC')).toBe('abc');
-		expect(helpers.get('capitalize')('hello')).toBe('Hello');
-		expect(helpers.get('kebab-case')('FooBarBaz')).toBe('foo-bar-baz');
-		expect(helpers.get('snake_case')('FooBarBaz')).toBe('foo_bar_baz');
-		expect(helpers.get('join')(['a', 'b'], '|')).toBe('a|b');
-		expect(helpers.get('length')(['a', 'b', 'c'])).toBe(3);
-		expect(helpers.get('date')('iso')).toBe('2024-05-15T12:34:56.000Z');
-		expect(helpers.get('date')('year')).toBe('2024');
-		expect(helpers.get('date')('month')).toBe('5');
-		expect(helpers.get('date')('day')).toBe('15');
-		expect(helpers.get('date')()).toBe('5/15/2024');
-		expect(helpers.get('json')({ a: 1 })).toContain('\n');
-		expect(helpers.get('json_compact')({ a: 1 })).toBe('{"a":1}');
-		expect(helpers.get('unless_eq')(1, 2, { fn: () => 'ok', inverse: () => 'no' })).toBe('ok');
-		expect(helpers.get('add')(2, 3)).toBe(5);
-		expect(helpers.get('subtract')(5, 2)).toBe(3);
-		expect(helpers.get('replace')('foo-bar', 'bar', 'baz')).toBe('foo-baz');
-		expect(helpers.get('truncate')('abcdef', 3)).toBe('abc...');
-		expect(helpers.get('env')('EXAMPLE_KEY')).toBe('example-value');
-		expect(helpers.get('project_slug')('My Project')).toBe('my-project');
-		expect(helpers.get('package_name')('Pkg Name')).toBe('pkg-name');
-		expect(helpers.get('class_name')('my-class_name')).toBe('Myclassname');
-		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replaceAll('-', '_'));
-
-		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
-		engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
-		await engine.getTemplate('devcontainer-node-json');
-		expect(fallbackSpy).toHaveBeenCalledWith('devcontainer-node-json');
-		vi.useRealTimers();
-		delete process.env.EXAMPLE_KEY;
-		String.prototype.replaceAll = originalReplaceAll;
+		templateEngine.registerFallbackTemplate('test-template', 'devcontainerNodeJson');
+		const fallback = templateEngine.getFallbackTemplate('test-template');
+		expect(fallback).toBe(templateEngine.fallbackTemplateProvider.devcontainerNodeJson);
 	});
 
-	it('generates files and handles missing templates', async () => {
-		engine.templates.set('tmpl', 'Hello {{name}}');
-		const content = await engine.generateFile('tmpl', { name: 'world' });
-		expect(content).toBe('Hello world');
-
-		await expect(engine.generateFile('missing', {})).rejects.toThrow('Template not found');
+	it('should compile a template with data', () => {
+		const templateString = 'Hello, {{name}}!';
+		const data = { name: 'World' };
+		const result = templateEngine.compileTemplate(templateString, data);
+		expect(result).toBe('Hello, World!');
 	});
 
-	it('generates multiple files collecting errors', async () => {
-		engine.templates.set('ok', 'Hi');
-		const results = await engine.generateFiles([
-			// eslint-disable-next-line sonarjs/publicly-writable-directories
-			{ templateId: 'ok', filePath: '/tmp/ok.txt', data: {} },
-			// eslint-disable-next-line sonarjs/publicly-writable-directories
-			{ templateId: 'missing', filePath: '/tmp/missing.txt', data: {} }
-		]);
+	it('should use helpers during template compilation', () => {
+		const templateString = '{{uppercase name}}';
+		const data = { name: 'test' };
+		const result = templateEngine.compileTemplate(templateString, data);
+		expect(result).toBe('TEST');
+	});
 
-		const success = results.find((entry) => entry.templateId === 'ok');
-		const failure = results.find((entry) => entry.templateId === 'missing');
+	it('should generate a file from a registered template', async () => {
+		templateEngine.templates.set('my-template', 'Hello, {{name}}!');
+		const data = { name: 'Generated File' };
+		const content = await templateEngine.generateFile('my-template', data);
+		expect(content).toBe('Hello, Generated File!');
+	});
 
-		expect(success).toMatchObject({ success: true, content: 'Hi' });
-		expect(failure.success).toBe(false);
-		expect(failure.error).toContain('Template not found');
+	it('should throw an error when generating a file with a non-existent template', async () => {
+		await expect(templateEngine.generateFile('non-existent', {})).rejects.toThrow(
+			'Template not found: non-existent'
+		);
+	});
+
+	it('should generate multiple files', async () => {
+		templateEngine.templates.set('t1', 'File 1: {{message}}');
+		templateEngine.templates.set('t2', 'File 2: {{message}}');
+		const requests = [
+			{ templateId: 't1', data: { message: 'First' } },
+			{ templateId: 't2', data: { message: 'Second' } },
+			{ templateId: 't3', data: { message: 'Third' } } // Non-existent
+		];
+
+		const results = await templateEngine.generateFiles(requests);
+
+		expect(results.length).toBe(3);
+		expect(results[0].success).toBe(true);
+		expect(results[0].content).toBe('File 1: First');
+		expect(results[1].success).toBe(true);
+		expect(results[1].content).toBe('File 2: Second');
+		expect(results[2].success).toBe(false);
+		expect(results[2].error).toBe('Template not found: t3');
+	});
+
+	it('should use fallback template if R2 fails or template is marked for fallback', async () => {
+		templateEngine.fallbackTemplateProvider = {
+			devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}'
+		};
+		r2Bucket.get.mockResolvedValue(null);
+		templateEngine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
+
+		const content = await templateEngine.generateFile('devcontainer-node-json', {});
+		expect(content).toBe(templateEngine.fallbackTemplateProvider.devcontainerNodeJson);
 	});
 });

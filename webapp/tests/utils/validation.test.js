@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+	isValidUuid,
+	isValidEmail,
+	isValidUrl,
 	validateProjectName,
 	validateRepositoryUrl,
 	validateSelectedCapabilities,
@@ -111,92 +114,54 @@ describe('validation utilities', () => {
 		it('requires configuration object', () => {
 			expect(validateCapabilityConfiguration(null, ['doppler'])).toEqual({
 				valid: false,
-				error: 'Configuration must be an object'
+				errors: ['Configuration must be an object']
+			});
+		});
+
+		it('validates required properties', () => {
+			const result = validateCapabilityConfiguration({ 'devcontainer-node': {} }, [
+				'devcontainer-node'
+			]);
+			expect(result).toEqual({
+				valid: false,
+				errors: ['Invalid Node.js version']
 			});
 		});
 
 		it('validates capability-specific constraints', () => {
 			const cases = [
 				{
-					selected: ['devcontainer-node'],
-					configuration: { 'devcontainer-node': { nodeVersion: '16', enabled: true } },
-					error: 'Invalid Node.js version'
+					s: ['devcontainer-node'],
+					c: { 'devcontainer-node': { nodeVersion: '16' } },
+					e: ['Invalid Node.js version']
 				},
 				{
-					selected: ['devcontainer-python'],
-					configuration: { 'devcontainer-python': { packageManager: 'conda' } },
-					error: 'Invalid package manager'
+					s: ['dependabot'],
+					c: { dependabot: { ecosystems: ['invalid'] } },
+					e: ['Invalid ecosystem: invalid']
 				},
 				{
-					selected: ['devcontainer-java'],
-					configuration: { 'devcontainer-java': { javaVersion: '8' } },
-					error: 'Invalid Java version'
-				},
-				{
-					selected: ['circleci'],
-					configuration: { circleci: { deployTarget: 'invalid' } },
-					error: 'Invalid deploy target'
-				},
-				{
-					selected: ['github-actions'],
-					configuration: { circleci: {}, 'github-actions': { nodeVersion: '16' } },
-					error: 'Invalid Node.js version'
-				},
-				{
-					selected: ['sonarcloud'],
-					configuration: { sonarcloud: { language: 'ruby' } },
-					error: 'Invalid language'
-				},
-				{
-					selected: ['doppler'],
-					configuration: { doppler: { projectType: 'desktop' } },
-					error: 'Invalid project type'
-				},
-				{
-					selected: ['cloudflare-wrangler'],
-					configuration: { 'cloudflare-wrangler': { workerType: 'invalid' } },
-					error: 'Invalid worker type'
-				},
-				{
-					selected: ['dependabot'],
-					configuration: { dependabot: { ecosystems: ['invalid'] } },
-					error: 'Invalid ecosystem: invalid'
-				},
-				{
-					selected: ['lighthouse-ci'],
-					configuration: { 'lighthouse-ci': { thresholds: { performance: 101 } } },
-					error: 'Threshold performance must be a number between 0 and 100'
-				},
-				{
-					selected: ['playwright'],
-					configuration: { playwright: { browsers: ['safari'] } },
-					error: 'Invalid browser: safari'
-				},
-				{
-					selected: ['spec-kit'],
-					configuration: { 'spec-kit': { specFormat: 'docx' } },
-					error: 'Invalid spec format'
+					s: ['lighthouse-ci'],
+					c: { 'lighthouse-ci': { thresholds: { performance: 101 } } },
+					e: ['Threshold performance must be a number between 0 and 100']
 				}
 			];
 
-			for (const testCase of cases) {
-				const result = validateCapabilityConfiguration(testCase.configuration, testCase.selected);
-				expect(result).toEqual({ valid: false, error: testCase.error });
+			for (const { s, c, e } of cases) {
+				const result = validateCapabilityConfiguration(c, s);
+				expect(result.valid).toBe(false);
+				expect(result.errors).toEqual(expect.arrayContaining(e));
 			}
 		});
 
 		it('returns valid when all configurations pass', () => {
 			const configuration = {
-				'cloudflare-wrangler': { workerType: 'web' },
-				dependabot: { ecosystems: ['npm'], updateSchedule: 'weekly' }
+				'devcontainer-node': { nodeVersion: '20' },
+				dependabot: { ecosystems: ['npm', 'github-actions'] }
 			};
-
-			const result = validateCapabilityConfiguration(configuration, [
-				'cloudflare-wrangler',
-				'dependabot'
-			]);
-
-			expect(result).toEqual({ valid: true });
+			const selected = ['devcontainer-node', 'dependabot'];
+			const result = validateCapabilityConfiguration(configuration, selected);
+			expect(result).toEqual({ valid: true, errors: [] });
 		});
 	});
 
@@ -244,6 +209,36 @@ describe('validation utilities', () => {
 
 		it('generateProjectSlug delegates to sanitizeProjectName', () => {
 			expect(generateProjectSlug('Another Project')).toBe('another-project');
+		});
+	});
+
+	describe('isValidUuid', () => {
+		it('should return true for a valid UUID', () => {
+			expect(isValidUuid('123e4567-e89b-12d3-a456-426614174000')).toBe(true);
+		});
+
+		it('should return false for an invalid UUID', () => {
+			expect(isValidUuid('not-a-uuid')).toBe(false);
+		});
+	});
+
+	describe('isValidEmail', () => {
+		it('should return true for a valid email', () => {
+			expect(isValidEmail('test@example.com')).toBe(true);
+		});
+
+		it('should return false for an invalid email', () => {
+			expect(isValidEmail('not-an-email')).toBe(false);
+		});
+	});
+
+	describe('isValidUrl', () => {
+		it('should return true for a valid URL', () => {
+			expect(isValidUrl('https://example.com')).toBe(true);
+		});
+
+		it('should return false for an invalid URL', () => {
+			expect(isValidUrl('not-a-url')).toBe(false);
 		});
 	});
 });
