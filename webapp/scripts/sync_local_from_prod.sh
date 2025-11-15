@@ -63,6 +63,8 @@ print_error() {
 # Function to sync a specific database
 sync_database() {
     local db_name="$1"
+    local d1_output=""
+    local d1_exit_code=0
     
     print_step "Syncing $db_name database from production to local"
     
@@ -71,10 +73,15 @@ sync_database() {
         return 1
     fi
     
-    if bash "$D1_SCRIPT" "$db_name"; then
+    # Capture stdout and stderr
+    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1)
+    d1_exit_code=$?
+    
+    if [ "$d1_exit_code" -eq 0 ]; then
         print_success "$db_name database synced successfully"
     else
-        print_warning "$db_name database sync had issues (this might be expected for some migrations)"
+        print_warning "$db_name database sync had issues (this might be expected for some migrations). Details:
+$d1_output"
         # Don't fail the entire script for migration issues
     fi
 }
