@@ -1,120 +1,431 @@
-<!-- webapp/src/lib/components/genproj/PreviewMode.svelte -->
-<script>
-	import { onMount, createEventDispatcher } from 'svelte';
-	import { logger } from '$lib/utils/logging';
-	import { ProjectConfig } from '$lib/models/project-config.js';
+<!--
+	PreviewMode.svelte
+	
+	Preview component that shows generated files and external service changes
+	without requiring authentication. Provides real-time preview updates.
+	
+	Features:
+	- File tree display
+	- Code syntax highlighting
+	- External service preview
+	- Responsive design
+	- Accessibility support
+-->
 
+<script>
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { selectedCapabilities, capabilityValidation } from '$lib/client/capability-store.js';
+	import { CAPABILITIES as capabilities } from '$lib/utils/capabilities.js';
+
+	// Props
+	export let previewData = null;
+	export let loading = false;
+	export let error = null;
+
+	// Event dispatcher
 	const dispatch = createEventDispatcher();
 
-	export let name; // Renamed from projectName
-	export let repositoryUrl;
-	export let selectedCapabilities;
-	export let configuration;
+	// Reactive state
+	let selectedFile = null;
+	let expandedFolders = new Set(['/']);
+	let fileTree = [];
+	let externalServices = [];
 
-	let projectConfig = null;
+	// Reactive updates
 	$: {
-		try {
-			projectConfig = new ProjectConfig({
-				name, // Changed from projectName
-				repositoryUrl,
-				selectedCapabilities,
-				configuration
-			});
-			error = null;
-		} catch (e) {
-			projectConfig = null;
-			error = e.message;
+		if (previewData) {
+			fileTree = previewData.files || [];
+			externalServices = previewData.externalServices || [];
 		}
 	}
 
-	let previewFiles = [];
-	let loading = false;
-	let error = null;
-
-	// Function to fetch and update the preview
-	async function fetchPreview() {
-		if (!projectConfig) {
-			previewFiles = [];
-			loading = false;
-			return;
-		}
-		loading = true;
-		error = null;
-		try {
-			const response = await fetch('/projects/genproj/api/preview', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(projectConfig.toObject())
-			});
-
-			if (!response.ok) {
-				const errData = await response.json();
-				throw new Error(errData.message || `HTTP error! status: ${response.status}`);
-			}
-
-			const data = await response.json();
-			previewFiles = data.files;
-			logger.info('Project preview generated successfully', {
-				filesCount: previewFiles.length
-			});
-		} catch (err) {
-			error = err.message;
-			logger.error('Failed to generate preview', { error: err.message });
-		} finally {
-			loading = false;
-		}
+	/**
+	 * Handles file selection
+	 * @param {Object} file - File object to select
+	 */
+	function selectFile(file) {
+		selectedFile = file;
+		dispatch('fileSelected', file);
 	}
 
-	// Fetch preview whenever projectConfig changes
-	$: (projectConfig, fetchPreview());
+	/**
+	 * Toggles folder expansion
+	 * @param {string} folderPath - Path of the folder to toggle
+	 */
+	function toggleFolder(folderPath) {
+		if (expandedFolders.has(folderPath)) {
+			expandedFolders.delete(folderPath);
+		} else {
+			expandedFolders.add(folderPath);
+		}
+		expandedFolders = expandedFolders; // Trigger reactivity
+	}
+
+	/**
+	 * Checks if a folder is expanded
+	 * @param {string} folderPath - Path of the folder to check
+	 * @returns {boolean} Whether the folder is expanded
+	 */
+	function isFolderExpanded(folderPath) {
+		return expandedFolders.has(folderPath);
+	}
+
+	/**
+	 * Gets the file icon based on extension
+	 * @param {string} filename - Name of the file
+	 * @returns {string} Icon emoji
+	 */
+	function getFileIcon(filename) {
+		const ext = filename.split('.').pop()?.toLowerCase();
+		const iconMap = {
+			js: '📄',
+			ts: '📘',
+			json: '📋',
+			md: '📝',
+			yml: '⚙️',
+			yaml: '⚙️',
+			xml: '📄',
+			html: '🌐',
+			css: '🎨',
+			scss: '🎨',
+			svelte: '🔷',
+			vue: '💚',
+			react: '⚛️',
+			py: '🐍',
+			java: '☕',
+			go: '🐹',
+			rs: '🦀',
+			php: '🐘',
+			rb: '💎',
+			sql: '🗄️',
+			dockerfile: '🐳',
+			gitignore: '🙈',
+			env: '🔐',
+			txt: '📄',
+			log: '📋'
+		};
+		return iconMap[ext] || '📄';
+	}
+
+	/**
+	 * Gets the syntax highlighting language
+	 * @param {string} filename - Name of the file
+	 * @returns {string} Language for syntax highlighting
+	 */
+	function getLanguage(filename) {
+		const ext = filename.split('.').pop()?.toLowerCase();
+		const langMap = {
+			js: 'javascript',
+			ts: 'typescript',
+			json: 'json',
+			md: 'markdown',
+			yml: 'yaml',
+			yaml: 'yaml',
+			xml: 'xml',
+			html: 'html',
+			css: 'css',
+			scss: 'scss',
+			svelte: 'svelte',
+			py: 'python',
+			java: 'java',
+			go: 'go',
+			rs: 'rust',
+			php: 'php',
+			rb: 'ruby',
+			sql: 'sql',
+			dockerfile: 'dockerfile',
+			env: 'bash',
+			txt: 'text'
+		};
+		return langMap[ext] || 'text';
+	}
+
+	/**
+	 * Formats file size
+	 * @param {number} bytes - File size in bytes
+	 * @returns {string} Formatted file size
+	 */
+	function formatFileSize(bytes) {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	/**
+	 * Handles refresh preview
+	 */
+	function refreshPreview() {
+		dispatch('refresh');
+	}
+
+	/**
+	 * Handles continue to generation
+	 */
+	function continueToGeneration() {
+		dispatch('continue');
+	}
 </script>
 
-<div class="space-y-4">
+<div class="preview-mode">
 	{#if loading}
-		<p>Loading preview...</p>
+		<!-- Loading State -->
+		<div class="flex items-center justify-center min-h-96">
+			<div class="text-center">
+				<div
+					class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
+				></div>
+				<p class="text-gray-600">Generating preview...</p>
+			</div>
+		</div>
 	{:else if error}
-		<div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4">
-			<div class="flex">
-				<div class="shrink-0">
-					<svg
-						class="h-5 w-5 text-red-400"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						aria-hidden="true"
-					>
+		<!-- Error State -->
+		<div class="flex items-center justify-center min-h-96">
+			<div class="text-center max-w-md">
+				<div
+					class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
+				>
+					<svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
-							fill-rule="evenodd"
-							d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-							clip-rule="evenodd"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
 						/>
 					</svg>
 				</div>
-				<div class="ml-3">
-					<h3 class="text-sm font-medium text-red-300">Error generating preview</h3>
-					<div class="mt-2 text-sm text-red-200">
-						<p>{error}</p>
+				<h3 class="text-lg font-semibold text-gray-900 mb-2">Preview Generation Failed</h3>
+				<p class="text-gray-600 mb-4">{error}</p>
+				<button
+					type="button"
+					class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+					on:click={refreshPreview}
+				>
+					Try Again
+				</button>
+			</div>
+		</div>
+	{:else if previewData}
+		<!-- Main Preview Content -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+			<!-- File Tree -->
+			<div class="lg:col-span-1 bg-white rounded-lg shadow-sm border border-gray-200">
+				<div class="p-4 border-b border-gray-200">
+					<h3 class="text-lg font-semibold text-gray-900">Generated Files</h3>
+					<p class="text-sm text-gray-500 mt-1">
+						{fileTree.length} files will be created
+					</p>
+				</div>
+
+				<div class="p-4 overflow-y-auto max-h-96">
+					{#each fileTree as file (file.path)}
+						<div class="file-item">
+							{#if file.type === 'folder'}
+								<button
+									type="button"
+									class="flex items-center w-full text-left p-2 hover:bg-gray-50 rounded"
+									on:click={() => toggleFolder(file.path)}
+								>
+									<span class="mr-2">
+										{isFolderExpanded(file.path) ? '📂' : '📁'}
+									</span>
+									<span class="font-medium text-gray-900">{file.name}</span>
+								</button>
+
+								{#if isFolderExpanded(file.path)}
+									<div class="ml-4 mt-1">
+										{#each file.children || [] as childFile}
+											<button
+												type="button"
+												class="flex items-center w-full text-left p-2 hover:bg-gray-50 rounded cursor-pointer
+													{selectedFile?.path === childFile.path ? 'bg-blue-50 border-l-2 border-blue-500' : ''}"
+												on:click={() => selectFile(childFile)}
+											>
+												<span class="mr-2 text-sm">{getFileIcon(childFile.name)}</span>
+												<span class="text-sm text-gray-700 flex-1">{childFile.name}</span>
+												<span class="text-xs text-gray-500">{formatFileSize(childFile.size)}</span>
+											</button>
+										{/each}
+									</div>
+								{/if}
+							{:else}
+								<button
+									type="button"
+									class="flex items-center w-full text-left p-2 hover:bg-gray-50 rounded cursor-pointer
+										{selectedFile?.path === file.path ? 'bg-blue-50 border-l-2 border-blue-500' : ''}"
+									on:click={() => selectFile(file)}
+								>
+									<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
+									<span class="text-sm text-gray-700 flex-1">{file.name}</span>
+									<span class="text-xs text-gray-500">{formatFileSize(file.size)}</span>
+								</button>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			</div>
+
+			<!-- File Content -->
+			<div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+				{#if selectedFile}
+					<div class="p-4 border-b border-gray-200">
+						<div class="flex items-center justify-between">
+							<div>
+								<h3 class="text-lg font-semibold text-gray-900">{selectedFile.name}</h3>
+								<p class="text-sm text-gray-500">{selectedFile.path}</p>
+							</div>
+							<div class="flex items-center space-x-2">
+								<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+									{getLanguage(selectedFile.name)}
+								</span>
+								<span class="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="p-4 overflow-x-auto">
+						<pre class="text-sm text-gray-800 whitespace-pre-wrap"><code
+								>{selectedFile.content}</code
+							></pre>
+					</div>
+				{:else}
+					<div class="flex items-center justify-center h-64 text-gray-500">
+						<div class="text-center">
+							<div class="text-4xl mb-4">📄</div>
+							<p>Select a file to preview its content</p>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		<!-- External Services Preview -->
+		{#if externalServices.length > 0}
+			<div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
+				<div class="p-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">External Service Changes</h3>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						{#each externalServices as service}
+							<div class="border border-gray-200 rounded-lg p-4">
+								<div class="flex items-center mb-3">
+									<span class="text-2xl mr-3">
+										{#if service.type === 'github'}
+											🐙
+										{:else if service.type === 'circleci'}
+											🔄
+										{:else if service.type === 'doppler'}
+											🔐
+										{:else if service.type === 'sonarcloud'}
+											📊
+										{:else}
+											⚙️
+										{/if}
+									</span>
+									<div>
+										<h4 class="font-semibold text-gray-900">{service.name}</h4>
+										<p class="text-sm text-gray-500">{service.type}</p>
+									</div>
+								</div>
+
+								<div class="space-y-2">
+									{#each service.actions as action}
+										<div class="flex items-center text-sm">
+											<span class="mr-2">
+												{#if action.type === 'create'}
+													✅
+												{:else if action.type === 'configure'}
+													⚙️
+												{:else if action.type === 'update'}
+													🔄
+												{:else}
+													📝
+												{/if}
+											</span>
+											<span class="text-gray-700">{action.description}</span>
+										</div>
+									{/each}
+								</div>
+
+								{#if service.requiresAuth}
+									<div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+										<p class="text-xs text-yellow-800">🔐 Authentication required</p>
+									</div>
+								{/if}
+							</div>
+						{/each}
 					</div>
 				</div>
 			</div>
+		{/if}
+
+		<!-- Action Buttons -->
+		<div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+			<button
+				type="button"
+				class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+				on:click={refreshPreview}
+			>
+				Refresh Preview
+			</button>
+
+			<button
+				type="button"
+				class="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+				on:click={continueToGeneration}
+			>
+				Generate Project
+				<span class="ml-2">🚀</span>
+			</button>
 		</div>
-	{:else if previewFiles.length === 0}
-		<p class="text-gray-500 dark:text-gray-400">
-			No capabilities selected or no preview available.
-		</p>
 	{:else}
-		<h3 class="text-xl font-semibold mb-3">Generated Files Preview</h3>
-		<div class="space-y-4">
-			{#each previewFiles as file (file.filePath)}
-				<div class="bg-gray-100 dark:bg-gray-700 rounded-md p-3">
-					<p class="font-mono text-sm text-gray-800 dark:text-gray-200 mb-1">
-						{file.filePath}
-					</p>
-					<pre
-						class="bg-gray-200 dark:bg-gray-800 p-2 rounded-sm text-xs overflow-auto">{file.content}</pre>
-				</div>
-			{/each}
+		<!-- No Preview Data -->
+		<div class="flex items-center justify-center min-h-96">
+			<div class="text-center max-w-md">
+				<div class="text-4xl mb-4">👀</div>
+				<h3 class="text-lg font-semibold text-gray-900 mb-2">No Preview Available</h3>
+				<p class="text-gray-600 mb-4">
+					Please configure your project and capabilities to see a preview.
+				</p>
+				<button
+					type="button"
+					class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+					on:click={() => dispatch('configure')}
+				>
+					Go to Configuration
+				</button>
+			</div>
 		</div>
 	{/if}
 </div>
+
+<style>
+	.preview-mode {
+		min-height: calc(100vh - 200px);
+	}
+
+	.file-item {
+		margin-bottom: 0.25rem;
+	}
+
+	/* Smooth transitions */
+	button {
+		transition: all 0.2s ease-in-out;
+	}
+
+	/* Focus styles for accessibility */
+	button:focus-visible {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	/* Responsive adjustments */
+	@media (max-width: 768px) {
+		.preview-mode {
+			padding: 1rem;
+		}
+
+		.grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
