@@ -69,7 +69,13 @@ echo "" >> "$BOOTSTRAP_SQL_FILE"
 echo "Fetching table list from remote D1 database: $DB_NAME..."
 # Get table names, excluding sqlite system tables and Cloudflare internal tables
 # Output is JSON: [{"results":[{"name":"table1"},{"name":"table2"}]}]
-TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json)
+TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null)
+WRANGLER_EXIT_CODE=$?
+
+if [ "$WRANGLER_EXIT_CODE" -ne 0 ]; then
+    echo "Error: 'npx wrangler d1 execute' command failed with exit code $WRANGLER_EXIT_CODE when fetching table names for '$DB_NAME'. This might indicate a problem with the database or wrangler configuration."
+    # Continue to allow the empty table check to potentially handle this gracefully.
+fi
 
 if [ -z "$TABLE_NAMES_JSON" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq 'length')" == "0" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq '.[0].results | length')" == "0" ]; then
     echo "Warning: No user tables found in the remote D1 database '$DB_NAME'. This is expected if the database is new or intentionally empty. Skipping schema and data sync for this database."
