@@ -10,7 +10,7 @@ show_usage() {
     echo "Usage: $0 DATABASE_NAME"
     echo ""
     echo "Arguments:"
-    echo "  DATABASE_NAME    Database to populate from production (wdi or ccbilling)"
+    echo "  DATABASE_NAME    Database to populate from production (wdi, ccbilling, or genproj)"
     echo "                   Required: Must specify either 'wdi' or 'ccbilling'"
     echo ""
     echo "Examples:"
@@ -39,7 +39,7 @@ fi
 DB_NAME="$1"
 
 # Validate database name
-if [ "$DB_NAME" != "wdi" ] && [ "$DB_NAME" != "ccbilling" ]; then
+if [ "$DB_NAME" != "wdi" ] && [ "$DB_NAME" != "ccbilling" ] && [ "$DB_NAME" != "genproj" ]; then
     echo "Error: Invalid database name '$DB_NAME'."
     echo "Valid options are: wdi, ccbilling"
     echo ""

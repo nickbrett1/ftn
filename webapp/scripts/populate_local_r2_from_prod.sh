@@ -27,6 +27,9 @@ if ! command -v curl &> /dev/null; then
     exit 1
 fi
 
+# Parse command line arguments
+TARGET_DB="${1:-}" # Optional argument for target database (e.g., "genproj")
+
 # Function to discover R2 buckets from wrangler.jsonc
 discover_buckets() {
     local config_file="$1"
@@ -163,20 +166,44 @@ if [[ $? -ne 0 || -z "$bucket_names" ]]; then
 fi
 
 # Convert bucket names to array
-readarray -t BUCKETS <<< "$bucket_names"
+readarray -t ALL_BUCKETS <<< "$bucket_names"
 
-echo "Discovered ${#BUCKETS[@]} R2 bucket(s): ${BUCKETS[*]}"
+echo "Discovered ${#ALL_BUCKETS[@]} R2 bucket(s): ${ALL_BUCKETS[*]}"
+echo ""
+
+declare -a BUCKETS_TO_SYNC
+
+if [[ -n "$TARGET_DB" ]]; then
+    echo "Filtering buckets for target database: $TARGET_DB"
+    for bucket in "${ALL_BUCKETS[@]}"; do
+        if [[ "$TARGET_DB" == "genproj" && "$bucket" == "genproj-templates" ]]; then
+            BUCKETS_TO_SYNC+=("$bucket")
+        elif [[ "$TARGET_DB" == "ccbilling" && "$bucket" == "ccbilling" ]]; then
+            BUCKETS_TO_SYNC+=("$bucket")
+        elif [[ "$TARGET_DB" == "wdi" && "$bucket" == "wdi" ]]; then
+            BUCKETS_TO_SYNC+=("$bucket")
+        fi
+    done
+    if [[ ${#BUCKETS_TO_SYNC[@]} -eq 0 ]]; then
+        echo "Warning: No R2 buckets found for target database '$TARGET_DB'. Skipping R2 sync."
+        exit 0
+    fi
+else
+    BUCKETS_TO_SYNC=("${ALL_BUCKETS[@]}")
+fi
+
+echo "R2 bucket(s) to sync: ${BUCKETS_TO_SYNC[*]}"
 echo ""
 
 total_success=0
 total_errors=0
 
-for bucket in "${BUCKETS[@]}"; do
+for bucket in "${BUCKETS_TO_SYNC[@]}"; do
     sync_bucket "$bucket"
 done
 
 echo "=== All bucket synchronization completed ==="
-echo "Total buckets processed: ${#BUCKETS[@]}"
-echo "Buckets: ${BUCKETS[*]}"
+echo "Total buckets processed: ${#BUCKETS_TO_SYNC[@]}"
+echo "Buckets: ${BUCKETS_TO_SYNC[*]}"
 echo ""
 echo "--- Script finished successfully ---"
