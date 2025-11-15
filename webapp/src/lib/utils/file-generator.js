@@ -5,10 +5,9 @@ import * as fallbackTemplates from '$lib/config/fallback-templates';
 
 export class TemplateEngine {
 	constructor(r2Bucket) {
-		// Accept r2Bucket as an argument
 		this.templates = new Map();
 		this.helpers = new Map();
-		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
+		this.r2Bucket = r2Bucket;
 		this.fallbackTemplateMap = new Map();
 	}
 
@@ -26,60 +25,105 @@ export class TemplateEngine {
 	}
 
 	registerBuiltInHelpers() {
+		this.registerComparisonHelpers();
+		this.registerTextHelpers();
+		this.registerArrayHelpers();
+		this.registerDateHelpers();
+		this.registerObjectHelpers();
+		this.registerMathHelpers();
+		this.registerProjectHelpers();
+	}
+
+	registerComparisonHelpers() {
 		const helpers = {
-			if_eq: function (a, b, options) {
-				if (a === b) {
-					return options.fn(this);
-				}
-				return options.inverse(this);
-			},
-			unless_eq: function (a, b, options) {
-				if (a !== b) {
-					return options.fn(this);
-				}
-				return options.inverse(this);
-			},
-			uppercase: (string_) => string_.toUpperCase(),
-			lowercase: (string_) => string_.toLowerCase(),
-			capitalize: (string_) => string_.charAt(0).toUpperCase() + string_.slice(1),
-			'kebab-case': (string_) =>
-				string_
-					.replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
-					.replaceAll(/[\s_]+/g, '-')
+			if_eq: (a, b, options) => (a === b ? options.fn(this) : options.inverse(this)),
+			unless_eq: (a, b, options) => (a !== b ? options.fn(this) : options.inverse(this))
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerTextHelpers() {
+		const helpers = {
+			uppercase: (str) => str.toUpperCase(),
+			lowercase: (str) => str.toLowerCase(),
+			capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),
+			'kebab-case': (str) =>
+				str
+					.replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+					.replace(/[\s_]+/g, '-')
 					.toLowerCase(),
-			snake_case: (string_) =>
-				string_
-					.replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2')
-					.replaceAll(/[\s-]+/g, '_')
+			snake_case: (str) =>
+				str
+					.replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+					.replace(/[\s-]+/g, '_')
 					.toLowerCase(),
-			join: (array, separator) => array.join(separator),
-			length: (array) => array.length,
+			replace: (str, find, replace) => str.replace(new RegExp(find, 'g'), replace),
+			truncate: (str, length) => (str.length > length ? str.slice(0, length) + '...' : str)
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerArrayHelpers() {
+		const helpers = {
+			join: (arr, sep) => arr.join(sep),
+			length: (arr) => arr.length
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerDateHelpers() {
+		const helpers = {
 			date: (format) => {
 				const d = new Date();
-				if (format === 'iso') return d.toISOString();
-				if (format === 'year') return String(d.getFullYear());
-				if (format === 'month') return String(d.getMonth() + 1);
-				if (format === 'day') return String(d.getDate());
-				return d.toLocaleDateString();
-			},
-			json: (object) => JSON.stringify(object, null, 2),
-			json_compact: (object) => JSON.stringify(object),
-			add: (a, b) => Number(a) + Number(b),
-			subtract: (a, b) => Number(a) - Number(b),
-			replace: (string_, find, replace) => string_.replaceAll(new RegExp(find, 'g'), replace),
-			truncate: (string_, length_) =>
-				string_.length > length_ ? string_.slice(0, length_) + '...' : string_,
-			env: (key) => process.env[key],
-			project_slug: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
-			package_name: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
-			class_name: (name) =>
-				name.replaceAll(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
-			constant_name: (name) => name.toUpperCase().replaceAll(/[\s-]/g, '_')
+				switch (format) {
+					case 'iso':
+						return d.toISOString();
+					case 'year':
+						return String(d.getFullYear());
+					case 'month':
+						return String(d.getMonth() + 1);
+					case 'day':
+						return String(d.getDate());
+					default:
+						return d.toLocaleDateString();
+				}
+			}
 		};
+		this.registerHelpers(helpers);
+	}
 
-		for (const [name, function_] of Object.entries(helpers)) {
-			this.helpers.set(name, function_);
-			Handlebars.registerHelper(name, function_);
+	registerObjectHelpers() {
+		const helpers = {
+			json: (obj) => JSON.stringify(obj, null, 2),
+			json_compact: (obj) => JSON.stringify(obj)
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerMathHelpers() {
+		const helpers = {
+			add: (a, b) => Number(a) + Number(b),
+			subtract: (a, b) => Number(a) - Number(b)
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerProjectHelpers() {
+		const helpers = {
+			env: (key) => process.env[key],
+			project_slug: (name) => name.toLowerCase().replace(/\s+/g, '-'),
+			package_name: (name) => name.toLowerCase().replace(/\s+/g, '-'),
+			class_name: (name) =>
+				name.replace(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
+			constant_name: (name) => name.toUpperCase().replace(/[\s-]/g, '_')
+		};
+		this.registerHelpers(helpers);
+	}
+
+	registerHelpers(helpers) {
+		for (const [name, fn] of Object.entries(helpers)) {
+			this.helpers.set(name, fn);
+			Handlebars.registerHelper(name, fn);
 		}
 	}
 
@@ -152,6 +196,7 @@ export class TemplateEngine {
 			return fallback;
 		}
 
+.
 		return null;
 	}
 

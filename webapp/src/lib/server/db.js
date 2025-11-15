@@ -11,7 +11,7 @@
  * @throws {Error} If the GENPROJ_DB binding is not found in the environment.
  */
 export function getGenprojDb(environment) {
-	if (!environment || !environment.GENPROJ_DB) {
+	if (!environment?.GENPROJ_DB) {
 		throw new Error('GENPROJ_DB binding not found in environment.');
 	}
 	return environment.GENPROJ_DB;

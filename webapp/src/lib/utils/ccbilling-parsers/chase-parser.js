@@ -325,7 +325,7 @@ export class ChaseParser extends BaseParser {
 				}
 
 				// Stop looking if we encounter another transaction line (starts with date pattern and contains an amount)
-				if (/^\d{2}\/\d{2}\s+/.test(nextLine) && /\d+\.\d{2}$/.test(nextLine)) {
+				if (/^\d{2}\/\d{2}\s+/.test(nextLine) && /^\d{1,3}(,\d{3})*(\.\d{2})?$/.test(nextLine)) {
 					break;
 				}
 			}
@@ -625,7 +625,8 @@ export class ChaseParser extends BaseParser {
 
 		// Only return true if it has a currency keyword and matches the pattern
 		const matchesPattern =
-			/^[A-Z\s]+$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(lineTrimmed);
+			/^[A-Z]{2,}(?:\s[A-Z]{2,})*$/.test(lineTrimmed) ||
+			/^\d{2}\/\d{2}\s+[A-Z]{2,}(?:\s[A-Z]{2,})*$/.test(lineTrimmed);
 
 		return matchesPattern && hasCurrencyKeyword;
 	}

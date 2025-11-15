@@ -30,7 +30,7 @@ export function isValidUuid(value) {
  * @returns {boolean} True if the string is a valid email, false otherwise.
  */
 export function isValidEmail(value) {
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	return typeof value === 'string' && emailRegex.test(value);
 }
 
@@ -124,6 +124,42 @@ export function validateSelectedCapabilities(selected) {
 	return { valid: true };
 }
 
+const validationRules = {
+	'devcontainer-node': (config) =>
+		!['18', '20', '22'].includes(config.nodeVersion) ? 'Invalid Node.js version' : null,
+	'devcontainer-python': (config) =>
+		!['pip', 'poetry'].includes(config.packageManager) ? 'Invalid package manager' : null,
+	'devcontainer-java': (config) =>
+		!['11', '17', '22'].includes(config.javaVersion) ? 'Invalid Java version' : null,
+	circleci: (config) =>
+		!['none', 'cloudflare'].includes(config.deployTarget) ? 'Invalid deploy target' : null,
+	'github-actions': (config) =>
+		!['18', '20', '22'].includes(config.nodeVersion) ? 'Invalid Node.js version' : null,
+	sonarcloud: (config) => !['js', 'py', 'java'].includes(config.language) ? 'Invalid language' : null,
+	doppler: (config) =>
+		!['web', 'backend'].includes(config.projectType) ? 'Invalid project type' : null,
+	'cloudflare-wrangler': (config) =>
+		!['web', 'api'].includes(config.workerType) ? 'Invalid worker type' : null,
+	dependabot: (config) =>
+		config.ecosystems && !config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
+			? `Invalid ecosystem: ${config.ecosystems.find(
+					(e) => !['npm', 'github-actions'].includes(e)
+				)}`
+			: null,
+	'lighthouse-ci': (config) =>
+		config.thresholds && (config.thresholds.performance < 0 || config.thresholds.performance > 100)
+			? 'Threshold performance must be a number between 0 and 100'
+			: null,
+	playwright: (config) =>
+		config.browsers && !config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
+			? `Invalid browser: ${config.browsers.find(
+					(b) => !['chromium', 'firefox', 'webkit'].includes(b)
+				)}`
+			: null,
+	'spec-kit': (config) =>
+		!['md', 'yaml'].includes(config.specFormat) ? 'Invalid spec format' : null
+};
+
 /**
  * Validates capability configuration.
  * @param {any} configuration The configuration object.
@@ -140,61 +176,30 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 
 	for (const id of selectedCapabilities) {
 		const capability = getCapabilityById(id);
-		if (capability && capability.configurationSchema) {
-			const config = configuration[id];
-			const schema = capability.configurationSchema;
+		if (!capability?.configurationSchema) {
+			continue;
+		}
 
-			if (config) {
-				if (schema.required) {
-					for (const requiredProperty of schema.required) {
-						if (config[requiredProperty] === undefined) {
-							errors.push(`${id}.${requiredProperty} is required`);
-						}
-					}
+		const config = configuration[id];
+		const schema = capability.configurationSchema;
+
+		if (!config) {
+			continue;
+		}
+
+		if (schema.required) {
+			for (const requiredProperty of schema.required) {
+				if (config[requiredProperty] === undefined) {
+					errors.push(`${id}.${requiredProperty} is required`);
 				}
-				// This is brittle, but necessary to match the tests without a full schema validator
-				if (id === 'devcontainer-node' && !['18', '20', '22'].includes(config.nodeVersion))
-					errors.push('Invalid Node.js version');
-				if (id === 'devcontainer-python' && !['pip', 'poetry'].includes(config.packageManager))
-					errors.push('Invalid package manager');
-				if (id === 'devcontainer-java' && !['11', '17', '22'].includes(config.javaVersion))
-					errors.push('Invalid Java version');
-				if (id === 'circleci' && !['none', 'cloudflare'].includes(config.deployTarget))
-					errors.push('Invalid deploy target');
-				if (id === 'github-actions' && !['18', '20', '22'].includes(config.nodeVersion))
-					errors.push('Invalid Node.js version');
-				if (id === 'sonarcloud' && !['js', 'py', 'java'].includes(config.language))
-					errors.push('Invalid language');
-				if (id === 'doppler' && !['web', 'backend'].includes(config.projectType))
-					errors.push('Invalid project type');
-				if (id === 'cloudflare-wrangler' && !['web', 'api'].includes(config.workerType))
-					errors.push('Invalid worker type');
-				if (
-					id === 'dependabot' &&
-					config.ecosystems &&
-					!config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
-				)
-					errors.push(
-						'Invalid ecosystem: ' +
-							config.ecosystems.find((e) => !['npm', 'github-actions'].includes(e))
-					);
-				if (
-					id === 'lighthouse-ci' &&
-					config.thresholds &&
-					(config.thresholds.performance < 0 || config.thresholds.performance > 100)
-				)
-					errors.push('Threshold performance must be a number between 0 and 100');
-				if (
-					id === 'playwright' &&
-					config.browsers &&
-					!config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
-				)
-					errors.push(
-						'Invalid browser: ' +
-							config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
-					);
-				if (id === 'spec-kit' && !['md', 'yaml'].includes(config.specFormat))
-					errors.push('Invalid spec format');
+			}
+		}
+
+		const rule = validationRules[id];
+		if (rule) {
+			const error = rule(config);
+			if (error) {
+				errors.push(error);
 			}
 		}
 	}
