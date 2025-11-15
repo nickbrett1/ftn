@@ -76,6 +76,12 @@ sync_database() {
     # Use '|| true' to prevent set -e from exiting the script if D1_SCRIPT returns non-zero
     d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1 || true)
     d1_exit_code=$?
+
+    # --- DEBUGGING START ---
+    echo "DEBUG: d1_output for $db_name:"
+    echo "$d1_output"
+    echo "DEBUG: d1_exit_code for $db_name: $d1_exit_code"
+    # --- DEBUGGING END ---
     
     if [ "$d1_exit_code" -eq 0 ]; then
         num_tables_synced=$(echo "$d1_output" | grep "Tables synced:" | awk '{print $3}')
