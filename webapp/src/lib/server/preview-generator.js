@@ -64,10 +64,10 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
 
 		// Generate files
-		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
+		const files = generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
 
 		// Generate external service changes
-		const externalServices = await generateExternalServiceChanges(
+		const externalServices = generateExternalServiceChanges(
 			projectConfig,
 			executionOrder,
 			r2Bucket
@@ -98,7 +98,7 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<FileObject>} Array of file objects
  */
-async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
+function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
 	// Make function async
 	const files = [];
 
@@ -107,7 +107,7 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
+		const capabilityFiles = generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
 		files.push(...capabilityFiles);
 	}
 
@@ -125,17 +125,17 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
  * @param {Object} capability - Capability definition
  * @returns {Array<FileObject>} Array of file objects
  */
-async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
+function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
 	// Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
+	const templateEngine = getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	// Generate capability-specific files
 	if (capability.templates) {
 		for (const template of capability.templates) {
 			try {
-				const content = await templateEngine.generateFile(template.templateId, {
+				const content = templateEngine.generateFile(template.templateId, {
 					// Await the call
 					...projectConfig,
 					capabilityConfig,
@@ -209,7 +209,7 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Array<ExternalService>} Array of external service changes
  */
-async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
+function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
 	// Make async
 	const services = [
 		{
@@ -238,7 +238,7 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const serviceChanges = await generateCapabilityServiceChanges(
+		const serviceChanges = generateCapabilityServiceChanges(
 			projectConfig,
 			capability,
 			r2Bucket
@@ -255,10 +255,10 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * @param {Object} capability - Capability definition
  * @returns {Array<ExternalService>} Array of service changes
  */
-async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
+function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
 	// Make async
 	const services = [];
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
+	const templateEngine = getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {

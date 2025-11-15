@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
+	isNotEmpty,
+	isValidUuid,
+	isValidEmail,
+	isValidUrl,
 	validateProjectName,
 	validateRepositoryUrl,
 	validateSelectedCapabilities,
@@ -10,7 +14,99 @@ import {
 	generateProjectSlug
 } from '$lib/utils/validation.js';
 
+vi.mock('$lib/config/capabilities', () => {
+	const MOCK_CAPABILITIES = {
+		'devcontainer-node': {
+			id: 'devcontainer-node',
+			configurationSchema: { required: ['nodeVersion'] }
+		},
+		'devcontainer-python': {
+			id: 'devcontainer-python',
+			configurationSchema: { required: ['packageManager'] }
+		},
+		'devcontainer-java': {
+			id: 'devcontainer-java',
+			configurationSchema: { required: ['javaVersion'] }
+		},
+		circleci: { id: 'circleci', configurationSchema: { required: ['deployTarget'] } },
+		'github-actions': {
+			id: 'github-actions',
+			configurationSchema: { required: ['nodeVersion'] }
+		},
+		sonarcloud: { id: 'sonarcloud', configurationSchema: { required: ['language'] } },
+		doppler: { id: 'doppler', configurationSchema: { required: ['projectType'] } },
+		'cloudflare-wrangler': {
+			id: 'cloudflare-wrangler',
+			configurationSchema: { required: ['workerType'] }
+		},
+		dependabot: { id: 'dependabot', configurationSchema: { required: ['ecosystems'] } },
+		'lighthouse-ci': { id: 'lighthouse-ci', configurationSchema: { required: ['thresholds'] } },
+		playwright: { id: 'playwright', configurationSchema: { required: ['browsers'] } },
+		'spec-kit': { id: 'spec-kit', configurationSchema: { required: ['specFormat'] } }
+	};
+
+	return {
+		getCapabilityById: (id) => MOCK_CAPABILITIES[id],
+		capabilities: Object.values(MOCK_CAPABILITIES)
+	};
+});
+
 describe('validation utilities', () => {
+	describe('isNotEmpty', () => {
+		it('returns true for non-empty strings', () => {
+			expect(isNotEmpty('test')).toBe(true);
+			expect(isNotEmpty(' test ')).toBe(true);
+		});
+
+		it('returns false for empty or whitespace-only strings', () => {
+			expect(isNotEmpty('')).toBe(false);
+			expect(isNotEmpty('   ')).toBe(false);
+		});
+
+		it('returns false for non-string values', () => {
+			expect(isNotEmpty(null)).toBe(false);
+			expect(isNotEmpty(undefined)).toBe(false);
+			expect(isNotEmpty(123)).toBe(false);
+			expect(isNotEmpty({})).toBe(false);
+		});
+	});
+
+	describe('isValidUuid', () => {
+		it('returns true for valid UUIDs', () => {
+			expect(isValidUuid('123e4567-e89b-12d3-a456-426614174000')).toBe(true);
+		});
+
+		it('returns false for invalid UUIDs', () => {
+			expect(isValidUuid('not-a-uuid')).toBe(false);
+			expect(isValidUuid('123e4567-e89b-12d3-a456-42661417400')).toBe(false); // one char short
+		});
+	});
+
+	describe('isValidEmail', () => {
+		it('returns true for valid emails', () => {
+			expect(isValidEmail('test@example.com')).toBe(true);
+		});
+
+		it('returns false for invalid emails', () => {
+			expect(isValidEmail('test@.com')).toBe(false);
+			expect(isValidEmail('test@com')).toBe(false);
+			expect(isValidEmail('test.com')).toBe(false);
+			expect(isValidEmail('@example.com')).toBe(false);
+		});
+	});
+
+	describe('isValidUrl', () => {
+		it('returns true for valid URLs', () => {
+			expect(isValidUrl('http://example.com')).toBe(true);
+			expect(isValidUrl('https://example.com/path?query=1')).toBe(true);
+		});
+
+		it('returns false for invalid URLs', () => {
+			expect(isValidUrl('example.com')).toBe(false);
+			expect(isValidUrl('not a url')).toBe(false);
+		});
+	});
+
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });
@@ -111,7 +207,7 @@ describe('validation utilities', () => {
 		it('requires configuration object', () => {
 			expect(validateCapabilityConfiguration(null, ['doppler'])).toEqual({
 				valid: false,
-				error: 'Configuration must be an object'
+				errors: ['Configuration must be an object']
 			});
 		});
 
@@ -181,7 +277,7 @@ describe('validation utilities', () => {
 
 			for (const testCase of cases) {
 				const result = validateCapabilityConfiguration(testCase.configuration, testCase.selected);
-				expect(result).toEqual({ valid: false, error: testCase.error });
+				expect(result).toEqual({ valid: false, errors: [testCase.error] });
 			}
 		});
 
@@ -196,7 +292,7 @@ describe('validation utilities', () => {
 				'dependabot'
 			]);
 
-			expect(result).toEqual({ valid: true });
+			expect(result).toEqual({ valid: true, errors: [] });
 		});
 	});
 
