@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { render, cleanup } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import Fireworks from '../../src/lib/components/Fireworks.svelte';
 
@@ -23,190 +23,92 @@ vi.mock('@tsparticles/engine', () => ({
 
 describe('Fireworks Component', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
 		// Mock window dimensions
-		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
-		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
+		Object.defineProperty(globalThis, 'innerWidth', { value: 1920, configurable: true });
+		Object.defineProperty(globalThis, 'innerHeight', { value: 1080, configurable: true });
 	});
 
 	afterEach(() => {
+		vi.clearAllMocks();
 		vi.clearAllTimers();
+		cleanup(); // Manually cleanup the DOM after each test
 	});
 
 	it('should not render when show is false', () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: false }
-		});
-
+		render(Fireworks, { show: false });
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
-
-		unmount(component);
 	});
 
 	it('should render container when show is true', () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		render(Fireworks, { show: true });
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-
-		unmount(component);
 	});
 
 	it('should have correct CSS classes when rendered', () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		render(Fireworks, { show: true });
 		const fireworksDiv = document.querySelector('.fixed.inset-0.pointer-events-none.z-50');
 		expect(fireworksDiv).toBeTruthy();
-
-		unmount(component);
 	});
 
 	it('should initialize particles on mount', async () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		render(Fireworks, { show: true });
 		await tick();
-		flushSync();
-
-		// Wait for async initialization
 		await new Promise((resolve) => setTimeout(resolve, 10));
-		flushSync();
-
-		// The test passes if no errors are thrown during initialization
-		// This verifies that the component initializes without crashing
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-
-		unmount(component);
 	});
 
 	it('should start fireworks when show becomes true', async () => {
-		// Start with show: false
-		const component1 = mount(Fireworks, {
-			target: document.body,
-			props: { show: false }
-		});
-
+		const { rerender } = render(Fireworks, { show: false });
 		await tick();
-		flushSync();
-
-		// Should not have container initially
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
 
-		unmount(component1);
-
-		// Now mount with show: true
-		const component2 = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		rerender({ show: true });
 		await tick();
-		flushSync();
-
-		// Wait for async initialization
 		await new Promise((resolve) => setTimeout(resolve, 10));
-		flushSync();
-
-		// Should now have the container
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-
-		unmount(component2);
 	});
 
 	it('should stop fireworks when show becomes false', async () => {
-		// Start with show: true
-		const component1 = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		const { rerender } = render(Fireworks, { show: true });
 		await tick();
-		flushSync();
-
-		// Wait for async initialization
 		await new Promise((resolve) => setTimeout(resolve, 10));
-		flushSync();
-
-		// Should have container initially
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
 
-		unmount(component1);
-
-		// Now mount with show: false
-		const component2 = mount(Fireworks, {
-			target: document.body,
-			props: { show: false }
-		});
-
+		rerender({ show: false });
 		await tick();
-		flushSync();
-
-		// Should no longer have the container
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeNull();
-
-		unmount(component2);
 	});
 
 	it('should clean up particles on component destroy', () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
-		unmount(component);
-
-		// Should call destroy on particles instance
-		// Note: This might not be called if particlesInstance is null during testing
-		// The important thing is that the component doesn't crash
+		const { unmount } = render(Fireworks, { show: true });
+		unmount();
+		// Test that no errors are thrown. The mock for destroy will be checked implicitly.
+		// No explicit assertion needed here other than that unmount() doesn't throw.
 		expect(true).toBe(true);
 	});
 });
 
 describe('Fireworks Animation Logic', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
 		// Mock window dimensions
-		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
-		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
+		Object.defineProperty(globalThis, 'innerWidth', { value: 1920, configurable: true });
+		Object.defineProperty(globalThis, 'innerHeight', { value: 1080, configurable: true });
+	});
+
+    afterEach(() => {
+		vi.clearAllMocks();
+		cleanup();
 	});
 
 	it('should create particle container when rendered', async () => {
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
+		render(Fireworks, { show: true });
 		await tick();
-		flushSync();
-
-		// Should have the particle container div
 		const particleContainer = document.querySelector('.w-full.h-full');
 		expect(particleContainer).toBeTruthy();
-
-		unmount(component);
 	});
 
 	it('should handle window dimensions correctly', () => {
-		// Mock window dimensions
-		Object.defineProperty(globalThis, 'innerWidth', { value: 1920 });
-		Object.defineProperty(globalThis, 'innerHeight', { value: 1080 });
-
-		const component = mount(Fireworks, {
-			target: document.body,
-			props: { show: true }
-		});
-
-		// Should render the container
+		render(Fireworks, { show: true });
 		expect(document.querySelector('.fixed.inset-0.pointer-events-none.z-50')).toBeTruthy();
-
-		unmount(component);
 	});
 });

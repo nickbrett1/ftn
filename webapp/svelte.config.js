@@ -34,6 +34,9 @@ export async function highlight(code, lang) {
 
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
+	test: {
+		environment: 'vitest'
+	},
 	kit: {
 		adapter: adapter(),
 		serviceWorker: {

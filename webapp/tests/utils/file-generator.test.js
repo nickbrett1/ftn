@@ -3,17 +3,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TemplateEngine } from '$lib/utils/file-generator';
 import * as fallbackTemplates from '$lib/config/fallback-templates';
 
-// Mock fallback templates
-vi.mock('$lib/config/fallback-templates', () => {
-	return {
-		devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}',
-		playwrightConfig: '{"testDir": "./tests"}',
-		default: {
-			devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}',
-			playwrightConfig: '{"testDir": "./tests"}'
-		}
-	};
-});
 
 describe('TemplateEngine', () => {
 	let r2Bucket;
@@ -59,9 +48,12 @@ describe('TemplateEngine', () => {
 	});
 
 	it('should register and retrieve a fallback template', () => {
+		templateEngine.fallbackTemplateProvider = {
+			devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}'
+		};
 		templateEngine.registerFallbackTemplate('test-template', 'devcontainerNodeJson');
 		const fallback = templateEngine.getFallbackTemplate('test-template');
-		expect(fallback).toBe(fallbackTemplates.devcontainerNodeJson);
+		expect(fallback).toBe(templateEngine.fallbackTemplateProvider.devcontainerNodeJson);
 	});
 
 	it('should compile a template with data', () => {
@@ -112,10 +104,13 @@ describe('TemplateEngine', () => {
 	});
 
 	it('should use fallback template if R2 fails or template is marked for fallback', async () => {
+		templateEngine.fallbackTemplateProvider = {
+			devcontainerNodeJson: '{"name": "Mock Devcontainer Node JSON"}'
+		};
 		r2Bucket.get.mockResolvedValue(null);
 		templateEngine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
 
 		const content = await templateEngine.generateFile('devcontainer-node-json', {});
-		expect(content).toBe(fallbackTemplates.devcontainerNodeJson);
+		expect(content).toBe(templateEngine.fallbackTemplateProvider.devcontainerNodeJson);
 	});
 });

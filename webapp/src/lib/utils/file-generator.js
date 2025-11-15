@@ -10,6 +10,7 @@ export class TemplateEngine {
 		this.helpers = new Map();
 		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
 		this.fallbackTemplateMap = new Map();
+		this.fallbackTemplateProvider = fallbackTemplates;
 	}
 
 	async initialize() {
@@ -120,7 +121,7 @@ export class TemplateEngine {
 
 	getFallbackTemplate(name) {
 		const fallbackName = this.fallbackTemplateMap.get(name);
-		return fallbackTemplates[fallbackName] || null;
+		return this.fallbackTemplateProvider[fallbackName] || null;
 	}
 
 	async getTemplate(name) {
