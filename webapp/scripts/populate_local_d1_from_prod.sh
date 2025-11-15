@@ -69,29 +69,23 @@ echo "" >> "$BOOTSTRAP_SQL_FILE"
 echo "Fetching table list from remote D1 database: $DB_NAME..."
 # Get table names, excluding sqlite system tables and Cloudflare internal tables
 # Output is JSON: [{"results":[{"name":"table1"},{"name":"name2"}]}]
-TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null || true)
-WRANGLER_EXIT_CODE=$?
+TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json 2>/dev/null || echo "[]") # Ensure it's always valid JSON array or empty array
 
-TABLE_NAMES="" # Initialize TABLE_NAMES
+TABLE_NAMES=$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results[]? // empty') # Use '[]?' to handle cases where .[0].results is not an array or doesn't exist, and 'empty' to ensure no output if no tables.
+
+NUM_TABLES=0
+if [ -n "$TABLE_NAMES" ]; then
+    NUM_TABLES=$(echo "$TABLE_NAMES" | wc -l)
+fi
+
 NO_TABLES_FOUND=false
-
-if [ "$WRANGLER_EXIT_CODE" -ne 0 ]; then
-    echo "Error: 'npx wrangler d1 execute' command failed with exit code $WRANGLER_EXIT_CODE when fetching table names for '$DB_NAME'. This might indicate a problem with the database or wrangler configuration."
-    NO_TABLES_FOUND=true
-elif [ -z "$TABLE_NAMES_JSON" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq 'length' 2>/dev/null)" == "0" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq '.[0].results | length' 2>/dev/null)" == "0" ]; then
+if [ "$NUM_TABLES" -eq 0 ]; then
     echo "Warning: No user tables found in the remote D1 database '$DB_NAME'. This is expected if the database is new or intentionally empty. Skipping schema and data sync for this database."
     NO_TABLES_FOUND=true
 fi
 
 if [ "$NO_TABLES_FOUND" = false ]; then
-    TABLE_NAMES=$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results[].name')
-fi
-
-# The rest of the script will now be guarded by checking $NO_TABLES_FOUND
-# or by iterating over $TABLE_NAMES which will be empty if no tables were found.
-
-if [ "$NO_TABLES_FOUND" = false ]; then
-    echo "Found tables:"
+    echo "Found $NUM_TABLES tables:"
     echo "$TABLE_NAMES"
     echo ""
 
@@ -227,9 +221,13 @@ if [ "$NO_TABLES_FOUND" = false ]; then
     echo "" # Add a newline for better log readability
 
 
-    echo "Applying remote data to local D1 database: $DB_NAME..."
-    # The --yes flag is to auto-confirm any prompts, similar to how migrations apply might behave.
-    npx wrangler d1 execute "$DB_NAME" --local --file="$BOOTSTRAP_SQL_FILE" --yes
+    if [ "$NUM_TABLES" -gt 0 ]; then
+        echo "Applying remote data to local D1 database: $DB_NAME..."
+        # The --yes flag is to auto-confirm any prompts, similar to how migrations apply might behave.
+        npx wrangler d1 execute "$DB_NAME" --local --file="$BOOTSTRAP_SQL_FILE" --yes
+    else
+        echo "No tables to apply to local D1 database: $DB_NAME."
+    fi
 
     NUM_TABLES=$(echo "$TABLE_NAMES" | wc -l)
     echo "Tables synced: $NUM_TABLES" # This line will be captured by the calling script
