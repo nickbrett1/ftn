@@ -90,11 +90,6 @@ fi
 # The rest of the script will now be guarded by checking $NO_TABLES_FOUND
 # or by iterating over $TABLE_NAMES which will be empty if no tables were found.
 
-if [ -z "$TABLE_NAMES" ] && [ "$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results | length')" == "0" ]; then # Double check if TABLE_NAMES is empty string after jq
-    echo "No user tables found in the database '$DB_NAME'."
-    exit 0
-fi
-
 if [ "$NO_TABLES_FOUND" = false ]; then
     echo "Found tables:"
     echo "$TABLE_NAMES"
@@ -238,7 +233,9 @@ if [ "$NO_TABLES_FOUND" = false ]; then
 
     echo "Local D1 database '$DB_NAME' populated successfully from remote schema and sample data."
 else
-    echo "Skipping table processing for '$DB_NAME' as no remote tables were found or wrangler command failed."
+    echo "Skipping sync for '$DB_NAME' because no tables were found."
     echo "Bootstrap SQL file generated successfully (empty): $BOOTSTRAP_SQL_FILE"
     echo "Local D1 database '$DB_NAME' will not be populated as no remote tables were found."
 fi
+
+exit 0 # Ensure a successful exit if no critical errors occurred.
