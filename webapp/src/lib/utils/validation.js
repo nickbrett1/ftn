@@ -87,7 +87,7 @@ export function validateRepositoryUrl(url) {
 	if (typeof url !== 'string') {
 		return { valid: false, error: 'Repository URL must be a string' };
 	}
-	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(\.git)?$/.test(url)) {
+	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\.git)?$/.test(url)) {
 		return {
 			valid: false,
 			error: 'Repository URL must be a valid GitHub URL (https://github.com/owner/repo)'
@@ -126,38 +126,37 @@ export function validateSelectedCapabilities(selected) {
 
 const validationRules = {
 	'devcontainer-node': (config) =>
-		!['18', '20', '22'].includes(config.nodeVersion) ? 'Invalid Node.js version' : null,
+		['18', '20', '22'].includes(config.nodeVersion) ? null : 'Invalid Node.js version',
 	'devcontainer-python': (config) =>
-		!['pip', 'poetry'].includes(config.packageManager) ? 'Invalid package manager' : null,
+		['pip', 'poetry'].includes(config.packageManager) ? null : 'Invalid package manager',
 	'devcontainer-java': (config) =>
-		!['11', '17', '22'].includes(config.javaVersion) ? 'Invalid Java version' : null,
+		['11', '17', '22'].includes(config.javaVersion) ? null : 'Invalid Java version',
 	circleci: (config) =>
-		!['none', 'cloudflare'].includes(config.deployTarget) ? 'Invalid deploy target' : null,
+		['none', 'cloudflare'].includes(config.deployTarget) ? null : 'Invalid deploy target',
 	'github-actions': (config) =>
-		!['18', '20', '22'].includes(config.nodeVersion) ? 'Invalid Node.js version' : null,
-	sonarcloud: (config) => !['js', 'py', 'java'].includes(config.language) ? 'Invalid language' : null,
+		['18', '20', '22'].includes(config.nodeVersion) ? null : 'Invalid Node.js version',
+	sonarcloud: (config) => (['js', 'py', 'java'].includes(config.language) ? null : 'Invalid language'),
 	doppler: (config) =>
-		!['web', 'backend'].includes(config.projectType) ? 'Invalid project type' : null,
+		['web', 'backend'].includes(config.projectType) ? null : 'Invalid project type',
 	'cloudflare-wrangler': (config) =>
-		!['web', 'api'].includes(config.workerType) ? 'Invalid worker type' : null,
+		['web', 'api'].includes(config.workerType) ? null : 'Invalid worker type',
 	dependabot: (config) =>
-		config.ecosystems && !config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
-			? `Invalid ecosystem: ${config.ecosystems.find(
+		config.ecosystems && config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
+			? null
+			: `Invalid ecosystem: ${config.ecosystems.find(
 					(e) => !['npm', 'github-actions'].includes(e)
-				)}`
-			: null,
+				)}`,
 	'lighthouse-ci': (config) =>
-		config.thresholds && (config.thresholds.performance < 0 || config.thresholds.performance > 100)
-			? 'Threshold performance must be a number between 0 and 100'
-			: null,
+		config.thresholds && config.thresholds.performance >= 0 && config.thresholds.performance <= 100
+			? null
+			: 'Threshold performance must be a number between 0 and 100',
 	playwright: (config) =>
-		config.browsers && !config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
-			? `Invalid browser: ${config.browsers.find(
+		config.browsers && config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
+			? null
+			: `Invalid browser: ${config.browsers.find(
 					(b) => !['chromium', 'firefox', 'webkit'].includes(b)
-				)}`
-			: null,
-	'spec-kit': (config) =>
-		!['md', 'yaml'].includes(config.specFormat) ? 'Invalid spec format' : null
+				)}`,
+	'spec-kit': (config) => (['md', 'yaml'].includes(config.specFormat) ? null : 'Invalid spec format')
 };
 
 /**

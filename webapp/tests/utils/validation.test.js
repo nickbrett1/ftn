@@ -196,7 +196,18 @@ describe('validation utilities', () => {
 				'dependabot'
 			]);
 
-			expect(result).toEqual({ valid: true });
+			expect(result).toEqual({ valid: true, errors: [] });
+		});
+
+		it('validates required properties', () => {
+			const configuration = {
+				'devcontainer-node': { nodeVersion: '22' }
+			};
+			const result = validateCapabilityConfiguration(configuration, ['devcontainer-node']);
+			expect(result).toEqual({
+				valid: false,
+				errors: ['devcontainer-node.enabled is required']
+			});
 		});
 	});
 

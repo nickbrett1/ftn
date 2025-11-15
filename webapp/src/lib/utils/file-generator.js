@@ -37,7 +37,7 @@ export class TemplateEngine {
 	registerComparisonHelpers() {
 		const helpers = {
 			if_eq: (a, b, options) => (a === b ? options.fn(this) : options.inverse(this)),
-			unless_eq: (a, b, options) => (a !== b ? options.fn(this) : options.inverse(this))
+			unless_eq: (a, b, options) => (a === b ? options.inverse(this) : options.fn(this))
 		};
 		this.registerHelpers(helpers);
 	}

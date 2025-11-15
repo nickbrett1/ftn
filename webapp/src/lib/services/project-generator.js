@@ -1,7 +1,6 @@
 // webapp/src/lib/services/project-generator.js
 
 import { capabilities } from '$lib/config/capabilities';
-import { ProjectConfig } from '$lib/models/project-config';
 import { renderTemplate } from '$lib/utils/file-generator';
 import { logError, log } from '$lib/utils/logging';
 import { TokenService } from '$lib/server/token-service';
