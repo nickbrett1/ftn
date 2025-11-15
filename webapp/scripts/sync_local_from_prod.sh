@@ -73,8 +73,8 @@ sync_database() {
     fi
     
     # Capture stdout and stderr
-    # Use '|| true' to prevent set -e from exiting the script if D1_SCRIPT returns non-zero
-    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1 || true)
+    # Remove '|| true' to correctly capture the exit code of D1_SCRIPT
+    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1)
     d1_exit_code=$?
 
     # --- DEBUGGING START ---
@@ -90,17 +90,15 @@ sync_database() {
         else
             print_success "$db_name database synced successfully."
         fi
-    elif [ "$d1_exit_code" -eq 1 ]; then # Our custom exit code for skipped sync
+        return 0 # Success, continue
+    elif [ "$d1_exit_code" -eq 2 ]; then # Our custom exit code for skipped sync
         print_warning "$db_name database sync skipped (no tables found)."
-    else
+        return 0 # Skipped, continue to R2 sync
+    else # d1_exit_code is 1 (critical error) or other unexpected non-zero
         print_error "$db_name database sync failed. Details:
 $d1_output"
-        return 1 # Fail the script for actual errors
+        return 1 # Critical error, exit the main script
     fi
-    
-    # Always return 0 from this function if it didn't encounter a critical error
-    # This allows the main script to continue to R2 sync even if D1 was skipped.
-    return 0
 }
 
 # Function to sync R2 buckets

@@ -248,7 +248,7 @@ else
     echo "Skipping sync for '$DB_NAME' because no tables were found."
     echo "Bootstrap SQL file generated successfully (empty): $BOOTSTRAP_SQL_FILE"
     echo "Local D1 database '$DB_NAME' will not be populated as no remote tables were found."
-    exit 1 # Exit with non-zero to indicate skipped/unsuccessful sync
+    exit 2 # Skipped, exit with code 2
 fi
 
 # If we reach here, it means tables were processed successfully
