@@ -72,7 +72,7 @@ echo "Fetching table list from remote D1 database: $DB_NAME..."
 TABLE_NAMES_JSON=$(npx wrangler d1 execute "$DB_NAME" --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%';" --json)
 
 if [ -z "$TABLE_NAMES_JSON" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq 'length')" == "0" ] || [ "$(echo "$TABLE_NAMES_JSON" | jq '.[0].results | length')" == "0" ]; then
-    echo "Warning: Could not fetch table names or no user tables found in the database '$DB_NAME'."
+    echo "Warning: No user tables found in the remote D1 database '$DB_NAME'. This is expected if the database is new or intentionally empty. Skipping schema and data sync for this database."
     # Do not exit here, allow the script to proceed and handle the empty table case gracefully.
 fi
 
