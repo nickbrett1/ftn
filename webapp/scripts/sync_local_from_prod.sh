@@ -63,8 +63,7 @@ print_error() {
 # Function to sync a specific database
 sync_database() {
     local db_name="$1"
-    local d1_output=""
-    local d1_exit_code=0
+    local num_tables_synced=""
     
     print_step "Syncing $db_name database from production to local"
     
@@ -78,12 +77,23 @@ sync_database() {
     d1_exit_code=$?
     
     if [ "$d1_exit_code" -eq 0 ]; then
-        print_success "$db_name database synced successfully"
+        num_tables_synced=$(echo "$d1_output" | grep "Tables synced:" | awk '{print $3}')
+        if [ -n "$num_tables_synced" ]; then
+            print_success "$db_name database synced successfully ($num_tables_synced tables)."
+        else
+            print_success "$db_name database synced successfully."
+        fi
+    elif [ "$d1_exit_code" -eq 1 ]; then # Our custom exit code for skipped sync
+        print_warning "$db_name database sync skipped (no tables found)."
     else
-        print_warning "$db_name database sync had issues (this might be expected for some migrations). Details:
+        print_error "$db_name database sync failed. Details:
 $d1_output"
-        # Don't fail the entire script for migration issues
+        return 1 # Fail the script for actual errors
     fi
+    
+    # Always return 0 from this function if it didn't encounter a critical error
+    # This allows the main script to continue to R2 sync even if D1 was skipped.
+    return 0
 }
 
 # Function to sync R2 buckets
