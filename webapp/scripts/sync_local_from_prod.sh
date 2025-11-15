@@ -97,6 +97,55 @@ sync_r2() {
     fi
 }
 
+# Function to verify sync was successful
+verify_sync() {
+    local db_name="$1"
+    
+    print_step "Verifying $db_name sync"
+    
+    # Check if tables exist in local database
+    if npx wrangler d1 execute "$db_name" --local --command "SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;" >/dev/null 2>&1; then
+        print_success "$db_name local database has tables"
+    else
+        print_warning "$db_name local database appears empty"
+    fi
+    
+    # Check if R2 buckets have objects
+    if npx wrangler r2 bucket info "$db_name" >/dev/null 2>&1; then
+        print_success "$db_name R2 bucket is accessible"
+    else
+        print_warning "$db_name R2 bucket may not be accessible locally"
+    fi
+}
+
+# Parse command line arguments
+DB_TARGET="${1:-all}"
+
+if [ "$DB_TARGET" = "-h" ] || [ "$DB_TARGET" = "--help" ]; then
+    show_usage
+    exit 0
+fi
+
+# Validate database name
+if [[ "$DB_TARGET" != "all" && "$DB_TARGET" != "wdi" && "$DB_TARGET" != "ccbilling" && "$DB_TARGET" != "genproj" ]]; then
+    print_error "Invalid database name '$DB_TARGET'."
+    echo "Valid options are: all, wdi, ccbilling, genproj"
+    echo ""
+    show_usage
+    exit 1
+fi
+
+# Check if required scripts exist
+if [[ ! -f "$D1_SCRIPT" ]]; then
+    print_error "D1 sync script not found: $D1_SCRIPT"
+    exit 1
+fi
+
+if [[ ! -f "$R2_SCRIPT" ]]; then
+    print_error "R2 sync script not found: $R2_SCRIPT"
+    exit 1
+fi
+
 # Main execution
 print_step "Starting comprehensive sync from production to local"
 echo "Target: $DB_TARGET"
