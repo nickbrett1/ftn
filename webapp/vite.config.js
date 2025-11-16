@@ -45,9 +45,6 @@ export default defineConfig(({ command, mode }) => {
 	return {
 		plugins,
 		logLevel: 'info',
-		resolve: {
-			conditions: mode === 'test' ? ['browser'] : []
-		},
 		server: {
 			host: 'localhost',
 			warmup: {

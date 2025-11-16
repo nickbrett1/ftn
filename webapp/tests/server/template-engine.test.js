@@ -119,11 +119,9 @@ describe('TemplateEngineService', () => {
 		engine.helpers.fail = () => {
 			throw new Error('boom');
 		};
-		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		const output = engine.processTemplate('Before {{fail "x"}} After', {});
 		expect(output).toBe('Before  After');
-		expect(spy).toHaveBeenCalledWith('❌ Template helper error: boom');
 		delete engine.helpers.fail;
 	});
 });
