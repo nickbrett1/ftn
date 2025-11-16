@@ -1,10 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
 
-const { mockProcessTemplate } = vi.hoisted(() => ({
-	mockProcessTemplate: vi.fn((template, context) =>
-		template.replace('{{projectName}}', context.name)
-	)
+const { mockGenerateFile } = vi.hoisted(() => ({
+	mockGenerateFile: vi.fn()
 }));
 
 vi.mock('../../src/lib/config/capabilities.js', () => ({
@@ -13,12 +11,12 @@ vi.mock('../../src/lib/config/capabilities.js', () => ({
 			id: 'feature',
 			name: 'Feature Capability',
 			description: 'Adds feature support',
-			templates: [{ path: 'src/feature.js', content: 'console.log("{{name}}");' }], // Use 'name' instead of 'projectName'
+			templates: [{ filePath: 'src/feature.js', templateId: 'feature-js' }],
 			externalServices: [
 				{
 					type: 'github',
 					name: 'GitHub',
-					actions: [{ type: 'create', description: 'Setup {{name}} repo' }], // Use 'name' instead of 'projectName'
+					actions: [{ type: 'create', description: 'Setup {{name}} repo' }],
 					requiresAuth: true
 				}
 			]
@@ -46,7 +44,7 @@ vi.mock('../../src/lib/utils/capability-resolver.js', () => ({
 vi.mock('$app/environment', () => ({
 	platform: {
 		env: {
-			R2_TEMPLATES_BUCKET: undefined // Mock R2 bucket to be undefined in test environment
+			R2_TEMPLATES_BUCKET: undefined
 		}
 	}
 }));
@@ -54,47 +52,13 @@ vi.mock('$app/environment', () => ({
 vi.mock('../../src/lib/utils/file-generator.js', () => ({
 	TemplateEngine: class MockTemplateEngine {
 		constructor(r2Bucket) {
-			// Accept r2Bucket in constructor
 			this.r2Bucket = r2Bucket;
 		}
-		async initialize() {
-			// Mock initialization
-		}
+		async initialize() {}
 		compileTemplate(templateString, data) {
-			// Mock compileTemplate
 			return templateString.replace('{{projectName}}', data.name);
 		}
-		async generateFile(templateId, data) {
-			// Mock template content for testing
-			if (templateId === 'devcontainer-node-json') {
-				return `// devcontainer.json for ${data.name}`;
-			}
-			if (templateId === 'devcontainer-node-dockerfile') {
-				return `FROM node:${data.capabilityConfig.nodeVersion}`;
-			}
-			if (templateId === 'devcontainer-zshrc') {
-				return `// .zshrc for ${data.name}`;
-			}
-			if (templateId === 'devcontainer-p10k-zsh') {
-				return `// .p10k.zsh for ${data.name}`;
-			}
-			if (templateId === 'devcontainer-setup-sh') {
-				return `#!/bin/bash\n# setup.sh for ${data.name}`;
-			}
-			if (templateId === 'devcontainer-python-json') {
-				return `// devcontainer.json for Python ${data.capabilityConfig.pythonVersion}`;
-			}
-			if (templateId === 'devcontainer-python-dockerfile') {
-				return `FROM python:${data.capabilityConfig.pythonVersion}`;
-			}
-			if (templateId === 'devcontainer-java-json') {
-				return `// devcontainer.json for Java ${data.capabilityConfig.javaVersion}`;
-			}
-			if (templateId === 'devcontainer-java-dockerfile') {
-				return `FROM java:${data.capabilityConfig.javaVersion}`;
-			}
-			return `Mock content for ${templateId} with project ${data.name}`;
-		}
+		generateFile = mockGenerateFile;
 	}
 }));
 
@@ -113,6 +77,7 @@ describe('generatePreview', () => {
 	};
 
 	it('creates preview data with files, services and summary', async () => {
+		mockGenerateFile.mockResolvedValue('mock content');
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
 		expect(preview.files.length).toBeGreaterThan(0);
 		expect(preview.externalServices[0]).toMatchObject({ type: 'github' });
@@ -127,7 +92,7 @@ describe('generatePreview', () => {
 
 	it('continues preview generation when template processing fails', async () => {
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-		mockProcessTemplate.mockImplementationOnce(() => {
+		mockGenerateFile.mockImplementationOnce(() => {
 			throw new Error('template failure');
 		});
 
