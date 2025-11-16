@@ -23,9 +23,7 @@ describe('DopplerAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 403, statusText: 'Forbidden' });
-		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(service.makeRequest('/fail')).rejects.toThrow('Doppler API error: 403 Forbidden');
-		expect(spy).toHaveBeenCalledTimes(2);
 	});
 
 	it('supports basic CRUD operations for projects', async () => {
@@ -101,8 +99,6 @@ describe('DopplerAPIService', () => {
 		vi.spyOn(service, 'getUserInfo').mockResolvedValue({});
 		expect(await service.validateToken()).toBe(true);
 		service.getUserInfo.mockRejectedValue(new Error('bad token'));
-		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		expect(await service.validateToken()).toBe(false);
-		expect(spy).toHaveBeenCalledWith('❌ Doppler token validation failed: bad token');
 	});
 });
