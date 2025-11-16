@@ -27,25 +27,36 @@ describe('PreviewMode component', () => {
 	});
 
 	it('renders a file tree and shows file content on click', async () => {
-		const mockPreviewData = {
+		const previewData1 = {
 			files: [
 				{
-					path: 'README.md',
 					name: 'README.md',
+					path: 'README.md',
 					content: '# my-project',
-					size: 13
+					size: 12
 				}
 			],
 			externalServices: []
 		};
 
-		render(PreviewMode, {
-			previewData: mockPreviewData,
+		const previewData2 = {
+			files: [
+				{
+					name: 'README.md',
+					path: 'README.md',
+					content: '# cool-app',
+					size: 10
+				}
+			],
+			externalServices: []
+		};
+
+		const { rerender } = render(PreviewMode, {
+			previewData: previewData1,
 			loading: false,
 			error: null
 		});
 
-		// Wait for the file name to appear in the document
 		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
 
 		// Get the file node and click it
@@ -54,6 +65,19 @@ describe('PreviewMode component', () => {
 
 		// Wait for the content of the file to be visible
 		await waitFor(() => expect(screen.getByText('# my-project')).toBeTruthy());
+
+		await rerender({
+			previewData: previewData2,
+			loading: false,
+			error: null
+		});
+
+		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
+
+		const updatedFileNode = screen.getByText('README.md');
+		await fireEvent.click(updatedFileNode);
+
+		await waitFor(() => expect(screen.getByText('# cool-app')).toBeTruthy());
 	});
 
 	it('displays a loading state', () => {

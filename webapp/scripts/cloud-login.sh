@@ -28,6 +28,6 @@ script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callb
 echo
 # Setup Wrangler configuration with environment variables
 echo "Setting up Wrangler configuration..."
-doppler run --project webapp --config dev -- ./scripts/setup-wrangler-config.sh
+doppler run --project webapp --config stg -- ./scripts/setup-wrangler-config.sh stg
 
-echo "Cloud login script finished." 
+echo "Cloud login script finished."

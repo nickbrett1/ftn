@@ -15,7 +15,7 @@ export async function POST({ request, platform }) {
 		const previewData = await generatePreview(
 			projectConfig,
 			selectedCapabilities,
-			platform?.env?.R2_TEMPLATES_BUCKET
+			platform?.env?.R2_GENPROJ_TEMPLATES
 		); // Pass r2Bucket
 
 		return json(previewData, { status: 200 });

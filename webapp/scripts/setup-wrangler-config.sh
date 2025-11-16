@@ -31,18 +31,43 @@ if [ ! -f "wrangler.template.jsonc" ]; then
     exit 1
 fi
 
+# Function to display usage information
+show_usage() {
+    echo "Usage: $0 [ENVIRONMENT]"
+    echo ""
+    echo "Arguments:"
+    echo "  ENVIRONMENT    Optional: The Doppler environment to use (e.g., 'stg', 'prod')."
+    echo "                 Overrides DOPPLER_ENVIRONMENT if both are set."
+    echo ""
+    echo "This script generates wrangler.jsonc from the template using environment variables"
+    echo "fetched from Doppler. It prioritizes the ENVIRONMENT argument, then the"
+    echo "DOPPLER_ENVIRONMENT shell variable, and exits if neither is provided."
+}
+
+# Parse command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    show_usage
+    exit 0
+fi
+
+ENV_PARAM="$1" # Capture the first argument as the environment parameter
+
 # Build doppler args - DOPPLER_TOKEN is the token, DOPPLER_ENVIRONMENT is the config name
 DOPPLER_CONFIG_TO_USE=""
 DOPPLER_ARGS=""
-if [ -n "$DOPPLER_ENVIRONMENT" ]; then
+
+if [ -n "$ENV_PARAM" ]; then
+    DOPPLER_CONFIG_TO_USE="$ENV_PARAM"
+    DOPPLER_ARGS="--config $ENV_PARAM"
+    echo "🎯 Using Doppler config: $ENV_PARAM (from script argument)"
+elif [ -n "$DOPPLER_ENVIRONMENT" ]; then
     DOPPLER_CONFIG_TO_USE="$DOPPLER_ENVIRONMENT"
     DOPPLER_ARGS="--config $DOPPLER_ENVIRONMENT"
     echo "🎯 Using Doppler config: $DOPPLER_ENVIRONMENT (from DOPPLER_ENVIRONMENT environment variable)"
 else
-    # Default to stg config for staging/production builds
-    DOPPLER_CONFIG_TO_USE="stg"
-    DOPPLER_ARGS="--config stg"
-    echo "🎯 Using Doppler config: stg (default)"
+    echo "❌ Error: No Doppler environment specified."
+    echo "Please set DOPPLER_ENVIRONMENT or pass an environment as an argument (e.g., '$0 stg')."
+    exit 1
 fi
 
 # Add token to args if available
@@ -157,4 +182,4 @@ else
     echo "  4. Network connectivity issues"
     echo "  5. Template file issues or sed command failure"
     exit 1
-fi 
+fi
