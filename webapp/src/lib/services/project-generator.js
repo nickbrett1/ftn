@@ -6,10 +6,10 @@ import { renderTemplate } from '$lib/utils/file-generator';
 import { logError, log } from '$lib/utils/logging';
 import { TokenService } from '$lib/server/token-service';
 import { getCurrentUser } from '$lib/server/auth-helpers';
-import { GitHubAPIService } from '$lib/services/github-api';
-import { CircleCIAPIService } from '$lib/services/circleci-api'; // Import CircleCIAPIService
-import { DopplerAPIService } from '$lib/services/doppler-api'; // Import DopplerAPIService
-import { SonarCloudAPIService } from '$lib/services/sonarcloud-api'; // Import SonarCloudAPIService
+import { GitHubAPIService } from '$lib/server/github-api';
+import { CircleCIAPIService } from '$lib/server/circleci-api'; // Import CircleCIAPIService
+import { DopplerAPIService } from '$lib/server/doppler-api'; // Import DopplerAPIService
+import { SonarCloudAPIService } from '$lib/server/sonarcloud-api'; // Import SonarCloudAPIService
 
 /**
  * Service for generating project files based on selected capabilities.
