@@ -27,7 +27,9 @@ describe('SonarCloudAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Error' });
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(service.makeRequest('/fail')).rejects.toThrow('SonarCloud API error: 500 Error');
+		expect(spy).toHaveBeenCalledTimes(2);
 	});
 
 	it('validates token and retrieves resources', async () => {
