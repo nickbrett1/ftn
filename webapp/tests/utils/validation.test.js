@@ -294,6 +294,15 @@ describe('validation utilities', () => {
 
 			expect(result).toEqual({ valid: true, errors: [] });
 		});
+
+		it('should identify missing required properties', () => {
+			const configuration = {
+				'devcontainer-node': { enabled: true }
+			};
+			const selected = ['devcontainer-node'];
+			const result = validateCapabilityConfiguration(configuration, selected);
+			expect(result).toEqual({ valid: false, errors: ['devcontainer-node.nodeVersion is required'] });
+		});
 	});
 
 	describe('validateProjectConfiguration', () => {
