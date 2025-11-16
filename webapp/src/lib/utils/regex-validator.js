@@ -252,7 +252,13 @@ export function createSafeRegex(pattern) {
 			return null;
 		}
 
-		return new RegExp(pattern);
+		// Attempt to compile the regex to catch syntax errors
+		try {
+			return new RegExp(pattern);
+		} catch {
+			// Invalid syntax, return null
+			return null;
+		}
 	} catch (error) {
 		console.error(`Invalid regex pattern: ${pattern}`, error);
 		return null;

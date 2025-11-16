@@ -43,10 +43,12 @@ describe('BaseAPIService', () => {
 			status: 500,
 			statusText: 'Server Error'
 		});
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		await expect(service.makeRequest('/fail')).rejects.toThrow(
 			'Example API error: 500 Server Error'
 		);
+		expect(spy).toHaveBeenCalledTimes(2);
 	});
 
 	it('returns true when token validation succeeds', async () => {
@@ -60,9 +62,12 @@ describe('BaseAPIService', () => {
 	it('returns false and logs when token validation fails', async () => {
 		const error = new Error('boom');
 		const validateMethod = vi.fn().mockRejectedValue(error);
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
 		const result = await service.validateToken(validateMethod);
 
 		expect(validateMethod).toHaveBeenCalled();
 		expect(result).toBe(false);
+		expect(spy).toHaveBeenCalledWith('❌ Example token validation failed: boom');
 	});
 });

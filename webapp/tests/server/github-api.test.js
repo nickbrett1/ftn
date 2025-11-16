@@ -23,9 +23,11 @@ describe('GitHubAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(service.makeRequest('/missing')).rejects.toThrow(
 			'GitHub API error: 404 Not Found'
 		);
+		expect(spy).toHaveBeenCalledTimes(2);
 	});
 
 	it('retrieves user info and creates repositories', async () => {
@@ -151,6 +153,8 @@ describe('GitHubAPIService', () => {
 
 		service.makeRequest.mockReset();
 		vi.spyOn(service, 'getUserInfo').mockRejectedValue(new Error('bad token'));
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		expect(await service.validateToken()).toBe(false);
+		expect(spy).toHaveBeenCalledWith('❌ GitHub token validation failed: bad token');
 	});
 });

@@ -53,7 +53,7 @@ export async function validateAllTokens(authTokens, services) {
 	const results = {};
 
 	for (const [service, token] of Object.entries(authTokens)) {
-		if (token && services[service]) {
+		if (token && services && services[service]) {
 			try {
 				results[service] = await services[service].validateToken();
 			} catch (error) {
