@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
 
 const { mockProcessTemplate } = vi.hoisted(() => ({
@@ -112,9 +112,6 @@ describe('generatePreview', () => {
 		get: vi.fn(() => Promise.resolve(null))
 	};
 
-	// beforeEach(() => {
-	// 	// mockProcessTemplate.mockClear(); // This mock is no longer used directly
-	// });
 	it('creates preview data with files, services and summary', async () => {
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
 		expect(preview.files.length).toBeGreaterThan(0);

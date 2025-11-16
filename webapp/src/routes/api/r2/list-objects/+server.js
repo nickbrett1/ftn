@@ -46,6 +46,8 @@ export async function GET(event) {
 		bucket = event.platform?.env?.R2_CCBILLING;
 	} else if (bucketName === 'wdi') {
 		bucket = event.platform?.env?.R2_WDI;
+	} else if (bucketName === 'genproj-templates') {
+		bucket = event.platform?.env?.R2_GENPROJ_TEMPLATES;
 	} else {
 		return json({ error: `Unknown bucket: ${bucketName}` }, { status: 400 });
 	}
