@@ -152,8 +152,10 @@ describe('ExternalServiceIntegrationService', () => {
 	it('returns fallback instructions when errors occur', async () => {
 		mockCircle.followProject.mockRejectedValueOnce(new Error('boom'));
 		const service = new ExternalServiceIntegrationService({ circleci: 'token' });
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const result = await service.integrateCircleCI(context);
 		expect(result.success).toBe(false);
 		expect(result.error).toBe('boom');
+		expect(spy).toHaveBeenCalledWith('❌ CircleCI integration failed: boom');
 	});
 });
