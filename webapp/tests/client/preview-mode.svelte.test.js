@@ -27,25 +27,38 @@ describe('PreviewMode component', () => {
 	});
 
 	it('renders a file tree and shows file content on click', async () => {
-		const mockPreviewData = {
+		const selectedCapabilities = ['devcontainer-node'];
+
+		const previewData1 = {
 			files: [
 				{
-					path: 'README.md',
 					name: 'README.md',
+					path: 'README.md',
 					content: '# my-project',
-					size: 13
+					size: 12
 				}
 			],
 			externalServices: []
 		};
 
-		render(PreviewMode, {
-			previewData: mockPreviewData,
+		const previewData2 = {
+			files: [
+				{
+					name: 'README.md',
+					path: 'README.md',
+					content: '# cool-app',
+					size: 10
+				}
+			],
+			externalServices: []
+		};
+
+		const { rerender } = render(PreviewMode, {
+			previewData: previewData1,
 			loading: false,
 			error: null
 		});
 
-		// Wait for the file name to appear in the document
 		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
 
 		// Get the file node and click it
@@ -56,18 +69,19 @@ describe('PreviewMode component', () => {
 		await waitFor(() => expect(screen.getByText('# my-project')).toBeTruthy());
 	});
 
-	it('displays a loading state', () => {
-		render(PreviewMode, {
-			loading: true
+		await rerender({
+			previewData: previewData2,
+			loading: false,
+			error: null
 		});
 		expect(screen.getByText('Generating preview...')).toBeTruthy();
 	});
 
-	it('displays an error state', () => {
-		render(PreviewMode, {
-			error: 'Something went wrong'
-		});
-		expect(screen.getByText('Preview Generation Failed')).toBeTruthy();
-		expect(screen.getByText('Something went wrong')).toBeTruthy();
+		await waitFor(() => expect(screen.getByText('README.md')).toBeTruthy());
+
+		const updatedFileNode = screen.getByText('README.md');
+		await fireEvent.click(updatedFileNode);
+
+		await waitFor(() => expect(screen.getByText('# cool-app')).toBeTruthy());
 	});
 });

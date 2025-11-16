@@ -27,7 +27,7 @@ show_usage() {
     echo "Usage: $0 [DATABASE_NAME]"
     echo ""
     echo "Arguments:"
-    echo "  DATABASE_NAME    Database to sync (wdi, ccbilling, or 'all')"
+    echo "  DATABASE_NAME    Database to sync (wdi, ccbilling, genproj, or 'all')"
     echo "                   Default: 'all' - syncs both databases"
     echo ""
     echo "Examples:"
@@ -35,6 +35,7 @@ show_usage() {
     echo "  $0 all               # Sync both wdi and ccbilling"
     echo "  $0 ccbilling         # Sync only ccbilling database and R2"
     echo "  $0 wdi               # Sync only wdi database and R2"
+		echo "  $0 genproj           # Sync only genproj database and R2"
     echo ""
     echo "This script:"
     echo "  1. Syncs D1 database(s) from production to local"
@@ -62,6 +63,7 @@ print_error() {
 # Function to sync a specific database
 sync_database() {
     local db_name="$1"
+    local num_tables_synced=""
     
     print_step "Syncing $db_name database from production to local"
     
@@ -70,16 +72,36 @@ sync_database() {
         return 1
     fi
     
-    if bash "$D1_SCRIPT" "$db_name"; then
-        print_success "$db_name database synced successfully"
-    else
-        print_warning "$db_name database sync had issues (this might be expected for some migrations)"
-        # Don't fail the entire script for migration issues
+    # Capture stdout and stderr
+    # Temporarily disable -e to allow capturing the exit code of D1_SCRIPT
+    set +e
+    d1_output=$(bash "$D1_SCRIPT" "$db_name" 2>&1)
+    d1_exit_code=$?
+    set -e
+
+
+    
+    if [ "$d1_exit_code" -eq 0 ]; then
+        num_tables_synced=$(echo "$d1_output" | grep "Tables synced:" | awk '{print $3}')
+        if [ -n "$num_tables_synced" ]; then
+            print_success "$db_name database synced successfully ($num_tables_synced tables)."
+        else
+            print_success "$db_name database synced successfully."
+        fi
+        return 0 # Success, continue
+    elif [ "$d1_exit_code" -eq 2 ]; then # Our custom exit code for skipped sync
+        print_warning "$db_name database sync skipped (no tables found)."
+        return 0 # Skipped, continue to R2 sync
+    else # d1_exit_code is 1 (critical error) or other unexpected non-zero
+        print_error "$db_name database sync failed. Details:
+$d1_output"
+        return 1 # Critical error, exit the main script
     fi
 }
 
 # Function to sync R2 buckets
 sync_r2() {
+    local db_target="$1"
     print_step "Syncing R2 buckets from production to local"
     
     if [[ ! -f "$R2_SCRIPT" ]]; then
@@ -87,7 +109,7 @@ sync_r2() {
         return 1
     fi
     
-    if bash "$R2_SCRIPT"; then
+    if bash "$R2_SCRIPT" "$db_target"; then
         print_success "R2 buckets synced successfully"
     else
         print_error "R2 sync failed"
@@ -125,9 +147,9 @@ if [ "$DB_TARGET" = "-h" ] || [ "$DB_TARGET" = "--help" ]; then
 fi
 
 # Validate database name
-if [[ "$DB_TARGET" != "all" && "$DB_TARGET" != "wdi" && "$DB_TARGET" != "ccbilling" ]]; then
+if [[ "$DB_TARGET" != "all" && "$DB_TARGET" != "wdi" && "$DB_TARGET" != "ccbilling" && "$DB_TARGET" != "genproj" ]]; then
     print_error "Invalid database name '$DB_TARGET'."
-    echo "Valid options are: all, wdi, ccbilling"
+    echo "Valid options are: all, wdi, ccbilling, genproj"
     echo ""
     show_usage
     exit 1
@@ -155,20 +177,23 @@ if [[ "$DB_TARGET" == "all" ]]; then
     echo ""
     sync_database "ccbilling"
     echo ""
+    sync_database "genproj"
+    echo ""
 else
     sync_database "$DB_TARGET"
     echo ""
 fi
 
 # Sync R2 buckets (this syncs all buckets discovered from wrangler.jsonc)
-sync_r2
+sync_r2 "$DB_TARGET"
 echo ""
 
 # Verification
-print_step "Verification"
+print_step "Verifying"
 if [[ "$DB_TARGET" == "all" ]]; then
     verify_sync "wdi"
     verify_sync "ccbilling"
+    verify_sync "genproj"
 else
     verify_sync "$DB_TARGET"
 fi
