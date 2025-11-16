@@ -182,4 +182,4 @@ else
     echo "  4. Network connectivity issues"
     echo "  5. Template file issues or sed command failure"
     exit 1
-fi 
+fi

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
 	isRegexSafe,
 	createSafeDateRegex,
@@ -143,12 +143,14 @@ describe('Regex Validator - ReDoS Prevention', () => {
 		});
 
 		it('should handle invalid regex patterns', () => {
+			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const invalidPatterns = ['[unclosed', '(unclosed', '\\', '[a-z', '(a|b'];
 
 			for (const pattern of invalidPatterns) {
 				const regex = createSafeRegex(pattern);
 				expect(regex).toBeNull();
 			}
+			warnSpy.mockRestore();
 		});
 	});
 

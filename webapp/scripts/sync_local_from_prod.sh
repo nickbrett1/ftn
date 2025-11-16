@@ -195,7 +195,8 @@ if [[ "$DB_TARGET" == "all" ]]; then
     verify_sync "ccbilling"
     verify_sync "genproj"
 else
-    verify_sync "$DB_TARGET"
+    verify_sync "$DB_TARG
+ET"
 fi
 
 echo ""

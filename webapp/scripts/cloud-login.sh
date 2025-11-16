@@ -30,4 +30,4 @@ echo
 echo "Setting up Wrangler configuration..."
 doppler run --project webapp --config stg -- ./scripts/setup-wrangler-config.sh stg
 
-echo "Cloud login script finished." 
+echo "Cloud login script finished."
