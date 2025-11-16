@@ -150,20 +150,23 @@
 				<a
 					href="mailto:nick@fintechnick.com"
 					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="Email"
 				>
-					<EnvelopeRegular ariaLabel="Email" focusable="true" />
+					<EnvelopeRegular focusable="true" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
 					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="GitHub"
 				>
-					<GithubBrands ariaLabel="GitHub" focusable="true" />
+					<GithubBrands focusable="true" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
 					class="hover:text-sky-600 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="LinkedIn"
 				>
-					<LinkedinInBrands ariaLabel="LinkedIn" focusable="true" />
+					<LinkedinInBrands focusable="true" />
 				</a>
 			</div>
 		</div>

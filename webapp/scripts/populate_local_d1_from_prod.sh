@@ -252,4 +252,3 @@ else
 fi
 
 # If we reach here, it means tables were processed successfully
-
