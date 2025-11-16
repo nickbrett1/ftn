@@ -193,13 +193,13 @@ if [ "$NO_TABLES_FOUND" = false ]; then
         # jq -e exits with 0 if the last output is not null or false.
         if echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -e '.[0].results | if type == "array" then map(.name) | length > 0 else false end' > /dev/null 2>&1; then
             LOCAL_TABLE_NAMES_CLEANUP=$(echo "$LOCAL_TABLE_NAMES_JSON_CLEANUP" | jq -r '.[0].results[].name')
-            
+
             echo "Found existing local user tables to drop:"
             # Print names for clarity, handling potential multi-line output from jq
             echo "$LOCAL_TABLE_NAMES_CLEANUP" | sed 's/^/  - /'
-            
+
             echo "Dropping all local tables in a single transaction..."
-            
+
             # Build a single SQL command with all DROP TABLE statements
             DROP_SQL="PRAGMA foreign_keys=OFF;"
             echo "$LOCAL_TABLE_NAMES_CLEANUP" | while IFS= read -r LOCAL_TABLE_NAME_TO_DROP; do
@@ -209,7 +209,7 @@ if [ "$NO_TABLES_FOUND" = false ]; then
                 fi
             done
             DROP_SQL="$DROP_SQL PRAGMA foreign_keys=ON;"
-            
+
             # Execute all DROP TABLE statements in a single command
             if ! npx wrangler d1 execute "$DB_NAME" --local --command "$DROP_SQL" --yes; then
                 echo "Warning: Failed to drop some local tables. Attempting individual drops..."

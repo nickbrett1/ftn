@@ -80,7 +80,7 @@ sync_database() {
     set -e
 
 
-    
+
     if [ "$d1_exit_code" -eq 0 ]; then
         num_tables_synced=$(echo "$d1_output" | grep "Tables synced:" | awk '{print $3}')
         if [ -n "$num_tables_synced" ]; then
