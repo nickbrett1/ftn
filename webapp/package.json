@@ -10,7 +10,7 @@
 		"predev": "node scripts/copy-pdf-worker.js",
 		"dev": "npm run predev && doppler run --project webapp --config dev -- vite dev",
 		"prebuild": "node scripts/copy-pdf-worker.js",
-		"build": "doppler run --project webapp --config stg -- vite build",
+		"build": "vite build",
 		"check-pdf-worker": "node scripts/check-pdf-worker.js",
 		"preview": "doppler run --project webapp --config dev -- vite preview",
 		"lint": "prettier --check . && eslint .",
