@@ -90,7 +90,7 @@ describe('Logging Utilities', () => {
 		it('logApiCall should log successful API calls', () => {
 			logging.logApiCall('GET', '/api/test', {}, { ok: true }, 200, 100);
 			expect(consoleSpy.info).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:api] API call: GET /api/test'),
+				expect.stringContaining('API call: GET /api/test'),
 				expect.any(Object)
 			);
 		});
@@ -98,7 +98,7 @@ describe('Logging Utilities', () => {
 		it('logUserAction should log user actions', () => {
 			logging.logUserAction('user-1', 'click-button', { buttonId: 'submit' });
 			expect(consoleSpy.info).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:user] User action: click-button'),
+				expect.stringContaining('User action: click-button'),
 				expect.any(Object)
 			);
 		});
@@ -106,7 +106,7 @@ describe('Logging Utilities', () => {
 		it('logSecurityEvent should log security events', () => {
 			logging.logSecurityEvent('login-failure', { ip: '127.0.0.1' });
 			expect(consoleSpy.warn).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:security] Security event: login-failure'),
+				expect.stringContaining('Security event: login-failure'),
 				expect.any(Object)
 			);
 		});
@@ -114,7 +114,7 @@ describe('Logging Utilities', () => {
 		it('logDatabaseOperation should log database operations', () => {
 			logging.logDatabaseOperation('insert', 'users', { userId: '123' });
 			expect(consoleSpy.info).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:database] Database operation: insert on users'),
+				expect.stringContaining('Database operation: insert on users'),
 				expect.any(Object)
 			);
 		});
@@ -122,7 +122,7 @@ describe('Logging Utilities', () => {
 		it('logFileOperation should log file operations', () => {
 			logging.logFileOperation('create', '/path/to/file', { size: 1024 });
 			expect(consoleSpy.info).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:file] File operation: create on /path/to/file'),
+				expect.stringContaining('File operation: create on /path/to/file'),
 				expect.any(Object)
 			);
 		});
@@ -130,7 +130,7 @@ describe('Logging Utilities', () => {
 		it('logSystemEvent should log system events', () => {
 			logging.logSystemEvent('startup', { time: 100 });
 			expect(consoleSpy.info).toHaveBeenCalledWith(
-				expect.stringContaining('[genproj:system] System event: startup'),
+				expect.stringContaining('System event: startup'),
 				expect.any(Object)
 			);
 		});

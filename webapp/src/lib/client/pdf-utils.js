@@ -13,7 +13,11 @@ export const PDFUtils = {
 		}
 
 		// Import PDF.js only when needed
-		return import('pdfjs-dist')
+		const promise =
+			typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+				? import('pdfjs-dist/legacy/build/pdf.mjs')
+				: import('pdfjs-dist');
+		return promise
 			.then((pdfjsLibrary) => {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker
@@ -28,6 +32,8 @@ export const PDFUtils = {
 			})
 			.catch((error) => {
 				console.warn('PDF.js not available:', error);
+				// Re-throw the error to allow the caller to handle it
+				throw error;
 			});
 	},
 
@@ -99,7 +105,6 @@ export const PDFUtils = {
 
 		try {
 			// Import PDF.js only when needed
-			// Use legacy build in test environment to avoid worker issues
 			const pdfjsLibrary =
 				typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 					? await import('pdfjs-dist/legacy/build/pdf.mjs')

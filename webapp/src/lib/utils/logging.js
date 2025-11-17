@@ -39,7 +39,8 @@ const createLogger = (category) => {
 	const log = (level, message, data) => {
 		const levelValue = LOG_LEVELS[level.toUpperCase()];
 		if (levelValue !== undefined && levelValue >= currentLogLevel) {
-			const emoji = EMOJI_MAP[level] || '📝';
+			const baseCategory = category.split(':').pop();
+			const emoji = EMOJI_MAP[baseCategory] || EMOJI_MAP[level] || '📝';
 			const timestamp = new Date().toISOString();
 			const logMessage = `${emoji} [${timestamp}] [${category}] ${message}`;
 
@@ -60,23 +61,12 @@ const createLogger = (category) => {
 		}
 	};
 
-	const loggerInstance = {
+	return {
 		info: (message, data) => log('info', message, data),
 		warn: (message, data) => log('warn', message, data),
 		error: (message, data) => log('error', message, data),
 		debug: (message, data) => log('debug', message, data)
 	};
-
-	// Add category-specific methods
-	for (const key in EMOJI_MAP) {
-		if (!loggerInstance[key]) {
-			// Default to 'info' for custom categories, 'warn' for security
-			const level = key === 'security' ? 'warn' : 'info';
-			loggerInstance[key] = (message, data) => log(level, message, data);
-		}
-	}
-
-	return loggerInstance;
 };
 
 const logger = createLogger('genproj');
@@ -126,30 +116,30 @@ const logApiCall = (method, path, parameters, response, statusCode, duration) =>
 	const message = `API call: ${method} ${path}`;
 	const logData = { ...parameters, statusCode, duration: `${duration}ms` };
 	if (response.ok) {
-		apiLogger.api(message, logData);
+		apiLogger.info(message, logData);
 	} else {
 		apiLogger.error(`API call failed: ${method} ${path}`, logData);
 	}
 };
 
 const logUserAction = (userId, action, details) => {
-	userLogger.user(`User action: ${action}`, { userId, ...details });
+	userLogger.info(`User action: ${action}`, { userId, ...details });
 };
 
 const logSecurityEvent = (event, details) => {
-	securityLogger.security(`Security event: ${event}`, details);
+	securityLogger.warn(`Security event: ${event}`, details);
 };
 
 const logDatabaseOperation = (operation, table, details) => {
-	databaseLogger.database(`Database operation: ${operation} on ${table}`, details);
+	databaseLogger.info(`Database operation: ${operation} on ${table}`, details);
 };
 
 const logFileOperation = (operation, path, details) => {
-	fileLogger.file(`File operation: ${operation} on ${path}`, details);
+	fileLogger.info(`File operation: ${operation} on ${path}`, details);
 };
 
 const logSystemEvent = (event, details) => {
-	systemLogger.system(`System event: ${event}`, details);
+	systemLogger.info(`System event: ${event}`, details);
 };
 
 // Exporting all functions to be used in other modules and tests
