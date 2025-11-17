@@ -94,8 +94,8 @@ export class TemplateEngine {
 
 	registerObjectHelpers() {
 		const helpers = {
-			json: (obj) => JSON.stringify(obj, null, 2),
-			json_compact: (obj) => JSON.stringify(obj)
+			json: (obj) => new Handlebars.SafeString(JSON.stringify(obj, null, 2)),
+			json_compact: (obj) => new Handlebars.SafeString(JSON.stringify(obj))
 		};
 		this.registerHelpers(helpers);
 	}

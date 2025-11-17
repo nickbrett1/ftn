@@ -172,10 +172,9 @@ describe('GenprojAuthManager', () => {
 		const required = manager.getRequiredAuthServices([
 			'circleci',
 			'doppler',
-			'sonarcloud',
-			'github-actions'
+			'sonarcloud'
 		]);
-		expect(required.sort()).toEqual(['circleci', 'doppler', 'github', 'sonarcloud']);
+		expect(required.sort()).toEqual(['circleci', 'doppler', 'sonarcloud']);
 
 		const status = manager.checkRequiredAuth(['circleci', 'doppler', 'sonarcloud']);
 		expect(status.authenticated).toEqual([]);

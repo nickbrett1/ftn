@@ -99,6 +99,28 @@ describe('PDFUtils', () => {
 				globalThis.window = originalWindow;
 			}
 		});
+
+		describe('with unavailable pdfjs-dist', () => {
+			beforeAll(() => {
+				vi.doMock('pdfjs-dist', () => {
+					throw new Error('Module not found');
+				});
+			});
+
+			afterAll(() => {
+				vi.doUnmock('pdfjs-dist');
+			});
+
+			it('should handle cases where pdfjs-dist is not available', () => {
+				const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+				PDFUtilities.configureWorker();
+				expect(consoleWarnSpy).toHaveBeenCalledWith(
+					'PDF.js not available:',
+					expect.any(Error)
+				);
+				consoleWarnSpy.mockRestore();
+			});
+		});
 	});
 
 	describe('extractTextFromPDF', () => {

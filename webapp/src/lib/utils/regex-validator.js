@@ -254,9 +254,10 @@ export function createSafeRegex(pattern) {
 			return null;
 		}
 
+		new RegExp(pattern);
 		return new RegExp(pattern);
 	} catch (error) {
-		console.error(`Invalid regex pattern: ${pattern}`, error);
+		console.warn(`Invalid regex pattern: ${pattern}`, error);
 		return null;
 	}
 }
