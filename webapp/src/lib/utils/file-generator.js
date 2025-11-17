@@ -165,6 +165,9 @@ export class TemplateEngine {
 
 	getFallbackTemplate(name) {
 		const fallbackName = this.fallbackTemplateMap.get(name);
+		if (!fallbackName) {
+			return null;
+		}
 		return fallbackTemplates[fallbackName] || null;
 	}
 

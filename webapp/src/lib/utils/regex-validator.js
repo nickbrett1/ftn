@@ -247,16 +247,16 @@ export function createSafeCookieRegex(cookieName) {
  * @returns {RegExp|null} - Safe regex object or null if unsafe
  */
 export function createSafeRegex(pattern) {
-	try {
-		// Use the same structural analysis as isRegexSafe
-		if (hasDangerousStructure(pattern)) {
-			console.warn(`Potentially dangerous regex pattern detected: ${pattern}`);
-			return null;
-		}
+	// Use the same structural analysis as isRegexSafe
+	if (hasDangerousStructure(pattern)) {
+		console.warn(`Potentially dangerous regex pattern detected: ${pattern}`);
+		return null;
+	}
 
+	try {
 		return new RegExp(pattern);
 	} catch (error) {
-		console.error(`Invalid regex pattern: ${pattern}`, error);
+		console.warn(`Invalid regex pattern: ${pattern}`, error);
 		return null;
 	}
 }

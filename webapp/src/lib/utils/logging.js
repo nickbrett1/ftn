@@ -39,18 +39,19 @@ const createLogger = (category) => {
 	const log = (level, message, data) => {
 		const levelValue = LOG_LEVELS[level.toUpperCase()];
 		if (levelValue !== undefined && levelValue >= currentLogLevel) {
-			const emoji = EMOJI_MAP[level] || '📝';
+			const baseCategory = category.split(':').pop();
+			const emoji = EMOJI_MAP[baseCategory] || EMOJI_MAP[level] || '📝';
 			const timestamp = new Date().toISOString();
 			const logMessage = `${emoji} [${timestamp}] [${category}] ${message}`;
 
-			let consoleMethod;
-			if (level === 'warn' || level === 'security') {
-				consoleMethod = console.warn;
-			} else if (level === 'error') {
-				consoleMethod = console.error;
-			} else {
-				consoleMethod = console.log;
-			}
+			const consoleMethod =
+				level === 'warn'
+					? console.warn
+					: level === 'error'
+					? console.error
+					: level === 'debug'
+					? console.debug
+					: console.info;
 
 			if (data) {
 				consoleMethod(logMessage, data);
@@ -60,21 +61,12 @@ const createLogger = (category) => {
 		}
 	};
 
-	const loggerInstance = {
+	return {
 		info: (message, data) => log('info', message, data),
 		warn: (message, data) => log('warn', message, data),
 		error: (message, data) => log('error', message, data),
 		debug: (message, data) => log('debug', message, data)
 	};
-
-	// Add category-specific methods
-	for (const key in EMOJI_MAP) {
-		if (!loggerInstance[key]) {
-			loggerInstance[key] = (message, data) => log(key, message, data);
-		}
-	}
-
-	return loggerInstance;
 };
 
 const logger = createLogger('genproj');
@@ -90,10 +82,9 @@ const securityLogger = createLogger('genproj:security');
 const setLogLevel = (level) => {
 	const newLevel = LOG_LEVELS[level.toUpperCase()];
 	if (newLevel === undefined) {
-		logger.warn(`Invalid log level: ${level}`);
+		console.warn(`Invalid log level: ${level}`);
 	} else {
 		currentLogLevel = newLevel;
-		logger.info(`Log level set to: ${level}`);
 	}
 };
 
@@ -125,30 +116,30 @@ const logApiCall = (method, path, parameters, response, statusCode, duration) =>
 	const message = `API call: ${method} ${path}`;
 	const logData = { ...parameters, statusCode, duration: `${duration}ms` };
 	if (response.ok) {
-		logger.api(message, logData);
+		apiLogger.info(message, logData);
 	} else {
-		logger.error(`API call failed: ${method} ${path}`, logData);
+		apiLogger.error(`API call failed: ${method} ${path}`, logData);
 	}
 };
 
 const logUserAction = (userId, action, details) => {
-	logger.user(`User action: ${action}`, { userId, ...details });
+	userLogger.info(`User action: ${action}`, { userId, ...details });
 };
 
 const logSecurityEvent = (event, details) => {
-	logger.security(`Security event: ${event}`, details);
+	securityLogger.warn(`Security event: ${event}`, details);
 };
 
 const logDatabaseOperation = (operation, table, details) => {
-	logger.database(`Database operation: ${operation} on ${table}`, details);
+	databaseLogger.info(`Database operation: ${operation} on ${table}`, details);
 };
 
 const logFileOperation = (operation, path, details) => {
-	logger.file(`File operation: ${operation} on ${path}`, details);
+	fileLogger.info(`File operation: ${operation} on ${path}`, details);
 };
 
 const logSystemEvent = (event, details) => {
-	logger.system(`System event: ${event}`, details);
+	systemLogger.info(`System event: ${event}`, details);
 };
 
 // Exporting all functions to be used in other modules and tests
