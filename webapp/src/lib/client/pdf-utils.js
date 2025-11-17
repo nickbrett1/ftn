@@ -2,40 +2,34 @@
  * Shared PDF utilities for client-side PDF processing
  * Used by ccbilling-pdf-service.js
  */
-export const PDFUtils = {
+export class PDFUtils {
 	/**
 	 * Configure PDF.js worker for browser environment
 	 */
-	configureWorker() {
+	static configureWorker() {
 		// Only configure in browser environment
 		if (typeof window === 'undefined') {
 			return;
 		}
 
 		// Import PDF.js only when needed
-		const promise =
-			typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
-				? import('pdfjs-dist/legacy/build/pdf.mjs')
-				: import('pdfjs-dist');
-		return promise
-			.then((pdfjsLibrary) => {
+		import('pdfjs-dist')
+			.then((pdfjsLib) => {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker
 				if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 					// Use legacy build in test environment to avoid worker issues
-					pdfjsLibrary.GlobalWorkerOptions.workerSrc = null;
+					pdfjsLib.GlobalWorkerOptions.workerSrc = null;
 					console.log('📄 PDF.js worker disabled for test environment');
 				} else {
-					pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+					pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 					console.log('📄 PDF.js worker configured with local file');
 				}
 			})
 			.catch((error) => {
 				console.warn('PDF.js not available:', error);
-				// Re-throw the error to allow the caller to handle it
-				throw error;
 			});
-	},
+	}
 
 	/**
 	 * Extract text content from all pages of a PDF document
@@ -45,18 +39,18 @@ export const PDFUtils = {
 	 * @param {boolean} options.groupByLine - Whether to group text by line (default: true)
 	 * @returns {Promise<string>} - Combined text from all pages
 	 */
-	async extractTextFromPDF(pdfDocument, options = {}) {
-		const { groupByLine = true } = options;
+	static async extractTextFromPDF(pdfDocument, options = {}) {
+		const { sortByPosition = true, groupByLine = true } = options;
 		const textParts = [];
 
-		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
-			const page = await pdfDocument.getPage(pageNumber);
+		for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+			const page = await pdfDocument.getPage(pageNum);
 			const textContent = await page.getTextContent();
 
 			if (groupByLine) {
 				// Group text items by Y position (line) for better readability
 				const lines = {};
-				for (const item of textContent.items) {
+				textContent.items.forEach((item) => {
 					const y = Math.round(item.transform[5]); // Round Y position to group nearby items
 					if (!lines[y]) {
 						lines[y] = [];
@@ -65,11 +59,11 @@ export const PDFUtils = {
 						text: item.str,
 						x: item.transform[4]
 					});
-				}
+				});
 
 				// Sort lines by Y position (top to bottom)
 				const sortedLines = Object.keys(lines)
-					.sort((a, b) => Number.parseInt(b) - Number.parseInt(a)) // Sort Y positions in descending order
+					.sort((a, b) => parseInt(b) - parseInt(a)) // Sort Y positions in descending order
 					.map((y) => {
 						// Sort items within each line by X position (left to right)
 						return lines[y]
@@ -89,7 +83,7 @@ export const PDFUtils = {
 		}
 
 		return textParts.join('\n');
-	},
+	}
 
 	/**
 	 * Parse a PDF file and extract text content
@@ -97,25 +91,25 @@ export const PDFUtils = {
 	 * @param {Object} options - Parsing options
 	 * @returns {Promise<string>} - Extracted text content
 	 */
-	async parsePDFFile(pdfFile, options = {}) {
+	static async parsePDFFile(pdfFile, options = {}) {
 		// Only run in browser environment
 		if (typeof window === 'undefined') {
-			throw new TypeError('PDF parsing not available in server environment');
+			throw new Error('PDF parsing not available in server environment');
 		}
 
 		try {
 			// Import PDF.js only when needed
-			const pdfjsLibrary =
-				typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
-					? await import('pdfjs-dist/legacy/build/pdf.mjs')
-					: await import('pdfjs-dist');
+			// Use legacy build in test environment to avoid worker issues
+			const pdfjsLib = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+				? await import('pdfjs-dist/legacy/build/pdf.mjs')
+				: await import('pdfjs-dist');
 
 			// Configure worker if not already done
 			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 				// Legacy build doesn't need worker configuration
 				console.log('📄 Using PDF.js legacy build for test environment');
-			} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
-				pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+			} else if (pdfjsLib.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
+				pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 			}
 
 			console.log('📄 Loading PDF with PDF.js...');
@@ -130,11 +124,11 @@ export const PDFUtils = {
 					pdfFile.byteOffset + pdfFile.byteLength
 				);
 			} else {
-				throw new TypeError('Invalid PDF file format');
+				throw new Error('Invalid PDF file format');
 			}
 
 			// Load PDF document
-			const loadingTask = pdfjsLibrary.getDocument({ data: arrayBuffer });
+			const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
 			const pdf = await loadingTask.promise;
 
 			console.log('📄 PDF loaded:', pdf.numPages, 'pages');
@@ -149,7 +143,7 @@ export const PDFUtils = {
 			console.error('❌ PDF parsing failed:', error);
 			throw new Error(`PDF parsing failed: ${error.message}`);
 		}
-	},
+	}
 
 	/**
 	 * Parse a credit card statement from a PDF file
@@ -158,7 +152,7 @@ export const PDFUtils = {
 	 * @param {Object} options - Parsing options
 	 * @returns {Promise<Object>} - Parsed statement data
 	 */
-	async parseStatement(pdfFile, parserFactory, options = {}) {
+	static async parseStatement(pdfFile, parserFactory, options = {}) {
 		try {
 			// Validate PDF file
 			this.validatePDFFile(pdfFile);
@@ -175,7 +169,7 @@ export const PDFUtils = {
 			console.error('❌ Statement parsing failed:', error);
 			throw new Error(`Statement parsing failed: ${error.message}`);
 		}
-	},
+	}
 
 	/**
 	 * Validate a PDF file
@@ -184,7 +178,7 @@ export const PDFUtils = {
 	 * @param {number} options.maxSize - Maximum file size in bytes (default: 10MB)
 	 * @returns {boolean} - True if valid
 	 */
-	validatePDFFile(pdfFile, options = {}) {
+	static validatePDFFile(pdfFile, options = {}) {
 		const { maxSize = 10 * 1024 * 1024 } = options; // 10MB default
 
 		if (!pdfFile) {
@@ -198,7 +192,7 @@ export const PDFUtils = {
 		} else if (Buffer.isBuffer(pdfFile)) {
 			fileSize = pdfFile.length;
 		} else {
-			throw new TypeError('Invalid PDF file format');
+			throw new Error('Invalid PDF file format');
 		}
 
 		if (fileSize > maxSize) {
@@ -215,4 +209,4 @@ export const PDFUtils = {
 
 		return true;
 	}
-};
+}
