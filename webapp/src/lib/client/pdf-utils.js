@@ -13,7 +13,7 @@ export const PDFUtils = {
 		}
 
 		// Import PDF.js only when needed
-		import('pdfjs-dist')
+		return import('pdfjs-dist')
 			.then((pdfjsLibrary) => {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker

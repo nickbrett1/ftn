@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, assert } from 'vitest';
 
 // Create a mock function that can be controlled
 const mockGetDocument = vi.hoisted(() => vi.fn());
@@ -98,6 +98,35 @@ describe('PDFUtils', () => {
 				// Restore original window
 				globalThis.window = originalWindow;
 			}
+		});
+
+		describe('with unavailable pdfjs-dist', () => {
+			let consoleWarnSpy;
+
+			beforeEach(() => {
+				consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			});
+
+			afterEach(() => {
+				consoleWarnSpy.mockRestore();
+			});
+
+			it('should handle cases where pdfjs-dist is not available', async () => {
+				// This mock simulates the dynamic import failing
+				vi.doMock('pdfjs-dist', () => {
+					return new Promise((_, reject) => reject(new Error('Module not found')));
+				});
+
+				await PDFUtilities.configureWorker();
+
+				expect(consoleWarnSpy).toHaveBeenCalledWith(
+					'PDF.js not available:',
+					expect.any(Error)
+				);
+
+				// Unmock after the test to not affect other tests
+				vi.doUnmock('pdfjs-dist');
+			});
 		});
 	});
 
@@ -220,37 +249,39 @@ describe('PDFUtils', () => {
 
 		it('should throw error for invalid file format', async () => {
 			const invalidFile = { name: 'test.txt', type: 'text/plain' };
-
-			await expect(PDFUtilities.parsePDFFile(invalidFile)).rejects.toThrow(
-				'PDF parsing failed: Invalid PDF file format'
-			);
+			try {
+				await PDFUtilities.parsePDFFile(invalidFile);
+				assert.fail('Expected parsePDFFile to throw an error');
+			} catch (error) {
+				expect(error.message).toBe('PDF parsing failed: Invalid PDF file format');
+			}
 		});
 
 		it('should handle PDF loading errors', async () => {
 			const loadingError = new Error('Failed to load PDF');
-
-			// Create a new mock loading task with a rejected promise
 			const mockLoadingTaskWithError = {
 				get promise() {
 					return Promise.reject(loadingError);
 				}
 			};
-
-			// Mock getDocument to return the error loading task
 			mockGetDocument.mockReturnValue(mockLoadingTaskWithError);
 
-			await expect(PDFUtilities.parsePDFFile(mockFile)).rejects.toThrow(
-				'PDF parsing failed: Failed to load PDF'
-			);
+			try {
+				await PDFUtilities.parsePDFFile(mockFile);
+				assert.fail('Expected parsePDFFile to throw an error');
+			} catch (error) {
+				expect(error.message).toBe('PDF parsing failed: Failed to load PDF');
+			}
 		});
 
 		it('should handle text extraction errors', async () => {
-			// Mock the page to reject when getTextContent is called
 			mockPage.getTextContent.mockRejectedValue(new Error('Text extraction failed'));
-
-			await expect(PDFUtilities.parsePDFFile(mockFile)).rejects.toThrow(
-				'PDF parsing failed: Text extraction failed'
-			);
+			try {
+				await PDFUtilities.parsePDFFile(mockFile);
+				assert.fail('Expected parsePDFFile to throw an error');
+			} catch (error) {
+				expect(error.message).toBe('PDF parsing failed: Text extraction failed');
+			}
 		});
 
 		it('should pass options to extractTextFromPDF', async () => {
@@ -308,19 +339,23 @@ describe('PDFUtils', () => {
 		it('should handle parser factory errors', async () => {
 			const parserError = new Error('Parser failed');
 			mockParserFactory.parseStatement.mockRejectedValue(parserError);
-
-			await expect(PDFUtilities.parseStatement(mockFile, mockParserFactory)).rejects.toThrow(
-				'Statement parsing failed: Parser failed'
-			);
+			try {
+				await PDFUtilities.parseStatement(mockFile, mockParserFactory);
+				assert.fail('Expected parseStatement to throw an error');
+			} catch (error) {
+				expect(error.message).toBe('Statement parsing failed: Parser failed');
+			}
 		});
 
 		it('should handle PDF parsing errors', async () => {
 			const pdfError = new Error('PDF parsing failed');
 			vi.spyOn(PDFUtilities, 'parsePDFFile').mockRejectedValue(pdfError);
-
-			await expect(PDFUtilities.parseStatement(mockFile, mockParserFactory)).rejects.toThrow(
-				'Statement parsing failed: PDF parsing failed'
-			);
+			try {
+				await PDFUtilities.parseStatement(mockFile, mockParserFactory);
+				assert.fail('Expected parseStatement to throw an error');
+			} catch (error) {
+				expect(error.message).toBe('Statement parsing failed: PDF parsing failed');
+			}
 		});
 	});
 

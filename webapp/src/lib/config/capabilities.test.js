@@ -142,5 +142,26 @@ describe('Capabilities Config', () => {
 				expect(validCategories).toContain(capability.category);
 			}
 		});
+
+		it('should have valid dependencies and conflicts', () => {
+			const ids = new Set(capabilities.map((c) => c.id));
+			for (const capability of capabilities) {
+				for (const dep of capability.dependencies) {
+					expect(ids.has(dep)).toBe(true);
+				}
+				for (const conflict of capability.conflicts) {
+					expect(ids.has(conflict)).toBe(true);
+				}
+			}
+		});
+
+		it('should have valid auth service requirements', () => {
+			const validServices = ['circleci', 'doppler', 'sonarcloud', 'cloudflare'];
+			for (const capability of capabilities) {
+				for (const service of capability.requiresAuth) {
+					expect(validServices).toContain(service);
+				}
+			}
+		});
 	});
 });
