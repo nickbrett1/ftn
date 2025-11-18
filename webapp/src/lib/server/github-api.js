@@ -35,11 +35,16 @@ export class GitHubAPIService extends BaseAPIService {
 	 * @param {string} token - GitHub access token
 	 */
 	constructor(token) {
-		super(token, 'https://api.github.com', {
-			Authorization: `token ${token}`,
-			Accept: 'application/vnd.github.v3+json',
-			'User-Agent': 'genproj-tool'
-		});
+		super(
+			token,
+			'https://api.github.com',
+			{
+				Authorization: `token ${token}`,
+				Accept: 'application/vnd.github.v3+json',
+				'User-Agent': 'genproj-tool'
+			},
+			'GitHub'
+		);
 	}
 
 	/**

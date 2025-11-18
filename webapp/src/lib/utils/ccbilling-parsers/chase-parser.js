@@ -288,6 +288,12 @@ export class ChaseParser extends BaseParser {
 				}
 			}
 
+			// Check if this is a flight transaction and capture additional flight details
+			let flightDetails = null;
+			if (this.isFlightTransaction(merchant)) {
+				flightDetails = this.extractFlightDetails(lines, index);
+			}
+
 			// Check if this is an Amazon charge and capture full statement text
 			let fullStatementText = null;
 			if (this.isAmazonTransaction(merchant)) {
@@ -302,6 +308,7 @@ export class ChaseParser extends BaseParser {
 				is_foreign_currency: isForeignTransaction,
 				foreign_currency_amount: foreignCurrencyAmount,
 				foreign_currency_type: foreignCurrencyType,
+				flight_details: flightDetails,
 				full_statement_text: fullStatementText
 			};
 
@@ -335,6 +342,120 @@ export class ChaseParser extends BaseParser {
 		];
 
 		return foreignIndicators.some((indicator) => merchant.toUpperCase().includes(indicator));
+	}
+
+	/**
+	 * Check if a merchant name represents a flight transaction
+	 * @param {string} merchant - Merchant name
+	 * @returns {boolean} - True if it's a flight transaction
+	 */
+	isFlightTransaction(merchant) {
+		const flightIndicators = [
+			'FLIGHT',
+			'AIRLINE',
+			'AIRPORT',
+			'TICKET',
+			'TRAVEL',
+			'HOTEL',
+			'CAR RENTAL',
+			'TRANSPORTATION',
+			'UNITED',
+			'AMERICAN',
+			'DELTA',
+			'SOUTHWEST',
+			'JETBLUE',
+			'SPIRIT',
+			'FRONTIER',
+			'ALASKA',
+			'BRITISH AIRWAYS',
+			'LUFTHANSA',
+			'AIR CANADA',
+			'EMIRATES',
+			'QATAR',
+			'TURKISH AIRLINES'
+		];
+
+		const merchantUpper = merchant.toUpperCase();
+		return flightIndicators.some((indicator) => merchantUpper.includes(indicator));
+	}
+
+	/**
+	 * Extract flight details from multi-line flight transactions
+	 * @param {string[]} lines - All lines of the text content
+	 * @param {number} startIndex - The index of the first line of the flight transaction
+	 * @returns {Object|null} - Object containing flight details or null
+	 */
+	extractFlightDetails(lines, startIndex) {
+		let flightDetails = {
+			departure_airport: null,
+			arrival_airport: null,
+			departure_date: null,
+			arrival_date: null,
+			airline: null,
+			fare: null,
+			currency: null,
+			exchange_rate: null
+		};
+
+		// Look at the next few lines for airport codes
+		for (let index = startIndex + 1; index < Math.min(startIndex + 5, lines.length); index++) {
+			const line = lines[index];
+
+			// Look for airport codes pattern (e.g., "100925 1 L LGA IAH")
+			const airportMatch = line.match(/(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/);
+			if (airportMatch) {
+				flightDetails.departure_airport = airportMatch[4]; // LGA
+				flightDetails.arrival_airport = airportMatch[5]; // IAH
+				break;
+			}
+
+			// Look for simple airport codes (e.g., "LGA IAH") - but only if line is short and doesn't contain transaction details
+			if (
+				line.length < 20 &&
+				!line.includes('UNITED') &&
+				!line.includes('TX') &&
+				!line.includes('$')
+			) {
+				const simpleAirportMatch = line.match(/^(\w{3})\s+(\w{3})$/);
+				if (simpleAirportMatch) {
+					flightDetails.departure_airport = simpleAirportMatch[1];
+					flightDetails.arrival_airport = simpleAirportMatch[2];
+					break;
+				}
+			}
+
+			// Stop looking if we encounter another transaction line (starts with date pattern)
+			if (/^\d{2}\/\d{2}\s+/.test(line)) {
+				break;
+			}
+		}
+
+		// Extract airline from the merchant name
+		const merchant = lines[startIndex].match(/^(\d{2}\/\d{2})\s+(.+)/)?.[2] || '';
+
+		if (merchant) {
+			// Look for airline names in the merchant field
+			const airlines = [
+				'UNITED',
+				'AMERICAN',
+				'DELTA',
+				'SOUTHWEST',
+				'JETBLUE',
+				'SPIRIT',
+				'FRONTIER',
+				'ALASKA',
+				'BRITISH AIRWAYS'
+			];
+			for (const airline of airlines) {
+				if (merchant.toUpperCase().includes(airline)) {
+					flightDetails.airline = airline;
+					break;
+				}
+			}
+		}
+
+		// Only return details if at least one is found
+		return Object.values(flightDetails).some((value) => value !== null) ? flightDetails : null;
 	}
 
 	/**

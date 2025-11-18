@@ -36,11 +36,16 @@ export class CircleCIAPIService extends BaseAPIService {
 	 * @param {string} token - CircleCI API token
 	 */
 	constructor(token) {
-		super(token, 'https://circleci.com/api/v2', {
-			'Circle-Token': token,
-			Accept: 'application/json',
-			'Content-Type': 'application/json'
-		});
+		super(
+			token,
+			'https://circleci.com/api/v2',
+			{
+				'Circle-Token': token,
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			'CircleCI'
+		);
 	}
 
 	/**

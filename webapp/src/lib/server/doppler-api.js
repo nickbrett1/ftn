@@ -42,11 +42,16 @@ export class DopplerAPIService extends BaseAPIService {
 	 * @param {string} token - Doppler API token
 	 */
 	constructor(token) {
-		super(token, 'https://api.doppler.com/v3', {
-			Authorization: `Bearer ${token}`,
-			Accept: 'application/json',
-			'Content-Type': 'application/json'
-		});
+		super(
+			token,
+			'https://api.doppler.com/v3',
+			{
+				Authorization: `Bearer ${token}`,
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			'Doppler'
+		);
 	}
 
 	/**
