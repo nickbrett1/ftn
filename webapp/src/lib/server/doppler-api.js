@@ -31,53 +31,22 @@
  * @property {string} [comment] - Secret comment
  */
 
+import { BaseAPIService } from './base-api-service.js';
+
 /**
  * Doppler API service class
  */
-export class DopplerAPIService {
+export class DopplerAPIService extends BaseAPIService {
 	/**
 	 * Creates a new Doppler API service instance
 	 * @param {string} token - Doppler API token
 	 */
 	constructor(token) {
-		this.token = token;
-		this.baseUrl = 'https://api.doppler.com/v3';
-		this.headers = {
+		super(token, 'https://api.doppler.com/v3', {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/json',
 			'Content-Type': 'application/json'
-		};
-	}
-
-	/**
-	 * Makes an authenticated request to Doppler API
-	 * @param {string} endpoint - API endpoint
-	 * @param {Object} [options] - Request options
-	 * @returns {Promise<Response>} API response
-	 */
-	async makeRequest(endpoint, options = {}) {
-		const url = `${this.baseUrl}${endpoint}`;
-		const requestOptions = {
-			headers: this.headers,
-			...options
-		};
-
-		console.log(`🔍 Making Doppler API request to: ${endpoint}`);
-
-		try {
-			const response = await fetch(url, requestOptions);
-
-			if (!response.ok) {
-				console.error(`❌ Doppler API error: ${response.status} ${response.statusText}`);
-				throw new Error(`Doppler API error: ${response.status} ${response.statusText}`);
-			}
-
-			console.log(`✅ Doppler API request successful: ${endpoint}`);
-			return response;
-		} catch (error) {
-			console.error(`❌ Doppler API request failed: ${error.message}`);
-			throw error;
-		}
+		});
 	}
 
 	/**

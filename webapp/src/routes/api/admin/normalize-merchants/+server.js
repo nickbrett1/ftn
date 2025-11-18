@@ -216,119 +216,101 @@ export async function POST(event) {
  * Perform bulk pattern-based updates for known merchant patterns
  * This is more efficient than processing each payment individually
  */
+const updatePatterns = [
+	{
+		pattern: "merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%'",
+		normalized: 'AMAZON',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE 'CAVIAR%'",
+		normalized: 'CAVIAR',
+		details: 'SUBSTR(merchant, 8)'
+	},
+	{
+		pattern: "merchant LIKE 'DOORDASH%'",
+		normalized: 'DOORDASH',
+		details: 'SUBSTR(merchant, 10)'
+	},
+	{
+		pattern: "merchant LIKE '%UBER EATS%'",
+		normalized: 'UBER EATS',
+		details: "REPLACE(merchant, 'UBER EATS', '')"
+	},
+	{
+		pattern: "merchant LIKE 'LYFT%'",
+		normalized: 'LYFT',
+		details: 'SUBSTR(merchant, 6)'
+	},
+	{
+		pattern: "merchant LIKE 'UBER%' AND merchant NOT LIKE '%UBER EATS%'",
+		normalized: 'UBER',
+		details: 'SUBSTR(merchant, 6)'
+	},
+	{
+		pattern: "merchant LIKE '%UNITED%'",
+		normalized: 'UNITED',
+		details: 'merchant'
+	},
+	{
+		pattern: "merchant LIKE '%AMERICAN%'",
+		normalized: 'AMERICAN',
+		details: 'merchant'
+	},
+	{
+		pattern: "merchant LIKE '%DELTA%'",
+		normalized: 'DELTA',
+		details: 'merchant'
+	},
+	{
+		pattern: "merchant LIKE '%SOUTHWEST%'",
+		normalized: 'SOUTHWEST',
+		details: 'merchant'
+	},
+	{
+		pattern: "merchant LIKE '%BRITISH%'",
+		normalized: 'BRITISH AIRWAYS',
+		details: 'merchant'
+	},
+	{
+		pattern: "merchant LIKE '%SHELL%'",
+		normalized: 'SHELL',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE '%EXXON%'",
+		normalized: 'EXXON',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE '%CHEVRON%'",
+		normalized: 'CHEVRON',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE 'BLUEMERCURY%'",
+		normalized: 'BLUEMERCURY',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
+		normalized: 'GOOGLE CLOUD',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
+		normalized: 'PLAYSTATION NETWORK',
+		details: ''
+	},
+	{
+		pattern: "merchant LIKE '%APPLE%'",
+		normalized: 'APPLE',
+		details: 'merchant'
+	}
+];
+
 async function performBulkPatternUpdates(database) {
-	const updates = [
-		// Amazon variations
-		{
-			pattern: "merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%'",
-			normalized: 'AMAZON',
-			details: ''
-		},
-		// Caviar
-		{
-			pattern: "merchant LIKE 'CAVIAR%'",
-			normalized: 'CAVIAR',
-			details: 'SUBSTR(merchant, 8)' // Everything after 'CAVIAR '
-		},
-		// DoorDash
-		{
-			pattern: "merchant LIKE 'DOORDASH%'",
-			normalized: 'DOORDASH',
-			details: 'SUBSTR(merchant, 10)' // Everything after 'DOORDASH '
-		},
-		// Uber Eats
-		{
-			pattern: "merchant LIKE '%UBER EATS%'",
-			normalized: 'UBER EATS',
-			details: "REPLACE(merchant, 'UBER EATS', '')"
-		},
-		// Lyft
-		{
-			pattern: "merchant LIKE 'LYFT%'",
-			normalized: 'LYFT',
-			details: 'SUBSTR(merchant, 6)' // Everything after 'LYFT '
-		},
-		// Uber (not Uber Eats)
-		{
-			pattern: "merchant LIKE 'UBER%' AND merchant NOT LIKE '%UBER EATS%'",
-			normalized: 'UBER',
-			details: 'SUBSTR(merchant, 6)' // Everything after 'UBER '
-		},
-		// Airlines
-		{
-			pattern: "merchant LIKE '%UNITED%'",
-			normalized: 'UNITED',
-			details: 'merchant'
-		},
-		{
-			pattern: "merchant LIKE '%AMERICAN%'",
-			normalized: 'AMERICAN',
-			details: 'merchant'
-		},
-		{
-			pattern: "merchant LIKE '%DELTA%'",
-			normalized: 'DELTA',
-			details: 'merchant'
-		},
-		{
-			pattern: "merchant LIKE '%SOUTHWEST%'",
-			normalized: 'SOUTHWEST',
-			details: 'merchant'
-		},
-		{
-			pattern: "merchant LIKE '%BRITISH%'",
-			normalized: 'BRITISH AIRWAYS',
-			details: 'merchant'
-		},
-		// Gas stations
-		{
-			pattern: "merchant LIKE '%SHELL%'",
-			normalized: 'SHELL',
-			details: ''
-		},
-		{
-			pattern: "merchant LIKE '%EXXON%'",
-			normalized: 'EXXON',
-			details: ''
-		},
-		{
-			pattern: "merchant LIKE '%CHEVRON%'",
-			normalized: 'CHEVRON',
-			details: ''
-		},
-		// Bluemercury
-		{
-			pattern: "merchant LIKE 'BLUEMERCURY%'",
-			normalized: 'BLUEMERCURY',
-			details: ''
-		},
-		// Google Cloud
-		{
-			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
-			normalized: 'GOOGLE CLOUD',
-			details: ''
-		},
-		// PlayStation Network
-		{
-			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
-			normalized: 'PLAYSTATION NETWORK',
-			details: ''
-		},
-		// Apple services
-		{
-			pattern: "merchant LIKE '%APPLE%'",
-			normalized: 'APPLE',
-			details: 'merchant'
-		}
-		// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
-		// This will be handled by the merchant normalizer function instead of SQL patterns
-		// since SQLite doesn't have good regex support
-
-		// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
-		// These will be handled by the merchant normalizer function instead of SQL patterns
-		// since SQLite doesn't have good regex support for complex address patterns
-	];
-
+	const updates = updatePatterns;
 	let totalUpdated = 0;
 	const errors = [];
 
@@ -387,114 +369,25 @@ async function performBulkPatternUpdates(database) {
  * This prevents the UNIQUE constraint error: budget_merchant.budget_id, budget_merchant.merchant_normalized
  */
 async function performBudgetMerchantBulkUpdates(database) {
-	const updates = [
-		// Amazon variations
-		{
-			pattern: "merchant LIKE '%AMAZON%' OR merchant LIKE '%AMZN%'",
-			normalized: 'AMAZON'
-		},
-		// Caviar
-		{
-			pattern: "merchant LIKE 'CAVIAR%'",
-			normalized: 'CAVIAR'
-		},
-		// DoorDash
-		{
-			pattern: "merchant LIKE 'DOORDASH%'",
-			normalized: 'DOORDASH'
-		},
-		// Uber Eats
-		{
-			pattern: "merchant LIKE '%UBER EATS%'",
-			normalized: 'UBER EATS'
-		},
-		// Lyft
-		{
-			pattern: "merchant LIKE 'LYFT%'",
-			normalized: 'LYFT'
-		},
-		// Uber (not Uber Eats)
-		{
-			pattern: "merchant LIKE 'UBER%' AND merchant NOT LIKE '%UBER EATS%'",
-			normalized: 'UBER'
-		},
-		// Airlines
-		{
-			pattern: "merchant LIKE '%UNITED%'",
-			normalized: 'UNITED'
-		},
-		{
-			pattern: "merchant LIKE '%AMERICAN%'",
-			normalized: 'AMERICAN'
-		},
-		{
-			pattern: "merchant LIKE '%DELTA%'",
-			normalized: 'DELTA'
-		},
-		{
-			pattern: "merchant LIKE '%SOUTHWEST%'",
-			normalized: 'SOUTHWEST'
-		},
-		{
-			pattern: "merchant LIKE '%BRITISH%'",
-			normalized: 'BRITISH AIRWAYS'
-		},
-		// Gas stations
-		{
-			pattern: "merchant LIKE '%SHELL%'",
-			normalized: 'SHELL'
-		},
-		{
-			pattern: "merchant LIKE '%EXXON%'",
-			normalized: 'EXXON'
-		},
-		{
-			pattern: "merchant LIKE '%CHEVRON%'",
-			normalized: 'CHEVRON'
-		},
-		// Bluemercury
-		{
-			pattern: "merchant LIKE 'BLUEMERCURY%'",
-			normalized: 'BLUEMERCURY'
-		},
-		// Google Cloud
-		{
-			pattern: "merchant LIKE '%GOOGLE%CLOUD%' OR merchant LIKE '%GOOGLE *CLOUD%'",
-			normalized: 'GOOGLE CLOUD'
-		},
-		// PlayStation Network
-		{
-			pattern: "merchant LIKE '%PLAYSTATION%NETWORK%' OR merchant LIKE '%PLAYSTATION%NETWORK%'",
-			normalized: 'PLAYSTATION NETWORK'
-		},
-		// Apple services
-		{
-			pattern: "merchant LIKE '%APPLE%'",
-			normalized: 'APPLE'
-		}
-	];
-
+	const updates = updatePatterns;
 	let totalUpdated = 0;
 	let totalRemoved = 0;
 	const errors = [];
 
 	for (const update of updates) {
 		try {
-			// First, find all budget merchants that match this pattern and would be normalized
 			const { results: matchingMerchants } = await database
 				.prepare(
 					`
-					SELECT id, budget_id, merchant, merchant_normalized
-					FROM budget_merchant 
-					WHERE (${update.pattern})
-					AND (merchant_normalized != ? OR merchant_normalized IS NULL)
-					ORDER BY budget_id, id
-				`
+		SELECT id, budget_id, merchant, merchant_normalized
+		FROM budget_merchant
+		WHERE (${update.pattern})
+		AND (merchant_normalized != ? OR merchant_normalized IS NULL)
+		ORDER BY budget_id, id
+	`
 				)
 				.bind(update.normalized)
 				.all();
-
-			// Group by budget_id to handle duplicates
 			const budgetGroups = {};
 			for (const merchant of matchingMerchants) {
 				if (!budgetGroups[merchant.budget_id]) {
@@ -502,23 +395,19 @@ async function performBudgetMerchantBulkUpdates(database) {
 				}
 				budgetGroups[merchant.budget_id].push(merchant);
 			}
-
-			// Process each budget group
 			for (const [budgetId, merchants] of Object.entries(budgetGroups)) {
 				try {
-					// Check if this budget already has the normalized merchant
 					const { results: existingNormalized } = await database
 						.prepare(
 							`
-							SELECT id FROM budget_merchant 
-							WHERE budget_id = ? AND merchant_normalized = ?
-						`
+			SELECT id FROM budget_merchant
+			WHERE budget_id = ? AND merchant_normalized = ?
+		`
 						)
 						.bind(budgetId, update.normalized)
 						.all();
 
 					if (existingNormalized.length > 0) {
-						// Budget already has the normalized merchant, remove all matching merchants
 						for (const merchant of merchants) {
 							await database
 								.prepare('DELETE FROM budget_merchant WHERE id = ?')
@@ -527,17 +416,12 @@ async function performBudgetMerchantBulkUpdates(database) {
 							totalRemoved++;
 						}
 					} else {
-						// Update the first merchant to the normalized form, remove the rest
 						const [firstMerchant, ...remainingMerchants] = merchants;
-
-						// Update the first one
 						await database
 							.prepare('UPDATE budget_merchant SET merchant_normalized = ? WHERE id = ?')
 							.bind(update.normalized, firstMerchant.id)
 							.run();
 						totalUpdated++;
-
-						// Remove the rest
 						for (const merchant of remainingMerchants) {
 							await database
 								.prepare('DELETE FROM budget_merchant WHERE id = ?')
@@ -547,7 +431,6 @@ async function performBudgetMerchantBulkUpdates(database) {
 						}
 					}
 				} catch (budgetError) {
-					// Log the specific budget error but continue with other budgets
 					console.error(
 						`Error processing budget ${budgetId} for pattern ${update.pattern}:`,
 						budgetError

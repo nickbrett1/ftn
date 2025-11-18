@@ -24,53 +24,22 @@
  * @property {string} [branch] - Branch name (default: main)
  */
 
+import { BaseAPIService } from './base-api-service.js';
+
 /**
  * GitHub API service class
  */
-export class GitHubAPIService {
+export class GitHubAPIService extends BaseAPIService {
 	/**
 	 * Creates a new GitHub API service instance
 	 * @param {string} token - GitHub access token
 	 */
 	constructor(token) {
-		this.token = token;
-		this.baseUrl = 'https://api.github.com';
-		this.headers = {
+		super(token, 'https://api.github.com', {
 			Authorization: `token ${token}`,
 			Accept: 'application/vnd.github.v3+json',
 			'User-Agent': 'genproj-tool'
-		};
-	}
-
-	/**
-	 * Makes an authenticated request to GitHub API
-	 * @param {string} endpoint - API endpoint
-	 * @param {Object} [options] - Request options
-	 * @returns {Promise<Response>} API response
-	 */
-	async makeRequest(endpoint, options = {}) {
-		const url = `${this.baseUrl}${endpoint}`;
-		const requestOptions = {
-			headers: this.headers,
-			...options
-		};
-
-		console.log(`🔍 Making GitHub API request to: ${endpoint}`);
-
-		try {
-			const response = await fetch(url, requestOptions);
-
-			if (!response.ok) {
-				console.error(`❌ GitHub API error: ${response.status} ${response.statusText}`);
-				throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-			}
-
-			console.log(`✅ GitHub API request successful: ${endpoint}`);
-			return response;
-		} catch (error) {
-			console.error(`❌ GitHub API request failed: ${error.message}`);
-			throw error;
-		}
+		});
 	}
 
 	/**
