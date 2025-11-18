@@ -81,7 +81,7 @@ export async function POST(event) {
 		return createJsonResponse({ success: true });
 	} catch (error) {
 		// Handle unique constraint violation
-		if (error.message && error.message.includes('UNIQUE constraint failed')) {
+		if (error.message?.includes('UNIQUE constraint failed')) {
 			return createJsonResponse(
 				{ error: 'This merchant is already assigned to this budget' },
 				{ status: 400 }

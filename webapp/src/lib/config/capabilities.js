@@ -379,42 +379,62 @@ export function getCapabilitiesByCategory(category) {
 }
 
 /**
- * Validates the dependencies and conflicts of a selection of capabilities.
- * @param {string[]} selectedIds An array of selected capability IDs.
- * @returns {{valid: boolean, missing: {capability: string, dependency: string}[], conflicts: {capability1: string, capability2: string}[]}}
+ * Finds missing dependencies for a given selection of capabilities.
+ * @param {string[]} selectedIds - An array of selected capability IDs.
+ * @param {Set<string>} selectedSet - A set of selected capability IDs for quick lookups.
+ * @returns {{capability: string, dependency: string}[]} - An array of missing dependency objects.
  */
-export function validateCapabilityDependencies(selectedIds) {
+function findMissingDependencies(selectedIds, selectedSet) {
 	const missing = [];
-	const conflicts = [];
-	const selectedSet = new Set(selectedIds);
-
 	for (const id of selectedIds) {
 		const capability = getCapabilityById(id);
 		if (capability) {
-			// Check dependencies
 			for (const depId of capability.dependencies) {
 				if (!selectedSet.has(depId)) {
 					missing.push({ capability: id, dependency: depId });
 				}
 			}
+		}
+	}
+	return missing;
+}
 
-			// Check conflicts
+/**
+ * Finds conflicts among a given selection of capabilities.
+ * @param {string[]} selectedIds - An array of selected capability IDs.
+ * @param {Set<string>} selectedSet - A set of selected capability IDs for quick lookups.
+ * @returns {{capability1: string, capability2: string}[]} - An array of conflict objects.
+ */
+function findConflicts(selectedIds, selectedSet) {
+	const conflicts = [];
+	const processedConflicts = new Set();
+
+	for (const id of selectedIds) {
+		const capability = getCapabilityById(id);
+		if (capability) {
 			for (const conflictId of capability.conflicts) {
 				if (selectedSet.has(conflictId)) {
-					// Add conflict only once
-					if (
-						!conflicts.some(
-							(c) =>
-								(c.capability1 === id && c.capability2 === conflictId) ||
-								(c.capability1 === conflictId && c.capability2 === id)
-						)
-					) {
+					const conflictPair = [id, conflictId].sort().join('-');
+					if (!processedConflicts.has(conflictPair)) {
 						conflicts.push({ capability1: id, capability2: conflictId });
+						processedConflicts.add(conflictPair);
 					}
 				}
 			}
 		}
 	}
+	return conflicts;
+}
+
+/**
+ * Validates the dependencies and conflicts of a selection of capabilities.
+ * @param {string[]} selectedIds An array of selected capability IDs.
+ * @returns {{valid: boolean, missing: {capability: string, dependency: string}[], conflicts: {capability1: string, capability2: string}[]}}
+ */
+export function validateCapabilityDependencies(selectedIds) {
+	const selectedSet = new Set(selectedIds);
+	const missing = findMissingDependencies(selectedIds, selectedSet);
+	const conflicts = findConflicts(selectedIds, selectedSet);
 
 	return {
 		valid: missing.length === 0 && conflicts.length === 0,

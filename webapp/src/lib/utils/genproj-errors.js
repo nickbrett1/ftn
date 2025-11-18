@@ -90,74 +90,46 @@ export function handleGenprojError(error, context = {}) {
 		};
 	}
 
-	switch (error.name) {
-		case 'ValidationError': {
-			return {
-				status: 400,
-				body: createErrorResponseBody(
-					'VALIDATION_ERROR',
-					'Invalid request data',
-					error.message,
-					context
-				)
-			};
-		}
-		default: {
-			if (error.message?.includes('validation')) {
-				return {
-					status: 400,
-					body: createErrorResponseBody(
-						'VALIDATION_ERROR',
-						'Invalid request data',
-						error.message,
-						context
-					)
-				};
-			}
-			if (error.message?.includes('unauthorized') || error.message?.includes('authentication')) {
-				return {
-					status: 401,
-					body: createErrorResponseBody(
-						'AUTHENTICATION_ERROR',
-						'Authentication required',
-						null,
-						context
-					)
-				};
-			}
-			if (error.message?.includes('database') || error.message?.includes('SQL')) {
-				return {
-					status: 500,
-					body: createErrorResponseBody(
-						'DATABASE_ERROR',
-						'Database operation failed',
-						null,
-						context
-					)
-				};
-			}
-			if (error.message?.includes('fetch') || error.message?.includes('API')) {
-				return {
-					status: 502,
-					body: createErrorResponseBody(
-						'EXTERNAL_SERVICE_ERROR',
-						'External service unavailable',
-						null,
-						context
-					)
-				};
-			}
-			return {
-				status: 500,
-				body: createErrorResponseBody(
-					'INTERNAL_ERROR',
-					'An unexpected error occurred',
-					null,
-					context
-				)
-			};
-		}
+	if (error.name === 'ValidationError') {
+		return {
+			status: 400,
+			body: createErrorResponseBody('VALIDATION_ERROR', 'Invalid request data', error.message, context)
+		};
 	}
+
+	if (error.message?.includes('validation')) {
+		return {
+			status: 400,
+			body: createErrorResponseBody('VALIDATION_ERROR', 'Invalid request data', error.message, context)
+		};
+	}
+	if (error.message?.includes('unauthorized') || error.message?.includes('authentication')) {
+		return {
+			status: 401,
+			body: createErrorResponseBody('AUTHENTICATION_ERROR', 'Authentication required', null, context)
+		};
+	}
+	if (error.message?.includes('database') || error.message?.includes('SQL')) {
+		return {
+			status: 500,
+			body: createErrorResponseBody('DATABASE_ERROR', 'Database operation failed', null, context)
+		};
+	}
+	if (error.message?.includes('fetch') || error.message?.includes('API')) {
+		return {
+			status: 502,
+			body: createErrorResponseBody(
+				'EXTERNAL_SERVICE_ERROR',
+				'External service unavailable',
+				null,
+				context
+			)
+		};
+	}
+	return {
+		status: 500,
+		body: createErrorResponseBody('INTERNAL_ERROR', 'An unexpected error occurred', null, context)
+	};
 }
 
 /**

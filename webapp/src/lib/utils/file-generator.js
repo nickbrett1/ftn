@@ -44,13 +44,13 @@ export class TemplateEngine {
 			capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),
 			'kebab-case': (str) =>
 				str
-					.replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-					.replace(/[\s_]+/g, '-')
+					.replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
+					.replaceAll(/[\s_]+/g, '-')
 					.toLowerCase(),
 			snake_case: (str) =>
 				str
-					.replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-					.replace(/[\s-]+/g, '_')
+					.replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2')
+					.replaceAll(/[\s-]+/g, '_')
 					.toLowerCase(),
 			join: (arr, sep) => arr.join(sep),
 			length: (arr) => arr.length,
@@ -62,18 +62,18 @@ export class TemplateEngine {
 				if (format === 'day') return String(d.getDate());
 				return d.toLocaleDateString();
 			},
-			json: (obj) => JSON.stringify(obj, null, 2),
-			json_compact: (obj) => JSON.stringify(obj),
+			json: (obj) => new Handlebars.SafeString(JSON.stringify(obj, null, 2)),
+			json_compact: (obj) => new Handlebars.SafeString(JSON.stringify(obj)),
 			add: (a, b) => Number(a) + Number(b),
 			subtract: (a, b) => Number(a) - Number(b),
-			replace: (str, find, replace) => str.replace(new RegExp(find, 'g'), replace),
+			replace: (str, find, replace) => str.replaceAll(new RegExp(find, 'g'), replace),
 			truncate: (str, len) => (str.length > len ? str.slice(0, len) + '...' : str),
 			env: (key) => process.env[key],
-			project_slug: (name) => name.toLowerCase().replace(/\s+/g, '-'),
-			package_name: (name) => name.toLowerCase().replace(/\s+/g, '-'),
+			project_slug: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
+			package_name: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
 			class_name: (name) =>
-				name.replace(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
-			constant_name: (name) => name.toUpperCase().replace(/[\s-]/g, '_')
+				name.replaceAll(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
+			constant_name: (name) => name.toUpperCase().replaceAll(/[\s-]/g, '_')
 		};
 
 		for (const [name, fn] of Object.entries(helpers)) {
@@ -81,7 +81,6 @@ export class TemplateEngine {
 			Handlebars.registerHelper(name, fn);
 		}
 	}
-
 	async loadTemplatesFromR2() {
 		if (!this.r2Bucket) {
 			console.warn('R2 bucket not available. Skipping template loading from R2.');
@@ -90,28 +89,39 @@ export class TemplateEngine {
 
 		const listed = await this.r2Bucket.list();
 		for (const object of listed.objects) {
-			if (object.key.endsWith('.hbs')) {
-				const body = await this.r2Bucket.get(object.key);
-				if (body) {
-					let content = await body.text();
-					const templateName = object.key.replace('.hbs', '');
-					if (content.trim().startsWith('//')) {
-						let fallbackName = templateName;
-						const match = content.match(/Template:\s*(\S+)/);
-						if (match) {
-							fallbackName = match[1];
-						}
-						const fallback = this.getFallbackTemplate(fallbackName);
-						if (fallback) {
-							content = fallback;
-							this.templates.set(fallbackName, content);
-						}
-					}
-					this.templates.set(object.key, content);
-					this.templates.set(templateName, content);
-				}
+			await this._processR2Object(object);
+		}
+	}
+
+	async _processR2Object(object) {
+		if (!object.key.endsWith('.hbs')) return;
+
+		const body = await this.r2Bucket.get(object.key);
+		if (!body) return;
+
+		const content = await body.text();
+		const templateName = object.key.replace('.hbs', '');
+		const finalContent = this._resolveFallbackTemplate(content, templateName);
+
+		this.templates.set(object.key, finalContent);
+		this.templates.set(templateName, finalContent);
+	}
+
+	_resolveFallbackTemplate(content, templateName) {
+		if (content.trim().startsWith('//')) {
+			const fallbackName = this._getFallbackName(content, templateName);
+			const fallback = this.getFallbackTemplate(fallbackName);
+			if (fallback) {
+				this.templates.set(fallbackName, fallback);
+				return fallback;
 			}
 		}
+		return content;
+	}
+
+	_getFallbackName(content, defaultName) {
+		const match = /Template:\s*(\S+)/.exec(content);
+		return match ? match[1] : defaultName;
 	}
 
 	registerFallbackTemplate(name, fallbackName) {

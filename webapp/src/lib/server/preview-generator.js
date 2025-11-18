@@ -142,13 +142,15 @@ async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
 					capability
 				});
 
-				files.push({
-					path: template.filePath, // Use filePath from template
-					name: template.filePath.split('/').pop(), // Use filePath from template
-					content,
-					size: content.length,
-					type: 'file'
-				});
+				if (template.filePath) {
+					files.push({
+						path: template.filePath, // Use filePath from template
+						name: template.filePath.split('/').pop(),
+						content,
+						size: content.length,
+						type: 'file'
+					});
+				}
 			} catch (error) {
 				console.warn(`⚠️ Failed to process template ${template.templateId}:`, error); // Log templateId
 			}

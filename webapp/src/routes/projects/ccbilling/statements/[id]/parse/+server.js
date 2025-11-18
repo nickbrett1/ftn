@@ -47,156 +47,130 @@ export const GET = RouteUtils.createRouteHandler(
 	}
 );
 
+async function prepareStatementData(event, statement_id) {
+	const statement = await getStatement(event, statement_id);
+	if (!statement) {
+		return { error: RouteUtils.createErrorResponse('Statement not found', { status: 404 }) };
+	}
+
+	const billingCycleInfo = await getBillingCycle(event, statement.billing_cycle_id);
+	if (!billingCycleInfo) {
+		return {
+			error: RouteUtils.createErrorResponse('Billing cycle not found', { status: 404 })
+		};
+	}
+
+	return { statement, billingCycleInfo };
+}
+
+async function processParsedData(event, statement_id, parsedData, statement, billingCycleInfo) {
+	try {
+		await deletePaymentsForStatement(event, statement_id);
+	} catch (error) {
+		return {
+			error: json(
+				{ success: false, error: `Failed to process parsed data: ${error.message}` },
+				{ status: 500 }
+			)
+		};
+	}
+
+	const availableCreditCards = await listCreditCards(event);
+	const identifiedCreditCard = identifyCreditCardFromParsedData(
+		parsedData.last4,
+		availableCreditCards
+	);
+
+	if (!identifiedCreditCard) {
+		const errorMessage =
+			!parsedData.last4 || parsedData.last4.trim() === ''
+				? 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
+				: `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
+		return { error: json({ success: false, error: errorMessage }, { status: 400 }) };
+	}
+
+	if (!statement.credit_card_id) {
+		await updateStatementCreditCard(event, statement_id, identifiedCreditCard.id);
+	}
+
+	if (parsedData.statement_date && !statement.statement_date) {
+		await updateStatementDate(event, statement_id, parsedData.statement_date);
+	}
+
+	const charges = parsedData.charges || [];
+	for (const charge of charges) {
+		await createCharge(event, statement_id, charge, billingCycleInfo);
+	}
+
+	return { charges };
+}
+
+async function createCharge(event, statement_id, charge, billingCycleInfo) {
+	const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
+	let allocatedTo = charge.allocated_to || null;
+
+	try {
+		if (charge.merchant) {
+			const normalized = normalizeMerchant(charge.merchant);
+			const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
+			if (budget) {
+				allocatedTo = budget.name;
+			}
+		}
+	} catch (error) {
+		console.warn('Auto-association lookup failed for merchant', charge.merchant, error?.message);
+	}
+
+	const isAmazon =
+		charge.merchant &&
+		(charge.merchant.toUpperCase().includes('AMAZON') ||
+			charge.merchant.toUpperCase().includes('AMZN'));
+	let fullStatementText = null;
+
+	if (isAmazon) {
+		fullStatementText = charge.full_statement_text || charge.merchant_details;
+	}
+
+	await createPayment(
+		event,
+		statement_id,
+		charge.merchant,
+		charge.amount,
+		allocatedTo,
+		transactionDate,
+		charge.is_foreign_currency || false,
+		charge.foreign_currency_amount || null,
+		charge.foreign_currency_type || null,
+		charge.flight_details || null,
+		fullStatementText
+	);
+}
+
 export const POST = RouteUtils.createRouteHandler(
 	async (event, parsedBody) => {
 		const { params } = event;
 		const statement_id = Number.parseInt(params.id);
 
-		console.log('🔍 Starting parse for statement ID:', statement_id);
+		const { statement, billingCycleInfo, error: dataError } = await prepareStatementData(
+			event,
+			statement_id
+		);
+		if (dataError) return dataError;
 
-		// Get the statement details
-		const statement = await getStatement(event, statement_id);
-		if (!statement) {
-			return RouteUtils.createErrorResponse('Statement not found', { status: 404 });
-		}
-
-		console.log('📄 Statement found:', statement.filename);
-
-		// Get the billing cycle information for year context
-		const billingCycleInfo = await getBillingCycle(event, statement.billing_cycle_id);
-		if (!billingCycleInfo) {
-			return RouteUtils.createErrorResponse('Billing cycle not found', { status: 404 });
-		}
-
-		console.log('📅 Billing cycle:', billingCycleInfo.start_date, 'to', billingCycleInfo.end_date);
-
-		// Get the parsed data from the request body (already validated by RouteUtils)
 		const parsedData = parsedBody.parsedData;
 		if (!parsedData) {
 			return RouteUtils.createErrorResponse('No parsed data provided', { status: 400 });
 		}
 
-		console.log('📄 Received parsed data from client');
-
-		// Delete existing payments for this statement (in case of re-parsing)
-		try {
-			await deletePaymentsForStatement(event, statement_id);
-		} catch (error) {
-			return json(
-				{
-					success: false,
-					error: `Failed to process parsed data: ${error.message}`
-				},
-				{ status: 500 }
-			);
-		}
-
-		// Get all available credit cards for identification
-		const availableCreditCards = await listCreditCards(event);
-		console.log('💳 Available credit cards for identification:', availableCreditCards.length);
-
-		// Identify credit card from the parsed data
-		const identifiedCreditCard = identifyCreditCardFromParsedData(
-			parsedData.last4,
-			availableCreditCards
+		const { charges, error: processingError } = await processParsedData(
+			event,
+			statement_id,
+			parsedData,
+			statement,
+			billingCycleInfo
 		);
+		if (processingError) return processingError;
 
-		if (!identifiedCreditCard) {
-			console.warn('⚠️ Could not identify credit card from statement');
-
-			let errorMessage;
-			errorMessage =
-				!parsedData.last4 || parsedData.last4.trim() === ''
-					? 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
-					: `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
-
-			return json(
-				{
-					success: false,
-					error: errorMessage
-				},
-				{ status: 400 }
-			);
-		}
-
-		console.log(
-			'💳 Identified credit card:',
-			identifiedCreditCard
-				? `${identifiedCreditCard.name} (****${identifiedCreditCard.last4})`
-				: 'None'
-		);
-
-		// Update statement with identified credit card if not already set
-		if (!statement.credit_card_id && identifiedCreditCard) {
-			console.log('💳 Updating statement with identified credit card:', identifiedCreditCard.id);
-			await updateStatementCreditCard(event, statement_id, identifiedCreditCard.id);
-		}
-
-		// Update statement with parsed statement date if available
-		if (parsedData.statement_date && !statement.statement_date) {
-			console.log('📅 Updating statement with parsed date:', parsedData.statement_date);
-			await updateStatementDate(event, statement_id, parsedData.statement_date);
-		}
-
-		// Create payment records from parsed charges
-		const charges = parsedData.charges || [];
-		console.log('💳 Parsed charges:', charges.length, 'charges found');
-
-		for (const charge of charges) {
-			console.log('💰 Creating charge:', charge.merchant, '$' + charge.amount);
-
-			// Determine the correct year for the transaction date
-			const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
-
-			// Determine auto-allocation based on current merchant → budget mapping
-			let allocatedTo = charge.allocated_to || null;
-			try {
-				if (charge.merchant) {
-					const normalized = normalizeMerchant(charge.merchant);
-					const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
-					if (budget) {
-						allocatedTo = budget.name;
-					}
-				}
-			} catch (error) {
-				console.warn(
-					'Auto-association lookup failed for merchant',
-					charge.merchant,
-					error?.message
-				);
-			}
-
-			// Check if this is an Amazon charge and capture full statement text
-			const isAmazon =
-				charge.merchant &&
-				(charge.merchant.toUpperCase().includes('AMAZON') ||
-					charge.merchant.toUpperCase().includes('AMZN'));
-
-			// For Amazon charges, try to get the full statement text from the parsed data
-			let fullStatementText = null;
-			if (isAmazon && charge.full_statement_text) {
-				fullStatementText = charge.full_statement_text;
-			} else if (isAmazon && charge.merchant_details) {
-				// Fallback: use merchant_details if available
-				fullStatementText = charge.merchant_details;
-			}
-
-			await createPayment(
-				event,
-				statement_id,
-				charge.merchant,
-				charge.amount,
-				allocatedTo,
-				transactionDate, // Use the corrected transaction date
-				charge.is_foreign_currency || false,
-				charge.foreign_currency_amount || null,
-				charge.foreign_currency_type || null,
-				charge.flight_details || null,
-				fullStatementText
-			);
-		}
-
-		// Extract basic billing cycle and card info from the charges
 		const extractedBillingCycle = extractBillingCycleFromCharges(charges);
 		const cardInfo = extractCardInfoFromCharges(charges);
 
@@ -301,7 +275,7 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	}
 
 	// If it's in MM/DD format, we need to determine the year
-	const mmddMatch = transactionDate.match(/^(\d{1,2})\/(\d{1,2})$/);
+	const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(transactionDate);
 	if (!mmddMatch) {
 		// If it's not MM/DD format, try to parse it as is
 		return transactionDate;

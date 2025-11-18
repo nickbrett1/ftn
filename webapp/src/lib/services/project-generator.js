@@ -50,7 +50,7 @@ export class ProjectGeneratorService {
 			const capability = capabilities.find((c) => c.id === capabilityId);
 			if (capability) {
 				const capabilityConfig = projectConfig.configuration[capabilityId];
-				if (capabilityConfig && capabilityConfig.enabled) {
+				if (capabilityConfig?.enabled) {
 					switch (capabilityId) {
 						case 'circleci':
 							generatedFiles.push({
@@ -169,119 +169,13 @@ This project was generated with the following capabilities: ${projectConfig.sele
 
 		// Implement external service project creation
 		log('Configuring external services...', 'GEN');
-		const externalServiceResults = [];
+		const externalServiceResults = await this._configureExternalServices(
+			projectConfig,
+			storedTokens,
+			owner,
+			repoName
+		);
 
-		for (const capabilityId of projectConfig.selectedCapabilities) {
-			const capabilityConfig = projectConfig.configuration[capabilityId];
-			if (capabilityConfig && capabilityConfig.enabled) {
-				switch (capabilityId) {
-					case 'circleci': {
-						const circleciToken = storedTokens.find(
-							(t) => t.serviceName === 'CircleCI'
-						)?.accessToken;
-						if (circleciToken) {
-							log(`Configuring CircleCI for ${projectConfig.projectName}...`, 'GEN');
-							const circleciApiService = new CircleCIAPIService(circleciToken);
-							try {
-								await circleciApiService.followProject(owner, repoName);
-								externalServiceResults.push({
-									service: 'CircleCI',
-									success: true,
-									message: 'CircleCI configured successfully'
-								});
-								log('CircleCI configured successfully', 'GEN');
-							} catch (error) {
-								logError(`CircleCI configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'CircleCI',
-									success: false,
-									message: `CircleCI configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'CircleCI',
-								success: false,
-								message: 'CircleCI token not found.'
-							});
-						}
-						break;
-					}
-					case 'doppler': {
-						const dopplerToken = storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken;
-						if (dopplerToken) {
-							log(`Configuring Doppler for ${projectConfig.projectName}...`, 'GEN');
-							const dopplerApiService = new DopplerAPIService(dopplerToken);
-							try {
-								await dopplerApiService.createProject(
-									projectConfig.projectName,
-									`Secrets for ${projectConfig.projectName}`
-								);
-								externalServiceResults.push({
-									service: 'Doppler',
-									success: true,
-									message: 'Doppler configured successfully'
-								});
-								log('Doppler configured successfully', 'GEN');
-							} catch (error) {
-								logError(`Doppler configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'Doppler',
-									success: false,
-									message: `Doppler configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'Doppler',
-								success: false,
-								message: 'Doppler token not found.'
-							});
-						}
-						break;
-					}
-					case 'sonarcloud': {
-						const sonarcloudToken = storedTokens.find(
-							(t) => t.serviceName === 'SonarCloud'
-						)?.accessToken;
-						if (sonarcloudToken) {
-							log(`Configuring SonarCloud for ${projectConfig.projectName}...`, 'GEN');
-							const sonarcloudApiService = new SonarCloudAPIService(sonarcloudToken);
-							try {
-								// Assuming organization is part of projectConfig or derived
-								const organization = owner; // Use GitHub owner as SonarCloud organization for simplicity
-								await sonarcloudApiService.createProject(
-									organization,
-									projectConfig.projectName,
-									projectConfig.projectName
-								);
-								externalServiceResults.push({
-									service: 'SonarCloud',
-									success: true,
-									message: 'SonarCloud configured successfully'
-								});
-								log('SonarCloud configured successfully', 'GEN');
-							} catch (error) {
-								logError(`SonarCloud configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'SonarCloud',
-									success: false,
-									message: `SonarCloud configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'SonarCloud',
-								success: false,
-								message: 'SonarCloud token not found.'
-							});
-						}
-						break;
-					}
-					// Add other external services here
-				}
-			}
-		}
 		log(
 			`Configured ${externalServiceResults.filter((r) => r.success).length} external services`,
 			'GEN'
@@ -293,5 +187,106 @@ This project was generated with the following capabilities: ${projectConfig.sele
 			files: preview.files,
 			externalServiceResults
 		};
+	}
+
+	async _configureExternalServices(projectConfig, storedTokens, owner, repoName) {
+		const results = [];
+		for (const capabilityId of projectConfig.selectedCapabilities) {
+			if (!projectConfig.configuration[capabilityId]?.enabled) {
+				continue;
+			}
+
+			let result;
+			switch (capabilityId) {
+				case 'circleci':
+					result = await this._configureCircleCI(projectConfig, storedTokens, owner, repoName);
+					break;
+				case 'doppler':
+					result = await this._configureDoppler(projectConfig, storedTokens);
+					break;
+				case 'sonarcloud':
+					result = await this._configureSonarCloud(projectConfig, storedTokens, owner);
+					break;
+				default:
+					continue; // Skip capabilities without external service config
+			}
+			results.push(result);
+		}
+		return results;
+	}
+
+	async _configureCircleCI(projectConfig, storedTokens, owner, repoName) {
+		const circleciToken = storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken;
+		if (!circleciToken) {
+			return { service: 'CircleCI', success: false, message: 'CircleCI token not found.' };
+		}
+
+		log(`Configuring CircleCI for ${projectConfig.projectName}...`, 'GEN');
+		const circleciApiService = new CircleCIAPIService(circleciToken);
+		try {
+			await circleciApiService.followProject(owner, repoName);
+			log('CircleCI configured successfully', 'GEN');
+			return { service: 'CircleCI', success: true, message: 'CircleCI configured successfully' };
+		} catch (error) {
+			logError(`CircleCI configuration failed: ${error.message}`, 'GEN', error);
+			return {
+				service: 'CircleCI',
+				success: false,
+				message: `CircleCI configuration failed: ${error.message}`
+			};
+		}
+	}
+
+	async _configureDoppler(projectConfig, storedTokens) {
+		const dopplerToken = storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken;
+		if (!dopplerToken) {
+			return { service: 'Doppler', success: false, message: 'Doppler token not found.' };
+		}
+
+		log(`Configuring Doppler for ${projectConfig.projectName}...`, 'GEN');
+		const dopplerApiService = new DopplerAPIService(dopplerToken);
+		try {
+			await dopplerApiService.createProject(
+				projectConfig.projectName,
+				`Secrets for ${projectConfig.projectName}`
+			);
+			log('Doppler configured successfully', 'GEN');
+			return { service: 'Doppler', success: true, message: 'Doppler configured successfully' };
+		} catch (error) {
+			logError(`Doppler configuration failed: ${error.message}`, 'GEN', error);
+			return {
+				service: 'Doppler',
+				success: false,
+				message: `Doppler configuration failed: ${error.message}`
+			};
+		}
+	}
+
+	async _configureSonarCloud(projectConfig, storedTokens, owner) {
+		const sonarcloudToken = storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken;
+		if (!sonarcloudToken) {
+			return { service: 'SonarCloud', success: false, message: 'SonarCloud token not found.' };
+		}
+
+		log(`Configuring SonarCloud for ${projectConfig.projectName}...`, 'GEN');
+		const sonarcloudApiService = new SonarCloudAPIService(sonarcloudToken);
+		try {
+			// Assuming organization is part of projectConfig or derived
+			const organization = owner; // Use GitHub owner as SonarCloud organization for simplicity
+			await sonarcloudApiService.createProject(
+				organization,
+				projectConfig.projectName,
+				projectConfig.projectName
+			);
+			log('SonarCloud configured successfully', 'GEN');
+			return { service: 'SonarCloud', success: true, message: 'SonarCloud configured successfully' };
+		} catch (error) {
+			logError(`SonarCloud configuration failed: ${error.message}`, 'GEN', error);
+			return {
+				service: 'SonarCloud',
+				success: false,
+				message: `SonarCloud configuration failed: ${error.message}`
+			};
+		}
 	}
 }
