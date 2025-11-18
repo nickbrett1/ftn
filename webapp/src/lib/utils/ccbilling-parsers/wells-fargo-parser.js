@@ -403,85 +403,10 @@ export class WellsFargoParser extends BaseParser {
 	}
 
 	/**
-	 * Find text using a regex pattern and return the first match
-	 * @param {string} text - Text to search in
-	 * @param {RegExp} pattern - Regex pattern to match
-	 * @returns {string|null} - First match or null
+	 * Returns the regex for identifying a transaction line.
+	 * @returns {RegExp}
 	 */
-	findText(text, pattern) {
-		const match = text.match(pattern);
-		return match ? match[1] : null;
-	}
-
-	/**
-	 * Check if a transaction is an Amazon transaction
-	 * @param {string} merchant - Merchant name
-	 * @returns {boolean} - True if it's an Amazon transaction
-	 */
-	isAmazonTransaction(merchant) {
-		if (!merchant) return false;
-
-		const merchantUpper = merchant.toUpperCase();
-		return merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN');
-	}
-
-	/**
-	 * Extract full statement text for Amazon transactions
-	 * This captures multiple lines to get the order ID information
-	 * @param {Array} lines - All lines from the statement
-	 * @param {number} currentIndex - Current line index
-	 * @returns {string|null} - Full statement text or null
-	 */
-	extractFullStatementText(lines, currentIndex) {
-		if (currentIndex >= lines.length) return null;
-
-		const currentLine = lines[currentIndex];
-		let fullText = currentLine;
-
-		// Look ahead for additional lines that might contain order ID information
-		// Check the next few lines for order ID patterns
-		for (let index = currentIndex + 1; index < Math.min(currentIndex + 5, lines.length); index++) {
-			const nextLine = lines[index];
-
-			// Stop if we hit another transaction line (starts with date pattern)
-			if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) {
-				break;
-			}
-
-			// Check if this line contains order ID information
-			if (this.containsOrderIdInfo(nextLine)) {
-				fullText += '\n' + nextLine;
-			}
-		}
-
-		return fullText;
-	}
-
-	/**
-	 * Check if a line contains order ID information
-	 * @param {string} line - Line to check
-	 * @returns {boolean} - True if line contains order ID info
-	 */
-	containsOrderIdInfo(line) {
-		if (!line) return false;
-
-		const lineUpper = line.toUpperCase();
-
-		// Look for order ID patterns
-		const orderIdPatterns = [
-			/ORDER NUMBER/i,
-			/ORDER ID/i,
-			/ORDER #/i,
-			/\d{3}-\d{7}-\d{7}/, // Standard Amazon order ID format
-			/\d{16}/, // Compact order ID format
-			/\d{10,}/ // Any long number sequence
-		];
-
-		return orderIdPatterns.some((pattern) => {
-			if (typeof pattern === 'string') {
-				return lineUpper.includes(pattern);
-			}
-			return pattern.test(line);
-		});
+	getTransactionLineRegex() {
+		return /^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/;
 	}
 }

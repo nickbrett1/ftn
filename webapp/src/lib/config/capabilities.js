@@ -4,6 +4,50 @@
  * Defines the available project capabilities for the Project Generation Tool.
  * Each capability includes metadata and dependencies.
  */
+
+/**
+ * Creates a devcontainer capability object.
+ * @param {string} id - The unique identifier for the capability.
+ * @param {string} name - The display name of the capability.
+ * @param {string} description - A brief description of the capability.
+ * @param {object} configurationSchema - The schema for configuring the capability.
+ * @returns {object} A devcontainer capability object.
+ */
+function createDevContainerCapability(id, name, description, configurationSchema) {
+	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
+	return {
+		id,
+		name,
+		description,
+		category: 'devcontainer',
+		dependencies: ['docker'],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema,
+		templates: [
+			{
+				id: 'devcontainer-json',
+				filePath: '.devcontainer/devcontainer.json',
+				templateId: `devcontainer-${lang}-json`
+			},
+			{
+				id: 'dockerfile',
+				filePath: '.devcontainer/Dockerfile',
+				templateId: `devcontainer-${lang}-dockerfile`
+			},
+			{ id: 'zshrc', filePath: '.devcontainer/.zshrc', templateId: 'devcontainer-zshrc' },
+			{ id: 'p10k', filePath: '.devcontainer/.p10k.zsh', templateId: 'devcontainer-p10k-zsh' },
+			{
+				id: 'setup-sh',
+				filePath: '.devcontainer/setup.sh',
+				templateId: 'devcontainer-setup-sh',
+				isExecutable: true
+			}
+		],
+		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
+	};
+}
+
 export const capabilities = [
 	{
 		id: 'docker',
@@ -17,155 +61,41 @@ export const capabilities = [
 		templates: [],
 		website: 'https://www.docker.com/'
 	},
-	{
-		id: 'devcontainer-node',
-		name: 'Node.js DevContainer',
-		description: 'Sets up a VS Code DevContainer with Node.js environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+	createDevContainerCapability(
+		'devcontainer-node',
+		'Node.js DevContainer',
+		'Sets up a VS Code DevContainer with Node.js environment.',
+		{
 			type: 'object',
 			properties: {
-				nodeVersion: {
-					type: 'string',
-					enum: ['18', '20', '22'],
-					default: '22'
-				}
+				nodeVersion: { type: 'string', enum: ['18', '20', '22'], default: '22' }
 			},
 			required: []
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-node-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-node-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
-	{
-		id: 'devcontainer-python',
-		name: 'Python DevContainer',
-		description: 'Sets up a VS Code DevContainer with Python environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+		}
+	),
+	createDevContainerCapability(
+		'devcontainer-python',
+		'Python DevContainer',
+		'Sets up a VS Code DevContainer with Python environment.',
+		{
 			type: 'object',
 			properties: {
-				pythonVersion: {
-					type: 'string',
-					enum: ['3.9', '3.10', '3.11'],
-					default: '3.11'
-				},
-				packageManager: {
-					type: 'string',
-					enum: ['pip']
-				}
+				pythonVersion: { type: 'string', enum: ['3.9', '3.10', '3.11'], default: '3.11' },
+				packageManager: { type: 'string', enum: ['pip'] }
 			}
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-python-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-python-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
-	{
-		id: 'devcontainer-java',
-		name: 'Java DevContainer',
-		description: 'Sets up a VS Code DevContainer with Java environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+		}
+	),
+	createDevContainerCapability(
+		'devcontainer-java',
+		'Java DevContainer',
+		'Sets up a VS Code DevContainer with Java environment.',
+		{
 			type: 'object',
 			properties: {
-				javaVersion: {
-					type: 'string',
-					enum: ['11', '17', '21'],
-					default: '21'
-				}
+				javaVersion: { type: 'string', enum: ['11', '17', '21'], default: '21' }
 			}
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-java-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-java-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
+		}
+	),
 	{
 		id: 'circleci',
 		name: 'CircleCI Integration',
