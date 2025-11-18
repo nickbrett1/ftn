@@ -11,10 +11,6 @@
 </script>
 
 <style>
-	.mermaid-container {
-		display: flex;
-		justify-content: center;
-	}
 </style>
 
 <h1 class="!mb-0 no-underline">Building with AI Agents: 10 Thoughts from a 14,500-Line Project</h1>
