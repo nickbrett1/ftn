@@ -6,7 +6,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const budgets = await listBudgets(event);
-	return new Response(JSON.stringify(budgets), {
+	return Response.json(budgets, {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }
@@ -19,13 +19,13 @@ export async function POST(event) {
 	const { name, icon } = data;
 
 	if (!name || !name.trim()) {
-		return new Response(JSON.stringify({ error: 'Missing budget name' }), { status: 400 });
+		return Response.json({ error: 'Missing budget name' }, { status: 400 });
 	}
 
 	if (!icon) {
-		return new Response(JSON.stringify({ error: 'Missing budget icon' }), { status: 400 });
+		return Response.json({ error: 'Missing budget icon' }, { status: 400 });
 	}
 
 	await createBudget(event, name.trim(), icon);
-	return new Response(JSON.stringify({ success: true }));
+	return Response.json({ success: true });
 }

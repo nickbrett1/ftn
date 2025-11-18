@@ -15,30 +15,24 @@
 	let { children, onclick, disableHoverGlow = false, class: extraClasses = '' } = $props();
 	let rect = null;
 
-	function createClientRectTracker() {
-		const action = (node) => {
-			function update() {
-				rect = node.getBoundingClientRect();
+	const clientRectTracker = (node) => {
+		function update() {
+			rect = node.getBoundingClientRect();
+		}
+
+		const handle = setInterval(update, 100);
+		update();
+
+		return {
+			destroy() {
+				clearInterval(handle);
 			}
-
-			const handle = setInterval(update, 100);
-			update();
-
-			return {
-				destroy() {
-					clearInterval(handle);
-				}
-			};
 		};
-
-		return action;
-	}
-
-	const clientRectTracker = createClientRectTracker();
+	};
 
 	let blob = $state();
 
-	function handleMouseMove(ev) {
+	function handleMouseMove(event_) {
 		const isTouch = matchMedia('(hover: none)').matches;
 
 		blob.style.opacity = isTouch || disableHoverGlow ? '0' : '1';
@@ -46,7 +40,7 @@
 		blob.animate(
 			[
 				{
-					transform: `translate(${ev.clientX - rect.left - rect.width / 2}px,${ev.clientY - rect.top - rect.height / 2}px)`
+					transform: `translate(${event_.clientX - rect.left - rect.width / 2}px,${event_.clientY - rect.top - rect.height / 2}px)`
 				}
 			],
 			{
@@ -89,7 +83,7 @@
 			${onclick ? 'cursor-pointer' : ''}
 			rounded-lg
 			p-5
-			${!disableHoverGlow ? 'hover:bg-green-950/60' : ''}
+			${disableHoverGlow ? '' : 'hover:bg-green-950/60'}
 			relative
 			transition-all`}
 		>

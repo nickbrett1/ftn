@@ -1,0 +1,184 @@
+openapi: 3.0.0
+info:
+  title: Project Generation Tool - Token Management API
+  version: 1.0.0
+  description: API for managing secure storage and retrieval of authentication tokens for external services.
+
+servers:
+  - url: /api
+    description: Base API path
+
+paths:
+  /auth/tokens/store:
+    post:
+      summary: Store an encrypted authentication token
+      description: Internal API to securely store an encrypted authentication token for a user and external service after successful authentication.
+      operationId: storeAuthToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - serviceName
+                - encryptedToken
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: UUID of the user associated with the token.
+                serviceName:
+                  type: string
+                  description: Name of the external service (e.g., "CircleCI", "Doppler", "SonarCloud").
+                encryptedToken:
+                  type: string
+                  description: The encrypted authentication token string.
+                encryptedRefreshToken:
+                  type: string
+                  nullable: true
+                  description: The encrypted refresh token string (optional).
+                expiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Expiration timestamp of the authentication token (optional).
+                refreshTokenExpiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Expiration timestamp of the refresh token (optional).
+      responses:
+        '200':
+          description: Token stored successfully.
+        '400':
+          description: Invalid input.
+        '500':
+          description: Internal Server Error.
+
+  /auth/tokens/user/{userId}:
+    get:
+      summary: Retrieve stored authentication tokens for a user
+      description: Internal API to retrieve all stored and valid authentication tokens for a given user.
+      operationId: retrieveUserAuthTokens
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID of the user.
+      responses:
+        '200':
+          description: List of stored authentication token details.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserStoredAuthTokenInternal'
+        '404':
+          description: User not found or no tokens.
+        '500':
+          description: Internal Server Error.
+
+  /user/tokens:
+    get:
+      summary: View stored authentication token services for the logged-in user
+      description: Retrieves a list of external services for which the logged-in user has stored tokens, along with their status. Does NOT return the tokens themselves.
+      operationId: viewUserTokenServices
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of services with stored tokens.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserTokenServiceStatus'
+        '401':
+          description: Unauthorized - User not logged in.
+        '500':
+          description: Internal Server Error.
+
+  /user/tokens/{serviceName}:
+    delete:
+      summary: Revoke a stored authentication token for a service
+      description: Revokes a stored authentication token for a specific service for the logged-in user.
+      operationId: revokeUserToken
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: serviceName
+          schema:
+            type: string
+          required: true
+          description: Name of the external service whose token is to be revoked.
+      responses:
+        '200':
+          description: Token revoked successfully.
+        '401':
+          description: Unauthorized - User not logged in.
+        '404':
+          description: Token for service not found.
+        '500':
+          description: Internal Server Error.
+
+components:
+  schemas:
+    UserStoredAuthTokenInternal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+        encryptedToken:
+          type: string
+        encryptedRefreshToken:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        isRevoked:
+          type: boolean
+    UserTokenServiceStatus:
+      type: object
+      properties:
+        serviceName:
+          type: string
+          description: Name of the external service.
+        hasToken:
+          type: boolean
+          description: True if a token is stored for this service.
+        isExpired:
+          type: boolean
+          description: True if the stored token has expired.
+        isRevoked:
+          type: boolean
+          description: True if the stored token has been revoked.
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Expiration timestamp of the token, if available.
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId # Example cookie name for session management

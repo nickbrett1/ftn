@@ -8,7 +8,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const statement_id = parseInt(params.id);
+	const statement_id = Number.parseInt(params.id);
 
 	if (isNaN(statement_id)) {
 		return json({ error: 'Invalid statement ID' }, { status: 400 });
@@ -33,7 +33,7 @@ export async function DELETE(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const statement_id = parseInt(params.id);
+	const statement_id = Number.parseInt(params.id);
 
 	if (isNaN(statement_id)) {
 		return json({ error: 'Invalid statement ID' }, { status: 400 });

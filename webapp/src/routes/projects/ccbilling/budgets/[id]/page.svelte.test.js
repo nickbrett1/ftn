@@ -8,7 +8,13 @@ vi.mock('$app/stores', () => ({
 		subscribe: vi.fn((callback) => {
 			callback({
 				params: { id: 'test-budget-id' },
-				url: new URL('http://localhost:5173/projects/ccbilling/budgets/test-budget-id')
+				url: new URL('http://localhost:5173/projects/ccbilling/budgets/test-budget-id'),
+				data: {
+					user: {
+						email: 'test@example.com',
+						name: 'Test User'
+					}
+				}
 			});
 			return () => {};
 		})
@@ -17,10 +23,10 @@ vi.mock('$app/stores', () => ({
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 // Mock window.alert
-global.alert = vi.fn();
+globalThis.alert = vi.fn();
 
 describe('Budget Page - Merchant Removal', () => {
 	let component;
@@ -70,10 +76,13 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Wait for merchants to be rendered
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('amazon');
-			expect(document.body.textContent).toContain('target');
-		}, { timeout: 2000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('amazon');
+				expect(document.body.textContent).toContain('target');
+			},
+			{ timeout: 2000 }
+		);
 	});
 
 	it('should call removeMerchant function when remove button is clicked', async () => {
@@ -89,16 +98,19 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Wait for merchants to be rendered
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('amazon');
-			expect(document.body.textContent).toContain('target');
-		}, { timeout: 2000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('amazon');
+				expect(document.body.textContent).toContain('target');
+			},
+			{ timeout: 2000 }
+		);
 
 		// Find the Remove button
-		const removeButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
-			btn.textContent.includes('Remove')
+		const removeButtons = [...document.querySelectorAll('button')].filter((button) =>
+			button.textContent.includes('Remove')
 		);
-		
+
 		if (removeButtons.length > 0) {
 			removeButtons[0].click();
 			flushSync();
@@ -125,13 +137,16 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Wait for the merchant picker to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 2000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 2000 }
+		);
 
 		const select = document.querySelector('select');
-		
+
 		// Select a merchant from the combo box
 		select.value = 'walmart';
 		select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -141,16 +156,16 @@ describe('Budget Page - Merchant Removal', () => {
 		expect(select.value).toBe('walmart');
 
 		// Find and click the Add Merchant button
-		const addButton = Array.from(document.querySelectorAll('button')).find(btn =>
-			btn.textContent.includes('Add Merchant')
+		const addButton = [...document.querySelectorAll('button')].find((button) =>
+			button.textContent.includes('Add Merchant')
 		);
-		
+
 		if (addButton) {
 			addButton.click();
 			flushSync();
 
 			// Wait for the async operation to complete
-			await new Promise(resolve => setTimeout(resolve, 500));
+			await new Promise((resolve) => setTimeout(resolve, 500));
 		}
 	});
 
@@ -179,28 +194,31 @@ describe('Budget Page - Merchant Removal', () => {
 		});
 
 		// Wait for the merchant picker to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 2000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 2000 }
+		);
 
 		const select = document.querySelector('select');
-		const addButton = Array.from(document.querySelectorAll('button')).find(btn =>
-			btn.textContent.includes('Add Merchant')
+		const addButton = [...document.querySelectorAll('button')].find((button) =>
+			button.textContent.includes('Add Merchant')
 		);
 
 		// Simulate rapid user interactions
 		select.value = 'walmart';
 		select.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
-		
+
 		if (addButton) {
 			addButton.click();
 			flushSync();
 		}
 
 		// Wait for the operation to complete
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Try to interact with the select again
 		select.value = 'costco';
@@ -221,8 +239,11 @@ describe('Budget Page - Merchant Removal', () => {
 			props: { data: mockData }
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Test Budget');
-		}, { timeout: 1000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Test Budget');
+			},
+			{ timeout: 1000 }
+		);
 	});
 });

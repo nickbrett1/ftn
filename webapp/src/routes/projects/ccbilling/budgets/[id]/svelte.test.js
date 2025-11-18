@@ -3,7 +3,7 @@ import { mount, unmount } from 'svelte';
 import BudgetDetailPage from './+page.svelte';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
@@ -98,7 +98,7 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		// Test with many merchants
 		const manyMerchantsData = {
 			budget: { id: 1, name: 'Groceries', created_at: '2025-01-01T00:00:00Z' },
-			merchants: Array.from({ length: 10 }, (_, i) => ({ merchant: `Merchant ${i + 1}` }))
+			merchants: Array.from({ length: 10 }, (_, index) => ({ merchant: `Merchant ${index + 1}` }))
 		};
 
 		component = mount(BudgetDetailPage, {
@@ -208,10 +208,10 @@ describe('Budget Detail Page - Svelte Coverage', () => {
 		});
 
 		expect(document.body).toBeTruthy();
-		
+
 		unmount(component);
 		component = null;
-		
+
 		// After unmount, the component should be cleaned up
 		expect(true).toBe(true);
 	});

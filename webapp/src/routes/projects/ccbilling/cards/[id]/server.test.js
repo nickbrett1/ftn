@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, PUT, DELETE } from './+server.js';
 
 // Mock the dependencies
@@ -29,7 +29,8 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return credit card by id', async () => {
 			const mockCard = { id: 1, name: 'Chase Freedom', last4: '1234', created_at: '2024-01-01' };
 			getCreditCard.mockResolvedValue(mockCard);
@@ -130,7 +131,7 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 		it('should update credit card successfully', async () => {
 			const existingCard = { id: 1, name: 'Old Name', last4: '1234' };
 			const updateData = { name: 'New Name', last4: '5678' };
-			
+
 			getCreditCard.mockResolvedValue(existingCard);
 			mockEvent.request.json.mockResolvedValue(updateData);
 			updateCreditCard.mockResolvedValue({ id: 1, name: 'New Name', last4: '5678' });
@@ -251,9 +252,9 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 
 		it('should update card with original values (no trimming)', async () => {
 			const existingCard = { id: 1, name: 'Old Name', last4: '1234' };
-			mockEvent.request.json.mockResolvedValue({ 
-				name: '  New Name  ', 
-				last4: '  5678  ' 
+			mockEvent.request.json.mockResolvedValue({
+				name: '  New Name  ',
+				last4: '  5678  '
 			});
 			getCreditCard.mockResolvedValue(existingCard);
 			updateCreditCard.mockResolvedValue({ id: 1, name: '  New Name  ', last4: '  5678  ' });
@@ -267,9 +268,9 @@ describe('/projects/ccbilling/cards/[id] API', () => {
 
 		it('should handle special characters in card name', async () => {
 			const existingCard = { id: 1, name: 'Old Name', last4: '1234' };
-			mockEvent.request.json.mockResolvedValue({ 
-				name: 'Amex Gold & Platinum', 
-				last4: '5678' 
+			mockEvent.request.json.mockResolvedValue({
+				name: 'Amex Gold & Platinum',
+				last4: '5678'
 			});
 			getCreditCard.mockResolvedValue(existingCard);
 			updateCreditCard.mockResolvedValue({ id: 1, name: 'Amex Gold & Platinum', last4: '5678' });

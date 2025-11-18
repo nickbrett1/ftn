@@ -141,12 +141,14 @@ export function getNextAllocation(currentAllocation, budgets = []) {
  * Get available icons that are not already used by other budgets
  */
 export function getAvailableIconsForBudget(budgets = [], currentBudgetId = null) {
-	const usedIcons = budgets
-		.filter((budget) => budget.id !== currentBudgetId) // Exclude current budget when editing
-		.map((budget) => budget.icon)
-		.filter((icon) => icon); // Filter out null/undefined icons
+	const usedIcons = new Set(
+		budgets
+			.filter((budget) => budget.id !== currentBudgetId) // Exclude current budget when editing
+			.map((budget) => budget.icon)
+			.filter(Boolean)
+	); // Filter out null/undefined icons
 
-	return getAvailableIcons().filter((icon) => !usedIcons.includes(icon));
+	return getAvailableIcons().filter((icon) => !usedIcons.has(icon));
 }
 
 /**

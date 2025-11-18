@@ -5,12 +5,14 @@ import { defineConfig } from 'vitest/config';
 import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 
 // Get git info at build time
 function getGitInfo() {
 	try {
+		// eslint-disable-next-line sonarjs/no-os-command-from-path
 		const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+		// eslint-disable-next-line sonarjs/no-os-command-from-path
 		const branchName = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
 		const buildTime = new Date().toISOString();
 		return { commitHash, branchName, buildTime };
@@ -23,21 +25,21 @@ function getGitInfo() {
 const gitInfo = getGitInfo();
 
 export default defineConfig(({ command, mode }) => {
-	const isDev = command === 'serve' && mode === 'development';
+	const isDevelopment = command === 'serve' && mode === 'development';
 	const plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
 		sveltekit(),
 		svelteTesting(),
 		imagetools({
-			defaultDirectives: isDev
+			defaultDirectives: isDevelopment
 				? new URLSearchParams(`?width=480&format=webp`) // Faster for dev
 				: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
 		})
 	];
 
 	// Cloudflare plugin doesn't work for production builds. It also is only needed for development to access D1, KV, etc...
-	if (isDev) {
+	if (isDevelopment) {
 		plugins.push(...cloudflare());
 	}
 	return {
@@ -54,12 +56,16 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		test: {
-			include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
+			include: [
+				'src/**/*.{test,spec}.{js,ts}',
+				'tests/client/**/*.{test,spec}.{js,ts}',
+				'tests/server/**/*.{test,spec}.{js,ts}'
+			],
 			globals: true,
 			environment: 'jsdom',
 			// Add explicit setup and teardown to prevent race conditions
-			setupFiles: ['src/test-setup.js'],
-			teardownTimeout: 10000, // 10 seconds for cleanup
+			setupFiles: ['src/test-setup.js'], // Remove global setup file
+			teardownTimeout: 10_000, // 10 seconds for cleanup
 			// Configure for Svelte 5
 			environmentOptions: {
 				jsdom: {
@@ -79,19 +85,17 @@ export default defineConfig(({ command, mode }) => {
 					'**/*.stories.{js,ts}'
 				],
 				// Include all source files
-				include: [
-					'src/**/*.{js,ts}'
-				]
+				include: ['src/**/*.{js,ts}']
 			},
 			server: {},
 			// Add timeout and memory optimizations
-			testTimeout: 30000,
-			hookTimeout: 30000,
+			testTimeout: 30_000,
+			hookTimeout: 30_000,
 			// Pool options for test execution
-			pool: 'forks',
+			pool: 'threads', // Change to threads
 			poolOptions: {
-				forks: {
-					// Reverted from singleFork and isolate for better performance
+				threads: {
+					// Can add thread-specific options here if needed
 				}
 			},
 			// Configure for Svelte 5 runes
@@ -102,6 +106,11 @@ export default defineConfig(({ command, mode }) => {
 			reporter: ['default', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'
+			},
+			transformMode: {
+				ssr: {
+					exclude: ['/src/lib/utils/file-generator.js/'] // Exclude file-generator.js from SSR transformation
+				}
 			}
 		},
 		ssr: {

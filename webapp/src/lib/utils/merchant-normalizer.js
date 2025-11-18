@@ -178,7 +178,7 @@ function extractRideSharingDetails(merchant) {
  */
 function extractBritishAirwaysDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	
+
 	// Check if this is a British Airways transaction
 	if (merchantUpper.includes('BRITISH')) {
 		// Extract any additional details from the merchant name
@@ -189,7 +189,7 @@ function extractBritishAirwaysDetails(merchant) {
 			merchant_details: merchant
 		};
 	}
-	
+
 	return {
 		merchant_normalized: 'BRITISH AIRWAYS',
 		merchant_details: merchant
@@ -282,11 +282,11 @@ function extractAmazonDetails(merchant) {
  */
 function extractKindleDetails(merchant) {
 	// Clean up Kindle merchant name by removing service identifiers and phone numbers
-	let cleanedMerchant = merchant
+	const cleanedMerchant = merchant
 		.replace(/KINDLE\s+SVCS\*[A-Z0-9]+/i, 'KINDLE') // Remove service identifier like "N60LH2CQ0"
-		.replace(/\d{3}-\d{3}-\d{4}/g, '') // Remove phone numbers like "888-802-3080"
+		.replaceAll(/\d{3}-\d{3}-\d{4}/g, '') // Remove phone numbers like "888-802-3080"
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "WA"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -304,7 +304,7 @@ function extractMaidMarinesDetails(merchant) {
 		.replace(/MAIDMARINES\s+#\d+/i, 'MAIDMARINES') // Remove location number like "#1861813"
 		.replace(/MAIDMARINES\.C/i, 'MAIDMARINES') // Remove ".C" suffix
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -318,11 +318,11 @@ function extractMaidMarinesDetails(merchant) {
  */
 function extractJacadiDetails(merchant) {
 	// Clean up JACADI merchant name by removing store numbers and location information
-	let cleanedMerchant = merchant
+	const cleanedMerchant = merchant
 		.replace(/JACADI\s+#\d+/i, 'JACADI') // Remove store number like "#1710"
 		.replace(/\s+NEW\s+YORK/i, '') // Remove "NEW YORK" location
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -336,11 +336,11 @@ function extractJacadiDetails(merchant) {
  */
 function extractBluemercuryDetails(merchant) {
 	// Clean up BLUEMERCURY merchant name by removing store numbers and location information
-	let cleanedMerchant = merchant
+	const cleanedMerchant = merchant
 		.replace(/BLUEMERCURY\s+#\d+/i, 'BLUEMERCURY') // Remove store number like "#1710"
 		.replace(/\s+NEW\s+YORK/i, '') // Remove "NEW YORK" location
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -359,7 +359,7 @@ function extractGoogleCloudDetails(merchant) {
 		.replace(/GOOGLE\s*\*\s*CLOUD\s+[A-Z0-9]+/i, 'GOOGLE CLOUD') // Remove transaction ID
 		.replace(/GOOGLE\s*\*\s*CLOUD/i, 'GOOGLE CLOUD') // Normalize asterisk format
 		.replace(/\s+g\.co\/helppay#?/i, '') // Remove help URL
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -374,10 +374,10 @@ function extractGoogleCloudDetails(merchant) {
 function extractPlayStationNetworkDetails(merchant) {
 	// Clean up PlayStation Network merchant name by removing transaction IDs and codes
 	// Pattern: "PlayStation Network" followed by numbers and dashes
-	let cleanedMerchant = merchant
+	merchant
 		.replace(/PLAYSTATION\s+NETWORK\s+[0-9-]+/i, 'PLAYSTATION NETWORK') // Remove transaction codes like "12345-67890"
 		.replace(/PLAYSTATION\s+NETWORK\s+[A-Z0-9-]+/i, 'PLAYSTATION NETWORK') // Remove any alphanumeric codes
-		.replace(/\s+$/g, '') // Remove trailing whitespace
+		.replaceAll(/\s+$/g, '') // Remove trailing whitespace
 		.trim();
 
 	return {
@@ -390,15 +390,7 @@ function extractPlayStationNetworkDetails(merchant) {
  * Check if transaction is a hotel
  */
 function isHotelTransaction(merchantUpper) {
-	const hotelIndicators = [
-		'HOTEL',
-		'RESORT',
-		'INN',
-		'SUITE',
-		'LODGE',
-		'ACCOMMODATION',
-		'STAY'
-	];
+	const hotelIndicators = ['HOTEL', 'RESORT', 'INN', 'SUITE', 'LODGE', 'ACCOMMODATION', 'STAY'];
 
 	// Check for generic hotel indicators
 	if (hotelIndicators.some((indicator) => merchantUpper.includes(indicator))) {
@@ -412,10 +404,8 @@ function isHotelTransaction(merchantUpper) {
  * Extract hotel details
  */
 function extractHotelDetails(merchant) {
-	const merchantUpper = merchant.toUpperCase();
-	
 	// Clean up hotel merchant name by removing common suffixes and location codes
-	let cleanedMerchant = merchant
+	const cleanedMerchant = merchant
 		.replace(/\s+[A-Z]{2}\s*$/i, '') // Remove state codes like "NY"
 		.replace(/\s+\d{5}\s*$/i, '') // Remove ZIP codes
 		.replace(/\s+LLC\b/i, '') // Remove LLC
@@ -475,7 +465,7 @@ function isFlightTransaction(merchantUpper) {
  */
 function extractAppleDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	
+
 	// Apple Store purchases
 	if (merchantUpper.includes('APPLE STORE')) {
 		return {
@@ -483,7 +473,7 @@ function extractAppleDetails(merchant) {
 			merchant_details: merchant
 		};
 	}
-	
+
 	// Apple services (iTunes, App Store, etc.)
 	if (merchantUpper.includes('ITUNES') || merchantUpper.includes('APP STORE')) {
 		return {
@@ -491,7 +481,7 @@ function extractAppleDetails(merchant) {
 			merchant_details: merchant
 		};
 	}
-	
+
 	// Generic Apple transactions
 	return {
 		merchant_normalized: 'APPLE',
@@ -514,7 +504,7 @@ function hasStoreNumberPattern(merchantUpper) {
 function extractStoreNumberDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
 	const storeNumberMatch = merchantUpper.match(/^(.+?)\s+(\d{4,})\s+(.+)$/);
-	
+
 	if (storeNumberMatch) {
 		const [, baseName, storeNumber, location] = storeNumberMatch;
 		return {
@@ -522,7 +512,7 @@ function extractStoreNumberDetails(merchant) {
 			merchant_details: `${storeNumber} ${location.trim()}`
 		};
 	}
-	
+
 	return {
 		merchant_normalized: merchant,
 		merchant_details: ''
@@ -544,23 +534,25 @@ function hasAddressPattern(merchantUpper) {
  */
 function extractAddressDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	const addressMatch = merchantUpper.match(/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/);
-	
+	const addressMatch = merchantUpper.match(
+		/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/
+	);
+
 	if (addressMatch) {
-		const [, prefix, businessName, streetNumber, streetName, streetSuffix, location] = addressMatch;
+		const [, , businessName, streetNumber, streetName, streetSuffix, location] = addressMatch;
 		// Remove the dash from business name if present
 		const cleanBusinessName = businessName.replace(/-$/, '').trim();
-		
+
 		// Reconstruct the address with the original suffix if it exists
 		const originalSuffix = merchant.match(/\d+(TH|ST|ND|RD)/i);
 		const suffix = originalSuffix ? originalSuffix[1] : '';
-		
+
 		return {
 			merchant_normalized: cleanBusinessName,
 			merchant_details: `${streetNumber} ${streetName} ${streetSuffix}${suffix} ${location.trim()}`
 		};
 	}
-	
+
 	return {
 		merchant_normalized: merchant,
 		merchant_details: ''

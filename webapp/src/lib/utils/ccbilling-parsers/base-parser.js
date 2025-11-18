@@ -1,4 +1,4 @@
-import { ParsingUtils } from '../parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../parsing-utils.js';
 
 /**
  * Base class for credit card statement parsers
@@ -7,7 +7,6 @@ import { ParsingUtils } from '../parsing-utils.js';
  */
 export class BaseParser {
 	constructor() {
-		this.pdfDocument = null;
 		this.pages = [];
 	}
 
@@ -20,8 +19,8 @@ export class BaseParser {
 		this.pages = [];
 
 		// Load all pages
-		for (let i = 1; i <= pdfDocument.numPages; i++) {
-			const page = await pdfDocument.getPage(i);
+		for (let index = 1; index <= pdfDocument.numPages; index++) {
+			const page = await pdfDocument.getPage(index);
 			this.pages.push(page);
 		}
 	}
@@ -48,8 +47,8 @@ export class BaseParser {
 	 */
 	async extractAllPagesText() {
 		const texts = [];
-		for (let i = 0; i < this.pages.length; i++) {
-			const text = await this.extractPageText(i);
+		for (let index = 0; index < this.pages.length; index++) {
+			const text = await this.extractPageText(index);
 			texts.push(text);
 		}
 		return texts;
@@ -72,8 +71,8 @@ export class BaseParser {
 	 * @param {Object} options - Parsing options
 	 * @returns {string|null} - Date in YYYY-MM-DD format or null if invalid
 	 */
-	parseDate(dateStr, options = {}) {
-		return ParsingUtils.parseDate(dateStr, options);
+	parseDate(dateString, options = {}) {
+		return ParsingUtilities.parseDate(dateString, options);
 	}
 
 	/**
@@ -82,8 +81,8 @@ export class BaseParser {
 	 * @param {Object} options - Parsing options
 	 * @returns {number} - Parsed amount as number
 	 */
-	parseAmount(amountStr, options = {}) {
-		return ParsingUtils.parseAmount(amountStr, options);
+	parseAmount(amountString, options = {}) {
+		return ParsingUtilities.parseAmount(amountString, options);
 	}
 
 	/**
@@ -93,7 +92,7 @@ export class BaseParser {
 	 * @returns {Object} - Parsed JSON object
 	 */
 	parseJSONResponse(content, options = {}) {
-		return ParsingUtils.parseJSONResponse(content, options);
+		return ParsingUtilities.parseJSONResponse(content, options);
 	}
 
 	/**
@@ -103,7 +102,7 @@ export class BaseParser {
 	 * @returns {string} - Cleaned merchant name
 	 */
 	cleanMerchantName(merchantName, options = {}) {
-		return ParsingUtils.cleanMerchantName(merchantName, options);
+		return ParsingUtilities.cleanMerchantName(merchantName, options);
 	}
 
 	/**
@@ -112,8 +111,8 @@ export class BaseParser {
 	 * @param {Object} options - Extraction options
 	 * @returns {number} - Extracted numeric value
 	 */
-	extractNumeric(str, options = {}) {
-		return ParsingUtils.extractNumeric(str, options);
+	extractNumeric(string_, options = {}) {
+		return ParsingUtilities.extractNumeric(string_, options);
 	}
 
 	/**
@@ -121,7 +120,7 @@ export class BaseParser {
 	 * @param {string} pdfText - Text content from PDF
 	 * @returns {Object} - Parsed statement data
 	 */
-	async parse(pdfText) {
+	async parse(/* pdfText */) {
 		throw new Error('parse() method must be implemented by subclass');
 	}
 
@@ -133,6 +132,7 @@ export class BaseParser {
 	 * @returns {boolean} - True if valid, false otherwise
 	 */
 	validateParsedData(data, requiredFields = ['last4', 'statement_date', 'charges'], options = {}) {
-		return ParsingUtils.validateParsedData(data, requiredFields, options);
+		return ParsingUtilities.validateParsedData(data, requiredFields, options);
 	}
+	pdfDocument = null;
 }

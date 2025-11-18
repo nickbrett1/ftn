@@ -16,8 +16,7 @@ import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 export const GET = RouteUtils.createRouteHandler(
 	async (event) => {
 		const { params } = event;
-		const statement_id = parseInt(params.id);
-
+		const statement_id = Number.parseInt(params.id);
 
 		// Get the statement details
 		const statement = await getStatement(event, statement_id);
@@ -51,7 +50,7 @@ export const GET = RouteUtils.createRouteHandler(
 export const POST = RouteUtils.createRouteHandler(
 	async (event, parsedBody) => {
 		const { params } = event;
-		const statement_id = parseInt(params.id);
+		const statement_id = Number.parseInt(params.id);
 
 		console.log('🔍 Starting parse for statement ID:', statement_id);
 
@@ -106,12 +105,10 @@ export const POST = RouteUtils.createRouteHandler(
 			console.warn('⚠️ Could not identify credit card from statement');
 
 			let errorMessage;
-			if (!parsedData.last4 || parsedData.last4.trim() === '') {
-				errorMessage =
-					'No credit card information found in the statement. Please ensure the statement contains valid credit card details.';
-			} else {
-				errorMessage = `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
-			}
+			errorMessage =
+				!parsedData.last4 || parsedData.last4.trim() === ''
+					? 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
+					: `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
 
 			return json(
 				{
@@ -161,16 +158,20 @@ export const POST = RouteUtils.createRouteHandler(
 						allocatedTo = budget.name;
 					}
 				}
-			} catch (e) {
-				console.warn('Auto-association lookup failed for merchant', charge.merchant, e?.message);
+			} catch (error) {
+				console.warn(
+					'Auto-association lookup failed for merchant',
+					charge.merchant,
+					error?.message
+				);
 			}
 
 			// Check if this is an Amazon charge and capture full statement text
-			const isAmazon = charge.merchant && (
-				charge.merchant.toUpperCase().includes('AMAZON') || 
-				charge.merchant.toUpperCase().includes('AMZN')
-			);
-			
+			const isAmazon =
+				charge.merchant &&
+				(charge.merchant.toUpperCase().includes('AMAZON') ||
+					charge.merchant.toUpperCase().includes('AMZN'));
+
 			// For Amazon charges, try to get the full statement text from the parsed data
 			let fullStatementText = null;
 			if (isAmazon && charge.full_statement_text) {
@@ -255,7 +256,7 @@ function extractBillingCycleFromCharges(charges) {
 	// Find the earliest and latest dates
 	const dates = charges
 		.map((charge) => charge.date)
-		.filter((date) => date)
+		.filter(Boolean)
 		.sort((a, b) => new Date(a) - new Date(b));
 
 	if (dates.length === 0) {
@@ -264,7 +265,7 @@ function extractBillingCycleFromCharges(charges) {
 
 	return {
 		start_date: dates[0],
-		end_date: dates[dates.length - 1]
+		end_date: dates.at(-1)
 	};
 }
 
@@ -295,7 +296,7 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	if (!transactionDate) return null;
 
 	// If the date already has a year (YYYY-MM-DD format), return as is
-	if (transactionDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+	if (/^\d{4}-\d{2}-\d{2}$/.test(transactionDate)) {
 		return transactionDate;
 	}
 
@@ -306,8 +307,8 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 		return transactionDate;
 	}
 
-	const month = parseInt(mmddMatch[1], 10);
-	const day = parseInt(mmddMatch[2], 10);
+	const month = Number.parseInt(mmddMatch[1], 10);
+	const day = Number.parseInt(mmddMatch[2], 10);
 
 	// Extract year from billing cycle end date (closing date)
 	const billingCycleYear = new Date(billingCycle.end_date).getFullYear();

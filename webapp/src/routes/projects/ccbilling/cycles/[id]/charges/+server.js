@@ -12,7 +12,7 @@ export async function GET(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params } = event;
-	const billing_cycle_id = parseInt(params.id);
+	const billing_cycle_id = Number.parseInt(params.id);
 
 	if (isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
@@ -33,38 +33,38 @@ export async function POST(event) {
 	if (authResult instanceof Response) return authResult;
 
 	const { params, request } = event;
-	const billing_cycle_id = parseInt(params.id);
+	const billing_cycle_id = Number.parseInt(params.id);
 
 	if (isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
 	}
 
-    try {
-        const body = await request.json();
+	try {
+		const body = await request.json();
 
-        // If caller requests refresh of auto associations, run server-side reassignment
-        if (body && body.refresh === 'auto-associations') {
-            const updated = await refreshAutoAssociationsForCycle(event, billing_cycle_id);
-            return json({ success: true, updated });
-        }
+		// If caller requests refresh of auto associations, run server-side reassignment
+		if (body && body.refresh === 'auto-associations') {
+			const updated = await refreshAutoAssociationsForCycle(event, billing_cycle_id);
+			return json({ success: true, updated });
+		}
 
-        const { assignments } = body || {};
+		const { assignments } = body || {};
 
-        if (!assignments || !Array.isArray(assignments)) {
-            return json({ error: 'Invalid assignments data' }, { status: 400 });
-        }
+		if (!assignments || !Array.isArray(assignments)) {
+			return json({ error: 'Invalid assignments data' }, { status: 400 });
+		}
 
-        // Validate each assignment
-        for (const assignment of assignments) {
-            if (!assignment.id || !assignment.allocated_to) {
-                return json({ error: 'Each assignment must have id and allocated_to' }, { status: 400 });
-            }
-        }
+		// Validate each assignment
+		for (const assignment of assignments) {
+			if (!assignment.id || !assignment.allocated_to) {
+				return json({ error: 'Each assignment must have id and allocated_to' }, { status: 400 });
+			}
+		}
 
-        await bulkAssignPayments(event, assignments);
-        return json({ success: true });
-    } catch (error) {
-        console.error('Error bulk assigning charges:', error);
-        return json({ error: 'Failed to bulk assign charges' }, { status: 500 });
-    }
+		await bulkAssignPayments(event, assignments);
+		return json({ success: true });
+	} catch (error) {
+		console.error('Error bulk assigning charges:', error);
+		return json({ error: 'Failed to bulk assign charges' }, { status: 500 });
+	}
 }

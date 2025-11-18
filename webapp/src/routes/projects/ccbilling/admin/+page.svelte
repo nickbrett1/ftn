@@ -29,8 +29,8 @@
 			}
 
 			results = await response.json();
-		} catch (err) {
-			error = err.message;
+		} catch (error_) {
+			error = error_.message;
 		} finally {
 			normalizing = false;
 		}
@@ -46,8 +46,8 @@
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			dedupePreview = await response.json();
-		} catch (err) {
-			dedupeError = err.message;
+		} catch (error_) {
+			dedupeError = error_.message;
 		}
 	}
 
@@ -70,13 +70,12 @@
 			dedupeResults = await response.json();
 			// Refresh preview after deduplication
 			loadDedupePreview();
-		} catch (err) {
-			dedupeError = err.message;
+		} catch (error_) {
+			dedupeError = error_.message;
 		} finally {
 			deduplicating = false;
 		}
 	}
-
 
 	// Load preview on component mount
 	import { onMount } from 'svelte';
@@ -138,7 +137,9 @@
 						</div>
 						{#if results.errors && results.errors.length > 0}
 							<div class="mt-2 text-yellow-200">
-								<div class="font-medium mb-2">⚠️ Warnings: {results.errors.length} issues encountered</div>
+								<div class="font-medium mb-2">
+									⚠️ Warnings: {results.errors.length} issues encountered
+								</div>
 								<div class="text-sm space-y-2 max-h-40 overflow-y-auto">
 									{#each results.errors as error}
 										<div class="bg-yellow-900/30 border border-yellow-700 rounded p-2">
@@ -250,12 +251,16 @@
 						<div>Duplicate budget assignments removed: {dedupeResults.budgetMerchantsRemoved}</div>
 						{#if dedupeResults.errors && dedupeResults.errors.length > 0}
 							<div class="mt-2 text-yellow-200">
-								<div class="font-medium mb-2">⚠️ Warnings: {dedupeResults.errors.length} issues encountered</div>
+								<div class="font-medium mb-2">
+									⚠️ Warnings: {dedupeResults.errors.length} issues encountered
+								</div>
 								<div class="text-sm space-y-2 max-h-40 overflow-y-auto">
 									{#each dedupeResults.errors as error}
 										<div class="bg-yellow-900/30 border border-yellow-700 rounded p-2">
 											{#if error.canonicalForm}
-												<div class="font-medium text-yellow-300">Canonical Form: {error.canonicalForm}</div>
+												<div class="font-medium text-yellow-300">
+													Canonical Form: {error.canonicalForm}
+												</div>
 											{/if}
 											{#if error.canonical}
 												<div class="text-yellow-200">Canonical: {error.canonical}</div>

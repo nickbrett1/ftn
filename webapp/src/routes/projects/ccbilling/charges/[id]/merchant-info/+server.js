@@ -2,9 +2,9 @@ import { json } from '@sveltejs/kit';
 // Try to import environment variables, with fallbacks for build time
 let STATIC_LLAMA_API_MODEL;
 try {
-	const env = await import('$env/static/private');
-	STATIC_LLAMA_API_MODEL = env.LLAMA_API_MODEL;
-} catch (error) {
+	const environment = await import('$env/static/private');
+	STATIC_LLAMA_API_MODEL = environment.LLAMA_API_MODEL;
+} catch {
 	// During build time, these might not be available
 	STATIC_LLAMA_API_MODEL = process.env?.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 }
@@ -18,11 +18,14 @@ import LlamaAPIClient from 'llama-api-client';
  * Optional env: LLAMA_API_MODEL (default: llama3.1-8b-instruct)
  */
 async function runLlamaClient(event, prompt) {
-	const env = event.platform?.env ?? {};
-	const apiKey = env.LLAMA_API_KEY;
-	const model = STATIC_LLAMA_API_MODEL || env.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
+	const environment = event.platform?.env ?? {};
+	const apiKey = environment.LLAMA_API_KEY;
+	const model = STATIC_LLAMA_API_MODEL || environment.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
-		env.LLAMA_API_BASE_URL || env.LLAMA_BASE_URL || env.LLAMA_API_ENDPOINT || undefined;
+		environment.LLAMA_API_BASE_URL ||
+		environment.LLAMA_BASE_URL ||
+		environment.LLAMA_API_ENDPOINT ||
+		undefined;
 
 	// Debug (no secrets):
 	console.log('[LLAMA] Config', {
@@ -81,7 +84,9 @@ async function runLlamaClient(event, prompt) {
 
 				// Fallback to direct properties
 				return extractFromDirectProperties(response);
-			} catch {}
+			} catch {
+				// Ignore parsing errors and return empty string
+			}
 			return '';
 		}
 
@@ -111,7 +116,7 @@ async function runLlamaClient(event, prompt) {
 			// Array of content parts
 			if (Array.isArray(message.content)) {
 				const parts = message.content.map((part) => extractFromPart(part)).filter(Boolean);
-				return parts.length ? parts.join('\n') : null;
+				return parts.length > 0 ? parts.join('\n') : null;
 			}
 
 			// Object with text/content

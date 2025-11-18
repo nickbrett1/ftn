@@ -4,7 +4,8 @@
 		LinkedinInBrands,
 		EnvelopeRegular,
 		CreditCardSolid,
-		UserSecretSolid
+		ToolsSolid,
+		RocketSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -19,7 +20,7 @@
 	let authCheckTimeout = $state(null);
 
 	// Check if this is a preview deployment
-	const isPreview = $derived(browser && window.location.hostname.includes('preview'));
+	const isPreview = $derived(browser && globalThis.location.hostname.includes('preview'));
 
 	function loginStateUpdated(loggedIn) {
 		isLoggedIn = loggedIn;
@@ -47,6 +48,10 @@
 			content: 'Credit Card Billing Tool'
 		});
 
+		const genprojTooltips = tippy('#genproj', {
+			content: 'Project Generator Tool'
+		});
+
 		// Clean up tooltips when component unmounts
 		return () => {
 			clearInterval(authCheckInterval);
@@ -56,15 +61,21 @@
 			}
 			// tippy returns an array, so we need to destroy each instance
 			if (Array.isArray(deploymentsTooltips)) {
-				deploymentsTooltips.forEach((tooltip) => tooltip.destroy());
+				for (const tooltip of deploymentsTooltips) tooltip.destroy();
 			} else {
 				deploymentsTooltips.destroy();
 			}
 
 			if (Array.isArray(loginTooltips)) {
-				loginTooltips.forEach((tooltip) => tooltip.destroy());
+				for (const tooltip of loginTooltips) tooltip.destroy();
 			} else {
 				loginTooltips.destroy();
+			}
+
+			if (Array.isArray(genprojTooltips)) {
+				for (const tooltip of genprojTooltips) tooltip.destroy();
+			} else {
+				genprojTooltips.destroy();
 			}
 		};
 	});
@@ -77,6 +88,11 @@
 			// User is not logged in, show login modal
 		}
 	}
+
+	function handleGenprojClick() {
+		// User is already logged in, go directly to genproj page
+		goto('/projects/genproj');
+	}
 </script>
 
 <footer class="left-0 w-full overflow-hidden py-24">
@@ -88,23 +104,31 @@
 		>
 			<div class="flex gap-2">
 				<!-- Always show deploys icon -->
-				<button
+				<RocketSolid
 					id="deployments"
 					onclick={() => {
 						goto('/deploys');
 					}}
-					class="hover:text-green-400 cursor-pointer text-2xl size-8 md:size-[48px] flex items-center justify-center"
-				>
-					🚀
-				</button>
-
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+					title="Deployments & Preview Environments"
+					ariaLabel="Deployments & Preview Environments"
+					focusable="true"
+				/>
+				<ToolsSolid
+					id="genproj"
+					onclick={handleGenprojClick}
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+					title="Project Generator Tool"
+					ariaLabel="Project Generator Tool"
+					focusable="true"
+				/>
 				<!-- Credit Card Billing Tool icon -->
 				{#if isLoggedIn}
 					<!-- User is logged in, show clickable icon that goes directly to billing -->
 					<CreditCardSolid
 						id="login"
 						onclick={handleCreditCardClick}
-						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-[48px]"
+						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-12"
 						title="Credit Card Billing Tool"
 						ariaLabel="Credit Card Billing Tool"
 						focusable="true"
@@ -114,7 +138,7 @@
 					<Login loginCallback={loginStateUpdated}>
 						<CreditCardSolid
 							id="login"
-							class="hover:text-green-400 cursor-pointer size-8 md:size-[48px]"
+							class="hover:text-green-400 cursor-pointer size-8 md:size-12"
 							ariaLabel="Credit Card Billing Tool"
 							focusable="true"
 						/>
@@ -125,21 +149,24 @@
 			<div class="flex gap-4">
 				<a
 					href="mailto:nick@fintechnick.com"
-					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="Email"
 				>
-					<EnvelopeRegular ariaLabel="Email" focusable="true" />
+					<EnvelopeRegular focusable="true" />
 				</a>
 				<a
 					href="https://github.com/nickbrett1/ftn"
-					class="hover:text-green-400 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-green-400 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="GitHub"
 				>
-					<GithubBrands ariaLabel="GitHub" focusable="true" />
+					<GithubBrands focusable="true" />
 				</a>
 				<a
 					href="https://www.linkedin.com/in/nick-brett/"
-					class="hover:text-sky-600 size-8 md:size-[48px] p-1 flex items-center justify-center"
+					class="hover:text-sky-600 size-8 md:size-12 p-1 flex items-center justify-center"
+					aria-label="LinkedIn"
 				>
-					<LinkedinInBrands ariaLabel="LinkedIn" focusable="true" />
+					<LinkedinInBrands focusable="true" />
 				</a>
 			</div>
 		</div>

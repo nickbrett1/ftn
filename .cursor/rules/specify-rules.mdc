@@ -1,0 +1,28 @@
+# ftn Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-10-18
+
+## Active Technologies
+- TypeScript 5.9, SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API (001-here-s-my)
+- JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API (001-here-s-my)
+- Cloudflare D1 (user sessions, project configurations), Cloudflare R2 (generated file templates) (001-here-s-my)
+
+## Project Structure
+```
+src/
+tests/
+```
+
+## Commands
+npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] npm run lint
+
+## Code Style
+TypeScript 5.9, SvelteKit 2.47, Node.js 20+: Follow standard conventions
+
+## Recent Changes
+- 001-genproj: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
+- 001-here-s-my: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
+- 001-here-s-my: Added JavaScript (ES2022), SvelteKit 2.47, Node.js 20+ + SvelteKit, TailwindCSS, tippy.js, GitHub API, CircleCI API, SonarCloud API, Doppler API
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

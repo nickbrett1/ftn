@@ -32,6 +32,12 @@
 			"database_name": "ccbilling",
 			"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER",
 			"preview_database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
+		},
+		{
+			"binding": "GENPROJ_DB",
+			"database_name": "genproj",
+			"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
+			"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
 		}
 	],
 	"r2_buckets": [
@@ -42,6 +48,10 @@
 		{
 			"binding": "R2_CCBILLING",
 			"bucket_name": "ccbilling"
+		},
+		{
+			"binding": "R2_GENPROJ_TEMPLATES",
+			"bucket_name": "genproj-templates"
 		}
 	],
 	"env": {
@@ -67,6 +77,12 @@
 					"binding": "CCBILLING_DB",
 					"database_name": "ccbilling",
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
+				},
+				{
+					"binding": "GENPROJ_DB",
+					"database_name": "genproj",
+					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
@@ -77,6 +93,10 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
+				},
+				{
+					"binding": "R2_GENPROJ_TEMPLATES",
+					"bucket_name": "genproj-templates"
 				}
 			]
 		},
@@ -102,6 +122,12 @@
 					"binding": "CCBILLING_DB",
 					"database_name": "ccbilling",
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
+				},
+				{
+					"binding": "GENPROJ_DB",
+					"database_name": "genproj",
+					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
@@ -112,6 +138,10 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
+				},
+				{
+					"binding": "R2_GENPROJ_TEMPLATES",
+					"bucket_name": "genproj-templates"
 				}
 			]
 		},
@@ -137,6 +167,12 @@
 					"binding": "CCBILLING_DB",
 					"database_name": "ccbilling",
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
+				},
+				{
+					"binding": "GENPROJ_DB",
+					"database_name": "genproj",
+					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
@@ -147,6 +183,10 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
+				},
+				{
+					"binding": "R2_GENPROJ_TEMPLATES",
+					"bucket_name": "genproj-templates"
 				}
 			]
 		}

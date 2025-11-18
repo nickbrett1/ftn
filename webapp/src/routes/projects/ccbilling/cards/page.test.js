@@ -3,7 +3,7 @@ import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte/sve
 import CardsPage from './+page.svelte';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
@@ -12,16 +12,16 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Mock location.reload
-Object.defineProperty(window, 'location', {
+Object.defineProperty(globalThis, 'location', {
 	value: { reload: vi.fn() },
 	writable: true
 });
 
 // Mock confirm
-global.confirm = vi.fn();
+globalThis.confirm = vi.fn();
 
 // Mock alert
-global.alert = vi.fn();
+globalThis.alert = vi.fn();
 
 describe.skip('Credit Cards Page - Svelte Coverage', () => {
 	const mockCreditCards = [
@@ -45,7 +45,7 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 
 	describe('Basic Rendering', () => {
 		it('renders and executes component with credit cards', () => {
-			const { container, getAllByText } = render(CardsPage, {
+			const { container } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
@@ -196,7 +196,7 @@ describe.skip('Credit Cards Page - Svelte Coverage', () => {
 		});
 
 		it('successfully adds a card with valid data', async () => {
-			const { container, getByText, getByLabelText } = render(CardsPage, {
+			const { getByText, getByLabelText } = render(CardsPage, {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 

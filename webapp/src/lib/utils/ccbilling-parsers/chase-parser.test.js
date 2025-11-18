@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChaseParser } from './chase-parser.js';
-import { ParsingUtils } from '../parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../parsing-utils.js';
 
 describe('ChaseParser', () => {
 	let parser;
@@ -202,7 +202,7 @@ describe('ChaseParser', () => {
 
 			const charges = parser.extractCharges(text);
 			expect(charges).toHaveLength(3);
-			
+
 			// Should include the charges before and after the SHOP WITH POINTS section
 			expect(charges[0].merchant).toBe('AMAZON.COM');
 			expect(charges[0].amount).toBe(123.45);
@@ -210,12 +210,12 @@ describe('ChaseParser', () => {
 			expect(charges[1].amount).toBe(67.89);
 			expect(charges[2].merchant).toBe('TARGET');
 			expect(charges[2].amount).toBe(45.67);
-			
+
 			// Should NOT include any of the point redemption amounts
-			const pointRedemptionAmounts = [15.67, 5.40, 12.43];
-			pointRedemptionAmounts.forEach(amount => {
-				expect(charges.some(c => c.amount === amount)).toBe(false);
-			});
+			const pointRedemptionAmounts = [15.67, 5.4, 12.43];
+			for (const amount of pointRedemptionAmounts) {
+				expect(charges.some((c) => c.amount === amount)).toBe(false);
+			}
 		});
 
 		it('should handle ACCOUNT ACTIVITY (CONTINUED) section boundary correctly', () => {
@@ -231,15 +231,15 @@ describe('ChaseParser', () => {
 
 			const charges = parser.extractCharges(text);
 			expect(charges).toHaveLength(2);
-			
+
 			// Should include the charges before and after the SHOP WITH POINTS section
 			expect(charges[0].merchant).toBe('AMAZON.COM');
 			expect(charges[0].amount).toBe(123.45);
 			expect(charges[1].merchant).toBe('WALMART');
 			expect(charges[1].amount).toBe(67.89);
-			
+
 			// Should NOT include the point redemption amount (2.15)
-			expect(charges.some(c => c.amount === 2.15)).toBe(false);
+			expect(charges.some((c) => c.amount === 2.15)).toBe(false);
 		});
 	});
 
@@ -271,15 +271,29 @@ describe('ChaseParser', () => {
 
 	describe('isLikelyShopWithPointsTransaction', () => {
 		it('should identify AMZN.COM/BILLWA pattern as points transaction', () => {
-			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '2.15', 'AMAZON.COM AMZN.COM/BILLWA 2.15 215')).toBe(true);
+			expect(
+				parser.isLikelyShopWithPointsTransaction(
+					'AMAZON.COM',
+					'2.15',
+					'AMAZON.COM AMZN.COM/BILLWA 2.15 215'
+				)
+			).toBe(true);
 		});
 
 		it('should identify large Amazon amounts as potential points transactions', () => {
-			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '1500.00', 'AMAZON.COM 1500.00')).toBe(true);
+			expect(
+				parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '1500.00', 'AMAZON.COM 1500.00')
+			).toBe(true);
 		});
 
 		it('should not identify regular Amazon transactions as points transactions', () => {
-			expect(parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '23.75', 'AMAZON.COM*NR0ZC4090 Amzn.com/bill WA 23.75')).toBe(false);
+			expect(
+				parser.isLikelyShopWithPointsTransaction(
+					'AMAZON.COM',
+					'23.75',
+					'AMAZON.COM*NR0ZC4090 Amzn.com/bill WA 23.75'
+				)
+			).toBe(false);
 		});
 	});
 
@@ -348,21 +362,21 @@ describe('ChaseParser', () => {
 
 	describe('inherited methods', () => {
 		it('should use ParsingUtils.parseDate', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseDate');
+			const spy = vi.spyOn(ParsingUtilities, 'parseDate');
 			parser.parseDate('01/15');
 			expect(spy).toHaveBeenCalledWith('01/15', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.parseAmount', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseAmount');
+			const spy = vi.spyOn(ParsingUtilities, 'parseAmount');
 			parser.parseAmount('$123.45');
 			expect(spy).toHaveBeenCalledWith('$123.45', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
-			const spy = vi.spyOn(ParsingUtils, 'validateParsedData');
+			const spy = vi.spyOn(ParsingUtilities, 'validateParsedData');
 			const data = { last4: '1234', statement_date: '2024-01-15', charges: [] };
 			parser.validateParsedData(data);
 			expect(spy).toHaveBeenCalledWith(data, ['last4', 'statement_date', 'charges'], {});

@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { mount, unmount } from 'svelte';
 import Home from './+page.svelte';
 import { load } from './+page.server.js';
 import { redirect } from '@sveltejs/kit';
@@ -11,7 +11,7 @@ describe('Home', () => {
 		});
 
 		expect(document.body.textContent).toContain('Galactic Unicorn');
-		
+
 		unmount(component);
 	});
 
@@ -19,14 +19,14 @@ describe('Home', () => {
 		expect.assertions(1);
 		try {
 			await load({ cookies: { get: () => null }, platform: {} });
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
-			} catch (redirect) {
-				expected = redirect;
+			} catch (error_) {
+				expected = error_;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -51,14 +51,14 @@ describe('Home', () => {
 					env: { KV: { get: () => null } }
 				}
 			});
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
-			} catch (redirect) {
-				expected = redirect;
+			} catch (error_) {
+				expected = error_;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 });

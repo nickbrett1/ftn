@@ -15,7 +15,7 @@ describe('Budget Page Server', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockEvent = {
 			url: new URL('http://localhost/projects/ccbilling/budgets'),
 			request: {
@@ -58,23 +58,23 @@ describe('Budget Page Server', () => {
 	});
 
 	it('redirects unauthenticated user', async () => {
-		const redirectResponse = new Response(null, { 
-			status: 307, 
-			headers: { Location: '/notauthorised' } 
+		const redirectResponse = new Response(null, {
+			status: 307,
+			headers: { Location: '/notauthorised' }
 		});
 		requireUser.mockResolvedValue(redirectResponse);
 
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 

@@ -1,4 +1,5 @@
 <script>
+	/* eslint-disable sonarjs/no-commented-code */
 	import { createBubbler } from 'svelte/legacy';
 
 	const bubble = createBubbler();

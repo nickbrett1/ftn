@@ -1,0 +1,19 @@
+<script>
+	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+	import Img from '@zerodevx/svelte-img';
+
+	const { data } = $props();
+
+	const projectUrl = "https://github.com/nickbrett1/ftn";
+</script>
+
+<style>
+
+</style>
+
+<h1 class="!mb-0 no-underline">Spec Kit Driven Development</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Spec Kit to build a project generation wizard</p>
+November 2025
+<ProjectLinkButton href={projectUrl} />
+
+## Introduction

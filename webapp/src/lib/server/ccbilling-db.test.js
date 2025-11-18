@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getUnassignedMerchants } from './ccbilling-db.js';
 
 describe('Duplicate Merchant Variations Test', () => {
-	let mockDb;
+	let mockDatabase;
 	let mockEvent;
 
 	beforeEach(() => {
-		mockDb = {
+		mockDatabase = {
 			prepare: vi.fn().mockReturnValue({
 				all: vi.fn(),
 				bind: vi.fn().mockReturnThis()
@@ -14,7 +14,7 @@ describe('Duplicate Merchant Variations Test', () => {
 		};
 
 		mockEvent = {
-			platform: { env: { CCBILLING_DB: mockDb } }
+			platform: { env: { CCBILLING_DB: mockDatabase } }
 		};
 	});
 
@@ -29,9 +29,9 @@ describe('Duplicate Merchant Variations Test', () => {
 		// Mock data that simulates the duplicate merchant scenario
 		// "ABW ENTERPRISES" is assigned, but "ABW ENTERPRISES INC" is not
 		// Both normalize to the same value but have different assignment statuses
-		
+
 		// Mock assigned merchants query
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
 					{ merchant_normalized: 'ABW ENTERPRISES' },
@@ -42,14 +42,14 @@ describe('Duplicate Merchant Variations Test', () => {
 		});
 
 		// Mock all payment merchants query
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
-					{ merchant_normalized: 'ABW ENTERPRISES' },      // This one is assigned
-					{ merchant_normalized: 'ABW ENTERPRISES INC' },  // This one is NOT assigned but normalizes to same value
+					{ merchant_normalized: 'ABW ENTERPRISES' }, // This one is assigned
+					{ merchant_normalized: 'ABW ENTERPRISES INC' }, // This one is NOT assigned but normalizes to same value
 					{ merchant_normalized: 'AMAZON' },
 					{ merchant_normalized: 'TARGET' },
-					{ merchant_normalized: 'WALMART' }              // This one is not assigned
+					{ merchant_normalized: 'WALMART' } // This one is not assigned
 				]
 			})
 		});
@@ -60,9 +60,9 @@ describe('Duplicate Merchant Variations Test', () => {
 		// "ABW ENTERPRISES" and "ABW ENTERPRISES INC" should both be filtered out
 		// because "ABW ENTERPRISES" is assigned (they normalize to the same value)
 		expect(result).toEqual(['WALMART']);
-		
+
 		// Verify the correct queries were made
-		expect(mockDb.prepare).toHaveBeenCalledTimes(2);
+		expect(mockDatabase.prepare).toHaveBeenCalledTimes(2);
 	});
 
 	it('should demonstrate the bug: duplicate variations cause assigned merchants to appear as unassigned', async () => {
@@ -72,22 +72,20 @@ describe('Duplicate Merchant Variations Test', () => {
 		// 3. Both normalize to "ABW ENTERPRISES"
 		// 4. The old SQL approach would show "ABW ENTERPRISES INC" as unassigned
 		// 5. But the user sees this as "ABW ENTERPRISES" being available again
-		
+
 		// Mock assigned merchants (only "ABW ENTERPRISES" is assigned)
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
-				results: [
-					{ merchant_normalized: 'ABW ENTERPRISES' }
-				]
+				results: [{ merchant_normalized: 'ABW ENTERPRISES' }]
 			})
 		});
 
 		// Mock payment merchants (both variations exist)
-		mockDb.prepare.mockReturnValueOnce({
+		mockDatabase.prepare.mockReturnValueOnce({
 			all: vi.fn().mockResolvedValue({
 				results: [
-					{ merchant_normalized: 'ABW ENTERPRISES' },      // Assigned
-					{ merchant_normalized: 'ABW ENTERPRISES INC' }   // Not assigned but same normalized value
+					{ merchant_normalized: 'ABW ENTERPRISES' }, // Assigned
+					{ merchant_normalized: 'ABW ENTERPRISES INC' } // Not assigned but same normalized value
 				]
 			})
 		});

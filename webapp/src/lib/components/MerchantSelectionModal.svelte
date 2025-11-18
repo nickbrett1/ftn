@@ -3,7 +3,12 @@
 	import Button from './Button.svelte';
 	import { normalizeMerchant } from '$lib/utils/merchant-normalizer.js';
 
-	const { isOpen = false, onClose = () => {}, onSelect = () => {}, assignedMerchants = new Set() } = $props();
+	const {
+		isOpen = false,
+		onClose = () => {},
+		onSelect = () => {},
+		assignedMerchants = new Set()
+	} = $props();
 
 	let merchants = $state([]);
 	let filteredMerchants = $state([]);
@@ -11,8 +16,8 @@
 	let error = $state('');
 	let searchTerm = $state('');
 	let inputValue = $state(''); // Local input state for display
-	let modalRef = $state(null);
-	let backdropRef = $state(null);
+	let modalReference = $state(null);
+	let backdropReference = $state(null);
 	let isMounted = $state(false);
 	let focusTimeout = $state(null);
 	let scrollTimeout = $state(null);
@@ -54,9 +59,9 @@
 				filteredMerchants = [];
 				error = 'Invalid data format received from server';
 			}
-		} catch (err) {
-			console.error('Error loading merchants:', err);
-			error = err.message;
+		} catch (error_) {
+			console.error('Error loading merchants:', error_);
+			error = error_.message;
 			merchants = [];
 			filteredMerchants = [];
 		} finally {
@@ -72,9 +77,7 @@
 				return;
 			}
 
-			if (!searchTerm.trim()) {
-				filteredMerchants = merchants;
-			} else {
+			if (searchTerm.trim()) {
 				// Ensure merchants is an array and contains only strings before filtering
 				if (merchants.every((m) => typeof m === 'string')) {
 					const filtered = merchants.filter((merchant) =>
@@ -85,9 +88,11 @@
 					console.warn('Merchants data is not in expected format:', merchants);
 					filteredMerchants = [];
 				}
+			} else {
+				filteredMerchants = merchants;
 			}
-		} catch (err) {
-			console.error('Error in handleSearch:', err);
+		} catch (error_) {
+			console.error('Error in handleSearch:', error_);
 			// Fallback to showing all merchants if filtering fails
 			filteredMerchants = Array.isArray(merchants) ? sortMerchants(merchants) : [];
 		}
@@ -101,8 +106,8 @@
 			} else {
 				console.warn('Invalid merchant selected:', merchant);
 			}
-		} catch (err) {
-			console.error('Error in handleSelect:', err);
+		} catch (error_) {
+			console.error('Error in handleSelect:', error_);
 		}
 	}
 
@@ -111,8 +116,8 @@
 			if (event && event.key === 'Escape') {
 				onClose();
 			}
-		} catch (err) {
-			console.error('Error in handleKeydown:', err);
+		} catch (error_) {
+			console.error('Error in handleKeydown:', error_);
 		}
 	}
 
@@ -121,8 +126,8 @@
 			if (event && event.target === event.currentTarget) {
 				onClose();
 			}
-		} catch (err) {
-			console.error('Error in handleBackdropClick:', err);
+		} catch (error_) {
+			console.error('Error in handleBackdropClick:', error_);
 		}
 	}
 
@@ -143,19 +148,19 @@
 							searchInput.focus();
 						}
 					}
-				} catch (err) {
-					console.error('Error focusing search input:', err);
+				} catch (error_) {
+					console.error('Error focusing search input:', error_);
 				}
 			}, 100);
 
 			// Scroll to top of modal when it opens
 			scrollTimeout = setTimeout(() => {
 				try {
-					if (modalRef) {
-						modalRef.scrollTop = 0;
+					if (modalReference) {
+						modalReference.scrollTop = 0;
 					}
-				} catch (err) {
-					console.error('Error scrolling modal:', err);
+				} catch (error_) {
+					console.error('Error scrolling modal:', error_);
 				}
 			}, 50);
 
@@ -185,8 +190,8 @@
 		try {
 			isMounted = true;
 			// handleModalStateChange(); // This is now handled by the effect
-		} catch (err) {
-			console.error('Error in onMount:', err);
+		} catch (error_) {
+			console.error('Error in onMount:', error_);
 		}
 	});
 
@@ -205,8 +210,8 @@
 			if (typeof document !== 'undefined' && document.body) {
 				document.body.style.overflow = '';
 			}
-		} catch (err) {
-			console.error('Error in onDestroy:', err);
+		} catch (error_) {
+			console.error('Error in onDestroy:', error_);
 		}
 	});
 
@@ -217,7 +222,7 @@
 {#if isOpen}
 	<!-- Modal Backdrop - Responsive positioning -->
 	<div
-		bind:this={backdropRef}
+		bind:this={backdropReference}
 		class="modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
@@ -228,7 +233,7 @@
 	>
 		<!-- Modal Container - Responsive centering -->
 		<div
-			bind:this={modalRef}
+			bind:this={modalReference}
 			class="modal-container relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl mx-4 sm:mx-6 md:mx-8 mt-4 sm:mt-8 md:mt-12"
 			role="document"
 		>

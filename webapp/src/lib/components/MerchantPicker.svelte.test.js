@@ -3,7 +3,7 @@ import { mount, unmount, flushSync } from 'svelte';
 import MerchantPicker from './MerchantPicker.svelte';
 
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('MerchantPicker', () => {
 	const mockOnSelect = vi.fn();
@@ -36,16 +36,19 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for loading to complete
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('No recent unassigned merchants found');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('No recent unassigned merchants found');
+			},
+			{ timeout: 3000 }
+		);
 
 		expect(mockFetch).toHaveBeenCalledWith('/projects/ccbilling/budgets/recent-merchants');
 	});
 
 	it('should render merchants when API call succeeds', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -60,10 +63,13 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load and combobox to appear
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		// Check if the select element has the merchant options
 		const select = document.querySelector('select');
@@ -88,14 +94,17 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for loading to complete
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('No recent unassigned merchants found');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('No recent unassigned merchants found');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should call onSelect when a merchant is selected from dropdown', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -110,10 +119,13 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const select = document.querySelector('select');
 		select.value = 'Target';
@@ -125,7 +137,7 @@ describe('MerchantPicker', () => {
 
 	it('should show selected merchant when selectedMerchant prop is provided', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -141,16 +153,19 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-			expect(select.value).toBe('Target');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+				expect(select.value).toBe('Target');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should use custom placeholder when provided', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Mock fetch to return merchants
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -166,18 +181,21 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load and check placeholder text
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-			// Placeholder should appear in the first option
-			expect(select.innerHTML).toContain('Custom placeholder...');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+				// Placeholder should appear in the first option
+				expect(select.innerHTML).toContain('Custom placeholder...');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should display merchants returned from server (server-side filtering)', async () => {
 		// Server now returns only unassigned merchants, so we don't need client-side filtering
 		const mockMerchants = ['Best Buy', 'Target']; // Only unassigned merchants
-		
+
 		// Mock fetch to return unassigned merchants only
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -192,13 +210,16 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for merchants to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const select = document.querySelector('select');
-		
+
 		// Check that only unassigned merchants are displayed (server-side filtering)
 		expect(select.innerHTML).toContain('Target');
 		expect(select.innerHTML).toContain('Best Buy');
@@ -207,7 +228,7 @@ describe('MerchantPicker', () => {
 	it('should show "No merchants available" when server returns empty array', async () => {
 		// Server returns empty array when all merchants are assigned
 		const mockMerchants = [];
-		
+
 		// Mock fetch to return empty array
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -222,14 +243,17 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for message to appear
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('No recent unassigned merchants found');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('No recent unassigned merchants found');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should handle normal merchant loading', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		
+
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => mockMerchants
@@ -242,10 +266,13 @@ describe('MerchantPicker', () => {
 			}
 		});
 
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		expect(mockFetch).toHaveBeenCalledTimes(1);
 	});
@@ -263,9 +290,12 @@ describe('MerchantPicker', () => {
 			}
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Failed to load recent merchants');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Failed to load recent merchants');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should handle network errors gracefully', async () => {
@@ -278,14 +308,17 @@ describe('MerchantPicker', () => {
 			}
 		});
 
-		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain('Network error');
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				expect(document.body.textContent).toContain('Network error');
+			},
+			{ timeout: 3000 }
+		);
 	});
 
 	it('should not cause infinite loop when selecting merchant and refreshing list', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		// Track how many times fetch is called
 		let fetchCallCount = 0;
 		mockFetch.mockImplementation(async () => {
@@ -304,10 +337,13 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const initialFetchCount = fetchCallCount;
 
@@ -318,7 +354,7 @@ describe('MerchantPicker', () => {
 		flushSync();
 
 		// Wait a bit to ensure no additional fetches occur
-		await new Promise(resolve => setTimeout(resolve, 500));
+		await new Promise((resolve) => setTimeout(resolve, 500));
 
 		// Should not have triggered additional fetches beyond the initial load
 		expect(fetchCallCount).toBe(initialFetchCount);
@@ -326,7 +362,7 @@ describe('MerchantPicker', () => {
 
 	it('should prevent infinite loop when DOM updates trigger onchange events', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		let fetchCallCount = 0;
 		mockFetch.mockImplementation(async () => {
 			fetchCallCount++;
@@ -344,23 +380,26 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const initialFetchCount = fetchCallCount;
 
 		// Simulate multiple DOM updates
 		const select = document.querySelector('select');
-		for (let i = 0; i < 5; i++) {
-			select.value = mockMerchants[i % mockMerchants.length];
+		for (let index = 0; index < 5; index++) {
+			select.value = mockMerchants[index % mockMerchants.length];
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 			flushSync();
 		}
 
 		// Wait a bit to ensure no additional fetches occur
-		await new Promise(resolve => setTimeout(resolve, 500));
+		await new Promise((resolve) => setTimeout(resolve, 500));
 
 		// Should not have triggered additional fetches
 		expect(fetchCallCount).toBe(initialFetchCount);
@@ -368,7 +407,7 @@ describe('MerchantPicker', () => {
 
 	it('should handle parent component resetting selectedMerchant prop without infinite loop', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		let fetchCallCount = 0;
 		mockFetch.mockImplementation(async () => {
 			fetchCallCount++;
@@ -387,10 +426,13 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const initialFetchCount = fetchCallCount;
 
@@ -405,10 +447,13 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for the new component to load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		// Should have one additional fetch for the remount
 		expect(fetchCallCount).toBe(initialFetchCount + 1);
@@ -416,7 +461,7 @@ describe('MerchantPicker', () => {
 
 	it('should not cause infinite loop when parent resets selectedMerchant immediately', async () => {
 		const mockMerchants = ['Amazon', 'Target', 'Walmart'];
-		
+
 		let fetchCallCount = 0;
 		mockFetch.mockImplementation(async () => {
 			fetchCallCount++;
@@ -435,24 +480,27 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait for initial load
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		const initialFetchCount = fetchCallCount;
 
 		// In Svelte 5, we can only test by selecting values via the UI
 		// Rapidly change the select value
 		const select = document.querySelector('select');
-		for (let i = 0; i < 10; i++) {
-			select.value = mockMerchants[i % mockMerchants.length];
+		for (let index = 0; index < 10; index++) {
+			select.value = mockMerchants[index % mockMerchants.length];
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 			flushSync();
 		}
 
 		// Wait a bit to ensure no additional fetches occur
-		await new Promise(resolve => setTimeout(resolve, 500));
+		await new Promise((resolve) => setTimeout(resolve, 500));
 
 		// Should not have triggered additional fetches
 		expect(fetchCallCount).toBe(initialFetchCount);
@@ -460,9 +508,9 @@ describe('MerchantPicker', () => {
 
 	it('should handle race condition when refreshMerchantList is called during initial load', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		
+
 		let resolveFirstLoad;
-		const firstLoadPromise = new Promise(resolve => {
+		const firstLoadPromise = new Promise((resolve) => {
 			resolveFirstLoad = resolve;
 		});
 
@@ -487,16 +535,19 @@ describe('MerchantPicker', () => {
 
 		// Try to call refreshMerchantList while initial load is pending
 		// (simulating a race condition)
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Resolve the first load
 		resolveFirstLoad({ ok: true, json: async () => mockMerchants });
 
 		// Wait for component to stabilize
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		// Should have only called fetch once (preventing concurrent calls)
 		expect(fetchCallCount).toBeLessThanOrEqual(2);
@@ -504,9 +555,9 @@ describe('MerchantPicker', () => {
 
 	it('should prevent multiple concurrent loadUnassignedMerchants calls', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		
+
 		let resolveLoad;
-		const loadPromise = new Promise(resolve => {
+		const loadPromise = new Promise((resolve) => {
 			resolveLoad = resolve;
 		});
 
@@ -528,19 +579,22 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait a bit for initial call
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Try to trigger another load while first is pending
 		// (This would normally happen via refreshMerchantList, but we can't easily call it)
-		
+
 		// Resolve the load
 		resolveLoad({ ok: true, json: async () => mockMerchants });
 
 		// Wait for component to stabilize
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		// Should have only called fetch once due to the isLoadingInProgress guard
 		expect(fetchCallCount).toBe(1);
@@ -548,9 +602,9 @@ describe('MerchantPicker', () => {
 
 	it('should handle refreshMerchantList being called before initial load completes', async () => {
 		const mockMerchants = ['Amazon', 'Target'];
-		
+
 		let resolveLoad;
-		const loadPromise = new Promise(resolve => {
+		const loadPromise = new Promise((resolve) => {
 			resolveLoad = resolve;
 		});
 
@@ -572,16 +626,19 @@ describe('MerchantPicker', () => {
 		});
 
 		// Wait a bit
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Resolve the load
 		resolveLoad({ ok: true, json: async () => mockMerchants });
 
 		// Wait for component to stabilize
-		await vi.waitFor(() => {
-			const select = document.querySelector('select');
-			expect(select).toBeTruthy();
-		}, { timeout: 3000 });
+		await vi.waitFor(
+			() => {
+				const select = document.querySelector('select');
+				expect(select).toBeTruthy();
+			},
+			{ timeout: 3000 }
+		);
 
 		// Should have only called fetch once
 		expect(fetchCallCount).toBe(1);

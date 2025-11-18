@@ -1,7 +1,4 @@
-import { 
-	listStatements, 
-	createStatement
-} from '$lib/server/ccbilling-db.js';
+import { listStatements, createStatement } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
 import { json } from '@sveltejs/kit';
 
@@ -118,8 +115,8 @@ export async function POST(event) {
 				null // Statement date will be set after parsing
 			);
 			console.log('✅ Statement created in database with ID:', statementId);
-		} catch (dbError) {
-			console.error('❌ Database error creating statement:', dbError);
+		} catch (databaseError) {
+			console.error('❌ Database error creating statement:', databaseError);
 			// Clean up R2 file if database creation fails
 			try {
 				await bucket.delete(r2_key);
@@ -127,7 +124,7 @@ export async function POST(event) {
 			} catch (cleanupError) {
 				console.error('❌ Failed to cleanup R2 file:', cleanupError);
 			}
-			throw new Error(`Failed to create statement in database: ${dbError.message}`);
+			throw new Error(`Failed to create statement in database: ${databaseError.message}`);
 		}
 
 		// Statement uploaded successfully - parsing will be handled client-side
@@ -147,4 +144,3 @@ export async function POST(event) {
 		return json({ error: 'Failed to upload statement' }, { status: 500 });
 	}
 }
-

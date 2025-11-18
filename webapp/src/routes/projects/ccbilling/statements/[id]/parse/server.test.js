@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST, GET } from './+server.js';
 
 // Mock the dependencies
@@ -24,71 +24,78 @@ vi.mock('$lib/server/route-utils.js', () => ({
 				const { requireUser } = await import('$lib/server/require-user.js');
 				const authResult = await requireUser(event);
 				if (authResult instanceof Response) return authResult;
-					
-					// Mock parameter validation
-					if (options?.requiredParams && options.requiredParams.length > 0) {
-						const { id } = event.params;
-						if (options.validators && options.validators.id) {
-							const validation = options.validators.id(id);
-							if (validation !== true) {
-								return new Response(JSON.stringify({ success: false, error: validation }), {
+
+				// Mock parameter validation
+				if (options?.requiredParams && options.requiredParams.length > 0) {
+					const { id } = event.params;
+					if (options.validators && options.validators.id) {
+						const validation = options.validators.id(id);
+						if (validation !== true) {
+							return Response.json(
+								{ success: false, error: validation },
+								{
 									status: 400,
 									headers: { 'Content-Type': 'application/json' }
-								});
-							}
+								}
+							);
 						}
 					}
+				}
 
-					// Mock body parsing for POST requests
-					let parsedBody = null;
-					if (
-						options?.requiredBody &&
-						options.requiredBody.length > 0 &&
-						event.request?.method === 'POST'
-					) {
-						try {
-							parsedBody = await event.request.json();
-						} catch (error) {
-							console.error('Error parsing request body:', error);
-							return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+				// Mock body parsing for POST requests
+				let parsedBody = null;
+				if (
+					options?.requiredBody &&
+					options.requiredBody.length > 0 &&
+					event.request?.method === 'POST'
+				) {
+					try {
+						parsedBody = await event.request.json();
+					} catch (error) {
+						console.error('Error parsing request body:', error);
+						return Response.json(
+							{ success: false, error: 'Invalid JSON' },
+							{
 								status: 400,
 								headers: { 'Content-Type': 'application/json' }
-							});
-						}
+							}
+						);
 					}
+				}
 
-					// Call the handler with the appropriate parameters
-					if (options?.requiredBody && options.requiredBody.length > 0) {
-						return await handler(event, parsedBody);
-					} else {
-						return await handler(event);
-					}
-				};
-			}),
-		createErrorResponse: vi.fn((message, options = {}) => {
-			return new Response(JSON.stringify({ success: false, error: message }), {
-				status: options.status || 400,
-				headers: { 'Content-Type': 'application/json' }
-			});
+				// Call the handler with the appropriate parameters
+				return await (options?.requiredBody && options.requiredBody.length > 0
+					? handler(event, parsedBody)
+					: handler(event));
+			};
 		}),
-		parseInteger: vi.fn((value, paramName, options = {}) => {
+		createErrorResponse: vi.fn((message, options = {}) => {
+			return Response.json(
+				{ success: false, error: message },
+				{
+					status: options.status || 400,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
+		}),
+		parseInteger: vi.fn((value, parameterName, options = {}) => {
 			const { min, max } = options;
 
 			if (!value) {
-				return `Missing required parameter: ${paramName}`;
+				return `Missing required parameter: ${parameterName}`;
 			}
 
-			const parsed = parseInt(value, 10);
+			const parsed = Number.parseInt(value, 10);
 			if (isNaN(parsed)) {
-				return `Invalid ${paramName}: must be a number`;
+				return `Invalid ${parameterName}: must be a number`;
 			}
 
 			if (min !== undefined && parsed < min) {
-				return `Invalid ${paramName}: must be at least ${min}`;
+				return `Invalid ${parameterName}: must be at least ${min}`;
 			}
 
 			if (max !== undefined && parsed > max) {
-				return `Invalid ${paramName}: must be at most ${max}`;
+				return `Invalid ${parameterName}: must be at most ${max}`;
 			}
 
 			return parsed;
@@ -138,7 +145,8 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 		// Mock requireUser to return success by default
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-	});describe('GET endpoint', () => {
+	});
+	describe('GET endpoint', () => {
 		it('should return statement details', async () => {
 			const mockStatement = {
 				id: 1,

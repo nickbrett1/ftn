@@ -10,7 +10,6 @@
 	import 'tippy.js/dist/tippy.css';
 	import { onMount } from 'svelte';
 	import { onDestroy } from 'svelte';
-	import LinkifyIt from 'linkify-it';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -40,36 +39,6 @@
 			checkForFireworks();
 		}
 	});
-
-	// Function to format merchant name with flight details and Amazon order ID
-	function formatMerchantName(charge) {
-		// Use normalized merchant name for consistent display
-		const merchantName = charge.merchant_normalized || charge.merchant;
-
-		// Check if this is an Amazon charge with order ID
-		if (charge.amazon_order_id) {
-			return `${merchantName} (${charge.amazon_order_id})`;
-		}
-
-		// Check for flight details
-		if (charge.flight_details) {
-			const flight = charge.flight_details;
-			const airports = [];
-
-			if (flight.departure_airport) {
-				airports.push(flight.departure_airport);
-			}
-			if (flight.arrival_airport) {
-				airports.push(flight.arrival_airport);
-			}
-
-			if (airports.length > 0) {
-				return `${merchantName} (${airports.join(', ')})`;
-			}
-		}
-
-		return merchantName;
-	}
 
 	// Function to create clickable Amazon order link
 	function createAmazonOrderLink(orderId) {
@@ -144,21 +113,11 @@
 	let uploadError = $state('');
 	let selectedFile = $state(null);
 
-
 	// Toast notification state
 	let showToast = $state(false);
 	let toastMessage = $state('');
 	let toastType = $state('success'); // 'success', 'error', 'info'
 	let toastTimeout = $state(null);
-
-	// Progress tracking for parsing steps
-	const parsingSteps = [
-		'Getting statement details',
-		'Downloading PDF',
-		'Parsing PDF',
-		'Processing on server',
-		'Refreshing data'
-	];
 
 	// Delete statement state
 	let deletingStatements = $state(new Set());
@@ -175,7 +134,6 @@
 		chargeId: null
 	});
 
-
 	// Force reactivity by creating a new object reference
 	function setModalData(data) {
 		// Force reactivity by creating new references
@@ -188,11 +146,6 @@
 	let merchantInfoLoading = $state(false);
 	let merchantInfoError = $state('');
 	let merchantInfoData = $state(null);
-
-	// Check if any charges exist for a statement
-	function hasChargesForStatement(statementId) {
-		return localData.charges.some((charge) => charge.statement_id === statementId);
-	}
 
 	// Toast notification functions
 	function showToastMessage(message, type = 'success') {
@@ -213,8 +166,6 @@
 		}, 5000);
 	}
 
-	// Cancel parsing function
-
 	// Credit card filter state
 	let selectedCardFilter = $state('all'); // 'all' or credit card ID
 
@@ -234,7 +185,7 @@
 		// Apply credit card filter
 		if (selectedCardFilter !== 'all') {
 			filtered = filtered.filter(
-				(charge) => charge.credit_card_id === parseInt(selectedCardFilter)
+				(charge) => charge.credit_card_id === Number.parseInt(selectedCardFilter)
 			);
 		}
 
@@ -293,27 +244,12 @@
 	function getFilteredAllocationTotals() {
 		const totals = {};
 
-		getFilteredCharges().forEach((charge) => {
+		for (const charge of getFilteredCharges()) {
 			const allocation = charge.allocated_to || '__unallocated__';
 			totals[allocation] = (totals[allocation] || 0) + charge.amount;
-		});
+		}
 
 		return Object.entries(totals).sort(([, a], [, b]) => b - a);
-	}
-
-	const linkify = new LinkifyIt();
-	function toSegments(text) {
-		if (!text) return [];
-		const segments = [];
-		let last = 0;
-		const matches = linkify.match(text) || [];
-		for (const m of matches) {
-			if (m.index > last) segments.push({ type: 'text', text: text.slice(last, m.index) });
-			segments.push({ type: 'link', text: m.text, href: m.url });
-			last = m.lastIndex;
-		}
-		if (last < text.length) segments.push({ type: 'text', text: text.slice(last) });
-		return segments;
 	}
 
 	async function openMerchantInfo(chargeId) {
@@ -338,8 +274,8 @@
 				// Fallback to empty text if nothing usable
 				merchantInfoData = { merchant: data.merchant || '', text: '' };
 			}
-		} catch (e) {
-			merchantInfoError = e.message;
+		} catch (error) {
+			merchantInfoError = error.message;
 		} finally {
 			merchantInfoLoading = false;
 		}
@@ -347,28 +283,6 @@
 
 	// Allocation editing state - removed loading state to fix click issues
 	// Removed recentlyUpdated state as it was causing UI issues
-
-	// Calculate running totals and sort them
-	function getSortedAllocationTotals() {
-		const totals = localData.charges.reduce((totals, charge) => {
-			// Use a special key for unallocated items to avoid null key conversion issues
-			const allocation = charge.allocated_to || '__unallocated__';
-			if (!totals[allocation]) {
-				totals[allocation] = 0;
-			}
-			totals[allocation] += charge.amount;
-			return totals;
-		}, {});
-
-		const entries = Object.entries(totals);
-		return entries.sort(([a], [b]) => {
-			// Always put unallocated first
-			if (a === '__unallocated__') return -1;
-			if (b === '__unallocated__') return 1;
-			// Then sort budgets alphabetically
-			return a.localeCompare(b);
-		});
-	}
 
 	// Get the current unallocated total
 	function getUnallocatedTotal() {
@@ -402,7 +316,7 @@
 			fireworksTimeout = setTimeout(() => {
 				showFireworks = false;
 				fireworksTimeout = null;
-			}, 15000);
+			}, 15_000);
 		}
 
 		previousUnallocatedTotal = currentUnallocatedTotal;
@@ -420,9 +334,9 @@
 
 		// Add budgets in alphabetical order
 		const sortedBudgets = [...localData.budgets].sort((a, b) => a.name.localeCompare(b.name));
-		sortedBudgets.forEach((budget) => {
+		for (const budget of sortedBudgets) {
 			options.push({ value: budget.name, label: budget.name });
-		});
+		}
 
 		return options;
 	});
@@ -438,7 +352,6 @@
 	async function updateChargeAllocation(chargeId, newAllocation) {
 		// Check if this change involves an auto-association
 		const charge = localData.charges.find((c) => c.id === chargeId);
-		const currentAllocation = charge.allocated_to;
 
 		// Find if there's an auto-association for this merchant
 		// Try normalized merchant first, then fall back to original merchant name
@@ -622,59 +535,57 @@
 	// Helper function to check if an auto-association exists for a merchant
 	function getAutoAssociationForMerchant(charge) {
 		if (!charge || !localData.autoAssociations) return null;
-		
+
 		// Try normalized merchant first, then fall back to original merchant name
 		let autoAssociation = null;
-		
+
 		if (charge.merchant_normalized) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant_normalized
 			);
 		}
-		
+
 		// If no auto-association found by normalized name, try original merchant name
 		if (!autoAssociation && charge.merchant) {
 			autoAssociation = localData.autoAssociations.find(
 				(aa) => aa.merchant_normalized === charge.merchant
 			);
 		}
-		
+
 		return autoAssociation || null; // Ensure we return null instead of undefined
 	}
 
 	// Helper function to check if auto-association button should be shown
 	function shouldShowAutoAssociationButton(charge) {
 		if (!charge || !charge.allocated_to || !localData.autoAssociations) return false;
-		
+
 		const autoAssociation = getAutoAssociationForMerchant(charge);
-		
+
 		// Don't show button if auto-association already matches current allocation
 		if (autoAssociation && autoAssociation.budget_name === charge.allocated_to) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	// Helper function to get button text and styling based on auto-association state
 	function getAutoAssociationButtonInfo(charge) {
 		const autoAssociation = getAutoAssociationForMerchant(charge);
-		
-		if (autoAssociation) {
-			return {
-				text: 'Change Auto-association',
-				tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
-				title: 'Change auto-association',
-				class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
-			};
-		} else {
-			return {
-				text: 'Create Auto-association',
-				tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
-				title: 'Create auto-association',
-				class: 'bg-green-700 text-green-200 hover:bg-green-600'
-			};
-		}
+
+		return autoAssociation
+			? {
+					text: 'Change Auto-association',
+					tooltip: `Change auto-association for ${charge.merchant} (currently: ${autoAssociation.budget_name})`,
+					title: 'Change auto-association',
+					class: 'bg-blue-700 text-blue-200 hover:bg-blue-600'
+				}
+			: {
+					text: 'Create Auto-association',
+					tooltip: `Create auto-association for ${charge.merchant} → ${charge.allocated_to}`,
+					title: 'Create auto-association',
+					class: 'bg-green-700 text-green-200 hover:bg-green-600'
+				};
 	}
 
 	// Auto-association creation functions
@@ -731,13 +642,15 @@
 			await invalidate(`cycle-${data.cycleId}`);
 
 			// Show success message
-			showToastMessage(`Auto-association created for ${charge.merchant} → ${allocation}`, 'success');
+			showToastMessage(
+				`Auto-association created for ${charge.merchant} → ${allocation}`,
+				'success'
+			);
 		} catch (error) {
 			console.error('Error creating auto-association:', error);
 			alert(`Failed to create auto-association: ${error.message}`);
 		}
 	}
-
 
 	async function handleDelete() {
 		isDeleting = true;
@@ -755,8 +668,8 @@
 			// Invalidate the cache to ensure fresh data is loaded
 			await invalidate('/projects/ccbilling');
 			await goto('/projects/ccbilling');
-		} catch (err) {
-			deleteError = err.message;
+		} catch (error) {
+			deleteError = error.message;
 		} finally {
 			isDeleting = false;
 			showDeleteDialog = false;
@@ -803,10 +716,10 @@
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
-		} catch (err) {
-			console.error('❌ Upload/parse failed:', err);
-			uploadError = err.message;
-			showToastMessage(`Upload/parse failed: ${err.message}`, 'error');
+		} catch (error) {
+			console.error('❌ Upload/parse failed:', error);
+			uploadError = error.message;
+			showToastMessage(`Upload/parse failed: ${error.message}`, 'error');
 		} finally {
 			isUploading = false;
 		}
@@ -816,12 +729,12 @@
 		try {
 			// Initialize PDF service
 			const pdfService = new PDFService();
-			
+
 			// Parse the PDF file client-side
 			const parsedData = await pdfService.parseStatement(pdfFile);
-			
+
 			console.log('📄 PDF parsed successfully:', parsedData);
-			
+
 			// Send parsed data to server
 			const parseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/parse`, {
 				method: 'POST',
@@ -841,12 +754,14 @@
 
 			const parseResult = await parseResponse.json();
 			console.log('✅ Statement parsed successfully:', parseResult);
-			
-			showToastMessage(`Statement parsed successfully! Found ${parseResult.charges_found} charges.`, 'success');
-			
-		} catch (err) {
-			console.error('❌ Parse failed:', err);
-			throw new Error(`Failed to parse statement: ${err.message}`);
+
+			showToastMessage(
+				`Statement parsed successfully! Found ${parseResult.charges_found} charges.`,
+				'success'
+			);
+		} catch (error) {
+			console.error('❌ Parse failed:', error);
+			throw new Error(`Failed to parse statement: ${error.message}`);
 		}
 	}
 
@@ -873,8 +788,8 @@
 
 			// Use invalidate() - the proper SvelteKit way
 			await invalidate(`cycle-${data.cycleId}`);
-		} catch (err) {
-			console.error('Error deleting statement:', err);
+		} catch (error) {
+			console.error('Error deleting statement:', error);
 		} finally {
 			deletingStatements.delete(statementId);
 			showDeleteStatementDialog = false;
@@ -890,7 +805,7 @@
 	onMount(() => {
 		// Initialize tooltips for allocation buttons
 		tippy('[data-allocation-tooltip]', {
-			content: (reference) => reference.getAttribute('data-allocation-tooltip'),
+			content: (reference) => reference.dataset.allocationTooltip,
 			placement: 'top'
 		});
 	});
@@ -950,8 +865,8 @@
 								throw new Error(e.error || 'Failed to refresh auto-associations');
 							}
 							await invalidate(`cycle-${data.cycleId}`);
-						} catch (err) {
-							alert(err.message);
+						} catch (error) {
+							alert(error.message);
 						}
 					}}
 				>
@@ -1036,7 +951,6 @@
 			</div>
 		{/if}
 
-
 		<!-- Statements Section -->
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<div class="flex justify-between items-center mb-4">
@@ -1095,7 +1009,7 @@
 									<Button
 										variant="secondary"
 										size="sm"
-										onclick={() => document.getElementById('pdf-file-input').click()}
+										onclick={() => document.querySelector('#pdf-file-input').click()}
 										class="sm:ml-2"
 									>
 										Browse
@@ -1105,7 +1019,8 @@
 						</div>
 						<div>
 							<p class="text-gray-400 text-sm">
-								Statement will be automatically parsed and charges extracted. Credit card will be identified during processing.
+								Statement will be automatically parsed and charges extracted. Credit card will be
+								identified during processing.
 							</p>
 						</div>
 						<Button
@@ -1211,7 +1126,7 @@
 								class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
 							>
 								Filtered by: {localData.creditCards.find(
-									(card) => card.id === parseInt(selectedCardFilter)
+									(card) => card.id === Number.parseInt(selectedCardFilter)
 								)?.name}
 							</div>
 						{/if}
@@ -1660,7 +1575,9 @@
 				{:else}
 					<div class="text-center py-8">
 						<div class="text-gray-400 text-lg">No charges found</div>
-						<div class="text-gray-500 text-sm">Upload statements to automatically parse and see charges</div>
+						<div class="text-gray-500 text-sm">
+							Upload statements to automatically parse and see charges
+						</div>
 					</div>
 				{/if}
 			</div>
@@ -1707,16 +1624,7 @@
 							{#if merchantInfoData.text}
 								<div class="prose prose-invert max-w-none">
 									<p class="whitespace-pre-wrap text-gray-200 text-sm">
-										{#each toSegments(merchantInfoData.text) as seg}
-											{#if seg.type === 'text'}{seg.text}{:else}
-												<a
-													href={seg.href}
-													target="_blank"
-													rel="noopener noreferrer nofollow"
-													class="underline text-blue-400 hover:text-blue-300">{seg.text}</a
-												>
-											{/if}
-										{/each}
+										{merchantInfoData.text}
 									</p>
 								</div>
 							{:else}
@@ -1752,7 +1660,6 @@
 			on:skip={handleSkipAutoAssociation}
 			on:close={closeAutoAssociationModal}
 		/>
-
 
 		<!-- Cycle Information -->
 	</div>
@@ -1838,7 +1745,7 @@
 							class="text-blue-400 text-sm bg-blue-900/20 border border-blue-700 rounded px-2 py-1"
 						>
 							Filtered by: {localData.creditCards.find(
-								(card) => card.id === parseInt(selectedCardFilter)
+								(card) => card.id === Number.parseInt(selectedCardFilter)
 							)?.name}
 						</div>
 					{/if}

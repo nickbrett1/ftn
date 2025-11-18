@@ -1,6 +1,4 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { tick } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -19,7 +17,6 @@
 
 	// Core data - reactive state
 	let budget = $state(data.budget || null);
-	let budgets = $state(data.budgets || []);
 	let merchants = $state(data.merchants || []);
 
 	// Merchant management state
@@ -28,7 +25,7 @@
 	let addError = $state('');
 	let deletingMerchant = $state(null);
 	let isDeleting = $state(false);
-	let merchantPickerRef = $state(null);
+	let merchantPickerReference = $state(null);
 
 	// Budget editing state
 	let editName = $state(budget?.name || '');
@@ -42,7 +39,6 @@
 	let deleteBudgetError = $state('');
 
 	// Derived state for UI
-	let availableIcons = $derived(getAvailableIcons());
 	let sortedMerchants = $derived(
 		merchants
 			.filter((merchant) => merchant && merchant.merchant)
@@ -52,7 +48,11 @@
 	// Derived set of assigned merchant names for reactive filtering
 	// Use merchant_normalized for consistent comparison
 	let assignedMerchantNames = $derived(
-		new Set(merchants.filter((m) => m && (m.merchant_normalized || m.merchant)).map((m) => (m.merchant_normalized || m.merchant).toLowerCase()))
+		new Set(
+			merchants
+				.filter((m) => m && (m.merchant_normalized || m.merchant))
+				.map((m) => (m.merchant_normalized || m.merchant).toLowerCase())
+		)
 	);
 
 	async function addMerchant() {
@@ -65,12 +65,15 @@
 
 		// Check if merchant already exists using normalized names
 		const normalizedSelected = normalizeMerchant(selectedMerchant.trim());
-		const merchantExists = merchants.some(
-			(merchant) => {
-				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
-				return normalizedExisting.merchant_normalized.toLowerCase() === normalizedSelected.merchant_normalized.toLowerCase();
-			}
-		);
+		const merchantExists = merchants.some((merchant) => {
+			const normalizedExisting = normalizeMerchant(
+				merchant.merchant_normalized || merchant.merchant
+			);
+			return (
+				normalizedExisting.merchant_normalized.toLowerCase() ===
+				normalizedSelected.merchant_normalized.toLowerCase()
+			);
+		});
 		if (merchantExists) {
 			addError = 'This merchant is already assigned to this budget';
 			return;
@@ -104,12 +107,12 @@
 
 			// Wait for DOM updates to complete, then refresh the merchant list
 			await tick();
-			merchantPickerRef?.refreshMerchantList();
+			merchantPickerReference?.refreshMerchantList();
 
 			// Reset selectedMerchant to show placeholder text after DOM updates
 			await tick();
 			selectedMerchant = '';
-		} catch (error) {
+		} catch {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
@@ -140,8 +143,13 @@
 			// Remove from reactive collection using normalized names
 			const normalizedToRemove = normalizeMerchant(merchantName);
 			merchants = merchants.filter((merchant) => {
-				const normalizedExisting = normalizeMerchant(merchant.merchant_normalized || merchant.merchant);
-				return normalizedExisting.merchant_normalized.toLowerCase() !== normalizedToRemove.merchant_normalized.toLowerCase();
+				const normalizedExisting = normalizeMerchant(
+					merchant.merchant_normalized || merchant.merchant
+				);
+				return (
+					normalizedExisting.merchant_normalized.toLowerCase() !==
+					normalizedToRemove.merchant_normalized.toLowerCase()
+				);
 			});
 
 			// Wait for DOM updates to complete before refreshing picker
@@ -149,7 +157,7 @@
 
 			// Refresh picker to re-add removed merchant to list
 			// Tell the picker to refresh its merchant list
-			merchantPickerRef?.refreshMerchantList();
+			merchantPickerReference?.refreshMerchantList();
 		} catch (error) {
 			alert(`Failed to remove merchant "${merchantName}": ${error.message}`);
 		} finally {
@@ -186,7 +194,7 @@
 				return;
 			}
 			// No reload, just update UI
-		} catch (error) {
+		} catch {
 			nameEditError = 'Network error occurred';
 		} finally {
 			isSavingName = false;
@@ -223,8 +231,8 @@
 				deleteBudgetError = error.error || 'Failed to delete budget';
 				return;
 			}
-			window.location.href = '/projects/ccbilling/budgets';
-		} catch (error) {
+			globalThis.location.href = '/projects/ccbilling/budgets';
+		} catch {
 			deleteBudgetError = 'Network error occurred';
 		} finally {
 			isDeletingBudget = false;
@@ -319,7 +327,7 @@
 						onSelect={(merchant) => (selectedMerchant = merchant)}
 						placeholder="Choose a merchant to assign to this budget..."
 						assignedMerchants={assignedMerchantNames}
-						bind:this={merchantPickerRef}
+						bind:this={merchantPickerReference}
 					/>
 				</div>
 				{#if addError}
@@ -368,14 +376,10 @@
 							<button
 								onclick={() => removeMerchant(merchant.merchant)}
 								class="font-bold rounded bg-red-600 hover:bg-red-700 text-white py-1 px-3 text-sm cursor-pointer"
-								disabled={isDeleting &&
-									deletingMerchant === merchant.merchant}
+								disabled={isDeleting && deletingMerchant === merchant.merchant}
 								style="cursor: pointer;"
 							>
-								{isDeleting &&
-								deletingMerchant === merchant.merchant
-									? 'Removing...'
-									: 'Remove'}
+								{isDeleting && deletingMerchant === merchant.merchant ? 'Removing...' : 'Remove'}
 							</button>
 						</div>
 					{/each}

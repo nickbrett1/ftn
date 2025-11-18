@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './+server.js';
 
 // Mock the database functions
@@ -18,12 +18,13 @@ describe('Unassigned Merchants API', () => {
 		vi.clearAllMocks();
 
 		// Import the mocked functions
-		const dbModule = await import('$lib/server/ccbilling-db.js');
+		const databaseModule = await import('$lib/server/ccbilling-db.js');
 		const authModule = await import('$lib/server/require-user.js');
 
-		mockGetUnassignedMerchants = dbModule.getUnassignedMerchants;
+		mockGetUnassignedMerchants = databaseModule.getUnassignedMerchants;
 		mockRequireUser = authModule.requireUser;
-	});it('should return unassigned merchants when authenticated', async () => {
+	});
+	it('should return unassigned merchants when authenticated', async () => {
 		const mockMerchants = ['Walmart', 'Target', 'Grocery Store'];
 		mockRequireUser.mockResolvedValue(null); // No auth error
 		mockGetUnassignedMerchants.mockResolvedValue(mockMerchants);

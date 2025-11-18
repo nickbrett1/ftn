@@ -1,10 +1,10 @@
 // Try to import environment variables, with fallbacks for build time
 let GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET;
 try {
-	const env = await import('$env/static/private');
-	GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
-	GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
-} catch (error) {
+	const environment = await import('$env/static/private');
+	GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
+	GOOGLE_CLIENT_SECRET = environment.GOOGLE_CLIENT_SECRET;
+} catch {
 	// During build time, these might not be available
 	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
 	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
@@ -19,7 +19,7 @@ const tokenExchange = async (url, code) => {
 	if (!GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
 	if (!GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
 
-	const params = {
+	const parameters = {
 		client_id: GOOGLE_CLIENT_ID,
 		client_secret: GOOGLE_CLIENT_SECRET,
 
@@ -28,9 +28,9 @@ const tokenExchange = async (url, code) => {
 		redirect_uri: `${url.origin}/auth`
 	};
 
-	Object.entries(params).forEach(([key, value]) => {
+	for (const [key, value] of Object.entries(parameters)) {
 		body.append(key, value);
-	});
+	}
 
 	const response = await fetch('https://oauth2.googleapis.com/token', {
 		method: 'POST',
@@ -74,11 +74,11 @@ const HTML_TEMPORARY_REDIRECT = 307;
 export async function GET({ request, platform }) {
 	try {
 		const url = new URL(request.url);
-		const errorParam = url.searchParams.get('error');
-		if (errorParam !== null) {
+		const errorParameter = url.searchParams.get('error');
+		if (errorParameter !== null) {
 			// Keep this error log as it's for actual provider errors
-			console.error(`${logPrefix} Error in auth callback from provider: ${errorParam}`);
-			throw new Error(`OAuth provider error: ${errorParam}`);
+			console.error(`${logPrefix} Error in auth callback from provider: ${errorParameter}`);
+			throw new Error(`OAuth provider error: ${errorParameter}`);
 		}
 
 		const code = url.searchParams.get('code');
@@ -101,17 +101,20 @@ export async function GET({ request, platform }) {
 			expiration: kvExpiration
 		});
 
+		const cookies = request.headers.get('cookie') || '';
+		const redirectPath = cookies.match(/redirectPath=([^;]+)/)?.[1] || '/';
+
 		return new Response(null, {
 			// Changed from empty string to null for clarity
 			status: HTML_TEMPORARY_REDIRECT,
 			headers: {
-				Location: `${url.origin}/projects/ccbilling`,
+				Location: `${url.origin}${redirectPath}`,
 				'Set-Cookie': `auth=${newAuth}; Expires=${expiration.toUTCString()}; Path=/; Secure; SameSite=Lax`
 			}
 		});
-	} catch (e) {
+	} catch (error) {
 		// Keep this critical error log for production monitoring
-		console.error(`${logPrefix} Critical error during auth flow:`, e.message, e.stack);
+		console.error(`${logPrefix} Critical error during auth flow:`, error.message, error.stack);
 		// Optionally, redirect to an error page or return a generic error response
 		return new Response('Authentication failed due to an internal error.', { status: 500 });
 	}

@@ -11,7 +11,7 @@ RUN apt-get update \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates \
+    && npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates @google/gemini-cli \
     && if command -v sentry-cli >/dev/null 2>&1; then \
         echo "sentry-cli is already installed. Updating..."; \
         sentry-cli update; \

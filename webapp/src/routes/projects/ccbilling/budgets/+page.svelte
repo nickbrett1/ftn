@@ -6,8 +6,6 @@
 	import {
 		getAvailableIcons,
 		getIconDescription,
-		getDefaultIcon,
-		getAvailableIconsForBudget,
 		isIconUsedByOtherBudget,
 		getBudgetNameUsingIcon
 	} from '$lib/utils/budget-icons.js';
@@ -17,7 +15,7 @@
 	// Use synchronous destructuring to get data immediately
 	const { budgets = [] } = data;
 	// Sort budgets alphabetically by name
-	const sortedBudgets = budgets.slice().sort((a, b) => a.name.localeCompare(b.name));
+	const sortedBudgets = [...budgets].sort((a, b) => a.name.localeCompare(b.name));
 
 	// Add budget state
 	let showAddForm = $state(false);
@@ -31,9 +29,6 @@
 	let budgetToDelete = $state(null);
 	let isDeleting = $state(false);
 	let deleteError = $state('');
-
-	// Get available icons (excluding those already used by other budgets)
-	let availableIcons = $derived(getAvailableIconsForBudget(budgets));
 
 	async function addBudget() {
 		if (!newBudgetName.trim()) {
@@ -69,8 +64,8 @@
 			newBudgetName = '';
 			newBudgetIcon = '';
 			showAddForm = false;
-			window.location.reload();
-		} catch (error) {
+			globalThis.location.reload();
+		} catch {
 			addError = 'Network error occurred';
 		} finally {
 			isAdding = false;
@@ -97,8 +92,8 @@
 				deleteError = error.error || 'Failed to delete budget';
 				return;
 			}
-			window.location.reload();
-		} catch (error) {
+			globalThis.location.reload();
+		} catch {
 			deleteError = 'Network error occurred';
 		} finally {
 			isDeleting = false;
@@ -143,7 +138,8 @@
 							<button
 								type="button"
 								onclick={() => (newBudgetIcon = icon)}
-								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {newBudgetIcon === icon
+								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {newBudgetIcon ===
+								icon
 									? 'bg-blue-600'
 									: isUsed
 										? 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -194,7 +190,10 @@
 			<h2 class="text-2xl font-semibold text-white">Your Budgets</h2>
 			<div class="grid gap-4">
 				{#each sortedBudgets as budget (budget.id)}
-					<a href={`/projects/ccbilling/budgets/${budget.id}`} class="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer">
+					<a
+						href={`/projects/ccbilling/budgets/${budget.id}`}
+						class="block bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer"
+					>
 						<div class="flex items-center gap-4">
 							{#if budget.icon}
 								<span class="text-2xl">{budget.icon}</span>
@@ -230,7 +229,8 @@
 			<div class="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-sm w-full shadow-lg">
 				<h3 class="text-lg font-bold text-white mb-4">Delete Budget?</h3>
 				<p class="text-gray-300 mb-6">
-					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be undone.
+					Are you sure you want to delete the budget "{budgetToDelete.name}"? This action cannot be
+					undone.
 				</p>
 				{#if deleteError}
 					<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { mount, unmount } from 'svelte';
 import NotAuthorised from './+page.svelte';
 
 // Mock tsParticles
@@ -41,7 +41,7 @@ describe('NotAuthorised Page', () => {
 			target: document.body
 		});
 
-		const titles = Array.from(document.querySelectorAll('h1')).filter(h1 => 
+		const titles = [...document.querySelectorAll('h1')].filter((h1) =>
 			h1.textContent.includes('ACCESS DENIED')
 		);
 		expect(titles.length).toBe(3); // Main title + 2 glitch layers
@@ -55,7 +55,9 @@ describe('NotAuthorised Page', () => {
 		});
 
 		expect(document.body.textContent).toContain('Authentication Required');
-		expect(document.body.textContent).toContain('Some tools on this site currently require authentication');
+		expect(document.body.textContent).toContain(
+			'Some tools on this site currently require authentication'
+		);
 	});
 
 	it('renders information and insights section', () => {
@@ -103,9 +105,12 @@ describe('NotAuthorised Page', () => {
 		});
 
 		// Wait for onMount to complete
-		await vi.waitFor(() => {
-			expect(loadSlim).toHaveBeenCalledWith(tsParticles);
-		}, { timeout: 1000 });
+		await vi.waitFor(
+			() => {
+				expect(loadSlim).toHaveBeenCalledWith(tsParticles);
+			},
+			{ timeout: 1000 }
+		);
 
 		expect(loadTextShape).toHaveBeenCalledWith(tsParticles);
 		expect(createAuthParticleConfig).toHaveBeenCalled();
@@ -144,7 +149,7 @@ describe('NotAuthorised Page', () => {
 		});
 
 		// Check for responsive typography
-		const title = Array.from(document.querySelectorAll('h1')).find(h1 => 
+		const title = [...document.querySelectorAll('h1')].find((h1) =>
 			h1.className.includes('text-6xl')
 		);
 		expect(title).toBeTruthy();
@@ -157,7 +162,7 @@ describe('NotAuthorised Page', () => {
 		});
 
 		// Check for color classes indicating the error/warning theme
-		const title = Array.from(document.querySelectorAll('h1')).find(h1 => 
+		const title = [...document.querySelectorAll('h1')].find((h1) =>
 			h1.textContent.includes('ACCESS DENIED')
 		);
 		expect(title.className).toContain('text-red-400');

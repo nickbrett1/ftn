@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WellsFargoParser } from './wells-fargo-parser.js';
-import { ParsingUtils } from '../parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../parsing-utils.js';
 
 describe('WellsFargoParser', () => {
 	let parser;
@@ -170,7 +170,7 @@ describe('WellsFargoParser', () => {
 			const result = parser.parseWellsFargoTransaction(line);
 			expect(result).toEqual({
 				description: 'REFUND FOR PURCHASE',
-				amount: -50.0
+				amount: -50
 			});
 		});
 
@@ -214,7 +214,8 @@ describe('WellsFargoParser', () => {
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
 				foreign_currency_type: null,
-				full_statement_text: '01/15 01/15 860001800 5543286595Z9WS512 AMAZON.COM AMZN.COM/BILL WA $123.45'
+				full_statement_text:
+					'01/15 01/15 860001800 5543286595Z9WS512 AMAZON.COM AMZN.COM/BILL WA $123.45'
 			});
 		});
 
@@ -427,21 +428,21 @@ describe('WellsFargoParser', () => {
 
 	describe('inherited methods', () => {
 		it('should use ParsingUtils.parseDate', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseDate');
+			const spy = vi.spyOn(ParsingUtilities, 'parseDate');
 			parser.parseDate('01/15');
 			expect(spy).toHaveBeenCalledWith('01/15', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.parseAmount', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseAmount');
+			const spy = vi.spyOn(ParsingUtilities, 'parseAmount');
 			parser.parseAmount('$123.45');
 			expect(spy).toHaveBeenCalledWith('$123.45', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
-			const spy = vi.spyOn(ParsingUtils, 'validateParsedData');
+			const spy = vi.spyOn(ParsingUtilities, 'validateParsedData');
 			const data = { last4: '1234', statement_date: '2024-01-15', charges: [] };
 			parser.validateParsedData(data);
 			expect(spy).toHaveBeenCalledWith(data, ['last4', 'statement_date', 'charges'], {});
@@ -449,7 +450,7 @@ describe('WellsFargoParser', () => {
 		});
 
 		it('should use ParsingUtils.cleanMerchantName', () => {
-			const spy = vi.spyOn(ParsingUtils, 'cleanMerchantName');
+			const spy = vi.spyOn(ParsingUtilities, 'cleanMerchantName');
 			parser.cleanMerchantName('AMAZON.COM  EXTRA SPACES');
 			expect(spy).toHaveBeenCalledWith('AMAZON.COM  EXTRA SPACES', {});
 			spy.mockRestore();

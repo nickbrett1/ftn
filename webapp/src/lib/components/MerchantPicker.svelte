@@ -57,8 +57,8 @@
 
 			allUnassignedMerchants = Array.isArray(data) ? data.sort((a, b) => a.localeCompare(b)) : [];
 			// No need to set merchants - it's now derived from allUnassignedMerchants and assignedMerchants
-		} catch (err) {
-			error = err.message || 'Failed to load merchants';
+		} catch (error_) {
+			error = error_.message || 'Failed to load merchants';
 		} finally {
 			isLoading = false;
 			isLoadingInProgress = false;
@@ -83,7 +83,7 @@
 		localSelectedMerchant = merchant;
 		onSelect(merchant);
 		showModal = false;
-		
+
 		// If the selected merchant is not in the recent merchants list, add it
 		if (!allUnassignedMerchants.includes(merchant)) {
 			allUnassignedMerchants = [merchant, ...allUnassignedMerchants];
@@ -102,11 +102,11 @@
 			// Use a promise-based approach instead of setTimeout loop
 			return new Promise((resolve) => {
 				const checkLoading = () => {
-					if (!isLoadingInProgress) {
-						resolve();
-					} else {
+					if (isLoadingInProgress) {
 						// Use requestAnimationFrame for better performance than setTimeout
 						requestAnimationFrame(checkLoading);
+					} else {
+						resolve();
 					}
 				};
 				checkLoading();

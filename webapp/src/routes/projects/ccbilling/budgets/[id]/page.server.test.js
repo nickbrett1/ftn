@@ -4,7 +4,7 @@ import { load } from './+page.server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('$lib/server/ccbilling-db.js', () => ({ 
+vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getBudget: vi.fn(),
 	getBudgetMerchants: vi.fn(),
 	listBudgets: vi.fn()
@@ -19,7 +19,7 @@ describe('Budget Detail Page Server', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockEvent = {
 			params: { id: '1' },
 			url: new URL('http://localhost/projects/ccbilling/budgets/1'),
@@ -41,10 +41,7 @@ describe('Budget Detail Page Server', () => {
 
 	it('loads budget and merchants successfully', async () => {
 		const mockBudget = { id: 1, name: 'Groceries', created_at: '2025-01-01' };
-		const mockMerchants = [
-			{ merchant: 'Walmart' },
-			{ merchant: 'Target' }
-		];
+		const mockMerchants = [{ merchant: 'Walmart' }, { merchant: 'Target' }];
 		const mockBudgets = [
 			{ id: 1, name: 'Groceries', icon: '🛒' },
 			{ id: 2, name: 'Entertainment', icon: '🎬' }
@@ -60,8 +57,8 @@ describe('Budget Detail Page Server', () => {
 		expect(getBudget).toHaveBeenCalledWith(mockEvent, 1);
 		expect(getBudgetMerchants).toHaveBeenCalledWith(mockEvent, 1);
 		expect(listBudgets).toHaveBeenCalledWith(mockEvent);
-		expect(result).toEqual({ 
-			budget: mockBudget, 
+		expect(result).toEqual({
+			budget: mockBudget,
 			merchants: mockMerchants,
 			budgets: mockBudgets
 		});
@@ -73,14 +70,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -90,14 +87,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -107,14 +104,14 @@ describe('Budget Detail Page Server', () => {
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/projects/ccbilling/budgets');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -124,38 +121,38 @@ describe('Budget Detail Page Server', () => {
 			{ id: 1, name: 'Groceries', icon: '🛒' },
 			{ id: 2, name: 'Entertainment', icon: '🎬' }
 		];
-		
+
 		getBudget.mockResolvedValue(mockBudget);
 		getBudgetMerchants.mockResolvedValue([]);
 		listBudgets.mockResolvedValue(mockBudgets);
 
 		const result = await load(mockEvent);
 
-		expect(result).toEqual({ 
-			budget: mockBudget, 
+		expect(result).toEqual({
+			budget: mockBudget,
 			merchants: [],
 			budgets: mockBudgets
 		});
 	});
 
 	it('redirects unauthenticated user', async () => {
-		const redirectResponse = new Response(null, { 
-			status: 307, 
-			headers: { Location: '/notauthorised' } 
+		const redirectResponse = new Response(null, {
+			status: 307,
+			headers: { Location: '/notauthorised' }
 		});
 		requireUser.mockResolvedValue(redirectResponse);
 
 		expect.assertions(1);
 		try {
 			await load(mockEvent);
-		} catch (e) {
+		} catch (error) {
 			let expected;
 			try {
 				redirect(307, '/notauthorised');
 			} catch (redirectError) {
 				expected = redirectError;
 			}
-			expect(e).toEqual(expected);
+			expect(error).toEqual(expected);
 		}
 	});
 
@@ -169,7 +166,7 @@ describe('Budget Detail Page Server', () => {
 
 	it('handles database errors when getting merchants', async () => {
 		const mockBudget = { id: 1, name: 'Groceries', created_at: '2025-01-01' };
-		
+
 		getBudget.mockResolvedValue(mockBudget);
 		getBudgetMerchants.mockRejectedValue(new Error('Merchant query failed'));
 
@@ -181,11 +178,8 @@ describe('Budget Detail Page Server', () => {
 
 	it('handles database errors when getting budgets', async () => {
 		const mockBudget = { id: 1, name: 'Groceries', created_at: '2025-01-01' };
-		const mockMerchants = [
-			{ merchant: 'Walmart' },
-			{ merchant: 'Target' }
-		];
-		
+		const mockMerchants = [{ merchant: 'Walmart' }, { merchant: 'Target' }];
+
 		getBudget.mockResolvedValue(mockBudget);
 		getBudgetMerchants.mockResolvedValue(mockMerchants);
 		listBudgets.mockRejectedValue(new Error('Budgets query failed'));

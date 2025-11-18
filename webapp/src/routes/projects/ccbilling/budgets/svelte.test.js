@@ -3,7 +3,7 @@ import { mount, unmount } from 'svelte';
 import BudgetsPage from './+page.svelte';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
@@ -67,9 +67,9 @@ describe('Budget Management Page - Svelte Coverage', () => {
 		unmount(component);
 
 		// Test many budgets
-		const manyBudgets = Array.from({ length: 5 }, (_, i) => ({
-			id: i + 1,
-			name: `Budget ${i + 1}`,
+		const manyBudgets = Array.from({ length: 5 }, (_, index) => ({
+			id: index + 1,
+			name: `Budget ${index + 1}`,
 			created_at: '2025-01-01T00:00:00Z'
 		}));
 
@@ -78,8 +78,8 @@ describe('Budget Management Page - Svelte Coverage', () => {
 			props: { data: { budgets: manyBudgets } }
 		});
 		const budgetLinks = document.querySelectorAll('a');
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 1'))).toBe(true);
-		expect(Array.from(budgetLinks).some(link => link.textContent.includes('Budget 5'))).toBe(true);
+		expect([...budgetLinks].some((link) => link.textContent.includes('Budget 1'))).toBe(true);
+		expect([...budgetLinks].some((link) => link.textContent.includes('Budget 5'))).toBe(true);
 	});
 
 	it('processes budget data correctly', () => {

@@ -73,7 +73,8 @@ describe('CCBilling Page Server Route', () => {
 		mockListChargesForCycle = (await import('$lib/server/ccbilling-db.js')).listChargesForCycle;
 		mockListCreditCards = (await import('$lib/server/ccbilling-db.js')).listCreditCards;
 		mockListBudgets = (await import('$lib/server/ccbilling-db.js')).listBudgets;
-		mockListBudgetMerchantMappings = (await import('$lib/server/ccbilling-db.js')).listBudgetMerchantMappings;
+		mockListBudgetMerchantMappings = (await import('$lib/server/ccbilling-db.js'))
+			.listBudgetMerchantMappings;
 	});
 
 	describe('load function', () => {
@@ -133,7 +134,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.00,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -143,7 +144,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 2,
 					merchant: 'Starbucks',
-					amount: 5.50,
+					amount: 5.5,
 					allocated_to: 'Food',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -226,7 +227,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.00,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -236,7 +237,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 2,
 					merchant: 'Starbucks',
-					amount: 5.50,
+					amount: 5.5,
 					allocated_to: 'Food',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -247,9 +248,7 @@ describe('CCBilling Page Server Route', () => {
 			mockListChargesForCycle.mockResolvedValue(mockCharges);
 
 			// Mock credit cards
-			mockListCreditCards.mockResolvedValue([
-				{ id: 1, name: 'Chase Freedom', last4: '1234' }
-			]);
+			mockListCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '1234' }]);
 
 			// Mock budgets
 			mockListBudgets.mockResolvedValue([
@@ -353,7 +352,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 1,
 					merchant: 'Amazon',
-					amount: 50.00,
+					amount: 50,
 					allocated_to: 'Shopping',
 					credit_card_id: 1,
 					card_name: 'Chase Freedom',
@@ -363,7 +362,7 @@ describe('CCBilling Page Server Route', () => {
 				{
 					id: 2,
 					merchant: 'Shell',
-					amount: 45.00,
+					amount: 45,
 					allocated_to: 'Transportation',
 					credit_card_id: 2,
 					card_name: 'Amex Gold',

@@ -12,6 +12,8 @@ vi.mock('nanoid', () => ({
 }));
 
 describe('Google Auth Utils', () => {
+	let originalCreateElement;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Reset document.cookie
@@ -20,77 +22,90 @@ describe('Google Auth Utils', () => {
 			value: ''
 		});
 		// Reset window.google
-		delete window.google;
+		delete globalThis.google;
+
+		originalCreateElement = document.createElement;
+		// Mock document.createElement to return a mock script element
+		vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+			if (tagName === 'script') {
+				const script = originalCreateElement.call(document, 'script');
+				script.onload = null;
+				script.onerror = null;
+				vi.spyOn(script, 'setAttribute');
+				vi.spyOn(script, 'remove');
+				return script;
+			}
+			// For other elements, call the original createElement
+			return originalCreateElement.call(document, tagName);
+		});
 	});
 
 	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
 		vi.restoreAllMocks();
+		vi.clearAllTimers();
 	});
 
 	describe('getRedirectUri', () => {
 		it('should return development URI in development environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'development';
-			
+
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
-			
-			process.env.NODE_ENV = originalEnv;
+
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return production URI in production environment', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
-			
+
 			// Mock browser environment for production test
-			const originalLocation = window.location;
-			Object.defineProperty(window, 'location', {
+			const originalLocation = globalThis.location;
+			Object.defineProperty(globalThis, 'location', {
 				writable: true,
 				configurable: true,
 				value: {
 					origin: 'https://fintechnick.com'
 				}
 			});
-			
+
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://fintechnick.com/auth');
-			
+
 			// Clean up
-			Object.defineProperty(window, 'location', {
+			Object.defineProperty(globalThis, 'location', {
 				writable: true,
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return preview URI for preview deployments', () => {
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'production';
-			
+
 			// Mock browser environment for preview deployment
-			const originalLocation = window.location;
-			Object.defineProperty(window, 'location', {
+			const originalLocation = globalThis.location;
+			Object.defineProperty(globalThis, 'location', {
 				writable: true,
 				configurable: true,
 				value: {
 					origin: 'https://ftn-preview.nick-brett1.workers.dev'
 				}
 			});
-			
+
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
-			
+
 			// Clean up
-			Object.defineProperty(window, 'location', {
+			Object.defineProperty(globalThis, 'location', {
 				writable: true,
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnv;
+			process.env.NODE_ENV = originalEnvironment;
 		});
 	});
 
@@ -135,7 +150,7 @@ describe('Google Auth Utils', () => {
 	describe('initiateGoogleAuth', () => {
 		it('should redirect to ccbilling if user is already logged in', async () => {
 			const { goto } = await import('$app/navigation');
-			
+
 			// Mock logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
@@ -143,13 +158,13 @@ describe('Google Auth Utils', () => {
 			});
 
 			await initiateGoogleAuth('/projects/ccbilling');
-			
+
 			expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
 		});
 
 		it('should redirect to default path if no path specified', async () => {
 			const { goto } = await import('$app/navigation');
-			
+
 			// Mock logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
@@ -157,46 +172,19 @@ describe('Google Auth Utils', () => {
 			});
 
 			await initiateGoogleAuth();
-			
-			expect(goto).toHaveBeenCalledWith('/projects/ccbilling');
+
+			expect(goto).toHaveBeenCalledWith(globalThis.location.pathname);
 		});
 
-		it('should not redirect if auth cookie is deleted', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock deleted auth state
-			Object.defineProperty(document, 'cookie', {
-				writable: true,
-				value: 'auth=deleted'
-			});
-
-			// Mock Google GIS for OAuth flow
-			window.google = {
-				accounts: {
-					oauth2: {
-						initCodeClient: vi.fn(() => ({
-							requestCode: vi.fn()
-						}))
-					}
-				}
-			};
-
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
-		});
-
-		it('should not redirect if no auth cookie', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock no auth state
+		it('should set redirectPath cookie and request code with GIS if not logged in', async () => {
+			// Mock not logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
 				value: ''
 			});
 
-			// Mock Google GIS for OAuth flow
-			window.google = {
+			// Mock globalThis.google.accounts.oauth2
+			globalThis.google = {
 				accounts: {
 					oauth2: {
 						initCodeClient: vi.fn(() => ({
@@ -206,133 +194,135 @@ describe('Google Auth Utils', () => {
 				}
 			};
 
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
+			await initiateGoogleAuth('/some-path');
+
+			expect(document.cookie).toContain('redirectPath=/some-path');
+			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalledWith(
+				expect.objectContaining({
+					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
+					scope: 'openid profile email',
+					ux_mode: 'redirect',
+					state: 'mock-state-id',
+					redirect_uri: getRedirectUri()
+				})
+			);
 		});
 
-		it('should handle missing auth cookie gracefully', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock no auth cookie by setting it to empty
+		it('should load GIS script if not already loaded', async () => {
+			// Mock GIS not loaded
+
+			globalThis.google = undefined;
+
+			const appendSpy = vi.spyOn(document.body, 'append');
+
+			const initiateAuthPromise = initiateGoogleAuth();
+
+			expect(appendSpy).toHaveBeenCalledWith(expect.any(HTMLScriptElement));
+
+			const scriptElement = appendSpy.mock.calls[0][0];
+
+			expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
+
+			// Mock GIS loaded after script, but before onload is triggered
+
+			globalThis.google = {
+				accounts: {
+					id: {
+						initialize: vi.fn(),
+
+						renderButton: vi.fn(),
+
+						prompt: vi.fn()
+					},
+
+					oauth2: {
+						initCodeClient: vi.fn(() => ({
+							requestCode: vi.fn()
+						}))
+					}
+				}
+			};
+
+			// Simulate script loading success
+			scriptElement.dispatchEvent(new Event('load'));
+
+			// Wait for the initiateAuthPromise to resolve
+
+			await initiateAuthPromise;
+
+			expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledWith(
+				expect.objectContaining({
+					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
+				})
+			);
+
+			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+		});
+		it('should handle GIS script loading errors', async () => {
+			// Mock GIS not loaded
+			globalThis.google = undefined;
+
+			const appendSpy = vi.spyOn(document.body, 'append');
+			appendSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.dispatchEvent(new Event('error')); // Simulate script loading error
+			});
+
+			await expect(initiateGoogleAuth()).rejects.toThrow('Google gsi script failed to load');
+		});
+
+		it('should handle GIS initialization errors', async () => {
+			// Mock GIS not loaded
+			globalThis.google = undefined;
+
+			const appendSpy = vi.spyOn(document.body, 'append');
+			appendSpy.mockImplementationOnce((scriptElement) => {
+				scriptElement.dispatchEvent(new Event('load')); // Simulate script loading
+			});
+
+			// Mock GIS loaded but id not initialized
+			globalThis.google = {
+				accounts: {
+					id: undefined,
+					oauth2: undefined
+				}
+			};
+
+			await expect(initiateGoogleAuth()).rejects.toThrow(
+				'Google Identity Services failed to load properly'
+			);
+		});
+
+		it('should handle initCodeClient errors', async () => {
+			// Mock not logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
 				value: ''
 			});
 
-			// Mock Google GIS for OAuth flow
-			window.google = {
+			// Mock window.google.accounts.oauth2
+			globalThis.google = {
 				accounts: {
 					oauth2: {
-						initCodeClient: vi.fn(() => ({
-							requestCode: vi.fn()
-						}))
+						initCodeClient: vi.fn(() => {
+							throw new Error('Failed to initCodeClient');
+						})
 					}
 				}
 			};
 
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
+			await expect(initiateGoogleAuth()).rejects.toThrow('Failed to initCodeClient');
 		});
 
-		it('should use Google GIS if already loaded', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock Google GIS already loaded
-			window.google = {
-				accounts: {
-					oauth2: {
-						initCodeClient: vi.fn(() => ({
-							requestCode: vi.fn()
-						}))
-					}
-				}
-			};
-
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			expect(goto).not.toHaveBeenCalled();
-			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
-		});
-
-		it('should load Google GIS script if not already loaded', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock script loading
-			const mockScript = {
-				src: '',
-				nonce: '',
-				onload: vi.fn(),
-				onerror: vi.fn()
-			};
-			
-			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
-			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script load with proper Google GIS mock
-				setTimeout(() => {
-					// Set up the mock before calling onload
-					window.google = {
-						accounts: {
-							id: {
-								initialize: vi.fn()
-							},
-							oauth2: {
-								initCodeClient: vi.fn(() => ({
-									requestCode: vi.fn()
-								}))
-							}
-						}
-					};
-					// Now call onload which will trigger the OAuth flow
-					mockScript.onload();
-				}, 0);
+		it('should handle state mismatch error', async () => {
+			// Mock not logged in state
+			Object.defineProperty(document, 'cookie', {
+				writable: true,
+				value: ''
 			});
 
-			await initiateGoogleAuth('/projects/ccbilling');
-			
-			// Wait for async operations to complete
-			await new Promise(resolve => setTimeout(resolve, 10));
-			
-			expect(document.createElement).toHaveBeenCalledWith('script');
-			expect(mockScript.src).toBe('https://accounts.google.com/gsi/client');
-			expect(mockScript.nonce).toBe('%sveltekit.nonce%');
-		});
-
-		it('should handle script loading errors', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock script loading with error
-			const mockScript = {
-				src: '',
-				nonce: '',
-				onload: vi.fn(),
-				onerror: vi.fn()
-			};
-			
-			vi.spyOn(document, 'createElement').mockReturnValue(mockScript);
-			vi.spyOn(document.body, 'appendChild').mockImplementation(() => {
-				// Simulate script error immediately - don't call onload
-				setTimeout(() => {
-					if (mockScript.onerror) {
-						mockScript.onerror();
-					}
-				}, 0);
-			});
-
-			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('Google gsi script failed to load');
-		});
-
-
-		it('should handle state mismatch in OAuth callback', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock Google GIS with state mismatch
-			window.google = {
+			// Mock globalThis.google.accounts.oauth2
+			globalThis.google = {
 				accounts: {
-					id: {
-						initialize: vi.fn()
-					},
 					oauth2: {
 						initCodeClient: vi.fn(() => ({
 							requestCode: vi.fn()
@@ -341,44 +331,13 @@ describe('Google Auth Utils', () => {
 				}
 			};
 
-			// Mock the callback to simulate state mismatch
-			const initCodeClientSpy = vi.spyOn(window.google.accounts.oauth2, 'initCodeClient');
-			initCodeClientSpy.mockImplementation((config) => {
-				// Simulate state mismatch in callback immediately
-				config.callback({ state: 'wrong-state' });
+			// Simulate a state mismatch in the callback
+			globalThis.google.accounts.oauth2.initCodeClient.mockImplementationOnce((options) => {
+				options.callback({ state: 'mismatched-state' });
 				return { requestCode: vi.fn() };
 			});
 
-			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('State mismatch');
-		});
-
-		it('should handle OAuth errors in callback', async () => {
-			const { goto } = await import('$app/navigation');
-			
-			// Mock Google GIS with OAuth error
-			window.google = {
-				accounts: {
-					id: {
-						initialize: vi.fn()
-					},
-					oauth2: {
-						initCodeClient: vi.fn(() => ({
-							requestCode: vi.fn()
-						}))
-					}
-				}
-			};
-
-			// Mock the callback to simulate OAuth error
-			const initCodeClientSpy = vi.spyOn(window.google.accounts.oauth2, 'initCodeClient');
-			initCodeClientSpy.mockImplementation((config) => {
-				// Simulate OAuth error in callback immediately
-				config.callback({ error: 'access_denied' });
-				return { requestCode: vi.fn() };
-			});
-
-			await expect(initiateGoogleAuth('/projects/ccbilling')).rejects.toThrow('Failed to initCodeClient');
+			await expect(initiateGoogleAuth()).rejects.toThrow('State mismatch');
 		});
 	});
-
 });

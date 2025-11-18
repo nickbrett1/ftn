@@ -14,14 +14,14 @@
 	});
 </script>
 
-	<button
-		{id}
-		class="size-full cursor-pointer"
-		type="button"
-		aria-label={data.tooltip}
-		onclick={() => {
-			window.location = data.link;
-		}}
-	>
+<button
+	{id}
+	class="size-full cursor-pointer"
+	type="button"
+	aria-label={data.tooltip}
+	onclick={() => {
+		globalThis.location = data.link;
+	}}
+>
 	<data.Icon />
 </button>

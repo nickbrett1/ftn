@@ -15,8 +15,9 @@ export function getRedirectUri() {
 
 	// For production/preview, use the current origin dynamically
 	// This ensures preview deployments redirect back to the preview domain
-	if (typeof window !== 'undefined') {
-		return `${window.location.origin}/auth`;
+	if (typeof globalThis !== 'undefined') {
+		// Changed window to globalThis
+		return `${globalThis.location.origin}/auth`; // Changed window to globalThis
 	}
 
 	// Fallback for SSR
@@ -37,7 +38,7 @@ export function isUserAuthenticated() {
  * This is the preferred method as it handles the OAuth flow properly
  * @param {string} redirectPath - Optional path to redirect to after successful auth (defaults to /projects/ccbilling)
  */
-export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
+export async function initiateGoogleAuth(redirectPath = '/') {
 	// Check if user is already logged in
 	if (isUserAuthenticated()) {
 		// If already logged in, redirect using SvelteKit navigation
@@ -46,8 +47,13 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
 		return;
 	}
 
+	// Set a cookie to store the redirect path
+	const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
+	document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
+
 	// Check if Google GIS is already loaded
-	if (window.google?.accounts?.oauth2) {
+	if (globalThis.google?.accounts?.oauth2) {
+		// Changed window to globalThis
 		// Use the existing GIS client if available
 		await requestCodeWithGIS();
 	} else {
@@ -61,14 +67,16 @@ export async function initiateGoogleAuth(redirectPath = '/projects/ccbilling') {
  */
 async function requestCodeWithGIS() {
 	// Check if Google GIS is properly loaded
-	if (!window.google?.accounts?.oauth2) {
+	if (!globalThis.google?.accounts?.oauth2) {
+		// Changed window to globalThis
 		throw new Error('Google Identity Services not properly loaded');
 	}
 
 	const { nanoid } = await import('nanoid');
 	const state = nanoid();
 
-	const client = window.google.accounts.oauth2.initCodeClient({
+	const client = globalThis.google.accounts.oauth2.initCodeClient({
+		// Changed window to globalThis
 		client_id: GOOGLE_CLIENT_ID,
 		scope: 'openid profile email',
 		ux_mode: 'redirect',
@@ -96,16 +104,18 @@ function loadGoogleGISAndRequestCode() {
 		const script = document.createElement('script');
 		script.src = 'https://accounts.google.com/gsi/client';
 		script.nonce = '%sveltekit.nonce%';
-		script.onload = () => {
+		script.addEventListener('load', async () => {
 			try {
 				// Check if Google GIS is properly loaded
-				if (!window.google?.accounts?.id) {
+				if (!globalThis.google?.accounts?.id) {
+					// Changed window to globalThis
 					reject(new Error('Google Identity Services failed to load properly'));
 					return;
 				}
-				
+
 				// Initialize Google Identity Services
-				window.google.accounts.id.initialize({
+				globalThis.google.accounts.id.initialize({
+					// Changed window to globalThis
 					client_id: GOOGLE_CLIENT_ID,
 					callback: (response) => {
 						if (!response.credential || !response.clientId) {
@@ -115,16 +125,16 @@ function loadGoogleGISAndRequestCode() {
 				});
 
 				// Request authorization code
-				requestCodeWithGIS();
+				await requestCodeWithGIS();
 				resolve();
 			} catch (error) {
 				reject(error);
 			}
-		};
+		});
 		script.onerror = () => {
 			reject(new Error('Google gsi script failed to load'));
 		};
 
-		document.body.appendChild(script);
+		document.body.append(script);
 	});
 }

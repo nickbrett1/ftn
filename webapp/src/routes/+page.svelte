@@ -17,7 +17,7 @@
 			// Use a short timeout to allow the browser to complete rendering and layout adjustments.
 			// This helps ensure the scroll target is in its final position.
 			setTimeout(() => {
-				const targetId = hash.substring(1);
+				const targetId = hash.slice(1);
 				const element = document.getElementById(targetId);
 
 				if (element) {
@@ -36,13 +36,13 @@
 		const module = await import('$lib/components/Background.svelte');
 		BackgroundComponent = module.default;
 
-		if (browser && typeof window !== 'undefined' && window.location.hash) {
-			scrollToHash(window.location.hash, 'onMount');
+		if (browser && globalThis.window !== undefined && globalThis.location.hash) {
+			scrollToHash(globalThis.location.hash, 'onMount');
 		}
 	});
 
 	afterNavigate((navigation) => {
-		if (browser && typeof window !== 'undefined' && navigation.to && navigation.to.hash) {
+		if (browser && globalThis.window !== undefined && navigation.to && navigation.to.hash) {
 			console.log('afterNavigate: Attempting to scroll to hash:', navigation.to.hash);
 			scrollToHash(navigation.to.hash, 'afterNavigate');
 		}
@@ -55,7 +55,6 @@
 		name="description"
 		content="Nick Brett's personal website and portfolio, focused on financial technology."
 	/>
-
 </svelte:head>
 
 {#if BackgroundComponent}
@@ -80,6 +79,6 @@
 	<div id="contact" class="section">
 		<Contact />
 	</div>
-	</div>
+</div>
 
 <Footer />

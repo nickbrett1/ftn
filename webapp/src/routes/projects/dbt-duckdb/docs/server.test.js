@@ -5,9 +5,9 @@ import { error } from '@sveltejs/kit';
 // Mock the @sveltejs/kit error function
 vi.mock('@sveltejs/kit', () => ({
 	error: vi.fn((status, message) => {
-		const err = new Error(message);
-		err.status = status;
-		return err;
+		const error_ = new Error(message);
+		error_.status = status;
+		return error_;
 	})
 }));
 
@@ -28,7 +28,7 @@ describe('/src/routes/projects/dbt-duckdb/docs/+server.js', () => {
 		vi.clearAllMocks();
 		// Spy on console.error to check if it's called
 		vi.spyOn(console, 'error').mockImplementation(() => {});
-	});// Restore console.error after all tests
+	}); // Restore console.error after all tests
 	afterAll(() => {
 		vi.restoreAllMocks();
 	});

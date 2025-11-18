@@ -10,11 +10,11 @@ import { tick } from 'svelte';
 // ========== COMMON SETUP ==========
 export const setupTest = () => {
 	vi.clearAllMocks();
-	global.fetch = vi.fn().mockResolvedValue({
+	globalThis.fetch = vi.fn().mockResolvedValue({
 		ok: true,
 		json: () => Promise.resolve({ success: true })
 	});
-	return global.fetch;
+	return globalThis.fetch;
 };
 
 export const setupMocks = () => {
@@ -59,11 +59,10 @@ export const expectApiCall = (fetchMock, url, method, body) => {
 };
 
 // ========== UI INTERACTION HELPERS ==========
-export const findButtonByText = (container, text) => 
-	Array.from(container.querySelectorAll('button')).find(btn => 
-		btn.textContent?.includes(text));
+export const findButtonByText = (container, text) =>
+	[...container.querySelectorAll('button')].find((button) => button.textContent?.includes(text));
 
-export const findFormInput = (container, type = 'text') => 
+export const findFormInput = (container, type = 'text') =>
 	container.querySelector(`input[type="${type}"]`);
 
 export const fillInput = async (input, value) => {
@@ -89,25 +88,25 @@ export const clickButton = async (button) => {
 };
 
 // ========== COMMON TEST SCENARIOS ==========
-export const testBasicRendering = (Component, props, expectedContent) => {
-	const { container } = render(Component, { props });
-	expectedContent.forEach(content => {
+export const testBasicRendering = (Component, properties, expectedContent) => {
+	const { container } = render(Component, { props: properties });
+	for (const content of expectedContent) {
 		expect(container.innerHTML).toContain(content);
-	});
+	}
 	return container;
 };
 
-export const testEmptyState = (Component, props, expectedEmptyContent) => {
-	const { container } = render(Component, { props });
-	expectedEmptyContent.forEach(content => {
+export const testEmptyState = (Component, properties, expectedEmptyContent) => {
+	const { container } = render(Component, { props: properties });
+	for (const content of expectedEmptyContent) {
 		expect(container.innerHTML).toContain(content);
-	});
+	}
 	return container;
 };
 
-export const testFormValidation = async (Component, props, buttonText, errorMessage) => {
-	const { container } = render(Component, { props });
-	
+export const testFormValidation = async (Component, properties, buttonText, errorMessage) => {
+	const { container } = render(Component, { props: properties });
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
@@ -116,103 +115,100 @@ export const testFormValidation = async (Component, props, buttonText, errorMess
 			expect(container.innerHTML).toContain(errorMessage);
 		});
 	}
-	
+
 	return container;
 };
 
-export const testSuccessfulSubmission = async (Component, props, {
-	buttonText,
-	inputValue,
-	expectedUrl,
-	expectedMethod,
-	expectedBody
-}) => {
+export const testSuccessfulSubmission = async (
+	Component,
+	properties,
+	{ buttonText, inputValue, expectedUrl, expectedMethod, expectedBody }
+) => {
 	const fetchMock = setupTest();
-	const { container } = render(Component, { props });
-	
+	const { container } = render(Component, { props: properties });
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			await submitForm(container);
-			
+
 			expectApiCall(fetchMock, expectedUrl, expectedMethod, expectedBody);
 		}
 	}
-	
+
 	return { container, fetchMock };
 };
 
-export const testErrorHandling = async (Component, props, {
-	buttonText,
-	inputValue,
-	errorResponse,
-	expectedError
-}) => {
+export const testErrorHandling = async (
+	Component,
+	properties,
+	{ buttonText, inputValue, errorResponse, expectedError }
+) => {
 	const fetchMock = setupTest();
 	fetchMock.mockResolvedValueOnce(errorResponse);
-	
-	const { container } = render(Component, { props });
-	
+
+	const { container } = render(Component, { props: properties });
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			await submitForm(container);
-			
+
 			await waitFor(() => {
 				expect(container.innerHTML).toContain(expectedError);
 			});
 		}
 	}
-	
+
 	return { container, fetchMock };
 };
 
-export const testLoadingState = async (Component, props, {
-	buttonText,
-	inputValue,
-	loadingText
-}) => {
+export const testLoadingState = async (
+	Component,
+	properties,
+	{ buttonText, inputValue, loadingText }
+) => {
 	let resolvePromise;
-	const delayedPromise = new Promise(resolve => {
+	const delayedPromise = new Promise((resolve) => {
 		resolvePromise = resolve;
 	});
-	
+
 	const fetchMock = setupTest();
 	fetchMock.mockReturnValueOnce(delayedPromise);
-	
-	const { container } = render(Component, { props });
-	
+
+	const { container } = render(Component, { props: properties });
+
 	const button = findButtonByText(container, buttonText);
 	if (button) {
 		await clickButton(button);
-		
+
 		const input = findFormInput(container);
 		if (input) {
 			await fillInput(input, inputValue);
 			fireEvent.submit(container.querySelector('form')); // Don't await
 			await tick();
-			
+
 			expect(container.innerHTML).toContain(loadingText);
-			
+
 			resolvePromise(mockApiSuccess());
 		}
 	}
-	
+
 	return { container, fetchMock, resolvePromise };
 };
 
 // ========== BUDGET-SPECIFIC HELPERS ==========
 export const testBudgetCRUD = {
-	async create(Component, props, budgetName = 'Entertainment') {
-		return testSuccessfulSubmission(Component, props, {
+	async create(Component, properties, budgetName = 'Entertainment') {
+		return testSuccessfulSubmission(Component, properties, {
 			buttonText: 'Add New Budget',
 			inputValue: budgetName,
 			expectedUrl: '/projects/ccbilling/budgets',
@@ -220,102 +216,115 @@ export const testBudgetCRUD = {
 			expectedBody: { name: budgetName }
 		});
 	},
-	
-	async update(Component, props, budgetName = 'Updated Name') {
-		const { container } = render(Component, { props });
-		
+
+	async update(Component, properties, budgetName = 'Updated Name') {
+		const { container } = render(Component, { props: properties });
+
 		const editButton = findButtonByText(container, 'Edit');
 		if (editButton) {
 			await clickButton(editButton);
-			
+
 			const input = findFormInput(container);
 			if (input) {
 				await fillInput(input, budgetName);
-				
+
 				const saveButton = findButtonByText(container, 'Save');
 				if (saveButton) {
 					await clickButton(saveButton);
-					
-					expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'PUT', { name: budgetName });
+
+					expectApiCall(
+						globalThis.fetch,
+						`/projects/ccbilling/budgets/${properties.data.budgets[0].id}`,
+						'PUT',
+						{ name: budgetName }
+					);
 				}
 			}
 		}
-		
+
 		return container;
 	},
-	
-	async delete(Component, props) {
-		const { container } = render(Component, { props });
-		
+
+	async delete(Component, properties) {
+		const { container } = render(Component, { props: properties });
+
 		const deleteButton = findButtonByText(container, 'Delete');
 		if (deleteButton) {
 			await clickButton(deleteButton);
-			
+
 			const confirmButton = findButtonByText(container, 'Confirm');
 			if (confirmButton) {
 				await clickButton(confirmButton);
-				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budgets[0].id}`, 'DELETE');
+
+				expectApiCall(
+					globalThis.fetch,
+					`/projects/ccbilling/budgets/${properties.data.budgets[0].id}`,
+					'DELETE'
+				);
 			}
 		}
-		
+
 		return container;
 	}
 };
 
 export const testMerchantCRUD = {
-	async create(Component, props, merchantName = 'Costco') {
-		return testSuccessfulSubmission(Component, props, {
+	async create(Component, properties, merchantName = 'Costco') {
+		return testSuccessfulSubmission(Component, properties, {
 			buttonText: 'Add Merchant',
 			inputValue: merchantName,
-			expectedUrl: `/projects/ccbilling/budgets/${props.data.budget.id}/merchants`,
+			expectedUrl: `/projects/ccbilling/budgets/${properties.data.budget.id}/merchants`,
 			expectedMethod: 'POST',
 			expectedBody: { merchant: merchantName }
 		});
 	},
-	
-	async delete(Component, props) {
-		const { container } = render(Component, { props });
-		
+
+	async delete(Component, properties) {
+		const { container } = render(Component, { props: properties });
+
 		const removeButton = findButtonByText(container, 'Remove');
 		if (removeButton) {
 			await clickButton(removeButton);
-			
+
 			const confirmButton = findButtonByText(container, 'Confirm');
 			if (confirmButton) {
 				await clickButton(confirmButton);
-				
-				expectApiCall(global.fetch, `/projects/ccbilling/budgets/${props.data.budget.id}/merchants`, 'DELETE', 
-					{ merchant: props.data.merchants[0].merchant });
+
+				expectApiCall(
+					globalThis.fetch,
+					`/projects/ccbilling/budgets/${properties.data.budget.id}/merchants`,
+					'DELETE',
+					{ merchant: properties.data.merchants[0].merchant }
+				);
 			}
 		}
-		
+
 		return container;
 	}
 };
 
 // ========== VALIDATION HELPERS ==========
-export const runValidationTests = (testFn) => {
+export const runValidationTests = (testFunction) => {
 	const cases = [
 		{ input: '', expected: false, name: 'empty' },
 		{ input: '   ', expected: false, name: 'whitespace' },
 		{ input: 'Valid', expected: true, name: 'valid' }
 	];
-	
-	cases.forEach(({ input, expected, name }) => {
-		testFn(input, expected, name);
-	});
+
+	for (const { input, expected, name } of cases) {
+		testFunction(input, expected, name);
+	}
 };
 
 // ========== COMMON ASSERTIONS ==========
 export const expectElementsPresent = (container, elements) => {
-	elements.forEach(element => {
+	for (const element of elements) {
 		expect(container.innerHTML).toContain(element);
-	});
+	}
 };
 
 export const expectElementsAbsent = (container, elements) => {
-	elements.forEach(element => {
+	for (const element of elements) {
 		expect(container.innerHTML).not.toContain(element);
-	});
+	}
 };

@@ -3,7 +3,7 @@ import { mount, unmount, flushSync } from 'svelte';
 import CardsPage from './+page.svelte';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Mock SvelteKit modules
 vi.mock('$app/navigation', () => ({
@@ -12,16 +12,16 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Mock location.reload
-Object.defineProperty(window, 'location', {
+Object.defineProperty(globalThis, 'location', {
 	value: { reload: vi.fn() },
 	writable: true
 });
 
 // Mock confirm
-global.confirm = vi.fn();
+globalThis.confirm = vi.fn();
 
 // Mock alert
-global.alert = vi.fn();
+globalThis.alert = vi.fn();
 
 describe('Credit Cards Page - Svelte Coverage', () => {
 	const mockCreditCards = [
@@ -86,8 +86,8 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 				props: { data: { creditCards: mockCreditCards } }
 			});
 
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent.includes('Add Credit Card')
+			const addButton = [...document.querySelectorAll('button')].find((button) =>
+				button.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
 			flushSync();
@@ -105,16 +105,16 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form first
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent.includes('Add Credit Card')
+			const addButton = [...document.querySelectorAll('button')].find((button) =>
+				button.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
 			flushSync();
 			expect(document.body.innerHTML).toContain('Add New Credit Card');
 
 			// Click cancel
-			const cancelButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent === 'Cancel'
+			const cancelButton = [...document.querySelectorAll('button')].find(
+				(button) => button.textContent === 'Cancel'
 			);
 			cancelButton.click();
 			flushSync();
@@ -130,15 +130,15 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent.includes('Add Credit Card')
+			const addButton = [...document.querySelectorAll('button')].find((button) =>
+				button.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
 			flushSync();
 
 			// Try to submit without filling fields
-			const submitButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent === 'Add Card'
+			const submitButton = [...document.querySelectorAll('button')].find(
+				(button) => button.textContent === 'Add Card'
 			);
 			submitButton.click();
 			flushSync();
@@ -154,8 +154,8 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Show form
-			const addButton = Array.from(document.querySelectorAll('button')).find(btn => 
-				btn.textContent.includes('Add Credit Card')
+			const addButton = [...document.querySelectorAll('button')].find((button) =>
+				button.textContent.includes('Add Credit Card')
 			);
 			addButton.click();
 			flushSync();
@@ -163,27 +163,30 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			// Fill in form fields
 			const nameInput = document.querySelector('input[placeholder="e.g., Chase Sapphire"]');
 			const last4Input = document.querySelector('input[placeholder="1234"]');
-			
+
 			if (nameInput && last4Input) {
 				nameInput.value = 'Test Card';
 				nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-				
+
 				last4Input.value = '4321';
 				last4Input.dispatchEvent(new Event('input', { bubbles: true }));
-				
+
 				flushSync();
 
 				// Submit form
-				const submitButton = Array.from(document.querySelectorAll('button')).find(btn => 
-					btn.textContent === 'Add Card'
+				const submitButton = [...document.querySelectorAll('button')].find(
+					(button) => button.textContent === 'Add Card'
 				);
 				submitButton.click();
 				flushSync();
 
 				// Wait for API call
-				await vi.waitFor(() => {
-					expect(fetch).toHaveBeenCalled();
-				}, { timeout: 1000 });
+				await vi.waitFor(
+					() => {
+						expect(fetch).toHaveBeenCalled();
+					},
+					{ timeout: 1000 }
+				);
 			}
 		});
 	});
@@ -196,10 +199,10 @@ describe('Credit Cards Page - Svelte Coverage', () => {
 			});
 
 			// Find a delete button
-			const deleteButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
-				btn.textContent.includes('Delete')
+			const deleteButtons = [...document.querySelectorAll('button')].filter((button) =>
+				button.textContent.includes('Delete')
 			);
-			
+
 			if (deleteButtons.length > 0) {
 				deleteButtons[0].click();
 				flushSync();

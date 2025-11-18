@@ -34,7 +34,7 @@ export async function GET(event) {
 	const url = new URL(event.request.url);
 	const bucketName = url.searchParams.get('bucket');
 	const prefix = url.searchParams.get('prefix') || undefined;
-	const limit = parseInt(url.searchParams.get('limit') || '1000');
+	const limit = Number.parseInt(url.searchParams.get('limit') || '1000');
 
 	if (!bucketName) {
 		return json({ error: 'bucket parameter is required' }, { status: 400 });
@@ -46,6 +46,8 @@ export async function GET(event) {
 		bucket = event.platform?.env?.R2_CCBILLING;
 	} else if (bucketName === 'wdi') {
 		bucket = event.platform?.env?.R2_WDI;
+	} else if (bucketName === 'genproj-templates') {
+		bucket = event.platform?.env?.R2_GENPROJ_TEMPLATES;
 	} else {
 		return json({ error: `Unknown bucket: ${bucketName}` }, { status: 400 });
 	}
@@ -64,11 +66,11 @@ export async function GET(event) {
 		const result = await bucket.list(listOptions);
 
 		// Format the response to include useful object information
-		const objects = result.objects.map((obj) => ({
-			key: obj.key,
-			size: obj.size,
-			etag: obj.etag,
-			lastModified: obj.uploaded.toISOString()
+		const objects = result.objects.map((object) => ({
+			key: object.key,
+			size: object.size,
+			etag: object.etag,
+			lastModified: object.uploaded.toISOString()
 		}));
 
 		const response = {

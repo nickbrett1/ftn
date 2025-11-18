@@ -26,17 +26,18 @@
 	};
 
 	const defaultClasses = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline not-prose inline-block`;
-	
+
 	// Extract class from rest and merge with default classes
 	const customClass = rest.class || '';
 	const classes = `${defaultClasses} ${customClass}`.trim();
-	
+
 	// Remove class from rest to avoid conflicts, but keep event handlers
-	const { class: _, ...restWithoutClass } = rest;
+
+	const { class: _class, ...restWithoutClass } = rest;
 </script>
 
 {#if href}
-	<a {href} class={classes} {...restWithoutClass}>
+	<a {href} class={classes} {...restWithoutClass} data-sveltekit-reload rel="external">
 		{@render children?.()}
 	</a>
 {:else}
