@@ -27,9 +27,11 @@ describe('CircleCIAPIService', () => {
 		});
 
 		fetch.mockResolvedValueOnce({ ok: false, status: 401, statusText: 'Unauthorized' });
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(service.makeRequest('/me')).rejects.toThrow(
 			'CircleCI API error: 401 Unauthorized'
 		);
+		errorSpy.mockRestore();
 	});
 
 	it('retrieves user info and organizations', async () => {
@@ -119,6 +121,8 @@ describe('CircleCIAPIService', () => {
 		expect(await service.validateToken()).toBe(true);
 
 		service.getUserInfo.mockRejectedValue(new Error('bad token'));
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		expect(await service.validateToken()).toBe(false);
+		errorSpy.mockRestore();
 	});
 });

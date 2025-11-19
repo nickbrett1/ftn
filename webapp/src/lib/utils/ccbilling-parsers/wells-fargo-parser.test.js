@@ -398,9 +398,11 @@ describe('WellsFargoParser', () => {
 
 		it('should throw error for invalid statement', async () => {
 			const text = 'INVALID STATEMENT WITHOUT REQUIRED FIELDS';
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			await expect(parser.parse(text)).rejects.toThrow(
 				'Failed to parse required fields from Wells Fargo statement'
 			);
+			errorSpy.mockRestore();
 		});
 
 		it('should throw error when missing last4', async () => {
@@ -409,9 +411,11 @@ describe('WellsFargoParser', () => {
 				Billing Cycle 01/15/2024 to 02/15/2024
 				1/24 AMAZON.COM $123.45
 			`;
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			await expect(parser.parse(text)).rejects.toThrow(
 				'Failed to parse required fields from Wells Fargo statement'
 			);
+			errorSpy.mockRestore();
 		});
 
 		it('should throw error when missing statement date', async () => {
@@ -420,9 +424,11 @@ describe('WellsFargoParser', () => {
 				Account Number Ending in 1234
 				1/24 AMAZON.COM $123.45
 			`;
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			await expect(parser.parse(text)).rejects.toThrow(
 				'Failed to parse required fields from Wells Fargo statement'
 			);
+			errorSpy.mockRestore();
 		});
 	});
 

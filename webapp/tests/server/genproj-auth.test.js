@@ -47,12 +47,14 @@ describe('GenprojAuthManager', () => {
 	});
 
 	it('handles initialization errors gracefully', async () => {
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		// Mock KV.get to fail, which should be caught and return null
 		mockKV.get.mockRejectedValue(new Error('KV failure'));
 		// Mock KV.put to also fail, so save fails
 		mockKV.put.mockRejectedValue(new Error('KV save failure'));
 		const result = await manager.initialize(user, mockPlatform);
 		expect(result).toBe(false);
+		errorSpy.mockRestore();
 	});
 
 	it('updates authentication providers and tracks state', async () => {

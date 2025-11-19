@@ -33,8 +33,9 @@ describe('ParsingUtils', () => {
 
 		it('should throw error for invalid JSON', () => {
 			const invalidJson = '{"test": "value",}';
-
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			expect(() => ParsingUtilities.parseJSONResponse(invalidJson)).toThrow('JSON parsing failed');
+			errorSpy.mockRestore();
 		});
 
 		it('should throw error for non-string input', () => {

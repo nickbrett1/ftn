@@ -354,9 +354,11 @@ describe('ChaseParser', () => {
 
 		it('should throw error for invalid statement', async () => {
 			const text = 'INVALID STATEMENT WITHOUT REQUIRED FIELDS';
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			await expect(parser.parse(text)).rejects.toThrow(
 				'Failed to parse required fields from Chase statement'
 			);
+			errorSpy.mockRestore();
 		});
 	});
 

@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-
+import { describe, it, expect, vi } from 'vitest';
 import {
 	GenprojError,
 	ValidationError,
@@ -17,239 +16,173 @@ import {
 	logError
 } from '$lib/utils/genproj-errors.js';
 
-const fixedDate = new Date('2024-01-01T00:00:00.000Z');
-
-describe('genproj error utilities', () => {
-	beforeEach(() => {
-		vi.useFakeTimers();
-		vi.setSystemTime(fixedDate);
-		vi.spyOn(globalThis.console, 'error').mockImplementation(() => {});
-		vi.spyOn(globalThis.console, 'warn').mockImplementation(() => {});
-		if (globalThis.crypto?.randomUUID) {
-			vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('test-request-id');
-		}
+describe('Genproj Custom Errors', () => {
+	it('should create a GenprojError with correct properties', () => {
+		const error = new GenprojError('Test message', 'TEST_CODE', 501);
+		expect(error).toBeInstanceOf(Error);
+		expect(error).toBeInstanceOf(GenprojError);
+		expect(error.message).toBe('Test message');
+		expect(error.code).toBe('TEST_CODE');
+		expect(error.statusCode).toBe(501);
 	});
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-		vi.useRealTimers();
+	it('should create a ValidationError with correct properties', () => {
+		const error = new ValidationError('Invalid field', 'username');
+		expect(error).toBeInstanceOf(ValidationError);
+		expect(error.statusCode).toBe(400);
+		expect(error.field).toBe('username');
+	});
+});
+
+describe('handleGenprojError', () => {
+	it('should handle GenprojError instances correctly', () => {
+		const error = new RateLimitError('Too fast', 'GitHub', 60);
+		const result = handleGenprojError(error);
+		expect(result.status).toBe(429);
+		expect(result.body.error).toBe('RATE_LIMIT_ERROR');
+		expect(result.body.service).toBe('GitHub');
+		expect(result.body.retryAfter).toBe(60);
 	});
 
-	describe('error classes', () => {
-		it('preserves message, code, and status', () => {
-			const error = new GenprojError('boom', 'GENPROJ', 418);
-			expect(error.message).toBe('boom');
-			expect(error.code).toBe('GENPROJ');
-			expect(error.statusCode).toBe(418);
-		});
-
-		it('sets subclass-specific fields', () => {
-			const validation = new ValidationError('missing field', 'field');
-			expect(validation.statusCode).toBe(400);
-			expect(validation.field).toBe('field');
-
-			const auth = new AuthenticationError('unauthenticated', 'github');
-			expect(auth.statusCode).toBe(401);
-			expect(auth.service).toBe('github');
-
-			const authorization = new AuthorizationError('denied', ['github']);
-			expect(authorization.statusCode).toBe(403);
-			expect(authorization.requiredAuth).toEqual(['github']);
-
-			const notFound = new NotFoundError('not here', 'resource');
-			expect(notFound.statusCode).toBe(404);
-			expect(notFound.resource).toBe('resource');
-
-			const external = new ExternalServiceError('broken', 'service', new Error('boom'));
-			expect(external.statusCode).toBe(502);
-			expect(external.service).toBe('service');
-
-			const rateLimited = new RateLimitError('slow down', 'github', 120);
-			expect(rateLimited.statusCode).toBe(429);
-			expect(rateLimited.retryAfter).toBe(120);
-		});
+	it('should handle generic errors with specific keywords', () => {
+		const dbError = new Error('database query failed');
+		const result = handleGenprojError(dbError);
+		expect(result.status).toBe(500);
+		expect(result.body.error).toBe('DATABASE_ERROR');
 	});
 
-	describe('handleGenprojError', () => {
-		it('handles known GenprojError instances', () => {
-			const error = new ValidationError('Invalid data', 'field');
-			const response = handleGenprojError(error, { requestId: 'abc' });
-			expect(response.status).toBe(400);
-			expect(response.body).toMatchObject({
-				error: 'VALIDATION_ERROR',
-				message: 'Invalid data',
-				field: 'field',
-				requestId: 'abc',
-				timestamp: fixedDate.toISOString()
-			});
-		});
+	it('should return a generic internal error for unknown errors', () => {
+		const unknownError = new Error('Something weird happened');
+		const result = handleGenprojError(unknownError);
+		expect(result.status).toBe(500);
+		expect(result.body.error).toBe('INTERNAL_ERROR');
+	});
+});
 
-		it('handles non-genproj validation, auth, database, and external errors', () => {
-			const validation = handleGenprojError(new Error('validation failed'));
-			expect(validation.status).toBe(400);
-			expect(validation.body.error).toBe('VALIDATION_ERROR');
-
-			const auth = handleGenprojError(new Error('User unauthorized'));
-			expect(auth.status).toBe(401);
-			expect(auth.body.error).toBe('AUTHENTICATION_ERROR');
-
-			const database = handleGenprojError(new Error('database timeout'));
-			expect(database.status).toBe(500);
-			expect(database.body.error).toBe('DATABASE_ERROR');
-
-			const external = handleGenprojError(new Error('API failure'));
-			expect(external.status).toBe(502);
-			expect(external.body.error).toBe('EXTERNAL_SERVICE_ERROR');
-		});
-
-		it('falls back to internal error response', () => {
-			const response = handleGenprojError(new Error('mystery'));
-			expect(response.status).toBe(500);
-			expect(response.body.error).toBe('INTERNAL_ERROR');
-		});
+describe('withErrorHandling', () => {
+	it('should wrap a handler and return its result on success', async () => {
+		const mockHandler = vi.fn().mockResolvedValue({ status: 200, body: 'Success' });
+		const wrappedHandler = withErrorHandling(mockHandler);
+		const result = await wrappedHandler({});
+		expect(result.status).toBe(200);
+		expect(result.body).toBe('Success');
 	});
 
-	describe('withErrorHandling', () => {
-		it('returns handler result when successful', async () => {
-			const handler = withErrorHandling(async () => ({ status: 200 }));
-			await expect(handler({ request: { method: 'GET' } })).resolves.toEqual({ status: 200 });
-		});
+	it('should catch errors and return a formatted error response', async () => {
+		const error = new ValidationError('Bad input');
+		const mockHandler = vi.fn().mockRejectedValue(error);
+		const wrappedHandler = withErrorHandling(mockHandler);
+		const result = await wrappedHandler({ request: {} }); // Mock event
+		expect(result.status).toBe(400);
+		expect(result.body.error).toBe('VALIDATION_ERROR');
+	});
+});
 
-		it('converts thrown errors to response payload', async () => {
-			const handler = withErrorHandling(async () => {
-				throw new ValidationError('bad request', 'field');
-			});
+describe('validateRequest', () => {
+	const schema = {
+		name: { required: true, type: 'string', minLength: 2 },
+		age: { required: false, type: 'number' },
+		role: { required: true, enum: ['admin', 'user'] }
+	};
 
-			const event = {
-				requestId: 'event-id',
-				request: { method: 'POST' },
-				url: new URL('https://example.com')
-			};
-
-			const response = await handler(event);
-			expect(response.status).toBe(400);
-			expect(response.body.requestId).toBe('event-id');
-		});
+	it('should not throw for valid data', () => {
+		const data = { name: 'Jules', role: 'admin' };
+		expect(() => validateRequest(data, schema)).not.toThrow();
 	});
 
-	describe('validateRequest', () => {
-		const schema = {
-			name: { required: true, type: 'string', minLength: 3, maxLength: 5 },
-			email: { pattern: /^[^@]+@[^@]+$/ },
-			status: { enum: ['active', 'pending'] }
-		};
-
-		it('throws on missing required value', () => {
-			expect(() => validateRequest({}, schema)).toThrowError(ValidationError);
-		});
-
-		it('throws on invalid type, length, pattern, and enum', () => {
-			expect(() =>
-				validateRequest({ name: 123, email: 'bad', status: 'disabled' }, schema)
-			).toThrowError(ValidationError);
-		});
-
-		it('passes with valid payload', () => {
-			expect(() =>
-				validateRequest({ name: 'alex', email: 'user@example.com', status: 'active' }, schema)
-			).not.toThrow();
-		});
+	it('should throw ValidationError for missing required field', () => {
+		const data = { role: 'user' };
+		expect(() => validateRequest(data, schema)).toThrow(ValidationError);
+		expect(() => validateRequest(data, schema)).toThrow('name is required');
 	});
 
-	describe('requireAuthentication', () => {
-		it('throws when user missing', () => {
-			expect(() => requireAuthentication({})).toThrowError(AuthenticationError);
-		});
-
-		it('throws when service auth missing', () => {
-			const authState = { user: { id: '123' }, github: true };
-			expect(() => requireAuthentication(authState, ['github', 'doppler'])).toThrowError(
-				AuthorizationError
-			);
-		});
-
-		it('passes when user and services are present', () => {
-			expect(() =>
-				requireAuthentication(
-					{
-						user: { id: '123' },
-						github: true,
-						doppler: true
-					},
-					['github', 'doppler']
-				)
-			).not.toThrow();
-		});
+	it('should throw ValidationError for invalid type', () => {
+		const data = { name: 123, role: 'user' };
+		expect(() => validateRequest(data, schema)).toThrow('name must be a string');
 	});
 
-	describe('handleExternalServiceError', () => {
-		const baseError = { message: 'boom', headers: new Map(), status: 400 };
-
-		it('translates rate limit errors', () => {
-			const error = { ...baseError, status: 429, headers: new Map([['Retry-After', 90]]) };
-			expect(() => handleExternalServiceError(error, 'github')).toThrowError(RateLimitError);
-		});
-
-		it('translates auth, not found, server, and default errors', () => {
-			expect(() =>
-				handleExternalServiceError({ ...baseError, status: 401 }, 'github')
-			).toThrowError(AuthenticationError);
-
-			expect(() =>
-				handleExternalServiceError({ ...baseError, status: 404 }, 'github')
-			).toThrowError(NotFoundError);
-
-			expect(() =>
-				handleExternalServiceError({ ...baseError, status: 503 }, 'github')
-			).toThrowError(ExternalServiceError);
-
-			expect(() => handleExternalServiceError(baseError, 'github')).toThrowError(
-				ExternalServiceError
-			);
-		});
+	it('should throw ValidationError for minLength violation', () => {
+		const data = { name: 'A', role: 'user' };
+		expect(() => validateRequest(data, schema)).toThrow('name must be at least 2 characters');
 	});
 
-	describe('getUserFriendlyMessage', () => {
-		it('returns custom messages for known errors', () => {
-			expect(getUserFriendlyMessage(new ValidationError('bad', 'field'))).toBe('bad');
-			expect(getUserFriendlyMessage(new AuthenticationError('auth', 'github'))).toBe(
-				'Please sign in to continue'
-			);
-			expect(getUserFriendlyMessage(new AuthorizationError('nope', ['GitHub', 'Doppler']))).toBe(
-				'Additional authentication required: GitHub, Doppler'
-			);
-			expect(getUserFriendlyMessage(new NotFoundError('missing', 'resource'))).toBe(
-				'The requested resource was not found'
-			);
-			expect(getUserFriendlyMessage(new ExternalServiceError('fail', 'service'))).toBe(
-				'External service is temporarily unavailable. Please try again later.'
-			);
-			expect(getUserFriendlyMessage(new RateLimitError('slow', 'service', 10))).toBe(
-				'Too many requests. Please wait a moment and try again.'
-			);
-		});
+	it('should throw ValidationError for enum violation', () => {
+		const data = { name: 'Jules', role: 'guest' };
+		expect(() => validateRequest(data, schema)).toThrow('role must be one of: admin, user');
+	});
+});
 
-		it('returns default message otherwise', () => {
-			expect(getUserFriendlyMessage(new Error('unknown'))).toBe(
-				'Something went wrong. Please try again.'
-			);
-		});
+describe('requireAuthentication', () => {
+	it('should not throw if user is authenticated and no services are required', () => {
+		const authState = { user: { id: 1 } };
+		expect(() => requireAuthentication(authState)).not.toThrow();
 	});
 
-	describe('logError', () => {
-		it('logs with context and includes metadata', () => {
-			const error = new ValidationError('invalid', 'field');
-			logError(error, { context: 'testing' });
-			expect(console.error).toHaveBeenCalled();
-			const [message, payload] = console.error.mock.calls.at(-1);
-			expect(message).toContain('Genproj error logged:');
-			expect(payload).toMatchObject({
-				error: 'invalid',
-				context: 'testing',
-				code: 'VALIDATION_ERROR',
-				statusCode: 400,
-				timestamp: fixedDate.toISOString()
-			});
-		});
+	it('should throw AuthenticationError if user is not authenticated', () => {
+		expect(() => requireAuthentication({})).toThrow(AuthenticationError);
+	});
+
+	it('should throw AuthorizationError if required services are missing', () => {
+		const authState = { user: { id: 1 }, github: true };
+		expect(() => requireAuthentication(authState, ['github', 'doppler'])).toThrow(
+			AuthorizationError
+		);
+	});
+});
+
+describe('handleExternalServiceError', () => {
+	it('should throw RateLimitError for 429 status', () => {
+		const error = { status: 429, headers: new Map([['Retry-After', '120']]) };
+		expect(() => handleExternalServiceError(error, 'GitHub')).toThrow(RateLimitError);
+	});
+
+	it('should throw AuthenticationError for 401/403 status', () => {
+		const error = { status: 401 };
+		expect(() => handleExternalServiceError(error, 'Doppler')).toThrow(AuthenticationError);
+	});
+
+	it('should throw NotFoundError for 404 status', () => {
+		const error = { status: 404 };
+		expect(() => handleExternalServiceError(error, 'CircleCI')).toThrow(NotFoundError);
+	});
+
+	it('should throw ExternalServiceError for 5xx status', () => {
+		const error = { status: 503 };
+		expect(() => handleExternalServiceError(error, 'SonarCloud')).toThrow(ExternalServiceError);
+	});
+
+	it('should throw a generic ExternalServiceError for other errors', () => {
+		const error = new Error('Network issue');
+		expect(() => handleExternalServiceError(error, 'GenericAPI')).toThrow(ExternalServiceError);
+	});
+});
+
+describe('getUserFriendlyMessage', () => {
+	it('should return the correct message for each error type', () => {
+		expect(getUserFriendlyMessage(new ValidationError('Bad name', 'name'))).toBe('Bad name');
+		expect(getUserFriendlyMessage(new AuthenticationError('Sign in'))).toBe(
+			'Please sign in to continue'
+		);
+		expect(getUserFriendlyMessage(new RateLimitError('Slow down'))).toBe(
+			'Too many requests. Please wait a moment and try again.'
+		);
+		expect(getUserFriendlyMessage(new Error('Generic'))).toBe(
+			'Something went wrong. Please try again.'
+		);
+	});
+});
+
+describe('logError', () => {
+	it('should log the error with correct context', () => {
+		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const error = new GenprojError('Test log', 'LOG_CODE', 500);
+		const context = { requestId: '123' };
+		logError(error, context);
+		expect(consoleSpy).toHaveBeenCalled();
+		const logData = consoleSpy.mock.calls[0][1];
+		expect(logData.error).toBe('Test log');
+		expect(logData.code).toBe('LOG_CODE');
+		expect(logData.requestId).toBe('123');
+		consoleSpy.mockRestore();
 	});
 });

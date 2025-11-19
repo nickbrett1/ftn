@@ -98,8 +98,9 @@ describe('BaseParser', () => {
 				last4: '1234'
 				// missing statement_date and charges
 			};
-
+			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			expect(parser.validateParsedData(data)).toBe(false);
+			errorSpy.mockRestore();
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
