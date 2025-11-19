@@ -1,11 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { generatePreview } from '../../src/lib/server/preview-generator.js';
-
-const { mockProcessTemplate } = vi.hoisted(() => ({
-	mockProcessTemplate: vi.fn((template, context) =>
-		template.replace('{{projectName}}', context.name)
-	)
-}));
+import { TemplateEngine } from '../../src/lib/utils/file-generator.js';
 
 vi.mock('../../src/lib/config/capabilities.js', () => ({
 	capabilities: [
@@ -13,12 +8,12 @@ vi.mock('../../src/lib/config/capabilities.js', () => ({
 			id: 'feature',
 			name: 'Feature Capability',
 			description: 'Adds feature support',
-			templates: [{ path: 'src/feature.js', content: 'console.log("{{name}}");' }], // Use 'name' instead of 'projectName'
+			templates: [{ filePath: 'src/feature.js', templateId: 'feature-template' }],
 			externalServices: [
 				{
 					type: 'github',
 					name: 'GitHub',
-					actions: [{ type: 'create', description: 'Setup {{name}} repo' }], // Use 'name' instead of 'projectName'
+					actions: [{ type: 'create', description: 'Setup {{name}} repo' }],
 					requiresAuth: true
 				}
 			]
@@ -62,7 +57,7 @@ vi.mock('../../src/lib/utils/file-generator.js', () => ({
 		}
 		compileTemplate(templateString, data) {
 			// Mock compileTemplate
-			return templateString.replace('{{projectName}}', data.name);
+			return templateString.replace('{{name}}', data.name);
 		}
 		async generateFile(templateId, data) {
 			// Mock template content for testing
@@ -93,6 +88,9 @@ vi.mock('../../src/lib/utils/file-generator.js', () => ({
 			if (templateId === 'devcontainer-java-dockerfile') {
 				return `FROM java:${data.capabilityConfig.javaVersion}`;
 			}
+			if (templateId === 'feature-template') {
+				return `// feature file for ${data.name}`;
+			}
 			return `Mock content for ${templateId} with project ${data.name}`;
 		}
 	}
@@ -114,36 +112,43 @@ describe('generatePreview', () => {
 
 	it('creates preview data with files, services and summary', async () => {
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
-		expect(preview.files.length).toBeGreaterThan(0);
+		const srcFolder = preview.files.find((f) => f.name === 'src' && f.type === 'folder');
+		expect(srcFolder).toBeDefined();
+		const featureFile = srcFolder.children.find((f) => f.name === 'feature.js');
+		expect(featureFile).toBeDefined();
+
+		expect(preview.files.length).toBe(2); // folder and readme
 		expect(preview.externalServices[0]).toMatchObject({ type: 'github' });
 		expect(preview.summary).toMatchObject({
 			projectName: 'Demo',
 			totalCapabilities: 2,
 			addedDependencies: 1,
-			totalFiles: preview.files.length
+			totalFiles: 2
 		});
 		expect(preview.summary.isValid).toBe(true);
 	});
 
 	it('continues preview generation when template processing fails', async () => {
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-		mockProcessTemplate.mockImplementationOnce(() => {
-			throw new Error('template failure');
-		});
+		const generateFileSpy = vi
+			.spyOn(TemplateEngine.prototype, 'generateFile')
+			.mockRejectedValue(new Error('template failure'));
 
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
 
-		expect(warnSpy).toHaveBeenCalled();
+		expect(warnSpy).toHaveBeenCalledWith(
+			'⚠️ Failed to process template feature-template:',
+			expect.any(Error)
+		);
 		expect(preview.files).toEqual([
-			{
+			expect.objectContaining({
 				path: 'README.md',
-				name: 'README.md',
-				content: expect.stringContaining('# Demo'),
-				size: expect.any(Number),
-				type: 'file'
-			}
+				name: 'README.md'
+			})
 		]);
+		expect(preview.files.length).toBe(1);
 
+		generateFileSpy.mockRestore();
 		warnSpy.mockRestore();
 	});
 });

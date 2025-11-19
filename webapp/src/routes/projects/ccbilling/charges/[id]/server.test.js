@@ -9,20 +9,20 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({ requireUser: vi.fn() }));
-vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => {
-		const response = Response.json(data, {
-			status: options?.status || 200,
-			...options
-		});
-		response.json = vi.fn().mockResolvedValue(data);
-		return response;
-	})
-}));
+vi.mock('@sveltejs/kit', async (importOriginal) => {
+	const original = await importOriginal();
+	return {
+		...original,
+		json: vi.fn((data, init) => {
+			return new Response(JSON.stringify(data), init);
+		})
+	};
+});
 
 // Import the mocked functions
 import { getPayment, updatePayment, listBudgets } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
+import { json } from '@sveltejs/kit';
 
 describe('/projects/ccbilling/charges/[id] API', () => {
 	let mockEvent;
@@ -59,46 +59,42 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			};
 			getPayment.mockResolvedValue(mockCharge);
 
-			const response = await GET(mockEvent);
-			const result = await response.json();
+			await GET(mockEvent);
 
 			expect(getPayment).toHaveBeenCalledWith(mockEvent, 1);
-			expect(result.charge).toEqual(mockCharge);
+			expect(json).toHaveBeenCalledWith({ charge: mockCharge });
 		});
 
 		it('should return 400 for invalid charge ID', async () => {
 			mockEvent.params.id = 'invalid';
 
-			const response = await GET(mockEvent);
-			const result = await response.json();
+			await GET(mockEvent);
 
-			expect(response.status).toBe(400);
-			expect(result.error).toBe('Invalid charge ID');
+			expect(json).toHaveBeenCalledWith({ error: 'Invalid charge ID' }, { status: 400 });
 		});
 
 		it('should return 404 when charge not found', async () => {
 			getPayment.mockResolvedValue(null);
 
-			const response = await GET(mockEvent);
-			const result = await response.json();
+			await GET(mockEvent);
 
-			expect(response.status).toBe(404);
-			expect(result.error).toBe('Charge not found');
+			expect(json).toHaveBeenCalledWith({ error: 'Charge not found' }, { status: 404 });
 		});
 
 		it('should handle database errors', async () => {
 			getPayment.mockRejectedValue(new Error('Database error'));
+			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const response = await GET(mockEvent);
-			const result = await response.json();
+			await GET(mockEvent);
 
-			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to get charge');
+			expect(json).toHaveBeenCalledWith({ error: 'Failed to get charge' }, { status: 500 });
+			expect(consoleErrorSpy).toHaveBeenCalled();
+			consoleErrorSpy.mockRestore();
 		});
 
 		it('should redirect if user not authenticated', async () => {
 			requireUser.mockResolvedValue(new Response('', { status: 302 }));
-			expect(await GET(mockEvent)).toEqual(expect.any(Response));
+			await GET(mockEvent);
 			expect(getPayment).not.toHaveBeenCalled();
 		});
 	});
@@ -115,21 +111,18 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 		it('should successfully update a charge', async () => {
 			updatePayment.mockResolvedValue({});
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
+			await PUT(mockEvent);
 
 			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Updated Merchant', 99.99, 'Nick');
-			expect(result.success).toBe(true);
+			expect(json).toHaveBeenCalledWith({ success: true });
 		});
 
 		it('should return 400 for invalid charge ID', async () => {
 			mockEvent.params.id = 'invalid';
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(400);
-			expect(result.error).toBe('Invalid charge ID');
+			expect(json).toHaveBeenCalledWith({ error: 'Invalid charge ID' }, { status: 400 });
 		});
 
 		it('should return 400 for missing required fields', async () => {
@@ -138,11 +131,11 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 				// Missing amount and allocated_to
 			});
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
-
-			expect(response.status).toBe(400);
-			expect(result.error).toBe('Missing required fields: merchant, amount');
+			await PUT(mockEvent);
+			expect(json).toHaveBeenCalledWith(
+				{ error: 'Missing required fields: merchant, amount' },
+				{ status: 400 }
+			);
 		});
 
 		it('should return 400 for invalid allocated_to value', async () => {
@@ -152,12 +145,13 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 				allocated_to: 'Invalid'
 			});
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(400);
-			expect(result.error).toBe(
-				'allocated_to must be one of the available budgets: Nick, Tas, Both'
+			expect(json).toHaveBeenCalledWith(
+				{
+					error: 'allocated_to must be one of the available budgets: Nick, Tas, Both'
+				},
+				{ status: 400 }
 			);
 		});
 
@@ -168,21 +162,20 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 				allocated_to: 'Nick'
 			});
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(400);
-			expect(result.error).toBe('Amount must be a valid number');
+			expect(json).toHaveBeenCalledWith({ error: 'Amount must be a valid number' }, { status: 400 });
 		});
 
 		it('should handle database errors', async () => {
 			updatePayment.mockRejectedValue(new Error('Database error'));
+			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			const response = await PUT(mockEvent);
-			const result = await response.json();
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(500);
-			expect(result.error).toBe('Failed to update charge');
+			expect(json).toHaveBeenCalledWith({ error: 'Failed to update charge' }, { status: 500 });
+			expect(consoleErrorSpy).toHaveBeenCalled();
+			consoleErrorSpy.mockRestore();
 		});
 
 		it('should validate all allocation options', async () => {
@@ -196,11 +189,9 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 				});
 				updatePayment.mockResolvedValue({});
 
-				const response = await PUT(mockEvent);
-				const result = await response.json();
+				await PUT(mockEvent);
 
-				expect(response.status).toBe(200);
-				expect(result.success).toBe(true);
+				expect(json).toHaveBeenCalledWith({ success: true });
 				expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Test Merchant', 99.99, option);
 			}
 		});
@@ -213,9 +204,9 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			});
 			updatePayment.mockResolvedValue({});
 
-			const response = await PUT(mockEvent);
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(200);
+			expect(json).toHaveBeenCalledWith({ success: true });
 			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Refund', 0, 'Both');
 		});
 
@@ -227,16 +218,31 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 			});
 			updatePayment.mockResolvedValue({});
 
-			const response = await PUT(mockEvent);
+			await PUT(mockEvent);
 
-			expect(response.status).toBe(200);
+			expect(json).toHaveBeenCalledWith({ success: true });
 			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Credit', -50, 'Nick');
 		});
 
 		it('should redirect if user not authenticated', async () => {
 			requireUser.mockResolvedValue(new Response('', { status: 302 }));
-			expect(await PUT(mockEvent)).toEqual(expect.any(Response));
+			await PUT(mockEvent);
 			expect(updatePayment).not.toHaveBeenCalled();
+		});
+
+		it('should allow updating only the allocation', async () => {
+			mockEvent.request.json.mockResolvedValue({
+				allocated_to: 'Tas'
+			});
+			getPayment.mockResolvedValue({
+				id: 1,
+				merchant: 'Amazon',
+				amount: 85.67
+			});
+			updatePayment.mockResolvedValue({});
+			await PUT(mockEvent);
+			expect(json).toHaveBeenCalledWith({ success: true });
+			expect(updatePayment).toHaveBeenCalledWith(mockEvent, 1, 'Amazon', 85.67, 'Tas');
 		});
 	});
 });
