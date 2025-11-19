@@ -177,7 +177,7 @@ export class WellsFargoParser extends BaseParser {
 			// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
 			// Example: "06/17 06/17 860001800 5543286595Z9WS512 TST*BLACK TAP SOHO - T NEW YORK NY $13.06"
 			const transactionMatch = line.match(
-				/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+(.+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
+				/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^\$]+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
 			);
 
 			if (transactionMatch) {
