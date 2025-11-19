@@ -25,53 +25,27 @@
  * @property {string[]} events - Events to listen for
  */
 
+import { BaseAPIService } from './base-api-service.js';
+
 /**
  * CircleCI API service class
  */
-export class CircleCIAPIService {
+export class CircleCIAPIService extends BaseAPIService {
 	/**
 	 * Creates a new CircleCI API service instance
 	 * @param {string} token - CircleCI API token
 	 */
 	constructor(token) {
-		this.token = token;
-		this.baseUrl = 'https://circleci.com/api/v2';
-		this.headers = {
-			'Circle-Token': token,
-			Accept: 'application/json',
-			'Content-Type': 'application/json'
-		};
-	}
-
-	/**
-	 * Makes an authenticated request to CircleCI API
-	 * @param {string} endpoint - API endpoint
-	 * @param {Object} [options] - Request options
-	 * @returns {Promise<Response>} API response
-	 */
-	async makeRequest(endpoint, options = {}) {
-		const url = `${this.baseUrl}${endpoint}`;
-		const requestOptions = {
-			headers: this.headers,
-			...options
-		};
-
-		console.log(`🔍 Making CircleCI API request to: ${endpoint}`);
-
-		try {
-			const response = await fetch(url, requestOptions);
-
-			if (!response.ok) {
-				console.error(`❌ CircleCI API error: ${response.status} ${response.statusText}`);
-				throw new Error(`CircleCI API error: ${response.status} ${response.statusText}`);
-			}
-
-			console.log(`✅ CircleCI API request successful: ${endpoint}`);
-			return response;
-		} catch (error) {
-			console.error(`❌ CircleCI API request failed: ${error.message}`);
-			throw error;
-		}
+		super(
+			token,
+			'https://circleci.com/api/v2',
+			{
+				'Circle-Token': token,
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			'CircleCI'
+		);
 	}
 
 	/**

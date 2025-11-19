@@ -227,4 +227,75 @@ export class BaseParser {
 		const match = text.match(pattern);
 		return match ? match[1] : null;
 	}
+
+	/**
+	 * Returns the regex patterns for identifying the statement date.
+	 * Subclasses can override this to provide more specific regex.
+	 * @returns {RegExp[]}
+	 */
+	getStatementDatePatterns() {
+		return [];
+	}
+
+	/**
+	 * Extract the statement closing date
+	 * @param {string} text - PDF text content
+	 * @returns {string|null} - Statement date in YYYY-MM-DD format
+	 */
+	extractStatementDate(text) {
+		const patterns = this.getStatementDatePatterns();
+		for (const pattern of patterns) {
+			const match = text.match(pattern);
+			if (match) {
+				const dateString = match[2] || match[1];
+				return this.parseDate(dateString);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the regex patterns for identifying the last 4 digits of the credit card.
+	 * Subclasses can override this to provide more specific regex.
+	 * @returns {RegExp[]}
+	 */
+	getLast4DigitsPatterns() {
+		return [];
+	}
+
+	/**
+	 * Extract the last 4 digits of the credit card
+	 * @param {string} text - PDF text content
+	 * @returns {string|null} - Last 4 digits or null
+	 */
+	extractLast4Digits(text) {
+		const patterns = this.getLast4DigitsPatterns();
+		for (const pattern of patterns) {
+			const match = this.findText(text, pattern);
+			if (match) {
+				return match;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the keywords for identifying a payment to the card.
+	 * Subclasses can override this to provide more specific keywords.
+	 * @returns {string[]}
+	 */
+	getPaymentKeywords() {
+		return [];
+	}
+
+	/**
+	 * Check if a merchant name represents a payment to the card
+	 * @param {string} merchant - Merchant name
+	 * @returns {boolean} - True if it's a payment to the card
+	 */
+	isPaymentToCard(merchant) {
+		const paymentKeywords = this.getPaymentKeywords();
+		const merchantLower = merchant.toLowerCase();
+		return paymentKeywords.some((keyword) => merchantLower.includes(keyword.toLowerCase()));
+	}
 }

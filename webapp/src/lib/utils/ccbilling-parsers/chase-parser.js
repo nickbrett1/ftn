@@ -77,83 +77,41 @@ export class ChaseParser extends BaseParser {
 	}
 
 	/**
-	 * Extract the last 4 digits of the credit card
-	 * @param {string} text - PDF text content
-	 * @returns {string|null} - Last 4 digits or null
+	 * Returns the regex patterns for identifying the last 4 digits of the credit card.
+	 * @returns {RegExp[]}
 	 */
-	extractLast4Digits(text) {
-		// Look for various account number patterns
-		const patterns = [
-			// Standard Chase patterns
+	getLast4DigitsPatterns() {
+		return [
 			/Account Number:\s*XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
 			/Account Number:\s*(\d{4})/i,
 			/XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
-
-			// More comprehensive patterns from regex validator
 			/(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})/i,
-
-			// Additional patterns that might be used by Amazon Chase cards
 			/Account.*?(\d{4})/i,
 			/Card.*?(\d{4})/i,
 			/Account Number.*?(\d{4})/i,
 			/Card Number.*?(\d{4})/i,
-
-			// Pattern for statements that show "ending in XXXX"
 			/ending\s+in\s+(\d{4})/i,
-
-			// Pattern for masked numbers with asterisks
 			/\*{4}\s*(\d{4})/i,
 			/\*+\s*(\d{4})/i
 		];
-
-		for (const pattern of patterns) {
-			const match = this.findText(text, pattern);
-			if (match) {
-				return match;
-			}
-		}
-
-		return null;
 	}
 
 	/**
-	 * Extract the statement closing date
-	 * @param {string} text - PDF text content
-	 * @returns {string|null} - Statement date in YYYY-MM-DD format
+	 * Returns the regex patterns for identifying the statement date.
+	 * @returns {RegExp[]}
 	 */
-	extractStatementDate(text) {
-		// Look for various date patterns used by Chase statements
-		const patterns = [
-			// Standard Chase patterns
+	getStatementDatePatterns() {
+		return [
 			/Opening\/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
-
-			// Additional patterns that might be used by Amazon Chase cards
 			/Billing Cycle\s+(\d{1,2}\/\d{1,2}\/\d{2})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Billing Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
 			/Statement Period\s+(\d{1,2}\/\d{1,2}\/\d{2})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2})/i,
-
-			// Patterns with 4-digit years
 			/Closing Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
 			/Statement Date\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
 			/Billing Cycle\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
 		];
-
-		for (const pattern of patterns) {
-			const match = text.match(pattern);
-			if (match) {
-				// Use the second date (closing date) if two dates are provided
-				const dateString = match[2] || match[1];
-
-				// Check if the date is in 4-digit year format
-				return /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)
-					? this.parseChaseDate4Digit(dateString)
-					: this.parseChaseDate(dateString);
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -664,8 +622,12 @@ export class ChaseParser extends BaseParser {
 	 * @param {string} merchant - Merchant name
 	 * @returns {boolean} - True if it's a payment to the card
 	 */
-	isPaymentToCard(merchant) {
-		const paymentKeywords = [
+	/**
+	 * Returns the keywords for identifying a payment to the card.
+	 * @returns {string[]}
+	 */
+	getPaymentKeywords() {
+		return [
 			'payment thank you',
 			'payment thank you-mobile',
 			'online payment',
@@ -675,9 +637,6 @@ export class ChaseParser extends BaseParser {
 			'payment - thank you',
 			'payment - thank you-mobile'
 		];
-
-		const merchantLower = merchant.toLowerCase();
-		return paymentKeywords.some((keyword) => merchantLower.includes(keyword));
 	}
 
 	/**
