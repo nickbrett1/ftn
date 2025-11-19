@@ -63,56 +63,58 @@ export function getIconDescription(emoji) {
 	return BUDGET_ICONS[emoji] || 'Unknown';
 }
 
+const iconMappings = {
+	'🛒': ['grocery', 'food', 'supermarket'],
+	'🍽️': ['dining', 'restaurant'],
+	'🚗': ['transport', 'car'],
+	'🎬': ['entertainment', 'movie'],
+	'🛍️': ['shopping', 'retail'],
+	'✈️': ['travel', 'flight', 'hotel'],
+	'💡': ['utility', 'electric', 'water'],
+	'🏥': ['health', 'medical', 'doctor'],
+	'🏠': ['housing', 'rent', 'mortgage'],
+	'🎓': ['education', 'school', 'college'],
+	'💻': ['tech', 'computer', 'software'],
+	'🎮': ['game', 'gaming'],
+	'🏃': ['fitness', 'gym', 'workout'],
+	'🐕': ['pet', 'dog', 'cat'],
+	'👕': ['clothing', 'apparel'],
+	'📚': ['book', 'reading'],
+	'🎨': ['hobby', 'craft'],
+	'💄': ['beauty', 'cosmetic'],
+	'🍷': ['alcohol', 'wine', 'beer'],
+	'🎁': ['gift', 'present'],
+	'💊': ['medicine', 'pharmacy'],
+	'🚌': ['transit', 'bus', 'train'],
+	'⛽': ['gas', 'fuel'],
+	'🏦': ['bank', 'financial'],
+	'📱': ['mobile', 'phone'],
+	'📺': ['streaming', 'netflix', 'hulu'],
+	'🎵': ['music', 'spotify'],
+	'📰': ['news', 'subscription'],
+	'🏖️': ['vacation', 'holiday'],
+	'🎪': ['event', 'concert'],
+	'💍': ['jewelry', 'accessory'],
+	'🔧': ['home', 'improvement'],
+	'🌱': ['garden', 'plant'],
+	'🎯': ['sport', 'athletic'],
+	'📷': ['photo', 'camera'],
+	'💎': ['luxury', 'premium'],
+	'🔋': ['electronic', 'device']
+};
+
 /**
  * Get default icon for a budget name
  */
 export function getDefaultIcon(budgetName) {
 	const name = budgetName.toLowerCase();
-
-	if (name.includes('grocery') || name.includes('food') || name.includes('supermarket'))
-		return '🛒';
-	if (name.includes('dining') || name.includes('restaurant') || name.includes('food')) return '🍽️';
-	if (name.includes('transport') || name.includes('car') || name.includes('gas')) return '🚗';
-	if (name.includes('entertainment') || name.includes('movie') || name.includes('streaming'))
-		return '🎬';
-	if (name.includes('shopping') || name.includes('retail')) return '🛍️';
-	if (name.includes('travel') || name.includes('flight') || name.includes('hotel')) return '✈️';
-	if (name.includes('utility') || name.includes('electric') || name.includes('water')) return '💡';
-	if (name.includes('health') || name.includes('medical') || name.includes('doctor')) return '🏥';
-	if (name.includes('housing') || name.includes('rent') || name.includes('mortgage')) return '🏠';
-	if (name.includes('education') || name.includes('school') || name.includes('college'))
-		return '🎓';
-	if (name.includes('tech') || name.includes('computer') || name.includes('software')) return '💻';
-	if (name.includes('game') || name.includes('gaming')) return '🎮';
-	if (name.includes('fitness') || name.includes('gym') || name.includes('workout')) return '🏃';
-	if (name.includes('pet') || name.includes('dog') || name.includes('cat')) return '🐕';
-	if (name.includes('clothing') || name.includes('apparel')) return '👕';
-	if (name.includes('book') || name.includes('reading')) return '📚';
-	if (name.includes('hobby') || name.includes('craft')) return '🎨';
-	if (name.includes('beauty') || name.includes('cosmetic')) return '💄';
-	if (name.includes('alcohol') || name.includes('wine') || name.includes('beer')) return '🍷';
-	if (name.includes('gift') || name.includes('present')) return '🎁';
-	if (name.includes('medicine') || name.includes('pharmacy')) return '💊';
-	if (name.includes('transit') || name.includes('bus') || name.includes('train')) return '🚌';
-	if (name.includes('gas') || name.includes('fuel')) return '⛽';
-	if (name.includes('bank') || name.includes('financial')) return '🏦';
-	if (name.includes('mobile') || name.includes('phone')) return '📱';
-	if (name.includes('streaming') || name.includes('netflix') || name.includes('hulu')) return '📺';
-	if (name.includes('music') || name.includes('spotify')) return '🎵';
-	if (name.includes('news') || name.includes('subscription')) return '📰';
-	if (name.includes('vacation') || name.includes('holiday')) return '🏖️';
-	if (name.includes('event') || name.includes('concert')) return '🎪';
-	if (name.includes('jewelry') || name.includes('accessory')) return '💍';
-	if (name.includes('home') || name.includes('improvement')) return '🔧';
-	if (name.includes('garden') || name.includes('plant')) return '🌱';
-	if (name.includes('sport') || name.includes('athletic')) return '🎯';
-	if (name.includes('photo') || name.includes('camera')) return '📷';
-	if (name.includes('luxury') || name.includes('premium')) return '💎';
-	if (name.includes('electronic') || name.includes('device')) return '🔋';
-
+	for (const [icon, keywords] of Object.entries(iconMappings)) {
+		if (keywords.some((keyword) => name.includes(keyword))) {
+			return icon;
+		}
+	}
 	return '📦'; // Default fallback
 }
-
 /**
  * Get allocation icon for display
  */

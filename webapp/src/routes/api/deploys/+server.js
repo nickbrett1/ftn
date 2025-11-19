@@ -61,7 +61,7 @@ async function getWorkerDetails(accountId, apiToken, workerId, environment) {
 
 	if (deployResponse.ok) {
 		const deployData = await deployResponse.json();
-		if (deployData.result && deployData.result.length > 0) {
+		if (deployData.result?.length > 0) {
 			worker.latestDeployment = deployData.result[0];
 			worker.deployedAt = worker.latestDeployment.created_on || worker.deployedAt;
 		}
@@ -97,16 +97,44 @@ function formatDeployment(name, environment, url, workerDetails) {
 	};
 }
 
+async function getProductionVersions(accountId, apiToken) {
+	const versions = [];
+	const productionApiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
+	const productionResponse = await fetch(productionApiUrl, {
+		headers: {
+			Authorization: `Bearer ${apiToken}`,
+			'Content-Type': 'application/json'
+		}
+	});
+
+	if (productionResponse.ok) {
+		const productionData = await productionResponse.json();
+		if (productionData.success && productionData.result.length > 0) {
+			for (const version of productionData.result) {
+				versions.push({
+					name: `Production Version ${version.id}`,
+					status: 'active',
+					environment: 'production',
+					url: 'https://ftn-production.nick-brett1.workers.dev',
+					version: `v${version.id}`,
+					deployedAt: formatDate(version.created_on)
+				});
+			}
+		}
+	}
+	return versions;
+}
+
 export async function GET() {
 	try {
 		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
 		const apiToken = env.CLOUDFLARE_DEPLOYS_TOKEN;
 
 		if (!accountId || !apiToken) {
-			const missingVariables = [];
-			if (!accountId) missingVariables.push('CLOUDFLARE_ACCOUNT_ID');
-			if (!apiToken) missingVariables.push('CLOUDFLARE_DEPLOYS_TOKEN');
-
+			const missingVariables = [
+				...(!accountId ? ['CLOUDFLARE_ACCOUNT_ID'] : []),
+				...(!apiToken ? ['CLOUDFLARE_DEPLOYS_TOKEN'] : [])
+			];
 			throw error(
 				500,
 				`Missing Cloudflare environment variables: ${missingVariables.join(
@@ -120,12 +148,10 @@ export async function GET() {
 		const productionWorker = workers.find((worker) => worker.id === 'ftn-production');
 
 		if (!previewWorker && !productionWorker) {
-			const availableWorkers = workers.map((w) => w.id).join(', ');
+			const availableWorkers = workers.map((w) => w.id).join(', ') || 'none';
 			throw error(
 				404,
-				`Main Workers 'ftn-preview' and 'ftn-production' not found on your Cloudflare account. Available Workers: ${
-					availableWorkers || 'none'
-				}. You may need to deploy the Workers first.`
+				`Main Workers 'ftn-preview' and 'ftn-production' not found on your Cloudflare account. Available Workers: ${availableWorkers}. You may need to deploy the Workers first.`
 			);
 		}
 
@@ -158,29 +184,8 @@ export async function GET() {
 					productionDetails
 				)
 			);
-			const productionApiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
-			const productionResponse = await fetch(productionApiUrl, {
-				headers: {
-					Authorization: `Bearer ${apiToken}`,
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (productionResponse.ok) {
-				const productionData = await productionResponse.json();
-				if (productionData.success && productionData.result.length > 0) {
-					for (const version of productionData.result) {
-						deployments.push({
-							name: `Production Version ${version.id}`,
-							status: 'active',
-							environment: 'production',
-							url: 'https://ftn-production.nick-brett1.workers.dev',
-							version: `v${version.id}`,
-							deployedAt: formatDate(version.created_on)
-						});
-					}
-				}
-			}
+			const productionVersions = await getProductionVersions(accountId, apiToken);
+			deployments.push(...productionVersions);
 		}
 
 		return json(deployments);

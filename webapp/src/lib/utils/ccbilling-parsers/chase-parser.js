@@ -141,7 +141,7 @@ export class ChaseParser extends BaseParser {
 		];
 
 		for (const pattern of patterns) {
-			const match = text.match(pattern);
+			const match = pattern.exec(text);
 			if (match) {
 				// Use the second date (closing date) if two dates are provided
 				const dateString = match[2] || match[1];
@@ -164,7 +164,7 @@ export class ChaseParser extends BaseParser {
 	parseChaseDate(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -189,7 +189,7 @@ export class ChaseParser extends BaseParser {
 	parseChaseDate4Digit(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -257,7 +257,7 @@ export class ChaseParser extends BaseParser {
 			}
 
 			// Look for date pattern at the start of a line (MM/DD)
-			const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
+			const dateMatch = /^(\d{2}\/\d{2})\s+(.+)/.exec(line);
 			if (!dateMatch) continue;
 
 			const date = this.parseDate(dateMatch[1]);
@@ -428,7 +428,16 @@ export class ChaseParser extends BaseParser {
 	 * @returns {Object|null} - Object containing flight details or null
 	 */
 	extractFlightDetails(lines, startIndex) {
-		let flightDetails = {
+		const flightDetails = this._initializeFlightDetails();
+
+		this._extractAirportCodes(lines, startIndex, flightDetails);
+		this._extractAirline(lines[startIndex], flightDetails);
+
+		return Object.values(flightDetails).some((value) => value !== null) ? flightDetails : null;
+	}
+
+	_initializeFlightDetails() {
+		return {
 			departure_airport: null,
 			arrival_airport: null,
 			departure_date: null,
@@ -438,66 +447,66 @@ export class ChaseParser extends BaseParser {
 			currency: null,
 			exchange_rate: null
 		};
+	}
 
-		// Look at the next few lines for airport codes
+	_extractAirportCodes(lines, startIndex, flightDetails) {
 		for (let index = startIndex + 1; index < Math.min(startIndex + 5, lines.length); index++) {
 			const line = lines[index];
+			if (this._isTransactionLine(line)) break;
 
-			// Look for airport codes pattern (e.g., "100925 1 L LGA IAH")
-			const airportMatch = line.match(/(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/);
+			const airportMatch = /(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/.exec(line);
 			if (airportMatch) {
-				flightDetails.departure_airport = airportMatch[4]; // LGA
-				flightDetails.arrival_airport = airportMatch[5]; // IAH
-				break;
+				flightDetails.departure_airport = airportMatch[4];
+				flightDetails.arrival_airport = airportMatch[5];
+				return;
 			}
 
-			// Look for simple airport codes (e.g., "LGA IAH") - but only if line is short and doesn't contain transaction details
-			if (
-				line.length < 20 &&
-				!line.includes('UNITED') &&
-				!line.includes('TX') &&
-				!line.includes('$')
-			) {
-				const simpleAirportMatch = line.match(/^(\w{3})\s+(\w{3})$/);
+			if (this._isSimpleAirportLine(line)) {
+				const simpleAirportMatch = /^(\w{3})\s+(\w{3})$/.exec(line);
 				if (simpleAirportMatch) {
 					flightDetails.departure_airport = simpleAirportMatch[1];
 					flightDetails.arrival_airport = simpleAirportMatch[2];
-					break;
+					return;
 				}
 			}
+		}
+	}
 
-			// Stop looking if we encounter another transaction line (starts with date pattern)
-			if (/^\d{2}\/\d{2}\s+/.test(line)) {
+	_isTransactionLine(line) {
+		return /^\d{2}\/\d{2}\s+/.test(line);
+	}
+
+	_isSimpleAirportLine(line) {
+		return (
+			line.length < 20 &&
+			!line.includes('UNITED') &&
+			!line.includes('TX') &&
+			!line.includes('$')
+		);
+	}
+
+	_extractAirline(merchantLine, flightDetails) {
+		const merchant = /^(\d{2}\/\d{2})\s+(.+)/.exec(merchantLine)?.[2] || '';
+		if (!merchant) return;
+
+		const airlines = [
+			'UNITED',
+			'AMERICAN',
+			'DELTA',
+			'SOUTHWEST',
+			'JETBLUE',
+			'SPIRIT',
+			'FRONTIER',
+			'ALASKA',
+			'BRITISH AIRWAYS'
+		];
+
+		for (const airline of airlines) {
+			if (merchant.toUpperCase().includes(airline)) {
+				flightDetails.airline = airline;
 				break;
 			}
 		}
-
-		// Extract airline from the merchant name
-		const merchant = lines[startIndex].match(/^(\d{2}\/\d{2})\s+(.+)/)?.[2] || '';
-
-		if (merchant) {
-			// Look for airline names in the merchant field
-			const airlines = [
-				'UNITED',
-				'AMERICAN',
-				'DELTA',
-				'SOUTHWEST',
-				'JETBLUE',
-				'SPIRIT',
-				'FRONTIER',
-				'ALASKA',
-				'BRITISH AIRWAYS'
-			];
-			for (const airline of airlines) {
-				if (merchant.toUpperCase().includes(airline)) {
-					flightDetails.airline = airline;
-					break;
-				}
-			}
-		}
-
-		// Only return details if at least one is found
-		return Object.values(flightDetails).some((value) => value !== null) ? flightDetails : null;
 	}
 
 	/**
@@ -510,7 +519,7 @@ export class ChaseParser extends BaseParser {
 		// We need to handle multi-line merchants and various formats
 
 		// Look for date pattern at the beginning
-		const dateMatch = line.match(/^(\d{1,2}\/\d{1,2})/);
+		const dateMatch = /^(\d{1,2}\/\d{1,2})/.exec(line);
 		if (!dateMatch) return null;
 
 		const date = this.parseDate(dateMatch[1]);
@@ -644,7 +653,7 @@ export class ChaseParser extends BaseParser {
 
 		const [amount1, amount2WithExtra] = parts;
 		// Extract just the number from amount2, removing any extra text like "(EXCHG RATE)"
-		const amount2 = amount2WithExtra.match(/^(\d+\.\d+)/)?.[1];
+		const amount2 = /^(\d+\.\d+)/.exec(amount2WithExtra)?.[1];
 
 		const numberPattern = /^\d+\.\d+$/;
 
@@ -724,88 +733,5 @@ export class ChaseParser extends BaseParser {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Find text using a regex pattern and return the first match
-	 * @param {string} text - Text to search in
-	 * @param {RegExp} pattern - Regex pattern to match
-	 * @returns {string|null} - First match or null
-	 */
-	findText(text, pattern) {
-		const match = text.match(pattern);
-		return match ? match[1] : null;
-	}
-
-	/**
-	 * Check if a transaction is an Amazon transaction
-	 * @param {string} merchant - Merchant name
-	 * @returns {boolean} - True if it's an Amazon transaction
-	 */
-	isAmazonTransaction(merchant) {
-		if (!merchant) return false;
-
-		const merchantUpper = merchant.toUpperCase();
-		return merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN');
-	}
-
-	/**
-	 * Extract full statement text for Amazon transactions
-	 * This captures multiple lines to get the order ID information
-	 * @param {Array} lines - All lines from the statement
-	 * @param {number} currentIndex - Current line index
-	 * @returns {string|null} - Full statement text or null
-	 */
-	extractFullStatementText(lines, currentIndex) {
-		if (currentIndex >= lines.length) return null;
-
-		const currentLine = lines[currentIndex];
-		let fullText = currentLine;
-
-		// Look ahead for additional lines that might contain order ID information
-		// Check the next few lines for order ID patterns
-		for (let index = currentIndex + 1; index < Math.min(currentIndex + 5, lines.length); index++) {
-			const nextLine = lines[index];
-
-			// Stop if we hit another transaction line (starts with date pattern)
-			if (/^\d{2}\/\d{2}\s+/.test(nextLine)) {
-				break;
-			}
-
-			// Check if this line contains order ID information
-			if (this.containsOrderIdInfo(nextLine)) {
-				fullText += '\n' + nextLine;
-			}
-		}
-
-		return fullText;
-	}
-
-	/**
-	 * Check if a line contains order ID information
-	 * @param {string} line - Line to check
-	 * @returns {boolean} - True if line contains order ID info
-	 */
-	containsOrderIdInfo(line) {
-		if (!line) return false;
-
-		const lineUpper = line.toUpperCase();
-
-		// Look for order ID patterns
-		const orderIdPatterns = [
-			/ORDER NUMBER/i,
-			/ORDER ID/i,
-			/ORDER #/i,
-			/\d{3}-\d{7}-\d{7}/, // Standard Amazon order ID format
-			/\d{16}/, // Compact order ID format
-			/\d{10,}/ // Any long number sequence
-		];
-
-		return orderIdPatterns.some((pattern) => {
-			if (typeof pattern === 'string') {
-				return lineUpper.includes(pattern);
-			}
-			return pattern.test(line);
-		});
 	}
 }

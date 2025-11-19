@@ -4,6 +4,50 @@
  * Defines the available project capabilities for the Project Generation Tool.
  * Each capability includes metadata and dependencies.
  */
+
+/**
+ * Creates a devcontainer capability object.
+ * @param {string} id - The unique identifier for the capability.
+ * @param {string} name - The display name of the capability.
+ * @param {string} description - A brief description of the capability.
+ * @param {object} configurationSchema - The schema for configuring the capability.
+ * @returns {object} A devcontainer capability object.
+ */
+function createDevContainerCapability(id, name, description, configurationSchema) {
+	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
+	return {
+		id,
+		name,
+		description,
+		category: 'devcontainer',
+		dependencies: ['docker'],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema,
+		templates: [
+			{
+				id: 'devcontainer-json',
+				filePath: '.devcontainer/devcontainer.json',
+				templateId: `devcontainer-${lang}-json`
+			},
+			{
+				id: 'dockerfile',
+				filePath: '.devcontainer/Dockerfile',
+				templateId: `devcontainer-${lang}-dockerfile`
+			},
+			{ id: 'zshrc', filePath: '.devcontainer/.zshrc', templateId: 'devcontainer-zshrc' },
+			{ id: 'p10k', filePath: '.devcontainer/.p10k.zsh', templateId: 'devcontainer-p10k-zsh' },
+			{
+				id: 'setup-sh',
+				filePath: '.devcontainer/setup.sh',
+				templateId: 'devcontainer-setup-sh',
+				isExecutable: true
+			}
+		],
+		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
+	};
+}
+
 export const capabilities = [
 	{
 		id: 'docker',
@@ -17,155 +61,41 @@ export const capabilities = [
 		templates: [],
 		website: 'https://www.docker.com/'
 	},
-	{
-		id: 'devcontainer-node',
-		name: 'Node.js DevContainer',
-		description: 'Sets up a VS Code DevContainer with Node.js environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+	createDevContainerCapability(
+		'devcontainer-node',
+		'Node.js DevContainer',
+		'Sets up a VS Code DevContainer with Node.js environment.',
+		{
 			type: 'object',
 			properties: {
-				nodeVersion: {
-					type: 'string',
-					enum: ['18', '20', '22'],
-					default: '22'
-				}
+				nodeVersion: { type: 'string', enum: ['18', '20', '22'], default: '22' }
 			},
 			required: []
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-node-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-node-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
-	{
-		id: 'devcontainer-python',
-		name: 'Python DevContainer',
-		description: 'Sets up a VS Code DevContainer with Python environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+		}
+	),
+	createDevContainerCapability(
+		'devcontainer-python',
+		'Python DevContainer',
+		'Sets up a VS Code DevContainer with Python environment.',
+		{
 			type: 'object',
 			properties: {
-				pythonVersion: {
-					type: 'string',
-					enum: ['3.9', '3.10', '3.11'],
-					default: '3.11'
-				},
-				packageManager: {
-					type: 'string',
-					enum: ['pip']
-				}
+				pythonVersion: { type: 'string', enum: ['3.9', '3.10', '3.11'], default: '3.11' },
+				packageManager: { type: 'string', enum: ['pip'] }
 			}
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-python-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-python-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
-	{
-		id: 'devcontainer-java',
-		name: 'Java DevContainer',
-		description: 'Sets up a VS Code DevContainer with Java environment.',
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: {
+		}
+	),
+	createDevContainerCapability(
+		'devcontainer-java',
+		'Java DevContainer',
+		'Sets up a VS Code DevContainer with Java environment.',
+		{
 			type: 'object',
 			properties: {
-				javaVersion: {
-					type: 'string',
-					enum: ['11', '17', '21'],
-					default: '21'
-				}
+				javaVersion: { type: 'string', enum: ['11', '17', '21'], default: '21' }
 			}
-		},
-		templates: [
-			{
-				id: 'devcontainer-json',
-				filePath: '.devcontainer/devcontainer.json',
-				templateId: 'devcontainer-java-json'
-			},
-			{
-				id: 'dockerfile',
-				filePath: '.devcontainer/Dockerfile',
-				templateId: 'devcontainer-java-dockerfile'
-			},
-			{
-				id: 'zshrc',
-				filePath: '.devcontainer/.zshrc',
-				templateId: 'devcontainer-zshrc'
-			},
-			{
-				id: 'p10k',
-				filePath: '.devcontainer/.p10k.zsh',
-				templateId: 'devcontainer-p10k-zsh'
-			},
-			{
-				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
-				isExecutable: true
-			}
-		],
-		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
-	},
+		}
+	),
 	{
 		id: 'circleci',
 		name: 'CircleCI Integration',
@@ -379,42 +309,62 @@ export function getCapabilitiesByCategory(category) {
 }
 
 /**
- * Validates the dependencies and conflicts of a selection of capabilities.
- * @param {string[]} selectedIds An array of selected capability IDs.
- * @returns {{valid: boolean, missing: {capability: string, dependency: string}[], conflicts: {capability1: string, capability2: string}[]}}
+ * Finds missing dependencies for a given selection of capabilities.
+ * @param {string[]} selectedIds - An array of selected capability IDs.
+ * @param {Set<string>} selectedSet - A set of selected capability IDs for quick lookups.
+ * @returns {{capability: string, dependency: string}[]} - An array of missing dependency objects.
  */
-export function validateCapabilityDependencies(selectedIds) {
+function findMissingDependencies(selectedIds, selectedSet) {
 	const missing = [];
-	const conflicts = [];
-	const selectedSet = new Set(selectedIds);
-
 	for (const id of selectedIds) {
 		const capability = getCapabilityById(id);
 		if (capability) {
-			// Check dependencies
 			for (const depId of capability.dependencies) {
 				if (!selectedSet.has(depId)) {
 					missing.push({ capability: id, dependency: depId });
 				}
 			}
+		}
+	}
+	return missing;
+}
 
-			// Check conflicts
+/**
+ * Finds conflicts among a given selection of capabilities.
+ * @param {string[]} selectedIds - An array of selected capability IDs.
+ * @param {Set<string>} selectedSet - A set of selected capability IDs for quick lookups.
+ * @returns {{capability1: string, capability2: string}[]} - An array of conflict objects.
+ */
+function findConflicts(selectedIds, selectedSet) {
+	const conflicts = [];
+	const processedConflicts = new Set();
+
+	for (const id of selectedIds) {
+		const capability = getCapabilityById(id);
+		if (capability) {
 			for (const conflictId of capability.conflicts) {
 				if (selectedSet.has(conflictId)) {
-					// Add conflict only once
-					if (
-						!conflicts.some(
-							(c) =>
-								(c.capability1 === id && c.capability2 === conflictId) ||
-								(c.capability1 === conflictId && c.capability2 === id)
-						)
-					) {
+					const conflictPair = [id, conflictId].sort().join('-');
+					if (!processedConflicts.has(conflictPair)) {
 						conflicts.push({ capability1: id, capability2: conflictId });
+						processedConflicts.add(conflictPair);
 					}
 				}
 			}
 		}
 	}
+	return conflicts;
+}
+
+/**
+ * Validates the dependencies and conflicts of a selection of capabilities.
+ * @param {string[]} selectedIds An array of selected capability IDs.
+ * @returns {{valid: boolean, missing: {capability: string, dependency: string}[], conflicts: {capability1: string, capability2: string}[]}}
+ */
+export function validateCapabilityDependencies(selectedIds) {
+	const selectedSet = new Set(selectedIds);
+	const missing = findMissingDependencies(selectedIds, selectedSet);
+	const conflicts = findConflicts(selectedIds, selectedSet);
 
 	return {
 		valid: missing.length === 0 && conflicts.length === 0,

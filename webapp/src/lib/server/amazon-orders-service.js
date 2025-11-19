@@ -20,22 +20,22 @@ export function extractAmazonOrderId(merchantString) {
 
 	// Pattern for standard Amazon order IDs (XXX-XXXXXXX-XXXXXXX)
 	const standardPattern = /\b(\d{3}-\d{7}-\d{7})\b/;
-	let match = merchantString.match(standardPattern);
+	let match = standardPattern.exec(merchantString);
 	if (match) return match[1];
 
 	// Pattern for D01 format order IDs (D01-XXXXXXX-XXXXXXX)
 	const d01Pattern = /\b(D01-\d{7}-\d{7})\b/;
-	match = merchantString.match(d01Pattern);
+	match = d01Pattern.exec(merchantString);
 	if (match) return match[1];
 
 	// Pattern for compact order IDs (16 digits)
 	const compactPattern = /\b(\d{16})\b/;
-	match = merchantString.match(compactPattern);
+	match = compactPattern.exec(merchantString);
 	if (match) return match[1];
 
 	// Try to extract any long number sequence that might be an order ID
 	const numberPattern = /\b(\d{10,})\b/;
-	match = merchantString.match(numberPattern);
+	match = numberPattern.exec(merchantString);
 	if (match) return match[1];
 
 	return null;
@@ -67,22 +67,22 @@ export function extractAmazonOrderIdFromMultiLine(statementText) {
 	for (const line of lines) {
 		// Pattern for standard Amazon order IDs (XXX-XXXXXXX-XXXXXXX)
 		const standardPattern = /\b(\d{3}-\d{7}-\d{7})\b/;
-		let match = line.match(standardPattern);
+		let match = standardPattern.exec(line);
 		if (match) return match[1];
 
 		// Pattern for D01 format order IDs (D01-XXXXXXX-XXXXXXX)
 		const d01Pattern = /\b(D01-\d{7}-\d{7})\b/;
-		match = line.match(d01Pattern);
+		match = d01Pattern.exec(line);
 		if (match) return match[1];
 
 		// Pattern for compact order IDs (16 digits)
 		const compactPattern = /\b(\d{16})\b/;
-		match = line.match(compactPattern);
+		match = compactPattern.exec(line);
 		if (match) return match[1];
 
 		// Try to extract any long number sequence that might be an order ID
 		const numberPattern = /\b(\d{10,})\b/;
-		match = line.match(numberPattern);
+		match = numberPattern.exec(line);
 		if (match) return match[1];
 	}
 

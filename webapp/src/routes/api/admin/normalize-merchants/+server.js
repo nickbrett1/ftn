@@ -163,7 +163,7 @@ export async function POST(event) {
 		}
 
 		const duplicateCheck = await checkDuplicateMerchantVariations(database);
-		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
+		if (duplicateCheck.duplicateVariations?.length > 0) {
 			errors.push({
 				type: 'duplicate_merchant_variations',
 				message: `Found ${
@@ -184,6 +184,16 @@ export async function POST(event) {
 			.all();
 
 		const totalRemaining = countResult[0]?.total || 0;
+		let message;
+		if (offset === 0) {
+			message =
+				'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
+		} else {
+			message =
+				totalRemaining > batchSize
+					? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
+					: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
+		}
 
 		return json({
 			success: true,
@@ -193,12 +203,7 @@ export async function POST(event) {
 			totalRemaining: offset === 0 ? 0 : totalRemaining - updatedCount,
 			nextOffset: offset === 0 ? 0 : offset + batchSize,
 			errors: errors.length > 0 ? errors : undefined,
-			message:
-				offset === 0
-					? 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
-					: totalRemaining > batchSize
-						? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-						: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
+			message
 		});
 	} catch (error) {
 		console.error('Merchant normalization failed:', error);
@@ -338,9 +343,9 @@ async function performBulkPatternUpdates(database) {
 			let detailsField;
 			if (update.details === 'merchant') {
 				detailsField = 'merchant';
-			} else if (update.details && update.details.startsWith('SUBSTR')) {
+			} else if (update.details?.startsWith('SUBSTR')) {
 				detailsField = update.details;
-			} else if (update.details && update.details.startsWith('REPLACE')) {
+			} else if (update.details?.startsWith('REPLACE')) {
 				detailsField = update.details;
 			} else {
 				detailsField = "''";

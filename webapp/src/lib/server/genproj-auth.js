@@ -553,7 +553,7 @@ export class GenprojAuthManager {
 				this.authState = await this.getAuthenticationState(this.currentUser.id);
 			}
 
-			if (this.authState && this.authState.github) {
+			if (this.authState?.github) {
 				this.authState.github = null;
 				const saved = await this.saveAuthenticationState(this.currentUser.id, this.authState);
 				if (saved) {

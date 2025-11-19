@@ -5,6 +5,30 @@
  * while preserving detailed information for budget categorization.
  */
 
+const merchantMappings = [
+	{ check: (m) => m.includes('CAVIAR'), extract: extractFoodDeliveryDetails },
+	{ check: (m) => m.includes('DOORDASH'), extract: extractFoodDeliveryDetails },
+	{ check: (m) => m.includes('UBER EATS'), extract: extractFoodDeliveryDetails },
+	{ check: (m) => m.includes('LYFT'), extract: extractRideSharingDetails },
+	{ check: (m) => m.includes('UBER'), extract: extractRideSharingDetails },
+	{ check: (m) => hasAddressPattern(m), extract: extractAddressDetails },
+	{ check: (m) => isHotelTransaction(m), extract: extractHotelDetails },
+	{ check: (m) => isFlightTransaction(m), extract: extractFlightDetails },
+	{ check: (m) => m.includes('BRITISH'), extract: extractBritishAirwaysDetails },
+	{ check: (m) => m.includes('AMAZON') || m.includes('AMZN'), extract: extractAmazonDetails },
+	{ check: (m) => m.includes('KINDLE'), extract: extractKindleDetails },
+	{ check: (m) => m.includes('MAIDMARINES'), extract: extractMaidMarinesDetails },
+	{ check: (m) => m.includes('JACADI'), extract: extractJacadiDetails },
+	{ check: (m) => m.includes('APPLE') || m.includes('ITUNES'), extract: extractAppleDetails },
+	{ check: (m) => hasStoreNumberPattern(m), extract: extractStoreNumberDetails },
+	{ check: (m) => m.includes('BLUEMERCURY'), extract: extractBluemercuryDetails },
+	{ check: (m) => m.includes('GOOGLE') && m.includes('CLOUD'), extract: extractGoogleCloudDetails },
+	{
+		check: (m) => m.includes('PLAYSTATION') && m.includes('NETWORK'),
+		extract: extractPlayStationNetworkDetails
+	}
+];
+
 /**
  * Normalize a merchant name to create a unified identifier
  * @param {string} merchant - Original merchant name from statement
@@ -20,84 +44,10 @@ export function normalizeMerchant(merchant) {
 
 	const merchantUpper = merchant.toUpperCase().trim();
 
-	// Food delivery services
-	if (
-		merchantUpper.includes('CAVIAR') ||
-		merchantUpper.includes('DOORDASH') ||
-		merchantUpper.includes('UBER EATS')
-	) {
-		return extractFoodDeliveryDetails(merchant);
-	}
-
-	// Ride sharing services
-	if (merchantUpper.includes('LYFT') || merchantUpper.includes('UBER')) {
-		return extractRideSharingDetails(merchant);
-	}
-
-	// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
-	// This needs to come before hotel check to avoid false positives
-	if (hasAddressPattern(merchantUpper)) {
-		return extractAddressDetails(merchant);
-	}
-
-	// Hotels and accommodation
-	if (isHotelTransaction(merchantUpper)) {
-		return extractHotelDetails(merchant);
-	}
-
-	// Airlines and travel
-	if (isFlightTransaction(merchantUpper)) {
-		return extractFlightDetails(merchant);
-	}
-
-	// British Airways specific handling
-	if (merchantUpper.includes('BRITISH')) {
-		return extractBritishAirwaysDetails(merchant);
-	}
-
-	// Amazon and similar marketplaces
-	if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
-		return extractAmazonDetails(merchant);
-	}
-
-	// Kindle services
-	if (merchantUpper.includes('KINDLE')) {
-		return extractKindleDetails(merchant);
-	}
-
-	// MAIDMARINES cleaning service
-	if (merchantUpper.includes('MAIDMARINES')) {
-		return extractMaidMarinesDetails(merchant);
-	}
-
-	// JACADI clothing store
-	if (merchantUpper.includes('JACADI')) {
-		return extractJacadiDetails(merchant);
-	}
-
-	// Apple services
-	if (merchantUpper.includes('APPLE') || merchantUpper.includes('ITUNES')) {
-		return extractAppleDetails(merchant);
-	}
-
-	// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
-	if (hasStoreNumberPattern(merchantUpper)) {
-		return extractStoreNumberDetails(merchant);
-	}
-
-	// BLUEMERCURY beauty store
-	if (merchantUpper.includes('BLUEMERCURY')) {
-		return extractBluemercuryDetails(merchant);
-	}
-
-	// Google Cloud services
-	if (merchantUpper.includes('GOOGLE') && merchantUpper.includes('CLOUD')) {
-		return extractGoogleCloudDetails(merchant);
-	}
-
-	// PlayStation Network services
-	if (merchantUpper.includes('PLAYSTATION') && merchantUpper.includes('NETWORK')) {
-		return extractPlayStationNetworkDetails(merchant);
+	for (const mapping of merchantMappings) {
+		if (mapping.check(merchantUpper)) {
+			return mapping.extract(merchant);
+		}
 	}
 
 	// Default: return as-is with minimal normalization
@@ -115,7 +65,7 @@ function extractFoodDeliveryDetails(merchant) {
 
 	if (merchantUpper.includes('CAVIAR')) {
 		// Extract restaurant name from Caviar transactions
-		const restaurantMatch = merchant.match(/CAVIAR\s*[-*]\s*(.+)/i);
+		const restaurantMatch = /CAVIAR\s*[-*]\s*(.+)/i.exec(merchant);
 		return {
 			merchant_normalized: 'CAVIAR',
 			merchant_details: restaurantMatch ? restaurantMatch[1].trim() : ''
@@ -123,7 +73,7 @@ function extractFoodDeliveryDetails(merchant) {
 	}
 
 	if (merchantUpper.includes('DOORDASH')) {
-		const restaurantMatch = merchant.match(/DOORDASH\s*[-*]\s*(.+)/i);
+		const restaurantMatch = /DOORDASH\s*[-*]\s*(.+)/i.exec(merchant);
 		return {
 			merchant_normalized: 'DOORDASH',
 			merchant_details: restaurantMatch ? restaurantMatch[1].trim() : ''
@@ -131,7 +81,7 @@ function extractFoodDeliveryDetails(merchant) {
 	}
 
 	if (merchantUpper.includes('UBER EATS')) {
-		const restaurantMatch = merchant.match(/UBER\s*EATS\s*[-*]\s*(.+)/i);
+		const restaurantMatch = /UBER\s*EATS\s*[-*]\s*(.+)/i.exec(merchant);
 		return {
 			merchant_normalized: 'UBER EATS',
 			merchant_details: restaurantMatch ? restaurantMatch[1].trim() : ''
@@ -152,7 +102,7 @@ function extractRideSharingDetails(merchant) {
 
 	if (merchantUpper.includes('LYFT')) {
 		// Extract location or trip details
-		const detailsMatch = merchant.match(/LYFT\s*[-*]\s*(.+)/i);
+		const detailsMatch = /LYFT\s*[-*]\s*(.+)/i.exec(merchant);
 		return {
 			merchant_normalized: 'LYFT',
 			merchant_details: detailsMatch ? detailsMatch[1].trim() : ''
@@ -160,7 +110,7 @@ function extractRideSharingDetails(merchant) {
 	}
 
 	if (merchantUpper.includes('UBER') && !merchantUpper.includes('UBER EATS')) {
-		const detailsMatch = merchant.match(/UBER\s*[-*]\s*(.+)/i);
+		const detailsMatch = /UBER\s*[-*]\s*(.+)/i.exec(merchant);
 		return {
 			merchant_normalized: 'UBER',
 			merchant_details: detailsMatch ? detailsMatch[1].trim() : ''
@@ -229,7 +179,7 @@ function extractFlightDetails(merchant) {
 
 	// Extract route information if present
 	// Look for patterns like "JFK LAX", "JFK-LAX", or "JFK*LAX"
-	const routeMatch = merchant.match(/\b([A-Z]{3})\s*[-*\s]\s*([A-Z]{3})\b/i);
+	const routeMatch = /\b([A-Z]{3})\s*[-*\s]\s*([A-Z]{3})\b/i.exec(merchant);
 	const route = routeMatch ? `${routeMatch[1]}-${routeMatch[2]}` : '';
 
 	return {
@@ -392,12 +342,7 @@ function extractPlayStationNetworkDetails(merchant) {
 function isHotelTransaction(merchantUpper) {
 	const hotelIndicators = ['HOTEL', 'RESORT', 'INN', 'SUITE', 'LODGE', 'ACCOMMODATION', 'STAY'];
 
-	// Check for generic hotel indicators
-	if (hotelIndicators.some((indicator) => merchantUpper.includes(indicator))) {
-		return true;
-	}
-
-	return false;
+	return hotelIndicators.some((indicator) => merchantUpper.includes(indicator));
 }
 
 /**
@@ -503,7 +448,7 @@ function hasStoreNumberPattern(merchantUpper) {
  */
 function extractStoreNumberDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	const storeNumberMatch = merchantUpper.match(/^(.+?)\s+(\d{4,})\s+(.+)$/);
+	const storeNumberMatch = /^(.+?)\s+(\d{4,})\s+(.+)$/.exec(merchantUpper);
 
 	if (storeNumberMatch) {
 		const [, baseName, storeNumber, location] = storeNumberMatch;
@@ -534,9 +479,8 @@ function hasAddressPattern(merchantUpper) {
  */
 function extractAddressDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	const addressMatch = merchantUpper.match(
-		/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/
-	);
+	const addressMatch =
+		/^(.+?)\s+(.+?)\s+(\d+)\s+([A-Z]+)\s+(\d+)(?:TH|ST|ND|RD)?\s+(.+)$/.exec(merchantUpper);
 
 	if (addressMatch) {
 		const [, , businessName, streetNumber, streetName, streetSuffix, location] = addressMatch;
@@ -544,8 +488,8 @@ function extractAddressDetails(merchant) {
 		const cleanBusinessName = businessName.replace(/-$/, '').trim();
 
 		// Reconstruct the address with the original suffix if it exists
-		const originalSuffix = merchant.match(/\d+(TH|ST|ND|RD)/i);
-		const suffix = originalSuffix ? originalSuffix[1] : '';
+		const originalSuffix = /(d+)(TH|ST|ND|RD)/i.exec(merchant);
+		const suffix = originalSuffix ? originalSuffix[2] : '';
 
 		return {
 			merchant_normalized: cleanBusinessName,

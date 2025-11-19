@@ -104,7 +104,7 @@ export class WellsFargoParser extends BaseParser {
 		];
 
 		for (const pattern of patterns) {
-			const match = text.match(pattern);
+			const match = pattern.exec(text);
 			if (match) {
 				// Use the second date (closing date) if two dates are provided
 				const dateString = match[2] || match[1];
@@ -123,7 +123,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoDate(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -143,113 +143,114 @@ export class WellsFargoParser extends BaseParser {
 	 * @returns {Array} - Array of charge objects
 	 */
 	extractCharges(text) {
-		const charges = [];
-
-		// First, find the statement end date to determine transaction years
 		const statementDate = this.extractStatementDate(text);
 		const statementYear = statementDate
 			? new Date(statementDate).getFullYear()
 			: new Date().getFullYear();
+		const transactionSection = this._getTransactionSection(text);
+		if (!transactionSection) return [];
 
-		// Find the Transaction Summary section without using a mega-regex
+		const lines = transactionSection
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
+
+		return this._parseTransactionLines(lines, statementYear);
+	}
+
+	_getTransactionSection(text) {
 		const upperText = text.toUpperCase();
 		const startIndex = upperText.indexOf('TRANSACTION SUMMARY');
-		if (startIndex === -1) {
-			return charges;
-		}
+		if (startIndex === -1) return null;
 
 		const endCandidates = [
 			upperText.indexOf('FEES CHARGED', startIndex + 1),
 			upperText.indexOf('INTEREST CHARGED', startIndex + 1),
 			upperText.indexOf('BILTPROTECT SUMMARY', startIndex + 1)
 		].filter((index) => index !== -1);
+
 		const endIndex = endCandidates.length > 0 ? Math.min(...endCandidates) : text.length;
+		return text.slice(startIndex, endIndex);
+	}
 
-		const transactionSection = text.slice(startIndex, endIndex);
-		const lines = transactionSection
-			.split('\n')
-			.map((line) => line.trim())
-			.filter((line) => line.length > 0);
-
+	_parseTransactionLines(lines, statementYear) {
+		const charges = [];
+		const pattern =
+			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+(.+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})-?$/;
 		for (let index = 0; index < lines.length; index++) {
 			const line = lines[index];
-
-			// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
-			// Example: "06/17 06/17 860001800 5543286595Z9WS512 TST*BLACK TAP SOHO - T NEW YORK NY $13.06"
-			const transactionMatch = line.match(
-				/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+(.+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
-			);
+			const transactionMatch = pattern.exec(line);
 
 			if (transactionMatch) {
-				const transDate = transactionMatch[1]; // MM/DD format
-				const description = transactionMatch[3].trim();
-				const amountString = transactionMatch[4];
-
-				// Skip payments to the card
-				if (this.isPaymentToCard(description)) {
-					continue;
+				const charge = this._processTransaction(transactionMatch, lines, index, statementYear);
+				if (charge) {
+					charges.push(charge);
 				}
-
-				const amount = this.parseAmount(amountString);
-				const date = this.parseWellsFargoFullDate(transDate, statementYear);
-
-				if (!date || !amount || description.length < 2) continue;
-
-				// Check if this might be a foreign currency transaction
-				let isForeignTransaction = false;
-				let foreignCurrencyAmount = null;
-				let foreignCurrencyType = null;
-
-				// Look ahead for foreign currency information
-				for (let index_ = index + 1; index_ < Math.min(index + 4, lines.length); index_++) {
-					const nextLine = lines[index_];
-
-					// Check for currency type line (e.g., "DK KRONE")
-					if (this.isCurrencyLine(nextLine)) {
-						// Extract just the currency part, removing date prefix if present
-						const currencyMatch = nextLine.match(/(?:- \d{1,2}\/\d{1,2} )?(.*)/);
-						foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : nextLine.trim();
-						isForeignTransaction = true;
-
-						// Look for the foreign amount and exchange rate on the next line
-						if (index_ + 1 < lines.length) {
-							const rateLine = lines[index_ + 1];
-							const rateMatch = this.parseExchangeRate(rateLine);
-							if (rateMatch) {
-								foreignCurrencyAmount = rateMatch.foreignAmount;
-								break;
-							}
-						}
-					}
-
-					// Stop looking if we encounter another transaction line
-					if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) {
-						break;
-					}
-				}
-
-				// Check if this is an Amazon charge and capture full statement text
-				let fullStatementText = null;
-				if (this.isAmazonTransaction(description)) {
-					fullStatementText = this.extractFullStatementText(lines, index);
-				}
-
-				const charge = {
-					merchant: description.trim(),
-					amount: Math.abs(amount), // Store as positive value
-					date,
-					allocated_to: null,
-					is_foreign_currency: isForeignTransaction,
-					foreign_currency_amount: foreignCurrencyAmount,
-					foreign_currency_type: foreignCurrencyType,
-					full_statement_text: fullStatementText
-				};
-
-				charges.push(charge);
 			}
 		}
-
 		return charges;
+	}
+
+	_processTransaction(transactionMatch, lines, index, statementYear) {
+		const transDate = transactionMatch[1];
+		const description = transactionMatch[3].trim();
+		const amountString = transactionMatch[4];
+
+		if (this.isPaymentToCard(description)) return null;
+
+		const amount = this.parseAmount(amountString);
+		const date = this.parseWellsFargoFullDate(transDate, statementYear);
+
+		if (!date || !amount || description.length < 2) return null;
+
+		const foreignDetails = this._extractForeignCurrencyDetails(lines, index);
+		const fullStatementText = this.isAmazonTransaction(description)
+			? this.extractFullStatementText(lines, index)
+			: null;
+
+		return {
+			merchant: description,
+			amount: Math.abs(amount),
+			date,
+			allocated_to: null,
+			is_foreign_currency: foreignDetails.isForeignTransaction,
+			foreign_currency_amount: foreignDetails.foreignCurrencyAmount,
+			foreign_currency_type: foreignDetails.foreignCurrencyType,
+			full_statement_text: fullStatementText
+		};
+	}
+
+	_extractForeignCurrencyDetails(lines, currentIndex) {
+		const details = {
+			isForeignTransaction: false,
+			foreignCurrencyAmount: null,
+			foreignCurrencyType: null
+		};
+
+		for (let index = currentIndex + 1; index < Math.min(currentIndex + 4, lines.length); index++) {
+			const nextLine = lines[index];
+			if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) break;
+
+			if (this.isCurrencyLine(nextLine)) {
+				this._processCurrencyLine(nextLine, lines, index, details);
+				break;
+			}
+		}
+		return details;
+	}
+
+	_processCurrencyLine(line, lines, currentIndex, details) {
+		const currencyMatch = /(?:- \d{1,2}\/\d{1,2} )?(.*)/.exec(line);
+		details.foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : line.trim();
+		details.isForeignTransaction = true;
+
+		if (currentIndex + 1 < lines.length) {
+			const rateLine = lines[currentIndex + 1];
+			const rateMatch = this.parseExchangeRate(rateLine);
+			if (rateMatch) {
+				details.foreignCurrencyAmount = rateMatch.foreignAmount;
+			}
+		}
 	}
 
 	/**
@@ -260,7 +261,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoTransaction(line) {
 		// Wells Fargo format has multiple columns - we need to find the description and amount
 		// Amount is in the last column with $ sign, e.g. $2.90 or -$2.90
-		const amountMatch = line.match(/(.+?)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/);
+		const amountMatch = /(.+?)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/.exec(line);
 		if (!amountMatch) return null;
 
 		const description = amountMatch[1].trim();
@@ -284,7 +285,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoFullDate(dateString, statementYear) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -305,7 +306,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoTransactionDate(dateString, statementYear) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{2})$/);
+		const match = /^(\d{1,2})\/(\d{2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -373,7 +374,7 @@ export class WellsFargoParser extends BaseParser {
 	 */
 	parseExchangeRate(line) {
 		// Look for pattern like "123.45 X 0.67" or similar
-		const rateMatch = line.match(/(\d+\.\d+)\s*X\s*(\d+\.\d+)/);
+		const rateMatch = /(\d+\.\d+)\s*X\s*(\d+\.\d+)/.exec(line);
 		if (!rateMatch) return null;
 
 		return {
@@ -409,7 +410,7 @@ export class WellsFargoParser extends BaseParser {
 	 * @returns {string|null} - First match or null
 	 */
 	findText(text, pattern) {
-		const match = text.match(pattern);
+		const match = pattern.exec(text);
 		return match ? match[1] : null;
 	}
 
@@ -444,7 +445,7 @@ export class WellsFargoParser extends BaseParser {
 			const nextLine = lines[index];
 
 			// Stop if we hit another transaction line (starts with date pattern)
-			if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) {
+			if (this.getTransactionLineRegex().test(nextLine)) {
 				break;
 			}
 
@@ -483,5 +484,13 @@ export class WellsFargoParser extends BaseParser {
 			}
 			return pattern.test(line);
 		});
+	}
+
+	/**
+	 * Returns the regex for identifying a transaction line.
+	 * @returns {RegExp}
+	 */
+	getTransactionLineRegex() {
+		return /^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/;
 	}
 }
