@@ -2,14 +2,21 @@ import { describe, it, expect, vi } from 'vitest';
 import { ProjectGeneratorService } from '$lib/services/project-generator.js';
 import { ProjectConfig } from '$lib/models/project-config.js';
 import * as auth from '$lib/server/auth-helpers.js';
-import { GitHubAPIService } from '$lib/services/github-api.js';
+import { GitHubAPIService } from '$lib/server/github-api.js';
 
 vi.mock('$lib/server/auth-helpers.js');
 vi.mock('$lib/server/token-service.js');
-vi.mock('$lib/services/github-api.js');
-vi.mock('$lib/services/circleci-api.js');
-vi.mock('$lib/services/doppler-api.js');
-vi.mock('$lib/services/sonarcloud-api.js');
+vi.mock('$lib/server/github-api.js');
+vi.mock('$lib/server/circleci-api.js');
+vi.mock('$lib/server/doppler-api.js');
+vi.mock('$lib/server/sonarcloud-api.js');
+vi.mock('$lib/utils/logging', () => ({
+	logger: {
+		info: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn()
+	}
+}));
 
 describe('ProjectGeneratorService', () => {
 	const mockProjectConfig = new ProjectConfig({
@@ -88,10 +95,10 @@ describe('ProjectGeneratorService', () => {
 		GitHubAPIService.prototype.createRepository.mockResolvedValue({});
 		GitHubAPIService.prototype.createMultipleFiles.mockResolvedValue({});
 
-		const CircleCIAPIService = (await import('$lib/services/circleci-api.js')).CircleCIAPIService;
+		const CircleCIAPIService = (await import('$lib/server/circleci-api.js')).CircleCIAPIService;
 		CircleCIAPIService.prototype.followProject.mockResolvedValue({});
 
-		const DopplerAPIService = (await import('$lib/services/doppler-api.js')).DopplerAPIService;
+		const DopplerAPIService = (await import('$lib/server/doppler-api.js')).DopplerAPIService;
 		DopplerAPIService.prototype.createProject.mockResolvedValue({});
 
 		const service = new ProjectGeneratorService();

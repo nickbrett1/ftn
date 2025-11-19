@@ -37,7 +37,19 @@ const EMOJI_MAP = {
 
 const createLogger = (category) => {
 	const log = (level, message, data) => {
-		const levelValue = LOG_LEVELS[level.toUpperCase()];
+		const levelName = level.toUpperCase();
+		let levelValue = LOG_LEVELS[levelName];
+
+		// Special handling for custom log categories that don't have a standard level
+		if (levelValue === undefined) {
+			if (levelName === 'SECURITY') {
+				levelValue = LOG_LEVELS.WARN;
+			} else if (EMOJI_MAP[level]) {
+				// Default other custom emoji-mapped levels to INFO
+				levelValue = LOG_LEVELS.INFO;
+			}
+		}
+
 		if (levelValue !== undefined && levelValue >= currentLogLevel) {
 			const emoji = EMOJI_MAP[level] || '📝';
 			const timestamp = new Date().toISOString();
