@@ -31,7 +31,7 @@ describe('marked-config', () => {
 
 	it('should configure marked and highlight.js', async () => {
 		await import('$lib/client/marked-config.js');
-		
+
 		const { marked } = await import('marked');
 		const hljs = (await import('highlight.js/lib/core')).default;
 

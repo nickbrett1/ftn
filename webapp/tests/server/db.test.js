@@ -41,13 +41,18 @@ describe('db', () => {
 				all: vi.fn().mockRejectedValue(new Error('DB Error'))
 			};
 
-			await expect(executeGenprojQuery(mockDb, 'SELECT * FROM users')).rejects.toThrow('Database query failed: DB Error');
+			await expect(executeGenprojQuery(mockDb, 'SELECT * FROM users')).rejects.toThrow(
+				'Database query failed: DB Error'
+			);
 		});
 	});
 
 	describe('getGenprojFirstResult', () => {
 		it('should return the first result if available', async () => {
-			const mockResults = [{ id: 1, name: 'test' }, { id: 2, name: 'test2' }];
+			const mockResults = [
+				{ id: 1, name: 'test' },
+				{ id: 2, name: 'test2' }
+			];
 			const mockDb = {
 				prepare: vi.fn().mockReturnThis(),
 				bind: vi.fn().mockReturnThis(),
@@ -76,7 +81,9 @@ describe('db', () => {
 				all: vi.fn().mockRejectedValue(new Error('DB Error'))
 			};
 
-			await expect(getGenprojFirstResult(mockDb, 'SELECT * FROM users')).rejects.toThrow('Database query failed: DB Error');
+			await expect(getGenprojFirstResult(mockDb, 'SELECT * FROM users')).rejects.toThrow(
+				'Database query failed: DB Error'
+			);
 		});
 	});
 });

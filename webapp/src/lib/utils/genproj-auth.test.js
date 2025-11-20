@@ -107,9 +107,7 @@ describe('GenprojAuthManager', () => {
 				'❌ Failed to get authentication state from KV:',
 				expect.any(Error)
 			);
-			expect(console.error).toHaveBeenCalledWith(
-				'❌ Failed to save authentication state to KV'
-			);
+			expect(console.error).toHaveBeenCalledWith('❌ Failed to save authentication state to KV');
 		});
 	});
 

@@ -164,7 +164,10 @@ describe('/projects/ccbilling/charges/[id] API', () => {
 
 			await PUT(mockEvent);
 
-			expect(json).toHaveBeenCalledWith({ error: 'Amount must be a valid number' }, { status: 400 });
+			expect(json).toHaveBeenCalledWith(
+				{ error: 'Amount must be a valid number' },
+				{ status: 400 }
+			);
 		});
 
 		it('should handle database errors', async () => {

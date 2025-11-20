@@ -78,7 +78,10 @@ describe('/auth/github/callback/+server.js', () => {
 
 		expect(github.validateAuthorizationCode).toHaveBeenCalledWith(code);
 		expect(mockFetch).toHaveBeenCalledWith('https://api.github.com/user', expect.any(Object));
-		expect(session.createSession).toHaveBeenCalledWith(mockEvent.platform.env.KV, githubUser.id.toString());
+		expect(session.createSession).toHaveBeenCalledWith(
+			mockEvent.platform.env.KV,
+			githubUser.id.toString()
+		);
 		expect(session.setSessionCookie).toHaveBeenCalledWith(
 			mockEvent.cookies,
 			sessionData.id,

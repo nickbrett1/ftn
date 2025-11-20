@@ -131,7 +131,10 @@ describe('/projects/ccbilling/statements/[id]/+server.js', () => {
 			await DELETE(mockEvent);
 
 			expect(mockDeleteStatement).toHaveBeenCalledWith(mockEvent, 1);
-			expect(mockJson).toHaveBeenCalledWith({ success: true, message: 'Statement deleted successfully' });
+			expect(mockJson).toHaveBeenCalledWith({
+				success: true,
+				message: 'Statement deleted successfully'
+			});
 		});
 
 		it('should return 500 on error', async () => {

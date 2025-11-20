@@ -93,7 +93,11 @@ describe('ProjectGeneratorService', () => {
 			expect(result.generatedFiles).toEqual(generatedFiles);
 			expect(generateAllFiles).toHaveBeenCalledWith(context);
 			expect(service.createGitHubRepository).toHaveBeenCalledWith(context);
-			expect(service.commitFilesToRepository).toHaveBeenCalledWith(repository, generatedFiles, context);
+			expect(service.commitFilesToRepository).toHaveBeenCalledWith(
+				repository,
+				generatedFiles,
+				context
+			);
 			expect(service.configureExternalServices).toHaveBeenCalledWith(context, repository);
 		});
 
@@ -113,7 +117,17 @@ describe('ProjectGeneratorService', () => {
 	describe('createGitHubRepository', () => {
 		const context = {
 			projectName: 'test-project',
-			capabilities: ['sveltekit', 'tailwindcss', 'typescript', 'testing', 'playwright', 'devcontainer', 'circleci', 'sonarcloud', 'doppler']
+			capabilities: [
+				'sveltekit',
+				'tailwindcss',
+				'typescript',
+				'testing',
+				'playwright',
+				'devcontainer',
+				'circleci',
+				'sonarcloud',
+				'doppler'
+			]
 		};
 
 		it('should create a GitHub repository with a generated description', async () => {
@@ -196,7 +210,11 @@ describe('ProjectGeneratorService', () => {
 			expect(results.circleci.success).toBe(true);
 			expect(results.doppler.success).toBe(true);
 			expect(results.sonarcloud.success).toBe(true);
-			expect(service.services.circleci.followProject).toHaveBeenCalledWith('github', 'owner', 'repo');
+			expect(service.services.circleci.followProject).toHaveBeenCalledWith(
+				'github',
+				'owner',
+				'repo'
+			);
 			expect(service.services.doppler.createProject).toHaveBeenCalled();
 			expect(service.services.sonarcloud.createProject).toHaveBeenCalled();
 		});

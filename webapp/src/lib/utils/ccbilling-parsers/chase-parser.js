@@ -660,10 +660,17 @@ export class ChaseParser extends BaseParser {
 		};
 		const checkSuspiciousMerchants = () => {
 			const suspiciousMerchants = ['amazon.com', 'amazon marketplace', 'amazon mkpl'];
-			return suspiciousMerchants.some((suspicious) => merchantLower.includes(suspicious)) && amount > 500;
+			return (
+				suspiciousMerchants.some((suspicious) => merchantLower.includes(suspicious)) && amount > 500
+			);
 		};
 
 		// Combine checks
-		return checkAmznBillwa() || checkSuspiciousAmount() || checkPointsKeywords() || checkSuspiciousMerchants();
+		return (
+			checkAmznBillwa() ||
+			checkSuspiciousAmount() ||
+			checkPointsKeywords() ||
+			checkSuspiciousMerchants()
+		);
 	}
 }
