@@ -125,6 +125,154 @@ export function validateSelectedCapabilities(selected) {
 }
 
 /**
+ * Validates required properties based on schema.
+ * @param {string} id Capability ID
+ * @param {object} config Configuration object
+ * @param {object} schema Schema object
+ * @returns {string[]} Array of error messages
+ */
+function validateRequiredProperties(id, config, schema) {
+	const errors = [];
+	if (schema.required) {
+		for (const requiredProp of schema.required) {
+			if (config[requiredProp] === undefined) {
+				errors.push(`${id}.${requiredProp} is required`);
+			}
+		}
+	}
+	return errors;
+}
+
+/**
+ * Helper function to validate enum properties from schema
+ * @param {string} id - The capability ID
+ * @param {object} config - The configuration object
+ * @param {string} property - The property name to check
+ * @param {string} errorMessage - The error message to return if validation fails
+ * @returns {string[]} - Array of error messages
+ */
+function validateEnumProperty(id, config, property, errorMessage) {
+	const capability = getCapabilityById(id);
+	if (
+		config[property] &&
+		capability?.configurationSchema?.properties?.[property]?.enum &&
+		!capability.configurationSchema.properties[property].enum.includes(config[property])
+	) {
+		return [errorMessage];
+	}
+	return [];
+}
+
+/**
+ * Validators for specific capabilities.
+ */
+const capabilityValidators = {
+	'devcontainer-node': (config) =>
+		validateEnumProperty('devcontainer-node', config, 'nodeVersion', 'Invalid Node.js version'),
+
+	'devcontainer-python': (config) =>
+		validateEnumProperty('devcontainer-python', config, 'packageManager', 'Invalid package manager'),
+
+	'devcontainer-java': (config) =>
+		validateEnumProperty('devcontainer-java', config, 'javaVersion', 'Invalid Java version'),
+
+	circleci: (config) => {
+		if (config.deployTarget && !['none', 'cloudflare'].includes(config.deployTarget)) {
+			return ['Invalid deploy target'];
+		}
+		return [];
+	},
+
+	sonarcloud: (config) => {
+		if (config.language && !['js', 'py', 'java'].includes(config.language)) {
+			return ['Invalid language'];
+		}
+		return [];
+	},
+
+	doppler: (config) => {
+		if (config.projectType && !['web', 'backend'].includes(config.projectType)) {
+			return ['Invalid project type'];
+		}
+		return [];
+	},
+
+	'cloudflare-wrangler': (config) => {
+		if (config.workerType && !['web', 'api'].includes(config.workerType)) {
+			return ['Invalid worker type'];
+		}
+		return [];
+	},
+
+	dependabot: (config) => {
+		if (
+			config.ecosystems &&
+			!config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
+		) {
+			return [
+				'Invalid ecosystem: ' +
+					config.ecosystems.find((e) => !['npm', 'github-actions'].includes(e))
+			];
+		}
+		return [];
+	},
+
+	'lighthouse-ci': (config) => {
+		if (
+			config.thresholds &&
+			(config.thresholds.performance < 0 || config.thresholds.performance > 100)
+		) {
+			return ['Threshold performance must be a number between 0 and 100'];
+		}
+		return [];
+	},
+
+	playwright: (config) => {
+		if (
+			config.browsers &&
+			!config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
+		) {
+			return [
+				'Invalid browser: ' +
+					config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
+			];
+		}
+		return [];
+	},
+
+	'spec-kit': (config) => {
+		if (config.specFormat && !['md', 'yaml'].includes(config.specFormat)) {
+			return ['Invalid spec format'];
+		}
+		return [];
+	}
+};
+
+/**
+ * Validates configuration for a single capability.
+ * @param {string} id Capability ID
+ * @param {object} config Configuration object for the capability
+ * @returns {string[]} Array of error messages
+ */
+function validateSingleCapability(id, config) {
+	const errors = [];
+	const capability = getCapabilityById(id);
+
+	if (!capability || !capability.configurationSchema || !config) {
+		return errors;
+	}
+
+	errors.push(...validateRequiredProperties(id, config, capability.configurationSchema));
+
+	const validator = capabilityValidators[id];
+	if (validator) {
+		errors.push(...validator(config));
+	}
+
+	return errors;
+}
+
+/**
  * Validates capability configuration.
  * @param {any} configuration The configuration object.
  * @param {string[]} selectedCapabilities The selected capabilities.
@@ -139,96 +287,7 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 	}
 
 	for (const id of selectedCapabilities) {
-		const capability = getCapabilityById(id);
-		if (capability && capability.configurationSchema) {
-			const config = configuration[id];
-			const schema = capability.configurationSchema;
-
-			if (config) {
-				if (schema.required) {
-					for (const requiredProp of schema.required) {
-						if (config[requiredProp] === undefined) {
-							errors.push(`${id}.${requiredProp} is required`);
-						}
-					}
-				}
-				// This is brittle, but necessary to match the tests without a full schema validator
-				if (
-					id === 'devcontainer-node' &&
-					config.nodeVersion &&
-					!getCapabilityById(id)?.configurationSchema.properties.nodeVersion.enum.includes(
-						config.nodeVersion
-					)
-				)
-					errors.push('Invalid Node.js version');
-				if (
-					id === 'devcontainer-python' &&
-					config.packageManager &&
-					!getCapabilityById(id)?.configurationSchema.properties.packageManager.enum.includes(
-						config.packageManager
-					)
-				)
-					errors.push('Invalid package manager');
-				if (
-					id === 'devcontainer-java' &&
-					config.javaVersion &&
-					!getCapabilityById(id)?.configurationSchema.properties.javaVersion.enum.includes(
-						config.javaVersion
-					)
-				)
-					errors.push('Invalid Java version');
-				if (
-					id === 'circleci' &&
-					config.deployTarget &&
-					!['none', 'cloudflare'].includes(config.deployTarget)
-				)
-					errors.push('Invalid deploy target');
-				if (
-					id === 'sonarcloud' &&
-					config.language &&
-					!['js', 'py', 'java'].includes(config.language)
-				)
-					errors.push('Invalid language');
-				if (
-					id === 'doppler' &&
-					config.projectType &&
-					!['web', 'backend'].includes(config.projectType)
-				)
-					errors.push('Invalid project type');
-				if (
-					id === 'cloudflare-wrangler' &&
-					config.workerType &&
-					!['web', 'api'].includes(config.workerType)
-				)
-					errors.push('Invalid worker type');
-				if (
-					id === 'dependabot' &&
-					config.ecosystems &&
-					!config.ecosystems.every((e) => ['npm', 'github-actions'].includes(e))
-				)
-					errors.push(
-						'Invalid ecosystem: ' +
-							config.ecosystems.find((e) => !['npm', 'github-actions'].includes(e))
-					);
-				if (
-					id === 'lighthouse-ci' &&
-					config.thresholds &&
-					(config.thresholds.performance < 0 || config.thresholds.performance > 100)
-				)
-					errors.push('Threshold performance must be a number between 0 and 100');
-				if (
-					id === 'playwright' &&
-					config.browsers &&
-					!config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
-				)
-					errors.push(
-						'Invalid browser: ' +
-							config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
-					);
-				if (id === 'spec-kit' && config.specFormat && !['md', 'yaml'].includes(config.specFormat))
-					errors.push('Invalid spec format');
-			}
-		}
+		errors.push(...validateSingleCapability(id, configuration[id]));
 	}
 
 	return errors.length === 0 ? { valid: true } : { valid: false, errors };
