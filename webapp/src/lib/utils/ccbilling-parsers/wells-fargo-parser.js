@@ -237,7 +237,7 @@ export class WellsFargoParser extends BaseParser {
 		// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
 
 		const transactionMatch = line.match(
-			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^\$]+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
+			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^$]+?)\s+\$(-?[\d,]+\.?\d*)-?$/
 		);
 
 		if (!transactionMatch) {
@@ -260,7 +260,7 @@ export class WellsFargoParser extends BaseParser {
 
 		const date = this.parseWellsFargoFullDate(transDate, statementYear);
 
-		if (!date || isNaN(amount) || description.length < 2) {
+		if (!date || Number.isNaN(amount) || description.length < 2) {
 			return null;
 		}
 
