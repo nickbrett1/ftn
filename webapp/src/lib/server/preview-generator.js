@@ -52,7 +52,7 @@ async function getTemplateEngine(r2Bucket) {
  * @param {Object} projectConfig - Project configuration object
  * @param {string[]} selectedCapabilities - Array of selected capability IDs
  * @param {Object} r2Bucket - The R2 bucket instance for template loading
- * @returns {PreviewData} Generated preview data
+ * @returns {Promise<PreviewData>} Generated preview data
  */
 export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) {
 	// Accept r2Bucket as an argument
