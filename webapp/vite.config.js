@@ -58,8 +58,7 @@ export default defineConfig(({ command, mode }) => {
 		test: {
 			include: [
 				'src/**/*.{test,spec}.{js,ts}',
-				'tests/client/**/*.{test,spec}.{js,ts}',
-				'tests/server/**/*.{test,spec}.{js,ts}'
+				'tests/**/*.{test,spec}.{js,ts}'
 			],
 			globals: true,
 			environment: 'jsdom',

@@ -434,32 +434,30 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 
 			// Verify that createPayment was called with corrected dates
 			expect(createPayment).toHaveBeenCalledTimes(2);
-			expect(createPayment).toHaveBeenCalledWith(
-				mockEvent,
-				1,
-				'Test Store',
-				100.5,
-				'Both',
-				'2024-01-15', // Should be corrected to include year
-				false,
-				null,
-				null,
-				null,
-				null
-			);
-			expect(createPayment).toHaveBeenCalledWith(
-				mockEvent,
-				1,
-				'Grocery Store',
-				75.25,
-				'Both',
-				'2024-01-20', // Should be corrected to include year
-				false,
-				null,
-				null,
-				null,
-				null
-			);
+			expect(createPayment).toHaveBeenCalledWith(mockEvent, {
+				statement_id: 1,
+				merchant: 'Test Store',
+				amount: 100.5,
+				allocated_to: 'Both',
+				transaction_date: '2024-01-15', // Should be corrected to include year
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				flight_details: null,
+				full_statement_text: null
+			});
+			expect(createPayment).toHaveBeenCalledWith(mockEvent, {
+				statement_id: 1,
+				merchant: 'Grocery Store',
+				amount: 75.25,
+				allocated_to: 'Both',
+				transaction_date: '2024-01-20', // Should be corrected to include year
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				flight_details: null,
+				full_statement_text: null
+			});
 
 			expect(result.success).toBe(true);
 			expect(result.charges_found).toBe(2);

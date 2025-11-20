@@ -306,6 +306,9 @@
 
 	// Get disabled state message
 	function getDisabledMessage() {
+		if (!data.isAuthenticated) {
+			return 'Please sign in to generate a project';
+		}
 		if (!projectName || projectName.length < 3) {
 			return 'Please enter a project name (at least 3 characters)';
 		}
@@ -317,7 +320,11 @@
 
 	// Check if button is disabled
 	let isDisabled = $derived.by(
-		() => !projectName || projectName.length < 3 || selectedCapabilities.length === 0
+		() =>
+			!data.isAuthenticated ||
+			!projectName ||
+			projectName.length < 3 ||
+			selectedCapabilities.length === 0
 	);
 
 	// Demo mode banner - show only when user is not authenticated
@@ -400,7 +407,18 @@
 	{/if}
 
 	<!-- Main Content -->
-	<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+	<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative">
+		<!-- Login Button (top right, only when not authenticated) -->
+		{#if !data.isAuthenticated}
+			<div class="absolute top-4 right-4 sm:right-6 lg:right-8">
+				<button
+					onclick={handleSignInClick}
+					class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-green-400 shadow-lg"
+				>
+					Login
+				</button>
+			</div>
+		{/if}
 		<!-- Page Header -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-white">Project Generator</h1>

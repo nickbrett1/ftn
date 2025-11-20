@@ -111,7 +111,7 @@ describe('validation utilities', () => {
 		it('requires configuration object', () => {
 			expect(validateCapabilityConfiguration(null, ['doppler'])).toEqual({
 				valid: false,
-				error: 'Configuration must be an object'
+				errors: ['Configuration must be an object']
 			});
 		});
 
@@ -181,7 +181,7 @@ describe('validation utilities', () => {
 
 			for (const testCase of cases) {
 				const result = validateCapabilityConfiguration(testCase.configuration, testCase.selected);
-				expect(result).toEqual({ valid: false, error: testCase.error });
+				expect(result).toEqual({ valid: false, errors: [testCase.error] });
 			}
 		});
 

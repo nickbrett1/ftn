@@ -401,21 +401,22 @@ export async function deleteStatement(event, id) {
  * @param {string} allocated_to
  * @param {string} transaction_date
  */
-export async function createPayment(
-	event,
-	statement_id,
-	merchant,
-	amount,
-	allocated_to,
-	transaction_date = null,
-	is_foreign_currency = false,
-	foreign_currency_amount = null,
-	foreign_currency_type = null,
-	flight_details = null,
-	full_statement_text = null
-) {
+export async function createPayment(event, paymentData) {
 	const database = event.platform?.env?.CCBILLING_DB;
 	if (!database) throw new Error('CCBILLING_DB binding not found');
+
+	const {
+		statement_id,
+		merchant,
+		amount,
+		allocated_to,
+		transaction_date = null,
+		is_foreign_currency = false,
+		foreign_currency_amount = null,
+		foreign_currency_type = null,
+		flight_details = null,
+		full_statement_text = null
+	} = paymentData;
 
 	// Normalize the merchant
 	const normalized = normalizeMerchant(merchant);

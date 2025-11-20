@@ -1,8 +1,8 @@
 // webapp/src/lib/server/token-service.js
 
 import { logError, log } from '$lib/utils/logging';
-import { encrypt, decrypt } from '$lib/server/crypto'; // Assuming crypto utilities exist
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from '$env/static/private'; // Example for GitHub, others would follow
+import { encrypt, decrypt } from '$lib/server/crypto.js'; // Assuming crypto utilities exist
+
 
 export class TokenService {
 	constructor(d1) {

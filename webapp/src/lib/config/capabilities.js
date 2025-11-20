@@ -308,6 +308,30 @@ export function getCapabilitiesByCategory(category) {
 	return capabilities.filter((c) => c.category === category);
 }
 
+function checkDependencies(capability, selectedSet, missing) {
+	for (const depId of capability.dependencies) {
+		if (!selectedSet.has(depId)) {
+			missing.push({ capability: capability.id, dependency: depId });
+		}
+	}
+}
+
+function checkConflicts(capability, selectedSet, conflicts) {
+	for (const conflictId of capability.conflicts) {
+		if (selectedSet.has(conflictId)) {
+			// Add conflict only once
+			const alreadyExists = conflicts.some(
+				(c) =>
+					(c.capability1 === capability.id && c.capability2 === conflictId) ||
+					(c.capability1 === conflictId && c.capability2 === capability.id)
+			);
+			if (!alreadyExists) {
+				conflicts.push({ capability1: capability.id, capability2: conflictId });
+			}
+		}
+	}
+}
+
 /**
  * Validates the dependencies and conflicts of a selection of capabilities.
  * @param {string[]} selectedIds An array of selected capability IDs.
@@ -321,28 +345,8 @@ export function validateCapabilityDependencies(selectedIds) {
 	for (const id of selectedIds) {
 		const capability = getCapabilityById(id);
 		if (capability) {
-			// Check dependencies
-			for (const depId of capability.dependencies) {
-				if (!selectedSet.has(depId)) {
-					missing.push({ capability: id, dependency: depId });
-				}
-			}
-
-			// Check conflicts
-			for (const conflictId of capability.conflicts) {
-				if (selectedSet.has(conflictId)) {
-					// Add conflict only once
-					if (
-						!conflicts.some(
-							(c) =>
-								(c.capability1 === id && c.capability2 === conflictId) ||
-								(c.capability1 === conflictId && c.capability2 === id)
-						)
-					) {
-						conflicts.push({ capability1: id, capability2: conflictId });
-					}
-				}
-			}
+			checkDependencies(capability, selectedSet, missing);
+			checkConflicts(capability, selectedSet, conflicts);
 		}
 	}
 

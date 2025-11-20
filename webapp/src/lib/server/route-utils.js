@@ -12,11 +12,7 @@ export const RouteUtils = {
 	 * @returns {Object|Response} - User object or error response
 	 */
 	async handleAuth(event) {
-		const authResult = await requireUser(event);
-		if (authResult instanceof Response) {
-			return authResult;
-		}
-		return authResult;
+		return requireUser(event);
 	},
 
 	/**
@@ -70,7 +66,7 @@ export const RouteUtils = {
 		}
 
 		const parsed = Number.parseInt(value, 10);
-		if (isNaN(parsed)) {
+		if (Number.isNaN(parsed)) {
 			return `Invalid ${parameterName}: must be a number`;
 		}
 
@@ -200,11 +196,11 @@ export const RouteUtils = {
 	 * @returns {Promise<Object>} - Parsed body or error
 	 */
 	async parseRequestBody(request, options = {}) {
-		const { maxSize = 1024 * 1024 } = options; // 1MB default
+		// const { maxSize = 1024 * 1024 } = options; // 1MB default - currently unused
 
 		try {
 			const contentType = request.headers.get('content-type');
-			if (!contentType || !contentType.includes('application/json')) {
+			if (!contentType?.includes('application/json')) {
 				return {
 					error: 'Content-Type must be application/json',
 					status: 400

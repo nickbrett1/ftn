@@ -96,7 +96,7 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * Generates preview files for the project
  * @param {Object} projectConfig - Project configuration
  * @param {string[]} executionOrder - Capability execution order
- * @returns {Array<FileObject>} Array of file objects
+ * @returns {Promise<Array<FileObject>>} Array of file objects
  */
 async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
 	// Make function async
@@ -123,7 +123,7 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
  * Generates files for a specific capability
  * @param {Object} projectConfig - Project configuration
  * @param {Object} capability - Capability definition
- * @returns {Array<FileObject>} Array of file objects
+ * @returns {Promise<Array<FileObject>>} Array of file objects
  */
 async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
 	// Make function async
@@ -207,7 +207,7 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * Generates external service changes preview
  * @param {Object} projectConfig - Project configuration
  * @param {string[]} executionOrder - Capability execution order
- * @returns {Array<ExternalService>} Array of external service changes
+ * @returns {Promise<Array<ExternalService>>} Array of external service changes
  */
 async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
 	// Make async
@@ -253,7 +253,7 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * Generates service changes for a specific capability
  * @param {Object} projectConfig - Project configuration
  * @param {Object} capability - Capability definition
- * @returns {Array<ExternalService>} Array of service changes
+ * @returns {Promise<Array<ExternalService>>} Array of service changes
  */
 async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
 	// Make async

@@ -50,7 +50,7 @@ export class ProjectGeneratorService {
 			const capability = capabilities.find((c) => c.id === capabilityId);
 			if (capability) {
 				const capabilityConfig = projectConfig.configuration[capabilityId];
-				if (capabilityConfig && capabilityConfig.enabled) {
+				if (capabilityConfig?.enabled) {
 					switch (capabilityId) {
 						case 'circleci':
 							generatedFiles.push({
@@ -135,6 +135,38 @@ This project was generated with the following capabilities: ${projectConfig.sele
 		const owner = projectConfig.repositoryUrl.split('/')[3]; // Assuming format https://github.com/owner/repo
 		const repoName = projectConfig.projectName; // Use project name as repo name
 
+		const githubResult = await this.setupGitHubRepository(
+			githubApiService,
+			owner,
+			repoName,
+			projectConfig
+		);
+		if (!githubResult.success) {
+			return githubResult;
+		}
+
+		// Implement external service project creation
+		const externalServiceResults = await this.configureExternalServices(
+			projectConfig,
+			storedTokens,
+			owner,
+			repoName
+		);
+
+		log(
+			`Configured ${externalServiceResults.filter((r) => r.success).length} external services`,
+			'GEN'
+		);
+
+		return {
+			success: true,
+			message: 'Project generation completed successfully.',
+			files: githubResult.files,
+			externalServiceResults
+		};
+	}
+
+	async setupGitHubRepository(githubApiService, owner, repoName, projectConfig) {
 		try {
 			log(`Creating GitHub repository: ${owner}/${repoName}`, 'GEN');
 			await githubApiService.createRepository(
@@ -167,131 +199,147 @@ This project was generated with the following capabilities: ${projectConfig.sele
 			};
 		}
 
-		// Implement external service project creation
+		return { success: true, files: preview.files };
+	}
+
+	async configureExternalServices(projectConfig, storedTokens, owner, repoName) {
 		log('Configuring external services...', 'GEN');
 		const externalServiceResults = [];
 
 		for (const capabilityId of projectConfig.selectedCapabilities) {
 			const capabilityConfig = projectConfig.configuration[capabilityId];
-			if (capabilityConfig && capabilityConfig.enabled) {
-				switch (capabilityId) {
-					case 'circleci': {
-						const circleciToken = storedTokens.find(
-							(t) => t.serviceName === 'CircleCI'
-						)?.accessToken;
-						if (circleciToken) {
-							log(`Configuring CircleCI for ${projectConfig.projectName}...`, 'GEN');
-							const circleciApiService = new CircleCIAPIService(circleciToken);
-							try {
-								await circleciApiService.followProject(owner, repoName);
-								externalServiceResults.push({
-									service: 'CircleCI',
-									success: true,
-									message: 'CircleCI configured successfully'
-								});
-								log('CircleCI configured successfully', 'GEN');
-							} catch (error) {
-								logError(`CircleCI configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'CircleCI',
-									success: false,
-									message: `CircleCI configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'CircleCI',
-								success: false,
-								message: 'CircleCI token not found.'
-							});
-						}
-						break;
-					}
-					case 'doppler': {
-						const dopplerToken = storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken;
-						if (dopplerToken) {
-							log(`Configuring Doppler for ${projectConfig.projectName}...`, 'GEN');
-							const dopplerApiService = new DopplerAPIService(dopplerToken);
-							try {
-								await dopplerApiService.createProject(
-									projectConfig.projectName,
-									`Secrets for ${projectConfig.projectName}`
-								);
-								externalServiceResults.push({
-									service: 'Doppler',
-									success: true,
-									message: 'Doppler configured successfully'
-								});
-								log('Doppler configured successfully', 'GEN');
-							} catch (error) {
-								logError(`Doppler configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'Doppler',
-									success: false,
-									message: `Doppler configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'Doppler',
-								success: false,
-								message: 'Doppler token not found.'
-							});
-						}
-						break;
-					}
-					case 'sonarcloud': {
-						const sonarcloudToken = storedTokens.find(
-							(t) => t.serviceName === 'SonarCloud'
-						)?.accessToken;
-						if (sonarcloudToken) {
-							log(`Configuring SonarCloud for ${projectConfig.projectName}...`, 'GEN');
-							const sonarcloudApiService = new SonarCloudAPIService(sonarcloudToken);
-							try {
-								// Assuming organization is part of projectConfig or derived
-								const organization = owner; // Use GitHub owner as SonarCloud organization for simplicity
-								await sonarcloudApiService.createProject(
-									organization,
-									projectConfig.projectName,
-									projectConfig.projectName
-								);
-								externalServiceResults.push({
-									service: 'SonarCloud',
-									success: true,
-									message: 'SonarCloud configured successfully'
-								});
-								log('SonarCloud configured successfully', 'GEN');
-							} catch (error) {
-								logError(`SonarCloud configuration failed: ${error.message}`, 'GEN', error);
-								externalServiceResults.push({
-									service: 'SonarCloud',
-									success: false,
-									message: `SonarCloud configuration failed: ${error.message}`
-								});
-							}
-						} else {
-							externalServiceResults.push({
-								service: 'SonarCloud',
-								success: false,
-								message: 'SonarCloud token not found.'
-							});
-						}
-						break;
-					}
-					// Add other external services here
-				}
+			if (capabilityConfig?.enabled) {
+				await this.configureSingleService(
+					capabilityId,
+					projectConfig,
+					storedTokens,
+					owner,
+					repoName,
+					externalServiceResults
+				);
 			}
 		}
-		log(
-			`Configured ${externalServiceResults.filter((r) => r.success).length} external services`,
-			'GEN'
-		);
+		return externalServiceResults;
+	}
 
-		return {
-			success: true,
-			message: 'Project generation completed successfully.',
-			files: preview.files,
-			externalServiceResults
-		};
+	async configureSingleService(
+		capabilityId,
+		projectConfig,
+		storedTokens,
+		owner,
+		repoName,
+		results
+	) {
+		switch (capabilityId) {
+			case 'circleci':
+				await this.configureCircleCI(storedTokens, projectConfig, owner, repoName, results);
+				break;
+			case 'doppler':
+				await this.configureDoppler(storedTokens, projectConfig, results);
+				break;
+			case 'sonarcloud':
+				await this.configureSonarCloud(storedTokens, projectConfig, owner, results);
+				break;
+			// Add other external services here
+		}
+	}
+
+	async configureCircleCI(storedTokens, projectConfig, owner, repoName, results) {
+		const circleciToken = storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken;
+		if (circleciToken) {
+			log(`Configuring CircleCI for ${projectConfig.projectName}...`, 'GEN');
+			const circleciApiService = new CircleCIAPIService(circleciToken);
+			try {
+				await circleciApiService.followProject(owner, repoName);
+				results.push({
+					service: 'CircleCI',
+					success: true,
+					message: 'CircleCI configured successfully'
+				});
+				log('CircleCI configured successfully', 'GEN');
+			} catch (error) {
+				logError(`CircleCI configuration failed: ${error.message}`, 'GEN', error);
+				results.push({
+					service: 'CircleCI',
+					success: false,
+					message: `CircleCI configuration failed: ${error.message}`
+				});
+			}
+		} else {
+			results.push({
+				service: 'CircleCI',
+				success: false,
+				message: 'CircleCI token not found.'
+			});
+		}
+	}
+
+	async configureDoppler(storedTokens, projectConfig, results) {
+		const dopplerToken = storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken;
+		if (dopplerToken) {
+			log(`Configuring Doppler for ${projectConfig.projectName}...`, 'GEN');
+			const dopplerApiService = new DopplerAPIService(dopplerToken);
+			try {
+				await dopplerApiService.createProject(
+					projectConfig.projectName,
+					`Secrets for ${projectConfig.projectName}`
+				);
+				results.push({
+					service: 'Doppler',
+					success: true,
+					message: 'Doppler configured successfully'
+				});
+				log('Doppler configured successfully', 'GEN');
+			} catch (error) {
+				logError(`Doppler configuration failed: ${error.message}`, 'GEN', error);
+				results.push({
+					service: 'Doppler',
+					success: false,
+					message: `Doppler configuration failed: ${error.message}`
+				});
+			}
+		} else {
+			results.push({
+				service: 'Doppler',
+				success: false,
+				message: 'Doppler token not found.'
+			});
+		}
+	}
+
+	async configureSonarCloud(storedTokens, projectConfig, owner, results) {
+		const sonarcloudToken = storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken;
+		if (sonarcloudToken) {
+			log(`Configuring SonarCloud for ${projectConfig.projectName}...`, 'GEN');
+			const sonarcloudApiService = new SonarCloudAPIService(sonarcloudToken);
+			try {
+				// Assuming organization is part of projectConfig or derived
+				const organization = owner; // Use GitHub owner as SonarCloud organization for simplicity
+				await sonarcloudApiService.createProject(
+					organization,
+					projectConfig.projectName,
+					projectConfig.projectName
+				);
+				results.push({
+					service: 'SonarCloud',
+					success: true,
+					message: 'SonarCloud configured successfully'
+				});
+				log('SonarCloud configured successfully', 'GEN');
+			} catch (error) {
+				logError(`SonarCloud configuration failed: ${error.message}`, 'GEN', error);
+				results.push({
+					service: 'SonarCloud',
+					success: false,
+					message: `SonarCloud configuration failed: ${error.message}`
+				});
+			}
+		} else {
+			results.push({
+				service: 'SonarCloud',
+				success: false,
+				message: 'SonarCloud token not found.'
+			});
+		}
 	}
 }

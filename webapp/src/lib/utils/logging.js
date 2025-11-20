@@ -149,6 +149,9 @@ const logSystemEvent = (event, details) => {
 	logger.system(`System event: ${event}`, details);
 };
 
+const log = (message, category) => logger.info(message, { category });
+const logError = (message, category, error) => logger.error(message, { category, error });
+
 // Exporting all functions to be used in other modules and tests
 export {
 	createLogger,
@@ -169,5 +172,7 @@ export {
 	logFileOperation,
 	logSystemEvent,
 	setLogLevel,
-	getLogLevel
+	getLogLevel,
+	log,
+	logError
 };

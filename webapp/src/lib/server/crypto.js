@@ -3,8 +3,8 @@ import { webcrypto } from 'node:crypto';
 import { SECRET_KEY } from '$env/static/private';
 import { logError } from '$lib/utils/logging';
 
-const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 16; // 16 bytes for AES-256-GCM
+const ALGORITHM = 'AES-GCM';
+const IV_LENGTH = 12; // 12 bytes recommended for AES-GCM
 const TAG_LENGTH = 16; // 16 bytes for authentication tag
 
 // Derive a fixed-size key from the SECRET_KEY environment variable

@@ -181,19 +181,18 @@ export const POST = RouteUtils.createRouteHandler(
 				fullStatementText = charge.merchant_details;
 			}
 
-			await createPayment(
-				event,
+			await createPayment(event, {
 				statement_id,
-				charge.merchant,
-				charge.amount,
-				allocatedTo,
-				transactionDate, // Use the corrected transaction date
-				charge.is_foreign_currency || false,
-				charge.foreign_currency_amount || null,
-				charge.foreign_currency_type || null,
-				charge.flight_details || null,
-				fullStatementText
-			);
+				merchant: charge.merchant,
+				amount: charge.amount,
+				allocated_to: allocatedTo,
+				transaction_date: transactionDate, // Use the corrected transaction date
+				is_foreign_currency: charge.is_foreign_currency || false,
+				foreign_currency_amount: charge.foreign_currency_amount || null,
+				foreign_currency_type: charge.foreign_currency_type || null,
+				flight_details: charge.flight_details || null,
+				full_statement_text: fullStatementText
+			});
 		}
 
 		// Extract basic billing cycle and card info from the charges

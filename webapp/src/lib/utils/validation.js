@@ -153,21 +153,21 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 					}
 				}
 				// This is brittle, but necessary to match the tests without a full schema validator
-				if (id === 'devcontainer-node' && !['18', '20', '22'].includes(config.nodeVersion))
+				if (id === 'devcontainer-node' && config.nodeVersion && !['18', '20', '22'].includes(config.nodeVersion))
 					errors.push('Invalid Node.js version');
-				if (id === 'devcontainer-python' && !['pip', 'poetry'].includes(config.packageManager))
+				if (id === 'devcontainer-python' && config.packageManager && !['pip', 'poetry'].includes(config.packageManager))
 					errors.push('Invalid package manager');
-				if (id === 'devcontainer-java' && !['11', '17', '22'].includes(config.javaVersion))
+				if (id === 'devcontainer-java' && config.javaVersion && !['11', '17', '22'].includes(config.javaVersion))
 					errors.push('Invalid Java version');
-				if (id === 'circleci' && !['none', 'cloudflare'].includes(config.deployTarget))
+				if (id === 'circleci' && config.deployTarget && !['none', 'cloudflare'].includes(config.deployTarget))
 					errors.push('Invalid deploy target');
-				if (id === 'github-actions' && !['18', '20', '22'].includes(config.nodeVersion))
+				if (id === 'github-actions' && config.nodeVersion && !['18', '20', '22'].includes(config.nodeVersion))
 					errors.push('Invalid Node.js version');
-				if (id === 'sonarcloud' && !['js', 'py', 'java'].includes(config.language))
+				if (id === 'sonarcloud' && config.language && !['js', 'py', 'java'].includes(config.language))
 					errors.push('Invalid language');
-				if (id === 'doppler' && !['web', 'backend'].includes(config.projectType))
+				if (id === 'doppler' && config.projectType && !['web', 'backend'].includes(config.projectType))
 					errors.push('Invalid project type');
-				if (id === 'cloudflare-wrangler' && !['web', 'api'].includes(config.workerType))
+				if (id === 'cloudflare-wrangler' && config.workerType && !['web', 'api'].includes(config.workerType))
 					errors.push('Invalid worker type');
 				if (
 					id === 'dependabot' &&
@@ -193,13 +193,13 @@ export function validateCapabilityConfiguration(configuration, selectedCapabilit
 						'Invalid browser: ' +
 							config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
 					);
-				if (id === 'spec-kit' && !['md', 'yaml'].includes(config.specFormat))
+				if (id === 'spec-kit' && config.specFormat && !['md', 'yaml'].includes(config.specFormat))
 					errors.push('Invalid spec format');
 			}
 		}
 	}
 
-	return { valid: errors.length === 0, errors };
+	return errors.length === 0 ? { valid: true } : { valid: false, errors };
 }
 
 /**
