@@ -23,7 +23,8 @@ export async function isRegexSafe(pattern, testString, timeout = 1000) {
 		}
 
 		// Fallback: Use setTimeout with Promise (less reliable but better than nothing)
-		return testRegexWithTimeout(pattern, testString, timeout);
+		const { safe } = testRegexWithTimeout(pattern, testString, timeout);
+		return safe;
 	} catch {
 		// Invalid regex patterns are considered unsafe
 		return false;
@@ -150,7 +151,7 @@ function testRegexWithWorker(pattern, testString, timeout) {
  * @param {string} pattern - The regex pattern
  * @param {string} testString - The test string
  * @param {number} timeout - Timeout in milliseconds
- * @returns {boolean} - True if safe
+ * @returns {{ safe: boolean, match: boolean }} - Result object with safe status and match result
  */
 function testRegexWithTimeout(pattern, testString, timeout) {
 	try {
@@ -158,14 +159,16 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 		const startTime = Date.now();
 
 		// Test the pattern
-		// Use void to explicitly ignore the return value (we only care about execution time)
-		void regex.test(testString);
+		const match = regex.test(testString);
 		const endTime = Date.now();
 
 		// If it takes too long, consider it unsafe
-		return endTime - startTime <= timeout;
+		return {
+			safe: endTime - startTime <= timeout,
+			match
+		};
 	} catch {
-		return false;
+		return { safe: false, match: false };
 	}
 }
 
