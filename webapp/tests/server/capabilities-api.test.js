@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { GET } from '../../../src/routes/api/projects/genproj/capabilities/+server.js';
+import { GET } from '../../src/routes/api/projects/genproj/capabilities/+server.js';
 
 vi.mock('$lib/config/capabilities', () => ({
 	capabilities: { cap1: { name: 'Capability 1' } }

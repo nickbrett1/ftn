@@ -61,6 +61,7 @@ describe('logging utilities', () => {
 	});
 
 	it('authLogger emits auth prefixed messages', () => {
+		console.log.mockClear();
 		authLogger.auth('login');
 		const logOutput = console.log.mock.calls[0][0];
 		expect(logOutput).toContain('[genproj:auth] login');
@@ -101,6 +102,7 @@ describe('logging utilities', () => {
 	});
 
 	it('logApiCall differentiates success and failure', () => {
+		console.log.mockClear();
 		logApiCall('GET', '/items', { id: 1 }, { ok: true }, 200, 10);
 		const infoCall = console.log.mock.calls.find(([message]) =>
 			message.includes('API call: GET /items')
@@ -121,10 +123,12 @@ describe('logging utilities', () => {
 	});
 
 	it('logUserAction, logSecurityEvent, and other helpers emit messages', () => {
-		logUserAction('user-1', 'clicked', { page: 'home' });
+		console.log.mockClear();
 		logUserAction('user-1', 'clicked', { page: 'home' });
 		const logOutput = console.log.mock.calls.flat().join('');
 		expect(logOutput).toContain('User action: clicked');
+
+		console.warn.mockClear();
 		logSecurityEvent('login_failure', { userId: 'user-1' });
 		const warnOutput = console.warn.mock.calls.flat().join('');
 		expect(warnOutput).toContain('Security event: login_failure');

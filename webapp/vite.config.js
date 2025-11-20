@@ -56,9 +56,10 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		test: {
-			include: [
-				'src/**/*.{test,spec}.{js,ts}',
-				'tests/**/*.{test,spec}.{js,ts}'
+			include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
+			exclude: [
+				'tests/e2e/**', // Exclude Playwright E2E tests
+				'node_modules/**'
 			],
 			globals: true,
 			environment: 'jsdom',

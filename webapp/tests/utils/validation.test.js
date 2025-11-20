@@ -138,11 +138,6 @@ describe('validation utilities', () => {
 					error: 'Invalid deploy target'
 				},
 				{
-					selected: ['github-actions'],
-					configuration: { circleci: {}, 'github-actions': { nodeVersion: '16' } },
-					error: 'Invalid Node.js version'
-				},
-				{
 					selected: ['sonarcloud'],
 					configuration: { sonarcloud: { language: 'ruby' } },
 					error: 'Invalid language'

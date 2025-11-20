@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GET, OPTIONS } from '../../../src/routes/api/deployment-info/+server.js';
+import { GET, OPTIONS } from '../../src/routes/api/deployment-info/+server.js';
 
 describe('deployment-info api', () => {
 	beforeEach(() => {

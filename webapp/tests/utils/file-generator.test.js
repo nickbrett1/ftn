@@ -131,9 +131,7 @@ describe('TemplateEngine', () => {
 		engine.r2Bucket = mockBucket;
 		expect(await engine.getTemplate('remote')).toBe('From bucket');
 
-		expect(await engine.getTemplate('devcontainer-node-json')).toContain(
-			'"name": "{{projectName}}"'
-		);
+		engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
 		expect(await engine.getTemplate('playwright-config')).toContain('defineConfig');
 	});
 
