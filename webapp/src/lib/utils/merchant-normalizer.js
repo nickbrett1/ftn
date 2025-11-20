@@ -20,84 +20,73 @@ export function normalizeMerchant(merchant) {
 
 	const merchantUpper = merchant.toUpperCase().trim();
 
-	// Food delivery services
-	if (
-		merchantUpper.includes('CAVIAR') ||
-		merchantUpper.includes('DOORDASH') ||
-		merchantUpper.includes('UBER EATS')
-	) {
-		return extractFoodDeliveryDetails(merchant);
-	}
+	const MERCHANT_NORMALIZATION_RULES = [
+		{
+			condition: (mUpper) => mUpper.includes('CAVIAR') || mUpper.includes('DOORDASH') || mUpper.includes('UBER EATS'),
+			action: extractFoodDeliveryDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('LYFT') || mUpper.includes('UBER'),
+			action: extractRideSharingDetails
+		},
+		{
+			condition: (mUpper) => hasAddressPattern(mUpper),
+			action: extractAddressDetails
+		},
+		{
+			condition: (mUpper) => isHotelTransaction(mUpper),
+			action: extractHotelDetails
+		},
+		{
+			condition: (mUpper) => isFlightTransaction(mUpper),
+			action: extractFlightDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('BRITISH'),
+			action: extractBritishAirwaysDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('AMAZON') || mUpper.includes('AMZN'),
+			action: extractAmazonDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('KINDLE'),
+			action: extractKindleDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('MAIDMARINES'),
+			action: extractMaidMarinesDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('JACADI'),
+			action: extractJacadiDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('APPLE') || mUpper.includes('ITUNES'),
+			action: extractAppleDetails
+		},
+		{
+			condition: (mUpper) => hasStoreNumberPattern(mUpper),
+			action: extractStoreNumberDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('BLUEMERCURY'),
+			action: extractBluemercuryDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('GOOGLE') && mUpper.includes('CLOUD'),
+			action: extractGoogleCloudDetails
+		},
+		{
+			condition: (mUpper) => mUpper.includes('PLAYSTATION') && mUpper.includes('NETWORK'),
+			action: extractPlayStationNetworkDetails
+		}
+	];
 
-	// Ride sharing services
-	if (merchantUpper.includes('LYFT') || merchantUpper.includes('UBER')) {
-		return extractRideSharingDetails(merchant);
-	}
-
-	// Address format variations (e.g., TST* DIG INN- 100 W 67 NEW YORK)
-	// This needs to come before hotel check to avoid false positives
-	if (hasAddressPattern(merchantUpper)) {
-		return extractAddressDetails(merchant);
-	}
-
-	// Hotels and accommodation
-	if (isHotelTransaction(merchantUpper)) {
-		return extractHotelDetails(merchant);
-	}
-
-	// Airlines and travel
-	if (isFlightTransaction(merchantUpper)) {
-		return extractFlightDetails(merchant);
-	}
-
-	// British Airways specific handling
-	if (merchantUpper.includes('BRITISH')) {
-		return extractBritishAirwaysDetails(merchant);
-	}
-
-	// Amazon and similar marketplaces
-	if (merchantUpper.includes('AMAZON') || merchantUpper.includes('AMZN')) {
-		return extractAmazonDetails(merchant);
-	}
-
-	// Kindle services
-	if (merchantUpper.includes('KINDLE')) {
-		return extractKindleDetails(merchant);
-	}
-
-	// MAIDMARINES cleaning service
-	if (merchantUpper.includes('MAIDMARINES')) {
-		return extractMaidMarinesDetails(merchant);
-	}
-
-	// JACADI clothing store
-	if (merchantUpper.includes('JACADI')) {
-		return extractJacadiDetails(merchant);
-	}
-
-	// Apple services
-	if (merchantUpper.includes('APPLE') || merchantUpper.includes('ITUNES')) {
-		return extractAppleDetails(merchant);
-	}
-
-	// Store number variations (e.g., PINKBERRY 15012 NEW YORK)
-	if (hasStoreNumberPattern(merchantUpper)) {
-		return extractStoreNumberDetails(merchant);
-	}
-
-	// BLUEMERCURY beauty store
-	if (merchantUpper.includes('BLUEMERCURY')) {
-		return extractBluemercuryDetails(merchant);
-	}
-
-	// Google Cloud services
-	if (merchantUpper.includes('GOOGLE') && merchantUpper.includes('CLOUD')) {
-		return extractGoogleCloudDetails(merchant);
-	}
-
-	// PlayStation Network services
-	if (merchantUpper.includes('PLAYSTATION') && merchantUpper.includes('NETWORK')) {
-		return extractPlayStationNetworkDetails(merchant);
+	for (const rule of MERCHANT_NORMALIZATION_RULES) {
+		if (rule.condition(merchantUpper)) {
+			return rule.action(merchant);
+		}
 	}
 
 	// Default: return as-is with minimal normalization

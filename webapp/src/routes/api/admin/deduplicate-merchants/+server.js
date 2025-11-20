@@ -17,7 +17,7 @@ export async function POST(event) {
 	}
 
 	try {
-		const body = await event.request.json().catch(() => ({}));
+		const body = await event.request.json();
 		const dryRun = body.dryRun !== false; // Default to dry run unless explicitly disabled
 
 		// Find all duplicate merchants that only differ in case

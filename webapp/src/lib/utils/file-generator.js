@@ -90,26 +90,30 @@ export class TemplateEngine {
 
 		const listed = await this.r2Bucket.list();
 		for (const object of listed.objects) {
-			if (object.key.endsWith('.hbs')) {
-				const body = await this.r2Bucket.get(object.key);
-				if (body) {
-					let content = await body.text();
-					const templateName = object.key.replace('.hbs', '');
-					if (content.trim().startsWith('//')) {
-						let fallbackName = templateName;
-						const match = content.match(/Template:\s*(\S+)/);
-						if (match) {
-							fallbackName = match[1];
-						}
-						const fallback = this.getFallbackTemplate(fallbackName);
-						if (fallback) {
-							content = fallback;
-							this.templates.set(fallbackName, content);
-						}
+			await this._processTemplateObject(object);
+		}
+	}
+
+	async _processTemplateObject(object) {
+		if (object.key.endsWith('.hbs')) {
+			const body = await this.r2Bucket.get(object.key);
+			if (body) {
+				let content = await body.text();
+				const templateName = object.key.replace('.hbs', '');
+				if (content.trim().startsWith('//')) {
+					let fallbackName = templateName;
+					const match = content.match(/Template:\s*(\S+)/);
+					if (match) {
+						fallbackName = match[1];
 					}
-					this.templates.set(object.key, content);
-					this.templates.set(templateName, content);
+					const fallback = this.getFallbackTemplate(fallbackName);
+					if (fallback) {
+						content = fallback;
+						this.templates.set(fallbackName, content);
+					}
 				}
+				this.templates.set(object.key, content);
+				this.templates.set(templateName, content);
 			}
 		}
 	}

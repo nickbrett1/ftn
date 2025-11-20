@@ -87,7 +87,7 @@ export function validateRepositoryUrl(url) {
 	if (typeof url !== 'string') {
 		return { valid: false, error: 'Repository URL must be a string' };
 	}
-	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(\.git)?$/.test(url)) {
+	if (!/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\.git)?$/.test(url)) {
 		return {
 			valid: false,
 			error: 'Repository URL must be a valid GitHub URL (https://github.com/owner/repo)'

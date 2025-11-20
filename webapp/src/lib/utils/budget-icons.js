@@ -63,52 +63,57 @@ export function getIconDescription(emoji) {
 	return BUDGET_ICONS[emoji] || 'Unknown';
 }
 
+
+const ICON_KEYWORD_MAP = [
+	{ keywords: ['grocery', 'food', 'supermarket'], icon: '🛒' },
+	{ keywords: ['dining', 'restaurant', 'food'], icon: '🍽️' },
+	{ keywords: ['transport', 'car', 'gas'], icon: '🚗' },
+	{ keywords: ['entertainment', 'movie', 'streaming'], icon: '🎬' },
+	{ keywords: ['shopping', 'retail'], icon: '🛍️' },
+	{ keywords: ['travel', 'flight', 'hotel'], icon: '✈️' },
+	{ keywords: ['utility', 'electric', 'water'], icon: '💡' },
+	{ keywords: ['health', 'medical', 'doctor'], icon: '🏥' },
+	{ keywords: ['housing', 'rent', 'mortgage'], icon: '🏠' },
+	{ keywords: ['education', 'school', 'college'], icon: '🎓' },
+	{ keywords: ['tech', 'computer', 'software'], icon: '💻' },
+	{ keywords: ['game', 'gaming'], icon: '🎮' },
+	{ keywords: ['fitness', 'gym', 'workout'], icon: '🏃' },
+	{ keywords: ['pet', 'dog', 'cat'], icon: '🐕' },
+	{ keywords: ['clothing', 'apparel'], icon: '👕' },
+	{ keywords: ['book', 'reading'], icon: '📚' },
+	{ keywords: ['hobby', 'craft'], icon: '🎨' },
+	{ keywords: ['beauty', 'cosmetic'], icon: '💄' },
+	{ keywords: ['alcohol', 'wine', 'beer'], icon: '🍷' },
+	{ keywords: ['gift', 'present'], icon: '🎁' },
+	{ keywords: ['medicine', 'pharmacy'], icon: '💊' },
+	{ keywords: ['transit', 'bus', 'train'], icon: '🚌' },
+	{ keywords: ['gas', 'fuel'], icon: '⛽' },
+	{ keywords: ['bank', 'financial'], icon: '🏦' },
+	{ keywords: ['mobile', 'phone'], icon: '📱' },
+	{ keywords: ['streaming', 'netflix', 'hulu'], icon: '📺' },
+	{ keywords: ['music', 'spotify'], icon: '🎵' },
+	{ keywords: ['news', 'subscription'], icon: '📰' },
+	{ keywords: ['vacation', 'holiday'], icon: '🏖️' },
+	{ keywords: ['event', 'concert'], icon: '🎪' },
+	{ keywords: ['jewelry', 'accessory'], icon: '💍' },
+	{ keywords: ['home', 'improvement'], icon: '🔧' },
+	{ keywords: ['garden', 'plant'], icon: '🌱' },
+	{ keywords: ['sport', 'athletic'], icon: '🎯' },
+	{ keywords: ['photo', 'camera'], icon: '📷' },
+	{ keywords: ['luxury', 'premium'], icon: '💎' },
+			{ keywords: ['electronic', 'device'], icon: '🔋' }];
+
 /**
  * Get default icon for a budget name
  */
 export function getDefaultIcon(budgetName) {
 	const name = budgetName.toLowerCase();
 
-	if (name.includes('grocery') || name.includes('food') || name.includes('supermarket'))
-		return '🛒';
-	if (name.includes('dining') || name.includes('restaurant') || name.includes('food')) return '🍽️';
-	if (name.includes('transport') || name.includes('car') || name.includes('gas')) return '🚗';
-	if (name.includes('entertainment') || name.includes('movie') || name.includes('streaming'))
-		return '🎬';
-	if (name.includes('shopping') || name.includes('retail')) return '🛍️';
-	if (name.includes('travel') || name.includes('flight') || name.includes('hotel')) return '✈️';
-	if (name.includes('utility') || name.includes('electric') || name.includes('water')) return '💡';
-	if (name.includes('health') || name.includes('medical') || name.includes('doctor')) return '🏥';
-	if (name.includes('housing') || name.includes('rent') || name.includes('mortgage')) return '🏠';
-	if (name.includes('education') || name.includes('school') || name.includes('college'))
-		return '🎓';
-	if (name.includes('tech') || name.includes('computer') || name.includes('software')) return '💻';
-	if (name.includes('game') || name.includes('gaming')) return '🎮';
-	if (name.includes('fitness') || name.includes('gym') || name.includes('workout')) return '🏃';
-	if (name.includes('pet') || name.includes('dog') || name.includes('cat')) return '🐕';
-	if (name.includes('clothing') || name.includes('apparel')) return '👕';
-	if (name.includes('book') || name.includes('reading')) return '📚';
-	if (name.includes('hobby') || name.includes('craft')) return '🎨';
-	if (name.includes('beauty') || name.includes('cosmetic')) return '💄';
-	if (name.includes('alcohol') || name.includes('wine') || name.includes('beer')) return '🍷';
-	if (name.includes('gift') || name.includes('present')) return '🎁';
-	if (name.includes('medicine') || name.includes('pharmacy')) return '💊';
-	if (name.includes('transit') || name.includes('bus') || name.includes('train')) return '🚌';
-	if (name.includes('gas') || name.includes('fuel')) return '⛽';
-	if (name.includes('bank') || name.includes('financial')) return '🏦';
-	if (name.includes('mobile') || name.includes('phone')) return '📱';
-	if (name.includes('streaming') || name.includes('netflix') || name.includes('hulu')) return '📺';
-	if (name.includes('music') || name.includes('spotify')) return '🎵';
-	if (name.includes('news') || name.includes('subscription')) return '📰';
-	if (name.includes('vacation') || name.includes('holiday')) return '🏖️';
-	if (name.includes('event') || name.includes('concert')) return '🎪';
-	if (name.includes('jewelry') || name.includes('accessory')) return '💍';
-	if (name.includes('home') || name.includes('improvement')) return '🔧';
-	if (name.includes('garden') || name.includes('plant')) return '🌱';
-	if (name.includes('sport') || name.includes('athletic')) return '🎯';
-	if (name.includes('photo') || name.includes('camera')) return '📷';
-	if (name.includes('luxury') || name.includes('premium')) return '💎';
-	if (name.includes('electronic') || name.includes('device')) return '🔋';
+	for (const { keywords, icon } of ICON_KEYWORD_MAP) {
+		if (keywords.some((keyword) => name.includes(keyword))) {
+			return icon;
+		}
+	}
 
 	return '📦'; // Default fallback
 }

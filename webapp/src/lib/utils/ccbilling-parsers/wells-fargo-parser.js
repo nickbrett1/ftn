@@ -147,90 +147,153 @@ export class WellsFargoParser extends BaseParser {
 			.map((line) => line.trim())
 			.filter((line) => line.length > 0);
 
-		for (let index = 0; index < lines.length; index++) {
-			const line = lines[index];
-
-			// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
-			// Example: "06/17 06/17 860001800 5543286595Z9WS512 TST*BLACK TAP SOHO - T NEW YORK NY $13.06"
-			const transactionMatch = line.match(
-				/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^\$]+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
-			);
-
-			if (transactionMatch) {
-				const transDate = transactionMatch[1]; // MM/DD format
-				const description = transactionMatch[3].trim();
-				const amountString = transactionMatch[4];
-
-				// Skip payments to the card
-				if (this.isPaymentToCard(description)) {
-					continue;
-				}
-
-				const amount = this.parseAmount(amountString);
-				const date = this.parseWellsFargoFullDate(transDate, statementYear);
-
-				if (!date || !amount || description.length < 2) continue;
-
-				// Check if this might be a foreign currency transaction
-				let isForeignTransaction = false;
-				let foreignCurrencyAmount = null;
-				let foreignCurrencyType = null;
-
-				// Look ahead for foreign currency information
-				for (let index_ = index + 1; index_ < Math.min(index + 4, lines.length); index_++) {
-					const nextLine = lines[index_];
-
-					// Check for currency type line (e.g., "DK KRONE")
-					if (this.isCurrencyLine(nextLine)) {
-						// Extract just the currency part, removing date prefix if present
-						const currencyMatch = nextLine.match(/(?:- \d{1,2}\/\d{1,2} )?(.*)/);
-						foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : nextLine.trim();
-						isForeignTransaction = true;
-
-						// Look for the foreign amount and exchange rate on the next line
-						if (index_ + 1 < lines.length) {
-							const rateLine = lines[index_ + 1];
-							const rateMatch = this.parseExchangeRate(rateLine);
-							if (rateMatch) {
-								foreignCurrencyAmount = rateMatch.foreignAmount;
-								break;
-							}
-						}
-					}
-
-					// Stop looking if we encounter another transaction line
-					if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) {
-						break;
-					}
-				}
-
-				// Check if this is an Amazon charge and capture full statement text
-				let fullStatementText = null;
-				if (this.isAmazonTransaction(description)) {
-					fullStatementText = this.extractFullStatementText(lines, index);
-				}
-
-				const charge = {
-					merchant: description.trim(),
-					amount: Math.abs(amount), // Store as positive value
-					date,
-					allocated_to: null,
-					is_foreign_currency: isForeignTransaction,
-					foreign_currency_amount: foreignCurrencyAmount,
-					foreign_currency_type: foreignCurrencyType,
-					full_statement_text: fullStatementText
-				};
-
-				charges.push(charge);
-			}
-		}
-
-		return charges;
-	}
-
-	/**
-	 * Parse Wells Fargo transaction line
-	 * @param {string} line - Rest of the transaction line after date
+		        for (let index = 0; index < lines.length; index++) {
+		            const line = lines[index];
+		
+		            const transactionDetails = this._parseTransactionLineDetails(line, statementYear);
+		
+		            if (transactionDetails) {
+		                const { description, amount, date } = transactionDetails;
+		
+		                // Check if this is an Amazon charge and capture full statement text
+		                let fullStatementText = null;
+		                if (this.isAmazonTransaction(description)) {
+		                    fullStatementText = this.extractFullStatementText(lines, index);
+		                }
+		
+		                const { isForeignTransaction, foreignCurrencyAmount, foreignCurrencyType } =
+		                    this._extractForeignTransactionDetails(lines, index);
+		
+		                const charge = {
+		                    merchant: description.trim(),
+		                    amount: Math.abs(amount), // Store as positive value
+		                    date,
+		                    allocated_to: null,
+		                    is_foreign_currency: isForeignTransaction,
+		                    foreign_currency_amount: foreignCurrencyAmount,
+		                    foreign_currency_type: foreignCurrencyType,
+		                    full_statement_text: fullStatementText
+		                };
+		
+		                charges.push(charge);
+		            }
+		        }				
+				        return charges;
+				    }
+				
+				    /**
+				     * Extract foreign transaction details from statement lines.
+				     * @param {string[]} lines - All lines of the text content.
+				     * @param {number} startIndex - The index of the current transaction line.
+				     * @returns {{isForeignTransaction: boolean, foreignCurrencyAmount: number|null, foreignCurrencyType: string|null}}
+				     * @private
+				     */
+				    _extractForeignTransactionDetails(lines, startIndex) {
+				        let isForeignTransaction = false;
+				        let foreignCurrencyAmount = null;
+				        let foreignCurrencyType = null;
+				
+				        for (let i = startIndex + 1; i < Math.min(startIndex + 4, lines.length); i++) {
+				            const nextLine = lines[i];
+				
+				            if (this.isCurrencyLine(nextLine)) {
+				                const currencyMatch = nextLine.match(/(?:- \d{1,2}\/\d{1,2} )?(.*)/);
+				                foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : nextLine.trim();
+				                isForeignTransaction = true;
+				
+				                if (i + 1 < lines.length) {
+				                    const rateLine = lines[i + 1];
+				                    const rateMatch = this.parseExchangeRate(rateLine);
+				                    if (rateMatch) {
+				                        foreignCurrencyAmount = rateMatch.foreignAmount;
+				                        break;
+				                    }
+				                }
+				            }
+				
+				            if (/^\d{1,2}\/\d{1,2}\s+\d{1,2}\/\d{1,2}/.test(nextLine)) {
+				                break;
+				            }
+				        }
+				
+				        return { isForeignTransaction, foreignCurrencyAmount, foreignCurrencyType };
+				    }
+				
+				    	/**
+				
+				    	 * Parse Wells Fargo transaction line from text and statement year.
+				
+				    	 * @param {string} line - The transaction line text.
+				
+				    	 * @param {number} statementYear - The year from the statement date.
+				
+				    	 * @returns {{description: string, amount: number, date: string}|null} Parsed details or null if not a valid transaction line.
+				
+				    	 * @private
+				
+				    	 */
+				
+				    	_parseTransactionLineDetails(line, statementYear) {
+				
+				    		// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
+				
+				    		const transactionMatch = line.match(
+				
+				    			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^\$]+?)\s+\$(-?\d+(?:,\d{3})*\.?\d{0,2})[-]?$/
+				
+				    		);
+				
+				    
+				
+				    		if (!transactionMatch) {
+				
+				    			return null;
+				
+				    		}
+				
+				    
+				
+				    		const transDate = transactionMatch[1]; // MM/DD format
+				
+				    		const description = transactionMatch[3].trim();
+				
+				    		const amountString = transactionMatch[4];
+				
+				    
+				
+				    		// Skip payments to the card
+				
+				    		if (this.isPaymentToCard(description)) {
+				
+				    			return null;
+				
+				    		}
+				
+				    
+				
+				    		const amount = this.parseAmount(amountString);
+				
+				    		const date = this.parseWellsFargoFullDate(transDate, statementYear);
+				
+				    
+				
+				    		if (!date || isNaN(amount) || description.length < 2) {
+				
+				    			return null;
+				
+				    		}
+				
+				    
+				
+				    		return { description, amount, date };
+				
+				    	}
+				
+				    
+				
+				    	/**
+				
+				    	 * Parse Wells Fargo transaction line	 * @param {string} line - Rest of the transaction line after date
 	 * @returns {Object|null} - Object with description and amount, or null
 	 */
 	parseWellsFargoTransaction(line) {

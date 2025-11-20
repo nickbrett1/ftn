@@ -648,40 +648,22 @@ export class ChaseParser extends BaseParser {
 	 * @returns {boolean} - True if it's likely a SHOP WITH POINTS transaction
 	 */
 	isLikelyShopWithPointsTransaction(merchant, amount, fullLine) {
-		// Check for suspicious patterns that indicate SHOP WITH POINTS transactions
-
-		// 1. Check if the line contains the specific AMZN.COM/BILLWA pattern
-		// This is a clear indicator of SHOP WITH POINTS transactions
-		if (fullLine.includes('AMZN.COM/BILLWA')) {
-			return true;
-		}
-
-		// 2. Check if the amount is suspiciously large for the merchant description
-		// SHOP WITH POINTS transactions often have amounts like $1567.00 for a $15.67 purchase
-		if (amount > 1000 && merchant.toLowerCase().includes('amazon')) {
-			// Look for patterns that suggest this is a points transaction
-			// The amount might be 100x the actual purchase price
-			return true;
-		}
-
-		// 3. Check if the line contains points-related keywords
-		const pointsKeywords = ['points', 'rewards', 'shop with points'];
 		const lineLower = fullLine.toLowerCase();
-		if (pointsKeywords.some((keyword) => lineLower.includes(keyword))) {
-			return true;
-		}
+		const merchantLower = merchant.toLowerCase();
 
-		// 4. Check if the merchant name contains suspicious patterns
-		// SHOP WITH POINTS transactions often have very generic merchant names
-		const suspiciousMerchants = ['amazon.com', 'amazon marketplace', 'amazon mkpl'];
+		// Helper functions for individual checks
+		const checkAmznBillwa = () => lineLower.includes('amzn.com/billwa');
+		const checkSuspiciousAmount = () => amount > 1000 && merchantLower.includes('amazon');
+		const checkPointsKeywords = () => {
+			const pointsKeywords = ['points', 'rewards', 'shop with points'];
+			return pointsKeywords.some((keyword) => lineLower.includes(keyword));
+		};
+		const checkSuspiciousMerchants = () => {
+			const suspiciousMerchants = ['amazon.com', 'amazon marketplace', 'amazon mkpl'];
+			return suspiciousMerchants.some((suspicious) => merchantLower.includes(suspicious)) && amount > 500;
+		};
 
-		if (
-			suspiciousMerchants.some((suspicious) => merchant.toLowerCase().includes(suspicious)) && // If it's an Amazon transaction with a very large amount, it's likely points
-			amount > 500
-		) {
-			return true;
-		}
-
-		return false;
+		// Combine checks
+		return checkAmznBillwa() || checkSuspiciousAmount() || checkPointsKeywords() || checkSuspiciousMerchants();
 	}
 }
