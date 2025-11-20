@@ -10,7 +10,7 @@ export async function GET(event) {
 	const { params } = event;
 	const charge_id = Number.parseInt(params.id);
 
-	if (isNaN(charge_id)) {
+	if (Number.isNaN(charge_id)) {
 		return json({ error: 'Invalid charge ID' }, { status: 400 });
 	}
 
@@ -65,7 +65,7 @@ async function handleFullUpdate(event, charge_id, { merchant, amount, allocated_
 
 	// Validate amount is a number
 	const parsedAmount = Number.parseFloat(amount);
-	if (isNaN(parsedAmount)) {
+	if (Number.isNaN(parsedAmount)) {
 		return json({ error: 'Amount must be a valid number' }, { status: 400 });
 	}
 
@@ -81,7 +81,7 @@ export async function PUT(event) {
 	const { params, request } = event;
 	const charge_id = Number.parseInt(params.id);
 
-	if (isNaN(charge_id)) {
+	if (Number.isNaN(charge_id)) {
 		return json({ error: 'Invalid charge ID' }, { status: 400 });
 	}
 

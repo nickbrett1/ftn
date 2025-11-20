@@ -11,7 +11,7 @@
 	function validateDate(dateString) {
 		if (!dateString) return false;
 		const date = new Date(dateString);
-		return !isNaN(date.getTime());
+		return !Number.isNaN(date.getTime());
 	}
 
 	// Use server-provided dates if valid, otherwise fall back to today

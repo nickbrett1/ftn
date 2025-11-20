@@ -30,7 +30,7 @@ export async function load(event) {
 			const mostRecentEndDate = new Date(mostRecentCycle.end_date);
 
 			// Check if the date is valid (not NaN)
-			if (!isNaN(mostRecentEndDate.getTime())) {
+			if (!Number.isNaN(mostRecentEndDate.getTime())) {
 				// Set start date to day after the most recent cycle's end date
 				const nextDay = new Date(mostRecentEndDate);
 				nextDay.setDate(nextDay.getDate() + 1);

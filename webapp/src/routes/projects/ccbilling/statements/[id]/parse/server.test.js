@@ -86,7 +86,7 @@ vi.mock('$lib/server/route-utils.js', () => ({
 			}
 
 			const parsed = Number.parseInt(value, 10);
-			if (isNaN(parsed)) {
+			if (Number.isNaN(parsed)) {
 				return `Invalid ${parameterName}: must be a number`;
 			}
 
