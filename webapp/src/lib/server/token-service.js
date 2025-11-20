@@ -3,7 +3,6 @@
 import { logError, log } from '$lib/utils/logging';
 import { encrypt, decrypt } from '$lib/server/crypto.js'; // Assuming crypto utilities exist
 
-
 export class TokenService {
 	constructor(d1) {
 		this.d1 = d1;

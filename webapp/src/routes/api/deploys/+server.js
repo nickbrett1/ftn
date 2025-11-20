@@ -15,6 +15,21 @@ function formatDate(dateString) {
 	return date.toLocaleDateString('en-US', options);
 }
 
+function validateEnvironmentVariables(accountId, apiToken) {
+	if (!accountId || !apiToken) {
+		const missingVariables = [];
+		if (!accountId) missingVariables.push('CLOUDFLARE_ACCOUNT_ID');
+		if (!apiToken) missingVariables.push('CLOUDFLARE_DEPLOYS_TOKEN');
+
+		throw error(
+			500,
+			`Missing Cloudflare environment variables: ${missingVariables.join(
+				', '
+			)}. Please check your environment configuration.`
+		);
+	}
+}
+
 async function getCloudflareWorkers(accountId, apiToken) {
 	const listWorkersUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`;
 	const listResponse = await fetch(listWorkersUrl, {
@@ -43,14 +58,7 @@ async function getCloudflareWorkers(accountId, apiToken) {
 	return workersList.result;
 }
 
-async function getWorkerDetails(accountId, apiToken, workerId, environment) {
-	const worker = {
-		id: workerId,
-		deployedAt: new Date().toISOString(),
-		version: 'latest',
-		latestDeployment: null
-	};
-
+async function getLatestDeployment(accountId, apiToken, workerId) {
 	const deployUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${workerId}/deployments`;
 	const deployResponse = await fetch(deployUrl, {
 		headers: {
@@ -62,18 +70,20 @@ async function getWorkerDetails(accountId, apiToken, workerId, environment) {
 	if (deployResponse.ok) {
 		const deployData = await deployResponse.json();
 		if (deployData.result && deployData.result.length > 0) {
-			worker.latestDeployment = deployData.result[0];
-			worker.deployedAt = worker.latestDeployment.created_on || worker.deployedAt;
+			return deployData.result[0];
 		}
 	}
+	return null;
+}
 
-	let versionParts = [environment];
-	if (worker.latestDeployment?.metadata) {
-		if (worker.latestDeployment.metadata.branch) {
-			versionParts.push(worker.latestDeployment.metadata.branch);
+function determineVersion(environment, latestDeployment) {
+	const versionParts = [environment];
+	if (latestDeployment?.metadata) {
+		if (latestDeployment.metadata.branch) {
+			versionParts.push(latestDeployment.metadata.branch);
 		}
-		if (worker.latestDeployment.metadata.git_commit) {
-			versionParts.push(worker.latestDeployment.metadata.git_commit.slice(0, 8));
+		if (latestDeployment.metadata.git_commit) {
+			versionParts.push(latestDeployment.metadata.git_commit.slice(0, 8));
 		}
 	}
 
@@ -82,7 +92,20 @@ async function getWorkerDetails(accountId, apiToken, workerId, environment) {
 		versionParts.push(timestamp);
 	}
 
-	worker.version = versionParts.join('-');
+	return versionParts.join('-');
+}
+
+async function getWorkerDetails(accountId, apiToken, workerId, environment) {
+	const latestDeployment = await getLatestDeployment(accountId, apiToken, workerId);
+
+	const worker = {
+		id: workerId,
+		deployedAt: latestDeployment?.created_on || new Date().toISOString(),
+		version: 'latest',
+		latestDeployment
+	};
+
+	worker.version = determineVersion(environment, latestDeployment);
 	return worker;
 }
 
@@ -97,23 +120,81 @@ function formatDeployment(name, environment, url, workerDetails) {
 	};
 }
 
+async function getPreviewDeployment(accountId, apiToken) {
+	const previewDetails = await getWorkerDetails(accountId, apiToken, 'ftn-preview', 'preview');
+	return formatDeployment(
+		'Preview Environment',
+		'preview',
+		'https://ftn-preview.nick-brett1.workers.dev',
+		previewDetails
+	);
+}
+
+async function getProductionVersions(accountId, apiToken) {
+	const productionApiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
+	const productionResponse = await fetch(productionApiUrl, {
+		headers: {
+			Authorization: `Bearer ${apiToken}`,
+			'Content-Type': 'application/json'
+		}
+	});
+
+	const deployments = [];
+	if (productionResponse.ok) {
+		const productionData = await productionResponse.json();
+		if (productionData.success && productionData.result.length > 0) {
+			for (const version of productionData.result) {
+				deployments.push({
+					name: `Production Version ${version.id}`,
+					status: 'active',
+					environment: 'production',
+					url: 'https://ftn-production.nick-brett1.workers.dev',
+					version: `v${version.id}`,
+					deployedAt: formatDate(version.created_on)
+				});
+			}
+		}
+	}
+	return deployments;
+}
+
+async function getProductionDeployments(accountId, apiToken) {
+	const deployments = [];
+
+	const productionDetails = await getWorkerDetails(accountId, apiToken, 'ftn-production', 'prod');
+
+	deployments.push(
+		formatDeployment(
+			'Production Environment',
+			'production',
+			'https://ftn-production.nick-brett1.workers.dev',
+			productionDetails
+		)
+	);
+
+	const olderVersions = await getProductionVersions(accountId, apiToken);
+	deployments.push(...olderVersions);
+
+	return deployments;
+}
+
+function handleApiError(error_) {
+	if (error_.status) {
+		throw error_; // Re-throw SvelteKit errors
+	}
+
+	// Give more specific error information
+	const errorMessage = error_.message || 'Unknown error occurred';
+
+	throw error(500, `Deploys API error: ${errorMessage}`);
+}
+
 export async function GET() {
 	try {
 		const accountId = env.CLOUDFLARE_ACCOUNT_ID;
 		const apiToken = env.CLOUDFLARE_DEPLOYS_TOKEN;
 
-		if (!accountId || !apiToken) {
-			const missingVariables = [];
-			if (!accountId) missingVariables.push('CLOUDFLARE_ACCOUNT_ID');
-			if (!apiToken) missingVariables.push('CLOUDFLARE_DEPLOYS_TOKEN');
-
-			throw error(
-				500,
-				`Missing Cloudflare environment variables: ${missingVariables.join(
-					', '
-				)}. Please check your environment configuration.`
-			);
-		}
+		validateEnvironmentVariables(accountId, apiToken);
 
 		const workers = await getCloudflareWorkers(accountId, apiToken);
 		const previewWorker = workers.find((worker) => worker.id === 'ftn-preview');
@@ -132,66 +213,16 @@ export async function GET() {
 		const deployments = [];
 
 		if (previewWorker) {
-			const previewDetails = await getWorkerDetails(accountId, apiToken, 'ftn-preview', 'preview');
-			deployments.push(
-				formatDeployment(
-					'Preview Environment',
-					'preview',
-					'https://ftn-preview.nick-brett1.workers.dev',
-					previewDetails
-				)
-			);
+			deployments.push(await getPreviewDeployment(accountId, apiToken));
 		}
 
 		if (productionWorker) {
-			const productionDetails = await getWorkerDetails(
-				accountId,
-				apiToken,
-				'ftn-production',
-				'prod'
-			);
-			deployments.push(
-				formatDeployment(
-					'Production Environment',
-					'production',
-					'https://ftn-production.nick-brett1.workers.dev',
-					productionDetails
-				)
-			);
-			const productionApiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/ftn-production/versions`;
-			const productionResponse = await fetch(productionApiUrl, {
-				headers: {
-					Authorization: `Bearer ${apiToken}`,
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (productionResponse.ok) {
-				const productionData = await productionResponse.json();
-				if (productionData.success && productionData.result.length > 0) {
-					for (const version of productionData.result) {
-						deployments.push({
-							name: `Production Version ${version.id}`,
-							status: 'active',
-							environment: 'production',
-							url: 'https://ftn-production.nick-brett1.workers.dev',
-							version: `v${version.id}`,
-							deployedAt: formatDate(version.created_on)
-						});
-					}
-				}
-			}
+			const productionDeployments = await getProductionDeployments(accountId, apiToken);
+			deployments.push(...productionDeployments);
 		}
 
 		return json(deployments);
 	} catch (error_) {
-		if (error_.status) {
-			throw error_; // Re-throw SvelteKit errors
-		}
-
-		// Give more specific error information
-		const errorMessage = error_.message || 'Unknown error occurred';
-
-		throw error(500, `Deploys API error: ${errorMessage}`);
+		handleApiError(error_);
 	}
 }

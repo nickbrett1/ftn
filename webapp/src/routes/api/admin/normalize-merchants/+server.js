@@ -384,10 +384,7 @@ async function processBudgetGroup(database, budgetId, merchants, update) {
 
 	if (existingNormalized.length > 0) {
 		for (const merchant of merchants) {
-			await database
-				.prepare('DELETE FROM budget_merchant WHERE id = ?')
-				.bind(merchant.id)
-				.run();
+			await database.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
 			removed++;
 		}
 	} else {
@@ -398,10 +395,7 @@ async function processBudgetGroup(database, budgetId, merchants, update) {
 			.run();
 		updated++;
 		for (const merchant of remainingMerchants) {
-			await database
-				.prepare('DELETE FROM budget_merchant WHERE id = ?')
-				.bind(merchant.id)
-				.run();
+			await database.prepare('DELETE FROM budget_merchant WHERE id = ?').bind(merchant.id).run();
 			removed++;
 		}
 	}

@@ -92,7 +92,10 @@ describe('/logout/+server.js', () => {
 		expect(response.headers.get('set-cookie')).toMatch(/^auth=/);
 
 		// Verify Google token revocation
-		expect(mockFetch).toHaveBeenCalledWith('https://oauth2.googleapis.com/revoke', expect.any(Object));
+		expect(mockFetch).toHaveBeenCalledWith(
+			'https://oauth2.googleapis.com/revoke',
+			expect.any(Object)
+		);
 		const fetchBody = mockFetch.mock.calls[0][1].body;
 		expect(fetchBody.get('token')).toBe(token);
 

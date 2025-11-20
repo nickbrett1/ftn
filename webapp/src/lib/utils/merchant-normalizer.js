@@ -22,7 +22,8 @@ export function normalizeMerchant(merchant) {
 
 	const MERCHANT_NORMALIZATION_RULES = [
 		{
-			condition: (mUpper) => mUpper.includes('CAVIAR') || mUpper.includes('DOORDASH') || mUpper.includes('UBER EATS'),
+			condition: (mUpper) =>
+				mUpper.includes('CAVIAR') || mUpper.includes('DOORDASH') || mUpper.includes('UBER EATS'),
 			action: extractFoodDeliveryDetails
 		},
 		{

@@ -15,7 +15,7 @@ describe('crypto', () => {
 		const text = 'Hello, World!';
 		const encrypted = await encrypt(text);
 		expect(encrypted).not.toBe(text);
-		
+
 		const decrypted = await decrypt(encrypted);
 		expect(decrypted).toBe(text);
 	});
@@ -24,12 +24,12 @@ describe('crypto', () => {
 		const text = 'Hello, World!';
 		const encrypted1 = await encrypt(text);
 		const encrypted2 = await encrypt(text);
-		
+
 		expect(encrypted1).not.toBe(encrypted2);
-		
+
 		const decrypted1 = await decrypt(encrypted1);
 		const decrypted2 = await decrypt(encrypted2);
-		
+
 		expect(decrypted1).toBe(text);
 		expect(decrypted2).toBe(text);
 	});

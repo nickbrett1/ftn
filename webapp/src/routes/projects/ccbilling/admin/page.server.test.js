@@ -11,7 +11,9 @@ const mockEvent = {};
 
 describe('/projects/ccbilling/admin/+page.server.js', () => {
 	it('redirects if user is not authenticated', async () => {
-		requireUser.requireUser.mockResolvedValue(new Response(null, { status: 307, headers: { Location: '/notauthorised' } }));
+		requireUser.requireUser.mockResolvedValue(
+			new Response(null, { status: 307, headers: { Location: '/notauthorised' } })
+		);
 
 		try {
 			await load(mockEvent);

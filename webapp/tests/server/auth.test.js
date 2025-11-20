@@ -29,7 +29,9 @@ describe('auth', () => {
 				expect(url.pathname).toBe('/login/oauth/authorize');
 				expect(url.searchParams.get('client_id')).toBe('test-github-client-id');
 				expect(url.searchParams.get('state')).toBe(state);
-				expect(url.searchParams.get('redirect_uri')).toBe('https://example.com/auth/github/callback');
+				expect(url.searchParams.get('redirect_uri')).toBe(
+					'https://example.com/auth/github/callback'
+				);
 				expect(url.searchParams.get('scope')).toBe('repo,user');
 			});
 		});

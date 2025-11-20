@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createSession, validateSession, invalidateSession, invalidateAllSessions, setSessionCookie, deleteSessionCookie } from '$lib/server/session.js';
+import {
+	createSession,
+	validateSession,
+	invalidateSession,
+	invalidateAllSessions,
+	setSessionCookie,
+	deleteSessionCookie
+} from '$lib/server/session.js';
 
 describe('session', () => {
 	let mockKv;
@@ -56,7 +63,7 @@ describe('session', () => {
 			const sessionId = 'session123';
 			const userId = 'user123';
 			const expiresAt = new Date(Date.now() + 100000);
-			
+
 			mockKv.get.mockResolvedValueOnce(JSON.stringify({ userId, expiresAt: expiresAt.getTime() }));
 
 			const session = await validateSession(mockKv, sessionId);
@@ -74,7 +81,7 @@ describe('session', () => {
 			const sessionId = 'session123';
 			const userId = 'user123';
 			const expiresAt = new Date(Date.now() - 1000); // Expired
-			
+
 			mockKv.get.mockResolvedValueOnce(JSON.stringify({ userId, expiresAt: expiresAt.getTime() }));
 			mockKv.get.mockResolvedValueOnce('[]'); // userSessions
 
@@ -88,7 +95,7 @@ describe('session', () => {
 		it('should delete session from KV', async () => {
 			const sessionId = 'session123';
 			const userId = 'user123';
-			
+
 			mockKv.get.mockResolvedValueOnce(JSON.stringify({ userId, expiresAt: Date.now() }));
 			mockKv.get.mockResolvedValueOnce('["session123"]'); // userSessions
 
@@ -101,7 +108,7 @@ describe('session', () => {
 		it('should delete all sessions for a user', async () => {
 			const userId = 'user123';
 			const sessions = ['s1', 's2'];
-			
+
 			mockKv.get.mockResolvedValueOnce(JSON.stringify(sessions));
 
 			await invalidateAllSessions(mockKv, userId);
@@ -116,20 +123,28 @@ describe('session', () => {
 			const sessionId = 's1';
 			const expiresAt = new Date();
 			setSessionCookie(mockCookies, sessionId, expiresAt, true);
-			expect(mockCookies.set).toHaveBeenCalledWith('session', sessionId, expect.objectContaining({
-				httpOnly: true,
-				secure: true,
-				expires: expiresAt
-			}));
+			expect(mockCookies.set).toHaveBeenCalledWith(
+				'session',
+				sessionId,
+				expect.objectContaining({
+					httpOnly: true,
+					secure: true,
+					expires: expiresAt
+				})
+			);
 		});
 	});
 
 	describe('deleteSessionCookie', () => {
 		it('should delete session cookie', () => {
 			deleteSessionCookie(mockCookies, true);
-			expect(mockCookies.set).toHaveBeenCalledWith('session', '', expect.objectContaining({
-				maxAge: 0
-			}));
+			expect(mockCookies.set).toHaveBeenCalledWith(
+				'session',
+				'',
+				expect.objectContaining({
+					maxAge: 0
+				})
+			);
 		});
 	});
 });

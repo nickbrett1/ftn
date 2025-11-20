@@ -10,11 +10,15 @@ import {
 describe('amazon-orders-service', () => {
 	describe('extractAmazonOrderId', () => {
 		it('should extract standard Amazon order ID', () => {
-			expect(extractAmazonOrderId('AMAZON MKTPLACE PMTS 123-1234567-1234567')).toBe('123-1234567-1234567');
+			expect(extractAmazonOrderId('AMAZON MKTPLACE PMTS 123-1234567-1234567')).toBe(
+				'123-1234567-1234567'
+			);
 		});
 
 		it('should extract D01 format order ID', () => {
-			expect(extractAmazonOrderId('AMAZON DIGITAL D01-1234567-1234567')).toBe('D01-1234567-1234567');
+			expect(extractAmazonOrderId('AMAZON DIGITAL D01-1234567-1234567')).toBe(
+				'D01-1234567-1234567'
+			);
 		});
 
 		it('should extract compact order ID', () => {
@@ -51,7 +55,9 @@ describe('amazon-orders-service', () => {
 
 	describe('generateAmazonOrderUrl', () => {
 		it('should generate correct URL', () => {
-			expect(generateAmazonOrderUrl('123-456')).toBe('https://www.amazon.com/gp/your-account/order-details?orderID=123-456');
+			expect(generateAmazonOrderUrl('123-456')).toBe(
+				'https://www.amazon.com/gp/your-account/order-details?orderID=123-456'
+			);
 		});
 
 		it('should return null if no order ID', () => {
@@ -77,10 +83,7 @@ describe('amazon-orders-service', () => {
 
 	describe('enrichAmazonCharges', () => {
 		it('should enrich charges with Amazon order info', () => {
-			const charges = [
-				{ merchant: 'AMAZON 123-1234567-1234567' },
-				{ merchant: 'NETFLIX' }
-			];
+			const charges = [{ merchant: 'AMAZON 123-1234567-1234567' }, { merchant: 'NETFLIX' }];
 			const enriched = enrichAmazonCharges(charges);
 			expect(enriched[0].amazon_order).toBeDefined();
 			expect(enriched[0].amazon_order.order_id).toBe('123-1234567-1234567');

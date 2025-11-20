@@ -50,12 +50,14 @@ describe('TokenService', () => {
 	describe('getTokensByUserId', () => {
 		it('should retrieve and decrypt tokens', async () => {
 			const userId = 'user1';
-			const mockResults = [{
-				userId,
-				serviceName: 'github',
-				encryptedToken: 'encrypted-token123',
-				encryptedRefreshToken: null
-			}];
+			const mockResults = [
+				{
+					userId,
+					serviceName: 'github',
+					encryptedToken: 'encrypted-token123',
+					encryptedRefreshToken: null
+				}
+			];
 			mockD1.all.mockResolvedValue({ results: mockResults });
 
 			const tokens = await tokenService.getTokensByUserId(userId);
@@ -68,11 +70,13 @@ describe('TokenService', () => {
 		it('should retrieve and decrypt a single token', async () => {
 			const userId = 'user1';
 			const service = 'github';
-			const mockResults = [{
-				userId,
-				serviceName: service,
-				encryptedToken: 'encrypted-token123'
-			}];
+			const mockResults = [
+				{
+					userId,
+					serviceName: service,
+					encryptedToken: 'encrypted-token123'
+				}
+			];
 			mockD1.all.mockResolvedValue({ results: mockResults });
 
 			const token = await tokenService.getToken(userId, service);
@@ -104,10 +108,12 @@ describe('TokenService', () => {
 		it('should revoke token', async () => {
 			const userId = 'user1';
 			const service = 'github';
-			
+
 			const success = await tokenService.revokeUserToken(userId, service);
 			expect(success).toBe(true);
-			expect(mockD1.prepare).toHaveBeenCalledWith(expect.stringContaining('UPDATE UserStoredAuthToken SET isRevoked = TRUE'));
+			expect(mockD1.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('UPDATE UserStoredAuthToken SET isRevoked = TRUE')
+			);
 		});
 	});
 });

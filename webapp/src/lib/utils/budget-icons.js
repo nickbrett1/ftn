@@ -63,7 +63,6 @@ export function getIconDescription(emoji) {
 	return BUDGET_ICONS[emoji] || 'Unknown';
 }
 
-
 const ICON_KEYWORD_MAP = [
 	{ keywords: ['grocery', 'food', 'supermarket'], icon: '🛒' },
 	{ keywords: ['dining', 'restaurant', 'food'], icon: '🍽️' },
@@ -101,7 +100,8 @@ const ICON_KEYWORD_MAP = [
 	{ keywords: ['sport', 'athletic'], icon: '🎯' },
 	{ keywords: ['photo', 'camera'], icon: '📷' },
 	{ keywords: ['luxury', 'premium'], icon: '💎' },
-			{ keywords: ['electronic', 'device'], icon: '🔋' }];
+	{ keywords: ['electronic', 'device'], icon: '🔋' }
+];
 
 /**
  * Get default icon for a budget name

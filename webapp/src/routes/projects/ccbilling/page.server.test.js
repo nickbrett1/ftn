@@ -16,7 +16,9 @@ vi.mock('$lib/server/require-user.js', () => ({
 
 describe('/projects/ccbilling/+page.server.js', () => {
 	it('redirects if user is not authenticated', async () => {
-		requireUser.requireUser.mockResolvedValue(new Response(null, { status: 307, headers: { Location: '/notauthorised' } }));
+		requireUser.requireUser.mockResolvedValue(
+			new Response(null, { status: 307, headers: { Location: '/notauthorised' } })
+		);
 
 		// The `load` function throws a `Redirect` object, which is not a standard Error.
 		// Using a try/catch block is a reliable way to test this.
