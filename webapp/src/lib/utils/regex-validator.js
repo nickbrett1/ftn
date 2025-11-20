@@ -162,7 +162,12 @@ function testRegexWithTimeout(pattern, testString, timeout) {
 		const endTime = Date.now();
 
 		// If it takes too long, consider it unsafe
-		return endTime - startTime <= timeout;
+		if (endTime - startTime > timeout) {
+			return false;
+		}
+
+		// If it completes within the timeout, it's considered safe for this input
+		return true;
 	} catch {
 		return false;
 	}

@@ -218,17 +218,6 @@ export class BaseParser {
 	}
 
 	/**
-	 * Find text using a regex pattern and return the first match
-	 * @param {string} text - Text to search in
-	 * @param {RegExp} pattern - Regex pattern to match
-	 * @returns {string|null} - First match or null
-	 */
-	findText(text, pattern) {
-		const match = text.match(pattern);
-		return match ? match[1] : null;
-	}
-
-	/**
 	 * Returns the regex patterns for identifying the statement date.
 	 * Subclasses can override this to provide more specific regex.
 	 * @returns {RegExp[]}
