@@ -179,135 +179,53 @@ export class ChaseParser extends BaseParser {
 		for (let index = 0; index < lines.length; index++) {
 			const line = lines[index];
 
-			// Check if we're entering the SHOP WITH POINTS ACTIVITY section
-			if (line.toUpperCase().includes('SHOP WITH POINTS ACTIVITY')) {
-				inShopWithPointsSection = true;
-				continue;
-			}
-
-			// Check if we're entering the ACCOUNT ACTIVITY section (including continued)
-			if (line.toUpperCase().includes('ACCOUNT ACTIVITY')) {
-				inShopWithPointsSection = false; // Exit points section when entering account activity
-				continue;
-			}
-
-			// Check if we're exiting the SHOP WITH POINTS ACTIVITY section
-			// Look for other section headers
-			if (inShopWithPointsSection) {
-				if (
-					line.toUpperCase().includes('INTEREST CHARGES') ||
-					line.toUpperCase().includes('YOUR ACCOUNT MESSAGES') ||
-					line.toUpperCase().includes('ACCOUNT SUMMARY') ||
-					line.toUpperCase().includes('ACCOUNT ACTIVITY')
-				) {
-					inShopWithPointsSection = false;
-				} else {
-					// Skip all lines while in this section
-					continue;
-				}
-			}
+			const sectionState = this.updateSectionState(line, inShopWithPointsSection);
+			inShopWithPointsSection = sectionState.inShopWithPointsSection;
+			if (sectionState.shouldSkip) continue;
 
 			// Only process transaction lines when we're NOT in the SHOP WITH POINTS ACTIVITY section
-			// If we have a clear ACCOUNT ACTIVITY section, use it as a boundary
-			// Otherwise, process all transaction lines (for backward compatibility with test data)
 			if (inShopWithPointsSection) {
 				continue;
 			}
 
-			// Look for date pattern at the start of a line (MM/DD)
-			const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
-			if (!dateMatch) continue;
-
-			const date = this.parseDate(dateMatch[1]);
-			const restOfLine = dateMatch[2];
-
-			// Check if this line contains an amount (purchase transaction)
-			// Use safe regex to avoid ReDoS attacks
-			const amountMatch = this.safeMatchAmount(restOfLine);
-			if (!amountMatch) continue;
-
-			const merchant = amountMatch.merchant.trim();
-			const amount = this.parseAmount(amountMatch.amount);
-
-			if (!date || !amount || merchant.length < 2) continue;
+			const transaction = this.parseBasicTransaction(line);
+			if (!transaction) continue;
 
 			// Additional check: Skip if this looks like a "SHOP WITH POINTS" transaction
-			// These typically have very large amounts that don't match the transaction description
-			// and often appear in the SHOP WITH POINTS ACTIVITY section
-			if (this.isLikelyShopWithPointsTransaction(merchant, amount, restOfLine)) {
+			if (
+				this.isLikelyShopWithPointsTransaction(
+					transaction.merchant,
+					transaction.amount,
+					transaction.restOfLine
+				)
+			) {
 				continue;
 			}
 
 			// Skip payments to the card
-			if (this.isPaymentToCard(merchant)) {
+			if (this.isPaymentToCard(transaction.merchant)) {
 				continue;
 			}
 
 			// Check if this might be a foreign currency transaction
-			let isForeignTransaction = false;
-			let foreignCurrencyAmount = null;
-			let foreignCurrencyType = null;
-
-			// Always look ahead for currency conversion information
-			// Look at the next few lines for currency conversion info
-			for (let index_ = index + 1; index_ < Math.min(index + 5, lines.length); index_++) {
-				const nextLine = lines[index_];
-
-				// Check for currency type line (e.g., "POUND STERLING")
-				if (this.safeMatchCurrencyLine(nextLine)) {
-					foreignCurrencyType = nextLine.trim();
-					isForeignTransaction = true;
-
-					// Look for the amount and exchange rate on the next line
-					if (index_ + 1 < lines.length) {
-						const rateLine = lines[index_ + 1];
-						const rateMatch = this.safeMatchExchangeRate(rateLine);
-						if (rateMatch) {
-							foreignCurrencyAmount = rateMatch.amount1;
-							break;
-						}
-					}
-				}
-
-				// Check for exchange rate pattern in the same line
-				const rateMatch = this.safeMatchExchangeRate(nextLine);
-				if (rateMatch) {
-					foreignCurrencyAmount = rateMatch.amount1;
-					isForeignTransaction = true;
-					// Look for currency type in the same line or previous line
-					const currencyMatch = this.safeMatchCurrencyLine(nextLine);
-					if (currencyMatch) {
-						foreignCurrencyType = nextLine.trim();
-					}
-					break;
-				}
-
-				// Stop looking if we encounter another transaction line (starts with date pattern and contains an amount)
-				if (/^\d{2}\/\d{2}\s+/.test(nextLine) && /\d+\.\d{2}$/.test(nextLine)) {
-					break;
-				}
-			}
+			const foreignInfo = this.extractForeignTransactionInfo(lines, index);
 
 			// Check if this is a flight transaction and capture additional flight details
-			let flightDetails = null;
-			if (this.isFlightTransaction(merchant)) {
-				flightDetails = this.extractFlightDetails(lines, index);
-			}
+			const flightDetails = this.isFlightTransaction(transaction.merchant)
+				? this.extractFlightDetails(lines, index)
+				: null;
 
 			// Check if this is an Amazon charge and capture full statement text
-			let fullStatementText = null;
-			if (this.isAmazonTransaction(merchant)) {
-				fullStatementText = this.extractFullStatementText(lines, index);
-			}
+			const fullStatementText = this.isAmazonTransaction(transaction.merchant)
+				? this.extractFullStatementText(lines, index)
+				: null;
 
 			const charge = {
-				merchant,
-				amount,
-				date,
+				merchant: transaction.merchant,
+				amount: transaction.amount,
+				date: transaction.date,
 				allocated_to: null,
-				is_foreign_currency: isForeignTransaction,
-				foreign_currency_amount: foreignCurrencyAmount,
-				foreign_currency_type: foreignCurrencyType,
+				...foreignInfo,
 				flight_details: flightDetails,
 				full_statement_text: fullStatementText
 			};
@@ -316,6 +234,121 @@ export class ChaseParser extends BaseParser {
 		}
 
 		return charges;
+	}
+
+	/**
+	 * Update section state based on current line
+	 * @param {string} line - Current line
+	 * @param {boolean} inShopWithPointsSection - Current state
+	 * @returns {Object} - New state { inShopWithPointsSection, shouldSkip }
+	 */
+	updateSectionState(line, inShopWithPointsSection) {
+		const lineUpper = line.toUpperCase();
+
+		if (lineUpper.includes('SHOP WITH POINTS ACTIVITY')) {
+			return { inShopWithPointsSection: true, shouldSkip: true };
+		}
+
+		if (lineUpper.includes('ACCOUNT ACTIVITY')) {
+			return { inShopWithPointsSection: false, shouldSkip: true };
+		}
+
+		if (inShopWithPointsSection) {
+			if (
+				lineUpper.includes('INTEREST CHARGES') ||
+				lineUpper.includes('YOUR ACCOUNT MESSAGES') ||
+				lineUpper.includes('ACCOUNT SUMMARY') ||
+				lineUpper.includes('ACCOUNT ACTIVITY')
+			) {
+				return { inShopWithPointsSection: false, shouldSkip: false };
+			}
+			// Skip all lines while in this section
+			return { inShopWithPointsSection: true, shouldSkip: true };
+		}
+
+		return { inShopWithPointsSection, shouldSkip: false };
+	}
+
+	/**
+	 * Parse basic transaction details from a line
+	 * @param {string} line - Line to parse
+	 * @returns {Object|null} - Basic transaction details or null
+	 */
+	parseBasicTransaction(line) {
+		// Look for date pattern at the start of a line (MM/DD)
+		const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
+		if (!dateMatch) return null;
+
+		const date = this.parseDate(dateMatch[1]);
+		const restOfLine = dateMatch[2];
+
+		// Check if this line contains an amount (purchase transaction)
+		const amountMatch = this.safeMatchAmount(restOfLine);
+		if (!amountMatch) return null;
+
+		const merchant = amountMatch.merchant.trim();
+		const amount = this.parseAmount(amountMatch.amount);
+
+		if (!date || !amount || merchant.length < 2) return null;
+
+		return { date, merchant, amount, restOfLine };
+	}
+
+	/**
+	 * Extract foreign transaction information by looking ahead
+	 * @param {string[]} lines - All lines
+	 * @param {number} currentIndex - Current line index
+	 * @returns {Object} - Foreign transaction details
+	 */
+	extractForeignTransactionInfo(lines, currentIndex) {
+		let isForeignTransaction = false;
+		let foreignCurrencyAmount = null;
+		let foreignCurrencyType = null;
+
+		// Always look ahead for currency conversion information
+		for (let index_ = currentIndex + 1; index_ < Math.min(currentIndex + 5, lines.length); index_++) {
+			const nextLine = lines[index_];
+
+			// Check for currency type line (e.g., "POUND STERLING")
+			if (this.safeMatchCurrencyLine(nextLine)) {
+				foreignCurrencyType = nextLine.trim();
+				isForeignTransaction = true;
+
+				// Look for the amount and exchange rate on the next line
+				if (index_ + 1 < lines.length) {
+					const rateLine = lines[index_ + 1];
+					const rateMatch = this.safeMatchExchangeRate(rateLine);
+					if (rateMatch) {
+						foreignCurrencyAmount = rateMatch.amount1;
+						break;
+					}
+				}
+			}
+
+			// Check for exchange rate pattern in the same line
+			const rateMatch = this.safeMatchExchangeRate(nextLine);
+			if (rateMatch) {
+				foreignCurrencyAmount = rateMatch.amount1;
+				isForeignTransaction = true;
+				// Look for currency type in the same line or previous line
+				const currencyMatch = this.safeMatchCurrencyLine(nextLine);
+				if (currencyMatch) {
+					foreignCurrencyType = nextLine.trim();
+				}
+				break;
+			}
+
+			// Stop looking if we encounter another transaction line (starts with date pattern and contains an amount)
+			if (/^\d{2}\/\d{2}\s+/.test(nextLine) && /\d+\.\d{2}$/.test(nextLine)) {
+				break;
+			}
+		}
+
+		return {
+			is_foreign_currency: isForeignTransaction,
+			foreign_currency_amount: foreignCurrencyAmount,
+			foreign_currency_type: foreignCurrencyType
+		};
 	}
 
 	/**
@@ -386,15 +419,34 @@ export class ChaseParser extends BaseParser {
 	 * @returns {Object|null} - Object containing flight details or null
 	 */
 	extractFlightDetails(lines, startIndex) {
-		let flightDetails = {
-			departure_airport: null,
-			arrival_airport: null,
+		const airportDetails = this.extractAirportCodes(lines, startIndex);
+		const airline = this.extractAirline(lines, startIndex);
+
+		const flightDetails = {
+			departure_airport: airportDetails.departure_airport,
+			arrival_airport: airportDetails.arrival_airport,
 			departure_date: null,
 			arrival_date: null,
-			airline: null,
+			airline: airline,
 			fare: null,
 			currency: null,
 			exchange_rate: null
+		};
+
+		// Only return details if at least one is found
+		return Object.values(flightDetails).some((value) => value !== null) ? flightDetails : null;
+	}
+
+	/**
+	 * Extract airport codes from transaction lines
+	 * @param {string[]} lines - All lines of the text content
+	 * @param {number} startIndex - The index of the first line of the flight transaction
+	 * @returns {Object} - Object containing departure and arrival airports
+	 */
+	extractAirportCodes(lines, startIndex) {
+		const details = {
+			departure_airport: null,
+			arrival_airport: null
 		};
 
 		// Look at the next few lines for airport codes
@@ -404,8 +456,8 @@ export class ChaseParser extends BaseParser {
 			// Look for airport codes pattern (e.g., "100925 1 L LGA IAH")
 			const airportMatch = line.match(/(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/);
 			if (airportMatch) {
-				flightDetails.departure_airport = airportMatch[4]; // LGA
-				flightDetails.arrival_airport = airportMatch[5]; // IAH
+				details.departure_airport = airportMatch[4]; // LGA
+				details.arrival_airport = airportMatch[5]; // IAH
 				break;
 			}
 
@@ -418,8 +470,8 @@ export class ChaseParser extends BaseParser {
 			) {
 				const simpleAirportMatch = line.match(/^(\w{3})\s+(\w{3})$/);
 				if (simpleAirportMatch) {
-					flightDetails.departure_airport = simpleAirportMatch[1];
-					flightDetails.arrival_airport = simpleAirportMatch[2];
+					details.departure_airport = simpleAirportMatch[1];
+					details.arrival_airport = simpleAirportMatch[2];
 					break;
 				}
 			}
@@ -429,8 +481,16 @@ export class ChaseParser extends BaseParser {
 				break;
 			}
 		}
+		return details;
+	}
 
-		// Extract airline from the merchant name
+	/**
+	 * Extract airline from the merchant name
+	 * @param {string[]} lines - All lines of the text content
+	 * @param {number} startIndex - The index of the first line of the flight transaction
+	 * @returns {string|null} - Airline name or null
+	 */
+	extractAirline(lines, startIndex) {
 		const merchant = lines[startIndex].match(/^(\d{2}\/\d{2})\s+(.+)/)?.[2] || '';
 
 		if (merchant) {
@@ -448,14 +508,11 @@ export class ChaseParser extends BaseParser {
 			];
 			for (const airline of airlines) {
 				if (merchant.toUpperCase().includes(airline)) {
-					flightDetails.airline = airline;
-					break;
+					return airline;
 				}
 			}
 		}
-
-		// Only return details if at least one is found
-		return Object.values(flightDetails).some((value) => value !== null) ? flightDetails : null;
+		return null;
 	}
 
 	/**
