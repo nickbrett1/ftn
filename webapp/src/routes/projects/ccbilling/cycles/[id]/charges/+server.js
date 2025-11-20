@@ -14,7 +14,7 @@ export async function GET(event) {
 	const { params } = event;
 	const billing_cycle_id = Number.parseInt(params.id);
 
-	if (isNaN(billing_cycle_id)) {
+	if (Number.isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
 	}
 
@@ -35,7 +35,7 @@ export async function POST(event) {
 	const { params, request } = event;
 	const billing_cycle_id = Number.parseInt(params.id);
 
-	if (isNaN(billing_cycle_id)) {
+	if (Number.isNaN(billing_cycle_id)) {
 		return json({ error: 'Invalid billing cycle ID' }, { status: 400 });
 	}
 

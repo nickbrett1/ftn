@@ -94,7 +94,7 @@ export const ParsingUtils = {
 
 		const amount = Number.parseFloat(cleanAmount);
 
-		if (isNaN(amount)) {
+		if (Number.isNaN(amount)) {
 			return defaultValue;
 		}
 
@@ -230,7 +230,7 @@ export const ParsingUtils = {
 				const mmddMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
 				if (!mmddMatch) {
 					const date = new Date(dateString);
-					if (!isNaN(date.getTime())) {
+					if (!Number.isNaN(date.getTime())) {
 						return date.toISOString().split('T')[0];
 					}
 				}
@@ -313,6 +313,6 @@ export const ParsingUtils = {
 		// Remove commas and parse
 		const cleanValue = match[0].replaceAll(',', '');
 		const value = Number.parseFloat(cleanValue);
-		return isNaN(value) ? defaultValue : value;
+		return Number.isNaN(value) ? defaultValue : value;
 	}
 };

@@ -16,7 +16,7 @@ export function formatDate(dateInput, options = {}) {
 	if (!dateInput) return '';
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return '';
+	if (Number.isNaN(date.getTime())) return '';
 
 	if (includeTime) {
 		// Format: "August 17, 2025 at 02:32 PM EDT"
@@ -56,7 +56,7 @@ export function formatShortDate(dateInput) {
 	if (!dateInput) return '';
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return '';
+	if (Number.isNaN(date.getTime())) return '';
 
 	const month = (date.getMonth() + 1).toString().padStart(2, '0');
 	const day = date.getDate().toString().padStart(2, '0');
@@ -73,7 +73,7 @@ export function formatMediumDate(dateInput) {
 	if (!dateInput) return '';
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return '';
+	if (Number.isNaN(date.getTime())) return '';
 
 	const options = {
 		year: 'numeric',
@@ -94,7 +94,7 @@ export function formatTime(dateInput, includeTimezone = true) {
 	if (!dateInput) return '';
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return '';
+	if (Number.isNaN(date.getTime())) return '';
 
 	const options = {
 		hour: '2-digit',
@@ -114,7 +114,7 @@ export function formatRelativeTime(dateInput) {
 	if (!dateInput) return '';
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return '';
+	if (Number.isNaN(date.getTime())) return '';
 
 	const now = new Date();
 	const diffInMs = now - date;
@@ -141,7 +141,7 @@ export function isToday(dateInput) {
 	if (!dateInput) return false;
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return false;
+	if (Number.isNaN(date.getTime())) return false;
 
 	const today = new Date();
 	return date.toDateString() === today.toDateString();
@@ -156,7 +156,7 @@ export function isYesterday(dateInput) {
 	if (!dateInput) return false;
 
 	const date = new Date(dateInput);
-	if (isNaN(date.getTime())) return false;
+	if (Number.isNaN(date.getTime())) return false;
 
 	const yesterday = new Date();
 	yesterday.setDate(yesterday.getDate() - 1);
