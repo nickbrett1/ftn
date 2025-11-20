@@ -9,7 +9,7 @@ export const RouteUtils = {
 	/**
 	 * Handle authentication for a route
 	 * @param {Object} event - SvelteKit event object
-	 * @returns {Object|Response} - User object or error response
+	 * @returns {Promise<Object|Response>} - User object or error response
 	 */
 	async handleAuth(event) {
 		return requireUser(event);
