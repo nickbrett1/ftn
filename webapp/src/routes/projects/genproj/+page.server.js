@@ -1,6 +1,6 @@
 // webapp/src/routes/projects/genproj/+page.server.js
 
-import { redirect } from '@sveltejs/kit';
+
 import { getCurrentUser } from '$lib/server/auth';
 import { capabilities } from '$lib/config/capabilities';
 

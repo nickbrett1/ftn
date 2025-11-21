@@ -47,12 +47,14 @@ const createLogger = (category) => {
 			const timestamp = new Date().toISOString();
 			const logMessage = `${emoji} [${timestamp}] [${category}] ${message}`;
 
-			const consoleMethod =
-				level === 'warn' || level === 'security'
-					? console.warn
-					: level === 'error'
-						? console.error
-						: console.log;
+			let consoleMethod;
+			if (level === 'warn' || level === 'security') {
+				consoleMethod = console.warn;
+			} else if (level === 'error') {
+				consoleMethod = console.error;
+			} else {
+				consoleMethod = console.log;
+			}
 
 			if (data) {
 				consoleMethod(logMessage, data);

@@ -196,7 +196,6 @@ export const RouteUtils = {
 	 * @returns {Promise<Object>} - Parsed body or error
 	 */
 	async parseRequestBody(request, options = {}) {
-		// const { maxSize = 1024 * 1024 } = options; // 1MB default - currently unused
 
 		try {
 			const contentType = request.headers.get('content-type');

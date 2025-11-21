@@ -8,7 +8,7 @@ export const PDFUtils = {
 	 */
 	configureWorker() {
 		// Only configure in browser environment
-		if (typeof globalThis.window === 'undefined') {
+		if (globalThis.window === undefined) {
 			return;
 		}
 
@@ -93,7 +93,7 @@ export const PDFUtils = {
 	 */
 	async parsePDFFile(pdfFile, options = {}) {
 		// Only run in browser environment
-		if (typeof globalThis.window === 'undefined') {
+		if (globalThis.window === undefined) {
 			throw new TypeError('PDF parsing not available in server environment');
 		}
 

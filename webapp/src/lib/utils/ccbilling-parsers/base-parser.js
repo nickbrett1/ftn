@@ -61,7 +61,7 @@ export class BaseParser {
 	 * @returns {string|null} - Matched text or null
 	 */
 	findText(text, pattern) {
-		const match = text.match(pattern);
+		const match = pattern.exec(text);
 		return match ? match[1] : null;
 	}
 
