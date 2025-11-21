@@ -277,7 +277,7 @@ describe('PDFUtils', () => {
 				parseStatement: vi.fn()
 			};
 
-			// Mock the parsePDFFile method
+			// Mock the parsePDFFile method to isolate parseStatement logic
 			vi.spyOn(PDFUtilities, 'parsePDFFile').mockResolvedValue('Extracted text content');
 		});
 
@@ -290,19 +290,9 @@ describe('PDFUtils', () => {
 
 			const result = await PDFUtilities.parseStatement(mockFile, mockParserFactory);
 
-			expect(PDFUtilities.parsePDFFile).toHaveBeenCalledWith(mockFile, {});
+			expect(PDFUtilities.parsePDFFile).toHaveBeenCalledWith(mockFile);
 			expect(mockParserFactory.parseStatement).toHaveBeenCalledWith('Extracted text content');
 			expect(result).toEqual(mockParsedData);
-		});
-
-		it('should pass options to parsePDFFile', async () => {
-			const options = { groupByLine: true, sortByPosition: true };
-			const mockParsedData = { provider: 'Chase', charges: [] };
-			mockParserFactory.parseStatement.mockResolvedValue(mockParsedData);
-
-			await PDFUtilities.parseStatement(mockFile, mockParserFactory, options);
-
-			expect(PDFUtilities.parsePDFFile).toHaveBeenCalledWith(mockFile, options);
 		});
 
 		it('should handle parser factory errors', async () => {

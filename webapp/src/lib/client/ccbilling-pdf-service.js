@@ -23,10 +23,7 @@ export class PDFService {
 			PDFUtilities.validatePDFFile(pdfFile);
 
 			// Use shared PDF parsing logic
-			const parsedData = await PDFUtilities.parseStatement(pdfFile, this.parserFactory, {
-				groupByLine: true,
-				sortByPosition: true
-			});
+			const parsedData = await PDFUtilities.parseStatement(pdfFile, this.parserFactory);
 
 			return parsedData;
 		} catch (error) {

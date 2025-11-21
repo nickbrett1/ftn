@@ -82,11 +82,7 @@ describe('PDFService', () => {
 			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
 			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
 				mockPdfFile,
-				pdfService.parserFactory,
-				{
-					groupByLine: true,
-					sortByPosition: true
-				}
+				pdfService.parserFactory
 			);
 
 			expect(result).toEqual({
@@ -150,19 +146,6 @@ describe('PDFService', () => {
 
 			await expect(pdfService.parseStatement(invalidFile)).rejects.toThrow(
 				'PDF parsing failed: Invalid PDF file format'
-			);
-		});
-
-		it('should pass correct options to parseStatement', async () => {
-			await pdfService.parseStatement(mockPdfFile);
-
-			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
-				mockPdfFile,
-				pdfService.parserFactory,
-				{
-					groupByLine: true,
-					sortByPosition: true
-				}
 			);
 		});
 	});
@@ -245,11 +228,7 @@ describe('PDFService', () => {
 			expect(mockPDFUtilities.validatePDFFile).toHaveBeenCalledWith(mockPdfFile);
 			expect(mockPDFUtilities.parseStatement).toHaveBeenCalledWith(
 				mockPdfFile,
-				pdfService.parserFactory,
-				{
-					groupByLine: true,
-					sortByPosition: true
-				}
+				pdfService.parserFactory
 			);
 		});
 

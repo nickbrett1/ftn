@@ -8,7 +8,7 @@ export const PDFUtils = {
 	 */
 	configureWorker() {
 		// Only configure in browser environment
-		if (globalThis.window === undefined) {
+		if (globalThis.window == undefined) {
 			return;
 		}
 
@@ -93,7 +93,7 @@ export const PDFUtils = {
 	 */
 	async parsePDFFile(pdfFile, options = {}) {
 		// Only run in browser environment
-		if (globalThis.window === undefined) {
+		if (globalThis.window == undefined) {
 			throw new TypeError('PDF parsing not available in server environment');
 		}
 
@@ -150,16 +150,15 @@ export const PDFUtils = {
 	 * Parse a credit card statement from a PDF file
 	 * @param {File|Buffer} pdfFile - PDF file or buffer
 	 * @param {Object} parserFactory - Parser factory instance
-	 * @param {Object} options - Parsing options
 	 * @returns {Promise<Object>} - Parsed statement data
 	 */
-	async parseStatement(pdfFile, parserFactory, options = {}) {
+	async parseStatement(pdfFile, parserFactory) {
 		try {
 			// Validate PDF file
 			this.validatePDFFile(pdfFile);
 
 			// Use shared PDF parsing logic
-			const parsedData = await this.parsePDFFile(pdfFile, options);
+			const parsedData = await this.parsePDFFile(pdfFile);
 
 			// Parse the extracted text using the parser factory
 			const result = await parserFactory.parseStatement(parsedData);
