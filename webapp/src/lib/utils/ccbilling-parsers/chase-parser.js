@@ -301,54 +301,61 @@ export class ChaseParser extends BaseParser {
 	 * @returns {Object} - Foreign transaction details
 	 */
 	extractForeignTransactionInfo(lines, currentIndex) {
-		let isForeignTransaction = false;
-		let foreignCurrencyAmount = null;
-		let foreignCurrencyType = null;
+		for (let i = currentIndex + 1; i < Math.min(currentIndex + 5, lines.length); i++) {
+			const nextLine = lines[i];
 
-		// Always look ahead for currency conversion information
-		for (let index_ = currentIndex + 1; index_ < Math.min(currentIndex + 5, lines.length); index_++) {
-			const nextLine = lines[index_];
-
-			// Check for currency type line (e.g., "POUND STERLING")
-			if (this.safeMatchCurrencyLine(nextLine)) {
-				foreignCurrencyType = nextLine.trim();
-				isForeignTransaction = true;
-
-				// Look for the amount and exchange rate on the next line
-				if (index_ + 1 < lines.length) {
-					const rateLine = lines[index_ + 1];
-					const rateMatch = this.safeMatchExchangeRate(rateLine);
-					if (rateMatch) {
-						foreignCurrencyAmount = rateMatch.amount1;
-						break;
-					}
-				}
-			}
-
-			// Check for exchange rate pattern in the same line
-			const rateMatch = this.safeMatchExchangeRate(nextLine);
-			if (rateMatch) {
-				foreignCurrencyAmount = rateMatch.amount1;
-				isForeignTransaction = true;
-				// Look for currency type in the same line or previous line
-				const currencyMatch = this.safeMatchCurrencyLine(nextLine);
-				if (currencyMatch) {
-					foreignCurrencyType = nextLine.trim();
-				}
+			if (this._isTransactionLine(nextLine)) {
 				break;
 			}
 
-			// Stop looking if we encounter another transaction line (starts with date pattern and contains an amount)
-			if (/^\d{2}\/\d{2}\s+/.test(nextLine) && /\d+\.\d{2}$/.test(nextLine)) {
-				break;
+			const currencyInfo = this._parseCurrencyInfo(nextLine, lines, i);
+			if (currencyInfo) {
+				return currencyInfo;
 			}
 		}
 
 		return {
-			is_foreign_currency: isForeignTransaction,
-			foreign_currency_amount: foreignCurrencyAmount,
-			foreign_currency_type: foreignCurrencyType
+			is_foreign_currency: false,
+			foreign_currency_amount: null,
+			foreign_currency_type: null
 		};
+	}
+
+	_isTransactionLine(line) {
+		return /^\d{2}\/\d{2}\s+/.test(line) && /\d+\.\d{2}$/.test(line);
+	}
+
+	_parseCurrencyInfo(line, lines, index) {
+		if (this.safeMatchCurrencyLine(line)) {
+			const currencyType = line.trim();
+			let currencyAmount = null;
+
+			if (index + 1 < lines.length) {
+				const rateLine = lines[index + 1];
+				const rateMatch = this.safeMatchExchangeRate(rateLine);
+				if (rateMatch) {
+					currencyAmount = rateMatch.amount1;
+				}
+			}
+			return {
+				is_foreign_currency: true,
+				foreign_currency_amount: currencyAmount,
+				foreign_currency_type: currencyType
+			};
+		}
+
+		const rateMatch = this.safeMatchExchangeRate(line);
+		if (rateMatch) {
+			const currencyAmount = rateMatch.amount1;
+			const currencyType = this.safeMatchCurrencyLine(line) ? line.trim() : null;
+			return {
+				is_foreign_currency: true,
+				foreign_currency_amount: currencyAmount,
+				foreign_currency_type: currencyType
+			};
+		}
+
+		return null;
 	}
 
 	/**
