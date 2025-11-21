@@ -2,6 +2,21 @@
   "mcpServers": {
     "svelte": {
       "httpUrl": "https://mcp.svelte.dev/mcp"
+    },
+    "sonarqube": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--name",
+        "sonarqube-mcp-server",
+        "--rm",
+        "-e",
+        "SONARQUBE_TOKEN",
+        "-e",
+        "SONARQUBE_ORG",
+        "mcp/sonarqube"
+      ]
     }
   }
 }

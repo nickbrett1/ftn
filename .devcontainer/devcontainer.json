@@ -21,8 +21,10 @@
       "version": "24",
       "installMaven": "false",
       "installGradle": "false"
+    },
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {
+      "version": "latest"
     }
-    // "ghcr.io/itsmechlark/features/doppler:2": {} // For Doppler CLI - disabled due to init script issues
   },
 
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"], // Moved from build.runArgs
