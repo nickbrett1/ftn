@@ -32,7 +32,7 @@ export async function PUT(event) {
 	const data = await event.request.json();
 	const { name, icon } = data;
 
-	if (!name || !name.trim()) {
+	if (!name?.trim()) {
 		return Response.json({ error: 'Missing budget name' }, { status: 400 });
 	}
 

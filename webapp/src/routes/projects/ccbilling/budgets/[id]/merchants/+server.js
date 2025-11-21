@@ -31,7 +31,7 @@ function validateBudgetId(event) {
 async function validateMerchant(event) {
 	const data = await event.request.json();
 	const { merchant } = data;
-	if (!merchant || !merchant.trim()) {
+	if (!merchant?.trim()) {
 		return {
 			error: Response.json({ error: 'Missing merchant name' }, { status: 400 })
 		};
