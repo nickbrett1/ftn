@@ -383,11 +383,7 @@ function isHotelTransaction(merchantUpper) {
 	const hotelIndicators = ['HOTEL', 'RESORT', 'INN', 'SUITE', 'LODGE', 'ACCOMMODATION', 'STAY'];
 
 	// Check for generic hotel indicators
-	if (hotelIndicators.some((indicator) => merchantUpper.includes(indicator))) {
-		return true;
-	}
-
-	return false;
+	return hotelIndicators.some((indicator) => merchantUpper.includes(indicator));
 }
 
 /**

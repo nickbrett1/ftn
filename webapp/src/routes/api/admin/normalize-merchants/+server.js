@@ -185,6 +185,17 @@ export async function POST(event) {
 
 		const totalRemaining = countResult[0]?.total || 0;
 
+		let message;
+		if (offset === 0) {
+			message =
+				'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
+		} else if (totalRemaining > batchSize) {
+			message = `Processed batch. ${totalRemaining - updatedCount} payments remaining.`;
+		} else {
+			message =
+				'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
+		}
+
 		return json({
 			success: true,
 			paymentsProcessed: payments.length,
@@ -193,12 +204,7 @@ export async function POST(event) {
 			totalRemaining: offset === 0 ? 0 : totalRemaining - updatedCount,
 			nextOffset: offset === 0 ? 0 : offset + batchSize,
 			errors: errors.length > 0 ? errors : undefined,
-			message:
-				offset === 0
-					? 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
-					: totalRemaining > batchSize
-						? `Processed batch. ${totalRemaining - updatedCount} payments remaining.`
-						: 'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.'
+			message
 		});
 	} catch (error) {
 		console.error('Merchant normalization failed:', error);

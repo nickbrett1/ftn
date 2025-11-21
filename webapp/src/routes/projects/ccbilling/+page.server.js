@@ -1,7 +1,10 @@
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/require-user.js';
-import { listBillingCycles } from '$lib/server/ccbilling-db.js';
-import { listBudgets, listAllocationTotalsByCycle } from '$lib/server/ccbilling-db.js';
+import {
+	listBillingCycles,
+	listBudgets,
+	listAllocationTotalsByCycle
+} from '$lib/server/ccbilling-db.js';
 
 const HTML_TEMPORARY_REDIRECT = 307;
 

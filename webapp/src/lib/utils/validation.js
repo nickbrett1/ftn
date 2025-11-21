@@ -111,9 +111,9 @@ export function validateSelectedCapabilities(selected) {
 	if (selected.length > 20) {
 		return { valid: false, error: 'Too many capabilities selected (maximum 20)' };
 	}
-	const capabilityIds = capabilities.map((c) => c.id);
+	const capabilityIds = new Set(capabilities.map((c) => c.id));
 	for (const id of selected) {
-		if (!capabilityIds.includes(id)) {
+		if (!capabilityIds.has(id)) {
 			return { valid: false, error: `Invalid capability ID: ${id}` };
 		}
 	}
