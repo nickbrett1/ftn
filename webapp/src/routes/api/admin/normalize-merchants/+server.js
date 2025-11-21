@@ -186,14 +186,11 @@ export async function POST(event) {
 		const totalRemaining = countResult[0]?.total || 0;
 
 		let message;
-		if (offset === 0) {
+		if (offset === 0 || totalRemaining <= batchSize) {
 			message =
 				'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
-		} else if (totalRemaining > batchSize) {
-			message = `Processed batch. ${totalRemaining - updatedCount} payments remaining.`;
 		} else {
-			message =
-				'All merchants and budget mappings normalized successfully! Only records that needed updates were modified.';
+			message = `Processed batch. ${totalRemaining - updatedCount} payments remaining.`;
 		}
 
 		return json({
