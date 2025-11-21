@@ -343,9 +343,9 @@ export function sanitizeProjectName(name) {
 	}
 	return name
 		.toLowerCase()
-		.replace(/[^a-z0-9-]/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/(?:^-)|(?:-$)/g, '');
+		.replaceAll(/[^a-z0-9-]/g, '-')
+		.replaceAll(/-+/g, '-')
+		.replaceAll(/(?:^-)|(?:-$)/g, '');
 }
 
 /**

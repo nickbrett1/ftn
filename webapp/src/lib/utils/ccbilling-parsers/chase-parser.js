@@ -122,7 +122,7 @@ export class ChaseParser extends BaseParser {
 	parseChaseDate(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -147,7 +147,7 @@ export class ChaseParser extends BaseParser {
 	parseChaseDate4Digit(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -276,7 +276,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	parseBasicTransaction(line) {
 		// Look for date pattern at the start of a line (MM/DD)
-		const dateMatch = line.match(/^(\d{2}\/\d{2})\s+(.+)/);
+		const dateMatch = /^(\d{2}\/\d{2})\s+(.+)/.exec(line);
 		if (!dateMatch) return null;
 
 		const date = this.parseDate(dateMatch[1]);
@@ -444,44 +444,47 @@ export class ChaseParser extends BaseParser {
 	 * @returns {Object} - Object containing departure and arrival airports
 	 */
 	extractAirportCodes(lines, startIndex) {
-		const details = {
-			departure_airport: null,
-			arrival_airport: null
-		};
-
-		// Look at the next few lines for airport codes
 		for (let index = startIndex + 1; index < Math.min(startIndex + 5, lines.length); index++) {
 			const line = lines[index];
-
-			// Look for airport codes pattern (e.g., "100925 1 L LGA IAH")
-			const airportMatch = line.match(/(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/);
-			if (airportMatch) {
-				details.departure_airport = airportMatch[4]; // LGA
-				details.arrival_airport = airportMatch[5]; // IAH
-				break;
+			const airportDetails = this._parseAirportCodesFromLine(line);
+			if (airportDetails) {
+				return airportDetails;
 			}
-
-			// Look for simple airport codes (e.g., "LGA IAH") - but only if line is short and doesn't contain transaction details
-			if (
-				line.length < 20 &&
-				!line.includes('UNITED') &&
-				!line.includes('TX') &&
-				!line.includes('$')
-			) {
-				const simpleAirportMatch = line.match(/^(\w{3})\s+(\w{3})$/);
-				if (simpleAirportMatch) {
-					details.departure_airport = simpleAirportMatch[1];
-					details.arrival_airport = simpleAirportMatch[2];
-					break;
-				}
-			}
-
-			// Stop looking if we encounter another transaction line (starts with date pattern)
 			if (/^\d{2}\/\d{2}\s+/.test(line)) {
 				break;
 			}
 		}
-		return details;
+		return {
+			departure_airport: null,
+			arrival_airport: null
+		};
+	}
+
+	_parseAirportCodesFromLine(line) {
+		const airportMatch = /(\d{6})\s+(\d+)\s+(\w)\s+(\w{3})\s+(\w{3})/.exec(line);
+		if (airportMatch) {
+			return {
+				departure_airport: airportMatch[4],
+				arrival_airport: airportMatch[5]
+			};
+		}
+
+		if (
+			line.length < 20 &&
+			!line.includes('UNITED') &&
+			!line.includes('TX') &&
+			!line.includes('$')
+		) {
+			const simpleAirportMatch = /^(\w{3})\s+(\w{3})$/.exec(line);
+			if (simpleAirportMatch) {
+				return {
+					departure_airport: simpleAirportMatch[1],
+					arrival_airport: simpleAirportMatch[2]
+				};
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -491,7 +494,7 @@ export class ChaseParser extends BaseParser {
 	 * @returns {string|null} - Airline name or null
 	 */
 	extractAirline(lines, startIndex) {
-		const merchant = lines[startIndex].match(/^(\d{2}\/\d{2})\s+(.+)/)?.[2] || '';
+		const merchant = /^(\d{2}\/\d{2})\s+(.+)/.exec(lines[startIndex])?.[2] || '';
 
 		if (merchant) {
 			// Look for airline names in the merchant field
@@ -525,7 +528,7 @@ export class ChaseParser extends BaseParser {
 		// We need to handle multi-line merchants and various formats
 
 		// Look for date pattern at the beginning
-		const dateMatch = line.match(/^(\d{1,2}\/\d{1,2})/);
+		const dateMatch = /^(\d{1,2}\/\d{1,2})/.exec(line);
 		if (!dateMatch) return null;
 
 		const date = this.parseDate(dateMatch[1]);
@@ -659,7 +662,7 @@ export class ChaseParser extends BaseParser {
 
 		const [amount1, amount2WithExtra] = parts;
 		// Extract just the number from amount2, removing any extra text like "(EXCHG RATE)"
-		const amount2 = amount2WithExtra.match(/^(\d+\.\d+)/)?.[1];
+		const amount2 = /^(\d+\.\d+)/.exec(amount2WithExtra)?.[1];
 
 		const numberPattern = /^\d+\.\d+$/;
 

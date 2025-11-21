@@ -43,7 +43,7 @@ export async function POST(event) {
 		const body = await request.json();
 
 		// If caller requests refresh of auto associations, run server-side reassignment
-		if (body && body.refresh === 'auto-associations') {
+		if (body?.refresh === 'auto-associations') {
 			const updated = await refreshAutoAssociationsForCycle(event, billing_cycle_id);
 			return json({ success: true, updated });
 		}

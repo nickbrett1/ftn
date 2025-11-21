@@ -44,13 +44,13 @@ export class TemplateEngine {
 			capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),
 			'kebab-case': (str) =>
 				str
-					.replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-					.replace(/[\s_]+/g, '-')
+					.replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
+					.replaceAll(/[\s_]+/g, '-')
 					.toLowerCase(),
 			snake_case: (str) =>
 				str
-					.replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-					.replace(/[\s-]+/g, '_')
+					.replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2')
+					.replaceAll(/[\s-]+/g, '_')
 					.toLowerCase(),
 			join: (arr, sep) => arr.join(sep),
 			length: (arr) => arr.length,
@@ -66,14 +66,14 @@ export class TemplateEngine {
 			json_compact: (obj) => JSON.stringify(obj),
 			add: (a, b) => Number(a) + Number(b),
 			subtract: (a, b) => Number(a) - Number(b),
-			replace: (str, find, replace) => str.replace(new RegExp(find, 'g'), replace),
+			replace: (str, find, replace) => str.replaceAll(find, replace),
 			truncate: (str, len) => (str.length > len ? str.slice(0, len) + '...' : str),
 			env: (key) => process.env[key],
-			project_slug: (name) => name.toLowerCase().replace(/\s+/g, '-'),
-			package_name: (name) => name.toLowerCase().replace(/\s+/g, '-'),
+			project_slug: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
+			package_name: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
 			class_name: (name) =>
-				name.replace(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
-			constant_name: (name) => name.toUpperCase().replace(/[\s-]/g, '_')
+				name.replaceAll(/[^a-zA-Z0-9]/g, '').replace(/^\w/, (c) => c.toUpperCase()),
+			constant_name: (name) => name.toUpperCase().replaceAll(/[\s-]/g, '_')
 		};
 
 		for (const [name, fn] of Object.entries(helpers)) {

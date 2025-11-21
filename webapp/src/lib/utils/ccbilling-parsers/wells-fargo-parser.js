@@ -99,7 +99,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoDate(dateString) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -197,7 +197,7 @@ export class WellsFargoParser extends BaseParser {
 			const nextLine = lines[i];
 
 			if (this.isCurrencyLine(nextLine)) {
-				const currencyMatch = nextLine.match(/(?:- \d{1,2}\/\d{1,2} )?(.*)/);
+				const currencyMatch = /(?:- \d{1,2}\/\d{1,2} )?(.*)/.exec(nextLine);
 				foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : nextLine.trim();
 				isForeignTransaction = true;
 
@@ -236,9 +236,10 @@ export class WellsFargoParser extends BaseParser {
 	_parseTransactionLineDetails(line, statementYear) {
 		// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
 
-		const transactionMatch = line.match(
-			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^$]+?)\s+\$(-?[\d,]+\.?\d*)-?$/
-		);
+		const transactionMatch =
+			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^$]+?)\s+\$(-?[\d,]+\.?\d*)-?$/.exec(
+				line
+			);
 
 		if (!transactionMatch) {
 			return null;
@@ -275,7 +276,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoTransaction(line) {
 		// Wells Fargo format has multiple columns - we need to find the description and amount
 		// Amount is in the last column with $ sign, e.g. $2.90 or -$2.90
-		const amountMatch = line.match(/(.+?)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/);
+		const amountMatch = /(.+?)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/.exec(line);
 		if (!amountMatch) return null;
 
 		const description = amountMatch[1].trim();
@@ -299,7 +300,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoFullDate(dateString, statementYear) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -320,7 +321,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoTransactionDate(dateString, statementYear) {
 		if (!dateString) return null;
 
-		const match = dateString.match(/^(\d{1,2})\/(\d{2})$/);
+		const match = /^(\d{1,2})\/(\d{2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -388,7 +389,7 @@ export class WellsFargoParser extends BaseParser {
 	 */
 	parseExchangeRate(line) {
 		// Look for pattern like "123.45 X 0.67" or similar
-		const rateMatch = line.match(/(\d+\.\d+)\s*X\s*(\d+\.\d+)/);
+		const rateMatch = /(\d+\.\d+)\s*X\s*(\d+\.\d+)/.exec(line);
 		if (!rateMatch) return null;
 
 		return {

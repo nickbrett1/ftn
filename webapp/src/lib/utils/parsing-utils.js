@@ -164,7 +164,7 @@ export const ParsingUtils = {
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
 	parseMMDDYYYY(dateString) {
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -184,7 +184,7 @@ export const ParsingUtils = {
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
 	parseMMDDYY(dateString) {
-		const match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+		const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(dateString);
 		if (!match) return null;
 
 		const month = Number.parseInt(match[1], 10);
@@ -214,7 +214,7 @@ export const ParsingUtils = {
 			() => this.parseMMDDYY(dateString),
 			() => {
 				// Try parsing MM/DD format (common in credit card statements)
-				const mmddMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
+				const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
 				if (mmddMatch) {
 					const month = Number.parseInt(mmddMatch[1], 10);
 					const day = Number.parseInt(mmddMatch[2], 10);
@@ -227,7 +227,7 @@ export const ParsingUtils = {
 			},
 			() => {
 				// Try parsing as ISO date (only if it's not MM/DD format)
-				const mmddMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})$/);
+				const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
 				if (!mmddMatch) {
 					const date = new Date(dateString);
 					if (!Number.isNaN(date.getTime())) {
@@ -305,7 +305,7 @@ export const ParsingUtils = {
 		}
 
 		// Match numbers with optional commas and decimals
-		const match = string_.match(/\d{1,3}(?:,\d{3})*(?:\.\d+)?/);
+		const match = /\d{1,3}(?:,\d{3})*(?:\.\d+)?/.exec(string_);
 		if (!match) {
 			return defaultValue;
 		}

@@ -152,7 +152,7 @@ export async function POST(event) {
 		errors.push(...(consistencyUpdates.errors || []));
 
 		const assignmentCheck = await checkAssignmentConsistency(database);
-		if (assignmentCheck.inconsistencies && assignmentCheck.inconsistencies.length > 0) {
+		if (assignmentCheck.inconsistencies?.length > 0) {
 			errors.push({
 				type: 'assignment_inconsistency',
 				message: `Found ${
@@ -163,7 +163,7 @@ export async function POST(event) {
 		}
 
 		const duplicateCheck = await checkDuplicateMerchantVariations(database);
-		if (duplicateCheck.duplicateVariations && duplicateCheck.duplicateVariations.length > 0) {
+		if (duplicateCheck.duplicateVariations?.length > 0) {
 			errors.push({
 				type: 'duplicate_merchant_variations',
 				message: `Found ${
@@ -320,9 +320,9 @@ async function performBulkPatternUpdates(database) {
 			let detailsField;
 			if (update.details === 'merchant') {
 				detailsField = 'merchant';
-			} else if (update.details && update.details.startsWith('SUBSTR')) {
+			} else if (update.details?.startsWith('SUBSTR')) {
 				detailsField = update.details;
-			} else if (update.details && update.details.startsWith('REPLACE')) {
+			} else if (update.details?.startsWith('REPLACE')) {
 				detailsField = update.details;
 			} else {
 				detailsField = "''";

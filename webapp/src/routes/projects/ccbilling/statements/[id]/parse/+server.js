@@ -47,6 +47,61 @@ export const GET = RouteUtils.createRouteHandler(
 	}
 );
 
+async function processCharges(event, statement_id, charges, billingCycleInfo) {
+	for (const charge of charges) {
+		console.log('💰 Creating charge:', charge.merchant, '$' + charge.amount);
+
+		// Determine the correct year for the transaction date
+		const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
+
+		// Determine auto-allocation based on current merchant → budget mapping
+		let allocatedTo = charge.allocated_to || null;
+		try {
+			if (charge.merchant) {
+				const normalized = normalizeMerchant(charge.merchant);
+				const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
+				if (budget) {
+					allocatedTo = budget.name;
+				}
+			}
+		} catch (error) {
+			console.warn(
+				'Auto-association lookup failed for merchant',
+				charge.merchant,
+				error?.message
+			);
+		}
+
+		// Check if this is an Amazon charge and capture full statement text
+		const isAmazon =
+			charge.merchant &&
+			(charge.merchant.toUpperCase().includes('AMAZON') ||
+				charge.merchant.toUpperCase().includes('AMZN'));
+
+		// For Amazon charges, try to get the full statement text from the parsed data
+		let fullStatementText = null;
+		if (isAmazon && charge.full_statement_text) {
+			fullStatementText = charge.full_statement_text;
+		} else if (isAmazon && charge.merchant_details) {
+			// Fallback: use merchant_details if available
+			fullStatementText = charge.merchant_details;
+		}
+
+		await createPayment(event, {
+			statement_id,
+			merchant: charge.merchant,
+			amount: charge.amount,
+			allocated_to: allocatedTo,
+			transaction_date: transactionDate, // Use the corrected transaction date
+			is_foreign_currency: charge.is_foreign_currency || false,
+			foreign_currency_amount: charge.foreign_currency_amount || null,
+			foreign_currency_type: charge.foreign_currency_type || null,
+			flight_details: charge.flight_details || null,
+			full_statement_text: fullStatementText
+		});
+	}
+}
+
 export const POST = RouteUtils.createRouteHandler(
 	async (event, parsedBody) => {
 		const { params } = event;
@@ -142,58 +197,7 @@ export const POST = RouteUtils.createRouteHandler(
 		const charges = parsedData.charges || [];
 		console.log('💳 Parsed charges:', charges.length, 'charges found');
 
-		for (const charge of charges) {
-			console.log('💰 Creating charge:', charge.merchant, '$' + charge.amount);
-
-			// Determine the correct year for the transaction date
-			const transactionDate = determineTransactionDateWithYear(charge.date, billingCycleInfo);
-
-			// Determine auto-allocation based on current merchant → budget mapping
-			let allocatedTo = charge.allocated_to || null;
-			try {
-				if (charge.merchant) {
-					const normalized = normalizeMerchant(charge.merchant);
-					const budget = await getBudgetByMerchant(event, normalized.merchant_normalized);
-					if (budget) {
-						allocatedTo = budget.name;
-					}
-				}
-			} catch (error) {
-				console.warn(
-					'Auto-association lookup failed for merchant',
-					charge.merchant,
-					error?.message
-				);
-			}
-
-			// Check if this is an Amazon charge and capture full statement text
-			const isAmazon =
-				charge.merchant &&
-				(charge.merchant.toUpperCase().includes('AMAZON') ||
-					charge.merchant.toUpperCase().includes('AMZN'));
-
-			// For Amazon charges, try to get the full statement text from the parsed data
-			let fullStatementText = null;
-			if (isAmazon && charge.full_statement_text) {
-				fullStatementText = charge.full_statement_text;
-			} else if (isAmazon && charge.merchant_details) {
-				// Fallback: use merchant_details if available
-				fullStatementText = charge.merchant_details;
-			}
-
-			await createPayment(event, {
-				statement_id,
-				merchant: charge.merchant,
-				amount: charge.amount,
-				allocated_to: allocatedTo,
-				transaction_date: transactionDate, // Use the corrected transaction date
-				is_foreign_currency: charge.is_foreign_currency || false,
-				foreign_currency_amount: charge.foreign_currency_amount || null,
-				foreign_currency_type: charge.foreign_currency_type || null,
-				flight_details: charge.flight_details || null,
-				full_statement_text: fullStatementText
-			});
-		}
+		await processCharges(event, statement_id, charges, billingCycleInfo);
 
 		// Extract basic billing cycle and card info from the charges
 		const extractedBillingCycle = extractBillingCycleFromCharges(charges);
@@ -300,7 +304,7 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	}
 
 	// If it's in MM/DD format, we need to determine the year
-	const mmddMatch = transactionDate.match(/^(\d{1,2})\/(\d{1,2})$/);
+	const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(transactionDate);
 	if (!mmddMatch) {
 		// If it's not MM/DD format, try to parse it as is
 		return transactionDate;
