@@ -13,13 +13,9 @@ vi.mock('../../src/lib/client/pdf-utils.js', () => ({
 // Mock the ParserFactory module
 const mockGetSupportedProviders = vi.fn().mockReturnValue(['Chase', 'Amex', 'Discover']);
 vi.mock('../../src/lib/utils/ccbilling-parsers/parser-factory.js', () => ({
-	ParserFactory: class MockParserFactory {
-		constructor() {
-			return {
-				getSupportedProviders: mockGetSupportedProviders
-			};
-		}
-	}
+	ParserFactory: vi.fn().mockImplementation(function () {
+		this.getSupportedProviders = mockGetSupportedProviders;
+	})
 }));
 
 describe('PDFService', () => {
@@ -192,9 +188,7 @@ describe('PDFService', () => {
 				type: 'application/pdf'
 			});
 
-			const originalError = new Error();
-			originalError.message = undefined;
-			mockPDFUtilities.parseStatement.mockRejectedValue(originalError);
+			mockPDFUtilities.parseStatement.mockRejectedValue({ code: 'UNEXPECTED_ERROR' });
 
 			await expect(pdfService.parseStatement(mockPdfFile)).rejects.toThrow(
 				'PDF parsing failed: undefined'

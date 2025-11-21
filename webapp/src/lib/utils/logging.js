@@ -93,11 +93,11 @@ const securityLogger = createLogger('genproj:security');
 
 const setLogLevel = (level) => {
 	const newLevel = LOG_LEVELS[level.toUpperCase()];
-	if (newLevel !== undefined) {
+	if (newLevel === undefined) {
+		logger.warn(`Invalid log level: ${level}`);
+	} else {
 		currentLogLevel = newLevel;
 		logger.info(`Log level set to: ${level}`);
-	} else {
-		logger.warn(`Invalid log level: ${level}`);
 	}
 };
 
