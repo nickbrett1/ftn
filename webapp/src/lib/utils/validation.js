@@ -43,7 +43,7 @@ export function isValidUrl(value) {
 	try {
 		new URL(value);
 		return true;
-	} catch (e) {
+	} catch {
 		return false;
 	}
 }
@@ -171,7 +171,12 @@ const capabilityValidators = {
 		validateEnumProperty('devcontainer-node', config, 'nodeVersion', 'Invalid Node.js version'),
 
 	'devcontainer-python': (config) =>
-		validateEnumProperty('devcontainer-python', config, 'packageManager', 'Invalid package manager'),
+		validateEnumProperty(
+			'devcontainer-python',
+			config,
+			'packageManager',
+			'Invalid package manager'
+		),
 
 	'devcontainer-java': (config) =>
 		validateEnumProperty('devcontainer-java', config, 'javaVersion', 'Invalid Java version'),
