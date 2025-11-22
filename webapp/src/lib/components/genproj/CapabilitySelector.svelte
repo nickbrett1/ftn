@@ -23,6 +23,40 @@
 		GlobeSolid
 	} from 'svelte-awesome-icons';
 
+	// Tippy.js for tooltips
+	import tippy from 'tippy.js';
+	import 'tippy.js/dist/tippy.css';
+
+	// Svelte Action for Tippy.js
+	function useTippy(node, content) {
+		let tippyInstance;
+
+		function updateTippy(newContent) {
+			if (tippyInstance) {
+				tippyInstance.setContent(newContent);
+			} else {
+				tippyInstance = tippy(node, {
+					content: newContent,
+					placement: 'top',
+					animation: 'fade'
+				});
+			}
+		}
+
+		updateTippy(content);
+
+		return {
+			update(newContent) {
+				updateTippy(newContent);
+			},
+			destroy() {
+				if (tippyInstance) {
+					tippyInstance.destroy();
+				}
+			}
+		};
+	}
+
 	// Props
 	export let capabilities = [];
 	export let selectedCapabilities = [];
@@ -267,7 +301,7 @@
 											class="{getColorClassForCapability(
 												capability.id
 											)} hover:opacity-80 transition-opacity"
-											title="Learn more about {capability.name}"
+											use:useTippy={capability.name}
 											aria-label="Learn more about {capability.name}"
 										>
 											<svelte:component
