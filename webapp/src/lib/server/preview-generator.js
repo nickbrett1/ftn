@@ -169,16 +169,21 @@ function generateReadmeFile(projectConfig, executionOrder) {
 		.map((id) => capabilities.find((c) => c.id === id))
 		.filter(Boolean);
 
-	const readmeContent = `# ${projectConfig.name}
-
-${projectConfig.description || 'A project generated with genproj'}
-
+	let capabilitiesSection = '';
+	if (selectedCapabilities.length > 0) {
+		capabilitiesSection = `
 ## Capabilities
 
 This project includes the following capabilities:
 
 ${selectedCapabilities.map((cap) => `- **${cap.name}**: ${cap.description}`).join('\n')}
+`;
+	}
 
+	const readmeContent = `# ${projectConfig.name}
+
+${projectConfig.description || 'A project generated with genproj'}
+${capabilitiesSection}
 ## Setup
 
 1. Clone the repository
