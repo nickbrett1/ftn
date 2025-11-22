@@ -16,6 +16,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { selectedCapabilities, capabilityValidation } from '$lib/client/capability-store.js';
 	import { CAPABILITIES as capabilities } from '$lib/utils/capabilities.js';
+	import FileTreeItem from './FileTreeItem.svelte';
 
 	// Props
 	export let previewData = null;
@@ -77,7 +78,7 @@
 	 * @returns {string} Icon emoji
 	 */
 	function getFileIcon(filename) {
-		const ext = filename.split('.').pop()?.toLowerCase();
+		const extension = filename.split('.').pop()?.toLowerCase();
 		const iconMap = {
 			js: '📄',
 			ts: '📘',
@@ -105,7 +106,7 @@
 			txt: '📄',
 			log: '📋'
 		};
-		return iconMap[ext] || '📄';
+		return iconMap[extension] || '📄';
 	}
 
 	/**
@@ -114,7 +115,7 @@
 	 * @returns {string} Language for syntax highlighting
 	 */
 	function getLanguage(filename) {
-		const ext = filename.split('.').pop()?.toLowerCase();
+		const extension = filename.split('.').pop()?.toLowerCase();
 		const langMap = {
 			js: 'javascript',
 			ts: 'typescript',
@@ -138,7 +139,7 @@
 			env: 'bash',
 			txt: 'text'
 		};
-		return langMap[ext] || 'text';
+		return langMap[extension] || 'text';
 	}
 
 	/**
@@ -212,48 +213,13 @@
 
 				<div class="p-4 overflow-y-auto max-h-96">
 					{#each fileTree as file (file.path)}
-						<div class="file-item">
-							{#if file.type === 'folder'}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded"
-									on:click={() => toggleFolder(file.path)}
-								>
-									<span class="mr-2">
-										{isFolderExpanded(file.path) ? '📂' : '📁'}
-									</span>
-									<span class="font-medium text-gray-100">{file.name}</span>
-								</button>
-
-								{#if isFolderExpanded(file.path)}
-									<div class="ml-4 mt-1">
-										{#each file.children || [] as childFile}
-											<button
-												type="button"
-												class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-													{selectedFile?.path === childFile.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-												on:click={() => selectFile(childFile)}
-											>
-												<span class="mr-2 text-sm">{getFileIcon(childFile.name)}</span>
-												<span class="text-sm text-gray-300 flex-1">{childFile.name}</span>
-												<span class="text-xs text-gray-400">{formatFileSize(childFile.size)}</span>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							{:else}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-										{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-									on:click={() => selectFile(file)}
-								>
-									<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
-									<span class="text-sm text-gray-300 flex-1">{file.name}</span>
-									<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
-								</button>
-							{/if}
-						</div>
+						<FileTreeItem
+							item={file}
+							{selectedFile}
+							{expandedFolders}
+							on:toggleFolder={(e) => toggleFolder(e.detail)}
+							on:selectFile={(e) => selectFile(e.detail)}
+						/>
 					{/each}
 				</div>
 			</div>

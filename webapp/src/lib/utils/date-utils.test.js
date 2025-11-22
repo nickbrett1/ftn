@@ -25,7 +25,7 @@ describe('Date Utils', () => {
 	describe('formatDate', () => {
 		it('should return empty string for null/undefined/empty input', () => {
 			expect(formatDate(null)).toBe('');
-			expect(formatDate(undefined)).toBe('');
+			expect(formatDate()).toBe('');
 			expect(formatDate('')).toBe('');
 		});
 
@@ -144,7 +144,7 @@ describe('Date Utils', () => {
 			expect(formatRelativeTime(date)).toBe('5 minutes ago');
 		});
 
-        it('should handle singular minute', () => {
+		it('should handle singular minute', () => {
 			const now = new Date('2023-01-15T12:00:00Z');
 			vi.setSystemTime(now);
 
@@ -160,7 +160,7 @@ describe('Date Utils', () => {
 			expect(formatRelativeTime(date)).toBe('2 hours ago');
 		});
 
-        it('should handle singular hour', () => {
+		it('should handle singular hour', () => {
 			const now = new Date('2023-01-15T12:00:00Z');
 			vi.setSystemTime(now);
 
@@ -174,8 +174,8 @@ describe('Date Utils', () => {
 
 			const date = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
 			// Note: formatRelativeTime uses exact 24 hour periods for "days", not calendar days for this check
-            // The code: const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-            // if (diffInDays === 1) return 'yesterday';
+			// The code: const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+			// if (diffInDays === 1) return 'yesterday';
 			expect(formatRelativeTime(date)).toBe('yesterday');
 		});
 
@@ -193,8 +193,8 @@ describe('Date Utils', () => {
 
 			const date = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
 			// Expect Jan 8, 2023
-            // Note: This depends on timezone if the subtraction crosses a date boundary locally vs UTC
-            // But 7 days exactly should be fine.
+			// Note: This depends on timezone if the subtraction crosses a date boundary locally vs UTC
+			// But 7 days exactly should be fine.
 			expect(formatRelativeTime(date)).toBe('Jan 8, 2023');
 		});
 	});
@@ -212,13 +212,13 @@ describe('Date Utils', () => {
 			expect(isToday(now)).toBe(true);
 			// Also check same day different time
 			const earlier = new Date('2023-01-15T01:00:00Z');
-            // Ideally this is testing "same calendar day".
-            // If system is UTC, this works.
-            // Since isToday uses toDateString(), it uses local time.
-            // If we set system time, "local" time is based on that but offset remains system's offset.
-            // Best is to construct a date that is definitely same day locally.
-            const localNow = new Date();
-            expect(isToday(localNow)).toBe(true);
+			// Ideally this is testing "same calendar day".
+			// If system is UTC, this works.
+			// Since isToday uses toDateString(), it uses local time.
+			// If we set system time, "local" time is based on that but offset remains system's offset.
+			// Best is to construct a date that is definitely same day locally.
+			const localNow = new Date();
+			expect(isToday(localNow)).toBe(true);
 		});
 
 		it('should return false for not today', () => {

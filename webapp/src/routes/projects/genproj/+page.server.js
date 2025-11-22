@@ -1,6 +1,5 @@
 // webapp/src/routes/projects/genproj/+page.server.js
 
-
 import { getCurrentUser } from '$lib/server/auth';
 import { capabilities } from '$lib/config/capabilities';
 

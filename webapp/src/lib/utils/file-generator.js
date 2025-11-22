@@ -4,7 +4,7 @@ import Handlebars from 'handlebars';
 import * as fallbackTemplates from '$lib/config/fallback-templates';
 
 export class TemplateEngine {
-	constructor(r2Bucket = undefined) {
+	constructor(r2Bucket) {
 		// Accept r2Bucket as an argument
 		this.templates = new Map();
 		this.helpers = new Map();
@@ -39,21 +39,21 @@ export class TemplateEngine {
 				}
 				return options.inverse(this);
 			},
-			uppercase: (str) => str.toUpperCase(),
-			lowercase: (str) => str.toLowerCase(),
-			capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),
-			'kebab-case': (str) =>
-				str
+			uppercase: (string_) => string_.toUpperCase(),
+			lowercase: (string_) => string_.toLowerCase(),
+			capitalize: (string_) => string_.charAt(0).toUpperCase() + string_.slice(1),
+			'kebab-case': (string_) =>
+				string_
 					.replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
 					.replaceAll(/[\s_]+/g, '-')
 					.toLowerCase(),
-			snake_case: (str) =>
-				str
+			snake_case: (string_) =>
+				string_
 					.replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2')
 					.replaceAll(/[\s-]+/g, '_')
 					.toLowerCase(),
-			join: (arr, sep) => arr.join(sep),
-			length: (arr) => arr.length,
+			join: (array, separator) => array.join(separator),
+			length: (array) => array.length,
 			date: (format) => {
 				const d = new Date();
 				if (format === 'iso') return d.toISOString();
@@ -62,12 +62,12 @@ export class TemplateEngine {
 				if (format === 'day') return String(d.getDate());
 				return d.toLocaleDateString();
 			},
-			json: (obj) => JSON.stringify(obj, null, 2),
-			json_compact: (obj) => JSON.stringify(obj),
+			json: (object) => JSON.stringify(object, null, 2),
+			json_compact: (object) => JSON.stringify(object),
 			add: (a, b) => Number(a) + Number(b),
 			subtract: (a, b) => Number(a) - Number(b),
-			replace: (str, find, replace) => str.replaceAll(find, replace),
-			truncate: (str, len) => (str.length > len ? str.slice(0, len) + '...' : str),
+			replace: (string_, find, replace) => string_.replaceAll(find, replace),
+			truncate: (string_, length_) => (string_.length > length_ ? string_.slice(0, length_) + '...' : string_),
 			env: (key) => process.env[key],
 			project_slug: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
 			package_name: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
@@ -76,9 +76,9 @@ export class TemplateEngine {
 			constant_name: (name) => name.toUpperCase().replaceAll(/[\s-]/g, '_')
 		};
 
-		for (const [name, fn] of Object.entries(helpers)) {
-			this.helpers.set(name, fn);
-			Handlebars.registerHelper(name, fn);
+		for (const [name, function_] of Object.entries(helpers)) {
+			this.helpers.set(name, function_);
+			Handlebars.registerHelper(name, function_);
 		}
 	}
 
@@ -173,12 +173,12 @@ export class TemplateEngine {
 
 	async generateFiles(fileRequests) {
 		const results = [];
-		for (const [index, req] of fileRequests.entries()) {
+		for (const [index, request] of fileRequests.entries()) {
 			try {
-				const content = await this.generateFile(req.templateId, { ...req.data, index });
-				results.push({ ...req, success: true, content });
+				const content = await this.generateFile(request.templateId, { ...request.data, index });
+				results.push({ ...request, success: true, content });
 			} catch (error) {
-				results.push({ ...req, success: false, error: error.message });
+				results.push({ ...request, success: false, error: error.message });
 			}
 		}
 		return results;

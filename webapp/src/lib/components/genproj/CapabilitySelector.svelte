@@ -74,7 +74,7 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: value
 			}
 		};
@@ -86,9 +86,9 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: {
-					...(configuration[capabilityId]?.[field] || {}),
+					...configuration[capabilityId]?.[field],
 					[nestedField]: value
 				}
 			}
@@ -111,7 +111,7 @@
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
 		// Add a space before all uppercase letters that are not at the beginning
-		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
+		const spacedString = camelCaseString.replaceAll(/([A-Z])/g, ' $1');
 		// Capitalize the first letter of the entire string
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
 	}
@@ -273,11 +273,7 @@
 																				const currentArray =
 																					configuration[capability.id]?.[field] || [];
 																				let newArray;
-																				if (e.target.checked) {
-																					newArray = [...currentArray, option];
-																				} else {
-																					newArray = currentArray.filter((item) => item !== option);
-																				}
+																				newArray = e.target.checked ? [...currentArray, option] : currentArray.filter((item) => item !== option);
 																				handleConfigurationChange(capability.id, field, newArray);
 																			}}
 																		/>

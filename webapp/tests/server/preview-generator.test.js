@@ -112,9 +112,9 @@ describe('generatePreview', () => {
 
 	it('creates preview data with files, services and summary', async () => {
 		const preview = await generatePreview(projectConfig, ['feature'], mockR2Bucket);
-		const srcFolder = preview.files.find((f) => f.name === 'src' && f.type === 'folder');
-		expect(srcFolder).toBeDefined();
-		const featureFile = srcFolder.children.find((f) => f.name === 'feature.js');
+		const sourceFolder = preview.files.find((f) => f.name === 'src' && f.type === 'folder');
+		expect(sourceFolder).toBeDefined();
+		const featureFile = sourceFolder.children.find((f) => f.name === 'feature.js');
 		expect(featureFile).toBeDefined();
 
 		expect(preview.files.length).toBe(2); // folder and readme

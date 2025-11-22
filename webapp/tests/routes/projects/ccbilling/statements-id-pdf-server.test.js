@@ -4,7 +4,7 @@ import { GET } from '../../../../src/routes/projects/ccbilling/statements/[id]/p
 
 // Mock the json function
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, init) => new Response(JSON.stringify(data), init))
+	json: vi.fn((data, init) => Response.json(data, init))
 }));
 
 // Mock the requireUser function

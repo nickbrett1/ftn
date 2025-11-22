@@ -42,14 +42,25 @@ export async function GET(event) {
 
 	// Get the appropriate R2 bucket binding based on the bucket name
 	let bucket;
-	if (bucketName === 'ccbilling') {
+	switch (bucketName) {
+	case 'ccbilling': {
 		bucket = event.platform?.env?.R2_CCBILLING;
-	} else if (bucketName === 'wdi') {
+
+	break;
+	}
+	case 'wdi': {
 		bucket = event.platform?.env?.R2_WDI;
-	} else if (bucketName === 'genproj-templates') {
+
+	break;
+	}
+	case 'genproj-templates': {
 		bucket = event.platform?.env?.R2_GENPROJ_TEMPLATES;
-	} else {
+
+	break;
+	}
+	default: {
 		return json({ error: `Unknown bucket: ${bucketName}` }, { status: 400 });
+	}
 	}
 
 	if (!bucket) {

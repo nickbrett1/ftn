@@ -27,9 +27,9 @@ describe('deployment-info api', () => {
 	});
 
 	it('GET handles missing globals', async () => {
-		vi.stubGlobal('__BUILD_TIME__', undefined);
-		vi.stubGlobal('__GIT_BRANCH__', undefined);
-		vi.stubGlobal('__GIT_COMMIT__', undefined);
+		vi.stubGlobal('__BUILD_TIME__');
+		vi.stubGlobal('__GIT_BRANCH__');
+		vi.stubGlobal('__GIT_COMMIT__');
 
 		const response = await GET();
 		const data = await response.json();

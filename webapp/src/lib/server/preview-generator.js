@@ -286,39 +286,80 @@ async function generateCapabilityServiceChanges(projectConfig, capability, r2Buc
  * @param {Array<FileObject>} files - Array of file objects
  * @returns {Array<FileObject>} Organized files with folder structure
  */
-function organizeFilesIntoFolders(files) {
-	const folderMap = new Map();
-	const organizedFiles = [];
+export function organizeFilesIntoFolders(files) {
+	const root = [];
+	const map = new Map();
 
-	// Group files by folder
-	for (const file of files) {
-		const pathParts = file.path.split('/');
-		const folderPath = pathParts.slice(0, -1).join('/') || '/';
-
-		if (!folderMap.has(folderPath)) {
-			folderMap.set(folderPath, []);
-		}
-		folderMap.get(folderPath).push(file);
-	}
-
-	// Create folder structure
-	for (const [folderPath, folderFiles] of folderMap) {
-		if (folderPath === '/') {
-			// Root files
-			organizedFiles.push(...folderFiles);
-		} else {
-			// Create folder
-			const folderName = folderPath.split('/').pop();
-			organizedFiles.push({
-				path: folderPath,
-				name: folderName,
+	// Helper to get or create folder
+	const getFolder = (path, name) => {
+		if (!map.has(path)) {
+			const folder = {
+				path,
+				name,
 				type: 'folder',
-				children: folderFiles
-			});
+				children: [],
+				size: 0
+			};
+			map.set(path, folder);
+
+			// Add to parent
+			const parts = path.split('/');
+			if (parts.length > 1) {
+				const parentPath = parts.slice(0, -1).join('/');
+				const parentName = parts.at(-2);
+				const parent = getFolder(parentPath, parentName);
+				parent.children.push(folder);
+			} else {
+				root.push(folder);
+			}
+		}
+		return map.get(path);
+	};
+
+	for (const file of files) {
+		const parts = file.path.split('/');
+		if (parts.length > 1) {
+			const folderPath = parts.slice(0, -1).join('/');
+			const folderName = parts.at(-2);
+			const folder = getFolder(folderPath, folderName);
+			folder.children.push(file);
+
+			// Update folder sizes up the tree
+			let currentPath = folderPath;
+			while (currentPath) {
+				const currentFolder = map.get(currentPath);
+				if (currentFolder) {
+					currentFolder.size += file.size;
+				}
+				const currentParts = currentPath.split('/');
+				if (currentParts.length <= 1) break;
+				currentPath = currentParts.slice(0, -1).join('/');
+			}
+		} else {
+			root.push(file);
 		}
 	}
 
-	return organizedFiles;
+	// Sort function: folders first, then alphabetical
+	const sortItems = (a, b) => {
+		if (a.type === b.type) {
+			return a.name.localeCompare(b.name);
+		}
+		return a.type === 'folder' ? -1 : 1;
+	};
+
+	// Recursively sort
+	const sortRecursive = (items) => {
+		items.sort(sortItems);
+		for (const item of items) {
+			if (item.type === 'folder' && item.children) {
+				sortRecursive(item.children);
+			}
+		}
+		return items;
+	};
+
+	return sortRecursive(root);
 }
 
 /**

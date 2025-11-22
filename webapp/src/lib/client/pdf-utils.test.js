@@ -86,7 +86,7 @@ describe('PDFUtils', () => {
 			// Mock window to simulate browser environment
 			const originalWindow = globalThis.window;
 			globalThis.window = {};
-			const originalEnv = process.env.NODE_ENV;
+			const originalEnvironment = process.env.NODE_ENV;
 			process.env.NODE_ENV = 'development';
 
 			try {
@@ -99,7 +99,7 @@ describe('PDFUtils', () => {
 			} finally {
 				// Restore original window and env
 				globalThis.window = originalWindow;
-				process.env.NODE_ENV = originalEnv;
+				process.env.NODE_ENV = originalEnvironment;
 			}
 		});
 	});
