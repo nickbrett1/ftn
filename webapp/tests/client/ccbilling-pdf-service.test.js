@@ -36,6 +36,7 @@ describe('PDFService', () => {
 		mockPDFUtilities.parseStatement.mockResolvedValue({ success: true });
 
 		pdfService = new PDFService();
+		await pdfService.init();
 	});
 
 	afterEach(() => {
