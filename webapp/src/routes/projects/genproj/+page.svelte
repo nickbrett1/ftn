@@ -283,10 +283,9 @@
 
 	// Generate project handler
 	async function handleGenerateProject() {
-		// If not authenticated, go directly to GitHub auth
+		// If not authenticated, return (button should be disabled)
 		if (!data.isAuthenticated) {
-			const redirectPath = buildGenprojRedirectPath();
-			await initiateGoogleAuth(redirectPath);
+			logger.warn('Generate project requested while not authenticated');
 			return;
 		}
 
@@ -564,6 +563,7 @@
 								{previewData}
 								loading={previewLoading}
 								error={previewError}
+								isAuthenticated={data.isAuthenticated}
 								on:continue={handleContinueGeneration}
 								on:configure={() => switchTab('capabilities')}
 							/>

@@ -21,6 +21,7 @@
 	export let previewData = null;
 	export let loading = false;
 	export let error = null;
+	export let isAuthenticated = false;
 
 	// Event dispatcher
 	const dispatch = createEventDispatcher();
@@ -363,7 +364,11 @@
 		<div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
 			<button
 				type="button"
-				class="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+				class="px-8 py-3 rounded-lg font-semibold transition-colors {isAuthenticated
+					? 'bg-green-500 text-white hover:bg-green-600'
+					: 'bg-gray-700 text-gray-400 cursor-not-allowed'}"
+				disabled={!isAuthenticated}
+				title={!isAuthenticated ? 'Please sign in to generate a project' : ''}
 				on:click={continueToGeneration}
 			>
 				Generate Project
