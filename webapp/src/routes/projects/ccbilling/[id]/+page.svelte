@@ -729,6 +729,7 @@
 		try {
 			// Initialize PDF service
 			const pdfService = new PDFService();
+			await pdfService.init();
 
 			// Parse the PDF file client-side
 			const parsedData = await pdfService.parseStatement(pdfFile);

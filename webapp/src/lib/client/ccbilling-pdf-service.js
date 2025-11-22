@@ -8,6 +8,11 @@ import { ParserFactory } from '../utils/ccbilling-parsers/parser-factory.js';
 export class PDFService {
 	constructor() {
 		this.parserFactory = new ParserFactory();
+		// It is crucial to call the async init() method after instantiating PDFService.
+		// For example: `const pdfService = new PDFService(); await pdfService.init();`
+	}
+
+	async init() {
 		// Configure PDF.js worker for browser environment
 		PDFUtilities.configureWorker();
 	}
