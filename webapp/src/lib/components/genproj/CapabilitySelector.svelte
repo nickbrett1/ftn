@@ -6,6 +6,22 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { logger } from '$lib/utils/logging.js';
+	import {
+		PythonBrands,
+		NodeJsBrands,
+		JavaBrands,
+		DockerBrands,
+		CloudflareBrands,
+		CircleNotchSolid,
+		CloudSolid,
+		CodeSolid,
+		PlayCircleSolid,
+		FileAltSolid,
+		UserSecretSolid,
+		RobotSolid,
+		ChartLineSolid,
+		GlobeSolid
+	} from 'svelte-awesome-icons';
 
 	// Props
 	export let capabilities = [];
@@ -165,6 +181,46 @@
 				return missingCap ? missingCap.name : depId;
 			});
 	}
+
+	// Helper function to get the icon component for a capability
+	function getIconForCapability(capabilityId) {
+		const iconMap = {
+			'devcontainer-python': PythonBrands,
+			'devcontainer-node': NodeJsBrands,
+			'devcontainer-java': JavaBrands,
+			docker: DockerBrands,
+			circleci: CircleNotchSolid,
+			'cloudflare-wrangler': CloudflareBrands,
+			sonarcloud: CloudSolid,
+			sonarlint: CodeSolid,
+			playwright: PlayCircleSolid,
+			'spec-kit': FileAltSolid,
+			doppler: UserSecretSolid,
+			dependabot: RobotSolid,
+			'lighthouse-ci': ChartLineSolid
+		};
+		return iconMap[capabilityId] || GlobeSolid;
+	}
+
+	// Helper function to get the color class for a capability
+	function getColorClassForCapability(capabilityId) {
+		const colorMap = {
+			'devcontainer-python': 'text-yellow-400',
+			'devcontainer-node': 'text-green-500',
+			'devcontainer-java': 'text-red-500',
+			docker: 'text-blue-500',
+			circleci: 'text-green-400',
+			'cloudflare-wrangler': 'text-orange-500',
+			sonarcloud: 'text-orange-400',
+			sonarlint: 'text-red-400',
+			playwright: 'text-green-500',
+			'spec-kit': 'text-gray-400',
+			doppler: 'text-blue-400',
+			dependabot: 'text-blue-500',
+			'lighthouse-ci': 'text-orange-500'
+		};
+		return colorMap[capabilityId] || 'text-gray-400';
+	}
 </script>
 
 <div class="space-y-8">
@@ -193,29 +249,35 @@
 									disabled={isRequiredByOther(capability)}
 								/>
 							</div>
-							<div class="ml-3 text-sm w-full">
-								<label
-									for="capability-{capability.id}"
-									class="font-medium {selectedCapabilities.includes(capability.id)
-										? 'text-white'
-										: 'text-gray-300'} cursor-pointer"
-								>
-									{capability.name}
-								</label>
-								<p class="text-gray-400 mt-1">{capability.description}</p>
-
-								{#if capability.website}
-									<p class="text-gray-500 text-xs mt-1">
+							<div class="ml-3 text-sm w-full relative">
+								<div class="flex justify-between items-start">
+									<label
+										for="capability-{capability.id}"
+										class="font-medium {selectedCapabilities.includes(capability.id)
+											? 'text-white'
+											: 'text-gray-300'} cursor-pointer pr-8"
+									>
+										{capability.name}
+									</label>
+									{#if capability.website}
 										<a
 											href={capability.website}
 											target="_blank"
 											rel="noopener noreferrer"
-											class="text-blue-400 hover:underline"
+											class="{getColorClassForCapability(
+												capability.id
+											)} hover:opacity-80 transition-opacity"
+											title="Learn more about {capability.name}"
+											aria-label="Learn more about {capability.name}"
 										>
-											Learn more
+											<svelte:component
+												this={getIconForCapability(capability.id)}
+												class="w-5 h-5"
+											/>
 										</a>
-									</p>
-								{/if}
+									{/if}
+								</div>
+								<p class="text-gray-400 mt-1">{capability.description}</p>
 
 								{#if isRequiredByOther(capability)}
 									<p class="text-yellow-400 text-xs mt-2">

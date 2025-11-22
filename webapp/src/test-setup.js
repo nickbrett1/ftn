@@ -49,7 +49,18 @@ vi.mock('svelte-awesome-icons', () => {
 		ToolboxSolid: createMockIcon(),
 		PlaneDepartureSolid: createMockIcon(),
 		ToolsSolid: createMockIcon(),
-		RocketSolid: createMockIcon()
+		RocketSolid: createMockIcon(),
+		PythonBrands: createMockIcon(),
+		NodeJsBrands: createMockIcon(),
+		JavaBrands: createMockIcon(),
+		DockerBrands: createMockIcon(),
+		CloudflareBrands: createMockIcon(),
+		CircleNotchSolid: createMockIcon(),
+		CloudSolid: createMockIcon(),
+		CodeSolid: createMockIcon(),
+		PlayCircleSolid: createMockIcon(),
+		FileAltSolid: createMockIcon(),
+		GlobeSolid: createMockIcon()
 	};
 });
 
