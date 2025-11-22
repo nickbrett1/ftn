@@ -84,6 +84,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@threlte/core": "^8.3.0",
 		"@threlte/extras": "^9.7.0",
 		"@tsparticles/engine": "^3.8.1",

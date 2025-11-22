@@ -9,11 +9,11 @@ export const PDFUtils = {
 	configureWorker() {
 		// Only configure in browser environment
 		if (globalThis.window == undefined) {
-			return;
+			return Promise.resolve();
 		}
 
 		// Import PDF.js only when needed
-		import('pdfjs-dist')
+		return import('pdfjs-dist')
 			.then((pdfjsLibrary) => {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker
