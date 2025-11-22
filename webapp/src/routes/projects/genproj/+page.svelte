@@ -283,10 +283,9 @@
 
 	// Generate project handler
 	async function handleGenerateProject() {
-		// If not authenticated, go directly to GitHub auth
+		// If not authenticated, return (button should be disabled)
 		if (!data.isAuthenticated) {
-			const redirectPath = buildGenprojRedirectPath();
-			await initiateGoogleAuth(redirectPath);
+			logger.warn('Generate project requested while not authenticated');
 			return;
 		}
 
@@ -392,7 +391,8 @@
 							<span class="text-sm font-medium text-blue-300 ml-2">Demo Mode</span>
 						</div>
 						<p class="text-sm text-blue-200">
-							This tool is in demo mode. You can explore the preview tab, but project generation is disabled until you log in.
+							This tool is in demo mode. You can explore the preview tab, but project generation is
+							disabled until you log in.
 						</p>
 					</div>
 					<button
@@ -564,6 +564,7 @@
 								{previewData}
 								loading={previewLoading}
 								error={previewError}
+								isAuthenticated={data.isAuthenticated}
 								on:continue={handleContinueGeneration}
 							/>
 						</div>
