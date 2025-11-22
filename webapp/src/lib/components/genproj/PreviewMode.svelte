@@ -40,7 +40,7 @@
 			selectedFile = null;
 			// Expand all folders by default when new previewData arrives
 			expandedFolders = new Set();
-			fileTree.forEach((file) => {
+			fileTree.forEach(file => {
 				if (file.type === 'folder') {
 					expandedFolders.add(file.path);
 				}
