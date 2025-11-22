@@ -391,7 +391,7 @@
 							<span class="text-sm font-medium text-blue-300 ml-2">Demo Mode</span>
 						</div>
 						<p class="text-sm text-blue-200">
-							Explore the preview. Log in to generate.
+							Explore the preview. Login to generate.
 						</p>
 					</div>
 					<button
