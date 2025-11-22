@@ -201,6 +201,26 @@
 		};
 		return iconMap[capabilityId] || GlobeSolid;
 	}
+
+	// Helper function to get the color class for a capability
+	function getColorClassForCapability(capabilityId) {
+		const colorMap = {
+			'devcontainer-python': 'text-yellow-400',
+			'devcontainer-node': 'text-green-500',
+			'devcontainer-java': 'text-red-500',
+			docker: 'text-blue-500',
+			circleci: 'text-green-400',
+			'cloudflare-wrangler': 'text-orange-500',
+			sonarcloud: 'text-orange-400',
+			sonarlint: 'text-red-400',
+			playwright: 'text-green-500',
+			'spec-kit': 'text-gray-400',
+			doppler: 'text-blue-400',
+			dependabot: 'text-blue-500',
+			'lighthouse-ci': 'text-orange-500'
+		};
+		return colorMap[capabilityId] || 'text-gray-400';
+	}
 </script>
 
 <div class="space-y-8">
@@ -244,7 +264,9 @@
 											href={capability.website}
 											target="_blank"
 											rel="noopener noreferrer"
-											class="text-gray-400 hover:text-blue-400 transition-colors"
+											class="{getColorClassForCapability(
+												capability.id
+											)} hover:opacity-80 transition-opacity"
 											title="Learn more about {capability.name}"
 											aria-label="Learn more about {capability.name}"
 										>

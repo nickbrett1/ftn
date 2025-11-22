@@ -59,7 +59,8 @@ vi.mock('svelte-awesome-icons', () => {
 		CloudSolid: createMockIcon(),
 		CodeSolid: createMockIcon(),
 		PlayCircleSolid: createMockIcon(),
-		FileAltSolid: createMockIcon()
+		FileAltSolid: createMockIcon(),
+		GlobeSolid: createMockIcon()
 	};
 });
 
