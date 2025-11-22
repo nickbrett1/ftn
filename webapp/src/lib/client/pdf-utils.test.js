@@ -75,28 +75,31 @@ describe('PDFUtils', () => {
 			console.log('Process exists:', typeof process !== 'undefined');
 		});
 
-		it('should configure PDF.js worker for current environment', () => {
-			PDFUtilities.configureWorker();
+		it('should configure PDF.js worker for current environment', async () => {
+			await PDFUtilities.configureWorker();
 
-			// In test environment (jsdom), the worker should be set to a string URL
-			expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeDefined();
-			expect(typeof pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('string');
+			// In test environment, the worker src is set to null (object)
+			expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeNull();
 		});
 
-		it('should configure PDF.js worker for browser environment when window is available', () => {
+		it('should configure PDF.js worker for browser environment when window is available', async () => {
 			// Mock window to simulate browser environment
 			const originalWindow = globalThis.window;
 			globalThis.window = {};
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = 'development';
 
 			try {
-				PDFUtilities.configureWorker();
+				await PDFUtilities.configureWorker();
 
 				// In browser environment, the worker should be set to a string URL
 				expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBeDefined();
 				expect(typeof pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('string');
+				expect(pdfjsLib.GlobalWorkerOptions.workerSrc).toBe('/pdf.worker.min.mjs');
 			} finally {
-				// Restore original window
+				// Restore original window and env
 				globalThis.window = originalWindow;
+				process.env.NODE_ENV = originalEnv;
 			}
 		});
 	});
