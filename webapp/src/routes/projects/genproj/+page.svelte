@@ -565,6 +565,7 @@
 								loading={previewLoading}
 								error={previewError}
 								on:continue={handleContinueGeneration}
+								on:configure={() => switchTab('capabilities')}
 							/>
 						</div>
 					{/if}
