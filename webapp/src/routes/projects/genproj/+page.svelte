@@ -373,7 +373,7 @@
 	{#if showDemoBanner}
 		<div class="bg-blue-900 bg-opacity-40 border-b border-blue-500">
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-				<div class="flex items-center justify-between">
+				<div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
 					<div class="flex items-center gap-3">
 						<div class="flex items-center">
 							<svg
@@ -392,14 +392,14 @@
 							<span class="text-sm font-medium text-blue-300 ml-2">Demo Mode</span>
 						</div>
 						<p class="text-sm text-blue-200">
-							This tool is in demo mode. You can explore the preview tab, but project generation is disabled until you log in.
+							Explore the preview. Log in to generate.
 						</p>
 					</div>
 					<button
 						onclick={handleSignInClick}
 						class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-green-400"
 					>
-						Sign In to Generate
+						Login
 					</button>
 				</div>
 			</div>
