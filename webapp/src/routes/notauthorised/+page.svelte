@@ -118,10 +118,6 @@
 
 <style>
 	/* Glitch effect for the title */
-	.glitch-text {
-		/* Removed glow effect for better readability */
-	}
-
 	.glitch-layer-1 {
 		animation: glitch 3s infinite;
 		opacity: 0.8;

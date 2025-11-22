@@ -35,12 +35,12 @@ function createDevContainerCapability(id, name, description, configurationSchema
 				filePath: '.devcontainer/Dockerfile',
 				templateId: `devcontainer-${lang}-dockerfile`
 			},
-			{ id: 'zshrc', filePath: '.devcontainer/.zshrc', templateId: 'devcontainer-zshrc' },
-			{ id: 'p10k', filePath: '.devcontainer/.p10k.zsh', templateId: 'devcontainer-p10k-zsh' },
+			{ id: 'zshrc', filePath: '.devcontainer/.zshrc', templateId: 'devcontainer-zshrc-full' },
+			{ id: 'p10k', filePath: '.devcontainer/.p10k.zsh', templateId: 'devcontainer-p10k-zsh-full' },
 			{
 				id: 'setup-sh',
-				filePath: '.devcontainer/setup.sh',
-				templateId: 'devcontainer-setup-sh',
+				filePath: '.devcontainer/post-create-setup.sh',
+				templateId: 'devcontainer-post-create-setup-sh',
 				isExecutable: true
 			}
 		],

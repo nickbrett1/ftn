@@ -12,25 +12,29 @@ describe('TemplateEngine', () => {
 	let engine;
 
 	beforeEach(() => {
-		engine = new TemplateEngine();
+		const mockFetcher = vi.fn(async (url) => {
+			if (url.includes('devcontainer-node-json.hbs')) {
+				return { ok: true, text: async () => 'mock devcontainer node json' };
+			}
+			if (url.includes('playwright-config.hbs')) {
+				return { ok: true, text: async () => 'mock playwright config' };
+			}
+			return { ok: false, statusText: 'Not Found' };
+		});
+		engine = new TemplateEngine(mockFetcher);
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 		vi.spyOn(console, 'warn').mockImplementation(() => {});
-		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
-	it('initializes successfully and handles failures', async () => {
-		const loadSpy = vi.spyOn(engine, 'loadTemplatesFromR2').mockResolvedValue();
+	it('initializes successfully', async () => {
 		const helpersSpy = vi.spyOn(engine, 'registerBuiltInHelpers');
 		expect(await engine.initialize()).toBe(true);
 		expect(helpersSpy).toHaveBeenCalled();
-		expect(loadSpy).toHaveBeenCalled();
-
-		loadSpy.mockRejectedValueOnce(new Error('boom'));
-		expect(await engine.initialize()).toBe(false);
+		expect(engine.initialized).toBe(true);
 	});
 
 	it('registers built-in helpers', () => {
@@ -67,85 +71,42 @@ describe('TemplateEngine', () => {
 		expect(uppercase('hello')).toBe('HELLO');
 	});
 
-	it('loads templates from R2 bucket when available', async () => {
-		const mockBucket = {
-			list: vi.fn().mockResolvedValue({
-				objects: [{ key: 'template.hbs' }, { key: 'ignore.txt' }]
-			}),
-			get: vi.fn().mockImplementation(async (key) => {
-				if (key === 'template.hbs') {
-					return { text: async () => 'Hello {{name}}' };
-				}
-				return null;
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		await engine.loadTemplatesFromR2();
-		expect(engine.templates.get('template.hbs')).toBe('Hello {{name}}');
-		expect(engine.templates.get('template')).toBe('Hello {{name}}');
-		expect(mockBucket.list).toHaveBeenCalled();
-	});
-
-	it('replaces comment-only remote templates with fallback during load', async () => {
-		const mockBucket = {
-			list: vi.fn().mockResolvedValue({
-				objects: [{ key: 'playwright/playwright.config.js.hbs' }]
-			}),
-			get: vi.fn().mockResolvedValue({
-				text: vi
-					.fn()
-					.mockResolvedValue('// Generated file for playwright\n// Template: playwright-config')
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
-		await engine.loadTemplatesFromR2();
-		expect(engine.templates.get('playwright-config')).toContain('defineConfig');
-		expect(engine.templates.get('playwright/playwright.config.js.hbs')).toContain('defineConfig');
-		expect(mockBucket.list).toHaveBeenCalled();
-	});
-
-	it('warns and returns early when R2 bucket is unavailable', async () => {
-		engine.r2Bucket = null;
-		await engine.loadTemplatesFromR2();
-		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('R2 bucket not available'));
-	});
-
-	it('retrieves templates from cache, bucket, and fallbacks', async () => {
-		vi.spyOn(engine, 'loadTemplatesFromR2').mockResolvedValue();
+	it('retrieves templates using fetcher and caches them', async () => {
+		const mockFetcher = vi.fn(async (url) => {
+			if (url.includes('remote-template.hbs')) {
+				return { ok: true, text: async () => 'Remote {{name}}' };
+			}
+			// Simulate a failed fetch for non-existent templates
+			if (url.includes('non-existent-template.hbs')) {
+				return { ok: false, statusText: 'Not Found' };
+			}
+			return { ok: false, statusText: 'Not Found' }; // Default for other cases
+		});
+		engine = new TemplateEngine(mockFetcher);
 		await engine.initialize();
 
+		// Test cache hit
 		engine.templates.set('cached', 'Cached Template');
 		expect(await engine.getTemplate('cached')).toBe('Cached Template');
+		expect(mockFetcher).not.toHaveBeenCalled(); // Should not call fetcher if cached
 
-		const mockBucket = {
-			get: vi.fn().mockImplementation(async (key) => {
-				if (key === 'remote') {
-					return { text: async () => 'From bucket' };
-				}
-				return null;
-			})
-		};
-		engine.r2Bucket = mockBucket;
-		expect(await engine.getTemplate('remote')).toBe('From bucket');
+		// Test fetcher usage and caching
+		engine.templateIdToFileMap.set('remote', 'remote-template.hbs');
+		const remoteContent = await engine.getTemplate('remote');
+		expect(remoteContent).toBe('Remote {{name}}');
+		expect(mockFetcher).toHaveBeenCalledWith('/static/templates/remote-template.hbs');
+		expect(engine.templates.get('remote')).toBe('Remote {{name}}'); // Should be cached
 
-		engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
-		expect(await engine.getTemplate('playwright-config')).toContain('defineConfig');
-	});
-
-	it('uses fallback when remote template is comment-only', async () => {
-		const mockBucket = {
-			get: vi.fn().mockResolvedValue({
-				text: vi.fn().mockResolvedValue('// placeholder\n// TODO: fill in')
-			})
-		};
-
-		engine.r2Bucket = mockBucket;
-		engine.registerFallbackTemplate('playwright-config', 'playwrightConfig');
-		const template = await engine.getTemplate('playwright-config');
-		expect(template).toContain('defineConfig');
+		// Test template not found and error logging
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		engine.templateIdToFileMap.set('non-existent', 'non-existent-template.hbs');
+		const notFoundContent = await engine.getTemplate('non-existent');
+		expect(notFoundContent).toBeNull();
+		expect(errorSpy).toHaveBeenCalledWith(
+			expect.stringContaining('Error loading template non-existent-template.hbs'),
+			expect.any(Error)
+		);
+		errorSpy.mockRestore(); // Clean up the spy
 	});
 
 	it('compiles templates with helpers, conditionals, and loops', () => {
@@ -201,10 +162,11 @@ describe('TemplateEngine', () => {
 		expect(helpers.get('class_name')('my-class_name')).toBe('Myclassname');
 		expect(helpers.get('constant_name')('value-name')).toBe('VALUE-NAME'.replaceAll('-', '_'));
 
-		const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
-		engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
-		await engine.getTemplate('devcontainer-node-json');
-		expect(fallbackSpy).toHaveBeenCalledWith('devcontainer-node-json');
+		// Fallback related assertions are removed as methods no longer exist.
+		// const fallbackSpy = vi.spyOn(engine, 'getFallbackTemplate');
+		// engine.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
+		// await engine.getTemplate('devcontainer-node-json');
+		// expect(fallbackSpy).toHaveBeenCalledWith('devcontainer-node-json');
 		vi.useRealTimers();
 		delete process.env.EXAMPLE_KEY;
 		String.prototype.replaceAll = originalReplaceAll;

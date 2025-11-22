@@ -2,7 +2,7 @@
 import { json } from '@sveltejs/kit';
 import { generatePreview } from '$lib/server/preview-generator';
 import { logger } from '$lib/utils/logging';
-export async function POST({ request, platform }) {
+export async function POST({ request, platform, fetch }) {
 	try {
 		const requestBody = await request.json();
 		const { selectedCapabilities } = requestBody;
@@ -15,8 +15,9 @@ export async function POST({ request, platform }) {
 		const previewData = await generatePreview(
 			projectConfig,
 			selectedCapabilities,
-			platform?.env?.R2_GENPROJ_TEMPLATES
-		); // Pass r2Bucket
+			platform?.env?.R2_GENPROJ_TEMPLATES,
+			fetch
+		); // Pass r2Bucket and fetcher
 
 		return json(previewData, { status: 200 });
 	} catch (error) {

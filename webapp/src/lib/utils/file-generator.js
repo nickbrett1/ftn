@@ -1,23 +1,36 @@
 // webapp/src/lib/utils/file-generator.js
 
 import Handlebars from 'handlebars';
-import * as fallbackTemplates from '$lib/config/fallback-templates';
+
+const BASE_URL = '/static/templates/';
 
 export class TemplateEngine {
-	constructor(r2Bucket = undefined) {
-		// Accept r2Bucket as an argument
+	constructor(fetcher) {
 		this.templates = new Map();
 		this.helpers = new Map();
-		this.r2Bucket = r2Bucket; // Use the passed r2Bucket
-		this.fallbackTemplateMap = new Map();
+		this.templateIdToFileMap = new Map(); // Maps templateId to filename in static/templates
+		this.initialized = false; // Add a flag to prevent re-initialization
+        this.fetcher = fetcher;
 	}
 
 	async initialize() {
+		if (this.initialized) {
+            return true; // Already initialized, prevent redundant calls
+        }
 		try {
 			this.registerBuiltInHelpers();
-			this.registerFallbackTemplate('devcontainer-node-json', 'devcontainerNodeJson');
-			this.registerFallbackTemplate('playwright-config', 'playwrightConfig');
-			await this.loadTemplatesFromR2();
+            // Register template IDs and their corresponding static file names
+			this.templateIdToFileMap.set('devcontainer-node-json', 'devcontainer-node-json.hbs');
+            this.templateIdToFileMap.set('devcontainer-python-json', 'devcontainer-python-json.hbs');
+            this.templateIdToFileMap.set('devcontainer-java-json', 'devcontainer-java-json.hbs');
+            this.templateIdToFileMap.set('devcontainer-node-dockerfile', 'devcontainer-node-dockerfile.hbs');
+            this.templateIdToFileMap.set('devcontainer-python-dockerfile', 'devcontainer-python-dockerfile.hbs');
+            this.templateIdToFileMap.set('devcontainer-java-dockerfile', 'devcontainer-java-dockerfile.hbs');
+            this.templateIdToFileMap.set('devcontainer-zshrc-full', 'devcontainer-zshrc-full.hbs');
+            this.templateIdToFileMap.set('devcontainer-p10k-zsh-full', 'devcontainer-p10k-zsh-full.hbs');
+            this.templateIdToFileMap.set('devcontainer-post-create-setup-sh', 'devcontainer-post-create-setup-sh.hbs');
+			this.templateIdToFileMap.set('playwright-config', 'playwright-config.hbs');
+            this.initialized = true;
 			return true;
 		} catch (error) {
 			console.error('Failed to initialize TemplateEngine:', error);
@@ -82,80 +95,29 @@ export class TemplateEngine {
 		}
 	}
 
-	async loadTemplatesFromR2() {
-		if (!this.r2Bucket) {
-			console.warn('R2 bucket not available. Skipping template loading from R2.');
-			return;
-		}
-
-		const listed = await this.r2Bucket.list();
-		for (const object of listed.objects) {
-			await this._processTemplateObject(object);
-		}
-	}
-
-	async _processTemplateObject(object) {
-		if (object.key.endsWith('.hbs')) {
-			const body = await this.r2Bucket.get(object.key);
-			if (body) {
-				let content = await body.text();
-				const templateName = object.key.replace('.hbs', '');
-				if (content.trim().startsWith('//')) {
-					let fallbackName = templateName;
-					const match = content.match(/Template:\s*(\S+)/);
-					if (match) {
-						fallbackName = match[1];
-					}
-					const fallback = this.getFallbackTemplate(fallbackName);
-					if (fallback) {
-						content = fallback;
-						this.templates.set(fallbackName, content);
-					}
-				}
-				this.templates.set(object.key, content);
-				this.templates.set(templateName, content);
-			}
-		}
-	}
-
-	registerFallbackTemplate(name, fallbackName) {
-		this.fallbackTemplateMap.set(name, fallbackName);
-	}
-
-	getFallbackTemplate(name) {
-		const fallbackName = this.fallbackTemplateMap.get(name);
-		return fallbackTemplates[fallbackName] || null;
-	}
-
 	async getTemplate(name) {
 		if (this.templates.has(name)) {
 			return this.templates.get(name);
 		}
 
-		if (this.r2Bucket) {
-			const body = await this.r2Bucket.get(name);
-			if (body) {
-				const content = await body.text();
-				if (content.trim().startsWith('//')) {
-					const fallback = this.getFallbackTemplate(name);
-					if (fallback) {
-						this.templates.set(name, fallback);
-						return fallback;
-					}
-				} else {
-					this.templates.set(name, content);
-					return content;
-				}
+		const fileName = this.templateIdToFileMap.get(name);
+
+        if (!fileName) {
+            return null; // No file registered for this templateId
+        }
+
+		try {
+			const response = await this.fetcher(BASE_URL + fileName);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch template ${fileName}: ${response.statusText}`);
 			}
+			const content = await response.text();
+			this.templates.set(name, content); // Cache the fetched template
+			return content;
+		} catch (error) {
+			console.error(`Error loading template ${fileName}:`, error);
+			return null;
 		}
-
-		const fallback = this.getFallbackTemplate(name);
-		if (fallback) {
-			this.templates.set(name, fallback);
-			return fallback;
-		}
-
-		return null;
 	}
 
 	compileTemplate(templateString, data) {

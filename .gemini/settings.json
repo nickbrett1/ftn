@@ -26,6 +26,10 @@
         "--browser-url",
         "http://127.0.0.1:9222"
       ]
+    },
+    "circleci": {
+      "command": "npx",
+      "args": ["-y", "@circleci/mcp-server-circleci"]
     }
   }
 }

@@ -27,12 +27,17 @@ describe('genproj preview api route', () => {
 	const loadModule = () =>
 		import('../../src/routes/projects/genproj/api/preview/+server.js');
 
-	const buildEvent = (body, platform) => ({
-		request: {
-			json: async () => body
-		},
-		platform: platform || { env: { R2_GENPROJ_TEMPLATES: 'mock-bucket' } }
-	});
+	const buildEvent = (body, platform) => {
+		const mockFetch = vi.fn();
+		return {
+			request: {
+				json: async () => body
+			},
+			platform: platform || { env: { R2_GENPROJ_TEMPLATES: 'mock-bucket' } },
+			fetch: mockFetch, // Add mock fetch function
+			mockFetch // Return the mock fetch function for assertions
+		};
+	};
 
 	it('generates preview successfully', async () => {
 		const { POST } = await loadModule();
@@ -41,6 +46,7 @@ describe('genproj preview api route', () => {
 
 		const projectConfig = { name: 'test', selectedCapabilities: ['cap1'] };
 		const event = buildEvent(projectConfig);
+		const { mockFetch } = event; // Destructure mockFetch
 		const response = await POST(event);
 
 		expect(response.status).toBe(200);
@@ -49,7 +55,8 @@ describe('genproj preview api route', () => {
 		expect(generatePreviewMock).toHaveBeenCalledWith(
 			projectConfig,
 			['cap1'],
-			'mock-bucket'
+			'mock-bucket',
+			expect.any(Function) // Use expect.any(Function) for the mock fetch
 		);
 	});
 

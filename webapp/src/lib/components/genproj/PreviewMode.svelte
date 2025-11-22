@@ -37,6 +37,13 @@
 			fileTree = previewData.files || [];
 			externalServices = previewData.externalServices || [];
 			selectedFile = null;
+			// Expand all folders by default when new previewData arrives
+			expandedFolders = new Set();
+			fileTree.forEach(file => {
+				if (file.type === 'folder') {
+					expandedFolders.add(file.path);
+				}
+			});
 		}
 	}
 

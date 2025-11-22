@@ -392,7 +392,7 @@
 							<span class="text-sm font-medium text-blue-300 ml-2">Demo Mode</span>
 						</div>
 						<p class="text-sm text-blue-200">
-							Explore the tool without logging in. Sign in to generate projects.
+							This tool is in demo mode. You can explore the preview tab, but project generation is disabled until you log in.
 						</p>
 					</div>
 					<button

@@ -1399,7 +1399,7 @@
 											{/if}
 										</div>
 									</div>
-									<div class="text-right flex-shrink-0">
+									<div class="text-right shrink-0">
 										<div class="text-white font-medium {charge.amount < 0 ? 'text-red-400' : ''}">
 											{charge.amount < 0 ? '-' : ''}${Math.abs(charge.amount).toFixed(2)}
 										</div>
@@ -1677,7 +1677,7 @@
 					: 'blue'}-500 shadow-lg rounded-lg p-4"
 		>
 			<div class="flex items-center">
-				<div class="flex-shrink-0">
+				<div class="shrink-0">
 					{#if toastType === 'success'}
 						<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
 							<path
