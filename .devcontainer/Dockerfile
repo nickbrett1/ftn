@@ -8,6 +8,7 @@ RUN apt-get update \
         fonts-liberation \
         curl \
         git \
+				socat \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \

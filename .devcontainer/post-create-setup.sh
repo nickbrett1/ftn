@@ -49,8 +49,8 @@ git config --global --add safe.directory /workspaces/ftn
 echo "INFO: Adding Svelte MCP to Gemini..."
 gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
 
-echo "INFO: Adding Chrome DevTools MCP to Gemini..."
-gemini mcp add -s user chrome-devtools npx chrome-devtools-mcp@latest
+echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
+socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &
 
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"
