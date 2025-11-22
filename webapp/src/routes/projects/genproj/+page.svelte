@@ -333,7 +333,7 @@
 	async function handleSignInClick() {
 		// Build redirect path with current state to preserve selections
 		const redirectPath = buildGenprojRedirectPath();
-		await initiateGoogleAuth(redirectPath);
+		await initiateGoogleAuth(globalThis.location.pathname); // Pass the current pathname
 	}
 
 	// Build redirect path with current genproj state
@@ -409,16 +409,7 @@
 	<!-- Main Content -->
 	<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative">
 		<!-- Login Button (top right, only when not authenticated) -->
-		{#if !data.isAuthenticated}
-			<div class="absolute top-4 right-4 sm:right-6 lg:right-8">
-				<button
-					onclick={handleSignInClick}
-					class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-green-400 shadow-lg"
-				>
-					Login
-				</button>
-			</div>
-		{/if}
+
 		<!-- Page Header -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-white">Project Generator</h1>

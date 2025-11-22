@@ -21,6 +21,11 @@ describe('Login correctly', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		setMockUser(null); // Set user to null before each test
+		// Mock globalThis.location.pathname for deterministic testing
+		Object.defineProperty(globalThis, 'location', {
+			value: { pathname: '/projects/genproj' },
+			writable: true
+		});
 	});
 
 	afterEach(() => {
@@ -28,6 +33,8 @@ describe('Login correctly', () => {
 		vi.clearAllMocks();
 		vi.clearAllTimers();
 		vi.restoreAllMocks();
+		// Restore original globalThis.location
+		Object.defineProperty(globalThis, 'location', { value: globalThis.location, writable: true });
 	});
 
 	it('initiates Google auth when user is not logged in', async () => {
@@ -44,8 +51,8 @@ describe('Login correctly', () => {
 
 		flushSync();
 
-		// Should initiate Google auth
-		expect(GoogleAuth.initiateGoogleAuth).toHaveBeenCalledWith('/projects/ccbilling');
+		// Should initiate Google auth with the current pathname
+		expect(GoogleAuth.initiateGoogleAuth).toHaveBeenCalledWith(globalThis.location.pathname);
 
 		unmount(component);
 	});

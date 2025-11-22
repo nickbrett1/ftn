@@ -3,16 +3,16 @@
 	import { goto } from '$app/navigation';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
-	let { children, loginCallback } = $props(); // Added loginCallback prop
+	let { children, loginCallback, redirectOnSuccess = globalThis.location.pathname } = $props(); // Added loginCallback prop and redirectOnSuccess prop
 
 	async function onClick() {
 		if ($page.data.user) {
-			goto(globalThis.location.pathname);
+			goto(redirectOnSuccess); // Use redirectOnSuccess here
 			return;
 		}
 
 		try {
-			await initiateGoogleAuth('/projects/ccbilling'); // Pass the intended redirect path
+			await initiateGoogleAuth(redirectOnSuccess); // Use redirectOnSuccess here
 			if (loginCallback) {
 				loginCallback(true); // Notify parent of successful login initiation
 			}

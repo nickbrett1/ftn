@@ -135,7 +135,7 @@
 					/>
 				{:else}
 					<!-- User is not logged in, show login modal -->
-					<Login loginCallback={loginStateUpdated}>
+					<Login loginCallback={loginStateUpdated} redirectOnSuccess="/projects/ccbilling">
 						<CreditCardSolid
 							id="login"
 							class="hover:text-green-400 cursor-pointer size-8 md:size-12"

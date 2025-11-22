@@ -11,14 +11,18 @@ import { GITHUB_CLIENT_ID } from '$env/static/private';
  * @returns {Promise<any | null>} The current user object or null if not authenticated.
  */
 export async function getCurrentUser(event) {
-	// In a real application, this would involve:
-	// 1. Checking for a session cookie.
-	// 2. Validating the session (e.g., against a database or by decrypting a JWT).
-	// 3. Retrieving user details.
+	const authToken = event.cookies.get('auth');
+    console.log('--- Debug: auth cookie in getCurrentUser ---');
+    console.log(`Auth Token: ${authToken}`);
+    console.log('-------------------------------------------');
 
-	// For now, return a dummy user or null.
-	// This will be extended to integrate with D1 for session management.
-	return { id: 'dummy-user-id', name: 'Dummy User', email: 'dummy@example.com' }; // Placeholder
+	if (authToken) {
+		// In a real application, you would validate this token (e.g., JWT verification)
+		// and retrieve actual user details from a database or API.
+		return { id: 'dummy-user-id', name: 'Dummy User', email: 'dummy@example.com' }; // Simulate logged-in user
+	}
+
+	return null; // No auth token, simulate unauthenticated state
 }
 
 export const github = {
