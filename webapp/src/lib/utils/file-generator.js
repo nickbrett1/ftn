@@ -134,19 +134,23 @@ export class TemplateEngine {
 		}
 
 		if (this.r2Bucket) {
-			const body = await this.r2Bucket.get(name);
-			if (body) {
-				const content = await body.text();
-				if (content.trim().startsWith('//')) {
-					const fallback = this.getFallbackTemplate(name);
-					if (fallback) {
-						this.templates.set(name, fallback);
-						return fallback;
+			try {
+				const body = await this.r2Bucket.get(name);
+				if (body) {
+					const content = await body.text();
+					if (content.trim().startsWith('//')) {
+						const fallback = this.getFallbackTemplate(name);
+						if (fallback) {
+							this.templates.set(name, fallback);
+							return fallback;
+						}
+					} else {
+						this.templates.set(name, content);
+						return content;
 					}
-				} else {
-					this.templates.set(name, content);
-					return content;
 				}
+			} catch (error) {
+				console.warn(`Failed to fetch template '${name}' from R2, attempting fallback:`, error);
 			}
 		}
 
