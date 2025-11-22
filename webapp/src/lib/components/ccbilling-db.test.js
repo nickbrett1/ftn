@@ -50,7 +50,9 @@ describe('ccbilling-db.js', () => {
 			const mockCards = [{ id: 1, name: 'Visa' }];
 			mockDatabase.all.mockResolvedValue({ results: mockCards });
 			const cards = await db.listCreditCards(mockEvent);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('SELECT * FROM credit_card ORDER BY name ASC');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'SELECT * FROM credit_card ORDER BY name ASC'
+			);
 			expect(cards).toEqual(mockCards);
 		});
 
@@ -133,7 +135,9 @@ describe('ccbilling-db.js', () => {
 			const mockBudgets = [{ id: 1, name: 'Groceries' }];
 			mockDatabase.all.mockResolvedValue({ results: mockBudgets });
 			const budgets = await db.listBudgets(mockEvent);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('SELECT * FROM budget ORDER BY created_at DESC');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'SELECT * FROM budget ORDER BY created_at DESC'
+			);
 			expect(budgets).toEqual(mockBudgets);
 		});
 
@@ -148,7 +152,9 @@ describe('ccbilling-db.js', () => {
 
 		it('createBudget should insert a new budget', async () => {
 			await db.createBudget(mockEvent, 'Groceries', 'icon-string');
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('INSERT INTO budget (name, icon) VALUES (?, ?)');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'INSERT INTO budget (name, icon) VALUES (?, ?)'
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith('Groceries', 'icon-string');
 			expect(mockDatabase.run).toHaveBeenCalled();
 		});
@@ -208,7 +214,9 @@ describe('ccbilling-db.js', () => {
 			const mockStatements = [{ id: 1, filename: 'stmt.pdf' }];
 			mockDatabase.all.mockResolvedValue({ results: mockStatements });
 			const statements = await db.listStatements(mockEvent, 1);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('FROM statement s'));
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('FROM statement s')
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 			expect(statements).toEqual(mockStatements);
 		});
@@ -217,7 +225,9 @@ describe('ccbilling-db.js', () => {
 			const mockStatement = { id: 1, filename: 'stmt.pdf' };
 			mockDatabase.first.mockResolvedValue(mockStatement);
 			const statement = await db.getStatement(mockEvent, 1);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('FROM statement s'));
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('FROM statement s')
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 			expect(statement).toEqual(mockStatement);
 		});
@@ -237,7 +247,14 @@ describe('ccbilling-db.js', () => {
 			expect(mockDatabase.prepare).toHaveBeenCalledWith(
 				'INSERT INTO statement (billing_cycle_id, credit_card_id, filename, r2_key, statement_date, image_key) VALUES (?, ?, ?, ?, ?, ?)'
 			);
-			expect(mockDatabase.bind).toHaveBeenCalledWith(1, 1, 'file.pdf', 'r2key', '2023-01-15', 'imgkey');
+			expect(mockDatabase.bind).toHaveBeenCalledWith(
+				1,
+				1,
+				'file.pdf',
+				'r2key',
+				'2023-01-15',
+				'imgkey'
+			);
 			expect(newId).toBe(last_row_id);
 		});
 
@@ -268,7 +285,9 @@ describe('ccbilling-db.js', () => {
 		it('deleteStatement should delete a statement and its payments', async () => {
 			await db.deleteStatement(mockEvent, 1);
 			// It first calls deletePaymentsForStatement
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('DELETE FROM payment WHERE statement_id = ?');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'DELETE FROM payment WHERE statement_id = ?'
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 			// Then it deletes the statement
 			expect(mockDatabase.prepare).toHaveBeenCalledWith('DELETE FROM statement WHERE id = ?');
@@ -287,7 +306,9 @@ describe('ccbilling-db.js', () => {
 				allocated_to: 'Groceries'
 			};
 			await db.createPayment(mockEvent, paymentData);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO payment'));
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('INSERT INTO payment')
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(
 				1,
 				'Test Merchant',
@@ -364,7 +385,9 @@ describe('ccbilling-db.js', () => {
 
 		it('deletePaymentsForStatement should delete all payments for a statement', async () => {
 			await db.deletePaymentsForStatement(mockEvent, 1);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('DELETE FROM payment WHERE statement_id = ?');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'DELETE FROM payment WHERE statement_id = ?'
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 		});
 	});
@@ -374,7 +397,9 @@ describe('ccbilling-db.js', () => {
 		it('refreshAutoAssociationsForCycle should update payments based on budget mappings', async () => {
 			mockDatabase.run.mockResolvedValue({ meta: { changes: 5 } });
 			const updatedCount = await db.refreshAutoAssociationsForCycle(mockEvent, 1);
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('UPDATE payment AS p'));
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('UPDATE payment AS p')
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 			expect(updatedCount).toBe(5);
 		});

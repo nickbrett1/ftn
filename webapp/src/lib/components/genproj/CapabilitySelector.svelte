@@ -273,7 +273,9 @@
 																				const currentArray =
 																					configuration[capability.id]?.[field] || [];
 																				let newArray;
-																				newArray = e.target.checked ? [...currentArray, option] : currentArray.filter((item) => item !== option);
+																				newArray = e.target.checked
+																					? [...currentArray, option]
+																					: currentArray.filter((item) => item !== option);
 																				handleConfigurationChange(capability.id, field, newArray);
 																			}}
 																		/>

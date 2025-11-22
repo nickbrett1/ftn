@@ -19,27 +19,23 @@
 	import FileTreeItem from './FileTreeItem.svelte';
 
 	// Props
-	export let previewData = null;
-	export let loading = false;
-	export let error = null;
+	let { previewData = null, loading = false, error = null } = $props();
 
 	// Event dispatcher
 	const dispatch = createEventDispatcher();
 
 	// Reactive state
-	let selectedFile = null;
-	let expandedFolders = new Set(['/']);
-	let fileTree = [];
-	let externalServices = [];
+	let selectedFile = $state(null);
+	let expandedFolders = $state(new Set(['/']));
+	let fileTree = $derived(previewData?.files || []);
+	let externalServices = $derived(previewData?.externalServices || []);
 
-	// Reactive updates
-	$: {
+	// Effect to reset selected file when preview data changes
+	$effect(() => {
 		if (previewData) {
-			fileTree = previewData.files || [];
-			externalServices = previewData.externalServices || [];
 			selectedFile = null;
 		}
-	}
+	});
 
 	/**
 	 * Handles file selection
@@ -55,12 +51,13 @@
 	 * @param {string} folderPath - Path of the folder to toggle
 	 */
 	function toggleFolder(folderPath) {
-		if (expandedFolders.has(folderPath)) {
-			expandedFolders.delete(folderPath);
+		const newSet = new Set(expandedFolders);
+		if (newSet.has(folderPath)) {
+			newSet.delete(folderPath);
 		} else {
-			expandedFolders.add(folderPath);
+			newSet.add(folderPath);
 		}
-		expandedFolders = expandedFolders; // Trigger reactivity
+		expandedFolders = newSet;
 	}
 
 	/**
@@ -193,7 +190,7 @@
 				<button
 					type="button"
 					class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-					on:click={refreshPreview}
+					onclick={refreshPreview}
 				>
 					Try Again
 				</button>
@@ -217,8 +214,8 @@
 							item={file}
 							{selectedFile}
 							{expandedFolders}
-							on:toggleFolder={(e) => toggleFolder(e.detail)}
-							on:selectFile={(e) => selectFile(e.detail)}
+							ontoggleFolder={(path) => toggleFolder(path)}
+							onselectFile={(file) => selectFile(file)}
 						/>
 					{/each}
 				</div>
@@ -323,7 +320,7 @@
 			<button
 				type="button"
 				class="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
-				on:click={continueToGeneration}
+				onclick={continueToGeneration}
 			>
 				Generate Project
 				<span class="ml-2">🚀</span>
@@ -341,7 +338,7 @@
 				<button
 					type="button"
 					class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-					on:click={() => dispatch('configure')}
+					onclick={() => dispatch('configure')}
 				>
 					Go to Configuration
 				</button>

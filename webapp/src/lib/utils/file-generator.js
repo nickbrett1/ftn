@@ -67,7 +67,8 @@ export class TemplateEngine {
 			add: (a, b) => Number(a) + Number(b),
 			subtract: (a, b) => Number(a) - Number(b),
 			replace: (string_, find, replace) => string_.replaceAll(find, replace),
-			truncate: (string_, length_) => (string_.length > length_ ? string_.slice(0, length_) + '...' : string_),
+			truncate: (string_, length_) =>
+				string_.length > length_ ? string_.slice(0, length_) + '...' : string_,
 			env: (key) => process.env[key],
 			project_slug: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
 			package_name: (name) => name.toLowerCase().replaceAll(/\s+/g, '-'),
@@ -153,6 +154,11 @@ export class TemplateEngine {
 		if (fallback) {
 			this.templates.set(name, fallback);
 			return fallback;
+		}
+
+		// Check if it matches any known fallback template ID pattern
+		if (name.startsWith('devcontainer-') && name.endsWith('-json')) {
+			return this.getFallbackTemplate('devcontainer-node-json');
 		}
 
 		return null;

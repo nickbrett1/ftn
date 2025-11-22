@@ -5,22 +5,14 @@
 -->
 
 <script>
-	import { createEventDispatcher } from 'svelte';
-
-	export let item;
-	export let selectedFile;
-	export let expandedFolders;
-	export let level = 0;
-
-	const dispatch = createEventDispatcher();
-
-	function toggleFolder(folderPath) {
-		dispatch('toggleFolder', folderPath);
-	}
-
-	function selectFile(file) {
-		dispatch('selectFile', file);
-	}
+	let {
+		item,
+		selectedFile,
+		expandedFolders,
+		level = 0,
+		ontoggleFolder = () => {},
+		onselectFile = () => {}
+	} = $props();
 
 	function isFolderExpanded(folderPath) {
 		return expandedFolders.has(folderPath);
@@ -71,7 +63,7 @@
 			type="button"
 			class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
 			style="padding-left: {level * 1.5 + 0.5}rem"
-			on:click={() => toggleFolder(item.path)}
+			onclick={() => ontoggleFolder(item.path)}
 		>
 			<span
 				class="mr-2 transform transition-transform {isFolderExpanded(item.path) ? 'rotate-90' : ''}"
@@ -90,8 +82,8 @@
 						{selectedFile}
 						{expandedFolders}
 						level={level + 1}
-						on:toggleFolder
-						on:selectFile
+						{ontoggleFolder}
+						{onselectFile}
 					/>
 				{/each}
 			</div>
@@ -102,7 +94,7 @@
 			class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
 				{selectedFile?.path === item.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
 			style="padding-left: {level * 1.5 + 1.75}rem"
-			on:click={() => selectFile(item)}
+			onclick={() => onselectFile(item)}
 		>
 			<span class="mr-2 text-sm">{getFileIcon(item.name)}</span>
 			<span class="text-sm text-gray-300 flex-1 truncate">{item.name}</span>
