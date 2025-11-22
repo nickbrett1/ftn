@@ -55,7 +55,7 @@ vi.mock('svelte-awesome-icons', () => {
 		JavaBrands: createMockIcon(),
 		DockerBrands: createMockIcon(),
 		CloudflareBrands: createMockIcon(),
-		CircleciBrands: createMockIcon(),
+		CircleNotchSolid: createMockIcon(),
 		CloudSolid: createMockIcon(),
 		CodeSolid: createMockIcon(),
 		PlayCircleSolid: createMockIcon(),
