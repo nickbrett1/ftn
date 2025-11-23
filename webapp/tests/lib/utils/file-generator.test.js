@@ -39,6 +39,11 @@ const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{nodeVersion}}\"\nFROM mcr
     && npm install -g @google/gemini-cli
 `;
 
+const dopplerYamlTemplateContent = `setup:
+  project: {{projectName}}
+  config: dev
+`;
+
 describe('TemplateEngine', () => {
 	let engine;
 
@@ -84,11 +89,23 @@ describe('TemplateEngine', () => {
         expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
     });
 
+	it('generates sonar-project.properties with correct variables', () => {
+		const content = engine.generateFile('sonar-project-properties', { name: 'my-project' });
+		expect(content).toContain('sonar.projectKey=my-project');
+		expect(content).toContain('sonar.projectName=my-project');
+		expect(content).toContain('sonar.organization=bem');
+	});
+
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
 		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
+	});
+
+	it('generates doppler.yaml correctly', () => {
+		const content = engine.generateFile('doppler-yaml', { projectName: 'test-project' });
+		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
 	});
 
 	it('generates multiple files collecting errors', () => {
