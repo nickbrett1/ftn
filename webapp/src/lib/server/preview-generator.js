@@ -12,7 +12,7 @@ import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
-import { TemplateEngine } from '$lib/utils/file-generator.js';
+import { TemplateEngine, GEMINI_DEV_ALIAS } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
@@ -83,9 +83,16 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
  * @param {TemplateEngine} templateEngine - The template engine instance.
  * @param {Object} projectConfig - Project configuration.
  * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
+ * @param {string[]} allCapabilities - Array of all selected capability IDs.
  * @param {Array<FileObject>} files - Array to push generated file objects into.
  */
-async function generateDevContainerArtifacts(templateEngine, projectConfig, devContainerCapabilities, files) {
+async function generateDevContainerArtifacts(
+	templateEngine,
+	projectConfig,
+	devContainerCapabilities,
+	allCapabilities,
+	files
+) {
 	const baseDevContainerId = devContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
 	const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
@@ -144,7 +151,10 @@ async function generateDevContainerArtifacts(templateEngine, projectConfig, devC
 		type: 'file'
 	});
 
-	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', projectConfig);
+	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
+		...projectConfig,
+		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
+	});
 	files.push({
 		path: '.devcontainer/.zshrc',
 		name: '.zshrc',
@@ -182,13 +192,20 @@ async function generateDevContainerArtifacts(templateEngine, projectConfig, devC
  * @param {string[]} otherCapabilities - Array of non-devcontainer capability IDs
  * @param {Array<FileObject>} files - Array to push generated file objects into
  */
-async function generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files) {
+async function generateNonDevContainerFiles(
+	templateEngine,
+	projectConfig,
+	otherCapabilities,
+	files
+) {
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
-					const extraData = getCapabilityTemplateData(capabilityId, { capabilities: otherCapabilities });
+					const extraData = getCapabilityTemplateData(capabilityId, {
+						capabilities: otherCapabilities
+					});
 
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
@@ -224,16 +241,20 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
 	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
 
-
 	const files = [];
 
 	await generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files);
 
 	// Handle devcontainer capabilities with merging logic
 	if (devContainerCapabilities.length > 0) {
-		await generateDevContainerArtifacts(templateEngine, projectConfig, devContainerCapabilities, files);
+		await generateDevContainerArtifacts(
+			templateEngine,
+			projectConfig,
+			devContainerCapabilities,
+			executionOrder,
+			files
+		);
 	}
-
 
 	// Generate README.md
 	const readmeFile = generateReadmeFile(projectConfig, executionOrder);

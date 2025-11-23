@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET, PUT, DELETE } from '../../../../../../src/routes/projects/ccbilling/budgets/[id]/+server.js';
+import {
+	GET,
+	PUT,
+	DELETE
+} from '../../../../../../src/routes/projects/ccbilling/budgets/[id]/+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
