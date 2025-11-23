@@ -3,3 +3,6 @@
 # For example:
 # echo "Running devcontainer setup script..."
 # npm install
+
+echo "INFO: Adding Svelte MCP to Gemini..."
+gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
