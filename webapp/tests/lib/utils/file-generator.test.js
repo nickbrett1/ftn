@@ -89,6 +89,13 @@ describe('TemplateEngine', () => {
         expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
     });
 
+	it('generates sonar-project.properties with correct variables', () => {
+		const content = engine.generateFile('sonar-project-properties', { name: 'my-project' });
+		expect(content).toContain('sonar.projectKey=my-project');
+		expect(content).toContain('sonar.projectName=my-project');
+		expect(content).toContain('sonar.organization=bem');
+	});
+
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
 		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
