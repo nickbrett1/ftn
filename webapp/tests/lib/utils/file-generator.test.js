@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TemplateEngine } from '$lib/utils/file-generator.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
@@ -130,4 +131,46 @@ describe('TemplateEngine', () => {
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
 	});
+
+    it('should generate CircleCI config with Cloudflare deployment steps when deployTarget is cloudflare', () => {
+        const selectedCapabilities = ['circleci'];
+        const capabilitiesConfig = {
+            'circleci': {
+                deployTarget: 'cloudflare'
+            }
+        };
+        const projectMetadata = { name: 'test-project' };
+        const context = {
+            capabilities: selectedCapabilities,
+            config: capabilitiesConfig,
+            projectMetadata: projectMetadata
+        };
+
+        const templateData = getCapabilityTemplateData('circleci', context);
+        const content = engine.generateFile('circleci-config', templateData);
+
+        expect(content).toContain('deploy-to-cloudflare');
+        expect(content).toContain('command: npx wrangler deploy');
+    });
+
+    it('should NOT generate CircleCI config with Cloudflare deployment steps when deployTarget is none', () => {
+        const selectedCapabilities = ['circleci'];
+        const capabilitiesConfig = {
+            'circleci': {
+                deployTarget: 'none'
+            }
+        };
+        const projectMetadata = { name: 'test-project' };
+         const context = {
+            capabilities: selectedCapabilities,
+            config: capabilitiesConfig,
+            projectMetadata: projectMetadata
+        };
+
+        const templateData = getCapabilityTemplateData('circleci', context);
+        const content = engine.generateFile('circleci-config', templateData);
+
+        expect(content).not.toContain('deploy-to-cloudflare');
+        expect(content).not.toContain('command: npx wrangler deploy');
+    });
 });
