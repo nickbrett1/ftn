@@ -1,6 +1,25 @@
 export function getCapabilityTemplateData(capabilityId, context) {
 	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 
+	if (capabilityId === 'sonarcloud') {
+		const config = context.configuration?.sonarcloud || {};
+		const language = config.language || 'JavaScript';
+		let languageSettings = '';
+
+		if (language === 'JavaScript') {
+			languageSettings = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info';
+		} else if (language === 'Python') {
+			languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
+		} else if (language === 'Java') {
+			languageSettings = 'sonar.java.binaries=.';
+		}
+
+		return {
+			sonarLanguageSettings: languageSettings,
+			organization: ''
+		};
+	}
+
 	if (capabilityId === 'circleci') {
 		if (hasLighthouse) {
 			return {
