@@ -3,7 +3,7 @@ import { render } from '@testing-library/svelte';
 import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
 
 // Mock scrollIntoView
-globalThis.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe('PreviewMode', () => {
 	it('selects README.md by default if present', async () => {

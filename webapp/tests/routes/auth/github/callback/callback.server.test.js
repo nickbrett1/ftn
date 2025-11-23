@@ -23,7 +23,7 @@ describe('/auth/github/callback/+server.js', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		mockFetch = vi.fn();
-		globalThis.fetch = mockFetch;
+		global.fetch = mockFetch;
 		vi.spyOn(environment, 'dev', 'get').mockReturnValue(true); // Default to dev environment
 
 		mockEvent = {
@@ -60,7 +60,7 @@ describe('/auth/github/callback/+server.js', () => {
 		const code = 'valid-code';
 		const state = 'valid-state';
 		const accessToken = 'gh-token';
-		const githubUser = { id: 12_345, login: 'testuser' };
+		const githubUser = { id: 12345, login: 'testuser' };
 		const sessionData = { id: 'session-id', expiresAt: new Date() };
 
 		mockEvent.url.searchParams.set('code', code);

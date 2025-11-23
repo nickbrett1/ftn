@@ -5,7 +5,7 @@ import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
   "name": "Node.js",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -14,7 +14,7 @@ const nodeJsonTemplateContent = `{
       "username": "node"
     },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
+      "version": "{{capabilityConfig.nodeVersion}}"
     }
   },
   "customizations": {
@@ -35,7 +35,7 @@ const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr
     && npm install -g @google/gemini-cli
 `;
 
-const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{capabilityConfig.nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends git zsh \\
     && npm install -g @google/gemini-cli
 `;
@@ -111,7 +111,7 @@ describe('TemplateEngine', () => {
 
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
-		expect(content).toBe(javaDockerfileTemplateContent.replaceAll('{{javaVersion}}', '17'));
+		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
 	});

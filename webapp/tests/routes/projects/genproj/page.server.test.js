@@ -75,8 +75,8 @@ describe('genproj +page.server load', () => {
 		let caughtError;
 		try {
 			await load({ locals: mockLocals, url: mockUrl });
-		} catch (error) {
-			caughtError = error;
+		} catch (e) {
+			caughtError = e;
 		}
 
 		expect(caughtError).toBeInstanceOf(Error);

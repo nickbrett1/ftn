@@ -123,17 +123,17 @@ export class TemplateEngine {
 
 	generateFiles(fileRequests) {
 		const results = [];
-		for (const [index, request] of fileRequests.entries()) {
+		for (const [index, req] of fileRequests.entries()) {
 			try {
 				// If content is already pre-generated, use it directly
 				// This is for merged devcontainer files
 				const content =
-					request.content == undefined
-						? this.generateFile(request.templateId, { ...request.data, index })
-						: request.content;
-				results.push({ ...request, success: true, content });
+					req.content == undefined
+						? this.generateFile(req.templateId, { ...req.data, index })
+						: req.content;
+				results.push({ ...req, success: true, content });
 			} catch (error) {
-				results.push({ ...request, success: false, error: error.message });
+				results.push({ ...req, success: false, error: error.message });
 			}
 		}
 		return results;
@@ -141,7 +141,7 @@ export class TemplateEngine {
 }
 
 // Helper to collect files for non-dev-container capabilities
-function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities) {
+function collectNonDevContainerFiles(templateEngine, context, otherCapabilities) {
 	const files = [];
 
 	for (const capabilityId of otherCapabilities) {
@@ -171,14 +171,10 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 }
 
 // Helper to generate and merge devcontainer files
-function generateMergedDevelopmentContainerFiles(
-	templateEngine,
-	context,
-	developmentContainerCapabilities
-) {
+function generateMergedDevContainerFiles(templateEngine, context, devContainerCapabilities) {
 	const files = [];
 
-	if (developmentContainerCapabilities.length === 0) return files;
+	if (devContainerCapabilities.length === 0) return files;
 
 	const baseDevContainerId = devContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
@@ -186,13 +182,13 @@ function generateMergedDevelopmentContainerFiles(
 
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
+		`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
 		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
-	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
+	let mergedDevContainerJson = JSON.parse(baseJsonContent);
 
-	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
-		const capabilityId = developmentContainerCapabilities[index];
+	for (let i = 1; i < devContainerCapabilities.length; i++) {
+		const capabilityId = devContainerCapabilities[i];
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		const capabilityConfig = context.configuration?.[capabilityId] || {};
 
@@ -203,15 +199,14 @@ function generateMergedDevelopmentContainerFiles(
 		const otherJson = JSON.parse(otherJsonContent);
 
 		if (otherJson.features) {
-			mergedDevelopmentContainerJson.features = {
-				...mergedDevelopmentContainerJson.features,
+			mergedDevContainerJson.features = {
+				...mergedDevContainerJson.features,
 				...otherJson.features
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			const baseExtensions =
-				mergedDevelopmentContainerJson.customizations?.vscode?.extensions || [];
-			mergedDevelopmentContainerJson.customizations.vscode.extensions = [
+			const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
+			mergedDevContainerJson.customizations.vscode.extensions = [
 				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
 			];
 		}
@@ -219,12 +214,12 @@ function generateMergedDevelopmentContainerFiles(
 
 	files.push({
 		filePath: '.devcontainer/devcontainer.json',
-		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2)
+		content: JSON.stringify(mergedDevContainerJson, null, 2)
 	});
 
 	// Process Dockerfile (using base one for now)
 	const dockerfileContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-dockerfile`,
+		`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
 		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
 
@@ -257,7 +252,7 @@ export async function generateAllFiles(context) {
 	const templateEngine = new TemplateEngine();
 	await templateEngine.initialize();
 
-	const developmentContainerCapabilities = context.capabilities.filter((c) =>
+	const devContainerCapabilities = context.capabilities.filter((c) =>
 		c.startsWith('devcontainer-')
 	);
 	const otherCapabilities = context.capabilities.filter((c) => !c.startsWith('devcontainer-'));
@@ -265,12 +260,8 @@ export async function generateAllFiles(context) {
 	let allGeneratedFiles = [];
 
 	allGeneratedFiles.push(
-		...collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities),
-		...generateMergedDevelopmentContainerFiles(
-			templateEngine,
-			context,
-			developmentContainerCapabilities
-		)
+		...collectNonDevContainerFiles(templateEngine, context, otherCapabilities),
+		...generateMergedDevContainerFiles(templateEngine, context, devContainerCapabilities)
 	);
 
 	return allGeneratedFiles;

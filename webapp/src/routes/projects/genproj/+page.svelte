@@ -61,8 +61,8 @@
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+				const errData = await response.json();
+				throw new Error(errData.message || `HTTP error! status: ${response.status}`);
 			}
 
 			const data = await response.json();
@@ -70,9 +70,9 @@
 			logger.info('Project preview generated successfully', {
 				filesCount: previewData.files?.length || 0
 			});
-		} catch (error_) {
-			previewError = error_.message;
-			logger.error('Failed to generate preview', { error: error_.message });
+		} catch (err) {
+			previewError = err.message;
+			logger.error('Failed to generate preview', { error: err.message });
 		} finally {
 			previewLoading = false;
 		}
@@ -246,9 +246,9 @@
 
 				const fetchData = await response.json();
 				capabilities = fetchData;
-			} catch (error_) {
-				error = error_.message;
-				logger.error('Failed to load capabilities', { error: error_.message });
+			} catch (err) {
+				error = err.message;
+				logger.error('Failed to load capabilities', { error: err.message });
 			} finally {
 				loading = false;
 			}

@@ -60,8 +60,7 @@ vi.mock('svelte-awesome-icons', () => {
 		CodeSolid: createMockIcon(),
 		PlayCircleSolid: createMockIcon(),
 		FileAltSolid: createMockIcon(),
-		GlobeSolid: createMockIcon(),
-		LockSolid: createMockIcon()
+		GlobeSolid: createMockIcon()
 	};
 });
 
@@ -122,7 +121,7 @@ export function setMockUser(user) {
 }
 
 // Mock window.location for tests
-Object.defineProperty(globalThis, 'location', {
+Object.defineProperty(window, 'location', {
 	value: {
 		hash: '',
 		href: 'http://localhost:3000',
@@ -138,21 +137,21 @@ Object.defineProperty(globalThis, 'location', {
 });
 
 // Mock ResizeObserver
-globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
 	observe: vi.fn(),
 	unobserve: vi.fn(),
 	disconnect: vi.fn()
 }));
 
 // Mock IntersectionObserver
-globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 	observe: vi.fn(),
 	unobserve: vi.fn(),
 	disconnect: vi.fn()
 }));
 
 // Mock matchMedia
-Object.defineProperty(globalThis, 'matchMedia', {
+Object.defineProperty(window, 'matchMedia', {
 	writable: true,
 	value: vi.fn().mockImplementation((query) => ({
 		matches: false,
@@ -167,7 +166,7 @@ Object.defineProperty(globalThis, 'matchMedia', {
 });
 
 // Add browser-like behavior for better production simulation
-Object.defineProperty(globalThis, 'requestAnimationFrame', {
+Object.defineProperty(window, 'requestAnimationFrame', {
 	writable: true,
 	value: vi.fn().mockImplementation((callback) => {
 		// Simulate browser timing
@@ -176,13 +175,13 @@ Object.defineProperty(globalThis, 'requestAnimationFrame', {
 	})
 });
 
-Object.defineProperty(globalThis, 'cancelAnimationFrame', {
+Object.defineProperty(window, 'cancelAnimationFrame', {
 	writable: true,
 	value: vi.fn()
 });
 
 // Mock performance.now for timing-sensitive code
-Object.defineProperty(globalThis, 'performance', {
+Object.defineProperty(window, 'performance', {
 	writable: true,
 	value: {
 		now: vi.fn(() => Date.now())

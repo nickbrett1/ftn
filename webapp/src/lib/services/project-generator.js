@@ -52,36 +52,32 @@ export class ProjectGeneratorService {
 				const capabilityConfig = projectConfig.configuration[capabilityId];
 				if (capabilityConfig?.enabled) {
 					switch (capabilityId) {
-						case 'circleci': {
+						case 'circleci':
 							generatedFiles.push({
 								filePath: '.circleci/config.yml',
 								content: '# TODO: Add CircleCI config\n'
 							});
 							break;
-						}
-						case 'doppler': {
+						case 'doppler':
 							generatedFiles.push({
 								filePath: 'doppler-project.json',
 								content: '{\n  "name": "project-name"\n}\n' // Basic placeholder
 							});
 							break;
-						}
-						case 'sonarcloud': {
+						case 'sonarcloud':
 							generatedFiles.push({
 								filePath: 'sonar-project.properties', // Common SonarQube/SonarCloud config file
 								content: 'sonar.projectKey=my-project\n' // Basic placeholder
 							});
 							break;
-						}
 						// Add other capabilities that generate files here
-						default: {
+						default:
 							// For capabilities that don't generate specific files, add a dummy README
 							generatedFiles.push({
 								filePath: `${capability.id}/README.md`,
 								content: `# ${capability.name} for ${projectConfig.projectName}`
 							});
 							break;
-						}
 					}
 				}
 			} else {
@@ -232,18 +228,15 @@ This project was generated with the following capabilities: ${projectConfig.sele
 		results
 	) {
 		switch (capabilityId) {
-			case 'circleci': {
+			case 'circleci':
 				await this.configureCircleCI(storedTokens, projectConfig, owner, repoName, results);
 				break;
-			}
-			case 'doppler': {
+			case 'doppler':
 				await this.configureDoppler(storedTokens, projectConfig, results);
 				break;
-			}
-			case 'sonarcloud': {
+			case 'sonarcloud':
 				await this.configureSonarCloud(storedTokens, projectConfig, owner, results);
 				break;
-			}
 			// Add other external services here
 		}
 	}

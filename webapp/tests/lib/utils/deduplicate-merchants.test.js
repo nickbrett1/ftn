@@ -9,7 +9,7 @@ vi.mock('$lib/server/require-user.js', () => ({
 const { requireUser } = await import('$lib/server/require-user.js');
 
 describe('/api/admin/deduplicate-merchants', () => {
-	let mockDatabase;
+	let mockDb;
 	let mockEvent;
 
 	// Sample data for mocking DB responses
@@ -28,7 +28,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 		vi.clearAllMocks();
 
 		// Mock the D1 database
-		mockDatabase = {
+		mockDb = {
 			prepare: vi.fn().mockReturnThis(),
 			bind: vi.fn().mockReturnThis(),
 			all: vi.fn().mockResolvedValue({ results: [] }),
@@ -40,7 +40,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 		mockEvent = {
 			platform: {
 				env: {
-					CCBILLING_DB: mockDatabase
+					CCBILLING_DB: mockDb
 				}
 			},
 			request: {
@@ -91,19 +91,19 @@ describe('/api/admin/deduplicate-merchants', () => {
 	describe('GET handler', () => {
 		it('should return a summary of found duplicates', async () => {
 			// Mock the database calls within findCaseDuplicates
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('GROUP BY UPPER(merchant_normalized)'))
 				.all.mockResolvedValue({ results: mockDuplicatesData });
 
 			// Make mocks more specific to handle different queries
-			mockDatabase.prepare.mockImplementation((query) => {
+			mockDb.prepare.mockImplementation((query) => {
 				if (query.includes('GROUP BY'))
 					return { all: () => Promise.resolve({ results: mockDuplicatesData }) };
 				if (query.includes('FROM payment'))
 					return { bind: () => ({ first: () => Promise.resolve(mockPaymentCount) }) };
 				if (query.includes('FROM budget_merchant'))
 					return { bind: () => ({ first: () => Promise.resolve(mockBudgetCount) }) };
-				return mockDatabase; // Fallback to the generic mock
+				return mockDb; // Fallback to the generic mock
 			});
 
 			const response = await GET(mockEvent);
@@ -119,7 +119,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 		});
 
 		it('should return a message when no duplicates are found', async () => {
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('GROUP BY UPPER(merchant_normalized)'))
 				.all.mockResolvedValue({ results: [] });
 
@@ -133,7 +133,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 
 		it('should handle errors during processing', async () => {
 			const error = new Error('DB query failed');
-			mockDatabase.prepare.mockImplementation(() => {
+			mockDb.prepare.mockImplementation(() => {
 				throw error;
 			});
 
@@ -149,15 +149,15 @@ describe('/api/admin/deduplicate-merchants', () => {
 	describe('POST handler', () => {
 		beforeEach(() => {
 			// Mock the database calls within findCaseDuplicates for POST requests
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('GROUP BY UPPER(merchant_normalized)'))
 				.all.mockResolvedValue({ results: mockDuplicatesData });
 
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('SELECT COUNT(*) as count FROM payment'))
 				.first.mockResolvedValue(mockPaymentCount);
 
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('SELECT COUNT(*) as count FROM budget_merchant'))
 				.first.mockResolvedValue(mockBudgetCount);
 		});
@@ -170,7 +170,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 			expect(body.dryRun).toBe(true);
 			expect(body.duplicatesFound).toBe(1);
 			expect(body.duplicates[0].canonical).toBe('AMAZON');
-			expect(mockDatabase.run).not.toHaveBeenCalled(); // No updates should be run
+			expect(mockDb.run).not.toHaveBeenCalled(); // No updates should be run
 		});
 
 		it('should perform a dry run when explicitly requested', async () => {
@@ -180,7 +180,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 
 			expect(response.status).toBe(200);
 			expect(body.dryRun).toBe(true);
-			expect(mockDatabase.run).not.toHaveBeenCalled();
+			expect(mockDb.run).not.toHaveBeenCalled();
 		});
 
 		it('should perform deduplication when dryRun is false', async () => {
@@ -195,7 +195,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 			const budgetUpdateBind = vi.fn().mockReturnThis();
 
 			// This mock needs to handle ALL queries made during the POST request for this test case.
-			mockDatabase.prepare.mockImplementation((query) => {
+			mockDb.prepare.mockImplementation((query) => {
 				// Queries from findCaseDuplicates
 				if (query.includes('GROUP BY UPPER(merchant_normalized)')) {
 					return { all: () => Promise.resolve({ results: mockDuplicatesData }) };
@@ -237,21 +237,21 @@ describe('/api/admin/deduplicate-merchants', () => {
 
 			// Verify updates
 			// 1. Update payment
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+			expect(mockDb.prepare).toHaveBeenCalledWith(
 				'UPDATE payment SET merchant_normalized = ? WHERE merchant_normalized = ?'
 			);
 			expect(paymentUpdateBind).toHaveBeenCalledWith('AMAZON', 'amazon');
 			expect(body.paymentsUpdated).toBe(5);
 
 			// 2. Delete redundant budget merchant
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+			expect(mockDb.prepare).toHaveBeenCalledWith(
 				'DELETE FROM budget_merchant WHERE merchant_normalized = ? AND budget_id = ?'
 			);
 			expect(budgetDeleteBind).toHaveBeenCalledWith('amazon', 1);
 			expect(body.budgetMerchantsRemoved).toBe(1);
 
 			// 3. Update non-conflicting budget merchant
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+			expect(mockDb.prepare).toHaveBeenCalledWith(
 				'UPDATE budget_merchant SET merchant_normalized = ? WHERE merchant_normalized = ? AND budget_id = ?'
 			);
 			expect(budgetUpdateBind).toHaveBeenCalledWith('AMAZON', 'amazon', 2);
@@ -263,9 +263,9 @@ describe('/api/admin/deduplicate-merchants', () => {
 		it('should handle and report errors during deduplication', async () => {
 			mockEvent.request.json.mockResolvedValue({ dryRun: false });
 
-			const databaseError = new Error('Update failed');
+			const dbError = new Error('Update failed');
 			// This mock needs to handle the initial findCaseDuplicates call and then fail on the update
-			mockDatabase.prepare.mockImplementation((query) => {
+			mockDb.prepare.mockImplementation((query) => {
 				if (query.includes('GROUP BY UPPER(merchant_normalized)')) {
 					return { all: () => Promise.resolve({ results: mockDuplicatesData }) };
 				}
@@ -274,7 +274,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 				}
 				if (query.startsWith('UPDATE payment')) {
 					// This is where we want the error to happen
-					return { bind: () => ({ run: () => Promise.reject(databaseError) }) };
+					return { bind: () => ({ run: () => Promise.reject(dbError) }) };
 				}
 				return { bind: vi.fn().mockReturnThis(), run: vi.fn(), all: vi.fn(), first: vi.fn() };
 			});
@@ -286,7 +286,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 			expect(body.dryRun).toBe(false);
 			expect(body.errors).toHaveLength(1);
 			expect(body.errors[0].canonicalForm).toBe('AMAZON');
-			expect(body.errors[0].error).toBe(databaseError.message);
+			expect(body.errors[0].error).toBe(dbError.message);
 		});
 
 		it('should handle JSON parsing errors gracefully', async () => {
@@ -311,7 +311,7 @@ describe('/api/admin/deduplicate-merchants', () => {
 					variant_count: 2
 				}
 			];
-			mockDatabase
+			mockDb
 				.prepare(expect.stringContaining('GROUP BY UPPER(merchant_normalized)'))
 				.all.mockResolvedValue({ results: mixedCaseDuplicates });
 
