@@ -4,12 +4,12 @@ const generatePreviewMock = vi.fn();
 const loggerErrorMock = vi.fn();
 
 vi.mock('$lib/server/preview-generator', () => ({
-	generatePreview: (...args) => generatePreviewMock(...args)
+	generatePreview: (...arguments_) => generatePreviewMock(...arguments_)
 }));
 
 vi.mock('$lib/utils/logging', () => ({
 	logger: {
-		error: (...args) => loggerErrorMock(...args)
+		error: (...arguments_) => loggerErrorMock(...arguments_)
 	}
 }));
 
