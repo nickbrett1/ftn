@@ -22,7 +22,7 @@ vi.mock('$lib/config/capabilities', () => ({
 vi.mock('$lib/models/project-config', () => ({
 	ProjectConfig: vi.fn()
 }));
-vi.mock('$lib/utils/file-generator');
+
 vi.mock('$lib/utils/logging', () => ({
 	log: vi.fn(),
 	logError: vi.fn()
@@ -36,8 +36,11 @@ vi.mock('$lib/server/token-service', () => ({
 }));
 
 // Mock service modules. This will replace the classes with mock constructors (spies).
-vi.mock('$lib/server/auth-helpers', () => ({
-	getCurrentUser: vi.fn()
+vi.mock('$lib/server/auth', () => ({
+	getCurrentUser: vi.fn(),
+	github: {
+		createAuthorizationURL: vi.fn()
+	}
 }));
 
 vi.mock('$lib/server/github-api', () => ({
@@ -64,7 +67,7 @@ vi.mock('$lib/server/sonarcloud-api', () => ({
 }));
 
 // Import the mocked modules
-const { getCurrentUser } = await import('$lib/server/auth-helpers');
+const { getCurrentUser } = await import('$lib/server/auth');
 
 describe('ProjectGeneratorService', () => {
 	let service;
@@ -104,22 +107,19 @@ describe('ProjectGeneratorService', () => {
 			expect(result.files).toBe(testFiles);
 		});
 
-		it('should generate a README.md file', async () => {
+		it('should generate a README.md file with correct content', async () => {
 			const projectConfig = new ProjectConfig();
 			projectConfig.projectName = 'Test Project';
-			projectConfig.selectedCapabilities = [];
-			fileGenerator.renderTemplate.mockReturnValue('file content');
+			projectConfig.selectedCapabilities = ['circleci'];
 
 			const result = await service.generatePreview(projectConfig);
 			const readme = result.files.find((f) => f.filePath === 'README.md');
 			expect(readme).toBeDefined();
-			expect(fileGenerator.renderTemplate).toHaveBeenCalledWith(
-				expect.stringContaining('# Test Project'),
-				{}
-			);
+			expect(readme.content).toContain('# Test Project');
+			expect(readme.content).toContain('circleci');
 		});
 
-		it('should generate files for selected capabilities', async () => {
+		it('should generate placeholder files for selected capabilities', async () => {
 			const projectConfig = new ProjectConfig();
 			projectConfig.projectName = 'Test Project';
 			projectConfig.repositoryUrl = 'https://github.com/owner/repo';
@@ -129,27 +129,34 @@ describe('ProjectGeneratorService', () => {
 				doppler: { enabled: true },
 				sonarcloud: { enabled: true }
 			};
-			fileGenerator.renderTemplate.mockReturnValue('file content');
 
 			const result = await service.generatePreview(projectConfig);
 
-			expect(result.files.some((f) => f.filePath === '.circleci/config.yml')).toBe(true);
-			expect(result.files.some((f) => f.filePath === 'doppler-project.json')).toBe(true);
-			expect(result.files.some((f) => f.filePath === 'sonar-project.properties')).toBe(true);
+			const circleciFile = result.files.find((f) => f.filePath === '.circleci/config.yml');
+			expect(circleciFile).toBeDefined();
+			expect(circleciFile.content).toBe('# TODO: Add CircleCI config\n');
+
+			const dopplerFile = result.files.find((f) => f.filePath === 'doppler-project.json');
+			expect(dopplerFile).toBeDefined();
+			expect(dopplerFile.content).toBe('{\n  "name": "project-name"\n}\n');
+
+			const sonarcloudFile = result.files.find((f) => f.filePath === 'sonar-project.properties');
+			expect(sonarcloudFile).toBeDefined();
+			expect(sonarcloudFile.content).toBe('sonar.projectKey=my-project\n');
 		});
 
-		it('should generate a dummy README for capabilities without specific file templates', async () => {
+		it('should generate a dummy README for other capabilities', async () => {
 			const projectConfig = new ProjectConfig();
 			projectConfig.projectName = 'Test Project';
 			projectConfig.selectedCapabilities = ['other'];
 			projectConfig.configuration = {
 				other: { enabled: true }
 			};
-			fileGenerator.renderTemplate.mockReturnValue('file content');
 
 			const result = await service.generatePreview(projectConfig);
 			const readme = result.files.find((f) => f.filePath === 'other/README.md');
 			expect(readme).toBeDefined();
+			expect(readme.content).toBe('# Other for Test Project');
 		});
 
 		it('should log an error for unknown capabilities', async () => {

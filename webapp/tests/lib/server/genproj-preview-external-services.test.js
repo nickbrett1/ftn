@@ -6,14 +6,12 @@ import { capabilities } from '$lib/config/capabilities';
 vi.mock('$lib/utils/file-generator', () => ({
     TemplateEngine: class {
         async initialize() {}
-        async generateFile() { return 'content'; }
+        generateFile() { return 'content'; }
         compileTemplate(template) { return template; }
     }
 }));
 
 describe('Preview Generator - External Services', () => {
-    const mockR2Bucket = {};
-    const mockFetcher = vi.fn();
 
     it('should generate external services for CircleCI, Doppler, and SonarCloud', async () => {
         const selectedCapabilities = ['circleci', 'doppler', 'sonarcloud'];
@@ -24,7 +22,7 @@ describe('Preview Generator - External Services', () => {
             configuration: {}
         };
 
-        const previewData = await generatePreview(projectConfig, selectedCapabilities, mockR2Bucket, mockFetcher);
+        const previewData = await generatePreview(projectConfig, selectedCapabilities);
         const externalServices = previewData.externalServices;
 
         // Verify GitHub is always present

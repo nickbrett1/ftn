@@ -3,26 +3,57 @@
 import { GITHUB_CLIENT_ID } from '$env/static/private';
 
 /**
- * Placeholder for authentication logic.
- * In a real application, this would involve session management,
- * token validation, and user data retrieval.
- *
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @returns {Promise<any | null>} The current user object or null if not authenticated.
+ * Get current authenticated user from request
+ * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
+ * @returns {Promise<Object|null>} Current user object or null if not authenticated
  */
 export async function getCurrentUser(event) {
-	const authToken = event.cookies.get('auth');
+	const { request, platform } = event;
+	try {
+		// Get auth cookie from request
+		const cookies = request.headers.get('cookie') || '';
+		const authCookieRegex = /auth=([^;]+)/;
+		const authCookieMatch = authCookieRegex.exec(cookies);
+		const authCookie = authCookieMatch ? authCookieMatch[1] : null;
 
-    console.log(`Auth Token: ${authToken}`);
-    console.log('-------------------------------------------');
+		if (!authCookie || authCookie === 'deleted') {
+			return null;
+		}
 
-	if (authToken) {
-		// In a real application, you would validate this token (e.g., JWT verification)
-		// and retrieve actual user details from a database or API.
-		return { id: 'dummy-user-id', name: 'Dummy User', email: 'dummy@example.com' }; // Simulate logged-in user
+		// Get Google access token from KV
+		if (!platform?.env?.KV) {
+			return null;
+		}
+
+		const googleToken = await platform.env.KV.get(authCookie);
+		if (!googleToken) {
+			return null;
+		}
+
+		// Get user info from Google API
+		const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+			headers: {
+				Authorization: `Bearer ${googleToken}`
+			}
+		});
+
+		if (!userInfoResponse.ok) {
+			return null;
+		}
+
+		const userInfo = await userInfoResponse.json();
+
+		// Return user object compatible with GenprojAuthManager
+		return {
+			id: userInfo.email || userInfo.id, // Use email as user ID
+			email: userInfo.email,
+			name: userInfo.name || userInfo.email,
+			expiresAt: new Date(Date.now() + 3600 * 1000) // Default 1 hour expiration
+		};
+	} catch (error) {
+		console.error('❌ Error getting current user:', error);
+		return null;
 	}
-
-	return null; // No auth token, simulate unauthenticated state
 }
 
 export const github = {

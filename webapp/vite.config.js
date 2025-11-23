@@ -7,6 +7,7 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { execSync } from 'node:child_process';
 
+
 // Get git info at build time
 function getGitInfo() {
 	try {
@@ -29,6 +30,7 @@ export default defineConfig(({ command, mode }) => {
 	const plugins = [
 		tailwindcss(),
 		{ ...threeMinifier(), enforce: /** @type {"pre"} */ ('pre') },
+
 		sveltekit(),
 		svelteTesting(),
 		imagetools({

@@ -2,10 +2,10 @@
 
 import { capabilities } from '$lib/config/capabilities';
 import { ProjectConfig } from '$lib/models/project-config';
-import { renderTemplate } from '$lib/utils/file-generator';
+
 import { logError, log } from '$lib/utils/logging';
 import { TokenService } from '$lib/server/token-service';
-import { getCurrentUser } from '$lib/server/auth-helpers';
+import { getCurrentUser } from '$lib/server/auth';
 import { GitHubAPIService } from '$lib/server/github-api';
 import { CircleCIAPIService } from '$lib/server/circleci-api';
 import { DopplerAPIService } from '$lib/server/doppler-api';
@@ -55,19 +55,19 @@ export class ProjectGeneratorService {
 						case 'circleci':
 							generatedFiles.push({
 								filePath: '.circleci/config.yml',
-								content: renderTemplate('external/circleci-config.yml.hbs', templateContext)
+								content: '# TODO: Add CircleCI config\n'
 							});
 							break;
 						case 'doppler':
 							generatedFiles.push({
 								filePath: 'doppler-project.json',
-								content: renderTemplate('external/doppler-project.json.hbs', templateContext)
+								content: '{\n  "name": "project-name"\n}\n' // Basic placeholder
 							});
 							break;
 						case 'sonarcloud':
 							generatedFiles.push({
 								filePath: 'sonar-project.properties', // Common SonarQube/SonarCloud config file
-								content: renderTemplate('external/sonarcloud-project.xml.hbs', templateContext)
+								content: 'sonar.projectKey=my-project\n' // Basic placeholder
 							});
 							break;
 						// Add other capabilities that generate files here
@@ -75,7 +75,7 @@ export class ProjectGeneratorService {
 							// For capabilities that don't generate specific files, add a dummy README
 							generatedFiles.push({
 								filePath: `${capability.id}/README.md`,
-								content: renderTemplate(`# ${capability.name} for ${projectConfig.projectName}`, {})
+								content: `# ${capability.name} for ${projectConfig.projectName}`
 							});
 							break;
 					}
@@ -88,12 +88,9 @@ export class ProjectGeneratorService {
 		// Add a main README.md
 		generatedFiles.push({
 			filePath: 'README.md',
-			content: renderTemplate(
-				`# ${projectConfig.projectName}
+			content: `# ${projectConfig.projectName}
 
-This project was generated with the following capabilities: ${projectConfig.selectedCapabilities.join(', ')}`,
-				{}
-			)
+This project was generated with the following capabilities: ${projectConfig.selectedCapabilities.join(', ')}`
 		});
 
 		log('Project preview generated successfully', 'GEN', { filesCount: generatedFiles.length });
@@ -113,7 +110,7 @@ This project was generated with the following capabilities: ${projectConfig.sele
 			capabilities: projectConfig.selectedCapabilities
 		});
 
-		const userId = (await getCurrentUser(request, platform))?.id;
+		const userId = (await getCurrentUser({ request, platform }))?.id;
 		if (!userId) {
 			return { success: false, message: 'Unauthorized: User session not found.' };
 		}

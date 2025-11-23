@@ -80,7 +80,7 @@ describe('ProjectGeneratorService', () => {
 			const repository = { fullName: 'owner/repo' };
 			const externalServices = { circleci: { success: true } };
 
-			generateAllFiles.mockReturnValue(generatedFiles);
+			generateAllFiles.mockResolvedValue(generatedFiles);
 			service.createGitHubRepository = vi.fn().mockResolvedValue(repository);
 			service.commitFilesToRepository = vi.fn().mockResolvedValue();
 			service.configureExternalServices = vi.fn().mockResolvedValue(externalServices);
@@ -103,9 +103,7 @@ describe('ProjectGeneratorService', () => {
 
 		it('should return a failure result if any step fails', async () => {
 			const error = new Error('File generation failed');
-			generateAllFiles.mockImplementation(() => {
-				throw error;
-			});
+			generateAllFiles.mockRejectedValue(error);
 
 			const result = await service.generateProject(context);
 

@@ -1,0 +1,24 @@
+{
+  "name": "Python",
+  "image": "mcr.microsoft.com/devcontainers/python:0-{{pythonVersion}}",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "node"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "{{pythonVersion}}"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+  "postCreateCommand": "./post-create-setup.sh"
+}

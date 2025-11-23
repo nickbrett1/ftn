@@ -21,7 +21,6 @@
 	export let previewData = null;
 	export let loading = false;
 	export let error = null;
-	export let isAuthenticated = false;
 
 	// Event dispatcher
 	const dispatch = createEventDispatcher();
@@ -40,7 +39,7 @@
 			selectedFile = null;
 			// Expand all folders by default when new previewData arrives
 			expandedFolders = new Set();
-			fileTree.forEach(file => {
+			fileTree.forEach((file) => {
 				if (file.type === 'folder') {
 					expandedFolders.add(file.path);
 				}
@@ -359,7 +358,6 @@
 				</div>
 			</div>
 		{/if}
-
 	{:else}
 		<!-- No Preview Data -->
 		<div class="flex items-center justify-center min-h-96">

@@ -12,10 +12,10 @@ import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
-import { TemplateEngine } from '$lib/utils/file-generator.js'; // Import TemplateEngine
+import { TemplateEngine } from '$lib/utils/file-generator.js';
 
-async function getTemplateEngine(r2Bucket) {
-	const newInstance = new TemplateEngine(r2Bucket);
+async function getTemplateEngine() {
+	const newInstance = new TemplateEngine();
 	await newInstance.initialize();
 	return newInstance;
 }
@@ -50,29 +50,17 @@ async function getTemplateEngine(r2Bucket) {
  * Generates preview data for the specified project configuration
  * @param {Object} projectConfig - Project configuration object
  * @param {string[]} selectedCapabilities - Array of selected capability IDs
- * @param {Object} r2Bucket - The R2 bucket instance for template loading
  * @returns {Promise<PreviewData>} Generated preview data
  */
-export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) {
-	// Accept r2Bucket as an argument
+export async function generatePreview(projectConfig, selectedCapabilities) {
 	try {
-		console.log('🔍 Generating preview for project:', projectConfig.name);
-
-		// Resolve dependencies and get execution order
 		const resolution = resolveDependencies(selectedCapabilities);
 		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
 
-		// Generate files
-		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
+		const files = await generatePreviewFiles(projectConfig, executionOrder);
 
-		// Generate external service changes
-		const externalServices = await generateExternalServiceChanges(
-			projectConfig,
-			executionOrder,
-			r2Bucket
-		); // Pass r2Bucket
+		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder);
 
-		// Create summary
 		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
 
 		const previewData = {
@@ -81,8 +69,6 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 			summary,
 			timestamp: new Date().toISOString()
 		};
-
-		console.log(`✅ Generated preview: ${files.length} files, ${externalServices.length} services`);
 
 		return previewData;
 	} catch (error) {
@@ -97,17 +83,126 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Promise<Array<FileObject>>} Array of file objects
  */
-async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
-	// Make function async
+async function generatePreviewFiles(projectConfig, executionOrder) {
+	const templateEngine = await getTemplateEngine();
+
+	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
+	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
+
 	const files = [];
 
-	// Generate files for each capability
-	for (const capabilityId of executionOrder) {
+	// Handle non-devcontainer capabilities
+	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (!capability) continue;
+		if (capability && capability.templates) {
+			for (const template of capability.templates) {
+				try {
+					const content = templateEngine.generateFile(template.templateId, {
+						...projectConfig,
+						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
+						capability
+					});
+					files.push({
+						path: template.filePath,
+						name: template.filePath.split('/').pop(),
+						content,
+						size: content.length,
+						type: 'file'
+					});
+				} catch (error) {
+					console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+				}
+			}
+		}
+	}
 
-		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
-		files.push(...capabilityFiles);
+	// Handle devcontainer capabilities with merging logic
+	if (devContainerCapabilities.length > 0) {
+		const baseDevContainerId = devContainerCapabilities[0];
+		const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
+		const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
+
+		const baseJsonContent = templateEngine.generateFile(
+			`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
+			{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+		);
+		let mergedDevContainerJson = JSON.parse(baseJsonContent);
+
+		for (let i = 1; i < devContainerCapabilities.length; i++) {
+			const capabilityId = devContainerCapabilities[i];
+			const capability = capabilities.find((c) => c.id === capabilityId);
+			const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
+
+			const otherJsonContent = templateEngine.generateFile(
+				`devcontainer-${capabilityId.split('-')[1]}-json`,
+				{ ...projectConfig, capabilityConfig, capability }
+			);
+			const otherJson = JSON.parse(otherJsonContent);
+
+			if (otherJson.features) {
+				mergedDevContainerJson.features = {
+					...mergedDevContainerJson.features,
+					...otherJson.features
+				};
+			}
+			if (otherJson.customizations?.vscode?.extensions) {
+				const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
+				mergedDevContainerJson.customizations.vscode.extensions = [
+					...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
+				];
+			}
+		}
+
+		files.push({
+			path: '.devcontainer/devcontainer.json',
+			name: 'devcontainer.json',
+			content: JSON.stringify(mergedDevContainerJson, null, 2),
+			size: JSON.stringify(mergedDevContainerJson, null, 2).length,
+			type: 'file'
+		});
+
+		// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
+		const dockerfileContent = templateEngine.generateFile(
+			`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
+			{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+		);
+		files.push({
+			path: '.devcontainer/Dockerfile',
+			name: 'Dockerfile',
+			content: dockerfileContent,
+			size: dockerfileContent.length,
+			type: 'file'
+		});
+
+		const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', projectConfig);
+		files.push({
+			path: '.devcontainer/.zshrc',
+			name: '.zshrc',
+			content: zshrcContent,
+			size: zshrcContent.length,
+			type: 'file'
+		});
+
+		const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
+		files.push({
+			path: '.devcontainer/.p10k.zsh',
+			name: '.p10k.zsh',
+			content: p10kContent,
+			size: p10kContent.length,
+			type: 'file'
+		});
+
+		const postCreateContent = templateEngine.generateFile(
+			'devcontainer-post-create-setup-sh',
+			projectConfig
+		);
+		files.push({
+			path: '.devcontainer/post-create-setup.sh',
+			name: 'post-create-setup.sh',
+			content: postCreateContent,
+			size: postCreateContent.length,
+			type: 'file'
+		});
 	}
 
 	// Generate README.md
@@ -116,45 +211,6 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);
-}
-
-/**
- * Generates files for a specific capability
- * @param {Object} projectConfig - Project configuration
- * @param {Object} capability - Capability definition
- * @returns {Promise<Array<FileObject>>} Array of file objects
- */
-async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
-	// Make function async
-	const files = [];
-	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
-
-	// Generate capability-specific files
-	if (capability.templates) {
-		for (const template of capability.templates) {
-			try {
-				const content = await templateEngine.generateFile(template.templateId, {
-					// Await the call
-					...projectConfig,
-					capabilityConfig,
-					capability
-				});
-
-				files.push({
-					path: template.filePath, // Use filePath from template
-					name: template.filePath.split('/').pop(), // Use filePath from template
-					content,
-					size: content.length,
-					type: 'file'
-				});
-			} catch (error) {
-				console.warn(`⚠️ Failed to process template ${template.templateId}:`, error); // Log templateId
-			}
-		}
-	}
-
-	return files;
 }
 
 /**
@@ -213,8 +269,7 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Promise<Array<ExternalService>>} Array of external service changes
  */
-async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
-	// Make async
+async function generateExternalServiceChanges(projectConfig, executionOrder) {
 	const services = [
 		{
 			type: 'github',
@@ -235,18 +290,11 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		}
 	];
 
-	// GitHub service (always required)
-
-	// Generate service changes for each capability
 	for (const capabilityId of executionOrder) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const serviceChanges = await generateCapabilityServiceChanges(
-			projectConfig,
-			capability,
-			r2Bucket
-		); // Await the call
+		const serviceChanges = await generateCapabilityServiceChanges(projectConfig, capability);
 		services.push(...serviceChanges);
 	}
 
@@ -259,10 +307,9 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * @param {Object} capability - Capability definition
  * @returns {Promise<Array<ExternalService>>} Array of service changes
  */
-async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
-	// Make async
+async function generateCapabilityServiceChanges(projectConfig, capability) {
 	const services = [];
-	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine();
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {
@@ -271,11 +318,7 @@ async function generateCapabilityServiceChanges(projectConfig, capability, r2Buc
 				name: serviceConfig.name,
 				actions: serviceConfig.actions.map((action) => ({
 					type: action.type,
-					description: templateEngine.compileTemplate(action.description, {
-						// Use compileTemplate
-						...projectConfig,
-						capability
-					})
+					description: action.description.replace('{{name}}', projectConfig.name)
 				})),
 				requiresAuth: serviceConfig.requiresAuth
 			});
@@ -294,7 +337,6 @@ function organizeFilesIntoFolders(files) {
 	const folderMap = new Map();
 	const organizedFiles = [];
 
-	// Group files by folder
 	for (const file of files) {
 		const pathParts = file.path.split('/');
 		const folderPath = pathParts.slice(0, -1).join('/') || '/';
@@ -305,13 +347,10 @@ function organizeFilesIntoFolders(files) {
 		folderMap.get(folderPath).push(file);
 	}
 
-	// Create folder structure
 	for (const [folderPath, folderFiles] of folderMap) {
 		if (folderPath === '/') {
-			// Root files
 			organizedFiles.push(...folderFiles);
 		} else {
-			// Create folder
 			const folderName = folderPath.split('/').pop();
 			organizedFiles.push({
 				path: folderPath,

@@ -72,7 +72,7 @@ export class ProjectGeneratorService {
 		try {
 			// Step 1: Generate project files
 			console.log('📝 Generating project files...');
-			const generatedFiles = generateAllFiles(context);
+			const generatedFiles = await generateAllFiles(context);
 			console.log(`✅ Generated ${generatedFiles.length} files`);
 
 			// Step 2: Create GitHub repository

@@ -48,10 +48,6 @@
 		{
 			"binding": "R2_CCBILLING",
 			"bucket_name": "ccbilling"
-		},
-		{
-			"binding": "R2_GENPROJ_TEMPLATES",
-			"bucket_name": "genproj-templates"
 		}
 	],
 	"env": {
@@ -93,10 +89,6 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
-				},
-				{
-					"binding": "R2_GENPROJ_TEMPLATES",
-					"bucket_name": "genproj-templates"
 				}
 			]
 		},
@@ -138,10 +130,6 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
-				},
-				{
-					"binding": "R2_GENPROJ_TEMPLATES",
-					"bucket_name": "genproj-templates"
 				}
 			]
 		},
@@ -183,10 +171,6 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
-				},
-				{
-					"binding": "R2_GENPROJ_TEMPLATES",
-					"bucket_name": "genproj-templates"
 				}
 			]
 		}
