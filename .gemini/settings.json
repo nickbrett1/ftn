@@ -29,7 +29,10 @@
     },
     "circleci": {
       "command": "npx",
-      "args": ["-y", "@circleci/mcp-server-circleci"]
+      "args": [
+        "-y",
+        "@circleci/mcp-server-circleci"
+      ]
     }
   }
 }
