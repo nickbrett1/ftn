@@ -33,6 +33,11 @@ const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr
     && apt-get -y install --no-install-recommends git zsh
 `;
 
+const dopplerYamlTemplateContent = `setup:
+  project: {{projectName}}
+  config: dev
+`;
+
 describe('TemplateEngine', () => {
 	let engine;
 
@@ -77,6 +82,11 @@ describe('TemplateEngine', () => {
 		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
+	});
+
+	it('generates doppler.yaml correctly', () => {
+		const content = engine.generateFile('doppler-yaml', { projectName: 'test-project' });
+		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
 	});
 
 	it('generates multiple files collecting errors', () => {
