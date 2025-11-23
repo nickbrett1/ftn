@@ -1,0 +1,19 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.0.2
+jobs:
+  build:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Build
+          command: npm run build
+{{lighthouseJobDefinition}}
+workflows:
+  build-and-test:
+    jobs:
+      - build
+{{lighthouseWorkflowJob}}
