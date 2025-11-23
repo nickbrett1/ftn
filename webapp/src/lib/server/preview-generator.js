@@ -13,7 +13,10 @@ import {
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
 import { TemplateEngine } from '$lib/utils/file-generator.js';
-import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
+import {
+	getCapabilityTemplateData,
+	getCapabilityConfig
+} from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
 	const newInstance = new TemplateEngine();
@@ -85,15 +88,13 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
  * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
  * @param {Array<FileObject>} files - Array to push generated file objects into.
  */
-async function generateDevelopmentContainerArtifacts(
-	templateEngine,
-	projectConfig,
-	developmentContainerCapabilities,
-	files
-) {
-	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
-	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	const baseCapabilityConfig = projectConfig.configuration?.[baseDevelopmentContainerId] || {};
+async function generateDevContainerArtifacts(templateEngine, projectConfig, devContainerCapabilities, files) {
+	const baseDevContainerId = devContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
+	const baseCapabilityConfig = getCapabilityConfig(
+		baseDevContainerId,
+		projectConfig.configuration?.[baseDevContainerId]
+	);
 
 	// Generate base devcontainer.json content
 	const baseJsonContent = templateEngine.generateFile(
@@ -106,7 +107,10 @@ async function generateDevelopmentContainerArtifacts(
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
+		const capabilityConfig = getCapabilityConfig(
+			capabilityId,
+			projectConfig.configuration?.[capabilityId]
+		);
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
@@ -203,11 +207,16 @@ async function generateNonDevelopmentContainerFiles(
 						capabilities: otherCapabilities
 					});
 
+					const capabilityConfig = getCapabilityConfig(
+						capabilityId,
+						projectConfig.configuration?.[capabilityId]
+					);
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
 						...extraData,
 						projectName: projectConfig.name || 'my-project',
-						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
+						capabilityConfig,
 						capability
 					});
 					files.push({
