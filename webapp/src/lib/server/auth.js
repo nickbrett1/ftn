@@ -12,7 +12,7 @@ import { GITHUB_CLIENT_ID } from '$env/static/private';
  */
 export async function getCurrentUser(event) {
 	const authToken = event.cookies.get('auth');
-    console.log('--- Debug: auth cookie in getCurrentUser ---');
+
     console.log(`Auth Token: ${authToken}`);
     console.log('-------------------------------------------');
 

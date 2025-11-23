@@ -3,9 +3,7 @@ import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals, url = new URL('http://localhost/') }) {
-    console.log('--- Debug: locals.user in +page.server.js load ---');
-    console.log(locals.user);
-    console.log('----------------------------------------------------');
+        console.log('----------------------------------------------------');
     const user = locals.user;
     const isAuthenticated = !!user;
 
