@@ -1,11 +1,37 @@
+import { capabilities } from '$lib/config/capabilities.js';
+
+/**
+ * Merges user configuration with capability defaults.
+ * @param {string} capabilityId - The ID of the capability.
+ * @param {Object} userConfig - The user-provided configuration.
+ * @returns {Object} The merged configuration.
+ */
+export function getCapabilityConfig(capabilityId, userConfig) {
+	const capability = capabilities.find((c) => c.id === capabilityId);
+	const config = userConfig || {};
+
+	if (!capability?.configurationSchema?.properties) {
+		return config;
+	}
+
+	const defaults = {};
+	for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
+		if (prop.default !== undefined) {
+			defaults[key] = prop.default;
+		}
+	}
+
+	return { ...defaults, ...config };
+}
+
 export function getCapabilityTemplateData(capabilityId, context) {
 	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 	// Retrieve the configuration for the specific capability if it exists
-	const capabilityConfig = context.config?.[capabilityId] || {};
+	const capabilityConfig = getCapabilityConfig(capabilityId, context.config?.[capabilityId]);
 	const deployTarget = capabilityConfig.deployTarget;
 
 	if (capabilityId === 'sonarcloud') {
-		const config = context.configuration?.sonarcloud || {};
+		const config = getCapabilityConfig('sonarcloud', context.configuration?.sonarcloud);
 		const language = config.language || 'JavaScript';
 		let languageSettings = '';
 
