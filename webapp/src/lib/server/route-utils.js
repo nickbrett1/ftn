@@ -196,7 +196,6 @@ export const RouteUtils = {
 	 * @returns {Promise<Object>} - Parsed body or error
 	 */
 	async parseRequestBody(request, options = {}) {
-
 		try {
 			const contentType = request.headers.get('content-type');
 			if (!contentType?.includes('application/json')) {

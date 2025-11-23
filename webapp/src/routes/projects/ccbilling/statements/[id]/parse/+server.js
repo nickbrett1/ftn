@@ -65,11 +65,7 @@ async function processCharges(event, statement_id, charges, billingCycleInfo) {
 				}
 			}
 		} catch (error) {
-			console.warn(
-				'Auto-association lookup failed for merchant',
-				charge.merchant,
-				error?.message
-			);
+			console.warn('Auto-association lookup failed for merchant', charge.merchant, error?.message);
 		}
 
 		// Check if this is an Amazon charge and capture full statement text

@@ -78,20 +78,110 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
 }
 
 /**
- * Generates preview files for the project
- * @param {Object} projectConfig - Project configuration
- * @param {string[]} executionOrder - Capability execution order
- * @returns {Promise<Array<FileObject>>} Array of file objects
+ * Generates all devcontainer-related files.
+ * @param {TemplateEngine} templateEngine - The template engine instance.
+ * @param {Object} projectConfig - Project configuration.
+ * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
+ * @param {Array<FileObject>} files - Array to push generated file objects into.
  */
-async function generatePreviewFiles(projectConfig, executionOrder) {
-	const templateEngine = await getTemplateEngine();
+async function generateDevContainerArtifacts(templateEngine, projectConfig, devContainerCapabilities, files) {
+	const baseDevContainerId = devContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
+	const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
 
-	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
-	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
+	// Generate base devcontainer.json content
+	const baseJsonContent = templateEngine.generateFile(
+		`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
+		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+	);
+	let mergedDevContainerJson = JSON.parse(baseJsonContent);
 
-	const files = [];
+	// Merge features and extensions from other selected dev containers
+	for (let i = 1; i < devContainerCapabilities.length; i++) {
+		const capabilityId = devContainerCapabilities[i];
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
 
-	// Handle non-devcontainer capabilities
+		const otherJsonContent = templateEngine.generateFile(
+			`devcontainer-${capabilityId.split('-')[1]}-json`,
+			{ ...projectConfig, capabilityConfig, capability }
+		);
+		const otherJson = JSON.parse(otherJsonContent);
+
+		if (otherJson.features) {
+			mergedDevContainerJson.features = {
+				...mergedDevContainerJson.features,
+				...otherJson.features
+			};
+		}
+		if (otherJson.customizations?.vscode?.extensions) {
+			const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
+			mergedDevContainerJson.customizations.vscode.extensions = [
+				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
+			];
+		}
+	}
+
+	files.push({
+		path: '.devcontainer/devcontainer.json',
+		name: 'devcontainer.json',
+		content: JSON.stringify(mergedDevContainerJson, null, 2),
+		size: JSON.stringify(mergedDevContainerJson, null, 2).length,
+		type: 'file'
+	});
+
+	// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
+	const dockerfileContent = templateEngine.generateFile(
+		`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
+		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+	);
+	files.push({
+		path: '.devcontainer/Dockerfile',
+		name: 'Dockerfile',
+		content: dockerfileContent,
+		size: dockerfileContent.length,
+		type: 'file'
+	});
+
+	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', projectConfig);
+	files.push({
+		path: '.devcontainer/.zshrc',
+		name: '.zshrc',
+		content: zshrcContent,
+		size: zshrcContent.length,
+		type: 'file'
+	});
+
+	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
+	files.push({
+		path: '.devcontainer/.p10k.zsh',
+		name: '.p10k.zsh',
+		content: p10kContent,
+		size: p10kContent.length,
+		type: 'file'
+	});
+
+	const postCreateContent = templateEngine.generateFile(
+		'devcontainer-post-create-setup-sh',
+		projectConfig
+	);
+	files.push({
+		path: '.devcontainer/post-create-setup.sh',
+		name: 'post-create-setup.sh',
+		content: postCreateContent,
+		size: postCreateContent.length,
+		type: 'file'
+	});
+}
+
+/**
+ * Generates files for non-devcontainer capabilities
+ * @param {TemplateEngine} templateEngine - The template engine instance
+ * @param {Object} projectConfig - Project configuration
+ * @param {string[]} otherCapabilities - Array of non-devcontainer capability IDs
+ * @param {Array<FileObject>} files - Array to push generated file objects into
+ */
+async function generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files) {
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
@@ -115,95 +205,30 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 			}
 		}
 	}
+}
+
+/**
+ * Generates preview files for the project
+ * @param {Object} projectConfig - Project configuration
+ * @param {string[]} executionOrder - Capability execution order
+ * @returns {Promise<Array<FileObject>>} Array of file objects
+ */
+async function generatePreviewFiles(projectConfig, executionOrder) {
+	const templateEngine = await getTemplateEngine();
+
+	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
+	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
+
+
+	const files = [];
+
+	await generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files);
 
 	// Handle devcontainer capabilities with merging logic
 	if (devContainerCapabilities.length > 0) {
-		const baseDevContainerId = devContainerCapabilities[0];
-		const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
-		const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
-
-		const baseJsonContent = templateEngine.generateFile(
-			`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
-			{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
-		);
-		let mergedDevContainerJson = JSON.parse(baseJsonContent);
-
-		for (let i = 1; i < devContainerCapabilities.length; i++) {
-			const capabilityId = devContainerCapabilities[i];
-			const capability = capabilities.find((c) => c.id === capabilityId);
-			const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
-
-			const otherJsonContent = templateEngine.generateFile(
-				`devcontainer-${capabilityId.split('-')[1]}-json`,
-				{ ...projectConfig, capabilityConfig, capability }
-			);
-			const otherJson = JSON.parse(otherJsonContent);
-
-			if (otherJson.features) {
-				mergedDevContainerJson.features = {
-					...mergedDevContainerJson.features,
-					...otherJson.features
-				};
-			}
-			if (otherJson.customizations?.vscode?.extensions) {
-				const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
-				mergedDevContainerJson.customizations.vscode.extensions = [
-					...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
-				];
-			}
-		}
-
-		files.push({
-			path: '.devcontainer/devcontainer.json',
-			name: 'devcontainer.json',
-			content: JSON.stringify(mergedDevContainerJson, null, 2),
-			size: JSON.stringify(mergedDevContainerJson, null, 2).length,
-			type: 'file'
-		});
-
-		// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
-		const dockerfileContent = templateEngine.generateFile(
-			`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
-			{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
-		);
-		files.push({
-			path: '.devcontainer/Dockerfile',
-			name: 'Dockerfile',
-			content: dockerfileContent,
-			size: dockerfileContent.length,
-			type: 'file'
-		});
-
-		const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', projectConfig);
-		files.push({
-			path: '.devcontainer/.zshrc',
-			name: '.zshrc',
-			content: zshrcContent,
-			size: zshrcContent.length,
-			type: 'file'
-		});
-
-		const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
-		files.push({
-			path: '.devcontainer/.p10k.zsh',
-			name: '.p10k.zsh',
-			content: p10kContent,
-			size: p10kContent.length,
-			type: 'file'
-		});
-
-		const postCreateContent = templateEngine.generateFile(
-			'devcontainer-post-create-setup-sh',
-			projectConfig
-		);
-		files.push({
-			path: '.devcontainer/post-create-setup.sh',
-			name: 'post-create-setup.sh',
-			content: postCreateContent,
-			size: postCreateContent.length,
-			type: 'file'
-		});
+		await generateDevContainerArtifacts(templateEngine, projectConfig, devContainerCapabilities, files);
 	}
+
 
 	// Generate README.md
 	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
@@ -309,7 +334,6 @@ async function generateExternalServiceChanges(projectConfig, executionOrder) {
  */
 async function generateCapabilityServiceChanges(projectConfig, capability) {
 	const services = [];
-	const templateEngine = await getTemplateEngine();
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {

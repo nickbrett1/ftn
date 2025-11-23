@@ -3,17 +3,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 describe('r2 list objects route', () => {
 	let listMock;
 
-    beforeEach(() => {
-        vi.resetModules();
-        listMock = vi.fn();
-    });
+	beforeEach(() => {
+		vi.resetModules();
+		listMock = vi.fn();
+	});
 
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
 
-	const loadModule = () =>
-		import('../../../src/routes/api/r2/list-objects/+server.js');
+	const loadModule = () => import('../../../src/routes/api/r2/list-objects/+server.js');
 
 	const buildEvent = (params, env) => ({
 		request: {
@@ -33,9 +32,7 @@ describe('r2 list objects route', () => {
 			const { GET } = await loadModule();
 			const uploadedDate = new Date();
 			listMock.mockResolvedValue({
-				objects: [
-					{ key: 'file1.pdf', size: 100, etag: 'etag1', uploaded: uploadedDate }
-				],
+				objects: [{ key: 'file1.pdf', size: 100, etag: 'etag1', uploaded: uploadedDate }],
 				truncated: false,
 				cursor: null
 			});
@@ -66,7 +63,7 @@ describe('r2 list objects route', () => {
 			expect(body.bucket).toBe('wdi');
 		});
 
-        it('lists objects from genproj-templates bucket', async () => {
+		it('lists objects from genproj-templates bucket', async () => {
 			const { GET } = await loadModule();
 			listMock.mockResolvedValue({ objects: [], truncated: false });
 
@@ -91,7 +88,7 @@ describe('r2 list objects route', () => {
 			});
 		});
 
-        it('caps limit at 1000', async () => {
+		it('caps limit at 1000', async () => {
 			const { GET } = await loadModule();
 			listMock.mockResolvedValue({ objects: [], truncated: false });
 

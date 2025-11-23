@@ -142,12 +142,7 @@ export function handleGenprojError(error, context = {}) {
 	}
 	return {
 		status: 500,
-		body: createErrorResponseBody(
-			'INTERNAL_ERROR',
-			'An unexpected error occurred',
-			null,
-			context
-		)
+		body: createErrorResponseBody('INTERNAL_ERROR', 'An unexpected error occurred', null, context)
 	};
 }
 

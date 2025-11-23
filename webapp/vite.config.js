@@ -7,7 +7,6 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { execSync } from 'node:child_process';
 
-
 // Get git info at build time
 function getGitInfo() {
 	try {

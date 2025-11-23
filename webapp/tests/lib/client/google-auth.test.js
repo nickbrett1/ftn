@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { initiateGoogleAuth, getRedirectUri, isUserAuthenticated } from '../../../src/lib/client/google-auth.js';
+import {
+	initiateGoogleAuth,
+	getRedirectUri,
+	isUserAuthenticated
+} from '../../../src/lib/client/google-auth.js';
 
 // Mock SvelteKit navigation
 vi.mock('$app/navigation', () => ({

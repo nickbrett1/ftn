@@ -1,20 +1,14 @@
 // webapp/src/lib/utils/file-generator.js
 
 import devcontainerJavaDockerfile from '../templates/devcontainer-java-dockerfile.template?raw';
-import devcontainerNodeDockerfile from '../templates/devcontainer-node-dockerfile.template?raw';
-import devcontainerNodeJson from '../templates/devcontainer-node-json.template?raw';
-import devcontainerP10kZshFull from '../templates/devcontainer-p10k-zsh-full.template?raw';
-import devcontainerP10kZsh from '../templates/devcontainer-p10k-zsh.template?raw';
-import devcontainerPostCreateSetupSh from '../templates/devcontainer-post-create-setup-sh.template?raw';
-import devcontainerJavaDockerfile from '../templates/devcontainer-java-dockerfile.template?raw';
-import devcontainerJavaJson from '../templates/devcontainer-java-json.template?raw'; // New import
+import devcontainerJavaJson from '../templates/devcontainer-java-json.template?raw';
 import devcontainerNodeDockerfile from '../templates/devcontainer-node-dockerfile.template?raw';
 import devcontainerNodeJson from '../templates/devcontainer-node-json.template?raw';
 import devcontainerP10kZshFull from '../templates/devcontainer-p10k-zsh-full.template?raw';
 import devcontainerP10kZsh from '../templates/devcontainer-p10k-zsh.template?raw';
 import devcontainerPostCreateSetupSh from '../templates/devcontainer-post-create-setup-sh.template?raw';
 import devcontainerPythonDockerfile from '../templates/devcontainer-python-dockerfile.template?raw';
-import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw'; // New import
+import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
@@ -22,19 +16,18 @@ import { capabilities } from '$lib/config/capabilities.js';
 
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
-	'devcontainer-java-json': devcontainerJavaJson, // New entry
+	'devcontainer-java-json': devcontainerJavaJson,
 	'devcontainer-node-dockerfile': devcontainerNodeDockerfile,
 	'devcontainer-node-json': devcontainerNodeJson,
 	'devcontainer-p10k-zsh-full': devcontainerP10kZshFull,
 	'devcontainer-p10k-zsh': devcontainerP10kZsh,
 	'devcontainer-post-create-setup-sh': devcontainerPostCreateSetupSh,
 	'devcontainer-python-dockerfile': devcontainerPythonDockerfile,
-	'devcontainer-python-json': devcontainerPythonJson, // New entry
+	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
 	'playwright-config': playwrightConfig
 };
-
 export class TemplateEngine {
 	constructor() {
 		this.templates = new Map();
@@ -60,14 +53,15 @@ export class TemplateEngine {
 	}
 
 	getTemplate(name) {
-		return this.templates.get(name) || null;
+		const template = this.templates.get(name);
+		return template || null;
 	}
 
 	compileTemplate(templateString, data) {
 		let content = templateString;
 		const regex = /{{(.*?)}}/g;
 
-		content = content.replace(regex, (match, key) => {
+		content = content.replaceAll(regex, (match, key) => {
 			const keys = key.trim().split('.');
 			let value = data;
 			for (const k of keys) {
@@ -95,7 +89,12 @@ export class TemplateEngine {
 		const results = [];
 		for (const [index, req] of fileRequests.entries()) {
 			try {
-				const content = this.generateFile(req.templateId, { ...req.data, index });
+				// If content is already pre-generated, use it directly
+				// This is for merged devcontainer files
+				const content =
+					req.content == undefined
+						? this.generateFile(req.templateId, { ...req.data, index })
+						: req.content;
 				results.push({ ...req, success: true, content });
 			} catch (error) {
 				results.push({ ...req, success: false, error: error.message });
@@ -103,6 +102,107 @@ export class TemplateEngine {
 		}
 		return results;
 	}
+}
+
+// Helper to collect files for non-dev-container capabilities
+function collectNonDevContainerFiles(templateEngine, context, otherCapabilities) {
+	const files = [];
+	for (const capabilityId of otherCapabilities) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (capability && capability.templates) {
+			for (const template of capability.templates) {
+				try {
+					const content = templateEngine.generateFile(template.templateId, {
+						...context,
+						capabilityConfig: context.configuration?.[capabilityId] || {},
+						capability
+					});
+					files.push({
+						filePath: template.filePath,
+						content: content
+					});
+				} catch (error) {
+					console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+				}
+			}
+		}
+	}
+	return files;
+}
+
+// Helper to generate and merge devcontainer files
+function generateMergedDevContainerFiles(templateEngine, context, devContainerCapabilities) {
+	const files = [];
+
+	if (devContainerCapabilities.length === 0) return files;
+
+	const baseDevContainerId = devContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
+	const baseCapabilityConfig = context.configuration?.[baseDevContainerId] || {};
+
+	// Process devcontainer.json merging
+	const baseJsonContent = templateEngine.generateFile(
+		`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
+		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+	);
+	let mergedDevContainerJson = JSON.parse(baseJsonContent);
+
+	for (let i = 1; i < devContainerCapabilities.length; i++) {
+		const capabilityId = devContainerCapabilities[i];
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		const capabilityConfig = context.configuration?.[capabilityId] || {};
+
+		const otherJsonContent = templateEngine.generateFile(
+			`devcontainer-${capabilityId.split('-')[1]}-json`,
+			{ ...context, capabilityConfig, capability }
+		);
+		const otherJson = JSON.parse(otherJsonContent);
+
+		if (otherJson.features) {
+			mergedDevContainerJson.features = {
+				...mergedDevContainerJson.features,
+				...otherJson.features
+			};
+		}
+		if (otherJson.customizations?.vscode?.extensions) {
+			const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
+			mergedDevContainerJson.customizations.vscode.extensions = [
+				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
+			];
+		}
+	}
+
+	files.push({
+		filePath: '.devcontainer/devcontainer.json',
+		content: JSON.stringify(mergedDevContainerJson, null, 2)
+	});
+
+	// Process Dockerfile (using base one for now)
+	const dockerfileContent = templateEngine.generateFile(
+		`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
+		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+	);
+
+	files.push(
+		{
+			filePath: '.devcontainer/Dockerfile',
+			content: dockerfileContent
+		},
+		{
+			filePath: '.devcontainer/.zshrc',
+			content: templateEngine.generateFile('devcontainer-zshrc-full', context)
+		},
+		{
+			filePath: '.devcontainer/.p10k.zsh',
+			content: templateEngine.generateFile('devcontainer-p10k-zsh-full', context)
+		},
+		{
+			filePath: '.devcontainer/post-create-setup.sh',
+			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', context)
+		}
+	);
+
+	return files;
 }
 
 export async function generateAllFiles(context) {
@@ -114,98 +214,12 @@ export async function generateAllFiles(context) {
 	);
 	const otherCapabilities = context.capabilities.filter((c) => !c.startsWith('devcontainer-'));
 
-	const filesToGenerate = [];
+	let allGeneratedFiles = [];
 
-	// Handle non-devcontainer capabilities
-	for (const capabilityId of otherCapabilities) {
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (capability && capability.templates) {
-			for (const template of capability.templates) {
-				filesToGenerate.push({
-					templateId: template.templateId,
-					filePath: template.filePath,
-					data: {
-						...context,
-						capabilityConfig: context.configuration?.[capabilityId] || {},
-						capability
-					}
-				});
-			}
-		}
-	}
+	allGeneratedFiles.push(
+		...collectNonDevContainerFiles(templateEngine, context, otherCapabilities),
+		...generateMergedDevContainerFiles(templateEngine, context, devContainerCapabilities)
+	);
 
-	// Handle devcontainer capabilities with merging logic
-	if (devContainerCapabilities.length > 0) {
-		const baseDevContainerId = devContainerCapabilities[0];
-		const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
-		const baseCapabilityConfig = context.configuration?.[baseDevContainerId] || {};
-
-		// Generate base devcontainer.json content
-		const baseJsonContent = templateEngine.generateFile(
-			`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
-			{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
-		);
-		let mergedDevContainerJson = JSON.parse(baseJsonContent);
-
-		// Merge features and extensions from other selected dev containers
-		for (let i = 1; i < devContainerCapabilities.length; i++) {
-			const capabilityId = devContainerCapabilities[i];
-			const capability = capabilities.find((c) => c.id === capabilityId);
-			const capabilityConfig = context.configuration?.[capabilityId] || {};
-
-			const otherJsonContent = templateEngine.generateFile(
-				`devcontainer-${capabilityId.split('-')[1]}-json`,
-				{ ...context, capabilityConfig, capability }
-			);
-			const otherJson = JSON.parse(otherJsonContent);
-
-			if (otherJson.features) {
-				mergedDevContainerJson.features = {
-					...mergedDevContainerJson.features,
-					...otherJson.features
-				};
-			}
-			if (otherJson.customizations?.vscode?.extensions) {
-				const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
-				mergedDevContainerJson.customizations.vscode.extensions = [
-					...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
-				];
-			}
-		}
-
-		filesToGenerate.push({
-			filePath: '.devcontainer/devcontainer.json',
-			content: JSON.stringify(mergedDevContainerJson, null, 2)
-		});
-
-		// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
-		const dockerfileContent = templateEngine.generateFile(
-			`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
-			{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
-		);
-		filesToGenerate.push({
-			filePath: '.devcontainer/Dockerfile',
-			content: dockerfileContent
-		});
-
-		// For shell scripts, generate them once as they are not language-specific.
-		filesToGenerate.push({
-			filePath: '.devcontainer/.zshrc',
-			content: templateEngine.generateFile('devcontainer-zshrc-full', context)
-		});
-		filesToGenerate.push({
-			filePath: '.devcontainer/.p10k.zsh',
-			content: templateEngine.generateFile('devcontainer-p10k-zsh-full', context)
-		});
-		filesToGenerate.push({
-			filePath: '.devcontainer/post-create-setup.sh',
-			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', context)
-		});
-	}
-
-	const generatedFileResults = templateEngine.generateFiles(filesToGenerate);
-
-	return generatedFileResults
-		.filter((result) => result.success)
-		.map((result) => ({ path: result.filePath, content: result.content }));
+	return allGeneratedFiles;
 }

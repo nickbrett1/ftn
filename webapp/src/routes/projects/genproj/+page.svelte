@@ -390,9 +390,7 @@
 							</svg>
 							<span class="text-sm font-medium text-blue-300 ml-2">Demo Mode</span>
 						</div>
-						<p class="text-sm text-blue-200">
-							Explore the preview. Login to generate.
-						</p>
+						<p class="text-sm text-blue-200">Explore the preview. Login to generate.</p>
 					</div>
 					<button
 						onclick={handleSignInClick}
@@ -585,7 +583,7 @@
 					title={isDisabled ? getDisabledMessage() : ''}
 				>
 					Generate Project
-				<span class="ml-2">🚀</span>
+					<span class="ml-2">🚀</span>
 				</button>
 				{#if isDisabled}
 					<p class="text-sm text-gray-400 text-center" data-testid="disabled-message">

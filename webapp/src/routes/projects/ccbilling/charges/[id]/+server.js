@@ -93,7 +93,8 @@ export async function PUT(event) {
 		if (budgetError) return budgetError;
 
 		// If we're only updating allocation, get the current charge data
-		const isPartialUpdate = allocated_to !== undefined && (merchant === undefined || amount === undefined);
+		const isPartialUpdate =
+			allocated_to !== undefined && (merchant === undefined || amount === undefined);
 
 		if (isPartialUpdate) {
 			return await handlePartialUpdate(event, charge_id, data);

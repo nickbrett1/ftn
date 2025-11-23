@@ -111,14 +111,14 @@ describe('ccbilling auto-associations route', () => {
 			requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
 			listBudgetsMock.mockRejectedValue(new Error('DB Error'));
 
-            // Spy on console.error to avoid noise
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+			// Spy on console.error to avoid noise
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			const event = buildEvent('PUT', { merchant: 'Kroger', newBudgetName: 'Groceries' });
 			const response = await PUT(event);
 
 			expect(response.status).toBe(500);
-            consoleSpy.mockRestore();
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -168,18 +168,18 @@ describe('ccbilling auto-associations route', () => {
 			expect(response.status).toBe(401);
 		});
 
-        it('handles errors gracefully', async () => {
+		it('handles errors gracefully', async () => {
 			const { DELETE } = await loadModule();
 			requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
 			getBudgetByMerchantMock.mockRejectedValue(new Error('DB Error'));
 
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			const event = buildEvent('DELETE', { merchant: 'Kroger' });
 			const response = await DELETE(event);
 
 			expect(response.status).toBe(500);
-            consoleSpy.mockRestore();
+			consoleSpy.mockRestore();
 		});
 	});
 });

@@ -8,6 +8,7 @@
       "args": [
         "run",
         "-i",
+        "--network=host",
         "--name",
         "sonarqube-mcp-server",
         "--rm",
@@ -15,6 +16,8 @@
         "SONARQUBE_TOKEN",
         "-e",
         "SONARQUBE_ORG",
+        "-e",
+        "SONARQUBE_IDE_PORT",
         "mcp/sonarqube"
       ]
     },
@@ -29,10 +32,7 @@
     },
     "circleci": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ]
+      "args": ["-y", "@circleci/mcp-server-circleci"]
     }
   }
 }

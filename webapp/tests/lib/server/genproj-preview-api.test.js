@@ -24,8 +24,7 @@ describe('genproj preview api route', () => {
 		vi.clearAllMocks();
 	});
 
-	const loadModule = () =>
-		import('../../../src/routes/projects/genproj/api/preview/+server.js');
+	const loadModule = () => import('../../../src/routes/projects/genproj/api/preview/+server.js');
 
 	const buildEvent = (body, platform) => {
 		const mockFetch = vi.fn();
@@ -52,11 +51,7 @@ describe('genproj preview api route', () => {
 		expect(response.status).toBe(200);
 		const body = await response.json();
 		expect(body).toEqual(previewData);
-		expect(generatePreviewMock).toHaveBeenCalledWith(
-			projectConfig,
-			['cap1'],
-			'mock-bucket'
-		);
+		expect(generatePreviewMock).toHaveBeenCalledWith(projectConfig, ['cap1'], 'mock-bucket');
 	});
 
 	it('returns 400 if selectedCapabilities is missing', async () => {
