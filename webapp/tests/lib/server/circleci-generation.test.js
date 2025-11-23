@@ -26,6 +26,7 @@ describe('CircleCI Capability Generation', () => {
         expect(circleCiFile).toBeDefined();
 
         expect(circleCiFile.content).toContain('version: 2.1');
-        expect(circleCiFile.content).toContain('cimg/node:20.11.0');
+        expect(circleCiFile.content).toContain('executor: node/default');
+        expect(circleCiFile.content).toContain('node: circleci/node@5.0.2');
     });
 });
