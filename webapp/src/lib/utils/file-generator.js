@@ -17,10 +17,7 @@ import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import {
-	getCapabilityTemplateData,
-	getCapabilityConfig
-} from '$lib/utils/capability-template-utils.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 export const GEMINI_DEV_ALIAS = `# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
 gemini-dev() {
@@ -153,16 +150,11 @@ function collectNonDevContainerFiles(templateEngine, context, otherCapabilities)
 			for (const template of capability.templates) {
 				try {
 					const extraData = getCapabilityTemplateData(capabilityId, context);
-					const capabilityConfig = getCapabilityConfig(
-						capabilityId,
-						context.configuration?.[capabilityId]
-					);
-
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
 						projectName: context.name || 'my-project',
-						capabilityConfig,
+						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability
 					});
 					files.push({
@@ -186,10 +178,7 @@ function generateMergedDevContainerFiles(templateEngine, context, devContainerCa
 
 	const baseDevContainerId = devContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
-	const baseCapabilityConfig = getCapabilityConfig(
-		baseDevContainerId,
-		context.configuration?.[baseDevContainerId]
-	);
+	const baseCapabilityConfig = context.configuration?.[baseDevContainerId] || {};
 
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
@@ -201,10 +190,7 @@ function generateMergedDevContainerFiles(templateEngine, context, devContainerCa
 	for (let i = 1; i < devContainerCapabilities.length; i++) {
 		const capabilityId = devContainerCapabilities[i];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = getCapabilityConfig(
-			capabilityId,
-			context.configuration?.[capabilityId]
-		);
+		const capabilityConfig = context.configuration?.[capabilityId] || {};
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
