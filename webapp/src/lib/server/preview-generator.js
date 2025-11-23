@@ -13,6 +13,7 @@ import {
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
 import { TemplateEngine } from '$lib/utils/file-generator.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
 	const newInstance = new TemplateEngine();
@@ -187,8 +188,11 @@ async function generateNonDevContainerFiles(templateEngine, projectConfig, other
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
+					const extraData = getCapabilityTemplateData(capabilityId, { capabilities: otherCapabilities });
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
+						...extraData,
 						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
 						capability
 					});

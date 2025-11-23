@@ -1,23 +1,19 @@
 version: 2.1
-
+orbs:
+  node: circleci/node@5.0.2
 jobs:
   build:
-    docker:
-      - image: cimg/node:20.11.0
+    executor: node/default
     steps:
       - checkout
-      - run:
-          name: Install Dependencies
-          command: npm install
-      - run:
-          name: Run Tests
-          command: npm test
+      - node/install-packages:
+          pkg-manager: npm
       - run:
           name: Build
           command: npm run build
-
+{{lighthouseJobDefinition}}
 workflows:
-  version: 2
-  build_and_test:
+  build-and-test:
     jobs:
       - build
+{{lighthouseWorkflowJob}}
