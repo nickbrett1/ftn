@@ -7,14 +7,14 @@ const getBudgetByMerchantMock = vi.fn();
 const listBudgetsMock = vi.fn();
 
 vi.mock('$lib/server/require-user.js', () => ({
-	requireUser: (...args) => requireUserMock(...args)
+	requireUser: (...arguments_) => requireUserMock(...arguments_)
 }));
 
 vi.mock('$lib/server/ccbilling-db.js', () => ({
-	addBudgetMerchant: (...args) => addBudgetMerchantMock(...args),
-	removeBudgetMerchant: (...args) => removeBudgetMerchantMock(...args),
-	getBudgetByMerchant: (...args) => getBudgetByMerchantMock(...args),
-	listBudgets: (...args) => listBudgetsMock(...args)
+	addBudgetMerchant: (...arguments_) => addBudgetMerchantMock(...arguments_),
+	removeBudgetMerchant: (...arguments_) => removeBudgetMerchantMock(...arguments_),
+	getBudgetByMerchant: (...arguments_) => getBudgetByMerchantMock(...arguments_),
+	listBudgets: (...arguments_) => listBudgetsMock(...arguments_)
 }));
 
 describe('ccbilling auto-associations route', () => {

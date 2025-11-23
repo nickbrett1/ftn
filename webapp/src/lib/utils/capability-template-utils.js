@@ -24,15 +24,9 @@ export function getCapabilityTemplateData(capabilityId, context) {
 	}
 
 	if (capabilityId === 'circleci') {
-		let data = {
-			lighthouseJobDefinition: '',
-			lighthouseWorkflowJob: '',
-			deployJobDefinition: '',
-			deployWorkflowJob: ''
-		};
-
-		if (hasLighthouse) {
-			data.lighthouseJobDefinition = `
+		return hasLighthouse
+			? {
+					lighthouseJobDefinition: `
   lighthouse:
     executor: node/default
     steps:
@@ -44,38 +38,16 @@ export function getCapabilityTemplateData(capabilityId, context) {
           command: npm run build
       - run:
           name: Run Lighthouse CI
-          command: npm install -g @lhci/cli && lhci autorun`;
-			data.lighthouseWorkflowJob = `
+          command: npm install -g @lhci/cli && lhci autorun`,
+					lighthouseWorkflowJob: `
       - lighthouse:
           requires:
-            - build`;
-		}
-
-		if (deployTarget === 'cloudflare') {
-			data.deployJobDefinition = `
-  deploy-to-cloudflare:
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Build
-          command: npm run build
-      - run:
-          name: Deploy to Cloudflare Workers
-          command: npx wrangler deploy
-          environment:
-            CLOUDFLARE_API_TOKEN: \${CLOUDFLARE_API_TOKEN}
-            CLOUDFLARE_ACCOUNT_ID: \${CLOUDFLARE_ACCOUNT_ID}`;
-
-			data.deployWorkflowJob = `
-      - deploy-to-cloudflare:
-          requires:
-            - build`;
-		}
-
-		return data;
+            - build`
+				}
+			: {
+					lighthouseJobDefinition: '',
+					lighthouseWorkflowJob: ''
+				};
 	}
 
 	return {};

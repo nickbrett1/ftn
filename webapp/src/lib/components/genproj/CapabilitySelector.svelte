@@ -20,7 +20,8 @@
 		UserSecretSolid,
 		RobotSolid,
 		ChartLineSolid,
-		GlobeSolid
+		GlobeSolid,
+		LockSolid
 	} from 'svelte-awesome-icons';
 
 	// Tippy.js for tooltips
@@ -124,7 +125,7 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: value
 			}
 		};
@@ -136,9 +137,9 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: {
-					...(configuration[capabilityId]?.[field] || {}),
+					...configuration[capabilityId]?.[field],
 					[nestedField]: value
 				}
 			}
@@ -161,7 +162,7 @@
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
 		// Add a space before all uppercase letters that are not at the beginning
-		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
+		const spacedString = camelCaseString.replaceAll(/([A-Z])/g, ' $1');
 		// Capitalize the first letter of the entire string
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
 	}
@@ -282,6 +283,15 @@
 									on:change={(event) => handleCapabilityToggle(capability.id, event)}
 									disabled={isRequiredByOther(capability)}
 								/>
+								{#if isRequiredByOther(capability)}
+									<div
+										class="ml-1 text-yellow-500"
+										use:useTippy={'Locked by dependency'}
+										data-testid="lock-icon"
+									>
+										<LockSolid class="w-3 h-3" />
+									</div>
+								{/if}
 							</div>
 							<div class="ml-3 text-sm w-full relative">
 								<div class="flex justify-between items-start">
@@ -369,11 +379,9 @@
 																				const currentArray =
 																					configuration[capability.id]?.[field] || [];
 																				let newArray;
-																				if (e.target.checked) {
-																					newArray = [...currentArray, option];
-																				} else {
-																					newArray = currentArray.filter((item) => item !== option);
-																				}
+																				newArray = e.target.checked
+																					? [...currentArray, option]
+																					: currentArray.filter((item) => item !== option);
 																				handleConfigurationChange(capability.id, field, newArray);
 																			}}
 																		/>
