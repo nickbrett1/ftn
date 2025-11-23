@@ -175,7 +175,13 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'doppler-yaml',
+				filePath: 'doppler.yaml',
+				templateId: 'doppler-yaml'
+			}
+		],
 		website: 'https://www.doppler.com/'
 	},
 	{

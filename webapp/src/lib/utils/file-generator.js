@@ -11,6 +11,7 @@ import devcontainerPythonDockerfile from '../templates/devcontainer-python-docke
 import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
+import dopplerYaml from '../templates/doppler-yaml.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
 import circleciConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
@@ -30,7 +31,8 @@ const templateImports = {
 	'devcontainer-zshrc': devcontainerZshrc,
 	'playwright-config': playwrightConfig,
 	'circleci-config': circleciConfig,
-	'sonar-project-properties': sonarProjectProperties
+	'sonar-project-properties': sonarProjectPropertie
+	'doppler-yaml': dopplerYaml
 };
 export class TemplateEngine {
 	constructor() {
