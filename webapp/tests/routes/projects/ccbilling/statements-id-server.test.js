@@ -3,7 +3,7 @@ import { GET, DELETE } from '../../../../src/routes/projects/ccbilling/statement
 
 // Mock the json function
 vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, init) => new Response(JSON.stringify(data), init))
+	json: vi.fn((data, init) => Response.json(data, init))
 }));
 
 // Mock the requireUser function
@@ -126,7 +126,7 @@ describe('/projects/ccbilling/statements/[id]/+server.js', () => {
 			mockRequireUser.mockResolvedValue(null);
 			const statement = { id: 1, name: 'Test Statement' };
 			mockGetStatement.mockResolvedValue(statement);
-			mockDeleteStatement.mockResolvedValue(undefined);
+			mockDeleteStatement.mockResolvedValue();
 
 			await DELETE(mockEvent);
 

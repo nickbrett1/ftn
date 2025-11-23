@@ -2,9 +2,9 @@ export function getCapabilityTemplateData(capabilityId, context) {
 	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 
 	if (capabilityId === 'circleci') {
-		if (hasLighthouse) {
-			return {
-				lighthouseJobDefinition: `
+		return hasLighthouse
+			? {
+					lighthouseJobDefinition: `
   lighthouse:
     executor: node/default
     steps:
@@ -17,17 +17,15 @@ export function getCapabilityTemplateData(capabilityId, context) {
       - run:
           name: Run Lighthouse CI
           command: npm install -g @lhci/cli && lhci autorun`,
-				lighthouseWorkflowJob: `
+					lighthouseWorkflowJob: `
       - lighthouse:
           requires:
             - build`
-			};
-		} else {
-			return {
-				lighthouseJobDefinition: '',
-				lighthouseWorkflowJob: ''
-			};
-		}
+				}
+			: {
+					lighthouseJobDefinition: '',
+					lighthouseWorkflowJob: ''
+				};
 	}
 
 	return {};

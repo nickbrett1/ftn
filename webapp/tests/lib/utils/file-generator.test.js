@@ -73,21 +73,24 @@ describe('TemplateEngine', () => {
 	});
 
 	it('replaces variables in template string', () => {
-		const result = engine.compileTemplate('Hello {{name}} and {{nested.prop}}', { name: 'world', nested: { prop: 'value' } });
+		const result = engine.compileTemplate('Hello {{name}} and {{nested.prop}}', {
+			name: 'world',
+			nested: { prop: 'value' }
+		});
 		expect(result).toBe('Hello world and value');
 	});
-    
-    it('replaces variables from a real template file', () => {
-        const template = engine.getTemplate('devcontainer-java-dockerfile');
-        const result = engine.compileTemplate(template, { javaVersion: '17' });
-        expect(result).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
-    });
 
-    it('replaces variables from node dockerfile template', () => {
-        const template = engine.getTemplate('devcontainer-node-dockerfile');
-        const result = engine.compileTemplate(template, { nodeVersion: '20' });
-        expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
-    });
+	it('replaces variables from a real template file', () => {
+		const template = engine.getTemplate('devcontainer-java-dockerfile');
+		const result = engine.compileTemplate(template, { javaVersion: '17' });
+		expect(result).toBe(javaDockerfileTemplateContent.replaceAll('{{javaVersion}}', '17'));
+	});
+
+	it('replaces variables from node dockerfile template', () => {
+		const template = engine.getTemplate('devcontainer-node-dockerfile');
+		const result = engine.compileTemplate(template, { nodeVersion: '20' });
+		expect(result).toBe(nodeDockerfileTemplateContent.replaceAll('{{nodeVersion}}', '20'));
+	});
 
 	it('generates sonar-project.properties with correct variables', () => {
 		const content = engine.generateFile('sonar-project-properties', { name: 'my-project' });
@@ -98,7 +101,7 @@ describe('TemplateEngine', () => {
 
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
-		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+		expect(content).toBe(javaDockerfileTemplateContent.replaceAll('{{javaVersion}}', '17'));
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
 	});
@@ -110,7 +113,11 @@ describe('TemplateEngine', () => {
 
 	it('generates multiple files collecting errors', () => {
 		const results = engine.generateFiles([
-			{ templateId: 'devcontainer-java-dockerfile', filePath: '/tmp/ok.txt', data: { javaVersion: '17' } },
+			{
+				templateId: 'devcontainer-java-dockerfile',
+				filePath: '/tmp/ok.txt',
+				data: { javaVersion: '17' }
+			},
 			{ templateId: 'missing', filePath: '/tmp/missing.txt', data: {} }
 		]);
 
@@ -118,8 +125,8 @@ describe('TemplateEngine', () => {
 		const failure = results.find((entry) => entry.templateId === 'missing');
 
 		expect(success).toBeDefined();
-        expect(success.success).toBe(true);
-        expect(success.content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+		expect(success.success).toBe(true);
+		expect(success.content).toBe(javaDockerfileTemplateContent.replaceAll('{{javaVersion}}', '17'));
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
 	});

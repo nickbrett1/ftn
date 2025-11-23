@@ -27,11 +27,11 @@ describe('session', () => {
 			globalThis.crypto = {};
 		}
 		if (!globalThis.crypto.getRandomValues) {
-			globalThis.crypto.getRandomValues = vi.fn((arr) => {
-				for (let i = 0; i < arr.length; i++) {
-					arr[i] = i % 256;
+			globalThis.crypto.getRandomValues = vi.fn((array) => {
+				for (let index = 0; index < array.length; index++) {
+					array[index] = index % 256;
 				}
-				return arr;
+				return array;
 			});
 		}
 	});
@@ -62,7 +62,7 @@ describe('session', () => {
 		it('should return valid session if found and not expired', async () => {
 			const sessionId = 'session123';
 			const userId = 'user123';
-			const expiresAt = new Date(Date.now() + 100000);
+			const expiresAt = new Date(Date.now() + 100_000);
 
 			mockKv.get.mockResolvedValueOnce(JSON.stringify({ userId, expiresAt: expiresAt.getTime() }));
 

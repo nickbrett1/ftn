@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST, GET } from '../../../../../../../src/routes/projects/ccbilling/statements/[id]/parse/+server.js';
+import {
+	POST,
+	GET
+} from '../../../../../../../src/routes/projects/ccbilling/statements/[id]/parse/+server.js';
 
 // Mock the dependencies
 vi.mock('$lib/server/ccbilling-db.js', () => ({
