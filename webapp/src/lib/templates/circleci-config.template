@@ -12,8 +12,10 @@ jobs:
           name: Build
           command: npm run build
 {{lighthouseJobDefinition}}
+{{deployJobDefinition}}
 workflows:
   build-and-test:
     jobs:
       - build
 {{lighthouseWorkflowJob}}
+{{deployWorkflowJob}}
