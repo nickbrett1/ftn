@@ -585,6 +585,7 @@
 					title={isDisabled ? getDisabledMessage() : ''}
 				>
 					Generate Project
+				<span class="ml-2">🚀</span>
 				</button>
 				{#if isDisabled}
 					<p class="text-sm text-gray-400 text-center" data-testid="disabled-message">

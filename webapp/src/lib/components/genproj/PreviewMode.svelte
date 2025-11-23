@@ -360,21 +360,6 @@
 			</div>
 		{/if}
 
-		<!-- Action Buttons -->
-		<div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-			<button
-				type="button"
-				class="px-8 py-3 rounded-lg font-semibold transition-colors {isAuthenticated
-					? 'bg-green-500 text-white hover:bg-green-600'
-					: 'bg-gray-700 text-gray-400 cursor-not-allowed'}"
-				disabled={!isAuthenticated}
-				title={!isAuthenticated ? 'Please sign in to generate a project' : ''}
-				on:click={continueToGeneration}
-			>
-				Generate Project
-				<span class="ml-2">🚀</span>
-			</button>
-		</div>
 	{:else}
 		<!-- No Preview Data -->
 		<div class="flex items-center justify-center min-h-96">
