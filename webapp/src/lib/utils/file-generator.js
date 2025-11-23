@@ -107,11 +107,13 @@ export class TemplateEngine {
         }
 
 		try {
-			const response = await this.fetcher(BASE_URL + fileName);
-			if (!response.ok) {
-				throw new Error(`Failed to fetch template ${fileName}: ${response.statusText}`);
+			const r2Object = await this.fetcher.get(fileName);
+
+			if (!r2Object) {
+				throw new Error(`Template object not found.`);
 			}
-			const content = await response.text();
+
+			const content = await r2Object.text();
 			this.templates.set(name, content); // Cache the fetched template
 			return content;
 		} catch (error) {
