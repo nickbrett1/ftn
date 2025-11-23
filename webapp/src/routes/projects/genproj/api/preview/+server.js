@@ -15,9 +15,8 @@ export async function POST({ request, platform, fetch }) {
 		const previewData = await generatePreview(
 			projectConfig,
 			selectedCapabilities,
-			platform?.env?.R2_GENPROJ_TEMPLATES,
-			fetch
-		); // Pass r2Bucket and fetcher
+			platform?.env?.R2_GENPROJ_TEMPLATES
+		); // Pass r2Bucket
 
 		return json(previewData, { status: 200 });
 	} catch (error) {

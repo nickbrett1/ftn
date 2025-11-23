@@ -14,8 +14,8 @@ import {
 } from '$lib/utils/capability-resolver.js';
 import { TemplateEngine } from '$lib/utils/file-generator.js'; // Import TemplateEngine
 
-async function getTemplateEngine(args, fetcher) {
-	const newInstance = new TemplateEngine(fetcher);
+async function getTemplateEngine(r2Bucket) {
+	const newInstance = new TemplateEngine(r2Bucket);
 	await newInstance.initialize();
 	return newInstance;
 }
@@ -53,7 +53,7 @@ async function getTemplateEngine(args, fetcher) {
  * @param {Object} r2Bucket - The R2 bucket instance for template loading
  * @returns {Promise<PreviewData>} Generated preview data
  */
-export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket, fetcher) {
+export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket) {
 	// Accept r2Bucket as an argument
 	try {
 		console.log('🔍 Generating preview for project:', projectConfig.name);
@@ -63,15 +63,14 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
 
 		// Generate files
-		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket, fetcher); // Pass r2Bucket and fetcher
+		const files = await generatePreviewFiles(projectConfig, executionOrder, r2Bucket); // Pass r2Bucket
 
 		// Generate external service changes
 		const externalServices = await generateExternalServiceChanges(
 			projectConfig,
 			executionOrder,
-			r2Bucket,
-			fetcher
-		); // Pass r2Bucket and fetcher
+			r2Bucket
+		); // Pass r2Bucket
 
 		// Create summary
 		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
@@ -98,7 +97,7 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Promise<Array<FileObject>>} Array of file objects
  */
-async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket, fetcher) {
+async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket) {
 	// Make function async
 	const files = [];
 
@@ -107,7 +106,7 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket, fet
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (!capability) continue;
 
-		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket, fetcher); // Await the call
+		const capabilityFiles = await generateCapabilityFiles(projectConfig, capability, r2Bucket); // Await the call
 		files.push(...capabilityFiles);
 	}
 
@@ -125,11 +124,11 @@ async function generatePreviewFiles(projectConfig, executionOrder, r2Bucket, fet
  * @param {Object} capability - Capability definition
  * @returns {Promise<Array<FileObject>>} Array of file objects
  */
-async function generateCapabilityFiles(projectConfig, capability, r2Bucket, fetcher) {
+async function generateCapabilityFiles(projectConfig, capability, r2Bucket) {
 	// Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
-	const templateEngine = await getTemplateEngine(r2Bucket, fetcher); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	// Generate capability-specific files
 	if (capability.templates) {
@@ -214,7 +213,7 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
  * @param {string[]} executionOrder - Capability execution order
  * @returns {Promise<Array<ExternalService>>} Array of external service changes
  */
-async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket, fetcher) {
+async function generateExternalServiceChanges(projectConfig, executionOrder, r2Bucket) {
 	// Make async
 	const services = [
 		{
@@ -246,8 +245,7 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 		const serviceChanges = await generateCapabilityServiceChanges(
 			projectConfig,
 			capability,
-			r2Bucket,
-			fetcher
+			r2Bucket
 		); // Await the call
 		services.push(...serviceChanges);
 	}
@@ -261,10 +259,10 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
  * @param {Object} capability - Capability definition
  * @returns {Promise<Array<ExternalService>>} Array of service changes
  */
-async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket, fetcher) {
+async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket) {
 	// Make async
 	const services = [];
-	const templateEngine = await getTemplateEngine(r2Bucket, fetcher); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {

@@ -2,7 +2,7 @@
 
 import Handlebars from 'handlebars';
 
-const BASE_URL = '/static/templates/';
+
 
 export class TemplateEngine {
 	constructor(fetcher) {
@@ -102,9 +102,9 @@ export class TemplateEngine {
 
 		const fileName = this.templateIdToFileMap.get(name);
 
-        if (!fileName) {
-            return null; // No file registered for this templateId
-        }
+		if (!fileName) {
+			return null; // No file registered for this templateId
+		}
 
 		try {
 			const r2Object = await this.fetcher.get(fileName);

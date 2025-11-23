@@ -55,8 +55,7 @@ describe('genproj preview api route', () => {
 		expect(generatePreviewMock).toHaveBeenCalledWith(
 			projectConfig,
 			['cap1'],
-			'mock-bucket',
-			expect.any(Function) // Use expect.any(Function) for the mock fetch
+			'mock-bucket'
 		);
 	});
 
