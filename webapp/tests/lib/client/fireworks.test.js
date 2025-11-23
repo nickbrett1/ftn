@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
-import { tick } from 'svelte';
+import { mount, unmount, flushSync, tick } from 'svelte';
 import Fireworks from '../../../src/lib/components/Fireworks.svelte';
 
 // Mock tsparticles
