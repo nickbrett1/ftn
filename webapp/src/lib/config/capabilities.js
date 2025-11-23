@@ -130,7 +130,13 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'circleci-config',
+				filePath: '.circleci/config.yml',
+				templateId: 'circleci-config'
+			}
+		],
 		website: 'https://circleci.com/'
 	},
 	// Removed 'github-actions' capability
@@ -293,7 +299,13 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'lighthouse-ci-config',
+				filePath: '.lighthouse.cjs',
+				templateId: 'lighthouse-ci-config'
+			}
+		],
 		website: 'https://github.com/GoogleChrome/lighthouse-ci'
 	},
 	{

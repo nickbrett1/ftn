@@ -12,6 +12,8 @@ import devcontainerPythonJson from '../templates/devcontainer-python-json.templa
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
+import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
+import circleCiConfig from '../templates/circleci-config.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 
 const templateImports = {
@@ -26,8 +28,11 @@ const templateImports = {
 	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
-	'playwright-config': playwrightConfig
+	'playwright-config': playwrightConfig,
+	'lighthouse-ci-config': lighthouseCiConfig,
+	'circleci-config': circleCiConfig
 };
+
 export class TemplateEngine {
 	constructor() {
 		this.templates = new Map();
@@ -68,7 +73,13 @@ export class TemplateEngine {
 				if (value && typeof value === 'object' && k in value) {
 					value = value[k];
 				} else {
-					return match; // Return original match if path not found
+					// Don't leave placeholders like {{lighthouseJobDefinition}} if they are undefined or empty string
+					// Check if we should return empty string instead of original match
+					// But we need to distinguish between "missing key" and "valid empty value"
+					// In this engine implementation, if path is not found, it returns original match.
+					// We might want to clear it if it's intended to be optional.
+					// However, for safety, let's keep it unless we explicitly pass empty string in data.
+					return match;
 				}
 			}
 			return value;
@@ -107,13 +118,46 @@ export class TemplateEngine {
 // Helper to collect files for non-dev-container capabilities
 function collectNonDevContainerFiles(templateEngine, context, otherCapabilities) {
 	const files = [];
+	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
+
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
+					let extraData = {};
+					if (capabilityId === 'circleci') {
+						if (hasLighthouse) {
+							extraData = {
+								lighthouseJobDefinition: `
+  lighthouse:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Build
+          command: npm run build
+      - run:
+          name: Run Lighthouse CI
+          command: npm install -g @lhci/cli && lhci autorun`,
+								lighthouseWorkflowJob: `
+      - lighthouse:
+          requires:
+            - build`
+							};
+						} else {
+							extraData = {
+								lighthouseJobDefinition: '',
+								lighthouseWorkflowJob: ''
+							};
+						}
+					}
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
+						...extraData,
 						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability
 					});

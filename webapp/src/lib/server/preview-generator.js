@@ -182,13 +182,46 @@ async function generateDevContainerArtifacts(templateEngine, projectConfig, devC
  * @param {Array<FileObject>} files - Array to push generated file objects into
  */
 async function generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files) {
+	const hasLighthouse = otherCapabilities.includes('lighthouse-ci');
+
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
+					let extraData = {};
+					if (capabilityId === 'circleci') {
+						if (hasLighthouse) {
+							extraData = {
+								lighthouseJobDefinition: `
+  lighthouse:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Build
+          command: npm run build
+      - run:
+          name: Run Lighthouse CI
+          command: npm install -g @lhci/cli && lhci autorun`,
+								lighthouseWorkflowJob: `
+      - lighthouse:
+          requires:
+            - build`
+							};
+						} else {
+							extraData = {
+								lighthouseJobDefinition: '',
+								lighthouseWorkflowJob: ''
+							};
+						}
+					}
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
+						...extraData,
 						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
 						capability
 					});
