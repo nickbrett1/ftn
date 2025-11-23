@@ -206,7 +206,13 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'sonar-project-properties',
+				filePath: 'sonar-project.properties',
+				templateId: 'sonar-project-properties'
+			}
+		],
 		website: 'https://sonarcloud.io/'
 	},
 	{
