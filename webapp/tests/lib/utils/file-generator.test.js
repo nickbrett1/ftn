@@ -4,7 +4,7 @@ import { TemplateEngine } from '$lib/utils/file-generator.js';
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
   "name": "Node.js",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -13,7 +13,7 @@ const nodeJsonTemplateContent = `{
       "username": "node"
     },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
+      "version": "{{capabilityConfig.nodeVersion}}"
     }
   },
   "customizations": {
@@ -34,7 +34,7 @@ const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr
     && npm install -g @google/gemini-cli
 `;
 
-const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{capabilityConfig.nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends git zsh \\
     && npm install -g @google/gemini-cli
 `;
@@ -85,8 +85,9 @@ describe('TemplateEngine', () => {
 
     it('replaces variables from node dockerfile template', () => {
         const template = engine.getTemplate('devcontainer-node-dockerfile');
-        const result = engine.compileTemplate(template, { nodeVersion: '20' });
-        expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
+        // Now requires capabilityConfig structure
+        const result = engine.compileTemplate(template, { capabilityConfig: { nodeVersion: '20' } });
+        expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{capabilityConfig.nodeVersion}}/g, '20'));
     });
 
 	it('generates sonar-project.properties with correct variables', () => {
