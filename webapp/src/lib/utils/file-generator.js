@@ -15,6 +15,7 @@ import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
@@ -118,43 +119,13 @@ export class TemplateEngine {
 // Helper to collect files for non-dev-container capabilities
 function collectNonDevContainerFiles(templateEngine, context, otherCapabilities) {
 	const files = [];
-	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
-					let extraData = {};
-					if (capabilityId === 'circleci') {
-						if (hasLighthouse) {
-							extraData = {
-								lighthouseJobDefinition: `
-  lighthouse:
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Build
-          command: npm run build
-      - run:
-          name: Run Lighthouse CI
-          command: npm install -g @lhci/cli && lhci autorun`,
-								lighthouseWorkflowJob: `
-      - lighthouse:
-          requires:
-            - build`
-							};
-						} else {
-							extraData = {
-								lighthouseJobDefinition: '',
-								lighthouseWorkflowJob: ''
-							};
-						}
-					}
-
+					const extraData = getCapabilityTemplateData(capabilityId, context);
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
