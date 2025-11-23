@@ -23,9 +23,9 @@ test.describe('Capabilities API Contract', () => {
 		expect(capabilities.length).toBeGreaterThan(0); // Expect at least one capability
 
 		// Validate the structure of each capability
-		for (const capability of capabilities) {
+		capabilities.forEach((capability) => {
 			expect(capability).toMatchObject(EXPECTED_CAPABILITY_STRUCTURE);
-		}
+		});
 	});
 
 	test('Capabilities should have non-empty id, name, description, and category', async ({
@@ -35,12 +35,12 @@ test.describe('Capabilities API Contract', () => {
 		expect(response.ok()).toBeTruthy();
 
 		const capabilities = await response.json();
-		for (const capability of capabilities) {
+		capabilities.forEach((capability) => {
 			expect(capability.id).not.toBe('');
 			expect(capability.name).not.toBe('');
 			expect(capability.description).not.toBe('');
 			expect(capability.category).not.toBe('');
-		}
+		});
 	});
 
 	test('Capabilities should have unique IDs', async ({ request }) => {

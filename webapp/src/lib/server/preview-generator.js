@@ -12,7 +12,7 @@ import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
-import { TemplateEngine } from '$lib/utils/file-generator.js';
+import { TemplateEngine, GEMINI_DEV_ALIAS } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
@@ -48,32 +48,65 @@ async function getTemplateEngine() {
  */
 
 /**
+ * Generates preview data for the specified project configuration
+ * @param {Object} projectConfig - Project configuration object
+ * @param {string[]} selectedCapabilities - Array of selected capability IDs
+ * @returns {Promise<PreviewData>} Generated preview data
+ */
+export async function generatePreview(projectConfig, selectedCapabilities) {
+	try {
+		const resolution = resolveDependencies(selectedCapabilities);
+		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
+
+		const files = await generatePreviewFiles(projectConfig, executionOrder);
+
+		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder);
+
+		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
+
+		const previewData = {
+			files,
+			externalServices,
+			summary,
+			timestamp: new Date().toISOString()
+		};
+
+		return previewData;
+	} catch (error) {
+		console.error('❌ Error generating preview:', error);
+		throw new Error(`Failed to generate preview: ${error.message}`);
+	}
+}
+
+/**
  * Generates all devcontainer-related files.
  * @param {TemplateEngine} templateEngine - The template engine instance.
  * @param {Object} projectConfig - Project configuration.
- * @param {string[]} developmentContainerCapabilities - Array of devcontainer capability IDs.
+ * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
+ * @param {string[]} allCapabilities - Array of all selected capability IDs.
  * @param {Array<FileObject>} files - Array to push generated file objects into.
  */
-async function generateDevelopmentContainerArtifacts(
+async function generateDevContainerArtifacts(
 	templateEngine,
 	projectConfig,
-	developmentContainerCapabilities,
+	devContainerCapabilities,
+	allCapabilities,
 	files
 ) {
-	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
-	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	const baseCapabilityConfig = projectConfig.configuration?.[baseDevelopmentContainerId] || {};
+	const baseDevContainerId = devContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
+	const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
 
 	// Generate base devcontainer.json content
 	const baseJsonContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
+		`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
 		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
-	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
+	let mergedDevContainerJson = JSON.parse(baseJsonContent);
 
 	// Merge features and extensions from other selected dev containers
-	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
-		const capabilityId = developmentContainerCapabilities[index];
+	for (let i = 1; i < devContainerCapabilities.length; i++) {
+		const capabilityId = devContainerCapabilities[i];
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
 
@@ -84,15 +117,14 @@ async function generateDevelopmentContainerArtifacts(
 		const otherJson = JSON.parse(otherJsonContent);
 
 		if (otherJson.features) {
-			mergedDevelopmentContainerJson.features = {
-				...mergedDevelopmentContainerJson.features,
+			mergedDevContainerJson.features = {
+				...mergedDevContainerJson.features,
 				...otherJson.features
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			const baseExtensions =
-				mergedDevelopmentContainerJson.customizations?.vscode?.extensions || [];
-			mergedDevelopmentContainerJson.customizations.vscode.extensions = [
+			const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
+			mergedDevContainerJson.customizations.vscode.extensions = [
 				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
 			];
 		}
@@ -101,14 +133,14 @@ async function generateDevelopmentContainerArtifacts(
 	files.push({
 		path: '.devcontainer/devcontainer.json',
 		name: 'devcontainer.json',
-		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2),
-		size: JSON.stringify(mergedDevelopmentContainerJson, null, 2).length,
+		content: JSON.stringify(mergedDevContainerJson, null, 2),
+		size: JSON.stringify(mergedDevContainerJson, null, 2).length,
 		type: 'file'
 	});
 
 	// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
 	const dockerfileContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-dockerfile`,
+		`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
 		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
 	files.push({
@@ -119,7 +151,10 @@ async function generateDevelopmentContainerArtifacts(
 		type: 'file'
 	});
 
-	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', projectConfig);
+	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
+		...projectConfig,
+		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
+	});
 	files.push({
 		path: '.devcontainer/.zshrc',
 		name: '.zshrc',
@@ -138,7 +173,7 @@ async function generateDevelopmentContainerArtifacts(
 	});
 
 	const postCreateContent = templateEngine.generateFile(
-		'devcontainer-post-create-setup.sh',
+		'devcontainer-post-create-setup-sh',
 		projectConfig
 	);
 	files.push({
@@ -157,7 +192,7 @@ async function generateDevelopmentContainerArtifacts(
  * @param {string[]} otherCapabilities - Array of non-devcontainer capability IDs
  * @param {Array<FileObject>} files - Array to push generated file objects into
  */
-async function generateNonDevelopmentContainerFiles(
+async function generateNonDevContainerFiles(
 	templateEngine,
 	projectConfig,
 	otherCapabilities,
@@ -175,6 +210,7 @@ async function generateNonDevelopmentContainerFiles(
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
 						...extraData,
+						projectName: projectConfig.name || 'my-project',
 						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
 						capability
 					});
@@ -191,6 +227,41 @@ async function generateNonDevelopmentContainerFiles(
 			}
 		}
 	}
+}
+
+/**
+ * Generates preview files for the project
+ * @param {Object} projectConfig - Project configuration
+ * @param {string[]} executionOrder - Capability execution order
+ * @returns {Promise<Array<FileObject>>} Array of file objects
+ */
+async function generatePreviewFiles(projectConfig, executionOrder) {
+	const templateEngine = await getTemplateEngine();
+
+	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
+	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
+
+	const files = [];
+
+	await generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files);
+
+	// Handle devcontainer capabilities with merging logic
+	if (devContainerCapabilities.length > 0) {
+		await generateDevContainerArtifacts(
+			templateEngine,
+			projectConfig,
+			devContainerCapabilities,
+			executionOrder,
+			files
+		);
+	}
+
+	// Generate README.md
+	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
+	files.push(readmeFile);
+
+	// Organize files into folder structure
+	return organizeFilesIntoFolders(files);
 }
 
 /**
@@ -244,109 +315,6 @@ This project was generated using the genproj tool on ${new Date().toLocaleDateSt
 }
 
 /**
- * Organizes files into folder structure
- * @param {Array<FileObject>} files - Array of file objects
- * @returns {Array<FileObject>} Organized files with folder structure
- */
-function organizeFilesIntoFolders(files) {
-	const folderMap = new Map();
-	const organizedFiles = [];
-
-	for (const file of files) {
-		const pathParts = file.path.split('/');
-		const folderPath = pathParts.slice(0, -1).join('/') || '/';
-
-		if (!folderMap.has(folderPath)) {
-			folderMap.set(folderPath, []);
-		}
-		folderMap.get(folderPath).push(file);
-	}
-
-	for (const [folderPath, folderFiles] of folderMap) {
-		if (folderPath === '/') {
-			organizedFiles.push(...folderFiles);
-		} else {
-			const folderName = folderPath.split('/').pop();
-			organizedFiles.push({
-				path: folderPath,
-				name: folderName,
-				type: 'folder',
-				children: folderFiles
-			});
-		}
-	}
-
-	return organizedFiles;
-}
-
-/**
- * Generates preview files for the project
- * @param {Object} projectConfig - Project configuration
- * @param {string[]} executionOrder - Capability execution order
- * @returns {Promise<Array<FileObject>>} Array of file objects
- */
-async function generatePreviewFiles(projectConfig, executionOrder) {
-	const templateEngine = await getTemplateEngine();
-
-	const developmentContainerCapabilities = executionOrder.filter((c) =>
-		c.startsWith('devcontainer-')
-	);
-	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
-
-	const files = [];
-
-	await generateNonDevelopmentContainerFiles(
-		templateEngine,
-		projectConfig,
-		otherCapabilities,
-		files
-	);
-
-	// Handle devcontainer capabilities with merging logic
-	if (developmentContainerCapabilities.length > 0) {
-		await generateDevelopmentContainerArtifacts(
-			templateEngine,
-			projectConfig,
-			developmentContainerCapabilities,
-			files
-		);
-	}
-
-	// Generate README.md
-	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
-	files.push(readmeFile);
-
-	// Organize files into folder structure
-	return organizeFilesIntoFolders(files);
-}
-
-/**
- * Generates service changes for a specific capability
- * @param {Object} projectConfig - Project configuration
- * @param {Object} capability - Capability definition
- * @returns {Promise<Array<ExternalService>>} Array of service changes
- */
-async function generateCapabilityServiceChanges(projectConfig, capability) {
-	const services = [];
-
-	if (capability.externalServices) {
-		for (const serviceConfig of capability.externalServices) {
-			services.push({
-				type: serviceConfig.type,
-				name: serviceConfig.name,
-				actions: serviceConfig.actions.map((action) => ({
-					type: action.type,
-					description: action.description.replace('{{name}}', projectConfig.name)
-				})),
-				requiresAuth: serviceConfig.requiresAuth
-			});
-		}
-	}
-
-	return services;
-}
-
-/**
  * Generates external service changes preview
  * @param {Object} projectConfig - Project configuration
  * @param {string[]} executionOrder - Capability execution order
@@ -385,6 +353,68 @@ async function generateExternalServiceChanges(projectConfig, executionOrder) {
 }
 
 /**
+ * Generates service changes for a specific capability
+ * @param {Object} projectConfig - Project configuration
+ * @param {Object} capability - Capability definition
+ * @returns {Promise<Array<ExternalService>>} Array of service changes
+ */
+async function generateCapabilityServiceChanges(projectConfig, capability) {
+	const services = [];
+
+	if (capability.externalServices) {
+		for (const serviceConfig of capability.externalServices) {
+			services.push({
+				type: serviceConfig.type,
+				name: serviceConfig.name,
+				actions: serviceConfig.actions.map((action) => ({
+					type: action.type,
+					description: action.description.replace('{{name}}', projectConfig.name)
+				})),
+				requiresAuth: serviceConfig.requiresAuth
+			});
+		}
+	}
+
+	return services;
+}
+
+/**
+ * Organizes files into folder structure
+ * @param {Array<FileObject>} files - Array of file objects
+ * @returns {Array<FileObject>} Organized files with folder structure
+ */
+function organizeFilesIntoFolders(files) {
+	const folderMap = new Map();
+	const organizedFiles = [];
+
+	for (const file of files) {
+		const pathParts = file.path.split('/');
+		const folderPath = pathParts.slice(0, -1).join('/') || '/';
+
+		if (!folderMap.has(folderPath)) {
+			folderMap.set(folderPath, []);
+		}
+		folderMap.get(folderPath).push(file);
+	}
+
+	for (const [folderPath, folderFiles] of folderMap) {
+		if (folderPath === '/') {
+			organizedFiles.push(...folderFiles);
+		} else {
+			const folderName = folderPath.split('/').pop();
+			organizedFiles.push({
+				path: folderPath,
+				name: folderName,
+				type: 'folder',
+				children: folderFiles
+			});
+		}
+	}
+
+	return organizedFiles;
+}
+
+/**
  * Creates preview summary information
  * @param {Object} projectConfig - Project configuration
  * @param {Object} resolution - Dependency resolution result
@@ -409,35 +439,4 @@ function createPreviewSummary(projectConfig, resolution, files, services) {
 		conflicts: resolution.conflicts.length,
 		isValid: resolution.isValid
 	};
-}
-
-/**
- * Generates preview data for the specified project configuration
- * @param {Object} projectConfig - Project configuration object
- * @param {string[]} selectedCapabilities - Array of selected capability IDs
- * @returns {Promise<PreviewData>} Generated preview data
- */
-export async function generatePreview(projectConfig, selectedCapabilities) {
-	try {
-		const resolution = resolveDependencies(selectedCapabilities);
-		const executionOrder = getCapabilityExecutionOrder(selectedCapabilities);
-
-		const files = await generatePreviewFiles(projectConfig, executionOrder);
-
-		const externalServices = await generateExternalServiceChanges(projectConfig, executionOrder);
-
-		const summary = createPreviewSummary(projectConfig, resolution, files, externalServices);
-
-		const previewData = {
-			files,
-			externalServices,
-			summary,
-			timestamp: new Date().toISOString()
-		};
-
-		return previewData;
-	} catch (error) {
-		console.error('❌ Error generating preview:', error);
-		throw new Error(`Failed to generate preview: ${error.message}`);
-	}
 }

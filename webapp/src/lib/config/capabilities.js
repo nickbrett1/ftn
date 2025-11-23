@@ -13,7 +13,7 @@
  * @param {object} configurationSchema - The schema for configuring the capability.
  * @returns {object} A devcontainer capability object.
  */
-function createDevelopmentContainerCapability(id, name, description, configurationSchema) {
+function createDevContainerCapability(id, name, description, configurationSchema) {
 	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
 	return {
 		id,
@@ -61,7 +61,7 @@ export const capabilities = [
 		templates: [],
 		website: 'https://www.docker.com/'
 	},
-	createDevelopmentContainerCapability(
+	createDevContainerCapability(
 		'devcontainer-node',
 		'Node.js DevContainer',
 		'Sets up a VS Code DevContainer with Node.js environment.',
@@ -73,7 +73,7 @@ export const capabilities = [
 			required: []
 		}
 	),
-	createDevelopmentContainerCapability(
+	createDevContainerCapability(
 		'devcontainer-python',
 		'Python DevContainer',
 		'Sets up a VS Code DevContainer with Python environment.',
@@ -85,7 +85,7 @@ export const capabilities = [
 			}
 		}
 	),
-	createDevelopmentContainerCapability(
+	createDevContainerCapability(
 		'devcontainer-java',
 		'Java DevContainer',
 		'Sets up a VS Code DevContainer with Java environment.',
@@ -447,5 +447,5 @@ export function getRequiredAuthServices(selectedIds) {
 			}
 		}
 	}
-	return [...services];
+	return Array.from(services);
 }

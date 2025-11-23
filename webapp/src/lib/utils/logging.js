@@ -83,7 +83,7 @@ const createLogger = (category) => {
 
 const logger = createLogger('genproj');
 const authLogger = createLogger('genproj:auth');
-const databaseLogger = createLogger('genproj:database');
+const dbLogger = createLogger('genproj:database');
 const apiLogger = createLogger('genproj:api');
 const fileLogger = createLogger('genproj:file');
 const systemLogger = createLogger('genproj:system');
@@ -105,11 +105,11 @@ const getLogLevel = () => {
 	return Object.keys(LOG_LEVELS).find((key) => LOG_LEVELS[key] === currentLogLevel) || 'INFO';
 };
 
-const withTiming = (function_, operationName, data = {}) => {
-	return async (...arguments_) => {
+const withTiming = (fn, operationName, data = {}) => {
+	return async (...args) => {
 		const start = Date.now();
 		try {
-			const result = await function_(...arguments_);
+			const result = await fn(...args);
 			const duration = Date.now() - start;
 			logger.info(`Completed ${operationName}`, { ...data, duration: `${duration}ms` });
 			return result;
@@ -125,9 +125,9 @@ const withTiming = (function_, operationName, data = {}) => {
 	};
 };
 
-const logApiCall = (method, path, parameters, response, statusCode, duration) => {
+const logApiCall = (method, path, params, response, statusCode, duration) => {
 	const message = `API call: ${method} ${path}`;
-	const logData = { ...parameters, statusCode, duration: `${duration}ms` };
+	const logData = { ...params, statusCode, duration: `${duration}ms` };
 	if (response.ok) {
 		logger.api(message, logData);
 	} else {
@@ -163,7 +163,7 @@ export {
 	createLogger,
 	logger,
 	authLogger,
-	databaseLogger as dbLogger,
+	dbLogger,
 	apiLogger,
 	fileLogger,
 	systemLogger,

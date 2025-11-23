@@ -14,12 +14,12 @@ describe('r2 list objects route', () => {
 
 	const loadModule = () => import('../../../src/routes/api/r2/list-objects/+server.js');
 
-	const buildEvent = (parameters, environment) => ({
+	const buildEvent = (params, env) => ({
 		request: {
-			url: `https://app.test/api/r2/list-objects?${new URLSearchParams(parameters).toString()}`
+			url: `https://app.test/api/r2/list-objects?${new URLSearchParams(params).toString()}`
 		},
 		platform: {
-			env: environment || {
+			env: env || {
 				R2_CCBILLING: { list: listMock },
 				R2_WDI: { list: listMock },
 				R2_GENPROJ_TEMPLATES: { list: listMock }

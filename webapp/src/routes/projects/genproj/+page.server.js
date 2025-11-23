@@ -11,16 +11,16 @@ export async function load({ locals, url = new URL('http://localhost/') }) {
 	const authResult = url.searchParams.get('auth');
 
 	// Restore selected capabilities, project name, and repository URL from URL parameters
-	const selectedCapabilitiesParameter = url.searchParams.get('selected');
-	const projectNameParameter = url.searchParams.get('projectName');
-	const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
+	const selectedCapabilitiesParam = url.searchParams.get('selected');
+	const projectNameParam = url.searchParams.get('projectName');
+	const repositoryUrlParam = url.searchParams.get('repositoryUrl');
 
-	const selectedCapabilities = selectedCapabilitiesParameter
-		? selectedCapabilitiesParameter.split(',')
+	const selectedCapabilities = selectedCapabilitiesParam
+		? selectedCapabilitiesParam.split(',')
 		: [];
 
-	const projectName = projectNameParameter || '';
-	const repositoryUrl = repositoryUrlParameter || '';
+	const projectName = projectNameParam || '';
+	const repositoryUrl = repositoryUrlParam || '';
 
 	// If there's an error, redirect to /notauthorised after displaying a message
 	if (authError) {

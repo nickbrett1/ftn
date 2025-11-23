@@ -301,14 +301,14 @@ export class ChaseParser extends BaseParser {
 	 * @returns {Object} - Foreign transaction details
 	 */
 	extractForeignTransactionInfo(lines, currentIndex) {
-		for (let index = currentIndex + 1; index < Math.min(currentIndex + 5, lines.length); index++) {
-			const nextLine = lines[index];
+		for (let i = currentIndex + 1; i < Math.min(currentIndex + 5, lines.length); i++) {
+			const nextLine = lines[i];
 
 			if (this._isTransactionLine(nextLine)) {
 				break;
 			}
 
-			const currencyInfo = this._parseCurrencyInfo(nextLine, lines, index);
+			const currencyInfo = this._parseCurrencyInfo(nextLine, lines, i);
 			if (currencyInfo) {
 				return currencyInfo;
 			}

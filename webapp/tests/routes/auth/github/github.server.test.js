@@ -72,13 +72,13 @@ describe('/auth/github/+server.js', () => {
 
 	it('should set the secure flag on cookies in production', async () => {
 		// Temporarily set the environment to production for this test
-		const originalEnvironment = import.meta.env.PROD;
+		const originalEnv = import.meta.env.PROD;
 		import.meta.env.PROD = true;
 
 		try {
 			await GET(mockEvent);
 			expect.fail('GET should have thrown a redirect.');
-		} catch {
+		} catch (error) {
 			// Check that the secure flag is now true
 			expect(mockEvent.cookies.set).toHaveBeenCalledWith(
 				'github_oauth_state',
@@ -87,7 +87,7 @@ describe('/auth/github/+server.js', () => {
 			);
 		} finally {
 			// Restore the original environment
-			import.meta.env.PROD = originalEnvironment;
+			import.meta.env.PROD = originalEnv;
 		}
 	});
 });

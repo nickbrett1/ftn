@@ -21,7 +21,7 @@ describe('/logout/+server.js', () => {
 
 	beforeEach(() => {
 		mockFetch = vi.fn();
-		globalThis.fetch = mockFetch;
+		global.fetch = mockFetch;
 
 		consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 

@@ -14,7 +14,7 @@ vi.mock('@sveltejs/kit', async (importOriginal) => {
 	return {
 		...original,
 		json: vi.fn((data, init) => {
-			return Response.json(data, init);
+			return new Response(JSON.stringify(data), init);
 		})
 	};
 });

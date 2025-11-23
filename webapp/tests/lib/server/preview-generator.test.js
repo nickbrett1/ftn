@@ -20,7 +20,10 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 			});
 		}
 	}
-	return { TemplateEngine: MockTemplateEngine };
+	return {
+		TemplateEngine: MockTemplateEngine,
+		GEMINI_DEV_ALIAS: 'gemini-dev-alias-mock'
+	};
 });
 
 vi.mock('../../../src/lib/config/capabilities.js', () => ({

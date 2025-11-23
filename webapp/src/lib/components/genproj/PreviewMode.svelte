@@ -74,14 +74,14 @@
 	 * @param {Set} set - The set of expanded folders
 	 */
 	function expandAllFolders(files, set) {
-		for (const file of files) {
+		files.forEach((file) => {
 			if (file.type === 'folder') {
 				set.add(file.path);
 				if (file.children) {
 					expandAllFolders(file.children, set);
 				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -121,7 +121,7 @@
 	 * @returns {string} Icon emoji
 	 */
 	function getFileIcon(filename) {
-		const extension = filename.split('.').pop()?.toLowerCase();
+		const ext = filename.split('.').pop()?.toLowerCase();
 		const iconMap = {
 			js: '📄',
 			ts: '📘',
@@ -149,7 +149,7 @@
 			txt: '📄',
 			log: '📋'
 		};
-		return iconMap[extension] || '📄';
+		return iconMap[ext] || '📄';
 	}
 
 	/**
@@ -158,7 +158,7 @@
 	 * @returns {string} Language for syntax highlighting
 	 */
 	function getLanguage(filename) {
-		const extension = filename.split('.').pop()?.toLowerCase();
+		const ext = filename.split('.').pop()?.toLowerCase();
 		const langMap = {
 			js: 'javascript',
 			ts: 'typescript',
@@ -182,7 +182,7 @@
 			env: 'bash',
 			txt: 'text'
 		};
-		return langMap[extension] || 'text';
+		return langMap[ext] || 'text';
 	}
 
 	/**

@@ -193,16 +193,16 @@ export class WellsFargoParser extends BaseParser {
 		let foreignCurrencyAmount = null;
 		let foreignCurrencyType = null;
 
-		for (let index = startIndex + 1; index < Math.min(startIndex + 4, lines.length); index++) {
-			const nextLine = lines[index];
+		for (let i = startIndex + 1; i < Math.min(startIndex + 4, lines.length); i++) {
+			const nextLine = lines[i];
 
 			if (this.isCurrencyLine(nextLine)) {
 				const currencyMatch = /(?:- \d{1,2}\/\d{1,2} )?(.*)/.exec(nextLine);
 				foreignCurrencyType = currencyMatch ? currencyMatch[1].trim() : nextLine.trim();
 				isForeignTransaction = true;
 
-				if (index + 1 < lines.length) {
-					const rateLine = lines[index + 1];
+				if (i + 1 < lines.length) {
+					const rateLine = lines[i + 1];
 					const rateMatch = this.parseExchangeRate(rateLine);
 					if (rateMatch) {
 						foreignCurrencyAmount = rateMatch.foreignAmount;
