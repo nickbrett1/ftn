@@ -36,15 +36,52 @@
 		if (previewData) {
 			fileTree = previewData.files || [];
 			externalServices = previewData.externalServices || [];
-			selectedFile = null;
 			// Expand all folders by default when new previewData arrives
 			expandedFolders = new Set();
-			fileTree.forEach((file) => {
-				if (file.type === 'folder') {
-					expandedFolders.add(file.path);
-				}
-			});
+			expandAllFolders(fileTree, expandedFolders);
+
+			// Default select README.md if present
+			selectedFile = findReadme(fileTree);
 		}
+	}
+
+	/**
+	 * Recursively finds the README.md file in the file tree
+	 * @param {Array} files - The file tree array
+	 * @returns {Object|null} - The README file object or null
+	 */
+	function findReadme(files) {
+		// First pass: check for README.md in the current level
+		for (const file of files) {
+			if (file.type === 'file' && file.name.toLowerCase() === 'readme.md') {
+				return file;
+			}
+		}
+
+		// Second pass: recursively check subfolders
+		for (const file of files) {
+			if (file.type === 'folder' && file.children) {
+				const found = findReadme(file.children);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Recursively expands all folders
+	 * @param {Array} files - The file tree array
+	 * @param {Set} set - The set of expanded folders
+	 */
+	function expandAllFolders(files, set) {
+		files.forEach((file) => {
+			if (file.type === 'folder') {
+				set.add(file.path);
+				if (file.children) {
+					expandAllFolders(file.children, set);
+				}
+			}
+		});
 	}
 
 	/**
@@ -160,6 +197,21 @@
 	}
 
 	/**
+	 * Recursively counts total files in the file tree
+	 * @param {Array} files - Array of file/folder objects
+	 * @returns {number} Total count of files
+	 */
+	function countFiles(files) {
+		if (!files) return 0;
+		return files.reduce((count, item) => {
+			if (item.type === 'folder') {
+				return count + countFiles(item.children);
+			}
+			return count + 1;
+		}, 0);
+	}
+
+	/**
 	 * Handles continue to generation
 	 */
 	function continueToGeneration() {
@@ -213,7 +265,7 @@
 				<div class="p-4 border-b border-gray-700">
 					<h3 class="text-lg font-semibold text-gray-100">Generated Files</h3>
 					<p class="text-sm text-gray-400 mt-1">
-						{fileTree.length} files will be created
+						{countFiles(fileTree)} files will be created
 					</p>
 				</div>
 

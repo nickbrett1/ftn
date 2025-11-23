@@ -30,7 +30,13 @@ const nodeJsonTemplateContent = `{
 `;
 
 const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr.microsoft.com/devcontainers/java:0-{{javaVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git zsh
+    && apt-get -y install --no-install-recommends git zsh \\
+    && npm install -g @google/gemini-cli
+`;
+
+const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+    && apt-get -y install --no-install-recommends git zsh \\
+    && npm install -g @google/gemini-cli
 `;
 
 describe('TemplateEngine', () => {
@@ -70,6 +76,12 @@ describe('TemplateEngine', () => {
         const template = engine.getTemplate('devcontainer-java-dockerfile');
         const result = engine.compileTemplate(template, { javaVersion: '17' });
         expect(result).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+    });
+
+    it('replaces variables from node dockerfile template', () => {
+        const template = engine.getTemplate('devcontainer-node-dockerfile');
+        const result = engine.compileTemplate(template, { nodeVersion: '20' });
+        expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
     });
 
 	it('generates sonar-project.properties with correct variables', () => {

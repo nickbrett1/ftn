@@ -12,6 +12,7 @@ import devcontainerPythonJson from '../templates/devcontainer-python-json.templa
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
+import circleciConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 
@@ -28,6 +29,7 @@ const templateImports = {
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
 	'playwright-config': playwrightConfig,
+	'circleci-config': circleciConfig,
 	'sonar-project-properties': sonarProjectProperties
 };
 export class TemplateEngine {
