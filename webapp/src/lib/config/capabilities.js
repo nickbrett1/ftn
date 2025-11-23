@@ -104,6 +104,23 @@ export const capabilities = [
 		dependencies: [],
 		conflicts: [], // Removed 'github-actions' from conflicts
 		requiresAuth: ['circleci'],
+		externalServices: [
+			{
+				type: 'circleci',
+				name: 'CircleCI',
+				actions: [
+					{
+						type: 'create',
+						description: 'Create new project in CircleCI'
+					},
+					{
+						type: 'configure',
+						description: 'Set up environment variables'
+					}
+				],
+				requiresAuth: true
+			}
+		],
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -125,6 +142,23 @@ export const capabilities = [
 		dependencies: [],
 		conflicts: [],
 		requiresAuth: ['doppler'],
+		externalServices: [
+			{
+				type: 'doppler',
+				name: 'Doppler',
+				actions: [
+					{
+						type: 'create',
+						description: 'Create new project in Doppler'
+					},
+					{
+						type: 'configure',
+						description: 'Configure service tokens'
+					}
+				],
+				requiresAuth: true
+			}
+		],
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -146,6 +180,23 @@ export const capabilities = [
 		dependencies: [],
 		conflicts: [],
 		requiresAuth: ['sonarcloud'],
+		externalServices: [
+			{
+				type: 'sonarcloud',
+				name: 'SonarCloud',
+				actions: [
+					{
+						type: 'create',
+						description: 'Create new project in SonarCloud'
+					},
+					{
+						type: 'configure',
+						description: 'Configure analysis parameters'
+					}
+				],
+				requiresAuth: true
+			}
+		],
 		configurationSchema: {
 			type: 'object',
 			properties: {
