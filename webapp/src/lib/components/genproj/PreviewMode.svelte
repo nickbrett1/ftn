@@ -160,6 +160,21 @@
 	}
 
 	/**
+	 * Recursively counts total files in the file tree
+	 * @param {Array} files - Array of file/folder objects
+	 * @returns {number} Total count of files
+	 */
+	function countFiles(files) {
+		if (!files) return 0;
+		return files.reduce((count, item) => {
+			if (item.type === 'folder') {
+				return count + countFiles(item.children);
+			}
+			return count + 1;
+		}, 0);
+	}
+
+	/**
 	 * Handles continue to generation
 	 */
 	function continueToGeneration() {
@@ -213,7 +228,7 @@
 				<div class="p-4 border-b border-gray-700">
 					<h3 class="text-lg font-semibold text-gray-100">Generated Files</h3>
 					<p class="text-sm text-gray-400 mt-1">
-						{fileTree.length} files will be created
+						{countFiles(fileTree)} files will be created
 					</p>
 				</div>
 
