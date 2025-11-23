@@ -130,7 +130,13 @@ export const capabilities = [
 				}
 			}
 		},
-		templates: [],
+		templates: [
+			{
+				id: 'config-yml',
+				filePath: '.circleci/config.yml',
+				templateId: 'circleci-config'
+			}
+		],
 		website: 'https://circleci.com/'
 	},
 	// Removed 'github-actions' capability

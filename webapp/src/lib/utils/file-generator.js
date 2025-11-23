@@ -12,6 +12,7 @@ import devcontainerPythonJson from '../templates/devcontainer-python-json.templa
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
+import circleciConfig from '../templates/circleci-config.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 
 const templateImports = {
@@ -26,7 +27,8 @@ const templateImports = {
 	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
-	'playwright-config': playwrightConfig
+	'playwright-config': playwrightConfig,
+	'circleci-config': circleciConfig
 };
 export class TemplateEngine {
 	constructor() {
