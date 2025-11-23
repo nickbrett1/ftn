@@ -11,7 +11,9 @@ import devcontainerPythonDockerfile from '../templates/devcontainer-python-docke
 import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
+import dopplerYaml from '../templates/doppler-yaml.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
+import circleciConfig from '../templates/circleci-config.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 
 const templateImports = {
@@ -26,6 +28,8 @@ const templateImports = {
 	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
+	'circleci-config': circleciConfig,
+	'doppler-yaml': dopplerYaml,
 	'playwright-config': playwrightConfig
 };
 export class TemplateEngine {

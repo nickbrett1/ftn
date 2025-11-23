@@ -30,7 +30,18 @@ const nodeJsonTemplateContent = `{
 `;
 
 const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr.microsoft.com/devcontainers/java:0-{{javaVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git zsh
+    && apt-get -y install --no-install-recommends git zsh \\
+    && npm install -g @google/gemini-cli
+`;
+
+const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+    && apt-get -y install --no-install-recommends git zsh \\
+    && npm install -g @google/gemini-cli
+`;
+
+const dopplerYamlTemplateContent = `setup:
+  project: {{projectName}}
+  config: dev
 `;
 
 describe('TemplateEngine', () => {
@@ -72,11 +83,22 @@ describe('TemplateEngine', () => {
         expect(result).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
     });
 
+    it('replaces variables from node dockerfile template', () => {
+        const template = engine.getTemplate('devcontainer-node-dockerfile');
+        const result = engine.compileTemplate(template, { nodeVersion: '20' });
+        expect(result).toBe(nodeDockerfileTemplateContent.replace(/{{nodeVersion}}/g, '20'));
+    });
+
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
 		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
+	});
+
+	it('generates doppler.yaml correctly', () => {
+		const content = engine.generateFile('doppler-yaml', { projectName: 'test-project' });
+		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
 	});
 
 	it('generates multiple files collecting errors', () => {
