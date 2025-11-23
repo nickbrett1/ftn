@@ -2,15 +2,15 @@
 
 import Handlebars from 'handlebars';
 
-
+const BASE_URL = '/static/templates/';
 
 export class TemplateEngine {
-	constructor(r2Bucket) {
+	constructor(fetcher) {
 		this.templates = new Map();
 		this.helpers = new Map();
 		this.templateIdToFileMap = new Map(); // Maps templateId to filename in static/templates
 		this.initialized = false; // Add a flag to prevent re-initialization
-        this.r2Bucket = r2Bucket;
+        this.fetcher = fetcher;
 	}
 
 	async initialize() {
@@ -107,11 +107,11 @@ export class TemplateEngine {
         }
 
 		try {
-			const object = await this.r2Bucket.get(fileName);
-			if (object === null) {
-				throw new Error(`Template not found in R2: ${fileName}`);
+			const response = await this.fetcher(BASE_URL + fileName);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch template ${fileName}: ${response.statusText}`);
 			}
-			const content = await object.text();
+			const content = await response.text();
 			this.templates.set(name, content); // Cache the fetched template
 			return content;
 		} catch (error) {
