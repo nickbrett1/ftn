@@ -17,10 +17,7 @@ import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import {
-	getCapabilityTemplateData,
-	getCapabilityConfig
-} from '$lib/utils/capability-template-utils.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
@@ -133,16 +130,10 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 			for (const template of capability.templates) {
 				try {
 					const extraData = getCapabilityTemplateData(capabilityId, context);
-					const capabilityConfig = getCapabilityConfig(
-						capabilityId,
-						context.configuration?.[capabilityId]
-					);
-
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
-						projectName: context.name || 'my-project',
-						capabilityConfig,
+						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability
 					});
 					files.push({
@@ -168,12 +159,9 @@ function generateMergedDevelopmentContainerFiles(
 
 	if (developmentContainerCapabilities.length === 0) return files;
 
-	const baseDevContainerId = devContainerCapabilities[0];
-	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
-	const baseCapabilityConfig = getCapabilityConfig(
-		baseDevContainerId,
-		context.configuration?.[baseDevContainerId]
-	);
+	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
+	const baseCapabilityConfig = context.configuration?.[baseDevelopmentContainerId] || {};
 
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
@@ -185,10 +173,7 @@ function generateMergedDevelopmentContainerFiles(
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = getCapabilityConfig(
-			capabilityId,
-			context.configuration?.[capabilityId]
-		);
+		const capabilityConfig = context.configuration?.[capabilityId] || {};
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
