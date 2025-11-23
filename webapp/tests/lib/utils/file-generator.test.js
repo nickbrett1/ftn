@@ -91,10 +91,16 @@ describe('TemplateEngine', () => {
     });
 
 	it('generates sonar-project.properties with correct variables', () => {
-		const content = engine.generateFile('sonar-project-properties', { name: 'my-project' });
+		const data = {
+            projectName: 'my-project',
+            organization: 'my-org',
+            sonarLanguageSettings: 'sonar.foo=bar'
+        };
+		const content = engine.generateFile('sonar-project-properties', data);
 		expect(content).toContain('sonar.projectKey=my-project');
 		expect(content).toContain('sonar.projectName=my-project');
-		expect(content).toContain('sonar.organization=bem');
+		expect(content).toContain('sonar.organization=my-org');
+        expect(content).toContain('sonar.foo=bar');
 	});
 
 	it('generates files and handles missing templates', () => {
