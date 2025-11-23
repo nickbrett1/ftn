@@ -10,18 +10,13 @@ import { TemplateEngine } from '$lib/utils/file-generator.js';
 
 describe('TemplateEngine', () => {
 	let engine;
+	let mockR2Bucket;
 
 	beforeEach(() => {
-		const mockFetcher = vi.fn(async (url) => {
-			if (url.includes('devcontainer-node-json.hbs')) {
-				return { ok: true, text: async () => 'mock devcontainer node json' };
-			}
-			if (url.includes('playwright-config.hbs')) {
-				return { ok: true, text: async () => 'mock playwright config' };
-			}
-			return { ok: false, statusText: 'Not Found' };
-		});
-		engine = new TemplateEngine(mockFetcher);
+		mockR2Bucket = {
+			get: vi.fn().mockResolvedValue(null)
+		};
+		engine = new TemplateEngine(mockR2Bucket);
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 		vi.spyOn(console, 'warn').mockImplementation(() => {});
 	});
@@ -71,30 +66,29 @@ describe('TemplateEngine', () => {
 		expect(uppercase('hello')).toBe('HELLO');
 	});
 
-	it('retrieves templates using fetcher and caches them', async () => {
-		const mockFetcher = vi.fn(async (url) => {
-			if (url.includes('remote-template.hbs')) {
-				return { ok: true, text: async () => 'Remote {{name}}' };
+	it('retrieves templates from R2 and caches them', async () => {
+		mockR2Bucket.get.mockImplementation(async (key) => {
+			if (key === 'remote-template.hbs') {
+				return { text: async () => 'Remote {{name}}' };
 			}
-			// Simulate a failed fetch for non-existent templates
-			if (url.includes('non-existent-template.hbs')) {
-				return { ok: false, statusText: 'Not Found' };
+			if (key === 'non-existent-template.hbs') {
+				return null;
 			}
-			return { ok: false, statusText: 'Not Found' }; // Default for other cases
+			return null;
 		});
-		engine = new TemplateEngine(mockFetcher);
+
 		await engine.initialize();
 
 		// Test cache hit
 		engine.templates.set('cached', 'Cached Template');
 		expect(await engine.getTemplate('cached')).toBe('Cached Template');
-		expect(mockFetcher).not.toHaveBeenCalled(); // Should not call fetcher if cached
+		expect(mockR2Bucket.get).not.toHaveBeenCalled(); // Should not call R2 if cached
 
-		// Test fetcher usage and caching
+		// Test R2 usage and caching
 		engine.templateIdToFileMap.set('remote', 'remote-template.hbs');
 		const remoteContent = await engine.getTemplate('remote');
 		expect(remoteContent).toBe('Remote {{name}}');
-		expect(mockFetcher).toHaveBeenCalledWith('/static/templates/remote-template.hbs');
+		expect(mockR2Bucket.get).toHaveBeenCalledWith('remote-template.hbs');
 		expect(engine.templates.get('remote')).toBe('Remote {{name}}'); // Should be cached
 
 		// Test template not found and error logging

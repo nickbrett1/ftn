@@ -29,10 +29,11 @@
     },
     "circleci": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ]
+      "args": ["-y", "@circleci/mcp-server-circleci"]
+    },
+    "cloudflare": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://docs.mcp.cloudflare.com/mcp"]
     }
   }
 }

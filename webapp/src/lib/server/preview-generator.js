@@ -14,8 +14,8 @@ import {
 } from '$lib/utils/capability-resolver.js';
 import { TemplateEngine } from '$lib/utils/file-generator.js'; // Import TemplateEngine
 
-async function getTemplateEngine(args, fetcher) {
-	const newInstance = new TemplateEngine(fetcher);
+async function getTemplateEngine(r2Bucket) {
+	const newInstance = new TemplateEngine(r2Bucket);
 	await newInstance.initialize();
 	return newInstance;
 }
@@ -56,7 +56,7 @@ async function getTemplateEngine(args, fetcher) {
 export async function generatePreview(projectConfig, selectedCapabilities, r2Bucket, fetcher) {
 	// Accept r2Bucket as an argument
 	try {
-		console.log('🔍 Generating preview for project:', projectConfig.name);
+
 
 		// Resolve dependencies and get execution order
 		const resolution = resolveDependencies(selectedCapabilities);
@@ -83,7 +83,7 @@ export async function generatePreview(projectConfig, selectedCapabilities, r2Buc
 			timestamp: new Date().toISOString()
 		};
 
-		console.log(`✅ Generated preview: ${files.length} files, ${externalServices.length} services`);
+
 
 		return previewData;
 	} catch (error) {
@@ -129,7 +129,7 @@ async function generateCapabilityFiles(projectConfig, capability, r2Bucket, fetc
 	// Make function async
 	const files = [];
 	const capabilityConfig = projectConfig.configuration?.[capability.id] || {};
-	const templateEngine = await getTemplateEngine(r2Bucket, fetcher); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	// Generate capability-specific files
 	if (capability.templates) {
@@ -264,7 +264,7 @@ async function generateExternalServiceChanges(projectConfig, executionOrder, r2B
 async function generateCapabilityServiceChanges(projectConfig, capability, r2Bucket, fetcher) {
 	// Make async
 	const services = [];
-	const templateEngine = await getTemplateEngine(r2Bucket, fetcher); // Get the initialized template engine
+	const templateEngine = await getTemplateEngine(r2Bucket); // Get the initialized template engine
 
 	if (capability.externalServices) {
 		for (const serviceConfig of capability.externalServices) {

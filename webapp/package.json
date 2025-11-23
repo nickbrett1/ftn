@@ -27,7 +27,9 @@
 		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
 		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
 		"deploy": "npx wrangler deploy -e production",
-		"deploy-preview": "npx wrangler deploy --env preview"
+		"deploy-preview": "npx wrangler deploy --env preview",
+		"update:templates:local": "node scripts/update-templates.js local",
+		"update:templates:remote": "node scripts/update-templates.js remote"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.15.2",

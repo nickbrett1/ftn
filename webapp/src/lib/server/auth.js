@@ -13,9 +13,6 @@ import { GITHUB_CLIENT_ID } from '$env/static/private';
 export async function getCurrentUser(event) {
 	const authToken = event.cookies.get('auth');
 
-    console.log(`Auth Token: ${authToken}`);
-    console.log('-------------------------------------------');
-
 	if (authToken) {
 		// In a real application, you would validate this token (e.g., JWT verification)
 		// and retrieve actual user details from a database or API.
