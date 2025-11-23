@@ -206,6 +206,7 @@ async function generateNonDevelopmentContainerFiles(
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
 						...extraData,
+						projectName: projectConfig.name || 'my-project',
 						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
 						capability
 					});

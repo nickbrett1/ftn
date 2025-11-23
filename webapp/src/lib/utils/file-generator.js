@@ -133,6 +133,7 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
+						projectName: context.name || 'my-project',
 						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability
 					});
