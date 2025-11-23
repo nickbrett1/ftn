@@ -31,7 +31,7 @@ const templateImports = {
 	'devcontainer-zshrc': devcontainerZshrc,
 	'playwright-config': playwrightConfig,
 	'circleci-config': circleciConfig,
-	'sonar-project-properties': sonarProjectPropertie
+	'sonar-project-properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml
 };
 export class TemplateEngine {
