@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+	isNotEmpty,
+	isValidUuid,
+	isValidEmail,
+	isValidUrl,
 	validateProjectName,
 	validateRepositoryUrl,
 	validateSelectedCapabilities,
@@ -11,6 +15,68 @@ import {
 } from '$lib/utils/validation.js';
 
 describe('validation utilities', () => {
+	describe('isNotEmpty', () => {
+		it('returns true for non-empty strings', () => {
+			expect(isNotEmpty('hello')).toBe(true);
+			expect(isNotEmpty('  hello  ')).toBe(true);
+		});
+
+		it('returns false for empty or whitespace-only strings', () => {
+			expect(isNotEmpty('')).toBe(false);
+			expect(isNotEmpty('   ')).toBe(false);
+		});
+
+		it('returns false for non-string values', () => {
+			expect(isNotEmpty(null)).toBe(false);
+			expect(isNotEmpty(undefined)).toBe(false);
+			expect(isNotEmpty(123)).toBe(false);
+		});
+	});
+
+	describe('isValidUuid', () => {
+		it('returns true for valid UUIDs', () => {
+			expect(isValidUuid('123e4567-e89b-12d3-a456-426614174000')).toBe(true);
+			expect(isValidUuid('00000000-0000-0000-0000-000000000000')).toBe(true);
+		});
+
+		it('returns false for invalid UUIDs', () => {
+			expect(isValidUuid('invalid-uuid')).toBe(false);
+			expect(isValidUuid('123e4567-e89b-12d3-a456-42661417400')).toBe(false); // Too short
+			expect(isValidUuid(null)).toBe(false);
+			expect(isValidUuid(undefined)).toBe(false);
+		});
+	});
+
+	describe('isValidEmail', () => {
+		it('returns true for valid emails', () => {
+			expect(isValidEmail('test@example.com')).toBe(true);
+			expect(isValidEmail('user.name@domain.co.uk')).toBe(true);
+		});
+
+		it('returns false for invalid emails', () => {
+			expect(isValidEmail('invalid-email')).toBe(false);
+			expect(isValidEmail('@example.com')).toBe(false);
+			expect(isValidEmail('user@')).toBe(false);
+			expect(isValidEmail(null)).toBe(false);
+			expect(isValidEmail(undefined)).toBe(false);
+		});
+	});
+
+	describe('isValidUrl', () => {
+		it('returns true for valid URLs', () => {
+			expect(isValidUrl('https://example.com')).toBe(true);
+			expect(isValidUrl('http://localhost:3000')).toBe(true);
+			expect(isValidUrl('ftp://files.com')).toBe(true);
+		});
+
+		it('returns false for invalid URLs', () => {
+			expect(isValidUrl('not-a-url')).toBe(false);
+			expect(isValidUrl('/relative/path')).toBe(false);
+			expect(isValidUrl(null)).toBe(false);
+			expect(isValidUrl(undefined)).toBe(false);
+		});
+	});
+
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });

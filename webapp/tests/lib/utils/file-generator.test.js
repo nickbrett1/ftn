@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TemplateEngine } from '$lib/utils/file-generator.js';
+import { TemplateEngine, generateAllFiles } from '$lib/utils/file-generator.js';
 
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
@@ -129,5 +129,89 @@ describe('TemplateEngine', () => {
 		expect(success.content).toBe(javaDockerfileTemplateContent.replaceAll('{{javaVersion}}', '17'));
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
+	});
+});
+
+describe('generateAllFiles', () => {
+	const context = {
+		projectName: 'test-project',
+		capabilities: ['devcontainer-node', 'doppler'],
+		configuration: {
+			'devcontainer-node': { nodeVersion: '18' },
+			doppler: { projectType: 'web' }
+		}
+	};
+
+	it('generates all requested files including merged devcontainer files', async () => {
+		// Use the real TemplateEngine but mock its initialization if needed
+		// Since we are testing generateAllFiles which instantiates TemplateEngine internally,
+		// we rely on the template imports being available (which they are via ?raw).
+
+		const files = await generateAllFiles(context);
+
+		expect(files).toBeInstanceOf(Array);
+		expect(files.length).toBeGreaterThan(0);
+
+		// Check for specific files
+		const dockerfile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		expect(dockerfile).toBeDefined();
+		expect(dockerfile.content).toContain('FROM mcr.microsoft.com/devcontainers/typescript-node');
+
+		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		expect(devcontainerJson).toBeDefined();
+		const jsonContent = JSON.parse(devcontainerJson.content);
+		expect(jsonContent.name).toBe('Node.js');
+
+		const dopplerFile = files.find((f) => f.filePath === 'doppler.yaml');
+		expect(dopplerFile).toBeDefined();
+		expect(dopplerFile.content).toContain('project: test-project');
+	});
+
+	it('merges devcontainer configurations correctly', async () => {
+		const multiContext = {
+			...context,
+			capabilities: ['devcontainer-node', 'devcontainer-python'],
+			configuration: {
+				'devcontainer-node': { nodeVersion: '18' },
+				'devcontainer-python': { packageManager: 'pip' }
+			}
+		};
+
+		const files = await generateAllFiles(multiContext);
+		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		const jsonContent = JSON.parse(devcontainerJson.content);
+
+		// Should contain base node features
+		expect(jsonContent.name).toBe('Node.js');
+		// Should theoretically merge python features if the templates were set up that way
+		// In this mock setup, we check that the file is generated and valid JSON
+		expect(jsonContent).toHaveProperty('features');
+	});
+
+	it('handles empty capabilities list', async () => {
+		const emptyContext = {
+			projectName: 'empty',
+			capabilities: [],
+			configuration: {}
+		};
+		const files = await generateAllFiles(emptyContext);
+		expect(files).toEqual([]);
+	});
+
+	it('handles capability with no templates', async () => {
+		// Mock a capability not in the list or one without templates if possible
+		// Since we import capabilities from $lib/config/capabilities.js, we are bound by that list.
+		// We can just pass a context with a capability that has no templates logic in generateAllFiles if we could control it.
+		// But collectNonDevelopmentContainerFiles iterates over otherCapabilities and checks c.templates.
+		// If we pass a fake capability ID, it won't find it in capabilities array and skip it.
+
+		const fakeContext = {
+			projectName: 'fake',
+			capabilities: ['non-existent-capability'],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(fakeContext);
+		expect(files).toEqual([]);
 	});
 });

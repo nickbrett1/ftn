@@ -139,7 +139,6 @@ export async function POST(event) {
 		if (offset === 0 && updatedCount < 3) {
 			const bulkUpdates = await performBulkPatternUpdates(database);
 			updatedCount += bulkUpdates.paymentsUpdated;
-			budgetMerchantsUpdated += bulkUpdates.budgetMerchantsUpdated;
 			errors.push(...(bulkUpdates.errors || []));
 
 			const budgetBulkUpdates = await performBudgetMerchantBulkUpdates(database);
