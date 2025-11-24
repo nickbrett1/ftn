@@ -1,5 +1,5 @@
 
-import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
+import { render, fireEvent, screen } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Page from '../../../../src/routes/projects/genproj/+page.svelte';
 import * as googleAuth from '$lib/client/google-auth';
@@ -32,28 +32,7 @@ vi.mock('$app/environment', () => ({
 }));
 
 // Mock AuthFlow component
-// Note: In Svelte testing library, child components are not automatically mocked.
-// But we can check if it is rendered by looking for its content if we knew what it was.
-// Since we don't know the exact content of AuthFlow, let's assume it has some identifiable text
-// or we can rely on the fact that the logic is removed.
-
-// Ideally, we would mock the child component to spy on its creation, but that's hard in Svelte.
-// Instead, let's rely on checking the state 'showAuthFlow'.
-// But 'showAuthFlow' is internal state.
-// We can check if AuthFlow is NOT rendered.
-// To do that, we need to know what AuthFlow renders.
-// Let's check AuthFlow file content first.
-// But we can't do that inside the test file easily.
-// We'll assume AuthFlow has a modal or some text.
-// Or we can mock the component using vi.mock if we were importing it.
-// The Page imports it. So we can mock the import.
-
 vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
-    // Return a Svelte component that renders a specific test id
-    // Since we are mocking a default export which is a Svelte component
-    // We can't easily return a functional component in this mock format for Svelte 5/4 mix?
-    // Let's try to mock it as a simple object if possible, but Svelte expects a component.
-    // For now, let's verify logic by absence of calls if possible, or skip the mock and verify logic.
     return {
         default: class {
              constructor({ target }) {
@@ -65,12 +44,6 @@ vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
         }
     }
 });
-
-// Wait, the above mock strategy for Svelte components is brittle.
-// Let's use a simpler strategy. We removed the code.
-// The test should verify that even with all conditions met, the AuthFlow is not triggered.
-// But since we can't easily check internal state, maybe we should just rely on the code change.
-// However, adding a test that checks "AuthFlow is NOT visible" is good practice.
 
 // Mock global constants used in Footer
 global.__GIT_BRANCH__ = 'test-branch';
@@ -115,7 +88,6 @@ describe('GenProj Page Component', () => {
             configurable: true
         });
 
-        // Mock globalThis.location as well because Footer uses globalThis
         Object.defineProperty(globalThis, 'location', {
             value: {
                 pathname: '/projects/genproj',
@@ -177,15 +149,5 @@ describe('GenProj Page Component', () => {
         // Since we mocked it to render 'data-testid="auth-flow-mock"', we look for that
         const authFlow = screen.queryByTestId('auth-flow-mock');
         expect(authFlow).toBeNull();
-    });
-        // Check if initiateGoogleAuth was called
-        expect(googleAuth.initiateGoogleAuth).toHaveBeenCalled();
-
-        // Check the arguments
-        const calledArg = googleAuth.initiateGoogleAuth.mock.calls[0][0];
-
-        // The expected behavior (fix)
-        expect(calledArg).toContain('selected=core-cap');
-        expect(calledArg).toContain('/projects/genproj');
     });
 });
