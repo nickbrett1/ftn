@@ -35,9 +35,19 @@ const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr
     && npm install -g @google/gemini-cli
 `;
 
-const nodeDockerfileTemplateContent = `ARG VARIANT=\"{{capabilityConfig.nodeVersion}}\"\nFROM mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git zsh \\
-    && npm install -g @google/gemini-cli
+const nodeDockerfileTemplateContent = `ARG VARIANT="{{capabilityConfig.nodeVersion}}"
+FROM mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+    && apt-get -y install --no-install-recommends git zsh curl \\
+    && npm install -g @google/gemini-cli @specifyapp/cli
+
+USER node
+
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \\
+    && git clone https://github.com/zsh-users/zsh-autosuggestions \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \\
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \${ZSH_CUSTOM:-\$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \\
+    && curl https://cursor.com/install -fsS | bash
 `;
 
 const dopplerYamlTemplateContent = `setup:
