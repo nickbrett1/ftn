@@ -6,6 +6,7 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { logger } from '$lib/utils/logging.js';
+	import { slide } from 'svelte/transition';
 	import {
 		PythonBrands,
 		NodeJsBrands,
@@ -20,7 +21,11 @@
 		UserSecretSolid,
 		RobotSolid,
 		ChartLineSolid,
-		GlobeSolid
+		GlobeSolid,
+		ChevronDownSolid,
+		ChevronUpSolid,
+		CheckCircleSolid,
+		InfoCircleSolid
 	} from 'svelte-awesome-icons';
 
 	// Tippy.js for tooltips
@@ -62,6 +67,15 @@
 	export let selectedCapabilities = [];
 	export let configuration = {};
 
+	// Local state for expanded cards (to show benefits)
+	let expandedCapabilities = {};
+
+	function toggleBenefits(id) {
+		expandedCapabilities[id] = !expandedCapabilities[id];
+		// Trigger reactivity
+		expandedCapabilities = { ...expandedCapabilities };
+	}
+
 	// Event dispatcher
 	const dispatch = createEventDispatcher();
 
@@ -99,10 +113,29 @@
 
 	// Handlers
 	function handleCapabilityToggle(capabilityId, event) {
-		const isChecked = event.target.checked;
+		// If clicking the card, we toggle the state.
+		// If the event comes from the checkbox directly, we use its checked state.
+		// But since we want the whole header to be clickable, we need to be careful.
+
+		const isCurrentlySelected = selectedCapabilities.includes(capabilityId);
+		let shouldSelect = !isCurrentlySelected;
+
+		if (event.target.type === 'checkbox') {
+			shouldSelect = event.target.checked;
+		} else if (
+			event.target.closest('a') ||
+			event.target.closest('select') ||
+			event.target.closest('input[type="text"]') ||
+			event.target.closest('input[type="number"]') ||
+			event.target.closest('.benefits-toggle')
+		) {
+			// Don't toggle selection if clicking a link, input, or the benefits toggle
+			return;
+		}
+
 		let updatedSelection;
 
-		if (isChecked) {
+		if (shouldSelect) {
 			updatedSelection = [...selectedCapabilities, capabilityId];
 		} else {
 			// If unchecking, ensure it's not required by another selected capability
@@ -111,12 +144,15 @@
 				logger.warn(
 					`Cannot deselect ${capabilityId} as it's required by another selected capability.`
 				);
-				event.target.checked = true; // Revert checkbox state
+				// If it was a checkbox click, revert it
+				if (event.target.type === 'checkbox') {
+					event.target.checked = true;
+				}
 				return;
 			}
 			updatedSelection = selectedCapabilities.filter((id) => id !== capabilityId);
 		}
-		dispatch('capabilityToggle', { capabilityId, selected: isChecked });
+		dispatch('capabilityToggle', { capabilityId, selected: shouldSelect });
 		dispatch('update:selectedCapabilities', updatedSelection);
 	}
 
@@ -153,27 +189,14 @@
 		if (property.enum && property.enum.length === 1) {
 			return false;
 		}
-		// Add other conditions here if needed for non-enum single options
 		return true;
 	}
 
 	// Helper function to format camelCase strings into human-readable labels
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
-		// Add a space before all uppercase letters that are not at the beginning
 		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
-		// Capitalize the first letter of the entire string
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
-	}
-
-	// Helper function to check if a capability has dependencies
-	function hasDependencies(capability) {
-		return capability.dependencies && capability.dependencies.length > 0;
-	}
-
-	// Helper function to check if a capability has conflicts
-	function hasConflicts(capability) {
-		return capability.conflicts && capability.conflicts.length > 0;
 	}
 
 	// Helper function to check if a capability is required by another selected capability
@@ -193,7 +216,12 @@
 
 	// Helper to check if a capability is missing dependencies
 	function isMissingDependencies(capability) {
-		return capability.dependencies.some((depId) => !selectedCapabilities.includes(depId));
+		return capability.dependencies.some((depId) => {
+			if (selectedCapabilities.includes(depId)) return false;
+			const depCap = capabilities.find((c) => c.id === depId);
+			// Ignore if internal (not selectable by user)
+			return !(depCap && depCap.category === 'internal');
+		});
 	}
 
 	// Helper to get the names of conflicting capabilities
@@ -210,6 +238,11 @@
 	function getMissingDependencies(capability) {
 		return capability.dependencies
 			.filter((depId) => !selectedCapabilities.includes(depId))
+			.filter((depId) => {
+				const depCap = capabilities.find((c) => c.id === depId);
+				// Hide dependency if it's internal (not selectable by user)
+				return !(depCap && depCap.category === 'internal');
+			})
 			.map((depId) => {
 				const missingCap = capabilities.find((c) => c.id === depId);
 				return missingCap ? missingCap.name : depId;
@@ -257,192 +290,242 @@
 	}
 </script>
 
-<div class="space-y-8">
+<div class="space-y-12">
 	{#each categoryOrder as categoryId}
 		{#if capabilityGroups[categoryId] && capabilityGroups[categoryId].length > 0}
-			<div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-				<h2 class="text-2xl font-bold text-white mb-6">
-					{categoryNames[categoryId] || categoryId}
+			<div>
+				<h2
+					class="text-2xl font-bold text-white mb-6 flex items-center border-b border-gray-700 pb-2"
+				>
+					<span class="mr-2">{categoryNames[categoryId] || categoryId}</span>
+					<span class="text-sm font-normal text-gray-500 ml-auto"
+						>{capabilityGroups[categoryId].length} options</span
+					>
 				</h2>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+				<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each capabilityGroups[categoryId] as capability (capability.id)}
+						{@const isSelected = selectedCapabilities.includes(capability.id)}
+						{@const isRequired = isRequiredByOther(capability)}
+
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
 						<div
-							class="flex items-start p-4 rounded-md transition-all duration-200 ease-in-out {selectedCapabilities.includes(
-								capability.id
-							)
-								? 'bg-green-900 bg-opacity-30 border border-green-600'
-								: 'bg-gray-900 border border-gray-700 hover:border-gray-600'}"
+							class="group relative flex flex-col bg-gray-800 rounded-xl transition-all duration-200 border-2
+                                {isSelected
+								? 'border-green-500 shadow-lg shadow-green-900/20'
+								: 'border-gray-700 hover:border-gray-500 shadow-md'}
+                            "
+							onclick={(e) => handleCapabilityToggle(capability.id, e)}
 						>
-							<div class="flex items-center h-5">
+							<!-- Selection Indicator (Top Right) -->
+							<div class="absolute top-4 right-4 z-10">
 								<input
 									id="capability-{capability.id}"
 									type="checkbox"
-									class="form-checkbox h-5 w-5 text-green-500 rounded focus:ring-green-400 cursor-pointer"
-									checked={selectedCapabilities.includes(capability.id)}
-									on:change={(event) => handleCapabilityToggle(capability.id, event)}
-									disabled={isRequiredByOther(capability)}
+									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-900"
+									checked={isSelected}
+									disabled={isRequired}
+									onclick={(e) => e.stopPropagation()}
+									onchange={(e) => handleCapabilityToggle(capability.id, e)}
 								/>
 							</div>
-							<div class="ml-3 text-sm w-full relative">
-								<div class="flex justify-between items-start">
-									<label
-										for="capability-{capability.id}"
-										class="font-medium {selectedCapabilities.includes(capability.id)
-											? 'text-white'
-											: 'text-gray-300'} cursor-pointer pr-8"
-									>
-										{capability.name}
-									</label>
-									{#if capability.website}
-										<a
-											href={capability.website}
-											target="_blank"
-											rel="noopener noreferrer"
-											class="{getColorClassForCapability(
-												capability.id
-											)} hover:opacity-80 transition-opacity"
-											use:useTippy={capability.name}
-											aria-label="Learn more about {capability.name}"
-										>
-											<svelte:component
-												this={getIconForCapability(capability.id)}
-												class="w-5 h-5"
-											/>
-										</a>
-									{/if}
-								</div>
-								<p class="text-gray-400 mt-1">{capability.description}</p>
 
-								{#if isRequiredByOther(capability)}
-									<p class="text-yellow-400 text-xs mt-2">
-										Required by another selected capability. Cannot deselect.
-									</p>
+							<!-- Card Header -->
+							<div class="p-6 pb-2 flex-grow">
+								<div class="flex items-start pr-10">
+									<div class="p-3 rounded-lg bg-gray-900 mr-4 shrink-0">
+										<svelte:component
+											this={getIconForCapability(capability.id)}
+											class="w-8 h-8 {getColorClassForCapability(capability.id)}"
+										/>
+									</div>
+									<div>
+										<h3 class="text-lg font-bold text-white leading-tight mb-1">
+											{capability.name}
+										</h3>
+										{#if capability.website}
+											<a
+												href={capability.website}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"
+												onclick={(e) => e.stopPropagation()}
+											>
+												Docs <GlobeSolid class="w-3 h-3" />
+											</a>
+										{/if}
+									</div>
+								</div>
+
+								<p class="text-gray-400 text-sm mt-4 leading-relaxed">
+									{capability.description}
+								</p>
+
+								<!-- Warnings / Info -->
+								{#if isRequired}
+									<div
+										class="mt-3 flex items-start gap-2 text-yellow-500 text-xs bg-yellow-900/20 p-2 rounded"
+									>
+										<InfoCircleSolid class="w-4 h-4 mt-0.5 shrink-0" />
+										<span>Required by another selection.</span>
+									</div>
 								{/if}
 
-								{#if selectedCapabilities.includes(capability.id)}
-									<!-- Display configuration options if capability is selected and has a schema -->
-									{#if capability.configurationSchema && Object.keys(capability.configurationSchema.properties || {}).length > 0}
-										<div class="mt-4 space-y-3">
-											{#each Object.entries(capability.configurationSchema.properties) as [field, property]}
-												{#if shouldDisplayRule(property)}
-													<div>
-														<label
-															for="{capability.id}-{field}"
-															class="block text-xs font-medium text-gray-400 mb-1"
+								{#if isInConflict(capability)}
+									<div
+										class="mt-3 flex items-start gap-2 text-red-400 text-xs bg-red-900/20 p-2 rounded"
+									>
+										<InfoCircleSolid class="w-4 h-4 mt-0.5 shrink-0" />
+										<span>Conflicts with: {getConflictingCapabilities(capability).join(', ')}</span>
+									</div>
+								{/if}
+
+								{#if isMissingDependencies(capability)}
+									<div
+										class="mt-3 flex items-start gap-2 text-yellow-400 text-xs bg-yellow-900/20 p-2 rounded"
+									>
+										<InfoCircleSolid class="w-4 h-4 mt-0.5 shrink-0" />
+										<span>Requires: {getMissingDependencies(capability).join(', ')}</span>
+									</div>
+								{/if}
+							</div>
+
+							<!-- Configuration Section (Only if selected and has config) -->
+							{#if isSelected && capability.configurationSchema && Object.keys(capability.configurationSchema.properties || {}).length > 0}
+								<div class="px-6 py-4 bg-gray-900/50 border-t border-gray-700/50" transition:slide>
+									<div class="space-y-4">
+										<h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+											Configuration
+										</h4>
+										{#each Object.entries(capability.configurationSchema.properties) as [field, property]}
+											{#if shouldDisplayRule(property)}
+												<div onclick={(e) => e.stopPropagation()}>
+													<label
+														for="{capability.id}-{field}"
+														class="block text-xs font-medium text-gray-300 mb-1.5"
+													>
+														{formatLabel(field)}
+													</label>
+													{#if property.enum}
+														<select
+															id="{capability.id}-{field}"
+															class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
+															value={configuration[capability.id]?.[field] || property.default}
+															onchange={(e) =>
+																handleConfigurationChange(capability.id, field, e.target.value)}
 														>
-															{formatLabel(field)}:
-														</label>
-														{#if property.enum}
-															<select
-																id="{capability.id}-{field}"
-																class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-green-400 focus:border-green-400 sm:text-sm rounded-md bg-gray-900 text-white"
-																value={configuration[capability.id]?.[field] || property.default}
-																on:change={(e) =>
-																	handleConfigurationChange(capability.id, field, e.target.value)}
-															>
-																{#each property.enum as option}
-																	<option value={option}>{option}</option>
-																{/each}
-															</select>
-														{:else if property.type === 'boolean'}
+															{#each property.enum as option}
+																<option value={option}>{option}</option>
+															{/each}
+														</select>
+													{:else if property.type === 'boolean'}
+														<div class="flex items-center">
 															<input
 																type="checkbox"
 																id="{capability.id}-{field}"
-																class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer"
+																class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
 																checked={configuration[capability.id]?.[field] ||
 																	property.default ||
 																	false}
-																on:change={(e) =>
+																onchange={(e) =>
 																	handleConfigurationChange(capability.id, field, e.target.checked)}
 															/>
-														{:else if property.type === 'array' && property.items && property.items.enum}
-															<div class="flex flex-wrap gap-2 mt-1">
-																{#each property.items.enum as option}
-																	<label class="inline-flex items-center">
-																		<input
-																			type="checkbox"
-																			class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer"
-																			checked={configuration[capability.id]?.[field]?.includes(
-																				option
-																			) || false}
-																			on:change={(e) => {
-																				const currentArray =
-																					configuration[capability.id]?.[field] || [];
-																				let newArray;
-																				if (e.target.checked) {
-																					newArray = [...currentArray, option];
-																				} else {
-																					newArray = currentArray.filter((item) => item !== option);
-																				}
-																				handleConfigurationChange(capability.id, field, newArray);
-																			}}
-																		/>
-																		<span class="ml-2 text-gray-300 text-sm">{option}</span>
-																	</label>
-																{/each}
-															</div>
-														{:else if property.type === 'object' && field === 'thresholds' && property.properties.performance}
-															<div>
+															<span class="ml-2 text-sm text-gray-300">Enabled</span>
+														</div>
+													{:else if property.type === 'array' && property.items && property.items.enum}
+														<div class="flex flex-wrap gap-2">
+															{#each property.items.enum as option}
 																<label
-																	for="{capability.id}-threshold-performance"
-																	class="block text-xs font-medium text-gray-400 mb-1"
+																	class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
 																>
-																	Performance Threshold (0-100):
+																	<input
+																		type="checkbox"
+																		class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
+																		checked={configuration[capability.id]?.[field]?.includes(
+																			option
+																		) || false}
+																		onchange={(e) => {
+																			const currentArray =
+																				configuration[capability.id]?.[field] || [];
+																			let newArray;
+																			if (e.target.checked) {
+																				newArray = [...currentArray, option];
+																			} else {
+																				newArray = currentArray.filter((item) => item !== option);
+																			}
+																			handleConfigurationChange(capability.id, field, newArray);
+																		}}
+																	/>
+																	<span class="ml-1.5 text-gray-300 text-xs">{option}</span>
 																</label>
-																<input
-																	type="number"
-																	id="{capability.id}-threshold-performance"
-																	class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-600 focus:outline-none focus:ring-green-400 focus:border-green-400 sm:text-sm rounded-md bg-gray-900 text-white"
-																	min={property.properties.performance.minimum}
-																	max={property.properties.performance.maximum}
-																	value={configuration[capability.id]?.thresholds?.performance ||
-																		property.properties.performance.default ||
-																		0}
-																	on:change={(e) =>
-																		handleNestedConfigurationChange(
-																			capability.id,
-																			'thresholds',
-																			'performance',
-																			Number(e.target.value)
-																		)}
-																/>
-															</div>
-														{:else}
+															{/each}
+														</div>
+													{:else if property.type === 'object' && field === 'thresholds' && property.properties.performance}
+														<div>
 															<input
-																type="text"
-																id="{capability.id}-{field}"
-																class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-600 focus:outline-none focus:ring-green-400 focus:border-green-400 sm:text-sm rounded-md bg-gray-900 text-white"
-																value={configuration[capability.id]?.[field] ||
-																	property.default ||
-																	''}
-																on:change={(e) =>
-																	handleConfigurationChange(capability.id, field, e.target.value)}
+																type="number"
+																class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+																min={property.properties.performance.minimum}
+																max={property.properties.performance.maximum}
+																value={configuration[capability.id]?.thresholds?.performance ||
+																	property.properties.performance.default ||
+																	0}
+																onchange={(e) =>
+																	handleNestedConfigurationChange(
+																		capability.id,
+																		'thresholds',
+																		'performance',
+																		Number(e.target.value)
+																	)}
 															/>
-														{/if}
-													</div>
-												{/if}
-											{/each}
-										</div>
-									{/if}
+														</div>
+													{:else}
+														<input
+															type="text"
+															id="{capability.id}-{field}"
+															class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+															value={configuration[capability.id]?.[field] ||
+																property.default ||
+																''}
+															onchange={(e) =>
+																handleConfigurationChange(capability.id, field, e.target.value)}
+														/>
+													{/if}
+												</div>
+											{/if}
+										{/each}
+									</div>
+								</div>
+							{/if}
 
-									<!-- Conflict Warnings -->
-									{#if isInConflict(capability)}
-										<div class="mt-3 text-red-400 text-xs">
-											Conflicts with: {getConflictingCapabilities(capability).join(', ')}
-										</div>
-									{/if}
+							<!-- Benefits Section (Footer) -->
+							<div class="mt-auto border-t border-gray-700/50">
+								{#if capability.benefits && capability.benefits.length > 0}
+									<button
+										class="w-full flex items-center justify-between p-4 text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-700/30 transition-colors benefits-toggle text-left focus:outline-none"
+										onclick={(e) => {
+											e.stopPropagation();
+											toggleBenefits(capability.id);
+										}}
+									>
+										<span class="uppercase tracking-wider">Why use this?</span>
+										<svelte:component
+											this={expandedCapabilities[capability.id] ? ChevronUpSolid : ChevronDownSolid}
+											class="w-3 h-3"
+										/>
+									</button>
 
-									<!-- Missing Dependencies Warnings -->
-									{#if isMissingDependencies(capability)}
-										<div class="mt-3 text-yellow-400 text-xs">
-											Requires: {getMissingDependencies(capability).join(', ')}
-										</div>
-									{/if}
-
-									<!-- Authentication Requirements -->
-									{#if capability.requiresAuth && capability.requiresAuth.length > 0}
-										<div class="mt-3 text-blue-400 text-xs">
-											Requires authentication for: {capability.requiresAuth.join(', ')}
+									{#if expandedCapabilities[capability.id]}
+										<div class="px-6 pb-6 pt-2 bg-gray-900/30" transition:slide={{ duration: 200 }}>
+											<ul class="space-y-2">
+												{#each capability.benefits as benefit}
+													<li class="flex items-start text-sm text-gray-300">
+														<CheckCircleSolid class="w-4 h-4 text-green-500 mr-2 mt-0.5 shrink-0" />
+														<span>{benefit}</span>
+													</li>
+												{/each}
+											</ul>
 										</div>
 									{/if}
 								{/if}
@@ -454,3 +537,14 @@
 		{/if}
 	{/each}
 </div>
+
+<style>
+	/* Custom scrollbar for config sections if needed */
+	select {
+		appearance: none;
+		background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+		background-position: right 0.5rem center;
+		background-repeat: no-repeat;
+		background-size: 1.5em 1.5em;
+	}
+</style>
