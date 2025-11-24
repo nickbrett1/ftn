@@ -40,11 +40,6 @@ export class ProjectGeneratorService {
 		});
 
 		const generatedFiles = [];
-		const templateContext = {
-			projectName: projectConfig.projectName,
-			githubOwner: projectConfig.repositoryUrl.split('/')[3] // Assuming format https://github.com/owner/repo
-		};
-
 		// Generate files based on selected capabilities
 		for (const capabilityId of projectConfig.selectedCapabilities) {
 			const capability = capabilities.find((c) => c.id === capabilityId);
