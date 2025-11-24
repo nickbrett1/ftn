@@ -296,19 +296,6 @@
 			}
 		}
 
-		// Auto-show AuthFlow if user just returned from authentication
-		// This happens when:
-		// 1. User is authenticated
-		// 2. User has selected capabilities (from URL params after redirect)
-		// 3. User has a valid project name (from URL params after redirect)
-		// Also show AuthFlow if there was an error (so user can try again)
-		if (data.isAuthenticated && selectedCapabilities.length > 0 && projectName.length >= 3) {
-			// Small delay to ensure page is fully rendered
-			setTimeout(() => {
-				showAuthFlow = true;
-			}, 100);
-		}
-
 		// Clear error/auth params from URL after displaying
 		if (authError || authResult) {
 			const url = new URL(globalThis.location.href);
@@ -374,7 +361,7 @@
 	async function handleSignInClick() {
 		// Build redirect path with current state to preserve selections
 		const redirectPath = buildGenprojRedirectPath();
-		await initiateGoogleAuth(globalThis.location.pathname); // Pass the current pathname
+		await initiateGoogleAuth(redirectPath);
 	}
 
 	// Build redirect path with current genproj state
