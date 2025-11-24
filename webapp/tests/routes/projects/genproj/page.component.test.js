@@ -115,6 +115,7 @@ describe('GenProj Page Component', () => {
             configurable: true
         });
 
+        // Mock globalThis.location as well because Footer uses globalThis
         Object.defineProperty(globalThis, 'location', {
             value: {
                 pathname: '/projects/genproj',
@@ -176,5 +177,15 @@ describe('GenProj Page Component', () => {
         // Since we mocked it to render 'data-testid="auth-flow-mock"', we look for that
         const authFlow = screen.queryByTestId('auth-flow-mock');
         expect(authFlow).toBeNull();
+    });
+        // Check if initiateGoogleAuth was called
+        expect(googleAuth.initiateGoogleAuth).toHaveBeenCalled();
+
+        // Check the arguments
+        const calledArg = googleAuth.initiateGoogleAuth.mock.calls[0][0];
+
+        // The expected behavior (fix)
+        expect(calledArg).toContain('selected=core-cap');
+        expect(calledArg).toContain('/projects/genproj');
     });
 });
