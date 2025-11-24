@@ -104,7 +104,9 @@ describe('TemplateEngine', () => {
 	it('replaces variables from a real template file', () => {
 		const template = engine.getTemplate('devcontainer-java-dockerfile');
 		const result = engine.compileTemplate(template, { capabilityConfig: { javaVersion: '17' } });
-		expect(result).toBe(javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17'));
+		expect(result).toBe(
+			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+		);
 	});
 
 	it('replaces variables from node dockerfile template', () => {

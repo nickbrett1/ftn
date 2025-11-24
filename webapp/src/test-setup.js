@@ -60,7 +60,10 @@ vi.mock('svelte-awesome-icons', () => {
 		CodeSolid: createMockIcon(),
 		PlayCircleSolid: createMockIcon(),
 		FileAltSolid: createMockIcon(),
-		GlobeSolid: createMockIcon()
+		GlobeSolid: createMockIcon(),
+		ChevronDownSolid: createMockIcon(),
+		ChevronUpSolid: createMockIcon(),
+		InfoCircleSolid: createMockIcon()
 	};
 });
 

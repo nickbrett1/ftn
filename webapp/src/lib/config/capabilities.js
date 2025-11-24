@@ -15,6 +15,7 @@
  */
 function createDevContainerCapability(id, name, description, configurationSchema) {
 	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
+	const capName = lang.charAt(0).toUpperCase() + lang.slice(1);
 	return {
 		id,
 		name,
@@ -24,6 +25,11 @@ function createDevContainerCapability(id, name, description, configurationSchema
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema,
+		benefits: [
+			'Instant development environment setup for new contributors',
+			`Pre-configured ${capName} runtime and VS Code extensions`,
+			'Consistent tooling across the entire engineering team'
+		],
 		templates: [
 			{
 				id: 'devcontainer-json',
@@ -58,6 +64,11 @@ export const capabilities = [
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: { type: 'object', properties: {} },
+		benefits: [
+			'Containerize your application for consistent execution',
+			'Eliminate "works on my machine" issues',
+			'Simplify dependency management and isolation'
+		],
 		templates: [],
 		website: 'https://www.docker.com/'
 	},
@@ -102,7 +113,7 @@ export const capabilities = [
 		description: 'Configures CircleCI for continuous integration and deployment.',
 		category: 'ci-cd',
 		dependencies: [],
-		conflicts: [], // Removed 'github-actions' from conflicts
+		conflicts: [],
 		requiresAuth: ['circleci'],
 		externalServices: [
 			{
@@ -130,6 +141,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Automate testing and deployment pipelines',
+			'Gain insights with visual build logs and test results',
+			'Ensure code quality before merging changes'
+		],
 		templates: [
 			{
 				id: 'circleci-config',
@@ -139,7 +155,6 @@ export const capabilities = [
 		],
 		website: 'https://circleci.com/'
 	},
-	// Removed 'github-actions' capability
 	{
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
@@ -175,6 +190,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Centralized secrets management across environments',
+			'Eliminate .env files and risk of leaking secrets',
+			'Inject secrets securely into your application at runtime'
+		],
 		templates: [
 			{
 				id: 'doppler-yaml',
@@ -218,6 +238,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Automatic detection of bugs, vulnerabilities, and code smells',
+			'Track technical debt and code coverage over time',
+			'Enforce quality gates on pull requests'
+		],
 		templates: [
 			{
 				id: 'sonar-project-properties',
@@ -236,6 +261,11 @@ export const capabilities = [
 		conflicts: [],
 		requiresAuth: [],
 		configurationSchema: { type: 'object', properties: {} },
+		benefits: [
+			'Real-time code quality feedback in your IDE',
+			'Fix issues before they are committed to the repository',
+			'Sync rules with SonarCloud for consistent analysis'
+		],
 		templates: [],
 		website: 'https://www.sonarsource.com/products/sonarlint/'
 	},
@@ -257,6 +287,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Deploy serverless applications to the global edge network',
+			'Local emulation for fast development cycles',
+			'Scalable and performant runtime for modern apps'
+		],
 		templates: [],
 		website: 'https://developers.cloudflare.com/workers/wrangler/'
 	},
@@ -284,6 +319,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Automatically keep dependencies up to date',
+			'Receive security alerts for vulnerable packages',
+			'Reduce technical debt with regular maintenance PRs'
+		],
 		templates: [],
 		website: 'https://docs.github.com/en/code-security/dependabot/dependabot-overview'
 	},
@@ -311,6 +351,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Monitor performance, accessibility, and SEO metrics',
+			'Catch regressions in web vitals before deployment',
+			'Maintain high standards for user experience'
+		],
 		templates: [
 			{
 				id: 'lighthouse-ci-config',
@@ -340,6 +385,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Reliable end-to-end testing for modern web apps',
+			'Test across Chromium, Firefox, and WebKit',
+			'Powerful tooling for debugging and test generation'
+		],
 		templates: [],
 		website: 'https://playwright.dev/'
 	},
@@ -360,6 +410,11 @@ export const capabilities = [
 				}
 			}
 		},
+		benefits: [
+			'Define your project specifications as code',
+			'Generate documentation automatically from specs',
+			'Ensure project alignment with requirements'
+		],
 		templates: [],
 		website: 'https://www.speckit.app/'
 	}
