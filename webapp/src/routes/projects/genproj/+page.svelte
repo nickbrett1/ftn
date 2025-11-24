@@ -374,7 +374,7 @@
 	async function handleSignInClick() {
 		// Build redirect path with current state to preserve selections
 		const redirectPath = buildGenprojRedirectPath();
-		await initiateGoogleAuth(globalThis.location.pathname); // Pass the current pathname
+		await initiateGoogleAuth(redirectPath);
 	}
 
 	// Build redirect path with current genproj state
