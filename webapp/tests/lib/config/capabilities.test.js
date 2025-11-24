@@ -129,6 +129,7 @@ describe('Capabilities Config', () => {
 
 		it('should have valid category values', () => {
 			const validCategories = [
+				'core',
 				'devcontainer',
 				'ci-cd',
 				'code-quality',

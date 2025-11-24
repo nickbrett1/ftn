@@ -267,6 +267,19 @@
 			}
 		}
 
+		// Ensure core capabilities are selected by default
+		if (capabilities && capabilities.length > 0) {
+			const coreCapabilities = capabilities
+				.filter((c) => c.category === 'core')
+				.map((c) => c.id);
+
+			for (const coreId of coreCapabilities) {
+				if (!selectedCapabilities.includes(coreId)) {
+					selectedCapabilities = [...selectedCapabilities, coreId];
+				}
+			}
+		}
+
 		// Set initial configuration for selected capabilities from URL
 		for (const capabilityId of selectedCapabilities) {
 			const capability = capabilities.find((c) => c.id === capabilityId);
