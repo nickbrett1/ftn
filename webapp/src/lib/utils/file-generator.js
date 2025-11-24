@@ -91,7 +91,7 @@ export class TemplateEngine {
 		let content = templateString;
 		const regex = /{{(.*?)}}/g;
 
-		content = content.replaceAll(regex, (match, key) => {
+		content = content.replace(regex, (match, key) => {
 			const keys = key.trim().split('.');
 			let value = data;
 			for (const k of keys) {
@@ -149,7 +149,10 @@ function collectNonDevContainerFiles(templateEngine, context, otherCapabilities)
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
 				try {
-					const extraData = getCapabilityTemplateData(capabilityId, context);
+					const extraData = getCapabilityTemplateData(capabilityId, {
+						capabilities: otherCapabilities
+					});
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
@@ -194,7 +197,7 @@ function generateMergedDevContainerFiles(templateEngine, context, devContainerCa
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
-			{ ...context, capabilityConfig, capability }
+			{ ...context, capabilityConfig: capabilityConfig, capability: capability }
 		);
 		const otherJson = JSON.parse(otherJsonContent);
 

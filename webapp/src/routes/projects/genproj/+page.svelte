@@ -155,6 +155,19 @@
 			// Add the selected capability
 			selectedCapabilities = [...selectedCapabilities, capabilityId];
 
+			// Initialize configuration with default values
+			if (capability.configurationSchema) {
+				const configForCapability = {};
+				for (const [field, property] of Object.entries(capability.configurationSchema.properties)) {
+					if (property.default) {
+						configForCapability[field] = property.default;
+					}
+				}
+				if (!configuration[capabilityId]) {
+					configuration[capabilityId] = configForCapability;
+				}
+			}
+
 			// Auto-select any missing dependencies
 			if (capability && capability.dependencies) {
 				for (const depId of capability.dependencies) {
@@ -251,6 +264,22 @@
 				logger.error('Failed to load capabilities', { error: err.message });
 			} finally {
 				loading = false;
+			}
+		}
+
+		// Set initial configuration for selected capabilities from URL
+		for (const capabilityId of selectedCapabilities) {
+			const capability = capabilities.find((c) => c.id === capabilityId);
+			if (capability && capability.configurationSchema) {
+				const configForCapability = {};
+				for (const [field, property] of Object.entries(capability.configurationSchema.properties)) {
+					if (property.default) {
+						configForCapability[field] = property.default;
+					}
+				}
+				if (!configuration[capabilityId]) {
+					configuration[capabilityId] = configForCapability;
+				}
 			}
 		}
 
