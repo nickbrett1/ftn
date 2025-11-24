@@ -6,6 +6,7 @@
  */
 
 // Common constants to reduce duplication
+const CATEGORY_CORE = 'core';
 const CATEGORY_DEVCONTAINER = 'devcontainer';
 const CATEGORY_CODE_QUALITY = 'code-quality';
 const CATEGORY_PROJECT_STRUCTURE = 'project-structure';
@@ -91,6 +92,81 @@ function createDevContainerCapability(id, name, description, configurationSchema
 }
 
 export const capabilities = [
+	{
+		id: 'coding-agents',
+		name: 'AI Coding Agents',
+		description: 'Gemini CLI, Cursor CLI, and Svelte MCP integration.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'Gemini CLI pre-installed',
+			'Cursor CLI pre-installed',
+			'Svelte MCP for context-aware AI'
+		],
+		templates: EMPTY_ARRAY,
+		links: [
+			{ label: 'Gemini', url: 'https://ai.google.dev/gemini-api/docs/quickstart' },
+			{ label: 'Cursor', url: 'https://cursor.sh' },
+			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
+		]
+	},
+	{
+		id: 'editor-tools',
+		name: 'Editor Configuration',
+		description: 'Standard VS Code extensions and settings.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'ESLint & Prettier configured',
+			'Svelte VS Code extension',
+			'Consistent workspace settings'
+		],
+		templates: EMPTY_ARRAY
+	},
+	{
+		id: 'shell-tools',
+		name: 'Shell & Terminal',
+		description: 'Zsh with Powerlevel10k and productivity plugins.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: ['Oh My Zsh', 'Powerlevel10k Theme', 'Syntax Highlighting & Autosuggestions'],
+		templates: EMPTY_ARRAY,
+		website: 'https://github.com/romkatv/powerlevel10k'
+	},
+	{
+		id: 'spec-kit',
+		name: 'SpecKit',
+		description: 'Project specification tools by GitHub.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				specFormat: {
+					type: 'string',
+					enum: ['md', 'yaml']
+				}
+			}
+		},
+		benefits: [
+			'Define your project specifications as code',
+			'Generate documentation automatically from specs',
+			'Ensure project alignment with requirements'
+		],
+		templates: EMPTY_ARRAY,
+		website: 'https://github.com/github/spec-kit'
+	},
 	{
 		id: 'docker',
 		name: 'Docker',
@@ -395,31 +471,6 @@ export const capabilities = [
 		],
 		templates: EMPTY_ARRAY,
 		website: 'https://playwright.dev/'
-	},
-	{
-		id: 'spec-kit',
-		name: 'Spec-Kit',
-		description: 'Configures Spec-Kit for project specification.',
-		category: CATEGORY_PROJECT_STRUCTURE,
-		dependencies: EMPTY_ARRAY,
-		conflicts: EMPTY_ARRAY,
-		requiresAuth: EMPTY_ARRAY,
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				specFormat: {
-					type: 'string',
-					enum: ['md', 'yaml']
-				}
-			}
-		},
-		benefits: [
-			'Define your project specifications as code',
-			'Generate documentation automatically from specs',
-			'Ensure project alignment with requirements'
-		],
-		templates: EMPTY_ARRAY,
-		website: 'https://www.speckit.app/'
 	}
 ];
 

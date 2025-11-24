@@ -25,7 +25,8 @@
 		ChevronDownSolid,
 		ChevronUpSolid,
 		CheckCircleSolid,
-		InfoCircleSolid
+		InfoCircleSolid,
+		PenToSquareRegular
 	} from 'svelte-awesome-icons';
 
 	// Tippy.js for tooltips
@@ -91,6 +92,7 @@
 
 	// Category display names
 	const categoryNames = {
+		core: 'Core Capabilities (Always Included)',
 		devcontainer: 'Development Containers',
 		'ci-cd': 'CI/CD',
 		'code-quality': 'Code Quality',
@@ -102,6 +104,7 @@
 
 	// Order of categories for display
 	const categoryOrder = [
+		'core',
 		'devcontainer',
 		'ci-cd',
 		'code-quality',
@@ -139,6 +142,15 @@
 			updatedSelection = [...selectedCapabilities, capabilityId];
 		} else {
 			// If unchecking, ensure it's not required by another selected capability
+			const capability = capabilities.find((c) => c.id === capabilityId);
+			if (capability && capability.category === 'core') {
+				// Core capabilities cannot be deselected
+				if (event.target.type === 'checkbox') {
+					event.target.checked = true;
+				}
+				return;
+			}
+
 			const isRequired = isRequiredByOther({ id: capabilityId });
 			if (isRequired) {
 				logger.warn(
@@ -252,6 +264,10 @@
 	// Helper function to get the icon component for a capability
 	function getIconForCapability(capabilityId) {
 		const iconMap = {
+			'coding-agents': RobotSolid,
+			'shell-tools': CodeSolid,
+			'editor-tools': PenToSquareRegular,
+			'spec-kit': FileAltSolid,
 			'devcontainer-python': PythonBrands,
 			'devcontainer-node': NodeJsBrands,
 			'devcontainer-java': JavaBrands,
@@ -261,7 +277,6 @@
 			sonarcloud: CloudSolid,
 			sonarlint: CodeSolid,
 			playwright: PlayCircleSolid,
-			'spec-kit': FileAltSolid,
 			doppler: UserSecretSolid,
 			dependabot: RobotSolid,
 			'lighthouse-ci': ChartLineSolid
@@ -272,6 +287,10 @@
 	// Helper function to get the color class for a capability
 	function getColorClassForCapability(capabilityId) {
 		const colorMap = {
+			'coding-agents': 'text-blue-400',
+			'shell-tools': 'text-gray-300',
+			'editor-tools': 'text-blue-300',
+			'spec-kit': 'text-pink-400',
 			'devcontainer-python': 'text-yellow-400',
 			'devcontainer-node': 'text-green-500',
 			'devcontainer-java': 'text-red-500',
@@ -281,7 +300,6 @@
 			sonarcloud: 'text-orange-400',
 			sonarlint: 'text-red-400',
 			playwright: 'text-green-500',
-			'spec-kit': 'text-gray-400',
 			doppler: 'text-blue-400',
 			dependabot: 'text-blue-500',
 			'lighthouse-ci': 'text-orange-500'
@@ -305,7 +323,8 @@
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each capabilityGroups[categoryId] as capability (capability.id)}
-						{@const isSelected = selectedCapabilities.includes(capability.id)}
+						{@const isSelected = selectedCapabilities.includes(capability.id) || capability.category === 'core'}
+						{@const isCore = capability.category === 'core'}
 						{@const isRequired = isRequiredByOther(capability)}
 
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -315,17 +334,18 @@
                                 {isSelected
 								? 'border-green-500 shadow-lg shadow-green-900/20'
 								: 'border-gray-700 hover:border-gray-500 shadow-md'}
+								{isCore ? 'cursor-default' : ''}
                             "
-							onclick={(e) => handleCapabilityToggle(capability.id, e)}
+							onclick={(e) => !isCore && handleCapabilityToggle(capability.id, e)}
 						>
 							<!-- Selection Indicator (Top Right) -->
 							<div class="absolute top-4 right-4 z-10">
 								<input
 									id="capability-{capability.id}"
 									type="checkbox"
-									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-900"
+									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 border-gray-600 bg-gray-900 {isCore ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
 									checked={isSelected}
-									disabled={isRequired}
+									disabled={isRequired || isCore}
 									onclick={(e) => e.stopPropagation()}
 									onchange={(e) => handleCapabilityToggle(capability.id, e)}
 								/>
@@ -344,7 +364,21 @@
 										<h3 class="text-lg font-bold text-white leading-tight mb-1">
 											{capability.name}
 										</h3>
-										{#if capability.website}
+										{#if capability.links}
+											<div class="flex flex-wrap gap-x-3 gap-y-1">
+												{#each capability.links as link}
+													<a
+														href={link.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"
+														onclick={(e) => e.stopPropagation()}
+													>
+														{link.label} <GlobeSolid class="w-3 h-3" />
+													</a>
+												{/each}
+											</div>
+										{:else if capability.website}
 											<a
 												href={capability.website}
 												target="_blank"
