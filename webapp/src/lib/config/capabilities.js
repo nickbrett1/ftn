@@ -5,6 +5,42 @@
  * Each capability includes metadata and dependencies.
  */
 
+// Common constants to reduce duplication
+const CATEGORY_DEVCONTAINER = 'devcontainer';
+const CATEGORY_CODE_QUALITY = 'code-quality';
+const CATEGORY_PROJECT_STRUCTURE = 'project-structure';
+const CATEGORY_SECRETS = 'secrets';
+const CATEGORY_DEPLOYMENT = 'deployment';
+const CATEGORY_MONITORING = 'monitoring';
+const CATEGORY_CI_CD = 'ci-cd';
+
+const REQ_DOCKER = ['docker'];
+const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
+const CONFIG_SCHEMA_EMPTY = { type: 'object', properties: EMPTY_OBJECT };
+
+/**
+ * Helper to create a standard external service configuration
+ * @param {string} type Service type
+ * @param {string} name Service name
+ * @param {string} createDesc Description for create action
+ * @param {string} configDesc Description for configure action
+ * @returns {Array} External services array
+ */
+function createExternalServiceConfig(type, name, createDesc, configDesc) {
+	return [
+		{
+			type,
+			name,
+			actions: [
+				{ type: 'create', description: createDesc },
+				{ type: 'configure', description: configDesc }
+			],
+			requiresAuth: true
+		}
+	];
+}
+
 /**
  * Creates a devcontainer capability object.
  * @param {string} id - The unique identifier for the capability.
@@ -20,10 +56,10 @@ function createDevContainerCapability(id, name, description, configurationSchema
 		id,
 		name,
 		description,
-		category: 'devcontainer',
-		dependencies: ['docker'],
-		conflicts: [],
-		requiresAuth: [],
+		category: CATEGORY_DEVCONTAINER,
+		dependencies: REQ_DOCKER,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema,
 		benefits: [
 			'Instant development environment setup for new contributors',
@@ -60,16 +96,16 @@ export const capabilities = [
 		name: 'Docker',
 		description: 'Docker support for the project.',
 		category: 'internal',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: { type: 'object', properties: {} },
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		benefits: [
 			'Containerize your application for consistent execution',
 			'Eliminate "works on my machine" issues',
 			'Simplify dependency management and isolation'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://www.docker.com/'
 	},
 	createDevContainerCapability(
@@ -81,7 +117,7 @@ export const capabilities = [
 			properties: {
 				nodeVersion: { type: 'string', enum: ['18', '20', '22'], default: '22' }
 			},
-			required: []
+			required: EMPTY_ARRAY
 		}
 	),
 	createDevContainerCapability(
@@ -111,27 +147,16 @@ export const capabilities = [
 		id: 'circleci',
 		name: 'CircleCI Integration',
 		description: 'Configures CircleCI for continuous integration and deployment.',
-		category: 'ci-cd',
-		dependencies: [],
-		conflicts: [],
+		category: CATEGORY_CI_CD,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
 		requiresAuth: ['circleci'],
-		externalServices: [
-			{
-				type: 'circleci',
-				name: 'CircleCI',
-				actions: [
-					{
-						type: 'create',
-						description: 'Create new project in CircleCI'
-					},
-					{
-						type: 'configure',
-						description: 'Set up environment variables'
-					}
-				],
-				requiresAuth: true
-			}
-		],
+		externalServices: createExternalServiceConfig(
+			'circleci',
+			'CircleCI',
+			'Create new project in CircleCI',
+			'Set up environment variables'
+		),
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -159,27 +184,16 @@ export const capabilities = [
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
 		description: 'Integrates Doppler for secure secrets management.',
-		category: 'secrets',
-		dependencies: [],
-		conflicts: [],
+		category: CATEGORY_SECRETS,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
 		requiresAuth: ['doppler'],
-		externalServices: [
-			{
-				type: 'doppler',
-				name: 'Doppler',
-				actions: [
-					{
-						type: 'create',
-						description: 'Create new project in Doppler'
-					},
-					{
-						type: 'configure',
-						description: 'Configure service tokens'
-					}
-				],
-				requiresAuth: true
-			}
-		],
+		externalServices: createExternalServiceConfig(
+			'doppler',
+			'Doppler',
+			'Create new project in Doppler',
+			'Configure service tokens'
+		),
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -208,27 +222,16 @@ export const capabilities = [
 		id: 'sonarcloud',
 		name: 'SonarCloud Code Quality',
 		description: 'Sets up SonarCloud for static code analysis.',
-		category: 'code-quality',
-		dependencies: [],
-		conflicts: [],
+		category: CATEGORY_CODE_QUALITY,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
 		requiresAuth: ['sonarcloud'],
-		externalServices: [
-			{
-				type: 'sonarcloud',
-				name: 'SonarCloud',
-				actions: [
-					{
-						type: 'create',
-						description: 'Create new project in SonarCloud'
-					},
-					{
-						type: 'configure',
-						description: 'Configure analysis parameters'
-					}
-				],
-				requiresAuth: true
-			}
-		],
+		externalServices: createExternalServiceConfig(
+			'sonarcloud',
+			'SonarCloud',
+			'Create new project in SonarCloud',
+			'Configure analysis parameters'
+		),
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -256,26 +259,26 @@ export const capabilities = [
 		id: 'sonarlint',
 		name: 'SonarLint',
 		description: 'Configures SonarLint for local code quality analysis.',
-		category: 'code-quality',
+		category: CATEGORY_CODE_QUALITY,
 		dependencies: ['sonarcloud', 'devcontainer-java'],
-		conflicts: [],
-		requiresAuth: [],
-		configurationSchema: { type: 'object', properties: {} },
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		benefits: [
 			'Real-time code quality feedback in your IDE',
 			'Fix issues before they are committed to the repository',
 			'Sync rules with SonarCloud for consistent analysis'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://www.sonarsource.com/products/sonarlint/'
 	},
 	{
 		id: 'cloudflare-wrangler',
 		name: 'Cloudflare Wrangler',
 		description: 'Configures project for deployment to Cloudflare Workers.',
-		category: 'deployment',
-		dependencies: [],
-		conflicts: [],
+		category: CATEGORY_DEPLOYMENT,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
 		requiresAuth: ['cloudflare'],
 		configurationSchema: {
 			type: 'object',
@@ -292,17 +295,17 @@ export const capabilities = [
 			'Local emulation for fast development cycles',
 			'Scalable and performant runtime for modern apps'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://developers.cloudflare.com/workers/wrangler/'
 	},
 	{
 		id: 'dependabot',
 		name: 'Dependabot',
 		description: 'Configures Dependabot for automated dependency updates.',
-		category: 'project-structure',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
+		category: CATEGORY_PROJECT_STRUCTURE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -310,7 +313,7 @@ export const capabilities = [
 					type: 'array',
 					items: {
 						type: 'string',
-						enum: ['npm'] // Removed 'github-actions' from enum
+						enum: ['npm']
 					}
 				},
 				updateSchedule: {
@@ -324,17 +327,17 @@ export const capabilities = [
 			'Receive security alerts for vulnerable packages',
 			'Reduce technical debt with regular maintenance PRs'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://docs.github.com/en/code-security/dependabot/dependabot-overview'
 	},
 	{
 		id: 'lighthouse-ci',
 		name: 'Lighthouse CI',
 		description: 'Configures Lighthouse CI for performance monitoring.',
-		category: 'monitoring',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
+		category: CATEGORY_MONITORING,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -345,7 +348,7 @@ export const capabilities = [
 							type: 'number',
 							minimum: 0,
 							maximum: 100,
-							default: 90 // Changed default to 90
+							default: 90
 						}
 					}
 				}
@@ -369,10 +372,10 @@ export const capabilities = [
 		id: 'playwright',
 		name: 'Playwright',
 		description: 'Configures Playwright for end-to-end testing.',
-		category: 'project-structure',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
+		category: CATEGORY_PROJECT_STRUCTURE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -390,17 +393,17 @@ export const capabilities = [
 			'Test across Chromium, Firefox, and WebKit',
 			'Powerful tooling for debugging and test generation'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://playwright.dev/'
 	},
 	{
 		id: 'spec-kit',
 		name: 'Spec-Kit',
 		description: 'Configures Spec-Kit for project specification.',
-		category: 'project-structure',
-		dependencies: [],
-		conflicts: [],
-		requiresAuth: [],
+		category: CATEGORY_PROJECT_STRUCTURE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
 			properties: {
@@ -415,7 +418,7 @@ export const capabilities = [
 			'Generate documentation automatically from specs',
 			'Ensure project alignment with requirements'
 		],
-		templates: [],
+		templates: EMPTY_ARRAY,
 		website: 'https://www.speckit.app/'
 	}
 ];
