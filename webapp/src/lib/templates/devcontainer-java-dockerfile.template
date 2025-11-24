@@ -1,5 +1,13 @@
-ARG VARIANT="{{javaVersion}}"
-FROM mcr.microsoft.com/devcontainers/java:0-{{javaVersion}}
+ARG VARIANT="{{capabilityConfig.javaVersion}}"
+FROM mcr.microsoft.com/devcontainers/java:0-{{capabilityConfig.javaVersion}}
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends git zsh \
-    && npm install -g @google/gemini-cli
+    && apt-get -y install --no-install-recommends git zsh curl \
+    && npm install -g @google/gemini-cli @specifyapp/cli
+
+USER node
+
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \
+    && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \
+    && curl https://cursor.com/install -fsS | bash

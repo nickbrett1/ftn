@@ -30,9 +30,19 @@ const nodeJsonTemplateContent = `{
 }
 `;
 
-const javaDockerfileTemplateContent = `ARG VARIANT=\"{{javaVersion}}\"\nFROM mcr.microsoft.com/devcontainers/java:0-{{javaVersion}}\nRUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git zsh \\
-    && npm install -g @google/gemini-cli
+const javaDockerfileTemplateContent = `ARG VARIANT="{{capabilityConfig.javaVersion}}"
+FROM mcr.microsoft.com/devcontainers/java:0-{{capabilityConfig.javaVersion}}
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+    && apt-get -y install --no-install-recommends git zsh curl \\
+    && npm install -g @google/gemini-cli @specifyapp/cli
+
+USER node
+
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \\
+    && git clone https://github.com/zsh-users/zsh-autosuggestions \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \\
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \${ZSH_CUSTOM:-\$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \\
+    && curl https://cursor.com/install -fsS | bash
 `;
 
 const nodeDockerfileTemplateContent = `ARG VARIANT="{{capabilityConfig.nodeVersion}}"
@@ -93,8 +103,8 @@ describe('TemplateEngine', () => {
 
 	it('replaces variables from a real template file', () => {
 		const template = engine.getTemplate('devcontainer-java-dockerfile');
-		const result = engine.compileTemplate(template, { javaVersion: '17' });
-		expect(result).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+		const result = engine.compileTemplate(template, { capabilityConfig: { javaVersion: '17' } });
+		expect(result).toBe(javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17'));
 	});
 
 	it('replaces variables from node dockerfile template', () => {
@@ -120,8 +130,12 @@ describe('TemplateEngine', () => {
 	});
 
 	it('generates files and handles missing templates', () => {
-		const content = engine.generateFile('devcontainer-java-dockerfile', { javaVersion: '17' });
-		expect(content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+		const content = engine.generateFile('devcontainer-java-dockerfile', {
+			capabilityConfig: { javaVersion: '17' }
+		});
+		expect(content).toBe(
+			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+		);
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
 	});
@@ -136,7 +150,7 @@ describe('TemplateEngine', () => {
 			{
 				templateId: 'devcontainer-java-dockerfile',
 				filePath: '/tmp/ok.txt',
-				data: { javaVersion: '17' }
+				data: { capabilityConfig: { javaVersion: '17' } }
 			},
 			{ templateId: 'missing', filePath: '/tmp/missing.txt', data: {} }
 		]);
@@ -146,7 +160,9 @@ describe('TemplateEngine', () => {
 
 		expect(success).toBeDefined();
 		expect(success.success).toBe(true);
-		expect(success.content).toBe(javaDockerfileTemplateContent.replace(/{{javaVersion}}/g, '17'));
+		expect(success.content).toBe(
+			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+		);
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
 	});

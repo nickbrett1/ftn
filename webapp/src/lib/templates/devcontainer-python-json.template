@@ -1,6 +1,6 @@
 {
   "name": "Python",
-  "image": "mcr.microsoft.com/devcontainers/python:0-{{pythonVersion}}",
+  "image": "mcr.microsoft.com/devcontainers/python:0-{{capabilityConfig.pythonVersion}}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -9,7 +9,7 @@
       "username": "node"
     },
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "{{pythonVersion}}"
+      "version": "{{capabilityConfig.pythonVersion}}"
     }
   },
   "customizations": {
