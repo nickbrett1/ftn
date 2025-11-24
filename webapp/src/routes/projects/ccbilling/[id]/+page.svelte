@@ -1152,7 +1152,7 @@
 					</div>
 
 					<!-- Credit Card Filter and Sort Options -->
-					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+					<div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3">
 						<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 							<label for="card-filter" class="text-gray-300 text-sm font-medium"
 								>Filter by card:</label
