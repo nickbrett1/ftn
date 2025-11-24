@@ -31,6 +31,20 @@ vi.mock('$app/environment', () => ({
     dev: true
 }));
 
+// Mock AuthFlow component
+vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
+    return {
+        default: class {
+             constructor({ target }) {
+                 const div = document.createElement('div');
+                 div.setAttribute('data-testid', 'auth-flow-mock');
+                 target.appendChild(div);
+             }
+             $destroy() {}
+        }
+    }
+});
+
 // Mock global constants used in Footer
 global.__GIT_BRANCH__ = 'test-branch';
 global.__GIT_COMMIT__ = 'test-commit';
@@ -60,16 +74,13 @@ describe('GenProj Page Component', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        // Mock global fetch for capabilities loading if needed
         global.fetch = vi.fn();
 
-        // Mock window.location
-        // We need to properly mock window.location to simulate the URL
         Object.defineProperty(window, 'location', {
             value: {
                 pathname: '/projects/genproj',
                 origin: 'http://localhost',
-                hostname: 'localhost', // Added hostname for Footer check
+                hostname: 'localhost',
                 href: 'http://localhost/projects/genproj',
                 assign: vi.fn()
             },
@@ -77,7 +88,6 @@ describe('GenProj Page Component', () => {
             configurable: true
         });
 
-        // Mock globalThis.location as well because Footer uses globalThis
         Object.defineProperty(globalThis, 'location', {
             value: {
                 pathname: '/projects/genproj',
@@ -100,24 +110,44 @@ describe('GenProj Page Component', () => {
             data: {
                 isAuthenticated: false,
                 capabilities: mockCapabilities,
-                selectedCapabilities: ['core-cap'] // Pre-select core
+                selectedCapabilities: ['core-cap']
             }
         });
 
-        // Verify we are in demo mode (login button visible)
         const loginButton = screen.getByRole('button', { name: /Login/i });
         expect(loginButton).toBeTruthy();
 
         await fireEvent.click(loginButton);
 
-        // Check if initiateGoogleAuth was called
         expect(googleAuth.initiateGoogleAuth).toHaveBeenCalled();
-
-        // Check the arguments
         const calledArg = googleAuth.initiateGoogleAuth.mock.calls[0][0];
 
-        // The expected behavior (fix)
         expect(calledArg).toContain('selected=core-cap');
         expect(calledArg).toContain('/projects/genproj');
+    });
+
+    it('should NOT automatically show AuthFlow on mount when authenticated and ready', async () => {
+        // Setup data that previously triggered auto-show
+        const data = {
+            isAuthenticated: true,
+            capabilities: mockCapabilities,
+            selectedCapabilities: ['core-cap'],
+            projectName: 'my-project'
+        };
+
+        const { component } = render(Page, { data });
+
+        // Wait a bit because the previous logic had a setTimeout
+        await new Promise(r => setTimeout(r, 200));
+
+        // Verify that the Generate button is visible and enabled (meaning we are ready)
+        const generateButton = screen.getByTestId('generate-button');
+        expect(generateButton).toBeTruthy();
+        expect(generateButton.disabled).toBe(false);
+
+        // Verify that AuthFlow is NOT visible
+        // Since we mocked it to render 'data-testid="auth-flow-mock"', we look for that
+        const authFlow = screen.queryByTestId('auth-flow-mock');
+        expect(authFlow).toBeNull();
     });
 });
