@@ -106,12 +106,46 @@ export const capabilities = [
 			'Cursor CLI pre-installed',
 			'Svelte MCP for context-aware AI'
 		],
+		templates: EMPTY_ARRAY,
+		links: [
+			{ label: 'Gemini', url: 'https://ai.google.dev/gemini-api/docs/quickstart' },
+			{ label: 'Cursor', url: 'https://cursor.sh' },
+			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
+		]
+	},
+	{
+		id: 'editor-tools',
+		name: 'Editor Configuration',
+		description: 'Standard VS Code extensions and settings.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'ESLint & Prettier configured',
+			'Svelte VS Code extension',
+			'Consistent workspace settings'
+		],
 		templates: EMPTY_ARRAY
 	},
 	{
+		id: 'shell-tools',
+		name: 'Shell & Terminal',
+		description: 'Zsh with Powerlevel10k and productivity plugins.',
+		category: CATEGORY_CORE,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: ['Oh My Zsh', 'Powerlevel10k Theme', 'Syntax Highlighting & Autosuggestions'],
+		templates: EMPTY_ARRAY,
+		website: 'https://github.com/romkatv/powerlevel10k'
+	},
+	{
 		id: 'spec-kit',
-		name: 'Specify',
-		description: 'Design token management via Specify CLI.',
+		name: 'SpecKit',
+		description: 'Project specification tools by GitHub.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -131,35 +165,7 @@ export const capabilities = [
 			'Ensure project alignment with requirements'
 		],
 		templates: EMPTY_ARRAY,
-		website: 'https://specifyapp.com/'
-	},
-	{
-		id: 'shell-tools',
-		name: 'Shell & Terminal',
-		description: 'Zsh with Powerlevel10k and productivity plugins.',
-		category: CATEGORY_CORE,
-		dependencies: EMPTY_ARRAY,
-		conflicts: EMPTY_ARRAY,
-		requiresAuth: EMPTY_ARRAY,
-		configurationSchema: CONFIG_SCHEMA_EMPTY,
-		benefits: ['Oh My Zsh', 'Powerlevel10k Theme', 'Syntax Highlighting & Autosuggestions'],
-		templates: EMPTY_ARRAY
-	},
-	{
-		id: 'editor-tools',
-		name: 'Editor Configuration',
-		description: 'Standard VS Code extensions and settings.',
-		category: CATEGORY_CORE,
-		dependencies: EMPTY_ARRAY,
-		conflicts: EMPTY_ARRAY,
-		requiresAuth: EMPTY_ARRAY,
-		configurationSchema: CONFIG_SCHEMA_EMPTY,
-		benefits: [
-			'ESLint & Prettier configured',
-			'Svelte VS Code extension',
-			'Consistent workspace settings'
-		],
-		templates: EMPTY_ARRAY
+		website: 'https://github.com/github/spec-kit'
 	},
 	{
 		id: 'docker',

@@ -364,7 +364,21 @@
 										<h3 class="text-lg font-bold text-white leading-tight mb-1">
 											{capability.name}
 										</h3>
-										{#if capability.website}
+										{#if capability.links}
+											<div class="flex flex-wrap gap-x-3 gap-y-1">
+												{#each capability.links as link}
+													<a
+														href={link.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"
+														onclick={(e) => e.stopPropagation()}
+													>
+														{link.label} <GlobeSolid class="w-3 h-3" />
+													</a>
+												{/each}
+											</div>
+										{:else if capability.website}
 											<a
 												href={capability.website}
 												target="_blank"
