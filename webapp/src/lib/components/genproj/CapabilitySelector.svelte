@@ -216,7 +216,12 @@
 
 	// Helper to check if a capability is missing dependencies
 	function isMissingDependencies(capability) {
-		return capability.dependencies.some((depId) => !selectedCapabilities.includes(depId));
+		return capability.dependencies.some((depId) => {
+			if (selectedCapabilities.includes(depId)) return false;
+			const depCap = capabilities.find((c) => c.id === depId);
+			// Ignore if internal (not selectable by user)
+			return !(depCap && depCap.category === 'internal');
+		});
 	}
 
 	// Helper to get the names of conflicting capabilities
@@ -233,6 +238,11 @@
 	function getMissingDependencies(capability) {
 		return capability.dependencies
 			.filter((depId) => !selectedCapabilities.includes(depId))
+			.filter((depId) => {
+				const depCap = capabilities.find((c) => c.id === depId);
+				// Hide dependency if it's internal (not selectable by user)
+				return !(depCap && depCap.category === 'internal');
+			})
 			.map((depId) => {
 				const missingCap = capabilities.find((c) => c.id === depId);
 				return missingCap ? missingCap.name : depId;
