@@ -287,17 +287,6 @@ export class ProjectGeneratorService {
 			missing.push('GitHub');
 		}
 
-		// Check capability-specific requirements
-		if (capabilities.includes('circleci') && !this.authTokens.circleci) {
-			missing.push('CircleCI');
-		}
-		if (capabilities.includes('doppler') && !this.authTokens.doppler) {
-			missing.push('Doppler');
-		}
-		if (capabilities.includes('sonarcloud') && !this.authTokens.sonarcloud) {
-			missing.push('SonarCloud');
-		}
-
 		return {
 			isValid: missing.length === 0,
 			missing,

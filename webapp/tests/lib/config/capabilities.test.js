@@ -72,16 +72,9 @@ describe('Capabilities Config', () => {
 	});
 
 	describe('getRequiredAuthServices', () => {
-		it('should extract unique auth services', () => {
+		it('should return empty array as auth requirements have been removed', () => {
 			const services = getRequiredAuthServices(['circleci', 'doppler', 'sonarcloud']);
-			expect(services).toContain('circleci');
-			expect(services).toContain('doppler');
-			expect(services).toContain('sonarcloud');
-		});
-
-		it('should deduplicate auth services', () => {
-			const services = getRequiredAuthServices(['circleci', 'circleci']);
-			expect(services).toEqual(['circleci']);
+			expect(services).toEqual([]);
 		});
 
 		it('should return empty array when no auth required', () => {

@@ -259,7 +259,7 @@ describe('ProjectGeneratorService', () => {
 			expect(result.missing).toEqual(['GitHub']);
 		});
 
-		it('should identify missing capability-specific tokens', () => {
+		it('should not identify missing capability-specific tokens as we no longer require them', () => {
 			const service = new ProjectGeneratorService({
 				...authTokens,
 				circleci: null,
@@ -267,8 +267,8 @@ describe('ProjectGeneratorService', () => {
 			});
 			const capabilities = ['circleci', 'doppler', 'sonarcloud'];
 			const result = service.validateAuthentication(capabilities);
-			expect(result.isValid).toBe(false);
-			expect(result.missing).toEqual(['CircleCI', 'SonarCloud']);
+			expect(result.isValid).toBe(true);
+			expect(result.missing).toEqual([]);
 		});
 
 		it('should return valid when no capabilities requiring tokens are selected', () => {
