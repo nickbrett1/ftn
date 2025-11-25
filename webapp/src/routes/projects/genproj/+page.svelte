@@ -269,9 +269,7 @@
 
 		// Ensure core capabilities are selected by default
 		if (capabilities && capabilities.length > 0) {
-			const coreCapabilities = capabilities
-				.filter((c) => c.category === 'core')
-				.map((c) => c.id);
+			const coreCapabilities = capabilities.filter((c) => c.category === 'core').map((c) => c.id);
 
 			for (const coreId of coreCapabilities) {
 				if (!selectedCapabilities.includes(coreId)) {

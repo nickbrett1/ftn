@@ -323,7 +323,8 @@
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each capabilityGroups[categoryId] as capability (capability.id)}
-						{@const isSelected = selectedCapabilities.includes(capability.id) || capability.category === 'core'}
+						{@const isSelected =
+							selectedCapabilities.includes(capability.id) || capability.category === 'core'}
 						{@const isCore = capability.category === 'core'}
 						{@const isRequired = isRequiredByOther(capability)}
 
@@ -343,7 +344,9 @@
 								<input
 									id="capability-{capability.id}"
 									type="checkbox"
-									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 border-gray-600 bg-gray-900 {isCore ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
+									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 border-gray-600 bg-gray-900 {isCore
+										? 'opacity-50 cursor-not-allowed'
+										: 'cursor-pointer'}"
 									checked={isSelected}
 									disabled={isRequired || isCore}
 									onclick={(e) => e.stopPropagation()}
@@ -374,7 +377,8 @@
 														class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"
 														onclick={(e) => e.stopPropagation()}
 													>
-														{link.label} <GlobeSolid class="w-3 h-3" />
+														{link.label}
+														<GlobeSolid class="w-3 h-3" />
 													</a>
 												{/each}
 											</div>
