@@ -63,7 +63,7 @@
 				</p>
 			</div>
 		</Card>
-		<a href="/projects/genproj">
+		<a href="/projects/genproj" class="flex grow">
 			<Card>
 				<div class="flex flex-col grow">
 					<div class="flex flex-row">
@@ -71,7 +71,7 @@
 						<ToolboxSolid class="size-10 " aria-label="Tools" />
 					</div>
 					<p class="grow pt-5">
-						A tool that generates a new repository with configuration for tools I find great
+						A tool that generates a new repository with configuration for tools that I find are great
 						productivity boosters.
 					</p>
 				</div>
