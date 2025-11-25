@@ -12,6 +12,7 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
+	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
 
 	let { data = { isAuthenticated: false } } = $props();
 
@@ -316,13 +317,11 @@
 			return;
 		}
 
-		// If authenticated, check if all required auth is complete
-		// AuthFlow component will handle this
-		showAuthFlow = true;
+		// Directly initiate GitHub authentication
+		await initiateGitHubAuth(globalThis.location.href);
 	}
 
-	// Auth flow state
-	let showAuthFlow = $state(false);
+
 
 	function handleAuthComplete() {
 		showAuthFlow = false;
@@ -621,15 +620,7 @@
 		{/if}
 	</main>
 
-	<!-- AuthFlow Component (for authenticated users) -->
-	{#if showAuthFlow}
-		<AuthFlow
-			isAuthenticated={data.isAuthenticated}
-			{selectedCapabilities}
-			onAuthComplete={handleAuthComplete}
-			show={showAuthFlow}
-		/>
-	{/if}
+
 
 	<Footer />
 </div>

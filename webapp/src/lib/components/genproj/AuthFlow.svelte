@@ -8,6 +8,7 @@
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { logger } from '$lib/utils/logging.js';
 	import { capabilities } from '$lib/config/capabilities.js';
+	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
 
 	// Props
 	let {
@@ -33,7 +34,7 @@
 
 	// Get required auth services for selected capabilities
 	let requiredAuthServices = $derived.by(() => {
-		const required = new SvelteSet(['github']); // GitHub is always required for project generation
+		const required = new SvelteSet();
 		for (const capabilityId of selectedCapabilities) {
 			const capability = capabilities.find((c) => c.id === capabilityId);
 			if (capability?.requiresAuth) {
@@ -42,7 +43,27 @@
 				}
 			}
 		}
+		// GitHub is always required for project generation, but its auth flow is initiated directly from +page.svelte
+		// This modal only handles GitHub auth if other capabilities explicitly require it AND the user is not authenticated.
+		// For the purpose of determining if project generation needs GitHub, it is always a required service.
+		// However, for this modal, we primarily care about other services that need auth.
 		return [...required];
+	});
+
+	let servicesToDisplayInModal = $derived.by(() => {
+		// Only display services that are NOT GitHub, OR if GitHub is required AND not authenticated
+		// AND there are other services to authenticate.
+		const services = requiredAuthServices.filter((service) => service !== 'github');
+		if (
+			requiredAuthServices.includes('github') &&
+			!authStatus.github &&
+			services.length === 0
+		) {
+			// If GitHub is the only service required by the modal and not authenticated,
+			// the modal should not show up. The main page should handle this.
+			return [];
+		}
+		return services;
 	});
 
 	// Check if all required auth is complete
@@ -107,46 +128,7 @@
 		}
 	}
 
-	// Handle GitHub OAuth
-	async function handleGitHubAuth() {
-		try {
-			authenticatingService = 'github';
-			loading = true;
-			error = null;
 
-			// Build GitHub auth URL with current state to preserve selections
-			// We need to pass the selections through the OAuth flow so they're preserved on redirect
-			let authUrl = '/projects/genproj/api/auth/github';
-
-			// Get current selections from parent (if available via URL)
-			if (globalThis.window !== undefined && globalThis.location) {
-				const url = new URL(globalThis.location.href);
-				const selectedParameter = url.searchParams.get('selected');
-				const projectNameParameter = url.searchParams.get('projectName');
-				const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
-
-				const parameters = new SvelteURLSearchParams();
-				if (selectedParameter) parameters.set('selected', selectedParameter);
-				if (projectNameParameter) parameters.set('projectName', projectNameParameter);
-				if (repositoryUrlParameter) parameters.set('repositoryUrl', repositoryUrlParameter);
-
-				const queryString = parameters.toString();
-				if (queryString) {
-					authUrl += `?${queryString}`;
-				}
-			}
-
-			// Redirect to GitHub OAuth
-			if (globalThis.window !== undefined && globalThis.location) {
-				globalThis.location.href = authUrl;
-			}
-		} catch (error_) {
-			logger.error('GitHub auth failed', { error: error_.message });
-			error = error_.message;
-			loading = false;
-			authenticatingService = null;
-		}
-	}
 
 	// Handle external service token authentication
 	async function handleTokenAuth(service) {
@@ -243,17 +225,6 @@
 	onMount(() => {
 		loadAuthStatus();
 		checkAuthCallback();
-
-		// If GitHub is the only required service and we're not authenticated, redirect immediately
-		if (
-			show &&
-			requiredAuthServices.length === 1 &&
-			requiredAuthServices[0] === 'github' &&
-			!authStatus.github
-		) {
-			logger.info('Auto-redirecting to GitHub auth');
-			handleGitHubAuth();
-		}
 	});
 
 	// Watch for URL changes (OAuth callback)
@@ -266,7 +237,7 @@
 	});
 </script>
 
-{#if show && requiredAuthServices.length > 0}
+{#if show && servicesToDisplayInModal.length > 0}
 	<div
 		class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50"
 		role="dialog"
@@ -307,7 +278,7 @@
 
 				<!-- Auth Status List -->
 				<div class="space-y-4">
-					{#each requiredAuthServices as service (service)}
+					{#each servicesToDisplayInModal as service (service)}
 						{@const isAuthenticated = authStatus[service]}
 						{@const isAuthenticating = authenticatingService === service}
 						<div
@@ -345,16 +316,7 @@
 
 							{#if !isAuthenticated}
 								{#if service === 'github'}
-									<!-- GitHub OAuth Button -->
-									<button
-										class="mt-2 w-full px-4 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-										onclick={handleGitHubAuth}
-										disabled={loading || isAuthenticating}
-									>
-										{loading && isAuthenticating
-											? 'Authenticating...'
-											: `Authenticate with ${serviceNames[service]}`}
-									</button>
+									<!-- GitHub authentication is handled directly from the main page -->
 								{:else}
 									<!-- Token Input for External Services -->
 									<div class="mt-2 space-y-2">
@@ -395,7 +357,7 @@
 						<p class="text-sm text-green-400">All authentication complete!</p>
 					{:else}
 						<p class="text-sm text-gray-400">
-							{requiredAuthServices.filter((s) => !authStatus[s]).length} service(s) remaining
+							{servicesToDisplayInModal.filter((s) => !authStatus[s]).length} service(s) remaining
 						</p>
 					{/if}
 				</div>

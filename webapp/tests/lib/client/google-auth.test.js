@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as environment from '$app/environment';
 import {
 	initiateGoogleAuth,
 	getRedirectUri,
@@ -172,6 +173,7 @@ describe('Google Auth Utils', () => {
 		});
 
 		it('should set redirectPath cookie and request code with GIS if not logged in', async () => {
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
 			// Mock not logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
