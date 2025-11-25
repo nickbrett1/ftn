@@ -336,7 +336,7 @@
 					</div>
 
 					<div class="p-4 overflow-x-auto">
-						<pre class="text-sm text-gray-200 whitespace-pre-wrap"><code
+						<pre class="text-sm text-gray-200 whitespace-pre"><code
 								>{selectedFile.content}</code
 							></pre>
 					</div>
