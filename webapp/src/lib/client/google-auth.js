@@ -2,6 +2,8 @@
  * Shared Google OAuth utility functions
  */
 
+import { dev } from '$app/environment';
+
 const GOOGLE_CLIENT_ID = '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com';
 
 /**
@@ -9,7 +11,7 @@ const GOOGLE_CLIENT_ID = '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.goo
  */
 export function getRedirectUri() {
 	// For development, use localhost
-	if (process.env.NODE_ENV === 'development') {
+	if (dev) {
 		return 'http://127.0.0.1:5173/auth';
 	}
 
@@ -49,7 +51,11 @@ export async function initiateGoogleAuth(redirectPath = '/') {
 
 	// Set a cookie to store the redirect path
 	const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-	document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
+	if (dev) {
+		document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; samesite=lax`;
+	} else {
+		document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
+	}
 
 	// Check if Google GIS is already loaded
 	if (globalThis.google?.accounts?.oauth2) {
