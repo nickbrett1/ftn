@@ -43,7 +43,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
 		"@testing-library/svelte": "^5.2.9",
-		"@vitest/coverage-v8": "^4.0.13",
+		"@vitest/coverage-v8": "^4.0.14",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^2.1.2",
 		"c8": "^10.1.3",
