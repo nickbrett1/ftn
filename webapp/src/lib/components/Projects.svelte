@@ -63,24 +63,20 @@
 				</p>
 			</div>
 		</Card>
-		<HoverFadeCard>
-			{#snippet initial()}
+		<a href="/projects/genproj" class="flex grow">
+			<Card>
 				<div class="flex flex-col grow">
 					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">My Tools</span>
+						<span class="text-xl font-bold leading-none pt-2 grow">Generate a Project</span>
 						<ToolboxSolid class="size-10 " aria-label="Tools" />
 					</div>
 					<p class="grow pt-5">
-						Recommendations on the tools I use as an Engineer, Product Manager and Data Person.
+						A tool that generates a new repository with configuration for tools that I find are great
+						productivity boosters.
 					</p>
 				</div>
-			{/snippet}
-			{#snippet onHover()}
-				<div class="flex flex-col items-center grow">
-					<span class="text-2xl content-center font-bold grow">Coming Soon!</span>
-				</div>
-			{/snippet}
-		</HoverFadeCard>
+			</Card>
+		</a>
 		<Card onclick={() => (globalThis.location = 'https://github.com/nickbrett1/')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
