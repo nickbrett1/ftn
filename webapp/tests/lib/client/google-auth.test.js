@@ -51,18 +51,13 @@ describe('Google Auth Utils', () => {
 
 	describe('getRedirectUri', () => {
 		it('should return development URI in development environment', () => {
-			const originalEnvironment = process.env.NODE_ENV;
-			process.env.NODE_ENV = 'development';
-
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
-
-			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return production URI in production environment', () => {
-			const originalEnvironment = process.env.NODE_ENV;
-			process.env.NODE_ENV = 'production';
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
 
 			// Mock browser environment for production test
 			const originalLocation = globalThis.location;
@@ -83,13 +78,10 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnvironment;
 		});
 
 		it('should return preview URI for preview deployments', () => {
-			const originalEnvironment = process.env.NODE_ENV;
-			process.env.NODE_ENV = 'production';
-
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
 			// Mock browser environment for preview deployment
 			const originalLocation = globalThis.location;
 			Object.defineProperty(globalThis, 'location', {
@@ -109,7 +101,6 @@ describe('Google Auth Utils', () => {
 				configurable: true,
 				value: originalLocation
 			});
-			process.env.NODE_ENV = originalEnvironment;
 		});
 	});
 
@@ -177,7 +168,7 @@ describe('Google Auth Utils', () => {
 
 			await initiateGoogleAuth();
 
-			expect(goto).toHaveBeenCalledWith(globalThis.location.pathname);
+			expect(goto).toHaveBeenCalledWith('/');
 		});
 
 		it('should set redirectPath cookie and request code with GIS if not logged in', async () => {

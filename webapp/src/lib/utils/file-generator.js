@@ -91,7 +91,7 @@ export class TemplateEngine {
 		let content = templateString;
 		const regex = /{{(.*?)}}/g;
 
-		content = content.replace(regex, (match, key) => {
+		content = content.replaceAll(regex, (match, key) => {
 			const keys = key.trim().split('.');
 			let value = data;
 			for (const k of keys) {
