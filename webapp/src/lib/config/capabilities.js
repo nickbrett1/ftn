@@ -226,7 +226,7 @@ export const capabilities = [
 		category: CATEGORY_CI_CD,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
-		requiresAuth: ['circleci'],
+		requiresAuth: EMPTY_ARRAY,
 		externalServices: createExternalServiceConfig(
 			'circleci',
 			'CircleCI',
@@ -263,7 +263,7 @@ export const capabilities = [
 		category: CATEGORY_SECRETS,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
-		requiresAuth: ['doppler'],
+		requiresAuth: EMPTY_ARRAY,
 		externalServices: createExternalServiceConfig(
 			'doppler',
 			'Doppler',
@@ -301,7 +301,7 @@ export const capabilities = [
 		category: CATEGORY_CODE_QUALITY,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
-		requiresAuth: ['sonarcloud'],
+		requiresAuth: EMPTY_ARRAY,
 		externalServices: createExternalServiceConfig(
 			'sonarcloud',
 			'SonarCloud',
@@ -355,7 +355,7 @@ export const capabilities = [
 		category: CATEGORY_DEPLOYMENT,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
-		requiresAuth: ['cloudflare'],
+		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
 			properties: {
