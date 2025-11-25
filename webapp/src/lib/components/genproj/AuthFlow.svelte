@@ -243,6 +243,17 @@
 	onMount(() => {
 		loadAuthStatus();
 		checkAuthCallback();
+
+		// If GitHub is the only required service and we're not authenticated, redirect immediately
+		if (
+			show &&
+			requiredAuthServices.length === 1 &&
+			requiredAuthServices[0] === 'github' &&
+			!authStatus.github
+		) {
+			logger.info('Auto-redirecting to GitHub auth');
+			handleGitHubAuth();
+		}
 	});
 
 	// Watch for URL changes (OAuth callback)
