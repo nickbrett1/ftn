@@ -175,12 +175,13 @@ describe('GenprojAuthManager', () => {
 			'sonarcloud',
 			'github-actions'
 		]);
-		expect(required.sort()).toEqual(['circleci', 'doppler', 'github', 'sonarcloud']);
+		// Doppler, CircleCI, and SonarCloud no longer require auth
+		expect(required.sort()).toEqual(['github']);
 
 		const status = manager.checkRequiredAuth(['circleci', 'doppler', 'sonarcloud']);
 		expect(status.authenticated).toEqual([]);
-		expect(status.missing.sort()).toEqual(['circleci', 'doppler', 'sonarcloud']);
-		expect(status.allAuthenticated).toBe(false);
+		expect(status.missing).toEqual([]);
+		expect(status.allAuthenticated).toBe(true);
 	});
 
 	it('returns current auth state and can be cleared', async () => {
