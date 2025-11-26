@@ -150,15 +150,7 @@ export const capabilities = [
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				specFormat: {
-					type: 'string',
-					enum: ['md', 'yaml']
-				}
-			}
-		},
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		benefits: [
 			'Define your project specifications as code',
 			'Generate documentation automatically from specs',

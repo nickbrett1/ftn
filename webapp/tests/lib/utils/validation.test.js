@@ -167,11 +167,6 @@ describe('validation utilities', () => {
 					configuration: { playwright: { browsers: ['safari'] } },
 					error: 'Invalid browser: safari'
 				},
-				{
-					selected: ['spec-kit'],
-					configuration: { 'spec-kit': { specFormat: 'docx' } },
-					error: 'Invalid spec format'
-				}
 			];
 
 			for (const testCase of cases) {

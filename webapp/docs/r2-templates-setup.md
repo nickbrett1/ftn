@@ -67,7 +67,6 @@ Each template uses Handlebars syntax with the following common variables:
 - `{{thresholds}}` - Lighthouse CI thresholds object
 - `{{browsers}}` - Playwright browsers array
 - `{{testDir}}` - Playwright test directory
-- `{{specFormat}}` - Spec Kit format (markdown, yaml, json)
 - `{{includeTemplates}}` - Spec Kit include templates boolean
 
 ## Setup Commands
