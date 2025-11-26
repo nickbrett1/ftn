@@ -318,7 +318,9 @@
 			</div>
 
 			<!-- File Content -->
-			<div class="lg:col-span-2 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+			<div
+				class="lg:col-span-2 bg-gray-800 rounded-lg shadow-sm border border-gray-700 overflow-hidden"
+			>
 				{#if selectedFile}
 					<div class="p-4 border-b border-gray-700">
 						<div class="flex items-center justify-between">
