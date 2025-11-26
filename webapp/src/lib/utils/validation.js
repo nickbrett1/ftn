@@ -245,10 +245,7 @@ const capabilityValidators = {
 		return [];
 	},
 
-	'spec-kit': (config) => {
-		if (config.specFormat && !['md', 'yaml'].includes(config.specFormat)) {
-			return ['Invalid spec format'];
-		}
+	'spec-kit': () => {
 		return [];
 	}
 };
