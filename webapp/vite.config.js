@@ -118,6 +118,11 @@ export default defineConfig(({ command, mode }) => {
 			noExternal: ['three']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
+		resolve: {
+			alias: {
+				$lib: '/src/lib'
+			}
+		},
 		build: {
 			sourcemap: true
 		},
