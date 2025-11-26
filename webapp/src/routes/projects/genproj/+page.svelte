@@ -24,9 +24,26 @@
 	let repositoryUrl = $state(data.repositoryUrl || '');
 	let configuration = $state({});
 	let loading = $state(!data.capabilities || data.capabilities.length === 0);
-	let error = $state(data.error || null);
-	let authError = $state(data.error || null);
+	const initialError = $state(data.error || null);
 	let authResult = $state(data.authResult || null);
+
+	function getAuthErrorMessage(errorCode) {
+		switch (errorCode) {
+			case 'state_mismatch':
+				return 'Invalid authentication session. Please try again.';
+			case 'no_state':
+				return 'Your authentication session could not be found. Please try again.';
+			case 'token_exchange_failed':
+				return 'Failed to retrieve authentication token from GitHub. Please try again.';
+			case 'bad_verification_code':
+				return 'The verification code from GitHub is invalid. Please try again.';
+			default:
+				return null;
+		}
+	}
+
+	let authErrorMessage = $state(getAuthErrorMessage(initialError));
+	let capabilitiesError = $state(authErrorMessage ? null : initialError);
 
 	// Preview data state
 	let previewData = $state(null);
@@ -296,16 +313,11 @@
 		}
 
 		// Clear error/auth params from URL after displaying
-		if (authError || authResult) {
+		if (authErrorMessage || authResult) {
 			const url = new URL(globalThis.location.href);
-			if (url.searchParams.has('error')) {
-				url.searchParams.delete('error');
-				globalThis.history.replaceState({}, '', url.toString());
-			}
-			if (url.searchParams.has('auth')) {
-				url.searchParams.delete('auth');
-				globalThis.history.replaceState({}, '', url.toString());
-			}
+			url.searchParams.delete('error');
+			url.searchParams.delete('authResult');
+			globalThis.history.replaceState({}, '', url.toString());
 		}
 	});
 
@@ -433,6 +445,35 @@
 	<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative">
 		<!-- Login Button (top right, only when not authenticated) -->
 
+		<!-- Auth Error Banner -->
+		{#if authErrorMessage}
+			<div
+				class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4 mb-8 flex justify-between items-center"
+				data-testid="auth-error-banner"
+			>
+				<div class="flex items-center">
+					<svg class="h-5 w-5 text-red-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+						<path
+							fill-rule="evenodd"
+							d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+					<p class="ml-3 text-sm text-red-200">{authErrorMessage}</p>
+				</div>
+				<button
+					onclick={() => (authErrorMessage = null)}
+					class="text-red-300 hover:text-red-200 transition-colors"
+					aria-label="Dismiss error"
+				>
+					<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+						<path
+							d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
+						/>
+					</svg>
+				</button>
+			</div>
+		{/if}
 		<!-- Page Header -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-white">Project Generator</h1>
@@ -445,7 +486,7 @@
 				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
 				<span class="ml-3 text-white">Loading capabilities...</span>
 			</div>
-		{:else if error}
+		{:else if capabilitiesError}
 			<div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4">
 				<div class="flex">
 					<div class="shrink-0">
@@ -460,7 +501,7 @@
 					<div class="ml-3">
 						<h3 class="text-sm font-medium text-red-300">Error loading capabilities</h3>
 						<div class="mt-2 text-sm text-red-200">
-							<p data-testid="error-message">{error}</p>
+							<p data-testid="error-message">{capabilitiesError}</p>
 						</div>
 						<div class="mt-4">
 							<button
