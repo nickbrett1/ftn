@@ -327,6 +327,9 @@
 							selectedCapabilities.includes(capability.id) || capability.category === 'core'}
 						{@const isCore = capability.category === 'core'}
 						{@const isRequired = isRequiredByOther(capability)}
+						{@const visibleProperties = Object.entries(
+							capability.configurationSchema?.properties || {}
+						).filter(([_, prop]) => shouldDisplayRule(prop))}
 
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -429,109 +432,104 @@
 								{/if}
 							</div>
 
-							<!-- Configuration Section (Only if selected and has config) -->
-							{#if isSelected && capability.configurationSchema && Object.keys(capability.configurationSchema.properties || {}).length > 0}
+							<!-- Configuration Section (Only if selected and has visible config) -->
+							{#if isSelected && visibleProperties.length > 0}
 								<div class="px-6 py-4 bg-gray-900/50 border-t border-gray-700/50" transition:slide>
 									<div class="space-y-4">
 										<h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
 											Configuration
 										</h4>
-										{#each Object.entries(capability.configurationSchema.properties) as [field, property]}
-											{#if shouldDisplayRule(property)}
-												<div onclick={(e) => e.stopPropagation()}>
-													<label
-														for="{capability.id}-{field}"
-														class="block text-xs font-medium text-gray-300 mb-1.5"
+										{#each visibleProperties as [field, property]}
+											<div onclick={(e) => e.stopPropagation()}>
+												<label
+													for="{capability.id}-{field}"
+													class="block text-xs font-medium text-gray-300 mb-1.5"
+												>
+													{formatLabel(field)}
+												</label>
+												{#if property.enum}
+													<select
+														id="{capability.id}-{field}"
+														class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
+														value={configuration[capability.id]?.[field] || property.default}
+														onchange={(e) =>
+															handleConfigurationChange(capability.id, field, e.target.value)}
 													>
-														{formatLabel(field)}
-													</label>
-													{#if property.enum}
-														<select
-															id="{capability.id}-{field}"
-															class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
-															value={configuration[capability.id]?.[field] || property.default}
-															onchange={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.value)}
-														>
-															{#each property.enum as option}
-																<option value={option}>{option}</option>
-															{/each}
-														</select>
-													{:else if property.type === 'boolean'}
-														<div class="flex items-center">
-															<input
-																type="checkbox"
-																id="{capability.id}-{field}"
-																class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
-																checked={configuration[capability.id]?.[field] ||
-																	property.default ||
-																	false}
-																onchange={(e) =>
-																	handleConfigurationChange(capability.id, field, e.target.checked)}
-															/>
-															<span class="ml-2 text-sm text-gray-300">Enabled</span>
-														</div>
-													{:else if property.type === 'array' && property.items && property.items.enum}
-														<div class="flex flex-wrap gap-2">
-															{#each property.items.enum as option}
-																<label
-																	class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
-																>
-																	<input
-																		type="checkbox"
-																		class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
-																		checked={configuration[capability.id]?.[field]?.includes(
-																			option
-																		) || false}
-																		onchange={(e) => {
-																			const currentArray =
-																				configuration[capability.id]?.[field] || [];
-																			let newArray;
-																			if (e.target.checked) {
-																				newArray = [...currentArray, option];
-																			} else {
-																				newArray = currentArray.filter((item) => item !== option);
-																			}
-																			handleConfigurationChange(capability.id, field, newArray);
-																		}}
-																	/>
-																	<span class="ml-1.5 text-gray-300 text-xs">{option}</span>
-																</label>
-															{/each}
-														</div>
-													{:else if property.type === 'object' && field === 'thresholds' && property.properties.performance}
-														<div>
-															<input
-																type="number"
-																class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-																min={property.properties.performance.minimum}
-																max={property.properties.performance.maximum}
-																value={configuration[capability.id]?.thresholds?.performance ||
-																	property.properties.performance.default ||
-																	0}
-																onchange={(e) =>
-																	handleNestedConfigurationChange(
-																		capability.id,
-																		'thresholds',
-																		'performance',
-																		Number(e.target.value)
-																	)}
-															/>
-														</div>
-													{:else}
+														{#each property.enum as option}
+															<option value={option}>{option}</option>
+														{/each}
+													</select>
+												{:else if property.type === 'boolean'}
+													<div class="flex items-center">
 														<input
-															type="text"
+															type="checkbox"
 															id="{capability.id}-{field}"
-															class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-															value={configuration[capability.id]?.[field] ||
+															class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
+															checked={configuration[capability.id]?.[field] ||
 																property.default ||
-																''}
+																false}
 															onchange={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.value)}
+																handleConfigurationChange(capability.id, field, e.target.checked)}
 														/>
-													{/if}
-												</div>
-											{/if}
+														<span class="ml-2 text-sm text-gray-300">Enabled</span>
+													</div>
+												{:else if property.type === 'array' && property.items && property.items.enum}
+													<div class="flex flex-wrap gap-2">
+														{#each property.items.enum as option}
+															<label
+																class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
+															>
+																<input
+																	type="checkbox"
+																	class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
+																	checked={configuration[capability.id]?.[field]?.includes(option) ||
+																		false}
+																	onchange={(e) => {
+																		const currentArray =
+																			configuration[capability.id]?.[field] || [];
+																		let newArray;
+																		if (e.target.checked) {
+																			newArray = [...currentArray, option];
+																		} else {
+																			newArray = currentArray.filter((item) => item !== option);
+																		}
+																		handleConfigurationChange(capability.id, field, newArray);
+																	}}
+																/>
+																<span class="ml-1.5 text-gray-300 text-xs">{option}</span>
+															</label>
+														{/each}
+													</div>
+												{:else if property.type === 'object' && field === 'thresholds' && property.properties.performance}
+													<div>
+														<input
+															type="number"
+															class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+															min={property.properties.performance.minimum}
+															max={property.properties.performance.maximum}
+															value={configuration[capability.id]?.thresholds?.performance ||
+																property.properties.performance.default ||
+																0}
+															onchange={(e) =>
+																handleNestedConfigurationChange(
+																	capability.id,
+																	'thresholds',
+																	'performance',
+																	Number(e.target.value)
+																)}
+														/>
+													</div>
+												{:else}
+													<input
+														type="text"
+														id="{capability.id}-{field}"
+														class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+														value={configuration[capability.id]?.[field] || property.default || ''}
+														onchange={(e) =>
+															handleConfigurationChange(capability.id, field, e.target.value)}
+													/>
+												{/if}
+											</div>
 										{/each}
 									</div>
 								</div>
