@@ -1,6 +1,6 @@
 {
   "name": "Java",
-  "image": "mcr.microsoft.com/devcontainers/java:0-{{javaVersion}}",
+  "image": "mcr.microsoft.com/devcontainers/java:0-{{capabilityConfig.javaVersion}}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -9,7 +9,7 @@
       "username": "node"
     },
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "{{javaVersion}}"
+      "version": "{{capabilityConfig.javaVersion}}"
     }
   },
   "customizations": {
