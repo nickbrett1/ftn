@@ -22,7 +22,11 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 	}
 	return {
 		TemplateEngine: MockTemplateEngine,
-		GEMINI_DEV_ALIAS: 'gemini-dev-alias-mock'
+		GEMINI_DEV_ALIAS: 'gemini-dev-alias-mock',
+		SHELL_SETUP_SCRIPT: 'shell-setup-script-mock',
+		GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script-mock',
+		GEMINI_SETUP_SCRIPT: 'gemini-setup-script-mock',
+		PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script-mock'
 	};
 });
 

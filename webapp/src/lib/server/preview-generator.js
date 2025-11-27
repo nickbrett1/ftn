@@ -12,7 +12,14 @@ import {
 	resolveDependencies,
 	getCapabilityExecutionOrder
 } from '$lib/utils/capability-resolver.js';
-import { TemplateEngine, GEMINI_DEV_ALIAS } from '$lib/utils/file-generator.js';
+import {
+	TemplateEngine,
+	GEMINI_DEV_ALIAS,
+	SHELL_SETUP_SCRIPT,
+	GIT_SAFE_DIR_SCRIPT,
+	GEMINI_SETUP_SCRIPT,
+	PLAYWRIGHT_SETUP_SCRIPT
+} from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
@@ -172,10 +179,18 @@ async function generateDevContainerArtifacts(
 		type: 'file'
 	});
 
-	const postCreateContent = templateEngine.generateFile(
-		'devcontainer-post-create-setup-sh',
-		projectConfig
-	);
+	const postCreateContent = templateEngine.generateFile('devcontainer-post-create-setup-sh', {
+		...projectConfig,
+		shellSetup: allCapabilities.includes('shell-tools')
+			? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
+			: '',
+		gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
+			'{{projectName}}',
+			projectConfig.name || 'my-project'
+		),
+		geminiSetup: allCapabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
+		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
+	});
 	files.push({
 		path: '.devcontainer/post-create-setup.sh',
 		name: 'post-create-setup.sh',
