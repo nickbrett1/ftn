@@ -39,6 +39,39 @@ gemini-dev() {
   doppler run --project webapp --config dev -- gemini "$@"
 }`;
 
+export const SHELL_SETUP_SCRIPT = `
+echo "INFO: Creating Oh My Zsh custom directories..."
+mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
+
+if [ -f "/workspaces/{{projectName}}/.devcontainer/.zshrc" ]; then
+    echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
+    cp "/workspaces/{{projectName}}/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.zshrc"
+else
+    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.zshrc not found, skipping copy."
+fi
+
+if [ -f "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" ]; then
+    echo "INFO: Copying .p10k.zsh to $USER_HOME_DIR/.p10k.zsh"
+    cp "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" "$USER_HOME_DIR/.p10k.zsh"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
+else
+    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.p10k.zsh not found, skipping copy."
+fi`;
+
+export const GIT_SAFE_DIR_SCRIPT = `
+echo "INFO: Configuring git safe directory..."
+git config --global --add safe.directory /workspaces/{{projectName}}`;
+
+export const GEMINI_SETUP_SCRIPT = `
+echo "INFO: Adding Svelte MCP to Gemini..."
+gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp`;
+
+export const PLAYWRIGHT_SETUP_SCRIPT = `
+echo "INFO: Installing Playwright and its Chromium dependencies..."
+npx --yes playwright install --with-deps chromium
+echo "INFO: Playwright Chromium installation complete."`;
+
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
 	'devcontainer-java-json': devcontainerJavaJson,
@@ -244,7 +277,18 @@ function generateMergedDevContainerFiles(templateEngine, context, devContainerCa
 		},
 		{
 			filePath: '.devcontainer/post-create-setup.sh',
-			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', context)
+			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', {
+				...context,
+				shellSetup: context.capabilities.includes('shell-tools')
+					? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', context.name || 'my-project')
+					: '',
+				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
+					'{{projectName}}',
+					context.name || 'my-project'
+				),
+				geminiSetup: context.capabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
+				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
+			})
 		}
 	);
 
