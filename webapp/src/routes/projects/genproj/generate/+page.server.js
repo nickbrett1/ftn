@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { logger } from '$lib/utils/logging';
 
 /**
  * @param {import('./$types').PageServerLoadEvent} event
@@ -42,6 +43,7 @@ export async function load({ url, cookies, fetch }) {
 			previewData
 		};
 	} catch (e) {
+		logger.error('Failed to fetch preview', e);
 		return {
 			error: 'Failed to fetch preview'
 		};
