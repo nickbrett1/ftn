@@ -3,6 +3,21 @@ import { beforeEach, describe, it, expect, vi } from 'vitest';
 
 vi.mock('$lib/server/require-user');
 
+const { mockLoggerInfo, mockLoggerError, mockLoggerWarn } = vi.hoisted(() => ({
+	mockLoggerInfo: vi.fn(),
+	mockLoggerError: vi.fn(),
+	mockLoggerWarn: vi.fn()
+}));
+
+// Mock the logging module
+vi.mock('$lib/utils/logging', () => ({
+	logger: {
+		info: mockLoggerInfo,
+		error: mockLoggerError,
+		warn: mockLoggerWarn
+	}
+}));
+
 describe('/projects/genproj/generate load function', async () => {
 	const { load } = await import('/src/routes/projects/genproj/generate/+page.server.js');
 
@@ -48,14 +63,16 @@ describe('/projects/genproj/generate load function', async () => {
 	});
 
 	it('should return a fallback error if the preview fetch throws', async () => {
+		const error = new Error('Network error');
 		const mockEvent = {
 			url: new URL('http://localhost/projects/genproj/generate'),
 			cookies: { get: vi.fn().mockReturnValue('dummy-token') },
-			fetch: vi.fn().mockRejectedValue(new Error('Network error'))
+			fetch: vi.fn().mockRejectedValue(error)
 		};
 
 		const result = await load(mockEvent);
 		expect(result.error).toBe('Failed to fetch preview');
+		expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch preview', error);
 	});
 
 	it('should return project data on success', async () => {
