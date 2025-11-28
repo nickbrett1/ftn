@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+{{dopplerLogin}}
+
+echo "Logging into Cloudflare..."
+npx wrangler login
+
+{{setupWrangler}}

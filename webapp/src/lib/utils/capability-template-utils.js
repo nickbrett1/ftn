@@ -82,11 +82,24 @@ export function getCapabilityTemplateData(capabilityId, context) {
 
 	if (capabilityId === 'circleci') {
 		let data = {
+			preBuildSteps: '',
 			lighthouseJobDefinition: '',
 			lighthouseWorkflowJob: '',
 			deployJobDefinition: '',
 			deployWorkflowJob: ''
 		};
+
+		if (
+			context.capabilities.includes('cloudflare-wrangler') &&
+			context.capabilities.includes('doppler')
+		) {
+			data.preBuildSteps = `
+      - run:
+          name: Setup Wrangler Config
+          command: |
+            chmod +x scripts/setup-wrangler-config.sh
+            ./scripts/setup-wrangler-config.sh`;
+		}
 
 		if (hasLighthouse) {
 			data.lighthouseJobDefinition = `

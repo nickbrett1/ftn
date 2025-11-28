@@ -234,7 +234,11 @@ export const capabilities = [
 		{
 			type: 'object',
 			properties: {
-				pythonVersion: { type: 'string', enum: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14'], default: '3.14' },
+				pythonVersion: {
+					type: 'string',
+					enum: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14'],
+					default: '3.14'
+				},
 				packageManager: { type: 'string', enum: ['pip'] }
 			}
 		},
