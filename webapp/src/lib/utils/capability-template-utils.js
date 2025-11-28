@@ -5,6 +5,51 @@ export function getCapabilityTemplateData(capabilityId, context) {
 	const capabilityConfig = context.configuration?.[capabilityId] || {};
 	const deployTarget = capabilityConfig.deployTarget;
 
+	if (capabilityId === 'coding-agents') {
+		const hasSonarQube = context.capabilities.includes('sonarcloud');
+		const hasCircleCI = context.capabilities.includes('circleci');
+
+		let sonarQubeMcpConfig = '';
+		if (hasSonarQube) {
+			sonarQubeMcpConfig = `,
+    "sonarqube": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--name",
+        "sonarqube-mcp-server",
+        "sonarqube-mcp-server"
+      ],
+      "env": {
+        "SONAR_TOKEN": "$SONAR_TOKEN",
+        "SONAR_HOST_URL": "$SONAR_HOST_URL"
+      }
+    }`;
+		}
+
+		let circleCiMcpConfig = '';
+		if (hasCircleCI) {
+			circleCiMcpConfig = `,
+    "circleci": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-circleci"
+      ],
+      "env": {
+        "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
+      }
+    }`;
+		}
+
+		return {
+			sonarQubeMcpConfig,
+			circleCiMcpConfig
+		};
+	}
+
 	if (capabilityId === 'sonarcloud') {
 		const config = context.configuration?.sonarcloud || {};
 		const language = config.language || 'JavaScript';
