@@ -179,7 +179,7 @@ describe('TemplateEngine', () => {
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
-			config: capabilitiesConfig,
+			configuration: capabilitiesConfig,
 			projectMetadata: projectMetadata
 		};
 
@@ -200,7 +200,7 @@ describe('TemplateEngine', () => {
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
-			config: capabilitiesConfig,
+			configuration: capabilitiesConfig,
 			projectMetadata: projectMetadata
 		};
 
