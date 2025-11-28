@@ -17,15 +17,6 @@ const nodeJsonTemplateContent = `{
       "version": "{{capabilityConfig.nodeVersion}}"
     }
   },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "svelte.svelte-vscode"
-      ]
-    }
-  },
   "postCreateCommand": "./post-create-setup.sh"
 }
 `;

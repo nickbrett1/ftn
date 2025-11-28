@@ -12,14 +12,5 @@
       "version": "{{capabilityConfig.javaVersion}}"
     }
   },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "redhat.java",
-        "vscjava.vscode-java-debug",
-        "vscjava.vscode-java-test"
-      ]
-    }
-  },
   "postCreateCommand": "./post-create-setup.sh"
 }
