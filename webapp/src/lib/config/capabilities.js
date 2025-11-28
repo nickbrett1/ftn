@@ -214,7 +214,7 @@ export const capabilities = [
 				nodeVersion: {
 					type: 'string',
 					enum: ['18', '20', '22', '23', '24', '25'],
-					default: '24'
+					default: '25'
 				}
 			},
 			required: EMPTY_ARRAY
