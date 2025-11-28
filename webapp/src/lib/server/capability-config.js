@@ -124,7 +124,7 @@ export class CapabilityConfigurationService {
 				dependencies: [],
 				conflicts: [],
 				configuration: {
-					version: '3.11',
+					version: '3.14',
 					packageManager: 'pip'
 				},
 				requiresAuth: false,
