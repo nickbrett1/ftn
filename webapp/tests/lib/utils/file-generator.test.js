@@ -160,13 +160,9 @@ describe('TemplateEngine', () => {
 		expect(failure.error).toContain('Template not found');
 	});
 
-	it('should generate CircleCI config with Cloudflare deployment steps when deployTarget is cloudflare', () => {
-		const selectedCapabilities = ['circleci'];
-		const capabilitiesConfig = {
-			circleci: {
-				deployTarget: 'cloudflare'
-			}
-		};
+	it('should generate CircleCI config with Cloudflare deployment steps when cloudflare-wrangler capability is present', () => {
+		const selectedCapabilities = ['circleci', 'cloudflare-wrangler'];
+		const capabilitiesConfig = {};
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
@@ -181,13 +177,9 @@ describe('TemplateEngine', () => {
 		expect(content).toContain('command: npx wrangler deploy');
 	});
 
-	it('should NOT generate CircleCI config with Cloudflare deployment steps when deployTarget is none', () => {
+	it('should NOT generate CircleCI config with Cloudflare deployment steps when cloudflare-wrangler capability is NOT present', () => {
 		const selectedCapabilities = ['circleci'];
-		const capabilitiesConfig = {
-			circleci: {
-				deployTarget: 'none'
-			}
-		};
+		const capabilitiesConfig = {};
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
