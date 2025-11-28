@@ -115,7 +115,13 @@ export const capabilities = [
 			'Cursor CLI pre-installed',
 			'Svelte MCP for context-aware AI'
 		],
-		templates: EMPTY_ARRAY,
+		templates: [
+			{
+				id: 'gemini-settings',
+				filePath: '.gemini/settings.json',
+				templateId: 'gemini-settings-json'
+			}
+		],
 		links: [
 			{ label: 'Gemini', url: 'https://ai.google.dev/gemini-api/docs/quickstart' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },

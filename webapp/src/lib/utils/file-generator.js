@@ -16,6 +16,7 @@ import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
+import geminiSettingsJson from '../templates/gemini-settings-json.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
@@ -90,6 +91,7 @@ const templateImports = {
 	'circleci-config': circleCiConfig,
 	'sonar-project-properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
+	'gemini-settings-json': geminiSettingsJson,
 	'package-json': packageJsonTemplate
 };
 
