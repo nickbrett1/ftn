@@ -12,13 +12,5 @@
       "version": "{{capabilityConfig.pythonVersion}}"
     }
   },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance"
-      ]
-    }
-  },
   "postCreateCommand": "./post-create-setup.sh"
 }

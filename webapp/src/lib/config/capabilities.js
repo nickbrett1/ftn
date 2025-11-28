@@ -48,9 +48,16 @@ function createExternalServiceConfig(type, name, createDesc, configDesc) {
  * @param {string} name - The display name of the capability.
  * @param {string} description - A brief description of the capability.
  * @param {object} configurationSchema - The schema for configuring the capability.
+ * @param {string[]} vscodeExtensions - List of VS Code extensions to include.
  * @returns {object} A devcontainer capability object.
  */
-function createDevelopmentContainerCapability(id, name, description, configurationSchema) {
+function createDevelopmentContainerCapability(
+	id,
+	name,
+	description,
+	configurationSchema,
+	vscodeExtensions = []
+) {
 	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
 	const capName = lang.charAt(0).toUpperCase() + lang.slice(1);
 	return {
@@ -62,6 +69,7 @@ function createDevelopmentContainerCapability(id, name, description, configurati
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema,
+		vscodeExtensions,
 		benefits: [
 			'Instant development environment setup for new contributors',
 			`Pre-configured ${capName} runtime and VS Code extensions`,
@@ -101,6 +109,7 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['google.geminicodeassist'],
 		benefits: [
 			'Gemini CLI pre-installed',
 			'Cursor CLI pre-installed',
@@ -122,6 +131,25 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: [
+			'dbaeumer.vscode-eslint',
+			'esbenp.prettier-vscode',
+			'svelte.svelte-vscode',
+			'usernamehw.errorlens',
+			'streetsidesoftware.code-spell-checker',
+			'eamodio.gitlens',
+			'donjayamanne.githistory',
+			'mhutchie.git-graph',
+			'redhat.vscode-yaml',
+			'tamasfe.even-better-toml',
+			'pejmannikram.vscode-auto-scroll',
+			'naumovs.color-highlight',
+			'oderwat.indent-rainbow',
+			'wix.vscode-import-cost',
+			'mkxml.vscode-filesize',
+			'christian-kohler.npm-intellisense',
+			'yatki.vscode-surround'
+		],
 		benefits: [
 			'ESLint & Prettier configured',
 			'Svelte VS Code extension',
@@ -186,7 +214,8 @@ export const capabilities = [
 				nodeVersion: { type: 'string', enum: ['18', '20', '22'], default: '22' }
 			},
 			required: EMPTY_ARRAY
-		}
+		},
+		['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode', 'svelte.svelte-vscode']
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-python',
@@ -198,7 +227,8 @@ export const capabilities = [
 				pythonVersion: { type: 'string', enum: ['3.9', '3.10', '3.11'], default: '3.11' },
 				packageManager: { type: 'string', enum: ['pip'] }
 			}
-		}
+		},
+		['ms-python.python', 'ms-python.vscode-pylance']
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-java',
@@ -209,7 +239,8 @@ export const capabilities = [
 			properties: {
 				javaVersion: { type: 'string', enum: ['11', '17', '21'], default: '21' }
 			}
-		}
+		},
+		['redhat.java', 'vscjava.vscode-java-debug', 'vscjava.vscode-java-test']
 	),
 	{
 		id: 'circleci',
@@ -272,6 +303,7 @@ export const capabilities = [
 				}
 			}
 		},
+		vscodeExtensions: ['THEARC.doppler'],
 		benefits: [
 			'Centralized secrets management across environments',
 			'Eliminate .env files and risk of leaking secrets',
@@ -332,6 +364,7 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['SonarSource.sonarlint-vscode'],
 		benefits: [
 			'Real-time code quality feedback in your IDE',
 			'Fix issues before they are committed to the repository',
@@ -456,6 +489,7 @@ export const capabilities = [
 				}
 			}
 		},
+		vscodeExtensions: ['ms-playwright.playwright', 'vitest.explorer'],
 		benefits: [
 			'Reliable end-to-end testing for modern web apps',
 			'Test across Chromium, Firefox, and WebKit',

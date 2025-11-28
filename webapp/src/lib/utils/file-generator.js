@@ -230,6 +230,20 @@ function generateMergedDevelopmentContainerFiles(
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
+	const allExtensions = new Set();
+	if (mergedDevelopmentContainerJson.customizations?.vscode?.extensions) {
+		mergedDevelopmentContainerJson.customizations.vscode.extensions.forEach((ext) =>
+			allExtensions.add(ext)
+		);
+	}
+
+	for (const capabilityId of context.capabilities) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (capability && capability.vscodeExtensions) {
+			capability.vscodeExtensions.forEach((ext) => allExtensions.add(ext));
+		}
+	}
+
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
@@ -248,12 +262,18 @@ function generateMergedDevelopmentContainerFiles(
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			const baseExtensions =
-				mergedDevelopmentContainerJson.customizations?.vscode?.extensions || [];
-			mergedDevelopmentContainerJson.customizations.vscode.extensions = [
-				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
-			];
+			otherJson.customizations.vscode.extensions.forEach((ext) => allExtensions.add(ext));
 		}
+	}
+
+	if (allExtensions.size > 0) {
+		if (!mergedDevelopmentContainerJson.customizations) {
+			mergedDevelopmentContainerJson.customizations = {};
+		}
+		if (!mergedDevelopmentContainerJson.customizations.vscode) {
+			mergedDevelopmentContainerJson.customizations.vscode = {};
+		}
+		mergedDevelopmentContainerJson.customizations.vscode.extensions = Array.from(allExtensions);
 	}
 
 	files.push({
