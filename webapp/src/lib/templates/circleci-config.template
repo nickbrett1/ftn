@@ -8,6 +8,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+{{preBuildSteps}}
       - run:
           name: Build
           command: npm run build

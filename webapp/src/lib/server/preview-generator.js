@@ -276,6 +276,104 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	return null;
 }
 
+async function generateCloudflareFiles(templateEngine, projectConfig, allCapabilities, files) {
+	if (!allCapabilities.includes('cloudflare-wrangler')) return;
+
+	const hasDoppler = allCapabilities.includes('doppler');
+
+	// cloud_login.sh
+	const dopplerLogin = hasDoppler ? 'echo "Logging into Doppler..."\ndoppler login' : '';
+	const setupWrangler = hasDoppler
+		? 'echo "Running setup-wrangler-config.sh..."\nbash scripts/setup-wrangler-config.sh'
+		: '';
+
+	const cloudLoginContent = templateEngine.generateFile('scripts-cloud-login-sh', {
+		...projectConfig,
+		dopplerLogin,
+		setupWrangler
+	});
+
+	files.push({
+		path: 'scripts/cloud_login.sh',
+		name: 'cloud_login.sh',
+		content: cloudLoginContent,
+		size: cloudLoginContent.length,
+		type: 'file'
+	});
+
+	if (hasDoppler) {
+		const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
+			...projectConfig,
+			projectName: projectConfig.name || 'my-project'
+		});
+		files.push({
+			path: 'wrangler.template.jsonc',
+			name: 'wrangler.template.jsonc',
+			content: templateContent,
+			size: templateContent.length,
+			type: 'file'
+		});
+
+		const setupContent = templateEngine.generateFile(
+			'scripts-setup-wrangler-config-sh',
+			projectConfig
+		);
+		files.push({
+			path: 'scripts/setup-wrangler-config.sh',
+			name: 'setup-wrangler-config.sh',
+			content: setupContent,
+			size: setupContent.length,
+			type: 'file'
+		});
+	} else {
+		const wranglerContent = templateEngine.generateFile('wrangler-jsonc', {
+			...projectConfig,
+			projectName: projectConfig.name || 'my-project'
+		});
+		files.push({
+			path: 'wrangler.jsonc',
+			name: 'wrangler.jsonc',
+			content: wranglerContent,
+			size: wranglerContent.length,
+			type: 'file'
+		});
+	}
+}
+
+function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
+	const hasDoppler = allCapabilities.includes('doppler');
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+	const hasPython = allCapabilities.some((c) => c.startsWith('devcontainer-python'));
+	const hasJava = allCapabilities.some((c) => c.startsWith('devcontainer-java'));
+
+	let wranglerIgnore = '';
+	if (hasWrangler && hasDoppler) {
+		wranglerIgnore = 'wrangler.jsonc';
+	}
+
+	const pythonIgnore = hasPython
+		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest'
+		: '';
+	const javaIgnore = hasJava
+		? '\n# Java\n*.class\n*.log\n*.ctxt\n.mtj.tmp/\n*.jar\n*.war\n*.nar\n*.ear\n*.zip\n*.tar.gz\n*.rar\ntarget/'
+		: '';
+
+	const content = templateEngine.generateFile('gitignore', {
+		...projectConfig,
+		wranglerIgnore,
+		pythonIgnore,
+		javaIgnore
+	});
+
+	return {
+		path: '.gitignore',
+		name: '.gitignore',
+		content,
+		size: content.length,
+		type: 'file'
+	};
+}
+
 /**
  * Generates preview files for the project
  * @param {Object} projectConfig - Project configuration
@@ -310,11 +408,17 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		);
 	}
 
+	// Generate Cloudflare files
+	await generateCloudflareFiles(templateEngine, projectConfig, executionOrder, files);
+
 	// Generate package.json
 	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);
 	if (packageJsonFile) {
 		files.push(packageJsonFile);
 	}
+
+	// Generate .gitignore
+	files.push(generateGitignoreFile(templateEngine, projectConfig, executionOrder));
 
 	// Generate README.md
 	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
