@@ -29,16 +29,21 @@
 
 	function getAuthErrorMessage(errorCode) {
 		switch (errorCode) {
-			case 'state_mismatch':
+			case 'state_mismatch': {
 				return 'Invalid authentication session. Please try again.';
-			case 'no_state':
+			}
+			case 'no_state': {
 				return 'Your authentication session could not be found. Please try again.';
-			case 'token_exchange_failed':
+			}
+			case 'token_exchange_failed': {
 				return 'Failed to retrieve authentication token from GitHub. Please try again.';
-			case 'bad_verification_code':
+			}
+			case 'bad_verification_code': {
 				return 'The verification code from GitHub is invalid. Please try again.';
-			default:
+			}
+			default: {
 				return null;
+			}
 		}
 	}
 
@@ -79,8 +84,8 @@
 			});
 
 			if (!response.ok) {
-				const errData = await response.json();
-				throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+				const errorData = await response.json();
+				throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
 			}
 
 			const data = await response.json();
@@ -88,9 +93,9 @@
 			logger.info('Project preview generated successfully', {
 				filesCount: previewData.files?.length || 0
 			});
-		} catch (err) {
-			previewError = err.message;
-			logger.error('Failed to generate preview', { error: err.message });
+		} catch (error) {
+			previewError = error.message;
+			logger.error('Failed to generate preview', { error: error.message });
 		} finally {
 			previewLoading = false;
 		}
@@ -277,9 +282,9 @@
 
 				const fetchData = await response.json();
 				capabilities = fetchData;
-			} catch (err) {
-				error = err.message;
-				logger.error('Failed to load capabilities', { error: err.message });
+			} catch (error_) {
+				error = error_.message;
+				logger.error('Failed to load capabilities', { error: error_.message });
 			} finally {
 				loading = false;
 			}
@@ -332,8 +337,6 @@
 		// Directly initiate GitHub authentication
 		await initiateGitHubAuth(globalThis.location.href);
 	}
-
-
 
 	function handleAuthComplete() {
 		showAuthFlow = false;
@@ -660,8 +663,6 @@
 			</div>
 		{/if}
 	</main>
-
-
 
 	<Footer />
 </div>

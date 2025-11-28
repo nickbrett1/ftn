@@ -93,27 +93,27 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
  * @param {string[]} allCapabilities - Array of all selected capability IDs.
  * @param {Array<FileObject>} files - Array to push generated file objects into.
  */
-async function generateDevContainerArtifacts(
+async function generateDevelopmentContainerArtifacts(
 	templateEngine,
 	projectConfig,
-	devContainerCapabilities,
+	developmentContainerCapabilities,
 	allCapabilities,
 	files
 ) {
-	const baseDevContainerId = devContainerCapabilities[0];
-	const baseCapability = capabilities.find((c) => c.id === baseDevContainerId);
-	const baseCapabilityConfig = projectConfig.configuration?.[baseDevContainerId] || {};
+	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
+	const baseCapabilityConfig = projectConfig.configuration?.[baseDevelopmentContainerId] || {};
 
 	// Generate base devcontainer.json content
 	const baseJsonContent = templateEngine.generateFile(
-		`devcontainer-${baseDevContainerId.split('-')[1]}-json`,
+		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
 		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
-	let mergedDevContainerJson = JSON.parse(baseJsonContent);
+	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
 	// Merge features and extensions from other selected dev containers
-	for (let i = 1; i < devContainerCapabilities.length; i++) {
-		const capabilityId = devContainerCapabilities[i];
+	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
+		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
 
@@ -124,14 +124,15 @@ async function generateDevContainerArtifacts(
 		const otherJson = JSON.parse(otherJsonContent);
 
 		if (otherJson.features) {
-			mergedDevContainerJson.features = {
-				...mergedDevContainerJson.features,
+			mergedDevelopmentContainerJson.features = {
+				...mergedDevelopmentContainerJson.features,
 				...otherJson.features
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			const baseExtensions = mergedDevContainerJson.customizations?.vscode?.extensions || [];
-			mergedDevContainerJson.customizations.vscode.extensions = [
+			const baseExtensions =
+				mergedDevelopmentContainerJson.customizations?.vscode?.extensions || [];
+			mergedDevelopmentContainerJson.customizations.vscode.extensions = [
 				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
 			];
 		}
@@ -140,14 +141,14 @@ async function generateDevContainerArtifacts(
 	files.push({
 		path: '.devcontainer/devcontainer.json',
 		name: 'devcontainer.json',
-		content: JSON.stringify(mergedDevContainerJson, null, 2),
-		size: JSON.stringify(mergedDevContainerJson, null, 2).length,
+		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2),
+		size: JSON.stringify(mergedDevelopmentContainerJson, null, 2).length,
 		type: 'file'
 	});
 
 	// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
 	const dockerfileContent = templateEngine.generateFile(
-		`devcontainer-${baseDevContainerId.split('-')[1]}-dockerfile`,
+		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-dockerfile`,
 		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
 	files.push({
@@ -207,7 +208,7 @@ async function generateDevContainerArtifacts(
  * @param {string[]} otherCapabilities - Array of non-devcontainer capability IDs
  * @param {Array<FileObject>} files - Array to push generated file objects into
  */
-async function generateNonDevContainerFiles(
+async function generateNonDevelopmentContainerFiles(
 	templateEngine,
 	projectConfig,
 	otherCapabilities,
@@ -219,7 +220,8 @@ async function generateNonDevContainerFiles(
 			for (const template of capability.templates) {
 				try {
 					const extraData = getCapabilityTemplateData(capabilityId, {
-						capabilities: otherCapabilities
+						capabilities: otherCapabilities,
+						configuration: projectConfig.configuration
 					});
 
 					const content = templateEngine.generateFile(template.templateId, {
@@ -244,6 +246,36 @@ async function generateNonDevContainerFiles(
 	}
 }
 
+function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities) {
+	if (allCapabilities.includes('devcontainer-node')) {
+		let scripts = '';
+		let devDependencies = '';
+		let dependencies = '';
+
+		if (allCapabilities.includes('cloudflare-wrangler')) {
+			scripts += ',\n    "deploy": "wrangler deploy"';
+			devDependencies += '"wrangler": "^3.0.0"';
+		}
+
+		const content = templateEngine.generateFile('package-json', {
+			...projectConfig,
+			scripts,
+			devDependencies,
+			dependencies,
+			projectName: projectConfig.name || 'my-project'
+		});
+
+		return {
+			path: 'package.json',
+			name: 'package.json',
+			content,
+			size: content.length,
+			type: 'file'
+		};
+	}
+	return null;
+}
+
 /**
  * Generates preview files for the project
  * @param {Object} projectConfig - Project configuration
@@ -253,22 +285,35 @@ async function generateNonDevContainerFiles(
 async function generatePreviewFiles(projectConfig, executionOrder) {
 	const templateEngine = await getTemplateEngine();
 
-	const devContainerCapabilities = executionOrder.filter((c) => c.startsWith('devcontainer-'));
+	const developmentContainerCapabilities = executionOrder.filter((c) =>
+		c.startsWith('devcontainer-')
+	);
 	const otherCapabilities = executionOrder.filter((c) => !c.startsWith('devcontainer-'));
 
 	const files = [];
 
-	await generateNonDevContainerFiles(templateEngine, projectConfig, otherCapabilities, files);
+	await generateNonDevelopmentContainerFiles(
+		templateEngine,
+		projectConfig,
+		otherCapabilities,
+		files
+	);
 
 	// Handle devcontainer capabilities with merging logic
-	if (devContainerCapabilities.length > 0) {
-		await generateDevContainerArtifacts(
+	if (developmentContainerCapabilities.length > 0) {
+		await generateDevelopmentContainerArtifacts(
 			templateEngine,
 			projectConfig,
-			devContainerCapabilities,
+			developmentContainerCapabilities,
 			executionOrder,
 			files
 		);
+	}
+
+	// Generate package.json
+	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);
+	if (packageJsonFile) {
+		files.push(packageJsonFile);
 	}
 
 	// Generate README.md

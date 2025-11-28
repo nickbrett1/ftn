@@ -134,9 +134,9 @@ export function validateSelectedCapabilities(selected) {
 function validateRequiredProperties(id, config, schema) {
 	const errors = [];
 	if (schema.required) {
-		for (const requiredProp of schema.required) {
-			if (config[requiredProp] === undefined) {
-				errors.push(`${id}.${requiredProp} is required`);
+		for (const requiredProperty of schema.required) {
+			if (config[requiredProperty] === undefined) {
+				errors.push(`${id}.${requiredProperty} is required`);
 			}
 		}
 	}

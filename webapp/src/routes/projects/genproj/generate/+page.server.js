@@ -42,8 +42,8 @@ export async function load({ url, cookies, fetch }) {
 			selected,
 			previewData
 		};
-	} catch (e) {
-		logger.error('Failed to fetch preview', e);
+	} catch (error) {
+		logger.error('Failed to fetch preview', error);
 		return {
 			error: 'Failed to fetch preview'
 		};

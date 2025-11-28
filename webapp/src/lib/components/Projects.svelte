@@ -71,8 +71,8 @@
 						<ToolboxSolid class="size-10 " aria-label="Tools" />
 					</div>
 					<p class="grow pt-5">
-						A tool that generates a new repository with configuration for tools that I find are great
-						productivity boosters.
+						A tool that generates a new repository with configuration for tools that I find are
+						great productivity boosters.
 					</p>
 				</div>
 			</Card>

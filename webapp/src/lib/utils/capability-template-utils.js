@@ -1,7 +1,8 @@
 export function getCapabilityTemplateData(capabilityId, context) {
 	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 	// Retrieve the configuration for the specific capability if it exists
-	const capabilityConfig = context.config?.[capabilityId] || {};
+	// The context object structure passed from file-generator.js has 'configuration' property, not 'config'
+	const capabilityConfig = context.configuration?.[capabilityId] || {};
 	const deployTarget = capabilityConfig.deployTarget;
 
 	if (capabilityId === 'sonarcloud') {
@@ -9,12 +10,23 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		const language = config.language || 'JavaScript';
 		let languageSettings = '';
 
-		if (language === 'JavaScript') {
-			languageSettings = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info';
-		} else if (language === 'Python') {
-			languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
-		} else if (language === 'Java') {
-			languageSettings = 'sonar.java.binaries=.';
+		switch (language) {
+			case 'JavaScript': {
+				languageSettings = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info';
+
+				break;
+			}
+			case 'Python': {
+				languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
+
+				break;
+			}
+			case 'Java': {
+				languageSettings = 'sonar.java.binaries=.';
+
+				break;
+			}
+			// No default
 		}
 
 		return {
@@ -51,7 +63,8 @@ export function getCapabilityTemplateData(capabilityId, context) {
             - build`;
 		}
 
-		if (deployTarget === 'cloudflare') {
+		// Check if explicit deploy target is set OR if wrangler capability is present which implies cloudflare deployment
+		if (deployTarget === 'cloudflare' || context.capabilities.includes('cloudflare-wrangler')) {
 			data.deployJobDefinition = `
   deploy-to-cloudflare:
     executor: node/default

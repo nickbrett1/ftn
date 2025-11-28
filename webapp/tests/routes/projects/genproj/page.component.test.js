@@ -36,8 +36,8 @@ vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
 		default: class {
 			constructor({ target }) {
 				const div = document.createElement('div');
-				div.setAttribute('data-testid', 'auth-flow-mock');
-				target.appendChild(div);
+				div.dataset.testid = 'auth-flow-mock';
+				target.append(div);
 			}
 			$destroy() {}
 		}
@@ -45,9 +45,9 @@ vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
 });
 
 // Mock global constants used in Footer
-global.__GIT_BRANCH__ = 'test-branch';
-global.__GIT_COMMIT__ = 'test-commit';
-global.__BUILD_TIME__ = new Date().toISOString();
+globalThis.__GIT_BRANCH__ = 'test-branch';
+globalThis.__GIT_COMMIT__ = 'test-commit';
+globalThis.__BUILD_TIME__ = new Date().toISOString();
 
 describe('GenProj Page Component', () => {
 	const mockCapabilities = [
@@ -73,9 +73,9 @@ describe('GenProj Page Component', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
-		Object.defineProperty(window, 'location', {
+		Object.defineProperty(globalThis, 'location', {
 			value: {
 				pathname: '/projects/genproj',
 				origin: 'http://localhost',
@@ -119,10 +119,10 @@ describe('GenProj Page Component', () => {
 		await fireEvent.click(loginButton);
 
 		expect(googleAuth.initiateGoogleAuth).toHaveBeenCalled();
-		const calledArg = googleAuth.initiateGoogleAuth.mock.calls[0][0];
+		const calledArgument = googleAuth.initiateGoogleAuth.mock.calls[0][0];
 
-		expect(calledArg).toContain('selected=core-cap');
-		expect(calledArg).toContain('/projects/genproj');
+		expect(calledArgument).toContain('selected=core-cap');
+		expect(calledArgument).toContain('/projects/genproj');
 	});
 
 	it('should NOT automatically show AuthFlow on mount when authenticated and ready', async () => {

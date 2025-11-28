@@ -28,15 +28,15 @@ describe('/projects/genproj/generate load function', async () => {
 	it('should redirect if github access token is missing', async () => {
 		const mockEvent = {
 			url: new URL('http://localhost/projects/genproj/generate'),
-			cookies: { get: vi.fn().mockReturnValue(undefined) },
+			cookies: { get: vi.fn().mockReturnValue() },
 			fetch: vi.fn()
 		};
 		try {
 			await load(mockEvent);
 			expect.fail('Should have thrown');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/projects/genproj?error=not_authenticated');
+		} catch (error) {
+			expect(error.status).toBe(302);
+			expect(error.location).toBe('/projects/genproj?error=not_authenticated');
 		}
 	});
 
@@ -44,7 +44,9 @@ describe('/projects/genproj/generate load function', async () => {
 		const mockEvent = {
 			url: new URL('http://localhost/projects/genproj/generate'),
 			cookies: { get: vi.fn().mockReturnValue('dummy-token') },
-			fetch: vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({ message: 'API error' }) })
+			fetch: vi
+				.fn()
+				.mockResolvedValue({ ok: false, json: () => Promise.resolve({ message: 'API error' }) })
 		};
 
 		const result = await load(mockEvent);

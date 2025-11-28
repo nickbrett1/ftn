@@ -24,7 +24,7 @@
 	}
 
 	function getFileIcon(filename) {
-		const ext = filename.split('.').pop()?.toLowerCase();
+		const extension = filename.split('.').pop()?.toLowerCase();
 		const iconMap = {
 			js: '📄',
 			ts: '📘',
@@ -52,7 +52,7 @@
 			txt: '📄',
 			log: '📋'
 		};
-		return iconMap[ext] || '📄';
+		return iconMap[extension] || '📄';
 	}
 
 	function formatFileSize(bytes) {
@@ -87,9 +87,9 @@
 			if (result.repositoryUrl) {
 				goto(result.repositoryUrl);
 			}
-		} catch (e) {
-			error = e.message;
-			logger.error('Project generation failed', { error: e.message });
+		} catch (error_) {
+			error = error_.message;
+			logger.error('Project generation failed', { error: error_.message });
 		} finally {
 			loading = false;
 		}
