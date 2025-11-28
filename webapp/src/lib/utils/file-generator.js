@@ -17,6 +17,11 @@ import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
+import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
+import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
+import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?raw';
+import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
+import gitignoreTemplate from '../templates/gitignore.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
@@ -90,7 +95,12 @@ const templateImports = {
 	'circleci-config': circleCiConfig,
 	'sonar-project-properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
-	'package-json': packageJsonTemplate
+	'package-json': packageJsonTemplate,
+	'wrangler-jsonc': wranglerJsonc,
+	'wrangler-template-jsonc': wranglerTemplateJsonc,
+	'scripts-cloud-login-sh': scriptsCloudLoginSh,
+	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
+	gitignore: gitignoreTemplate
 };
 
 export class TemplateEngine {
@@ -262,10 +272,7 @@ function generateMergedDevelopmentContainerFiles(
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = applyDefaults(
-			capability,
-			context.configuration?.[capabilityId] || {}
-		);
+		const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
@@ -369,6 +376,81 @@ function generatePackageJson(templateEngine, context) {
 	return null;
 }
 
+function generateCloudflareFiles(templateEngine, context) {
+	const files = [];
+	if (!context.capabilities.includes('cloudflare-wrangler')) return files;
+
+	const hasDoppler = context.capabilities.includes('doppler');
+
+	// cloud_login.sh
+	const dopplerLogin = hasDoppler ? 'echo "Logging into Doppler..."\ndoppler login' : '';
+	const setupWrangler = hasDoppler
+		? 'echo "Running setup-wrangler-config.sh..."\nbash scripts/setup-wrangler-config.sh'
+		: '';
+
+	files.push({
+		filePath: 'scripts/cloud_login.sh',
+		content: templateEngine.generateFile('scripts-cloud-login-sh', {
+			...context,
+			dopplerLogin,
+			setupWrangler
+		})
+	});
+
+	if (hasDoppler) {
+		files.push({
+			filePath: 'wrangler.template.jsonc',
+			content: templateEngine.generateFile('wrangler-template-jsonc', {
+				...context,
+				projectName: context.name || 'my-project'
+			})
+		});
+		files.push({
+			filePath: 'scripts/setup-wrangler-config.sh',
+			content: templateEngine.generateFile('scripts-setup-wrangler-config-sh', context)
+		});
+	} else {
+		files.push({
+			filePath: 'wrangler.jsonc',
+			content: templateEngine.generateFile('wrangler-jsonc', {
+				...context,
+				projectName: context.name || 'my-project'
+			})
+		});
+	}
+
+	return files;
+}
+
+function generateGitignoreFile(templateEngine, context) {
+	const hasDoppler = context.capabilities.includes('doppler');
+	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
+	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
+	const hasJava = context.capabilities.some((c) => c.startsWith('devcontainer-java'));
+
+	let wranglerIgnore = '';
+	if (hasWrangler && hasDoppler) {
+		wranglerIgnore = 'wrangler.jsonc';
+	}
+
+	const pythonIgnore = hasPython
+		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest'
+		: '';
+	const javaIgnore = hasJava
+		? '\n# Java\n*.class\n*.log\n*.ctxt\n.mtj.tmp/\n*.jar\n*.war\n*.nar\n*.ear\n*.zip\n*.tar.gz\n*.rar\ntarget/'
+		: '';
+
+	return {
+		filePath: '.gitignore',
+		content: templateEngine.generateFile('gitignore', {
+			...context,
+			wranglerIgnore,
+			pythonIgnore,
+			javaIgnore
+		})
+	};
+}
+
 export async function generateAllFiles(context) {
 	const templateEngine = new TemplateEngine();
 	await templateEngine.initialize();
@@ -386,13 +468,17 @@ export async function generateAllFiles(context) {
 			templateEngine,
 			context,
 			developmentContainerCapabilities
-		)
+		),
+		...generateCloudflareFiles(templateEngine, context)
 	);
 
 	const packageJson = generatePackageJson(templateEngine, context);
 	if (packageJson) {
 		allGeneratedFiles.push(packageJson);
 	}
+
+	const gitignore = generateGitignoreFile(templateEngine, context);
+	allGeneratedFiles.push(gitignore);
 
 	return allGeneratedFiles;
 }
