@@ -105,7 +105,7 @@ describe('TemplateEngine', () => {
 		const template = engine.getTemplate('devcontainer-java-dockerfile');
 		const result = engine.compileTemplate(template, { capabilityConfig: { javaVersion: '17' } });
 		expect(result).toBe(
-			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
 		);
 	});
 
@@ -114,7 +114,7 @@ describe('TemplateEngine', () => {
 		// Now requires capabilityConfig structure
 		const result = engine.compileTemplate(template, { capabilityConfig: { nodeVersion: '20' } });
 		expect(result).toBe(
-			nodeDockerfileTemplateContent.replace(/{{capabilityConfig.nodeVersion}}/g, '20')
+			nodeDockerfileTemplateContent.replaceAll(/{{capabilityConfig.nodeVersion}}/g, '20')
 		);
 	});
 
@@ -136,7 +136,7 @@ describe('TemplateEngine', () => {
 			capabilityConfig: { javaVersion: '17' }
 		});
 		expect(content).toBe(
-			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
 		);
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
@@ -163,7 +163,7 @@ describe('TemplateEngine', () => {
 		expect(success).toBeDefined();
 		expect(success.success).toBe(true);
 		expect(success.content).toBe(
-			javaDockerfileTemplateContent.replace(/{{capabilityConfig.javaVersion}}/g, '17')
+			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
 		);
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
@@ -179,7 +179,7 @@ describe('TemplateEngine', () => {
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
-			config: capabilitiesConfig,
+			configuration: capabilitiesConfig,
 			projectMetadata: projectMetadata
 		};
 
@@ -200,7 +200,7 @@ describe('TemplateEngine', () => {
 		const projectMetadata = { name: 'test-project' };
 		const context = {
 			capabilities: selectedCapabilities,
-			config: capabilitiesConfig,
+			configuration: capabilitiesConfig,
 			projectMetadata: projectMetadata
 		};
 

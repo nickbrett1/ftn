@@ -14,7 +14,9 @@ vi.mock('$app/environment', () => ({
 
 describe('/projects/genproj/api/auth/github', () => {
 	it('should redirect to GitHub with the correct parameters', async () => {
-		const url = new URL('http://localhost/projects/genproj/api/auth/github?projectName=test&selected=a,b');
+		const url = new URL(
+			'http://localhost/projects/genproj/api/auth/github?projectName=test&selected=a,b'
+		);
 		/** @type {RequestEvent} */
 		const event = {
 			url,
@@ -29,17 +31,19 @@ describe('/projects/genproj/api/auth/github', () => {
 			await GET(event);
 			// This should not be reached
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
+		} catch (error) {
 			// @ts-ignore
-			expect(e.status).toBe(302);
+			expect(error.status).toBe(302);
 			// @ts-ignore
-			const location = e.location;
+			const location = error.location;
 			expect(location).toContain('https://github.com/login/oauth/authorize');
 			const locationUrl = new URL(location);
 			expect(locationUrl.searchParams.get('client_id')).toBe('test-client-id');
 			expect(locationUrl.searchParams.get('scope')).toBe('repo');
 			expect(locationUrl.searchParams.get('state')).toBeTruthy();
-			expect(locationUrl.searchParams.get('redirect_uri')).toBe('http://localhost/projects/genproj/api/auth/github/callback');
+			expect(locationUrl.searchParams.get('redirect_uri')).toBe(
+				'http://localhost/projects/genproj/api/auth/github/callback'
+			);
 		}
 	});
 });

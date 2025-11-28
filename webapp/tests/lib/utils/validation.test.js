@@ -166,7 +166,7 @@ describe('validation utilities', () => {
 					selected: ['playwright'],
 					configuration: { playwright: { browsers: ['safari'] } },
 					error: 'Invalid browser: safari'
-				},
+				}
 			];
 
 			for (const testCase of cases) {

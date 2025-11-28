@@ -34,9 +34,8 @@ vi.doMock('../../../src/lib/server/sonarcloud-api.js', () => ({
 }));
 
 describe('service-utils', async () => {
-	const { initializeServices, validateAllTokens } = await import(
-		'../../../src/lib/server/service-utils.js'
-	);
+	const { initializeServices, validateAllTokens } =
+		await import('../../../src/lib/server/service-utils.js');
 	const tokens = {
 		github: 'gh',
 		circleci: 'cc',

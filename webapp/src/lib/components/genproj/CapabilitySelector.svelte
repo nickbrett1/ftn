@@ -172,7 +172,7 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: value
 			}
 		};
@@ -184,9 +184,9 @@
 		const updatedConfiguration = {
 			...configuration,
 			[capabilityId]: {
-				...(configuration[capabilityId] || {}),
+				...configuration[capabilityId],
 				[field]: {
-					...(configuration[capabilityId]?.[field] || {}),
+					...configuration[capabilityId]?.[field],
 					[nestedField]: value
 				}
 			}
@@ -207,7 +207,7 @@
 	// Helper function to format camelCase strings into human-readable labels
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
-		const spacedString = camelCaseString.replace(/([A-Z])/g, ' $1');
+		const spacedString = camelCaseString.replaceAll(/([A-Z])/g, ' $1');
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
 	}
 
@@ -329,7 +329,7 @@
 						{@const isRequired = isRequiredByOther(capability)}
 						{@const visibleProperties = Object.entries(
 							capability.configurationSchema?.properties || {}
-						).filter(([_, prop]) => shouldDisplayRule(prop))}
+						).filter(([_, property]) => shouldDisplayRule(property))}
 
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -482,17 +482,16 @@
 																<input
 																	type="checkbox"
 																	class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
-																	checked={configuration[capability.id]?.[field]?.includes(option) ||
-																		false}
+																	checked={configuration[capability.id]?.[field]?.includes(
+																		option
+																	) || false}
 																	onchange={(e) => {
 																		const currentArray =
 																			configuration[capability.id]?.[field] || [];
 																		let newArray;
-																		if (e.target.checked) {
-																			newArray = [...currentArray, option];
-																		} else {
-																			newArray = currentArray.filter((item) => item !== option);
-																		}
+																		newArray = e.target.checked
+																			? [...currentArray, option]
+																			: currentArray.filter((item) => item !== option);
 																		handleConfigurationChange(capability.id, field, newArray);
 																	}}
 																/>

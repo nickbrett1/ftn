@@ -15,7 +15,9 @@ vi.mock('$app/environment', () => ({
 describe('/projects/genproj/api/auth/github/callback', () => {
 	let event;
 	beforeEach(() => {
-		const url = new URL('http://localhost/projects/genproj/api/auth/github/callback?code=test-code&state=test-state');
+		const url = new URL(
+			'http://localhost/projects/genproj/api/auth/github/callback?code=test-code&state=test-state'
+		);
 		event = {
 			url,
 			cookies: {
@@ -28,20 +30,25 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 	});
 
 	it('should redirect to the generate page on success', async () => {
-		event.cookies.get.mockReturnValue(JSON.stringify({ sessionId: 'test-state', projectName: 'test', selected: 'a,b' }));
+		event.cookies.get.mockReturnValue(
+			JSON.stringify({ sessionId: 'test-state', projectName: 'test', selected: 'a,b' })
+		);
 		event.fetch.mockResolvedValue(
-			new Response(JSON.stringify({ access_token: 'test-token' }), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' }
-			})
+			Response.json(
+				{ access_token: 'test-token' },
+				{
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			)
 		);
 
 		try {
 			await GET(event);
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			const location = e.location;
+		} catch (error) {
+			expect(error.status).toBe(302);
+			const location = error.location;
 			expect(location).toContain('/projects/genproj/generate');
 			const locationUrl = new URL(location, 'http://localhost');
 			expect(locationUrl.searchParams.get('projectName')).toBe('test');
@@ -59,18 +66,21 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 			})
 		);
 		event.fetch.mockResolvedValue(
-			new Response(JSON.stringify({ access_token: 'test-token' }), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' }
-			})
+			Response.json(
+				{ access_token: 'test-token' },
+				{
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			)
 		);
 
 		try {
 			await GET(event);
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			const location = e.location;
+		} catch (error) {
+			expect(error.status).toBe(302);
+			const location = error.location;
 			expect(location).toContain('/projects/genproj/generate');
 			const locationUrl = new URL(location, 'http://localhost');
 			expect(locationUrl.searchParams.get('repositoryUrl')).toBe('https://github.com/a/b');
@@ -83,9 +93,9 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 		try {
 			await GET(event);
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/projects/genproj?error=no_state');
+		} catch (error) {
+			expect(error.status).toBe(302);
+			expect(error.location).toBe('/projects/genproj?error=no_state');
 		}
 	});
 
@@ -95,27 +105,30 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 		try {
 			await GET(event);
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/projects/genproj?error=state_mismatch');
+		} catch (error) {
+			expect(error.status).toBe(302);
+			expect(error.location).toBe('/projects/genproj?error=state_mismatch');
 		}
 	});
 
 	it('should redirect to the genproj page with an error if the GitHub API returns an error', async () => {
 		event.cookies.get.mockReturnValue(JSON.stringify({ sessionId: 'test-state' }));
 		event.fetch.mockResolvedValue(
-			new Response(JSON.stringify({ error: 'bad_verification_code' }), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' }
-			})
+			Response.json(
+				{ error: 'bad_verification_code' },
+				{
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			)
 		);
 
 		try {
 			await GET(event);
 			expect.fail('GET should have thrown a redirect');
-		} catch (e) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/projects/genproj?error=bad_verification_code');
+		} catch (error) {
+			expect(error.status).toBe(302);
+			expect(error.location).toBe('/projects/genproj?error=bad_verification_code');
 		}
 	});
 
@@ -125,9 +138,9 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 
 		try {
 			await GET(event);
-		} catch (e) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/projects/genproj?error=token_exchange_failed');
+		} catch (error) {
+			expect(error.status).toBe(302);
+			expect(error.location).toBe('/projects/genproj?error=token_exchange_failed');
 		}
 	});
 });

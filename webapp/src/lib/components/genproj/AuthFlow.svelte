@@ -54,11 +54,7 @@
 		// Only display services that are NOT GitHub, OR if GitHub is required AND not authenticated
 		// AND there are other services to authenticate.
 		const services = requiredAuthServices.filter((service) => service !== 'github');
-		if (
-			requiredAuthServices.includes('github') &&
-			!authStatus.github &&
-			services.length === 0
-		) {
+		if (requiredAuthServices.includes('github') && !authStatus.github && services.length === 0) {
 			// If GitHub is the only service required by the modal and not authenticated,
 			// the modal should not show up. The main page should handle this.
 			return [];
@@ -127,8 +123,6 @@
 			error = 'Could not retrieve the token creation URL. Please try again.';
 		}
 	}
-
-
 
 	// Handle external service token authentication
 	async function handleTokenAuth(service) {

@@ -60,12 +60,12 @@ export async function GET({ url, cookies, fetch }) {
 		if (storedState.selected) generateUrl.searchParams.set('selected', storedState.selected);
 
 		throw redirect(302, generateUrl.toString());
-	} catch (e) {
-		if (isRedirect(e)) {
-			throw e;
+	} catch (error) {
+		if (isRedirect(error)) {
+			throw error;
 		}
 		// Log the actual error for debugging
-		console.error('GitHub token exchange failed:', e);
+		console.error('GitHub token exchange failed:', error);
 		throw redirect(302, `/projects/genproj?error=token_exchange_failed`);
 	}
 }

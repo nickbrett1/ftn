@@ -50,7 +50,7 @@ function createExternalServiceConfig(type, name, createDesc, configDesc) {
  * @param {object} configurationSchema - The schema for configuring the capability.
  * @returns {object} A devcontainer capability object.
  */
-function createDevContainerCapability(id, name, description, configurationSchema) {
+function createDevelopmentContainerCapability(id, name, description, configurationSchema) {
 	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
 	const capName = lang.charAt(0).toUpperCase() + lang.slice(1);
 	return {
@@ -176,7 +176,7 @@ export const capabilities = [
 		templates: EMPTY_ARRAY,
 		website: 'https://www.docker.com/'
 	},
-	createDevContainerCapability(
+	createDevelopmentContainerCapability(
 		'devcontainer-node',
 		'Node.js DevContainer',
 		'Sets up a VS Code DevContainer with Node.js environment.',
@@ -188,7 +188,7 @@ export const capabilities = [
 			required: EMPTY_ARRAY
 		}
 	),
-	createDevContainerCapability(
+	createDevelopmentContainerCapability(
 		'devcontainer-python',
 		'Python DevContainer',
 		'Sets up a VS Code DevContainer with Python environment.',
@@ -200,7 +200,7 @@ export const capabilities = [
 			}
 		}
 	),
-	createDevContainerCapability(
+	createDevelopmentContainerCapability(
 		'devcontainer-java',
 		'Java DevContainer',
 		'Sets up a VS Code DevContainer with Java environment.',
@@ -548,5 +548,5 @@ export function getRequiredAuthServices(selectedIds) {
 			}
 		}
 	}
-	return Array.from(services);
+	return [...services];
 }

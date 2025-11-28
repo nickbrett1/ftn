@@ -51,11 +51,9 @@ export async function initiateGoogleAuth(redirectPath = '/') {
 
 	// Set a cookie to store the redirect path
 	const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-	if (dev) {
-		document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; samesite=lax`;
-	} else {
-		document.cookie = `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
-	}
+	document.cookie = dev
+		? `redirectPath=${redirectPath}; expires=${expires}; path=/; samesite=lax`
+		: `redirectPath=${redirectPath}; expires=${expires}; path=/; secure; samesite=lax`;
 
 	// Check if Google GIS is already loaded
 	if (globalThis.google?.accounts?.oauth2) {
