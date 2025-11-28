@@ -211,7 +211,11 @@ export const capabilities = [
 		{
 			type: 'object',
 			properties: {
-				nodeVersion: { type: 'string', enum: ['18', '20', '22'], default: '22' }
+				nodeVersion: {
+					type: 'string',
+					enum: ['18', '20', '22', '23', '24', '25'],
+					default: '24'
+				}
 			},
 			required: EMPTY_ARRAY
 		},
