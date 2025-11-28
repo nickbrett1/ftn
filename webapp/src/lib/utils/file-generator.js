@@ -209,6 +209,18 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 	return files;
 }
 
+function applyDefaults(capability, config) {
+	const finalConfig = { ...config };
+	if (capability && capability.configurationSchema && capability.configurationSchema.properties) {
+		for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
+			if (finalConfig[key] === undefined && prop.default !== undefined) {
+				finalConfig[key] = prop.default;
+			}
+		}
+	}
+	return finalConfig;
+}
+
 // Helper to generate and merge devcontainer files
 function generateMergedDevelopmentContainerFiles(
 	templateEngine,
@@ -221,7 +233,10 @@ function generateMergedDevelopmentContainerFiles(
 
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	const baseCapabilityConfig = context.configuration?.[baseDevelopmentContainerId] || {};
+	const baseCapabilityConfig = applyDefaults(
+		baseCapability,
+		context.configuration?.[baseDevelopmentContainerId] || {}
+	);
 
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
@@ -247,7 +262,10 @@ function generateMergedDevelopmentContainerFiles(
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = context.configuration?.[capabilityId] || {};
+		const capabilityConfig = applyDefaults(
+			capability,
+			context.configuration?.[capabilityId] || {}
+		);
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
