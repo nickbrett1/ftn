@@ -438,7 +438,13 @@ export const capabilities = [
 			'Receive security alerts for vulnerable packages',
 			'Reduce technical debt with regular maintenance PRs'
 		],
-		templates: EMPTY_ARRAY,
+		templates: [
+			{
+				id: 'dependabot-config',
+				filePath: '.github/dependabot.yml',
+				templateId: 'dependabot-config'
+			}
+		],
 		website: 'https://docs.github.com/en/code-security/dependabot/dependabot-overview'
 	},
 	{
