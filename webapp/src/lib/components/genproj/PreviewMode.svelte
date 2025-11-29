@@ -35,7 +35,10 @@
 	$: {
 		if (previewData) {
 			fileTree = previewData.files || [];
-			externalServices = previewData.externalServices || [];
+			// Only show GitHub external services for the current release
+			externalServices = (previewData.externalServices || []).filter(
+				(service) => service.type === 'github'
+			);
 			// Expand all folders by default when new previewData arrives
 			expandedFolders = new Set();
 			expandAllFolders(fileTree, expandedFolders);
