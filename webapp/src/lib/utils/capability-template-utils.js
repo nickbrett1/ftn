@@ -121,8 +121,8 @@ export function getCapabilityTemplateData(capabilityId, context) {
             - build`;
 		}
 
-		// Check if explicit deploy target is set OR if wrangler capability is present which implies cloudflare deployment
-		if (deployTarget === 'cloudflare' || context.capabilities.includes('cloudflare-wrangler')) {
+		// Check if wrangler capability is present which implies cloudflare deployment
+		if (context.capabilities.includes('cloudflare-wrangler')) {
 			data.deployJobDefinition = `
   deploy-to-cloudflare:
     executor: node/default

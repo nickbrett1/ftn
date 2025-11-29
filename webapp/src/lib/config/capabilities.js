@@ -274,15 +274,7 @@ export const capabilities = [
 			'Create new project in CircleCI',
 			'Set up environment variables'
 		),
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				deployTarget: {
-					type: 'string',
-					enum: ['none', 'cloudflare']
-				}
-			}
-		},
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		benefits: [
 			'Automate testing and deployment pipelines',
 			'Gain insights with visual build logs and test results',
