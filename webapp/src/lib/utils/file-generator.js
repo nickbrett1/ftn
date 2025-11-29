@@ -24,7 +24,10 @@ import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?ra
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
+import {
+	getCapabilityTemplateData,
+	applyDefaults
+} from '$lib/utils/capability-template-utils.js';
 
 export const GEMINI_DEV_ALIAS = `# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
 gemini-dev() {
@@ -219,18 +222,6 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 		}
 	}
 	return files;
-}
-
-function applyDefaults(capability, config) {
-	const finalConfig = { ...config };
-	if (capability && capability.configurationSchema && capability.configurationSchema.properties) {
-		for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
-			if (finalConfig[key] === undefined && prop.default !== undefined) {
-				finalConfig[key] = prop.default;
-			}
-		}
-	}
-	return finalConfig;
 }
 
 // Helper to generate and merge devcontainer files

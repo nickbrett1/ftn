@@ -151,3 +151,15 @@ export function getCapabilityTemplateData(capabilityId, context) {
 
 	return {};
 }
+
+export function applyDefaults(capability, config) {
+	const finalConfig = { ...config };
+	if (capability && capability.configurationSchema && capability.configurationSchema.properties) {
+		for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
+			if (finalConfig[key] === undefined && prop.default !== undefined) {
+				finalConfig[key] = prop.default;
+			}
+		}
+	}
+	return finalConfig;
+}
