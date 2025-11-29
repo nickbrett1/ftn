@@ -44,5 +44,17 @@ describe('capability-template-utils', () => {
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "npm"');
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "pip"');
 		});
+
+		it('should use configured update schedule', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot'],
+				configuration: {
+					dependabot: {
+						updateSchedule: 'daily'
+					}
+				}
+			});
+			expect(data.dependabotUpdates).toContain('interval: "daily"');
+		});
 	});
 });

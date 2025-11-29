@@ -420,13 +420,6 @@ export const capabilities = [
 		configurationSchema: {
 			type: 'object',
 			properties: {
-				ecosystems: {
-					type: 'array',
-					items: {
-						type: 'string',
-						enum: ['npm']
-					}
-				},
 				updateSchedule: {
 					type: 'string',
 					enum: ['daily', 'weekly', 'monthly']

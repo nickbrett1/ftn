@@ -150,6 +150,8 @@ export function getCapabilityTemplateData(capabilityId, context) {
 	}
 
 	if (capabilityId === 'dependabot') {
+		const config = context.configuration?.dependabot || {};
+		const interval = config.updateSchedule || 'weekly';
 		const updates = [];
 
 		// Always add GitHub Actions
@@ -157,14 +159,14 @@ export function getCapabilityTemplateData(capabilityId, context) {
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"`);
+      interval: "${interval}"`);
 
 		if (context.capabilities.includes('devcontainer-node')) {
 			updates.push(`
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"`);
+      interval: "${interval}"`);
 		}
 
 		if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
@@ -172,7 +174,7 @@ export function getCapabilityTemplateData(capabilityId, context) {
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"`);
+      interval: "${interval}"`);
 		}
 
 		// Java support
@@ -181,7 +183,7 @@ export function getCapabilityTemplateData(capabilityId, context) {
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: "weekly"`);
+      interval: "${interval}"`);
 		}
 
 		return {
