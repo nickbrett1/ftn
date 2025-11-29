@@ -23,6 +23,7 @@ import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template
 import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?raw';
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
+import dependabotConfig from '../templates/dependabot.yml.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import {
 	getCapabilityTemplateData,
@@ -105,7 +106,8 @@ const templateImports = {
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
 	'scripts-cloud-login-sh': scriptsCloudLoginSh,
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
-	gitignore: gitignoreTemplate
+	gitignore: gitignoreTemplate,
+	'dependabot-config': dependabotConfig
 };
 
 export class TemplateEngine {

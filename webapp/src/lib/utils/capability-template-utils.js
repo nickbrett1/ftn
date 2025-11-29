@@ -149,6 +149,46 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		return data;
 	}
 
+	if (capabilityId === 'dependabot') {
+		const updates = [];
+
+		// Always add GitHub Actions
+		updates.push(`
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"`);
+
+		if (context.capabilities.includes('devcontainer-node')) {
+			updates.push(`
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"`);
+		}
+
+		if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
+			updates.push(`
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"`);
+		}
+
+		// Java support
+		if (context.capabilities.some((c) => c.startsWith('devcontainer-java'))) {
+			updates.push(`
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"`);
+		}
+
+		return {
+			dependabotUpdates: updates.join('')
+		};
+	}
+
 	return {};
 }
 
