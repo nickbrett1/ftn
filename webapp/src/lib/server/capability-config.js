@@ -156,7 +156,7 @@ export class CapabilityConfigurationService {
 				dependencies: [],
 				conflicts: [],
 				configuration: {
-					browsers: ['chromium', 'firefox', 'webkit'],
+					browsers: ['chromium'],
 					headed: false
 				},
 				requiresAuth: false,

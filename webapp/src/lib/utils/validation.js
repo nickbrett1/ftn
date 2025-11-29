@@ -232,16 +232,7 @@ const capabilityValidators = {
 		return [];
 	},
 
-	playwright: (config) => {
-		if (
-			config.browsers &&
-			!config.browsers.every((b) => ['chromium', 'firefox', 'webkit'].includes(b))
-		) {
-			return [
-				'Invalid browser: ' +
-					config.browsers.find((b) => !['chromium', 'firefox', 'webkit'].includes(b))
-			];
-		}
+	playwright: () => {
 		return [];
 	},
 

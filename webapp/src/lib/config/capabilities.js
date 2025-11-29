@@ -493,22 +493,11 @@ export const capabilities = [
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
-		configurationSchema: {
-			type: 'object',
-			properties: {
-				browsers: {
-					type: 'array',
-					items: {
-						type: 'string',
-						enum: ['chromium', 'firefox', 'webkit']
-					}
-				}
-			}
-		},
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		vscodeExtensions: ['ms-playwright.playwright', 'vitest.explorer'],
 		benefits: [
 			'Reliable end-to-end testing for modern web apps',
-			'Test across Chromium, Firefox, and WebKit',
+			'Fast and reliable testing with Chromium',
 			'Powerful tooling for debugging and test generation'
 		],
 		templates: EMPTY_ARRAY,

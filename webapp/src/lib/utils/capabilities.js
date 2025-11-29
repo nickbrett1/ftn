@@ -175,7 +175,7 @@ export const CAPABILITIES = {
 		dependencies: [],
 		conflicts: [],
 		configuration: {
-			browsers: ['chromium', 'firefox', 'webkit'],
+			browsers: ['chromium'],
 			headed: false,
 			parallel: true,
 			workers: 4

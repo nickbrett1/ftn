@@ -161,11 +161,6 @@ describe('validation utilities', () => {
 					selected: ['lighthouse-ci'],
 					configuration: { 'lighthouse-ci': { thresholds: { performance: 101 } } },
 					error: 'Threshold performance must be a number between 0 and 100'
-				},
-				{
-					selected: ['playwright'],
-					configuration: { playwright: { browsers: ['safari'] } },
-					error: 'Invalid browser: safari'
 				}
 			];
 
