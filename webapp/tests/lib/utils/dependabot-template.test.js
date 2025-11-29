@@ -4,7 +4,7 @@ import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.
 
 describe('capability-template-utils', () => {
 	describe('dependabot configuration', () => {
-		it('should include github-actions by default', () => {
+		it('should include github-actions by default with weekly schedule', () => {
 			const data = getCapabilityTemplateData('dependabot', {
 				capabilities: ['dependabot']
 			});
@@ -43,6 +43,29 @@ describe('capability-template-utils', () => {
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "github-actions"');
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "npm"');
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "pip"');
+		});
+
+		it('should respect custom update schedule', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node'],
+				configuration: {
+					dependabot: {
+						updateSchedule: 'daily'
+					}
+				}
+			});
+			expect(data.dependabotUpdates).toContain('interval: "daily"');
+			expect(data.dependabotUpdates).not.toContain('interval: "weekly"');
+		});
+
+		it('should use default weekly schedule if not configured', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node'],
+				configuration: {
+					dependabot: {}
+				}
+			});
+			expect(data.dependabotUpdates).toContain('interval: "weekly"');
 		});
 	});
 });
