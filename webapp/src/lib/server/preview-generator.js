@@ -20,7 +20,10 @@ import {
 	GEMINI_SETUP_SCRIPT,
 	PLAYWRIGHT_SETUP_SCRIPT
 } from '$lib/utils/file-generator.js';
-import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
+import {
+	getCapabilityTemplateData,
+	applyDefaults
+} from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
 	const newInstance = new TemplateEngine();
@@ -102,7 +105,10 @@ async function generateDevelopmentContainerArtifacts(
 ) {
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	const baseCapabilityConfig = projectConfig.configuration?.[baseDevelopmentContainerId] || {};
+	const baseCapabilityConfig = applyDefaults(
+		baseCapability,
+		projectConfig.configuration?.[baseDevelopmentContainerId] || {}
+	);
 
 	// Generate base devcontainer.json content
 	const baseJsonContent = templateEngine.generateFile(
@@ -111,11 +117,28 @@ async function generateDevelopmentContainerArtifacts(
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
+	const allExtensions = new Set();
+	if (mergedDevelopmentContainerJson.customizations?.vscode?.extensions) {
+		mergedDevelopmentContainerJson.customizations.vscode.extensions.forEach((ext) =>
+			allExtensions.add(ext)
+		);
+	}
+
+	for (const capabilityId of allCapabilities) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (capability && capability.vscodeExtensions) {
+			capability.vscodeExtensions.forEach((ext) => allExtensions.add(ext));
+		}
+	}
+
 	// Merge features and extensions from other selected dev containers
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
+		const capabilityConfig = applyDefaults(
+			capability,
+			projectConfig.configuration?.[capabilityId] || {}
+		);
 
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capabilityId.split('-')[1]}-json`,
@@ -130,12 +153,18 @@ async function generateDevelopmentContainerArtifacts(
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			const baseExtensions =
-				mergedDevelopmentContainerJson.customizations?.vscode?.extensions || [];
-			mergedDevelopmentContainerJson.customizations.vscode.extensions = [
-				...new Set([...baseExtensions, ...otherJson.customizations.vscode.extensions])
-			];
+			otherJson.customizations.vscode.extensions.forEach((ext) => allExtensions.add(ext));
 		}
+	}
+
+	if (allExtensions.size > 0) {
+		if (!mergedDevelopmentContainerJson.customizations) {
+			mergedDevelopmentContainerJson.customizations = {};
+		}
+		if (!mergedDevelopmentContainerJson.customizations.vscode) {
+			mergedDevelopmentContainerJson.customizations.vscode = {};
+		}
+		mergedDevelopmentContainerJson.customizations.vscode.extensions = Array.from(allExtensions);
 	}
 
 	files.push({
