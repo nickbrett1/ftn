@@ -60,21 +60,27 @@ describe('Generate Page File Tree', () => {
 	it('should allow expanding nested folders', async () => {
 		render(Page, { data: nestedData });
 
-		// Click root folder
+		// Check that everything is expanded by default
+		expect(screen.getByText('root')).toBeTruthy();
+		expect(screen.getByText('subfolder')).toBeTruthy();
+		expect(screen.getByText('deep.txt')).toBeTruthy();
+
+		// Toggle to collapse root
 		const rootFolder = screen.getByText('root');
 		await fireEvent.click(rootFolder);
 
-		// Subfolder should be visible
-		// Using findByText to wait for DOM update
-		const subFolder = await screen.findByText('subfolder');
-		expect(subFolder).toBeTruthy();
+		// Subfolder should be hidden
+		expect(screen.queryByText('subfolder')).toBeNull();
+		expect(screen.queryByText('deep.txt')).toBeNull();
 
-		// In the buggy version, subfolder is rendered as a 'file' (button) but without folder logic.
-		// So clicking it selects it, but doesn't expand it.
-		await fireEvent.click(subFolder);
+		// Expand root again
+		await fireEvent.click(rootFolder);
+		expect(screen.getByText('subfolder')).toBeTruthy();
 
-		// Expect 'deep.txt' to be visible
-		// This should fail if the bug exists
-		expect(screen.queryByText('deep.txt')).toBeTruthy();
+		// Subfolder should still be expanded because we didn't collapse it, only its parent hidden it?
+		// Or does the state persist? The state is in `expandedFolders`.
+		// When we collapse root, we just hide children. We don't remove subfolder from set.
+		// So expanding root should show subfolder AND deep.txt.
+		expect(screen.getByText('deep.txt')).toBeTruthy();
 	});
 });
