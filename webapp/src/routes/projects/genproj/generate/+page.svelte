@@ -138,16 +138,11 @@
 				</div>
 			{/if}
 		{:else}
-			<button
-				type="button"
-				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-					{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-				onclick={() => (selectedFile = file)}
-			>
+			<div class="flex items-center w-full text-left p-2 rounded">
 				<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
 				<span class="text-sm text-gray-300 flex-1">{file.name}</span>
 				<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
-			</button>
+			</div>
 		{/if}
 	</div>
 {/snippet}
