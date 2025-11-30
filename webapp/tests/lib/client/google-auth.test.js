@@ -53,55 +53,50 @@ describe('Google Auth Utils', () => {
 	describe('getRedirectUri', () => {
 		it('should return development URI in development environment', () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true); // Dev is usually browser too
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
 		});
 
-		it('should return production URI in production environment', () => {
+		it('should return production URI in production environment (browser)', () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true);
 
 			// Mock browser environment for production test
-			const originalLocation = globalThis.location;
-			Object.defineProperty(globalThis, 'location', {
-				writable: true,
-				configurable: true,
-				value: {
-					origin: 'https://fintechnick.com'
-				}
-			});
+			const originalLocation = window.location;
+			// Use Object.defineProperty on window.location because it's read-only
+			delete window.location;
+			window.location = { origin: 'https://fintechnick.com' };
 
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://fintechnick.com/auth');
 
 			// Clean up
-			Object.defineProperty(globalThis, 'location', {
-				writable: true,
-				configurable: true,
-				value: originalLocation
-			});
+			window.location = originalLocation;
 		});
 
-		it('should return preview URI for preview deployments', () => {
+		it('should return preview URI for preview deployments (browser)', () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true);
+
 			// Mock browser environment for preview deployment
-			const originalLocation = globalThis.location;
-			Object.defineProperty(globalThis, 'location', {
-				writable: true,
-				configurable: true,
-				value: {
-					origin: 'https://ftn-preview.nick-brett1.workers.dev'
-				}
-			});
+			const originalLocation = window.location;
+			delete window.location;
+			window.location = { origin: 'https://ftn-preview.nick-brett1.workers.dev' };
 
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://ftn-preview.nick-brett1.workers.dev/auth');
 
 			// Clean up
-			Object.defineProperty(globalThis, 'location', {
-				writable: true,
-				configurable: true,
-				value: originalLocation
-			});
+			window.location = originalLocation;
+		});
+
+		it('should return fallback URI in SSR environment', () => {
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(false);
+
+			const uri = getRedirectUri();
+			expect(uri).toBe('https://fintechnick.com/auth');
 		});
 	});
 
@@ -174,14 +169,16 @@ describe('Google Auth Utils', () => {
 
 		it('should set redirectPath cookie and request code with GIS if not logged in', async () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true);
+
 			// Mock not logged in state
 			Object.defineProperty(document, 'cookie', {
 				writable: true,
 				value: ''
 			});
 
-			// Mock globalThis.google.accounts.oauth2
-			globalThis.google = {
+			// Mock window.google.accounts.oauth2
+			window.google = {
 				accounts: {
 					oauth2: {
 						initCodeClient: vi.fn(() => ({
@@ -194,7 +191,7 @@ describe('Google Auth Utils', () => {
 			await initiateGoogleAuth('/some-path');
 
 			expect(document.cookie).toContain('redirectPath=/some-path');
-			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalledWith(
+			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalledWith(
 				expect.objectContaining({
 					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com',
 					scope: 'openid profile email',
@@ -207,8 +204,7 @@ describe('Google Auth Utils', () => {
 
 		it('should load GIS script if not already loaded', async () => {
 			// Mock GIS not loaded
-
-			globalThis.google = undefined;
+			window.google = undefined;
 
 			const appendSpy = vi.spyOn(document.body, 'append');
 
@@ -221,17 +217,13 @@ describe('Google Auth Utils', () => {
 			expect(scriptElement.src).toBe('https://accounts.google.com/gsi/client');
 
 			// Mock GIS loaded after script, but before onload is triggered
-
-			globalThis.google = {
+			window.google = {
 				accounts: {
 					id: {
 						initialize: vi.fn(),
-
 						renderButton: vi.fn(),
-
 						prompt: vi.fn()
 					},
-
 					oauth2: {
 						initCodeClient: vi.fn(() => ({
 							requestCode: vi.fn()
@@ -244,20 +236,20 @@ describe('Google Auth Utils', () => {
 			scriptElement.dispatchEvent(new Event('load'));
 
 			// Wait for the initiateAuthPromise to resolve
-
 			await initiateAuthPromise;
 
-			expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledWith(
+			expect(window.google.accounts.id.initialize).toHaveBeenCalledWith(
 				expect.objectContaining({
 					client_id: '263846603498-57v6mk1hacurssur6atn1tiplsnv4j18.apps.googleusercontent.com'
 				})
 			);
 
-			expect(globalThis.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
+			expect(window.google.accounts.oauth2.initCodeClient).toHaveBeenCalled();
 		});
+
 		it('should handle GIS script loading errors', async () => {
 			// Mock GIS not loaded
-			globalThis.google = undefined;
+			window.google = undefined;
 
 			const appendSpy = vi.spyOn(document.body, 'append');
 			appendSpy.mockImplementationOnce((scriptElement) => {
@@ -269,7 +261,7 @@ describe('Google Auth Utils', () => {
 
 		it('should handle GIS initialization errors', async () => {
 			// Mock GIS not loaded
-			globalThis.google = undefined;
+			window.google = undefined;
 
 			const appendSpy = vi.spyOn(document.body, 'append');
 			appendSpy.mockImplementationOnce((scriptElement) => {
@@ -277,7 +269,7 @@ describe('Google Auth Utils', () => {
 			});
 
 			// Mock GIS loaded but id not initialized
-			globalThis.google = {
+			window.google = {
 				accounts: {
 					id: undefined,
 					oauth2: undefined
@@ -297,7 +289,7 @@ describe('Google Auth Utils', () => {
 			});
 
 			// Mock window.google.accounts.oauth2
-			globalThis.google = {
+			window.google = {
 				accounts: {
 					oauth2: {
 						initCodeClient: vi.fn(() => {
@@ -317,8 +309,8 @@ describe('Google Auth Utils', () => {
 				value: ''
 			});
 
-			// Mock globalThis.google.accounts.oauth2
-			globalThis.google = {
+			// Mock window.google.accounts.oauth2
+			window.google = {
 				accounts: {
 					oauth2: {
 						initCodeClient: vi.fn(() => ({
@@ -329,7 +321,7 @@ describe('Google Auth Utils', () => {
 			};
 
 			// Simulate a state mismatch in the callback
-			globalThis.google.accounts.oauth2.initCodeClient.mockImplementationOnce((options) => {
+			window.google.accounts.oauth2.initCodeClient.mockImplementationOnce((options) => {
 				options.callback({ state: 'mismatched-state' });
 				return { requestCode: vi.fn() };
 			});
