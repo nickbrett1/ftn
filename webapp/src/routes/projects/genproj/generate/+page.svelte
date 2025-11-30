@@ -3,6 +3,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
+	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
 
 	let { data } = $props();
 	let loading = $state(false);
@@ -98,6 +99,10 @@
 
 			if (!response.ok) {
 				if (response.status === 401) {
+					if (result.message && result.message.includes('GitHub token not found')) {
+						await initiateGitHubAuth(window.location.href);
+						return;
+					}
 					goto('/notauthorised');
 					return;
 				}
