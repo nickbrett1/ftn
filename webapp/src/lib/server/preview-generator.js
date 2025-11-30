@@ -313,6 +313,7 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 
 	const hasDoppler = allCapabilities.includes('doppler');
 	const projectName = projectConfig.name || 'my-project';
+	const compatibilityDate = new Date().toISOString().split('T')[0];
 
 	// cloud_login.sh
 	const dopplerLogin = hasDoppler
@@ -343,7 +344,8 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 	if (hasDoppler) {
 		const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
 			...projectConfig,
-			projectName: projectConfig.name || 'my-project'
+			projectName: projectConfig.name || 'my-project',
+			compatibilityDate
 		});
 		files.push({
 			path: 'wrangler.template.jsonc',
@@ -367,7 +369,8 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 	} else {
 		const wranglerContent = templateEngine.generateFile('wrangler-jsonc', {
 			...projectConfig,
-			projectName: projectConfig.name || 'my-project'
+			projectName: projectConfig.name || 'my-project',
+			compatibilityDate
 		});
 		files.push({
 			path: 'wrangler.jsonc',
