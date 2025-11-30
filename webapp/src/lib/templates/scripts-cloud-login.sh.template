@@ -3,7 +3,8 @@ set -e
 
 {{dopplerLogin}}
 
-echo "Logging into Cloudflare..."
-npx wrangler login
+{{wranglerLogin}}
 
 {{setupWrangler}}
+
+echo "Cloud login script finished."

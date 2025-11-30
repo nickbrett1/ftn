@@ -89,7 +89,8 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
 		expect(cloudLogin).toBeDefined();
 		expect(cloudLogin.content).toContain('doppler login');
-		expect(cloudLogin.content).toContain('bash scripts/setup-wrangler-config.sh');
+		expect(cloudLogin.content).toContain('doppler setup --no-interactive --project test-project');
+		expect(cloudLogin.content).toContain('./scripts/setup-wrangler-config.sh');
 
 		const wranglerJsonc = files.find((f) => f.filePath === 'wrangler.jsonc');
 		expect(wranglerJsonc).toBeUndefined(); // Should not generate wrangler.jsonc directly
