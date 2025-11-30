@@ -11,12 +11,13 @@
 	let expandedFolders = $state(new Set(['/']));
 
 	function toggleFolder(folderPath) {
-		if (expandedFolders.has(folderPath)) {
-			expandedFolders.delete(folderPath);
+		const newSet = new Set(expandedFolders);
+		if (newSet.has(folderPath)) {
+			newSet.delete(folderPath);
 		} else {
-			expandedFolders.add(folderPath);
+			newSet.add(folderPath);
 		}
-		expandedFolders = expandedFolders; // Trigger reactivity
+		expandedFolders = newSet;
 	}
 
 	function isFolderExpanded(folderPath) {
@@ -100,6 +101,42 @@
 	<title>Generate Project</title>
 </svelte:head>
 
+{#snippet fileTreeItem(file)}
+	<div class="file-item">
+		{#if file.type === 'folder'}
+			<button
+				type="button"
+				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded"
+				onclick={() => toggleFolder(file.path)}
+			>
+				<span class="mr-2">
+					{isFolderExpanded(file.path) ? '📂' : '📁'}
+				</span>
+				<span class="font-medium text-gray-100">{file.name}</span>
+			</button>
+
+			{#if isFolderExpanded(file.path)}
+				<div class="ml-4 mt-1 border-l border-gray-700 pl-2">
+					{#each file.children || [] as childFile}
+						{@render fileTreeItem(childFile)}
+					{/each}
+				</div>
+			{/if}
+		{:else}
+			<button
+				type="button"
+				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
+					{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
+				onclick={() => (selectedFile = file)}
+			>
+				<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
+				<span class="text-sm text-gray-300 flex-1">{file.name}</span>
+				<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
+			</button>
+		{/if}
+	</div>
+{/snippet}
+
 <div class="min-h-screen bg-zinc-900 flex flex-col">
 	<Header />
 	<main class="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -135,48 +172,7 @@
 			{#if data.previewData}
 				<div class="p-4 overflow-y-auto max-h-96">
 					{#each data.previewData.files as file (file.path)}
-						<div class="file-item">
-							{#if file.type === 'folder'}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded"
-									onclick={() => toggleFolder(file.path)}
-								>
-									<span class="mr-2">
-										{isFolderExpanded(file.path) ? '📂' : '📁'}
-									</span>
-									<span class="font-medium text-gray-100">{file.name}</span>
-								</button>
-
-								{#if isFolderExpanded(file.path)}
-									<div class="ml-4 mt-1">
-										{#each file.children || [] as childFile}
-											<button
-												type="button"
-												class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-													{selectedFile?.path === childFile.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-												onclick={() => (selectedFile = childFile)}
-											>
-												<span class="mr-2 text-sm">{getFileIcon(childFile.name)}</span>
-												<span class="text-sm text-gray-300 flex-1">{childFile.name}</span>
-												<span class="text-xs text-gray-400">{formatFileSize(childFile.size)}</span>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							{:else}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-										{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-									onclick={() => (selectedFile = file)}
-								>
-									<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
-									<span class="text-sm text-gray-300 flex-1">{file.name}</span>
-									<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
-								</button>
-							{/if}
-						</div>
+						{@render fileTreeItem(file)}
 					{/each}
 				</div>
 			{:else}
@@ -184,7 +180,7 @@
 			{/if}
 		</div>
 
-		<div class="flex justify-end">
+		<div class="flex justify-start">
 			<button
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-green-600 text-white hover:bg-green-700 border-green-400 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed"
 				disabled={loading}
@@ -193,7 +189,7 @@
 				{#if loading}
 					<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
 				{:else}
-					Generate Project
+					Generate Project <span class="ml-2">🚀</span>
 				{/if}
 			</button>
 		</div>
