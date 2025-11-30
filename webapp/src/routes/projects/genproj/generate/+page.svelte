@@ -97,6 +97,10 @@
 			const result = await response.json();
 
 			if (!response.ok) {
+				if (response.status === 401) {
+					goto('/notauthorised');
+					return;
+				}
 				throw new Error(result.message || 'Failed to generate project');
 			}
 
