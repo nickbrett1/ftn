@@ -99,7 +99,7 @@
 		secrets: 'Secrets Management',
 		deployment: 'Deployment',
 		monitoring: 'Monitoring & Testing',
-		'project-structure': 'Project Structure & Tools',
+		'project-structure': 'Dependency Management',
 		Other: 'Other Capabilities'
 	};
 
