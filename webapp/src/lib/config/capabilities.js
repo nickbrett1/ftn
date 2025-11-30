@@ -254,7 +254,7 @@ export const capabilities = [
 				javaVersion: {
 					type: 'string',
 					enum: ['11', '17', '21', '22', '23', '24', '25'],
-					default: '21'
+					default: '25'
 				}
 			}
 		},
