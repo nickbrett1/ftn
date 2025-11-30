@@ -59,4 +59,15 @@ describe('CapabilitySelector', () => {
 
 		expect(screen.getByText('Update Schedule')).toBeTruthy();
 	});
+
+	it('shows missing dependencies warning for gitguardian', () => {
+		render(CapabilitySelector, {
+			capabilities: mockCapabilities,
+			selectedCapabilities: [],
+			configuration: {}
+		});
+
+		// Find the GitGuardian card (or look for text within it)
+		expect(screen.getByText('Requires: CircleCI Integration')).toBeTruthy();
+	});
 });
