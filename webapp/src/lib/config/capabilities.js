@@ -109,7 +109,11 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
-		vscodeExtensions: ['google.geminicodeassist'],
+		vscodeExtensions: [
+			'google.geminicodeassist',
+			'saoudrizwan.claude-dev',
+			'GitHub.copilot-nightly'
+		],
 		benefits: [
 			'Gemini CLI pre-installed',
 			'Cursor CLI pre-installed',
@@ -154,7 +158,13 @@ export const capabilities = [
 			'wix.vscode-import-cost',
 			'mkxml.vscode-filesize',
 			'christian-kohler.npm-intellisense',
-			'yatki.vscode-surround'
+			'yatki.vscode-surround',
+			'GitHub.vscode-pull-request-github',
+			'shyykoserhiy.git-autoconfig',
+			'actboy168.tasks',
+			'humao.rest-client',
+			'alefragnani.project-manager',
+			'mutantdino.resourcemonitor'
 		],
 		benefits: [
 			'ESLint & Prettier configured',
@@ -208,6 +218,7 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['ms-azuretools.vscode-docker'],
 		benefits: [
 			'Containerize your application for consistent execution',
 			'Eliminate "works on my machine" issues',
@@ -221,7 +232,15 @@ export const capabilities = [
 		'Node.js DevContainer',
 		'Sets up a VS Code DevContainer with Node.js environment.',
 		CONFIG_SCHEMA_EMPTY,
-		['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode', 'svelte.svelte-vscode']
+		[
+			'dbaeumer.vscode-eslint',
+			'esbenp.prettier-vscode',
+			'svelte.svelte-vscode',
+			'bradlc.vscode-tailwindcss',
+			'unifiedjs.vscode-mdx',
+			'ecmel.vscode-html-css',
+			'GraphQL.vscode-graphql-syntax'
+		]
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-python',

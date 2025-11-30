@@ -81,4 +81,41 @@ describe('File Generator - Extensions', () => {
 		// Ensure standard editor tools are NOT present if not selected
 		expect(content.customizations.vscode.extensions).not.toContain('dbaeumer.vscode-eslint');
 	});
+
+	it('should include missing useful extensions in capabilities', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node', 'editor-tools', 'coding-agents', 'docker'],
+			configuration: {
+				'devcontainer-node': { nodeVersion: '22' }
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const devcontainerFile = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		const content = JSON.parse(devcontainerFile.content);
+		const extensions = content.customizations.vscode.extensions;
+
+		// Coding Agents
+		expect(extensions).toContain('google.geminicodeassist');
+		expect(extensions).toContain('saoudrizwan.claude-dev');
+		expect(extensions).toContain('GitHub.copilot-nightly');
+
+		// Editor Tools
+		expect(extensions).toContain('GitHub.vscode-pull-request-github');
+		expect(extensions).toContain('shyykoserhiy.git-autoconfig');
+		expect(extensions).toContain('actboy168.tasks');
+		expect(extensions).toContain('humao.rest-client');
+		expect(extensions).toContain('alefragnani.project-manager');
+		expect(extensions).toContain('mutantdino.resourcemonitor');
+
+		// Docker (via docker capability which is dependency of devcontainer-node but we selected it explicitly just in case)
+		expect(extensions).toContain('ms-azuretools.vscode-docker');
+
+		// Devcontainer Node
+		expect(extensions).toContain('bradlc.vscode-tailwindcss');
+		expect(extensions).toContain('unifiedjs.vscode-mdx');
+		expect(extensions).toContain('ecmel.vscode-html-css');
+		expect(extensions).toContain('GraphQL.vscode-graphql-syntax');
+	});
 });
