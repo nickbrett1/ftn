@@ -161,7 +161,13 @@ export const capabilities = [
 			'Svelte VS Code extension',
 			'Consistent workspace settings'
 		],
-		templates: EMPTY_ARRAY
+		templates: [
+			{
+				id: 'vscode-tasks',
+				filePath: '.vscode/tasks.json',
+				templateId: 'vscode-tasks-json'
+			}
+		]
 	},
 	{
 		id: 'shell-tools',

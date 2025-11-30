@@ -24,6 +24,7 @@ import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?ra
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
+import vscodeTasksJson from '../templates/vscode-tasks-json.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import {
 	getCapabilityTemplateData,
@@ -107,7 +108,8 @@ const templateImports = {
 	'scripts-cloud-login-sh': scriptsCloudLoginSh,
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
 	gitignore: gitignoreTemplate,
-	'dependabot-config': dependabotConfig
+	'dependabot-config': dependabotConfig,
+	'vscode-tasks-json': vscodeTasksJson
 };
 
 export class TemplateEngine {

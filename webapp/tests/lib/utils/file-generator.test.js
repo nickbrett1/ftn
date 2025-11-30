@@ -1,3 +1,4 @@
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TemplateEngine, GEMINI_DEV_ALIAS, generateAllFiles } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
@@ -63,6 +64,73 @@ RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 const dopplerYamlTemplateContent = `setup:
   project: {{projectName}}
   config: dev
+`;
+
+const vscodeTasksJsonTemplateContent = `{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "presentation": {
+    "echo": true,
+    "reveal": "always",
+    "focus": false,
+    "panel": "dedicated",
+    "showReuseMessage": false
+  },
+  "tasks": [
+    {
+      "label": "Run all build tasks",
+      "dependsOn": ["svelte dev", "new terminal", "test vitest"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "path": ".",
+      "problemMatcher": [],
+      "label": "svelte dev",
+      "detail": "svelte dev",
+      "group": "build",
+      "presentation": {
+        "group": "build-group",
+        "panel": "shared"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "path": ".",
+      "problemMatcher": [],
+      "label": "test vitest",
+      "detail": "test vitest",
+      "group": "build",
+      "presentation": {
+        "group": "build-group",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "new terminal",
+      "type": "shell",
+      "group": "build",
+      "command": "zsh",
+      "args": ["-i"],
+      "problemMatcher": [],
+      "detail": "new terminal",
+      "presentation": {
+        "group": "build-group",
+        "panel": "shared"
+      },
+      "options": {
+        "cwd": "/workspaces/{{projectName}}"
+      }
+    }
+  ]
+}
 `;
 
 describe('TemplateEngine', () => {
@@ -146,6 +214,11 @@ describe('TemplateEngine', () => {
 		const content = engine.generateFile('doppler-yaml', { projectName: 'test-project' });
 		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
 	});
+
+    it('generates vscode-tasks.json correctly', () => {
+        const content = engine.generateFile('vscode-tasks-json', { projectName: 'test-project' });
+        expect(content).toBe(vscodeTasksJsonTemplateContent.replace('{{projectName}}', 'test-project'));
+    });
 
 	it('generates multiple files collecting errors', () => {
 		const results = engine.generateFiles([
