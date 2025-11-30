@@ -2,8 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { encrypt, decrypt } from '$lib/server/crypto.js';
 
 // Mock the environment variable
-vi.mock('$env/static/private', () => ({
-	SECRET_KEY: 'test-secret-key-must-be-at-least-32-bytes-long-for-security-reasons'
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		SECRET_KEY: 'test-secret-key-must-be-at-least-32-bytes-long-for-security-reasons'
+	}
 }));
 
 vi.mock('$lib/utils/logging', () => ({

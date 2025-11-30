@@ -1,6 +1,6 @@
 // webapp/src/lib/server/crypto.js
 import { webcrypto } from 'node:crypto';
-import { SECRET_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { logError } from '$lib/utils/logging';
 
 const ALGORITHM = 'AES-GCM';
@@ -9,12 +9,12 @@ const TAG_LENGTH = 16; // 16 bytes for authentication tag
 
 // Derive a fixed-size key from the SECRET_KEY environment variable
 async function getKey() {
-	if (!SECRET_KEY) {
+	if (!env.SECRET_KEY) {
 		logError('SECRET_KEY environment variable is not set. Encryption will fail.', 'CRYPTO');
 		throw new Error('SECRET_KEY is not set.');
 	}
 	const encoder = new TextEncoder();
-	const keyMaterial = await webcrypto.subtle.digest('SHA-256', encoder.encode(SECRET_KEY));
+	const keyMaterial = await webcrypto.subtle.digest('SHA-256', encoder.encode(env.SECRET_KEY));
 	return await webcrypto.subtle.importKey('raw', keyMaterial, ALGORITHM, false, [
 		'encrypt',
 		'decrypt'
