@@ -411,6 +411,7 @@ function generateCloudflareFiles(templateEngine, context) {
 
 	const hasDoppler = context.capabilities.includes('doppler');
 	const projectName = context.name || 'my-project';
+	const compatibilityDate = new Date().toISOString().split('T')[0];
 
 	// cloud_login.sh
 	const dopplerLogin = hasDoppler
@@ -438,7 +439,8 @@ function generateCloudflareFiles(templateEngine, context) {
 			filePath: 'wrangler.template.jsonc',
 			content: templateEngine.generateFile('wrangler-template-jsonc', {
 				...context,
-				projectName: context.name || 'my-project'
+				projectName: context.name || 'my-project',
+				compatibilityDate
 			})
 		});
 		files.push({
@@ -450,7 +452,8 @@ function generateCloudflareFiles(templateEngine, context) {
 			filePath: 'wrangler.jsonc',
 			content: templateEngine.generateFile('wrangler-jsonc', {
 				...context,
-				projectName: context.name || 'my-project'
+				projectName: context.name || 'my-project',
+				compatibilityDate
 			})
 		});
 	}

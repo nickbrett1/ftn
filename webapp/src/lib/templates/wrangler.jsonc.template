@@ -1,7 +1,7 @@
 {
 	"name": "{{projectName}}",
 	"main": "src/index.js",
-	"compatibility_date": "2024-04-05",
+	"compatibility_date": "{{compatibilityDate}}",
 	"compatibility_flags": [
 		"nodejs_compat"
 	]
