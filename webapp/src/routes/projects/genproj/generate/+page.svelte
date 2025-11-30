@@ -8,7 +8,22 @@
 	let loading = $state(false);
 	let error = $state(data.error || null);
 	let selectedFile = $state(null);
-	let expandedFolders = $state(new Set(['/']));
+	let expandedFolders = $state(
+		new Set(['/', ...getAllFolderPaths(data.previewData?.files || [])])
+	);
+
+	function getAllFolderPaths(files) {
+		let paths = [];
+		for (const file of files) {
+			if (file.type === 'folder') {
+				paths.push(file.path);
+				if (file.children) {
+					paths = [...paths, ...getAllFolderPaths(file.children)];
+				}
+			}
+		}
+		return paths;
+	}
 
 	function toggleFolder(folderPath) {
 		const newSet = new Set(expandedFolders);
