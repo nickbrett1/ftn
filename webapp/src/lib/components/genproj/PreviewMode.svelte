@@ -42,6 +42,7 @@
 			// Expand all folders by default when new previewData arrives
 			expandedFolders = new Set();
 			expandAllFolders(fileTree, expandedFolders);
+			expandedFolders = new Set(expandedFolders); // Trigger reactivity
 
 			// Default select README.md if present
 			selectedFile = findReadme(fileTree);
@@ -101,12 +102,13 @@
 	 * @param {string} folderPath - Path of the folder to toggle
 	 */
 	function toggleFolder(folderPath) {
-		if (expandedFolders.has(folderPath)) {
-			expandedFolders.delete(folderPath);
+		const newSet = new Set(expandedFolders);
+		if (newSet.has(folderPath)) {
+			newSet.delete(folderPath);
 		} else {
-			expandedFolders.add(folderPath);
+			newSet.add(folderPath);
 		}
-		expandedFolders = expandedFolders; // Trigger reactivity
+		expandedFolders = newSet; // Trigger reactivity
 	}
 
 	/**
@@ -222,6 +224,42 @@
 	}
 </script>
 
+{#snippet fileTreeItem(file)}
+	<div class="file-item">
+		{#if file.type === 'folder'}
+			<button
+				type="button"
+				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded"
+				on:click={() => toggleFolder(file.path)}
+			>
+				<span class="mr-2">
+					{isFolderExpanded(file.path) ? '📂' : '📁'}
+				</span>
+				<span class="font-medium text-gray-100">{file.name}</span>
+			</button>
+
+			{#if isFolderExpanded(file.path)}
+				<div class="ml-4 mt-1 border-l border-gray-700 pl-2">
+					{#each file.children || [] as childFile}
+						{@render fileTreeItem(childFile)}
+					{/each}
+				</div>
+			{/if}
+		{:else}
+			<button
+				type="button"
+				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
+					{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
+				on:click={() => selectFile(file)}
+			>
+				<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
+				<span class="text-sm text-gray-300 flex-1">{file.name}</span>
+				<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
+			</button>
+		{/if}
+	</div>
+{/snippet}
+
 <div class="preview-mode">
 	{#if loading}
 		<!-- Loading State -->
@@ -274,48 +312,7 @@
 
 				<div class="p-4 overflow-y-auto max-h-96">
 					{#each fileTree as file (file.path)}
-						<div class="file-item">
-							{#if file.type === 'folder'}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded"
-									on:click={() => toggleFolder(file.path)}
-								>
-									<span class="mr-2">
-										{isFolderExpanded(file.path) ? '📂' : '📁'}
-									</span>
-									<span class="font-medium text-gray-100">{file.name}</span>
-								</button>
-
-								{#if isFolderExpanded(file.path)}
-									<div class="ml-4 mt-1">
-										{#each file.children || [] as childFile}
-											<button
-												type="button"
-												class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-													{selectedFile?.path === childFile.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-												on:click={() => selectFile(childFile)}
-											>
-												<span class="mr-2 text-sm">{getFileIcon(childFile.name)}</span>
-												<span class="text-sm text-gray-300 flex-1">{childFile.name}</span>
-												<span class="text-xs text-gray-400">{formatFileSize(childFile.size)}</span>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							{:else}
-								<button
-									type="button"
-									class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
-										{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
-									on:click={() => selectFile(file)}
-								>
-									<span class="mr-2 text-sm">{getFileIcon(file.name)}</span>
-									<span class="text-sm text-gray-300 flex-1">{file.name}</span>
-									<span class="text-xs text-gray-400">{formatFileSize(file.size)}</span>
-								</button>
-							{/if}
-						</div>
+						{@render fileTreeItem(file)}
 					{/each}
 				</div>
 			</div>
