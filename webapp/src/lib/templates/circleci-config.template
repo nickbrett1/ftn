@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.2
+{{orbs}}
 jobs:
   build:
     executor: node/default
@@ -20,3 +21,4 @@ workflows:
       - build
 {{lighthouseWorkflowJob}}
 {{deployWorkflowJob}}
+{{additionalWorkflowJobs}}

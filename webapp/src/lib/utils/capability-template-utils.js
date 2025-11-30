@@ -86,8 +86,19 @@ export function getCapabilityTemplateData(capabilityId, context) {
 			lighthouseJobDefinition: '',
 			lighthouseWorkflowJob: '',
 			deployJobDefinition: '',
-			deployWorkflowJob: ''
+			deployWorkflowJob: '',
+			orbs: '',
+			additionalWorkflowJobs: ''
 		};
+
+		if (context.capabilities.includes('gitguardian')) {
+			data.orbs += `  ggshield: gitguardian/ggshield@1\n`;
+			data.additionalWorkflowJobs += `
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>`;
+		}
 
 		if (
 			context.capabilities.includes('cloudflare-wrangler') &&
