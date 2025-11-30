@@ -233,8 +233,8 @@
 		return capability.dependencies.some((depId) => {
 			if (selectedCapabilities.includes(depId)) return false;
 			const depCap = capabilities.find((c) => c.id === depId);
-			// Ignore if internal (not selectable by user)
-			return !(depCap && depCap.category === 'internal');
+			// Ignore if internal (not selectable by user), but always show circleci
+			return !(depCap && depCap.category === 'internal' && depId !== 'circleci');
 		});
 	}
 
@@ -254,8 +254,8 @@
 			.filter((depId) => !selectedCapabilities.includes(depId))
 			.filter((depId) => {
 				const depCap = capabilities.find((c) => c.id === depId);
-				// Hide dependency if it's internal (not selectable by user)
-				return !(depCap && depCap.category === 'internal');
+				// Hide dependency if it's internal (not selectable by user), but always show circleci
+				return !(depCap && depCap.category === 'internal' && depId !== 'circleci');
 			})
 			.map((depId) => {
 				const missingCap = capabilities.find((c) => c.id === depId);
