@@ -482,7 +482,7 @@ export const capabilities = [
 		id: 'playwright',
 		name: 'Playwright',
 		description: 'Configures Playwright for end-to-end testing.',
-		category: CATEGORY_PROJECT_STRUCTURE,
+		category: CATEGORY_MONITORING,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
