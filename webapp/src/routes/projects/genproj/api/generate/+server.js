@@ -22,6 +22,9 @@ export async function POST({ request, platform }) {
 		const result = await service.generateProject(projectConfig, platform, request);
 
 		if (!result.success) {
+			if (result.message && result.message.includes('Unauthorized')) {
+				return json({ message: result.message }, { status: 401 });
+			}
 			return json({ message: result.message }, { status: 500 });
 		}
 
