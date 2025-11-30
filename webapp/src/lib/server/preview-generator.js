@@ -18,7 +18,10 @@ import {
 	SHELL_SETUP_SCRIPT,
 	GIT_SAFE_DIR_SCRIPT,
 	GEMINI_SETUP_SCRIPT,
-	PLAYWRIGHT_SETUP_SCRIPT
+	PLAYWRIGHT_SETUP_SCRIPT,
+	DOPPLER_LOGIN_SCRIPT,
+	WRANGLER_LOGIN_SCRIPT,
+	SETUP_WRANGLER_SCRIPT
 } from '$lib/utils/file-generator.js';
 import {
 	getCapabilityTemplateData,
@@ -309,16 +312,23 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 	if (!allCapabilities.includes('cloudflare-wrangler')) return;
 
 	const hasDoppler = allCapabilities.includes('doppler');
+	const projectName = projectConfig.name || 'my-project';
 
 	// cloud_login.sh
-	const dopplerLogin = hasDoppler ? 'echo "Logging into Doppler..."\ndoppler login' : '';
+	const dopplerLogin = hasDoppler
+		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		: '';
+
+	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+
 	const setupWrangler = hasDoppler
-		? 'echo "Running setup-wrangler-config.sh..."\nbash scripts/setup-wrangler-config.sh'
+		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
 	const cloudLoginContent = templateEngine.generateFile('scripts-cloud-login-sh', {
 		...projectConfig,
 		dopplerLogin,
+		wranglerLogin,
 		setupWrangler
 	});
 

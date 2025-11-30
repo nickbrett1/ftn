@@ -84,6 +84,38 @@ echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."`;
 
+export const DOPPLER_LOGIN_SCRIPT = `
+# Doppler login/setup
+if command -v doppler &> /dev/null; then
+  if doppler whoami &> /dev/null; then
+    echo "Already logged in to Doppler."
+  else
+    echo "INFO: Logging into Doppler..."
+    doppler login --no-check-version --no-timeout --yes
+    echo "INFO: Setting up Doppler..."
+    doppler setup --no-interactive --project {{projectName}} --config dev
+  fi
+else
+  echo "Doppler CLI not found. Skipping Doppler login."
+fi`;
+
+export const WRANGLER_LOGIN_SCRIPT = `
+echo
+# Cloudflare Wrangler login
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+  echo "Wrangler CLI not found. Installing globally with npm..."
+  npm install -g wrangler
+fi
+
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\\\.0\\\\.0\\\\.0/localhost/g'" /dev/null`;
+
+export const SETUP_WRANGLER_SCRIPT = `
+echo
+# Setup Wrangler configuration with environment variables
+echo "Setting up Wrangler configuration..."
+doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh dev`;
+
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
 	'devcontainer-java-json': devcontainerJavaJson,
@@ -378,11 +410,17 @@ function generateCloudflareFiles(templateEngine, context) {
 	if (!context.capabilities.includes('cloudflare-wrangler')) return files;
 
 	const hasDoppler = context.capabilities.includes('doppler');
+	const projectName = context.name || 'my-project';
 
 	// cloud_login.sh
-	const dopplerLogin = hasDoppler ? 'echo "Logging into Doppler..."\ndoppler login' : '';
+	const dopplerLogin = hasDoppler
+		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		: '';
+
+	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+
 	const setupWrangler = hasDoppler
-		? 'echo "Running setup-wrangler-config.sh..."\nbash scripts/setup-wrangler-config.sh'
+		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
 	files.push({
@@ -390,6 +428,7 @@ function generateCloudflareFiles(templateEngine, context) {
 		content: templateEngine.generateFile('scripts-cloud-login-sh', {
 			...context,
 			dopplerLogin,
+			wranglerLogin,
 			setupWrangler
 		})
 	});
