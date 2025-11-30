@@ -586,35 +586,73 @@ async function generateCapabilityServiceChanges(projectConfig, capability) {
  * @param {Array<FileObject>} files - Array of file objects
  * @returns {Array<FileObject>} Organized files with folder structure
  */
-function organizeFilesIntoFolders(files) {
+export function organizeFilesIntoFolders(files) {
+	const root = [];
 	const folderMap = new Map();
-	const organizedFiles = [];
+
+	// Sort files by path to ensure folders are created in order?
+	// Not strictly necessary if we build the tree dynamically.
 
 	for (const file of files) {
 		const pathParts = file.path.split('/');
-		const folderPath = pathParts.slice(0, -1).join('/') || '/';
 
-		if (!folderMap.has(folderPath)) {
-			folderMap.set(folderPath, []);
+		// If it's a file at root
+		if (pathParts.length === 1) {
+			root.push(file);
+			continue;
 		}
-		folderMap.get(folderPath).push(file);
+
+		// It's in a folder. Traverse/Create structure.
+		let currentLevel = root;
+		let currentPath = '';
+
+		for (let i = 0; i < pathParts.length - 1; i++) {
+			const folderName = pathParts[i];
+			currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+
+			let folder = currentLevel.find((f) => f.type === 'folder' && f.name === folderName);
+
+			if (!folder) {
+				folder = {
+					path: currentPath,
+					name: folderName,
+					type: 'folder',
+					children: [],
+					// Size of a folder is not strictly defined, but we could sum it up.
+					// For now, let's leave it undefined or 0.
+					size: 0
+				};
+				currentLevel.push(folder);
+			}
+
+			// Add file size to folder size (optional, but nice)
+			folder.size += file.size;
+
+			currentLevel = folder.children;
+		}
+
+		// Add the file to the leaf folder
+		currentLevel.push(file);
 	}
 
-	for (const [folderPath, folderFiles] of folderMap) {
-		if (folderPath === '/') {
-			organizedFiles.push(...folderFiles);
-		} else {
-			const folderName = folderPath.split('/').pop();
-			organizedFiles.push({
-				path: folderPath,
-				name: folderName,
-				type: 'folder',
-				children: folderFiles
-			});
-		}
-	}
+	// Optional: Sort items so folders come first or alphabetically
+	const sortItems = (items) => {
+		items.sort((a, b) => {
+			if (a.type === b.type) {
+				return a.name.localeCompare(b.name);
+			}
+			return a.type === 'folder' ? -1 : 1;
+		});
+		items.forEach((item) => {
+			if (item.type === 'folder') {
+				sortItems(item.children);
+			}
+		});
+	};
 
-	return organizedFiles;
+	sortItems(root);
+
+	return root;
 }
 
 /**
