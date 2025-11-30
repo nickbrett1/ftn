@@ -118,21 +118,6 @@ describe('validation utilities', () => {
 		it('validates capability-specific constraints', () => {
 			const cases = [
 				{
-					selected: ['devcontainer-node'],
-					configuration: { 'devcontainer-node': { nodeVersion: '16', enabled: true } },
-					error: 'Invalid Node.js version'
-				},
-				{
-					selected: ['devcontainer-python'],
-					configuration: { 'devcontainer-python': { packageManager: 'conda' } },
-					error: 'Invalid package manager'
-				},
-				{
-					selected: ['devcontainer-java'],
-					configuration: { 'devcontainer-java': { javaVersion: '8' } },
-					error: 'Invalid Java version'
-				},
-				{
 					selected: ['circleci'],
 					configuration: { circleci: { deployTarget: 'invalid' } },
 					error: 'Invalid deploy target'

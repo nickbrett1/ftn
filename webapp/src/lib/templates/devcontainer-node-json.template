@@ -1,6 +1,6 @@
 {
   "name": "Node.js",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -9,9 +9,7 @@
       "username": "node"
     },
     "ghcr.io/devcontainers/features/python:1": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "{{capabilityConfig.nodeVersion}}"
-    }
+    "ghcr.io/devcontainers/features/node:1": {}
   },
   "postCreateCommand": "./post-create-setup.sh"
 }

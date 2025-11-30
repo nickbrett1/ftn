@@ -220,50 +220,21 @@ export const capabilities = [
 		'devcontainer-node',
 		'Node.js DevContainer',
 		'Sets up a VS Code DevContainer with Node.js environment.',
-		{
-			type: 'object',
-			properties: {
-				nodeVersion: {
-					type: 'string',
-					enum: ['18', '20', '22', '23', '24', '25'],
-					default: '25'
-				}
-			},
-			required: EMPTY_ARRAY
-		},
+		CONFIG_SCHEMA_EMPTY,
 		['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode', 'svelte.svelte-vscode']
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-python',
 		'Python DevContainer',
 		'Sets up a VS Code DevContainer with Python environment.',
-		{
-			type: 'object',
-			properties: {
-				pythonVersion: {
-					type: 'string',
-					enum: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14'],
-					default: '3.14'
-				},
-				packageManager: { type: 'string', enum: ['pip'] }
-			}
-		},
+		CONFIG_SCHEMA_EMPTY,
 		['ms-python.python', 'ms-python.vscode-pylance']
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-java',
 		'Java DevContainer',
 		'Sets up a VS Code DevContainer with Java environment.',
-		{
-			type: 'object',
-			properties: {
-				javaVersion: {
-					type: 'string',
-					enum: ['11', '17', '21', '22', '23', '24', '25'],
-					default: '25'
-				}
-			}
-		},
+		CONFIG_SCHEMA_EMPTY,
 		['redhat.java', 'vscjava.vscode-java-debug', 'vscjava.vscode-java-test']
 	),
 	{

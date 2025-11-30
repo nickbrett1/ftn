@@ -6,7 +6,7 @@ import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
   "name": "Node.js",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -15,16 +15,13 @@ const nodeJsonTemplateContent = `{
       "username": "node"
     },
     "ghcr.io/devcontainers/features/python:1": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "{{capabilityConfig.nodeVersion}}"
-    }
+    "ghcr.io/devcontainers/features/node:1": {}
   },
   "postCreateCommand": "./post-create-setup.sh"
 }
 `;
 
-const javaDockerfileTemplateContent = `ARG VARIANT="{{capabilityConfig.javaVersion}}"
-FROM mcr.microsoft.com/devcontainers/java:0-{{capabilityConfig.javaVersion}}
+const javaDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends git zsh curl \\
     && npm install -g @google/gemini-cli @specifyapp/cli
@@ -42,8 +39,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 `;
 
-const nodeDockerfileTemplateContent = `ARG VARIANT="{{capabilityConfig.nodeVersion}}"
-FROM mcr.microsoft.com/devcontainers/typescript-node:0-{{capabilityConfig.nodeVersion}}
+const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends git zsh curl \\
     && npm install -g @google/gemini-cli @specifyapp/cli
@@ -171,19 +167,16 @@ describe('TemplateEngine', () => {
 
 	it('replaces variables from a real template file', () => {
 		const template = engine.getTemplate('devcontainer-java-dockerfile');
-		const result = engine.compileTemplate(template, { capabilityConfig: { javaVersion: '17' } });
-		expect(result).toBe(
-			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
-		);
+		// Previously tested replacement, now verifies content is static/correct
+		const result = engine.compileTemplate(template, {});
+		expect(result).toBe(javaDockerfileTemplateContent);
 	});
 
 	it('replaces variables from node dockerfile template', () => {
 		const template = engine.getTemplate('devcontainer-node-dockerfile');
-		// Now requires capabilityConfig structure
-		const result = engine.compileTemplate(template, { capabilityConfig: { nodeVersion: '20' } });
-		expect(result).toBe(
-			nodeDockerfileTemplateContent.replaceAll(/{{capabilityConfig.nodeVersion}}/g, '20')
-		);
+		// Previously tested replacement, now verifies content is static/correct
+		const result = engine.compileTemplate(template, {});
+		expect(result).toBe(nodeDockerfileTemplateContent);
 	});
 
 	it('generates sonar-project.properties with correct variables', () => {
@@ -201,11 +194,9 @@ describe('TemplateEngine', () => {
 
 	it('generates files and handles missing templates', () => {
 		const content = engine.generateFile('devcontainer-java-dockerfile', {
-			capabilityConfig: { javaVersion: '17' }
+			capabilityConfig: { javaVersion: '17' } // This config should be ignored now
 		});
-		expect(content).toBe(
-			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
-		);
+		expect(content).toBe(javaDockerfileTemplateContent);
 
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
 	});
@@ -235,9 +226,7 @@ describe('TemplateEngine', () => {
 
 		expect(success).toBeDefined();
 		expect(success.success).toBe(true);
-		expect(success.content).toBe(
-			javaDockerfileTemplateContent.replaceAll(/{{capabilityConfig.javaVersion}}/g, '17')
-		);
+		expect(success.content).toBe(javaDockerfileTemplateContent);
 		expect(failure.success).toBe(false);
 		expect(failure.error).toContain('Template not found');
 	});
@@ -281,7 +270,7 @@ describe('TemplateEngine', () => {
 			name: 'test-project',
 			capabilities: ['devcontainer-node', 'doppler'],
 			configuration: {
-				'devcontainer-node': { nodeVersion: '18' }
+				'devcontainer-node': {} // No version needed anymore
 			}
 		};
 
@@ -298,7 +287,7 @@ describe('TemplateEngine', () => {
 			name: 'test-project',
 			capabilities: ['devcontainer-node'],
 			configuration: {
-				'devcontainer-node': { nodeVersion: '18' }
+				'devcontainer-node': {}
 			}
 		};
 

@@ -53,10 +53,10 @@ describe('CapabilitySelector', () => {
 	it('shows configuration when selected', async () => {
 		render(CapabilitySelector, {
 			capabilities: mockCapabilities,
-			selectedCapabilities: ['devcontainer-node'],
+			selectedCapabilities: ['dependabot'],
 			configuration: {}
 		});
 
-		expect(screen.getByText('Node Version')).toBeTruthy();
+		expect(screen.getByText('Update Schedule')).toBeTruthy();
 	});
 });
