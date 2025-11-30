@@ -334,8 +334,12 @@
 			return;
 		}
 
+		// Build redirect URL with current state to preserve selections
+		const redirectPath = buildGenprojRedirectPath();
+		const redirectUrl = new URL(redirectPath, globalThis.location.origin).toString();
+
 		// Directly initiate GitHub authentication
-		await initiateGitHubAuth(globalThis.location.href);
+		await initiateGitHubAuth(redirectUrl);
 	}
 
 	function handleAuthComplete() {
