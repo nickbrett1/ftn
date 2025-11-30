@@ -213,6 +213,44 @@ describe('ProjectGeneratorService', () => {
 			expect(service.setupGitHubRepository).toHaveBeenCalled();
 			expect(service.configureExternalServices).toHaveBeenCalled();
 		});
+
+		it('should handle empty repositoryUrl by extracting owner from created repository', async () => {
+			getCurrentUser.mockResolvedValue({ id: 'user1' });
+			getTokensByUserIdMock.mockResolvedValue([{ serviceName: 'GitHub', accessToken: 'gh-token' }]);
+
+			projectConfig.repositoryUrl = ''; // Empty URL
+
+			// Mock setupGitHubRepository to return a repository object with fullName
+			service.setupGitHubRepository = vi.fn().mockResolvedValue({
+				success: true,
+				files: [],
+				repository: {
+					fullName: 'new-owner/new-repo',
+					htmlUrl: 'https://github.com/new-owner/new-repo'
+				}
+			});
+			service.configureExternalServices = vi.fn().mockResolvedValue([]);
+
+			const result = await service.generateProject(projectConfig, platform, request);
+
+			expect(service.setupGitHubRepository).toHaveBeenCalledWith(
+				expect.anything(),
+				undefined, // Owner should be undefined initially
+				projectConfig.projectName,
+				projectConfig
+			);
+
+			// Check if configureExternalServices was called with the correct owner extracted from repository
+			expect(service.configureExternalServices).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				'new-owner',
+				expect.anything()
+			);
+
+			expect(result.repository).toBeDefined();
+			expect(result.repository.fullName).toBe('new-owner/new-repo');
+		});
 	});
 
 	describe('setupGitHubRepository', () => {
@@ -251,6 +289,29 @@ describe('ProjectGeneratorService', () => {
 			);
 			expect(result.success).toBe(false);
 			expect(result.message).toContain('Failed to commit files to GitHub repository');
+		});
+
+		it('should use fullName from created repository if owner is undefined', async () => {
+			githubApiService.createRepository.mockResolvedValue({
+				fullName: 'generated-owner/generated-repo',
+				name: 'generated-repo'
+			});
+			githubApiService.createMultipleFiles.mockResolvedValue({});
+
+			const result = await service.setupGitHubRepository(
+				githubApiService,
+				undefined,
+				'generated-repo',
+				projectConfig
+			);
+
+			expect(githubApiService.createMultipleFiles).toHaveBeenCalledWith(
+				'generated-owner',
+				'generated-repo',
+				expect.anything(),
+				expect.anything()
+			);
+			expect(result.repository).toBeDefined();
 		});
 	});
 
