@@ -335,6 +335,29 @@ export const capabilities = [
 		website: 'https://www.doppler.com/'
 	},
 	{
+		id: 'gitguardian',
+		name: 'GitGuardian',
+		description: 'Automated secrets detection in your CI pipeline.',
+		category: CATEGORY_SECRETS,
+		dependencies: ['circleci'],
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		externalServices: createExternalServiceConfig(
+			'gitguardian',
+			'GitGuardian',
+			'Create new project in GitGuardian',
+			'Get API Key and add to CircleCI environment variables'
+		),
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'Detect secrets in your code before they are merged',
+			'Prevent credentials leakage',
+			'Real-time alerting'
+		],
+		templates: EMPTY_ARRAY,
+		website: 'https://www.gitguardian.com/'
+	},
+	{
 		id: 'sonarcloud',
 		name: 'SonarCloud Code Quality',
 		description: 'Sets up SonarCloud for static code analysis.',
