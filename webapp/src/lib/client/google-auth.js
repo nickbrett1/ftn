@@ -40,6 +40,12 @@ export function isUserAuthenticated() {
  * @param {string} redirectPath - Optional path to redirect to after successful auth (defaults to /projects/ccbilling)
  */
 export async function initiateGoogleAuth(redirectPath = '/') {
+	// Handle case where function is used directly as event handler
+	// In that case, redirectPath is an Event object, which we don't want
+	if (typeof redirectPath !== 'string') {
+		redirectPath = '/';
+	}
+
 	// Check if user is already logged in
 	if (isUserAuthenticated()) {
 		// If already logged in, redirect using SvelteKit navigation
