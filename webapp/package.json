@@ -93,6 +93,7 @@
 		"@tsparticles/shape-text": "^3.9.1",
 		"@tsparticles/slim": "^3.8.1",
 		"apexcharts": "^5.3.6",
+		"arctic": "^3.7.0",
 		"cookie": "^1.0.2",
 		"gsap": "^3.13.0",
 		"handlebars": "^4.7.8",
