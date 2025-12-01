@@ -1,11 +1,14 @@
 import { GET } from '../../../../../../../../src/routes/projects/genproj/api/auth/github/callback/+server.js';
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from '$env/static/private';
 import { dev } from '$app/environment';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('$env/static/private', () => ({
-	GITHUB_CLIENT_ID: 'test-client-id',
-	GITHUB_CLIENT_SECRET: 'test-client-secret'
+	DEV_GITHUB_CLIENT_ID: 'test-client-id',
+	DEV_GITHUB_CLIENT_SECRET: 'test-client-secret',
+	PREVIEW_GITHUB_CLIENT_ID: 'preview-test-client-id',
+	PREVIEW_GITHUB_CLIENT_SECRET: 'preview-test-client-secret',
+	PROD_GITHUB_CLIENT_ID: 'prod-test-client-id',
+	PROD_GITHUB_CLIENT_SECRET: 'prod-test-client-secret'
 }));
 
 vi.mock('$app/environment', () => ({
@@ -53,6 +56,19 @@ describe('/projects/genproj/api/auth/github/callback', () => {
 			const locationUrl = new URL(location, 'http://localhost');
 			expect(locationUrl.searchParams.get('projectName')).toBe('test');
 			expect(locationUrl.searchParams.get('selected')).toBe('a,b');
+
+			// Verify fetch call
+			expect(event.fetch).toHaveBeenCalledWith(
+				'https://github.com/login/oauth/access_token',
+				expect.objectContaining({
+					body: JSON.stringify({
+						client_id: 'test-client-id',
+						client_secret: 'test-client-secret',
+						code: 'test-code',
+						redirect_uri: 'http://localhost/projects/genproj/api/auth/github/callback'
+					})
+				})
+			);
 		}
 	});
 

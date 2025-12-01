@@ -1,7 +1,5 @@
 // webapp/src/lib/server/auth.js
 
-import { GITHUB_CLIENT_ID } from '$env/static/private';
-
 /**
  * Get current authenticated user from request
  * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
@@ -55,16 +53,5 @@ export async function getCurrentUser(event) {
 		return null;
 	}
 }
-
-export const github = {
-	createAuthorizationURL: async (state, eventUrl) => {
-		const url = new URL('https://github.com/login/oauth/authorize');
-		url.searchParams.set('client_id', GITHUB_CLIENT_ID);
-		url.searchParams.set('state', state);
-		url.searchParams.set('redirect_uri', `${eventUrl.origin}/auth/github/callback`);
-		url.searchParams.set('scope', 'repo,user'); // Requesting repo and user scope
-		return url;
-	}
-};
 
 // Other authentication-related functions will be added here.

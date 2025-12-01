@@ -31,7 +31,6 @@ describe('external service configuration helpers', () => {
 	});
 
 	it('returns environment variable names and rate limit configs', () => {
-		expect(getEnvVarName('github', 'clientId')).toBe('GITHUB_CLIENT_ID');
 		expect(getEnvVarName('doppler', 'apiToken')).toBe('DOPPLER_API_TOKEN');
 		expect(getEnvVarName('unknown', 'apiToken')).toBeUndefined();
 		expect(getRateLimitConfig('github')).toMatchObject({ max: 5000 });

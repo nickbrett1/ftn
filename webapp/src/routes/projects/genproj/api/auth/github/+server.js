@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { GITHUB_CLIENT_ID } from '$env/static/private';
+import { getGithubCredentials } from '$lib/server/github/credentials';
 import { dev } from '$app/environment';
 
 /**
@@ -22,13 +22,18 @@ export async function GET({ url, cookies }) {
 		secure: !dev
 	});
 
+	const { clientId } = getGithubCredentials(url.hostname);
+
 	const authUrl = new URL('https://github.com/login/oauth/authorize');
-	authUrl.searchParams.set('client_id', GITHUB_CLIENT_ID);
+	authUrl.searchParams.set('client_id', clientId);
 	authUrl.searchParams.set('scope', 'repo');
 	authUrl.searchParams.set('state', sessionId);
 
-	// Dynamically construct the redirect URI
-	const redirectUri = new URL('/projects/genproj/api/auth/github/callback', url.origin);
+	// Dynamically construct the redirect URI, ensuring 'localhost' is used instead of '127.0.0.1'
+	const origin = url.origin.includes('127.0.0.1')
+		? url.origin.replace('127.0.0.1', 'localhost')
+		: url.origin;
+	const redirectUri = new URL('/projects/genproj/api/auth/github/callback', origin);
 	authUrl.searchParams.set('redirect_uri', redirectUri.toString());
 
 	return redirect(302, authUrl.toString());

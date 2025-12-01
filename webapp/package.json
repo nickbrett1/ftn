@@ -8,7 +8,7 @@
 	"scripts": {
 		"postinstall": "node scripts/copy-pdf-worker.js",
 		"predev": "node scripts/copy-pdf-worker.js && node scripts/generate-cloudflare-worker.js",
-		"dev": "npm run predev && vite dev",
+		"dev": "npm run predev && doppler run --project webapp --config dev -- vite dev",
 		"prebuild": "node scripts/copy-pdf-worker.js",
 		"build": "vite build",
 		"check-pdf-worker": "node scripts/check-pdf-worker.js",

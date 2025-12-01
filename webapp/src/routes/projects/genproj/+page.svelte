@@ -24,7 +24,7 @@
 	let repositoryUrl = $state(data.repositoryUrl || '');
 	let configuration = $state({});
 	let loading = $state(!data.capabilities || data.capabilities.length === 0);
-	const initialError = $state(data.error || null);
+	let initialError = $state(data.error || null);
 	let authResult = $state(data.authResult || null);
 
 	function getAuthErrorMessage(errorCode) {
@@ -47,8 +47,8 @@
 		}
 	}
 
-	let authErrorMessage = $state(getAuthErrorMessage(initialError));
-	let capabilitiesError = $state(authErrorMessage ? null : initialError);
+	let authErrorMessage = $derived(getAuthErrorMessage(initialError));
+	let capabilitiesError = $derived(authErrorMessage ? null : initialError);
 
 	// Preview data state
 	let previewData = $state(null);
@@ -469,7 +469,7 @@
 					<p class="ml-3 text-sm text-red-200">{authErrorMessage}</p>
 				</div>
 				<button
-					onclick={() => (authErrorMessage = null)}
+					onclick={() => (initialError = null)}
 					class="text-red-300 hover:text-red-200 transition-colors"
 					aria-label="Dismiss error"
 				>

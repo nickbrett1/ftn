@@ -1,5 +1,5 @@
 import { redirect, isRedirect } from '@sveltejs/kit';
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from '$env/static/private';
+import { getGithubCredentials } from '$lib/server/github/credentials';
 import { dev } from '$app/environment';
 
 /**
@@ -21,7 +21,11 @@ export async function GET({ url, cookies, fetch }) {
 	}
 
 	try {
-		const redirectUri = new URL('/projects/genproj/api/auth/github/callback', url.origin);
+		const { clientId, clientSecret } = getGithubCredentials(url.hostname);
+		const origin = url.origin.includes('127.0.0.1')
+			? url.origin.replace('127.0.0.1', 'localhost')
+			: url.origin;
+		const redirectUri = new URL('/projects/genproj/api/auth/github/callback', origin);
 		const response = await fetch('https://github.com/login/oauth/access_token', {
 			method: 'POST',
 			headers: {
@@ -29,8 +33,8 @@ export async function GET({ url, cookies, fetch }) {
 				Accept: 'application/json'
 			},
 			body: JSON.stringify({
-				client_id: GITHUB_CLIENT_ID,
-				client_secret: GITHUB_CLIENT_SECRET,
+				client_id: clientId,
+				client_secret: clientSecret,
 				code,
 				redirect_uri: redirectUri.toString()
 			})

@@ -131,11 +131,6 @@ export function getApiTokenConfig(serviceName) {
  * @type {Object<string, Object>}
  */
 export const envVarNames = {
-	github: {
-		clientId: 'GITHUB_CLIENT_ID',
-		clientSecret: 'GITHUB_CLIENT_SECRET',
-		redirectUri: 'GITHUB_REDIRECT_URI'
-	},
 	circleci: {
 		apiToken: 'CIRCLECI_API_TOKEN'
 	},
