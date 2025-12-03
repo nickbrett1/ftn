@@ -8,6 +8,7 @@
 	let { data } = $props();
 	let loading = $state(false);
 	let error = $state(data.error || null);
+	let success = $state(null);
 	let selectedFile = $state(null);
 	let expandedFolders = $state(
 		new Set(['/', ...getAllFolderPaths(data.previewData?.files || [])])
@@ -81,6 +82,7 @@
 	async function handleGenerate() {
 		loading = true;
 		error = null;
+		success = null;
 
 		try {
 			const response = await fetch('/projects/genproj/api/generate', {
@@ -110,7 +112,13 @@
 			}
 
 			if (result.repositoryUrl) {
-				goto(result.repositoryUrl);
+				success = `Project generated successfully! Redirecting to ${result.repositoryUrl}...`;
+				// Short delay so user can see success message
+				setTimeout(() => {
+					goto(result.repositoryUrl);
+				}, 2000);
+			} else {
+				success = 'Project generated successfully!';
 			}
 		} catch (error_) {
 			error = error_.message;
@@ -167,6 +175,12 @@
 		{#if error}
 			<div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-md p-4 mb-8">
 				<p class="text-red-300">{error}</p>
+			</div>
+		{/if}
+
+		{#if success}
+			<div class="bg-green-900 bg-opacity-20 border border-green-500 rounded-md p-4 mb-8">
+				<p class="text-green-300">{success}</p>
 			</div>
 		{/if}
 
