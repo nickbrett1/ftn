@@ -82,7 +82,7 @@
 		"vite": "^7.2.6",
 		"vite-imagetools": "^9.0.2",
 		"vitest": "^4.0.14",
-		"wrangler": "^4.51.0"
+		"wrangler": "^4.52.1"
 	},
 	"type": "module",
 	"dependencies": {
