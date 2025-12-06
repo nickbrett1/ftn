@@ -1,5 +1,5 @@
 import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Page from '../../../../../src/routes/projects/genproj/generate/+page.svelte';
 import { goto } from '$app/navigation';
 
@@ -21,14 +21,29 @@ describe('Generate Page Interaction', () => {
     beforeEach(() => {
         global.fetch = vi.fn();
         vi.clearAllMocks();
+        vi.useFakeTimers();
+
+        // Mock window.location.href
+        Object.defineProperty(window, 'location', {
+            value: {
+                href: '',
+                origin: 'http://localhost'
+            },
+            writable: true
+        });
     });
 
-    it('displays success message on successful generation', async () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('displays success message on successful generation and redirects', async () => {
+        const repoUrl = 'https://github.com/user/repo';
         global.fetch.mockResolvedValue({
             ok: true,
             json: async () => ({
                 message: 'Success',
-                repositoryUrl: 'https://github.com/user/repo'
+                repositoryUrl: repoUrl
             })
         });
 
@@ -42,9 +57,12 @@ describe('Generate Page Interaction', () => {
             expect(screen.getByText(/Project generated successfully/i)).toBeTruthy();
         });
 
-        // Ensure goto is called eventually
-        await waitFor(() => {
-             expect(goto).toHaveBeenCalledWith('https://github.com/user/repo');
-        }, { timeout: 3000 }); // Increase timeout to account for delay
+        // Fast-forward timers to trigger redirection
+        vi.runAllTimers();
+
+        // Check redirection
+        // Since repoUrl starts with http, it should use window.location.href
+        expect(window.location.href).toBe(repoUrl);
+        expect(goto).not.toHaveBeenCalled();
     });
 });
