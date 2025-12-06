@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { ProjectGeneratorService } from '$lib/services/project-generator';
 import { logger } from '$lib/utils/logging';
 
-export async function POST({ request, platform }) {
+export async function POST({ request, platform, cookies }) {
 	try {
 		const body = await request.json();
 		const { name, repositoryUrl, selectedCapabilities } = body;
@@ -19,7 +19,14 @@ export async function POST({ request, platform }) {
 		};
 
 		const service = new ProjectGeneratorService();
-		const result = await service.generateProject(projectConfig, platform, request);
+		// Extract GitHub token from cookie if available
+		const githubToken = cookies.get('github_access_token');
+		const result = await service.generateProject(
+			projectConfig,
+			platform,
+			request,
+			githubToken
+		);
 
 		if (!result.success) {
 			if (

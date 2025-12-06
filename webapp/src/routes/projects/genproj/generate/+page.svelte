@@ -115,7 +115,11 @@
 				success = `Project generated successfully! Redirecting to ${result.repositoryUrl}...`;
 				// Short delay so user can see success message
 				setTimeout(() => {
-					goto(result.repositoryUrl);
+					if (result.repositoryUrl.startsWith('http')) {
+						window.location.href = result.repositoryUrl;
+					} else {
+						goto(result.repositoryUrl);
+					}
 				}, 2000);
 			} else {
 				success = 'Project generated successfully!';

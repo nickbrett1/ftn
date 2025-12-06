@@ -101,9 +101,10 @@ This project was generated with the following capabilities: ${projectConfig.sele
 	 * @param {ProjectConfig} projectConfig - The project configuration.
 	 * @param {object} platform - The platform object containing environment bindings (e.g., D1_DATABASE).
 	 * @param {Request} request - The original request object to extract user session.
+	 * @param {string} [explicitGitHubToken] - Optional GitHub token to use instead of the stored one.
 	 * @returns {Promise<{success: boolean, message: string, files?: {filePath: string, content: string}[]}>}
 	 */
-	async generateProject(projectConfig, platform, request) {
+	async generateProject(projectConfig, platform, request, explicitGitHubToken = null) {
 		log('Generating full project...', 'GEN', {
 			projectName: projectConfig.projectName,
 			capabilities: projectConfig.selectedCapabilities
@@ -119,7 +120,8 @@ This project was generated with the following capabilities: ${projectConfig.sele
 
 		log('Retrieved stored tokens for user', 'GEN', { userId, tokenCount: storedTokens.length });
 
-		const githubToken = storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken;
+		const githubToken =
+			explicitGitHubToken || storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken;
 		if (!githubToken) {
 			return {
 				success: false,
