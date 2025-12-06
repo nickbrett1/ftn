@@ -202,6 +202,38 @@ describe('ProjectGeneratorService', () => {
 			expect(result.message).toBe('GitHub token not found. Please authenticate with GitHub.');
 		});
 
+		it('should use explicitGitHubToken if provided', async () => {
+			getCurrentUser.mockResolvedValue({ id: 'user1' });
+			getTokensByUserIdMock.mockResolvedValue([]); // No stored tokens
+
+			service.setupGitHubRepository = vi
+				.fn()
+				.mockResolvedValue({ success: true, files: [], repository: {} });
+			service.configureExternalServices = vi.fn().mockResolvedValue([]);
+
+			const explicitToken = 'explicit-token';
+			await service.generateProject(projectConfig, platform, request, explicitToken);
+
+			expect(GitHubAPIService).toHaveBeenCalledWith(explicitToken);
+		});
+
+		it('should fallback to stored tokens if explicit token is missing', async () => {
+			getCurrentUser.mockResolvedValue({ id: 'user1' });
+			const storedToken = 'stored-token';
+			getTokensByUserIdMock.mockResolvedValue([
+				{ serviceName: 'GitHub', accessToken: storedToken }
+			]);
+
+			service.setupGitHubRepository = vi
+				.fn()
+				.mockResolvedValue({ success: true, files: [], repository: {} });
+			service.configureExternalServices = vi.fn().mockResolvedValue([]);
+
+			await service.generateProject(projectConfig, platform, request); // No explicit token
+
+			expect(GitHubAPIService).toHaveBeenCalledWith(storedToken);
+		});
+
 		it('should call setupGitHubRepository and configureExternalServices on success', async () => {
 			getCurrentUser.mockResolvedValue({ id: 'user1' });
 			getTokensByUserIdMock.mockResolvedValue([{ serviceName: 'GitHub', accessToken: 'gh-token' }]);
