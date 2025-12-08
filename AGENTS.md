@@ -8,7 +8,13 @@ The `.jules` directory contains tools specifically designed for the Jules AI age
 
 - **`verify_ui.py`**: A Playwright script used to verify the `genproj` UI. It navigates to the project generation page, takes a screenshot, and performs assertions (e.g., ensuring certain elements are hidden).
     - **Usage**: `python3 .jules/verify_ui.py`
-    - **Prerequisites**: Ensure the app is running (e.g., `npm run preview` on port 4173) and Playwright dependencies are installed.
+    - **Prerequisites**: Ensure the app is running and Playwright dependencies are installed.
+
+## Known Limitations
+
+### `npm run preview`
+
+The `npm run preview` command (Vite preview server) is unreliable in this environment and often fails with connection refused errors when accessed by Playwright or curl. **Do not use `npm run preview` for verification.** Instead, rely on unit tests and component tests (using `vitest` and `@testing-library/svelte`) to verify frontend changes.
 
 ## Unresolved Security Vulnerability: `node-tar`
 
