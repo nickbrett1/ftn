@@ -217,7 +217,15 @@
 			{/if}
 		</div>
 
-		<div class="flex justify-start">
+		<div class="flex justify-start gap-4">
+			<a
+				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(data.projectName)}&repositoryUrl={encodeURIComponent(
+					data.repositoryUrl
+				)}"
+				class="px-8 py-3 rounded-md font-medium transition-colors border bg-gray-700 text-white hover:bg-gray-600 border-gray-500 flex items-center justify-center"
+			>
+				Back to Configuration
+			</a>
 			<button
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-green-600 text-white hover:bg-green-700 border-green-400 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed"
 				disabled={loading}

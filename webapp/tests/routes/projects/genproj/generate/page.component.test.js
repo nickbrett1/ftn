@@ -83,4 +83,21 @@ describe('Generate Page File Tree', () => {
 		// So expanding root should show subfolder AND deep.txt.
 		expect(screen.getByText('deep.txt')).toBeTruthy();
 	});
+
+	it('should have a back button linking to configuration', async () => {
+		const data = {
+			projectName: 'my-cool-project',
+			repositoryUrl: 'https://github.com/test/repo',
+			selected: 'core,python',
+			previewData: { files: [] }
+		};
+
+		render(Page, { data });
+
+		const backButton = screen.getByText('Back to Configuration');
+		expect(backButton).toBeTruthy();
+
+		const expectedUrl = '/projects/genproj?selected=core,python&projectName=my-cool-project&repositoryUrl=https%3A%2F%2Fgithub.com%2Ftest%2Frepo';
+		expect(backButton.closest('a').getAttribute('href')).toBe(expectedUrl);
+	});
 });
