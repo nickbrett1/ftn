@@ -76,7 +76,7 @@ describe('ProjectGeneratorService', () => {
 		};
 
 		it('should successfully generate a project', async () => {
-			const generatedFiles = [{ path: 'test.txt', content: 'test' }];
+			const generatedFiles = [{ filePath: 'test.txt', content: 'test' }];
 			const repository = { fullName: 'owner/repo' };
 			const externalServices = { circleci: { success: true } };
 
@@ -156,8 +156,8 @@ describe('ProjectGeneratorService', () => {
 	describe('commitFilesToRepository', () => {
 		const repository = { fullName: 'owner/repo' };
 		const generatedFiles = [
-			{ path: 'file1.txt', content: 'content1' },
-			{ path: 'file2.js', content: 'content2' }
+			{ filePath: 'file1.txt', content: 'content1' },
+			{ filePath: 'file2.js', content: 'content2' }
 		];
 		const context = { capabilities: ['sveltekit'] };
 
@@ -165,9 +165,9 @@ describe('ProjectGeneratorService', () => {
 			await service.commitFilesToRepository(repository, generatedFiles, context);
 
 			const expectedGithubFiles = generatedFiles.map((file) => ({
-				path: file.path,
+				path: file.filePath,
 				content: file.content,
-				message: `Add ${file.path}`
+				message: `Add ${file.filePath}`
 			}));
 
 			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
