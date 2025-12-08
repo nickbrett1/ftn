@@ -98,12 +98,14 @@ describe('GitHubAPIService', () => {
 	it('creates multiple files in a single commit', async () => {
 		const referenceJson = vi.fn().mockResolvedValue({ object: { sha: 'ref-sha' } });
 		const commitJson = vi.fn().mockResolvedValue({ tree: { sha: 'tree-sha' } });
+		const blobJson = vi.fn().mockResolvedValue({ sha: 'blob-sha' });
 		const treeJson = vi.fn().mockResolvedValue({ sha: 'new-tree' });
 		const newCommitJson = vi.fn().mockResolvedValue({ sha: 'commit-sha' });
 
 		vi.spyOn(service, 'makeRequest')
 			.mockResolvedValueOnce({ json: referenceJson })
 			.mockResolvedValueOnce({ json: commitJson })
+			.mockResolvedValueOnce({ json: blobJson }) // blob for file.txt
 			.mockResolvedValueOnce({ json: treeJson })
 			.mockResolvedValueOnce({ json: newCommitJson })
 			.mockResolvedValueOnce({});

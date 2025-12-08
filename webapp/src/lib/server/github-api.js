@@ -180,13 +180,25 @@ export class GitHubAPIService extends BaseAPIService {
 		const commitData = await commitResponse.json();
 		const baseTreeSha = commitData.tree.sha;
 
-		// Create tree entries for all files
-		const treeEntries = files.map((file) => ({
-			path: file.path,
-			mode: '100644',
-			type: 'blob',
-			content: file.content
-		}));
+		// Create blobs for each file
+		const blobPromises = files.map(async (file) => {
+			const blobResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/blobs`, {
+				method: 'POST',
+				body: JSON.stringify({
+					content: Buffer.from(file.content).toString('base64'),
+					encoding: 'base64'
+				})
+			});
+			const blobData = await blobResponse.json();
+			return {
+				path: file.path,
+				mode: '100644',
+				type: 'blob',
+				sha: blobData.sha
+			};
+		});
+
+		const treeEntries = await Promise.all(blobPromises);
 
 		// Create new tree
 		const treeResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/trees`, {
