@@ -76,10 +76,37 @@ export class GitHubAPIService extends BaseAPIService {
 			license_template: 'mit'
 		};
 
-		const response = await this.makeRequest('/user/repos', {
-			method: 'POST',
-			body: JSON.stringify(repositoryData)
-		});
+		let response;
+		try {
+			response = await this.makeRequest('/user/repos', {
+				method: 'POST',
+				body: JSON.stringify(repositoryData)
+			});
+		} catch (error) {
+			// Handle "Repository already exists" error (422)
+			if (error.message.includes('422')) {
+				console.log(`⚠️ Repository creation failed (422). Checking if repository '${name}' already exists...`);
+
+				try {
+					const user = await this.getUserInfo();
+					const existingRepo = await this.getRepository(user.login, name);
+
+					console.log(`✅ Found existing repository: ${existingRepo.full_name}. Using it.`);
+					return {
+						name: existingRepo.name,
+						fullName: existingRepo.full_name,
+						cloneUrl: existingRepo.clone_url,
+						htmlUrl: existingRepo.html_url,
+						private: existingRepo.private
+					};
+				} catch (checkError) {
+					console.error(`❌ Could not retrieve existing repository: ${checkError.message}`);
+					// If we can't find it, re-throw the original creation error
+					throw error;
+				}
+			}
+			throw error;
+		}
 
 		const repository = await response.json();
 
