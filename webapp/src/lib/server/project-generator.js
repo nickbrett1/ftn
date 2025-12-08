@@ -168,11 +168,22 @@ export class ProjectGeneratorService {
 		const [owner, repo] = repository.fullName.split('/');
 
 		// Convert generated files to GitHub file format
-		const githubFiles = generatedFiles.map((file) => ({
-			path: file.path,
-			content: file.content,
-			message: `Add ${file.path}`
-		}));
+		const githubFiles = generatedFiles.map((file) => {
+			if (!file.filePath) {
+				console.error('❌ Found file with missing filePath:', JSON.stringify(file).substring(0, 200));
+				throw new Error('File generation failed: Missing file path');
+			}
+			return {
+				path: file.filePath,
+				content: file.content,
+				message: `Add ${file.filePath}`
+			};
+		});
+
+		console.log(
+			`📤 Preparing to commit ${githubFiles.length} files:`,
+			githubFiles.map((f) => f.path).join(', ')
+		);
 
 		// Create commit with all files
 		await this.services.github.createMultipleFiles(
