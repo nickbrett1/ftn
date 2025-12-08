@@ -169,9 +169,9 @@ export class ProjectGeneratorService {
 
 		// Convert generated files to GitHub file format
 		const githubFiles = generatedFiles.map((file) => ({
-			path: file.path,
+			path: file.filePath,
 			content: file.content,
-			message: `Add ${file.path}`
+			message: `Add ${file.filePath}`
 		}));
 
 		// Create commit with all files
