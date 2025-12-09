@@ -8,6 +8,9 @@ vi.mock('svelte-awesome-icons', () => ({
 	Icon: vi.fn()
 }));
 
+// Mock scrollIntoView
+globalThis.HTMLElement.prototype.scrollIntoView = vi.fn();
+
 describe('PreviewMode File Count', () => {
 	it('should correctly count files including those in nested folders', () => {
 		const previewData = {
