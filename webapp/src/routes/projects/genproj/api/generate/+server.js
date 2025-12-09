@@ -7,7 +7,7 @@ import { logger } from '$lib/utils/logging';
 export async function POST({ request, platform, cookies }) {
 	try {
 		const body = await request.json();
-		const { name, repositoryUrl, selectedCapabilities } = body;
+		const { name, repositoryUrl, selectedCapabilities, overwrite } = body;
 
 		if (!name || !selectedCapabilities) {
 			return json({ message: 'Missing required fields' }, { status: 400 });
@@ -47,7 +47,8 @@ export async function POST({ request, platform, cookies }) {
 			capabilities: selectedCapabilities,
 			configuration: {}, // Defaults will be applied by generators
 			authTokens, // Redundant but harmless if included
-			userId: user.id
+			userId: user.id,
+			overwrite: overwrite || false
 		};
 
 		// Run generation
@@ -60,6 +61,15 @@ export async function POST({ request, platform, cookies }) {
 				(result.error.includes('Unauthorized') || result.error.includes('GitHub token not found'))
 			) {
 				return json({ message: result.error }, { status: 401 });
+			}
+			if (result.errorCode === 'REPOSITORY_EXISTS') {
+				return json(
+					{
+						message: 'Repository already exists',
+						code: 'REPOSITORY_EXISTS'
+					},
+					{ status: 409 }
+				);
 			}
 			return json({ message: result.error || 'Project generation failed' }, { status: 500 });
 		}

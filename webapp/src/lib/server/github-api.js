@@ -76,10 +76,21 @@ export class GitHubAPIService extends BaseAPIService {
 			license_template: 'mit'
 		};
 
-		const response = await this.makeRequest('/user/repos', {
-			method: 'POST',
-			body: JSON.stringify(repositoryData)
-		});
+		let response;
+		try {
+			response = await this.makeRequest('/user/repos', {
+				method: 'POST',
+				body: JSON.stringify(repositoryData)
+			});
+		} catch (error) {
+			if (error.message.includes('name already exists on this account')) {
+				const e = new Error('Repository already exists');
+				// @ts-ignore
+				e.code = 'REPOSITORY_EXISTS';
+				throw e;
+			}
+			throw error;
+		}
 
 		const repository = await response.json();
 

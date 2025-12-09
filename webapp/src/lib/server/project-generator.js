@@ -107,6 +107,7 @@ export class ProjectGeneratorService {
 			return {
 				success: false,
 				error: error.message,
+				errorCode: error.code,
 				generationTimeMs
 			};
 		}
@@ -122,7 +123,7 @@ export class ProjectGeneratorService {
 			throw new Error('GitHub authentication required for repository creation');
 		}
 
-		const { projectName, capabilities } = context;
+		const { projectName, capabilities, overwrite } = context;
 
 		// Generate repository description
 		const capabilityNames = capabilities.map((cap) => {
@@ -143,14 +144,30 @@ export class ProjectGeneratorService {
 		const description = `A ${capabilityNames.join(', ')} project generated with genproj`;
 
 		// Create repository
-		const repository = await this.services.github.createRepository(
-			projectName,
-			description,
-			false, // public
-			true // auto-init
-		);
+		try {
+			const repository = await this.services.github.createRepository(
+				projectName,
+				description,
+				false, // public
+				true // auto-init
+			);
+			return repository;
+		} catch (error) {
+			if (error.code === 'REPOSITORY_EXISTS' && overwrite) {
+				console.log(`⚠️ Repository exists, overwriting: ${projectName}`);
+				const user = await this.services.github.getUserInfo();
+				const existingRepo = await this.services.github.getRepository(user.login, projectName);
 
-		return repository;
+				return {
+					name: existingRepo.name,
+					fullName: existingRepo.full_name,
+					cloneUrl: existingRepo.clone_url,
+					htmlUrl: existingRepo.html_url,
+					private: existingRepo.private
+				};
+			}
+			throw error;
+		}
 	}
 
 	/**
