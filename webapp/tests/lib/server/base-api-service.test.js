@@ -21,6 +21,8 @@ describe('BaseAPIService', () => {
 				})
 			)
 		);
+		// Suppress console.error for clean test output
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	afterEach(() => {
@@ -41,11 +43,30 @@ describe('BaseAPIService', () => {
 		fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500,
-			statusText: 'Server Error'
+			statusText: 'Server Error',
+			text: async () => ''
 		});
 
 		await expect(service.makeRequest('/fail')).rejects.toThrow(
 			'Example API error: 500 Server Error'
+		);
+	});
+
+	it('includes response body in error message when available', async () => {
+		const errorBody = JSON.stringify({
+			message: 'Validation Failed',
+			errors: [{ code: 'missing_field', field: 'path' }]
+		});
+
+		fetch.mockResolvedValueOnce({
+			ok: false,
+			status: 422,
+			statusText: 'Unprocessable Entity',
+			text: async () => errorBody
+		});
+
+		await expect(service.makeRequest('/validation-fail')).rejects.toThrow(
+			`Example API error: 422 Unprocessable Entity - ${errorBody}`
 		);
 	});
 
