@@ -23,10 +23,7 @@ import {
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT
 } from '$lib/utils/file-generator.js';
-import {
-	getCapabilityTemplateData,
-	applyDefaults
-} from '$lib/utils/capability-template-utils.js';
+import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
 async function getTemplateEngine() {
 	const newInstance = new TemplateEngine();

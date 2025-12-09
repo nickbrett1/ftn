@@ -7,12 +7,18 @@
 
 	let { data } = $props();
 	let loading = $state(false);
+	// We only use the initial error from data, subsequent errors are local
 	let error = $state(data.error || null);
 	let success = $state(null);
 	let selectedFile = $state(null);
+
+	// Initialize expanded folders from data, but allow it to be independent state
+	// We use an IIFE to capture the initial data value without creating a reactive dependency on data
 	let expandedFolders = $state(
-		new Set(['/', ...getAllFolderPaths(data.previewData?.files || [])])
+		(() => new Set(['/', ...getAllFolderPaths(data.previewData?.files || [])]))()
 	);
+	let showRepoExistsModal = $state(false);
+	let newProjectName = $state('');
 
 	function getAllFolderPaths(files) {
 		let paths = [];
@@ -79,10 +85,14 @@
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
-	async function handleGenerate() {
+	async function handleGenerate(options = {}) {
 		loading = true;
 		error = null;
 		success = null;
+		showRepoExistsModal = false;
+
+		const projectNameToUse = options.newName || data.projectName;
+		const overwrite = options.overwrite || false;
 
 		try {
 			const response = await fetch('/projects/genproj/api/generate', {
@@ -91,9 +101,10 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					name: data.projectName,
+					name: projectNameToUse,
 					repositoryUrl: data.repositoryUrl,
-					selectedCapabilities: data.selected.split(',')
+					selectedCapabilities: data.selected.split(','),
+					overwrite
 				})
 			});
 
@@ -106,6 +117,13 @@
 						return;
 					}
 					goto('/notauthorised');
+					return;
+				}
+				if (response.status === 409 && result.code === 'REPOSITORY_EXISTS') {
+					newProjectName = projectNameToUse;
+					showRepoExistsModal = true;
+					// Important: stop loading spinner if we show modal
+					loading = false;
 					return;
 				}
 				throw new Error(result.message || 'Failed to generate project');
@@ -128,8 +146,22 @@
 			error = error_.message;
 			logger.error('Project generation failed', { error: error_.message });
 		} finally {
-			loading = false;
+			// If we didn't return early due to modal, stop loading
+			if (!showRepoExistsModal) {
+				loading = false;
+			}
 		}
+	}
+
+	function handleRename() {
+		if (newProjectName && newProjectName !== data.projectName) {
+			// Don't navigate, just retry generation with new name
+			handleGenerate({ newName: newProjectName });
+		}
+	}
+
+	function handleOverwrite() {
+		handleGenerate({ overwrite: true });
 	}
 </script>
 
@@ -188,6 +220,64 @@
 			</div>
 		{/if}
 
+		{#if showRepoExistsModal}
+			<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+				<div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-700">
+					<h3 class="text-xl font-bold text-white mb-4">Repository Already Exists</h3>
+					<p class="text-gray-300 mb-6">
+						A repository named <span class="font-mono text-blue-400">{newProjectName}</span> already exists
+						on your account. How would you like to proceed?
+					</p>
+
+					<div class="space-y-4">
+						<div class="bg-gray-700 p-4 rounded-md">
+							<label for="new-name" class="block text-sm font-medium text-gray-300 mb-2">
+								Option 1: Choose a different name
+							</label>
+							<div class="flex gap-2">
+								<input
+									id="new-name"
+									type="text"
+									bind:value={newProjectName}
+									class="flex-1 bg-gray-900 border border-gray-600 text-white rounded px-3 py-2 text-sm"
+								/>
+								<button
+									onclick={handleRename}
+									class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm transition-colors"
+								>
+									Rename
+								</button>
+							</div>
+						</div>
+
+						<div class="bg-gray-700 p-4 rounded-md">
+							<p class="text-sm font-medium text-gray-300 mb-2">
+								Option 2: Use existing repository
+							</p>
+							<button
+								onclick={handleOverwrite}
+								class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-2"
+							>
+								<span>⚠️</span> Overwrite / Use Existing
+							</button>
+							<p class="text-xs text-gray-400 mt-2">
+								This will add files to the existing repository. Existing files may be overwritten.
+							</p>
+						</div>
+
+						<div class="flex justify-end pt-2">
+							<button
+								onclick={() => (showRepoExistsModal = false)}
+								class="text-gray-400 hover:text-white px-4 py-2 transition-colors"
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
+
 		<div class="bg-gray-800 border border-gray-700 rounded-lg shadow-sm p-6 mb-8">
 			<h2 class="text-xl font-semibold text-white mb-4">Project Details</h2>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -219,9 +309,9 @@
 
 		<div class="flex justify-start gap-4">
 			<a
-				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(data.projectName)}&repositoryUrl={encodeURIComponent(
-					data.repositoryUrl
-				)}"
+				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(
+					data.projectName
+				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}"
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-gray-700 text-white hover:bg-gray-600 border-gray-500 flex items-center justify-center"
 			>
 				Back to Configuration

@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TemplateEngine, GEMINI_DEV_ALIAS, generateAllFiles } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
@@ -206,10 +205,10 @@ describe('TemplateEngine', () => {
 		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
 	});
 
-    it('generates vscode-tasks.json correctly', () => {
-        const content = engine.generateFile('vscode-tasks-json', { projectName: 'test-project' });
-        expect(content).toBe(vscodeTasksJsonTemplateContent.replace('{{projectName}}', 'test-project'));
-    });
+	it('generates vscode-tasks.json correctly', () => {
+		const content = engine.generateFile('vscode-tasks-json', { projectName: 'test-project' });
+		expect(content).toBe(vscodeTasksJsonTemplateContent.replace('{{projectName}}', 'test-project'));
+	});
 
 	it('generates multiple files collecting errors', () => {
 		const results = engine.generateFiles([

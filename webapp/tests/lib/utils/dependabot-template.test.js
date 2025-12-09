@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 

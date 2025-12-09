@@ -97,7 +97,8 @@ describe('Generate Page File Tree', () => {
 		const backButton = screen.getByText('Back to Configuration');
 		expect(backButton).toBeTruthy();
 
-		const expectedUrl = '/projects/genproj?selected=core,python&projectName=my-cool-project&repositoryUrl=https%3A%2F%2Fgithub.com%2Ftest%2Frepo';
+		const expectedUrl =
+			'/projects/genproj?selected=core,python&projectName=my-cool-project&repositoryUrl=https%3A%2F%2Fgithub.com%2Ftest%2Frepo';
 		expect(backButton.closest('a').getAttribute('href')).toBe(expectedUrl);
 	});
 });

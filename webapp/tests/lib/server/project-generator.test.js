@@ -151,6 +151,45 @@ describe('ProjectGeneratorService', () => {
 				'GitHub authentication required for repository creation'
 			);
 		});
+
+		it('should propagate REPOSITORY_EXISTS error if overwrite is false', async () => {
+			const error = new Error('Repository already exists');
+			error.code = 'REPOSITORY_EXISTS';
+			service.services.github.createRepository.mockRejectedValue(error);
+
+			await expect(service.createGitHubRepository(context)).rejects.toThrow(
+				'Repository already exists'
+			);
+		});
+
+		it('should recover and return existing repository if overwrite is true', async () => {
+			const contextWithOverwrite = { ...context, overwrite: true };
+			const error = new Error('Repository already exists');
+			error.code = 'REPOSITORY_EXISTS';
+			service.services.github.createRepository.mockRejectedValue(error);
+
+			service.services.github.getUserInfo = vi.fn().mockResolvedValue({ login: 'owner' });
+			const existingRepo = {
+				name: 'test-project',
+				full_name: 'owner/test-project',
+				clone_url: 'clone-url',
+				html_url: 'html-url',
+				private: true
+			};
+			service.services.github.getRepository = vi.fn().mockResolvedValue(existingRepo);
+
+			const result = await service.createGitHubRepository(contextWithOverwrite);
+
+			expect(result).toEqual({
+				name: 'test-project',
+				fullName: 'owner/test-project',
+				cloneUrl: 'clone-url',
+				htmlUrl: 'html-url',
+				private: true
+			});
+			expect(service.services.github.getUserInfo).toHaveBeenCalled();
+			expect(service.services.github.getRepository).toHaveBeenCalledWith('owner', 'test-project');
+		});
 	});
 
 	describe('commitFilesToRepository', () => {

@@ -26,10 +26,7 @@ import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
 import vscodeTasksJson from '../templates/vscode-tasks-json.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import {
-	getCapabilityTemplateData,
-	applyDefaults
-} from '$lib/utils/capability-template-utils.js';
+import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
 export const GEMINI_DEV_ALIAS = `# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
 gemini-dev() {
