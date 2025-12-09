@@ -44,15 +44,31 @@ export class BaseAPIService {
 			const response = await fetch(url, requestOptions);
 
 			if (!response.ok) {
+				let errorDetails = '';
+				try {
+					const text = await response.text();
+					if (text) {
+						errorDetails = ` - ${text}`;
+					}
+				} catch (e) {
+					// Ignore error reading body
+				}
+
 				console.error(
-					`❌ ${this.serviceName} API error: ${response.status} ${response.statusText}`
+					`❌ ${this.serviceName} API error: ${response.status} ${response.statusText}${errorDetails}`
 				);
-				throw new Error(`${this.serviceName} API error: ${response.status} ${response.statusText}`);
+				throw new Error(
+					`${this.serviceName} API error: ${response.status} ${response.statusText}${errorDetails}`
+				);
 			}
 
 			console.log(`✅ ${this.serviceName} API request successful: ${endpoint}`);
 			return response;
 		} catch (error) {
+			// If we already enhanced the error, rethrow it
+			if (error.message.startsWith(`${this.serviceName} API error:`)) {
+				throw error;
+			}
 			console.error(`❌ ${this.serviceName} API request failed: ${error.message}`);
 			throw error;
 		}
