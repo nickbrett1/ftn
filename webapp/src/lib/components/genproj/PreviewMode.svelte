@@ -310,7 +310,7 @@
 					</p>
 				</div>
 
-				<div class="p-4 overflow-y-auto max-h-96">
+				<div class="p-4 overflow-y-auto max-h-96 file-tree-container">
 					{#each fileTree as file (file.path)}
 						{@render fileTreeItem(file)}
 					{/each}
@@ -461,5 +461,30 @@
 		.grid {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	/* Custom scrollbar for file tree */
+	.file-tree-container {
+		scrollbar-width: thin;
+		scrollbar-color: #4b5563 #1f2937;
+	}
+
+	.file-tree-container::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.file-tree-container::-webkit-scrollbar-track {
+		background: #1f2937;
+		border-radius: 4px;
+	}
+
+	.file-tree-container::-webkit-scrollbar-thumb {
+		background-color: #4b5563;
+		border-radius: 4px;
+		border: 2px solid #1f2937;
+	}
+
+	.file-tree-container::-webkit-scrollbar-thumb:hover {
+		background-color: #6b7280;
 	}
 </style>
