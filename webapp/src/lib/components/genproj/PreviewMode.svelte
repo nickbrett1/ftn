@@ -13,7 +13,7 @@
 -->
 
 <script>
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import { selectedCapabilities, capabilityValidation } from '$lib/client/capability-store.js';
 	import { CAPABILITIES as capabilities } from '$lib/utils/capabilities.js';
 
@@ -30,6 +30,7 @@
 	let expandedFolders = new Set(['/']);
 	let fileTree = [];
 	let externalServices = [];
+	let fileTreeContainer; // Reference to the file tree container element
 
 	// Reactive updates
 	$: {
@@ -45,7 +46,16 @@
 			expandedFolders = new Set(expandedFolders); // Trigger reactivity
 
 			// Default select README.md if present
-			selectedFile = findReadme(fileTree);
+			const readme = findReadme(fileTree);
+			if (readme) {
+				selectedFile = readme;
+				// Auto-scroll to README.md
+				tick().then(() => {
+					scrollSelectedIntoView();
+				});
+			} else {
+				selectedFile = null;
+			}
 		}
 	}
 
@@ -70,6 +80,21 @@
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Scrolls the selected file into view within the file tree container
+	 */
+	function scrollSelectedIntoView() {
+		if (!selectedFile || !fileTreeContainer) return;
+
+		// Use data-path attribute to find the element within the scoped container
+		const buttons = Array.from(fileTreeContainer.querySelectorAll('button'));
+		const element = buttons.find((btn) => btn.dataset.path === selectedFile.path);
+
+		if (element) {
+			element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+		}
 	}
 
 	/**
@@ -248,6 +273,7 @@
 		{:else}
 			<button
 				type="button"
+				data-path={file.path}
 				class="flex items-center w-full text-left p-2 hover:bg-gray-700 rounded cursor-pointer
 					{selectedFile?.path === file.path ? 'bg-blue-900 border-l-2 border-blue-500' : ''}"
 				on:click={() => selectFile(file)}
@@ -310,7 +336,10 @@
 					</p>
 				</div>
 
-				<div class="p-4 overflow-y-auto max-h-96 file-tree-container">
+				<div
+					class="p-4 overflow-y-auto max-h-96 file-tree-container"
+					bind:this={fileTreeContainer}
+				>
 					{#each fileTree as file (file.path)}
 						{@render fileTreeItem(file)}
 					{/each}
