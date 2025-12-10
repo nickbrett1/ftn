@@ -6,5 +6,10 @@ Here's the structure that I propose we follow along with notes for each section 
 
 Stuff:
 * Ran out of money for cursor
-* Google Code Assist no good
-* Big changes no good
+* Google Code Assist no good - not enough context, but ok for file level changes
+* Big changes no good - thing runs top far off in the wrong direction
+* Hard to iterate on specs
+* Tried antigravity - ran out of money very quickly
+* Tried Gemini - no strict limits, benfit
+* Jules better than Cursor equivalent, didnt get stuck. but uses lots of memory and can lack feedback, eg slow
+* MCP helped eg with sonarqube and svelte5
