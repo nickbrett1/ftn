@@ -338,10 +338,6 @@ function generateMergedDevelopmentContainerFiles(
 
 	if (developmentContainerCapabilities.length === 0) return files;
 
-	files.push(
-		generateAndMergeDevcontainerJson(templateEngine, context, developmentContainerCapabilities)
-	);
-
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
 	const baseCapabilityConfig = applyDefaults(
@@ -356,6 +352,7 @@ function generateMergedDevelopmentContainerFiles(
 	);
 
 	files.push(
+		generateAndMergeDevcontainerJson(templateEngine, context, developmentContainerCapabilities),
 		{
 			filePath: '.devcontainer/Dockerfile',
 			content: dockerfileContent
@@ -449,18 +446,20 @@ function generateCloudflareFiles(templateEngine, context) {
 	});
 
 	if (hasDoppler) {
-		files.push({
-			filePath: 'wrangler.template.jsonc',
-			content: templateEngine.generateFile('wrangler-template-jsonc', {
-				...context,
-				projectName: context.name || 'my-project',
-				compatibilityDate
-			})
-		});
-		files.push({
-			filePath: 'scripts/setup-wrangler-config.sh',
-			content: templateEngine.generateFile('scripts-setup-wrangler-config-sh', context)
-		});
+		files.push(
+			{
+				filePath: 'wrangler.template.jsonc',
+				content: templateEngine.generateFile('wrangler-template-jsonc', {
+					...context,
+					projectName: context.name || 'my-project',
+					compatibilityDate
+				})
+			},
+			{
+				filePath: 'scripts/setup-wrangler-config.sh',
+				content: templateEngine.generateFile('scripts-setup-wrangler-config-sh', context)
+			}
+		);
 	} else {
 		files.push({
 			filePath: 'wrangler.jsonc',

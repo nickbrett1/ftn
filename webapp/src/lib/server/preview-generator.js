@@ -182,27 +182,12 @@ function createDevContainerDockerfile(templateEngine, projectConfig, devContaine
  * @returns {Array<FileObject>} An array of generated file objects.
  */
 function createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
-	const files = [];
 	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
 		...projectConfig,
 		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
 	});
-	files.push({
-		path: '.devcontainer/.zshrc',
-		name: '.zshrc',
-		content: zshrcContent,
-		size: zshrcContent.length,
-		type: 'file'
-	});
 
 	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
-	files.push({
-		path: '.devcontainer/.p10k.zsh',
-		name: '.p10k.zsh',
-		content: p10kContent,
-		size: p10kContent.length,
-		type: 'file'
-	});
 
 	const postCreateContent = templateEngine.generateFile('devcontainer-post-create-setup-sh', {
 		...projectConfig,
@@ -216,15 +201,30 @@ function createDevContainerShellFiles(templateEngine, projectConfig, allCapabili
 		geminiSetup: allCapabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
-	files.push({
-		path: '.devcontainer/post-create-setup.sh',
-		name: 'post-create-setup.sh',
-		content: postCreateContent,
-		size: postCreateContent.length,
-		type: 'file'
-	});
 
-	return files;
+	return [
+		{
+			path: '.devcontainer/.zshrc',
+			name: '.zshrc',
+			content: zshrcContent,
+			size: zshrcContent.length,
+			type: 'file'
+		},
+		{
+			path: '.devcontainer/.p10k.zsh',
+			name: '.p10k.zsh',
+			content: p10kContent,
+			size: p10kContent.length,
+			type: 'file'
+		},
+		{
+			path: '.devcontainer/post-create-setup.sh',
+			name: 'post-create-setup.sh',
+			content: postCreateContent,
+			size: postCreateContent.length,
+			type: 'file'
+		}
+	];
 }
 
 /**
@@ -250,12 +250,8 @@ async function generateDevelopmentContainerArtifacts(
 			projectConfig,
 			developmentContainerCapabilities,
 			allCapabilities
-		)
-	);
-	files.push(
-		createDevContainerDockerfile(templateEngine, projectConfig, developmentContainerCapabilities)
-	);
-	files.push(
+		),
+		createDevContainerDockerfile(templateEngine, projectConfig, developmentContainerCapabilities),
 		...createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities)
 	);
 }
@@ -486,12 +482,11 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		files.push(packageJsonFile);
 	}
 
-	// Generate .gitignore
-	files.push(generateGitignoreFile(templateEngine, projectConfig, executionOrder));
-
-	// Generate README.md
-	const readmeFile = generateReadmeFile(projectConfig, executionOrder);
-	files.push(readmeFile);
+	// Generate .gitignore and README.md
+	files.push(
+		generateGitignoreFile(templateEngine, projectConfig, executionOrder),
+		generateReadmeFile(projectConfig, executionOrder)
+	);
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);
