@@ -5,10 +5,9 @@
 
 <script>
 	import { onMount } from 'svelte';
-	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { logger } from '$lib/utils/logging.js';
 	import { capabilities } from '$lib/config/capabilities.js';
-	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
 
 	// Props
 	let {
@@ -20,17 +19,10 @@
 
 	// State
 	let authStatus = $state({
-		google: false,
-		github: false,
-		circleci: false,
-		doppler: false,
-		sonarcloud: false
+		google: false
 	});
 
-	let loading = $state(false);
 	let error = $state(null);
-	let authenticatingService = $state(null);
-	let tokenInputs = $state({});
 
 	// Get required auth services for selected capabilities
 	let requiredAuthServices = $derived.by(() => {
@@ -69,20 +61,11 @@
 
 	// Service display names
 	const serviceNames = {
-		google: 'Google',
-		github: 'GitHub',
-		circleci: 'CircleCI',
-		doppler: 'Doppler',
-		sonarcloud: 'SonarCloud'
+		google: 'Google'
 	};
 
 	// Service descriptions
-	const serviceDescriptions = {
-		github: 'Required for creating GitHub repositories',
-		circleci: 'Required for setting up CI/CD pipelines',
-		doppler: 'Required for secrets management',
-		sonarcloud: 'Required for code quality analysis'
-	};
+	const serviceDescriptions = {};
 
 	// Load authentication status
 	async function loadAuthStatus() {
@@ -91,86 +74,10 @@
 		}
 
 		try {
-			loading = true;
-			// TODO: Fetch auth status from API endpoint
-			// For now, we'll assume user needs to authenticate
-			authStatus = {
-				google: isAuthenticated,
-				github: false,
-				circleci: false,
-				doppler: false,
-				sonarcloud: false
-			};
+			authStatus.google = true;
 		} catch (error_) {
 			logger.error('Failed to load auth status', { error: error_.message });
 			error = error_.message;
-		} finally {
-			loading = false;
-		}
-	}
-
-	// Open the token URL in a new tab
-	async function openTokenUrl(service) {
-		try {
-			const response = await fetch(`/projects/genproj/api/auth/${service}`);
-			if (!response.ok) {
-				throw new Error('Failed to fetch token URL.');
-			}
-			const data = await response.json();
-			window.open(data.authUrl, '_blank', 'noopener,noreferrer');
-		} catch (error_) {
-			logger.error(`Failed to open token URL for ${service}`, { error: error_.message });
-			error = 'Could not retrieve the token creation URL. Please try again.';
-		}
-	}
-
-	// Handle external service token authentication
-	async function handleTokenAuth(service) {
-		const token = tokenInputs[service]?.trim();
-
-		if (!token) {
-			error = `${serviceNames[service]} token is required`;
-			return;
-		}
-
-		try {
-			authenticatingService = service;
-			loading = true;
-			error = null;
-
-			const response = await fetch(`/projects/genproj/api/auth/${service}`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ token })
-			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || `${serviceNames[service]} authentication failed`);
-			}
-
-			await response.json();
-
-			// Update auth status
-			authStatus[service] = true;
-			tokenInputs[service] = ''; // Clear token input
-
-			logger.info(`${serviceNames[service]} authentication successful`);
-
-			// Check if all auth is complete
-			if (allAuthComplete) {
-				setTimeout(() => {
-					onAuthComplete();
-				}, 500); // Small delay to show success
-			}
-		} catch (error_) {
-			logger.error(`${serviceNames[service]} auth failed`, { error: error_.message });
-			error = error_.message;
-		} finally {
-			loading = false;
-			authenticatingService = null;
 		}
 	}
 
@@ -274,7 +181,6 @@
 				<div class="space-y-4">
 					{#each servicesToDisplayInModal as service (service)}
 						{@const isAuthenticated = authStatus[service]}
-						{@const isAuthenticating = authenticatingService === service}
 						<div
 							class="p-4 border rounded-md {isAuthenticated
 								? 'border-green-700 bg-green-900 bg-opacity-20'
@@ -307,40 +213,6 @@
 									</div>
 								</div>
 							</div>
-
-							{#if !isAuthenticated}
-								{#if service === 'github'}
-									<!-- GitHub authentication is handled directly from the main page -->
-								{:else}
-									<!-- Token Input for External Services -->
-									<div class="mt-2 space-y-2">
-										<div class="flex items-center gap-2">
-											<input
-												type="password"
-												placeholder={`Enter ${serviceNames[service]} token`}
-												bind:value={tokenInputs[service]}
-												class="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-												disabled={loading || isAuthenticating}
-											/>
-											<button
-												class="px-3 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-600"
-												onclick={() => openTokenUrl(service)}
-											>
-												Create token
-											</button>
-										</div>
-										<button
-											class="w-full px-4 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-											onclick={() => handleTokenAuth(service)}
-											disabled={loading || isAuthenticating || !tokenInputs[service]?.trim()}
-										>
-											{loading && isAuthenticating
-												? 'Validating...'
-												: `Authenticate with ${serviceNames[service]}`}
-										</button>
-									</div>
-								{/if}
-							{/if}
 						</div>
 					{/each}
 				</div>
