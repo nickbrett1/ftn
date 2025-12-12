@@ -96,7 +96,7 @@ else
   echo "Doppler CLI not found. Skipping Doppler login."
 fi`;
 
-export const WRANGLER_LOGIN_SCRIPT = `
+export const WRANGLER_LOGIN_SCRIPT = String.raw`
 echo
 # Cloudflare Wrangler login
 # Check if wrangler is installed
@@ -257,16 +257,11 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 	return files;
 }
 
-// Helper to generate and merge devcontainer files
-function generateMergedDevelopmentContainerFiles(
+function generateAndMergeDevcontainerJson(
 	templateEngine,
 	context,
 	developmentContainerCapabilities
 ) {
-	const files = [];
-
-	if (developmentContainerCapabilities.length === 0) return files;
-
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
 	const baseCapabilityConfig = applyDefaults(
@@ -327,10 +322,32 @@ function generateMergedDevelopmentContainerFiles(
 		mergedDevelopmentContainerJson.customizations.vscode.extensions = Array.from(allExtensions);
 	}
 
-	files.push({
+	return {
 		filePath: '.devcontainer/devcontainer.json',
 		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2)
-	});
+	};
+}
+
+// Helper to generate and merge devcontainer files
+function generateMergedDevelopmentContainerFiles(
+	templateEngine,
+	context,
+	developmentContainerCapabilities
+) {
+	const files = [];
+
+	if (developmentContainerCapabilities.length === 0) return files;
+
+	files.push(
+		generateAndMergeDevcontainerJson(templateEngine, context, developmentContainerCapabilities)
+	);
+
+	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
+	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
+	const baseCapabilityConfig = applyDefaults(
+		baseCapability,
+		context.configuration?.[baseDevelopmentContainerId] || {}
+	);
 
 	// Process Dockerfile (using base one for now)
 	const dockerfileContent = templateEngine.generateFile(
@@ -496,25 +513,21 @@ export async function generateAllFiles(context) {
 	);
 	const otherCapabilities = context.capabilities.filter((c) => !c.startsWith('devcontainer-'));
 
-	let allGeneratedFiles = [];
+	const otherFiles = [
+		generatePackageJson(templateEngine, context),
+		generateGitignoreFile(templateEngine, context)
+	].filter(Boolean);
 
-	allGeneratedFiles.push(
+	const allGeneratedFiles = [
 		...collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities),
 		...generateMergedDevelopmentContainerFiles(
 			templateEngine,
 			context,
 			developmentContainerCapabilities
 		),
-		...generateCloudflareFiles(templateEngine, context)
-	);
-
-	const packageJson = generatePackageJson(templateEngine, context);
-	if (packageJson) {
-		allGeneratedFiles.push(packageJson);
-	}
-
-	const gitignore = generateGitignoreFile(templateEngine, context);
-	allGeneratedFiles.push(gitignore);
+		...generateCloudflareFiles(templateEngine, context),
+		...otherFiles
+	];
 
 	return allGeneratedFiles;
 }

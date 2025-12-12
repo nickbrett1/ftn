@@ -5,7 +5,7 @@ import { github } from '$lib/server/auth';
 /** @type {import('./$types').RequestHandler} */
 export async function GET(event) {
 	const state = nanoid();
-	const url = await github.createAuthorizationURL(state, event.url);
+	const url = github.createAuthorizationURL(state, event.url);
 
 	event.cookies.set('github_oauth_state', state, {
 		path: '/',

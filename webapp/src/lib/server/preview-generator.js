@@ -89,105 +89,100 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
 }
 
 /**
- * Generates all devcontainer-related files.
+ * Creates the merged devcontainer.json file.
  * @param {TemplateEngine} templateEngine - The template engine instance.
  * @param {Object} projectConfig - Project configuration.
  * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
  * @param {string[]} allCapabilities - Array of all selected capability IDs.
- * @param {Array<FileObject>} files - Array to push generated file objects into.
+ * @returns {FileObject} The generated devcontainer.json file object.
  */
-async function generateDevelopmentContainerArtifacts(
+function createMergedDevContainerJson(
 	templateEngine,
 	projectConfig,
-	developmentContainerCapabilities,
-	allCapabilities,
-	files
+	devContainerCapabilities,
+	allCapabilities
 ) {
-	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
-	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	const baseCapabilityConfig = applyDefaults(
-		baseCapability,
-		projectConfig.configuration?.[baseDevelopmentContainerId] || {}
+	const baseId = devContainerCapabilities[0];
+	const baseCap = capabilities.find((c) => c.id === baseId);
+	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
+
+	const baseJsonContent = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-json`, {
+		...projectConfig,
+		capabilityConfig: baseConfig,
+		capability: baseCap
+	});
+	const mergedJson = JSON.parse(baseJsonContent);
+	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
+
+	allCapabilities.forEach((id) =>
+		capabilities.find((c) => c.id === id)?.vscodeExtensions?.forEach((ext) => allExtensions.add(ext))
 	);
 
-	// Generate base devcontainer.json content
-	const baseJsonContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
-		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
-	);
-	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
-
-	const allExtensions = new Set();
-	if (mergedDevelopmentContainerJson.customizations?.vscode?.extensions) {
-		mergedDevelopmentContainerJson.customizations.vscode.extensions.forEach((ext) =>
-			allExtensions.add(ext)
-		);
-	}
-
-	for (const capabilityId of allCapabilities) {
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (capability && capability.vscodeExtensions) {
-			capability.vscodeExtensions.forEach((ext) => allExtensions.add(ext));
-		}
-	}
-
-	// Merge features and extensions from other selected dev containers
-	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
-		const capabilityId = developmentContainerCapabilities[index];
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = applyDefaults(
-			capability,
-			projectConfig.configuration?.[capabilityId] || {}
-		);
-
+	for (let i = 1; i < devContainerCapabilities.length; i++) {
+		const capId = devContainerCapabilities[i];
+		const cap = capabilities.find((c) => c.id === capId);
+		const capConfig = applyDefaults(cap, projectConfig.configuration?.[capId] || {});
 		const otherJsonContent = templateEngine.generateFile(
-			`devcontainer-${capabilityId.split('-')[1]}-json`,
-			{ ...projectConfig, capabilityConfig, capability }
+			`devcontainer-${capId.split('-')[1]}-json`,
+			{ ...projectConfig, capabilityConfig: capConfig, capability: cap }
 		);
 		const otherJson = JSON.parse(otherJsonContent);
 
 		if (otherJson.features) {
-			mergedDevelopmentContainerJson.features = {
-				...mergedDevelopmentContainerJson.features,
-				...otherJson.features
-			};
+			mergedJson.features = { ...mergedJson.features, ...otherJson.features };
 		}
-		if (otherJson.customizations?.vscode?.extensions) {
-			otherJson.customizations.vscode.extensions.forEach((ext) => allExtensions.add(ext));
-		}
+		otherJson.customizations?.vscode?.extensions?.forEach((ext) => allExtensions.add(ext));
 	}
 
 	if (allExtensions.size > 0) {
-		if (!mergedDevelopmentContainerJson.customizations) {
-			mergedDevelopmentContainerJson.customizations = {};
-		}
-		if (!mergedDevelopmentContainerJson.customizations.vscode) {
-			mergedDevelopmentContainerJson.customizations.vscode = {};
-		}
-		mergedDevelopmentContainerJson.customizations.vscode.extensions = Array.from(allExtensions);
+		mergedJson.customizations = mergedJson.customizations || {};
+		mergedJson.customizations.vscode = mergedJson.customizations.vscode || {};
+		mergedJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
-	files.push({
+	const content = JSON.stringify(mergedJson, null, 2);
+	return {
 		path: '.devcontainer/devcontainer.json',
 		name: 'devcontainer.json',
-		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2),
-		size: JSON.stringify(mergedDevelopmentContainerJson, null, 2).length,
+		content,
+		size: content.length,
 		type: 'file'
-	});
+	};
+}
 
-	// For Dockerfile, use the base one. Merging Dockerfiles is complex and a future improvement.
-	const dockerfileContent = templateEngine.generateFile(
-		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-dockerfile`,
-		{ ...projectConfig, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+/**
+ * Creates the Dockerfile for the devcontainer.
+ * @param {TemplateEngine} templateEngine - The template engine instance.
+ * @param {Object} projectConfig - Project configuration.
+ * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
+ * @returns {FileObject} The generated Dockerfile object.
+ */
+function createDevContainerDockerfile(templateEngine, projectConfig, devContainerCapabilities) {
+	const baseId = devContainerCapabilities[0];
+	const baseCap = capabilities.find((c) => c.id === baseId);
+	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
+	const content = templateEngine.generateFile(
+		`devcontainer-${baseId.split('-')[1]}-dockerfile`,
+		{ ...projectConfig, capabilityConfig: baseConfig, capability: baseCap }
 	);
-	files.push({
+	return {
 		path: '.devcontainer/Dockerfile',
 		name: 'Dockerfile',
-		content: dockerfileContent,
-		size: dockerfileContent.length,
+		content,
+		size: content.length,
 		type: 'file'
-	});
+	};
+}
 
+/**
+ * Creates shell-related files for the devcontainer.
+ * @param {TemplateEngine} templateEngine - The template engine instance.
+ * @param {Object} projectConfig - Project configuration.
+ * @param {string[]} allCapabilities - Array of all selected capability IDs.
+ * @returns {Array<FileObject>} An array of generated file objects.
+ */
+function createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
+	const files = [];
 	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
 		...projectConfig,
 		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
@@ -228,6 +223,41 @@ async function generateDevelopmentContainerArtifacts(
 		size: postCreateContent.length,
 		type: 'file'
 	});
+
+	return files;
+}
+
+/**
+ * Generates all devcontainer-related files.
+ * @param {TemplateEngine} templateEngine - The template engine instance.
+ * @param {Object} projectConfig - Project configuration.
+ * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
+ * @param {string[]} allCapabilities - Array of all selected capability IDs.
+ * @param {Array<FileObject>} files - Array to push generated file objects into.
+ */
+async function generateDevelopmentContainerArtifacts(
+	templateEngine,
+	projectConfig,
+	developmentContainerCapabilities,
+	allCapabilities,
+	files
+) {
+	if (developmentContainerCapabilities.length === 0) return;
+
+	files.push(
+		createMergedDevContainerJson(
+			templateEngine,
+			projectConfig,
+			developmentContainerCapabilities,
+			allCapabilities
+		)
+	);
+	files.push(
+		createDevContainerDockerfile(templateEngine, projectConfig, developmentContainerCapabilities)
+	);
+	files.push(
+		...createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities)
+	);
 }
 
 /**
@@ -588,7 +618,6 @@ async function generateCapabilityServiceChanges(projectConfig, capability) {
  */
 export function organizeFilesIntoFolders(files) {
 	const root = [];
-	const folderMap = new Map();
 
 	// Sort files by path to ensure folders are created in order?
 	// Not strictly necessary if we build the tree dynamically.

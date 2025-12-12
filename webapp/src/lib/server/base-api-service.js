@@ -51,7 +51,7 @@ export class BaseAPIService {
 						errorDetails = ` - ${text}`;
 					}
 				} catch (e) {
-					// Ignore error reading body
+					console.warn(`Could not read error response body: ${e.message}`);
 				}
 
 				console.error(

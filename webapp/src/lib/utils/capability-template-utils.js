@@ -1,17 +1,10 @@
-export function getCapabilityTemplateData(capabilityId, context) {
-	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
-	// Retrieve the configuration for the specific capability if it exists
-	// The context object structure passed from file-generator.js has 'configuration' property, not 'config'
-	const capabilityConfig = context.configuration?.[capabilityId] || {};
-	const deployTarget = capabilityConfig.deployTarget;
+function getCodingAgentsTemplateData(context) {
+	const hasSonarQube = context.capabilities.includes('sonarcloud');
+	const hasCircleCI = context.capabilities.includes('circleci');
 
-	if (capabilityId === 'coding-agents') {
-		const hasSonarQube = context.capabilities.includes('sonarcloud');
-		const hasCircleCI = context.capabilities.includes('circleci');
-
-		let sonarQubeMcpConfig = '';
-		if (hasSonarQube) {
-			sonarQubeMcpConfig = `,
+	let sonarQubeMcpConfig = '';
+	if (hasSonarQube) {
+		sonarQubeMcpConfig = `,
     "sonarqube": {
       "command": "docker",
       "args": [
@@ -27,11 +20,11 @@ export function getCapabilityTemplateData(capabilityId, context) {
         "SONAR_HOST_URL": "$SONAR_HOST_URL"
       }
     }`;
-		}
+	}
 
-		let circleCiMcpConfig = '';
-		if (hasCircleCI) {
-			circleCiMcpConfig = `,
+	let circleCiMcpConfig = '';
+	if (hasCircleCI) {
+		circleCiMcpConfig = `,
     "circleci": {
       "command": "npx",
       "args": [
@@ -42,78 +35,79 @@ export function getCapabilityTemplateData(capabilityId, context) {
         "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
       }
     }`;
-		}
-
-		return {
-			sonarQubeMcpConfig,
-			circleCiMcpConfig
-		};
 	}
 
-	if (capabilityId === 'sonarcloud') {
-		const config = context.configuration?.sonarcloud || {};
-		const language = config.language || 'JavaScript';
-		let languageSettings = '';
+	return {
+		sonarQubeMcpConfig,
+		circleCiMcpConfig
+	};
+}
 
-		switch (language) {
-			case 'JavaScript': {
-				languageSettings = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info';
+function getSonarCloudTemplateData(context) {
+	const config = context.configuration?.sonarcloud || {};
+	const language = config.language || 'JavaScript';
+	let languageSettings = '';
 
-				break;
-			}
-			case 'Python': {
-				languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
+	switch (language) {
+		case 'JavaScript': {
+			languageSettings = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info';
 
-				break;
-			}
-			case 'Java': {
-				languageSettings = 'sonar.java.binaries=.';
-
-				break;
-			}
-			// No default
+			break;
 		}
+		case 'Python': {
+			languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
 
-		return {
-			sonarLanguageSettings: languageSettings,
-			organization: ''
-		};
+			break;
+		}
+		case 'Java': {
+			languageSettings = 'sonar.java.binaries=.';
+
+			break;
+		}
+		// No default
 	}
 
-	if (capabilityId === 'circleci') {
-		let data = {
-			preBuildSteps: '',
-			lighthouseJobDefinition: '',
-			lighthouseWorkflowJob: '',
-			deployJobDefinition: '',
-			deployWorkflowJob: '',
-			orbs: '',
-			additionalWorkflowJobs: ''
-		};
+	return {
+		sonarLanguageSettings: languageSettings,
+		organization: ''
+	};
+}
 
-		if (context.capabilities.includes('gitguardian')) {
-			data.orbs += `  ggshield: gitguardian/ggshield@1\n`;
-			data.additionalWorkflowJobs += `
+function getCircleCiTemplateData(context) {
+	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
+	const data = {
+		preBuildSteps: '',
+		lighthouseJobDefinition: '',
+		lighthouseWorkflowJob: '',
+		deployJobDefinition: '',
+		deployWorkflowJob: '',
+		orbs: '',
+		additionalWorkflowJobs: ''
+	};
+
+	if (context.capabilities.includes('gitguardian')) {
+		data.orbs += `  ggshield: gitguardian/ggshield@1\n`;
+		data.additionalWorkflowJobs += `
       - ggshield/scan:
           name: ggshield-scan
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>`;
-		}
+	}
 
-		if (
-			context.capabilities.includes('cloudflare-wrangler') &&
-			context.capabilities.includes('doppler')
-		) {
-			data.preBuildSteps = `
+	if (
+		context.capabilities.includes('cloudflare-wrangler') &&
+		context.capabilities.includes('doppler')
+	) {
+		data.preBuildSteps = `
       - run:
           name: Setup Wrangler Config
           command: |
             chmod +x scripts/setup-wrangler-config.sh
             ./scripts/setup-wrangler-config.sh`;
-		}
+	}
 
-		if (hasLighthouse) {
-			data.lighthouseJobDefinition = `
+	if (hasLighthouse) {
+		data.lighthouseJobDefinition = `
   lighthouse:
     executor: node/default
     steps:
@@ -126,15 +120,15 @@ export function getCapabilityTemplateData(capabilityId, context) {
       - run:
           name: Run Lighthouse CI
           command: npm install -g @lhci/cli && lhci autorun`;
-			data.lighthouseWorkflowJob = `
+		data.lighthouseWorkflowJob = `
       - lighthouse:
           requires:
             - build`;
-		}
+	}
 
-		// Check if wrangler capability is present which implies cloudflare deployment
-		if (context.capabilities.includes('cloudflare-wrangler')) {
-			data.deployJobDefinition = `
+	// Check if wrangler capability is present which implies cloudflare deployment
+	if (context.capabilities.includes('cloudflare-wrangler')) {
+		data.deployJobDefinition = `
   deploy-to-cloudflare:
     executor: node/default
     steps:
@@ -151,63 +145,72 @@ export function getCapabilityTemplateData(capabilityId, context) {
             CLOUDFLARE_API_TOKEN: \${CLOUDFLARE_API_TOKEN}
             CLOUDFLARE_ACCOUNT_ID: \${CLOUDFLARE_ACCOUNT_ID}`;
 
-			data.deployWorkflowJob = `
+		data.deployWorkflowJob = `
       - deploy-to-cloudflare:
           requires:
             - build`;
-		}
-
-		return data;
 	}
 
-	if (capabilityId === 'dependabot') {
-		const config = context.configuration?.dependabot || {};
-		const interval = config.updateSchedule || 'weekly';
-		const updates = [];
+	return data;
+}
 
-		// Always add GitHub Actions
-		updates.push(`
+function getDependabotTemplateData(context) {
+	const config = context.configuration?.dependabot || {};
+	const interval = config.updateSchedule || 'weekly';
+	const updates = [];
+
+	// Always add GitHub Actions
+	updates.push(`
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "${interval}"`);
 
-		if (context.capabilities.includes('devcontainer-node')) {
-			updates.push(`
+	if (context.capabilities.includes('devcontainer-node')) {
+		updates.push(`
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "${interval}"`);
-		}
+	}
 
-		if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
-			updates.push(`
+	if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
+		updates.push(`
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "${interval}"`);
-		}
+	}
 
-		// Java support
-		if (context.capabilities.some((c) => c.startsWith('devcontainer-java'))) {
-			updates.push(`
+	// Java support
+	if (context.capabilities.some((c) => c.startsWith('devcontainer-java'))) {
+		updates.push(`
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "${interval}"`);
-		}
-
-		return {
-			dependabotUpdates: updates.join('')
-		};
 	}
 
-	return {};
+	return {
+		dependabotUpdates: updates.join('')
+	};
+}
+
+export function getCapabilityTemplateData(capabilityId, context) {
+	const dataGenerators = {
+		'coding-agents': getCodingAgentsTemplateData,
+		sonarcloud: getSonarCloudTemplateData,
+		circleci: getCircleCiTemplateData,
+		dependabot: getDependabotTemplateData
+	};
+
+	const generator = dataGenerators[capabilityId];
+	return generator ? generator(context) : {};
 }
 
 export function applyDefaults(capability, config) {
 	const finalConfig = { ...config };
-	if (capability && capability.configurationSchema && capability.configurationSchema.properties) {
+	if (capability?.configurationSchema?.properties) {
 		for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
 			if (finalConfig[key] === undefined && prop.default !== undefined) {
 				finalConfig[key] = prop.default;
