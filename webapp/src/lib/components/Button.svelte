@@ -25,11 +25,11 @@
 		lg: 'py-3 px-6 text-lg'
 	};
 
-	const defaultClasses = `font-bold rounded ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} no-underline not-prose inline-block`;
-
-	// Extract class from rest and merge with default classes
-	const customClass = rest.class || '';
-	const classes = `${defaultClasses} ${customClass}`.trim();
+	const classes = $derived(
+		`font-bold rounded ${variants[variant]} ${sizes[size]} ${
+			disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+		} no-underline not-prose inline-block ${rest.class || ''}`.trim()
+	);
 
 	// Remove class from rest to avoid conflicts, but keep event handlers
 
