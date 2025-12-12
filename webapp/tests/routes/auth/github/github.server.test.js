@@ -32,7 +32,7 @@ describe('/auth/github/+server.js', () => {
 		vi.resetAllMocks();
 
 		vi.mocked(nanoid).mockReturnValue(mockState);
-		vi.mocked(github.createAuthorizationURL).mockResolvedValue(new URL(mockAuthUrl));
+		vi.mocked(github.createAuthorizationURL).mockReturnValue(new URL(mockAuthUrl));
 
 		mockEvent = {
 			cookies: {
