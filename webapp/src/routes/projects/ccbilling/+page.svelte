@@ -5,7 +5,9 @@
 	const { data } = $props();
 
 	// Use synchronous destructuring to get data immediately
-	const { billingCycles = [], budgets = [], allocationTotals = [] } = data;
+	const billingCycles = $derived(data.billingCycles ?? []);
+	const budgets = $derived(data.budgets ?? []);
+	const allocationTotals = $derived(data.allocationTotals ?? []);
 
 	import { formatDate } from '$lib/utils/date-utils.js';
 
@@ -15,7 +17,7 @@
 	}
 
 	// Build a lookup for budget icons by name for quick access during render
-	const budgetNameToIcon = new Map(budgets.map((b) => [b.name, b.icon]));
+	const budgetNameToIcon = $derived(new Map(budgets.map((b) => [b.name, b.icon])));
 
 	function getTotalsForCycle(cycleId) {
 		// Build a map of allocation -> total for the given cycle
@@ -80,7 +82,7 @@
 											)}
 										</h3>
 										<div class="mt-2 text-sm text-gray-300 space-y-1">
-											{#each getTotalsForCycle(cycle.id) as [allocation, total]}
+											{#each getTotalsForCycle(cycle.id) as [allocation, total] (allocation)}
 												<div class="flex justify-between gap-4">
 													<span class="text-gray-400 flex items-center gap-2">
 														{#if allocation !== '__unallocated__' && budgetNameToIcon.get(allocation)}
