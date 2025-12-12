@@ -13,19 +13,29 @@
 	import { logger } from '$lib/utils/logging.js';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
+	import { browser } from '$app/environment';
 
 	let { data = { isAuthenticated: false } } = $props();
 
 	// Reactive state
 	let activeTab = $state('capabilities');
-	let capabilities = $state(data.capabilities || []);
-	let selectedCapabilities = $state(data.selectedCapabilities || []);
-	let projectName = $state(data.projectName || '');
-	let repositoryUrl = $state(data.repositoryUrl || '');
+	let capabilities = $state([]);
+	let selectedCapabilities = $state([]);
+	let projectName = $state('');
+	let repositoryUrl = $state('');
 	let configuration = $state({});
-	let loading = $state(!data.capabilities || data.capabilities.length === 0);
-	let initialError = $state(data.error || null);
-	let authResult = $state(data.authResult || null);
+	let loading = $state(true);
+	let initialError = $state(null);
+	let authResult = $derived(data.authResult || null);
+
+	$effect(() => {
+		capabilities = data.capabilities || [];
+		selectedCapabilities = data.selectedCapabilities || [];
+		projectName = data.projectName || '';
+		repositoryUrl = data.repositoryUrl || '';
+		loading = !data.capabilities || data.capabilities.length === 0;
+		initialError = data.error || null;
+	});
 
 	function getAuthErrorMessage(errorCode) {
 		switch (errorCode) {
@@ -103,7 +113,9 @@
 
 	// Reactive trigger for fetching preview when relevant data changes
 	$effect(() => {
-		fetchPreview();
+		if (browser) {
+			fetchPreview();
+		}
 	});
 
 	// Event handlers for PreviewMode
@@ -283,7 +295,7 @@
 				const fetchData = await response.json();
 				capabilities = fetchData;
 			} catch (error_) {
-				error = error_.message;
+				initialError = error_.message;
 				logger.error('Failed to load capabilities', { error: error_.message });
 			} finally {
 				loading = false;
