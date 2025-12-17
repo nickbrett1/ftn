@@ -109,19 +109,19 @@ describe('/projects/ccbilling/cycles/[id]/charges API', () => {
 					{ id: 2, allocated_to: 'Tas' }
 				]
 			});
+		});
 
-			describe('POST endpoint (refresh auto-associations)', () => {
-				it('should refresh auto associations when requested', async () => {
-					mockEvent.request.json.mockResolvedValue({ refresh: 'auto-associations' });
-					refreshAutoAssociationsForCycle.mockResolvedValue(7);
+		describe('POST endpoint (refresh auto-associations)', () => {
+			it('should refresh auto associations when requested', async () => {
+				mockEvent.request.json.mockResolvedValue({ refresh: 'auto-associations' });
+				refreshAutoAssociationsForCycle.mockResolvedValue(7);
 
-					const response = await POST(mockEvent);
-					const result = await response.json();
+				const response = await POST(mockEvent);
+				const result = await response.json();
 
-					expect(refreshAutoAssociationsForCycle).toHaveBeenCalledWith(mockEvent, 1);
-					expect(result.success).toBe(true);
-					expect(result.updated).toBe(7);
-				});
+				expect(refreshAutoAssociationsForCycle).toHaveBeenCalledWith(mockEvent, 1);
+				expect(result.success).toBe(true);
+				expect(result.updated).toBe(7);
 			});
 		});
 
