@@ -112,6 +112,35 @@ vi.mock('$app/stores', async (importOriginal) => {
 	};
 });
 
+// Mock Cloudflare platform bindings
+beforeEach(() => {
+	mockPageData.update((data) => ({
+		...data,
+		platform: {
+			env: {
+				KV: {
+					get: vi.fn(),
+					put: vi.fn(),
+					delete: vi.fn()
+				},
+				R2_CCBILLING: {
+					get: vi.fn(),
+					put: vi.fn(),
+					delete: vi.fn()
+				},
+				D1: {
+					prepare: vi.fn(() => ({
+						bind: vi.fn().mockReturnThis(),
+						all: vi.fn(),
+						first: vi.fn(),
+						run: vi.fn()
+					}))
+				}
+			}
+		}
+	}));
+});
+
 // Export a function to allow tests to set the user
 export function setMockUser(user) {
 	mockPageData.update((current) => ({

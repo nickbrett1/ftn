@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import * as cookie from 'cookie';
-import { genprojAuth } from '$lib/server/genproj-auth.js';
+import { createGenprojAuth } from '$lib/server/genproj-auth.js';
 
 const revokeGoogleToken = async (token) => {
 	const body = new URLSearchParams();
@@ -22,6 +22,7 @@ const revokeGoogleToken = async (token) => {
 const HTML_TEMPORARY_REDIRECT = 307;
 
 export async function GET({ request, platform }) {
+	const genprojAuth = createGenprojAuth(platform);
 	const cookies = request.headers.get('cookie');
 	if (!cookies) {
 		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
@@ -48,7 +49,7 @@ export async function GET({ request, platform }) {
 
 	// Initialize genprojAuth with a mock user to clear its state
 	// The authCookieKey is used as a unique identifier for the user's genproj state
-	await genprojAuth.initialize({ id: authCookieKey, email: 'unknown@example.com' }, platform);
+	await genprojAuth.initialize({ id: authCookieKey, email: 'unknown@example.com' });
 
 	await Promise.all([
 		revokeGoogleToken(token),

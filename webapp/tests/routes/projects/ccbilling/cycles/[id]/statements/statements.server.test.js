@@ -39,7 +39,8 @@ describe('/projects/ccbilling/cycles/[id]/statements API', () => {
 
 		// Mock R2 bucket
 		mockR2Bucket = {
-			put: vi.fn().mockResolvedValue({})
+			put: vi.fn().mockResolvedValue({}),
+			delete: vi.fn().mockResolvedValue({})
 		};
 
 		// Mock event object

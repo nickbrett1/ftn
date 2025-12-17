@@ -7,12 +7,16 @@ import { genprojAuth } from '$lib/server/genproj-auth.js';
 vi.mock('@sveltejs/kit', () => ({
 	redirect: vi.fn((status, location) => ({ status, location, isRedirect: true }))
 }));
-vi.mock('$lib/server/genproj-auth.js', () => ({
-	genprojAuth: {
+vi.mock('$lib/server/genproj-auth.js', () => {
+	const genprojAuth = {
 		initialize: vi.fn(),
 		clearGitHubAuth: vi.fn()
-	}
-}));
+	};
+	return {
+		createGenprojAuth: vi.fn(() => genprojAuth),
+		genprojAuth
+	};
+});
 
 describe('/logout/+server.js', () => {
 	let mockEvent;
@@ -103,10 +107,10 @@ describe('/logout/+server.js', () => {
 		expect(mockEvent.platform.env.KV.delete).toHaveBeenCalledWith(authCookieKey);
 
 		// Verify genproj auth clear
-		expect(genprojAuth.initialize).toHaveBeenCalledWith(
-			{ id: authCookieKey, email: 'unknown@example.com' },
-			mockEvent.platform
-		);
+		expect(genprojAuth.initialize).toHaveBeenCalledWith({
+			id: authCookieKey,
+			email: 'unknown@example.com'
+		});
 		expect(genprojAuth.clearGitHubAuth).toHaveBeenCalled();
 	});
 
