@@ -6,10 +6,10 @@ import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
 globalThis.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe('PreviewMode', () => {
-    // Reset mocks before each test
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+	// Reset mocks before each test
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
 	it('selects README.md by default if present', async () => {
 		const previewData = {
@@ -81,41 +81,46 @@ describe('PreviewMode', () => {
 		expect(codeElement.textContent).toBe('# Docs Readme');
 	});
 
-    it('scrolls the selected file into view when auto-selected', async () => {
-        const previewData = {
-            files: [
-                {
-                    name: 'src',
-                    path: 'src',
-                    type: 'folder',
-                    children: [
-                        { name: 'index.js', path: 'src/index.js', type: 'file', content: 'console.log("hi")' }
-                    ]
-                },
-                { name: 'README.md', path: 'README.md', type: 'file', content: '# Readme' },
-                { name: 'package.json', path: 'package.json', type: 'file', content: '{}' }
-            ],
-            externalServices: []
-        };
+	it('scrolls the selected file into view when auto-selected', async () => {
+		const previewData = {
+			files: [
+				{
+					name: 'src',
+					path: 'src',
+					type: 'folder',
+					children: [
+						{ name: 'index.js', path: 'src/index.js', type: 'file', content: 'console.log("hi")' }
+					]
+				},
+				{ name: 'README.md', path: 'README.md', type: 'file', content: '# Readme' },
+				{ name: 'package.json', path: 'package.json', type: 'file', content: '{}' }
+			],
+			externalServices: []
+		};
 
-        render(PreviewMode, {
-            previewData,
-            loading: false,
-            error: null
-        });
+		render(PreviewMode, {
+			previewData,
+			loading: false,
+			error: null
+		});
 
-        // Find the "README.md" button in the file tree.
-        // We look for the button that has "README.md" text.
-        // There are multiple "README.md" texts, so we filter.
-        const buttons = screen.getAllByRole('button');
-        const readmeButton = buttons.find(b => b.textContent.includes('README.md') && b.dataset.path === 'README.md');
+		// Find the "README.md" button in the file tree.
+		// We look for the button that has "README.md" text.
+		// There are multiple "README.md" texts, so we filter.
+		const buttons = screen.getAllByRole('button');
+		const readmeButton = buttons.find(
+			(b) => b.textContent.includes('README.md') && b.dataset.path === 'README.md'
+		);
 
-        expect(readmeButton).toBeTruthy();
+		expect(readmeButton).toBeTruthy();
 
-        // Wait for potential async operations (like tick)
-        await waitFor(() => {
-            // We expect scrollIntoView to be called on the element.
-            expect(globalThis.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
-        }, { timeout: 1000 });
-    });
+		// Wait for potential async operations (like tick)
+		await waitFor(
+			() => {
+				// We expect scrollIntoView to be called on the element.
+				expect(globalThis.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+			},
+			{ timeout: 1000 }
+		);
+	});
 });

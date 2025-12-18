@@ -115,7 +115,9 @@ function createMergedDevContainerJson(
 	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
 
 	allCapabilities.forEach((id) =>
-		capabilities.find((c) => c.id === id)?.vscodeExtensions?.forEach((ext) => allExtensions.add(ext))
+		capabilities
+			.find((c) => c.id === id)
+			?.vscodeExtensions?.forEach((ext) => allExtensions.add(ext))
 	);
 
 	for (let i = 1; i < devContainerCapabilities.length; i++) {
@@ -161,10 +163,11 @@ function createDevContainerDockerfile(templateEngine, projectConfig, devContaine
 	const baseId = devContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
 	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
-	const content = templateEngine.generateFile(
-		`devcontainer-${baseId.split('-')[1]}-dockerfile`,
-		{ ...projectConfig, capabilityConfig: baseConfig, capability: baseCap }
-	);
+	const content = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-dockerfile`, {
+		...projectConfig,
+		capabilityConfig: baseConfig,
+		capability: baseCap
+	});
 	return {
 		path: '.devcontainer/Dockerfile',
 		name: 'Dockerfile',
