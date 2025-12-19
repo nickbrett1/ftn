@@ -12,9 +12,14 @@ The `.jules` directory contains tools specifically designed for the Jules AI age
 
 ## Known Limitations
 
-### `npm run preview`
+### Playwright and `npm run preview`
 
-The `npm run preview` command (Vite preview server) is unreliable in this environment and often fails with connection refused errors when accessed by Playwright or curl. **Do not use `npm run preview` for verification.** Instead, rely on unit tests and component tests (using `vitest` and `@testing-library/svelte`) to verify frontend changes.
+Both the `npm run preview` command (Vite preview server) and the development server `npm run dev` are unreliable in this environment for end-to-end testing. They frequently fail with connection refused errors when accessed by Playwright.
+
+**Guidance:**
+- **Avoid using Playwright** for visual verification or end-to-end testing in this environment.
+- Rely on **unit tests** and **component tests** (using `vitest` and `@testing-library/svelte`) to verify frontend logic and rendering.
+- Use tools like `curl` to verify that routes are accessible and return the expected HTML structure.
 
 ## Unresolved Security Vulnerability: `node-tar`
 
