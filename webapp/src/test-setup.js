@@ -228,5 +228,5 @@ Element.prototype.animate = vi.fn().mockImplementation(() => ({
 	cancel: vi.fn(),
 	play: vi.fn(),
 	pause: vi.fn(),
-	reverse: vi.fn(),
+	reverse: vi.fn()
 }));
