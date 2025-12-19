@@ -336,10 +336,7 @@
 					</p>
 				</div>
 
-				<div
-					class="p-4 overflow-y-auto max-h-96 file-tree-container"
-					bind:this={fileTreeContainer}
-				>
+				<div class="p-4 overflow-y-auto max-h-96 file-tree-container" bind:this={fileTreeContainer}>
 					{#each fileTree as file (file.path)}
 						{@render fileTreeItem(file)}
 					{/each}
