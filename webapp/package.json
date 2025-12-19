@@ -30,7 +30,7 @@
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.18.0",
+		"@cloudflare/vite-plugin": "^1.19.0",
 		"@dimforge/rapier3d-compat": "^0.19.3",
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.86.6",
@@ -82,7 +82,7 @@
 		"vite": "^7.3.0",
 		"vite-imagetools": "^9.0.2",
 		"vitest": "^4.0.14",
-		"wrangler": "^4.55.0"
+		"wrangler": "^4.56.0"
 	},
 	"type": "module",
 	"dependencies": {
