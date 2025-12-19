@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { writable } from 'svelte/store';
+import '@testing-library/jest-dom/vitest';
 
 // Set NODE_ENV to test for proper rune handling
 if (typeof process !== 'undefined') {
@@ -219,3 +220,13 @@ Object.defineProperty(globalThis, 'performance', {
 		now: vi.fn(() => Date.now())
 	}
 });
+
+// Mock Element.prototype.animate for Svelte transitions in JSDOM
+Element.prototype.animate = vi.fn().mockImplementation(() => ({
+	finished: Promise.resolve(),
+	onfinish: null,
+	cancel: vi.fn(),
+	play: vi.fn(),
+	pause: vi.fn(),
+	reverse: vi.fn(),
+}));
