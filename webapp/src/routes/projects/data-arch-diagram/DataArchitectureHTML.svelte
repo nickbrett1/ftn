@@ -137,12 +137,76 @@
 	}
 </script>
 
+<style>
+	@keyframes dash {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	/* Use :global to ensure the animation works if styles are scoped, though these classes are applied to the SVG */
+	.animate-dash {
+		stroke-dasharray: 5;
+		stroke-dashoffset: 10;
+		animation: dash 1s linear infinite;
+	}
+</style>
+
+{#snippet animatedArrow()}
+	<svg
+		class="w-6 h-12 mx-auto text-emerald-500/50"
+		viewBox="0 0 24 48"
+		fill="none"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<path d="M12 0V40" stroke="currentColor" stroke-width="2" class="animate-dash" />
+		<path
+			d="M6 34L12 40L18 34"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet iconStreaming()}
+	<svg
+		class="w-6 h-6 mx-auto mb-2 text-emerald-400"
+		fill="none"
+		viewBox="0 0 24 24"
+		stroke="currentColor"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M13 10V3L4 14h7v7l9-11h-7z"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet iconBatch()}
+	<svg
+		class="w-6 h-6 mx-auto mb-2 text-emerald-400"
+		fill="none"
+		viewBox="0 0 24 24"
+		stroke="currentColor"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4"
+		/>
+	</svg>
+{/snippet}
+
 <div class="w-full max-w-6xl mx-auto p-4 md:p-8 bg-zinc-900 text-zinc-200 font-sans">
 	<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
 		<!-- Sidebar: Governance -->
 		<div class="lg:col-span-1 flex lg:block">
 			<button
-				class="w-full h-full min-h-[60px] lg:min-h-[600px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center lg:[writing-mode:vertical-lr]"
+				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center lg:[writing-mode:vertical-lr]"
 				on:click={() => select(data.governance)}
 				class:ring-2={selectedItem === data.governance}
 				class:ring-emerald-400={selectedItem === data.governance}
@@ -169,14 +233,17 @@
 							class:ring-emerald-400={selectedItem === source}
 						>
 							<div class="font-bold mb-1">{source.title}</div>
-							<!-- Diamond shape hint via CSS or icon -->
-							<div class="w-3 h-3 bg-emerald-500/20 rotate-45 mx-auto mb-2"></div>
+							{#if source.id === 'streaming'}
+								{@render iconStreaming()}
+							{:else}
+								{@render iconBatch()}
+							{/if}
 						</button>
 					{/each}
 				</div>
 				<!-- Connector Down -->
-				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-emerald-500/50">
-					↓
+				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+					{@render animatedArrow()}
 				</div>
 			</div>
 
@@ -188,7 +255,7 @@
 				<div class="flex justify-center lg:justify-start">
 					{#each data.collect.items as item}
 						<button
-							class="w-full max-w-2xl p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
+							class="w-full p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
 							on:click={() => select(item)}
 							class:ring-2={selectedItem === item}
 							class:ring-emerald-400={selectedItem === item}
@@ -198,8 +265,8 @@
 					{/each}
 				</div>
 				<!-- Connector Down -->
-				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-emerald-500/50">
-					↓
+				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+					{@render animatedArrow()}
 				</div>
 			</div>
 
@@ -285,8 +352,8 @@
 				</div>
 
 				<!-- Connector Down -->
-				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-emerald-500/50">
-					↓
+				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+					{@render animatedArrow()}
 				</div>
 			</div>
 
@@ -308,8 +375,8 @@
 					{/each}
 				</div>
 				<!-- Connector Down -->
-				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-emerald-500/50">
-					↓
+				<div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+					{@render animatedArrow()}
 				</div>
 			</div>
 
