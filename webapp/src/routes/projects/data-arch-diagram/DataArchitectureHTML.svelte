@@ -8,13 +8,14 @@
 			title: 'Data Governance',
 			description:
 				'A centralized framework to ensure data is managed consistently and meets organizational standards for quality, security, and compliance.',
-			icon: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z' // Shield
+			icon: 'M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3' // Shield
 		},
 		sources: [
 			{
 				id: 'streaming',
 				title: 'Streaming',
-				description: 'Real-time data from sources like IoT devices, applications, and social media.',
+				description:
+					'Real-time data from sources like IoT devices, applications, and social media.',
 				icon: 'M13 10V3L4 14h7v7l9-11h-7z' // Lightning
 			},
 			{
@@ -149,20 +150,6 @@
 	}
 </script>
 
-<style>
-	@keyframes dash {
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
-	/* Use :global to ensure the animation works if styles are scoped, though these classes are applied to the SVG */
-	.animate-dash {
-		stroke-dasharray: 5;
-		stroke-dashoffset: 10;
-		animation: dash 1s linear infinite;
-	}
-</style>
-
 {#snippet animatedArrow()}
 	<svg
 		class="w-6 h-12 text-emerald-500/50"
@@ -195,14 +182,14 @@
 <div class="w-full max-w-6xl mx-auto p-4 md:p-8 bg-zinc-900 text-zinc-200 font-sans">
 	<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
 		<!-- Sidebar: Governance -->
-		<div class="lg:col-span-1 flex lg:block">
+		<div class="lg:col-span-1 flex flex-col">
 			<button
-				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center lg:[writing-mode:vertical-lr]"
+				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center gap-4 lg:[writing-mode:vertical-lr]"
 				on:click={() => select(data.governance)}
 				class:ring-2={selectedItem === data.governance}
 				class:ring-emerald-400={selectedItem === data.governance}
 			>
-				<span class="mb-2 lg:mb-0 lg:mr-2 flex-shrink-0 lg:rotate-180">
+				<span class="mb-2 lg:mb-0 flex-shrink-0 lg:rotate-180">
 					{@render icon(data.governance.icon)}
 				</span>
 				<span class="font-bold text-emerald-100 uppercase tracking-widest text-sm lg:rotate-180"
@@ -374,29 +361,31 @@
 					{/each}
 				</div>
 			</div>
-		</div>
-	</div>
 
-	<!-- Connector Down (Between Grid and End Users) -->
-	<div class="flex justify-center py-6">
-		{@render animatedArrow()}
-	</div>
+			<!-- Connector Down (Between Grid and End Users) -->
+			<div class="flex justify-center py-6">
+				{@render animatedArrow()}
+			</div>
 
-	<!-- Section: End Users -->
-	<div>
-		<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center">End Users</h3>
-		<div class="flex flex-col sm:flex-row gap-4 justify-center">
-			{#each data.users as user}
-				<button
-					class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
-					on:click={() => select(user)}
-					class:ring-2={selectedItem === user}
-					class:ring-emerald-400={selectedItem === user}
-				>
-					<div class="font-bold mb-1">{user.title}</div>
-					{@render icon(user.icon)}
-				</button>
-			{/each}
+			<!-- Section: End Users -->
+			<div>
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+					End Users
+				</h3>
+				<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+					{#each data.users as user}
+						<button
+							class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
+							on:click={() => select(user)}
+							class:ring-2={selectedItem === user}
+							class:ring-emerald-400={selectedItem === user}
+						>
+							<div class="font-bold mb-1">{user.title}</div>
+							{@render icon(user.icon)}
+						</button>
+					{/each}
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -419,3 +408,17 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	@keyframes dash {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	/* Use :global to ensure the animation works if styles are scoped, though these classes are applied to the SVG */
+	.animate-dash {
+		stroke-dasharray: 5;
+		stroke-dashoffset: 10;
+		animation: dash 1s linear infinite;
+	}
+</style>
