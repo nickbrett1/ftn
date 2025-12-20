@@ -2,6 +2,19 @@
 
 This document provides information for AI agents working on this codebase.
 
+## Project Structure & Testing
+
+- **Root Directory**: The repository root contains configuration and documentation.
+- **Web Application**: The main application code and configuration, including `package.json`, are located in the `webapp/` subdirectory.
+- **Dependency Installation**: Before running tests or building the project, you must install dependencies by running `npm install` from within the `webapp/` directory:
+  ```bash
+  cd webapp && npm install
+  ```
+- **Running Tests**: To run the test suite, use the `test:once` script from within the `webapp/` directory:
+  ```bash
+  cd webapp && npm run test:once
+  ```
+
 ## Jules Tools
 
 The `.jules` directory contains tools specifically designed for the Jules AI agent to verify changes and perform utility tasks.
