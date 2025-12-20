@@ -2,24 +2,18 @@
 
 This document provides information for AI agents working on this codebase.
 
-## Project Structure and Workflow
+## Project Structure & Testing
 
-- **Root Directory**: The root of the repository contains project-wide configuration.
-- **Web Application**: The main application code and `package.json` are located in the `webapp` subdirectory.
-
-### Setup and Testing
-
-When working on the application, you must run commands from within the `webapp` directory.
-
-1.  **Install Dependencies**: Before running any tests or scripts, ensure dependencies are installed.
-    ```bash
-    cd webapp && npm install
-    ```
-
-2.  **Run Tests**: To run the test suite once (without watch mode):
-    ```bash
-    cd webapp && npm run test:once
-    ```
+- **Root Directory**: The repository root contains configuration and documentation.
+- **Web Application**: The main application code and configuration, including `package.json`, are located in the `webapp/` subdirectory.
+- **Dependency Installation**: Before running tests or building the project, you must install dependencies by running `npm install` from within the `webapp/` directory:
+  ```bash
+  cd webapp && npm install
+  ```
+- **Running Tests**: To run the test suite, use the `test:once` script from within the `webapp/` directory:
+  ```bash
+  cd webapp && npm run test:once
+  ```
 
 ## Jules Tools
 
