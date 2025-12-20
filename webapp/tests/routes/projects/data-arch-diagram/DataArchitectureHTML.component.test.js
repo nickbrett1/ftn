@@ -92,6 +92,8 @@ describe('DataArchitectureHTML', () => {
 		expect(refBadge).toHaveClass('text-blue-300'); // Blue for reference
 
 		// Verify description
-		expect(screen.getByText(/Learn more about the Data Lake concept from AWS/i)).toBeInTheDocument();
+		expect(
+			screen.getByText(/Learn more about the Data Lake concept from AWS/i)
+		).toBeInTheDocument();
 	});
 });
