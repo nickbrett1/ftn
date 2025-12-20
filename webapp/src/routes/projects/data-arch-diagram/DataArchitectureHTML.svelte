@@ -15,7 +15,7 @@
 				id: 'streaming',
 				title: 'Streaming',
 				description:
-					'Real-time data from sources like IoT devices, applications, and social media.',
+					'Real-time data from sources like market feeds, transaction logs, and IoT devices.',
 				icon: 'M13 10V3L4 14h7v7l9-11h-7z' // Lightning
 			},
 			{
@@ -38,7 +38,8 @@
 							text: 'Modern ETL without a Data Warehouse',
 							url: '/projects/dbt-duckdb',
 							type: 'project',
-							description: 'See how I implemented this pattern using dbt and DuckDB in this portfolio project.'
+							description:
+								'See how I implemented this pattern using dbt and DuckDB in this portfolio project.'
 						}
 					],
 					icon: 'M3 6l7 7v4h4v-4l7-7V4H3z' // Funnel/Filter
