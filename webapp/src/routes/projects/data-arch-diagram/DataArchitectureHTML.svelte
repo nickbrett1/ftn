@@ -94,7 +94,7 @@
 				links: [
 					{
 						text: 'What is a Data Warehouse?',
-						url: 'https://www.snowflake.com/guides/what-is-a-data-warehouse',
+						url: 'https://www.snowflake.com/en/fundamentals/data-warehouse/',
 						type: 'info',
 						description: 'A comprehensive guide to Data Warehousing from Snowflake.'
 					}
