@@ -32,6 +32,13 @@
 					id: 'collect',
 					title: 'CDC | ETL | Event Streaming',
 					description: 'Methods for collecting and transforming data from various sources.',
+					examples: 'Kafka, Debezium, Flink, Spark Streaming',
+					links: [
+						{
+							text: 'Modern ETL without a Data Warehouse',
+							url: '/projects/dbt-duckdb'
+						}
+					],
 					icon: 'M3 6l7 7v4h4v-4l7-7V4H3z' // Funnel/Filter
 				}
 			]
@@ -41,6 +48,13 @@
 				title: 'Data Lake',
 				description:
 					'A central repository for storing large amounts of raw data in its native format.',
+				examples: 'S3, ADLS, GCS',
+				links: [
+					{
+						text: 'What is a Data Lake?',
+						url: 'https://aws.amazon.com/what-is/data-lake/'
+					}
+				],
 				stages: [
 					{
 						id: 'raw',
@@ -63,7 +77,8 @@
 						id: 'sensitive',
 						title: 'Sensitive',
 						description:
-							'A secure area for handling sensitive data, using technologies like Iceberg, Hudi, Delta Lake, or HDFS.'
+							'A secure area for handling sensitive data, using technologies like Iceberg, Hudi, Delta Lake, or HDFS.',
+						examples: 'Iceberg, Hudi, Delta Lake'
 					}
 				]
 			},
@@ -71,6 +86,13 @@
 				title: 'Data Warehouse',
 				description:
 					'A system used for reporting and data analysis, storing structured and processed data.',
+				examples: 'Snowflake, BigQuery, Redshift',
+				links: [
+					{
+						text: 'What is a Data Warehouse?',
+						url: 'https://www.snowflake.com/guides/what-is-a-data-warehouse'
+					}
+				],
 				storage: [
 					{ id: 'dwh-raw', title: 'Raw', description: 'Raw data storage layer within the DWH.' },
 					{
@@ -88,12 +110,14 @@
 					title: 'Analytical Engine',
 					items: ['SQL', 'AI/ML', 'Streaming'],
 					description: 'Powers querying and analysis across the warehouse.',
+					examples: 'Trino, Spark SQL',
 					icon: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' // Cog
 				},
 				programming: {
 					title: 'Programming',
 					description:
-						'Allows for custom data processing and analysis using languages like Python or Scala.'
+						'Allows for custom data processing and analysis using languages like Python or Scala.',
+					examples: 'Snowpark, PySpark'
 				}
 			}
 		},
@@ -102,12 +126,20 @@
 				id: 'apps',
 				title: 'Applications',
 				description: 'Custom applications that consume data via APIs or direct connections.',
+				examples: 'Custom React Apps, Microservices, API Consumers',
+				links: [
+					{
+						text: 'Machine Learning for Flight Delays',
+						url: 'https://github.com/nickbrett1/data-science-on-gcp/'
+					}
+				],
 				icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z' // App Grid
 			},
 			{
 				id: 'bi',
 				title: 'BI / Reporting',
 				description: 'Business intelligence tools for dashboards and visual reporting.',
+				examples: 'Tableau, PowerBI, Looker, Superset',
 				icon: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2v-3h2v3zm4 0h-2v-5h2v5z' // Chart
 			},
 			{
@@ -120,6 +152,7 @@
 				id: 'notebooks',
 				title: 'Notebooks',
 				description: 'Interactive environments (like Jupyter) for data science and exploration.',
+				examples: 'Jupyter, Zeppelin, Databricks Notebooks',
 				icon: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z' // Doc
 			}
 		],
@@ -429,6 +462,41 @@
 			<div class="flex-1">
 				<h4 class="text-lg font-bold text-emerald-400 mb-1">{selectedItem.title}</h4>
 				<p class="text-zinc-300 text-sm md:text-base">{selectedItem.description}</p>
+
+				{#if selectedItem.examples}
+					<div class="mt-2 text-sm text-zinc-400">
+						<span class="font-bold text-zinc-500 uppercase text-xs">Examples:</span>
+						{selectedItem.examples}
+					</div>
+				{/if}
+
+				{#if selectedItem.links && selectedItem.links.length > 0}
+					<div class="mt-3 flex flex-wrap gap-4">
+						{#each selectedItem.links as link}
+							<a
+								href={link.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-emerald-400 hover:text-emerald-300 underline text-sm flex items-center gap-1 group"
+							>
+								{link.text}
+								<svg
+									class="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+									/>
+								</svg>
+							</a>
+						{/each}
+					</div>
+				{/if}
 			</div>
 			<button
 				class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold rounded border border-zinc-600 shrink-0"
