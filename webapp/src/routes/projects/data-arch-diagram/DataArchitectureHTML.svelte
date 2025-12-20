@@ -102,7 +102,7 @@
 				id: 'apps',
 				title: 'Applications',
 				description: 'Custom applications that consume data via APIs or direct connections.',
-				icon: 'M4 6h16v12H4z M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z' // Window
+				icon: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z' // App Grid
 			},
 			{
 				id: 'bi',
@@ -114,7 +114,7 @@
 				id: 'sql',
 				title: 'SQL Clients',
 				description: 'Tools for analysts to query data directly using SQL.',
-				icon: 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H4v-1h8v1zm6 0h-4v-1h4v1zm0-3H4V6h16v7z' // Terminalish
+				icon: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M8 10l3 3-3 3 M14 15h3' // Terminal
 			},
 			{
 				id: 'notebooks',
@@ -168,9 +168,9 @@
 	</svg>
 {/snippet}
 
-{#snippet icon(path)}
+{#snippet icon(path, classes = 'mb-2')}
 	<svg
-		class="w-6 h-6 mx-auto mb-2 text-emerald-400"
+		class="w-6 h-6 mx-auto text-emerald-400 {classes}"
 		fill="none"
 		viewBox="0 0 24 24"
 		stroke="currentColor"
@@ -190,7 +190,7 @@
 				class:ring-emerald-400={selectedItem === data.governance}
 			>
 				<span class="lg:mb-0 flex-shrink-0 lg:rotate-180">
-					{@render icon(data.governance.icon)}
+					{@render icon(data.governance.icon, '')}
 				</span>
 				<span class="font-bold text-emerald-100 uppercase tracking-widest text-sm lg:rotate-180"
 					>Data Governance</span
