@@ -88,7 +88,7 @@
 					title: 'Analytical Engine',
 					items: ['SQL', 'AI/ML', 'Streaming'],
 					description: 'Powers querying and analysis across the warehouse.',
-					icon: 'M9.17 6l2 2H20v10H4V6h5.17M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z' // Folder/Engine generic? Let's use something like a chip or cog. Using Folder for now or generic. Let's use Cog: M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z
+					icon: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' // Cog
 				},
 				programming: {
 					title: 'Programming',
@@ -134,13 +134,13 @@
 				id: 'analysts',
 				title: 'Data Analysts',
 				description: 'Users who query data to find trends and answer business questions.',
-				icon: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 3 16 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z' // Search
+				icon: 'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.59-6.59L22 11.5V6h-6z' // Trending Up
 			},
 			{
 				id: 'scientists',
 				title: 'Data Scientists',
 				description: 'Advanced users building models and performing deep statistical analysis.',
-				icon: 'M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z' // Atom
+				icon: 'M19.8 18.4L14 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81H9.04c-.42 0-.65.48-.39.81L10 6.5v4.17L4.2 18.4c-.49.66-.02 1.6.8 1.6h14c.82 0 1.29-.94.8-1.6z' // Science
 			}
 		]
 	};
@@ -189,7 +189,7 @@
 				class:ring-2={selectedItem === data.governance}
 				class:ring-emerald-400={selectedItem === data.governance}
 			>
-				<span class="mb-2 lg:mb-0 flex-shrink-0 lg:rotate-180">
+				<span class="lg:mb-0 flex-shrink-0 lg:rotate-180">
 					{@render icon(data.governance.icon)}
 				</span>
 				<span class="font-bold text-emerald-100 uppercase tracking-widest text-sm lg:rotate-180"
@@ -258,7 +258,15 @@
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Data Lake -->
-					<div class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30">
+					<div
+						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+						role="button"
+						tabindex="0"
+						on:click={() => select(data.store.datalake)}
+						on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && select(data.store.datalake)}
+						class:ring-2={selectedItem === data.store.datalake}
+						class:ring-emerald-400={selectedItem === data.store.datalake}
+					>
 						<div class="text-center font-bold text-zinc-400 mb-4 uppercase tracking-wider">
 							{data.store.datalake.title}
 						</div>
@@ -266,7 +274,10 @@
 							<div class="flex gap-3">
 								<button
 									class="w-1/3 p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-xs font-bold break-words"
-									on:click={() => select(data.store.datalake.stages[3])}
+									on:click={(e) => {
+										e.stopPropagation();
+										select(data.store.datalake.stages[3]);
+									}}
 								>
 									Sensitive
 								</button>
@@ -274,7 +285,10 @@
 									{#each data.store.datalake.stages.slice(0, 3) as stage}
 										<button
 											class="p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-sm font-medium"
-											on:click={() => select(stage)}
+											on:click={(e) => {
+												e.stopPropagation();
+												select(stage);
+											}}
 											class:ring-2={selectedItem === stage}
 											class:ring-emerald-400={selectedItem === stage}
 										>
@@ -287,7 +301,15 @@
 					</div>
 
 					<!-- DWH -->
-					<div class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30">
+					<div
+						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+						role="button"
+						tabindex="0"
+						on:click={() => select(data.store.dwh)}
+						on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && select(data.store.dwh)}
+						class:ring-2={selectedItem === data.store.dwh}
+						class:ring-emerald-400={selectedItem === data.store.dwh}
+					>
 						<div class="text-center font-bold text-zinc-400 mb-4 uppercase tracking-wider">
 							{data.store.dwh.title}
 						</div>
@@ -296,7 +318,10 @@
 							{#each data.store.dwh.storage as layer}
 								<button
 									class="p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-xs font-bold text-center flex items-center justify-center h-full"
-									on:click={() => select(layer)}
+									on:click={(e) => {
+										e.stopPropagation();
+										select(layer);
+									}}
 									class:ring-2={selectedItem === layer}
 									class:ring-emerald-400={selectedItem === layer}
 								>
@@ -308,7 +333,10 @@
 						<div class="flex gap-2">
 							<button
 								class="w-2/3 p-3 bg-zinc-900 rounded border border-zinc-700 hover:bg-zinc-800 transition-colors text-left"
-								on:click={() => select(data.store.dwh.engine)}
+								on:click={(e) => {
+									e.stopPropagation();
+									select(data.store.dwh.engine);
+								}}
 								class:ring-2={selectedItem === data.store.dwh.engine}
 								class:ring-emerald-400={selectedItem === data.store.dwh.engine}
 							>
@@ -326,7 +354,10 @@
 							</button>
 							<button
 								class="w-1/3 p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-xs font-bold flex items-center justify-center text-center"
-								on:click={() => select(data.store.dwh.programming)}
+								on:click={(e) => {
+									e.stopPropagation();
+									select(data.store.dwh.programming);
+								}}
 								class:ring-2={selectedItem === data.store.dwh.programming}
 								class:ring-emerald-400={selectedItem === data.store.dwh.programming}
 							>
