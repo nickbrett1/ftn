@@ -190,6 +190,10 @@
 	function select(item) {
 		selectedItem = selectedItem === item ? null : item;
 	}
+
+	function hasProjectLink(item) {
+		return item.links?.some(link => link.type === 'project');
+	}
 </script>
 
 {#snippet animatedArrow()}
@@ -219,6 +223,14 @@
 	>
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={path} />
 	</svg>
+{/snippet}
+
+{#snippet projectIndicator()}
+	<div class="absolute top-2 right-2 text-emerald-400" title="Contains Project Example">
+		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+		</svg>
+	</div>
 {/snippet}
 
 <div class="w-full max-w-6xl mx-auto p-4 md:p-8 bg-zinc-900 text-zinc-200 font-sans">
@@ -255,6 +267,9 @@
 							class:ring-2={selectedItem === source}
 							class:ring-emerald-400={selectedItem === source}
 						>
+							{#if hasProjectLink(source)}
+								{@render projectIndicator()}
+							{/if}
 							<div class="font-bold mb-1">{source.title}</div>
 							{@render icon(source.icon)}
 						</button>
@@ -275,11 +290,14 @@
 				<div class="flex justify-center lg:justify-start">
 					{#each data.collect.items as item}
 						<button
-							class="w-full p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
+							class="w-full p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center relative"
 							on:click={() => select(item)}
 							class:ring-2={selectedItem === item}
 							class:ring-emerald-400={selectedItem === item}
 						>
+							{#if hasProjectLink(item)}
+								{@render projectIndicator()}
+							{/if}
 							<div class="font-bold mb-1">{item.title}</div>
 							{@render icon(item.icon)}
 						</button>
@@ -301,7 +319,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Data Lake -->
 					<div
-						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
 						role="button"
 						tabindex="0"
 						on:click={() => select(data.store.datalake)}
@@ -309,6 +327,9 @@
 						class:ring-2={selectedItem === data.store.datalake}
 						class:ring-emerald-400={selectedItem === data.store.datalake}
 					>
+						{#if hasProjectLink(data.store.datalake)}
+							{@render projectIndicator()}
+						{/if}
 						<div class="text-center font-bold text-zinc-400 mb-4 uppercase tracking-wider">
 							{data.store.datalake.title}
 						</div>
@@ -323,10 +344,17 @@
 								>
 									Sensitive
 								</button>
-								<div class="flex-1 flex flex-col gap-2">
-									{#each data.store.datalake.stages.slice(0, 3) as stage}
+								<div class="flex-1 flex flex-col gap-1">
+									{#each data.store.datalake.stages.slice(0, 3) as stage, i}
+										{#if i > 0}
+											<div class="flex justify-center -my-1 text-emerald-500/30 z-0">
+												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-3-3m3 3l3-3" />
+												</svg>
+											</div>
+										{/if}
 										<button
-											class="p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-sm font-medium"
+											class="p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-sm font-medium z-10 relative"
 											on:click={(e) => {
 												e.stopPropagation();
 												select(stage);
@@ -344,7 +372,7 @@
 
 					<!-- DWH -->
 					<div
-						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
 						role="button"
 						tabindex="0"
 						on:click={() => select(data.store.dwh)}
@@ -352,14 +380,22 @@
 						class:ring-2={selectedItem === data.store.dwh}
 						class:ring-emerald-400={selectedItem === data.store.dwh}
 					>
+						{#if hasProjectLink(data.store.dwh)}
+							{@render projectIndicator()}
+						{/if}
 						<div class="text-center font-bold text-zinc-400 mb-4 uppercase tracking-wider">
 							{data.store.dwh.title}
 						</div>
 
-						<div class="grid grid-cols-3 gap-2 mb-4">
-							{#each data.store.dwh.storage as layer}
+						<div class="flex items-center gap-1 mb-4">
+							{#each data.store.dwh.storage as layer, i}
+								{#if i > 0}
+									<svg class="w-4 h-4 text-emerald-500/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+									</svg>
+								{/if}
 								<button
-									class="p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-xs font-bold text-center flex items-center justify-center h-full"
+									class="flex-1 p-2 bg-zinc-800 border border-emerald-500/30 rounded hover:bg-zinc-700 text-xs font-bold text-center flex items-center justify-center h-full min-h-[40px]"
 									on:click={(e) => {
 										e.stopPropagation();
 										select(layer);
@@ -423,11 +459,14 @@
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 					{#each data.analyze as item}
 						<button
-							class="p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center flex flex-col items-center justify-center min-h-[80px]"
+							class="p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center flex flex-col items-center justify-center min-h-[80px] relative"
 							on:click={() => select(item)}
 							class:ring-2={selectedItem === item}
 							class:ring-emerald-400={selectedItem === item}
 						>
+							{#if hasProjectLink(item)}
+								{@render projectIndicator()}
+							{/if}
 							<span class="font-bold text-sm mb-2">{item.title}</span>
 							{@render icon(item.icon)}
 						</button>
@@ -448,11 +487,14 @@
 				<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
 					{#each data.users as user}
 						<button
-							class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center"
+							class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center relative"
 							on:click={() => select(user)}
 							class:ring-2={selectedItem === user}
 							class:ring-emerald-400={selectedItem === user}
 						>
+							{#if hasProjectLink(user)}
+								{@render projectIndicator()}
+							{/if}
 							<div class="font-bold mb-1">{user.title}</div>
 							{@render icon(user.icon)}
 						</button>
