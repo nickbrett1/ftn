@@ -53,4 +53,45 @@ describe('DataArchitectureHTML', () => {
 		const svgs = container.querySelectorAll('svg');
 		expect(svgs.length).toBeGreaterThan(5);
 	});
+
+	it('renders links with type badges and descriptions', async () => {
+		render(DataArchitectureHTML);
+
+		// Click on "Collect & Transform" to see the "Modern ETL" link
+		const collectButton = screen.getByText('CDC | ETL | Event Streaming').closest('button');
+		await fireEvent.click(collectButton);
+
+		// Verify the link exists
+		const link = screen.getByText('Modern ETL without a Data Warehouse');
+		expect(link).toBeInTheDocument();
+		expect(link.closest('a')).toHaveAttribute('href', '/projects/dbt-duckdb');
+
+		// Verify the "My Project" badge is displayed
+		const myProjectBadge = screen.getByText('My Project');
+		expect(myProjectBadge).toBeInTheDocument();
+		expect(myProjectBadge).toHaveClass('text-emerald-300'); // Green for my project
+
+		// Verify the description is displayed
+		const description = screen.getByText(/See how I implemented this pattern/i);
+		expect(description).toBeInTheDocument();
+
+		// Close panel
+		const closeButton = screen.getByText('Close');
+		await fireEvent.click(closeButton);
+
+		// Click on "Data Lake" which has external reference links
+		// Use getByRole to be more precise if possible, or text inside the button
+		// Data Lake is a complex button (div with role=button)
+		const datalakeTitle = screen.getByText('Data Lake');
+		const datalakeButton = datalakeTitle.closest('div[role="button"]');
+		await fireEvent.click(datalakeButton);
+
+		// Verify "Reference" badge
+		const refBadge = screen.getByText('Reference');
+		expect(refBadge).toBeInTheDocument();
+		expect(refBadge).toHaveClass('text-blue-300'); // Blue for reference
+
+		// Verify description
+		expect(screen.getByText(/Learn more about the Data Lake concept from AWS/i)).toBeInTheDocument();
+	});
 });
