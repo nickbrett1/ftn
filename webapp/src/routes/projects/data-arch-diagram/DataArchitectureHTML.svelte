@@ -192,7 +192,7 @@
 	}
 
 	function hasProjectLink(item) {
-		return item.links?.some(link => link.type === 'project');
+		return item.links?.some((link) => link.type === 'project');
 	}
 </script>
 
@@ -228,7 +228,12 @@
 {#snippet projectIndicator()}
 	<div class="absolute top-2 right-2 text-purple-400" title="Contains Project Example">
 		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+			/>
 		</svg>
 	</div>
 {/snippet}
@@ -349,7 +354,12 @@
 										{#if i > 0}
 											<div class="flex justify-center -my-1 text-emerald-500/30 z-0">
 												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-3-3m3 3l3-3" />
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M12 5v14m0 0l-3-3m3 3l3-3"
+													/>
 												</svg>
 											</div>
 										{/if}
@@ -390,8 +400,18 @@
 						<div class="flex items-center gap-1 mb-4">
 							{#each data.store.dwh.storage as layer, i}
 								{#if i > 0}
-									<svg class="w-4 h-4 text-emerald-500/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+									<svg
+										class="w-4 h-4 text-emerald-500/30 shrink-0"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M14 5l7 7m0 0l-7 7m7-7H3"
+										/>
 									</svg>
 								{/if}
 								<button

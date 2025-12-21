@@ -19,14 +19,84 @@
 		</h1>
 		<div class="max-w-4xl mx-auto mb-12 text-center text-gray-300 space-y-6">
 			<p class="text-lg">
-				Most use-cases I've seen for coding agents focus on taking a text prompt and generating text.
-				However newer models like Gemini 3 claim to have strong <strong><a href="https://cloud.google.com/use-cases/multimodal-ai" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">multi-modal capabilities</a></strong>
-    As an experiment, I uploading a photo of a data architecture diagram from the excellent book <em>Architecting Data and Machine Learning Platform</em> and as a way to build on the concepts and explain it to others, I asked Gemini to generate a fully functional,
-				interactive HTML/Svelte diagram.
+				Most use-cases I've seen for coding agents focus on taking a text prompt and generating
+				text. However, newer models like Gemini 3 claim to have strong <strong
+					><a
+						href="https://cloud.google.com/use-cases/multimodal-ai"
+						class="text-emerald-400 hover:text-emerald-300 underline"
+						target="_blank"
+						rel="noopener noreferrer">multi-modal capabilities</a
+					></strong
+				>.
+			</p>
+
+			<!-- Visual Workflow Diagram -->
+			<div class="flex flex-col md:flex-row items-center justify-center gap-4 my-10 text-white">
+				<div class="flex flex-col items-center gap-2">
+					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
+						<span class="text-2xl mb-2 block">📝</span>
+						<span class="text-sm font-medium text-gray-200">Text Prompt</span>
+					</div>
+				</div>
+				<div class="text-2xl font-bold text-gray-500 hidden md:block">+</div>
+				<div class="md:hidden text-gray-500">↓</div>
+
+				<div class="flex flex-col items-center gap-2">
+					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
+						<span class="text-2xl mb-2 block">🖼️</span>
+						<span class="text-sm font-medium text-gray-200">Image</span>
+					</div>
+				</div>
+
+				<div class="text-2xl font-bold text-gray-500 hidden md:block">→</div>
+				<div class="md:hidden text-gray-500">↓</div>
+
+				<div class="flex flex-col items-center justify-center">
+					<div
+						class="bg-gradient-to-br from-blue-600 to-purple-600 p-1 rounded-full shadow-lg shadow-purple-500/20"
+					>
+						<div
+							class="bg-zinc-900 rounded-full w-24 h-24 flex flex-col items-center justify-center"
+						>
+							<span class="text-2xl mb-1">✨</span>
+							<span
+								class="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400"
+								>Gemini 3</span
+							>
+						</div>
+					</div>
+				</div>
+
+				<div class="text-2xl font-bold text-gray-500 hidden md:block">→</div>
+				<div class="md:hidden text-gray-500">↓</div>
+
+				<div class="flex flex-col items-center gap-2">
+					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
+						<span class="text-2xl mb-2 block">💻</span>
+						<span class="text-sm font-medium text-gray-200">Code</span>
+					</div>
+				</div>
+			</div>
+
+			<p>
+				As an experiment, I uploaded a photo of a data architecture diagram from the excellent book
+				<a
+					href="https://www.oreilly.com/library/view/architecting-data-and/9781098151607/"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="text-emerald-400 hover:text-emerald-300 underline"
+					><em>Architecting Data and Machine Learning Platforms</em></a
+				>.
 			</p>
 			<p>
-				The result below was quite good and highlights how Gemini 3 can interpret visual spatial relationships and text,
-				translating them into semantic structure and styled components. It took some iteration to produce the results; it wasn't a one-shot prompt, but still impressive.
+				My goal was to build on the concepts and explain them to others, so I asked Gemini to
+				generate a fully functional, interactive HTML/Svelte diagram based on the image.
+			</p>
+			<p>
+				The result below was quite good and highlights how Gemini 3 can interpret visual spatial
+				relationships and text, translating them into semantic structure and styled components. It
+				took some iteration to produce the results; it wasn't a one-shot prompt, but still
+				impressive.
 			</p>
 		</div>
 
@@ -54,16 +124,16 @@
 						/>
 					</div>
 					<p class="text-sm text-gray-400 mt-4 italic">
-						A photo of a diagram from the book <em>Architecting Data and Machine Learning Platform</em> provided as the reference material.
+						A photo of a diagram from the book <em
+							>Architecting Data and Machine Learning Platform</em
+						> provided as the reference material.
 					</p>
 				</div>
 			</div>
 
 			<!-- Generated Diagram -->
 			<div class="flex flex-col gap-4">
-				<div
-					class="bg-zinc-800/50 rounded-xl p-1 border border-zinc-700 shadow-xl overflow-hidden"
-				>
+				<div class="bg-zinc-800/50 rounded-xl p-1 border border-zinc-700 shadow-xl overflow-hidden">
 					<div class="p-5 pb-0">
 						<h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
 							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -71,12 +141,14 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									stroke-width="2"
-									d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg
+									d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+								></path></svg
 							>
 							The Output: Generated Code
 						</h2>
 						<p class="text-sm text-gray-400 mb-4 italic">
-							Interactive Svelte component generated by Gemini 3. Click items to explore. Boxes with purple stars contain links to my projects.
+							Interactive Svelte component generated by Gemini 3. Click items to explore. Boxes with
+							purple stars contain links to my projects.
 						</p>
 					</div>
 					<!-- Wrapper to ensure diagram containment -->

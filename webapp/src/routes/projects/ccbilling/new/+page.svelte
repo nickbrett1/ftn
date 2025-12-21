@@ -19,8 +19,12 @@
 	const today = new Date().toISOString().split('T')[0];
 
 	// Initialize with untrack to avoid dependency issues
-	let startDate = $state(untrack(() => validateDate(data.defaultStartDate) ? data.defaultStartDate : today));
-	let endDate = $state(untrack(() => validateDate(data.defaultEndDate) ? data.defaultEndDate : today));
+	let startDate = $state(
+		untrack(() => (validateDate(data.defaultStartDate) ? data.defaultStartDate : today))
+	);
+	let endDate = $state(
+		untrack(() => (validateDate(data.defaultEndDate) ? data.defaultEndDate : today))
+	);
 
 	let isSubmitting = $state(false);
 	let error = $state('');
