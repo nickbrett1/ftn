@@ -20,7 +20,50 @@
 		<div class="max-w-4xl mx-auto mb-12 text-center text-gray-300 space-y-6">
 			<p class="text-lg">
 				Most use-cases I've seen for coding agents focus on taking a text prompt and generating
-				text. However, newer models like Gemini 3 claim to have strong <strong
+				text.
+			</p>
+
+			<!-- Typical Workflow Diagram -->
+			<div class="flex flex-col md:flex-row items-center justify-center gap-4 my-6 text-white">
+				<div class="flex flex-col items-center gap-2">
+					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
+						<span class="text-2xl mb-2 block">📝</span>
+						<span class="text-sm font-medium text-gray-200">Text Prompt</span>
+					</div>
+				</div>
+
+				<div class="text-2xl font-bold text-gray-500 hidden md:block">→</div>
+				<div class="md:hidden text-gray-500">↓</div>
+
+				<div class="flex flex-col items-center justify-center">
+					<div
+						class="bg-gradient-to-br from-blue-600 to-purple-600 p-1 rounded-full shadow-lg shadow-purple-500/20"
+					>
+						<div
+							class="bg-zinc-900 rounded-full w-24 h-24 flex flex-col items-center justify-center"
+						>
+							<span class="text-2xl mb-1">✨</span>
+							<span
+								class="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400"
+								>Gemini 3</span
+							>
+						</div>
+					</div>
+				</div>
+
+				<div class="text-2xl font-bold text-gray-500 hidden md:block">→</div>
+				<div class="md:hidden text-gray-500">↓</div>
+
+				<div class="flex flex-col items-center gap-2">
+					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
+						<span class="text-2xl mb-2 block">💻</span>
+						<span class="text-sm font-medium text-gray-200">Code</span>
+					</div>
+				</div>
+			</div>
+
+			<p class="text-lg">
+				However, newer models like Gemini 3 claim to have strong <strong
 					><a
 						href="https://cloud.google.com/use-cases/multimodal-ai"
 						class="text-emerald-400 hover:text-emerald-300 underline"
@@ -32,19 +75,28 @@
 
 			<!-- Visual Workflow Diagram -->
 			<div class="flex flex-col md:flex-row items-center justify-center gap-4 my-10 text-white">
-				<div class="flex flex-col items-center gap-2">
-					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
-						<span class="text-2xl mb-2 block">📝</span>
-						<span class="text-sm font-medium text-gray-200">Text Prompt</span>
+				<!-- Inputs Group -->
+				<div
+					class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-800/30 p-4 rounded-xl border border-dashed border-zinc-700"
+				>
+					<div class="flex flex-col items-center gap-2">
+						<div
+							class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg"
+						>
+							<span class="text-2xl mb-2 block">📝</span>
+							<span class="text-sm font-medium text-gray-200">Text Prompt</span>
+						</div>
 					</div>
-				</div>
-				<div class="text-2xl font-bold text-gray-500 hidden md:block">+</div>
-				<div class="md:hidden text-gray-500">↓</div>
 
-				<div class="flex flex-col items-center gap-2">
-					<div class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg">
-						<span class="text-2xl mb-2 block">🖼️</span>
-						<span class="text-sm font-medium text-gray-200">Image</span>
+					<div class="text-2xl font-bold text-gray-500">+</div>
+
+					<div class="flex flex-col items-center gap-2">
+						<div
+							class="bg-zinc-800 border border-zinc-600 p-4 rounded-lg text-center w-32 shadow-lg"
+						>
+							<span class="text-2xl mb-2 block">🖼️</span>
+							<span class="text-sm font-medium text-gray-200">Image</span>
+						</div>
 					</div>
 				</div>
 
