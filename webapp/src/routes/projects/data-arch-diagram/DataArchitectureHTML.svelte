@@ -233,33 +233,33 @@
 	</div>
 {/snippet}
 
-<div class="w-full max-w-6xl mx-auto p-4 md:p-8 bg-zinc-900 text-zinc-200 font-sans">
-	<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+<div class="w-full p-4 md:p-8 bg-zinc-900 text-zinc-200 font-sans">
+	<div class="grid grid-cols-1 2xl:grid-cols-12 gap-6 relative">
 		<!-- Sidebar: Governance -->
-		<div class="lg:col-span-1 flex flex-col">
+		<div class="2xl:col-span-1 flex flex-col">
 			<button
-				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center gap-4 lg:[writing-mode:vertical-lr]"
+				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center gap-4 2xl:[writing-mode:vertical-lr]"
 				on:click={() => select(data.governance)}
 				class:ring-2={selectedItem === data.governance}
 				class:ring-emerald-400={selectedItem === data.governance}
 			>
-				<span class="lg:mb-0 flex-shrink-0 lg:rotate-180">
+				<span class="2xl:mb-0 flex-shrink-0 2xl:rotate-180">
 					{@render icon(data.governance.icon, '')}
 				</span>
-				<span class="font-bold text-emerald-100 uppercase tracking-widest text-sm lg:rotate-180"
+				<span class="font-bold text-emerald-100 uppercase tracking-widest text-sm 2xl:rotate-180"
 					>Data Governance</span
 				>
 			</button>
 		</div>
 
 		<!-- Main Flow -->
-		<div class="lg:col-span-11 flex flex-col">
+		<div class="2xl:col-span-11 flex flex-col">
 			<!-- Section: Sources -->
 			<div>
-				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center 2xl:text-left">
 					Sources
 				</h3>
-				<div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+				<div class="flex flex-col sm:flex-row justify-center 2xl:justify-start gap-4">
 					{#each data.sources as source}
 						<button
 							class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center relative"
@@ -284,10 +284,10 @@
 
 			<!-- Section: Collect -->
 			<div>
-				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center 2xl:text-left">
 					Collect & Transform
 				</h3>
-				<div class="flex justify-center lg:justify-start">
+				<div class="flex justify-center 2xl:justify-start">
 					{#each data.collect.items as item}
 						<button
 							class="w-full p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center relative"
@@ -312,7 +312,7 @@
 
 			<!-- Section: Store -->
 			<div>
-				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center 2xl:text-left">
 					Store
 				</h3>
 
@@ -453,7 +453,7 @@
 
 			<!-- Section: Analyze -->
 			<div>
-				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center 2xl:text-left">
 					Analyze, Visualize, Activate
 				</h3>
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -481,10 +481,10 @@
 
 			<!-- Section: End Users -->
 			<div>
-				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center lg:text-left">
+				<h3 class="text-sm font-bold text-amber-100 uppercase mb-4 text-center 2xl:text-left">
 					End Users
 				</h3>
-				<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+				<div class="flex flex-col sm:flex-row gap-4 justify-center 2xl:justify-start">
 					{#each data.users as user}
 						<button
 							class="flex-1 p-4 bg-zinc-800 border border-emerald-500/30 rounded-lg hover:bg-zinc-700 transition-all text-center relative"
