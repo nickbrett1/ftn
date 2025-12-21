@@ -131,19 +131,17 @@
 			</div>
 
 			<p>
-				As an experiment, I uploaded a photo of a data architecture diagram from the excellent book
+				As an experiment, I created a prompt with a photo of a data architecture diagram from the
+				excellent book
 				<a
 					href="https://www.oreilly.com/library/view/architecting-data-and/9781098151607/"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="text-emerald-400 hover:text-emerald-300 underline"
 					><em>Architecting Data and Machine Learning Platforms</em></a
-				>.
+				>, and asked Gemini to generate the code for an equivalent interactive diagram.
 			</p>
-			<p>
-				My goal was to build on the concepts and explain them to others, so I asked Gemini to
-				generate a fully functional, interactive HTML/Svelte diagram based on the image.
-			</p>
+			<p>My goal was to build on the concepts and explain them to others.</p>
 			<p>
 				The result below was quite good and highlights how Gemini 3 can interpret visual spatial
 				relationships and text, translating them into semantic structure and styled components. It
