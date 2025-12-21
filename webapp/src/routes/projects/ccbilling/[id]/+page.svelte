@@ -16,11 +16,13 @@
 
 	// Create a local reactive copy of the data for mutations
 	// Use untrack to avoid creating a dependency on data during initialization
-	let localData = $state(untrack(() => ({
-		...data,
-		charges: [...data.charges],
-		autoAssociations: data.autoAssociations || []
-	})));
+	let localData = $state(
+		untrack(() => ({
+			...data,
+			charges: [...data.charges],
+			autoAssociations: data.autoAssociations || []
+		}))
+	);
 
 	// Update localData when data prop changes (e.g., after invalidate())
 	$effect(() => {
