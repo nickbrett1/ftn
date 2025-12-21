@@ -141,7 +141,6 @@
 					><em>Architecting Data and Machine Learning Platforms</em></a
 				>, and asked Gemini to generate the code for an equivalent interactive diagram.
 			</p>
-			<p>My goal was to build on the concepts and explain them to others.</p>
 			<p>
 				The result below was quite good and highlights how Gemini 3 can interpret visual spatial
 				relationships and text, translating them into semantic structure and styled components. It
