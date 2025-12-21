@@ -17,13 +17,13 @@
 		<div class="max-w-3xl mx-auto mb-8 text-center text-gray-300 space-y-4">
 			<p>
 				This diagram illustrates the data flows in a modern cloud data architecture. Click on the
-				components to learn more — <span class="text-emerald-400 font-bold"
-					>boxes marked with an icon link to my portfolio projects.</span
+				components to learn more — <span class="text-purple-400 font-bold"
+					>boxes marked with a purple star icon link to my portfolio projects.</span
 				>
 			</p>
 			<p class="text-sm text-gray-400 italic">
 				Note: This is a simplified view focusing on core data movements. Specific nuances like
-				Machine Learning training pipelines, model reciting loops, or industry-specific compliance
+				Machine Learning training pipelines, model retraining loops, or industry-specific compliance
 				flows are omitted for clarity.
 			</p>
 		</div>
