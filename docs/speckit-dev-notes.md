@@ -66,8 +66,24 @@ I ended up taking some of the speckit code and then just iterating on it directl
 
 5. A few other thoughts and lessons on agent tools from building this project:
 
-* Tried antigravity - ran out of credits very quickly
-* Tried Gemini - no strict limits, benfit
-* Jules better than Cursor equivalent, didnt get stuck. but uses lots of memory and can lack feedback, eg slow. But cool bew features, eg suggestions
+5.1 In this project I tried the new Antigravity IDE from Google (https://antigravity.google/)
+
+I wanted to see if in a similar way to speckit that I could work at a higher level of abstraction with agents. What happened? I ran out of credits within 15 minutes and so couldnt really evaluate it.
+Note, they have since increased the free tier usage amounts but i havent revisited.
+
+5.2 Gemini - no strict limits
+
+After exhausting my Cursor credits, I tried Gemini and this had the nice property that instead of cutting me off entirely from a model when i ran out of credits, it would just degrade me to a worse model for a few hours.
+For my personal projects, where I might be doing a couple of hours work at a time, this worked really well. I haven't looked back.
+
+5.3 Coding from my phone, Jules > Cursor
+
+With my switch away from Cursor, i lost access to Cursor's Cloud Agents. Per my previohs article these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
+Ive swotched over to Jules (https://jules.google.com/), the Google equivalent, and found it to be better.
+Cursor cloud agents appeared to geat stuck at times, seemingly for over a day, i expect due to capacity comstraints. Jules doesnt suffer from that.
+Jules can be slow, and its web interface uses so much client side memory it can fail to load on my phone if a chat thread is too long.
+but it seems to work, and does have some recent new features that seem cool, such as suggestions (though i havent seen many to know how good they can be.  
+
+
 * MCP helped eg with sonarqube and svelte5
 * Next - local LLM? Want to try a hardware project.
