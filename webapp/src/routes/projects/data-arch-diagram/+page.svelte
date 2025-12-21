@@ -19,13 +19,14 @@
 		</h1>
 		<div class="max-w-4xl mx-auto mb-12 text-center text-gray-300 space-y-6">
 			<p class="text-lg">
-				I tested the <strong><a href="https://cloud.google.com/use-cases/multimodal-ai" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">multi-modal capabilities</a> of Gemini 3</strong> by uploading a
-				photo of a diagram from the book <em>Architecting Data and Machine Learning Platform</em> and asking it to generate a fully functional,
+				Most use-cases I've seen for coding agents focus on taking a text prompt and generating text.
+				However newer models like Gemini 3 claim to have strong <strong><a href="https://cloud.google.com/use-cases/multimodal-ai" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">multi-modal capabilities</a></>
+    As an experiment, I uploading a photo of a data architecture diagram from the excellent book <em>Architecting Data and Machine Learning Platform</em> and as a way to build on the concepts and explain it to others, I asked Gemini to generate a fully functional,
 				interactive HTML/Svelte diagram.
 			</p>
 			<p>
-				The result below highlights how Gemini 3 can interpret visual spatial relationships and text,
-				translating them into semantic structure and styled components. It took some iteration to produce the results; it wasn't a one-shot prompt.
+				The result below was quite good and highlights how Gemini 3 can interpret visual spatial relationships and text,
+				translating them into semantic structure and styled components. It took some iteration to produce the results; it wasn't a one-shot prompt, but still impressive.
 			</p>
 		</div>
 
