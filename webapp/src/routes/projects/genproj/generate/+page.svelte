@@ -4,11 +4,12 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
 	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
+	import { untrack } from 'svelte';
 
 	let { data } = $props();
 	let loading = $state(false);
 	// We only use the initial error from data, subsequent errors are local
-	let error = $state(data.error || null);
+	let error = $state(untrack(() => data.error || null));
 	let success = $state(null);
 	let selectedFile = $state(null);
 

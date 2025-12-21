@@ -4,8 +4,8 @@
 
 	const { data } = $props();
 
-	// Use synchronous destructuring to get data immediately
-	const { creditCards = [] } = data;
+	// Use derived state to react to data changes
+	let creditCards = $derived(data.creditCards || []);
 
 	// Add card state - use $state() for Svelte 5 reactivity
 	let showAddForm = $state(false);

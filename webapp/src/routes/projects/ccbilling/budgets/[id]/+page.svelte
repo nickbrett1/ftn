@@ -1,5 +1,5 @@
 <script>
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import MerchantPicker from '$lib/components/MerchantPicker.svelte';
@@ -15,9 +15,21 @@
 
 	const { data } = $props();
 
-	// Core data - reactive state
-	let budget = $state(data.budget || null);
-	let merchants = $state(data.merchants || []);
+	// Core data - reactive state initialized with untrack to avoid dependency issues
+	let budget = $state(untrack(() => data.budget || null));
+	let merchants = $state(untrack(() => data.merchants || []));
+
+	$effect(() => {
+		// Reset merchants only if budget ID has changed (navigation)
+		// Check this BEFORE updating budget state to detect the change
+		const currentBudget = untrack(() => budget);
+		if (currentBudget?.id !== data.budget?.id) {
+			merchants = data.merchants || [];
+		}
+
+		// Update budget from data
+		budget = data.budget || null;
+	});
 
 	// Merchant management state
 	let selectedMerchant = $state('');

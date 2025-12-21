@@ -3,6 +3,7 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { goto, invalidate } from '$app/navigation';
+	import { untrack } from 'svelte';
 
 	// Get default dates from server
 	const { data } = $props();
@@ -16,8 +17,10 @@
 
 	// Use server-provided dates if valid, otherwise fall back to today
 	const today = new Date().toISOString().split('T')[0];
-	let startDate = $state(validateDate(data.defaultStartDate) ? data.defaultStartDate : today);
-	let endDate = $state(validateDate(data.defaultEndDate) ? data.defaultEndDate : today);
+
+	// Initialize with untrack to avoid dependency issues
+	let startDate = $state(untrack(() => validateDate(data.defaultStartDate) ? data.defaultStartDate : today));
+	let endDate = $state(untrack(() => validateDate(data.defaultEndDate) ? data.defaultEndDate : today));
 
 	let isSubmitting = $state(false);
 	let error = $state('');

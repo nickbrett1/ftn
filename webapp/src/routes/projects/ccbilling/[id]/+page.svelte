@@ -8,18 +8,19 @@
 	import { PDFService } from '$lib/client/ccbilling-pdf-service.js';
 	import tippy from 'tippy.js';
 	import 'tippy.js/dist/tippy.css';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { onDestroy } from 'svelte';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	// Create a local reactive copy of the data for mutations
-	let localData = $state({
+	// Use untrack to avoid creating a dependency on data during initialization
+	let localData = $state(untrack(() => ({
 		...data,
 		charges: [...data.charges],
 		autoAssociations: data.autoAssociations || []
-	});
+	})));
 
 	// Update localData when data prop changes (e.g., after invalidate())
 	$effect(() => {
