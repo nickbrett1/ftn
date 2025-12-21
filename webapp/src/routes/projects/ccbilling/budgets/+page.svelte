@@ -12,10 +12,10 @@
 
 	const { data } = $props();
 
-	// Use synchronous destructuring to get data immediately
-	const { budgets = [] } = data;
+	// Use derived state to react to data changes
+	let budgets = $derived(data.budgets || []);
 	// Sort budgets alphabetically by name
-	const sortedBudgets = [...budgets].sort((a, b) => a.name.localeCompare(b.name));
+	let sortedBudgets = $derived([...budgets].sort((a, b) => a.name.localeCompare(b.name)));
 
 	// Add budget state
 	let showAddForm = $state(false);

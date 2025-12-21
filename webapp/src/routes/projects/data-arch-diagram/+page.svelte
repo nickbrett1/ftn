@@ -20,7 +20,7 @@
 		<div class="max-w-4xl mx-auto mb-12 text-center text-gray-300 space-y-6">
 			<p class="text-lg">
 				Most use-cases I've seen for coding agents focus on taking a text prompt and generating text.
-				However newer models like Gemini 3 claim to have strong <strong><a href="https://cloud.google.com/use-cases/multimodal-ai" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">multi-modal capabilities</a></>
+				However newer models like Gemini 3 claim to have strong <strong><a href="https://cloud.google.com/use-cases/multimodal-ai" class="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">multi-modal capabilities</a></strong>
     As an experiment, I uploading a photo of a data architecture diagram from the excellent book <em>Architecting Data and Machine Learning Platform</em> and as a way to build on the concepts and explain it to others, I asked Gemini to generate a fully functional,
 				interactive HTML/Svelte diagram.
 			</p>

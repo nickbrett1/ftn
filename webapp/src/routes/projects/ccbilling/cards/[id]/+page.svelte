@@ -1,14 +1,24 @@
 <script>
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 
 	const { data } = $props();
-	const { card } = data;
+	let card = $derived(data.card);
 
-	let editName = $state(card?.name || '');
-	let editLast4 = $state(card?.last4 || '');
+	let editName = $state(untrack(() => data.card?.name || ''));
+	let editLast4 = $state(untrack(() => data.card?.last4 || ''));
 	let saveError = $state('');
+
+	$effect(() => {
+		// Update edit fields when card data changes (e.g. navigation)
+		// We use untrack to avoid infinite loops if we were setting reactive state that triggers this
+		// but here we just want to sync from props.
+		if (data.card) {
+			editName = data.card.name;
+			editLast4 = data.card.last4;
+		}
+	});
 
 	let showDeleteDialog = $state(false);
 	let isDeleting = $state(false);
