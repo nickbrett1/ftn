@@ -7,7 +7,8 @@
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
-		RobotSolid
+		RobotSolid,
+		ProjectDiagramSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -30,6 +31,20 @@
 				<p class="grow pt-5">
 					10 thoughts on AI-assisted development from building a personal finance tool using
 					Cursor's agent mode.
+				</p>
+			</div>
+		</Card>
+		<Card onclick={() => (globalThis.location.href = '/projects/data-arch-diagram')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow"
+						>Gemini 3 Data Architecture Diagram</span
+					>
+					<ProjectDiagramSolid class="size-10" aria-label="Data Architecture Diagram Project" />
+				</div>
+				<p class="grow pt-5">
+					An experiment testing Gemini 3's multimodal capabilities by asking it to convert a photo
+					of a data architecture diagram into interactive code.
 				</p>
 			</div>
 		</Card>
