@@ -10,7 +10,7 @@
 
 <h1 class="!mb-0 no-underline">Vibe Coding with Spec Kit</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">Structured approaches for building with agents</p>
-November 2025
+December 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
