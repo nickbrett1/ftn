@@ -80,10 +80,25 @@ For my personal projects, where I might be doing a couple of hours work at a tim
 
 With my switch away from Cursor, i lost access to Cursor's Cloud Agents. Per my previohs article these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
 Ive swotched over to Jules (https://jules.google.com/), the Google equivalent, and found it to be better.
-Cursor cloud agents appeared to geat stuck at times, seemingly for over a day, i expect due to capacity comstraints. Jules doesnt suffer from that.
+Cursor cloud agents appeared to geat stuck at times, seemingly for over a day, i expect due to capacity constraints. Jules doesnt suffer from that.
 Jules can be slow, and its web interface uses so much client side memory it can fail to load on my phone if a chat thread is too long.
 but it seems to work, and does have some recent new features that seem cool, such as suggestions (though i havent seen many to know how good they can be.  
 
+5.4 MCP integration is a must
 
-* MCP helped eg with sonarqube and svelte5
-* Next - local LLM? Want to try a hardware project.
+In my last agent project, I didn't invest time in setting up MCP integrations, or those integrations I would have liked didnt exist. 
+This caused me challenges when working for example with Svelte5 code (link to 7. Newer Frameworks Are Challenging in the building with AI agents article).
+For this project i took the time to setup three MCP integrations:
+
+1. for Svelte (https://svelte.dev/docs/mcp/overview) that made it easier to make UI changes correctly.
+2. for Sonarqube (https://github.com/SonarSource/sonarqube-mcp-server) that made it trivial to correct all my sonarqube violations
+3. for chrome devtools (https://github.com/ChromeDevTools/chrome-devtools-mcp) that i havent used as much but when ive hit difficult css based problems is very useful for the agent to 'see' the browser output
+
+Overall these seemed to be at least as valuable as upgrading my model from Gemini 2 to Gemini 3, and i expect more gains from thinking about how to provide agents with access to more tools
+
+6. So whats next?
+
+Well speckit didnt quite pan out for me, but I did use the project to upgrade many aspects of my workflow. So what's next? I'm thinking about two possibilities:
+
+1. Model expense was clearly a challenge. I'm left wondering whether an LLM running locally could help here, at least some tasks. I have a 2-year old MacStudio with a good amount of RAM so this might be an interesting path, especially if I can tune a model for my workflows.
+2. I want to push the boat out and see if an agent can help me with a hardware project, something that would be pretty daunting to attempt otherwise. Stay tuned!
