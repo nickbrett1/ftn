@@ -1,19 +1,133 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import Img from '@zerodevx/svelte-img';
+	import twoButtonsMeme from "$lib/images/twobuttonsmeme.jpg?as=run";
 
 	const { data } = $props();
 
 	const projectUrl = "https://github.com/nickbrett1/ftn";
 </script>
 
-<style>
-
-</style>
-
-<h1 class="!mb-0 no-underline">Spec Kit Driven Development</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">What I learned using Spec Kit to build a project generation wizard</p>
+<h1 class="!mb-0 no-underline">Vibe Coding with Spec Kit</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">Structured approaches for building with agents</p>
 November 2025
 <ProjectLinkButton href={projectUrl} />
 
 ## Introduction
+
+[Spec Kit](https://github.com/github/spec-kit) is a framework that helps define specifications for projects that are then built with agents. Or perhaps more simply stated, it provides a structured approach for "vibe coding".
+
+I wanted to try Spec Kit after my [past experience with agents](/projects/building-with-ai) to see if I could do better. The idea of Spec Kit is that it helps define the requirements for a project, along with the necessary constraints that need to be upheld.
+
+<!-- Placeholder for a new meme -->
+<Img src={twoButtonsMeme} alt="Meme about structured coding vs vibe coding" class="mx-auto my-4 max-w-md" />
+
+Overall I struggled to utilize Spec Kit well, but did learn many valuable lessons along the way.
+
+## Why Genproj was a Match
+
+[Genproj](/projects/genproj) is a small project to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like containers for my development workflow, CI/CD setup, secrets management, and of course nowadays setting up agents.
+
+Using an agent for this project seemed like a good match because:
+
+1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation. Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
+2.  **Decomposable:** The project could easily be decomposed. Every tool has a UI element, maybe some configuration for how it should be used, and then generates some code. Nice and repeatable for an agent.
+3.  **Clear Spec:** The spec felt pretty easy to define; there wasn't much UI or obvious ambiguity.
+4.  **Right Size:** It was a project that wasn't so small I could do it in a few prompts, but didn't seem so large that it would take a lot of effort to specify.
+
+## The Spec Kit Artifacts
+
+In this section, let's look at the files we created.
+
+### The Constitution
+
+[.specify/memory/constitution.md](https://github.com/nickbrett1/ftn/blob/main/.specify/memory/constitution.md) - This file defined all the principles that I didn't want the agents violating when creating the project. Things like code quality and testing.
+
+Creating this was quite good fun; it made me think about how I developed software, and I like the name 'constitution' as a way to enforce certain non-negotiables.
+
+### The Specification
+
+[specs/001-genproj/spec.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/spec.md) - Next up was the specification for the project itself. This was longer than I expected, even for what I thought was a simple project.
+
+As always, having to actually write down the spec really helped me crystalize what I wanted.
+
+### The Tasks
+
+From there, it was over to Spec Kit to generate a task breakdown to build it: [specs/001-genproj/tasks.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/tasks.md).
+
+## Lessons Learned
+
+### 1. Agents can be expensive!
+
+With Spec Kit, agents are doing a lot more work. Of course, this additional work is geared towards a higher quality result, breaking down tasks and validating work against the constitution.
+
+But in around 2 to 3 ~2 hour sessions I had entirely exhausted my monthly Cursor allowance ($20) and a top-up ($10). The sums weren't huge, but if I can be coding most nights, I could see this becoming many hundreds of dollars a month. Enough to give pause.
+
+**Solution?** Could we try to use different agents, some cheaper and less capable, for different Spec Kit activities? Not everything needs the most advanced model, but it wasn't at all obvious how to do this.
+
+### 2. Hard to iterate on specs
+
+I had tried with this project to pick something manageable in scope and complexity, and I was hoping the structured approach from Spec Kit would help manage that as well.
+
+But I still ran into problems. Primarily these were because I had missed out details in my specification. But because of that, I wanted to just update my specs and add/remove some stuff.
+
+But the workflow in Spec Kit isn't really geared to this kind of iteration, and I found myself just deleting what had been produced and going back. This was a major reason costs exploded.
+
+**Solution?** Helping coding agents work, and be aware of, iterative workflows seems key. It's a hard state management problem, as it is for humans, but we'll need better approaches for this.
+
+### 3. Big changes are difficult to manage
+
+Even when I could get a large change that I was happy with, I would face the normal problems of how to merge that back into my main branch.
+
+All Spec Kit changes for a given project go into a single branch, and when you kickoff the implementation it powers forward. This led to a lot of code being generated, maybe not all I wanted, and increased the chances of conflicts with the main branch.
+
+**Solution?** A human doing this work would have more understanding as to when to pause, when maybe to split the work across multiple branches, when to suggest merging pieces back into main. It seems we'll need more tooling for LLMs to do the same.
+
+### 4. Conclusion
+
+The conclusion was that Spec Kit loosens the reins on LLMs but aims to provide strong guardrails with specifications and the constitution. Through my own use of the tool, I wasn't able to stop the LLMs from running amok, though I do see the potential in the tool.
+
+I ended up taking some of the Spec Kit code and then just iterating on it directly with my agent to complete the project.
+
+## Other Thoughts on Agent Tools
+
+A few other thoughts and lessons on agent tools from building this project:
+
+### Antigravity IDE
+
+In this project, I tried the new [Antigravity IDE from Google](https://antigravity.google/). I wanted to see if, in a similar way to Spec Kit, I could work at a higher level of abstraction with agents.
+
+**What happened?** I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, they have since increased the free tier usage amounts but I haven't revisited.
+
+### Gemini - No Strict Limits
+
+After exhausting my Cursor credits, I tried Gemini and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to a worse model for a few hours.
+
+For my personal projects, where I might be doing a couple of hours work at a time, this worked really well. I haven't looked back.
+
+### Coding from my phone: Jules > Cursor
+
+With my switch away from Cursor, I lost access to Cursor's Cloud Agents. Per my [previous article](/projects/building-with-ai), these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
+
+I've switched over to [Jules](https://jules.google.com/), the Google equivalent, and found it to be better. Cursor cloud agents appeared to get stuck at times, seemingly for over a day, I expect due to capacity constraints. Jules doesn't suffer from that.
+
+Jules can be slow, and its web interface uses so much client-side memory it can fail to load on my phone if a chat thread is too long. But it seems to work, and does have some recent new features that seem cool, such as suggestions (though I haven't seen many to know how good they can be).
+
+### MCP Integration is a Must
+
+In my last agent project, I didn't invest time in setting up MCP integrations, or those integrations I would have liked didn't exist. This caused me challenges when working for example with [Svelte 5 code](/projects/building-with-ai#7-newer-frameworks-are-challenging).
+
+For this project, I took the time to set up three MCP integrations:
+
+1.  **Svelte:** [Svelte MCP](https://svelte.dev/docs/mcp/overview) made it easier to make UI changes correctly.
+2.  **SonarQube:** [SonarQube MCP](https://github.com/SonarSource/sonarqube-mcp-server) made it trivial to correct all my SonarQube violations.
+3.  **Chrome DevTools:** [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) that I haven't used as much but when I've hit difficult CSS-based problems is very useful for the agent to 'see' the browser output.
+
+Overall these seemed to be at least as valuable as upgrading my model from Gemini 2 to Gemini 3, and I expect more gains from thinking about how to provide agents with access to more tools.
+
+## What's Next?
+
+Well Spec Kit didn't quite pan out for me, but I did use the project to upgrade many aspects of my workflow. So what's next? I'm thinking about two possibilities:
+
+1.  **Local Models:** Model expense was clearly a challenge. I'm left wondering whether an LLM running locally could help here, at least for some tasks. I have a 2-year old MacStudio with a good amount of RAM so this might be an interesting path, especially if I can tune a model for my workflows.
+2.  **Hardware Project:** I want to push the boat out and see if an agent can help me with a hardware project, something that would be pretty daunting to attempt otherwise. Stay tuned!
