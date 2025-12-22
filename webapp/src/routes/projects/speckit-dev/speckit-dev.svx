@@ -1,6 +1,7 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import Img from '@zerodevx/svelte-img';
+	import speckitMeme from '$lib/images/speckit-meme.jpg?as=run';
 
 	const { data } = $props();
 
@@ -18,19 +19,12 @@ November 2025
 
 I wanted to try Spec Kit after my [past experience with agents](/projects/building-with-ai) to see if I could do better. The idea of Spec Kit is that it helps define the requirements for a project, along with the necessary constraints that need to be upheld.
 
-<div class="bg-gray-100 p-8 border-2 border-dashed border-gray-300 rounded-lg text-center my-8 mx-auto max-w-md">
-    <p class="font-bold text-lg mb-4 text-gray-700">Suggested Meme: Drake Hotline Bling</p>
-    <div class="flex flex-col gap-4">
-        <div class="bg-white p-4 rounded shadow-sm text-left border-l-4 border-red-400">
-            <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Drake Rejecting:</p>
-            <p class="font-medium text-gray-900">"Writing the code yourself in 2 hours"</p>
-        </div>
-        <div class="bg-white p-4 rounded shadow-sm text-left border-l-4 border-green-400">
-            <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Drake Approving:</p>
-            <p class="font-medium text-gray-900">"Spending $30 on AI credits to write a 'Constitution' and debug specifications for 2 days"</p>
-        </div>
-    </div>
-</div>
+<figure class="my-8 mx-auto max-w-md">
+    <Img src={speckitMeme} alt="Drake Hotline Bling Meme about using SpecKit" class="rounded-lg shadow-lg w-full" />
+    <figcaption class="text-center text-sm text-gray-500 mt-2 italic">
+        Although this captures my sentiment at times using Spec Kit, there was lots of promise and I could see it working better with practice and more support for iterative development.
+    </figcaption>
+</figure>
 
 Overall I struggled to utilize Spec Kit well, but did learn many valuable lessons along the way.
 
