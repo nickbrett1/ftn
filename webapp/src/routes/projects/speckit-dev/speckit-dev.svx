@@ -28,9 +28,9 @@ I wanted to try Spec Kit after my [past experience with agents](/projects/buildi
 
 Overall I struggled to utilize Spec Kit well, but did learn many valuable lessons along the way.
 
-## Why Genproj was a Match
+## Selecting a Project
 
-[Genproj](/projects/genproj) is a small project to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like containers for my development workflow, CI/CD setup, secrets management, and of course nowadays setting up agents.
+To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). This is a small project designed to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like containers for my development workflow, CI/CD setup, secrets management, and of course nowadays setting up agents.
 
 Using an agent for this project seemed like a good match because:
 
