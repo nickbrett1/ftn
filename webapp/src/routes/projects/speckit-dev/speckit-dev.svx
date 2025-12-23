@@ -104,11 +104,11 @@ I ended up taking some of the Spec Kit code and then just iterating on it direct
 
 A few other thoughts and lessons on agent tools from building this project:
 
-### Antigravity IDE
+### New AI Agent IDEs
 
-In this project, I tried the new [Antigravity IDE from Google](https://antigravity.google/). I wanted to see if, in a similar way to Spec Kit, I could work at a higher level of abstraction with agents.
+In this project, I tried some of the new AI Agent IDEs, such as the [Antigravity IDE from Google](https://antigravity.google/). I wanted to see if, in a similar way to Spec Kit, these tools could help me work at a higher level of abstraction by providing more structure for using LLMs.
 
-**What happened?** I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, they have since increased the free tier usage amounts but I haven't revisited.
+**What happened?** I found that it suffered from the same cost problem. I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, they have since increased the free tier usage amounts but I haven't revisited.
 
 ### Gemini - No Strict Limits
 
