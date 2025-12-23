@@ -106,6 +106,48 @@
 					"text": "Spec Kit Started"
 				}
 			}
+		],
+		"points": [
+			{
+				"x": 1760832000000,
+				"y": 17.75,
+				"marker": {
+					"size": 8,
+					"fillColor": "#fff",
+					"strokeColor": "#333",
+					"radius": 2,
+					"cssClass": "apexcharts-custom-class"
+				},
+				"label": {
+					"borderColor": "#FF4560",
+					"offsetY": 0,
+					"style": {
+						"color": "#fff",
+						"background": "#FF4560"
+					},
+					"text": "Heavy Spec Kit Usage"
+				}
+			},
+			{
+				"x": 1761955200000,
+				"y": 21.61,
+				"marker": {
+					"size": 8,
+					"fillColor": "#fff",
+					"strokeColor": "#333",
+					"radius": 2,
+					"cssClass": "apexcharts-custom-class"
+				},
+				"label": {
+					"borderColor": "#FF4560",
+					"offsetY": 0,
+					"style": {
+						"color": "#fff",
+						"background": "#FF4560"
+					},
+					"text": "Heavy Spec Kit Usage"
+				}
+			}
 		]
 	}
 }

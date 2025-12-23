@@ -18,6 +18,9 @@
 					fontFamily: 'inherit',
 					toolbar: {
 						show: false
+					},
+					zoom: {
+						enabled: false
 					}
 				},
 				stroke: {
@@ -31,8 +34,7 @@
 					}
 				},
 				dataLabels: {
-					enabled: true,
-					enabledOnSeries: [1]
+					enabled: false
 				},
 				labels: spendData.series[0].data.map((d) => d[0]),
 				xaxis: {
