@@ -11,6 +11,11 @@ vi.mock('@zerodevx/svelte-img', () => ({
 	default: vi.fn()
 }));
 
+// Mock SpendChart
+vi.mock('$lib/components/SpendChart.svelte', () => ({
+	default: vi.fn()
+}));
+
 describe('SpeckitDev Article', () => {
 	it('renders the new caption', () => {
 		render(SpeckitDev, { data: {} });
