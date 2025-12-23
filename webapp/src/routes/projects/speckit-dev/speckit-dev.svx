@@ -130,7 +130,7 @@ Jules can be slow, and its web interface uses so much client-side memory it can 
 
 ### MCP Integration is a Must
 
-In my last agent project, I didn't invest time in setting up MCP integrations, or those integrations I would have liked didn't exist. This caused me challenges when working for example with [Svelte 5 code](/projects/building-with-ai#7-newer-frameworks-are-challenging).
+In my last agent project, I didn't invest time in setting up MCP integrations, or those integrations I would have liked didn't exist. This caused me challenges when working for example with [Svelte 5 code](https://fintechnick.com/projects/building-with-ai#7-newer-frameworks-are-challenging).
 
 For this project, I took the time to set up three MCP integrations:
 

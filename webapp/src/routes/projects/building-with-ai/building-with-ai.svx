@@ -126,6 +126,7 @@ fi
 
 Similarly, Cursor would hang when running tests from my desktop, so I needed to introduce a special command (`npm run test:once`) for it to use to run tests, which again needed to be documented in my context file to guide the agent.
 
+<a id="7-newer-frameworks-are-challenging"></a>
 ### 7. Newer Frameworks Are Challenging
 
 > **Key Insight:** AI agents work best with established patterns and examples. For cutting-edge technologies, you need to create your own reference implementations.
