@@ -99,6 +99,8 @@
 				"x": 1760491940000,
 				"borderColor": "#775DD0",
 				"label": {
+					"position": "bottom",
+					"orientation": "vertical",
 					"style": {
 						"color": "#fff",
 						"background": "#775DD0"
