@@ -3,6 +3,7 @@
 	import SpendChart from '$lib/components/SpendChart.svelte';
 	import Img from '@zerodevx/svelte-img';
 	import speckitMeme from '$lib/images/speckit-meme.jpg?as=run';
+	import genprojDecomposable from '$lib/images/genproj-decomposable.jpeg?as=run';
 
 	const { data } = $props();
 
@@ -38,8 +39,11 @@ Using an agent for this project seemed like a good match because:
 1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation, such as the [GitHub Oauth API](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps) and the [vscode devcontainer configuration](https://containers.dev/implementors/json_reference/). Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
 2.  **Decomposable:** The project could easily be decomposed. Every tool has a UI element, maybe some configuration for how it should be used, and then generates some code. Nice and repeatable for an agent.
 
-    <figure class="my-4 mx-auto max-w-lg border-2 border-dashed border-gray-400 p-8 text-center text-gray-400 rounded-lg">
-        TODO: UI screenshot showing the config for a single capability
+    <figure class="my-4 mx-auto max-w-lg">
+        <Img src={genprojDecomposable} alt="GenProj capability cards" class="rounded-lg shadow-lg w-full" />
+        <figcaption class="text-center text-sm text-gray-500 mt-2 italic">
+            Note the auto-configuration for these three capabilities, showing their similarity.
+        </figcaption>
     </figure>
 3.  **Clear Spec:** The spec felt pretty easy to define; there wasn't much UI or obvious ambiguity.
 4.  **Right Size:** It was a project that wasn't so small I could do it in a few prompts, but didn't seem so large that it would take a lot of effort to specify.
