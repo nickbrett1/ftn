@@ -94,7 +94,16 @@ But the workflow in Spec Kit isn't really geared to this kind of iteration, and 
 
 Even when I could get a large change that I was happy with, I would face the normal problems of how to merge that back into my main branch.
 
-All Spec Kit changes for a given project go into a single branch, and when you kickoff the implementation it powers forward. This led to a lot of code being generated, maybe not all I wanted, and increased the chances of conflicts with the main branch.
+All Spec Kit changes for a given project go into a single branch, and when you kickoff the implementation it powers forward. To highlight quite how much work Spec Kit generated for this relatively simple project, here is the breakdown of the generated tasks:
+
+| Phase Type | Count |
+| :--- | :--- |
+| Setup & Foundation | 2 phases (12 tasks) |
+| User Stories | 9 phases (80 tasks) |
+| Polish & Error Handling | 2 phases (15 tasks) |
+| **Total** | **13 phases (107 tasks)** |
+
+This led to a huge amount of code being generated in a single go, maybe not all I wanted, and increased the chances of conflicts with the main branch.
 
 **Solution?** A human doing this work would have more understanding as to when to pause, when maybe to split the work across multiple branches, when to suggest merging pieces back into main. It seems we'll need more tooling for LLMs to do the same.
 
