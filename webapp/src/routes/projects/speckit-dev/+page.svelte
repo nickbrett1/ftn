@@ -6,10 +6,10 @@
 </script>
 
 <svelte:head>
-	<title>Spec Kit Driven Development</title>
+	<title>Learning Spec Kit: A Structured Approach to Vibe Coding</title>
 	<meta
 		name="description"
-		content="What I learned using Spec Kit to build a project generation wizard"
+		content="My experience using GitHub's Spec Kit to build an agent-generated project - structured approaches for vibe coding."
 	/>
 </svelte:head>
 
