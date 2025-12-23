@@ -31,12 +31,16 @@ Overall I struggled to utilize Spec Kit well, but did learn many valuable lesson
 
 ## Selecting a Project
 
-To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). This is a small project designed to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like containers for my development workflow, CI/CD setup, secrets management, and of course nowadays setting up agents.
+To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). This is a small project designed to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart).
 
 Using an agent for this project seemed like a good match because:
 
-1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation. Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
+1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation, such as the [GitHub Oauth API](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps) and the [vscode devcontainer configuration](https://containers.dev/implementors/json_reference/). Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
 2.  **Decomposable:** The project could easily be decomposed. Every tool has a UI element, maybe some configuration for how it should be used, and then generates some code. Nice and repeatable for an agent.
+
+    <figure class="my-4 mx-auto max-w-lg border-2 border-dashed border-gray-400 p-8 text-center text-gray-400 rounded-lg">
+        TODO: UI screenshot showing the config for a single capability
+    </figure>
 3.  **Clear Spec:** The spec felt pretty easy to define; there wasn't much UI or obvious ambiguity.
 4.  **Right Size:** It was a project that wasn't so small I could do it in a few prompts, but didn't seem so large that it would take a lot of effort to specify.
 
