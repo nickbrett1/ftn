@@ -86,7 +86,48 @@ I had tried with this project to pick something manageable in scope and complexi
 
 But I still ran into problems. Primarily these were because I had missed out details in my specification. But because of that, I wanted to just update my specs and add/remove some stuff.
 
-But the workflow in Spec Kit isn't really geared to this kind of iteration, and I found myself just deleting what had been produced and going back. This was a major reason costs exploded.
+But the workflow in Spec Kit isn’t really geared to this kind of iteration, and I found myself just deleting what had been produced and going back. This was a major reason costs exploded.
+
+To better understand this, let's look at the standard Spec Kit workflow. It is designed as a linear progression of commands:
+
+1.  **Install & Initialize**
+    First, you install the tool (e.g., using `uv`) and initialize your project:
+    ```bash
+    uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+    specify init <PROJECT_NAME>
+    ```
+
+2.  **Establish Project Principles**
+    You define the governing principles for code quality and standards:
+    ```text
+    /speckit.constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements
+    ```
+
+3.  **Create the Spec**
+    Next, you describe *what* you want to build:
+    ```text
+    /speckit.specify Build an application that can help me organize my photos in separate photo albums...
+    ```
+
+4.  **Create a Technical Implementation Plan**
+    Then you define *how* it should be built (tech stack, architecture):
+    ```text
+    /speckit.plan The application uses Vite with minimal number of libraries...
+    ```
+
+5.  **Break Down into Tasks**
+    The plan is converted into an actionable task list:
+    ```text
+    /speckit.tasks
+    ```
+
+6.  **Execute Implementation**
+    Finally, the agent executes the tasks:
+    ```text
+    /speckit.implement
+    ```
+
+The challenge arises when you reach step 4 or 5 and realize you missed something in step 3. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
 
 **Solution?** Helping coding agents work, and be aware of, iterative workflows seems key. It's a hard state management problem, as it is for humans, but we'll need better approaches for this.
 
