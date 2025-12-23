@@ -39,9 +39,9 @@ Using an agent for this project seemed like a good match because:
 3.  **Clear Spec:** The spec felt pretty easy to define; there wasn't much UI or obvious ambiguity.
 4.  **Right Size:** It was a project that wasn't so small I could do it in a few prompts, but didn't seem so large that it would take a lot of effort to specify.
 
-## The Spec Kit Artifacts
+## How to use Spec Kit
 
-In this section, let's look at the files we created.
+In this section, let's look at how to use Spec Kit in the context of the artifacts that need to be created.
 
 ### The Constitution
 
