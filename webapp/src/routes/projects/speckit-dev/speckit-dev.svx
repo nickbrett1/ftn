@@ -17,7 +17,7 @@ December 2025
 
 [Spec Kit](https://github.com/github/spec-kit) is a framework that helps define specifications for projects that are then built with agents. Or perhaps more simply stated, it provides a structured approach for "vibe coding".
 
-I wanted to try Spec Kit after my [past experience with agents](/projects/building-with-ai) to see if I could do better. The idea of Spec Kit is that it helps define the requirements for a project, along with the necessary constraints that need to be upheld. Yes, that’s what you do with Spec Kit but the benefit is that it should make development with agents more productive and produce higher quality results.
+I wanted to try Spec Kit after my [past experience with agents](/projects/building-with-ai) to see if I could do better. Spec Kit helps define the requirements for a project, along with the necessary constraints that need to be upheld, aiming to make development with agents more productive and produce higher quality results.
 
 <figure class="my-8 mx-auto max-w-md">
     <Img src={speckitMeme} alt="Drake Hotline Bling Meme about using SpecKit" class="rounded-lg shadow-lg w-full" />

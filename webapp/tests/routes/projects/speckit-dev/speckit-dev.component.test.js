@@ -14,6 +14,8 @@ vi.mock('@zerodevx/svelte-img', () => ({
 describe('SpeckitDev Article', () => {
 	it('renders the new caption', () => {
 		render(SpeckitDev, { data: {} });
-		expect(screen.getByText(/Although this captures my sentiment at times using Spec Kit/)).toBeTruthy();
+		expect(
+			screen.getByText(/Although this captures my sentiment at times using Spec Kit/)
+		).toBeTruthy();
 	});
 });
