@@ -14,6 +14,10 @@ This document provides information for AI agents working on this codebase.
   ```bash
   cd webapp && npm run test:once
   ```
+- **UI Verification**: Do **not** use Playwright for UI validation or end-to-end testing, as the environment is unreliable for external connections. Instead, rely on:
+  - **Unit Tests**: For logic and utility functions.
+  - **Component Tests**: Using `vitest` and `@testing-library/svelte` to verify frontend rendering and interactions.
+  - **Manual Verification**: Use `curl` to verify route accessibility and HTML structure if necessary.
 
 ## Image Handling
 
@@ -34,26 +38,9 @@ We use **@zerodevx/svelte-img** for optimized image loading.
     <Img src={myImage} alt="Description" class="your-classes" />
     ```
 
-## Jules Tools
-
-The `.jules` directory contains tools specifically designed for the Jules AI agent to verify changes and perform utility tasks.
-
-- **`verify_ui.py`**: A Playwright script used to verify the `genproj` UI. It navigates to the project generation page, takes a screenshot, and performs assertions (e.g., ensuring certain elements are hidden).
-    - **Usage**: `python3 .jules/verify_ui.py`
-    - **Prerequisites**: Ensure the app is running and Playwright dependencies are installed.
-
 ## Known Limitations
 
-### Playwright and `npm run preview`
-
-Both the `npm run preview` command (Vite preview server) and the development server `npm run dev` are unreliable in this environment for end-to-end testing. They frequently fail with connection refused errors when accessed by Playwright.
-
-**Guidance:**
-- **Avoid using Playwright** for visual verification or end-to-end testing in this environment.
-- Rely on **unit tests** and **component tests** (using `vitest` and `@testing-library/svelte`) to verify frontend logic and rendering.
-- Use tools like `curl` to verify that routes are accessible and return the expected HTML structure.
-
-## Unresolved Security Vulnerability: `node-tar`
+### Unresolved Security Vulnerability: `node-tar`
 
 A security vulnerability exists in `node-tar@7.5.1`, which is a bundled dependency of `npm@11.6.2`. This is a transitive dependency and cannot be resolved using `npm overrides` because it is bundled within the `npm` package itself.
 
