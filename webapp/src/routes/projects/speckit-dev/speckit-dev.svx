@@ -72,7 +72,7 @@ With Spec Kit, agents are doing a lot more work. Of course, this additional work
 
 <SpendChart />
 
-But in around 2 to 3 ~2 hour sessions I had entirely exhausted my monthly Cursor allowance ($20) and a top-up ($10). The sums weren't huge, but if I can be coding most nights, I could see this becoming many hundreds of dollars a month. Enough to give pause.
+When I was using Spec Kit I could rapidly exhaust all my monthly ($20) Cursor credits in 2-3 hours including a ($10) top up. The sums weren't huge, but if I can be coding most nights, I could see this becoming many hundreds of dollars a month. Enough to give pause.
 
 **Solution?** Could we try to use different agents, some cheaper and less capable, for different Spec Kit activities? Not everything needs the most advanced model, but it wasn't at all obvious how to do this.
 
