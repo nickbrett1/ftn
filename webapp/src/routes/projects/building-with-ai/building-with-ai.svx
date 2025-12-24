@@ -193,6 +193,4 @@ For those interested in exploring this approach, I'd recommend starting with a w
 
 ## Coda: Vibe Coding with Spec Kit
 
-Since writing this, the concept of "vibe coding" has taken off—a term popularized by Andrej Karpathy to describe a coding style where you focus on high-level intent and "vibes" while letting AI handle the implementation details. It's less about syntax and more about directing the flow of creation.
-
-This aligns perfectly with my next experiment: **Spec Kit**. I've started exploring [Spec Kit](https://github.com/github/spec-kit), a toolkit designed to streamline the creation of AI-native specifications. By combining the loose, creative energy of vibe coding with the structured rigor of Spec Kit, I'm hoping to bridge the gap between "it feels right" and "it works perfectly." It feels like the natural evolution of the lessons learned here—moving from managing code to managing the *intent* behind the code.
+Since writing this, the concept of "vibe coding" has taken off. This aligns perfectly with my next experiment: [**Vibe Coding with Spec Kit**](/projects/speckit-dev). I've started exploring [Spec Kit](https://github.com/github/spec-kit), a toolkit designed to streamline the creation of AI-native specifications. By combining the loose, creative energy of vibe coding with the structured rigor of Spec Kit, I'm hoping to bridge the gap between "it feels right" and "it works perfectly." It feels like the natural evolution of the lessons learned here—moving from managing code to managing the *intent* behind the code.
