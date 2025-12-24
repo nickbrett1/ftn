@@ -67,7 +67,7 @@ jobs:
 
   code_test:
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:current-browsers
     resource_class: large # Increase to large for more memory and CPU resources
     steps:
       - checkout:
