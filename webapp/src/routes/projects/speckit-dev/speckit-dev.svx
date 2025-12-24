@@ -146,7 +146,7 @@ For my personal projects, where I might be doing a couple of hours work at a tim
 
 ### Coding from my phone: Jules > Cursor
 
-With my switch away from Cursor, I lost access to Cursor's Cloud Agents. Per my [previous article](/projects/building-with-ai), these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
+With my switch away from Cursor, I lost access to [Cursor's Cloud Agents](https://cursor.com/blog/cloud-agents). Per my [previous article](/projects/building-with-ai), these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
 
 I've switched over to [Jules](https://jules.google.com/), the Google equivalent, and found it to be better. Cursor cloud agents regularly got stuck while this happens less frequently with Jules.
 
