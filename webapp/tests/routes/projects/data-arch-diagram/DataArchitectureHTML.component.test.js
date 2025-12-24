@@ -87,9 +87,9 @@ describe('DataArchitectureHTML', () => {
 		await fireEvent.click(datalakeButton);
 
 		// Verify "Reference" badge
-		const refBadge = screen.getByText('Reference');
-		expect(refBadge).toBeInTheDocument();
-		expect(refBadge).toHaveClass('text-blue-300'); // Blue for reference
+		const referenceBadge = screen.getByText('Reference');
+		expect(referenceBadge).toBeInTheDocument();
+		expect(referenceBadge).toHaveClass('text-blue-300'); // Blue for reference
 
 		// Verify description
 		expect(

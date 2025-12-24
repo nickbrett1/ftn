@@ -157,14 +157,15 @@ function getCircleCiTemplateData(context) {
 function getDependabotTemplateData(context) {
 	const config = context.configuration?.dependabot || {};
 	const interval = config.updateSchedule || 'weekly';
-	const updates = [];
-
-	// Always add GitHub Actions
-	updates.push(`
+	const updates = [
+		`
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "${interval}"`);
+      interval: "${interval}"`
+	];
+
+	// Always add GitHub Actions
 
 	if (context.capabilities.includes('devcontainer-node')) {
 		updates.push(`
@@ -211,9 +212,9 @@ export function getCapabilityTemplateData(capabilityId, context) {
 export function applyDefaults(capability, config) {
 	const finalConfig = { ...config };
 	if (capability?.configurationSchema?.properties) {
-		for (const [key, prop] of Object.entries(capability.configurationSchema.properties)) {
-			if (finalConfig[key] === undefined && prop.default !== undefined) {
-				finalConfig[key] = prop.default;
+		for (const [key, property] of Object.entries(capability.configurationSchema.properties)) {
+			if (finalConfig[key] === undefined && property.default !== undefined) {
+				finalConfig[key] = property.default;
 			}
 		}
 	}

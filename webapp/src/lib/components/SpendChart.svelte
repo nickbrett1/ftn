@@ -6,7 +6,7 @@
 	let chart;
 
 	onMount(async () => {
-		if (typeof window !== 'undefined') {
+		if (globalThis.window !== undefined) {
 			const ApexCharts = (await import('apexcharts')).default;
 
 			const options = {
@@ -52,8 +52,8 @@
 							}
 						},
 						labels: {
-							formatter: (val) => {
-								return '$' + val.toFixed(2);
+							formatter: (value) => {
+								return '$' + value.toFixed(2);
 							}
 						}
 					},

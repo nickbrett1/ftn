@@ -19,12 +19,12 @@ describe('Generate Page Interaction', () => {
 	};
 
 	beforeEach(() => {
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 		vi.clearAllMocks();
 		vi.useFakeTimers();
 
 		// Mock window.location.href
-		Object.defineProperty(window, 'location', {
+		Object.defineProperty(globalThis, 'location', {
 			value: {
 				href: '',
 				origin: 'http://localhost'
@@ -39,7 +39,7 @@ describe('Generate Page Interaction', () => {
 
 	it('displays success message on successful generation and redirects', async () => {
 		const repoUrl = 'https://github.com/user/repo';
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			json: async () => ({
 				message: 'Success',
@@ -49,8 +49,8 @@ describe('Generate Page Interaction', () => {
 
 		render(Page, { data: defaultData });
 
-		const generateBtn = screen.getByRole('button', { name: /Generate Project/i });
-		await fireEvent.click(generateBtn);
+		const generateButton = screen.getByRole('button', { name: /Generate Project/i });
+		await fireEvent.click(generateButton);
 
 		// Expect success message
 		await waitFor(() => {
@@ -62,7 +62,7 @@ describe('Generate Page Interaction', () => {
 
 		// Check redirection
 		// Since repoUrl starts with http, it should use window.location.href
-		expect(window.location.href).toBe(repoUrl);
+		expect(globalThis.location.href).toBe(repoUrl);
 		expect(goto).not.toHaveBeenCalled();
 	});
 });

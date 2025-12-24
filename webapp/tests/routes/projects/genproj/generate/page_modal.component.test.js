@@ -29,12 +29,12 @@ describe('Generate Page Component', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 	it('should show modal when REPOSITORY_EXISTS error occurs', async () => {
 		// Mock 409 response
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 409,
 			json: async () => ({ code: 'REPOSITORY_EXISTS', message: 'Repository already exists' })
@@ -43,8 +43,8 @@ describe('Generate Page Component', () => {
 		const { getByText, getByRole } = render(Page, { data });
 
 		// Click Generate button
-		const generateBtn = getByRole('button', { name: /generate project/i });
-		await fireEvent.click(generateBtn);
+		const generateButton = getByRole('button', { name: /generate project/i });
+		await fireEvent.click(generateButton);
 
 		// Check if modal appears
 		expect(getByText('Repository Already Exists')).toBeTruthy();
@@ -53,7 +53,7 @@ describe('Generate Page Component', () => {
 
 	it('should handle rename option', async () => {
 		// 1. Initial fail with 409
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 409,
 			json: async () => ({ code: 'REPOSITORY_EXISTS', message: 'Repository already exists' })
@@ -65,7 +65,7 @@ describe('Generate Page Component', () => {
 		await fireEvent.click(getByRole('button', { name: /generate project/i }));
 
 		// 2. Mock success for second attempt (rename)
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: async () => ({ repositoryUrl: 'https://github.com/user/new-name' })
@@ -79,7 +79,7 @@ describe('Generate Page Component', () => {
 		await fireEvent.click(getByRole('button', { name: 'Rename' }));
 
 		// Verify API call with new name
-		expect(global.fetch).toHaveBeenLastCalledWith(
+		expect(globalThis.fetch).toHaveBeenLastCalledWith(
 			'/projects/genproj/api/generate',
 			expect.objectContaining({
 				body: expect.stringContaining('"name":"new-name"')
@@ -89,7 +89,7 @@ describe('Generate Page Component', () => {
 
 	it('should handle overwrite option', async () => {
 		// 1. Initial fail with 409
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 409,
 			json: async () => ({ code: 'REPOSITORY_EXISTS', message: 'Repository already exists' })
@@ -101,7 +101,7 @@ describe('Generate Page Component', () => {
 		await fireEvent.click(getByRole('button', { name: /generate project/i }));
 
 		// 2. Mock success for overwrite attempt
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: async () => ({ repositoryUrl: 'https://github.com/user/test-project' })
@@ -111,7 +111,7 @@ describe('Generate Page Component', () => {
 		await fireEvent.click(getByRole('button', { name: /overwrite/i }));
 
 		// Verify API call with overwrite: true
-		expect(global.fetch).toHaveBeenLastCalledWith(
+		expect(globalThis.fetch).toHaveBeenLastCalledWith(
 			'/projects/genproj/api/generate',
 			expect.objectContaining({
 				body: expect.stringContaining('"overwrite":true')
