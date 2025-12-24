@@ -164,7 +164,7 @@ With my switch away from Cursor, I lost access to [Cursor's Cloud Agents](https:
 
 I've switched over to [Jules](https://jules.google.com/), the Google equivalent, and found it to be better. Cursor cloud agents regularly got stuck while this happens less frequently with Jules.
 
-Its web interface uses so much client-side memory it can fail to load on my phone if a chat thread is too long. But it seems to work, and does have some recent new features that seem cool, such as suggestions (though I haven't seen many to know how good they can be).
+Its web interface uses so much client-side memory it can fail to load on my phone if a chat thread is too long. But if I keep my requests small and incremental it seems to work well, and does have some recent new features that seem cool, such as suggestions (though I haven't seen many to know how good they can be).
 
 ### MCP Integration is a Must
 
