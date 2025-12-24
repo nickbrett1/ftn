@@ -132,9 +132,12 @@ function createMergedDevelopmentContainerJson(
 		if (otherJson.features) {
 			mergedJson.features = { ...mergedJson.features, ...otherJson.features };
 		}
-		if (otherJson.customizations?.vscode?.extensions)
-			for (const extension of otherJson.customizations?.vscode?.extensions)
+		const extensions = otherJson.customizations?.vscode?.extensions;
+		if (extensions) {
+			for (const extension of extensions) {
 				allExtensions.add(extension);
+			}
+		}
 	}
 
 	if (allExtensions.size > 0) {
