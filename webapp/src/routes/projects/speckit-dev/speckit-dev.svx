@@ -154,7 +154,7 @@ In this project, I tried some of the new AI Agent IDEs, such as the [Antigravity
 
 ### Gemini - No Strict Limits
 
-After exhausting my Cursor credits, I tried Gemini and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to an earlier model version for a few hours.
+After exhausting my Cursor credits, I tried [Gemini](https://github.com/google-gemini/gemini-cli) and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to an earlier model version for a few hours.
 
 For my personal projects, where I might be doing a couple of hours work at a time, this worked really well. I haven't looked back.
 
