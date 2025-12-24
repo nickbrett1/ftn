@@ -42,8 +42,7 @@ Well overall I struggled to utilize Spec Kit well, but did learn many valuable l
 
 ## Selecting a Project
 
-To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). Genproj is a template generator that creates the boilerplate configuration for a selection of tools that I find valuable to make it easier with new projects. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart).
-
+To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). Genproj is a code generator that creates the boilerplate configuration for a selection of tools that I find valuable to make it easy to get going with new projects. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart) but they can be time consuming to setup.
 Using an agent for this project seemed like a good match because:
 
 1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation, such as the [GitHub Oauth API](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps) and the [vscode devcontainer configuration](https://containers.dev/implementors/json_reference/). Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
@@ -60,29 +59,31 @@ Using an agent for this project seemed like a good match because:
 
 ## How to use Spec Kit
 
-In this section, let's look at how to use Spec Kit in the context of the artifacts that need to be created.
+Let me first explain how I used Spec Kit in the context of the artifacts that need to be created.
 
 ### The Constitution
 
 [.specify/memory/constitution.md](https://github.com/nickbrett1/ftn/blob/main/.specify/memory/constitution.md) - This file defined all the principles that I didn't want the agents violating when creating the project. Things like code quality and testing.
 
-Creating this was quite good fun; it made me think about how I developed software, and I like the name 'constitution' as a way to enforce certain non-negotiables.
+Creating this was quite good fun; it made me think about how I developed software, and I like the name 'constitution' as a way to enforce certain non-negotiables. 
+
+A lot of this effort could be repurposed as well into AGENTS.md for use outside of Spec Kit.
 
 ### The Specification
 
-[specs/001-genproj/spec.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/spec.md) - Next up was the specification for the project itself. I wrote the input section and then Spec Kit generated the user stories. There were more stories created than I anticipated and perhaps were needed - which I think as we mention later in the article led to more work from the agent and more cost.
+[specs/001-genproj/spec.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/spec.md) - Next up was the specification for the project itself. I wrote the input section and then Spec Kit generated the user stories. There were more stories created than I anticipated, and perhaps were needed - which I think as we mention later in the article led to more work from the agent and more cost.
 
 As always, having to actually write down the spec really helped me crystalize what I wanted.
 
 ### The Tasks
 
-From there, it was over to Spec Kit to generate a task breakdown to build it: [specs/001-genproj/tasks.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/tasks.md).
+From there, it was over to Spec Kit to generate a task breakdown to build Genproj: [specs/001-genproj/tasks.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/tasks.md).
 
 ## Lessons Learned
 
 ### 1. Agents can be expensive!
 
-With Spec Kit, agents are doing a lot of work. Of course, this additional work is geared towards a higher quality result, breaking down tasks and validating work against the constitution.
+With Spec Kit, agents are doing a lot of work. Of course, this additional work is geared towards a higher quality result, breaking down tasks and validating work against the constitution. But it came with, quite literally, a cost.
 
 <SpendChart />
 
