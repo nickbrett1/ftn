@@ -93,11 +93,12 @@ To better understand this, let's look at the standard Spec Kit workflow. It is d
 
 ```mermaid
 graph TD
-    A[Init Project] --> B[Establish Principles]
-    B --> C[Create Spec]
-    C --> D[Create Tech Plan]
-    D --> E[Create Tasks]
-    E --> F[Execute]
+    A["1. Init Project\nspecify init"] --> B["2. Establish Principles\n/speckit.constitution"]
+    B --> C["3. Create Spec\n/speckit.specify"]
+    C --> D["4. Create Tech Plan\n/speckit.plan"]
+    D --> E["5. Create Tasks\n/speckit.tasks"]
+    E --> F["6. Execute\n/speckit.implement"]
+    linkStyle 0,1,2,3,4 stroke:#d8b4fe,stroke-width:2px;
 ```
 
 The challenge arises when you reach step 4 or 5 and realize you missed something in step 3. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
