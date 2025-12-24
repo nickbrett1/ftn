@@ -257,6 +257,49 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 	return files;
 }
 
+function addExtensionsFromContainerJson(allExtensions, json) {
+	if (json.customizations?.vscode?.extensions) {
+		for (const extension of json.customizations.vscode.extensions) {
+			allExtensions.add(extension);
+		}
+	}
+}
+
+function addExtensionsFromCapabilities(allExtensions, capabilityIds) {
+	for (const capabilityId of capabilityIds) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		if (capability && capability.vscodeExtensions) {
+			for (const extension of capability.vscodeExtensions) allExtensions.add(extension);
+		}
+	}
+}
+
+function processAdditionalDevContainer(
+	capabilityId,
+	context,
+	templateEngine,
+	mergedJson,
+	allExtensions
+) {
+	const capability = capabilities.find((c) => c.id === capabilityId);
+	const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
+
+	const otherJsonContent = templateEngine.generateFile(
+		`devcontainer-${capabilityId.split('-')[1]}-json`,
+		{ ...context, capabilityConfig: capabilityConfig, capability: capability }
+	);
+	const otherJson = JSON.parse(otherJsonContent);
+
+	if (otherJson.features) {
+		mergedJson.features = {
+			...mergedJson.features,
+			...otherJson.features
+		};
+	}
+
+	addExtensionsFromContainerJson(allExtensions, otherJson);
+}
+
 function generateAndMergeDevcontainerJson(
 	templateEngine,
 	context,
@@ -277,39 +320,23 @@ function generateAndMergeDevcontainerJson(
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
 	const allExtensions = new Set();
-	if (mergedDevelopmentContainerJson.customizations?.vscode?.extensions) {
-		for (const extension of mergedDevelopmentContainerJson.customizations.vscode.extensions)
-			allExtensions.add(extension);
-	}
 
-	for (const capabilityId of context.capabilities) {
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (capability && capability.vscodeExtensions) {
-			for (const extension of capability.vscodeExtensions) allExtensions.add(extension);
-		}
-	}
+	// 1. From base JSON
+	addExtensionsFromContainerJson(allExtensions, mergedDevelopmentContainerJson);
 
+	// 2. From all capabilities (project configuration)
+	addExtensionsFromCapabilities(allExtensions, context.capabilities);
+
+	// 3. From other devcontainer JSONs (merged ones)
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
 		const capabilityId = developmentContainerCapabilities[index];
-		const capability = capabilities.find((c) => c.id === capabilityId);
-		const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
-
-		const otherJsonContent = templateEngine.generateFile(
-			`devcontainer-${capabilityId.split('-')[1]}-json`,
-			{ ...context, capabilityConfig: capabilityConfig, capability: capability }
+		processAdditionalDevContainer(
+			capabilityId,
+			context,
+			templateEngine,
+			mergedDevelopmentContainerJson,
+			allExtensions
 		);
-		const otherJson = JSON.parse(otherJsonContent);
-
-		if (otherJson.features) {
-			mergedDevelopmentContainerJson.features = {
-				...mergedDevelopmentContainerJson.features,
-				...otherJson.features
-			};
-		}
-		if (otherJson.customizations?.vscode?.extensions) {
-			for (const extension of otherJson.customizations.vscode.extensions)
-				allExtensions.add(extension);
-		}
 	}
 
 	if (allExtensions.size > 0) {
