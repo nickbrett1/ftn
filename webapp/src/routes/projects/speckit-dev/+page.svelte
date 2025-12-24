@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Learning Spec Kit: A Structured Approach to Vibe Coding</title>
+	<title>Vibe Coding with Spec Kit</title>
 	<meta
 		name="description"
 		content="My experience using GitHub's Spec Kit to build an agent-generated project - structured approaches for vibe coding."
