@@ -8,7 +8,8 @@
 		ToolboxSolid,
 		PlaneDepartureSolid,
 		RobotSolid,
-		ProjectDiagramSolid
+		ProjectDiagramSolid,
+		ClipboardCheckSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -22,6 +23,15 @@
 			These are some of my personal projects, tools, code and writings.
 		</div>
 
+		<Card onclick={() => (globalThis.location.href = '/projects/speckit-dev')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow">Vibe Coding with Spec Kit</span>
+					<ClipboardCheckSolid class="size-10" aria-label="Spec Kit Project" />
+				</div>
+				<p class="grow pt-5">Structured approaches for building with agents using Spec Kit.</p>
+			</div>
+		</Card>
 		<Card onclick={() => (globalThis.location.href = '/projects/building-with-ai')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
