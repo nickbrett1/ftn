@@ -129,7 +129,7 @@ describe('PDFUtils', () => {
 	});
 
 	// Skipping parsePDFFile tests that rely on complex environment mocking and real file parsing
-    // as per user instructions. We will test validateFile separately.
+	// as per user instructions. We will test validateFile separately.
 
 	describe('parseStatement', () => {
 		it('should parse statement successfully', async () => {
@@ -137,26 +137,27 @@ describe('PDFUtils', () => {
 			const mockFactory = {
 				createParser: vi.fn().mockReturnValue(mockParser),
 				findParser: vi.fn().mockReturnValue(mockParser),
-                parseStatement: vi.fn().mockResolvedValue({ success: true })
+				parseStatement: vi.fn().mockResolvedValue({ success: true })
 			};
 
-            // Mock PDFUtils.validatePDFFile
-            vi.spyOn(PDFUtils, 'validatePDFFile').mockReturnValue(true);
-            // Mock PDFUtils.parsePDFFile
-            vi.spyOn(PDFUtils, 'parsePDFFile').mockResolvedValue('Statement Text');
+			// Mock PDFUtils.validatePDFFile
+			vi.spyOn(PDFUtils, 'validatePDFFile').mockReturnValue(true);
+			// Mock PDFUtils.parsePDFFile
+			vi.spyOn(PDFUtils, 'parsePDFFile').mockResolvedValue('Statement Text');
 
 			const result = await PDFUtils.parseStatement(new File([], 'test.pdf'), mockFactory);
 			expect(result).toEqual({ success: true });
-            expect(mockFactory.parseStatement).toHaveBeenCalledWith('Statement Text');
+			expect(mockFactory.parseStatement).toHaveBeenCalledWith('Statement Text');
 		});
 
 		it('should handle PDF parsing errors', async () => {
-            vi.spyOn(PDFUtils, 'validatePDFFile').mockReturnValue(true);
-            vi.spyOn(PDFUtils, 'parsePDFFile').mockRejectedValue(new Error('PDF parsing failed'));
+			vi.spyOn(PDFUtils, 'validatePDFFile').mockReturnValue(true);
+			vi.spyOn(PDFUtils, 'parsePDFFile').mockRejectedValue(new Error('PDF parsing failed'));
 
-            const mockFactory = {};
-			await expect(PDFUtils.parseStatement(new File([], 'test.pdf'), mockFactory))
-                .rejects.toThrow('Statement parsing failed: PDF parsing failed');
+			const mockFactory = {};
+			await expect(PDFUtils.parseStatement(new File([], 'test.pdf'), mockFactory)).rejects.toThrow(
+				'Statement parsing failed: PDF parsing failed'
+			);
 		});
 	});
 
@@ -175,18 +176,18 @@ describe('PDFUtils', () => {
 		});
 
 		it('should throw error for file too large', () => {
-            // Mock File size property if needed, but File constructor creates file with size based on content.
-            // We need a large content or mock the size property.
-            // File properties are read-only.
-            // Create a mock object that looks like a File.
+			// Mock File size property if needed, but File constructor creates file with size based on content.
+			// We need a large content or mock the size property.
+			// File properties are read-only.
+			// Create a mock object that looks like a File.
 			const largeFile = {
 				name: 'large.pdf',
 				type: 'application/pdf',
 				size: 11 * 1024 * 1024 // 11MB
 			};
-            // Manually set prototype if instance check is strict, but validatePDFFile uses instanceof File.
-            // We can rely on duck typing if we change the implementation, or use Object.setPrototypeOf.
-            Object.setPrototypeOf(largeFile, File.prototype);
+			// Manually set prototype if instance check is strict, but validatePDFFile uses instanceof File.
+			// We can rely on duck typing if we change the implementation, or use Object.setPrototypeOf.
+			Object.setPrototypeOf(largeFile, File.prototype);
 
 			expect(() => PDFUtils.validatePDFFile(largeFile)).toThrow('PDF file too large');
 		});
@@ -197,9 +198,11 @@ describe('PDFUtils', () => {
 				type: 'application/pdf',
 				size: 2 * 1024 * 1024 // 2MB
 			};
-            Object.setPrototypeOf(file, File.prototype);
+			Object.setPrototypeOf(file, File.prototype);
 
-			expect(() => PDFUtils.validatePDFFile(file, { maxSize: 1 * 1024 * 1024 })).toThrow('PDF file too large');
+			expect(() => PDFUtils.validatePDFFile(file, { maxSize: 1 * 1024 * 1024 })).toThrow(
+				'PDF file too large'
+			);
 		});
 
 		it('should throw error for wrong file type', () => {
@@ -209,18 +212,18 @@ describe('PDFUtils', () => {
 
 		it('should validate Buffer objects', () => {
 			const buffer = new ArrayBuffer(100);
-            // Buffer.isBuffer checks for Node.js Buffer, but here it's ArrayBuffer?
-            // Code: `else if (Buffer.isBuffer(pdfFile))`
-            // In browser environment (jsdom), Buffer is polyfilled by vitest?
-            // Actually, validatePDFFile implementation:
-            // `} else if (Buffer.isBuffer(pdfFile)) {`
-            // We need to pass a Buffer.
-            const buf = Buffer.from('content');
+			// Buffer.isBuffer checks for Node.js Buffer, but here it's ArrayBuffer?
+			// Code: `else if (Buffer.isBuffer(pdfFile))`
+			// In browser environment (jsdom), Buffer is polyfilled by vitest?
+			// Actually, validatePDFFile implementation:
+			// `} else if (Buffer.isBuffer(pdfFile)) {`
+			// We need to pass a Buffer.
+			const buf = Buffer.from('content');
 			expect(() => PDFUtils.validatePDFFile(buf)).not.toThrow();
 		});
 
 		it('should throw error for Buffer too large', () => {
-            const buf = Buffer.alloc(11 * 1024 * 1024);
+			const buf = Buffer.alloc(11 * 1024 * 1024);
 			expect(() => PDFUtils.validatePDFFile(buf)).toThrow('PDF file too large');
 		});
 	});
