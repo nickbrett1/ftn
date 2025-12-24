@@ -29,7 +29,10 @@
 					<span class="text-xl font-bold leading-none pt-2 grow">Vibe Coding with Spec Kit</span>
 					<ClipboardCheckSolid class="size-10" aria-label="Spec Kit Project" />
 				</div>
-				<p class="grow pt-5">Structured approaches for building with agents using Spec Kit.</p>
+				<p class="grow pt-5">
+					Using GitHub's Spec Kit to define detailed specifications for AI agents, aiming to turn
+					'vibe coding' into a reliable engineering process.
+				</p>
 			</div>
 		</Card>
 		<Card onclick={() => (globalThis.location.href = '/projects/building-with-ai')}>
