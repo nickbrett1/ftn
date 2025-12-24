@@ -38,7 +38,7 @@ I wanted to try Spec Kit after my [past experience with agents](/projects/buildi
     </figcaption>
 </figure>
 
-Overall I struggled to utilize Spec Kit well, but did learn many valuable lessons along the way.
+Well overall I struggled to utilize Spec Kit well, but did learn many valuable lessons along the way.
 
 ## Selecting a Project
 
