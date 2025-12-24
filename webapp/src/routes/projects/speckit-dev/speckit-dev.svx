@@ -93,11 +93,11 @@ To better understand this, let's look at the standard Spec Kit workflow. It is d
 
 ```mermaid
 graph TD
-    A["1. Init Project&#10;specify init"] --> B["2. Establish Principles&#10;/speckit.constitution"]
-    B --> C["3. Create Spec&#10;/speckit.specify"]
-    C --> D["4. Create Tech Plan&#10;/speckit.plan"]
-    D --> E["5. Create Tasks&#10;/speckit.tasks"]
-    E --> F["6. Execute&#10;/speckit.implement"]
+    A["1. Init Project&#10specify init"] --> B["2. Establish Principles&#10/speckit.constitution"]
+    B --> C["3. Create Spec&#10/speckit.specify"]
+    C --> D["4. Create Tech Plan&#10/speckit.plan"]
+    D --> E["5. Create Tasks&#10/speckit.tasks"]
+    E --> F["6. Execute&#10/speckit.implement"]
     linkStyle 0,1,2,3,4 stroke:#d8b4fe,stroke-width:2px;
 ```
 
