@@ -26,28 +26,28 @@ A developer portfolio website showcasing financial technology expertise through 
 - **Testing**: Vitest unit testing, Storybook component testing
 - **Preview Deployments**: Automatic preview URLs for all feature branches
 
-## 💼 Featured Fintech Projects
+## 💼 Featured Projects
 
-### **Analytics & Business Intelligence**
+### **[Project Generator (genproj)](/projects/genproj)**
 
-Modern data pipeline and visualization tools:
+A developer tool to scaffold production-ready applications with selectable capabilities.
 
-- **dbt Integration**: Data transformation workflows with DuckDB
-- **Charting**: ApexCharts for interactive financial dashboards
-- **Real-time Analytics**: Performance monitoring and user behavior tracking
+- **Key Features**: Dynamic configuration of DevContainers, CI/CD pipelines, and code quality tools.
+- **Tech**: SvelteKit, GitHub API, Template Engine.
 
-**Technologies**: dbt, DuckDB, ApexCharts, data warehousing
+### **[Personal Finance (ccbilling)](/projects/ccbilling)**
 
-### **Personal Finance Automation (ccbilling)**
+Automated budget tracking and statement processing system.
 
-Automated credit card statement processing and budget management system:
+- **Key Features**: AI-driven merchant categorization, PDF parsing, encryption at rest.
+- **Tech**: Cloudflare Workers, D1, Vector Search.
 
-- **AI-Powered**: LLama LLM integration for merchant descriptions
-- **Document Processing**: Automated extraction of transactions from multiple credit card PDFs
-- **Budget Management**: Budget allocation and spending analysis
-- **Data Security**: Encrypted document storage
+### **[Data Analytics (dbt-duckdb)](/projects/dbt-duckdb)**
 
-**Technologies**: Svelte 5, LLM API integration, PDF processing, SQLite
+Serverless data warehouse and transformation pipeline.
+
+- **Key Features**: In-browser SQL analytics, dbt transformation logic.
+- **Tech**: DuckDB Wasm, Apache Arrow, SvelteKit.
 
 ## 🛠 Technical Architecture
 
