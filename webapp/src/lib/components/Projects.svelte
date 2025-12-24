@@ -30,8 +30,8 @@
 					<ClipboardCheckSolid class="size-10" aria-label="Spec Kit Project" />
 				</div>
 				<p class="grow pt-5">
-					Using GitHub's Spec Kit to define detailed specifications for AI agents, aiming to turn
-					'vibe coding' into a reliable engineering process.
+					Using 'Spec Kit' to define specifications for AI agents, aiming to turn
+					'vibe coding' into a more reliable engineering process.
 				</p>
 			</div>
 		</Card>
