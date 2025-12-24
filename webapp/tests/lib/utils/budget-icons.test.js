@@ -39,11 +39,11 @@ describe('Budget Icons Utility', () => {
 			// Matches 'gas'
 			expect(getDefaultIcon('Gas Station')).toBe('🚗');
 			// Matches 'streaming' - which maps to 'movie' keyword icon 🎬 in current implementation
-            // Actually 'streaming' keyword is mapped to 📺 in ICON_KEYWORD_MAP?
-            // Let's check budget-icons.js content again.
-            // { keywords: ['entertainment', 'movie', 'streaming'], icon: '🎬' },
-            // { keywords: ['streaming', 'netflix', 'hulu'], icon: '📺' },
-            // Ah, 'streaming' appears in both? The first one wins.
+			// Actually 'streaming' keyword is mapped to 📺 in ICON_KEYWORD_MAP?
+			// Let's check budget-icons.js content again.
+			// { keywords: ['entertainment', 'movie', 'streaming'], icon: '🎬' },
+			// { keywords: ['streaming', 'netflix', 'hulu'], icon: '📺' },
+			// Ah, 'streaming' appears in both? The first one wins.
 			expect(getDefaultIcon('Netflix Streaming')).toBe('🎬');
 		});
 
@@ -115,9 +115,7 @@ describe('Budget Icons Utility', () => {
 	});
 
 	describe('isIconUsedByOtherBudget', () => {
-		const budgets = [
-			{ id: 1, icon: '🛒', name: 'Groceries' }
-		];
+		const budgets = [{ id: 1, icon: '🛒', name: 'Groceries' }];
 
 		it('should return true if icon is used by another budget', () => {
 			expect(isIconUsedByOtherBudget('🛒', budgets, 2)).toBe(true);
@@ -133,9 +131,7 @@ describe('Budget Icons Utility', () => {
 	});
 
 	describe('getBudgetNameUsingIcon', () => {
-		const budgets = [
-			{ id: 1, icon: '🛒', name: 'Groceries' }
-		];
+		const budgets = [{ id: 1, icon: '🛒', name: 'Groceries' }];
 
 		it('should return budget name using the icon', () => {
 			expect(getBudgetNameUsingIcon('🛒', budgets, 2)).toBe('Groceries');
@@ -150,9 +146,9 @@ describe('Budget Icons Utility', () => {
 		});
 	});
 
-    describe('BUDGET_ICONS constant', () => {
-        it('should have key-value pairs', () => {
-            expect(BUDGET_ICONS['🛒']).toBe('Groceries');
-        });
-    });
+	describe('BUDGET_ICONS constant', () => {
+		it('should have key-value pairs', () => {
+			expect(BUDGET_ICONS['🛒']).toBe('Groceries');
+		});
+	});
 });
