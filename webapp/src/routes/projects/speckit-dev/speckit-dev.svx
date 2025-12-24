@@ -114,7 +114,7 @@ graph TD
 
 </div>
 
-The real problem is when you reach step 6 and have generated code and realize something is missing from step 3 because then you have generated a lot of work. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
+The problem is when you reach step 6 and have generated code and realize something is missing from step 3 because then you have generated a lot of work. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
 
 **Solution?** Helping coding agents work, and be aware of, iterative workflows seems key. It's a hard state management problem, as it is for humans, but we'll need better approaches for this.
 
