@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
 	validateProjectName,
@@ -7,10 +7,63 @@ import {
 	validateCapabilityConfiguration,
 	validateProjectConfiguration,
 	sanitizeProjectName,
-	generateProjectSlug
+	generateProjectSlug,
+    isValidUuid,
+    isValidEmail,
+    isValidUrl,
+    isNotEmpty
 } from '$lib/utils/validation.js';
 
+import { getCapabilityById } from '$lib/config/capabilities.js';
+
+// Mock getCapabilityById to test validation of required properties and enums
+vi.mock('$lib/config/capabilities', async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        getCapabilityById: (id) => {
+            if (id === 'mock-required-prop') {
+                return {
+                    id: 'mock-required-prop',
+                    configurationSchema: {
+                        type: 'object',
+                        required: ['mandatoryField'],
+                        properties: {
+                            mandatoryField: { type: 'string' }
+                        }
+                    }
+                };
+            }
+            return actual.getCapabilityById(id);
+        }
+    };
+});
+
+
 describe('validation utilities', () => {
+    describe('basic validators', () => {
+        it('isNotEmpty', () => {
+             expect(isNotEmpty('abc')).toBe(true);
+             expect(isNotEmpty('  ')).toBe(false);
+             expect(isNotEmpty(null)).toBe(false);
+        });
+
+        it('isValidUuid', () => {
+             expect(isValidUuid('123e4567-e89b-12d3-a456-426614174000')).toBe(true);
+             expect(isValidUuid('invalid')).toBe(false);
+        });
+
+        it('isValidEmail', () => {
+             expect(isValidEmail('test@example.com')).toBe(true);
+             expect(isValidEmail('invalid')).toBe(false);
+        });
+
+        it('isValidUrl', () => {
+             expect(isValidUrl('https://example.com')).toBe(true);
+             expect(isValidUrl('invalid')).toBe(false);
+        });
+    });
+
 	describe('validateProjectName', () => {
 		it('rejects missing or non-string names', () => {
 			expect(validateProjectName('')).toEqual({ valid: false, error: 'Project name is required' });
@@ -155,6 +208,12 @@ describe('validation utilities', () => {
 			}
 		});
 
+        it('validates required properties from schema', () => {
+             const result = validateCapabilityConfiguration({ 'mock-required-prop': {} }, ['mock-required-prop']);
+             expect(result.valid).toBe(false);
+             expect(result.errors).toContain('mock-required-prop.mandatoryField is required');
+        });
+
 		it('returns valid when all configurations pass', () => {
 			const configuration = {
 				'cloudflare-wrangler': { workerType: 'web' },
@@ -168,6 +227,16 @@ describe('validation utilities', () => {
 
 			expect(result).toEqual({ valid: true });
 		});
+
+        it('handles capabilities without validators', () => {
+             const result = validateCapabilityConfiguration({}, ['playwright']);
+             expect(result.valid).toBe(true);
+        });
+
+        it('handles unknown capability gracefully', () => {
+             const result = validateCapabilityConfiguration({}, ['unknown-cap']);
+             expect(result.valid).toBe(true);
+        });
 	});
 
 	describe('validateProjectConfiguration', () => {
@@ -203,6 +272,19 @@ describe('validation utilities', () => {
 			const result = validateProjectConfiguration(baseConfig);
 			expect(result).toEqual({ valid: true, errors: [] });
 		});
+
+        it('validates config even if selectedCapabilities missing', () => {
+             const config = { ...baseConfig, selectedCapabilities: undefined };
+             // it should fail selectedCapabilities check
+             const result = validateProjectConfiguration(config);
+             expect(result.valid).toBe(false);
+        });
+
+        it('handles missing configuration object gracefully', () => {
+             const config = { ...baseConfig, configuration: undefined };
+             const result = validateProjectConfiguration(config);
+             expect(result.valid).toBe(true);
+        });
 	});
 
 	describe('sanitizeProjectName and generateProjectSlug', () => {
