@@ -350,8 +350,8 @@
 									Sensitive
 								</button>
 								<div class="flex-1 flex flex-col gap-1">
-									{#each data.store.datalake.stages.slice(0, 3) as stage, i}
-										{#if i > 0}
+									{#each data.store.datalake.stages.slice(0, 3) as stage, index}
+										{#if index > 0}
 											<div class="flex justify-center -my-1 text-emerald-500/30 z-0">
 												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 													<path
@@ -398,8 +398,8 @@
 						</div>
 
 						<div class="flex items-center gap-1 mb-4">
-							{#each data.store.dwh.storage as layer, i}
-								{#if i > 0}
+							{#each data.store.dwh.storage as layer, index}
+								{#if index > 0}
 									<svg
 										class="w-4 h-4 text-emerald-500/30 shrink-0"
 										fill="none"

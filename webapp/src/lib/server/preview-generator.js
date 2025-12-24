@@ -96,13 +96,13 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
  * @param {string[]} allCapabilities - Array of all selected capability IDs.
  * @returns {FileObject} The generated devcontainer.json file object.
  */
-function createMergedDevContainerJson(
+function createMergedDevelopmentContainerJson(
 	templateEngine,
 	projectConfig,
-	devContainerCapabilities,
+	developmentContainerCapabilities,
 	allCapabilities
 ) {
-	const baseId = devContainerCapabilities[0];
+	const baseId = developmentContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
 	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
 
@@ -114,14 +114,13 @@ function createMergedDevContainerJson(
 	const mergedJson = JSON.parse(baseJsonContent);
 	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
 
-	allCapabilities.forEach((id) =>
+	for (const id of allCapabilities)
 		capabilities
 			.find((c) => c.id === id)
-			?.vscodeExtensions?.forEach((ext) => allExtensions.add(ext))
-	);
+			?.vscodeExtensions?.forEach((extension) => allExtensions.add(extension));
 
-	for (let i = 1; i < devContainerCapabilities.length; i++) {
-		const capId = devContainerCapabilities[i];
+	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
+		const capId = developmentContainerCapabilities[index];
 		const cap = capabilities.find((c) => c.id === capId);
 		const capConfig = applyDefaults(cap, projectConfig.configuration?.[capId] || {});
 		const otherJsonContent = templateEngine.generateFile(
@@ -133,7 +132,9 @@ function createMergedDevContainerJson(
 		if (otherJson.features) {
 			mergedJson.features = { ...mergedJson.features, ...otherJson.features };
 		}
-		otherJson.customizations?.vscode?.extensions?.forEach((ext) => allExtensions.add(ext));
+		if (otherJson.customizations?.vscode?.extensions)
+			for (const extension of otherJson.customizations?.vscode?.extensions)
+				allExtensions.add(extension);
 	}
 
 	if (allExtensions.size > 0) {
@@ -159,8 +160,12 @@ function createMergedDevContainerJson(
  * @param {string[]} devContainerCapabilities - Array of devcontainer capability IDs.
  * @returns {FileObject} The generated Dockerfile object.
  */
-function createDevContainerDockerfile(templateEngine, projectConfig, devContainerCapabilities) {
-	const baseId = devContainerCapabilities[0];
+function createDevelopmentContainerDockerfile(
+	templateEngine,
+	projectConfig,
+	developmentContainerCapabilities
+) {
+	const baseId = developmentContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
 	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
 	const content = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-dockerfile`, {
@@ -184,7 +189,7 @@ function createDevContainerDockerfile(templateEngine, projectConfig, devContaine
  * @param {string[]} allCapabilities - Array of all selected capability IDs.
  * @returns {Array<FileObject>} An array of generated file objects.
  */
-function createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
+function createDevelopmentContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
 	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
 		...projectConfig,
 		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
@@ -248,14 +253,18 @@ async function generateDevelopmentContainerArtifacts(
 	if (developmentContainerCapabilities.length === 0) return;
 
 	files.push(
-		createMergedDevContainerJson(
+		createMergedDevelopmentContainerJson(
 			templateEngine,
 			projectConfig,
 			developmentContainerCapabilities,
 			allCapabilities
 		),
-		createDevContainerDockerfile(templateEngine, projectConfig, developmentContainerCapabilities),
-		...createDevContainerShellFiles(templateEngine, projectConfig, allCapabilities)
+		createDevelopmentContainerDockerfile(
+			templateEngine,
+			projectConfig,
+			developmentContainerCapabilities
+		),
+		...createDevelopmentContainerShellFiles(templateEngine, projectConfig, allCapabilities)
 	);
 }
 
@@ -633,8 +642,8 @@ export function organizeFilesIntoFolders(files) {
 		let currentLevel = root;
 		let currentPath = '';
 
-		for (let i = 0; i < pathParts.length - 1; i++) {
-			const folderName = pathParts[i];
+		for (let index = 0; index < pathParts.length - 1; index++) {
+			const folderName = pathParts[index];
 			currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
 
 			let folder = currentLevel.find((f) => f.type === 'folder' && f.name === folderName);
@@ -670,11 +679,11 @@ export function organizeFilesIntoFolders(files) {
 			}
 			return a.type === 'folder' ? -1 : 1;
 		});
-		items.forEach((item) => {
+		for (const item of items) {
 			if (item.type === 'folder') {
 				sortItems(item.children);
 			}
-		});
+		}
 	};
 
 	sortItems(root);

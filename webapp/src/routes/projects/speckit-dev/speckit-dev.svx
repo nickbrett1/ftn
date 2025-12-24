@@ -21,6 +21,7 @@ December 2025
 
 I wanted to try Spec Kit after my [past experience with agents](/projects/building-with-ai) to see if I could do better. Spec Kit helps define the requirements for a project, along with the necessary constraints that need to be upheld, aiming to make development with agents more productive and produce higher quality results.
 
+<p class="mb-4">How did it go?</p>
 <figure class="my-8 mx-auto max-w-md">
     <Img src={speckitMeme} alt="Drake Hotline Bling Meme about using SpecKit" class="rounded-lg shadow-lg w-full" />
     <figcaption class="text-center text-sm text-gray-500 mt-2 italic">
@@ -32,7 +33,7 @@ Overall I struggled to utilize Spec Kit well, but did learn many valuable lesson
 
 ## Selecting a Project
 
-To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). This is a small project designed to make it easier to generate a new GitHub project with a selection of tools already configured that I find valuable. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart). Genproj is a template generator that creates the boilerplate configuration for these tools to make it easier with new projects.
+To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). Genproj is a template generator that creates the boilerplate configuration for a selection of tools that I find valuable to make it easier with new projects. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart).
 
 Using an agent for this project seemed like a good match because:
 
@@ -60,7 +61,7 @@ Creating this was quite good fun; it made me think about how I developed softwar
 
 ### The Specification
 
-[specs/001-genproj/spec.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/spec.md) - Next up was the specification for the project itself. This was longer than I expected, even for what I thought was a simple project.
+[specs/001-genproj/spec.md](https://github.com/nickbrett1/ftn/blob/main/specs/001-genproj/spec.md) - Next up was the specification for the project itself. I wrote the input section and then Spec Kit generated the user stories. There were more stories created than I anticipated and perhaps were needed - which I think as we mention later in the article led to more work from the agent and more cost.
 
 As always, having to actually write down the spec really helped me crystalize what I wanted.
 
@@ -72,7 +73,7 @@ From there, it was over to Spec Kit to generate a task breakdown to build it: [s
 
 ### 1. Agents can be expensive!
 
-With Spec Kit, agents are doing a lot more work. Of course, this additional work is geared towards a higher quality result, breaking down tasks and validating work against the constitution.
+With Spec Kit, agents are doing a lot of work. Of course, this additional work is geared towards a higher quality result, breaking down tasks and validating work against the constitution.
 
 <SpendChart />
 
@@ -90,42 +91,14 @@ But the workflow in Spec Kit isn’t really geared to this kind of iteration, an
 
 To better understand this, let's look at the standard Spec Kit workflow. It is designed as a linear progression of commands:
 
-1.  **Install & Initialize**
-    First, you install the tool (e.g., using `uv`) and initialize your project:
-    ```bash
-    uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-    specify init <PROJECT_NAME>
-    ```
-
-2.  **Establish Project Principles**
-    You define the governing principles for code quality and standards:
-    ```text
-    /speckit.constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements
-    ```
-
-3.  **Create the Spec**
-    Next, you describe *what* you want to build:
-    ```text
-    /speckit.specify Build an application that can help me organize my photos in separate photo albums...
-    ```
-
-4.  **Create a Technical Implementation Plan**
-    Then you define *how* it should be built (tech stack, architecture):
-    ```text
-    /speckit.plan The application uses Vite with minimal number of libraries...
-    ```
-
-5.  **Break Down into Tasks**
-    The plan is converted into an actionable task list:
-    ```text
-    /speckit.tasks
-    ```
-
-6.  **Execute Implementation**
-    Finally, the agent executes the tasks:
-    ```text
-    /speckit.implement
-    ```
+```mermaid
+graph TD
+    A[Init Project] --> B[Establish Principles]
+    B --> C[Create Spec]
+    C --> D[Create Tech Plan]
+    D --> E[Create Tasks]
+    E --> F[Execute]
+```
 
 The challenge arises when you reach step 4 or 5 and realize you missed something in step 3. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
 
@@ -150,7 +123,7 @@ This led to a huge amount of code being generated in a single go, maybe not all 
 
 ### 4. Conclusion
 
-The conclusion was that Spec Kit loosens the reins on LLMs but aims to provide strong guardrails with specifications and the constitution. Through my own use of the tool, I wasn't able to stop the LLMs from running amok, though I do see the potential in the tool.
+The conclusion was that Spec Kit enables LLMs to take on much larger pieces of work more autonomously - and uses strong guardrails to ensure correctness. Through my own use of the tool, I still found the guardrails insufficient, though I also could have selected a project that was too complex to do in one shot or not sufficiently specified my needs.
 
 I ended up taking some of the Spec Kit code and then just iterating on it directly with my agent to complete the project.
 
@@ -162,11 +135,11 @@ A few other thoughts and lessons on agent tools from building this project:
 
 In this project, I tried some of the new AI Agent IDEs, such as the [Antigravity IDE from Google](https://antigravity.google/). I wanted to see if, in a similar way to Spec Kit, these tools could help me work at a higher level of abstraction by providing more structure for using LLMs.
 
-**What happened?** I found that it suffered from the same cost problem. I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, they have since increased the free tier usage amounts but I haven't revisited.
+**What happened?** I found that it suffered from the same cost problem. I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, Google has since increased the free tier usage amounts but I haven't revisited.
 
 ### Gemini - No Strict Limits
 
-After exhausting my Cursor credits, I tried Gemini and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to a worse model for a few hours.
+After exhausting my Cursor credits, I tried Gemini and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to an earlier model version for a few hours.
 
 For my personal projects, where I might be doing a couple of hours work at a time, this worked really well. I haven't looked back.
 
@@ -174,9 +147,9 @@ For my personal projects, where I might be doing a couple of hours work at a tim
 
 With my switch away from Cursor, I lost access to Cursor's Cloud Agents. Per my [previous article](/projects/building-with-ai), these were really useful to help me make small incremental feature updates and bug fixes when away from my desktop.
 
-I've switched over to [Jules](https://jules.google.com/), the Google equivalent, and found it to be better. Cursor cloud agents appeared to get stuck at times, seemingly for over a day, I expect due to capacity constraints. Jules doesn't suffer from that.
+I've switched over to [Jules](https://jules.google.com/), the Google equivalent, and found it to be better. Cursor cloud agents regularly got stuck while this happens less frequently with Jules.
 
-Jules can be slow, and its web interface uses so much client-side memory it can fail to load on my phone if a chat thread is too long. But it seems to work, and does have some recent new features that seem cool, such as suggestions (though I haven't seen many to know how good they can be).
+Its web interface uses so much client-side memory it can fail to load on my phone if a chat thread is too long. But it seems to work, and does have some recent new features that seem cool, such as suggestions (though I haven't seen many to know how good they can be).
 
 ### MCP Integration is a Must
 

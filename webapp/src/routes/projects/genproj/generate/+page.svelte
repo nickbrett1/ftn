@@ -114,7 +114,7 @@
 			if (!response.ok) {
 				if (response.status === 401) {
 					if (result.message && result.message.includes('GitHub token not found')) {
-						await initiateGitHubAuth(window.location.href);
+						await initiateGitHubAuth(globalThis.location.href);
 						return;
 					}
 					goto('/notauthorised');
@@ -135,7 +135,7 @@
 				// Short delay so user can see success message
 				setTimeout(() => {
 					if (result.repositoryUrl.startsWith('http')) {
-						window.location.href = result.repositoryUrl;
+						globalThis.location.href = result.repositoryUrl;
 					} else {
 						goto(result.repositoryUrl);
 					}

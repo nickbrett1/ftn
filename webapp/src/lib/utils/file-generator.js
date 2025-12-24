@@ -278,15 +278,14 @@ function generateAndMergeDevcontainerJson(
 
 	const allExtensions = new Set();
 	if (mergedDevelopmentContainerJson.customizations?.vscode?.extensions) {
-		mergedDevelopmentContainerJson.customizations.vscode.extensions.forEach((ext) =>
-			allExtensions.add(ext)
-		);
+		for (const extension of mergedDevelopmentContainerJson.customizations.vscode.extensions)
+			allExtensions.add(extension);
 	}
 
 	for (const capabilityId of context.capabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.vscodeExtensions) {
-			capability.vscodeExtensions.forEach((ext) => allExtensions.add(ext));
+			for (const extension of capability.vscodeExtensions) allExtensions.add(extension);
 		}
 	}
 
@@ -308,7 +307,8 @@ function generateAndMergeDevcontainerJson(
 			};
 		}
 		if (otherJson.customizations?.vscode?.extensions) {
-			otherJson.customizations.vscode.extensions.forEach((ext) => allExtensions.add(ext));
+			for (const extension of otherJson.customizations.vscode.extensions)
+				allExtensions.add(extension);
 		}
 	}
 
@@ -319,7 +319,7 @@ function generateAndMergeDevcontainerJson(
 		if (!mergedDevelopmentContainerJson.customizations.vscode) {
 			mergedDevelopmentContainerJson.customizations.vscode = {};
 		}
-		mergedDevelopmentContainerJson.customizations.vscode.extensions = Array.from(allExtensions);
+		mergedDevelopmentContainerJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
 	return {

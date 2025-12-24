@@ -89,8 +89,8 @@
 		if (!selectedFile || !fileTreeContainer) return;
 
 		// Use data-path attribute to find the element within the scoped container
-		const buttons = Array.from(fileTreeContainer.querySelectorAll('button'));
-		const element = buttons.find((btn) => btn.dataset.path === selectedFile.path);
+		const buttons = [...fileTreeContainer.querySelectorAll('button')];
+		const element = buttons.find((button) => button.dataset.path === selectedFile.path);
 
 		if (element) {
 			element.scrollIntoView({ block: 'center', behavior: 'smooth' });
