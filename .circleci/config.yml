@@ -67,7 +67,7 @@ jobs:
 
   code_test:
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:current-browsers
     resource_class: large # Increase to large for more memory and CPU resources
     steps:
       - checkout:
@@ -79,6 +79,16 @@ jobs:
             - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v6-fresh-{{ .Branch }}-
             - node-v6-fresh-
+      - restore_cache:
+          name: Restore Playwright cache
+          keys:
+            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - playwright-{{ .Branch }}-
+            - playwright-
+      - run:
+          name: Install Playwright Chromium (if not cached)
+          command: |
+            cd webapp && npx playwright install chromium
       - attach_workspace:
           at: webapp
       - doppler/install
@@ -100,6 +110,11 @@ jobs:
             echo "Disk usage:"
             df -h
           when: always
+      - save_cache:
+          name: Cache Playwright
+          paths:
+            - ~/.cache/ms-playwright
+          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - store_test_results:
           path: ./webapp/reports/
       - sonarcloud/scan
