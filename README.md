@@ -40,14 +40,14 @@ A developer tool to scaffold production-ready applications with selectable capab
 Automated budget tracking and statement processing system.
 
 - **Key Features**: AI-driven merchant categorization, PDF parsing, encryption at rest.
-- **Tech**: Cloudflare Workers, D1, Vector Search.
+- **Tech**: Cloudflare Workers, D1, Llama LLM
 
 ### **[Data Analytics (dbt-duckdb)](/projects/dbt-duckdb)**
 
 Serverless data warehouse and transformation pipeline.
 
-- **Key Features**: In-browser SQL analytics, dbt transformation logic.
-- **Tech**: DuckDB Wasm, Apache Arrow, SvelteKit.
+- **Key Features**: SQL analytics, dbt transformation logic.
+- **Tech**: DuckDB, SvelteKit.
 
 ## 🛠 Technical Architecture
 
