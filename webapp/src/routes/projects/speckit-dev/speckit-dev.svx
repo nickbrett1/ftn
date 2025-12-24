@@ -10,6 +10,15 @@
 	const projectUrl = "https://github.com/nickbrett1/ftn";
 </script>
 
+<style>
+	.mermaid-container {
+		display: flex;
+		justify-content: center;
+		white-space: pre-wrap;
+		overflow-x: auto;
+	}
+</style>
+
 <h1 class="!mb-0 no-underline">Vibe Coding with Spec Kit</h1>
 <p class="text-xl text-gray-300 !mt-2 !mb-6">Structured approaches for building with agents</p>
 December 2025
@@ -91,6 +100,8 @@ But the workflow in Spec Kit isn’t really geared to this kind of iteration, an
 
 To better understand this, let's look at the standard Spec Kit workflow. It is designed as a linear progression of commands:
 
+<div class="mermaid-container">
+
 ```mermaid
 graph TD
     A["1. Init Project&#10specify init"] --> B["2. Establish Principles&#10/speckit.constitution"]
@@ -100,6 +111,8 @@ graph TD
     E --> F["6. Execute&#10/speckit.implement"]
     linkStyle 0,1,2,3,4 stroke:#d8b4fe,stroke-width:2px;
 ```
+
+</div>
 
 The real problem is when you reach step 6 and have generated code and realize something is missing from step 3 because then you have generated a lot of work. There isn't an obvious way to simply "update" the spec and have the changes ripple through to the plan and tasks intelligently. Instead, the workflow encourages a forward-only motion. To iterate, I often found myself manually deleting generated files and re-running the commands from the earlier steps, regenerating everything in between. This repetition is what drove up the costs.
 
