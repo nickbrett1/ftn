@@ -190,3 +190,9 @@ However, I believe this trade-off is inevitable and that the positives outweigh 
 As AI agents continue to evolve, I'm excited to see how they'll further transform software development. The key right now I believe is not to treat them as replacements for human developers, but as collaborative partners that can amplify our capabilities and enable us to build better software, faster.
 
 For those interested in exploring this approach, I'd recommend starting with a well-defined, self-contained project. The combination of clear requirements, automated testing, and AI assistance can create a powerful development environment.
+
+## Coda: Vibe Coding with Spec Kit
+
+Since writing this, the concept of "vibe coding" has taken off—a term popularized by Andrej Karpathy to describe a coding style where you focus on high-level intent and "vibes" while letting AI handle the implementation details. It's less about syntax and more about directing the flow of creation.
+
+This aligns perfectly with my next experiment: **Spec Kit**. I've started exploring [Spec Kit](https://github.com/github/spec-kit), a toolkit designed to streamline the creation of AI-native specifications. By combining the loose, creative energy of vibe coding with the structured rigor of Spec Kit, I'm hoping to bridge the gap between "it feels right" and "it works perfectly." It feels like the natural evolution of the lessons learned here—moving from managing code to managing the *intent* behind the code.
