@@ -28,21 +28,21 @@ A developer portfolio website showcasing financial technology expertise through 
 
 ## 💼 Featured Projects
 
-### **[Project Generator (genproj)](/projects/genproj)**
+### **[Project Generator (genproj)](webapp/src/routes/projects/genproj)**
 
 A developer tool to scaffold production-ready applications with selectable capabilities.
 
 - **Key Features**: Dynamic configuration of DevContainers, CI/CD pipelines, and code quality tools.
 - **Tech**: SvelteKit, GitHub API, Template Engine.
 
-### **[Personal Finance (ccbilling)](/projects/ccbilling)**
+### **[Personal Finance (ccbilling)](webapp/src/routes/projects/ccbilling)**
 
 Automated budget tracking and statement processing system.
 
 - **Key Features**: AI-driven merchant categorization, PDF parsing, encryption at rest.
 - **Tech**: Cloudflare Workers, D1, Llama LLM
 
-### **[Data Analytics (dbt-duckdb)](/projects/dbt-duckdb)**
+### **[Data Analytics (dbt-duckdb)](webapp/src/routes/projects/dbt-duckdb)**
 
 Serverless data warehouse and transformation pipeline.
 
