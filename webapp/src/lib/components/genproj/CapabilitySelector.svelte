@@ -520,6 +520,44 @@
 																)}
 														/>
 													</div>
+												{:else if property.type === 'object' && property.properties && property.properties.enabled && property.properties.name}
+													<div class="space-y-2">
+														<div class="flex items-center">
+															<input
+																type="checkbox"
+																id="{capability.id}-{field}-enabled"
+																class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
+																checked={configuration[capability.id]?.[field]?.enabled ??
+																	property.properties.enabled.default}
+																onchange={(e) =>
+																	handleNestedConfigurationChange(
+																		capability.id,
+																		field,
+																		'enabled',
+																		e.target.checked
+																	)}
+															/>
+															<span class="ml-2 text-sm text-gray-300">Enable {formatLabel(field)}</span>
+														</div>
+														{#if configuration[capability.id]?.[field]?.enabled ?? property.properties.enabled.default}
+															<input
+																type="text"
+																id="{capability.id}-{field}-name"
+																placeholder={property.properties.name.default || 'Name'}
+																class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+																value={configuration[capability.id]?.[field]?.name ||
+																	property.properties.name.default ||
+																	''}
+																onchange={(e) =>
+																	handleNestedConfigurationChange(
+																		capability.id,
+																		field,
+																		'name',
+																		e.target.value
+																	)}
+															/>
+														{/if}
+													</div>
 												{:else}
 													<input
 														type="text"

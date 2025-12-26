@@ -270,7 +270,24 @@ export const capabilities = [
 			'Create new project in CircleCI',
 			'Set up environment variables'
 		),
-		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				context: {
+					type: 'object',
+					properties: {
+						enabled: {
+							type: 'boolean',
+							default: true
+						},
+						name: {
+							type: 'string',
+							default: 'common'
+						}
+					}
+				}
+			}
+		},
 		benefits: [
 			'Automate testing and deployment pipelines',
 			'Gain insights with visual build logs and test results',

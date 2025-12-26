@@ -82,14 +82,25 @@ function getCircleCiTemplateData(context) {
 		deployJobDefinition: '',
 		deployWorkflowJob: '',
 		orbs: '',
-		additionalWorkflowJobs: ''
+		additionalWorkflowJobs: '',
+		buildWorkflowJob: '      - build'
 	};
+
+	const contextConfig = context.configuration?.circleci?.context;
+	// Default enabled is true, default name is 'common'
+	const contextEnabled = contextConfig?.enabled ?? true;
+	const contextName = contextConfig?.name || 'common';
+
+	if (contextEnabled) {
+		data.buildWorkflowJob = `      - build:
+          context: ${contextName}`;
+	}
 
 	if (context.capabilities.includes('gitguardian')) {
 		data.orbs += `  ggshield: gitguardian/ggshield@1\n`;
 		data.additionalWorkflowJobs += `
       - ggshield/scan:
-          name: ggshield-scan
+          name: ggshield-scan${contextEnabled ? `\n          context: ${contextName}` : ''}
           base_revision: << pipeline.git.base_revision >>
           revision: <<pipeline.git.revision>>`;
 	}
@@ -121,7 +132,7 @@ function getCircleCiTemplateData(context) {
           name: Run Lighthouse CI
           command: npm install -g @lhci/cli && lhci autorun`;
 		data.lighthouseWorkflowJob = `
-      - lighthouse:
+      - lighthouse:${contextEnabled ? `\n          context: ${contextName}` : ''}
           requires:
             - build`;
 	}
@@ -146,7 +157,7 @@ function getCircleCiTemplateData(context) {
             CLOUDFLARE_ACCOUNT_ID: \${CLOUDFLARE_ACCOUNT_ID}`;
 
 		data.deployWorkflowJob = `
-      - deploy-to-cloudflare:
+      - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
           requires:
             - build`;
 	}
