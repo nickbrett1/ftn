@@ -18,7 +18,7 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - build
+{{buildWorkflowJob}}
 {{lighthouseWorkflowJob}}
 {{deployWorkflowJob}}
 {{additionalWorkflowJobs}}
