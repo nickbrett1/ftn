@@ -139,13 +139,23 @@ function getCircleCiTemplateData(context) {
 
 	// Check if wrangler capability is present which implies cloudflare deployment
 	if (context.capabilities.includes('cloudflare-wrangler')) {
+		let setupWranglerStep = '';
+		if (context.capabilities.includes('doppler')) {
+			setupWranglerStep = `
+      - run:
+          name: Setup Wrangler Config
+          command: |
+            chmod +x scripts/setup-wrangler-config.sh
+            ./scripts/setup-wrangler-config.sh`;
+		}
+
 		data.deployJobDefinition = `
   deploy-to-cloudflare:
     executor: node/default
     steps:
       - checkout
       - node/install-packages:
-          pkg-manager: npm
+          pkg-manager: npm${setupWranglerStep}
       - run:
           name: Build
           command: npm run build
