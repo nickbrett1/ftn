@@ -9,6 +9,12 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+          override-ci-command: |
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
 {{preBuildSteps}}
       - run:
           name: Build
