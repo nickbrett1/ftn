@@ -169,7 +169,10 @@ describe('generatePreview', () => {
 
 	it('generates package.json with correct wrangler version when cloudflare-wrangler and devcontainer-node are present', async () => {
 		const projectConfig = { name: 'NodeProject' };
-		const preview = await generatePreview(projectConfig, ['devcontainer-node', 'cloudflare-wrangler']);
+		const preview = await generatePreview(projectConfig, [
+			'devcontainer-node',
+			'cloudflare-wrangler'
+		]);
 
 		const packageJsonFile = preview.files.find((f) => f.name === 'package.json');
 		expect(packageJsonFile).toBeDefined();

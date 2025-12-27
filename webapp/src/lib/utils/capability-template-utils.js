@@ -125,6 +125,12 @@ function getCircleCiTemplateData(context) {
       - checkout
       - node/install-packages:
           pkg-manager: npm
+          override-ci-command: |
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
       - run:
           name: Build
           command: npm run build
@@ -155,7 +161,13 @@ function getCircleCiTemplateData(context) {
     steps:
       - checkout
       - node/install-packages:
-          pkg-manager: npm${setupWranglerStep}
+          pkg-manager: npm
+          override-ci-command: |
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi${setupWranglerStep}
       - run:
           name: Build
           command: npm run build
