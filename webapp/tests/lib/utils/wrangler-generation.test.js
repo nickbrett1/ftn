@@ -27,7 +27,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(packageJson).toBeDefined();
 		const content = JSON.parse(packageJson.content);
 		expect(content.scripts).toHaveProperty('deploy', 'wrangler deploy');
-		expect(content.devDependencies).toHaveProperty('wrangler');
+		expect(content.devDependencies).toHaveProperty('wrangler', '^4.54.0');
 	});
 
 	it('should add deploy job to circleci config when Wrangler and CircleCI are selected', async () => {

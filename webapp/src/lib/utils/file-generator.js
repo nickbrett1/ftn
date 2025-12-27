@@ -422,7 +422,7 @@ function generatePackageJson(templateEngine, context) {
 
 	if (context.capabilities.includes('cloudflare-wrangler')) {
 		scripts += ',\n    "deploy": "wrangler deploy"';
-		devDependencies += '"wrangler": "^3.0.0"';
+		devDependencies += '"wrangler": "^4.54.0"';
 	}
 
 	if (context.capabilities.includes('devcontainer-node')) {

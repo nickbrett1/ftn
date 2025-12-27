@@ -10,6 +10,9 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		constructor() {
 			this.initialize = vi.fn().mockResolvedValue(true);
 			this.generateFile = vi.fn((templateId, data) => {
+				if (templateId === 'package-json') {
+					return JSON.stringify(data);
+				}
 				if (templateId.includes('json')) {
 					const features = { [`feature-${templateId}`]: {} };
 					const extensions = [`ext-${templateId}`];
@@ -162,6 +165,16 @@ describe('generatePreview', () => {
 
 		const wranglerTemplate = preview.files.find((f) => f.name === 'wrangler.template.jsonc');
 		expect(wranglerTemplate).toBeDefined();
+	});
+
+	it('generates package.json with correct wrangler version when cloudflare-wrangler and devcontainer-node are present', async () => {
+		const projectConfig = { name: 'NodeProject' };
+		const preview = await generatePreview(projectConfig, ['devcontainer-node', 'cloudflare-wrangler']);
+
+		const packageJsonFile = preview.files.find((f) => f.name === 'package.json');
+		expect(packageJsonFile).toBeDefined();
+		const content = JSON.parse(packageJsonFile.content);
+		expect(content.devDependencies).toContain('"wrangler": "^4.54.0"');
 	});
 
 	it('handles errors during preview generation', async () => {

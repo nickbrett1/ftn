@@ -324,7 +324,7 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 
 		if (allCapabilities.includes('cloudflare-wrangler')) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += '"wrangler": "^3.0.0"';
+			devDependencies += '"wrangler": "^4.54.0"';
 		}
 
 		const content = templateEngine.generateFile('package-json', {
