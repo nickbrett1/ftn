@@ -278,11 +278,6 @@ export const capabilities = [
 				id: 'svelte-vite-config-js',
 				filePath: 'vite.config.js',
 				templateId: 'svelte-vite-config-js'
-			},
-			{
-				id: 'jsconfig-json',
-				filePath: 'jsconfig.json',
-				templateId: 'jsconfig-json'
 			}
 		],
 		website: 'https://kit.svelte.dev/'

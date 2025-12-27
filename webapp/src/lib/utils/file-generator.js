@@ -30,7 +30,6 @@ import svelteAppHtml from '../templates/svelte-app-html.template?raw';
 import sveltePageSvelte from '../templates/svelte-page-svelte.template?raw';
 import svelteConfigJs from '../templates/svelte-config-js.template?raw';
 import svelteViteConfigJs from '../templates/svelte-vite-config-js.template?raw';
-import jsconfigJson from '../templates/jsconfig-json.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -149,8 +148,7 @@ const templateImports = {
 	'svelte-app-html': svelteAppHtml,
 	'svelte-page-svelte': sveltePageSvelte,
 	'svelte-config-js': svelteConfigJs,
-	'svelte-vite-config-js': svelteViteConfigJs,
-	'jsconfig-json': jsconfigJson
+	'svelte-vite-config-js': svelteViteConfigJs
 };
 
 export class TemplateEngine {
@@ -446,7 +444,7 @@ function generatePackageJson(templateEngine, context) {
 	if (hasSvelteKit) {
 		typeField = 'module';
 		scripts =
-			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",\n    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"';
+			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
 			'"@sveltejs/kit": "^2.0.0",\n    "@sveltejs/vite-plugin-svelte": "^3.0.0",\n    "svelte": "^5.0.0",\n    "svelte-check": "^3.6.0",\n    "typescript": "^5.0.0",\n    "vite": "^5.0.0"';
 
