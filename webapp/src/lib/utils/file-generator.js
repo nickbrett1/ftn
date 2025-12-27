@@ -259,7 +259,7 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 					const content = templateEngine.generateFile(template.templateId, {
 						...context,
 						...extraData,
-						projectName: context.name || 'my-project',
+						projectName: context.projectName || context.name || 'my-project',
 						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability,
 						adapterPackage
@@ -420,11 +420,14 @@ function generateMergedDevelopmentContainerFiles(
 			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', {
 				...context,
 				shellSetup: context.capabilities.includes('shell-tools')
-					? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', context.name || 'my-project')
+					? SHELL_SETUP_SCRIPT.replaceAll(
+							'{{projectName}}',
+							context.projectName || context.name || 'my-project'
+						)
 					: '',
 				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 					'{{projectName}}',
-					context.name || 'my-project'
+					context.projectName || context.name || 'my-project'
 				),
 				geminiSetup: context.capabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
@@ -479,7 +482,7 @@ function generatePackageJson(templateEngine, context) {
 			devDependencies,
 			dependencies,
 			typeField,
-			projectName: context.name || 'my-project'
+			projectName: context.projectName || context.name || 'my-project'
 		});
 		return {
 			filePath: 'package.json',
@@ -495,7 +498,7 @@ function generateCloudflareFiles(templateEngine, context) {
 
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
-	const projectName = context.name || 'my-project';
+	const projectName = context.projectName || context.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
 	// cloud_login.sh
@@ -538,7 +541,7 @@ function generateCloudflareFiles(templateEngine, context) {
 				filePath: 'wrangler.template.jsonc',
 				content: templateEngine.generateFile('wrangler-template-jsonc', {
 					...context,
-					projectName: context.name || 'my-project',
+					projectName: context.projectName || context.name || 'my-project',
 					compatibilityDate,
 					mainEntryPoint
 				})
@@ -553,7 +556,7 @@ function generateCloudflareFiles(templateEngine, context) {
 			filePath: 'wrangler.jsonc',
 			content: templateEngine.generateFile('wrangler-jsonc', {
 				...context,
-				projectName: context.name || 'my-project',
+				projectName: context.projectName || context.name || 'my-project',
 				compatibilityDate,
 				mainEntryPoint
 			})
