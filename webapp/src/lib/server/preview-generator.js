@@ -318,7 +318,7 @@ async function generateNonDevelopmentContainerFiles(
 
 function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities) {
 	if (allCapabilities.includes('devcontainer-node')) {
-		let scripts = '';
+		let scripts = ',\n    "build": "echo \'No build step required\'"';
 		let devDependencies = '';
 		let dependencies = '';
 

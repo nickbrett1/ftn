@@ -418,7 +418,7 @@ function generateMergedDevelopmentContainerFiles(
 }
 
 function generatePackageJson(templateEngine, context) {
-	let scripts = '';
+	let scripts = ',\n    "build": "echo \'No build step required\'"';
 	let devDependencies = '';
 	let dependencies = '';
 
