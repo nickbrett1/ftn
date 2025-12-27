@@ -93,6 +93,7 @@
 	// Category display names
 	const categoryNames = {
 		core: 'Core Capabilities (Always Included)',
+		frameworks: 'Frameworks',
 		devcontainer: 'Development Containers',
 		'ci-cd': 'CI/CD',
 		'code-quality': 'Code Quality',
@@ -106,6 +107,7 @@
 	// Order of categories for display
 	const categoryOrder = [
 		'core',
+		'frameworks',
 		'devcontainer',
 		'ci-cd',
 		'code-quality',

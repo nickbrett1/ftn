@@ -1,6 +1,6 @@
 {
 	"name": "{{projectName}}",
-	"main": "src/index.js",
+	"main": "{{mainEntryPoint}}",
 	"compatibility_date": "{{compatibilityDate}}",
 	"compatibility_flags": [
 		"nodejs_compat"

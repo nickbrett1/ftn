@@ -14,6 +14,7 @@ const CATEGORY_SECRETS = 'secrets';
 const CATEGORY_DEPLOYMENT = 'deployment';
 const CATEGORY_MONITORING = 'monitoring';
 const CATEGORY_CI_CD = 'ci-cd';
+const CATEGORY_FRAMEWORKS = 'frameworks';
 
 const REQ_DOCKER = ['docker'];
 const EMPTY_ARRAY = [];
@@ -242,6 +243,50 @@ export const capabilities = [
 			'GraphQL.vscode-graphql-syntax'
 		]
 	),
+	{
+		id: 'sveltekit',
+		name: 'SvelteKit',
+		description: 'Initializes a SvelteKit project with Svelte 5.',
+		category: CATEGORY_FRAMEWORKS,
+		dependencies: ['devcontainer-node'],
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['svelte.svelte-vscode'],
+		benefits: [
+			'Web development, streamlined',
+			'Svelte 5 Runes support',
+			'Fast, efficient, and type-safe'
+		],
+		templates: [
+			{
+				id: 'svelte-app-html',
+				filePath: 'src/app.html',
+				templateId: 'svelte-app-html'
+			},
+			{
+				id: 'svelte-page-svelte',
+				filePath: 'src/routes/+page.svelte',
+				templateId: 'svelte-page-svelte'
+			},
+			{
+				id: 'svelte-config-js',
+				filePath: 'svelte.config.js',
+				templateId: 'svelte-config-js'
+			},
+			{
+				id: 'svelte-vite-config-js',
+				filePath: 'vite.config.js',
+				templateId: 'svelte-vite-config-js'
+			},
+			{
+				id: 'jsconfig-json',
+				filePath: 'jsconfig.json',
+				templateId: 'jsconfig-json'
+			}
+		],
+		website: 'https://kit.svelte.dev/'
+	},
 	createDevelopmentContainerCapability(
 		'devcontainer-python',
 		'Python DevContainer',

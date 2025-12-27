@@ -294,12 +294,19 @@ async function generateNonDevelopmentContainerFiles(
 						configuration: projectConfig.configuration
 					});
 
+					// Special handling for SvelteKit config adapter
+					let adapterPackage = '@sveltejs/adapter-auto';
+					if (capabilityId === 'sveltekit' && otherCapabilities.includes('cloudflare-wrangler')) {
+						adapterPackage = '@sveltejs/adapter-cloudflare';
+					}
+
 					const content = templateEngine.generateFile(template.templateId, {
 						...projectConfig,
 						...extraData,
 						projectName: projectConfig.name || 'my-project',
 						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
-						capability
+						capability,
+						adapterPackage
 					});
 					files.push({
 						path: template.filePath,
@@ -321,10 +328,35 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 		let scripts = ',\n    "build": "echo \'No build step required\'"';
 		let devDependencies = '';
 		let dependencies = '';
+		let typeField = '';
 
-		if (allCapabilities.includes('cloudflare-wrangler')) {
-			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += '"wrangler": "^4.54.0"';
+		const hasSvelteKit = allCapabilities.includes('sveltekit');
+		const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+
+		if (hasSvelteKit) {
+			typeField = 'module';
+			scripts =
+				',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",\n    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"';
+			devDependencies +=
+				'"@sveltejs/kit": "^2.0.0",\n    "@sveltejs/vite-plugin-svelte": "^3.0.0",\n    "svelte": "^5.0.0",\n    "svelte-check": "^3.6.0",\n    "typescript": "^5.0.0",\n    "vite": "^5.0.0"';
+
+			if (hasWrangler) {
+				scripts += ',\n    "deploy": "wrangler deploy"';
+				devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^4.1.0"';
+				// Wrangler is also needed as dev dep
+				devDependencies += ',\n    "wrangler": "^4.54.0"';
+			} else {
+				devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
+			}
+		} else {
+			// Normal Node.js setup
+			if (hasWrangler) {
+				scripts += ',\n    "deploy": "wrangler deploy"';
+				devDependencies += '"wrangler": "^4.54.0"';
+				typeField = 'module'; // Wrangler projects are usually modules
+			} else {
+				typeField = 'commonjs';
+			}
 		}
 
 		const content = templateEngine.generateFile('package-json', {
@@ -332,6 +364,7 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 			scripts,
 			devDependencies,
 			dependencies,
+			typeField,
 			projectName: projectConfig.name || 'my-project'
 		});
 
@@ -350,6 +383,7 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 	if (!allCapabilities.includes('cloudflare-wrangler')) return;
 
 	const hasDoppler = allCapabilities.includes('doppler');
+	const hasSvelteKit = allCapabilities.includes('sveltekit');
 	const projectName = projectConfig.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
@@ -379,20 +413,29 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		type: 'file'
 	});
 
-	const indexJsContent = templateEngine.generateFile('cloudflare-worker-index-js', projectConfig);
-	files.push({
-		path: 'src/index.js',
-		name: 'index.js',
-		content: indexJsContent,
-		size: indexJsContent.length,
-		type: 'file'
-	});
+	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
+	// because SvelteKit manages its own entry point via the adapter.
+	// But we still need wrangler configuration.
+
+	const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+
+	if (!hasSvelteKit) {
+		const indexJsContent = templateEngine.generateFile('cloudflare-worker-index-js', projectConfig);
+		files.push({
+			path: 'src/index.js',
+			name: 'index.js',
+			content: indexJsContent,
+			size: indexJsContent.length,
+			type: 'file'
+		});
+	}
 
 	if (hasDoppler) {
 		const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
 			...projectConfig,
 			projectName: projectConfig.name || 'my-project',
-			compatibilityDate
+			compatibilityDate,
+			mainEntryPoint
 		});
 		files.push({
 			path: 'wrangler.template.jsonc',
@@ -417,7 +460,8 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		const wranglerContent = templateEngine.generateFile('wrangler-jsonc', {
 			...projectConfig,
 			projectName: projectConfig.name || 'my-project',
-			compatibilityDate
+			compatibilityDate,
+			mainEntryPoint
 		});
 		files.push({
 			path: 'wrangler.jsonc',
