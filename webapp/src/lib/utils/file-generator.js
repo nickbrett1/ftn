@@ -249,7 +249,10 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 
 					// Special handling for SvelteKit config adapter
 					let adapterPackage = '@sveltejs/adapter-auto';
-					if (capabilityId === 'sveltekit' && context.capabilities.includes('cloudflare-wrangler')) {
+					if (
+						capabilityId === 'sveltekit' &&
+						context.capabilities.includes('cloudflare-wrangler')
+					) {
 						adapterPackage = '@sveltejs/adapter-cloudflare';
 					}
 
