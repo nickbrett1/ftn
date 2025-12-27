@@ -450,7 +450,7 @@ function generatePackageJson(templateEngine, context) {
 
 		if (hasWrangler) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^4.1.0"';
+			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^5.0.0"';
 			// Wrangler is also needed as dev dep
 			devDependencies += ',\n    "wrangler": "^4.54.0"';
 		} else {
