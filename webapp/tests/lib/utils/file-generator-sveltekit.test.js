@@ -28,7 +28,7 @@ describe('SvelteKit File Generation', () => {
 		const content = JSON.parse(packageJson.content);
 		expect(content.type).toBe('module');
 		expect(content.scripts).toHaveProperty('dev', 'vite dev');
-		expect(content.scripts).toHaveProperty('check', 'svelte-kit sync && svelte-check --tsconfig ./jsconfig.json');
+		expect(content.scripts).toHaveProperty('check', 'svelte-kit sync && svelte-check');
 		expect(content.devDependencies).toHaveProperty('@sveltejs/kit');
 		expect(content.devDependencies).toHaveProperty('@sveltejs/adapter-auto');
 		expect(content.devDependencies).not.toHaveProperty('wrangler');
@@ -37,7 +37,7 @@ describe('SvelteKit File Generation', () => {
 		expect(files.find((f) => f.filePath === 'src/app.html')).toBeDefined();
 		expect(files.find((f) => f.filePath === 'src/routes/+page.svelte')).toBeDefined();
 		expect(files.find((f) => f.filePath === 'vite.config.js')).toBeDefined();
-		expect(files.find((f) => f.filePath === 'jsconfig.json')).toBeDefined();
+		expect(files.find((f) => f.filePath === 'jsconfig.json')).toBeUndefined();
 
 		// Check svelte.config.js adapter
 		const svelteConfig = files.find((f) => f.filePath === 'svelte.config.js');
