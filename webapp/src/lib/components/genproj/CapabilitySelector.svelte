@@ -537,7 +537,9 @@
 																		e.target.checked
 																	)}
 															/>
-															<span class="ml-2 text-sm text-gray-300">Enable {formatLabel(field)}</span>
+															<span class="ml-2 text-sm text-gray-300"
+																>Enable {formatLabel(field)}</span
+															>
 														</div>
 														{#if configuration[capability.id]?.[field]?.enabled ?? property.properties.enabled.default}
 															<input

@@ -25,6 +25,7 @@ import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-co
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
 import vscodeTasksJson from '../templates/vscode-tasks-json.template?raw';
+import cloudflareWorkerIndexJs from '../templates/cloudflare-worker-index-js.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -138,7 +139,8 @@ const templateImports = {
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
 	gitignore: gitignoreTemplate,
 	'dependabot-config': dependabotConfig,
-	'vscode-tasks-json': vscodeTasksJson
+	'vscode-tasks-json': vscodeTasksJson,
+	'cloudflare-worker-index-js': cloudflareWorkerIndexJs
 };
 
 export class TemplateEngine {
@@ -470,6 +472,11 @@ function generateCloudflareFiles(templateEngine, context) {
 			wranglerLogin,
 			setupWrangler
 		})
+	});
+
+	files.push({
+		filePath: 'src/index.js',
+		content: templateEngine.generateFile('cloudflare-worker-index-js', context)
 	});
 
 	if (hasDoppler) {

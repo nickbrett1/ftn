@@ -379,6 +379,15 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		type: 'file'
 	});
 
+	const indexJsContent = templateEngine.generateFile('cloudflare-worker-index-js', projectConfig);
+	files.push({
+		path: 'src/index.js',
+		name: 'index.js',
+		content: indexJsContent,
+		size: indexJsContent.length,
+		type: 'file'
+	});
+
 	if (hasDoppler) {
 		const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
 			...projectConfig,
