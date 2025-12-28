@@ -121,7 +121,7 @@
 					<PenToSquareRegular class="size-10" aria-label="Blog" />
 				</div>
 				<p class="grow pt-5">
-					A collection of articles focusing on things I've learned as a Software Engineering
+					A collection of older articles focusing on things I've learned as a Software Engineering
 					Manager.
 				</p>
 			</div>
