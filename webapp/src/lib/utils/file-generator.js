@@ -461,13 +461,13 @@ function generatePackageJson(templateEngine, context) {
 		scripts =
 			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
-			'"@sveltejs/kit": "^2.0.0",\n    "@sveltejs/vite-plugin-svelte": "^3.0.0",\n    "svelte": "^5.0.0",\n    "svelte-check": "^3.6.0",\n    "typescript": "^5.0.0",\n    "vite": "^5.0.0"';
+			'"@sveltejs/kit": "^2.16.0",\n    "@sveltejs/vite-plugin-svelte": "^5.0.0",\n    "svelte": "^5.0.0",\n    "svelte-check": "^4.0.0",\n    "typescript": "^5.0.0",\n    "vite": "^6.0.0"';
 
 		if (hasWrangler) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^5.0.0"';
+			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^5.0.3"';
 			// Wrangler is also needed as dev dep
-			devDependencies += ',\n    "wrangler": "^4.54.0"';
+			devDependencies += ',\n    "wrangler": "^3.57.0"';
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}

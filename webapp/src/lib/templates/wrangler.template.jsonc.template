@@ -3,8 +3,12 @@
 	"main": "{{mainEntryPoint}}",
 	"compatibility_date": "{{compatibilityDate}}",
 	"compatibility_flags": [
-		"nodejs_compat"
+		"nodejs_compat_v2"
 	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
 	"observability": {
 		"logs": {
 			"enabled": true,
