@@ -150,9 +150,9 @@
 		</div>
 
 		<!-- Comparison Section -->
-		<div class="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+		<div class="flex flex-col gap-12 items-start">
 			<!-- Original Image -->
-			<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-4 w-full">
 				<div class="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 shadow-xl">
 					<h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -181,7 +181,7 @@
 			</div>
 
 			<!-- Generated Diagram -->
-			<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-4 w-full">
 				<div class="bg-zinc-800/50 rounded-xl p-1 border border-zinc-700 shadow-xl overflow-hidden">
 					<div class="p-5 pb-0">
 						<h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">

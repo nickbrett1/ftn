@@ -242,8 +242,10 @@
 	<div class="grid grid-cols-1 2xl:grid-cols-12 gap-6 relative">
 		<!-- Sidebar: Governance -->
 		<div class="2xl:col-span-1 flex flex-col">
+			<!-- Spacer to align with content on the right, skipping the section titles -->
+			<div class="hidden 2xl:block h-9 mb-4"></div>
 			<button
-				class="w-full h-full min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center gap-4 2xl:[writing-mode:vertical-lr]"
+				class="w-full flex-1 min-h-[60px] bg-zinc-800 border-2 border-emerald-500/50 rounded-lg p-2 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center gap-4 2xl:[writing-mode:vertical-lr]"
 				on:click={() => select(data.governance)}
 				class:ring-2={selectedItem === data.governance}
 				class:ring-emerald-400={selectedItem === data.governance}
@@ -321,10 +323,10 @@
 					Store
 				</h3>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-5 gap-6">
 					<!-- Data Lake -->
 					<div
-						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
+						class="md:col-span-2 p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
 						role="button"
 						tabindex="0"
 						on:click={() => select(data.store.datalake)}
@@ -382,7 +384,7 @@
 
 					<!-- DWH -->
 					<div
-						class="p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
+						class="md:col-span-3 p-4 rounded-xl border border-dashed border-zinc-600 bg-zinc-800/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
 						role="button"
 						tabindex="0"
 						on:click={() => select(data.store.dwh)}
