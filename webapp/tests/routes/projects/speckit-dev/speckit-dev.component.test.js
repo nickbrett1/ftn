@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import SpeckitDevelopment from '../../../../src/routes/projects/speckit-dev/speckit-dev.svx';
 
+// Note: Mermaid diagrams are disabled in tests (via svelte.config.js) to avoid
+// a dependency on the Playwright browser.
+
 // Mock components
 vi.mock('$lib/components/ProjectLinkButton.svelte', () => ({
 	default: vi.fn()
