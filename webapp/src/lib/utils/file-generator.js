@@ -249,11 +249,19 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 
 					// Special handling for SvelteKit config adapter
 					let adapterPackage = '@sveltejs/adapter-auto';
+					let adapterComment =
+						'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
+						'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
+						'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
+
 					if (
 						capabilityId === 'sveltekit' &&
 						context.capabilities.includes('cloudflare-wrangler')
 					) {
 						adapterPackage = '@sveltejs/adapter-cloudflare';
+						adapterComment =
+							'// adapter-cloudflare is configured for Wrangler deployment\n' +
+							'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
 					}
 
 					const content = templateEngine.generateFile(template.templateId, {
@@ -262,7 +270,8 @@ function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapab
 						projectName: context.projectName || context.name || 'my-project',
 						capabilityConfig: context.configuration?.[capabilityId] || {},
 						capability,
-						adapterPackage
+						adapterPackage,
+						adapterComment
 					});
 					files.push({
 						filePath: template.filePath,
