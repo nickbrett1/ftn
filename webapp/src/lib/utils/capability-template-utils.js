@@ -160,14 +160,22 @@ function getCircleCiTemplateData(context) {
     executor: node/default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          override-ci-command: |
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package.json" }}
+            - v1-deps-
+      - run:
+          name: Install Packages
+          command: |
             if [ -f package-lock.json ]; then
               npm ci
             else
               npm install
-            fi${setupWranglerStep}
+            fi
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}
       - run:
           name: Build
           command: npm run build
