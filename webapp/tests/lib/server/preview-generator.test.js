@@ -177,7 +177,7 @@ describe('generatePreview', () => {
 		const packageJsonFile = preview.files.find((f) => f.name === 'package.json');
 		expect(packageJsonFile).toBeDefined();
 		const content = JSON.parse(packageJsonFile.content);
-		expect(content.devDependencies).toContain('"wrangler": "^4.54.0"');
+		expect(content.devDependencies).toContain('"wrangler": "^4.56.0"');
 	});
 
 	it('handles errors during preview generation', async () => {
