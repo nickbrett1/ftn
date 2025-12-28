@@ -28,11 +28,11 @@ describe('NPM Resolution Test', () => {
         await fs.writeFile(path.join(tempDir, 'package.json'), packageJsonFile.content);
 
         try {
-            // Use --dry-run to check resolution without actually downloading everything
+            // Use full install to verify dependency resolution
             // Increase timeout as this can be slow
-            const { stdout, stderr } = await execPromise('npm install --dry-run', { 
+            const { stdout, stderr } = await execPromise('npm install', { 
                 cwd: tempDir,
-                timeout: 60000 
+                timeout: 600000 
             });
             
             expect(stdout).toBeDefined();
