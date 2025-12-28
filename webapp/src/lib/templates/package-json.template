@@ -10,10 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    {{devDependencies}}
-  },
-  "dependencies": {
-    {{dependencies}}
-  }
+	"devDependencies": {
+		{{devDependencies}}
+	}{{overrides}}
 }
