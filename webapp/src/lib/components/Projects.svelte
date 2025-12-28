@@ -75,6 +75,20 @@
 				</p>
 			</div>
 		</Card>
+		<a href="/projects/genproj" class="flex grow">
+			<Card>
+				<div class="flex flex-col grow">
+					<div class="flex flex-row">
+						<span class="text-xl font-bold leading-none pt-2 grow">Generate a Project</span>
+						<ToolboxSolid class="size-10 " aria-label="Tools" />
+					</div>
+					<p class="grow pt-5">
+						A tool that generates a new repository with configuration for tools that I find are
+						great productivity boosters.
+					</p>
+				</div>
+			</Card>
+		</a>
 		<Card
 			onclick={() => (globalThis.location = 'https://github.com/nickbrett1/data-science-on-gcp/')}
 		>
@@ -91,20 +105,6 @@
 				</p>
 			</div>
 		</Card>
-		<a href="/projects/genproj" class="flex grow">
-			<Card>
-				<div class="flex flex-col grow">
-					<div class="flex flex-row">
-						<span class="text-xl font-bold leading-none pt-2 grow">Generate a Project</span>
-						<ToolboxSolid class="size-10 " aria-label="Tools" />
-					</div>
-					<p class="grow pt-5">
-						A tool that generates a new repository with configuration for tools that I find are
-						great productivity boosters.
-					</p>
-				</div>
-			</Card>
-		</a>
 		<Card onclick={() => (globalThis.location = 'https://github.com/nickbrett1/')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
