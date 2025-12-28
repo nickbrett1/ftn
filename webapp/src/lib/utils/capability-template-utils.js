@@ -181,10 +181,7 @@ function getCircleCiTemplateData(context) {
           command: npm run build
       - run:
           name: Deploy to Cloudflare Workers
-          command: npx wrangler deploy
-          environment:
-            CLOUDFLARE_API_TOKEN: \${CLOUDFLARE_API_TOKEN}
-            CLOUDFLARE_ACCOUNT_ID: \${CLOUDFLARE_ACCOUNT_ID}`;
+          command: npx wrangler deploy`;
 
 		data.deployWorkflowJob = `
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
