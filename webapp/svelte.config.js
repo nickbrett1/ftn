@@ -32,6 +32,8 @@ export async function highlight(code, lang) {
 	return escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
 }
 
+const isTest = process.env.VITEST === 'true';
+
 /** @type {import('@sveltejs/kit').Config}*/
 const config = {
 	kit: {
@@ -96,7 +98,7 @@ const config = {
 		mdsvex({
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkFootnotes, remarkGfm],
-			rehypePlugins: [[rehypeMermaid, { strategy: 'inline-svg' }]],
+			rehypePlugins: isTest ? [] : [[rehypeMermaid, { strategy: 'inline-svg' }]],
 			highlight: {
 				highlighter: async (code, lang) => {
 					// Intercept the highlighter for mermaid blocks and return an AST node directly.
