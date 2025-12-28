@@ -234,7 +234,7 @@ export class TemplateEngine {
 }
 
 // Helper to collect files for non-dev-container capabilities
-function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities) {
+export function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities) {
 	const files = [];
 
 	for (const capabilityId of otherCapabilities) {
@@ -385,7 +385,7 @@ function generateAndMergeDevcontainerJson(
 }
 
 // Helper to generate and merge devcontainer files
-function generateMergedDevelopmentContainerFiles(
+export function generateMergedDevelopmentContainerFiles(
 	templateEngine,
 	context,
 	developmentContainerCapabilities
@@ -447,7 +447,7 @@ function generateMergedDevelopmentContainerFiles(
 	return files;
 }
 
-function generatePackageJson(templateEngine, context) {
+export function generatePackageJson(templateEngine, context) {
 	let scripts = ',\n    "build": "echo \'No build step required\'"';
 	let devDependencies = '';
 	let dependencies = '';
@@ -504,7 +504,7 @@ function generatePackageJson(templateEngine, context) {
 	return null;
 }
 
-function generateCloudflareFiles(templateEngine, context) {
+export function generateCloudflareFiles(templateEngine, context) {
 	const files = [];
 	if (!context.capabilities.includes('cloudflare-wrangler')) return files;
 
@@ -578,7 +578,7 @@ function generateCloudflareFiles(templateEngine, context) {
 	return files;
 }
 
-function generateGitignoreFile(templateEngine, context) {
+export function generateGitignoreFile(templateEngine, context) {
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
 	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
