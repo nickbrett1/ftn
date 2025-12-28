@@ -10,7 +10,10 @@
 	},
 	"observability": {
 		"logs": {
-			"enabled": true
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"invocation_logs": true,
+			"persist": true
 		}
 	},
 	"kv_namespaces": [
