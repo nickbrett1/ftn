@@ -459,7 +459,7 @@ export function generatePackageJson(templateEngine, context) {
 
 	if (hasSvelteKit) {
 		typeField = 'module';
-		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "vite": "^7.3.0"\n  }';
+		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",\n    "vite": "^7.3.0"\n  }';
 		scripts =
 			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
