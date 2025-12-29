@@ -243,7 +243,7 @@ export function collectNonDevelopmentContainerFiles(templateEngine, context, oth
 			for (const template of capability.templates) {
 				try {
 					const extraData = getCapabilityTemplateData(capabilityId, {
-						capabilities: otherCapabilities,
+						capabilities: context.capabilities,
 						configuration: context.configuration
 					});
 
