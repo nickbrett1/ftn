@@ -282,6 +282,7 @@ async function generateNonDevelopmentContainerFiles(
 	templateEngine,
 	projectConfig,
 	otherCapabilities,
+	allCapabilities,
 	files
 ) {
 	for (const capabilityId of otherCapabilities) {
@@ -290,7 +291,7 @@ async function generateNonDevelopmentContainerFiles(
 			for (const template of capability.templates) {
 				try {
 					const extraData = getCapabilityTemplateData(capabilityId, {
-						capabilities: otherCapabilities,
+						capabilities: allCapabilities,
 						configuration: projectConfig.configuration
 					});
 
@@ -539,6 +540,7 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		templateEngine,
 		projectConfig,
 		otherCapabilities,
+		executionOrder,
 		files
 	);
 
