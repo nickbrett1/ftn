@@ -1,0 +1,55 @@
+
+import { describe, it, expect } from 'vitest';
+import { TemplateEngine, generateMergedDevelopmentContainerFiles } from '$lib/utils/file-generator';
+
+describe('DevContainer Generation Tests', () => {
+    it('should generate valid Java devcontainer.json without undefined variables', async () => {
+        const engine = new TemplateEngine();
+        await engine.initialize();
+
+        const context = {
+            capabilities: ['devcontainer-java'],
+            configuration: {}
+        };
+
+        const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-java']);
+
+        const devcontainerJsonFile = files.find(f => f.filePath === '.devcontainer/devcontainer.json');
+        expect(devcontainerJsonFile).toBeDefined();
+
+        const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
+
+        // Check for unresolved variables in image
+        expect(devcontainerJson.image).toBe('mcr.microsoft.com/devcontainers/java:1-21');
+
+        // Check for unresolved variables in features
+        const javaFeature = devcontainerJson.features['ghcr.io/devcontainers/features/java:1'];
+        expect(javaFeature).toBeDefined();
+        expect(javaFeature.version).toBe('21');
+    });
+
+    it('should generate valid Python devcontainer.json without undefined variables', async () => {
+        const engine = new TemplateEngine();
+        await engine.initialize();
+
+        const context = {
+            capabilities: ['devcontainer-python'],
+            configuration: {}
+        };
+
+        const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-python']);
+
+        const devcontainerJsonFile = files.find(f => f.filePath === '.devcontainer/devcontainer.json');
+        expect(devcontainerJsonFile).toBeDefined();
+
+        const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
+
+        // Check for unresolved variables in image
+        expect(devcontainerJson.image).toBe('mcr.microsoft.com/devcontainers/python:1-3.12');
+
+        // Check for unresolved variables in features
+        const pythonFeature = devcontainerJson.features['ghcr.io/devcontainers/features/python:1'];
+        expect(pythonFeature).toBeDefined();
+        expect(pythonFeature.version).toBe('3.12');
+    });
+});
