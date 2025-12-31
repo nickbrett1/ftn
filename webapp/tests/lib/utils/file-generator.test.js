@@ -13,6 +13,9 @@ const nodeJsonTemplateContent = `{
       "upgradePackages": true,
       "username": "node"
     },
+    "ghcr.io/devcontainers-contrib/features/apt-packages:1": {
+      "packages": "socat"
+    },
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
   },
