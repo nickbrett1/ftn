@@ -77,9 +77,7 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
-export const GEMINI_SETUP_SCRIPT = `
-echo "INFO: Adding Svelte MCP to Gemini..."
-gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp`;
+export const GEMINI_SETUP_SCRIPT = ``;
 
 export const PLAYWRIGHT_SETUP_SCRIPT = `
 echo "INFO: Installing Playwright and its Chromium dependencies..."
