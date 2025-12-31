@@ -203,7 +203,7 @@ export class GitHubAPIService extends BaseAPIService {
 			const blobData = await blobResponse.json();
 			return {
 				path: file.path,
-				mode: '100644',
+				mode: file.path.endsWith('.sh') ? '100755' : '100644',
 				type: 'blob',
 				sha: blobData.sha
 			};

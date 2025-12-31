@@ -16,5 +16,5 @@
       "version": "21"
     }
   },
-  "postCreateCommand": "./post-create-setup.sh"
+  "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }
