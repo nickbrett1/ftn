@@ -1,6 +1,6 @@
 {
   "name": "Java",
-  "image": "mcr.microsoft.com/devcontainers/java:0-{{capabilityConfig.javaVersion}}",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -10,7 +10,7 @@
     },
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "{{capabilityConfig.javaVersion}}"
+      "version": "21"
     }
   },
   "postCreateCommand": "./post-create-setup.sh"
