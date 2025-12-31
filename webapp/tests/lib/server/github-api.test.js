@@ -106,6 +106,7 @@ describe('GitHubAPIService', () => {
 			.mockResolvedValueOnce({ json: referenceJson })
 			.mockResolvedValueOnce({ json: commitJson })
 			.mockResolvedValueOnce({ json: blobJson }) // blob for file.txt
+			.mockResolvedValueOnce({ json: blobJson }) // blob for script.sh
 			.mockResolvedValueOnce({ json: treeJson })
 			.mockResolvedValueOnce({ json: newCommitJson })
 			.mockResolvedValueOnce({});
@@ -117,6 +118,10 @@ describe('GitHubAPIService', () => {
 				{
 					path: 'file.txt',
 					content: 'content'
+				},
+				{
+					path: 'script.sh',
+					content: 'echo "hello"'
 				}
 			],
 			'Initial commit'
@@ -125,6 +130,17 @@ describe('GitHubAPIService', () => {
 		expect(commit).toEqual({ sha: 'commit-sha' });
 		const patchCall = service.makeRequest.mock.calls.at(-1);
 		expect(patchCall[0]).toBe('/repos/user/repo/git/refs/heads/main');
+
+		// Verify file modes
+		const treeCall = service.makeRequest.mock.calls.find(
+			(call) => call[0] === '/repos/user/repo/git/trees'
+		);
+		const treeBody = JSON.parse(treeCall[1].body);
+		const fileEntry = treeBody.tree.find((entry) => entry.path === 'file.txt');
+		const scriptEntry = treeBody.tree.find((entry) => entry.path === 'script.sh');
+
+		expect(fileEntry.mode).toBe('100644');
+		expect(scriptEntry.mode).toBe('100755');
 	});
 
 	it('creates webhooks, lists repos and deletes repository', async () => {

@@ -16,7 +16,7 @@ const nodeJsonTemplateContent = `{
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
   },
-  "postCreateCommand": "./post-create-setup.sh"
+  "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }
 `;
 
