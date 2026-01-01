@@ -116,6 +116,8 @@ echo
 echo "Setting up Wrangler configuration..."
 doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh dev`;
 
+export const DOPPLER_INSTALL_SCRIPT = `(curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh`;
+
 const templateImports = {
 	'devcontainer-java-dockerfile': devcontainerJavaDockerfile,
 	'devcontainer-java-json': devcontainerJavaJson,
@@ -402,7 +404,14 @@ export function generateMergedDevelopmentContainerFiles(
 	// Process Dockerfile (using base one for now)
 	const dockerfileContent = templateEngine.generateFile(
 		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-dockerfile`,
-		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+		{
+			...context,
+			capabilityConfig: baseCapabilityConfig,
+			capability: baseCapability,
+			dopplerInstallation: context.capabilities.includes('doppler')
+				? `RUN ${DOPPLER_INSTALL_SCRIPT}`
+				: ''
+		}
 	);
 
 	files.push(
