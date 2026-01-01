@@ -19,7 +19,11 @@
 		(() => new Set(['/', ...getAllFolderPaths(data.previewData?.files || [])]))()
 	);
 	let showRepoExistsModal = $state(false);
+	let showConflictModal = $state(false);
 	let newProjectName = $state('');
+	let conflicts = $state([]);
+	let conflictResolutions = $state({});
+	let currentConflictIndex = $state(0);
 
 	function getAllFolderPaths(files) {
 		let paths = [];
@@ -86,14 +90,71 @@
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
+	async function checkConflicts(projectNameToUse) {
+		loading = true;
+		try {
+			const response = await fetch('/projects/genproj/api/conflicts', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					name: projectNameToUse,
+					selectedCapabilities: data.selected.split(',')
+				})
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				// If checking conflicts fails, log it but maybe proceed to blind overwrite or error?
+				// For now, let's treat it as an error
+				throw new Error(result.message || 'Failed to check conflicts');
+			}
+
+			if (result.conflicts && result.conflicts.length > 0) {
+				conflicts = result.conflicts;
+				// Initialize resolutions to 'overwrite' (or 'keep' if preferred default)
+				conflictResolutions = {};
+				conflicts.forEach((c) => {
+					conflictResolutions[c.path] = 'overwrite';
+				});
+				showConflictModal = true;
+				showRepoExistsModal = false;
+				loading = false;
+				return true; // Conflicts found
+			}
+			return false; // No conflicts
+		} catch (err) {
+			console.error('Conflict check error:', err);
+			// Fallback: if check fails, maybe proceed with standard flow or show error
+			// Let's just return false to proceed with standard overwrite attempt which handles errors
+			return false;
+		}
+	}
+
 	async function handleGenerate(options = {}) {
 		loading = true;
 		error = null;
 		success = null;
-		showRepoExistsModal = false;
+
+		// Don't hide modal immediately if we are just transitioning between modals
+		if (!options.fromConflictModal) {
+			showRepoExistsModal = false;
+			showConflictModal = false;
+		}
 
 		const projectNameToUse = options.newName || data.projectName;
 		const overwrite = options.overwrite || false;
+		const resolutions = options.resolutions || null;
+
+		// If overwrite is requested but resolutions aren't set, check for conflicts first
+		if (overwrite && !resolutions && !options.skipConflictCheck) {
+			const hasConflicts = await checkConflicts(projectNameToUse);
+			if (hasConflicts) {
+				return;
+			}
+		}
 
 		try {
 			const response = await fetch('/projects/genproj/api/generate', {
@@ -105,7 +166,8 @@
 					name: projectNameToUse,
 					repositoryUrl: data.repositoryUrl,
 					selectedCapabilities: data.selected.split(','),
-					overwrite
+					overwrite,
+					resolutions
 				})
 			});
 
@@ -132,6 +194,7 @@
 
 			if (result.repositoryUrl) {
 				success = `Project generated successfully! Redirecting to ${result.repositoryUrl}...`;
+				showConflictModal = false;
 				// Short delay so user can see success message
 				setTimeout(() => {
 					if (result.repositoryUrl.startsWith('http')) {
@@ -142,13 +205,14 @@
 				}, 2000);
 			} else {
 				success = 'Project generated successfully!';
+				showConflictModal = false;
 			}
 		} catch (error_) {
 			error = error_.message;
 			logger.error('Project generation failed', { error: error_.message });
 		} finally {
 			// If we didn't return early due to modal, stop loading
-			if (!showRepoExistsModal) {
+			if (!showRepoExistsModal && !showConflictModal) {
 				loading = false;
 			}
 		}
@@ -163,6 +227,37 @@
 
 	function handleOverwrite() {
 		handleGenerate({ overwrite: true });
+	}
+
+	function handleResolveConflicts() {
+		handleGenerate({
+			overwrite: true,
+			resolutions: conflictResolutions,
+			fromConflictModal: true,
+			skipConflictCheck: true
+		});
+	}
+
+	function setResolution(path, resolution) {
+		conflictResolutions[path] = resolution;
+		// Trigger reactivity
+		conflictResolutions = { ...conflictResolutions };
+	}
+
+	function getCurrentConflict() {
+		return conflicts[currentConflictIndex];
+	}
+
+	function nextConflict() {
+		if (currentConflictIndex < conflicts.length - 1) {
+			currentConflictIndex++;
+		}
+	}
+
+	function prevConflict() {
+		if (currentConflictIndex > 0) {
+			currentConflictIndex--;
+		}
 	}
 </script>
 
@@ -274,6 +369,133 @@
 								Cancel
 							</button>
 						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		{#if showConflictModal}
+			<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
+				<div
+					class="bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl h-[80vh] flex flex-col border border-gray-700"
+				>
+					<div class="p-6 border-b border-gray-700 flex justify-between items-center">
+						<h3 class="text-xl font-bold text-white">Resolve File Conflicts</h3>
+						<span class="text-sm text-gray-400">
+							Conflict {currentConflictIndex + 1} of {conflicts.length}
+						</span>
+					</div>
+
+					<div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+						<!-- Sidebar file list -->
+						<div class="w-full md:w-1/4 border-r border-gray-700 overflow-y-auto bg-gray-900">
+							{#each conflicts as conflict, index}
+								<button
+									class="w-full text-left p-3 border-b border-gray-800 hover:bg-gray-800 transition-colors flex items-center justify-between {currentConflictIndex ===
+									index
+										? 'bg-gray-800 border-l-4 border-l-blue-500'
+										: ''}"
+									onclick={() => (currentConflictIndex = index)}
+								>
+									<span class="text-sm truncate font-mono text-gray-300">{conflict.path}</span>
+									<span class="text-xs">
+										{#if conflictResolutions[conflict.path] === 'overwrite'}
+											<span class="text-yellow-400">Overwrite</span>
+										{:else}
+											<span class="text-green-400">Keep</span>
+										{/if}
+									</span>
+								</button>
+							{/each}
+						</div>
+
+						<!-- Content area -->
+						<div class="flex-1 flex flex-col overflow-hidden">
+							<div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+								<h4 class="font-mono text-white text-lg">{getCurrentConflict().path}</h4>
+								<div class="flex gap-2">
+									<button
+										class="px-3 py-1 text-sm rounded border {conflictResolutions[
+											getCurrentConflict().path
+										] === 'keep'
+											? 'bg-green-600 border-green-500 text-white'
+											: 'bg-gray-700 border-gray-600 text-gray-300'}"
+										onclick={() => setResolution(getCurrentConflict().path, 'keep')}
+									>
+										Keep Existing
+									</button>
+									<button
+										class="px-3 py-1 text-sm rounded border {conflictResolutions[
+											getCurrentConflict().path
+										] === 'overwrite'
+											? 'bg-yellow-600 border-yellow-500 text-white'
+											: 'bg-gray-700 border-gray-600 text-gray-300'}"
+										onclick={() => setResolution(getCurrentConflict().path, 'overwrite')}
+									>
+										Overwrite
+									</button>
+								</div>
+							</div>
+
+							<div class="flex-1 overflow-hidden grid grid-cols-2">
+								<div class="flex flex-col border-r border-gray-700">
+									<div class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide">
+										Existing Content
+									</div>
+									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-gray-300">
+										<pre>{getCurrentConflict().existingContent}</pre>
+									</div>
+								</div>
+								<div class="flex flex-col">
+									<div class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide">
+										New Content
+									</div>
+									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300">
+										<pre>{getCurrentConflict().generatedContent}</pre>
+									</div>
+								</div>
+							</div>
+
+							<!-- Navigation controls -->
+							<div class="p-4 bg-gray-800 border-t border-gray-700 flex justify-between">
+								<button
+									class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 disabled:opacity-50"
+									disabled={currentConflictIndex === 0}
+									onclick={prevConflict}
+								>
+									Previous
+								</button>
+								<div class="text-gray-400 text-sm flex items-center">
+									{Object.values(conflictResolutions).filter((r) => r === 'overwrite').length} to overwrite,
+									{Object.values(conflictResolutions).filter((r) => r === 'keep').length} to keep
+								</div>
+								<button
+									class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 disabled:opacity-50"
+									disabled={currentConflictIndex === conflicts.length - 1}
+									onclick={nextConflict}
+								>
+									Next
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="p-6 border-t border-gray-700 flex justify-end gap-3 bg-gray-800">
+						<button
+							onclick={() => {
+								showConflictModal = false;
+								loading = false;
+							}}
+							class="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+						>
+							Cancel
+						</button>
+						<button
+							onclick={handleResolveConflicts}
+							class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
+						>
+							Confirm & Generate
+						</button>
 					</div>
 				</div>
 			</div>

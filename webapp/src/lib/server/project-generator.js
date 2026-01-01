@@ -334,4 +334,50 @@ export class ProjectGeneratorService {
 
 		return results;
 	}
+
+	/**
+	 * Checks for conflicts between generated files and existing repository files
+	 * @param {ProjectGenerationContext} context - Generation context
+	 * @returns {Promise<Object[]>} List of conflicts
+	 */
+	async checkConflicts(context) {
+		if (!this.services.github) {
+			throw new Error('GitHub authentication required for conflict checking');
+		}
+
+		const { projectName } = context;
+		const user = await this.services.github.getUserInfo();
+
+		// Check if repo exists first
+		const exists = await this.services.github.repositoryExists(user.login, projectName);
+		if (!exists) {
+			return [];
+		}
+
+		console.log('🔍 Checking for file conflicts...');
+		const generatedFiles = await generateAllFiles(context);
+		const conflicts = [];
+
+		// In a real scenario, we might want to optimize this by fetching the git tree
+		// For now, we'll check each file individually as the number of generated files is usually small
+		for (const file of generatedFiles) {
+			const existingContent = await this.services.github.getFileContent(
+				user.login,
+				projectName,
+				file.filePath
+			);
+
+			// If file exists and content is different
+			if (existingContent !== null && existingContent !== file.content) {
+				conflicts.push({
+					path: file.filePath,
+					generatedContent: file.content,
+					existingContent: existingContent
+				});
+			}
+		}
+
+		console.log(`⚠️ Found ${conflicts.length} file conflicts`);
+		return conflicts;
+	}
 }
