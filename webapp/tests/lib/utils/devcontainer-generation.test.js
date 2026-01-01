@@ -19,8 +19,8 @@ describe('DevContainer Generation Tests', () => {
 
         const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
 
-        // Check for unresolved variables in image
-        expect(devcontainerJson.image).toBe('mcr.microsoft.com/devcontainers/java:1-21');
+        // Check for unresolved variables in build
+        expect(devcontainerJson.build).toEqual({ dockerfile: 'Dockerfile' });
 
         // Check for unresolved variables in features
         const javaFeature = devcontainerJson.features['ghcr.io/devcontainers/features/java:1'];
@@ -44,8 +44,8 @@ describe('DevContainer Generation Tests', () => {
 
         const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
 
-        // Check for unresolved variables in image
-        expect(devcontainerJson.image).toBe('mcr.microsoft.com/devcontainers/python:1-3.12');
+        // Check for unresolved variables in build
+        expect(devcontainerJson.build).toEqual({ dockerfile: 'Dockerfile' });
 
         // Check for unresolved variables in features
         const pythonFeature = devcontainerJson.features['ghcr.io/devcontainers/features/python:1'];
