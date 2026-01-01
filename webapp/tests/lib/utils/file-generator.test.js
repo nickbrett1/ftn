@@ -30,6 +30,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
+{{dopplerInstallation}}
+
 USER node
 
 RUN if [ ! -d "$HOME/.oh-my-zsh" ]; then sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; fi \\
@@ -47,6 +49,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && npm install -g @google/gemini-cli @specifyapp/cli
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+{{dopplerInstallation}}
 
 USER node
 
