@@ -7,7 +7,7 @@ import { logger } from '$lib/utils/logging';
 export async function POST({ request, platform, cookies }) {
 	try {
 		const body = await request.json();
-		const { name, repositoryUrl, selectedCapabilities, overwrite } = body;
+		const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions } = body;
 
 		if (!name || !selectedCapabilities) {
 			return json({ message: 'Missing required fields' }, { status: 400 });
@@ -48,7 +48,8 @@ export async function POST({ request, platform, cookies }) {
 			configuration: {}, // Defaults will be applied by generators
 			authTokens, // Redundant but harmless if included
 			userId: user.id,
-			overwrite: overwrite || false
+			overwrite: overwrite || false,
+			resolutions: resolutions || null
 		};
 
 		// Run generation

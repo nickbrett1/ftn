@@ -217,6 +217,48 @@ describe('ProjectGeneratorService', () => {
 			);
 		});
 
+		it('should respect resolutions when committing files', async () => {
+			const contextWithResolutions = {
+				...context,
+				resolutions: {
+					'file1.txt': 'keep',
+					'file2.js': 'overwrite'
+				}
+			};
+
+			await service.commitFilesToRepository(repository, generatedFiles, contextWithResolutions);
+
+			// Should only contain file2.js
+			const expectedGithubFiles = [
+				{
+					path: 'file2.js',
+					content: 'content2',
+					message: 'Add file2.js'
+				}
+			];
+
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				expectedGithubFiles,
+				'Initial commit: Generated project with 1 capabilities'
+			);
+		});
+
+		it('should not commit anything if all files are resolved to keep', async () => {
+			const contextWithResolutions = {
+				...context,
+				resolutions: {
+					'file1.txt': 'keep',
+					'file2.js': 'keep'
+				}
+			};
+
+			await service.commitFilesToRepository(repository, generatedFiles, contextWithResolutions);
+
+			expect(service.services.github.createMultipleFiles).not.toHaveBeenCalled();
+		});
+
 		it('should throw an error if GitHub service is not available', async () => {
 			service.services.github = null;
 			await expect(
@@ -344,6 +386,51 @@ describe('ProjectGeneratorService', () => {
 			const service = new ProjectGeneratorService({});
 			const results = await service.validateAllTokens();
 			expect(results).toEqual({});
+		});
+	});
+
+	describe('checkConflicts', () => {
+		const context = {
+			projectName: 'test-project',
+			capabilities: ['sveltekit']
+		};
+
+		it('should identify conflicting files', async () => {
+			const generatedFiles = [
+				{ filePath: 'file1.txt', content: 'new-content' },
+				{ filePath: 'file2.txt', content: 'same-content' }
+			];
+			generateAllFiles.mockResolvedValue(generatedFiles);
+
+			service.services.github.getUserInfo.mockResolvedValue({ login: 'user' });
+			service.services.github.repositoryExists.mockResolvedValue(true);
+			service.services.github.getFileContent = vi
+				.fn()
+				.mockResolvedValueOnce('old-content') // file1.txt
+				.mockResolvedValueOnce('same-content'); // file2.txt
+
+			const conflicts = await service.checkConflicts(context);
+
+			expect(conflicts).toHaveLength(1);
+			expect(conflicts[0]).toEqual({
+				path: 'file1.txt',
+				generatedContent: 'new-content',
+				existingContent: 'old-content'
+			});
+			expect(service.services.github.getFileContent).toHaveBeenCalledWith(
+				'user',
+				'test-project',
+				'file1.txt'
+			);
+		});
+
+		it('should return empty array if repository does not exist', async () => {
+			service.services.github.getUserInfo.mockResolvedValue({ login: 'user' });
+			service.services.github.repositoryExists.mockResolvedValue(false);
+
+			const conflicts = await service.checkConflicts(context);
+
+			expect(conflicts).toEqual([]);
 		});
 	});
 });
