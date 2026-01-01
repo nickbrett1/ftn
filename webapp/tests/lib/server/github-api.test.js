@@ -58,6 +58,25 @@ describe('GitHubAPIService', () => {
 		expect(await service.repositoryExists('user', 'repo')).toBe(false);
 	});
 
+	it('gets file content', async () => {
+		const content = 'Hello World';
+		const base64Content = Buffer.from(content).toString('base64');
+		const jsonMock = vi.fn();
+
+		vi.spyOn(service, 'makeRequest').mockResolvedValue({ json: jsonMock });
+
+		// Success case
+		jsonMock.mockResolvedValueOnce({ content: base64Content });
+		const result1 = await service.getFileContent('user', 'repo', 'file.txt');
+		expect(result1).toBe(content);
+		expect(service.makeRequest).toHaveBeenCalledWith('/repos/user/repo/contents/file.txt');
+
+		// Not found case
+		service.makeRequest.mockRejectedValueOnce(new Error('GitHub API error: 404 Not Found'));
+		const result2 = await service.getFileContent('user', 'repo', 'missing.txt');
+		expect(result2).toBeNull();
+	});
+
 	it('creates or updates files with existing sha detection', async () => {
 		const getFileJson = vi.fn().mockResolvedValue({ sha: 'abc123' });
 		const putJson = vi.fn().mockResolvedValue({ content: { path: 'README.md' } });

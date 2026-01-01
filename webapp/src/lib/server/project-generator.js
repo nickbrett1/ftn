@@ -183,13 +183,26 @@ export class ProjectGeneratorService {
 		}
 
 		const [owner, repo] = repository.fullName.split('/');
+		const resolutions = context.resolutions || {};
+
+		// Filter files based on resolutions
+		// If resolution is 'keep', we skip generating this file
+		const filesToCommit = generatedFiles.filter((file) => {
+			const resolution = resolutions[file.filePath];
+			return resolution !== 'keep';
+		});
 
 		// Convert generated files to GitHub file format
-		const githubFiles = generatedFiles.map((file) => ({
+		const githubFiles = filesToCommit.map((file) => ({
 			path: file.filePath,
 			content: file.content,
 			message: `Add ${file.filePath}`
 		}));
+
+		if (githubFiles.length === 0) {
+			console.log('⚠️ No files to commit after applying conflict resolutions');
+			return;
+		}
 
 		// Create commit with all files
 		await this.services.github.createMultipleFiles(

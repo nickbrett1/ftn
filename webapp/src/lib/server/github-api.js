@@ -124,6 +124,26 @@ export class GitHubAPIService extends BaseAPIService {
 	}
 
 	/**
+	 * Gets the content of a file in the repository
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @param {string} path - File path
+	 * @returns {Promise<string|null>} File content or null if not found
+	 */
+	async getFileContent(owner, repo, path) {
+		try {
+			const response = await this.makeRequest(`/repos/${owner}/${repo}/contents/${path}`);
+			const data = await response.json();
+			return Buffer.from(data.content, 'base64').toString('utf-8');
+		} catch (error) {
+			if (error.message.includes('404')) {
+				return null;
+			}
+			throw error;
+		}
+	}
+
+	/**
 	 * Creates or updates a file in the repository
 	 * @param {string} owner - Repository owner
 	 * @param {string} repo - Repository name
