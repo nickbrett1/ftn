@@ -357,7 +357,8 @@
 								<span>⚠️</span> Overwrite / Use Existing
 							</button>
 							<p class="text-xs text-gray-400 mt-2">
-								This will add files to the existing repository. Existing files may be overwritten.
+								This will add files to the existing repository. You will be able to review conflicts and
+								decide whether to overwrite or keep existing files.
 							</p>
 						</div>
 
@@ -377,7 +378,7 @@
 		{#if showConflictModal}
 			<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
 				<div
-					class="bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl h-[80vh] flex flex-col border border-gray-700"
+					class="bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl h-[80vh] flex flex-col border border-gray-700 overscroll-contain"
 				>
 					<div class="p-6 border-b border-gray-700 flex justify-between items-center">
 						<h3 class="text-xl font-bold text-white">Resolve File Conflicts</h3>
@@ -411,9 +412,13 @@
 
 						<!-- Content area -->
 						<div class="flex-1 flex flex-col overflow-hidden">
-							<div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-								<h4 class="font-mono text-white text-lg">{getCurrentConflict().path}</h4>
-								<div class="flex gap-2">
+							<div
+								class="p-4 bg-gray-800 border-b border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+							>
+								<h4 class="font-mono text-white text-lg break-all md:break-normal">
+									{getCurrentConflict().path}
+								</h4>
+								<div class="flex gap-2 w-full md:w-auto justify-end">
 									<button
 										class="px-3 py-1 text-sm rounded border {conflictResolutions[
 											getCurrentConflict().path
@@ -437,17 +442,23 @@
 								</div>
 							</div>
 
-							<div class="flex-1 overflow-hidden grid grid-cols-2">
-								<div class="flex flex-col border-r border-gray-700">
-									<div class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide">
+							<div
+								class="flex-1 overflow-y-auto md:overflow-hidden grid grid-cols-1 md:grid-cols-2"
+							>
+								<div class="flex flex-col border-r border-gray-700 h-64 md:h-auto">
+									<div
+										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide"
+									>
 										Existing Content
 									</div>
 									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-gray-300">
 										<pre>{getCurrentConflict().existingContent}</pre>
 									</div>
 								</div>
-								<div class="flex flex-col">
-									<div class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide">
+								<div class="flex flex-col h-64 md:h-auto">
+									<div
+										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide"
+									>
 										New Content
 									</div>
 									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300">
