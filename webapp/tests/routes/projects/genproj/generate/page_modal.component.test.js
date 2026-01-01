@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, screen } from '@testing-library/svelte';
+import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
 import Page from '../../../../../src/routes/projects/genproj/generate/+page.svelte';
 
 // Mock dependencies
@@ -100,7 +100,14 @@ describe('Generate Page Component', () => {
 		// Trigger modal
 		await fireEvent.click(getByRole('button', { name: /generate project/i }));
 
-		// 2. Mock success for overwrite attempt
+		// 2. Mock success for conflicts check (no conflicts)
+		globalThis.fetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => ({ conflicts: [] })
+		});
+
+		// 3. Mock success for overwrite attempt
 		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
@@ -111,11 +118,13 @@ describe('Generate Page Component', () => {
 		await fireEvent.click(getByRole('button', { name: /overwrite/i }));
 
 		// Verify API call with overwrite: true
-		expect(globalThis.fetch).toHaveBeenLastCalledWith(
-			'/projects/genproj/api/generate',
-			expect.objectContaining({
-				body: expect.stringContaining('"overwrite":true')
-			})
-		);
+		await waitFor(() => {
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
+				'/projects/genproj/api/generate',
+				expect.objectContaining({
+					body: expect.stringContaining('"overwrite":true')
+				})
+			);
+		});
 	});
 });
