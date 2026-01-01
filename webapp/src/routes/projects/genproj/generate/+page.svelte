@@ -24,6 +24,7 @@
 	let conflicts = $state([]);
 	let conflictResolutions = $state({});
 	let currentConflictIndex = $state(0);
+	let activeConflictTab = $state('new');
 
 	function getAllFolderPaths(files) {
 		let paths = [];
@@ -442,12 +443,36 @@
 								</div>
 							</div>
 
-							<div
-								class="flex-1 overflow-y-auto md:overflow-hidden grid grid-cols-1 md:grid-cols-2"
-							>
-								<div class="flex flex-col border-r border-gray-700 h-64 md:h-auto">
+							<div class="flex-1 overflow-hidden flex flex-col md:grid md:grid-cols-2 relative">
+								<!-- Mobile Tabs -->
+								<div class="flex border-b border-gray-700 md:hidden shrink-0">
+									<button
+										class="flex-1 py-2 text-center text-sm font-medium {activeConflictTab ===
+										'existing'
+											? 'text-white border-b-2 border-blue-500'
+											: 'text-gray-400'}"
+										onclick={() => (activeConflictTab = 'existing')}
+									>
+										Existing
+									</button>
+									<button
+										class="flex-1 py-2 text-center text-sm font-medium {activeConflictTab === 'new'
+											? 'text-white border-b-2 border-green-500'
+											: 'text-gray-400'}"
+										onclick={() => (activeConflictTab = 'new')}
+									>
+										New
+									</button>
+								</div>
+
+								<div
+									class="flex flex-col border-r border-gray-700 h-full md:h-auto overflow-hidden {activeConflictTab ===
+									'existing'
+										? 'flex'
+										: 'hidden'} md:flex"
+								>
 									<div
-										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide"
+										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide md:block hidden"
 									>
 										Existing Content
 									</div>
@@ -455,9 +480,13 @@
 										<pre>{getCurrentConflict().existingContent}</pre>
 									</div>
 								</div>
-								<div class="flex flex-col h-64 md:h-auto">
+								<div
+									class="flex flex-col h-full md:h-auto overflow-hidden {activeConflictTab === 'new'
+										? 'flex'
+										: 'hidden'} md:flex"
+								>
 									<div
-										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide"
+										class="bg-gray-900 p-2 text-xs text-center text-gray-400 uppercase tracking-wide md:block hidden"
 									>
 										New Content
 									</div>
