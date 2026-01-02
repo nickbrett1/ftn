@@ -238,24 +238,48 @@ export function collectNonDevelopmentContainerFiles(templateEngine, context, oth
 
 	for (const capabilityId of otherCapabilities) {
 		const capability = capabilities.find((c) => c.id === capabilityId);
-		if (!capability?.templates) continue;
+		if (capability && capability.templates) {
+			for (const template of capability.templates) {
+				try {
+					const extraData = getCapabilityTemplateData(capabilityId, {
+						capabilities: context.capabilities,
+						configuration: context.configuration
+					});
 
-		for (const template of capability.templates) {
-			const content = templateEngine.generateFile(template.templateId, {
-				...context,
-				...getCapabilityTemplateData(capabilityId, {
-					capabilities: context.capabilities,
-					configuration: context.configuration
-				}),
-				projectName: context.projectName || context.name || 'my-project',
-				capabilityConfig: context.configuration?.[capabilityId] || {},
-				capability
-			});
+					// Special handling for SvelteKit config adapter
+					let adapterPackage = '@sveltejs/adapter-auto';
+					let adapterComment =
+						'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
+						'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
+						'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
 
-			files.push({
-				filePath: template.filePath,
-				content: content
-			});
+					if (
+						capabilityId === 'sveltekit' &&
+						context.capabilities.includes('cloudflare-wrangler')
+					) {
+						adapterPackage = '@sveltejs/adapter-cloudflare';
+						adapterComment =
+							'// adapter-cloudflare is configured for Wrangler deployment\n' +
+							'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+					}
+
+					const content = templateEngine.generateFile(template.templateId, {
+						...context,
+						...extraData,
+						projectName: context.projectName || context.name || 'my-project',
+						capabilityConfig: context.configuration?.[capabilityId] || {},
+						capability,
+						adapterPackage,
+						adapterComment
+					});
+					files.push({
+						filePath: template.filePath,
+						content: content
+					});
+				} catch (error) {
+					console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+				}
+			}
 		}
 	}
 	return files;
@@ -533,7 +557,9 @@ export function generateCloudLoginFiles(templateEngine, context) {
 				filePath: 'src/index.js',
 				content: templateEngine.generateFile('cloudflare-worker-index-js', context)
 			});
-		} else if (hasDoppler) {
+		}
+
+		if (hasDoppler) {
 			files.push(
 				{
 					filePath: 'wrangler.template.jsonc',
