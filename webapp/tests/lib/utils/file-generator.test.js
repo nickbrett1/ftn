@@ -44,7 +44,7 @@ RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 `;
 
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+RUN apt-get update \\
     && apt-get -y install --no-install-recommends git socat curl gnupg \\
     && npm install -g @google/gemini-cli @specifyapp/cli
 

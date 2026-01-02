@@ -71,7 +71,14 @@ if [ -f "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" ]; then
     sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
 else
     echo "INFO: /workspaces/{{projectName}}/.devcontainer/.p10k.zsh not found, skipping copy."
-fi`;
+fi
+
+echo "INFO: Installing uv tool..."
+curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+echo "INFO: Installing Cursor CLI..."
+curl https://cursor.com/install -fsS | bash
+`;
 
 export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
