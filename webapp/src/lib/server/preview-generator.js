@@ -21,7 +21,8 @@ import {
 	PLAYWRIGHT_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
-	SETUP_WRANGLER_SCRIPT
+	SETUP_WRANGLER_SCRIPT,
+	DOPPLER_INSTALL_SCRIPT
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
