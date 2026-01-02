@@ -95,7 +95,8 @@ describe('/projects/genproj/generate load function', async () => {
 			projectName,
 			repositoryUrl,
 			selected,
-			previewData: mockPreview
+			previewData: mockPreview,
+			configuration: {}
 		});
 	});
 });

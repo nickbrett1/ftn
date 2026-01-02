@@ -33,6 +33,7 @@
 		selectedCapabilities = data.selectedCapabilities || [];
 		projectName = data.projectName || '';
 		repositoryUrl = data.repositoryUrl || '';
+		configuration = data.configuration || {};
 		loading = !data.capabilities || data.capabilities.length === 0;
 		initialError = data.error || null;
 	});
@@ -280,6 +281,16 @@
 
 	// Load capabilities on mount (only if not provided by server)
 	onMount(async () => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const configParam = urlParams.get('config');
+		if (configParam) {
+			try {
+				configuration = JSON.parse(atob(configParam));
+			} catch (e) {
+				logger.error('Error parsing configuration from URL', e);
+			}
+		}
+
 		// If we already have capabilities from server, don't fetch again
 		if (data.capabilities && data.capabilities.length > 0) {
 			loading = false;
@@ -394,7 +405,7 @@
 
 	// Build redirect path with current genproj state
 	function buildGenprojRedirectPath() {
-		const basePath = '/projects/genproj';
+		const basePath = '/projects/genproj/generate';
 		const parameters = new URLSearchParams();
 
 		// Preserve selected capabilities
@@ -410,6 +421,11 @@
 		// Preserve repository URL if set
 		if (repositoryUrl) {
 			parameters.set('repositoryUrl', repositoryUrl);
+		}
+
+		// Preserve configuration
+		if (Object.keys(configuration).length > 0) {
+			parameters.set('config', btoa(JSON.stringify(configuration)));
 		}
 
 		const queryString = parameters.toString();

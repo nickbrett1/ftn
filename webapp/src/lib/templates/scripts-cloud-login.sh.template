@@ -5,6 +5,8 @@ set -e
 
 {{wranglerLogin}}
 
+{{googleCloudLogin}}
+
 {{setupWrangler}}
 
 echo "Cloud login script finished."

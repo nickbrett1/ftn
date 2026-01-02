@@ -185,18 +185,17 @@ export class TemplateEngine {
 		const regex = /{{(.*?)}}/g;
 
 		content = content.replaceAll(regex, (match, key) => {
-			const keys = key.trim().split('.');
+			const trimmedKey = key.trim();
+			if (data.hasOwnProperty(trimmedKey)) {
+				return data[trimmedKey];
+			}
+
+			const keys = trimmedKey.split('.');
 			let value = data;
 			for (const k of keys) {
 				if (value && typeof value === 'object' && k in value) {
 					value = value[k];
 				} else {
-					// Don't leave placeholders like {{lighthouseJobDefinition}} if they are undefined or empty string
-					// Check if we should return empty string instead of original match
-					// But we need to distinguish between "missing key" and "valid empty value"
-					// In this engine implementation, if path is not found, it returns original match.
-					// We might want to clear it if it's intended to be optional.
-					// However, for safety, let's keep it unless we explicitly pass empty string in data.
 					return match;
 				}
 			}
@@ -466,7 +465,8 @@ export function generatePackageJson(templateEngine, context) {
 
 	if (hasSvelteKit) {
 		typeField = 'module';
-		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",\n    "vite": "^7.3.0"\n  }';
+		overrides =
+			',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",\n    "vite": "^7.3.0"\n  }';
 		scripts =
 			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
@@ -480,15 +480,13 @@ export function generatePackageJson(templateEngine, context) {
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}
-	} else {
+	} else if (hasWrangler) {
 		// Normal Node.js setup
-		if (hasWrangler) {
-			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += '"wrangler": "^3.57.0"';
-			typeField = 'module'; // Wrangler projects are usually modules
-		} else {
-			typeField = 'commonjs';
-		}
+		scripts += ',\n    "deploy": "wrangler deploy"';
+		devDependencies += '"wrangler": "^3.57.0"';
+		typeField = 'module'; // Wrangler projects are usually modules
+	} else {
+		typeField = 'commonjs';
 	}
 
 	if (context.capabilities.includes('devcontainer-node')) {
@@ -511,12 +509,15 @@ export function generatePackageJson(templateEngine, context) {
 	return null;
 }
 
-export function generateCloudflareFiles(templateEngine, context) {
+export function generateCloudLoginFiles(templateEngine, context) {
 	const files = [];
-	if (!context.capabilities.includes('cloudflare-wrangler')) return files;
-
+	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
 	const hasDoppler = context.capabilities.includes('doppler');
+	const hasGoogleCloud = context.capabilities.includes('google-cloud');
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
+
+	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return files;
+
 	const projectName = context.projectName || context.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
@@ -525,11 +526,14 @@ export function generateCloudflareFiles(templateEngine, context) {
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
 
-	const setupWrangler = hasDoppler
-		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
-		: '';
+	const setupWrangler =
+		hasDoppler && hasWrangler
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+			: '';
+
+	const googleCloudLogin = hasGoogleCloud ? 'gcloud auth login && gcloud config set project' : '';
 
 	files.push({
 		filePath: 'scripts/cloud_login.sh',
@@ -537,49 +541,51 @@ export function generateCloudflareFiles(templateEngine, context) {
 			...context,
 			dopplerLogin,
 			wranglerLogin,
-			setupWrangler
+			setupWrangler,
+			googleCloudLogin
 		})
 	});
 
 	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
 	// because SvelteKit manages its own entry point via the adapter.
 	// But we still need wrangler configuration.
+	if (hasWrangler) {
+		const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
 
-	const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+		if (!hasSvelteKit) {
+			files.push({
+				filePath: 'src/index.js',
+				content: templateEngine.generateFile('cloudflare-worker-index-js', context)
+			});
+		}
 
-	if (!hasSvelteKit) {
-		files.push({
-			filePath: 'src/index.js',
-			content: templateEngine.generateFile('cloudflare-worker-index-js', context)
-		});
-	}
-
-	if (hasDoppler) {
-		files.push(
-			{
-				filePath: 'wrangler.template.jsonc',
-				content: templateEngine.generateFile('wrangler-template-jsonc', {
+		if (hasDoppler) {
+			files.push(
+				{
+					filePath: 'wrangler.template.jsonc',
+					content: templateEngine.generateFile('wrangler-template-jsonc', {
+						...context,
+						projectName: context.projectName || context.name || 'my-project',
+						compatibilityDate,
+						mainEntryPoint
+					})
+				},
+				{
+					filePath: 'scripts/setup-wrangler-config.sh',
+					content: templateEngine.generateFile('scripts-setup-wrangler-config-sh', context)
+				}
+			);
+		} else {
+			files.push({
+				filePath: 'wrangler.jsonc',
+				content: templateEngine.generateFile('wrangler-jsonc', {
 					...context,
 					projectName: context.projectName || context.name || 'my-project',
 					compatibilityDate,
 					mainEntryPoint
 				})
-			},
-			{
-				filePath: 'scripts/setup-wrangler-config.sh',
-				content: templateEngine.generateFile('scripts-setup-wrangler-config-sh', context)
-			}
-		);
-	} else {
-		files.push({
-			filePath: 'wrangler.jsonc',
-			content: templateEngine.generateFile('wrangler-jsonc', {
-				...context,
-				projectName: context.projectName || context.name || 'my-project',
-				compatibilityDate,
-				mainEntryPoint
-			})
-		});
+			});
+		}
 	}
 
 	return files;
@@ -623,6 +629,8 @@ export async function generateAllFiles(context) {
 	);
 	const otherCapabilities = context.capabilities.filter((c) => !c.startsWith('devcontainer-'));
 
+	const cloudLoginFiles = generateCloudLoginFiles(templateEngine, context);
+
 	const otherFiles = [
 		generatePackageJson(templateEngine, context),
 		generateGitignoreFile(templateEngine, context)
@@ -635,7 +643,7 @@ export async function generateAllFiles(context) {
 			context,
 			developmentContainerCapabilities
 		),
-		...generateCloudflareFiles(templateEngine, context),
+		...cloudLoginFiles,
 		...otherFiles
 	];
 

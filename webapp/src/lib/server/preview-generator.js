@@ -166,7 +166,8 @@ function createMergedDevelopmentContainerJson(
 function createDevelopmentContainerDockerfile(
 	templateEngine,
 	projectConfig,
-	developmentContainerCapabilities
+	developmentContainerCapabilities,
+	allCapabilities
 ) {
 	const baseId = developmentContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
@@ -174,7 +175,10 @@ function createDevelopmentContainerDockerfile(
 	const content = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-dockerfile`, {
 		...projectConfig,
 		capabilityConfig: baseConfig,
-		capability: baseCap
+		capability: baseCap,
+		dopplerInstallation: allCapabilities.includes('doppler')
+			? `RUN ${DOPPLER_INSTALL_SCRIPT}`
+			: ''
 	});
 	return {
 		path: '.devcontainer/Dockerfile',
@@ -265,7 +269,8 @@ async function generateDevelopmentContainerArtifacts(
 		createDevelopmentContainerDockerfile(
 			templateEngine,
 			projectConfig,
-			developmentContainerCapabilities
+			developmentContainerCapabilities,
+			allCapabilities
 		),
 		...createDevelopmentContainerShellFiles(templateEngine, projectConfig, allCapabilities)
 	);

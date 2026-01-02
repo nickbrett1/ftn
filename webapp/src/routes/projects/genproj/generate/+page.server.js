@@ -13,6 +13,15 @@ export async function load({ url, cookies, fetch }) {
 	const projectName = url.searchParams.get('projectName') || 'my-project';
 	const repositoryUrl = url.searchParams.get('repositoryUrl') || '';
 	const selected = url.searchParams.get('selected') || '';
+	const config = url.searchParams.get('config') || '';
+	let configuration = {};
+	if (config) {
+		try {
+			configuration = JSON.parse(atob(config));
+		} catch (e) {
+			logger.error('Error parsing configuration from URL', e);
+		}
+	}
 
 	try {
 		const response = await fetch('/projects/genproj/api/preview', {
@@ -23,7 +32,8 @@ export async function load({ url, cookies, fetch }) {
 			body: JSON.stringify({
 				name: projectName,
 				repositoryUrl: repositoryUrl,
-				selectedCapabilities: selected.split(',')
+				selectedCapabilities: selected.split(','),
+				configuration
 			})
 		});
 
@@ -40,7 +50,8 @@ export async function load({ url, cookies, fetch }) {
 			projectName,
 			repositoryUrl,
 			selected,
-			previewData
+			previewData,
+			configuration
 		};
 	} catch (error) {
 		logger.error('Failed to fetch preview', error);

@@ -574,7 +574,7 @@
 			<a
 				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(
 					data.projectName
-				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}"
+				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}&config={btoa(JSON.stringify(data.configuration))}"
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-gray-700 text-white hover:bg-gray-600 border-gray-500 flex items-center justify-center"
 			>
 				Back to Configuration

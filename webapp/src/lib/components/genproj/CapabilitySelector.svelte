@@ -282,6 +282,7 @@
 			sonarlint: CodeSolid,
 			playwright: PlayCircleSolid,
 			doppler: UserSecretSolid,
+			'google-cloud': CloudSolid,
 			dependabot: RobotSolid,
 			'lighthouse-ci': ChartLineSolid
 		};
@@ -305,6 +306,7 @@
 			sonarlint: 'text-red-400',
 			playwright: 'text-green-500',
 			doppler: 'text-blue-400',
+			'google-cloud': 'text-blue-500',
 			dependabot: 'text-blue-500',
 			'lighthouse-ci': 'text-orange-500'
 		};
