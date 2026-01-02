@@ -486,6 +486,23 @@ export const capabilities = [
 		website: 'https://developers.cloudflare.com/workers/wrangler/'
 	},
 	{
+		id: 'google-cloud',
+		name: 'Google Cloud',
+		description: 'Configures project for Google Cloud deployment.',
+		category: CATEGORY_DEPLOYMENT,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'Deploy to Google Cloud Run, App Engine, or Functions',
+			'Authenticated gcloud CLI access in scripts',
+			'Seamless integration with Google Cloud services'
+		],
+		templates: EMPTY_ARRAY,
+		website: 'https://cloud.google.com/'
+	},
+	{
 		id: 'dependabot',
 		name: 'Dependabot',
 		description: 'Configures Dependabot for automated dependency updates.',

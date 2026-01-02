@@ -116,6 +116,12 @@ echo
 echo "Setting up Wrangler configuration..."
 doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh dev`;
 
+export const GOOGLE_CLOUD_LOGIN_SCRIPT = `
+echo
+# Google Cloud login
+echo "Logging into Google Cloud..."
+gcloud auth login && gcloud config set project {{projectName}} && gcloud config set run/region us-central1 && gcloud auth application-default login`;
+
 export const DOPPLER_INSTALL_SCRIPT = `(curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh`;
 
 const templateImports = {
@@ -466,7 +472,8 @@ export function generatePackageJson(templateEngine, context) {
 
 	if (hasSvelteKit) {
 		typeField = 'module';
-		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",\n    "vite": "^7.3.0"\n  }';
+		overrides =
+			',\n  "overrides": {\n    "cookie": "^1.0.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",\n    "vite": "^7.3.0"\n  }';
 		scripts =
 			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
@@ -511,11 +518,14 @@ export function generatePackageJson(templateEngine, context) {
 	return null;
 }
 
-export function generateCloudflareFiles(templateEngine, context) {
+export function generateCloudIntegrationFiles(templateEngine, context) {
 	const files = [];
-	if (!context.capabilities.includes('cloudflare-wrangler')) return files;
-
+	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
 	const hasDoppler = context.capabilities.includes('doppler');
+	const hasGoogleCloud = context.capabilities.includes('google-cloud');
+
+	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return files;
+
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 	const projectName = context.projectName || context.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
@@ -525,11 +535,16 @@ export function generateCloudflareFiles(templateEngine, context) {
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
 
-	const setupWrangler = hasDoppler
-		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+	const googleCloudLogin = hasGoogleCloud
+		? GOOGLE_CLOUD_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
+
+	const setupWrangler =
+		hasDoppler && hasWrangler
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+			: '';
 
 	files.push({
 		filePath: 'scripts/cloud_login.sh',
@@ -537,9 +552,13 @@ export function generateCloudflareFiles(templateEngine, context) {
 			...context,
 			dopplerLogin,
 			wranglerLogin,
+			googleCloudLogin,
 			setupWrangler
 		})
 	});
+
+	// If not using Wrangler, skip the rest of Cloudflare specific files
+	if (!hasWrangler) return files;
 
 	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
 	// because SvelteKit manages its own entry point via the adapter.
@@ -635,7 +654,7 @@ export async function generateAllFiles(context) {
 			context,
 			developmentContainerCapabilities
 		),
-		...generateCloudflareFiles(templateEngine, context),
+		...generateCloudIntegrationFiles(templateEngine, context),
 		...otherFiles
 	];
 

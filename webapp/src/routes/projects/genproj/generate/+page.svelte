@@ -358,8 +358,8 @@
 								<span>⚠️</span> Overwrite / Use Existing
 							</button>
 							<p class="text-xs text-gray-400 mt-2">
-								This will add files to the existing repository. You will be able to review conflicts and
-								decide whether to overwrite or keep existing files.
+								This will add files to the existing repository. You will be able to review conflicts
+								and decide whether to overwrite or keep existing files.
 							</p>
 						</div>
 
@@ -490,7 +490,9 @@
 									>
 										New Content
 									</div>
-									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300">
+									<div
+										class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300"
+									>
 										<pre>{getCurrentConflict().generatedContent}</pre>
 									</div>
 								</div>

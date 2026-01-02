@@ -21,7 +21,8 @@ import {
 	PLAYWRIGHT_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
-	SETUP_WRANGLER_SCRIPT
+	SETUP_WRANGLER_SCRIPT,
+	GOOGLE_CLOUD_LOGIN_SCRIPT
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -392,10 +393,18 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	return null;
 }
 
-async function generateCloudflareFiles(templateEngine, projectConfig, allCapabilities, files) {
-	if (!allCapabilities.includes('cloudflare-wrangler')) return;
-
+async function generateCloudIntegrationFiles(
+	templateEngine,
+	projectConfig,
+	allCapabilities,
+	files
+) {
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
 	const hasDoppler = allCapabilities.includes('doppler');
+	const hasGoogleCloud = allCapabilities.includes('google-cloud');
+
+	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return;
+
 	const hasSvelteKit = allCapabilities.includes('sveltekit');
 	const projectName = projectConfig.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
@@ -405,16 +414,22 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
 
-	const setupWrangler = hasDoppler
-		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+	const googleCloudLogin = hasGoogleCloud
+		? GOOGLE_CLOUD_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
+
+	const setupWrangler =
+		hasDoppler && hasWrangler
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+			: '';
 
 	const cloudLoginContent = templateEngine.generateFile('scripts-cloud-login-sh', {
 		...projectConfig,
 		dopplerLogin,
 		wranglerLogin,
+		googleCloudLogin,
 		setupWrangler
 	});
 
@@ -425,6 +440,9 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		size: cloudLoginContent.length,
 		type: 'file'
 	});
+
+	// If not using Wrangler, skip the rest of Cloudflare specific files
+	if (!hasWrangler) return;
 
 	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
 	// because SvelteKit manages its own entry point via the adapter.
@@ -555,8 +573,8 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		);
 	}
 
-	// Generate Cloudflare files
-	await generateCloudflareFiles(templateEngine, projectConfig, executionOrder, files);
+	// Generate Cloud Integration files
+	await generateCloudIntegrationFiles(templateEngine, projectConfig, executionOrder, files);
 
 	// Generate package.json
 	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);
