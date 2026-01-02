@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends git socat curl \
+    && apt-get -y install --no-install-recommends git socat curl gnupg \
     && npm install -g @google/gemini-cli @specifyapp/cli
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
