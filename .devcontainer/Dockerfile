@@ -9,6 +9,7 @@ RUN apt-get update \
         curl \
         git \
 				socat \
+				gnupg \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
