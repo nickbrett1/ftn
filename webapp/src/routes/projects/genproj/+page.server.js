@@ -14,12 +14,15 @@ export async function load({ locals, url = new URL('http://localhost/') }) {
 	const projectNameParameter = url.searchParams.get('projectName');
 	const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
 
-	const selectedCapabilities = selectedCapabilitiesParameter
-		? selectedCapabilitiesParameter.split(',')
-		: [];
+	const selectedCapabilities =
+		selectedCapabilitiesParameter && selectedCapabilitiesParameter !== 'undefined'
+			? selectedCapabilitiesParameter.split(',')
+			: [];
 
-	const projectName = projectNameParameter || '';
-	const repositoryUrl = repositoryUrlParameter || '';
+	const projectName =
+		projectNameParameter && projectNameParameter !== 'undefined' ? projectNameParameter : '';
+	const repositoryUrl =
+		repositoryUrlParameter && repositoryUrlParameter !== 'undefined' ? repositoryUrlParameter : '';
 
 	// If there's an error, redirect to /notauthorised after displaying a message
 	if (authError) {

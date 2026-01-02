@@ -283,7 +283,7 @@
 	onMount(async () => {
 		const urlParams = new URLSearchParams(window.location.search);
 		const configParam = urlParams.get('config');
-		if (configParam) {
+		if (configParam && configParam !== 'undefined' && configParam !== 'dW5kZWZpbmVk') {
 			try {
 				configuration = JSON.parse(atob(configParam));
 			} catch (e) {

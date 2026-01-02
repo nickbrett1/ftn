@@ -21,6 +21,12 @@ export async function POST({ request, platform, fetch }) {
 		return json(previewData, { status: 200 });
 	} catch (error) {
 		logger.error('Error generating preview:', error);
-		return json({ error: 'Failed to generate preview', details: error.message }, { status: 500 });
+		return json(
+			{
+				error: 'Failed to generate preview',
+				message: error.message
+			},
+			{ status: 500 }
+		);
 	}
 }
