@@ -398,10 +398,13 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	return null;
 }
 
-async function generateCloudflareFiles(templateEngine, projectConfig, allCapabilities, files) {
-	if (!allCapabilities.includes('cloudflare-wrangler')) return;
-
+async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCapabilities, files) {
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
 	const hasDoppler = allCapabilities.includes('doppler');
+	const hasGoogleCloud = allCapabilities.includes('google-cloud');
+
+	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return;
+
 	const hasSvelteKit = allCapabilities.includes('sveltekit');
 	const projectName = projectConfig.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
@@ -411,17 +414,23 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = WRANGLER_LOGIN_SCRIPT;
+	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
 
-	const setupWrangler = hasDoppler
-		? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+	const setupWrangler =
+		hasDoppler && hasWrangler
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+			: '';
+
+	const googleCloudLogin = hasGoogleCloud
+		? `gcloud auth login && gcloud config set project ${projectName}`
 		: '';
 
 	const cloudLoginContent = templateEngine.generateFile('scripts-cloud-login-sh', {
 		...projectConfig,
 		dopplerLogin,
 		wranglerLogin,
-		setupWrangler
+		setupWrangler,
+		googleCloudLogin
 	});
 
 	files.push({
@@ -432,63 +441,68 @@ async function generateCloudflareFiles(templateEngine, projectConfig, allCapabil
 		type: 'file'
 	});
 
-	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
-	// because SvelteKit manages its own entry point via the adapter.
-	// But we still need wrangler configuration.
+	if (hasWrangler) {
+		// If SvelteKit is present, we don't generate src/index.js (worker entry point)
+		// because SvelteKit manages its own entry point via the adapter.
+		// But we still need wrangler configuration.
 
-	const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+		const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
 
-	if (!hasSvelteKit) {
-		const indexJsContent = templateEngine.generateFile('cloudflare-worker-index-js', projectConfig);
-		files.push({
-			path: 'src/index.js',
-			name: 'index.js',
-			content: indexJsContent,
-			size: indexJsContent.length,
-			type: 'file'
-		});
-	}
+		if (!hasSvelteKit) {
+			const indexJsContent = templateEngine.generateFile(
+				'cloudflare-worker-index-js',
+				projectConfig
+			);
+			files.push({
+				path: 'src/index.js',
+				name: 'index.js',
+				content: indexJsContent,
+				size: indexJsContent.length,
+				type: 'file'
+			});
+		}
 
-	if (hasDoppler) {
-		const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
-			...projectConfig,
-			projectName: projectConfig.name || 'my-project',
-			compatibilityDate,
-			mainEntryPoint
-		});
-		files.push({
-			path: 'wrangler.template.jsonc',
-			name: 'wrangler.template.jsonc',
-			content: templateContent,
-			size: templateContent.length,
-			type: 'file'
-		});
+		if (hasDoppler) {
+			const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
+				...projectConfig,
+				projectName: projectConfig.name || 'my-project',
+				compatibilityDate,
+				mainEntryPoint
+			});
+			files.push({
+				path: 'wrangler.template.jsonc',
+				name: 'wrangler.template.jsonc',
+				content: templateContent,
+				size: templateContent.length,
+				type: 'file'
+			});
 
-		const setupContent = templateEngine.generateFile(
-			'scripts-setup-wrangler-config-sh',
-			projectConfig
-		);
-		files.push({
-			path: 'scripts/setup-wrangler-config.sh',
-			name: 'setup-wrangler-config.sh',
-			content: setupContent,
-			size: setupContent.length,
-			type: 'file'
-		});
-	} else {
-		const wranglerContent = templateEngine.generateFile('wrangler-jsonc', {
-			...projectConfig,
-			projectName: projectConfig.name || 'my-project',
-			compatibilityDate,
-			mainEntryPoint
-		});
-		files.push({
-			path: 'wrangler.jsonc',
-			name: 'wrangler.jsonc',
-			content: wranglerContent,
-			size: wranglerContent.length,
-			type: 'file'
-		});
+			const setupContent = templateEngine.generateFile(
+				'scripts-setup-wrangler-config-sh',
+				projectConfig
+			);
+			files.push({
+				path: 'scripts/setup-wrangler-config.sh',
+				name: 'setup-wrangler-config.sh',
+				content: setupContent,
+				size: setupContent.length,
+				type: 'file'
+			});
+		} else {
+			const wranglerContent = templateEngine.generateFile('wrangler-jsonc', {
+				...projectConfig,
+				projectName: projectConfig.name || 'my-project',
+				compatibilityDate,
+				mainEntryPoint
+			});
+			files.push({
+				path: 'wrangler.jsonc',
+				name: 'wrangler.jsonc',
+				content: wranglerContent,
+				size: wranglerContent.length,
+				type: 'file'
+			});
+		}
 	}
 }
 
@@ -561,8 +575,8 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		);
 	}
 
-	// Generate Cloudflare files
-	await generateCloudflareFiles(templateEngine, projectConfig, executionOrder, files);
+	// Generate Cloud Deployment files (Cloudflare, Google Cloud, etc.)
+	await generateCloudDeploymentFiles(templateEngine, projectConfig, executionOrder, files);
 
 	// Generate package.json
 	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);

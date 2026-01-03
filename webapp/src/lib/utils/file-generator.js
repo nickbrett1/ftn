@@ -541,7 +541,9 @@ export function generateCloudLoginFiles(templateEngine, context) {
 			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
 			: '';
 
-	const googleCloudLogin = hasGoogleCloud ? 'gcloud auth login && gcloud config set project' : '';
+	const googleCloudLogin = hasGoogleCloud
+		? `gcloud auth login && gcloud config set project ${projectName}`
+		: '';
 
 	files.push({
 		filePath: 'scripts/cloud_login.sh',
