@@ -12,8 +12,6 @@ USER node
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \
     && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \
-    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
-
-RUN curl https://cursor.com/install -fsS | bash
-
-RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \
+    && curl https://cursor.com/install -fsS | bash \
+    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
