@@ -115,7 +115,7 @@ if ! command -v wrangler &> /dev/null; then
   npm install -g wrangler
 fi
 
-script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\\\.0\\\\.0\\\\.0/localhost/g'" /dev/null`;
+script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null`;
 
 export const SETUP_WRANGLER_SCRIPT = `
 echo
