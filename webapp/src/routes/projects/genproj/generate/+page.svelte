@@ -358,8 +358,8 @@
 								<span>⚠️</span> Overwrite / Use Existing
 							</button>
 							<p class="text-xs text-gray-400 mt-2">
-								This will add files to the existing repository. You will be able to review conflicts and
-								decide whether to overwrite or keep existing files.
+								This will add files to the existing repository. You will be able to review conflicts
+								and decide whether to overwrite or keep existing files.
 							</p>
 						</div>
 
@@ -390,7 +390,9 @@
 
 					<div class="flex-1 overflow-hidden flex flex-col md:flex-row">
 						<!-- Sidebar file list -->
-						<div class="w-full md:w-1/4 border-r border-gray-700 overflow-y-auto bg-gray-900">
+						<div
+							class="w-full hidden md:block md:w-1/4 border-r border-gray-700 overflow-y-auto bg-gray-900"
+						>
 							{#each conflicts as conflict, index}
 								<button
 									class="w-full text-left p-3 border-b border-gray-800 hover:bg-gray-800 transition-colors flex items-center justify-between {currentConflictIndex ===
@@ -490,7 +492,9 @@
 									>
 										New Content
 									</div>
-									<div class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300">
+									<div
+										class="flex-1 overflow-auto p-4 bg-gray-950 font-mono text-xs text-green-300"
+									>
 										<pre>{getCurrentConflict().generatedContent}</pre>
 									</div>
 								</div>
@@ -574,7 +578,9 @@
 			<a
 				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(
 					data.projectName
-				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}&config={btoa(JSON.stringify(data.configuration))}"
+				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}&config={btoa(
+					JSON.stringify(data.configuration)
+				)}"
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-gray-700 text-white hover:bg-gray-600 border-gray-500 flex items-center justify-center"
 			>
 				Back to Configuration
