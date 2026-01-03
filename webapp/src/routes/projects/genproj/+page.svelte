@@ -358,7 +358,7 @@
 		}
 
 		// Build redirect URL with current state to preserve selections
-		const redirectPath = buildGenprojRedirectPath();
+		const redirectPath = buildGenprojRedirectPath('/projects/genproj/generate');
 		const redirectUrl = new URL(redirectPath, globalThis.location.origin).toString();
 
 		// Directly initiate GitHub authentication
@@ -399,13 +399,12 @@
 
 	async function handleSignInClick() {
 		// Build redirect path with current state to preserve selections
-		const redirectPath = buildGenprojRedirectPath();
+		const redirectPath = buildGenprojRedirectPath('/projects/genproj');
 		await initiateGoogleAuth(redirectPath);
 	}
 
 	// Build redirect path with current genproj state
-	function buildGenprojRedirectPath() {
-		const basePath = '/projects/genproj/generate';
+	function buildGenprojRedirectPath(basePath = '/projects/genproj/generate') {
 		const parameters = new URLSearchParams();
 
 		// Preserve selected capabilities
