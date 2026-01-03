@@ -178,7 +178,7 @@ function createDevelopmentContainerDockerfile(
 		capabilityConfig: baseConfig,
 		capability: baseCap,
 		dopplerInstallation: allCapabilities.includes('doppler')
-			? `RUN ${DOPPLER_INSTALL_SCRIPT}`
+			? ` \\\n    && ${DOPPLER_INSTALL_SCRIPT} \\\n    && apt-get update && apt-get install -y doppler`
 			: ''
 	});
 	return {
