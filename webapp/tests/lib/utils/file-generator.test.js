@@ -5,6 +5,7 @@ import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
   "name": "Node.js",
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
   "build": { "dockerfile": "Dockerfile" },
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
