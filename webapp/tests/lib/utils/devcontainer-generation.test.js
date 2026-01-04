@@ -23,6 +23,10 @@ describe('DevContainer Generation Tests', () => {
 		// Check for unresolved variables in build
 		expect(devcontainerJson.build).toEqual({ dockerfile: 'Dockerfile' });
 
+		// Check for runArgs
+		expect(devcontainerJson.runArgs).toContain('--sysctl');
+		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
+
 		// Check for unresolved variables in features
 		const javaFeature = devcontainerJson.features['ghcr.io/devcontainers/features/java:1'];
 		expect(javaFeature).toBeDefined();
@@ -49,6 +53,10 @@ describe('DevContainer Generation Tests', () => {
 
 		// Check for unresolved variables in build
 		expect(devcontainerJson.build).toEqual({ dockerfile: 'Dockerfile' });
+
+		// Check for runArgs
+		expect(devcontainerJson.runArgs).toContain('--sysctl');
+		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
 
 		// Check for unresolved variables in features
 		const pythonFeature = devcontainerJson.features['ghcr.io/devcontainers/features/python:1'];
