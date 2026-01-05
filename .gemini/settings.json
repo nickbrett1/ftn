@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "svelte": {
-      "httpUrl": "https://mcp.svelte.dev/mcp"
+      "url": "https://mcp.svelte.dev/mcp",
+      "type": "http"
     },
     "sonarqube": {
       "command": "docker",
@@ -32,7 +33,10 @@
     },
     "circleci": {
       "command": "npx",
-      "args": ["-y", "@circleci/mcp-server-circleci"]
+      "args": [
+        "-y",
+        "@circleci/mcp-server-circleci"
+      ]
     }
   }
 }
