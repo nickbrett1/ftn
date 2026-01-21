@@ -66,7 +66,7 @@
 		"npm": "^11.7.0",
 		"playwright": "^1.57.0",
 		"postcss": "^8.5.6",
-		"prettier": "^3.8.0",
+		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.4.1",
 		"rehype-mermaid": "^3.0.0",
 		"remark-footnotes": "2.0",
