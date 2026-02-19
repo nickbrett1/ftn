@@ -9,7 +9,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/node:current-browsers
+      - image: cimg/node:current
     steps:
       - checkout:
           method: blobless
@@ -54,7 +54,7 @@ jobs:
       - run:
           name: Build app
           command: |
-            cd webapp && npm run build
+            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run build
       - save_cache:
           name: Update node_modules cache
           paths:
