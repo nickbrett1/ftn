@@ -98,25 +98,13 @@ const config = {
 		mdsvex({
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkFootnotes, remarkGfm],
-			rehypePlugins: isTest ? [] : [[rehypeMermaid, { strategy: 'inline-svg' }]],
+			rehypePlugins: [],
 			highlight: {
 				highlighter: async (code, lang) => {
-					// Intercept the highlighter for mermaid blocks and return an AST node directly.
-					// Further explanation here: https://sunbath.top/playground/integrate-rehype-mermaid-with-mdsvex
+					// Handle mermaid blocks by wrapping them in a standard code block for client-side rendering.
+					// We must escape the code to prevent Svelte from interpreting curly braces as expressions.
 					if (lang === 'mermaid') {
-						return {
-							type: 'element',
-							tagName: 'pre',
-							properties: {},
-							children: [
-								{
-									type: 'element',
-									tagName: 'code',
-									properties: { className: ['language-mermaid'] },
-									children: [{ type: 'text', value: code }]
-								}
-							]
-						};
+						return `<pre><code class="language-mermaid">${escapeSvelte(code)}</code></pre>`;
 					}
 					// Use Shiki for other languages
 					return await highlight(code, lang);

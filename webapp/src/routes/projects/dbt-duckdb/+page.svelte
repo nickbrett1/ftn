@@ -1,7 +1,15 @@
 <script>
 	import Header from '$lib/components/Header.svelte';
 	import ArticleContent from './dbt-duckdb.svx';
+	import { onMount } from 'svelte';
+	import mermaid from 'mermaid';
+
 	const { data } = $props();
+
+	onMount(async () => {
+		mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+		await mermaid.run({ querySelector: '.language-mermaid' });
+	});
 </script>
 
 <svelte:head>
