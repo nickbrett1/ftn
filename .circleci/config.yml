@@ -9,7 +9,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:current-browsers
     steps:
       - checkout:
           method: blobless
