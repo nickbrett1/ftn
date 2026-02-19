@@ -40,8 +40,8 @@
 	let merchantPickerReference = $state(null);
 
 	// Budget editing state
-	let editName = $state(budget?.name || '');
-	let editIcon = $state(budget?.icon || '');
+	let editName = $state(untrack(() => budget?.name || ''));
+	let editIcon = $state(untrack(() => budget?.icon || ''));
 	let isSavingName = $state(false);
 	let nameEditError = $state('');
 
