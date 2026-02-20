@@ -13,6 +13,8 @@ updates:
     ignore:
       - dependency-name: "remark-footnotes"
         # Keep at v2.x as later versions break footnote functionality
+      - dependency-name: "svelte"
+        # Pin to 5.50.3 to avoid mdsvex preprocessor crash in 5.53.0+
       
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
