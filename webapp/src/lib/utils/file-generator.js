@@ -24,6 +24,7 @@ import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?ra
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
+import dependabotAutoMerge from '../templates/dependabot-auto-merge.yml.template?raw';
 import vscodeTasksJson from '../templates/vscode-tasks-json.template?raw';
 import cloudflareWorkerIndexJs from '../templates/cloudflare-worker-index-js.template?raw';
 import svelteAppHtml from '../templates/svelte-app-html.template?raw';
@@ -151,6 +152,7 @@ const templateImports = {
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
 	gitignore: gitignoreTemplate,
 	'dependabot-config': dependabotConfig,
+	'dependabot-auto-merge': dependabotAutoMerge,
 	'vscode-tasks-json': vscodeTasksJson,
 	'cloudflare-worker-index-js': cloudflareWorkerIndexJs,
 	'svelte-app-html': svelteAppHtml,
