@@ -32,7 +32,9 @@ jobs:
             cd webapp
             # Install dependencies using the lockfile for consistency
             npm install
-            # Ensure rollup native module is present for linux x64
+            # Rollup 4+ uses native binaries. We explicitly install the linux-x64 version with --force
+            # to prevent build failures caused by npm failing to resolve optional platform-specific 
+            # dependencies, which often happens when the lockfile was generated on a different OS.
             npm install rollup @rollup/rollup-linux-x64-gnu --force
       - run:
           name: Install Playwright Chromium (if not cached)
