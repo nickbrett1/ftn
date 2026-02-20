@@ -17,15 +17,15 @@ jobs:
           name: Restore node_modules and next cache
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - node-v6-fresh-{{ .Branch }}-
-            - node-v6-fresh-
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
       - restore_cache:
           name: Restore Playwright cache
           keys:
-            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - playwright-{{ .Branch }}-
-            - playwright-
+            - playwright-v2-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - playwright-v2-{{ .Branch }}-
+            - playwright-v2-
       - run:
           name: Install modules
           command: |
@@ -44,7 +44,7 @@ jobs:
           name: Cache Playwright
           paths:
             - ~/.cache/ms-playwright
-          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+          key: playwright-v2-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - doppler/install
       - run:
           name: Setup Wrangler configuration
@@ -59,7 +59,7 @@ jobs:
           name: Update node_modules cache
           paths:
             - webapp/node_modules
-          key: node-v6-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+          key: node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - persist_to_workspace:
           root: webapp
           paths:
