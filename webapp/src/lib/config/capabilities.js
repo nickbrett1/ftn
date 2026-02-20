@@ -529,6 +529,11 @@ export const capabilities = [
 				id: 'dependabot-config',
 				filePath: '.github/dependabot.yml',
 				templateId: 'dependabot-config'
+			},
+			{
+				id: 'dependabot-auto-merge',
+				filePath: '.github/workflows/dependabot-auto-merge.yml',
+				templateId: 'dependabot-auto-merge'
 			}
 		],
 		website: 'https://docs.github.com/en/code-security/dependabot/dependabot-overview'
