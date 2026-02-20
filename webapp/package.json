@@ -59,7 +59,7 @@
 		"highlight.js": "^11.11.1",
 		"jsdom": "^28.0.0",
 		"kolorist": "^1.8.0",
-		"magic-string": "^0.30.21",
+		"magic-string": "^0.30.21",``
 		"mdsvex": "^0.12.6",
 		"mermaid": "11.12.2",
 		"miragejs": "^0.1.48",
