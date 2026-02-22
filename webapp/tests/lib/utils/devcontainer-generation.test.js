@@ -31,6 +31,16 @@ describe('DevContainer Generation Tests', () => {
 		const javaFeature = devcontainerJson.features['ghcr.io/devcontainers/features/java:1'];
 		expect(javaFeature).toBeDefined();
 		expect(javaFeature.version).toBe('21');
+
+		// Check for correct user in features
+		expect(devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username).toBe(
+			'vscode'
+		);
+
+		// Check Dockerfile user
+		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		expect(dockerfileFile).toBeDefined();
+		expect(dockerfileFile.content).toContain('USER vscode');
 	});
 
 	it('should generate valid Python devcontainer.json without undefined variables', async () => {
@@ -62,5 +72,15 @@ describe('DevContainer Generation Tests', () => {
 		const pythonFeature = devcontainerJson.features['ghcr.io/devcontainers/features/python:1'];
 		expect(pythonFeature).toBeDefined();
 		expect(pythonFeature.version).toBe('3.12');
+
+		// Check for correct user in features
+		expect(devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username).toBe(
+			'vscode'
+		);
+
+		// Check Dockerfile user
+		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		expect(dockerfileFile).toBeDefined();
+		expect(dockerfileFile.content).toContain('USER vscode');
 	});
 });
