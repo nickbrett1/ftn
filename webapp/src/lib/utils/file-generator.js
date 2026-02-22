@@ -75,7 +75,7 @@ else
 fi
 
 echo "INFO: Installing uv tool..."
-curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+curl -LsSf https://astral.sh/uv/install.sh | sudo env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 echo "INFO: Installing Cursor CLI..."
 curl https://cursor.com/install -fsS | bash
