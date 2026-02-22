@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/python
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends git socat curl gnupg
+    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm
 
 {{dopplerInstallation}}
 
