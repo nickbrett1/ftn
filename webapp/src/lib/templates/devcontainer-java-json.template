@@ -15,6 +15,9 @@
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/java:1": {
       "version": "21"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
     }
   },
   "postCreateCommand": ".devcontainer/post-create-setup.sh"

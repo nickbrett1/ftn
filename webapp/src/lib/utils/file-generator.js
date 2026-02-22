@@ -85,7 +85,10 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
-export const GEMINI_SETUP_SCRIPT = ``;
+export const GEMINI_SETUP_SCRIPT = `
+echo "INFO: Installing Gemini CLI and Specify CLI..."
+sudo npm install -g @google/gemini-cli @specifyapp/cli
+echo "INFO: Gemini CLI and Specify CLI installation complete."`;
 
 export const PLAYWRIGHT_SETUP_SCRIPT = `
 echo "INFO: Installing Playwright and its Chromium dependencies..."

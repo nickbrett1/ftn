@@ -26,8 +26,7 @@ const nodeJsonTemplateContent = `{
 
 const javaDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg \\
-    && npm install -g @google/gemini-cli @specifyapp/cli
+    && apt-get -y install --no-install-recommends git socat curl gnupg
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
@@ -46,7 +45,6 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update \\
     && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates \\
-    && npm install -g @google/gemini-cli @specifyapp/cli \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER node
