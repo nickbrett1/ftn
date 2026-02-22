@@ -7,7 +7,7 @@
       "installZsh": true,
       "installOhMyZsh": true,
       "upgradePackages": true,
-      "username": "node"
+      "username": "vscode"
     },
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "packages": "socat"
