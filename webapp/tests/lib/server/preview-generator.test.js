@@ -13,6 +13,9 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 				if (templateId === 'package-json') {
 					return JSON.stringify(data);
 				}
+				if (templateId === 'gitignore') {
+					return `content for gitignore ${data.pythonIgnore || ''} ${data.javaIgnore || ''}`;
+				}
 				if (templateId.includes('json')) {
 					const features = { [`feature-${templateId}`]: {} };
 					const extensions = [`ext-${templateId}`];
@@ -80,6 +83,16 @@ vi.mock('../../../src/lib/config/capabilities.js', () => ({
 			id: 'doppler',
 			name: 'Doppler',
 			externalServices: []
+		},
+		{
+			id: 'sveltekit',
+			name: 'SvelteKit',
+			templates: [{ templateId: 'svelte-config-js', filePath: 'svelte.config.js' }]
+		},
+		{
+			id: 'devcontainer-python',
+			name: 'Python DevContainer',
+			templates: []
 		}
 	]
 }));
@@ -178,6 +191,34 @@ describe('generatePreview', () => {
 		expect(packageJsonFile).toBeDefined();
 		const content = JSON.parse(packageJsonFile.content);
 		expect(content.devDependencies).toContain('"wrangler": "^4.56.0"');
+	});
+
+	it('generates sveltekit specific files', async () => {
+		const projectConfig = { name: 'SvelteProject' };
+		const preview = await generatePreview(projectConfig, ['sveltekit', 'devcontainer-node']);
+
+		const svelteConfig = preview.files.find((f) => f.name === 'svelte.config.js');
+		expect(svelteConfig).toBeDefined();
+
+		const packageJson = preview.files.find((f) => f.name === 'package.json');
+		const pkg = JSON.parse(packageJson.content);
+		expect(pkg.devDependencies).toContain('@sveltejs/kit');
+	});
+
+	it('generates correct gitignore for python', async () => {
+		const projectConfig = { name: 'PythonProject' };
+		const preview = await generatePreview(projectConfig, ['devcontainer-python']);
+		const gitignore = preview.files.find((f) => f.name === '.gitignore');
+		expect(gitignore).toBeDefined();
+		expect(gitignore.content).toContain('__pycache__');
+	});
+
+	it('generates correct gitignore for java', async () => {
+		const projectConfig = { name: 'JavaProject' };
+		const preview = await generatePreview(projectConfig, ['devcontainer-java']);
+		const gitignore = preview.files.find((f) => f.name === '.gitignore');
+		expect(gitignore).toBeDefined();
+		expect(gitignore.content).toContain('*.class');
 	});
 
 	it('handles errors during preview generation', async () => {

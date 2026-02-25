@@ -190,4 +190,31 @@ describe('GitHubAPIService', () => {
 		vi.spyOn(service, 'getUserInfo').mockRejectedValue(new Error('bad token'));
 		expect(await service.validateToken()).toBe(false);
 	});
+
+	it('handles errors in repository creation', async () => {
+		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(
+			new Error('name already exists on this account')
+		);
+		await expect(service.createRepository('repo', 'desc')).rejects.toThrow('Repository already exists');
+
+		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(new Error('Other error'));
+		await expect(service.createRepository('repo', 'desc')).rejects.toThrow('Other error');
+	});
+
+	it('handles errors in repository existence check', async () => {
+		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(new Error('Other error'));
+		await expect(service.repositoryExists('user', 'repo')).rejects.toThrow('Other error');
+	});
+
+	it('handles errors in get file content', async () => {
+		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(new Error('Other error'));
+		await expect(service.getFileContent('user', 'repo', 'file.txt')).rejects.toThrow('Other error');
+	});
+
+	it('handles errors in create or update file', async () => {
+		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(new Error('Other error'));
+		await expect(
+			service.createOrUpdateFile('user', 'repo', { path: 'file.txt', content: 'content' })
+		).rejects.toThrow('Other error');
+	});
 });
