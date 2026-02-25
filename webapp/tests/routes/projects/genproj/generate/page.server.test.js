@@ -99,4 +99,19 @@ describe('/projects/genproj/generate load function', async () => {
 			configuration: {}
 		});
 	});
+
+	it('should handle invalid base64 config gracefully', async () => {
+		const mockEvent = {
+			url: new URL('http://localhost/projects/genproj/generate?config=invalid-base64'),
+			cookies: { get: vi.fn().mockReturnValue('dummy-token') },
+			fetch: vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
+		};
+
+		const result = await load(mockEvent);
+		expect(result.configuration).toEqual({});
+		expect(mockLoggerError).toHaveBeenCalledWith(
+			'Error parsing configuration from URL',
+			expect.any(Error)
+		);
+	});
 });
