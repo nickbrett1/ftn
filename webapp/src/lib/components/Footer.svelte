@@ -4,7 +4,8 @@
 		LinkedinInBrands,
 		EnvelopeRegular,
 		CreditCardSolid,
-		RocketSolid
+		RocketSolid,
+		HandshakeSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -46,6 +47,9 @@
 		const loginTooltips = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
+		const consultingTooltips = tippy('#consulting', {
+			content: 'Consulting Services'
+		});
 
 		// Clean up tooltips when component unmounts
 		return () => {
@@ -65,6 +69,12 @@
 				for (const tooltip of loginTooltips) tooltip.destroy();
 			} else {
 				loginTooltips.destroy();
+			}
+
+			if (Array.isArray(consultingTooltips)) {
+				for (const tooltip of consultingTooltips) tooltip.destroy();
+			} else {
+				consultingTooltips.destroy();
 			}
 		};
 	});
@@ -104,7 +114,7 @@
 					<CreditCardSolid
 						id="login"
 						onclick={handleCreditCardClick}
-						class="hover:text-green-400 cursor-pointer text-green-400 size-8 md:size-12"
+						class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
 						title="Credit Card Billing Tool"
 						ariaLabel="Credit Card Billing Tool"
 						focusable="true"
@@ -120,6 +130,18 @@
 						/>
 					</Login>
 				{/if}
+
+				<!-- Consulting Services icon -->
+				<HandshakeSolid
+					id="consulting"
+					onclick={() => {
+						goto('/consulting');
+					}}
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+					title="Consulting Services"
+					ariaLabel="Consulting Services"
+					focusable="true"
+				/>
 			</div>
 
 			<div class="flex gap-4">

@@ -1,7 +1,14 @@
 <script>
+	import { goto } from '$app/navigation';
 	let { current = 'home', active = 'home', close = null, hide = () => {} } = $props();
 
 	const handleClick = () => {
+		if (current === 'consulting') {
+			goto('/consulting');
+			hide();
+			return;
+		}
+
 		// Simple hash navigation
 		const targetId = current;
 		const element = document.getElementById(targetId);
