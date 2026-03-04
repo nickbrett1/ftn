@@ -7,7 +7,11 @@ import { env } from '$env/dynamic/private';
 export async function load({ locals }) {
 	// Check if user is authenticated
 	if (!locals.user) {
-		throw redirect(302, '/notauthorised?message=' + encodeURIComponent('Please sign in to access consulting services.'));
+		throw redirect(
+			302,
+			'/notauthorised?message=' +
+				encodeURIComponent('Please sign in to access consulting services.')
+		);
 	}
 
 	return {
@@ -33,9 +37,10 @@ export const actions = {
 
 		const stripe = new Stripe(stripeSecretKey);
 
+		let session;
 		try {
 			// Create a Stripe Checkout Session
-			const session = await stripe.checkout.sessions.create({
+			session = await stripe.checkout.sessions.create({
 				payment_method_types: ['card'],
 				line_items: [
 					{
@@ -55,16 +60,15 @@ export const actions = {
 				cancel_url: `${url.origin}/consulting/cancel`,
 				customer_email: locals.user.email
 			});
-
-			// Redirect to Stripe Checkout
-			throw redirect(303, session.url);
 		} catch (err) {
 			console.error('Stripe error:', err);
-			if (err.status === 303) throw err; // Re-throw redirect
 			return {
 				success: false,
 				error: 'Failed to create checkout session. Please try again.'
 			};
 		}
+
+		// Redirect to Stripe Checkout
+		throw redirect(303, session.url);
 	}
 };

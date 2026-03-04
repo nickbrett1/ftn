@@ -25,6 +25,9 @@
 		const currentBudget = untrack(() => budget);
 		if (currentBudget?.id !== data.budget?.id) {
 			merchants = data.merchants || [];
+			// Reset edit state when budget ID has changed (navigation)
+			editName = data.budget?.name || '';
+			editIcon = data.budget?.icon || '';
 		}
 
 		// Update budget from data
@@ -40,8 +43,8 @@
 	let merchantPickerReference = $state(null);
 
 	// Budget editing state
-	let editName = $state(budget?.name || '');
-	let editIcon = $state(budget?.icon || '');
+	let editName = $state(untrack(() => budget?.name || ''));
+	let editIcon = $state(untrack(() => budget?.icon || ''));
 	let isSavingName = $state(false);
 	let nameEditError = $state('');
 
