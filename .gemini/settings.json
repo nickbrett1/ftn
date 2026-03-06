@@ -37,5 +37,7 @@
         "SONARQUBE_IDE_PORT": "$SONARQUBE_IDE_PORT"
       }
     }
-  }
+  },
+
+  "safeCommands": ["ls", "cat", "grep", "find"]
 }
