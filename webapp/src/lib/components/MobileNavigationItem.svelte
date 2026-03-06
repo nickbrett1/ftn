@@ -3,8 +3,8 @@
 	let { current = 'home', active = 'home', close = null, hide = () => {} } = $props();
 
 	const handleClick = () => {
-		if (current === 'consulting') {
-			goto('/consulting');
+		if (current === 'shop') {
+			goto('/shop');
 			hide();
 			return;
 		}

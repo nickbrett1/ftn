@@ -5,7 +5,7 @@
 		EnvelopeRegular,
 		CreditCardSolid,
 		RocketSolid,
-		HandshakeSolid
+		CartShoppingSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -47,8 +47,8 @@
 		const loginTooltips = tippy('#login', {
 			content: 'Credit Card Billing Tool'
 		});
-		const consultingTooltips = tippy('#consulting', {
-			content: 'Consulting Services'
+		const shopTooltips = tippy('#shop', {
+			content: 'Virtual Shop'
 		});
 
 		// Clean up tooltips when component unmounts
@@ -71,10 +71,10 @@
 				loginTooltips.destroy();
 			}
 
-			if (Array.isArray(consultingTooltips)) {
-				for (const tooltip of consultingTooltips) tooltip.destroy();
+			if (Array.isArray(shopTooltips)) {
+				for (const tooltip of shopTooltips) tooltip.destroy();
 			} else {
-				consultingTooltips.destroy();
+				shopTooltips.destroy();
 			}
 		};
 	});
@@ -131,15 +131,15 @@
 					</Login>
 				{/if}
 
-				<!-- Consulting Services icon -->
-				<HandshakeSolid
-					id="consulting"
+				<!-- Virtual Shop icon -->
+				<CartShoppingSolid
+					id="shop"
 					onclick={() => {
-						goto('/consulting');
+						goto('/shop');
 					}}
 					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
-					title="Consulting Services"
-					ariaLabel="Consulting Services"
+					title="Virtual Shop"
+					ariaLabel="Virtual Shop"
 					focusable="true"
 				/>
 			</div>

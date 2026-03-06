@@ -1,37 +1,33 @@
-// webapp/src/routes/consulting/+page.server.js
-import { redirect } from '@sveltejs/kit';
+// webapp/src/routes/shop/+page.server.js
+import { redirect, error } from '@sveltejs/kit';
 import Stripe from 'stripe';
 import { env } from '$env/dynamic/private';
+import { products } from '$lib/data/products.js';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ locals }) {
-	// Check if user is authenticated
-	if (!locals.user) {
-		throw redirect(
-			302,
-			'/notauthorised?message=' +
-				encodeURIComponent('Please sign in to access consulting services.')
-		);
-	}
-
+export async function load() {
 	return {
-		user: locals.user
+		products
 	};
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	checkout: async ({ url, locals }) => {
-		// Verify authentication again in the action
-		if (!locals.user) {
-			throw redirect(302, '/notauthorised');
+	checkout: async ({ request, url }) => {
+		const formData = await request.formData();
+		const productId = formData.get('productId');
+
+		const product = products.find((p) => p.id === productId);
+
+		if (!product) {
+			throw error(404, 'Product not found');
 		}
 
 		const stripeSecretKey = env.STRIPE_SECRET_KEY;
 		if (!stripeSecretKey) {
 			return {
 				success: false,
-				error: 'Stripe is not configured. Please contact support.'
+				error: 'Stripe is not configured.'
 			};
 		}
 
@@ -45,20 +41,20 @@ export const actions = {
 				line_items: [
 					{
 						price_data: {
-							currency: 'usd',
+							currency: product.currency,
 							product_data: {
-								name: 'Consulting Service',
-								description: 'One hour of specialized consulting services.'
+								name: product.name,
+								description: product.description,
+                                images: [product.image]
 							},
-							unit_amount: 10000 // $100.00
+							unit_amount: product.price
 						},
 						quantity: 1
 					}
 				],
 				mode: 'payment',
-				success_url: `${url.origin}/consulting/success?session_id={CHECKOUT_SESSION_ID}`,
-				cancel_url: `${url.origin}/consulting/cancel`,
-				customer_email: locals.user.email
+				success_url: `${url.origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+				cancel_url: `${url.origin}/shop/cancel`,
 			});
 		} catch (err) {
 			console.error('Stripe error:', err);

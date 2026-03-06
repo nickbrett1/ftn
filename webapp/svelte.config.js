@@ -66,7 +66,8 @@ const config = {
 					'data:',
 					'blob:',
 					'https://img.icons8.com',
-					'https://upload.wikimedia.org'
+					'https://upload.wikimedia.org',
+					'https://images.unsplash.com'
 				],
 				'manifest-src': ['self'],
 				'media-src': ['self', 'https://ssl.gstatic.com'],

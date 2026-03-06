@@ -18,7 +18,7 @@
 	>
 		{#each items as item (item)}
 			<DesktopNavigationItem
-				href={item === 'consulting' ? '/consulting' : `/#${item}`}
+				href={item === 'shop' ? '/shop' : `/#${item}`}
 				isActive={active == item}
 				>{item}</DesktopNavigationItem
 			>

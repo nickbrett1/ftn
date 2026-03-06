@@ -52,6 +52,7 @@ vi.mock('svelte-awesome-icons', () => {
 		ToolsSolid: createMockIcon(),
 		RocketSolid: createMockIcon(),
 		HandshakeSolid: createMockIcon(),
+		CartShoppingSolid: createMockIcon(),
 		PythonBrands: createMockIcon(),
 		NodeJsBrands: createMockIcon(),
 		JavaBrands: createMockIcon(),
