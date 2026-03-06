@@ -15,7 +15,7 @@
 		"preview": "vite preview",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"clean": "rimraf .svelte-kit",
+		"clean": "node -e \"fs.rmSync('.svelte-kit', { recursive: true, force: true })\"",
 		"test": "vitest --coverage",
 		"test:once": "vitest run",
 		"test-staging": "vitest --coverage --reporter=junit --outputFile=./reports/junit.xml",
