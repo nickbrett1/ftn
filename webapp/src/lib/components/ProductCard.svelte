@@ -2,6 +2,7 @@
 <script>
     import Card from './Card.svelte';
     import Button from './Button.svelte';
+    import Img from '@zerodevx/svelte-img';
 
     /** @type {{ product: any }} */
     let { product } = $props();
@@ -15,7 +16,7 @@
 <Card disableHoverGlow={true} class="h-full">
     <div class="flex flex-col h-full w-full">
         <div class="relative w-full pt-[66%] mb-4 overflow-hidden rounded-md border border-green-400/30">
-            <img 
+            <Img 
                 src={product.image} 
                 alt={product.name} 
                 class="absolute inset-0 w-full h-full object-cover transition-all duration-500"

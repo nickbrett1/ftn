@@ -209,6 +209,16 @@ export class BaseParser {
 	}
 
 	/**
+	 * Extract the card name from the statement
+	 * Subclasses can override this to provide more specific logic.
+	 * @param {string} text - PDF text content
+	 * @returns {string|null} - Card name or null
+	 */
+	extractCardName(/* text */) {
+		return null;
+	}
+
+	/**
 	 * Returns the regex for identifying a transaction line.
 	 * Subclasses can override this to provide a more specific regex.
 	 * @returns {RegExp}

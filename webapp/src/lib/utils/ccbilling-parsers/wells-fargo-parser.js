@@ -21,6 +21,11 @@ export class WellsFargoParser extends BaseParser {
 
 		const textUpper = text.toUpperCase();
 
+		// Check for Cardless / Column N.A. which should be handled by BiltCardlessParser
+		if (textUpper.includes('CARDLESS') || textUpper.includes('COLUMN N.A.')) {
+			return false;
+		}
+
 		// Look for Wells Fargo-specific identifiers
 		const wellsFargoIdentifiers = [
 			'WELLS FARGO',
@@ -51,10 +56,12 @@ export class WellsFargoParser extends BaseParser {
 	async parse(pdfText) {
 		const last4 = this.extractLast4Digits(pdfText);
 		const statementDate = this.extractStatementDate(pdfText);
+		const cardName = this.extractCardName(pdfText);
 		const charges = this.extractCharges(pdfText);
 
 		const result = {
 			last4,
+			card_name: cardName,
 			statement_date: statementDate,
 			charges
 		};

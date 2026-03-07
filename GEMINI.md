@@ -16,6 +16,8 @@ src/
 tests/
 ```
 
+**Images:** All project images must be stored in `webapp/src/lib/images`. Use Svelte imports for images in components to benefit from SvelteKit's asset optimization.
+
 ## Commands
 
 [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]

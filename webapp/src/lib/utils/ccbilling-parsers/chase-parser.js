@@ -60,10 +60,12 @@ export class ChaseParser extends BaseParser {
 	async parse(pdfText) {
 		const last4 = this.extractLast4Digits(pdfText);
 		const statementDate = this.extractStatementDate(pdfText);
+		const cardName = this.extractCardName(pdfText);
 		const charges = this.extractCharges(pdfText);
 
 		const result = {
 			last4,
+			card_name: cardName,
 			statement_date: statementDate,
 			charges
 		};

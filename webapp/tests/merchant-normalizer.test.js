@@ -45,8 +45,14 @@ describe('Merchant Normalizer', () => {
 	describe('MaidMarines normalization', () => {
 		it('should normalize MaidMarines with store number', () => {
 			const result = normalizeMerchant('MAIDMARINES #1862550 MAIDMARINES.C NY');
-			expect(result.merchant_normalized).toBe('MAIDMARINES');
-			expect(result.merchant_details).toBe('');
+			expect(result.merchant_normalized).toBe('MAID MARINES');
+			expect(result.merchant_details).toBe('MAIDMARINES');
+		});
+
+		it('should normalize MaidMarines from Bilt statement row', () => {
+			const result = normalizeMerchant('MAIDMARINES #1874442 121 West 27th Street Suit');
+			expect(result.merchant_normalized).toBe('MAID MARINES');
+			expect(result.merchant_details).toBe('121 West 27th Street Suit');
 		});
 	});
 

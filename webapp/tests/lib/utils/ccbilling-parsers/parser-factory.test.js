@@ -26,16 +26,30 @@ vi.mock('../../../../src/lib/utils/ccbilling-parsers/wells-fargo-parser.js', () 
 	}
 }));
 
+vi.mock('../../../../src/lib/utils/ccbilling-parsers/bilt-cardless-parser.js', () => ({
+	BiltCardlessParser: class MockBiltCardlessParser {
+		constructor() {
+			return {
+				providerName: 'Bilt Cardless',
+				canParse: vi.fn(),
+				parse: vi.fn()
+			};
+		}
+	}
+}));
+
 describe('ParserFactory', () => {
 	let factory;
+	let mockBiltCardlessParser;
 	let mockChaseParser;
 	let mockWellsFargoParser;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		factory = new ParserFactory();
-		mockChaseParser = factory.parsers[0];
-		mockWellsFargoParser = factory.parsers[1];
+		mockBiltCardlessParser = factory.parsers[0];
+		mockChaseParser = factory.parsers[1];
+		mockWellsFargoParser = factory.parsers[2];
 	});
 
 	afterEach(() => {
@@ -46,15 +60,27 @@ describe('ParserFactory', () => {
 	});
 
 	describe('constructor', () => {
-		it('should initialize with Chase and Wells Fargo parsers', () => {
-			expect(factory.parsers).toHaveLength(2);
-			expect(factory.parsers[0].providerName).toBe('Chase');
-			expect(factory.parsers[1].providerName).toBe('Wells Fargo');
+		it('should initialize with Bilt, Chase and Wells Fargo parsers', () => {
+			expect(factory.parsers).toHaveLength(3);
+			expect(factory.parsers[0].providerName).toBe('Bilt Cardless');
+			expect(factory.parsers[1].providerName).toBe('Chase');
+			expect(factory.parsers[2].providerName).toBe('Wells Fargo');
 		});
 	});
 
 	describe('detectParser', () => {
+		it('should detect Bilt Cardless parser for Bilt Cardless statements', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(true);
+			const text = 'BILT CARDLESS STATEMENT';
+
+			const result = factory.detectParser(text);
+
+			expect(result).toBe(mockBiltCardlessParser);
+			expect(mockBiltCardlessParser.canParse).toHaveBeenCalledWith(text);
+		});
+
 		it('should detect Chase parser for Chase statements', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(true);
 			const text = 'CHASE ACCOUNT SUMMARY';
 
@@ -65,6 +91,7 @@ describe('ParserFactory', () => {
 		});
 
 		it('should detect Wells Fargo parser for Wells Fargo statements', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(true);
 			const text = 'WELLS FARGO BILT ACCOUNT';
@@ -76,6 +103,7 @@ describe('ParserFactory', () => {
 		});
 
 		it('should return null when no parser matches', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN STATEMENT FORMAT';
@@ -98,6 +126,7 @@ describe('ParserFactory', () => {
 
 		it('should log warning when no parser found', () => {
 			const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN FORMAT';
@@ -128,6 +157,7 @@ describe('ParserFactory', () => {
 		});
 
 		it('should throw error when no parser is available', async () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(false);
 			const text = 'UNKNOWN STATEMENT FORMAT';
@@ -142,7 +172,7 @@ describe('ParserFactory', () => {
 		it('should return list of supported provider names', () => {
 			const providers = factory.getSupportedProviders();
 
-			expect(providers).toEqual(['Chase', 'Wells Fargo']);
+			expect(providers).toEqual(['Bilt Cardless', 'Chase', 'Wells Fargo']);
 		});
 
 		it('should return all provider names when multiple parsers exist', () => {
@@ -154,7 +184,7 @@ describe('ParserFactory', () => {
 
 			const providers = factory.getSupportedProviders();
 
-			expect(providers).toEqual(['Chase', 'Wells Fargo', 'Amex']);
+			expect(providers).toEqual(['Bilt Cardless', 'Chase', 'Wells Fargo', 'Amex']);
 		});
 	});
 
@@ -180,6 +210,7 @@ describe('ParserFactory', () => {
 		});
 
 		it('should handle null text input', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(false);
 
@@ -189,6 +220,7 @@ describe('ParserFactory', () => {
 		});
 
 		it('should handle empty text input', () => {
+			mockBiltCardlessParser.canParse.mockReturnValue(false);
 			mockChaseParser.canParse.mockReturnValue(false);
 			mockWellsFargoParser.canParse.mockReturnValue(false);
 
@@ -207,7 +239,7 @@ describe('ParserFactory', () => {
 
 			factory.parsers.push(newParser);
 
-			expect(factory.parsers).toHaveLength(3);
+			expect(factory.parsers).toHaveLength(4);
 			expect(factory.getSupportedProviders()).toContain('NewBank');
 		});
 

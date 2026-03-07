@@ -36,7 +36,7 @@
         </h1>
         
         <p class="text-white/70 mb-8 font-mono text-sm uppercase tracking-wide">
-            The transaction was cancelled. No charges were made, even in test mode.
+            The transaction was cancelled. No charges were made.
         </p>
         
         <div class="space-y-4">

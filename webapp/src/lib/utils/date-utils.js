@@ -3,6 +3,17 @@
  */
 
 /**
+ * Helper to parse YYYY-MM-DD string into local date components without timezone shift
+ */
+function parseISODateParts(dateInput) {
+	if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+		const [year, month, day] = dateInput.split('-').map(Number);
+		return { year, month: month - 1, day }; // month is 0-indexed for Date constructor
+	}
+	return null;
+}
+
+/**
  * Format a date string to a user-friendly, fully spelled out format with local timezone
  * @param {string|Date} dateInput - Date string or Date object
  * @param {Object} options - Formatting options
@@ -15,10 +26,15 @@ export function formatDate(dateInput, options = {}) {
 
 	if (!dateInput) return '';
 
-	const date = new Date(dateInput);
+	// Special handling for YYYY-MM-DD to avoid UTC shift
+	const parts = parseISODateParts(dateInput);
+	const date = parts
+		? new Date(parts.year, parts.month, parts.day)
+		: new Date(dateInput);
+		
 	if (Number.isNaN(date.getTime())) return '';
 
-	if (includeTime) {
+	if (includeTime && !parts) {
 		// Format: "August 17, 2025 at 02:32 PM EDT"
 		const dateOptions = {
 			year: 'numeric',
@@ -55,6 +71,14 @@ export function formatDate(dateInput, options = {}) {
 export function formatShortDate(dateInput) {
 	if (!dateInput) return '';
 
+	// Special handling for YYYY-MM-DD to avoid UTC shift
+	const parts = parseISODateParts(dateInput);
+	if (parts) {
+		const month = (parts.month + 1).toString().padStart(2, '0');
+		const day = parts.day.toString().padStart(2, '0');
+		return `${month}/${day}`;
+	}
+
 	const date = new Date(dateInput);
 	if (Number.isNaN(date.getTime())) return '';
 
@@ -72,7 +96,12 @@ export function formatShortDate(dateInput) {
 export function formatMediumDate(dateInput) {
 	if (!dateInput) return '';
 
-	const date = new Date(dateInput);
+	// Special handling for YYYY-MM-DD to avoid UTC shift
+	const parts = parseISODateParts(dateInput);
+	const date = parts
+		? new Date(parts.year, parts.month, parts.day)
+		: new Date(dateInput);
+
 	if (Number.isNaN(date.getTime())) return '';
 
 	const options = {
@@ -92,6 +121,11 @@ export function formatMediumDate(dateInput) {
  */
 export function formatTime(dateInput, includeTimezone = true) {
 	if (!dateInput) return '';
+
+	// If it's just a date string (YYYY-MM-DD), time is not applicable
+	if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+		return '';
+	}
 
 	const date = new Date(dateInput);
 	if (Number.isNaN(date.getTime())) return '';
@@ -113,7 +147,11 @@ export function formatTime(dateInput, includeTimezone = true) {
 export function formatRelativeTime(dateInput) {
 	if (!dateInput) return '';
 
-	const date = new Date(dateInput);
+	const parts = parseISODateParts(dateInput);
+	const date = parts
+		? new Date(parts.year, parts.month, parts.day)
+		: new Date(dateInput);
+
 	if (Number.isNaN(date.getTime())) return '';
 
 	const now = new Date();
@@ -140,11 +178,19 @@ export function formatRelativeTime(dateInput) {
 export function isToday(dateInput) {
 	if (!dateInput) return false;
 
-	const date = new Date(dateInput);
+	const parts = parseISODateParts(dateInput);
+	const date = parts
+		? new Date(parts.year, parts.month, parts.day)
+		: new Date(dateInput);
+
 	if (Number.isNaN(date.getTime())) return false;
 
 	const today = new Date();
-	return date.toDateString() === today.toDateString();
+	return (
+		date.getFullYear() === today.getFullYear() &&
+		date.getMonth() === today.getMonth() &&
+		date.getDate() === today.getDate()
+	);
 }
 
 /**
@@ -155,11 +201,19 @@ export function isToday(dateInput) {
 export function isYesterday(dateInput) {
 	if (!dateInput) return false;
 
-	const date = new Date(dateInput);
+	const parts = parseISODateParts(dateInput);
+	const date = parts
+		? new Date(parts.year, parts.month, parts.day)
+		: new Date(dateInput);
+
 	if (Number.isNaN(date.getTime())) return false;
 
 	const yesterday = new Date();
 	yesterday.setDate(yesterday.getDate() - 1);
 
-	return date.toDateString() === yesterday.toDateString();
+	return (
+		date.getFullYear() === yesterday.getFullYear() &&
+		date.getMonth() === yesterday.getMonth() &&
+		date.getDate() === yesterday.getDate()
+	);
 }

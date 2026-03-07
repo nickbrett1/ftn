@@ -353,6 +353,7 @@ describe('WellsFargoParser', () => {
 			const result = await parser.parse(text);
 			expect(result).toEqual({
 				last4: '1234',
+				card_name: null,
 				statement_date: '2024-02-15',
 				charges: expect.arrayContaining([
 					expect.objectContaining({

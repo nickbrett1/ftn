@@ -1,4 +1,28 @@
 // webapp/src/lib/data/products.js
+import bullStatue from '$lib/images/bull-statue.png?as=run';
+import bearKit from '$lib/images/bear-kit.png?as=run';
+import dipButton from '$lib/images/dip-button.png?as=run';
+import tickerTape from '$lib/images/ticker-tape.png?as=run';
+import qePress from '$lib/images/qe-press.png?as=run';
+import bitcoinCoin from '$lib/images/bitcoin-coin.png?as=run';
+import ethereumCert from '$lib/images/ethereum-cert.png?as=run';
+import dogePlushie from '$lib/images/doge-plushie.png?as=run';
+import hodlHoodie from '$lib/images/hodl-hoodie.png?as=run';
+import pixelBullNft from '$lib/images/pixel-bull-nft.png?as=run';
+import runesKeychain from '$lib/images/runes-keychain.png?as=run';
+import agentBrain from '$lib/images/agent-brain.png?as=run';
+import helloWorldNeon from '$lib/images/hello-world-neon.png?as=run';
+import mechKeyboard from '$lib/images/mech-keyboard.png?as=run';
+import satoshiFloppy from '$lib/images/satoshi-floppy.png?as=run';
+import simulationService from '$lib/images/simulation-service.png?as=run';
+import engineerMug from '$lib/images/engineer-mug.png?as=run';
+import secretSauce from '$lib/images/secret-sauce.png?as=run';
+import timeMachine from '$lib/images/time-machine.png?as=run';
+import invisibleCloak from '$lib/images/invisible-cloak.png?as=run';
+import magicMoney from '$lib/images/magic-money.png?as=run';
+import liquidLiquidity from '$lib/images/liquid-liquidity.png?as=run';
+import infiniteLoop from '$lib/images/infinite-loop.png?as=run';
+import everythingApp from '$lib/images/everything-app.png?as=run';
 
 export const products = [
 	{
@@ -8,7 +32,7 @@ export const products = [
 		price: 250000, // In cents ($2,500.00)
 		currency: 'usd',
 		category: 'Finance',
-		image: 'https://images.unsplash.com/photo-1635350736475-c8cef4b21906?auto=format&fit=crop&q=80&w=600&h=400'
+		image: bullStatue
 	},
 	{
 		id: 'bear-kit',
@@ -17,7 +41,7 @@ export const products = [
 		price: 4999,
 		currency: 'usd',
 		category: 'Finance',
-		image: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=600&h=400'
+		image: bearKit
 	},
 	{
 		id: 'dip-button',
@@ -26,7 +50,7 @@ export const products = [
 		price: 1999,
 		currency: 'usd',
 		category: 'Finance',
-		image: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=600&h=400'
+		image: dipButton
 	},
 	{
 		id: 'ticker-tape',
@@ -35,7 +59,7 @@ export const products = [
 		price: 45000,
 		currency: 'usd',
 		category: 'Finance',
-		image: 'https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&q=80&w=600&h=400'
+		image: tickerTape
 	},
 	{
 		id: 'qe-press',
@@ -44,7 +68,7 @@ export const products = [
 		price: 8800,
 		currency: 'usd',
 		category: 'Finance',
-		image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=600&h=400'
+		image: qePress
 	},
 	{
 		id: 'bitcoin-coin',
@@ -53,7 +77,7 @@ export const products = [
 		price: 1500,
 		currency: 'usd',
 		category: 'Crypto',
-		image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=600&h=400'
+		image: bitcoinCoin
 	},
 	{
 		id: 'ethereum-cert',
@@ -62,7 +86,7 @@ export const products = [
 		price: 120000,
 		currency: 'usd',
 		category: 'Crypto',
-		image: 'https://images.unsplash.com/photo-1622790698141-94e30457ef12?auto=format&fit=crop&q=80&w=600&h=400'
+		image: ethereumCert
 	},
 	{
 		id: 'doge-plushie',
@@ -71,7 +95,7 @@ export const products = [
 		price: 2499,
 		currency: 'usd',
 		category: 'Crypto',
-		image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=600&h=400'
+		image: dogePlushie
 	},
 	{
 		id: 'hodl-hoodie',
@@ -80,7 +104,7 @@ export const products = [
 		price: 5500,
 		currency: 'usd',
 		category: 'Crypto',
-		image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=600&h=400'
+		image: hodlHoodie
 	},
 	{
 		id: 'pixel-bull-nft',
@@ -89,7 +113,7 @@ export const products = [
 		price: 1000000,
 		currency: 'usd',
 		category: 'Crypto',
-		image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=600&h=400'
+		image: pixelBullNft
 	},
 	{
 		id: 'runes-keychain',
@@ -98,7 +122,7 @@ export const products = [
 		price: 800,
 		currency: 'usd',
 		category: 'Tech',
-		image: 'https://images.unsplash.com/photo-1584931423298-c576fda54bd2?auto=format&fit=crop&q=80&w=600&h=400'
+		image: runesKeychain
 	},
 	{
 		id: 'agent-brain',
@@ -107,7 +131,7 @@ export const products = [
 		price: 12000,
 		currency: 'usd',
 		category: 'Tech',
-		image: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?auto=format&fit=crop&q=80&w=600&h=400'
+		image: agentBrain
 	},
 	{
 		id: 'hello-world-neon',
@@ -116,7 +140,7 @@ export const products = [
 		price: 7500,
 		currency: 'usd',
 		category: 'Tech',
-		image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&q=80&w=600&h=400'
+		image: helloWorldNeon
 	},
 	{
 		id: 'mech-keyboard',
@@ -125,7 +149,7 @@ export const products = [
 		price: 13000,
 		currency: 'usd',
 		category: 'Tech',
-		image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=600&h=400'
+		image: mechKeyboard
 	},
 	{
 		id: 'satoshi-floppy',
@@ -134,7 +158,7 @@ export const products = [
 		price: 100000000,
 		currency: 'usd',
 		category: 'Tech',
-		image: 'https://images.unsplash.com/photo-1591405351990-4726e331f141?auto=format&fit=crop&q=80&w=600&h=400'
+		image: satoshiFloppy
 	},
 	{
 		id: 'simulation-service',
@@ -143,7 +167,7 @@ export const products = [
 		price: 10000,
 		currency: 'usd',
 		category: 'Lifestyle',
-		image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600&h=400'
+		image: simulationService
 	},
 	{
 		id: 'engineer-mug',
@@ -152,7 +176,7 @@ export const products = [
 		price: 1400,
 		currency: 'usd',
 		category: 'Lifestyle',
-		image: 'https://images.unsplash.com/photo-1517256673644-36ad11246d21?auto=format&fit=crop&q=80&w=600&h=400'
+		image: engineerMug
 	},
 	{
 		id: 'secret-sauce',
@@ -161,7 +185,7 @@ export const products = [
 		price: 2900,
 		currency: 'usd',
 		category: 'Lifestyle',
-		image: 'https://images.unsplash.com/photo-1471897488648-5eae4ac6686b?auto=format&fit=crop&q=80&w=600&h=400'
+		image: secretSauce
 	},
 	{
 		id: 'time-machine',
@@ -170,7 +194,7 @@ export const products = [
 		price: 500000000,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1501139083538-0139583c060f?auto=format&fit=crop&q=80&w=600&h=400'
+		image: timeMachine
 	},
 	{
 		id: 'invisible-cloak',
@@ -179,7 +203,7 @@ export const products = [
 		price: 99900,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&q=80&w=600&h=400'
+		image: invisibleCloak
 	},
 	{
 		id: 'magic-money',
@@ -188,7 +212,7 @@ export const products = [
 		price: 100,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&q=80&w=600&h=400'
+		image: magicMoney
 	},
 	{
 		id: 'liquid-liquidity',
@@ -197,7 +221,7 @@ export const products = [
 		price: 1250,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1555529669-2269763671c0?auto=format&fit=crop&q=80&w=600&h=400'
+		image: liquidLiquidity
 	},
 	{
 		id: 'infinite-loop',
@@ -206,7 +230,7 @@ export const products = [
 		price: 500,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?auto=format&fit=crop&q=80&w=600&h=400'
+		image: infiniteLoop
 	},
 	{
 		id: 'everything-app',
@@ -215,6 +239,6 @@ export const products = [
 		price: 99,
 		currency: 'usd',
 		category: 'Imaginary',
-		image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=600&h=400'
+		image: everythingApp
 	}
 ];

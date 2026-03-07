@@ -210,10 +210,30 @@ describe('ParsingUtils', () => {
 		});
 	});
 
+	describe('parseMonthDDYYYY', () => {
+		it('should parse valid Month DD, YYYY dates', () => {
+			expect(ParsingUtilities.parseMonthDDYYYY('Feb 7, 2026')).toBe('2026-02-07');
+			expect(ParsingUtilities.parseMonthDDYYYY('March 15, 2024')).toBe('2024-03-15');
+			expect(ParsingUtilities.parseMonthDDYYYY('jan 01, 2023')).toBe('2023-01-01');
+		});
+
+		it('should return null for invalid format', () => {
+			expect(ParsingUtilities.parseMonthDDYYYY('01/15/2024')).toBeNull();
+			expect(ParsingUtilities.parseMonthDDYYYY('Feb 7 2026')).toBeNull();
+			expect(ParsingUtilities.parseMonthDDYYYY('invalid')).toBeNull();
+		});
+
+		it('should return null for invalid dates', () => {
+			expect(ParsingUtilities.parseMonthDDYYYY('Feb 32, 2026')).toBeNull();
+			expect(ParsingUtilities.parseMonthDDYYYY('Inv 07, 2026')).toBeNull();
+		});
+	});
+
 	describe('parseDateAuto', () => {
-		it('should try multiple formats', () => {
+		it('should try multiple formats including Month DD, YYYY', () => {
 			expect(ParsingUtilities.parseDateAuto('01/15/2024')).toBe('2024-01-15');
 			expect(ParsingUtilities.parseDateAuto('01/15/24')).toBe('2024-01-15');
+			expect(ParsingUtilities.parseDateAuto('Feb 7, 2026')).toBe('2026-02-07');
 		});
 
 		it('should return null when no format matches', () => {

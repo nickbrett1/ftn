@@ -149,6 +149,7 @@ export const POST = RouteUtils.createRouteHandler(
 		// Identify credit card from the parsed data
 		const identifiedCreditCard = identifyCreditCardFromParsedData(
 			parsedData.last4,
+			parsedData.card_name,
 			availableCreditCards
 		);
 
@@ -156,10 +157,16 @@ export const POST = RouteUtils.createRouteHandler(
 			console.warn('⚠️ Could not identify credit card from statement');
 
 			let errorMessage;
-			errorMessage =
-				!parsedData.last4 || parsedData.last4.trim() === ''
-					? 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.'
-					: `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
+			if (!parsedData.last4 && !parsedData.card_name) {
+				errorMessage =
+					'No credit card information found in the statement. Please ensure the statement contains valid credit card details.';
+			} else if (parsedData.last4 && parsedData.last4 !== '0000') {
+				errorMessage = `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
+			} else if (parsedData.card_name) {
+				errorMessage = `No matching credit card found with name: "${parsedData.card_name}". Please add a credit card with a similar name before uploading this statement.`;
+			} else {
+				errorMessage = 'Could not identify the credit card for this statement.';
+			}
 
 			return json(
 				{
@@ -222,24 +229,57 @@ export const POST = RouteUtils.createRouteHandler(
 /**
  * Identify credit card from parsed data
  * @param {string} last4 - Last 4 digits from parsed data
+ * @param {string} cardName - Card name from parsed data
  * @param {Array} availableCreditCards - Available credit cards
  * @returns {Object|null} - Identified credit card or null
  */
-function identifyCreditCardFromParsedData(last4, availableCreditCards) {
-	if (!last4 || last4.trim() === '') {
-		console.warn('⚠️ No last4 digits found in parsed data');
-		return null;
+function identifyCreditCardFromParsedData(last4, cardName, availableCreditCards) {
+	// 1. Try to match by last4 (most precise)
+	if (last4 && last4.trim() !== '' && last4 !== '0000') {
+		const matchingByLast4 = availableCreditCards.find((card) => card.last4 === last4);
+		if (matchingByLast4) {
+			console.log('✅ Credit card identified successfully by last4');
+			return matchingByLast4;
+		}
 	}
 
-	const matchingCard = availableCreditCards.find((card) => card.last4 === last4);
+	// 2. Fallback to matching by card name
+	if (cardName && cardName.trim() !== '') {
+		const normalizedSearchName = cardName.toLowerCase().replace('palladium', 'paladium');
 
-	if (matchingCard) {
-		console.log('✅ Credit card identified successfully');
-		return matchingCard;
-	} else {
-		console.warn(`⚠️ No matching card found for last4: ${last4}`);
-		return null;
+		const matchingByName = availableCreditCards.find((card) => {
+			const dbCardName = card.name.toLowerCase();
+			const normalizedDbName = dbCardName.replace('palladium', 'paladium');
+
+			// Exact match
+			if (dbCardName === cardName.toLowerCase()) return true;
+
+			// Normalized exact match (handles palladium/paladium)
+			if (normalizedDbName === normalizedSearchName) return true;
+
+			// Substring match - either the DB card name contains the statement card name or vice versa
+			if (dbCardName.includes(cardName.toLowerCase()) || cardName.toLowerCase().includes(dbCardName))
+				return true;
+
+			// Special case for Bilt
+			if (cardName.toLowerCase().includes('bilt') && dbCardName.includes('bilt')) {
+				if (cardName.toLowerCase().includes('palladium') && dbCardName.includes('paladium'))
+					return true;
+				if (cardName.toLowerCase().includes('paladium') && dbCardName.includes('palladium'))
+					return true;
+			}
+
+			return false;
+		});
+
+		if (matchingByName) {
+			console.log('✅ Credit card identified successfully by card name');
+			return matchingByName;
+		}
 	}
+
+	console.warn(`⚠️ No matching card found for last4: ${last4} or name: ${cardName}`);
+	return null;
 }
 
 /**
@@ -309,26 +349,39 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	const month = Number.parseInt(mmddMatch[1], 10);
 	const day = Number.parseInt(mmddMatch[2], 10);
 
-	// Extract year from billing cycle end date (closing date)
-	const billingCycleYear = new Date(billingCycle.end_date).getFullYear();
+	// Parse billing cycle dates safely
+	const parseISODate = (isoStr) => {
+		const [y, m, d] = isoStr.split('-').map(Number);
+		return { y, m, d };
+	};
 
-	// Create a date with the billing cycle year
-	let transactionYear = billingCycleYear;
-	const transactionDateWithYear = new Date(transactionYear, month - 1, day);
+	const billingCycleStart = parseISODate(billingCycle.start_date);
+	const billingCycleEnd = parseISODate(billingCycle.end_date);
 
-	// Check if this date falls within the billing cycle
-	const billingCycleStart = new Date(billingCycle.start_date);
-	const billingCycleEnd = new Date(billingCycle.end_date);
+	// Default to the billing cycle end year
+	let transactionYear = billingCycleEnd.y;
 
-	// If the date with the billing cycle year is after the billing cycle end,
-	// it might be from the previous year
-	if (transactionDateWithYear > billingCycleEnd) {
-		transactionYear = billingCycleYear - 1;
+	// Create numeric representation for comparison (YYYYMMDD)
+	const toNumeric = (y, m, d) => y * 10000 + m * 100 + d;
+
+	const currentNumeric = toNumeric(transactionYear, month, day);
+	const startNumeric = toNumeric(billingCycleStart.y, billingCycleStart.m, billingCycleStart.d);
+	const endNumeric = toNumeric(billingCycleEnd.y, billingCycleEnd.m, billingCycleEnd.d);
+
+	// If the date with the closing year is after the billing cycle end,
+	// it must be from the previous year (e.g., Dec charge in Jan closing cycle)
+	if (currentNumeric > endNumeric) {
+		transactionYear--;
 	}
-	// If the date with the billing cycle year is before the billing cycle start,
-	// it might be from the next year
-	else if (transactionDateWithYear < billingCycleStart) {
-		transactionYear = billingCycleYear + 1;
+	// If the date with the closing year is before the billing cycle start,
+	// it might be from the next year (rare but possible)
+	else if (currentNumeric < startNumeric) {
+		// Only increment if the billing cycle spans across years and this date fits the start of the next year
+		if (billingCycleStart.y < billingCycleEnd.y) {
+			// Already handled by default (transactionYear = billingCycleEnd.y)
+		} else {
+			transactionYear++;
+		}
 	}
 
 	// Format the final date

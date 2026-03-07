@@ -202,16 +202,64 @@ export const ParsingUtils = {
 	},
 
 	/**
+	 * Parse date in "Month DD, YYYY" format (e.g., "Feb 7, 2026")
+	 * @param {string} dateStr - Date string
+	 * @returns {string|null} - Date in YYYY-MM-DD format
+	 */
+	parseMonthDDYYYY(dateString) {
+		const months = {
+			JAN: 1,
+			JANUARY: 1,
+			FEB: 2,
+			FEBRUARY: 2,
+			MAR: 3,
+			MARCH: 3,
+			APR: 4,
+			APRIL: 4,
+			MAY: 5,
+			JUN: 6,
+			JUNE: 6,
+			JUL: 7,
+			JULY: 7,
+			AUG: 8,
+			AUGUST: 8,
+			SEP: 9,
+			SEPTEMBER: 9,
+			OCT: 10,
+			OCTOBER: 10,
+			NOV: 11,
+			NOVEMBER: 11,
+			DEC: 12,
+			DECEMBER: 12
+		};
+
+		const match = /^([A-Z]{3,9})\s+(\d{1,2}),\s+(\d{4})$/i.exec(dateString.trim());
+		if (!match) return null;
+
+		const monthStr = match[1].toUpperCase();
+		const day = Number.parseInt(match[2], 10);
+		const year = Number.parseInt(match[3], 10);
+
+		const month = months[monthStr];
+		if (!month || day < 1 || day > 31) return null;
+
+		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+	},
+
+	/**
 	 * Auto-detect and parse date format
 	 * @param {string} dateStr - Date string
 	 * @param {number} defaultYear - Default year
 	 * @returns {string|null} - Date in YYYY-MM-DD format
 	 */
 	parseDateAuto(dateString, defaultYear) {
+		if (!dateString) return null;
+
 		// Try different formats
 		const formats = [
 			() => this.parseMMDDYYYY(dateString),
 			() => this.parseMMDDYY(dateString),
+			() => this.parseMonthDDYYYY(dateString),
 			() => {
 				// Try parsing MM/DD format (common in credit card statements)
 				const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
@@ -226,13 +274,21 @@ export const ParsingUtils = {
 				return null;
 			},
 			() => {
-				// Try parsing as ISO date (only if it's not MM/DD format)
-				const mmddMatch = /^(\d{1,2})\/(\d{1,2})$/.exec(dateString);
-				if (!mmddMatch) {
-					const date = new Date(dateString);
-					if (!Number.isNaN(date.getTime())) {
-						return date.toISOString().split('T')[0];
-					}
+				// Try parsing as ISO date (only if it's already YYYY-MM-DD)
+				const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+				if (isoMatch) return dateString;
+				return null;
+			},
+			() => {
+				// Last resort: try native Date parsing but only for valid dates
+				// Avoid timezone shifts by using UTC-like extraction
+				const date = new Date(dateString);
+				if (!Number.isNaN(date.getTime())) {
+					// Use local components to avoid shift
+					const y = date.getFullYear();
+					const m = date.getMonth() + 1;
+					const d = date.getDate();
+					return `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
 				}
 				return null;
 			}

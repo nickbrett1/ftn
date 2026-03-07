@@ -33,6 +33,9 @@ export const actions = {
 
 		const stripe = new Stripe(stripeSecretKey);
 
+		const imageSrc = typeof product.image === 'object' ? product.image.img?.src : product.image;
+		const imageUrl = imageSrc ? new URL(imageSrc, url.origin).href : undefined;
+
 		let session;
 		try {
 			// Create a Stripe Checkout Session
@@ -45,7 +48,7 @@ export const actions = {
 							product_data: {
 								name: product.name,
 								description: product.description,
-                                images: [product.image]
+								images: imageUrl ? [imageUrl] : []
 							},
 							unit_amount: product.price
 						},
