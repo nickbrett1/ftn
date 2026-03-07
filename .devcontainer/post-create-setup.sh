@@ -9,6 +9,11 @@ USER_HOME_DIR="$HOME"
 echo "INFO: Creating Oh My Zsh custom directories..."
 mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
 
+echo "INFO: Initializing Gemini CLI global settings..."
+mkdir -p "$USER_HOME_DIR/.gemini"
+printf '{\n  "general": {\n    "sessionRetention": {\n      "enabled": true,\n      "maxAge": "30d",\n      "warningAcknowledged": true\n    }\n  },\n  "ide": {\n    "hasSeenNudge": true,\n    "enabled": true\n  }\n}\n' > "$USER_HOME_DIR/.gemini/settings.json"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"
+
 if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
     echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
     cp "/workspaces/ftn/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
@@ -31,23 +36,6 @@ echo "INFO: Playwright Chromium installation complete."
 
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
-
-# Needed when run under vscode, but does not work right now (July 20th, 2025) in Cursor
-# WEBAPP_DIR="/workspaces/ftn/webapp"
-# if [ -d "$WEBAPP_DIR" ]; then
-
-#   echo "INFO: Webapp directory found at $WEBAPP_DIR. Checking Wrangler login status..."
-#   ( # Start a subshell to localize the cd
-#       cd "$WEBAPP_DIR"
-#       npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=8976 | stdbuf -oL sed 's/0\.0\.0\.0/localhost/g'
-#       echo "INFO: Wrangler login process initiated."
-#   ) # End subshell
-# else
-#   echo "INFO: Webapp directory not found at $WEBAPP_DIR, skipping Wrangler login."
-# fi
-
-echo "INFO: Adding Svelte MCP to Gemini..."
-gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
 
 echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
 socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &

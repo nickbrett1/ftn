@@ -11,7 +11,10 @@
     },
     "circleci": {
       "command": "npx",
-      "args": ["-y", "@circleci/mcp-server-circleci"]
+      "args": [
+        "-y",
+        "@circleci/mcp-server-circleci"
+      ]
     },
     "sonarqube": {
       "command": "/usr/bin/docker",
@@ -36,8 +39,16 @@
         "SONARQUBE_URL": "https://sonarcloud.io",
         "SONARQUBE_IDE_PORT": "$SONARQUBE_IDE_PORT"
       }
+    },
+    "svelte": {
+      "url": "https://mcp.svelte.dev/mcp",
+      "type": "http"
     }
   },
-
-  "safeCommands": ["ls", "cat", "grep", "find"]
+  "safeCommands": [
+    "ls",
+    "cat",
+    "grep",
+    "find"
+  ]
 }
