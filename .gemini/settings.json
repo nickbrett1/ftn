@@ -11,10 +11,7 @@
     },
     "circleci": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ]
+      "args": ["-y", "@circleci/mcp-server-circleci"]
     },
     "sonarqube": {
       "command": "/usr/bin/docker",
@@ -43,12 +40,23 @@
     "svelte": {
       "url": "https://mcp.svelte.dev/mcp",
       "type": "http"
+    },
+    "nanobanana": {
+      "command": "node",
+      "args": ["/home/node/nanobanana-mcp/mcp-server/dist/index.js"],
+      "env": {
+        "NANOBANANA_GEMINI_API_KEY": "$NANOBANANA_GEMINI_API_KEY"
+      }
     }
   },
-  "safeCommands": [
-    "ls",
-    "cat",
-    "grep",
-    "find"
-  ]
+  "safeCommands": ["ls", "cat", "grep", "find"],
+  "security": {
+    "environmentVariableRedaction": {
+      "allowed": [
+        "NANOBANANA_GEMINI_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY"
+      ]
+    }
+  }
 }

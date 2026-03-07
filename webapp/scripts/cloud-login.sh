@@ -34,8 +34,9 @@ echo
 echo "Configuring Gemini CLI..."
 
 doppler run --project webapp --config dev -- gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
-# Clean up extension directory to ensure fresh installation
-rm -rf /home/node/.gemini/extensions/nanobanana
-doppler run --project webapp --config dev -- gemini extensions install https://github.com/gemini-cli-extensions/nanobanana --consent
+
+echo "INFO: Installing Nanobanana MCP..."
+chmod +x /workspaces/ftn/webapp/scripts/install-nanobanana.sh
+/workspaces/ftn/webapp/scripts/install-nanobanana.sh
 
 echo "Cloud login script finished."
