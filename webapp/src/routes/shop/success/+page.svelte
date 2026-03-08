@@ -1,6 +1,7 @@
 <!-- webapp/src/routes/shop/success/+page.svelte -->
 <script>
     import Navbar from '$lib/components/Navbar.svelte';
+    import Header from '$lib/components/Header.svelte';
     import Footer from '$lib/components/Footer.svelte';
     import Button from '$lib/components/Button.svelte';
     import { onMount } from 'svelte';
@@ -20,6 +21,8 @@
 {#if BackgroundComponent}
     <svelte:component this={BackgroundComponent} />
 {/if}
+
+<Header />
 
 <Navbar />
 

@@ -1,6 +1,7 @@
 <!-- webapp/src/routes/shop/+page.svelte -->
 <script>
     import Navbar from '$lib/components/Navbar.svelte';
+    import Header from '$lib/components/Header.svelte';
     import Footer from '$lib/components/Footer.svelte';
     import ShopDisclaimer from '$lib/components/ShopDisclaimer.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
@@ -34,6 +35,8 @@
 {#if BackgroundComponent}
     <BackgroundComponent />
 {/if}
+
+<Header />
 
 <Navbar />
 
