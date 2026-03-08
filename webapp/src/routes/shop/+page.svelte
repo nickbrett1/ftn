@@ -54,7 +54,7 @@
         <!-- Sidebar / Filter -->
         <aside class="w-full md:w-48 flex-shrink-0">
             <h2 class="text-xs uppercase tracking-[0.2em] text-white/40 font-bold mb-4 font-mono">Categories</h2>
-            <nav class="flex flex-row md:flex-col gap-2 overflow-x-auto pb-4 md:pb-0 scrollbar-hide">
+            <nav class="flex flex-row md:flex-col gap-2 flex-wrap pb-4 md:pb-0">
                 {#each categories as category}
                     <button 
                         onclick={() => selectedCategory = category}
@@ -89,13 +89,3 @@
 </div>
 
 <Footer />
-
-<style>
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-</style>
