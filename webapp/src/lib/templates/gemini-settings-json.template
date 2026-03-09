@@ -7,7 +7,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-chrome"
+        "chrome-devtools-mcp"
       ]
     }{{sonarQubeMcpConfig}}{{circleCiMcpConfig}}
   }
