@@ -60,7 +60,7 @@
 		"jsdom": "^28.0.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.21",
-		"mdsvex": "^0.12.6",
+		"mdsvex": "^0.12.7",
 		"mermaid": "11.13.0",
 		"miragejs": "^0.1.48",
 		"npm": "^11.11.0",
