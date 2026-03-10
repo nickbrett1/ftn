@@ -3,7 +3,9 @@
 	"version": "0.0.1",
 	"private": true,
 	"overrides": {
-		"cookie": "^1.0.2"
+		"@sveltejs/kit": {
+			"cookie": "^0.7.2"
+		}
 	},
 	"scripts": {
 		"postinstall": "node scripts/copy-pdf-worker.js",
@@ -36,7 +38,7 @@
 		"@melt-ui/svelte": "^0.86.6",
 		"@playwright/test": "^1.58.2",
 		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/adapter-cloudflare": "^7.2.7",
+		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.53.4",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
@@ -57,13 +59,13 @@
 		"eslint-plugin-svelte": "^3.15.1",
 		"eslint-plugin-unicorn": "^63.0.0",
 		"highlight.js": "^11.11.1",
-		"jsdom": "^28.0.0",
+		"jsdom": "^28.1.0",
 		"kolorist": "^1.8.0",
 		"magic-string": "^0.30.21",
 		"mdsvex": "^0.12.7",
 		"mermaid": "11.13.0",
 		"miragejs": "^0.1.48",
-		"npm": "^11.11.0",
+		"npm": "^11.6.0",
 		"playwright": "^1.58.2",
 		"postcss": "^8.5.8",
 		"prettier": "^3.8.1",
@@ -75,7 +77,7 @@
 		"safe-regex2": "^5.0.0",
 		"sharp": "^0.34.5",
 		"shiki": "^4.0.2",
-		"svelte": "5.50.3",
+		"svelte": "^5.53.8",
 		"svelte-awesome-icons": "^3.0.1",
 		"svelte-preprocess": "^6.0.3",
 		"tailwindcss": "^4.2.1",
@@ -97,7 +99,7 @@
 		"@tsparticles/slim": "^3.8.1",
 		"apexcharts": "^5.10.3",
 		"arctic": "^3.7.0",
-		"cookie": "^1.0.2",
+		"cookie": "^1.1.1",
 		"gsap": "^3.14.2",
 		"handlebars": "^4.7.8",
 		"hi-base32": "^0.5.1",
