@@ -36,17 +36,20 @@ import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-
 
 export const GEMINI_DEV_ALIAS = `# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
 gemini-dev() {
-  # Define the name of the container to check for
-  local container_name="sonarqube-mcp-server"
+  # Only check for Docker containers if Docker is installed
+  if command -v docker &> /dev/null; then
+    # Define the name of the container to check for
+    local container_name="sonarqube-mcp-server"
 
-  # Find the container ID using Docker's filter. The -q flag means "quiet" (ID only).
-  local container_id=$(docker ps -a -q --filter "name=\${container_name}")
+    # Find the container ID using Docker's filter. The -q flag means "quiet" (ID only).
+    local container_id=$(docker ps -a -q --filter "name=\${container_name}")
 
-  # Check if the container_id variable is not empty
-  if [ -n "$container_id" ]; then
-    echo "Found stale container '\${container_name}' ($container_id). Removing it..."
-    # Force remove the container. The -f flag stops it if it's running.
-    docker rm -f "$container_id"
+    # Check if the container_id variable is not empty
+    if [ -n "$container_id" ]; then
+      echo "Found stale container '\${container_name}' ($container_id). Removing it..."
+      # Force remove the container. The -f flag stops it if it's running.
+      docker rm -f "$container_id"
+    fi
   fi
 
   echo "Starting Gemini with Doppler..."
