@@ -28,9 +28,7 @@ const javaDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends git socat curl gnupg
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
-
-{{dopplerInstallation}}
+RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER vscode
 
@@ -45,9 +43,7 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
 
 const pythonDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/python
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm
-
-{{dopplerInstallation}}
+    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm{{dopplerInstallation}}
 
 USER vscode
 
