@@ -73,7 +73,7 @@
 		"remark-footnotes": "2.0",
 		"remark-gfm": "^4.0.1",
 		"resize-observer-polyfill": "^1.5.1",
-		"safe-regex2": "^5.0.0",
+		"safe-regex2": "^5.1.0",
 		"sharp": "^0.34.5",
 		"shiki": "^4.0.2",
 		"svelte": "^5.53.8",
