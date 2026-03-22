@@ -1,0 +1,2 @@
+cd webapp
+npx vitest run --coverage tests/routes/shop/+page.server.test.js tests/lib/data/products.test.js tests/routes/projects/ccbilling/statements/\[id\]/parse/+server.test.js tests/lib/utils/parsing-utils.test.js tests/lib/utils/ccbilling-parsers/wells-fargo-parser.test.js | grep -E "(shop/\+page\.server\.js|data/products\.js|\[id\]/parse/\+server\.js|parsing-utils\.js|wells-fargo-parser\.js)"
