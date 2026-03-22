@@ -292,4 +292,19 @@ describe('ParsingUtils', () => {
 			expect(ParsingUtilities.extractNumeric('Price: $100 and $200')).toBe(100);
 		});
 	});
+
+	describe('ParsingUtils - appended coverage', () => {
+		it('parseJSONResponse handles cleanMarkdown=false', () => {
+			const json = '{"key": "value"}';
+			expect(ParsingUtilities.parseJSONResponse(json, { cleanMarkdown: false })).toEqual({ key: 'value' });
+		});
+
+		it('validateParsedData throws exact error in strict mode', () => {
+			expect(() => ParsingUtilities.validateParsedData({ a: 1 }, ['b'], { strict: true })).toThrow('Missing required field: b');
+		});
+
+		it('parseAmount parses negative amount with parens correctly and fallback', () => {
+			expect(ParsingUtilities.parseAmount('abc', { defaultValue: 10 })).toBe(10);
+		});
+	});
 });

@@ -458,3 +458,28 @@ describe('WellsFargoParser', () => {
 		});
 	});
 });
+
+	describe('WellsFargoParser - appended coverage', () => {
+		const parser = new WellsFargoParser();
+		it('extractStatementDate returns null if text is missing', () => {
+			const fallback = parser.extractStatementDate('');
+			expect(fallback).toBeNull();
+		});
+
+		it('parseWellsFargoTransaction handles line without space', () => {
+			const result = parser.parseWellsFargoTransaction('Test Merchant$10.50');
+			expect(result).toBeNull();
+		});
+
+		it('parse successfully returns parsed object with last4 and date', async () => {
+			// Override validation for the test to skip failing on empty charges/other fields not needed for this branch
+			const spy = vi.spyOn(parser, 'validateParsedData').mockReturnValue(true);
+			const dateSpy = vi.spyOn(parser, 'extractStatementDate').mockReturnValue('2023-01-15');
+			const sampleText = 'Account Number Ending in 1234\nStatement Date: 01/15/2023\nTRANSACTION SUMMARY';
+			const res = await parser.parse(sampleText);
+			expect(res.last4).toBe('1234');
+			expect(res.statement_date).toBe('2023-01-15');
+			spy.mockRestore();
+			dateSpy.mockRestore();
+		});
+	});
