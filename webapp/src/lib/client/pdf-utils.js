@@ -145,18 +145,44 @@ export const PDFUtils = {
 			}
 
 			// Load PDF document
-			const loadingTask = pdfjsLibrary.getDocument({
+			const pdfOptions = {
 				data: arrayBuffer,
 				cMapUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/cmaps/',
 				cMapPacked: true,
 				standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/standard_fonts/'
-			});
-			const pdf = await loadingTask.promise;
+			};
+
+			let loadingTask = pdfjsLibrary.getDocument(pdfOptions);
+			let pdf = await loadingTask.promise;
 
 			console.log('📄 PDF loaded:', pdf.numPages, 'pages');
 
+			// Validate PDF structure
+			try {
+				await pdf.getMetadata();
+			} catch (e) {
+				throw new Error(`PDF validation failed: The document appears to be corrupted or uses unsupported features. Details: ${e.message}`);
+			}
+
 			// Extract text from all pages
-			const allText = await this.extractTextFromPDF(pdf, options);
+			let allText;
+			try {
+				allText = await this.extractTextFromPDF(pdf, options);
+			} catch (extractionError) {
+				console.warn('⚠️ extractTextFromPDF failed:', extractionError.message);
+				// If parsing fails in the worker due to un-polyfilled syntax errors in older browsers,
+				// fallback to the main thread which is fully polyfilled by Vite
+				if (pdfjsLibrary.GlobalWorkerOptions.workerSrc) {
+					console.warn('🔄 Disabling PDF.js worker and retrying in main thread...');
+					pdfjsLibrary.GlobalWorkerOptions.workerSrc = '';
+
+					loadingTask = pdfjsLibrary.getDocument(pdfOptions);
+					pdf = await loadingTask.promise;
+					allText = await this.extractTextFromPDF(pdf, options);
+				} else {
+					throw extractionError;
+				}
+			}
 
 			console.log('📄 Text extracted from PDF');
 

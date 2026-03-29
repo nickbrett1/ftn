@@ -138,6 +138,7 @@ describe('PDFUtils', () => {
 					getDocument: vi.fn().mockReturnValue({
 						promise: Promise.resolve({
 							numPages: 1,
+							getMetadata: vi.fn().mockResolvedValue({}),
 							getPage: vi.fn().mockResolvedValue({
 								getTextContent: vi.fn().mockResolvedValue({
 									items: [{ str: 'Parsed', transform: [1, 0, 0, 1, 10, 20] }]
@@ -211,6 +212,7 @@ describe('PDFUtils', () => {
 			// Mock getDocument to throw inside getTextContent
 			const errorMockPdf = {
 				numPages: 1,
+				getMetadata: vi.fn().mockResolvedValue({}),
 				getPage: vi.fn().mockResolvedValue({
 					getTextContent: vi.fn().mockRejectedValue(new TypeError("undefined is not a function (near '...i of e...')"))
 				})
