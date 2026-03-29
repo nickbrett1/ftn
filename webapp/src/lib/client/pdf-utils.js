@@ -131,7 +131,7 @@ export const PDFUtils = {
 		}
 
 		// Ensure ReadableStream async iterator polyfill for iOS Safari
-		if (typeof globalThis.ReadableStream !== 'undefined' && !globalThis.ReadableStream.prototype[Symbol.asyncIterator]) {
+		if (globalThis.ReadableStream !== undefined && !globalThis.ReadableStream.prototype[Symbol.asyncIterator]) {
 			console.log('📄 Polyfilling ReadableStream.prototype[Symbol.asyncIterator] for iOS Safari');
 			globalThis.ReadableStream.prototype[Symbol.asyncIterator] = async function* () {
 				const reader = this.getReader();
