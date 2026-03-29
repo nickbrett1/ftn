@@ -234,9 +234,8 @@ export class BiltCardlessParser extends BaseParser {
 							break;
 						}
 
-						// Add to description if it's not a page footer
+						// Add to full statement text if it's not a page footer
 						if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
-							description += ' ' + nextLine;
 							fullStatementText += '\n' + nextLine;
 						}
 						lookAhead++;

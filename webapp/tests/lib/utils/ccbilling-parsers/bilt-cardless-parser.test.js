@@ -85,7 +85,7 @@ Total new charges in this period $10,518.22
 			expect(charges).toHaveLength(3);
 
 			expect(charges[0]).toMatchObject({
-				merchant: 'MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004 NY USA',
+				merchant: 'MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004',
 				amount: 3.0,
 				date: '2026-02-07'
 			});
