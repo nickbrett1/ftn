@@ -242,8 +242,9 @@ export class BaseParser {
 	 * @returns {string|null} - Statement date in YYYY-MM-DD format
 	 */
 	extractStatementDate(text) {
-		const patterns = this.getStatementDatePatterns();
-		for (const pattern of (patterns || [])) {
+		const patterns = this.getStatementDatePatterns() || [];
+		for (let i = 0; i < patterns.length; i++) {
+			const pattern = patterns[i];
 			const match = pattern.exec(text);
 			if (match) {
 				const dateString = match[2] || match[1];
@@ -268,8 +269,9 @@ export class BaseParser {
 	 * @returns {string|null} - Last 4 digits or null
 	 */
 	extractLast4Digits(text) {
-		const patterns = this.getLast4DigitsPatterns();
-		for (const pattern of (patterns || [])) {
+		const patterns = this.getLast4DigitsPatterns() || [];
+		for (let i = 0; i < patterns.length; i++) {
+			const pattern = patterns[i];
 			const match = this.findText(text, pattern);
 			if (match) {
 				return match;

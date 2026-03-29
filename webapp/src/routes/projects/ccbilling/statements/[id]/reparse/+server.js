@@ -58,7 +58,7 @@ export const PATCH = RouteUtils.createRouteHandler(
 				(nc) => Math.abs(nc.amount - payment.amount) < 0.01
 			);
 
-			if (matchIndex !== -1) {
+			if (matchIndex >= 0) {
 				const matchedCharge = unmatchedNewCharges[matchIndex];
 				matchedPairs.push({
 					paymentId: payment.id,

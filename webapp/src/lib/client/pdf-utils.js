@@ -50,7 +50,9 @@ export const PDFUtils = {
 			if (groupByLine) {
 				// Group text items by Y position (line) for better readability
 				const lines = {};
-				for (const item of (textContent?.items || [])) {
+				const items = textContent?.items || [];
+				for (let i = 0; i < items.length; i++) {
+					const item = items[i];
 					const y = Math.round(item.transform[5]); // Round Y position to group nearby items
 					if (!lines[y]) {
 						lines[y] = [];
