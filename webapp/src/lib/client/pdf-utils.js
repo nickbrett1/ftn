@@ -45,59 +45,58 @@ export const PDFUtils = {
 
 		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
 			const page = await pdfDocument.getPage(pageNumber);
+			const textContent = await page.getTextContent();
 
-			let textContent;
-			try {
-				textContent = await page.getTextContent();
-			} catch (err) {
-				console.warn(`⚠️ Skipping page ${pageNumber} due to getTextContent error:`, err);
-				continue; // Skip this page if PDF.js fails internally
-			}
+			// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
+			const items = Array.isArray(textContent?.items)
+				? textContent.items
+				: Object.values(textContent?.items || {});
 
 			if (groupByLine) {
-				// Group text items by Y position (line) for better readability
-				const lines = {};
-				// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
-				const items = Array.isArray(textContent?.items)
-					? textContent.items
-					: Object.values(textContent?.items || {});
-
-				for (const item of items) {
-					const y = Math.round(item.transform[5]); // Round Y position to group nearby items
-					if (!lines[y]) {
-						lines[y] = [];
-					}
-					lines[y].push({
-						text: item.str,
-						x: item.transform[4]
-					});
-				}
-
-				// Sort lines by Y position (top to bottom)
-				const sortedLines = Object.keys(lines)
-					.sort((a, b) => Number.parseInt(b) - Number.parseInt(a)) // Sort Y positions in descending order
-					.map((y) => {
-						// Sort items within each line by X position (left to right)
-						return lines[y]
-							.sort((a, b) => a.x - b.x)
-							.map((item) => item.text)
-							.join(' ')
-							.trim();
-					})
-					.filter((line) => line.length > 0); // Remove empty lines
-
+				const sortedLines = this._groupAndSortTextItems(items);
 				textParts.push(sortedLines.join('\n'));
 			} else {
 				// Simple text extraction without grouping
-				const items = Array.isArray(textContent?.items)
-					? textContent.items
-					: Object.values(textContent?.items || {});
 				const pageText = items.map((item) => item.str).join(' ');
 				textParts.push(pageText);
 			}
 		}
 
 		return textParts.join('\n');
+	},
+
+	/**
+	 * Group text items by line (Y position) and sort them
+	 * @param {Array} items - Array of text items
+	 * @returns {Array<string>} - Sorted lines of text
+	 * @private
+	 */
+	_groupAndSortTextItems(items) {
+		const lines = {};
+
+		for (const item of items) {
+			const y = Math.round(item.transform[5]); // Round Y position to group nearby items
+			if (!lines[y]) {
+				lines[y] = [];
+			}
+			lines[y].push({
+				text: item.str,
+				x: item.transform[4]
+			});
+		}
+
+		// Sort lines by Y position (top to bottom)
+		return Object.keys(lines)
+			.sort((a, b) => Number.parseInt(b) - Number.parseInt(a)) // Sort Y positions in descending order
+			.map((y) => {
+				// Sort items within each line by X position (left to right)
+				return lines[y]
+					.sort((a, b) => a.x - b.x)
+					.map((item) => item.text)
+					.join(' ')
+					.trim();
+			})
+			.filter((line) => line.length > 0); // Remove empty lines
 	},
 
 	/**
@@ -144,7 +143,12 @@ export const PDFUtils = {
 			}
 
 			// Load PDF document
-			const loadingTask = pdfjsLibrary.getDocument({ data: arrayBuffer });
+			const loadingTask = pdfjsLibrary.getDocument({
+				data: arrayBuffer,
+				cMapUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/cmaps/',
+				cMapPacked: true,
+				standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/standard_fonts/'
+			});
 			const pdf = await loadingTask.promise;
 
 			console.log('📄 PDF loaded:', pdf.numPages, 'pages');
