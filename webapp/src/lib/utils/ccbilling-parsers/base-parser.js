@@ -243,7 +243,7 @@ export class BaseParser {
 	 */
 	extractStatementDate(text) {
 		const patterns = this.getStatementDatePatterns();
-		for (const pattern of patterns) {
+		for (const pattern of (patterns || [])) {
 			const match = pattern.exec(text);
 			if (match) {
 				const dateString = match[2] || match[1];
@@ -269,7 +269,7 @@ export class BaseParser {
 	 */
 	extractLast4Digits(text) {
 		const patterns = this.getLast4DigitsPatterns();
-		for (const pattern of patterns) {
+		for (const pattern of (patterns || [])) {
 			const match = this.findText(text, pattern);
 			if (match) {
 				return match;

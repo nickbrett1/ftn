@@ -17,7 +17,7 @@ export const PATCH = RouteUtils.createRouteHandler(
 
 		// Get the parsed data from the request body (already validated by RouteUtils)
 		const parsedData = parsedBody.parsedData;
-		if (!parsedData || !parsedData.charges) {
+		if (!parsedData?.charges) {
 			return RouteUtils.createErrorResponse('No parsed charges provided', { status: 400 });
 		}
 
