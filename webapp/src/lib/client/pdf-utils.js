@@ -117,11 +117,10 @@ export const PDFUtils = {
 	 * @private
 	 */
 	async _initializePDFJs() {
-		// Use legacy build in test environment to avoid worker issues
-		const pdfjsLibrary =
-			typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
-				? await import('pdfjs-dist/legacy/build/pdf.mjs')
-				: await import('pdfjs-dist');
+		// Use legacy build universally for maximum compatibility across older browsers and iOS Safari.
+		// Modern builds use native ES syntax (like for...of on NodeLists) that older WebKit engines reject
+		// with `TypeError: undefined is not a function (near '...i of e...')` when evaluating iterators.
+		const pdfjsLibrary = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
 		// Configure worker if not already done
 		if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
