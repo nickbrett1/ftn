@@ -180,26 +180,7 @@ export const PDFUtils = {
 			}
 
 			// Extract text from all pages
-			let allText;
-			try {
-				allText = await this.extractTextFromPDF(pdf, options);
-			} catch (extractionError) {
-				console.warn('⚠️ extractTextFromPDF failed:', extractionError.message);
-				// If parsing fails in the worker due to un-polyfilled syntax errors in older browsers,
-				// fallback to the main thread which is fully polyfilled by Vite
-				if (pdfjsLibrary.GlobalWorkerOptions.workerSrc) {
-					console.warn('🔄 Disabling PDF.js worker and retrying in main thread...');
-					pdfjsLibrary.GlobalWorkerOptions.workerSrc = '';
-
-					// Use the original un-detached ArrayBuffer copy for the main thread parsing
-					const fallbackPdfOptions = { ...pdfOptions, data: arrayBuffer };
-					loadingTask = pdfjsLibrary.getDocument(fallbackPdfOptions);
-					pdf = await loadingTask.promise;
-					allText = await this.extractTextFromPDF(pdf, options);
-				} else {
-					throw extractionError;
-				}
-			}
+			const allText = await this.extractTextFromPDF(pdf, options);
 
 			console.log('📄 Text extracted from PDF');
 
