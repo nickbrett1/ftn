@@ -179,6 +179,7 @@ export class BiltCardlessParser extends BaseParser {
 					// Description and amount might be on this line or next lines
 					let description = line.replace(dateMatch[0], '').trim();
 					let amount = null;
+					let fullStatementText = line;
 
 					// Check if amount is on the same line
 					const amountOnSameLineMatch = /(-?)\$([\d,]+\.\d{2})$/.exec(line);
@@ -187,30 +188,61 @@ export class BiltCardlessParser extends BaseParser {
 						amount = this.parseAmount(amountOnSameLineMatch[2]);
 						if (isNegative) amount = -Math.abs(amount);
 						description = description.replace(amountOnSameLineMatch[0], '').trim();
-					} else {
-						// Amount not on same line, look ahead
-						let lookAhead = 1;
-						while (lookAhead < 5 && index + lookAhead < lines.length) {
-							const nextLine = lines[index + lookAhead];
+					}
 
-							// If we hit another date, we went too far
-							if (datePattern.test(nextLine)) break;
+					// Look ahead for additional description lines and/or the amount if not found
+					let lookAhead = 1;
+					let amountFoundInLookahead = false;
+					while (lookAhead < 5 && index + lookAhead < lines.length) {
+						const nextLine = lines[index + lookAhead];
 
+						// If we hit another date, we went too far
+						if (datePattern.test(nextLine)) break;
+
+						// Try to match the amount if we haven't found it yet
+						if (amount === null && !amountFoundInLookahead) {
 							const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
 							if (amountMatch) {
 								const isNegative = amountMatch[1] === '-';
 								amount = this.parseAmount(amountMatch[2]);
 								if (isNegative) amount = -Math.abs(amount);
-								break;
-							} else {
-								// Add to description if it's not the amount and not a page footer
-								if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
-									description += ' ' + nextLine;
-								}
+								fullStatementText += '\n' + nextLine;
+								amountFoundInLookahead = true;
+								lookAhead++;
+								continue;
 							}
-							lookAhead++;
 						}
+
+						// If this line is an amount that was already found, we should stop
+						// This happens if amount was on the first line and we hit the NEXT transaction's amount (which shouldn't happen without a date, but just in case)
+						if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
+							break;
+						}
+
+						// Avoid including section headers or totals from subsequent lines
+						const nextLineUpper = nextLine.toUpperCase();
+						if (
+							nextLineUpper === 'TRANSACTIONS' ||
+							nextLineUpper === 'PAYMENTS AND CREDITS' ||
+							nextLineUpper === 'FEES' ||
+							nextLineUpper.startsWith('TOTAL NEW CHARGES') ||
+							nextLineUpper.startsWith('TOTAL PAYMENTS') ||
+							nextLineUpper.startsWith('TOTAL FEES') ||
+							nextLineUpper === 'INTEREST CHARGED' ||
+							nextLineUpper === 'DATE DESCRIPTION AMOUNT'
+						) {
+							break;
+						}
+
+						// Add to description if it's not a page footer
+						if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
+							description += ' ' + nextLine;
+							fullStatementText += '\n' + nextLine;
+						}
+						lookAhead++;
 					}
+
+					// Skip fast-forwarding the outer loop; it only processes lines with datePattern anyway.
 
 					if (date && amount !== null && description.length > 1) {
 						// Skip payments in the payments section, but keep refunds (negative amounts in credits)
@@ -224,7 +256,7 @@ export class BiltCardlessParser extends BaseParser {
 							is_foreign_currency: false,
 							foreign_currency_amount: null,
 							foreign_currency_type: null,
-							full_statement_text: line
+							full_statement_text: fullStatementText
 						};
 
 						// Check for foreign currency in description or next lines
