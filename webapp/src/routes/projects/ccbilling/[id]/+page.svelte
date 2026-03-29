@@ -745,14 +745,14 @@
 			if (!pdfResponse.ok) {
 				throw new Error('Failed to fetch PDF for re-parsing');
 			}
-			const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+			const pdfBlob = await pdfResponse.blob();
 
 			showToastMessage('Parsing PDF...', 'info');
 
-			// 2. Parse the PDF client-side using the raw ArrayBuffer
+			// 2. Parse the PDF client-side using the downloaded Blob
 			const pdfService = new PDFService();
 			await pdfService.init();
-			const parsedData = await pdfService.parseStatement(pdfArrayBuffer);
+			const parsedData = await pdfService.parseStatement(pdfBlob);
 
 			console.log('📄 PDF re-parsed successfully:', parsedData);
 

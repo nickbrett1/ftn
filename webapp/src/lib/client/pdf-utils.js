@@ -131,7 +131,14 @@ export const PDFUtils = {
 	 */
 	async _getArrayBuffer(pdfFile) {
 		if (pdfFile instanceof File || pdfFile instanceof Blob) {
-			return await pdfFile.arrayBuffer();
+			// Use FileReader for robust backwards compatibility with iOS Safari.
+			// Native Blob.arrayBuffer() and Response.arrayBuffer() can truncate or corrupt streams on older Webkit versions.
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve(reader.result);
+				reader.onerror = () => reject(new Error('Failed to read PDF file buffer'));
+				reader.readAsArrayBuffer(pdfFile);
+			});
 		} else if (pdfFile instanceof ArrayBuffer) {
 			return pdfFile;
 		} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
