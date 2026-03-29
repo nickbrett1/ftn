@@ -43,7 +43,8 @@ export const PDFUtils = {
 		const { groupByLine = true } = options;
 		const textParts = [];
 
-		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+		let pageNumber = 1;
+		while (pageNumber <= pdfDocument.numPages) {
 			const page = await pdfDocument.getPage(pageNumber);
 			let textContent;
 			try {
@@ -67,6 +68,7 @@ export const PDFUtils = {
 				const pageText = items.map((item) => item.str).join(' ');
 				textParts.push(pageText);
 			}
+			pageNumber++;
 		}
 
 		return textParts.join('\n');
@@ -79,18 +81,17 @@ export const PDFUtils = {
 	 * @private
 	 */
 	_groupAndSortTextItems(items) {
-		const lines = {};
-
-		for (const item of items) {
+		const lines = items.reduce((acc, item) => {
 			const y = Math.round(item.transform[5]); // Round Y position to group nearby items
-			if (!lines[y]) {
-				lines[y] = [];
+			if (!acc[y]) {
+				acc[y] = [];
 			}
-			lines[y].push({
+			acc[y].push({
 				text: item.str,
 				x: item.transform[4]
 			});
-		}
+			return acc;
+		}, {});
 
 		// Sort lines by Y position (top to bottom)
 		return Object.keys(lines)
