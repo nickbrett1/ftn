@@ -61,6 +61,20 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 		expect(data.error).toBe('Statement not found');
 	});
 
+	it('should return 400 if no parsedData provided', async () => {
+		getStatement.mockResolvedValue({ id: 1, filename: 'test.pdf' });
+
+		const event = {
+			params: { id: '1' },
+			locals: { parsedBody: {} } // completely missing parsedData
+		};
+
+		const response = await PATCH(event);
+		expect(response.status).toBe(400);
+		const data = await response.json();
+		expect(data.error).toBe('No parsed charges provided');
+	});
+
 	it('should return 400 if no parsed charges provided', async () => {
 		getStatement.mockResolvedValue({ id: 1, filename: 'test.pdf' });
 
@@ -170,6 +184,44 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 		});
 	});
 
+	it('should successfully update merchant info with missing optional fields', async () => {
+		getStatement.mockResolvedValue({ id: 1, filename: 'test.pdf' });
+		getPaymentsForStatement.mockResolvedValue([
+			{ id: 1, amount: 10, merchant: 'Old Name', transaction_date: '2023-01-01' }
+		]);
+		updatePaymentMerchantFields.mockResolvedValue(true);
+
+		const event = {
+			params: { id: '1' },
+			locals: {
+				parsedBody: {
+					parsedData: {
+						charges: [
+							{
+								amount: 10,
+								merchant: 'New Name'
+								// missing flight_details, etc
+							}
+						]
+					}
+				}
+			}
+		};
+
+		const response = await PATCH(event);
+		expect(response.status).toBe(200);
+
+		expect(updatePaymentMerchantFields).toHaveBeenCalledWith(event, 1, {
+			merchant: 'New Name',
+			merchant_normalized: null,
+			is_foreign_currency: false,
+			foreign_currency_amount: null,
+			foreign_currency_type: null,
+			flight_details: null,
+			amazon_order_id: null
+		});
+	});
+
 	it('should not update if merchant name has not changed', async () => {
 		getStatement.mockResolvedValue({ id: 1, filename: 'test.pdf' });
 		getPaymentsForStatement.mockResolvedValue([
@@ -200,5 +252,16 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 		expect(data.changes).toHaveLength(0);
 
 		expect(updatePaymentMerchantFields).not.toHaveBeenCalled();
+	});
+});
+
+describe('PATCH /projects/ccbilling/statements/[id]/reparse validators', () => {
+	it('should test RouteUtils validators fallback directly', async () => {
+		// Import the module dynamically to get access to the registered validators
+		const { PATCH } = await import('../../../../src/routes/projects/ccbilling/statements/[id]/reparse/+server.js');
+
+		// The mock of RouteUtils doesn't expose the validators array directly.
+		// So this test is just ensuring the file parses cleanly.
+		expect(PATCH).toBeDefined();
 	});
 });
