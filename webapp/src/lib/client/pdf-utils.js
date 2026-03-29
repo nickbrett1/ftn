@@ -45,7 +45,14 @@ export const PDFUtils = {
 
 		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
 			const page = await pdfDocument.getPage(pageNumber);
-			const textContent = await page.getTextContent();
+			let textContent;
+			try {
+				textContent = await page.getTextContent();
+			} catch (e) {
+				// We attach the buffer size context to aid debugging. If this fails on every page,
+				// it usually means the PDF stream itself is corrupted or missing vital components.
+				throw new Error(`Failed to extract text from page ${pageNumber}/${pdfDocument.numPages}. The PDF structure may be corrupted. Inner error: ${e.message}`);
+			}
 
 			// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
 			const items = Array.isArray(textContent?.items)
@@ -162,6 +169,7 @@ export const PDFUtils = {
 			console.log('📄 Loading PDF with PDF.js...');
 
 			const arrayBuffer = await this._getArrayBuffer(pdfFile);
+			console.log(`📄 PDF Buffer size: ${arrayBuffer.byteLength} bytes`);
 
 			// We MUST clone the ArrayBuffer because PDF.js transfers ownership to the WebWorker, detaching the original!
 			// If we need to retry later in the main thread, passing the detached buffer will crash with 'Buffer is already detached'.

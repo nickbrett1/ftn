@@ -226,7 +226,7 @@ describe('PDFUtils', () => {
 			const mockParserFactory = { parseStatement: vi.fn() };
 
 			await expect(PDFUtils.parseStatement(buffer, mockParserFactory)).rejects.toThrow(
-				"Statement parsing failed: PDF parsing failed: undefined is not a function (near '...i of e...')"
+				"Statement parsing failed: PDF parsing failed: Failed to extract text from page 1/1. The PDF structure may be corrupted. Inner error: undefined is not a function (near '...i of e...')"
 			);
 		});
 	});

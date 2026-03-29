@@ -733,6 +733,29 @@
 		}
 	}
 
+	/**
+	 * Helper function to robustly download an ArrayBuffer using XMLHttpRequest.
+	 * This completely bypasses the fetch(), .blob(), and FileReader() APIs which are
+	 * known to randomly truncate or corrupt large binary streams on iOS Safari.
+	 */
+	function fetchPDFArrayBuffer(url) {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', url, true);
+			xhr.responseType = 'arraybuffer';
+
+			xhr.onload = () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					resolve(xhr.response);
+				} else {
+					reject(new Error(`HTTP Error ${xhr.status} downloading PDF`));
+				}
+			};
+			xhr.onerror = () => reject(new Error('Network error downloading PDF'));
+			xhr.send();
+		});
+	}
+
 	async function reparseStatement(statementId) {
 		if (reparsingStatements.has(statementId)) return;
 		reparsingStatements.add(statementId);
@@ -740,19 +763,16 @@
 		try {
 			showToastMessage('Fetching PDF for re-parsing...', 'info');
 
-			// 1. Fetch the PDF from the server
-			const pdfResponse = await fetch(`/projects/ccbilling/statements/${statementId}/pdf`);
-			if (!pdfResponse.ok) {
-				throw new Error('Failed to fetch PDF for re-parsing');
-			}
-			const pdfBlob = await pdfResponse.blob();
+			// 1. Fetch the PDF raw ArrayBuffer directly bypassing newer buggy fetch abstractions on iOS
+			const pdfUrl = `/projects/ccbilling/statements/${statementId}/pdf`;
+			const pdfArrayBuffer = await fetchPDFArrayBuffer(pdfUrl);
 
 			showToastMessage('Parsing PDF...', 'info');
 
-			// 2. Parse the PDF client-side using the downloaded Blob
+			// 2. Parse the PDF client-side using the raw XHR ArrayBuffer
 			const pdfService = new PDFService();
 			await pdfService.init();
-			const parsedData = await pdfService.parseStatement(pdfBlob);
+			const parsedData = await pdfService.parseStatement(pdfArrayBuffer);
 
 			console.log('📄 PDF re-parsed successfully:', parsedData);
 
