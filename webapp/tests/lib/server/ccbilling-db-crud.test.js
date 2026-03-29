@@ -411,8 +411,7 @@ describe('ccbilling-db.js', () => {
 				is_foreign_currency: true,
 				foreign_currency_amount: 10,
 				foreign_currency_type: 'EUR',
-				flight_details: { dest: 'JFK' },
-				amazon_order_id: '123'
+				flight_details: { dest: 'JFK' }
 			};
 
 			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
@@ -427,7 +426,6 @@ describe('ccbilling-db.js', () => {
 				10,
 				'EUR',
 				JSON.stringify({ dest: 'JFK' }),
-				'123',
 				10
 			);
 			expect(mockDatabase.run).toHaveBeenCalled();
@@ -443,8 +441,7 @@ describe('ccbilling-db.js', () => {
 				is_foreign_currency: false,
 				foreign_currency_amount: null,
 				foreign_currency_type: null,
-				flight_details: null,
-				amazon_order_id: null
+				flight_details: null
 			};
 
 			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
@@ -456,7 +453,6 @@ describe('ccbilling-db.js', () => {
 				'New Merch',
 				null,
 				0,
-				null,
 				null,
 				null,
 				null,

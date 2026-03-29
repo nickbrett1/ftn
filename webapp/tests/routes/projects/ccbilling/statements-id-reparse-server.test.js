@@ -155,8 +155,7 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 								is_foreign_currency: true,
 								foreign_currency_amount: 5,
 								foreign_currency_type: 'EUR',
-								flight_details: { dest: 'JFK' },
-								amazon_order_id: '123'
+								flight_details: { dest: 'JFK' }
 							}
 						]
 					}
@@ -179,8 +178,7 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 			is_foreign_currency: true,
 			foreign_currency_amount: 5,
 			foreign_currency_type: 'EUR',
-			flight_details: JSON.stringify({ dest: 'JFK' }),
-			amazon_order_id: '123'
+			flight_details: JSON.stringify({ dest: 'JFK' })
 		});
 	});
 
@@ -217,8 +215,7 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 			is_foreign_currency: false,
 			foreign_currency_amount: null,
 			foreign_currency_type: null,
-			flight_details: null,
-			amazon_order_id: null
+			flight_details: null
 		});
 	});
 

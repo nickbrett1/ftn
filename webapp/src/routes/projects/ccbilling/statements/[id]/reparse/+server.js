@@ -122,8 +122,7 @@ export const PATCH = RouteUtils.createRouteHandler(
 					is_foreign_currency: newCharge.is_foreign_currency || false,
 					foreign_currency_amount: newCharge.foreign_currency_amount || null,
 					foreign_currency_type: newCharge.foreign_currency_type || null,
-					flight_details: newCharge.flight_details ? JSON.stringify(newCharge.flight_details) : null,
-					amazon_order_id: newCharge.amazon_order_id || null
+					flight_details: newCharge.flight_details ? JSON.stringify(newCharge.flight_details) : null
 				});
 				updateCount++;
 			}

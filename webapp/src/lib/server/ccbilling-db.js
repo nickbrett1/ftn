@@ -543,8 +543,7 @@ export async function updatePaymentMerchantFields(event, paymentId, fields) {
 		is_foreign_currency,
 		foreign_currency_amount,
 		foreign_currency_type,
-		flight_details,
-		amazon_order_id
+		flight_details
 	} = fields;
 
 	const result = await database
@@ -555,8 +554,7 @@ export async function updatePaymentMerchantFields(event, paymentId, fields) {
 			     is_foreign_currency = ?,
 			     foreign_currency_amount = ?,
 			     foreign_currency_type = ?,
-			     flight_details = ?,
-			     amazon_order_id = ?
+			     flight_details = ?
 			 WHERE id = ?`
 		)
 		.bind(
@@ -566,7 +564,6 @@ export async function updatePaymentMerchantFields(event, paymentId, fields) {
 			foreign_currency_amount,
 			foreign_currency_type,
 			flight_details ? JSON.stringify(flight_details) : null,
-			amazon_order_id,
 			paymentId
 		)
 		.run();
