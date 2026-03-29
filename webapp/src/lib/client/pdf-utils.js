@@ -136,10 +136,14 @@ export const PDFUtils = {
 			globalThis.ReadableStream.prototype[Symbol.asyncIterator] = async function* () {
 				const reader = this.getReader();
 				try {
-					while (true) {
+					let reading = true;
+					while (reading) {
 						const { done, value } = await reader.read();
-						if (done) return;
-						yield value;
+						if (done) {
+							reading = false;
+						} else {
+							yield value;
+						}
 					}
 				} finally {
 					reader.releaseLock();

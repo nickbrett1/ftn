@@ -758,7 +758,9 @@
 
 	async function reparseStatement(statementId) {
 		if (reparsingStatements.has(statementId)) return;
-		reparsingStatements.add(statementId);
+		const newSet = new Set(reparsingStatements);
+		newSet.add(statementId);
+		reparsingStatements = newSet;
 
 		try {
 			showToastMessage('Fetching PDF for re-parsing...', 'info');
@@ -817,7 +819,9 @@
 			console.error('❌ Reparse failed:', error);
 			showToastMessage(`Reparse failed: ${error.message}`, 'error');
 		} finally {
-			reparsingStatements.delete(statementId);
+			const newSet = new Set(reparsingStatements);
+			newSet.delete(statementId);
+			reparsingStatements = newSet;
 		}
 	}
 
