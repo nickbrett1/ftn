@@ -80,7 +80,7 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 
 		const event = {
 			params: { id: '1' },
-			locals: { parsedBody: {} } // missing parsedData.charges
+			locals: { parsedBody: { parsedData: {} } } // missing parsedData.charges
 		};
 
 		const response = await PATCH(event);
