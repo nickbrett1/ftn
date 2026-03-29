@@ -129,6 +129,24 @@ export const PDFUtils = {
 		} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
 			pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 		}
+
+		// Ensure ReadableStream async iterator polyfill for iOS Safari
+		if (typeof globalThis.ReadableStream !== 'undefined' && !globalThis.ReadableStream.prototype[Symbol.asyncIterator]) {
+			console.log('📄 Polyfilling ReadableStream.prototype[Symbol.asyncIterator] for iOS Safari');
+			globalThis.ReadableStream.prototype[Symbol.asyncIterator] = async function* () {
+				const reader = this.getReader();
+				try {
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) return;
+						yield value;
+					}
+				} finally {
+					reader.releaseLock();
+				}
+			};
+		}
+
 		return pdfjsLibrary;
 	},
 
