@@ -72,18 +72,17 @@ export const PDFUtils = {
 	 * @private
 	 */
 	_groupAndSortTextItems(items) {
-		const lines = {};
-
-		for (const item of items) {
+		const lines = items.reduce((acc, item) => {
 			const y = Math.round(item.transform[5]); // Round Y position to group nearby items
-			if (!lines[y]) {
-				lines[y] = [];
+			if (!acc[y]) {
+				acc[y] = [];
 			}
-			lines[y].push({
+			acc[y].push({
 				text: item.str,
 				x: item.transform[4]
 			});
-		}
+			return acc;
+		}, {});
 
 		// Sort lines by Y position (top to bottom)
 		return Object.keys(lines)
