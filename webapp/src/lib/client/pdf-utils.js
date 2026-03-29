@@ -45,14 +45,24 @@ export const PDFUtils = {
 
 		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
 			const page = await pdfDocument.getPage(pageNumber);
-			const textContent = await page.getTextContent();
+
+			let textContent;
+			try {
+				textContent = await page.getTextContent();
+			} catch (err) {
+				console.warn(`⚠️ Skipping page ${pageNumber} due to getTextContent error:`, err);
+				continue; // Skip this page if PDF.js fails internally
+			}
 
 			if (groupByLine) {
 				// Group text items by Y position (line) for better readability
 				const lines = {};
-				const items = textContent?.items || [];
-				for (let i = 0; i < items.length; i++) {
-					const item = items[i];
+				// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
+				const items = Array.isArray(textContent?.items)
+					? textContent.items
+					: Object.values(textContent?.items || {});
+
+				for (const item of items) {
 					const y = Math.round(item.transform[5]); // Round Y position to group nearby items
 					if (!lines[y]) {
 						lines[y] = [];
@@ -79,7 +89,10 @@ export const PDFUtils = {
 				textParts.push(sortedLines.join('\n'));
 			} else {
 				// Simple text extraction without grouping
-				const pageText = textContent.items.map((item) => item.str).join(' ');
+				const items = Array.isArray(textContent?.items)
+					? textContent.items
+					: Object.values(textContent?.items || {});
+				const pageText = items.map((item) => item.str).join(' ');
 				textParts.push(pageText);
 			}
 		}

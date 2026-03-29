@@ -518,8 +518,7 @@ export class ChaseParser extends BaseParser {
 				'ALASKA',
 				'BRITISH AIRWAYS'
 			];
-			for (let i = 0; i < airlines.length; i++) {
-				const airline = airlines[i];
+			for (const airline of airlines) {
 				if (merchant.toUpperCase().includes(airline)) {
 					return airline;
 				}
