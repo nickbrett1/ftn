@@ -13,12 +13,7 @@ export async function load(event) {
 	// Get existing billing cycles to calculate default dates
 	const existingCycles = await listBillingCycles(event);
 
-	// Calculate default dates
-	const today = new Date();
-	const todayString = today.toISOString().split('T')[0];
-
-	let defaultStartDate = todayString;
-	let defaultEndDate = todayString;
+	let defaultStartDate = null;
 
 	// If there are existing cycles, set start date to day after most recent cycle's end date
 	if (existingCycles && existingCycles.length > 0) {
@@ -31,24 +26,24 @@ export async function load(event) {
 
 			// Check if the date is valid (not NaN)
 			if (!Number.isNaN(mostRecentEndDate.getTime())) {
-				// Set start date to day after the most recent cycle's end date
-				const nextDay = new Date(mostRecentEndDate);
-				nextDay.setDate(nextDay.getDate() + 1);
+				// We don't want timezone offset issues on the server either.
+				// By taking getUTCFullYear, etc, we grab the literal date elements represented by the string.
+				// However, if the DB stores it as YYYY-MM-DD string, new Date('2024-01-05') creates 2024-01-05T00:00:00Z.
+				// We can simply add a day to it in UTC.
 
-				// Ensure the calculated start date is not in the future
-				// If the most recent cycle ends in the future, default to today
-				if (nextDay <= today) {
-					defaultStartDate = nextDay.toISOString().split('T')[0];
-				}
-				// If nextDay is in the future, keep defaultStartDate as today
+				const nextDay = new Date(mostRecentEndDate);
+				nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+				const nextDayYear = nextDay.getUTCFullYear();
+				const nextDayMonth = String(nextDay.getUTCMonth() + 1).padStart(2, '0');
+				const nextDayDate = String(nextDay.getUTCDate()).padStart(2, '0');
+
+				defaultStartDate = `${nextDayYear}-${nextDayMonth}-${nextDayDate}`;
 			}
-			// If mostRecentEndDate is invalid, keep defaultStartDate as today
 		}
-		// If mostRecentCycle.end_date is null/undefined, keep defaultStartDate as today
 	}
 
 	return {
-		defaultStartDate,
-		defaultEndDate
+		defaultStartDate
 	};
 }
