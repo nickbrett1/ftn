@@ -10,10 +10,33 @@ import {
 	formatTime,
 	formatRelativeTime,
 	isToday,
-	isYesterday
+	isYesterday,
+	getLocalDateString
 } from '../../../src/lib/utils/date-utils.js';
 
 describe('Date Utils', () => {
+	describe('getLocalDateString', () => {
+		it('should return the local date as a YYYY-MM-DD string', () => {
+			const date = new Date(2023, 4, 15); // May 15, 2023 local time
+			expect(getLocalDateString(date)).toBe('2023-05-15');
+		});
+
+		it('should correctly pad single digit months and days', () => {
+			const date = new Date(2023, 0, 5); // Jan 5, 2023 local time
+			expect(getLocalDateString(date)).toBe('2023-01-05');
+		});
+
+		it('should default to today if no date is provided', () => {
+			const today = new Date();
+			const expectedYear = today.getFullYear();
+			const expectedMonth = String(today.getMonth() + 1).padStart(2, '0');
+			const expectedDay = String(today.getDate()).padStart(2, '0');
+			const expected = `${expectedYear}-${expectedMonth}-${expectedDay}`;
+
+			expect(getLocalDateString()).toBe(expected);
+		});
+	});
+
 	beforeEach(() => {
 		vi.useFakeTimers();
 	});

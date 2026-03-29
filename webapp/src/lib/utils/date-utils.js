@@ -3,6 +3,18 @@
  */
 
 /**
+ * Get the local date as a YYYY-MM-DD string
+ * @param {Date} [date=new Date()] - The date to format
+ * @returns {string} The local date string
+ */
+export function getLocalDateString(date = new Date()) {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+/**
  * Helper to parse YYYY-MM-DD string into local date components without timezone shift
  */
 function parseISODateParts(dateInput) {

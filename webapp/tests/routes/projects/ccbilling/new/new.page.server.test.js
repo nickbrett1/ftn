@@ -43,37 +43,30 @@ describe('/projects/ccbilling/new/+page.server.js', () => {
 		}
 	});
 
-	it('defaults to today when no existing cycles', async () => {
+	it('defaults to null when no existing cycles', async () => {
 		db.listBillingCycles.mockResolvedValue([]);
 		const result = await load(mockEvent);
-		expect(result).toEqual({ defaultStartDate: todayString, defaultEndDate: todayString });
+		expect(result).toEqual({ defaultStartDate: null });
 	});
 
 	it('calculates start date as day after most recent cycle', async () => {
 		const cycles = [{ end_date: '2024-01-05T00:00:00.000Z' }];
 		db.listBillingCycles.mockResolvedValue(cycles);
 		const result = await load(mockEvent);
-		expect(result).toEqual({ defaultStartDate: '2024-01-06', defaultEndDate: todayString });
+		expect(result).toEqual({ defaultStartDate: '2024-01-06' });
 	});
 
-	it('defaults to today if most recent cycle ends in the future', async () => {
-		const cycles = [{ end_date: '2024-01-15T00:00:00.000Z' }];
-		db.listBillingCycles.mockResolvedValue(cycles);
-		const result = await load(mockEvent);
-		expect(result).toEqual({ defaultStartDate: todayString, defaultEndDate: todayString });
-	});
-
-	it('defaults to today if most recent cycle end date is null', async () => {
+	it('defaults to null if most recent cycle end date is null', async () => {
 		const cycles = [{ end_date: null }];
 		db.listBillingCycles.mockResolvedValue(cycles);
 		const result = await load(mockEvent);
-		expect(result).toEqual({ defaultStartDate: todayString, defaultEndDate: todayString });
+		expect(result).toEqual({ defaultStartDate: null });
 	});
 
-	it('defaults to today if most recent cycle end date is invalid', async () => {
+	it('defaults to null if most recent cycle end date is invalid', async () => {
 		const cycles = [{ end_date: 'invalid-date' }];
 		db.listBillingCycles.mockResolvedValue(cycles);
 		const result = await load(mockEvent);
-		expect(result).toEqual({ defaultStartDate: todayString, defaultEndDate: todayString });
+		expect(result).toEqual({ defaultStartDate: null });
 	});
 });

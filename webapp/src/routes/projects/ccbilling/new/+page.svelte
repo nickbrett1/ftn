@@ -4,6 +4,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { goto, invalidate } from '$app/navigation';
 	import { untrack } from 'svelte';
+	import { getLocalDateString } from '$lib/utils/date-utils.js';
 
 	// Get default dates from server
 	const { data } = $props();
@@ -15,16 +16,24 @@
 		return !Number.isNaN(date.getTime());
 	}
 
-	// Use server-provided dates if valid, otherwise fall back to today
-	const today = new Date().toISOString().split('T')[0];
+	// Calculate client-side today correctly to avoid UTC offset issues
+	const today = getLocalDateString();
 
 	// Initialize with untrack to avoid dependency issues
 	let startDate = $state(
-		untrack(() => (validateDate(data.defaultStartDate) ? data.defaultStartDate : today))
+		untrack(() => {
+			if (validateDate(data.defaultStartDate)) {
+				// Don't set start date to the future
+				if (data.defaultStartDate > today) {
+					return today;
+				}
+				return data.defaultStartDate;
+			}
+			return today;
+		})
 	);
-	let endDate = $state(
-		untrack(() => (validateDate(data.defaultEndDate) ? data.defaultEndDate : today))
-	);
+
+	let endDate = $state(today);
 
 	let isSubmitting = $state(false);
 	let error = $state('');
