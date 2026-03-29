@@ -131,9 +131,11 @@ export const PDFUtils = {
 
 			// Convert file to ArrayBuffer
 			let arrayBuffer;
-			if (pdfFile instanceof File) {
+			if (pdfFile instanceof File || pdfFile instanceof Blob) {
 				arrayBuffer = await pdfFile.arrayBuffer();
-			} else if (Buffer.isBuffer(pdfFile)) {
+			} else if (pdfFile instanceof ArrayBuffer) {
+				arrayBuffer = pdfFile;
+			} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
 				arrayBuffer = pdfFile.buffer.slice(
 					pdfFile.byteOffset,
 					pdfFile.byteOffset + pdfFile.byteLength
@@ -206,9 +208,11 @@ export const PDFUtils = {
 
 		// Check file size
 		let fileSize = 0;
-		if (pdfFile instanceof File) {
+		if (pdfFile instanceof File || pdfFile instanceof Blob) {
 			fileSize = pdfFile.size;
-		} else if (Buffer.isBuffer(pdfFile)) {
+		} else if (pdfFile instanceof ArrayBuffer) {
+			fileSize = pdfFile.byteLength;
+		} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
 			fileSize = pdfFile.length;
 		} else {
 			throw new TypeError('Invalid PDF file format');
@@ -218,10 +222,10 @@ export const PDFUtils = {
 			throw new Error(`PDF file too large. Maximum size: ${maxSize / 1024 / 1024}MB`);
 		}
 
-		// Check file type for File objects
-		if (pdfFile instanceof File) {
+		// Skip strict MIME type check for ArrayBuffers, but enforce for File/Blob if provided
+		if (pdfFile instanceof File || pdfFile instanceof Blob) {
 			const mimeType = pdfFile.type;
-			if (mimeType !== 'application/pdf') {
+			if (mimeType && mimeType !== 'application/pdf' && mimeType !== '') {
 				throw new Error('Invalid file type. Only PDF files are supported.');
 			}
 		}
