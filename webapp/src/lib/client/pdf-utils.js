@@ -105,6 +105,45 @@ export const PDFUtils = {
 	 * @param {Object} options - Parsing options
 	 * @returns {Promise<string>} - Extracted text content
 	 */
+	/**
+	 * Import and configure the PDF.js library dynamically
+	 * @private
+	 */
+	async _initializePDFJs() {
+		// Use legacy build in test environment to avoid worker issues
+		const pdfjsLibrary =
+			typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+				? await import('pdfjs-dist/legacy/build/pdf.mjs')
+				: await import('pdfjs-dist');
+
+		// Configure worker if not already done
+		if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+			console.log('📄 Using PDF.js legacy build for test environment');
+		} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
+			pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+		}
+		return pdfjsLibrary;
+	},
+
+	/**
+	 * Convert the incoming PDF object to a raw ArrayBuffer
+	 * @private
+	 */
+	async _getArrayBuffer(pdfFile) {
+		if (pdfFile instanceof File || pdfFile instanceof Blob) {
+			return await pdfFile.arrayBuffer();
+		} else if (pdfFile instanceof ArrayBuffer) {
+			return pdfFile;
+		} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
+			return pdfFile.buffer.slice(
+				pdfFile.byteOffset,
+				pdfFile.byteOffset + pdfFile.byteLength
+			);
+		} else {
+			throw new TypeError('Invalid PDF file format');
+		}
+	},
+
 	async parsePDFFile(pdfFile, options = {}) {
 		// Only run in browser environment
 		if (globalThis.window == undefined) {
@@ -112,41 +151,17 @@ export const PDFUtils = {
 		}
 
 		try {
-			// Import PDF.js only when needed
-			// Use legacy build in test environment to avoid worker issues
-			const pdfjsLibrary =
-				typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
-					? await import('pdfjs-dist/legacy/build/pdf.mjs')
-					: await import('pdfjs-dist');
-
-			// Configure worker if not already done
-			if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-				// Legacy build doesn't need worker configuration
-				console.log('📄 Using PDF.js legacy build for test environment');
-			} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
-				pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-			}
-
+			const pdfjsLibrary = await this._initializePDFJs();
 			console.log('📄 Loading PDF with PDF.js...');
 
-			// Convert file to ArrayBuffer
-			let arrayBuffer;
-			if (pdfFile instanceof File || pdfFile instanceof Blob) {
-				arrayBuffer = await pdfFile.arrayBuffer();
-			} else if (pdfFile instanceof ArrayBuffer) {
-				arrayBuffer = pdfFile;
-			} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
-				arrayBuffer = pdfFile.buffer.slice(
-					pdfFile.byteOffset,
-					pdfFile.byteOffset + pdfFile.byteLength
-				);
-			} else {
-				throw new TypeError('Invalid PDF file format');
-			}
+			const arrayBuffer = await this._getArrayBuffer(pdfFile);
 
-			// Load PDF document
+			// We MUST clone the ArrayBuffer because PDF.js transfers ownership to the WebWorker, detaching the original!
+			// If we need to retry later in the main thread, passing the detached buffer will crash with 'Buffer is already detached'.
+			const arrayBufferForWorker = arrayBuffer.slice(0);
+
 			const pdfOptions = {
-				data: arrayBuffer,
+				data: arrayBufferForWorker,
 				cMapUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/cmaps/',
 				cMapPacked: true,
 				standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.5.207/standard_fonts/'
@@ -176,7 +191,9 @@ export const PDFUtils = {
 					console.warn('🔄 Disabling PDF.js worker and retrying in main thread...');
 					pdfjsLibrary.GlobalWorkerOptions.workerSrc = '';
 
-					loadingTask = pdfjsLibrary.getDocument(pdfOptions);
+					// Use the original un-detached ArrayBuffer copy for the main thread parsing
+					const fallbackPdfOptions = { ...pdfOptions, data: arrayBuffer };
+					loadingTask = pdfjsLibrary.getDocument(fallbackPdfOptions);
 					pdf = await loadingTask.promise;
 					allText = await this.extractTextFromPDF(pdf, options);
 				} else {
