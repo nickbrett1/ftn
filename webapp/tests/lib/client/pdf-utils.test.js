@@ -205,3 +205,26 @@ describe('PDFUtils', () => {
 			globalThis.window = originalWindow;
 		});
 	});
+
+	describe('parsing failures handling', () => {
+		it('should cleanly throw PDF parsing failure if getTextContent throws an error', async () => {
+			// Mock getDocument to throw inside getTextContent
+			const errorMockPdf = {
+				numPages: 1,
+				getPage: vi.fn().mockResolvedValue({
+					getTextContent: vi.fn().mockRejectedValue(new TypeError("undefined is not a function (near '...i of e...')"))
+				})
+			};
+
+			vi.mocked((await import('pdfjs-dist/legacy/build/pdf.mjs')).getDocument).mockReturnValueOnce({
+				promise: Promise.resolve(errorMockPdf)
+			});
+
+			const buffer = new ArrayBuffer(100);
+			const mockParserFactory = { parseStatement: vi.fn() };
+
+			await expect(PDFUtils.parseStatement(buffer, mockParserFactory)).rejects.toThrow(
+				"Statement parsing failed: PDF parsing failed: undefined is not a function (near '...i of e...')"
+			);
+		});
+	});
