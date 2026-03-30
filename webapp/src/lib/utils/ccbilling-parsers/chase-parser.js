@@ -223,7 +223,7 @@ export class ChaseParser extends BaseParser {
 				: null;
 
 			const charge = {
-				merchant: transaction.merchant,
+				merchant: this.cleanMerchantName(transaction.merchant),
 				amount: transaction.amount,
 				date: transaction.date,
 				allocated_to: null,

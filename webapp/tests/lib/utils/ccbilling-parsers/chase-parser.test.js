@@ -136,7 +136,7 @@ describe('ChaseParser', () => {
 			expect(charges).toHaveLength(2);
 			const currentYear = new Date().getFullYear();
 			expect(charges[0]).toEqual({
-				merchant: 'AMAZON.COM',
+				merchant: 'Amazon.Com',
 				amount: 123.45,
 				date: `${currentYear}-01-15`,
 				allocated_to: null,
@@ -204,11 +204,11 @@ describe('ChaseParser', () => {
 			expect(charges).toHaveLength(3);
 
 			// Should include the charges before and after the SHOP WITH POINTS section
-			expect(charges[0].merchant).toBe('AMAZON.COM');
+			expect(charges[0].merchant).toBe('Amazon.Com');
 			expect(charges[0].amount).toBe(123.45);
-			expect(charges[1].merchant).toBe('WALMART');
+			expect(charges[1].merchant).toBe('Walmart');
 			expect(charges[1].amount).toBe(67.89);
-			expect(charges[2].merchant).toBe('TARGET');
+			expect(charges[2].merchant).toBe('Target');
 			expect(charges[2].amount).toBe(45.67);
 
 			// Should NOT include any of the point redemption amounts
@@ -233,9 +233,9 @@ describe('ChaseParser', () => {
 			expect(charges).toHaveLength(2);
 
 			// Should include the charges before and after the SHOP WITH POINTS section
-			expect(charges[0].merchant).toBe('AMAZON.COM');
+			expect(charges[0].merchant).toBe('Amazon.Com');
 			expect(charges[0].amount).toBe(123.45);
-			expect(charges[1].merchant).toBe('WALMART');
+			expect(charges[1].merchant).toBe('Walmart');
 			expect(charges[1].amount).toBe(67.89);
 
 			// Should NOT include the point redemption amount (2.15)
@@ -340,12 +340,12 @@ describe('ChaseParser', () => {
 				statement_date: '2024-02-15',
 				charges: expect.arrayContaining([
 					expect.objectContaining({
-						merchant: 'AMAZON.COM',
+						merchant: 'Amazon.Com',
 						amount: 123.45,
 						date: `${currentYear}-01-15`
 					}),
 					expect.objectContaining({
-						merchant: 'WALMART',
+						merchant: 'Walmart',
 						amount: 67.89,
 						date: `${currentYear}-01-16`
 					})

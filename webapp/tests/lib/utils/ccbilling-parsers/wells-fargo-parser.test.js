@@ -207,7 +207,7 @@ describe('WellsFargoParser', () => {
 			const charges = parser.extractCharges(text);
 			expect(charges).toHaveLength(2);
 			expect(charges[0]).toEqual({
-				merchant: 'AMAZON.COM AMZN.COM/BILL WA',
+				merchant: 'Amazon.Com Amzn.Com/Bill Wa',
 				amount: 123.45,
 				date: '2024-01-15',
 				allocated_to: null,
@@ -216,6 +216,16 @@ describe('WellsFargoParser', () => {
 				foreign_currency_type: null,
 				full_statement_text:
 					'01/15 01/15 860001800 5543286595Z9WS512 AMAZON.COM AMZN.COM/BILL WA $123.45'
+			});
+			expect(charges[1]).toEqual({
+				merchant: 'Walmart Store #1234 Tx',
+				amount: 67.89,
+				date: '2024-01-16',
+				allocated_to: null,
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				full_statement_text: null
 			});
 		});
 
@@ -357,17 +367,17 @@ describe('WellsFargoParser', () => {
 				statement_date: '2024-02-15',
 				charges: expect.arrayContaining([
 					expect.objectContaining({
-						merchant: 'AMAZON.COM AMZN.COM/BILL WA',
+						merchant: 'Amazon.Com Amzn.Com/Bill Wa',
 						amount: 123.45,
 						date: '2024-01-15'
 					}),
 					expect.objectContaining({
-						merchant: 'WALMART STORE #1234 TX',
+						merchant: 'Walmart Store #1234 Tx',
 						amount: 67.89,
 						date: '2024-01-16'
 					}),
 					expect.objectContaining({
-						merchant: 'STARBUCKS STORE #567',
+						merchant: 'Starbucks Store #567',
 						amount: 5.5,
 						date: '2024-02-17'
 					})
