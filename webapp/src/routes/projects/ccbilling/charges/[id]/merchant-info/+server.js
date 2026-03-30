@@ -190,8 +190,10 @@ export async function GET(event) {
 	}
 
 	const fullStatementText = charge.full_statement_text || '';
+	const merchantDetails = charge.merchant_details || '';
 
 	const prompt = `Cleaned merchant name: "${merchantName}"
+Merchant details: "${merchantDetails}"
 Raw statement text: "${fullStatementText}"
 
 Provide a concise plain-text summary including:
@@ -210,6 +212,7 @@ Provide a concise plain-text summary including:
 				error: aiResult.error || 'Failed to fetch merchant info',
 				details: aiResult.details,
 				merchant: merchantName,
+				merchantDetails,
 				fullStatementText
 			},
 			{ status: aiResult.status || 502 }
@@ -223,11 +226,11 @@ Provide a concise plain-text summary including:
 		const debug =
 			event.url?.searchParams?.get('debug') === '1' ? { reason: 'empty-text' } : undefined;
 		return json(
-			{ error: 'Empty response from model', merchant: merchantName, fullStatementText, debug },
+			{ error: 'Empty response from model', merchant: merchantName, merchantDetails, fullStatementText, debug },
 			{ status: 502 }
 		);
 	}
 	const debug =
 		event.url?.searchParams?.get('debug') === '1' ? { textLength: text.length } : undefined;
-	return json({ merchant: merchantName, fullStatementText, text, debug });
+	return json({ merchant: merchantName, merchantDetails, fullStatementText, text, debug });
 }
