@@ -1815,8 +1815,13 @@
 					{:else if merchantInfoData}
 						<div class="space-y-3">
 							<div class="text-gray-300 text-sm">
-								Searched: <span class="text-white">{merchantInfoData.merchant}</span>
+								Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
 							</div>
+							{#if merchantInfoData.fullStatementText}
+								<div class="text-gray-300 text-sm">
+									Raw statement text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
+								</div>
+							{/if}
 							{#if merchantInfoData.text}
 								<div class="prose prose-invert max-w-none">
 									<p class="whitespace-pre-wrap text-gray-200 text-sm">
