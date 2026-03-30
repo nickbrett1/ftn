@@ -1,3 +1,19 @@
+const streetSuffixes = [
+	'AVE', 'AVENUE', 'ST', 'STREET', 'RD', 'ROAD', 'BLVD', 'BOULEVARD',
+	'DR', 'DRIVE', 'LN', 'LANE', 'WAY', 'CT', 'COURT', 'CIR', 'CIRCLE',
+	'HWY', 'HIGHWAY', 'PKWY', 'PARKWAY', 'SQ', 'SQUARE', 'BRIDGE',
+	'BROADWAY', 'RUE', 'RTE', 'ROUTE', 'PL', 'PLACE', 'TER', 'TERRACE',
+	'PIKE', 'TRL', 'TRAIL', 'PKY', 'FREEWAY', 'FWY', 'EXPY', 'EXPRESSWAY'
+];
+
+const suffixRegexStr = `(?:${streetSuffixes.join('|')})`;
+
+// Match a street number, up to 3 words, and a street suffix, followed by optional extra text
+const addressPattern = new RegExp(
+	`\\s+(?:#\\s*)?\\d{1,5}\\s+(?:[A-Za-z0-9\\-]+\\s+){0,3}${suffixRegexStr}(?:\\s+.*)?$`,
+	'i'
+);
+
 /**
  * Shared parsing utilities for credit card statement parsing
  * Eliminates duplication in parsing logic across different services
@@ -310,16 +326,21 @@ export const ParsingUtils = {
 	 * @param {Object} options - Cleaning options
 	 * @param {boolean} options.removeCommonSuffixes - Remove common suffixes (default: true)
 	 * @param {boolean} options.normalizeCase - Normalize case (default: true)
+	 * @param {boolean} options.removeAddress - Remove trailing street address (default: true)
 	 * @returns {string} - Cleaned merchant name
 	 */
 	cleanMerchantName(merchantName, options = {}) {
-		const { removeCommonSuffixes = true, normalizeCase = true } = options;
+		const { removeCommonSuffixes = true, normalizeCase = true, removeAddress = true } = options;
 
 		if (!merchantName || typeof merchantName !== 'string') {
 			return '';
 		}
 
 		let cleaned = merchantName.trim();
+
+		if (removeAddress) {
+			cleaned = cleaned.replace(addressPattern, '').trim();
+		}
 
 		// Remove common suffixes
 		if (removeCommonSuffixes) {
