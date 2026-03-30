@@ -41,10 +41,8 @@ export async function GET(event) {
 			return json({ error: 'PDF not found in R2' }, { status: 404 });
 		}
 
-		// Return the PDF as a blob
-		const pdfBuffer = await pdfObject.arrayBuffer();
-
-		return new Response(pdfBuffer, {
+		// Stream the PDF directly from R2 to avoid ArrayBuffer memory limits and truncation
+		return new Response(pdfObject.body, {
 			headers: {
 				'Content-Type': 'application/pdf',
 				'Content-Disposition': `attachment; filename="${statement.filename}"`

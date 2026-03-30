@@ -389,6 +389,78 @@ describe('ccbilling-db.js', () => {
 			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 		});
+
+		it('getPaymentsForStatement should fetch payments for a statement', async () => {
+			const mockPayments = [{ id: 1, amount: 50 }, { id: 2, amount: 100 }];
+			mockDatabase.all.mockResolvedValue({ results: mockPayments });
+
+			const result = await db.getPaymentsForStatement(mockEvent, 1);
+
+			expect(mockDatabase.prepare).toHaveBeenCalledWith('SELECT * FROM payment WHERE statement_id = ? ORDER BY transaction_date ASC');
+			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
+			expect(mockDatabase.all).toHaveBeenCalled();
+			expect(result).toEqual(mockPayments);
+		});
+
+		it('updatePaymentMerchantFields should update merchant-related fields', async () => {
+			mockDatabase.run.mockResolvedValue({ success: true });
+
+			const fields = {
+				merchant: 'New Merch',
+				merchant_normalized: 'new merch',
+				is_foreign_currency: true,
+				foreign_currency_amount: 10,
+				foreign_currency_type: 'EUR',
+				flight_details: { dest: 'JFK' }
+			};
+
+			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
+
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('UPDATE payment')
+			);
+			expect(mockDatabase.bind).toHaveBeenCalledWith(
+				'New Merch',
+				'new merch',
+				1,
+				10,
+				'EUR',
+				JSON.stringify({ dest: 'JFK' }),
+				10
+			);
+			expect(mockDatabase.run).toHaveBeenCalled();
+			expect(result).toBe(true);
+		});
+
+		it('updatePaymentMerchantFields should handle false/null fields', async () => {
+			mockDatabase.run.mockResolvedValue({ success: true });
+
+			const fields = {
+				merchant: 'New Merch',
+				merchant_normalized: null,
+				is_foreign_currency: false,
+				foreign_currency_amount: null,
+				foreign_currency_type: null,
+				flight_details: null
+			};
+
+			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
+
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('UPDATE payment')
+			);
+			expect(mockDatabase.bind).toHaveBeenCalledWith(
+				'New Merch',
+				null,
+				0,
+				null,
+				null,
+				null,
+				10
+			);
+			expect(mockDatabase.run).toHaveBeenCalled();
+			expect(result).toBe(true);
+		});
 	});
 
 	// Other DB functions

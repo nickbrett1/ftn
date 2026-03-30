@@ -127,6 +127,11 @@
 	let showDeleteStatementDialog = $state(false);
 	let statementToDelete = $state(null);
 
+	// Reparse statement state
+	let reparsingStatements = $state(new Set());
+	let showReparseResultDialog = $state(false);
+	let reparseResult = $state(null);
+
 	// Auto-association update modal state
 	let showAutoAssociationModal = $state(false);
 	let autoAssociationModalData = $state({
@@ -728,6 +733,98 @@
 		}
 	}
 
+	/**
+	 * Helper function to robustly download an ArrayBuffer using XMLHttpRequest.
+	 * This completely bypasses the fetch(), .blob(), and FileReader() APIs which are
+	 * known to randomly truncate or corrupt large binary streams on iOS Safari.
+	 */
+	function fetchPDFArrayBuffer(url) {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', url, true);
+			xhr.responseType = 'arraybuffer';
+
+			xhr.onload = () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					resolve(xhr.response);
+				} else {
+					reject(new Error(`HTTP Error ${xhr.status} downloading PDF`));
+				}
+			};
+			xhr.onerror = () => reject(new Error('Network error downloading PDF'));
+			xhr.send();
+		});
+	}
+
+	async function reparseStatement(statementId) {
+		if (reparsingStatements.has(statementId)) return;
+		const newSet = new Set(reparsingStatements);
+		newSet.add(statementId);
+		reparsingStatements = newSet;
+
+		try {
+			showToastMessage('Fetching PDF for re-parsing...', 'info');
+
+			// 1. Fetch the PDF raw ArrayBuffer directly bypassing newer buggy fetch abstractions on iOS
+			const pdfUrl = `/projects/ccbilling/statements/${statementId}/pdf`;
+			const pdfArrayBuffer = await fetchPDFArrayBuffer(pdfUrl);
+
+			showToastMessage('Parsing PDF...', 'info');
+
+			// 2. Parse the PDF client-side using the raw XHR ArrayBuffer
+			const pdfService = new PDFService();
+			await pdfService.init();
+			const parsedData = await pdfService.parseStatement(pdfArrayBuffer);
+
+			console.log('📄 PDF re-parsed successfully:', parsedData);
+
+			showToastMessage('Sending parsed data to server...', 'info');
+
+			// 3. Send parsed data to new reparse endpoint
+			const reparseResponse = await fetch(`/projects/ccbilling/statements/${statementId}/reparse`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					parsedData: parsedData
+				})
+			});
+
+			const result = await reparseResponse.json();
+
+			if (!reparseResponse.ok) {
+				// The server returns 400 with a specific message if structural changes are detected
+				// We'll show this in the modal
+				reparseResult = {
+					success: false,
+					message: result.error || 'Failed to reparse statement',
+					details: result.details || null
+				};
+				showReparseResultDialog = true;
+				return;
+			}
+
+			// Success! Show modal with results
+			reparseResult = {
+				success: true,
+				message: result.message || 'Statement reparsed successfully',
+				changes: result.changes || []
+			};
+			showReparseResultDialog = true;
+
+			// Refresh data to show updated merchant names
+			await invalidate(`cycle-${data.cycleId}`);
+		} catch (error) {
+			console.error('❌ Reparse failed:', error);
+			showToastMessage(`Reparse failed: ${error.message}`, 'error');
+		} finally {
+			const newSet = new Set(reparsingStatements);
+			newSet.delete(statementId);
+			reparsingStatements = newSet;
+		}
+	}
+
 	async function parseStatementClientSide(statementId, pdfFile) {
 		try {
 			// Initialize PDF service
@@ -955,6 +1052,79 @@
 			</div>
 		{/if}
 
+		<!-- Reparse Result Modal -->
+		{#if showReparseResultDialog && reparseResult}
+			<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+				<div class="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full shadow-xl">
+					<h3 class="text-xl font-bold text-white mb-2">
+						{reparseResult.success ? 'Reparse Successful' : 'Reparse Failed'}
+					</h3>
+
+					<div class="mb-6">
+						{#if reparseResult.success}
+							<div class="bg-green-900/30 border border-green-700 text-green-200 px-4 py-3 rounded mb-4">
+								<p>{reparseResult.message}</p>
+								<p class="text-sm mt-1">Found {reparseResult.changes.length} merchant name changes.</p>
+							</div>
+
+							{#if reparseResult.changes.length > 0}
+								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50">
+									{#each reparseResult.changes as change}
+										<div class="text-sm border-b border-gray-700 last:border-0 pb-2 last:pb-0">
+											<div class="text-gray-400">Old: {change.oldMerchant}</div>
+											<div class="text-green-400">New: {change.newMerchant}</div>
+											<div class="text-gray-500 text-xs mt-1">Date: {change.date} | Amount: ${change.amount.toFixed(2)}</div>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p class="text-gray-300 text-sm">No merchant names were changed. The parser output matched the existing data.</p>
+							{/if}
+						{:else}
+							<div class="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+								<p>{reparseResult.message}</p>
+								<p class="text-sm mt-2 text-red-300">If you want to apply these changes, you must delete the statement and upload it again.</p>
+							</div>
+
+							{#if reparseResult.details && reparseResult.details.missing_charges}
+								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2">
+									<div class="text-sm font-semibold text-white mb-1">Missing Charges ({reparseResult.details.missing_charges.length}):</div>
+									{#each reparseResult.details.missing_charges as missing}
+										<div class="text-sm border-b border-gray-700 last:border-0 pb-1 last:pb-0">
+											<div class="text-gray-300">{missing.merchant}</div>
+											<div class="text-gray-500 text-xs">Date: {missing.date} | Amount: ${missing.amount.toFixed(2)}</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+
+							{#if reparseResult.details && reparseResult.details.extra_charges}
+								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2">
+									<div class="text-sm font-semibold text-white mb-1">Extra Charges ({reparseResult.details.extra_charges.length}):</div>
+									{#each reparseResult.details.extra_charges as extra}
+										<div class="text-sm border-b border-gray-700 last:border-0 pb-1 last:pb-0">
+											<div class="text-gray-300">{extra.merchant}</div>
+											<div class="text-gray-500 text-xs">Date: {extra.date} | Amount: ${extra.amount.toFixed(2)}</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+						{/if}
+					</div>
+
+					<div class="flex justify-end gap-2">
+						<Button
+							type="button"
+							variant="secondary"
+							onclick={() => (showReparseResultDialog = false)}
+						>
+							Close
+						</Button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Statements Section -->
 		<div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
 			<div class="flex justify-between items-center mb-4">
@@ -1089,24 +1259,46 @@
 											⚠ Not Parsed
 										</div>
 									{/if}
-									<Button
-										type="button"
-										variant="danger"
-										size="sm"
-										disabled={deletingStatements.has(statement.id)}
-										onclick={() => confirmDeleteStatement(statement)}
-									>
-										{#if deletingStatements.has(statement.id)}
-											<div class="flex items-center space-x-2">
-												<div
-													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-												></div>
-												<span>Deleting...</span>
-											</div>
-										{:else}
-											Delete
-										{/if}
-									</Button>
+
+									<div class="flex space-x-2 ml-2">
+										<Button
+											type="button"
+											variant="secondary"
+											size="sm"
+											disabled={reparsingStatements.has(statement.id) || deletingStatements.has(statement.id)}
+											onclick={() => reparseStatement(statement.id)}
+										>
+											{#if reparsingStatements.has(statement.id)}
+												<div class="flex items-center space-x-2">
+													<div
+														class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
+													></div>
+													<span>Reparsing...</span>
+												</div>
+											{:else}
+												Reparse
+											{/if}
+										</Button>
+
+										<Button
+											type="button"
+											variant="danger"
+											size="sm"
+											disabled={deletingStatements.has(statement.id) || reparsingStatements.has(statement.id)}
+											onclick={() => confirmDeleteStatement(statement)}
+										>
+											{#if deletingStatements.has(statement.id)}
+												<div class="flex items-center space-x-2">
+													<div
+														class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
+													></div>
+													<span>Deleting...</span>
+												</div>
+											{:else}
+												Delete
+											{/if}
+										</Button>
+									</div>
 								</div>
 							</div>
 						</div>

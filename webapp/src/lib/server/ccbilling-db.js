@@ -527,6 +527,51 @@ export async function updatePayment(event, id, merchant, amount, allocated_to) {
 }
 
 /**
+ * Update merchant-related fields for a specific payment/charge.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} paymentId
+ * @param {Object} fields
+ * @returns {Promise<boolean>}
+ */
+export async function updatePaymentMerchantFields(event, paymentId, fields) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) throw new Error('CCBILLING_DB binding not found');
+
+	const {
+		merchant,
+		merchant_normalized,
+		is_foreign_currency,
+		foreign_currency_amount,
+		foreign_currency_type,
+		flight_details
+	} = fields;
+
+	const result = await database
+		.prepare(
+			`UPDATE payment
+			 SET merchant = ?,
+			     merchant_normalized = ?,
+			     is_foreign_currency = ?,
+			     foreign_currency_amount = ?,
+			     foreign_currency_type = ?,
+			     flight_details = ?
+			 WHERE id = ?`
+		)
+		.bind(
+			merchant,
+			merchant_normalized,
+			is_foreign_currency ? 1 : 0,
+			foreign_currency_amount,
+			foreign_currency_type,
+			flight_details ? JSON.stringify(flight_details) : null,
+			paymentId
+		)
+		.run();
+
+	return result.success;
+}
+
+/**
  * Bulk update payments/charges for budget assignment.
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Array<{id: number, allocated_to: string}>} assignments
@@ -542,6 +587,24 @@ export async function bulkAssignPayments(event, assignments) {
 			.bind(assignment.allocated_to, assignment.id)
 			.run();
 	}
+}
+
+/**
+ * Get all payments/charges for a statement.
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {number} statement_id
+ * @returns {Promise<Array>}
+ */
+export async function getPaymentsForStatement(event, statement_id) {
+	const database = event.platform?.env?.CCBILLING_DB;
+	if (!database) throw new Error('CCBILLING_DB binding not found');
+
+	const result = await database
+		.prepare(`SELECT * FROM payment WHERE statement_id = ? ORDER BY transaction_date ASC`)
+		.bind(statement_id)
+		.all();
+
+	return result.results || [];
 }
 
 /**
