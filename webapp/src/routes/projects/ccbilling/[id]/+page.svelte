@@ -263,13 +263,20 @@
 	async function openMerchantInfo(chargeId) {
 		merchantInfoLoading = true;
 		merchantInfoError = '';
-		merchantInfoData = null;
+		// Pre-populate with local charge data so raw details are always available immediately
+		const charge = localData.charges.find(c => c.id === chargeId);
+		merchantInfoData = charge ? { merchant: charge.merchant, fullStatementText: charge.full_statement_text, text: null } : null;
 		showMerchantInfo = true;
+
 		try {
 			const res = await fetch(`/projects/ccbilling/charges/${chargeId}/merchant-info`);
 			const isOk = res.ok;
 			const data = await res.json().catch(() => ({}));
 			if (!isOk) {
+				// If the backend returned merchant and fullStatementText in the error, use them
+				if (data && (data.merchant || data.fullStatementText)) {
+					merchantInfoData = { ...merchantInfoData, ...data };
+				}
 				throw new Error(data.error || `Failed to fetch merchant info (status ${res.status})`);
 			}
 
@@ -1807,14 +1814,8 @@
 			<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
 				<div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-lg w-full shadow-lg">
 					<h3 class="text-lg font-bold text-white mb-4">Merchant details</h3>
-					{#if merchantInfoLoading}
-						<div class="text-gray-300">Fetching info...</div>
-					{:else if merchantInfoError}
-						<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
-							{merchantInfoError}
-						</div>
-					{:else if merchantInfoData}
-						<div class="space-y-3">
+					{#if merchantInfoData}
+						<div class="space-y-3 mb-4">
 							<div class="text-gray-300 text-sm">
 								Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
 							</div>
@@ -1823,17 +1824,24 @@
 									Full unprocessed name / Raw text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
 								</div>
 							{/if}
-							{#if merchantInfoData.text}
-								<div class="prose prose-invert max-w-none">
-									<p class="whitespace-pre-wrap text-gray-200 text-sm">
-										{merchantInfoData.text}
-									</p>
-								</div>
-							{:else}
-								<div class="text-gray-300">No info available.</div>
-							{/if}
 						</div>
-					{:else}
+					{/if}
+
+					{#if merchantInfoLoading}
+						<div class="text-gray-300">Fetching enriched info...</div>
+					{:else if merchantInfoError}
+						<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+							{merchantInfoError}
+						</div>
+					{:else if merchantInfoData && merchantInfoData.text}
+						<div class="space-y-3">
+							<div class="prose prose-invert max-w-none">
+								<p class="whitespace-pre-wrap text-gray-200 text-sm">
+									{merchantInfoData.text}
+								</p>
+							</div>
+						</div>
+					{:else if !merchantInfoData}
 						<div class="text-gray-300">No info available.</div>
 					{/if}
 					<div class="flex justify-end gap-2 mt-6">
