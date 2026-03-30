@@ -242,6 +242,16 @@ describe('ParsingUtils', () => {
 	});
 
 	describe('cleanMerchantName', () => {
+		it('should remove phone numbers', () => {
+			expect(ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374')).toBe('Fdh*Fresh Direct');
+			expect(ParsingUtilities.cleanMerchantName('KINDLE 888-802-3080')).toBe('Kindle');
+			expect(ParsingUtilities.cleanMerchantName('SOME STORE 123-456-7890 NY')).toBe('Some Store Ny');
+		});
+
+		it('should allow disabling phone number removal', () => {
+			expect(ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374', { removePhoneNumber: false })).toBe('Fdh*Fresh Direct 866-283-7374');
+		});
+
 		it('should remove common suffixes', () => {
 			expect(ParsingUtilities.cleanMerchantName('Test Merchant LLC')).toBe('Test Merchant');
 			expect(ParsingUtilities.cleanMerchantName('Test Merchant INC')).toBe('Test Merchant');
