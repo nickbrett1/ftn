@@ -165,7 +165,7 @@ async function runLlamaClient(event, prompt) {
 		return { ok: true, text };
 	} catch (error) {
 		console.error('Llama client call failed:', error);
-		return { ok: false, status: 502, error: 'LLama API client error' };
+		return { ok: false, status: 502, error: 'LLama API client error', details: error.message };
 	}
 }
 

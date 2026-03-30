@@ -277,7 +277,8 @@
 				if (data && (data.merchant || data.fullStatementText)) {
 					merchantInfoData = { ...merchantInfoData, ...data };
 				}
-				throw new Error(data.error || `Failed to fetch merchant info (status ${res.status})`);
+				merchantInfoError = data.error || `Failed to fetch merchant info (status ${res.status})`;
+				return;
 			}
 
 			// Accept both {merchant, text} and error-shaped payloads for robustness
@@ -1829,20 +1830,26 @@
 
 					{#if merchantInfoLoading}
 						<div class="text-gray-300">Fetching enriched info...</div>
-					{:else if merchantInfoError}
-						<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
-							{merchantInfoError}
-						</div>
-					{:else if merchantInfoData && merchantInfoData.text}
-						<div class="space-y-3">
-							<div class="prose prose-invert max-w-none">
-								<p class="whitespace-pre-wrap text-gray-200 text-sm">
-									{merchantInfoData.text}
-								</p>
+					{:else}
+						{#if merchantInfoError}
+							<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+								<div class="font-semibold">{merchantInfoError}</div>
+								{#if merchantInfoData && merchantInfoData.details}
+									<div class="text-sm mt-1">{merchantInfoData.details}</div>
+								{/if}
 							</div>
-						</div>
-					{:else if !merchantInfoData}
-						<div class="text-gray-300">No info available.</div>
+						{/if}
+						{#if merchantInfoData && merchantInfoData.text}
+							<div class="space-y-3">
+								<div class="prose prose-invert max-w-none">
+									<p class="whitespace-pre-wrap text-gray-200 text-sm">
+										{merchantInfoData.text}
+									</p>
+								</div>
+							</div>
+						{:else if !merchantInfoData}
+							<div class="text-gray-300">No info available.</div>
+						{/if}
 					{/if}
 					<div class="flex justify-end gap-2 mt-6">
 						<button

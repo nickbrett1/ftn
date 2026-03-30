@@ -327,16 +327,22 @@ export const ParsingUtils = {
 	 * @param {boolean} options.removeCommonSuffixes - Remove common suffixes (default: true)
 	 * @param {boolean} options.normalizeCase - Normalize case (default: true)
 	 * @param {boolean} options.removeAddress - Remove trailing street address (default: true)
+	 * @param {boolean} options.removePhoneNumber - Remove phone numbers (default: true)
 	 * @returns {string} - Cleaned merchant name
 	 */
 	cleanMerchantName(merchantName, options = {}) {
-		const { removeCommonSuffixes = true, normalizeCase = true, removeAddress = true } = options;
+		const { removeCommonSuffixes = true, normalizeCase = true, removeAddress = true, removePhoneNumber = true } = options;
 
 		if (!merchantName || typeof merchantName !== 'string') {
 			return '';
 		}
 
 		let cleaned = merchantName.trim();
+
+		// Remove phone numbers like "866-283-7374"
+		if (removePhoneNumber) {
+			cleaned = cleaned.replaceAll(/\b\d{3}-\d{3}-\d{4}\b/g, '').replaceAll(/\s+/g, ' ').trim();
+		}
 
 		if (removeAddress) {
 			cleaned = cleaned.replace(addressPattern, '').trim();
