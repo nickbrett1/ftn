@@ -270,7 +270,9 @@
 			const isOk = res.ok;
 			const data = await res.json().catch(() => ({}));
 			if (!isOk) {
-				throw new Error(data.error || `Failed to fetch merchant info (status ${res.status})`);
+				merchantInfoError = data.error || `Failed to fetch merchant info (status ${res.status})`;
+				merchantInfoData = data;
+				return;
 			}
 
 			// Accept both {merchant, text} and error-shaped payloads for robustness
@@ -1809,32 +1811,38 @@
 					<h3 class="text-lg font-bold text-white mb-4">Merchant details</h3>
 					{#if merchantInfoLoading}
 						<div class="text-gray-300">Fetching info...</div>
-					{:else if merchantInfoError}
-						<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
-							{merchantInfoError}
-						</div>
-					{:else if merchantInfoData}
-						<div class="space-y-3">
-							<div class="text-gray-300 text-sm">
-								Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
-							</div>
-							{#if merchantInfoData.fullStatementText}
-								<div class="text-gray-300 text-sm">
-									Full unprocessed name / Raw text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
-								</div>
-							{/if}
-							{#if merchantInfoData.text}
-								<div class="prose prose-invert max-w-none">
-									<p class="whitespace-pre-wrap text-gray-200 text-sm">
-										{merchantInfoData.text}
-									</p>
-								</div>
-							{:else}
-								<div class="text-gray-300">No info available.</div>
-							{/if}
-						</div>
 					{:else}
-						<div class="text-gray-300">No info available.</div>
+						{#if merchantInfoError}
+							<div class="bg-red-900 border border-red-700 text-red-200 px-4 py-2 rounded mb-4">
+								<div class="font-semibold">{merchantInfoError}</div>
+								{#if merchantInfoData && merchantInfoData.details}
+									<div class="text-sm mt-1">{merchantInfoData.details}</div>
+								{/if}
+							</div>
+						{/if}
+						{#if merchantInfoData && merchantInfoData.merchant}
+							<div class="space-y-3">
+								<div class="text-gray-300 text-sm">
+									Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
+								</div>
+								{#if merchantInfoData.fullStatementText}
+									<div class="text-gray-300 text-sm">
+										Full unprocessed name / Raw text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
+									</div>
+								{/if}
+								{#if merchantInfoData.text}
+									<div class="prose prose-invert max-w-none">
+										<p class="whitespace-pre-wrap text-gray-200 text-sm">
+											{merchantInfoData.text}
+										</p>
+									</div>
+								{:else if !merchantInfoError}
+									<div class="text-gray-300">No info available.</div>
+								{/if}
+							</div>
+						{:else if !merchantInfoError}
+							<div class="text-gray-300">No info available.</div>
+						{/if}
 					{/if}
 					<div class="flex justify-end gap-2 mt-6">
 						<button
