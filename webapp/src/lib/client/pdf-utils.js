@@ -17,7 +17,7 @@ export const PDFUtils = {
 			.then((pdfjsLibrary) => {
 				// Use the local worker file that gets copied during build
 				// In test environment, use a mock worker or disable worker
-				if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+				if (globalThis.process !== undefined && process.env.NODE_ENV === 'test') {
 					// Use legacy build in test environment to avoid worker issues
 					pdfjsLibrary.GlobalWorkerOptions.workerSrc = null;
 					console.log('📄 PDF.js worker disabled for test environment');
@@ -124,7 +124,7 @@ export const PDFUtils = {
 		const pdfjsLibrary = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
 		// Configure worker if not already done
-		if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+		if (globalThis.process !== undefined && process.env.NODE_ENV === 'test') {
 			console.log('📄 Using PDF.js legacy build for test environment');
 		} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== '/pdf.worker.min.mjs') {
 			pdfjsLibrary.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -163,7 +163,7 @@ export const PDFUtils = {
 			return await pdfFile.arrayBuffer();
 		} else if (pdfFile instanceof ArrayBuffer) {
 			return pdfFile;
-		} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
+		} else if (globalThis.Buffer !== undefined && Buffer.isBuffer(pdfFile)) {
 			return pdfFile.buffer.slice(
 				pdfFile.byteOffset,
 				pdfFile.byteOffset + pdfFile.byteLength
@@ -266,7 +266,7 @@ export const PDFUtils = {
 			fileSize = pdfFile.size;
 		} else if (pdfFile instanceof ArrayBuffer) {
 			fileSize = pdfFile.byteLength;
-		} else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(pdfFile)) {
+		} else if (globalThis.Buffer !== undefined && Buffer.isBuffer(pdfFile)) {
 			fileSize = pdfFile.length;
 		} else {
 			throw new TypeError('Invalid PDF file format');
