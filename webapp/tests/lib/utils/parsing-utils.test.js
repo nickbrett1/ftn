@@ -253,6 +253,17 @@ describe('ParsingUtils', () => {
 			expect(ParsingUtilities.cleanMerchantName('TEST MERCHANT')).toBe('Test Merchant');
 		});
 
+		it('should strip trailing addresses', () => {
+			expect(ParsingUtilities.cleanMerchantName('CHOPT 800 Westchester Avenue')).toBe('Chopt');
+			expect(ParsingUtilities.cleanMerchantName('MINT MOBILE 1550 SCENIC AVE')).toBe('Mint Mobile');
+			expect(ParsingUtilities.cleanMerchantName('PlaystationNetwork 2207 Bridge')).toBe('Playstationnetwork');
+			expect(ParsingUtilities.cleanMerchantName('MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004')).toBe('Mta*Nyct Paygo');
+			expect(ParsingUtilities.cleanMerchantName('APC Paris 39 rue Madame Paris 75006 FRAFRA')).toBe('Apc Paris');
+			expect(ParsingUtilities.cleanMerchantName('DOORDASH*CHIPOTLE 123 FAST ROAD')).toBe('Doordash*Chipotle');
+			expect(ParsingUtilities.cleanMerchantName('Catch 22 Restaurant')).toBe('Catch 22 Restaurant'); // Shouldn't match
+			expect(ParsingUtilities.cleanMerchantName('Bar 44 New York')).toBe('Bar 44 New York'); // Shouldn't match
+		});
+
 		it('should handle empty input', () => {
 			expect(ParsingUtilities.cleanMerchantName('')).toBe('');
 			expect(ParsingUtilities.cleanMerchantName(null)).toBe('');
