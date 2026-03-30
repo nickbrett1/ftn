@@ -172,7 +172,7 @@ export class WellsFargoParser extends BaseParser {
 					this._extractForeignTransactionDetails(lines, index);
 
 				const charge = {
-					merchant: description.trim(),
+					merchant: this.cleanMerchantName(description),
 					amount: Math.abs(amount), // Store as positive value
 					date,
 					allocated_to: null,

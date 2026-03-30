@@ -248,7 +248,7 @@ export class BiltCardlessParser extends BaseParser {
 						if (inPayments && amount > 0) continue; // Positive in payments section is likely a payment
 
 						const charge = {
-							merchant: description.trim(),
+							merchant: this.cleanMerchantName(description),
 							amount: amount, // Use raw amount (negative for credits)
 							date,
 							allocated_to: null,
