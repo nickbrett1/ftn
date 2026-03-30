@@ -106,7 +106,7 @@
 		"llama-api-client": "^0.3.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.7",
-		"pdfjs-dist": "^5.5.207",
+		"pdfjs-dist": "^5.6.205",
 		"stripe": "^21.0.1",
 		"three": "^0.183.2",
 		"tippy.js": "^6.3.7",
