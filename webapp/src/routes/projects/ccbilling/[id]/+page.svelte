@@ -283,7 +283,7 @@
 				merchantInfoData = data;
 			} else {
 				// Fallback to empty text if nothing usable
-				merchantInfoData = { merchant: data.merchant || '', fullStatementText: data.fullStatementText || '', text: '' };
+				merchantInfoData = { merchant: data.merchant || '', merchantDetails: data.merchantDetails || '', fullStatementText: data.fullStatementText || '', text: '' };
 			}
 		} catch (error) {
 			merchantInfoError = error.message;
@@ -1825,6 +1825,11 @@
 								<div class="text-gray-300 text-sm">
 									Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
 								</div>
+									{#if merchantInfoData.merchantDetails}
+										<div class="text-gray-300 text-sm">
+											Merchant details: <span class="text-white">{merchantInfoData.merchantDetails}</span>
+										</div>
+									{/if}
 								{#if merchantInfoData.fullStatementText}
 									<div class="text-gray-300 text-sm">
 										Full unprocessed name / Raw text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
