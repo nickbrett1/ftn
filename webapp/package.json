@@ -90,7 +90,7 @@
 	"type": "module",
 	"dependencies": {
 		"@stripe/stripe-js": "^9.0.1",
-		"@threlte/core": "^8.5.5",
+		"@threlte/core": "^8.5.6",
 		"@threlte/extras": "^9.14.4",
 		"@tsparticles/engine": "^3.8.1",
 		"@tsparticles/interaction-external-trail": "3.9",
