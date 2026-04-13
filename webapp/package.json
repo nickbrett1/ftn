@@ -99,7 +99,7 @@
 		"apexcharts": "^5.10.5",
 		"arctic": "^3.7.0",
 		"cookie": "^1.1.1",
-		"gsap": "^3.14.2",
+		"gsap": "^3.15.0",
 		"handlebars": "^4.7.9",
 		"hi-base32": "^0.5.1",
 		"linkify-it": "^5.0.0",
