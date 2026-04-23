@@ -93,7 +93,7 @@
 	"dependencies": {
 		"@stripe/stripe-js": "^9.3.1",
 		"@threlte/core": "^8.5.9",
-		"@threlte/extras": "^9.14.8",
+		"@threlte/extras": "^9.14.9",
 		"@tsparticles/engine": "^3.8.1",
 		"@tsparticles/interaction-external-trail": "3.9",
 		"@tsparticles/shape-text": "^3.9.1",
