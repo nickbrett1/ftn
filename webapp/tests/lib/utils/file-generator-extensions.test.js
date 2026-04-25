@@ -60,7 +60,7 @@ describe('File Generator - Extensions', () => {
 
 		expect(extensions).toContain('SonarSource.sonarlint-vscode');
 		expect(extensions).toContain('dbaeumer.vscode-eslint');
-		expect(extensions).toContain('THEARC.doppler');
+		expect(extensions).toContain('doppler.doppler-vscode');
 	});
 
 	it('should include Python extensions when Python devcontainer is selected', async () => {
@@ -99,7 +99,7 @@ describe('File Generator - Extensions', () => {
 		// Coding Agents
 		expect(extensions).toContain('google.geminicodeassist');
 		expect(extensions).toContain('saoudrizwan.claude-dev');
-		expect(extensions).toContain('GitHub.copilot-nightly');
+		expect(extensions).toContain('GitHub.copilot');
 
 		// Editor Tools
 		expect(extensions).toContain('GitHub.vscode-pull-request-github');
