@@ -113,7 +113,7 @@ export const capabilities = [
 		vscodeExtensions: [
 			'google.geminicodeassist',
 			'saoudrizwan.claude-dev',
-			'GitHub.copilot-nightly'
+			'GitHub.copilot'
 		],
 		benefits: [
 			'Gemini CLI pre-installed',
@@ -153,6 +153,7 @@ export const capabilities = [
 			'mhutchie.git-graph',
 			'redhat.vscode-yaml',
 			'tamasfe.even-better-toml',
+			'bierner.markdown-mermaid',
 			'pejmannikram.vscode-auto-scroll',
 			'naumovs.color-highlight',
 			'oderwat.indent-rainbow',
@@ -366,7 +367,7 @@ export const capabilities = [
 				}
 			}
 		},
-		vscodeExtensions: ['THEARC.doppler'],
+		vscodeExtensions: ['doppler.doppler-vscode'],
 		benefits: [
 			'Centralized secrets management across environments',
 			'Eliminate .env files and risk of leaking secrets',

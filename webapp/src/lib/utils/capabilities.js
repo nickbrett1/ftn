@@ -101,7 +101,8 @@ export const CAPABILITIES = {
 				'svelte.svelte-vscode',
 				'bradlc.vscode-tailwindcss',
 				'esbenp.prettier-vscode',
-				'ms-vscode.vscode-typescript-next'
+				'ms-vscode.vscode-typescript-next',
+				'bierner.markdown-mermaid'
 			],
 			postCreateCommand: 'npm install'
 		},
