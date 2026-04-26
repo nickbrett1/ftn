@@ -26,6 +26,7 @@ import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
 import dependabotAutoMerge from '../templates/dependabot-auto-merge.yml.template?raw';
 import vscodeTasksJson from '../templates/vscode-tasks-json.template?raw';
+import vscodeSettingsJson from '../templates/vscode-settings-json.template?raw';
 import cloudflareWorkerIndexJs from '../templates/cloudflare-worker-index-js.template?raw';
 import svelteAppHtml from '../templates/svelte-app-html.template?raw';
 import sveltePageSvelte from '../templates/svelte-page-svelte.template?raw';
@@ -165,6 +166,7 @@ const templateImports = {
 	'dependabot-config': dependabotConfig,
 	'dependabot-auto-merge': dependabotAutoMerge,
 	'vscode-tasks-json': vscodeTasksJson,
+	'vscode-settings-json': vscodeSettingsJson,
 	'cloudflare-worker-index-js': cloudflareWorkerIndexJs,
 	'svelte-app-html': svelteAppHtml,
 	'svelte-page-svelte': sveltePageSvelte,
@@ -643,6 +645,21 @@ export function generateGitignoreFile(templateEngine, context) {
 	};
 }
 
+export function generateVscodeSettingsFile(templateEngine, context) {
+	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
+	if (!hasPython) return null;
+
+	const content = templateEngine.generateFile('vscode-settings-json', {
+		...context,
+		projectName: context.projectName || context.name || 'my-project'
+	});
+
+	return {
+		filePath: '.vscode/settings.json',
+		content
+	};
+}
+
 export async function generateAllFiles(context) {
 	const templateEngine = new TemplateEngine();
 	await templateEngine.initialize();
@@ -656,7 +673,8 @@ export async function generateAllFiles(context) {
 
 	const otherFiles = [
 		generatePackageJson(templateEngine, context),
-		generateGitignoreFile(templateEngine, context)
+		generateGitignoreFile(templateEngine, context),
+		generateVscodeSettingsFile(templateEngine, context)
 	].filter(Boolean);
 
 	const allGeneratedFiles = [

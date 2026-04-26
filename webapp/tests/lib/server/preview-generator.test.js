@@ -16,7 +16,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 				if (templateId === 'gitignore') {
 					return `content for gitignore ${data.pythonIgnore || ''} ${data.javaIgnore || ''}`;
 				}
-				if (templateId.includes('json')) {
+				if (templateId.startsWith('devcontainer-') && templateId.endsWith('-json')) {
 					const features = { [`feature-${templateId}`]: {} };
 					const extensions = [`ext-${templateId}`];
 					return JSON.stringify({
@@ -24,6 +24,9 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 						features,
 						customizations: { vscode: { extensions } }
 					});
+				}
+				if (templateId === 'vscode-settings-json') {
+					return 'content for vscode-settings-json';
 				}
 				return `content for ${templateId}`;
 			});
@@ -219,6 +222,18 @@ describe('generatePreview', () => {
 		const gitignore = preview.files.find((f) => f.name === '.gitignore');
 		expect(gitignore).toBeDefined();
 		expect(gitignore.content).toContain('*.class');
+	});
+
+	it('generates .vscode/settings.json for python', async () => {
+		const projectConfig = { name: 'PythonProject' };
+		const preview = await generatePreview(projectConfig, ['devcontainer-python']);
+
+		const vscodeFolder = preview.files.find((f) => f.name === '.vscode' && f.type === 'folder');
+		expect(vscodeFolder).toBeDefined();
+
+		const settingsFile = vscodeFolder.children.find((f) => f.name === 'settings.json');
+		expect(settingsFile).toBeDefined();
+		expect(settingsFile.content).toBe('content for vscode-settings-json');
 	});
 
 	it('handles errors during preview generation', async () => {

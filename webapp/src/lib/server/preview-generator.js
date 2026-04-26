@@ -22,7 +22,8 @@ import {
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
-	DOPPLER_INSTALL_SCRIPT
+	DOPPLER_INSTALL_SCRIPT,
+	generateVscodeSettingsFile
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -540,6 +541,24 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 	};
 }
 
+function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabilities) {
+	const hasPython = allCapabilities.some((c) => c.startsWith('devcontainer-python'));
+	if (!hasPython) return null;
+
+	const content = templateEngine.generateFile('vscode-settings-json', {
+		...projectConfig,
+		projectName: projectConfig.name || 'my-project'
+	});
+
+	return {
+		path: '.vscode/settings.json',
+		name: 'settings.json',
+		content,
+		size: content.length,
+		type: 'file'
+	};
+}
+
 /**
  * Generates preview files for the project
  * @param {Object} projectConfig - Project configuration
@@ -589,6 +608,15 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		generateGitignoreFile(templateEngine, projectConfig, executionOrder),
 		generateReadmeFile(projectConfig, executionOrder)
 	);
+
+	const vscodeSettingsFile = generateVscodeSettingsPreview(
+		templateEngine,
+		projectConfig,
+		executionOrder
+	);
+	if (vscodeSettingsFile) {
+		files.push(vscodeSettingsFile);
+	}
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);
