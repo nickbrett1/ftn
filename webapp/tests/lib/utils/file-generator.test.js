@@ -322,6 +322,6 @@ describe('TemplateEngine', () => {
 
 	it('gemini-dev alias content should match expected constant', () => {
 		expect(GEMINI_DEV_ALIAS).toContain('gemini-dev()');
-		expect(GEMINI_DEV_ALIAS).toContain('doppler run --project webapp --config dev -- gemini "$@"');
+		expect(GEMINI_DEV_ALIAS).toContain('doppler run --project {{projectName}} --config dev -- gemini "$@"');
 	});
 });
