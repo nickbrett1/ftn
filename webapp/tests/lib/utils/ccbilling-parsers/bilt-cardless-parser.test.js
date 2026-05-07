@@ -116,6 +116,22 @@ Total payments and credits in this period -$1,076.47
 			});
 		});
 
+		it('should exclude PAYMENT with negative amounts in payments section', () => {
+			const text = `
+Payments and credits
+Date Description Amount
+Mar 7, 2026 PAYMENT -$20,505.78
+Mar 7, 2026 MERCHANDISE RETURN -$79.34
+Total payments and credits in this period -$20,585.12
+			`;
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(1);
+			expect(charges[0]).toMatchObject({
+				merchant: 'Merchandise Return',
+				amount: -79.34,
+			});
+		});
+
 		it('should extract from fees section', () => {
 			const text = `
 Fees

@@ -247,6 +247,9 @@ export class BiltCardlessParser extends BaseParser {
 						// Skip payments in the payments section, but keep refunds (negative amounts in credits)
 						if (inPayments && amount > 0) continue; // Positive in payments section is likely a payment
 
+						// Skip if this is a payment using shared base parser method
+						if (this.isPaymentToCard(description)) continue;
+
 						const charge = {
 							merchant: this.cleanMerchantName(description),
 							amount: amount, // Use raw amount (negative for credits)
@@ -274,5 +277,18 @@ export class BiltCardlessParser extends BaseParser {
 		}
 
 		return charges;
+	}
+
+	/**
+	 * Returns the keywords for identifying a payment to the card.
+	 * @returns {string[]}
+	 */
+	getPaymentKeywords() {
+		return [
+			'payment thank you',
+			'payment',
+			'online payment',
+			'payment received'
+		];
 	}
 }
