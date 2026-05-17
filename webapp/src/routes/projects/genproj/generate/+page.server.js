@@ -18,8 +18,8 @@ export async function load({ url, cookies, fetch }) {
 	if (config) {
 		try {
 			configuration = JSON.parse(atob(config));
-		} catch (e) {
-			logger.error('Error parsing configuration from URL', e);
+		} catch (error) {
+			logger.error('Error parsing configuration from URL', error);
 		}
 	}
 

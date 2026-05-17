@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ChaseParser } from '../../../../src/lib/utils/ccbilling-parsers/chase-parser.js';
-import { ParsingUtils } from '../../../../src/lib/utils/parsing-utils.js';
+import { ParsingUtils as ParsingUtilities } from '../../../../src/lib/utils/parsing-utils.js';
 
 describe('ChaseParser', () => {
 	let parser;
@@ -42,7 +42,7 @@ describe('ChaseParser', () => {
 			expect(parser.extractLast4Digits(text)).toBe('1234');
 		});
 
-        it('should extract last 4 digits from ending in pattern', () => {
+		it('should extract last 4 digits from ending in pattern', () => {
 			const text = 'Account ending in 1234';
 			expect(parser.extractLast4Digits(text)).toBe('1234');
 		});
@@ -57,7 +57,7 @@ describe('ChaseParser', () => {
 			expect(parser.extractLast4Digits(text)).toBe('9012');
 		});
 
-        it('should extract last 4 digits from asterisk pattern', () => {
+		it('should extract last 4 digits from asterisk pattern', () => {
 			const text = '**** 9012';
 			expect(parser.extractLast4Digits(text)).toBe('9012');
 		});
@@ -84,7 +84,7 @@ describe('ChaseParser', () => {
 			expect(parser.extractStatementDate(text)).toBe('2024-04-15');
 		});
 
-        it('should extract date from statement closing date pattern', () => {
+		it('should extract date from statement closing date pattern', () => {
 			const text = 'Statement Closing Date 04/15/24';
 			expect(parser.extractStatementDate(text)).toBe('2024-04-15');
 		});
@@ -230,7 +230,7 @@ describe('ChaseParser', () => {
 			expect(charges.some((c) => c.amount === 2.15)).toBe(false);
 		});
 
-        it('should handle dates with year correctly if present', () => {
+		it('should handle dates with year correctly if present', () => {
 			const text = `
 				01/15/24 AMAZON.COM 123.45
 			`;
@@ -246,8 +246,8 @@ describe('ChaseParser', () => {
 			expect(parser.isLikelyForeignTransaction('DSB DANISH KRONE')).toBe(true);
 			expect(parser.isLikelyForeignTransaction('EURO TRANSACTION')).toBe(true);
 			expect(parser.isLikelyForeignTransaction('POUND STERLING')).toBe(true);
-            expect(parser.isLikelyForeignTransaction('PESO')).toBe(true);
-            expect(parser.isLikelyForeignTransaction('DOLLAR')).toBe(true);
+			expect(parser.isLikelyForeignTransaction('PESO')).toBe(true);
+			expect(parser.isLikelyForeignTransaction('DOLLAR')).toBe(true);
 		});
 
 		it('should not identify regular transactions as foreign', () => {
@@ -262,7 +262,7 @@ describe('ChaseParser', () => {
 			expect(parser.isFlightTransaction('BRITISH AIRWAYS')).toBe(true);
 			expect(parser.isFlightTransaction('Some AIRPORT shop')).toBe(true);
 			expect(parser.isFlightTransaction('Expedia FLIGHT')).toBe(true);
-            expect(parser.isFlightTransaction('TICKET')).toBe(true);
+			expect(parser.isFlightTransaction('TICKET')).toBe(true);
 		});
 
 		it('should not identify regular transactions as flights', () => {
@@ -273,7 +273,11 @@ describe('ChaseParser', () => {
 
 	describe('extractFlightDetails', () => {
 		it('should extract flight details', () => {
-            const lines = ['01/15 UNITED AIRLINES 123.45', '123456 123456 X SFO JFK', '01/16 WALMART 67.89'];
+			const lines = [
+				'01/15 UNITED AIRLINES 123.45',
+				'123456 123456 X SFO JFK',
+				'01/16 WALMART 67.89'
+			];
 			const result = parser.extractFlightDetails(lines, 0);
 			expect(result).not.toBeNull();
 			expect(result.departure_airport).toBe('SFO');
@@ -282,7 +286,7 @@ describe('ChaseParser', () => {
 		});
 
 		it('should handle simple airport code patterns', () => {
-            const lines = ['01/15 UNITED AIRLINES 123.45', 'SFO JFK', '01/16 WALMART 67.89'];
+			const lines = ['01/15 UNITED AIRLINES 123.45', 'SFO JFK', '01/16 WALMART 67.89'];
 			const result = parser.extractFlightDetails(lines, 0);
 			expect(result).not.toBeNull();
 			expect(result.departure_airport).toBe('SFO');
@@ -290,13 +294,13 @@ describe('ChaseParser', () => {
 		});
 
 		it('should return null if no flight details found', () => {
-            const lines = ['01/15 AIRPORT SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
+			const lines = ['01/15 AIRPORT SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
 			const result = parser.extractFlightDetails(lines, 0);
 			expect(result).toBeNull();
 		});
 
-        it('should return null if no flight details found entirely', () => {
-            const lines = ['01/15 SOME SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
+		it('should return null if no flight details found entirely', () => {
+			const lines = ['01/15 SOME SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
 			const result = parser.extractFlightDetails(lines, 0);
 			expect(result).toBeNull();
 		});
@@ -342,13 +346,9 @@ describe('ChaseParser', () => {
 			).toBe(false);
 		});
 
-        it('should identify point keywords', () => {
+		it('should identify point keywords', () => {
 			expect(
-				parser.isLikelyShopWithPointsTransaction(
-					'AMAZON.COM',
-					'23.75',
-					'AMAZON.COM rewards 23.75'
-				)
+				parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '23.75', 'AMAZON.COM rewards 23.75')
 			).toBe(true);
 		});
 	});
@@ -377,26 +377,26 @@ describe('ChaseParser', () => {
 			expect(result.amount).toBe(-50);
 		});
 
-        it('should handle valid transaction but no amount', () => {
+		it('should handle valid transaction but no amount', () => {
 			const line = '01/15 REFUND XXX';
 			const result = parser.parseTransactionLine(line);
 			expect(result).toBeNull();
 		});
 
-        it('should handle currency line matches correctly', () => {
-            expect(parser.safeMatchCurrencyLine('SHOP WITH POINTS ACTIVITY')).toBe(false);
-            expect(parser.safeMatchCurrencyLine('A')).toBe(false);
-            expect(parser.safeMatchCurrencyLine('DANISH KRONE')).toBe(true);
-        });
+		it('should handle currency line matches correctly', () => {
+			expect(parser.safeMatchCurrencyLine('SHOP WITH POINTS ACTIVITY')).toBe(false);
+			expect(parser.safeMatchCurrencyLine('A')).toBe(false);
+			expect(parser.safeMatchCurrencyLine('DANISH KRONE')).toBe(true);
+		});
 
-        it('should extract exchange rates', () => {
-            const res = parser.safeMatchExchangeRate('15.50 X 6.45');
-            expect(res.amount1).toBe(15.5);
-            expect(res.amount2).toBe(6.45);
+		it('should extract exchange rates', () => {
+			const res = parser.safeMatchExchangeRate('15.50 X 6.45');
+			expect(res.amount1).toBe(15.5);
+			expect(res.amount2).toBe(6.45);
 
-            expect(parser.safeMatchExchangeRate('INVALID X TEXT')).toBeNull();
-            expect(parser.safeMatchExchangeRate('15.50 X ')).toBeNull();
-        });
+			expect(parser.safeMatchExchangeRate('INVALID X TEXT')).toBeNull();
+			expect(parser.safeMatchExchangeRate('15.50 X ')).toBeNull();
+		});
 	});
 
 	describe('parse', () => {
@@ -440,21 +440,21 @@ describe('ChaseParser', () => {
 
 	describe('inherited methods', () => {
 		it('should use ParsingUtils.parseDate', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseDate');
+			const spy = vi.spyOn(ParsingUtilities, 'parseDate');
 			parser.parseDate('01/15');
 			expect(spy).toHaveBeenCalledWith('01/15', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.parseAmount', () => {
-			const spy = vi.spyOn(ParsingUtils, 'parseAmount');
+			const spy = vi.spyOn(ParsingUtilities, 'parseAmount');
 			parser.parseAmount('$123.45');
 			expect(spy).toHaveBeenCalledWith('$123.45', {});
 			spy.mockRestore();
 		});
 
 		it('should use ParsingUtils.validateParsedData', () => {
-			const spy = vi.spyOn(ParsingUtils, 'validateParsedData');
+			const spy = vi.spyOn(ParsingUtilities, 'validateParsedData');
 			const data = { last4: '1234', statement_date: '2024-01-15', charges: [] };
 			parser.validateParsedData(data);
 			expect(spy).toHaveBeenCalledWith(data, ['last4', 'statement_date', 'charges'], {});

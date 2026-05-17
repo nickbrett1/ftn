@@ -281,13 +281,13 @@
 
 	// Load capabilities on mount (only if not provided by server)
 	onMount(async () => {
-		const urlParams = new URLSearchParams(window.location.search);
-		const configParam = urlParams.get('config');
-		if (configParam) {
+		const urlParameters = new URLSearchParams(globalThis.location.search);
+		const configParameter = urlParameters.get('config');
+		if (configParameter) {
 			try {
-				configuration = JSON.parse(atob(configParam));
-			} catch (e) {
-				logger.error('Error parsing configuration from URL', e);
+				configuration = JSON.parse(atob(configParameter));
+			} catch (error) {
+				logger.error('Error parsing configuration from URL', error);
 			}
 		}
 

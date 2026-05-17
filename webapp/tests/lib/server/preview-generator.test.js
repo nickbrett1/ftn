@@ -209,8 +209,8 @@ describe('generatePreview', () => {
 		expect(svelteConfig).toBeDefined();
 
 		const packageJson = preview.files.find((f) => f.name === 'package.json');
-		const pkg = JSON.parse(packageJson.content);
-		expect(pkg.devDependencies).toContain('@sveltejs/kit');
+		const package_ = JSON.parse(packageJson.content);
+		expect(package_.devDependencies).toContain('@sveltejs/kit');
 	});
 
 	it('generates gemini-dev alias with correct project name in .zshrc', async () => {
@@ -277,13 +277,13 @@ describe('organizeFilesIntoFolders', () => {
 		const tree = organizeFilesIntoFolders(files);
 		expect(tree).toHaveLength(2); // README.md and src folder
 
-		const srcFolder = tree.find((f) => f.name === 'src');
-		expect(srcFolder.type).toBe('folder');
-		expect(srcFolder.children).toHaveLength(2); // main.js and utils folder
+		const sourceFolder = tree.find((f) => f.name === 'src');
+		expect(sourceFolder.type).toBe('folder');
+		expect(sourceFolder.children).toHaveLength(2); // main.js and utils folder
 
-		const utilsFolder = srcFolder.children.find((f) => f.name === 'utils');
-		expect(utilsFolder.type).toBe('folder');
-		expect(utilsFolder.children).toHaveLength(1);
-		expect(utilsFolder.children[0].name).toBe('helper.js');
+		const utilitiesFolder = sourceFolder.children.find((f) => f.name === 'utils');
+		expect(utilitiesFolder.type).toBe('folder');
+		expect(utilitiesFolder.children).toHaveLength(1);
+		expect(utilitiesFolder.children[0].name).toBe('helper.js');
 	});
 });

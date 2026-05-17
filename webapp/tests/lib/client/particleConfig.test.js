@@ -65,12 +65,12 @@ describe('ParticleConfig', () => {
 
 			// Check positive percentages (green)
 			const positiveText = config.particles.shape.options.text[0];
-			expect(positiveText.particles.color).toBe('#00FF9E');
+			expect(positiveText.particles.color).toEqual({ value: '#00FF9E' });
 			expect(positiveText.value).toHaveLength(50);
 
 			// Check negative percentages (red)
 			const negativeText = config.particles.shape.options.text[1];
-			expect(negativeText.particles.color).toBe('#FF0061');
+			expect(negativeText.particles.color).toEqual({ value: '#FF0061' });
 			expect(negativeText.value).toHaveLength(50);
 		});
 
@@ -105,12 +105,12 @@ describe('ParticleConfig', () => {
 
 			// Check 404 text (green)
 			const error404Text = config.particles.shape.options.text[0];
-			expect(error404Text.particles.color).toBe('#22c55e');
+			expect(error404Text.particles.color).toEqual({ value: '#22c55e' });
 			expect(error404Text.value).toEqual(['404', '404', '404']);
 
 			// Check ERROR text (red)
 			const errorText = config.particles.shape.options.text[1];
-			expect(errorText.particles.color).toBe('#FF0061');
+			expect(errorText.particles.color).toEqual({ value: '#FF0061' });
 			expect(errorText.value).toEqual(['ERROR', 'ERROR']);
 		});
 
@@ -121,7 +121,7 @@ describe('ParticleConfig', () => {
 
 		it('should have correct link properties', () => {
 			const config = createErrorParticleConfig();
-			expect(config.particles.links.color).toBe('#22c55e');
+			expect(config.particles.links.color).toEqual({ value: '#22c55e' });
 			expect(config.particles.links.distance).toBe(150);
 			expect(config.particles.links.opacity).toBe(0.3);
 		});
@@ -152,12 +152,12 @@ describe('ParticleConfig', () => {
 
 			// Check AUTH text (green)
 			const authText = config.particles.shape.options.text[0];
-			expect(authText.particles.color).toBe('#22c55e');
+			expect(authText.particles.color).toEqual({ value: '#22c55e' });
 			expect(authText.value).toEqual(['AUTH', 'AUTH', 'AUTH']);
 
 			// Check LOGIN text (yellow/amber)
 			const loginText = config.particles.shape.options.text[1];
-			expect(loginText.particles.color).toBe('#fbbf24');
+			expect(loginText.particles.color).toEqual({ value: '#fbbf24' });
 			expect(loginText.value).toEqual(['LOGIN', 'LOGIN']);
 		});
 
@@ -168,7 +168,7 @@ describe('ParticleConfig', () => {
 
 		it('should have correct link properties', () => {
 			const config = createAuthParticleConfig();
-			expect(config.particles.links.color).toBe('#22c55e');
+			expect(config.particles.links.color).toEqual({ value: '#22c55e' });
 			expect(config.particles.links.distance).toBe(150);
 			expect(config.particles.links.opacity).toBe(0.3);
 		});

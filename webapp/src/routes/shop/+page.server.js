@@ -33,8 +33,8 @@ export const actions = {
 
 		const stripe = new Stripe(stripeSecretKey);
 
-		const imageSrc = typeof product.image === 'object' ? product.image.img?.src : product.image;
-		const imageUrl = imageSrc ? new URL(imageSrc, url.origin).href : undefined;
+		const imageSource = typeof product.image === 'object' ? product.image.img?.src : product.image;
+		const imageUrl = imageSource ? new URL(imageSource, url.origin).href : undefined;
 
 		let session;
 		try {
@@ -59,8 +59,8 @@ export const actions = {
 				success_url: `${url.origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: `${url.origin}/shop/cancel`
 			});
-		} catch (err) {
-			console.error('Stripe error:', err);
+		} catch (error_) {
+			console.error('Stripe error:', error_);
 			return {
 				success: false,
 				error: 'Failed to create checkout session. Please try again.'
