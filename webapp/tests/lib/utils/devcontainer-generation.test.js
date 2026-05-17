@@ -33,9 +33,9 @@ describe('DevContainer Generation Tests', () => {
 		expect(javaFeature.version).toBe('21');
 
 		// Check for correct user in features
-		expect(devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username).toBe(
-			'vscode'
-		);
+		expect(
+			devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username
+		).toBe('vscode');
 
 		// Check Dockerfile user
 		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
@@ -74,9 +74,9 @@ describe('DevContainer Generation Tests', () => {
 		expect(pythonFeature.version).toBe('3.12');
 
 		// Check for correct user in features
-		expect(devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username).toBe(
-			'vscode'
-		);
+		expect(
+			devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username
+		).toBe('vscode');
 
 		// Check Dockerfile user
 		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');

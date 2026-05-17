@@ -226,7 +226,13 @@ Provide a concise plain-text summary including:
 		const debug =
 			event.url?.searchParams?.get('debug') === '1' ? { reason: 'empty-text' } : undefined;
 		return json(
-			{ error: 'Empty response from model', merchant: merchantName, merchantDetails, fullStatementText, debug },
+			{
+				error: 'Empty response from model',
+				merchant: merchantName,
+				merchantDetails,
+				fullStatementText,
+				debug
+			},
 			{ status: 502 }
 		);
 	}

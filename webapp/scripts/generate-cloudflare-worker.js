@@ -9,4 +9,3 @@ const dir = path.dirname(workerPath);
 console.log('Ensuring placeholder _worker.js for Cloudflare Vite plugin...');
 fs.mkdirSync(dir, { recursive: true });
 fs.writeFileSync(workerPath, 'export default { fetch: () => new Response("Placeholder") };');
-

@@ -32,7 +32,7 @@ describe('products.js', () => {
 	});
 
 	it('checks a specific product details', () => {
-		const bearKit = products.find(p => p.id === 'bear-kit');
+		const bearKit = products.find((p) => p.id === 'bear-kit');
 		expect(bearKit).toBeDefined();
 		expect(bearKit.name).toBe('Bear Market Survival Kit');
 		expect(bearKit.price).toBe(4999);

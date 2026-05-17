@@ -52,7 +52,9 @@ export const PDFUtils = {
 			} catch (e) {
 				// We attach the buffer size context to aid debugging. If this fails on every page,
 				// it usually means the PDF stream itself is corrupted or missing vital components.
-				throw new Error(`Failed to extract text from page ${pageNumber}/${pdfDocument.numPages}. The PDF structure may be corrupted. Inner error: ${e.message}`);
+				throw new Error(
+					`Failed to extract text from page ${pageNumber}/${pdfDocument.numPages}. The PDF structure may be corrupted. Inner error: ${e.message}`
+				);
 			}
 
 			// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
@@ -164,10 +166,7 @@ export const PDFUtils = {
 		} else if (pdfFile instanceof ArrayBuffer) {
 			return pdfFile;
 		} else if (globalThis.Buffer && Buffer.isBuffer(pdfFile)) {
-			return pdfFile.buffer.slice(
-				pdfFile.byteOffset,
-				pdfFile.byteOffset + pdfFile.byteLength
-			);
+			return pdfFile.buffer.slice(pdfFile.byteOffset, pdfFile.byteOffset + pdfFile.byteLength);
 		} else {
 			throw new TypeError('Invalid PDF file format');
 		}
@@ -206,7 +205,9 @@ export const PDFUtils = {
 			try {
 				await pdf.getMetadata();
 			} catch (e) {
-				throw new Error(`PDF validation failed: The document appears to be corrupted or uses unsupported features. Details: ${e.message}`);
+				throw new Error(
+					`PDF validation failed: The document appears to be corrupted or uses unsupported features. Details: ${e.message}`
+				);
 			}
 
 			// Extract text from all pages

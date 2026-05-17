@@ -73,7 +73,9 @@ describe('shop/+page.server.js', () => {
 
 		it('throws 404 error if product is not found', async () => {
 			const request = mockRequest('non-existent-id');
-			await expect(actions.checkout({ request, url: mockUrl })).rejects.toThrow('Product not found');
+			await expect(actions.checkout({ request, url: mockUrl })).rejects.toThrow(
+				'Product not found'
+			);
 			expect(kit.error).toHaveBeenCalledWith(404, 'Product not found');
 		});
 

@@ -57,7 +57,7 @@ export const actions = {
 				],
 				mode: 'payment',
 				success_url: `${url.origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-				cancel_url: `${url.origin}/shop/cancel`,
+				cancel_url: `${url.origin}/shop/cancel`
 			});
 		} catch (err) {
 			console.error('Stripe error:', err);

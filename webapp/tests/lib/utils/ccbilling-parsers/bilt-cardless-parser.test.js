@@ -128,7 +128,7 @@ Total payments and credits in this period -$20,585.12
 			expect(charges).toHaveLength(1);
 			expect(charges[0]).toMatchObject({
 				merchant: 'Merchandise Return',
-				amount: -79.34,
+				amount: -79.34
 			});
 		});
 

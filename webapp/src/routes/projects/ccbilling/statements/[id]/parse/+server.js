@@ -258,7 +258,10 @@ function identifyCreditCardFromParsedData(last4, cardName, availableCreditCards)
 			if (normalizedDbName === normalizedSearchName) return true;
 
 			// Substring match - either the DB card name contains the statement card name or vice versa
-			if (dbCardName.includes(cardName.toLowerCase()) || cardName.toLowerCase().includes(dbCardName))
+			if (
+				dbCardName.includes(cardName.toLowerCase()) ||
+				cardName.toLowerCase().includes(dbCardName)
+			)
 				return true;
 
 			// Special case for Bilt

@@ -518,7 +518,7 @@ export class ChaseParser extends BaseParser {
 				'ALASKA',
 				'BRITISH AIRWAYS'
 			];
-			const foundAirline = airlines.find(airline => merchant.toUpperCase().includes(airline));
+			const foundAirline = airlines.find((airline) => merchant.toUpperCase().includes(airline));
 			if (foundAirline) {
 				return foundAirline;
 			}

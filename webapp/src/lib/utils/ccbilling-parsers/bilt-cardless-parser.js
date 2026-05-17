@@ -89,11 +89,7 @@ export class BiltCardlessParser extends BaseParser {
 	 * @returns {RegExp[]}
 	 */
 	getLast4DigitsPatterns() {
-		return [
-			/Account Number:?\s*(\d{4})/i,
-			/Ending in\s*(\d{4})/i,
-			/Account #\s*(\d{4})/i
-		];
+		return [/Account Number:?\s*(\d{4})/i, /Ending in\s*(\d{4})/i, /Account #\s*(\d{4})/i];
 	}
 
 	/**
@@ -284,11 +280,6 @@ export class BiltCardlessParser extends BaseParser {
 	 * @returns {string[]}
 	 */
 	getPaymentKeywords() {
-		return [
-			'payment thank you',
-			'payment',
-			'online payment',
-			'payment received'
-		];
+		return ['payment thank you', 'payment', 'online payment', 'payment received'];
 	}
 }
