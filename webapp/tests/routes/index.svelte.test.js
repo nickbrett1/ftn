@@ -3,9 +3,11 @@ import ResizeObserver from 'resize-observer-polyfill';
 import { mount, unmount, flushSync } from 'svelte';
 import App from '../../src/routes/+page.svelte';
 
+vi.mock('@tsparticles/engine');
+
 describe.skip('App', () => {
 	vi.stubGlobal('ResizeObserver', ResizeObserver);
-	vi.mock('@tsparticles/engine');
+
 
 	// Needed per https://github.com/testing-library/svelte-testing-library/issues/284
 	Element.prototype.animate = () => ({ cancel: vi.fn(), finished: Promise.resolve() });
