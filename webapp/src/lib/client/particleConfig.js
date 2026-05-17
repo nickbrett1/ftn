@@ -134,7 +134,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, true), // Positive percentages
 							weight: '400',
 							particles: {
-								color: '#00FF9E', // Green for positive
+								color: { value: '#00FF9E' }, // Green for positive
 								size: { value: 8 }
 							}
 						},
@@ -144,7 +144,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, false), // Negative percentages
 							weight: '400',
 							particles: {
-								color: '#FF0061', // Red for negative
+								color: { value: '#FF0061' }, // Red for negative
 								size: { value: 8 }
 							}
 						}
@@ -173,7 +173,7 @@ function createTextParticleConfig(textConfig, overrides = {}) {
 		particles: {
 			...baseConfig.particles,
 			links: {
-				color: '#22c55e',
+				color: { value: '#22c55e' },
 				distance: 150,
 				enable: true,
 				opacity: 0.3,
@@ -216,7 +216,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['404', '404', '404'],
 			weight: '400',
 			particles: {
-				color: '#22c55e', // Green
+				color: { value: '#22c55e' }, // Green
 				size: { value: 12 }
 			}
 		},
@@ -226,7 +226,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['ERROR', 'ERROR'],
 			weight: '400',
 			particles: {
-				color: '#FF0061', // Red
+				color: { value: '#FF0061' }, // Red
 				size: { value: 12 }
 			}
 		}
@@ -249,7 +249,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['AUTH', 'AUTH', 'AUTH'],
 			weight: '400',
 			particles: {
-				color: '#22c55e', // Green
+				color: { value: '#22c55e' }, // Green
 				size: { value: 12 }
 			}
 		},
@@ -259,7 +259,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['LOGIN', 'LOGIN'],
 			weight: '400',
 			particles: {
-				color: '#fbbf24', // Yellow/amber
+				color: { value: '#fbbf24' }, // Yellow/amber
 				size: { value: 12 }
 			}
 		}
