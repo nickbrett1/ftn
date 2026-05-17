@@ -97,7 +97,7 @@
 		"@threlte/extras": "^9.18.0",
 		"@tsparticles/engine": "^3.8.1",
 		"@tsparticles/interaction-external-trail": "3.9",
-		"@tsparticles/shape-text": "^3.9.1",
+		"@tsparticles/shape-text": "^4.0.2",
 		"@tsparticles/slim": "^3.8.1",
 		"apexcharts": "^5.12.0",
 		"arctic": "^3.7.0",
