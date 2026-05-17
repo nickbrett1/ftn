@@ -157,6 +157,18 @@ describe('parsePDFFile', () => {
 		expect(text).toBe('Parsed');
 	});
 
+	it('should parse a Blob properly', async () => {
+		const blob = new Blob(['dummy'], { type: 'application/pdf' });
+		const text = await PDFUtils.parsePDFFile(blob);
+		expect(text).toBe('Parsed');
+	});
+
+	it('should parse a Buffer properly', async () => {
+		const buffer = Buffer.from('dummy');
+		const text = await PDFUtils.parsePDFFile(buffer);
+		expect(text).toBe('Parsed');
+	});
+
 	it('should throw if invalid file type passed', async () => {
 		await expect(PDFUtils.parsePDFFile({})).rejects.toThrow('Invalid PDF file format');
 	});

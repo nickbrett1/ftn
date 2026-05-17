@@ -278,3 +278,9 @@ describe('Date Utils', () => {
 		});
 	});
 });
+
+	describe('formatTime', () => {
+		it('should handle pure date inputs YYYY-MM-DD gracefully', () => {
+			expect(formatTime('2023-01-15')).toBe('');
+		});
+	});
