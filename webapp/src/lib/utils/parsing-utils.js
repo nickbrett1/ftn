@@ -1,9 +1,44 @@
 const streetSuffixes = [
-	'AVE', 'AVENUE', 'ST', 'STREET', 'RD', 'ROAD', 'BLVD', 'BOULEVARD',
-	'DR', 'DRIVE', 'LN', 'LANE', 'WAY', 'CT', 'COURT', 'CIR', 'CIRCLE',
-	'HWY', 'HIGHWAY', 'PKWY', 'PARKWAY', 'SQ', 'SQUARE', 'BRIDGE',
-	'BROADWAY', 'RUE', 'RTE', 'ROUTE', 'PL', 'PLACE', 'TER', 'TERRACE',
-	'PIKE', 'TRL', 'TRAIL', 'PKY', 'FREEWAY', 'FWY', 'EXPY', 'EXPRESSWAY'
+	'AVE',
+	'AVENUE',
+	'ST',
+	'STREET',
+	'RD',
+	'ROAD',
+	'BLVD',
+	'BOULEVARD',
+	'DR',
+	'DRIVE',
+	'LN',
+	'LANE',
+	'WAY',
+	'CT',
+	'COURT',
+	'CIR',
+	'CIRCLE',
+	'HWY',
+	'HIGHWAY',
+	'PKWY',
+	'PARKWAY',
+	'SQ',
+	'SQUARE',
+	'BRIDGE',
+	'BROADWAY',
+	'RUE',
+	'RTE',
+	'ROUTE',
+	'PL',
+	'PLACE',
+	'TER',
+	'TERRACE',
+	'PIKE',
+	'TRL',
+	'TRAIL',
+	'PKY',
+	'FREEWAY',
+	'FWY',
+	'EXPY',
+	'EXPRESSWAY'
 ];
 
 const suffixRegexStr = `(?:${streetSuffixes.join('|')})`;
@@ -331,7 +366,12 @@ export const ParsingUtils = {
 	 * @returns {string} - Cleaned merchant name
 	 */
 	cleanMerchantName(merchantName, options = {}) {
-		const { removeCommonSuffixes = true, normalizeCase = true, removeAddress = true, removePhoneNumber = true } = options;
+		const {
+			removeCommonSuffixes = true,
+			normalizeCase = true,
+			removeAddress = true,
+			removePhoneNumber = true
+		} = options;
 
 		if (!merchantName || typeof merchantName !== 'string') {
 			return '';
@@ -341,7 +381,10 @@ export const ParsingUtils = {
 
 		// Remove phone numbers like "866-283-7374"
 		if (removePhoneNumber) {
-			cleaned = cleaned.replaceAll(/\b\d{3}-\d{3}-\d{4}\b/g, '').replaceAll(/\s+/g, ' ').trim();
+			cleaned = cleaned
+				.replaceAll(/\b\d{3}-\d{3}-\d{4}\b/g, '')
+				.replaceAll(/\s+/g, ' ')
+				.trim();
 		}
 
 		if (removeAddress) {

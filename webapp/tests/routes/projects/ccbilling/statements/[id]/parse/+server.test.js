@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET, POST } from '../../../../../../../src/routes/projects/ccbilling/statements/[id]/parse/+server.js';
+import {
+	GET,
+	POST
+} from '../../../../../../../src/routes/projects/ccbilling/statements/[id]/parse/+server.js';
 import * as db from '../../../../../../../src/lib/server/ccbilling-db.js';
 
 // Mock RouteUtils so we can test the handlers directly
@@ -129,9 +132,7 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 				last4: '1234',
 				card_name: '',
 				statement_date: '2023-01-31',
-				charges: [
-					{ merchant: 'Test Merchant', amount: 10.5, date: '01/15' }
-				]
+				charges: [{ merchant: 'Test Merchant', amount: 10.5, date: '01/15' }]
 			};
 
 			const result = await POST(mockEvent(1, parsedData));
@@ -191,7 +192,7 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 				last4: '1234',
 				charges: [
 					{ merchant: 'Dec Merchant', amount: 10, date: '12/20' }, // Previous year
-					{ merchant: 'Jan Merchant', amount: 20, date: '01/05' }  // Current year
+					{ merchant: 'Jan Merchant', amount: 20, date: '01/05' } // Current year
 				]
 			};
 

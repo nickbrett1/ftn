@@ -243,13 +243,21 @@ describe('ParsingUtils', () => {
 
 	describe('cleanMerchantName', () => {
 		it('should remove phone numbers', () => {
-			expect(ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374')).toBe('Fdh*Fresh Direct');
+			expect(ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374')).toBe(
+				'Fdh*Fresh Direct'
+			);
 			expect(ParsingUtilities.cleanMerchantName('KINDLE 888-802-3080')).toBe('Kindle');
-			expect(ParsingUtilities.cleanMerchantName('SOME STORE 123-456-7890 NY')).toBe('Some Store Ny');
+			expect(ParsingUtilities.cleanMerchantName('SOME STORE 123-456-7890 NY')).toBe(
+				'Some Store Ny'
+			);
 		});
 
 		it('should allow disabling phone number removal', () => {
-			expect(ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374', { removePhoneNumber: false })).toBe('Fdh*Fresh Direct 866-283-7374');
+			expect(
+				ParsingUtilities.cleanMerchantName('FDH*FRESH DIRECT 866-283-7374', {
+					removePhoneNumber: false
+				})
+			).toBe('Fdh*Fresh Direct 866-283-7374');
 		});
 
 		it('should remove common suffixes', () => {
@@ -266,10 +274,18 @@ describe('ParsingUtils', () => {
 		it('should strip trailing addresses', () => {
 			expect(ParsingUtilities.cleanMerchantName('CHOPT 800 Westchester Avenue')).toBe('Chopt');
 			expect(ParsingUtilities.cleanMerchantName('MINT MOBILE 1550 SCENIC AVE')).toBe('Mint Mobile');
-			expect(ParsingUtilities.cleanMerchantName('PlaystationNetwork 2207 Bridge')).toBe('Playstationnetwork');
-			expect(ParsingUtilities.cleanMerchantName('MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004')).toBe('Mta*Nyct Paygo');
-			expect(ParsingUtilities.cleanMerchantName('APC Paris 39 rue Madame Paris 75006 FRAFRA')).toBe('Apc Paris');
-			expect(ParsingUtilities.cleanMerchantName('DOORDASH*CHIPOTLE 123 FAST ROAD')).toBe('Doordash*Chipotle');
+			expect(ParsingUtilities.cleanMerchantName('PlaystationNetwork 2207 Bridge')).toBe(
+				'Playstationnetwork'
+			);
+			expect(ParsingUtilities.cleanMerchantName('MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004')).toBe(
+				'Mta*Nyct Paygo'
+			);
+			expect(ParsingUtilities.cleanMerchantName('APC Paris 39 rue Madame Paris 75006 FRAFRA')).toBe(
+				'Apc Paris'
+			);
+			expect(ParsingUtilities.cleanMerchantName('DOORDASH*CHIPOTLE 123 FAST ROAD')).toBe(
+				'Doordash*Chipotle'
+			);
 			expect(ParsingUtilities.cleanMerchantName('Catch 22 Restaurant')).toBe('Catch 22 Restaurant'); // Shouldn't match
 			expect(ParsingUtilities.cleanMerchantName('Bar 44 New York')).toBe('Bar 44 New York'); // Shouldn't match
 		});
@@ -317,11 +333,15 @@ describe('ParsingUtils', () => {
 	describe('ParsingUtils - appended coverage', () => {
 		it('parseJSONResponse handles cleanMarkdown=false', () => {
 			const json = '{"key": "value"}';
-			expect(ParsingUtilities.parseJSONResponse(json, { cleanMarkdown: false })).toEqual({ key: 'value' });
+			expect(ParsingUtilities.parseJSONResponse(json, { cleanMarkdown: false })).toEqual({
+				key: 'value'
+			});
 		});
 
 		it('validateParsedData throws exact error in strict mode', () => {
-			expect(() => ParsingUtilities.validateParsedData({ a: 1 }, ['b'], { strict: true })).toThrow('Missing required field: b');
+			expect(() => ParsingUtilities.validateParsedData({ a: 1 }, ['b'], { strict: true })).toThrow(
+				'Missing required field: b'
+			);
 		});
 
 		it('parseAmount parses negative amount with parens correctly and fallback', () => {

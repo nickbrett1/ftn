@@ -199,7 +199,7 @@ export const products = [
 	{
 		id: 'invisible-cloak',
 		name: 'Invisible Cloak (Clearance)',
-		description: 'You literally cannot see it. That\'s the point.',
+		description: "You literally cannot see it. That's the point.",
 		price: 99900,
 		currency: 'usd',
 		category: 'Imaginary',

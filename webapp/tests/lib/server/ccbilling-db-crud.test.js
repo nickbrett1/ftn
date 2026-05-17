@@ -391,12 +391,17 @@ describe('ccbilling-db.js', () => {
 		});
 
 		it('getPaymentsForStatement should fetch payments for a statement', async () => {
-			const mockPayments = [{ id: 1, amount: 50 }, { id: 2, amount: 100 }];
+			const mockPayments = [
+				{ id: 1, amount: 50 },
+				{ id: 2, amount: 100 }
+			];
 			mockDatabase.all.mockResolvedValue({ results: mockPayments });
 
 			const result = await db.getPaymentsForStatement(mockEvent, 1);
 
-			expect(mockDatabase.prepare).toHaveBeenCalledWith('SELECT * FROM payment WHERE statement_id = ? ORDER BY transaction_date ASC');
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(
+				'SELECT * FROM payment WHERE statement_id = ? ORDER BY transaction_date ASC'
+			);
 			expect(mockDatabase.bind).toHaveBeenCalledWith(1);
 			expect(mockDatabase.all).toHaveBeenCalled();
 			expect(result).toEqual(mockPayments);
@@ -416,9 +421,7 @@ describe('ccbilling-db.js', () => {
 
 			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
 
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(
-				expect.stringContaining('UPDATE payment')
-			);
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('UPDATE payment'));
 			expect(mockDatabase.bind).toHaveBeenCalledWith(
 				'New Merch',
 				'new merch',
@@ -446,18 +449,8 @@ describe('ccbilling-db.js', () => {
 
 			const result = await db.updatePaymentMerchantFields(mockEvent, 10, fields);
 
-			expect(mockDatabase.prepare).toHaveBeenCalledWith(
-				expect.stringContaining('UPDATE payment')
-			);
-			expect(mockDatabase.bind).toHaveBeenCalledWith(
-				'New Merch',
-				null,
-				0,
-				null,
-				null,
-				null,
-				10
-			);
+			expect(mockDatabase.prepare).toHaveBeenCalledWith(expect.stringContaining('UPDATE payment'));
+			expect(mockDatabase.bind).toHaveBeenCalledWith('New Merch', null, 0, null, null, null, 10);
 			expect(mockDatabase.run).toHaveBeenCalled();
 			expect(result).toBe(true);
 		});

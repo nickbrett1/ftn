@@ -40,10 +40,8 @@ export function formatDate(dateInput, options = {}) {
 
 	// Special handling for YYYY-MM-DD to avoid UTC shift
 	const parts = parseISODateParts(dateInput);
-	const date = parts
-		? new Date(parts.year, parts.month, parts.day)
-		: new Date(dateInput);
-		
+	const date = parts ? new Date(parts.year, parts.month, parts.day) : new Date(dateInput);
+
 	if (Number.isNaN(date.getTime())) return '';
 
 	if (includeTime && !parts) {
@@ -110,9 +108,7 @@ export function formatMediumDate(dateInput) {
 
 	// Special handling for YYYY-MM-DD to avoid UTC shift
 	const parts = parseISODateParts(dateInput);
-	const date = parts
-		? new Date(parts.year, parts.month, parts.day)
-		: new Date(dateInput);
+	const date = parts ? new Date(parts.year, parts.month, parts.day) : new Date(dateInput);
 
 	if (Number.isNaN(date.getTime())) return '';
 
@@ -160,9 +156,7 @@ export function formatRelativeTime(dateInput) {
 	if (!dateInput) return '';
 
 	const parts = parseISODateParts(dateInput);
-	const date = parts
-		? new Date(parts.year, parts.month, parts.day)
-		: new Date(dateInput);
+	const date = parts ? new Date(parts.year, parts.month, parts.day) : new Date(dateInput);
 
 	if (Number.isNaN(date.getTime())) return '';
 
@@ -191,9 +185,7 @@ export function isToday(dateInput) {
 	if (!dateInput) return false;
 
 	const parts = parseISODateParts(dateInput);
-	const date = parts
-		? new Date(parts.year, parts.month, parts.day)
-		: new Date(dateInput);
+	const date = parts ? new Date(parts.year, parts.month, parts.day) : new Date(dateInput);
 
 	if (Number.isNaN(date.getTime())) return false;
 
@@ -214,9 +206,7 @@ export function isYesterday(dateInput) {
 	if (!dateInput) return false;
 
 	const parts = parseISODateParts(dateInput);
-	const date = parts
-		? new Date(parts.year, parts.month, parts.day)
-		: new Date(dateInput);
+	const date = parts ? new Date(parts.year, parts.month, parts.day) : new Date(dateInput);
 
 	if (Number.isNaN(date.getTime())) return false;
 

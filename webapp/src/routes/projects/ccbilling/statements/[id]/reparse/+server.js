@@ -1,6 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { RouteUtils } from '$lib/server/route-utils.js';
-import { getStatement, getPaymentsForStatement, updatePaymentMerchantFields } from '$lib/server/ccbilling-db.js';
+import {
+	getStatement,
+	getPaymentsForStatement,
+	updatePaymentMerchantFields
+} from '$lib/server/ccbilling-db.js';
 
 export const PATCH = RouteUtils.createRouteHandler(
 	async (event, parsedBody) => {
@@ -77,7 +81,8 @@ export const PATCH = RouteUtils.createRouteHandler(
 			return json(
 				{
 					success: false,
-					error: 'Structural changes detected: Could not match parsed charges to existing database records by amount. Please delete and re-upload the statement to apply these changes.',
+					error:
+						'Structural changes detected: Could not match parsed charges to existing database records by amount. Please delete and re-upload the statement to apply these changes.',
 					details: {
 						missing_charges: missingCharges.map((c) => ({
 							merchant: c.merchant,
@@ -132,9 +137,10 @@ export const PATCH = RouteUtils.createRouteHandler(
 
 		return json({
 			success: true,
-			message: updateCount > 0
-				? `Reparsed successfully. Updated ${updateCount} merchant name(s).`
-				: 'Reparsed successfully, but no merchant names were changed.',
+			message:
+				updateCount > 0
+					? `Reparsed successfully. Updated ${updateCount} merchant name(s).`
+					: 'Reparsed successfully, but no merchant names were changed.',
 			changes: changes,
 			updateCount: updateCount
 		});

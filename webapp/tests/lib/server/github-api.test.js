@@ -195,7 +195,9 @@ describe('GitHubAPIService', () => {
 		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(
 			new Error('name already exists on this account')
 		);
-		await expect(service.createRepository('repo', 'desc')).rejects.toThrow('Repository already exists');
+		await expect(service.createRepository('repo', 'desc')).rejects.toThrow(
+			'Repository already exists'
+		);
 
 		vi.spyOn(service, 'makeRequest').mockRejectedValueOnce(new Error('Other error'));
 		await expect(service.createRepository('repo', 'desc')).rejects.toThrow('Other error');
