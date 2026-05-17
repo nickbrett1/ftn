@@ -61,6 +61,7 @@
 		"eslint-plugin-sonarjs": "^4.0.3",
 		"eslint-plugin-svelte": "^3.17.1",
 		"eslint-plugin-unicorn": "^64.0.0",
+		"fs-extra": "^11.3.5",
 		"highlight.js": "^11.11.1",
 		"jsdom": "^29.1.1",
 		"kolorist": "^1.8.0",
@@ -96,10 +97,10 @@
 		"@stripe/stripe-js": "^9.5.0",
 		"@threlte/core": "^8.5.14",
 		"@threlte/extras": "^9.18.0",
-		"@tsparticles/engine": "^3.8.1",
-		"@tsparticles/interaction-external-trail": "3.9",
-		"@tsparticles/shape-text": "^3.9.1",
-		"@tsparticles/slim": "^3.8.1",
+		"@tsparticles/engine": "^4.0.2",
+		"@tsparticles/interaction-external-trail": "^4.0.2",
+		"@tsparticles/shape-text": "^4.0.2",
+		"@tsparticles/slim": "^4.0.2",
 		"apexcharts": "^5.12.0",
 		"arctic": "^3.7.0",
 		"cookie": "^1.1.1",
@@ -114,6 +115,6 @@
 		"stripe": "^22.1.1",
 		"three": "^0.184.0",
 		"tippy.js": "^6.3.7",
-		"tsparticles": "^3.9.1"
+		"tsparticles": "^4.0.2"
 	}
 }

@@ -1,14 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PDFUtils } from '../../../src/lib/client/pdf-utils.js';
 
 // Mock the environment to appear as a browser
 globalThis.window = {};
 
 describe('PDFUtils', () => {
-	beforeEach(() => {
-		vi.resetModules();
-	});
-
 	describe('extractTextFromPDF', () => {
 		it('should handle normal text items', async () => {
 			const mockPdf = {
@@ -96,6 +92,11 @@ describe('PDFUtils', () => {
 			expect(PDFUtils.validatePDFFile(buffer)).toBe(true);
 		});
 
+		it('should handle Buffer successfully', () => {
+			const buffer = Buffer.alloc(100);
+			expect(PDFUtils.validatePDFFile(buffer)).toBe(true);
+		});
+
 		it('should handle File successfully', () => {
 			const file = new File(['dummy'], 'test.pdf', { type: 'application/pdf' });
 			expect(PDFUtils.validatePDFFile(file)).toBe(true);
@@ -131,24 +132,28 @@ describe('PDFUtils', () => {
 });
 
 describe('parsePDFFile', () => {
-	beforeEach(() => {
-		vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => {
-			return {
-				GlobalWorkerOptions: { workerSrc: '' },
-				getDocument: vi.fn().mockReturnValue({
-					promise: Promise.resolve({
-						numPages: 1,
-						getMetadata: vi.fn().mockResolvedValue({}),
-						getPage: vi.fn().mockResolvedValue({
-							getTextContent: vi.fn().mockResolvedValue({
-								items: [{ str: 'Parsed', transform: [1, 0, 0, 1, 10, 20] }]
-							})
-						})
-					})
-				})
-			};
-		});
-	});
+    let originalInitializePDFJs;
+    beforeEach(() => {
+        originalInitializePDFJs = PDFUtils._initializePDFJs;
+        PDFUtils._initializePDFJs = vi.fn().mockResolvedValue({
+            GlobalWorkerOptions: { workerSrc: '' },
+            getDocument: vi.fn().mockReturnValue({
+                promise: Promise.resolve({
+                    numPages: 1,
+                    getMetadata: vi.fn().mockResolvedValue({}),
+                    getPage: vi.fn().mockResolvedValue({
+                        getTextContent: vi.fn().mockResolvedValue({
+                            items: [{ str: 'Parsed', transform: [1, 0, 0, 1, 10, 20] }]
+                        })
+                    })
+                })
+            })
+        });
+    });
+
+    afterEach(() => {
+        PDFUtils._initializePDFJs = originalInitializePDFJs;
+    });
 
 	it('should parse an ArrayBuffer properly', async () => {
 		// This test uses the dynamic import mocked above
@@ -160,9 +165,65 @@ describe('parsePDFFile', () => {
 	it('should throw if invalid file type passed', async () => {
 		await expect(PDFUtils.parsePDFFile({})).rejects.toThrow('Invalid PDF file format');
 	});
+
+    it('should handle File passed correctly', async () => {
+		const file = new File(['dummy'], 'test.pdf', { type: 'application/pdf' });
+		const text = await PDFUtils.parsePDFFile(file);
+		expect(text).toBe('Parsed');
+	});
+
+    it('should throw if not in browser environment', async () => {
+		const originalWindow = globalThis.window;
+		globalThis.window = undefined;
+		await expect(PDFUtils.parsePDFFile(new ArrayBuffer(100))).rejects.toThrow('PDF parsing not available in server environment');
+		globalThis.window = originalWindow;
+	});
+
+    it('should throw if PDF is corrupted', async () => {
+		PDFUtils._initializePDFJs = vi.fn().mockResolvedValue({
+            GlobalWorkerOptions: { workerSrc: '' },
+            getDocument: vi.fn().mockReturnValue({
+                promise: Promise.resolve({
+                    numPages: 1,
+                    getMetadata: vi.fn().mockRejectedValue(new Error('Corrupted')),
+                    getPage: vi.fn().mockResolvedValue({
+                        getTextContent: vi.fn().mockResolvedValue({
+                            items: [{ str: 'Parsed', transform: [1, 0, 0, 1, 10, 20] }]
+                        })
+                    })
+                })
+            })
+        });
+
+		const buffer = new ArrayBuffer(100);
+		await expect(PDFUtils.parsePDFFile(buffer)).rejects.toThrow('PDF validation failed');
+	});
 });
 
 describe('parseStatement', () => {
+    let originalInitializePDFJs;
+    beforeEach(() => {
+        originalInitializePDFJs = PDFUtils._initializePDFJs;
+        PDFUtils._initializePDFJs = vi.fn().mockResolvedValue({
+            GlobalWorkerOptions: { workerSrc: '' },
+            getDocument: vi.fn().mockReturnValue({
+                promise: Promise.resolve({
+                    numPages: 1,
+                    getMetadata: vi.fn().mockResolvedValue({}),
+                    getPage: vi.fn().mockResolvedValue({
+                        getTextContent: vi.fn().mockResolvedValue({
+                            items: [{ str: 'Parsed', transform: [1, 0, 0, 1, 10, 20] }]
+                        })
+                    })
+                })
+            })
+        });
+    });
+
+    afterEach(() => {
+        PDFUtils._initializePDFJs = originalInitializePDFJs;
+    });
+
 	it('should validate, parse PDF, and call parser factory', async () => {
 		const buffer = new ArrayBuffer(100);
 		const mockParserFactory = {
@@ -212,21 +273,29 @@ describe('configureWorker', () => {
 });
 
 describe('parsing failures handling', () => {
-	it('should cleanly throw PDF parsing failure if getTextContent throws an error', async () => {
-		// Mock getDocument to throw inside getTextContent
-		const errorMockPdf = {
-			numPages: 1,
-			getMetadata: vi.fn().mockResolvedValue({}),
-			getPage: vi.fn().mockResolvedValue({
-				getTextContent: vi
-					.fn()
-					.mockRejectedValue(new TypeError("undefined is not a function (near '...i of e...')"))
-			})
-		};
+    let originalInitializePDFJs;
+    beforeEach(() => {
+        originalInitializePDFJs = PDFUtils._initializePDFJs;
+    });
+    afterEach(() => {
+        PDFUtils._initializePDFJs = originalInitializePDFJs;
+    });
 
-		vi.mocked((await import('pdfjs-dist/legacy/build/pdf.mjs')).getDocument).mockReturnValueOnce({
-			promise: Promise.resolve(errorMockPdf)
-		});
+	it('should cleanly throw PDF parsing failure if getTextContent throws an error', async () => {
+        PDFUtils._initializePDFJs = vi.fn().mockResolvedValue({
+            GlobalWorkerOptions: { workerSrc: '' },
+            getDocument: vi.fn().mockReturnValue({
+                promise: Promise.resolve({
+                    numPages: 1,
+                    getMetadata: vi.fn().mockResolvedValue({}),
+                    getPage: vi.fn().mockResolvedValue({
+                        getTextContent: vi
+                            .fn()
+                            .mockRejectedValue(new TypeError("undefined is not a function (near '...i of e...')"))
+                    })
+                })
+            })
+        });
 
 		const buffer = new ArrayBuffer(100);
 		const mockParserFactory = { parseStatement: vi.fn() };
