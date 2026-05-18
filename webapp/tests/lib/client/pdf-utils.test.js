@@ -238,7 +238,6 @@ describe('parseStatement', () => {
 		expect(result).toEqual({ success: true });
 		expect(mockParserFactory.parseStatement).toHaveBeenCalledWith('Parsed');
 	});
-});
 
 	it('should throw an error if validation fails', async () => {
 		const mockParserFactory = { parseStatement: vi.fn() };
