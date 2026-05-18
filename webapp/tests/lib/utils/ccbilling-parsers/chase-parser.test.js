@@ -463,201 +463,203 @@ describe('ChaseParser', () => {
 	});
 });
 
-	describe('getPaymentKeywords', () => {
-		it('should return chase specific payment keywords', () => {
-			const parser = new ChaseParser();
-			const keywords = parser.getPaymentKeywords();
-			expect(keywords).toContain('payment thank you');
-			expect(keywords).toContain('online payment');
+describe('getPaymentKeywords', () => {
+	it('should return chase specific payment keywords', () => {
+		const parser = new ChaseParser();
+		const keywords = parser.getPaymentKeywords();
+		expect(keywords).toContain('payment thank you');
+		expect(keywords).toContain('online payment');
+	});
+});
+
+describe('isLikelyShopWithPointsTransaction', () => {
+	it('should identify shop with points transactions', () => {
+		const parser = new ChaseParser();
+		expect(
+			parser.isLikelyShopWithPointsTransaction(
+				'Amazon',
+				1500,
+				'01/01 AMZN.COM/BILLWA AMZN.COM/BILLWA WA $1500.00'
+			)
+		).toBe(true);
+		expect(
+			parser.isLikelyShopWithPointsTransaction(
+				'Amazon Shop with points',
+				10,
+				'01/01 Amazon Shop with points WA $10.00'
+			)
+		).toBe(true);
+		expect(parser.isLikelyShopWithPointsTransaction('Target', 10, '01/01 Target WA $10.00')).toBe(
+			false
+		);
+	});
+});
+
+describe('isFlightTransaction', () => {
+	it('should identify flight transactions', () => {
+		const parser = new ChaseParser();
+		expect(parser.isFlightTransaction('UNITED AIRLINES')).toBe(true);
+		expect(parser.isFlightTransaction('AMERICAN AIRLINES')).toBe(true);
+		expect(parser.isFlightTransaction('DELTA AIRLINES')).toBe(true);
+		expect(parser.isFlightTransaction('JETBLUE AIRWAYS')).toBe(true);
+		expect(parser.isFlightTransaction('WALMART')).toBe(false);
+	});
+});
+
+describe('extractFlightDetails', () => {
+	it('should extract flight details', () => {
+		const parser = new ChaseParser();
+		const lines = ['01/01 UNITED AIRLINES $100.00', '012345 123 U SFO JFK', '01/02 WALMART $50.00'];
+		const details = parser.extractFlightDetails(lines, 0);
+		expect(details.departure_airport).toBe('SFO');
+		expect(details.arrival_airport).toBe('JFK');
+		expect(details.airline).toBe('UNITED');
+	});
+
+	it('should extract flight details simple', () => {
+		const parser = new ChaseParser();
+		const lines = ['01/01 UNITED AIRLINES $100.00', 'SFO JFK', '01/02 WALMART $50.00'];
+		const details = parser.extractFlightDetails(lines, 0);
+		expect(details.departure_airport).toBe('SFO');
+		expect(details.arrival_airport).toBe('JFK');
+	});
+
+	it('should handle flight transactions with no details', () => {
+		const parser = new ChaseParser();
+		const lines = ['01/01 UNITED AIRLINES $100.00', 'SOME OTHER STUFF', '01/02 WALMART $50.00'];
+		const details = parser.extractFlightDetails(lines, 0);
+		expect(details.airline).toBe('UNITED');
+		expect(details.departure_airport).toBe(null);
+	});
+});
+
+describe('isLikelyForeignTransaction', () => {
+	it('should identify likely foreign transactions', () => {
+		const parser = new ChaseParser();
+		expect(parser.isLikelyForeignTransaction('SOMETHING EURO')).toBe(true);
+		expect(parser.isLikelyForeignTransaction('POUND PUB')).toBe(true);
+		expect(parser.isLikelyForeignTransaction('YEN STORE')).toBe(true);
+		expect(parser.isLikelyForeignTransaction('DSB TRAIN')).toBe(true);
+		expect(parser.isLikelyForeignTransaction('WALMART')).toBe(false);
+	});
+});
+
+describe('_parseCurrencyInfo', () => {
+	it('should parse currency info from rate line only', () => {
+		const parser = new ChaseParser();
+		const lines = ['123.45 X 0.67', 'OTHER'];
+		const info = parser._parseCurrencyInfo(lines[0], lines, 0);
+		expect(info.is_foreign_currency).toBe(true);
+		expect(info.foreign_currency_amount).toBe(123.45);
+	});
+
+	it('should parse currency info with rate on next line', () => {
+		const parser = new ChaseParser();
+		const lines = ['EURO', '123.45 X 0.67'];
+		const info = parser._parseCurrencyInfo(lines[0], lines, 0);
+		expect(info.is_foreign_currency).toBe(true);
+		expect(info.foreign_currency_amount).toBe(123.45);
+	});
+});
+
+describe('_parseAirportCodesFromLine', () => {
+	it('should parse simple airport codes', () => {
+		const parser = new ChaseParser();
+		expect(parser._parseAirportCodesFromLine('SFO JFK')).toEqual({
+			departure_airport: 'SFO',
+			arrival_airport: 'JFK'
 		});
 	});
 
-	describe('isLikelyShopWithPointsTransaction', () => {
-		it('should identify shop with points transactions', () => {
-			const parser = new ChaseParser();
-			expect(parser.isLikelyShopWithPointsTransaction('Amazon', 1500, '01/01 AMZN.COM/BILLWA AMZN.COM/BILLWA WA $1500.00')).toBe(true);
-			expect(parser.isLikelyShopWithPointsTransaction('Amazon Shop with points', 10, '01/01 Amazon Shop with points WA $10.00')).toBe(true);
-			expect(parser.isLikelyShopWithPointsTransaction('Target', 10, '01/01 Target WA $10.00')).toBe(false);
+	it('should parse detailed airport codes', () => {
+		const parser = new ChaseParser();
+		expect(parser._parseAirportCodesFromLine('123456 123 U SFO JFK')).toEqual({
+			departure_airport: 'SFO',
+			arrival_airport: 'JFK'
 		});
 	});
 
-	describe('isFlightTransaction', () => {
-		it('should identify flight transactions', () => {
-			const parser = new ChaseParser();
-			expect(parser.isFlightTransaction('UNITED AIRLINES')).toBe(true);
-			expect(parser.isFlightTransaction('AMERICAN AIRLINES')).toBe(true);
-			expect(parser.isFlightTransaction('DELTA AIRLINES')).toBe(true);
-			expect(parser.isFlightTransaction('JETBLUE AIRWAYS')).toBe(true);
-			expect(parser.isFlightTransaction('WALMART')).toBe(false);
-		});
+	it('should return null if invalid format', () => {
+		const parser = new ChaseParser();
+		expect(parser._parseAirportCodesFromLine('SOME INVALID TEXT')).toBe(null);
+	});
+});
+
+describe('parseDate', () => {
+	it('should return null for invalid date parts', () => {
+		const parser = new ChaseParser();
+		expect(parser.parseDate('99/99/2023')).toBe(null);
+		expect(parser.parseDate('00/00/2023')).toBe(null);
+	});
+});
+
+describe('updateSectionState', () => {
+	it('should exit shop with points section correctly', () => {
+		const parser = new ChaseParser();
+		let state = parser.updateSectionState('SHOP WITH POINTS ACTIVITY', false);
+		expect(state.inShopWithPointsSection).toBe(true);
+
+		state = parser.updateSectionState('SOME ITEM', state.inShopWithPointsSection);
+		expect(state.inShopWithPointsSection).toBe(true);
+
+		state = parser.updateSectionState('INTEREST CHARGES', state.inShopWithPointsSection);
+		expect(state.inShopWithPointsSection).toBe(false);
+
+		state = parser.updateSectionState('SHOP WITH POINTS ACTIVITY', false);
+		state = parser.updateSectionState('YOUR ACCOUNT MESSAGES', state.inShopWithPointsSection);
+		expect(state.inShopWithPointsSection).toBe(false);
+	});
+});
+
+describe('safeMatchExchangeRate', () => {
+	it('should return null for invalid inputs', () => {
+		const parser = new ChaseParser();
+		expect(parser.safeMatchExchangeRate('INVALID X TEXT')).toBe(null);
+		expect(parser.safeMatchExchangeRate('123.45 X TEXT')).toBe(null);
+		expect(parser.safeMatchExchangeRate('123.45 X')).toBe(null);
+	});
+});
+
+describe('parseChaseDate4Digit', () => {
+	it('should handle missing dates', () => {
+		const parser = new ChaseParser();
+		expect(parser.parseChaseDate4Digit('')).toBe(null);
 	});
 
-	describe('extractFlightDetails', () => {
-		it('should extract flight details', () => {
-			const parser = new ChaseParser();
-			const lines = [
-				'01/01 UNITED AIRLINES $100.00',
-				'012345 123 U SFO JFK',
-				'01/02 WALMART $50.00'
-			];
-			const details = parser.extractFlightDetails(lines, 0);
-			expect(details.departure_airport).toBe('SFO');
-			expect(details.arrival_airport).toBe('JFK');
-			expect(details.airline).toBe('UNITED');
-		});
-
-		it('should extract flight details simple', () => {
-			const parser = new ChaseParser();
-			const lines = [
-				'01/01 UNITED AIRLINES $100.00',
-				'SFO JFK',
-				'01/02 WALMART $50.00'
-			];
-			const details = parser.extractFlightDetails(lines, 0);
-			expect(details.departure_airport).toBe('SFO');
-			expect(details.arrival_airport).toBe('JFK');
-		});
-
-		it('should handle flight transactions with no details', () => {
-			const parser = new ChaseParser();
-			const lines = [
-				'01/01 UNITED AIRLINES $100.00',
-				'SOME OTHER STUFF',
-				'01/02 WALMART $50.00'
-			];
-			const details = parser.extractFlightDetails(lines, 0);
-			expect(details.airline).toBe('UNITED');
-			expect(details.departure_airport).toBe(null);
-		});
+	it('should handle invalid date values', () => {
+		const parser = new ChaseParser();
+		expect(parser.parseChaseDate4Digit('13/01/2023')).toBe(null);
+		expect(parser.parseChaseDate4Digit('01/32/2023')).toBe(null);
+		expect(parser.parseChaseDate4Digit('00/01/2023')).toBe(null);
+		expect(parser.parseChaseDate4Digit('01/00/2023')).toBe(null);
+		expect(parser.parseChaseDate4Digit('99/99/2023')).toBe(null);
 	});
 
-	describe('isLikelyForeignTransaction', () => {
-		it('should identify likely foreign transactions', () => {
-			const parser = new ChaseParser();
-			expect(parser.isLikelyForeignTransaction('SOMETHING EURO')).toBe(true);
-			expect(parser.isLikelyForeignTransaction('POUND PUB')).toBe(true);
-			expect(parser.isLikelyForeignTransaction('YEN STORE')).toBe(true);
-			expect(parser.isLikelyForeignTransaction('DSB TRAIN')).toBe(true);
-			expect(parser.isLikelyForeignTransaction('WALMART')).toBe(false);
-		});
+	it('should parse valid dates', () => {
+		const parser = new ChaseParser();
+		expect(parser.parseChaseDate4Digit('12/15/2023')).toBe('2023-12-15');
+		expect(parser.parseChaseDate4Digit('01/05/2024')).toBe('2024-01-05');
 	});
 
-	describe('_parseCurrencyInfo', () => {
-		it('should parse currency info from rate line only', () => {
-			const parser = new ChaseParser();
-			const lines = ['123.45 X 0.67', 'OTHER'];
-			const info = parser._parseCurrencyInfo(lines[0], lines, 0);
-			expect(info.is_foreign_currency).toBe(true);
-			expect(info.foreign_currency_amount).toBe(123.45);
-		});
+	it('should handle badly formatted inputs', () => {
+		const parser = new ChaseParser();
+		expect(parser.parseChaseDate4Digit('NOT A DATE')).toBe(null);
+	});
+});
 
-		it('should parse currency info with rate on next line', () => {
-			const parser = new ChaseParser();
-			const lines = ['EURO', '123.45 X 0.67'];
-			const info = parser._parseCurrencyInfo(lines[0], lines, 0);
-			expect(info.is_foreign_currency).toBe(true);
-			expect(info.foreign_currency_amount).toBe(123.45);
-		});
+describe('extractCharges - detailed coverage', () => {
+	it('should skip likely shop with points transactions', () => {
+		const parser = new ChaseParser();
+		// Mock so that updateSectionState doesn't filter it out, but isLikelyShopWithPointsTransaction does
+		const text = '01/01 AMZN.COM/BILLWA AMZN.COM/BILLWA WA 1500.00\n';
+		const charges = parser.extractCharges(text);
+		expect(charges.length).toBe(0);
 	});
 
-	describe('_parseAirportCodesFromLine', () => {
-		it('should parse simple airport codes', () => {
-			const parser = new ChaseParser();
-			expect(parser._parseAirportCodesFromLine('SFO JFK')).toEqual({
-				departure_airport: 'SFO',
-				arrival_airport: 'JFK'
-			});
-		});
-
-		it('should parse detailed airport codes', () => {
-			const parser = new ChaseParser();
-			expect(parser._parseAirportCodesFromLine('123456 123 U SFO JFK')).toEqual({
-				departure_airport: 'SFO',
-				arrival_airport: 'JFK'
-			});
-		});
-
-		it('should return null if invalid format', () => {
-			const parser = new ChaseParser();
-			expect(parser._parseAirportCodesFromLine('SOME INVALID TEXT')).toBe(null);
-		});
+	it('should continue if inShopWithPointsSection is already true', () => {
+		const parser = new ChaseParser();
+		const text = 'SHOP WITH POINTS ACTIVITY\n01/01 SOME MERCHANT 10.00\n';
+		const charges = parser.extractCharges(text);
+		expect(charges.length).toBe(0);
 	});
-
-	describe('parseDate', () => {
-		it('should return null for invalid date parts', () => {
-			const parser = new ChaseParser();
-			expect(parser.parseDate('99/99/2023')).toBe(null);
-			expect(parser.parseDate('00/00/2023')).toBe(null);
-		});
-	});
-
-	describe('updateSectionState', () => {
-		it('should exit shop with points section correctly', () => {
-			const parser = new ChaseParser();
-			let state = parser.updateSectionState('SHOP WITH POINTS ACTIVITY', false);
-			expect(state.inShopWithPointsSection).toBe(true);
-
-			state = parser.updateSectionState('SOME ITEM', state.inShopWithPointsSection);
-			expect(state.inShopWithPointsSection).toBe(true);
-
-			state = parser.updateSectionState('INTEREST CHARGES', state.inShopWithPointsSection);
-			expect(state.inShopWithPointsSection).toBe(false);
-
-			state = parser.updateSectionState('SHOP WITH POINTS ACTIVITY', false);
-			state = parser.updateSectionState('YOUR ACCOUNT MESSAGES', state.inShopWithPointsSection);
-			expect(state.inShopWithPointsSection).toBe(false);
-		});
-	});
-
-	describe('safeMatchExchangeRate', () => {
-		it('should return null for invalid inputs', () => {
-			const parser = new ChaseParser();
-			expect(parser.safeMatchExchangeRate('INVALID X TEXT')).toBe(null);
-			expect(parser.safeMatchExchangeRate('123.45 X TEXT')).toBe(null);
-			expect(parser.safeMatchExchangeRate('123.45 X')).toBe(null);
-		});
-	});
-
-	describe('parseChaseDate4Digit', () => {
-		it('should handle missing dates', () => {
-			const parser = new ChaseParser();
-			expect(parser.parseChaseDate4Digit('')).toBe(null);
-		});
-
-		it('should handle invalid date values', () => {
-			const parser = new ChaseParser();
-			expect(parser.parseChaseDate4Digit('13/01/2023')).toBe(null);
-			expect(parser.parseChaseDate4Digit('01/32/2023')).toBe(null);
-			expect(parser.parseChaseDate4Digit('00/01/2023')).toBe(null);
-			expect(parser.parseChaseDate4Digit('01/00/2023')).toBe(null);
-			expect(parser.parseChaseDate4Digit('99/99/2023')).toBe(null);
-		});
-
-		it('should parse valid dates', () => {
-			const parser = new ChaseParser();
-			expect(parser.parseChaseDate4Digit('12/15/2023')).toBe('2023-12-15');
-			expect(parser.parseChaseDate4Digit('01/05/2024')).toBe('2024-01-05');
-		});
-
-		it('should handle badly formatted inputs', () => {
-			const parser = new ChaseParser();
-			expect(parser.parseChaseDate4Digit('NOT A DATE')).toBe(null);
-		});
-	});
-
-	describe('extractCharges - detailed coverage', () => {
-		it('should skip likely shop with points transactions', () => {
-			const parser = new ChaseParser();
-			// Mock so that updateSectionState doesn't filter it out, but isLikelyShopWithPointsTransaction does
-			const text = "01/01 AMZN.COM/BILLWA AMZN.COM/BILLWA WA 1500.00\n";
-			const charges = parser.extractCharges(text);
-			expect(charges.length).toBe(0);
-		});
-
-		it('should continue if inShopWithPointsSection is already true', () => {
-			const parser = new ChaseParser();
-			const text = "SHOP WITH POINTS ACTIVITY\n01/01 SOME MERCHANT 10.00\n";
-			const charges = parser.extractCharges(text);
-			expect(charges.length).toBe(0);
-		});
-	});
+});

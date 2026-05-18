@@ -135,7 +135,10 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							weight: '400',
 							particles: {
 								color: { value: '#00FF9E' }, // Green for positive
-								size: { value: 8 }
+								size: { value: 8 },
+								links: {
+									color: { value: '#ffffff' } // white lines
+								}
 							}
 						},
 						{
@@ -145,7 +148,10 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							weight: '400',
 							particles: {
 								color: { value: '#FF0061' }, // Red for negative
-								size: { value: 8 }
+								size: { value: 8 },
+								links: {
+									color: { value: '#ffffff' } // white lines
+								}
 							}
 						}
 					]
