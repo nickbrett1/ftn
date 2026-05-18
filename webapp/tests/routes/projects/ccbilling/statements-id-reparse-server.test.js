@@ -31,10 +31,13 @@ vi.mock('../../../../src/lib/server/route-utils.js', () => {
 				};
 			},
 			createErrorResponse: (message, options) => {
-				return Response.json({ error: message }, {
-					status: options?.status || 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return Response.json(
+					{ error: message },
+					{
+						status: options?.status || 500,
+						headers: { 'Content-Type': 'application/json' }
+					}
+				);
 			},
 			parseInteger: (value, name, options) => {
 				const number_ = Number.parseInt(value);

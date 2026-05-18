@@ -20,9 +20,9 @@ describe('date-utils', () => {
 			expect(formatDate(null)).toBe('');
 		});
 
-        it('should handle invalid date input', () => {
-            expect(formatDate('invalid-date')).toBe('');
-        });
+		it('should handle invalid date input', () => {
+			expect(formatDate('invalid-date')).toBe('');
+		});
 	});
 
 	describe('formatMediumDate', () => {
@@ -31,8 +31,8 @@ describe('date-utils', () => {
 		});
 
 		it('should handle invalid date input', () => {
-            expect(formatMediumDate('invalid-date')).toBe('');
-        });
+			expect(formatMediumDate('invalid-date')).toBe('');
+		});
 	});
 
 	describe('formatRelativeTime', () => {
@@ -42,8 +42,8 @@ describe('date-utils', () => {
 		});
 
 		it('should handle invalid date input', () => {
-            expect(formatRelativeTime('invalid-date')).toBe('');
-        });
+			expect(formatRelativeTime('invalid-date')).toBe('');
+		});
 	});
 
 	describe('isToday', () => {
@@ -51,9 +51,9 @@ describe('date-utils', () => {
 			expect(isToday('2023-10-25')).toBe(false);
 		});
 
-        it('should handle invalid date input', () => {
-            expect(isToday('invalid-date')).toBe(false);
-        });
+		it('should handle invalid date input', () => {
+			expect(isToday('invalid-date')).toBe(false);
+		});
 	});
 
 	describe('isYesterday', () => {
@@ -61,8 +61,8 @@ describe('date-utils', () => {
 			expect(isYesterday('2023-10-25')).toBe(false);
 		});
 
-        it('should handle invalid date input', () => {
-            expect(isYesterday('invalid-date')).toBe(false);
-        });
+		it('should handle invalid date input', () => {
+			expect(isYesterday('invalid-date')).toBe(false);
+		});
 	});
 });

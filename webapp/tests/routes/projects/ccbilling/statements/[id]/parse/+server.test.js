@@ -97,7 +97,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('returns 400 if parsedData is not provided', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 
 			// Omit parsedData to trigger the error
 			const event = { params: { id: '1' }, locals: { parsedBody: {} } };
@@ -107,7 +110,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('handles missing credit card gracefully (400 error)', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([]);
 
 			const parsedData = { last4: '1234', card_name: 'Test Card' };
@@ -120,7 +126,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('handles missing credit card fully gracefully (400 error)', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([]);
 
 			const parsedData = {};
@@ -133,7 +142,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('handles missing credit card with card name not matching (400 error)', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 
 			const parsedData = { card_name: 'Wells Fargo' };
@@ -146,7 +158,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('handles missing credit card fallback to default (400 error)', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 
 			const parsedData = { last4: '0000' };
@@ -159,7 +174,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('identifies credit card by last4 and processes charges', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
@@ -188,9 +206,18 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 		});
 
 		it('identifies credit card by name if last4 is missing', async () => {
-			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: null });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
-			database.listCreditCards.mockResolvedValue([{ id: 6, name: 'Bilt Mastercard', last4: '9999' }]);
+			database.getStatement.mockResolvedValue({
+				id: 1,
+				billing_cycle_id: 10,
+				credit_card_id: null
+			});
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
+			database.listCreditCards.mockResolvedValue([
+				{ id: 6, name: 'Bilt Mastercard', last4: '9999' }
+			]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
 			database.getBudgetByMerchant.mockResolvedValue(null);
@@ -208,9 +235,18 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 		});
 
 		it('identifies credit card by name substring match if last4 is missing', async () => {
-			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: null });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
-			database.listCreditCards.mockResolvedValue([{ id: 6, name: 'Bilt Mastercard', last4: '9999' }]);
+			database.getStatement.mockResolvedValue({
+				id: 1,
+				billing_cycle_id: 10,
+				credit_card_id: null
+			});
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
+			database.listCreditCards.mockResolvedValue([
+				{ id: 6, name: 'Bilt Mastercard', last4: '9999' }
+			]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
 			database.getBudgetByMerchant.mockResolvedValue(null);
@@ -228,9 +264,18 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 		});
 
 		it('identifies credit card by name palladium match if last4 is missing', async () => {
-			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: null });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
-			database.listCreditCards.mockResolvedValue([{ id: 6, name: 'Bilt Palladium', last4: '9999' }]);
+			database.getStatement.mockResolvedValue({
+				id: 1,
+				billing_cycle_id: 10,
+				credit_card_id: null
+			});
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
+			database.listCreditCards.mockResolvedValue([
+				{ id: 6, name: 'Bilt Palladium', last4: '9999' }
+			]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
 			database.getBudgetByMerchant.mockResolvedValue(null);
@@ -248,8 +293,15 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 		});
 
 		it('identifies credit card by name palladium reverse match if last4 is missing', async () => {
-			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: null });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getStatement.mockResolvedValue({
+				id: 1,
+				billing_cycle_id: 10,
+				credit_card_id: null
+			});
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 6, name: 'Bilt Paladium', last4: '9999' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
@@ -268,9 +320,18 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 		});
 
 		it('returns success for parsing without charges', async () => {
-			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: null });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
-			database.listCreditCards.mockResolvedValue([{ id: 6, name: 'Bilt Mastercard', last4: '9999' }]);
+			database.getStatement.mockResolvedValue({
+				id: 1,
+				billing_cycle_id: 10,
+				credit_card_id: null
+			});
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
+			database.listCreditCards.mockResolvedValue([
+				{ id: 6, name: 'Bilt Mastercard', last4: '9999' }
+			]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
 			database.getBudgetByMerchant.mockResolvedValue(null);
@@ -287,7 +348,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('returns 500 if deleting payments throws an error', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.deletePaymentsForStatement.mockRejectedValue(new Error('DB error'));
 
 			const result = await POST(mockEvent(1, { charges: [] }));
@@ -298,7 +362,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('correctly handles transaction date year parsing logic across years', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2022-12-15', end_date: '2023-01-14' }); // Cross year billing cycle
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2022-12-15',
+				end_date: '2023-01-14'
+			}); // Cross year billing cycle
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
@@ -332,7 +399,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('correctly handles transaction date year parsing logic across years forwards', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-12-15', end_date: '2024-01-14' }); // Cross year billing cycle
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-12-15',
+				end_date: '2024-01-14'
+			}); // Cross year billing cycle
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
@@ -361,7 +431,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('extracts billing cycle and card info from charges correctly', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: 5 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
@@ -389,7 +462,10 @@ describe('ccbilling/statements/[id]/parse/+server.js', () => {
 
 		it('handles charges with empty values correctly', async () => {
 			database.getStatement.mockResolvedValue({ id: 1, billing_cycle_id: 10, credit_card_id: 5 });
-			database.getBillingCycle.mockResolvedValue({ start_date: '2023-01-01', end_date: '2023-01-31' });
+			database.getBillingCycle.mockResolvedValue({
+				start_date: '2023-01-01',
+				end_date: '2023-01-31'
+			});
 			database.listCreditCards.mockResolvedValue([{ id: 5, name: 'Chase', last4: '1234' }]);
 			database.deletePaymentsForStatement.mockResolvedValue(true);
 			database.updateStatementCreditCard.mockResolvedValue(true);
