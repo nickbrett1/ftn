@@ -29,7 +29,7 @@ export const products = [
 		id: 'bull-statue',
 		name: 'Wall Street Charging Bull Statue (Replica)',
 		description: 'A high-quality replica of the iconic Wall Street bull.',
-		price: 250000, // In cents ($2,500.00)
+		price: 250_000, // In cents ($2,500.00)
 		currency: 'usd',
 		category: 'Finance',
 		image: bullStatue
@@ -56,7 +56,7 @@ export const products = [
 		id: 'ticker-tape',
 		name: 'Framed Stock Ticker Tape (1929 Crash)',
 		description: 'A piece of history for your office wall.',
-		price: 45000,
+		price: 45_000,
 		currency: 'usd',
 		category: 'Finance',
 		image: tickerTape
@@ -83,7 +83,7 @@ export const products = [
 		id: 'ethereum-cert',
 		name: '1 Ethereum (Digital Certificate)',
 		description: 'Mock ownership certificate for one Ether.',
-		price: 120000,
+		price: 120_000,
 		currency: 'usd',
 		category: 'Crypto',
 		image: ethereumCert
@@ -110,7 +110,7 @@ export const products = [
 		id: 'pixel-bull-nft',
 		name: 'NFT of a Pixelated Bull',
 		description: 'Extremely rare digital art (not really).',
-		price: 1000000,
+		price: 1_000_000,
 		currency: 'usd',
 		category: 'Crypto',
 		image: pixelBullNft
@@ -128,7 +128,7 @@ export const products = [
 		id: 'agent-brain',
 		name: 'Autonomous Agent Brain',
 		description: 'A circuit board model representing the future.',
-		price: 12000,
+		price: 12_000,
 		currency: 'usd',
 		category: 'Tech',
 		image: agentBrain
@@ -146,7 +146,7 @@ export const products = [
 		id: 'mech-keyboard',
 		name: 'Mechanical Keyboard (Blue Switches)',
 		description: 'Extremely loud typing for maximum productivity.',
-		price: 13000,
+		price: 13_000,
 		currency: 'usd',
 		category: 'Tech',
 		image: mechKeyboard
@@ -155,7 +155,7 @@ export const products = [
 		id: 'satoshi-floppy',
 		name: 'Vintage Floppy Disk (Signed)',
 		description: 'Allegedly signed by Satoshi Nakamoto.',
-		price: 100000000,
+		price: 100_000_000,
 		currency: 'usd',
 		category: 'Tech',
 		image: satoshiFloppy
@@ -164,7 +164,7 @@ export const products = [
 		id: 'simulation-service',
 		name: '1 Hour Virtual Simulation Service (Mock)',
 		description: 'Pick the brain of an agentic simulation.',
-		price: 10000,
+		price: 10_000,
 		currency: 'usd',
 		category: 'Lifestyle',
 		image: simulationService
@@ -191,7 +191,7 @@ export const products = [
 		id: 'time-machine',
 		name: 'Time Machine (Beta)',
 		description: 'Limited edition. Only travels forward at 1s/s.',
-		price: 500000000,
+		price: 500_000_000,
 		currency: 'usd',
 		category: 'Imaginary',
 		image: timeMachine
@@ -199,8 +199,8 @@ export const products = [
 	{
 		id: 'invisible-cloak',
 		name: 'Invisible Cloak (Clearance)',
-		description: 'You literally cannot see it. That\'s the point.',
-		price: 99900,
+		description: "You literally cannot see it. That's the point.",
+		price: 99_900,
 		currency: 'usd',
 		category: 'Imaginary',
 		image: invisibleCloak

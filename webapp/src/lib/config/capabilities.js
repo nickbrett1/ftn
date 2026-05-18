@@ -110,11 +110,7 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
-		vscodeExtensions: [
-			'google.geminicodeassist',
-			'saoudrizwan.claude-dev',
-			'GitHub.copilot'
-		],
+		vscodeExtensions: ['google.geminicodeassist', 'saoudrizwan.claude-dev', 'GitHub.copilot'],
 		benefits: [
 			'Gemini CLI pre-installed',
 			'Cursor CLI pre-installed',

@@ -21,7 +21,7 @@ export class ParserFactory {
 	 * @returns {BaseParser|null} - Appropriate parser or null if none found
 	 */
 	detectParser(text) {
-		const parser = this.parsers.find(p => p.canParse(text));
+		const parser = this.parsers.find((p) => p.canParse(text));
 		if (parser) {
 			console.log(`🔍 Detected parser: ${parser.providerName}`);
 			return parser;

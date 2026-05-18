@@ -1,16 +1,51 @@
 const streetSuffixes = [
-	'AVE', 'AVENUE', 'ST', 'STREET', 'RD', 'ROAD', 'BLVD', 'BOULEVARD',
-	'DR', 'DRIVE', 'LN', 'LANE', 'WAY', 'CT', 'COURT', 'CIR', 'CIRCLE',
-	'HWY', 'HIGHWAY', 'PKWY', 'PARKWAY', 'SQ', 'SQUARE', 'BRIDGE',
-	'BROADWAY', 'RUE', 'RTE', 'ROUTE', 'PL', 'PLACE', 'TER', 'TERRACE',
-	'PIKE', 'TRL', 'TRAIL', 'PKY', 'FREEWAY', 'FWY', 'EXPY', 'EXPRESSWAY'
+	'AVE',
+	'AVENUE',
+	'ST',
+	'STREET',
+	'RD',
+	'ROAD',
+	'BLVD',
+	'BOULEVARD',
+	'DR',
+	'DRIVE',
+	'LN',
+	'LANE',
+	'WAY',
+	'CT',
+	'COURT',
+	'CIR',
+	'CIRCLE',
+	'HWY',
+	'HIGHWAY',
+	'PKWY',
+	'PARKWAY',
+	'SQ',
+	'SQUARE',
+	'BRIDGE',
+	'BROADWAY',
+	'RUE',
+	'RTE',
+	'ROUTE',
+	'PL',
+	'PLACE',
+	'TER',
+	'TERRACE',
+	'PIKE',
+	'TRL',
+	'TRAIL',
+	'PKY',
+	'FREEWAY',
+	'FWY',
+	'EXPY',
+	'EXPRESSWAY'
 ];
 
-const suffixRegexStr = `(?:${streetSuffixes.join('|')})`;
+const suffixRegexString = `(?:${streetSuffixes.join('|')})`;
 
 // Match a street number, up to 4 words, and a street suffix (with optional period), followed by optional extra text
 const addressPattern = new RegExp(
-	String.raw`\s+(?:#\s*)?\d{1,5}\s+(?:[A-Za-z0-9\-]+\s+){0,4}${suffixRegexStr}\.?(?:\s+.*)?$`,
+	String.raw`\s+(?:#\s*)?\d{1,5}\s+(?:[A-Za-z0-9\-]+\s+){0,4}${suffixRegexString}\.?(?:\s+.*)?$`,
 	'i'
 );
 
@@ -252,11 +287,11 @@ export const ParsingUtils = {
 		const match = /^([A-Z]{3,9})\s+(\d{1,2}),\s+(\d{4})$/i.exec(dateString.trim());
 		if (!match) return null;
 
-		const monthStr = match[1].toUpperCase();
+		const monthString = match[1].toUpperCase();
 		const day = Number.parseInt(match[2], 10);
 		const year = Number.parseInt(match[3], 10);
 
-		const month = months[monthStr];
+		const month = months[monthString];
 		if (!month || day < 1 || day > 31) return null;
 
 		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -331,7 +366,12 @@ export const ParsingUtils = {
 	 * @returns {string} - Cleaned merchant name
 	 */
 	cleanMerchantName(merchantName, options = {}) {
-		const { removeCommonSuffixes = true, normalizeCase = true, removeAddress = true, removePhoneNumber = true } = options;
+		const {
+			removeCommonSuffixes = true,
+			normalizeCase = true,
+			removeAddress = true,
+			removePhoneNumber = true
+		} = options;
 
 		if (!merchantName || typeof merchantName !== 'string') {
 			return '';
@@ -341,7 +381,10 @@ export const ParsingUtils = {
 
 		// Remove phone numbers like "866-283-7374"
 		if (removePhoneNumber) {
-			cleaned = cleaned.replaceAll(/\b\d{3}-\d{3}-\d{4}\b/g, '').replaceAll(/\s+/g, ' ').trim();
+			cleaned = cleaned
+				.replaceAll(/\b\d{3}-\d{3}-\d{4}\b/g, '')
+				.replaceAll(/\s+/g, ' ')
+				.trim();
 		}
 
 		if (removeAddress) {

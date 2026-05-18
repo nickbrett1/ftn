@@ -49,10 +49,12 @@ export const PDFUtils = {
 			let textContent;
 			try {
 				textContent = await page.getTextContent();
-			} catch (e) {
+			} catch (error) {
 				// We attach the buffer size context to aid debugging. If this fails on every page,
 				// it usually means the PDF stream itself is corrupted or missing vital components.
-				throw new Error(`Failed to extract text from page ${pageNumber}/${pdfDocument.numPages}. The PDF structure may be corrupted. Inner error: ${e.message}`);
+				throw new Error(
+					`Failed to extract text from page ${pageNumber}/${pdfDocument.numPages}. The PDF structure may be corrupted. Inner error: ${error.message}`
+				);
 			}
 
 			// textContent.items may be an array-like object or Proxy without Symbol.iterator in some environments
@@ -81,16 +83,16 @@ export const PDFUtils = {
 	 * @private
 	 */
 	_groupAndSortTextItems(items) {
-		const lines = items.reduce((acc, item) => {
+		const lines = items.reduce((accumulator, item) => {
 			const y = Math.round(item.transform[5]); // Round Y position to group nearby items
-			if (!acc[y]) {
-				acc[y] = [];
+			if (!accumulator[y]) {
+				accumulator[y] = [];
 			}
-			acc[y].push({
+			accumulator[y].push({
 				text: item.str,
 				x: item.transform[4]
 			});
-			return acc;
+			return accumulator;
 		}, {});
 
 		// Sort lines by Y position (top to bottom)
@@ -164,10 +166,7 @@ export const PDFUtils = {
 		} else if (pdfFile instanceof ArrayBuffer) {
 			return pdfFile;
 		} else if (globalThis.Buffer && Buffer.isBuffer(pdfFile)) {
-			return pdfFile.buffer.slice(
-				pdfFile.byteOffset,
-				pdfFile.byteOffset + pdfFile.byteLength
-			);
+			return pdfFile.buffer.slice(pdfFile.byteOffset, pdfFile.byteOffset + pdfFile.byteLength);
 		} else {
 			throw new TypeError('Invalid PDF file format');
 		}
@@ -205,8 +204,10 @@ export const PDFUtils = {
 			// Validate PDF structure
 			try {
 				await pdf.getMetadata();
-			} catch (e) {
-				throw new Error(`PDF validation failed: The document appears to be corrupted or uses unsupported features. Details: ${e.message}`);
+			} catch (error) {
+				throw new Error(
+					`PDF validation failed: The document appears to be corrupted or uses unsupported features. Details: ${error.message}`
+				);
 			}
 
 			// Extract text from all pages

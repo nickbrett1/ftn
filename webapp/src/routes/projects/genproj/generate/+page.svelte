@@ -117,17 +117,17 @@
 				conflicts = result.conflicts;
 				// Initialize resolutions to 'overwrite' (or 'keep' if preferred default)
 				conflictResolutions = {};
-				conflicts.forEach((c) => {
+				for (const c of conflicts) {
 					conflictResolutions[c.path] = 'overwrite';
-				});
+				}
 				showConflictModal = true;
 				showRepoExistsModal = false;
 				loading = false;
 				return true; // Conflicts found
 			}
 			return false; // No conflicts
-		} catch (err) {
-			console.error('Conflict check error:', err);
+		} catch (error_) {
+			console.error('Conflict check error:', error_);
 			// Fallback: if check fails, maybe proceed with standard flow or show error
 			// Let's just return false to proceed with standard overwrite attempt which handles errors
 			return false;
@@ -255,7 +255,7 @@
 		}
 	}
 
-	function prevConflict() {
+	function previousConflict() {
 		if (currentConflictIndex > 0) {
 			currentConflictIndex--;
 		}
@@ -505,7 +505,7 @@
 								<button
 									class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 disabled:opacity-50"
 									disabled={currentConflictIndex === 0}
-									onclick={prevConflict}
+									onclick={previousConflict}
 								>
 									Previous
 								</button>

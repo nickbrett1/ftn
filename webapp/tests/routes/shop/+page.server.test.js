@@ -73,7 +73,9 @@ describe('shop/+page.server.js', () => {
 
 		it('throws 404 error if product is not found', async () => {
 			const request = mockRequest('non-existent-id');
-			await expect(actions.checkout({ request, url: mockUrl })).rejects.toThrow('Product not found');
+			await expect(actions.checkout({ request, url: mockUrl })).rejects.toThrow(
+				'Product not found'
+			);
 			expect(kit.error).toHaveBeenCalledWith(404, 'Product not found');
 		});
 
@@ -101,10 +103,10 @@ describe('shop/+page.server.js', () => {
 				await actions.checkout({ request, url: mockUrl });
 				// Should throw a redirect error
 				expect.unreachable('Should have thrown redirect');
-			} catch (e) {
-				if (e.message !== 'Redirect') throw e;
-				expect(e.status).toBe(303);
-				expect(e.location).toBe('https://checkout.stripe.com/session_123');
+			} catch (error) {
+				if (error.message !== 'Redirect') throw error;
+				expect(error.status).toBe(303);
+				expect(error.location).toBe('https://checkout.stripe.com/session_123');
 			}
 
 			expect(stripeMock).toHaveBeenCalledTimes(1);

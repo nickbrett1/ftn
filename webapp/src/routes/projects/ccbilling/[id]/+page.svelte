@@ -283,7 +283,12 @@
 				merchantInfoData = data;
 			} else {
 				// Fallback to empty text if nothing usable
-				merchantInfoData = { merchant: data.merchant || '', merchantDetails: data.merchantDetails || '', fullStatementText: data.fullStatementText || '', text: '' };
+				merchantInfoData = {
+					merchant: data.merchant || '',
+					merchantDetails: data.merchantDetails || '',
+					fullStatementText: data.fullStatementText || '',
+					text: ''
+				};
 			}
 		} catch (error) {
 			merchantInfoError = error.message;
@@ -747,13 +752,13 @@
 			xhr.open('GET', url, true);
 			xhr.responseType = 'arraybuffer';
 
-			xhr.onload = () => {
+			xhr.addEventListener('load', () => {
 				if (xhr.status >= 200 && xhr.status < 300) {
 					resolve(xhr.response);
 				} else {
 					reject(new Error(`HTTP Error ${xhr.status} downloading PDF`));
 				}
-			};
+			});
 			xhr.onerror = () => reject(new Error('Network error downloading PDF'));
 			xhr.send();
 		});
@@ -1065,49 +1070,74 @@
 
 					<div class="mb-6">
 						{#if reparseResult.success}
-							<div class="bg-green-900/30 border border-green-700 text-green-200 px-4 py-3 rounded mb-4">
+							<div
+								class="bg-green-900/30 border border-green-700 text-green-200 px-4 py-3 rounded mb-4"
+							>
 								<p>{reparseResult.message}</p>
-								<p class="text-sm mt-1">Found {reparseResult.changes.length} merchant name changes.</p>
+								<p class="text-sm mt-1">
+									Found {reparseResult.changes.length} merchant name changes.
+								</p>
 							</div>
 
 							{#if reparseResult.changes.length > 0}
-								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50">
+								<div
+									class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50"
+								>
 									{#each reparseResult.changes as change}
 										<div class="text-sm border-b border-gray-700 last:border-0 pb-2 last:pb-0">
 											<div class="text-gray-400">Old: {change.oldMerchant}</div>
 											<div class="text-green-400">New: {change.newMerchant}</div>
-											<div class="text-gray-500 text-xs mt-1">Date: {change.date} | Amount: ${change.amount.toFixed(2)}</div>
+											<div class="text-gray-500 text-xs mt-1">
+												Date: {change.date} | Amount: ${change.amount.toFixed(2)}
+											</div>
 										</div>
 									{/each}
 								</div>
 							{:else}
-								<p class="text-gray-300 text-sm">No merchant names were changed. The parser output matched the existing data.</p>
+								<p class="text-gray-300 text-sm">
+									No merchant names were changed. The parser output matched the existing data.
+								</p>
 							{/if}
 						{:else}
 							<div class="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
 								<p>{reparseResult.message}</p>
-								<p class="text-sm mt-2 text-red-300">If you want to apply these changes, you must delete the statement and upload it again.</p>
+								<p class="text-sm mt-2 text-red-300">
+									If you want to apply these changes, you must delete the statement and upload it
+									again.
+								</p>
 							</div>
 
 							{#if reparseResult.details && reparseResult.details.missing_charges}
-								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2">
-									<div class="text-sm font-semibold text-white mb-1">Missing Charges ({reparseResult.details.missing_charges.length}):</div>
+								<div
+									class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2"
+								>
+									<div class="text-sm font-semibold text-white mb-1">
+										Missing Charges ({reparseResult.details.missing_charges.length}):
+									</div>
 									{#each reparseResult.details.missing_charges as missing}
 										<div class="text-sm border-b border-gray-700 last:border-0 pb-1 last:pb-0">
 											<div class="text-gray-300">{missing.merchant}</div>
-											<div class="text-gray-500 text-xs">Date: {missing.date} | Amount: ${missing.amount.toFixed(2)}</div>
+											<div class="text-gray-500 text-xs">
+												Date: {missing.date} | Amount: ${missing.amount.toFixed(2)}
+											</div>
 										</div>
 									{/each}
 								</div>
 							{/if}
 
 							{#if reparseResult.details && reparseResult.details.extra_charges}
-								<div class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2">
-									<div class="text-sm font-semibold text-white mb-1">Extra Charges ({reparseResult.details.extra_charges.length}):</div>
+								<div
+									class="max-h-60 overflow-y-auto space-y-2 border border-gray-700 rounded p-2 bg-gray-900/50 mt-2"
+								>
+									<div class="text-sm font-semibold text-white mb-1">
+										Extra Charges ({reparseResult.details.extra_charges.length}):
+									</div>
 									{#each reparseResult.details.extra_charges as extra}
 										<div class="text-sm border-b border-gray-700 last:border-0 pb-1 last:pb-0">
 											<div class="text-gray-300">{extra.merchant}</div>
-											<div class="text-gray-500 text-xs">Date: {extra.date} | Amount: ${extra.amount.toFixed(2)}</div>
+											<div class="text-gray-500 text-xs">
+												Date: {extra.date} | Amount: ${extra.amount.toFixed(2)}
+											</div>
 										</div>
 									{/each}
 								</div>
@@ -1268,7 +1298,8 @@
 											type="button"
 											variant="secondary"
 											size="sm"
-											disabled={reparsingStatements.has(statement.id) || deletingStatements.has(statement.id)}
+											disabled={reparsingStatements.has(statement.id) ||
+												deletingStatements.has(statement.id)}
 											onclick={() => reparseStatement(statement.id)}
 										>
 											{#if reparsingStatements.has(statement.id)}
@@ -1287,7 +1318,8 @@
 											type="button"
 											variant="danger"
 											size="sm"
-											disabled={deletingStatements.has(statement.id) || reparsingStatements.has(statement.id)}
+											disabled={deletingStatements.has(statement.id) ||
+												reparsingStatements.has(statement.id)}
 											onclick={() => confirmDeleteStatement(statement)}
 										>
 											{#if deletingStatements.has(statement.id)}
@@ -1825,14 +1857,18 @@
 								<div class="text-gray-300 text-sm">
 									Cleaned merchant name: <span class="text-white">{merchantInfoData.merchant}</span>
 								</div>
-									{#if merchantInfoData.merchantDetails}
-										<div class="text-gray-300 text-sm">
-											Merchant details: <span class="text-white">{merchantInfoData.merchantDetails}</span>
-										</div>
-									{/if}
+								{#if merchantInfoData.merchantDetails}
+									<div class="text-gray-300 text-sm">
+										Merchant details: <span class="text-white"
+											>{merchantInfoData.merchantDetails}</span
+										>
+									</div>
+								{/if}
 								{#if merchantInfoData.fullStatementText}
 									<div class="text-gray-300 text-sm">
-										Full unprocessed name / Raw text: <span class="text-white">{merchantInfoData.fullStatementText}</span>
+										Full unprocessed name / Raw text: <span class="text-white"
+											>{merchantInfoData.fullStatementText}</span
+										>
 									</div>
 								{/if}
 								{#if merchantInfoData.text}

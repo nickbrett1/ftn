@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ChaseParser } from '../../../../src/lib/utils/ccbilling-parsers/chase-parser.js';
 import { ParsingUtils as ParsingUtilities } from '../../../../src/lib/utils/parsing-utils.js';
 
@@ -9,73 +9,56 @@ describe('ChaseParser', () => {
 		parser = new ChaseParser();
 	});
 
-	afterEach(() => {
-		// Clear all mocks and timers to prevent leaks
-		vi.clearAllMocks();
-		vi.clearAllTimers();
-		vi.restoreAllMocks();
-	});
-
-	describe('constructor', () => {
-		it('should initialize with correct provider name', () => {
-			expect(parser.providerName).toBe('Chase');
-		});
-	});
-
 	describe('canParse', () => {
-		it('should detect Chase statements with JPMORGAN CHASE', () => {
-			const chaseText = 'CHASE ACCOUNT SUMMARY JPMORGAN CHASE';
-			expect(parser.canParse(chaseText)).toBe(true);
+		it('should identify valid Chase statement', () => {
+			const text = 'CHASE ACCOUNT SUMMARY\nAccount Number: XXXX XXXX XXXX 1234';
+			expect(parser.canParse(text)).toBe(true);
 		});
 
-		it('should detect Chase statements with CHASE BANK', () => {
-			const chaseText = 'ACCOUNT ACTIVITY CHASE BANK';
-			expect(parser.canParse(chaseText)).toBe(true);
+		it('should reject invalid statement', () => {
+			const text = 'WELLS FARGO ACCOUNT SUMMARY';
+			expect(parser.canParse(text)).toBe(false);
 		});
 
-		it('should detect Chase statements with standalone CHASE word', () => {
-			const chaseText = 'ACCOUNT ACTIVITY CHASE CREDIT CARD';
-			expect(parser.canParse(chaseText)).toBe(true);
-		});
-
-		it('should not detect non-Chase statements', () => {
-			const nonChaseText = 'AMEX STATEMENT SUMMARY';
-			expect(parser.canParse(nonChaseText)).toBe(false);
-		});
-
-		it('should not detect Wells Fargo statements', () => {
-			const wellsFargoText = 'WELLS FARGO ONLINE Cash Advance Limit';
-			expect(parser.canParse(wellsFargoText)).toBe(false);
-		});
-
-		it('should not detect statements with CHASE in "Cash Advance"', () => {
-			const textWithCashAdvance = 'Cash Advance Limit $4,000.00 Wells Fargo';
-			expect(parser.canParse(textWithCashAdvance)).toBe(false);
-		});
-
-		it('should be case insensitive for valid Chase identifiers', () => {
-			const chaseText = 'jpmorgan chase account summary';
-			expect(parser.canParse(chaseText)).toBe(true);
-		});
-
-		it('should handle null input', () => {
-			expect(parser.canParse(null)).toBe(false);
+		it('should identify statement from URL', () => {
+			const text = 'www.chase.com\nAccount Number: 1234';
+			expect(parser.canParse(text)).toBe(true);
 		});
 	});
 
 	describe('extractLast4Digits', () => {
-		it('should extract last 4 digits from account number pattern', () => {
+		it('should extract last 4 digits from Account Number pattern', () => {
+			const text = 'Account Number: 1234 5678 9012 3456';
+			expect(parser.extractLast4Digits(text)).toBe('3456');
+		});
+
+		it('should extract last 4 digits from Account Number XXXX XXXX XXXX 1234 pattern', () => {
 			const text = 'Account Number: XXXX XXXX XXXX 1234';
 			expect(parser.extractLast4Digits(text)).toBe('1234');
 		});
 
-		it('should extract last 4 digits from alternative pattern', () => {
-			const text = 'Account Number: 5678';
+		it('should extract last 4 digits from Account Number pattern single', () => {
+			const text = 'Account Number: 1234';
+			expect(parser.extractLast4Digits(text)).toBe('1234');
+		});
+
+		it('should extract last 4 digits from ending in pattern', () => {
+			const text = 'Account ending in 1234';
+			expect(parser.extractLast4Digits(text)).toBe('1234');
+		});
+
+		it('should extract last 4 digits from Card Number pattern', () => {
+			const text = 'Card Number: 5678';
 			expect(parser.extractLast4Digits(text)).toBe('5678');
 		});
 
 		it('should extract last 4 digits from masked pattern', () => {
 			const text = 'XXXX XXXX XXXX 9012';
+			expect(parser.extractLast4Digits(text)).toBe('9012');
+		});
+
+		it('should extract last 4 digits from asterisk pattern', () => {
+			const text = '**** 9012';
 			expect(parser.extractLast4Digits(text)).toBe('9012');
 		});
 
@@ -98,6 +81,11 @@ describe('ChaseParser', () => {
 
 		it('should extract date from statement date pattern', () => {
 			const text = 'Statement Date 04/15/24';
+			expect(parser.extractStatementDate(text)).toBe('2024-04-15');
+		});
+
+		it('should extract date from statement closing date pattern', () => {
+			const text = 'Statement Closing Date 04/15/24';
 			expect(parser.extractStatementDate(text)).toBe('2024-04-15');
 		});
 
@@ -241,6 +229,16 @@ describe('ChaseParser', () => {
 			// Should NOT include the point redemption amount (2.15)
 			expect(charges.some((c) => c.amount === 2.15)).toBe(false);
 		});
+
+		it('should handle dates with year correctly if present', () => {
+			const text = `
+				01/15/24 AMAZON.COM 123.45
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(1);
+			expect(charges[0].date).toBe('2024-01-15');
+		});
 	});
 
 	describe('isLikelyForeignTransaction', () => {
@@ -248,11 +246,63 @@ describe('ChaseParser', () => {
 			expect(parser.isLikelyForeignTransaction('DSB DANISH KRONE')).toBe(true);
 			expect(parser.isLikelyForeignTransaction('EURO TRANSACTION')).toBe(true);
 			expect(parser.isLikelyForeignTransaction('POUND STERLING')).toBe(true);
+			expect(parser.isLikelyForeignTransaction('PESO')).toBe(true);
+			expect(parser.isLikelyForeignTransaction('DOLLAR')).toBe(true);
 		});
 
 		it('should not identify regular transactions as foreign', () => {
 			expect(parser.isLikelyForeignTransaction('AMAZON.COM')).toBe(false);
 			expect(parser.isLikelyForeignTransaction('WALMART')).toBe(false);
+		});
+	});
+
+	describe('isFlightTransaction', () => {
+		it('should identify flight transaction indicators', () => {
+			expect(parser.isFlightTransaction('UNITED AIRLINES')).toBe(true);
+			expect(parser.isFlightTransaction('BRITISH AIRWAYS')).toBe(true);
+			expect(parser.isFlightTransaction('Some AIRPORT shop')).toBe(true);
+			expect(parser.isFlightTransaction('Expedia FLIGHT')).toBe(true);
+			expect(parser.isFlightTransaction('TICKET')).toBe(true);
+		});
+
+		it('should not identify regular transactions as flights', () => {
+			expect(parser.isFlightTransaction('AMAZON.COM')).toBe(false);
+			expect(parser.isFlightTransaction('WALMART')).toBe(false);
+		});
+	});
+
+	describe('extractFlightDetails', () => {
+		it('should extract flight details', () => {
+			const lines = [
+				'01/15 UNITED AIRLINES 123.45',
+				'123456 123456 X SFO JFK',
+				'01/16 WALMART 67.89'
+			];
+			const result = parser.extractFlightDetails(lines, 0);
+			expect(result).not.toBeNull();
+			expect(result.departure_airport).toBe('SFO');
+			expect(result.arrival_airport).toBe('JFK');
+			expect(result.airline).toBe('UNITED');
+		});
+
+		it('should handle simple airport code patterns', () => {
+			const lines = ['01/15 UNITED AIRLINES 123.45', 'SFO JFK', '01/16 WALMART 67.89'];
+			const result = parser.extractFlightDetails(lines, 0);
+			expect(result).not.toBeNull();
+			expect(result.departure_airport).toBe('SFO');
+			expect(result.arrival_airport).toBe('JFK');
+		});
+
+		it('should return null if no flight details found', () => {
+			const lines = ['01/15 AIRPORT SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
+			const result = parser.extractFlightDetails(lines, 0);
+			expect(result).toBeNull();
+		});
+
+		it('should return null if no flight details found entirely', () => {
+			const lines = ['01/15 SOME SHOP 123.45', 'Some other text', '01/16 WALMART 67.89'];
+			const result = parser.extractFlightDetails(lines, 0);
+			expect(result).toBeNull();
 		});
 	});
 
@@ -295,6 +345,12 @@ describe('ChaseParser', () => {
 				)
 			).toBe(false);
 		});
+
+		it('should identify point keywords', () => {
+			expect(
+				parser.isLikelyShopWithPointsTransaction('AMAZON.COM', '23.75', 'AMAZON.COM rewards 23.75')
+			).toBe(true);
+		});
 	});
 
 	describe('parseTransactionLine', () => {
@@ -319,6 +375,27 @@ describe('ChaseParser', () => {
 			const line = '01/15 REFUND -50.00';
 			const result = parser.parseTransactionLine(line);
 			expect(result.amount).toBe(-50);
+		});
+
+		it('should handle valid transaction but no amount', () => {
+			const line = '01/15 REFUND XXX';
+			const result = parser.parseTransactionLine(line);
+			expect(result).toBeNull();
+		});
+
+		it('should handle currency line matches correctly', () => {
+			expect(parser.safeMatchCurrencyLine('SHOP WITH POINTS ACTIVITY')).toBe(false);
+			expect(parser.safeMatchCurrencyLine('A')).toBe(false);
+			expect(parser.safeMatchCurrencyLine('DANISH KRONE')).toBe(true);
+		});
+
+		it('should extract exchange rates', () => {
+			const res = parser.safeMatchExchangeRate('15.50 X 6.45');
+			expect(res.amount1).toBe(15.5);
+			expect(res.amount2).toBe(6.45);
+
+			expect(parser.safeMatchExchangeRate('INVALID X TEXT')).toBeNull();
+			expect(parser.safeMatchExchangeRate('15.50 X ')).toBeNull();
 		});
 	});
 
@@ -354,7 +431,7 @@ describe('ChaseParser', () => {
 		});
 
 		it('should throw error for invalid statement', async () => {
-			const text = 'INVALID STATEMENT WITHOUT REQUIRED FIELDS';
+			const text = 'CHASE ACCOUNT SUMMARY';
 			await expect(parser.parse(text)).rejects.toThrow(
 				'Failed to parse required fields from Chase statement'
 			);

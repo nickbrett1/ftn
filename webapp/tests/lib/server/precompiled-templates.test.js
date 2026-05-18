@@ -18,9 +18,13 @@ describe('precompiled-templates.js', () => {
 
 		// Spot check a few known templates
 		expect(globalThis.Handlebars.templates['devcontainer-node-dockerfile.hbs']).toBeDefined();
-		expect(typeof globalThis.Handlebars.templates['devcontainer-node-dockerfile.hbs']).toBe('function');
+		expect(typeof globalThis.Handlebars.templates['devcontainer-node-dockerfile.hbs']).toBe(
+			'function'
+		);
 
 		expect(globalThis.Handlebars.templates['devcontainer-java-dockerfile.hbs']).toBeDefined();
-		expect(typeof globalThis.Handlebars.templates['devcontainer-java-dockerfile.hbs']).toBe('function');
+		expect(typeof globalThis.Handlebars.templates['devcontainer-java-dockerfile.hbs']).toBe(
+			'function'
+		);
 	});
 });

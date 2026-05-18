@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PATCH } from '../../../../src/routes/projects/ccbilling/statements/[id]/reparse/+server.js';
-import { getStatement, getPaymentsForStatement, updatePaymentMerchantFields } from '../../../../src/lib/server/ccbilling-db.js';
-import { RouteUtils } from '../../../../src/lib/server/route-utils.js';
+import {
+	getStatement,
+	getPaymentsForStatement,
+	updatePaymentMerchantFields
+} from '../../../../src/lib/server/ccbilling-db.js';
+import { RouteUtils as RouteUtilities } from '../../../../src/lib/server/route-utils.js';
 
 vi.mock('../../../../src/lib/server/ccbilling-db.js', () => ({
 	getStatement: vi.fn(),
@@ -19,7 +23,7 @@ vi.mock('../../../../src/lib/server/route-utils.js', () => {
 					if (!parsedBody && event.request) {
 						try {
 							parsedBody = await event.request.json();
-						} catch (e) {
+						} catch {
 							// Ignore
 						}
 					}
@@ -27,16 +31,19 @@ vi.mock('../../../../src/lib/server/route-utils.js', () => {
 				};
 			},
 			createErrorResponse: (message, options) => {
-				return new Response(JSON.stringify({ error: message }), {
-					status: options?.status || 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return Response.json(
+					{ error: message },
+					{
+						status: options?.status || 500,
+						headers: { 'Content-Type': 'application/json' }
+					}
+				);
 			},
-			parseInteger: (val, name, options) => {
-				const num = Number.parseInt(val);
-				if (Number.isNaN(num)) return `Invalid ${name}`;
-				if (options?.min && num < options.min) return `Invalid ${name}`;
-				return num;
+			parseInteger: (value, name, options) => {
+				const number_ = Number.parseInt(value);
+				if (Number.isNaN(number_)) return `Invalid ${name}`;
+				if (options?.min && number_ < options.min) return `Invalid ${name}`;
+				return number_;
 			}
 		}
 	};
@@ -255,7 +262,8 @@ describe('PATCH /projects/ccbilling/statements/[id]/reparse', () => {
 describe('PATCH /projects/ccbilling/statements/[id]/reparse validators', () => {
 	it('should test RouteUtils validators fallback directly', async () => {
 		// Import the module dynamically to get access to the registered validators
-		const { PATCH } = await import('../../../../src/routes/projects/ccbilling/statements/[id]/reparse/+server.js');
+		const { PATCH } =
+			await import('../../../../src/routes/projects/ccbilling/statements/[id]/reparse/+server.js');
 
 		// The mock of RouteUtils doesn't expose the validators array directly.
 		// So this test is just ensuring the file parses cleanly.

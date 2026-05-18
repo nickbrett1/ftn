@@ -7,12 +7,14 @@ describe('Dependabot File Generation', () => {
 			name: 'test-project',
 			capabilities: ['dependabot', 'devcontainer-node'],
 			configuration: {
-				'dependabot': {}
+				dependabot: {}
 			}
 		};
 
 		const files = await generateAllFiles(context);
-		const autoMergeFile = files.find((f) => f.filePath === '.github/workflows/dependabot-auto-merge.yml');
+		const autoMergeFile = files.find(
+			(f) => f.filePath === '.github/workflows/dependabot-auto-merge.yml'
+		);
 		const dependabotConfigFile = files.find((f) => f.filePath === '.github/dependabot.yml');
 
 		expect(autoMergeFile).toBeDefined();
@@ -32,7 +34,9 @@ describe('Dependabot File Generation', () => {
 		};
 
 		const files = await generateAllFiles(context);
-		const autoMergeFile = files.find((f) => f.filePath === '.github/workflows/dependabot-auto-merge.yml');
+		const autoMergeFile = files.find(
+			(f) => f.filePath === '.github/workflows/dependabot-auto-merge.yml'
+		);
 
 		expect(autoMergeFile).toBeUndefined();
 	});
