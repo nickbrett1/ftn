@@ -248,3 +248,47 @@ describe('parsing failures handling', () => {
 		);
 	});
 });
+
+	it('should throw if run outside browser', async () => {
+		const oldWindow = globalThis.window;
+		delete globalThis.window;
+		await expect(PDFUtils.parsePDFFile({})).rejects.toThrow('PDF parsing not available in server environment');
+		globalThis.window = oldWindow;
+	});
+
+describe('_initializePDFJs coverage', () => {
+	it('should polyfill ReadableStream asyncIterator if missing', async () => {
+		const originalReadableStream = globalThis.ReadableStream;
+		globalThis.ReadableStream = function () {};
+		globalThis.ReadableStream.prototype.getReader = () => ({
+			read: vi.fn()
+				.mockResolvedValueOnce({ done: false, value: 1 })
+				.mockResolvedValueOnce({ done: true }),
+			releaseLock: vi.fn()
+		});
+
+		const lib = await PDFUtils._initializePDFJs();
+
+		expect(globalThis.ReadableStream.prototype[Symbol.asyncIterator]).toBeDefined();
+
+		const stream = new globalThis.ReadableStream();
+		const result = [];
+		for await (const chunk of stream) {
+			result.push(chunk);
+		}
+
+		expect(result).toEqual([1]);
+
+		globalThis.ReadableStream = originalReadableStream;
+	});
+
+	it('should configure worker if not in test env', async () => {
+		const originalEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = 'production';
+
+		const lib = await PDFUtils._initializePDFJs();
+		expect(lib.GlobalWorkerOptions.workerSrc).toBe('/pdf.worker.min.mjs');
+
+		process.env.NODE_ENV = originalEnv;
+	});
+});
