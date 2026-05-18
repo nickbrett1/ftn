@@ -4,7 +4,8 @@ import {
 	formatShortDate,
 	formatMediumDate,
 	formatMonthYear,
-	formatRelativeTime, formatTime,
+	formatRelativeTime,
+	formatTime,
 	parseISODateParts,
 	isToday,
 	isYesterday
@@ -67,8 +68,8 @@ describe('date-utils', () => {
 	});
 });
 
-	describe('formatTime', () => {
-		it('should handle pure date inputs YYYY-MM-DD gracefully', () => {
-			expect(formatTime('2023-01-15')).toBe('');
-		});
+describe('formatTime', () => {
+	it('should handle pure date inputs YYYY-MM-DD gracefully', () => {
+		expect(formatTime('2023-01-15')).toBe('');
 	});
+});

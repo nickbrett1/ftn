@@ -134,8 +134,11 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, true), // Positive percentages
 							weight: '400',
 							particles: {
-								color: { value: '#00FF9E' }, // Green for positive
-								size: { value: 8 }
+								paint: { color: { value: '#00FF9E' } }, // Green for positive
+								size: { value: 48 },
+								links: {
+									color: { value: '#ffffff' } // white lines
+								}
 							}
 						},
 						{
@@ -144,8 +147,11 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, false), // Negative percentages
 							weight: '400',
 							particles: {
-								color: { value: '#FF0061' }, // Red for negative
-								size: { value: 8 }
+								paint: { color: { value: '#FF0061' } }, // Red for negative
+								size: { value: 48 },
+								links: {
+									color: { value: '#ffffff' } // white lines
+								}
 							}
 						}
 					]
@@ -216,8 +222,8 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['404', '404', '404'],
 			weight: '400',
 			particles: {
-				color: { value: '#22c55e' }, // Green
-				size: { value: 12 }
+				paint: { color: { value: '#22c55e' } }, // Green
+				size: { value: 48 }
 			}
 		},
 		{
@@ -226,8 +232,8 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['ERROR', 'ERROR'],
 			weight: '400',
 			particles: {
-				color: { value: '#FF0061' }, // Red
-				size: { value: 12 }
+				paint: { color: { value: '#FF0061' } }, // Red
+				size: { value: 48 }
 			}
 		}
 	];
@@ -249,8 +255,8 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['AUTH', 'AUTH', 'AUTH'],
 			weight: '400',
 			particles: {
-				color: { value: '#22c55e' }, // Green
-				size: { value: 12 }
+				paint: { color: { value: '#22c55e' } }, // Green
+				size: { value: 48 }
 			}
 		},
 		{
@@ -259,8 +265,8 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['LOGIN', 'LOGIN'],
 			weight: '400',
 			particles: {
-				color: { value: '#fbbf24' }, // Yellow/amber
-				size: { value: 12 }
+				paint: { color: { value: '#fbbf24' } }, // Yellow/amber
+				size: { value: 48 }
 			}
 		}
 	];
