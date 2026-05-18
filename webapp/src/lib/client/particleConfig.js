@@ -134,7 +134,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, true), // Positive percentages
 							weight: '400',
 							particles: {
-								color: { value: '#00FF9E' }, // Green for positive
+								paint: { color: { value: '#00FF9E' } }, // Green for positive
 								size: { value: 24 },
 								links: {
 									color: { value: '#ffffff' } // white lines
@@ -147,7 +147,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							value: generatePercentageValues(50, false), // Negative percentages
 							weight: '400',
 							particles: {
-								color: { value: '#FF0061' }, // Red for negative
+								paint: { color: { value: '#FF0061' } }, // Red for negative
 								size: { value: 24 },
 								links: {
 									color: { value: '#ffffff' } // white lines
@@ -222,7 +222,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['404', '404', '404'],
 			weight: '400',
 			particles: {
-				color: { value: '#22c55e' }, // Green
+				paint: { color: { value: '#22c55e' } }, // Green
 				size: { value: 24 }
 			}
 		},
@@ -232,7 +232,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			value: ['ERROR', 'ERROR'],
 			weight: '400',
 			particles: {
-				color: { value: '#FF0061' }, // Red
+				paint: { color: { value: '#FF0061' } }, // Red
 				size: { value: 24 }
 			}
 		}
@@ -255,7 +255,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['AUTH', 'AUTH', 'AUTH'],
 			weight: '400',
 			particles: {
-				color: { value: '#22c55e' }, // Green
+				paint: { color: { value: '#22c55e' } }, // Green
 				size: { value: 24 }
 			}
 		},
@@ -265,7 +265,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			value: ['LOGIN', 'LOGIN'],
 			weight: '400',
 			particles: {
-				color: { value: '#fbbf24' }, // Yellow/amber
+				paint: { color: { value: '#fbbf24' } }, // Yellow/amber
 				size: { value: 24 }
 			}
 		}
@@ -292,3 +292,34 @@ function deepMerge(target, source) {
 
 	return result;
 }
+
+/*
+ * EXAMPLE: Creating custom particle configurations
+ *
+ * To add new particle effects, follow this pattern:
+ *
+ * export const createCustomParticleConfig = (overrides = {}) => {
+ *   const config = {
+ *     ...baseConfig,
+ *     particles: {
+ *       ...baseConfig.particles,
+ *       // Custom particle settings
+ *       shape: {
+ *         type: 'circle', // or 'text', 'star', etc.
+ *         options: { ... }
+ *       },
+ *       color: { value: '#custom-color' },
+ *       move: {
+ *         ...baseConfig.particles.move,
+ *         direction: 'custom-direction'
+ *       }
+ *     }
+ *   };
+ *
+ *   return deepMerge(config, overrides);
+ * };
+ *
+ * SECURITY NOTE: This module uses crypto.getRandomValues() for all random number
+ * generation. If you create custom particle configs that need randomness, consider
+ * using the same approach for consistency and security best practices.
+ */
