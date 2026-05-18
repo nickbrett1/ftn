@@ -8,6 +8,7 @@ vi.mock('@tsparticles/engine');
 describe.skip('App', () => {
 	vi.stubGlobal('ResizeObserver', ResizeObserver);
 
+
 	// Needed per https://github.com/testing-library/svelte-testing-library/issues/284
 	Element.prototype.animate = () => ({ cancel: vi.fn(), finished: Promise.resolve() });
 
