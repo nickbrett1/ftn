@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { generateAllFiles } from '$lib/utils/file-generator.js';
-import fs from 'fs/promises';
-import path from 'path';
-import { exec } from 'child_process';
-import util from 'util';
-import os from 'os';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { exec } from 'node:child_process';
+import util from 'node:util';
+import os from 'node:os';
 
 const execPromise = util.promisify(exec);
 
@@ -32,7 +32,7 @@ describe('NPM Resolution Test', () => {
 			// Increase timeout as this can be slow
 			const { stdout, stderr } = await execPromise('npm install', {
 				cwd: tempDir,
-				timeout: 600000
+				timeout: 600_000
 			});
 
 			expect(stdout).toBeDefined();
@@ -45,5 +45,5 @@ describe('NPM Resolution Test', () => {
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
-	}, 70000); // 70 second timeout for npm install
+	}, 70_000); // 70 second timeout for npm install
 });

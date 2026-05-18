@@ -19,7 +19,7 @@
 </svelte:head>
 
 {#if BackgroundComponent}
-	<svelte:component this={BackgroundComponent} />
+	<BackgroundComponent />
 {/if}
 
 <Header />

@@ -86,13 +86,13 @@ Total new charges in this period $10,518.22
 
 			expect(charges[0]).toMatchObject({
 				merchant: 'Mta*Nyct Paygo',
-				amount: 3.0,
+				amount: 3,
 				date: '2026-02-07'
 			});
 
 			expect(charges[1]).toMatchObject({
 				merchant: 'Balance Transfer',
-				amount: 10165.79,
+				amount: 10_165.79,
 				date: '2026-02-13'
 			});
 		});
@@ -145,12 +145,12 @@ Total fees charged in this period $590.00
 			expect(charges).toHaveLength(2);
 			expect(charges[0]).toMatchObject({
 				merchant: 'Annual Fee',
-				amount: 495.0,
+				amount: 495,
 				date: '2026-03-06'
 			});
 			expect(charges[1]).toMatchObject({
 				merchant: 'Annual Fee',
-				amount: 95.0,
+				amount: 95,
 				date: '2026-03-06'
 			});
 		});
@@ -206,7 +206,7 @@ Mar 6, 2026 ANNUAL FEE $495.00
 			expect(result.charges).toHaveLength(4); // 2 transactions + 1 refund + 1 fee
 			expect(result.charges).toEqual(
 				expect.arrayContaining([
-					expect.objectContaining({ merchant: 'Annual Fee', amount: 495.0 }),
+					expect.objectContaining({ merchant: 'Annual Fee', amount: 495 }),
 					expect.objectContaining({ merchant: 'Merchandise Return', amount: -76.47 })
 				])
 			);

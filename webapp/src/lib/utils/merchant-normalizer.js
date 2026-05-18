@@ -299,8 +299,8 @@ function extractKindleDetails(merchant) {
 function extractMaidMarinesDetails(merchant) {
 	// Clean up MAIDMARINES merchant name by removing location identifiers and state codes
 	const cleaned = merchant
-		.replace(/MAIDMARINES\s+#\d+/gi, '')
-		.replace(/MAIDMARINES\.C/gi, '')
+		.replaceAll(/MAIDMARINES\s+#\d+/gi, '')
+		.replaceAll(/MAIDMARINES\.C/gi, '')
 		.replace(/\s+[A-Z]{2}\s*$/i, '')
 		.replaceAll(/\s+$/g, '')
 		.replaceAll(/\s+/g, ' ')

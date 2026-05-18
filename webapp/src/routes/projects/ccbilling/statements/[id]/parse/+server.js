@@ -248,27 +248,27 @@ function identifyCreditCardFromParsedData(last4, cardName, availableCreditCards)
 		const normalizedSearchName = cardName.toLowerCase().replace('palladium', 'paladium');
 
 		const matchingByName = availableCreditCards.find((card) => {
-			const dbCardName = card.name.toLowerCase();
-			const normalizedDbName = dbCardName.replace('palladium', 'paladium');
+			const databaseCardName = card.name.toLowerCase();
+			const normalizedDatabaseName = databaseCardName.replace('palladium', 'paladium');
 
 			// Exact match
-			if (dbCardName === cardName.toLowerCase()) return true;
+			if (databaseCardName === cardName.toLowerCase()) return true;
 
 			// Normalized exact match (handles palladium/paladium)
-			if (normalizedDbName === normalizedSearchName) return true;
+			if (normalizedDatabaseName === normalizedSearchName) return true;
 
 			// Substring match - either the DB card name contains the statement card name or vice versa
 			if (
-				dbCardName.includes(cardName.toLowerCase()) ||
-				cardName.toLowerCase().includes(dbCardName)
+				databaseCardName.includes(cardName.toLowerCase()) ||
+				cardName.toLowerCase().includes(databaseCardName)
 			)
 				return true;
 
 			// Special case for Bilt
-			if (cardName.toLowerCase().includes('bilt') && dbCardName.includes('bilt')) {
-				if (cardName.toLowerCase().includes('palladium') && dbCardName.includes('paladium'))
+			if (cardName.toLowerCase().includes('bilt') && databaseCardName.includes('bilt')) {
+				if (cardName.toLowerCase().includes('palladium') && databaseCardName.includes('paladium'))
 					return true;
-				if (cardName.toLowerCase().includes('paladium') && dbCardName.includes('palladium'))
+				if (cardName.toLowerCase().includes('paladium') && databaseCardName.includes('palladium'))
 					return true;
 			}
 
@@ -353,8 +353,8 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	const day = Number.parseInt(mmddMatch[2], 10);
 
 	// Parse billing cycle dates safely
-	const parseISODate = (isoStr) => {
-		const [y, m, d] = isoStr.split('-').map(Number);
+	const parseISODate = (isoString) => {
+		const [y, m, d] = isoString.split('-').map(Number);
 		return { y, m, d };
 	};
 
@@ -365,7 +365,7 @@ function determineTransactionDateWithYear(transactionDate, billingCycle) {
 	let transactionYear = billingCycleEnd.y;
 
 	// Create numeric representation for comparison (YYYYMMDD)
-	const toNumeric = (y, m, d) => y * 10000 + m * 100 + d;
+	const toNumeric = (y, m, d) => y * 10_000 + m * 100 + d;
 
 	const currentNumeric = toNumeric(transactionYear, month, day);
 	const startNumeric = toNumeric(billingCycleStart.y, billingCycleStart.m, billingCycleStart.d);

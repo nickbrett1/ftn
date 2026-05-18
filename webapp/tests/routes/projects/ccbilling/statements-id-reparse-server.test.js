@@ -5,7 +5,7 @@ import {
 	getPaymentsForStatement,
 	updatePaymentMerchantFields
 } from '../../../../src/lib/server/ccbilling-db.js';
-import { RouteUtils } from '../../../../src/lib/server/route-utils.js';
+import { RouteUtils as RouteUtilities } from '../../../../src/lib/server/route-utils.js';
 
 vi.mock('../../../../src/lib/server/ccbilling-db.js', () => ({
 	getStatement: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock('../../../../src/lib/server/route-utils.js', () => {
 					if (!parsedBody && event.request) {
 						try {
 							parsedBody = await event.request.json();
-						} catch (e) {
+						} catch {
 							// Ignore
 						}
 					}
@@ -31,16 +31,19 @@ vi.mock('../../../../src/lib/server/route-utils.js', () => {
 				};
 			},
 			createErrorResponse: (message, options) => {
-				return new Response(JSON.stringify({ error: message }), {
-					status: options?.status || 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return Response.json(
+					{ error: message },
+					{
+						status: options?.status || 500,
+						headers: { 'Content-Type': 'application/json' }
+					}
+				);
 			},
-			parseInteger: (val, name, options) => {
-				const num = Number.parseInt(val);
-				if (Number.isNaN(num)) return `Invalid ${name}`;
-				if (options?.min && num < options.min) return `Invalid ${name}`;
-				return num;
+			parseInteger: (value, name, options) => {
+				const number_ = Number.parseInt(value);
+				if (Number.isNaN(number_)) return `Invalid ${name}`;
+				if (options?.min && number_ < options.min) return `Invalid ${name}`;
+				return number_;
 			}
 		}
 	};

@@ -84,7 +84,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	getLast4DigitsPatterns() {
 		return [
-			/Account Number:\s*XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
+			/Account Number:\s*(?:(?:XXXX|\d{4})\s+){3}(\d{4})/i,
 			/Account Number:\s*(\d{4})/i,
 			/XXXX\s+XXXX\s+XXXX\s+(\d{4})/i,
 			/(?:card|account)\s+(?:number|#)[:\s]*\*{0,4}(\d{4})/i,
@@ -278,7 +278,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	parseBasicTransaction(line) {
 		// Look for date pattern at the start of a line (MM/DD)
-		const dateMatch = /^(\d{2}\/\d{2})\s+(.+)/.exec(line);
+		const dateMatch = /^(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\s+(.+)/.exec(line);
 		if (!dateMatch) return null;
 
 		const date = this.parseDate(dateMatch[1]);
@@ -380,7 +380,8 @@ export class ChaseParser extends BaseParser {
 			'WON',
 			'RUBLE',
 			'LIRA',
-			'RAND'
+			'RAND',
+			'DOLLAR'
 		];
 
 		return foreignIndicators.some((indicator) => merchant.toUpperCase().includes(indicator));
@@ -536,7 +537,7 @@ export class ChaseParser extends BaseParser {
 		// We need to handle multi-line merchants and various formats
 
 		// Look for date pattern at the beginning
-		const dateMatch = /^(\d{1,2}\/\d{1,2})/.exec(line);
+		const dateMatch = /^(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/.exec(line);
 		if (!dateMatch) return null;
 
 		const date = this.parseDate(dateMatch[1]);
@@ -552,7 +553,7 @@ export class ChaseParser extends BaseParser {
 		let merchant = amountMatch.merchant;
 
 		// Remove the date part from the beginning of the merchant name
-		const datePattern = /^\d{1,2}\/\d{1,2}\s+/;
+		const datePattern = /^\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\s+/;
 		merchant = merchant.replace(datePattern, '');
 
 		// Clean up merchant name

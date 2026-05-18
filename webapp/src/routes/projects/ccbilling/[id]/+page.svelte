@@ -752,13 +752,13 @@
 			xhr.open('GET', url, true);
 			xhr.responseType = 'arraybuffer';
 
-			xhr.onload = () => {
+			xhr.addEventListener('load', () => {
 				if (xhr.status >= 200 && xhr.status < 300) {
 					resolve(xhr.response);
 				} else {
 					reject(new Error(`HTTP Error ${xhr.status} downloading PDF`));
 				}
-			};
+			});
 			xhr.onerror = () => reject(new Error('Network error downloading PDF'));
 			xhr.send();
 		});

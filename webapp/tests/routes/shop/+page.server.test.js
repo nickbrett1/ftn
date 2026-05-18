@@ -103,10 +103,10 @@ describe('shop/+page.server.js', () => {
 				await actions.checkout({ request, url: mockUrl });
 				// Should throw a redirect error
 				expect.unreachable('Should have thrown redirect');
-			} catch (e) {
-				if (e.message !== 'Redirect') throw e;
-				expect(e.status).toBe(303);
-				expect(e.location).toBe('https://checkout.stripe.com/session_123');
+			} catch (error) {
+				if (error.message !== 'Redirect') throw error;
+				expect(error.status).toBe(303);
+				expect(error.location).toBe('https://checkout.stripe.com/session_123');
 			}
 
 			expect(stripeMock).toHaveBeenCalledTimes(1);

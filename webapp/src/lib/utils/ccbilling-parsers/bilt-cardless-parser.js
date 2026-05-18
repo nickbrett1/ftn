@@ -165,12 +165,12 @@ export class BiltCardlessParser extends BaseParser {
 			if (inTransactions || inPayments || inFees) {
 				const dateMatch = datePattern.exec(line);
 				if (dateMatch) {
-					const monthStr = dateMatch[1];
+					const monthString = dateMatch[1];
 					const day = dateMatch[2];
 					const year = dateMatch[3];
 
 					// Full date in ISO format
-					const date = this.parseDate(`${monthStr} ${day}, ${year}`);
+					const date = this.parseDate(`${monthString} ${day}, ${year}`);
 
 					// Description and amount might be on this line or next lines
 					let description = line.replace(dateMatch[0], '').trim();

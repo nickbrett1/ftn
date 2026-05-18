@@ -33,7 +33,10 @@
 
 	// Remove class from rest to avoid conflicts, but keep event handlers
 
-	const { class: _class, ...restWithoutClass } = rest;
+	let restWithoutClass = $derived.by(() => {
+		const { class: _, ...r } = rest;
+		return r;
+	});
 </script>
 
 {#if href}

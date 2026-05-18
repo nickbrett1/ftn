@@ -41,11 +41,11 @@ const streetSuffixes = [
 	'EXPRESSWAY'
 ];
 
-const suffixRegexStr = `(?:${streetSuffixes.join('|')})`;
+const suffixRegexString = `(?:${streetSuffixes.join('|')})`;
 
 // Match a street number, up to 4 words, and a street suffix (with optional period), followed by optional extra text
 const addressPattern = new RegExp(
-	String.raw`\s+(?:#\s*)?\d{1,5}\s+(?:[A-Za-z0-9\-]+\s+){0,4}${suffixRegexStr}\.?(?:\s+.*)?$`,
+	String.raw`\s+(?:#\s*)?\d{1,5}\s+(?:[A-Za-z0-9\-]+\s+){0,4}${suffixRegexString}\.?(?:\s+.*)?$`,
 	'i'
 );
 
@@ -287,11 +287,11 @@ export const ParsingUtils = {
 		const match = /^([A-Z]{3,9})\s+(\d{1,2}),\s+(\d{4})$/i.exec(dateString.trim());
 		if (!match) return null;
 
-		const monthStr = match[1].toUpperCase();
+		const monthString = match[1].toUpperCase();
 		const day = Number.parseInt(match[2], 10);
 		const year = Number.parseInt(match[3], 10);
 
-		const month = months[monthStr];
+		const month = months[monthString];
 		if (!month || day < 1 || day > 31) return null;
 
 		return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;

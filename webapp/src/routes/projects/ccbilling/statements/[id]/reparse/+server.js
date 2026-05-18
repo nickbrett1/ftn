@@ -62,7 +62,9 @@ export const PATCH = RouteUtils.createRouteHandler(
 				(nc) => Math.abs(nc.amount - payment.amount) < 0.01
 			);
 
-			if (matchIndex >= 0) {
+			if (matchIndex === -1) {
+				missingCharges.push(payment);
+			} else {
 				const matchedCharge = unmatchedNewCharges[matchIndex];
 				matchedPairs.push({
 					paymentId: payment.id,
@@ -71,8 +73,6 @@ export const PATCH = RouteUtils.createRouteHandler(
 				});
 				// Remove from unmatched
 				unmatchedNewCharges.splice(matchIndex, 1);
-			} else {
-				missingCharges.push(payment);
 			}
 		}
 
