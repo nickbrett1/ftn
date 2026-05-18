@@ -135,7 +135,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							weight: '400',
 							particles: {
 								paint: { color: { value: '#00FF9E' } }, // Green for positive
-								size: { value: 24 },
+								size: { value: 48 },
 								links: {
 									color: { value: '#ffffff' } // white lines
 								}
@@ -148,7 +148,7 @@ export const createFinancialParticleConfig = (overrides = {}) => {
 							weight: '400',
 							particles: {
 								paint: { color: { value: '#FF0061' } }, // Red for negative
-								size: { value: 24 },
+								size: { value: 48 },
 								links: {
 									color: { value: '#ffffff' } // white lines
 								}
@@ -223,7 +223,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			weight: '400',
 			particles: {
 				paint: { color: { value: '#22c55e' } }, // Green
-				size: { value: 24 }
+				size: { value: 48 }
 			}
 		},
 		{
@@ -233,7 +233,7 @@ export const createErrorParticleConfig = (overrides = {}) => {
 			weight: '400',
 			particles: {
 				paint: { color: { value: '#FF0061' } }, // Red
-				size: { value: 24 }
+				size: { value: 48 }
 			}
 		}
 	];
@@ -256,7 +256,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			weight: '400',
 			particles: {
 				paint: { color: { value: '#22c55e' } }, // Green
-				size: { value: 24 }
+				size: { value: 48 }
 			}
 		},
 		{
@@ -266,7 +266,7 @@ export const createAuthParticleConfig = (overrides = {}) => {
 			weight: '400',
 			particles: {
 				paint: { color: { value: '#fbbf24' } }, // Yellow/amber
-				size: { value: 24 }
+				size: { value: 48 }
 			}
 		}
 	];
