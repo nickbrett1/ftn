@@ -204,7 +204,14 @@ jobs:
           command: |
             cd webapp
             echo "Attempting to sync secrets to Cloudflare production environment..."
-            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env production; then
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets.json
+            jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
+            SUCCESS=true
+            while read -r batch; do
+                echo "$batch" | npx wrangler secret bulk --env production || SUCCESS=false
+            done < doppler_secrets_batches.json
+            rm doppler_secrets.json doppler_secrets_batches.json
+            if [ "$SUCCESS" = true ]; then
               echo "✅ Secrets successfully synced to Cloudflare production"
             else
               echo "❌ Error: Failed to sync secrets to Cloudflare production. This is critical for production deployments."
@@ -251,7 +258,14 @@ jobs:
           command: |
             cd webapp
             echo "Attempting to sync secrets to Cloudflare preview environment..."
-            if doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' | npx wrangler secret bulk --env preview; then
+            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets.json
+            jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
+            SUCCESS=true
+            while read -r batch; do
+                echo "$batch" | npx wrangler secret bulk --env preview || SUCCESS=false
+            done < doppler_secrets_batches.json
+            rm doppler_secrets.json doppler_secrets_batches.json
+            if [ "$SUCCESS" = true ]; then
               echo "✅ Secrets successfully synced to Cloudflare preview"
             else
               echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview. This may be due to script settings conflicts."
