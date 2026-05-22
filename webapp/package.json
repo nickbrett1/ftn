@@ -102,7 +102,7 @@
 		"@tsparticles/interaction-external-trail": "^4.0.5",
 		"@tsparticles/shape-text": "^4.0.5",
 		"@tsparticles/slim": "^4.0.5",
-		"apexcharts": "^5.12.0",
+		"apexcharts": "^5.13.0",
 		"arctic": "^3.7.0",
 		"cookie": "^1.1.1",
 		"gsap": "^3.15.0",
