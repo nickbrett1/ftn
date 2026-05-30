@@ -60,7 +60,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-security": "^4.0.0",
 		"eslint-plugin-sonarjs": "^4.0.3",
-		"eslint-plugin-svelte": "^3.18.0",
+		"eslint-plugin-svelte": "^3.19.0",
 		"eslint-plugin-unicorn": "^64.0.0",
 		"fs-extra": "^11.3.5",
 		"highlight.js": "^11.11.1",
