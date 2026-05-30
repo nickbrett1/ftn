@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# Determine the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The webapp directory is one level up from the scripts directory
+WEBAPP_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Change to the webapp directory so that relative paths work correctly
+cd "$WEBAPP_DIR"
+
 # Setup Wrangler Configuration Script
 # This script generates wrangler.jsonc from the template using environment variables
 # It should be called during development setup and CI/CD deployments

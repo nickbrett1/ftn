@@ -201,7 +201,9 @@ function createDevelopmentContainerDockerfile(
 function createDevelopmentContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
 	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
 		...projectConfig,
-		geminiDevAlias: allCapabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
+		geminiDevAlias: allCapabilities.includes('doppler')
+			? GEMINI_DEV_ALIAS.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
+			: ''
 	});
 
 	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);

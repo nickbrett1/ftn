@@ -301,6 +301,8 @@ describe('TemplateEngine', () => {
 		expect(zshrc).toBeDefined();
 		expect(zshrc.content).toContain('gemini-dev()');
 		expect(zshrc.content).toContain('doppler run');
+		expect(zshrc.content).toContain('--project test-project');
+		expect(zshrc.content).not.toContain('{{projectName}}');
 	});
 
 	it('should NOT include gemini-dev alias in .zshrc when Doppler capability is NOT present in generateAllFiles', async () => {

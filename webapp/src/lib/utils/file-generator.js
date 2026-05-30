@@ -446,7 +446,12 @@ export function generateMergedDevelopmentContainerFiles(
 			filePath: '.devcontainer/.zshrc',
 			content: templateEngine.generateFile('devcontainer-zshrc-full', {
 				...context,
-				geminiDevAlias: context.capabilities.includes('doppler') ? GEMINI_DEV_ALIAS : ''
+				geminiDevAlias: context.capabilities.includes('doppler')
+					? GEMINI_DEV_ALIAS.replaceAll(
+							'{{projectName}}',
+							context.projectName || context.name || 'my-project'
+						)
+					: ''
 			})
 		},
 		{

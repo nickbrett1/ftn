@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# Determine the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The webapp directory is one level up from the scripts directory
+WEBAPP_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Change to the webapp directory so that relative paths work correctly
+cd "$WEBAPP_DIR"
+
 # Doppler login/setup
 if command -v doppler &> /dev/null; then
   if doppler whoami &> /dev/null; then
@@ -36,7 +44,7 @@ echo "Configuring Gemini CLI..."
 doppler run --project webapp --config dev -- gemini mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
 
 echo "INFO: Installing Nanobanana MCP..."
-chmod +x /workspaces/ftn/webapp/scripts/install-nanobanana.sh
-/workspaces/ftn/webapp/scripts/install-nanobanana.sh
+chmod +x ./scripts/install-nanobanana.sh
+./scripts/install-nanobanana.sh
 
 echo "Cloud login script finished."
