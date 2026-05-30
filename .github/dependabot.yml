@@ -10,6 +10,10 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+    groups:
+      tsparticles:
+        patterns:
+          - "*tsparticles*"
     ignore:
       - dependency-name: "remark-footnotes"
         # Keep at v2.x as later versions break footnote functionality
