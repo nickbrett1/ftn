@@ -28,7 +28,7 @@
   },
 
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"], // Moved from build.runArgs
-  "forwardPorts": [8788, 8976, 36079, 33301, 37677], // Ports for Cloudflare Workers preview and Wrangler dev tools, as well as for gemini workaround (https://github.com/google-gemini/gemini-cli/issues/6297)
+  "forwardPorts": [8788, 8976, 36079, 33301, 37677], // Ports for Cloudflare Workers preview and Wrangler dev tools. If running multiple containers, use WRANGLER_CALLBACK_PORT to avoid conflicts on 8976.
   // Configure tool-specific properties.
   "customizations": {
     // Configure properties specific to VS Code.
