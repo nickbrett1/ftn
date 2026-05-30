@@ -43,7 +43,7 @@ describe('/projects/genproj/api/auth/github', () => {
 			expect(location).toContain('https://github.com/login/oauth/authorize');
 			const locationUrl = new URL(location);
 			expect(locationUrl.searchParams.get('client_id')).toBe('test-client-id');
-			expect(locationUrl.searchParams.get('scope')).toBe('repo');
+			expect(locationUrl.searchParams.get('scope')).toBe('repo workflow');
 			expect(locationUrl.searchParams.get('state')).toBeTruthy();
 			expect(locationUrl.searchParams.get('redirect_uri')).toBe(
 				'http://localhost/projects/genproj/api/auth/github/callback'

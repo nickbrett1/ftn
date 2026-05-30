@@ -180,10 +180,25 @@ describe('GitHubAPIService', () => {
 	});
 
 	it('retrieves repositories and validates token', async () => {
-		const repoJson = vi.fn().mockResolvedValue({ name: 'repo' });
+		const repoPayload = {
+			name: 'repo',
+			full_name: 'user/repo',
+			clone_url: 'clone',
+			html_url: 'html',
+			private: false,
+			default_branch: 'main'
+		};
+		const repoJson = vi.fn().mockResolvedValue(repoPayload);
 		vi.spyOn(service, 'makeRequest').mockResolvedValue({ json: repoJson });
 
-		expect(await service.getRepository('user', 'repo')).toEqual({ name: 'repo' });
+		expect(await service.getRepository('user', 'repo')).toEqual({
+			name: 'repo',
+			fullName: 'user/repo',
+			cloneUrl: 'clone',
+			htmlUrl: 'html',
+			private: false,
+			defaultBranch: 'main'
+		});
 		expect(await service.validateToken()).toBe(true);
 
 		service.makeRequest.mockReset();

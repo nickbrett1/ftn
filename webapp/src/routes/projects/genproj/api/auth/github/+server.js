@@ -26,7 +26,7 @@ export async function GET({ url, cookies }) {
 
 	const authUrl = new URL('https://github.com/login/oauth/authorize');
 	authUrl.searchParams.set('client_id', clientId);
-	authUrl.searchParams.set('scope', 'repo');
+	authUrl.searchParams.set('scope', 'repo workflow');
 	authUrl.searchParams.set('state', sessionId);
 
 	// Dynamically construct the redirect URI, ensuring 'localhost' is used instead of '127.0.0.1'

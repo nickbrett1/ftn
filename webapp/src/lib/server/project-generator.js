@@ -160,10 +160,11 @@ export class ProjectGeneratorService {
 
 				return {
 					name: existingRepo.name,
-					fullName: existingRepo.full_name,
-					cloneUrl: existingRepo.clone_url,
-					htmlUrl: existingRepo.html_url,
-					private: existingRepo.private
+					fullName: existingRepo.fullName,
+					cloneUrl: existingRepo.cloneUrl,
+					htmlUrl: existingRepo.htmlUrl,
+					private: existingRepo.private,
+					defaultBranch: existingRepo.defaultBranch
 				};
 			}
 			throw error;
@@ -209,7 +210,8 @@ export class ProjectGeneratorService {
 			owner,
 			repo,
 			githubFiles,
-			`Initial commit: Generated project with ${context.capabilities.length} capabilities`
+			`Initial commit: Generated project with ${context.capabilities.length} capabilities`,
+			repository.defaultBranch || 'main'
 		);
 	}
 

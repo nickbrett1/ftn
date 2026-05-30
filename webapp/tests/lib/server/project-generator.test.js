@@ -171,10 +171,11 @@ describe('ProjectGeneratorService', () => {
 			service.services.github.getUserInfo = vi.fn().mockResolvedValue({ login: 'owner' });
 			const existingRepo = {
 				name: 'test-project',
-				full_name: 'owner/test-project',
-				clone_url: 'clone-url',
-				html_url: 'html-url',
-				private: true
+				fullName: 'owner/test-project',
+				cloneUrl: 'clone-url',
+				htmlUrl: 'html-url',
+				private: true,
+				defaultBranch: 'main'
 			};
 			service.services.github.getRepository = vi.fn().mockResolvedValue(existingRepo);
 
@@ -185,7 +186,8 @@ describe('ProjectGeneratorService', () => {
 				fullName: 'owner/test-project',
 				cloneUrl: 'clone-url',
 				htmlUrl: 'html-url',
-				private: true
+				private: true,
+				defaultBranch: 'main'
 			});
 			expect(service.services.github.getUserInfo).toHaveBeenCalled();
 			expect(service.services.github.getRepository).toHaveBeenCalledWith('owner', 'test-project');
@@ -193,7 +195,7 @@ describe('ProjectGeneratorService', () => {
 	});
 
 	describe('commitFilesToRepository', () => {
-		const repository = { fullName: 'owner/repo' };
+		const repository = { fullName: 'owner/repo', defaultBranch: 'main' };
 		const generatedFiles = [
 			{ filePath: 'file1.txt', content: 'content1' },
 			{ filePath: 'file2.js', content: 'content2' }
@@ -213,7 +215,8 @@ describe('ProjectGeneratorService', () => {
 				'owner',
 				'repo',
 				expectedGithubFiles,
-				'Initial commit: Generated project with 1 capabilities'
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
 			);
 		});
 
@@ -241,7 +244,8 @@ describe('ProjectGeneratorService', () => {
 				'owner',
 				'repo',
 				expectedGithubFiles,
-				'Initial commit: Generated project with 1 capabilities'
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
 			);
 		});
 

@@ -101,7 +101,8 @@ export class GitHubAPIService extends BaseAPIService {
 			fullName: repository.full_name,
 			cloneUrl: repository.clone_url,
 			htmlUrl: repository.html_url,
-			private: repository.private
+			private: repository.private,
+			defaultBranch: repository.default_branch || 'main'
 		};
 	}
 
@@ -196,11 +197,11 @@ export class GitHubAPIService extends BaseAPIService {
 	 * @param {string} commitMessage - Commit message
 	 * @returns {Promise<Object>} Commit information
 	 */
-	async createMultipleFiles(owner, repo, files, commitMessage) {
-		console.log(`🔄 Creating ${files.length} files in ${owner}/${repo}`);
+	async createMultipleFiles(owner, repo, files, commitMessage, branch = 'main') {
+		console.log(`🔄 Creating ${files.length} files in ${owner}/${repo} on branch ${branch}`);
 
 		// Get the latest commit SHA
-		const referenceResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/main`);
+		const referenceResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/${branch}`);
 		const referenceData = await referenceResponse.json();
 		const latestCommitSha = referenceData.object.sha;
 
@@ -253,7 +254,7 @@ export class GitHubAPIService extends BaseAPIService {
 		const newCommitData = await newCommitResponse.json();
 
 		// Update branch reference
-		await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/main`, {
+		await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
 			method: 'PATCH',
 			body: JSON.stringify({
 				sha: newCommitData.sha
@@ -306,7 +307,15 @@ export class GitHubAPIService extends BaseAPIService {
 	 */
 	async getRepository(owner, repo) {
 		const response = await this.makeRequest(`/repos/${owner}/${repo}`);
-		return response.json();
+		const repository = await response.json();
+		return {
+			name: repository.name,
+			fullName: repository.full_name,
+			cloneUrl: repository.clone_url,
+			htmlUrl: repository.html_url,
+			private: repository.private,
+			defaultBranch: repository.default_branch || 'main'
+		};
 	}
 
 	/**
