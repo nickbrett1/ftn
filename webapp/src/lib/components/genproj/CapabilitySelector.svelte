@@ -284,7 +284,8 @@
 			doppler: UserSecretSolid,
 			'google-cloud': CloudSolid,
 			dependabot: RobotSolid,
-			'lighthouse-ci': ChartLineSolid
+			'lighthouse-ci': ChartLineSolid,
+			dagster: GlobeSolid
 		};
 		return iconMap[capabilityId] || GlobeSolid;
 	}
@@ -308,7 +309,8 @@
 			doppler: 'text-blue-400',
 			'google-cloud': 'text-blue-500',
 			dependabot: 'text-blue-500',
-			'lighthouse-ci': 'text-orange-500'
+			'lighthouse-ci': 'text-orange-500',
+			dagster: 'text-purple-400'
 		};
 		return colorMap[capabilityId] || 'text-gray-400';
 	}

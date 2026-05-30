@@ -279,6 +279,23 @@ export const capabilities = [
 		],
 		website: 'https://kit.svelte.dev/'
 	},
+	{
+		id: 'dagster',
+		name: 'Dagster',
+		description: 'Configures a Dagster project for data orchestration.',
+		category: CATEGORY_FRAMEWORKS,
+		dependencies: ['devcontainer-python'],
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'Data orchestration for the whole lifecycle',
+			'Software-defined assets',
+			'Rich UI for observing and operating data pipelines'
+		],
+		templates: [],
+		website: 'https://dagster.io/'
+	},
 	createDevelopmentContainerCapability(
 		'devcontainer-python',
 		'Python DevContainer',
