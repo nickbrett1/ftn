@@ -116,6 +116,6 @@
 		"stripe": "^22.2.0",
 		"three": "^0.184.0",
 		"tippy.js": "^6.3.7",
-		"tsparticles": "^4.0.5"
+		"tsparticles": "^4.1.0"
 	}
 }
