@@ -124,7 +124,7 @@ export const capabilities = [
 			}
 		],
 		links: [
-			{ label: 'Antigravity', url: 'https://goo.gle/gemini-cli-migration' },
+			{ label: 'Antigravity', url: 'https://antigravity.google/product/antigravity-cli' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },
 			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
 		]
