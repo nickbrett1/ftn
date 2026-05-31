@@ -15,5 +15,6 @@
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
   },
+  "forwardPorts": [8788, {{wranglerPort}}, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }

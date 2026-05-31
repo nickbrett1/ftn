@@ -20,5 +20,6 @@
       "version": "lts"
     }
   },
+  "forwardPorts": [8788, {{wranglerPort}}, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }

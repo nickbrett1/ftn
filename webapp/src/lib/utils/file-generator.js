@@ -119,6 +119,12 @@ else
   echo "Doppler CLI not found. Skipping Doppler login."
 fi`;
 
+function getProjectWranglerPort(projectName) {
+	if (!projectName) return 8976;
+	const hash = projectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return 8976 + (hash % 20); // Range 8976-8995
+}
+
 export const WRANGLER_LOGIN_SCRIPT = String.raw`
 echo
 # Cloudflare Wrangler login
@@ -128,7 +134,7 @@ if ! command -v wrangler &> /dev/null; then
   npm install -g wrangler
 fi
 
-WRANGLER_CALLBACK_PORT=${'${WRANGLER_CALLBACK_PORT:-8976}'}
+WRANGLER_CALLBACK_PORT=${'${WRANGLER_CALLBACK_PORT:-{{wranglerPort}}}'}
 script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=${'$WRANGLER_CALLBACK_PORT'} | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null`;
 
 export const SETUP_WRANGLER_SCRIPT = `
@@ -336,9 +342,12 @@ function processAdditionalDevelopmentContainer(
 	const capability = capabilities.find((c) => c.id === capabilityId);
 	const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
 
+	const projectName = context.projectName || context.name || 'my-project';
+	const wranglerPort = getProjectWranglerPort(projectName);
+
 	const otherJsonContent = templateEngine.generateFile(
 		`devcontainer-${capabilityId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: capabilityConfig, capability: capability }
+		{ ...context, capabilityConfig: capabilityConfig, capability: capability, wranglerPort }
 	);
 	const otherJson = JSON.parse(otherJsonContent);
 
@@ -364,10 +373,13 @@ function generateAndMergeDevcontainerJson(
 		context.configuration?.[baseDevelopmentContainerId] || {}
 	);
 
+	const projectName = context.projectName || context.name || 'my-project';
+	const wranglerPort = getProjectWranglerPort(projectName);
+
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
 		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability, wranglerPort }
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
@@ -584,6 +596,7 @@ export function generateCloudLoginFiles(templateEngine, context) {
 	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return files;
 
 	const projectName = context.projectName || context.name || 'my-project';
+	const wranglerPort = getProjectWranglerPort(projectName);
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
 	// cloud_login.sh
@@ -591,7 +604,9 @@ export function generateCloudLoginFiles(templateEngine, context) {
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
+	const wranglerLogin = hasWrangler
+		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{wranglerPort}}', wranglerPort.toString())
+		: '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler
