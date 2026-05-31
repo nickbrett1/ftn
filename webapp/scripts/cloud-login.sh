@@ -31,7 +31,47 @@ if ! command -v wrangler &> /dev/null; then
   npm install -g wrangler
 fi
 
+# 1. Check if already logged in via Doppler API Token (Highly recommended for multi-container)
+if doppler run --project webapp --config dev -- env | grep -q "CLOUDFLARE_API_TOKEN"; then
+  echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Using token for authentication."
+  # Verify connectivity
+  if doppler run --project webapp --config dev -- npx wrangler whoami > /dev/null 2>&1; then
+    echo "✅ Successfully authenticated via Doppler token. Skipping interactive login."
+    exit 0
+  else
+    echo "⚠️ CLOUDFLARE_API_TOKEN found in Doppler but 'wrangler whoami' failed. Proceeding to interactive login..."
+  fi
+fi
+
+# 2. Check if already logged in via OAuth session
+if npx wrangler whoami > /dev/null 2>&1; then
+  echo "✅ Already logged in via OAuth session."
+  exit 0
+fi
+
 WRANGLER_CALLBACK_PORT=${WRANGLER_CALLBACK_PORT:-8976}
+
+# 3. Check for port conflicts inside the container
+if ss -tuln | grep -q ":8976 "; then
+  CONFLICT_PID=$(lsof -t -i:8976)
+  echo "❌ Error: Port 8976 is already in use inside this container (PID: $CONFLICT_PID)."
+  echo "   If this is a stale 'socat' process, you can kill it with: kill $CONFLICT_PID"
+  exit 1
+fi
+
+# If we are using a non-standard port, we need to bridge the gap from 8976
+if [ "$WRANGLER_CALLBACK_PORT" != "8976" ]; then
+  echo "INFO: Using non-standard port $WRANGLER_CALLBACK_PORT. Bridging from 8976..."
+  socat TCP-LISTEN:8976,fork,reuseaddr TCP:localhost:$WRANGLER_CALLBACK_PORT &
+  SOCAT_PID=$!
+  trap "kill $SOCAT_PID 2>/dev/null || true" EXIT
+fi
+
+echo "📢 IMPORTANT: Cloudflare OAuth ALWAYS redirects to localhost:8976 on your host machine."
+echo "   If you have multiple containers, ensure port 8976 is forwarded to THIS container in VS Code."
+echo "   (Check the 'Ports' tab in VS Code and ensure 8976 points to this project)"
+echo
+
 script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=$WRANGLER_CALLBACK_PORT | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null
 
 echo

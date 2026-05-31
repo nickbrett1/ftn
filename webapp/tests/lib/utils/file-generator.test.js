@@ -20,6 +20,10 @@ const nodeJsonTemplateContent = `{
     "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
   },
+  "mounts": [
+    "source=\${localEnv:HOME}\${localEnv:USERPROFILE}/.wrangler,target=/home/node/.wrangler,type=bind"
+  ],
+  "forwardPorts": [8788, 8976, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }
 `;

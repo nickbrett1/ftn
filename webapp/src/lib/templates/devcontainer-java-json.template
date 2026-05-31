@@ -20,6 +20,9 @@
       "version": "lts"
     }
   },
-  "forwardPorts": [8788, {{wranglerPort}}, 36079, 33301, 37677],
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.wrangler,target=/home/vscode/.wrangler,type=bind"
+  ],
+  "forwardPorts": [8788, 8976, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"
 }

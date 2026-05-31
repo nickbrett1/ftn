@@ -119,12 +119,6 @@ else
   echo "Doppler CLI not found. Skipping Doppler login."
 fi`;
 
-function getProjectWranglerPort(projectName) {
-	if (!projectName) return 8976;
-	const hash = projectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-	return 8976 + (hash % 20); // Range 8976-8995
-}
-
 export const WRANGLER_LOGIN_SCRIPT = String.raw`
 echo
 # Cloudflare Wrangler login
@@ -134,7 +128,47 @@ if ! command -v wrangler &> /dev/null; then
   npm install -g wrangler
 fi
 
-WRANGLER_CALLBACK_PORT=${'${WRANGLER_CALLBACK_PORT:-{{wranglerPort}}}'}
+# 1. Check if already logged in via Doppler API Token (Highly recommended for multi-container)
+if doppler run --project {{projectName}} --config dev -- env | grep -q "CLOUDFLARE_API_TOKEN"; then
+  echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Using token for authentication."
+  # Verify connectivity
+  if doppler run --project {{projectName}} --config dev -- npx wrangler whoami > /dev/null 2>&1; then
+    echo "✅ Successfully authenticated via Doppler token. Skipping interactive login."
+    exit 0
+  else
+    echo "⚠️ CLOUDFLARE_API_TOKEN found in Doppler but 'wrangler whoami' failed. Proceeding to interactive login..."
+  fi
+fi
+
+# 2. Check if already logged in via OAuth session
+if npx wrangler whoami > /dev/null 2>&1; then
+  echo "✅ Already logged in via OAuth session."
+  exit 0
+fi
+
+WRANGLER_CALLBACK_PORT=${'${WRANGLER_CALLBACK_PORT:-8976}'}
+
+# 3. Check for port conflicts inside the container
+if ss -tuln | grep -q ":8976 "; then
+  CONFLICT_PID=$(lsof -t -i:8976)
+  echo "❌ Error: Port 8976 is already in use inside this container (PID: $CONFLICT_PID)."
+  echo "   If this is a stale 'socat' process, you can kill it with: kill $CONFLICT_PID"
+  exit 1
+fi
+
+# If we are using a non-standard port, we need to bridge the gap from 8976
+if [ "$WRANGLER_CALLBACK_PORT" != "8976" ]; then
+  echo "INFO: Using non-standard port $WRANGLER_CALLBACK_PORT. Bridging from 8976..."
+  socat TCP-LISTEN:8976,fork,reuseaddr TCP:localhost:$WRANGLER_CALLBACK_PORT &
+  SOCAT_PID=$!
+  trap "kill $SOCAT_PID 2>/dev/null || true" EXIT
+fi
+
+echo "📢 IMPORTANT: Cloudflare OAuth ALWAYS redirects to localhost:8976 on your host machine."
+echo "   If you have multiple containers, ensure port 8976 is forwarded to THIS container in VS Code."
+echo "   (Check the 'Ports' tab in VS Code and ensure 8976 points to this project)"
+echo
+
 script -q -c "npx wrangler login --browser=false --callback-host=0.0.0.0 --callback-port=${'$WRANGLER_CALLBACK_PORT'} | stdbuf -oL sed 's/0\\.0\\.0\\.0/localhost/g'" /dev/null`;
 
 export const SETUP_WRANGLER_SCRIPT = `
@@ -342,12 +376,9 @@ function processAdditionalDevelopmentContainer(
 	const capability = capabilities.find((c) => c.id === capabilityId);
 	const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
 
-	const projectName = context.projectName || context.name || 'my-project';
-	const wranglerPort = getProjectWranglerPort(projectName);
-
 	const otherJsonContent = templateEngine.generateFile(
 		`devcontainer-${capabilityId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: capabilityConfig, capability: capability, wranglerPort }
+		{ ...context, capabilityConfig: capabilityConfig, capability: capability }
 	);
 	const otherJson = JSON.parse(otherJsonContent);
 
@@ -373,13 +404,10 @@ function generateAndMergeDevcontainerJson(
 		context.configuration?.[baseDevelopmentContainerId] || {}
 	);
 
-	const projectName = context.projectName || context.name || 'my-project';
-	const wranglerPort = getProjectWranglerPort(projectName);
-
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
 		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability, wranglerPort }
+		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
@@ -596,7 +624,6 @@ export function generateCloudLoginFiles(templateEngine, context) {
 	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return files;
 
 	const projectName = context.projectName || context.name || 'my-project';
-	const wranglerPort = getProjectWranglerPort(projectName);
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
 	// cloud_login.sh
@@ -604,9 +631,7 @@ export function generateCloudLoginFiles(templateEngine, context) {
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = hasWrangler
-		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{wranglerPort}}', wranglerPort.toString())
-		: '';
+	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler
