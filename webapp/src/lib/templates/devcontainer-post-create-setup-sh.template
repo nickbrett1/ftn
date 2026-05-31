@@ -7,6 +7,10 @@
 CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
 
+echo "INFO: Ensuring wrangler directory permissions..."
+mkdir -p "$USER_HOME_DIR/.wrangler"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"
+
 {{shellSetup}}
 
 {{gitSafeDirectory}}

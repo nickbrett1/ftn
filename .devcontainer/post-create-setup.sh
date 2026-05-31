@@ -14,6 +14,10 @@ mkdir -p "$USER_HOME_DIR/.agy"
 printf '{\n  "selectedAuthType": "oauth-personal",\n  "general": {\n    "sessionRetention": {\n      "enabled": true,\n      "maxAge": "30d",\n      "warningAcknowledged": true\n    }\n  },\n  "ide": {\n    "hasSeenNudge": true,\n    "enabled": true\n  }\n}\n' > "$USER_HOME_DIR/.agy/settings.json"
 sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.agy"
 
+echo "INFO: Ensuring wrangler directory permissions..."
+mkdir -p "$USER_HOME_DIR/.wrangler"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"
+
 if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
     echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
     cp "/workspaces/ftn/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
