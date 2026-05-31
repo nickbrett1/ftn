@@ -37,10 +37,6 @@
         "SONARQUBE_IDE_PORT": "$SONARQUBE_IDE_PORT"
       }
     },
-    "svelte": {
-      "url": "https://mcp.svelte.dev/mcp",
-      "type": "http"
-    },
     "nanobanana": {
       "command": "node",
       "args": ["/home/node/nanobanana-mcp/mcp-server/dist/index.js"],

@@ -417,7 +417,9 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
+	const wranglerLogin = hasWrangler
+		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		: '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler

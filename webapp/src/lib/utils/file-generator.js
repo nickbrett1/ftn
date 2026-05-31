@@ -631,7 +631,9 @@ export function generateCloudLoginFiles(templateEngine, context) {
 		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
 		: '';
 
-	const wranglerLogin = hasWrangler ? WRANGLER_LOGIN_SCRIPT : '';
+	const wranglerLogin = hasWrangler
+		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		: '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler
