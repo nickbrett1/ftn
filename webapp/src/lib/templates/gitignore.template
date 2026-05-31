@@ -18,6 +18,9 @@ vite.config.ts.timestamp-*
 .DS_Store
 Thumbs.db
 
+# Antigravity
+.antigravitycli
+
 # Optional
 {{wranglerIgnore}}
 {{pythonIgnore}}

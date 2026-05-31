@@ -332,4 +332,20 @@ describe('TemplateEngine', () => {
 			'doppler run --project {{projectName}} --config dev -- agy "$@"'
 		);
 	});
+
+	it('should include .antigravitycli in generated .gitignore file', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node'],
+			configuration: {
+				'devcontainer-node': {}
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const gitignore = files.find((f) => f.filePath === '.gitignore');
+
+		expect(gitignore).toBeDefined();
+		expect(gitignore.content).toContain('.antigravitycli');
+	});
 });
