@@ -13,10 +13,10 @@ vi.mock('$lib/utils/file-generator', () => ({
 			return template;
 		}
 	},
-	GEMINI_DEV_ALIAS: 'gemini-dev-alias',
+	AGY_DEV_ALIAS: 'agy-dev-alias',
 	SHELL_SETUP_SCRIPT: 'shell-setup-script',
 	GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script',
-	GEMINI_SETUP_SCRIPT: 'gemini-setup-script',
+	AGY_SETUP_SCRIPT: 'agy-setup-script',
 	PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script',
 	DOPPLER_LOGIN_SCRIPT: 'doppler-login-script',
 	WRANGLER_LOGIN_SCRIPT: 'wrangler-login-script',

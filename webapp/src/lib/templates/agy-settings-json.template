@@ -10,5 +10,14 @@
         "chrome-devtools-mcp"
       ]
     }{{sonarQubeMcpConfig}}{{circleCiMcpConfig}}
+  },
+  "security": {
+    "environmentVariableRedaction": {
+      "allowed": [
+        "NANOBANANA_GEMINI_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY"
+      ]
+    }
   }
 }

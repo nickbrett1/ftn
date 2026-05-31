@@ -14,10 +14,10 @@ import {
 } from '$lib/utils/capability-resolver.js';
 import {
 	TemplateEngine,
-	GEMINI_DEV_ALIAS,
+	AGY_DEV_ALIAS,
 	SHELL_SETUP_SCRIPT,
 	GIT_SAFE_DIR_SCRIPT,
-	GEMINI_SETUP_SCRIPT,
+	AGY_SETUP_SCRIPT,
 	PLAYWRIGHT_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
@@ -201,8 +201,8 @@ function createDevelopmentContainerDockerfile(
 function createDevelopmentContainerShellFiles(templateEngine, projectConfig, allCapabilities) {
 	const zshrcContent = templateEngine.generateFile('devcontainer-zshrc-full', {
 		...projectConfig,
-		geminiDevAlias: allCapabilities.includes('doppler')
-			? GEMINI_DEV_ALIAS.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
+		agyDevAlias: allCapabilities.includes('doppler')
+			? AGY_DEV_ALIAS.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: ''
 	});
 
@@ -217,7 +217,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			'{{projectName}}',
 			projectConfig.name || 'my-project'
 		),
-		geminiSetup: allCapabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
+		agySetup: allCapabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
 

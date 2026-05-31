@@ -118,4 +118,4 @@ fi
 DISABLE_AUTO_UPDATE=true
 DISABLE_UPDATE_PROMPT=true
 
-{{geminiDevAlias}}
+{{agyDevAlias}}

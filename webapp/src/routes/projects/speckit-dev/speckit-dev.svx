@@ -41,7 +41,7 @@ Well overall I struggled to utilize Spec Kit well, but did learn many valuable l
 
 ## Selecting a Project
 
-To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). Genproj is a code generator that creates the boilerplate configuration for a selection of tools that I find valuable to make it easy to get going with new projects. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://ai.google.dev/gemini-api/docs/quickstart) but they can be time consuming to setup.
+To put Spec Kit to the test, I chose to build [Genproj](/projects/genproj). Genproj is a code generator that creates the boilerplate configuration for a selection of tools that I find valuable to make it easy to get going with new projects. I feel I get a lot of benefit from things like [containers for my development workflow](https://code.visualstudio.com/docs/devcontainers/containers), [CI/CD setup](https://circleci.com/), [secrets management](https://www.doppler.com/), and of course nowadays [setting up agents](https://goo.gle/gemini-cli-migration) but they can be time consuming to setup.
 Using an agent for this project seemed like a good match because:
 
 1.  **Open APIs:** All the tools I wanted to integrate had open APIs with online documentation, such as the [GitHub Oauth API](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps) and the [vscode devcontainer configuration](https://containers.dev/implementors/json_reference/). Understanding how to integrate with them isn't technically difficult, but it is time-consuming, so an agent should do this well.
@@ -151,9 +151,9 @@ In this project, I tried some of the new AI Agent IDEs, such as the [Antigravity
 
 **What happened?** I found that it suffered from the same cost problem. I ran out of credits within 15 minutes and so couldn't really evaluate it. Note, Google has since increased the free tier usage amounts but I haven't revisited.
 
-### Gemini - No Strict Limits
+### Antigravity - No Strict Limits
 
-After exhausting my Cursor credits, I tried [Gemini](https://github.com/google-gemini/gemini-cli) and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to an earlier model version for a few hours.
+After exhausting my Cursor credits, I tried [Antigravity](https://goo.gle/gemini-cli-migration) and this had the nice property that instead of cutting me off entirely from a model when I ran out of credits, it would just degrade me to an earlier model version for a few hours.
 
 For my personal projects, where I might be doing a couple of hours work at a time, this worked really well. I haven't looked back.
 

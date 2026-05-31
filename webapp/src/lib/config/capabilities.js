@@ -103,8 +103,8 @@ function createDevelopmentContainerCapability(
 export const capabilities = [
 	{
 		id: 'coding-agents',
-		name: 'AI Coding Agents',
-		description: 'Gemini CLI, Cursor CLI, and Svelte MCP integration.',
+		name: 'AI Coding Agents (Antigravity)',
+		description: 'Antigravity CLI, Cursor CLI, and Svelte MCP integration.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -112,19 +112,19 @@ export const capabilities = [
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		vscodeExtensions: ['google.geminicodeassist', 'saoudrizwan.claude-dev', 'GitHub.copilot'],
 		benefits: [
-			'Gemini CLI pre-installed',
+			'Antigravity CLI pre-installed',
 			'Cursor CLI pre-installed',
 			'Svelte MCP for context-aware AI'
 		],
 		templates: [
 			{
-				id: 'gemini-settings',
-				filePath: '.gemini/settings.json',
-				templateId: 'gemini-settings-json'
+				id: 'agy-settings',
+				filePath: '.agy/settings.json',
+				templateId: 'agy-settings-json'
 			}
 		],
 		links: [
-			{ label: 'Gemini', url: 'https://ai.google.dev/gemini-api/docs/quickstart' },
+			{ label: 'Antigravity', url: 'https://goo.gle/gemini-cli-migration' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },
 			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
 		]

@@ -30,12 +30,12 @@
 #
 # 5. Multi-Agent Support
 #    - Handles agent-specific file paths and naming conventions
-#    - Supports: Claude, Gemini, Copilot, Cursor, Qwen, opencode, Codex, Windsurf, Kilo Code, Auggie CLI, Roo Code, CodeBuddy CLI, Amp, or Amazon Q Developer CLI
+#    - Supports: Claude, Antigravity, Gemini, Copilot, Cursor, Qwen, opencode, Codex, Windsurf, Kilo Code, Auggie CLI, Roo Code, CodeBuddy CLI, Amp, or Amazon Q Developer CLI
 #    - Can update single agents or all existing agent files
 #    - Creates default Claude file if no agent files exist
 #
 # Usage: ./update-agent-context.sh [agent_type]
-# Agent types: claude|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|q
+# Agent types: claude|antigravity|agy|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|q
 # Leave empty to update all existing agent files
 
 set -e
@@ -60,6 +60,7 @@ AGENT_TYPE="${1:-}"
 
 # Agent-specific file paths  
 CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
+ANTIGRAVITY_FILE="$REPO_ROOT/ANTIGRAVITY.md"
 GEMINI_FILE="$REPO_ROOT/GEMINI.md"
 COPILOT_FILE="$REPO_ROOT/.github/copilot-instructions.md"
 CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
@@ -582,8 +583,11 @@ update_specific_agent() {
         claude)
             update_agent_file "$CLAUDE_FILE" "Claude Code"
             ;;
-        gemini)
-            update_agent_file "$GEMINI_FILE" "Gemini CLI"
+        antigravity|agy)
+            update_agent_file "$ANTIGRAVITY_FILE" "Antigravity CLI"
+            ;;
+        antigravity|agy)
+            update_agent_file "$ANTIGRAVITY_FILE" "Antigravity CLI"
             ;;
         copilot)
             update_agent_file "$COPILOT_FILE" "GitHub Copilot"
@@ -623,7 +627,7 @@ update_specific_agent() {
             ;;
         *)
             log_error "Unknown agent type '$agent_type'"
-            log_error "Expected: claude|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|roo|amp|q"
+            log_error "Expected: claude|antigravity|agy|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|roo|amp|q"
             exit 1
             ;;
     esac
@@ -638,8 +642,13 @@ update_all_existing_agents() {
         found_agent=true
     fi
     
-    if [[ -f "$GEMINI_FILE" ]]; then
-        update_agent_file "$GEMINI_FILE" "Gemini CLI"
+    if [[ -f "$ANTIGRAVITY_FILE" ]]; then
+        update_agent_file "$ANTIGRAVITY_FILE" "Antigravity CLI"
+        found_agent=true
+    fi
+
+    if [[ -f "$ANTIGRAVITY_FILE" ]]; then
+        update_agent_file "$ANTIGRAVITY_FILE" "Antigravity CLI"
         found_agent=true
     fi
     
@@ -717,7 +726,7 @@ print_summary() {
     
     echo
 
-    log_info "Usage: $0 [claude|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|codebuddy|q]"
+    log_info "Usage: $0 [claude|antigravity|agy|gemini|copilot|cursor-agent|qwen|opencode|codex|windsurf|kilocode|auggie|codebuddy|q]"
 }
 
 #==============================================================================
@@ -769,4 +778,3 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
-

@@ -118,8 +118,8 @@ fi
 DISABLE_AUTO_UPDATE=true
 DISABLE_UPDATE_PROMPT=true
 
-# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
-gemini-dev() {
+# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
+agy-dev() {
   # Define the name of the container to check for
   local container_name="sonarqube-mcp-server"
 
@@ -133,7 +133,7 @@ gemini-dev() {
     docker rm -f "$container_id"
   fi
 
-  echo "Starting Gemini with Doppler..."
+  echo "Starting Antigravity with Doppler..."
   # Execute the main command, passing along all arguments you gave to the function
-  doppler run --project webapp --config dev -- gemini "$@"
+  doppler run --project webapp --config dev -- agy "$@"
 }

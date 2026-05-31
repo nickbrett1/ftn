@@ -187,7 +187,7 @@ webapp/static/pdf.worker.min.mjs
 
 docs/ccbillingstatementscore
 
-.gemini/tmp
+.agy/tmp
 webapp/core
 .jules/verification
 .antigravitycli

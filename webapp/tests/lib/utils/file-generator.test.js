@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TemplateEngine, GEMINI_DEV_ALIAS, generateAllFiles } from '$lib/utils/file-generator.js';
+import { TemplateEngine, AGY_DEV_ALIAS, generateAllFiles } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 // Manually define the content of the templates for testing purposes
@@ -290,7 +290,7 @@ describe('TemplateEngine', () => {
 		expect(content).not.toContain('command: npx wrangler deploy');
 	});
 
-	it('should include gemini-dev alias in .zshrc when Doppler capability is present in generateAllFiles', async () => {
+	it('should include agy-dev alias in .zshrc when Doppler capability is present in generateAllFiles', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['devcontainer-node', 'doppler'],
@@ -303,13 +303,13 @@ describe('TemplateEngine', () => {
 		const zshrc = files.find((f) => f.filePath.endsWith('.zshrc'));
 
 		expect(zshrc).toBeDefined();
-		expect(zshrc.content).toContain('gemini-dev()');
+		expect(zshrc.content).toContain('agy-dev()');
 		expect(zshrc.content).toContain('doppler run');
 		expect(zshrc.content).toContain('--project test-project');
 		expect(zshrc.content).not.toContain('{{projectName}}');
 	});
 
-	it('should NOT include gemini-dev alias in .zshrc when Doppler capability is NOT present in generateAllFiles', async () => {
+	it('should NOT include agy-dev alias in .zshrc when Doppler capability is NOT present in generateAllFiles', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['devcontainer-node'],
@@ -322,14 +322,14 @@ describe('TemplateEngine', () => {
 		const zshrc = files.find((f) => f.filePath.endsWith('.zshrc'));
 
 		expect(zshrc).toBeDefined();
-		expect(zshrc.content).not.toContain('gemini-dev()');
+		expect(zshrc.content).not.toContain('agy-dev()');
 		expect(zshrc.content).not.toContain('doppler run');
 	});
 
-	it('gemini-dev alias content should match expected constant', () => {
-		expect(GEMINI_DEV_ALIAS).toContain('gemini-dev()');
-		expect(GEMINI_DEV_ALIAS).toContain(
-			'doppler run --project {{projectName}} --config dev -- gemini "$@"'
+	it('agy-dev alias content should match expected constant', () => {
+		expect(AGY_DEV_ALIAS).toContain('agy-dev()');
+		expect(AGY_DEV_ALIAS).toContain(
+			'doppler run --project {{projectName}} --config dev -- agy "$@"'
 		);
 	});
 });

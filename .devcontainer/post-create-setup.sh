@@ -9,10 +9,10 @@ USER_HOME_DIR="$HOME"
 echo "INFO: Creating Oh My Zsh custom directories..."
 mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
 
-echo "INFO: Initializing Gemini CLI global settings..."
-mkdir -p "$USER_HOME_DIR/.gemini"
-printf '{\n  "selectedAuthType": "oauth-personal",\n  "general": {\n    "sessionRetention": {\n      "enabled": true,\n      "maxAge": "30d",\n      "warningAcknowledged": true\n    }\n  },\n  "ide": {\n    "hasSeenNudge": true,\n    "enabled": true\n  }\n}\n' > "$USER_HOME_DIR/.gemini/settings.json"
-sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"
+echo "INFO: Initializing Antigravity CLI global settings..."
+mkdir -p "$USER_HOME_DIR/.agy"
+printf '{\n  "selectedAuthType": "oauth-personal",\n  "general": {\n    "sessionRetention": {\n      "enabled": true,\n      "maxAge": "30d",\n      "warningAcknowledged": true\n    }\n  },\n  "ide": {\n    "hasSeenNudge": true,\n    "enabled": true\n  }\n}\n' > "$USER_HOME_DIR/.agy/settings.json"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.agy"
 
 if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
     echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"

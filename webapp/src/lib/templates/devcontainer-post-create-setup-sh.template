@@ -13,7 +13,7 @@ USER_HOME_DIR="$HOME"
 
 {{playwrightSetup}}
 
-{{geminiSetup}}
+{{agySetup}}
 
 echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
 socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &

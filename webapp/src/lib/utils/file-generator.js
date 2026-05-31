@@ -16,7 +16,7 @@ import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
-import geminiSettingsJson from '../templates/gemini-settings-json.template?raw';
+import agySettingsJson from '../templates/agy-settings-json.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
@@ -35,8 +35,8 @@ import svelteViteConfigJs from '../templates/svelte-vite-config-js.template?raw'
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
-export const GEMINI_DEV_ALIAS = `# A robust function to run Gemini with Doppler, ensuring no stale SonarQube containers exist.
-gemini-dev() {
+export const AGY_DEV_ALIAS = `# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
+agy-dev() {
   # Only check for Docker containers if Docker is installed
   if command -v docker &> /dev/null; then
     # Define the name of the container to check for
@@ -53,9 +53,9 @@ gemini-dev() {
     fi
   fi
 
-  echo "Starting Gemini with Doppler..."
+  echo "Starting Antigravity with Doppler..."
   # Execute the main command, passing along all arguments you gave to the function
-  doppler run --project {{projectName}} --config dev -- gemini "$@"
+  doppler run --project {{projectName}} --config dev -- agy "$@"
 }`;
 
 export const SHELL_SETUP_SCRIPT = `
@@ -89,15 +89,16 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
-export const GEMINI_SETUP_SCRIPT = `
-echo "INFO: Installing Gemini CLI and Specify CLI..."
+export const AGY_SETUP_SCRIPT = `
+echo "INFO: Installing Antigravity CLI and Specify CLI..."
 if ! command -v npm &> /dev/null; then
     echo "npm not found. Installing nodejs and npm..."
     sudo apt-get update
     sudo apt-get install -y nodejs npm
 fi
-sudo npm install -g @google/gemini-cli @specifyapp/cli
-echo "INFO: Gemini CLI and Specify CLI installation complete."`;
+sudo npm install -g @specifyapp/cli
+curl -fsSL https://antigravity.google/cli/install.sh | bash
+echo "INFO: Antigravity CLI and Specify CLI installation complete."`;
 
 export const PLAYWRIGHT_SETUP_SCRIPT = `
 echo "INFO: Installing Playwright and its Chromium dependencies..."
@@ -197,7 +198,7 @@ const templateImports = {
 	'circleci-config': circleCiConfig,
 	'sonar-project-properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
-	'gemini-settings-json': geminiSettingsJson,
+	'agy-settings-json': agySettingsJson,
 	'package-json': packageJsonTemplate,
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
@@ -487,8 +488,8 @@ export function generateMergedDevelopmentContainerFiles(
 			filePath: '.devcontainer/.zshrc',
 			content: templateEngine.generateFile('devcontainer-zshrc-full', {
 				...context,
-				geminiDevAlias: context.capabilities.includes('doppler')
-					? GEMINI_DEV_ALIAS.replaceAll(
+				agyDevAlias: context.capabilities.includes('doppler')
+					? AGY_DEV_ALIAS.replaceAll(
 							'{{projectName}}',
 							context.projectName || context.name || 'my-project'
 						)
@@ -513,7 +514,7 @@ export function generateMergedDevelopmentContainerFiles(
 					'{{projectName}}',
 					context.projectName || context.name || 'my-project'
 				),
-				geminiSetup: context.capabilities.includes('coding-agents') ? GEMINI_SETUP_SCRIPT : '',
+				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 			})
 		}

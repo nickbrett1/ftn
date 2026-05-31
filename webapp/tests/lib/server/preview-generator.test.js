@@ -29,7 +29,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 					return 'content for vscode-settings-json';
 				}
 				if (templateId === 'devcontainer-zshrc-full') {
-					return (data.geminiDevAlias || '').replace('{{projectName}}', data.name);
+					return (data.agyDevAlias || '').replace('{{projectName}}', data.name);
 				}
 				return `content for ${templateId}`;
 			});
@@ -37,10 +37,10 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 	}
 	return {
 		TemplateEngine: MockTemplateEngine,
-		GEMINI_DEV_ALIAS: 'gemini-dev-{{projectName}}-mock',
+		AGY_DEV_ALIAS: 'agy-dev-{{projectName}}-mock',
 		SHELL_SETUP_SCRIPT: 'shell-setup-script-mock',
 		GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script-mock',
-		GEMINI_SETUP_SCRIPT: 'gemini-setup-script-mock',
+		AGY_SETUP_SCRIPT: 'agy-setup-script-mock',
 		PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script-mock',
 		DOPPLER_LOGIN_SCRIPT: 'doppler-login-mock',
 		WRANGLER_LOGIN_SCRIPT: 'wrangler-login-mock',
@@ -213,7 +213,7 @@ describe('generatePreview', () => {
 		expect(package_.devDependencies).toContain('@sveltejs/kit');
 	});
 
-	it('generates gemini-dev alias with correct project name in .zshrc', async () => {
+	it('generates agy-dev alias with correct project name in .zshrc', async () => {
 		const projectConfig = { name: 'CustomProject' };
 		const preview = await generatePreview(projectConfig, ['devcontainer-node', 'doppler']);
 
@@ -222,7 +222,7 @@ describe('generatePreview', () => {
 		);
 		const zshrc = devcontainerFolder.children.find((f) => f.name === '.zshrc');
 		expect(zshrc).toBeDefined();
-		expect(zshrc.content).toBe('gemini-dev-CustomProject-mock');
+		expect(zshrc.content).toBe('agy-dev-CustomProject-mock');
 	});
 
 	it('generates correct gitignore for python', async () => {
