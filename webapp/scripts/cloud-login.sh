@@ -35,7 +35,7 @@ fi
 if doppler run --project webapp --config dev -- env | grep -q "CLOUDFLARE_API_TOKEN"; then
   echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Using token for authentication."
   # Verify connectivity
-  if doppler run --project webapp --config dev -- npx wrangler whoami > /dev/null 2>&1; then
+  if ! doppler run --project webapp --config dev -- npx wrangler whoami 2>&1 | grep -q "You are not authenticated"; then
     echo "✅ Successfully authenticated via Doppler token. Skipping interactive login."
     exit 0
   else
@@ -44,7 +44,7 @@ if doppler run --project webapp --config dev -- env | grep -q "CLOUDFLARE_API_TO
 fi
 
 # 2. Check if already logged in via OAuth session
-if npx wrangler whoami > /dev/null 2>&1; then
+if ! npx wrangler whoami 2>&1 | grep -q "You are not authenticated"; then
   echo "✅ Already logged in via OAuth session."
   exit 0
 fi
