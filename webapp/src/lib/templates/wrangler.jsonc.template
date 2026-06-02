@@ -3,7 +3,7 @@
 	"main": "{{mainEntryPoint}}",
 	"compatibility_date": "{{compatibilityDate}}",
 	"compatibility_flags": [
-		"nodejs_compat_v2"
+		"nodejs_compat"
 	],
 	"assets": {
 		"binding": "ASSETS",

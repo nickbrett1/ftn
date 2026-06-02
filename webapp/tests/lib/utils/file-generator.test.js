@@ -43,6 +43,8 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+
+RUN mkdir -p $HOME/.wrangler
 `;
 
 const pythonDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/python
@@ -57,6 +59,8 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash
+
+RUN mkdir -p $HOME/.wrangler
 `;
 
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
@@ -73,6 +77,8 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+
+RUN mkdir -p $HOME/.wrangler
 `;
 
 const dopplerYamlTemplateContent = `setup:

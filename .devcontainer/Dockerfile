@@ -36,7 +36,8 @@ RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zs
     && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-autosuggestions" \
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \
     && curl https://cursor.com/install -fsS | bash \
-    && curl -fsSL https://antigravity.google/cli/install.sh | bash
+    && curl -fsSL https://antigravity.google/cli/install.sh | bash \
+    && mkdir -p "$USER_HOME_DIR/.wrangler"
 
 
 # Add uv tools to PATH for node user

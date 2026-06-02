@@ -709,8 +709,11 @@ export function generateGitignoreFile(templateEngine, context) {
 	const hasDagster = context.capabilities.includes('dagster');
 
 	let wranglerIgnore = '';
-	if (hasWrangler && hasDoppler) {
-		wranglerIgnore = 'wrangler.jsonc';
+	if (hasWrangler) {
+		wranglerIgnore = '\n# Cloudflare Wrangler\n.wrangler';
+		if (hasDoppler) {
+			wranglerIgnore += '\nwrangler.jsonc';
+		}
 	}
 
 	let pythonIgnore = hasPython

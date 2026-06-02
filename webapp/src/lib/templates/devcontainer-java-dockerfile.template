@@ -13,3 +13,5 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \
     && curl https://cursor.com/install -fsS | bash \
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+
+RUN mkdir -p $HOME/.wrangler

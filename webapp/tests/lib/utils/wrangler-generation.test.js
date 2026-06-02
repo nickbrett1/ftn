@@ -103,6 +103,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 
 		const gitignore = files.find((f) => f.filePath === '.gitignore');
 		expect(gitignore).toBeDefined();
+		expect(gitignore.content).toContain('.wrangler');
 		expect(gitignore.content).toContain('wrangler.jsonc');
 	});
 
@@ -135,5 +136,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(gitignore).toBeDefined();
 		expect(gitignore.content).toContain('__pycache__');
 		expect(gitignore.content).toContain('.venv');
+		expect(gitignore.content).toContain('.wrangler');
+		expect(gitignore.content).not.toContain('wrangler.jsonc');
 	});
 });

@@ -518,8 +518,11 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 	const hasJava = allCapabilities.some((c) => c.startsWith('devcontainer-java'));
 
 	let wranglerIgnore = '';
-	if (hasWrangler && hasDoppler) {
-		wranglerIgnore = 'wrangler.jsonc';
+	if (hasWrangler) {
+		wranglerIgnore = '\n# Cloudflare Wrangler\n.wrangler';
+		if (hasDoppler) {
+			wranglerIgnore += '\nwrangler.jsonc';
+		}
 	}
 
 	const pythonIgnore = hasPython
