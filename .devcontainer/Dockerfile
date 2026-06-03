@@ -37,7 +37,7 @@ RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zs
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \
     && curl https://cursor.com/install -fsS | bash \
     && curl -fsSL https://antigravity.google/cli/install.sh | bash \
-    && mkdir -p "$USER_HOME_DIR/.wrangler"
+    && mkdir -p "$HOME/.wrangler"
 
 
 # Add uv tools to PATH for node user
