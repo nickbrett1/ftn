@@ -22,7 +22,8 @@ const nodeJsonTemplateContent = `{
   },
   "mounts": [
     "source=wrangler-config,target=/home/node/.wrangler,type=volume",
-    "source=doppler-config,target=/home/node/.doppler,type=volume"
+    "source=doppler-config,target=/home/node/.doppler,type=volume",
+    "source=gemini-cli-settings,target=/home/node/.gemini,type=volume"
   ],
   "forwardPorts": [8788, 8976, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"
