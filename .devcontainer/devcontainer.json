@@ -29,7 +29,8 @@
 
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"], // Moved from build.runArgs
   "mounts": [
-    "source=ftn-wrangler-config,target=/home/node/.wrangler,type=volume"
+    "source=ftn-wrangler-config,target=/home/node/.wrangler,type=volume",
+    "source=ftn-doppler-config,target=/home/node/.doppler,type=volume"
   ],
   "forwardPorts": [8788, 8976, 36079, 33301, 37677], // Ports for Cloudflare Workers preview and Wrangler dev tools. We use port 8976 as the entry point for OAuth callbacks.
   // Configure tool-specific properties.

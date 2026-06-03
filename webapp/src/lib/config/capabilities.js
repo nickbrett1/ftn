@@ -118,9 +118,9 @@ export const capabilities = [
 		],
 		templates: [
 			{
-				id: 'agy-settings',
-				filePath: '.agy/settings.json',
-				templateId: 'agy-settings-json'
+				id: 'mcp-config',
+				filePath: '.agents/mcp_config.json',
+				templateId: 'mcp-config-json'
 			}
 		],
 		links: [

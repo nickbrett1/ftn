@@ -80,9 +80,7 @@ echo "Setting up Wrangler configuration..."
 doppler run --project webapp --config dev -- ./scripts/setup-wrangler-config.sh dev
 
 echo
-echo "Configuring Antigravity CLI..."
 
-doppler run --project webapp --config dev -- agy mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
 
 echo "INFO: Installing Nanobanana MCP..."
 chmod +x ./scripts/install-nanobanana.sh

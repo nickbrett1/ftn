@@ -16,7 +16,7 @@ import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/sonar-project.properties.template?raw';
-import agySettingsJson from '../templates/agy-settings-json.template?raw';
+import mcpConfigJson from '../templates/mcp-config-json.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
@@ -199,7 +199,7 @@ const templateImports = {
 	'circleci-config': circleCiConfig,
 	'sonar-project-properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
-	'agy-settings-json': agySettingsJson,
+	'mcp-config-json': mcpConfigJson,
 	'package-json': packageJsonTemplate,
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,

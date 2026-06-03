@@ -12,7 +12,7 @@ describe('capability-template-utils', () => {
 			};
 			const data = getCapabilityTemplateData('coding-agents', context);
 			expect(data.sonarQubeMcpConfig).toContain('sonarqube-mcp-server');
-			expect(data.circleCiMcpConfig).toContain('@modelcontextprotocol/server-circleci');
+			expect(data.circleCiMcpConfig).toContain('@circleci/mcp-server-circleci');
 		});
 
 		it('should generate empty config if no dependencies', () => {

@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "svelte": {
-      "httpUrl": "https://mcp.svelte.dev/mcp"
+      "serverUrl": "https://mcp.svelte.dev/mcp"
     },
     "chrome-devtools": {
       "command": "npx",

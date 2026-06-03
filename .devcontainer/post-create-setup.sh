@@ -18,6 +18,10 @@ echo "INFO: Ensuring wrangler directory permissions..."
 mkdir -p "$USER_HOME_DIR/.wrangler"
 sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"
 
+echo "INFO: Ensuring doppler directory permissions..."
+mkdir -p "$USER_HOME_DIR/.doppler"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"
+
 if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
     echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
     cp "/workspaces/ftn/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"

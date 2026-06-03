@@ -6,13 +6,9 @@ function getCodingAgentsTemplateData(context) {
 	if (hasSonarQube) {
 		sonarQubeMcpConfig = `,
     "sonarqube": {
-      "command": "docker",
+      "command": "npx",
       "args": [
-        "run",
-        "--rm",
-        "-i",
-        "--name",
-        "sonarqube-mcp-server",
+        "-y",
         "sonarqube-mcp-server"
       ],
       "env": {
@@ -29,9 +25,10 @@ function getCodingAgentsTemplateData(context) {
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-circleci"
+        "@circleci/mcp-server-circleci"
       ],
       "env": {
+        "CIRCLECI_TOKEN": "$CIRCLECI_TOKEN",
         "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
       }
     }`;
