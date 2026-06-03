@@ -63,6 +63,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		// Check that compatibility_date is set to today's date
 		const today = new Date().toISOString().split('T')[0];
 		expect(wranglerJsonc.content).toContain(`"compatibility_date": "${today}"`);
+		expect(wranglerJsonc.content).not.toContain('"assets"');
 
 		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
 		expect(cloudLogin).toBeDefined();
@@ -88,6 +89,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		// Check that compatibility_date is set to today's date
 		const today = new Date().toISOString().split('T')[0];
 		expect(wranglerTemplate.content).toContain(`"compatibility_date": "${today}"`);
+		expect(wranglerTemplate.content).not.toContain('"assets"');
 
 		const setupScript = files.find((f) => f.filePath === 'scripts/setup-wrangler-config.sh');
 		expect(setupScript).toBeDefined();
@@ -121,6 +123,21 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const circleCiConfig = files.find((f) => f.filePath === '.circleci/config.yml');
 		expect(circleCiConfig).toBeDefined();
 		expect(circleCiConfig.content).toContain('./scripts/setup-wrangler-config.sh');
+	});
+
+	it('generates wrangler.jsonc with assets when Cloudflare and SvelteKit are selected', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['cloudflare-wrangler', 'sveltekit'],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(context);
+
+		const wranglerJsonc = files.find((f) => f.filePath === 'wrangler.jsonc');
+		expect(wranglerJsonc).toBeDefined();
+		expect(wranglerJsonc.content).toContain('"assets"');
+		expect(wranglerJsonc.content).toContain('.svelte-kit/cloudflare');
 	});
 
 	it('includes python ignore patterns in .gitignore when python capability is selected', async () => {
