@@ -25,3 +25,5 @@ sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"
 
 echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
 socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &
+
+{{cloudLoginSetup}}
