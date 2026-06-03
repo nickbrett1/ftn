@@ -1,0 +1,44 @@
+#!/bin/bash
+# scripts/run-wrangler-dev.sh
+set -e
+
+# Determine the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The project root directory is one level up from the scripts directory
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Change to the project root directory
+cd "$PROJECT_ROOT"
+
+echo "Checking Cloudflare authentication..."
+
+# 1. Check if CLOUDFLARE_API_TOKEN is already in the environment
+if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+  echo "✅ Using CLOUDFLARE_API_TOKEN from environment."
+  exec npx wrangler dev "$@"
+fi
+
+# 2. Check if CLOUDFLARE_API_TOKEN is available via Doppler
+if command -v doppler &> /dev/null && doppler whoami &> /dev/null; then
+  # Check if secret exists in Doppler config
+  if doppler secrets --project webapp --config dev --json 2>/dev/null | grep -q '"CLOUDFLARE_API_TOKEN"'; then
+    echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Running wrangler dev via Doppler..."
+    exec doppler run --project webapp --config dev -- npx wrangler dev "$@"
+  fi
+fi
+
+# 3. Check if logged in via Wrangler OAuth session
+WHOAMI_OUT=$(npx wrangler whoami 2>&1 || true)
+
+if echo "$WHOAMI_OUT" | grep -q "You are not authenticated"; then
+  echo "❌ Error: You are not authenticated with Cloudflare."
+  echo "   Wrangler needs to be authenticated to connect to the remote browser rendering API."
+  echo "   Please run the login script first to authenticate:"
+  echo ""
+  echo "   ./scripts/cloud_login.sh"
+  echo ""
+  exit 1
+else
+  echo "✅ Authenticated with Cloudflare."
+  exec npx wrangler dev "$@"
+fi
