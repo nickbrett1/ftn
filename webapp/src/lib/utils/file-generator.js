@@ -21,6 +21,7 @@ import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
 import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?raw';
+import scriptsRunWranglerDevSh from '../templates/scripts-run-wrangler-dev-sh.template?raw';
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
@@ -203,6 +204,7 @@ const templateImports = {
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
 	'scripts-cloud-login-sh': scriptsCloudLoginSh,
+	'scripts-run-wrangler-dev-sh': scriptsRunWranglerDevSh,
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
 	gitignore: gitignoreTemplate,
 	'dependabot-config': dependabotConfig,
@@ -655,6 +657,16 @@ export function generateCloudLoginFiles(templateEngine, context) {
 			googleCloudLogin
 		})
 	});
+
+	if (hasWrangler) {
+		files.push({
+			filePath: 'scripts/run-wrangler-dev.sh',
+			content: templateEngine.generateFile('scripts-run-wrangler-dev-sh', {
+				...context,
+				projectName
+			})
+		});
+	}
 
 	// If SvelteKit is present, we don't generate src/index.js (worker entry point)
 	// because SvelteKit manages its own entry point via the adapter.
