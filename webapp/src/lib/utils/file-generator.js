@@ -664,6 +664,9 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 	const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+	const assetsConfig = hasSvelteKit
+		? ',\n\t"assets": {\n\t\t"binding": "ASSETS",\n\t\t"directory": ".svelte-kit/cloudflare"\n\t}'
+		: '';
 
 	files.push({
 		filePath: 'scripts/run-wrangler-dev.sh',
@@ -688,7 +691,8 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 					...context,
 					projectName,
 					compatibilityDate,
-					mainEntryPoint
+					mainEntryPoint,
+					assetsConfig
 				})
 			},
 			{
@@ -703,7 +707,8 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 				...context,
 				projectName,
 				compatibilityDate,
-				mainEntryPoint
+				mainEntryPoint,
+				assetsConfig
 			})
 		});
 	}
