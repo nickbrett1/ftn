@@ -22,8 +22,7 @@ import {
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
-	DOPPLER_INSTALL_SCRIPT,
-	generateVscodeSettingsFile
+	DOPPLER_INSTALL_SCRIPT
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -86,7 +85,7 @@ export async function generatePreview(projectConfig, selectedCapabilities) {
 		return previewData;
 	} catch (error) {
 		console.error('❌ Error generating preview:', error);
-		throw new Error(`Failed to generate preview: ${error.message}`);
+		throw new Error(`Failed to generate preview: ${error.message}`, { cause: error });
 	}
 }
 
@@ -106,6 +105,7 @@ function createMergedDevelopmentContainerJson(
 ) {
 	const baseId = developmentContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
+	// eslint-disable-next-line security/detect-object-injection
 	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
 
 	const baseJsonContent = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-json`, {
@@ -116,17 +116,24 @@ function createMergedDevelopmentContainerJson(
 	const mergedJson = JSON.parse(baseJsonContent);
 	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
 
-	for (const id of allCapabilities)
-		capabilities
-			.find((c) => c.id === id)
-			?.vscodeExtensions?.forEach((extension) => allExtensions.add(extension));
+	for (const id of allCapabilities) {
+		const cap = capabilities.find((c) => c.id === id);
+		if (cap?.vscodeExtensions) {
+			for (const extension of cap.vscodeExtensions) {
+				allExtensions.add(extension);
+			}
+		}
+	}
 
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
+		// eslint-disable-next-line security/detect-object-injection
 		const capId = developmentContainerCapabilities[index];
 		const cap = capabilities.find((c) => c.id === capId);
+		// eslint-disable-next-line security/detect-object-injection
 		const capConfig = applyDefaults(cap, projectConfig.configuration?.[capId] || {});
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capId.split('-')[1]}-json`,
+			 
 			{ ...projectConfig, capabilityConfig: capConfig, capability: cap }
 		);
 		const otherJson = JSON.parse(otherJsonContent);
@@ -148,7 +155,7 @@ function createMergedDevelopmentContainerJson(
 		mergedJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
-	const content = JSON.stringify(mergedJson, null, 2);
+	const content = JSON.stringify(mergedJson, undefined, 2);
 	return {
 		path: '.devcontainer/devcontainer.json',
 		name: 'devcontainer.json',
@@ -173,6 +180,7 @@ function createDevelopmentContainerDockerfile(
 ) {
 	const baseId = developmentContainerCapabilities[0];
 	const baseCap = capabilities.find((c) => c.id === baseId);
+	// eslint-disable-next-line security/detect-object-injection
 	const baseConfig = applyDefaults(baseCap, projectConfig.configuration?.[baseId] || {});
 	const content = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-dockerfile`, {
 		...projectConfig,
@@ -287,6 +295,60 @@ async function generateDevelopmentContainerArtifacts(
  * @param {string[]} otherCapabilities - Array of non-devcontainer capability IDs
  * @param {Array<FileObject>} files - Array to push generated file objects into
  */
+function generateSingleTemplateFile(
+	templateEngine,
+	projectConfig,
+	capabilityId,
+	capability,
+	template,
+	otherCapabilities,
+	allCapabilities
+) {
+	try {
+		const extraData = getCapabilityTemplateData(capabilityId, {
+			capabilities: allCapabilities,
+			configuration: projectConfig.configuration
+		});
+
+		// Special handling for SvelteKit config adapter
+		let adapterPackage = '@sveltejs/adapter-auto';
+		let adapterComment =
+			'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
+			'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
+			'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
+
+		if (capabilityId === 'sveltekit' && otherCapabilities.includes('cloudflare-wrangler')) {
+			adapterPackage = '@sveltejs/adapter-cloudflare';
+			adapterComment =
+				'// adapter-cloudflare is configured for Wrangler deployment\n' +
+				'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+		}
+
+		// eslint-disable-next-line security/detect-object-injection
+		const capabilityConfig = projectConfig.configuration?.[capabilityId] || {};
+
+		const content = templateEngine.generateFile(template.templateId, {
+			...projectConfig,
+			...extraData,
+			projectName: projectConfig.name || 'my-project',
+			capabilityConfig,
+			capability,
+			adapterPackage,
+			adapterComment
+		});
+		return {
+			path: template.filePath,
+			name: template.filePath.split('/').pop(),
+			content,
+			size: content.length,
+			type: 'file'
+		};
+	} catch (error) {
+		console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+		return;
+	}
+}
+
 async function generateNonDevelopmentContainerFiles(
 	templateEngine,
 	projectConfig,
@@ -298,44 +360,17 @@ async function generateNonDevelopmentContainerFiles(
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
-				try {
-					const extraData = getCapabilityTemplateData(capabilityId, {
-						capabilities: allCapabilities,
-						configuration: projectConfig.configuration
-					});
-
-					// Special handling for SvelteKit config adapter
-					let adapterPackage = '@sveltejs/adapter-auto';
-					let adapterComment =
-						'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
-						'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
-						'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
-
-					if (capabilityId === 'sveltekit' && otherCapabilities.includes('cloudflare-wrangler')) {
-						adapterPackage = '@sveltejs/adapter-cloudflare';
-						adapterComment =
-							'// adapter-cloudflare is configured for Wrangler deployment\n' +
-							'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
-					}
-
-					const content = templateEngine.generateFile(template.templateId, {
-						...projectConfig,
-						...extraData,
-						projectName: projectConfig.name || 'my-project',
-						capabilityConfig: projectConfig.configuration?.[capabilityId] || {},
-						capability,
-						adapterPackage,
-						adapterComment
-					});
-					files.push({
-						path: template.filePath,
-						name: template.filePath.split('/').pop(),
-						content,
-						size: content.length,
-						type: 'file'
-					});
-				} catch (error) {
-					console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+				const file = generateSingleTemplateFile(
+					templateEngine,
+					projectConfig,
+					capabilityId,
+					capability,
+					template,
+					otherCapabilities,
+					allCapabilities
+				);
+				if (file) {
+					files.push(file);
 				}
 			}
 		}
@@ -347,7 +382,7 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 		let scripts = ',\n    "build": "echo \'No build step required\'"';
 		let devDependencies = '';
 		let dependencies = '';
-		let typeField = '';
+		let typeField;
 		let overrides = '';
 
 		const hasSvelteKit = allCapabilities.includes('sveltekit');
@@ -398,7 +433,6 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 			type: 'file'
 		};
 	}
-	return null;
 }
 
 async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCapabilities, files) {
@@ -550,7 +584,7 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 
 function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabilities) {
 	const hasPython = allCapabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return null;
+	if (!hasPython) return;
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...projectConfig,
@@ -768,6 +802,7 @@ export function organizeFilesIntoFolders(files) {
 		let currentPath = '';
 
 		for (let index = 0; index < pathParts.length - 1; index++) {
+			// eslint-disable-next-line security/detect-object-injection
 			const folderName = pathParts[index];
 			currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
 

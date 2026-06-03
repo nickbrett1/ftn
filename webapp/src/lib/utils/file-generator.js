@@ -21,7 +21,7 @@ import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
 import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?raw';
-import scriptsRunWranglerDevSh from '../templates/scripts-run-wrangler-dev-sh.template?raw';
+import scriptsRunWranglerDevelopmentSh from '../templates/scripts-run-wrangler-dev-sh.template?raw';
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
@@ -90,7 +90,7 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
-export const AGY_SETUP_SCRIPT = `
+export const AGY_SETUP_SCRIPT = String.raw`
 echo "INFO: Installing Antigravity CLI and Specify CLI..."
 if ! command -v npm &> /dev/null; then
     echo "npm not found. Installing nodejs and npm..."
@@ -103,7 +103,7 @@ echo "INFO: Antigravity CLI and Specify CLI installation complete."
 
 echo "INFO: Initializing Antigravity CLI global settings..."
 mkdir -p "$USER_HOME_DIR/.agy"
-printf '{\\n  "selectedAuthType": "oauth-personal",\\n  "general": {\\n    "sessionRetention": {\\n      "enabled": true,\\n      "maxAge": "30d",\\n      "warningAcknowledged": true\\n    }\\n  },\\n  "ide": {\\n    "hasSeenNudge": true,\\n    "enabled": true\\n  }\\n}\\n' > "$USER_HOME_DIR/.agy/settings.json"
+printf '{\n  "selectedAuthType": "oauth-personal",\n  "general": {\n    "sessionRetention": {\n      "enabled": true,\n      "maxAge": "30d",\n      "warningAcknowledged": true\n    }\n  },\n  "ide": {\n    "hasSeenNudge": true,\n    "enabled": true\n  }\n}\n' > "$USER_HOME_DIR/.agy/settings.json"
 sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.agy"`;
 
 export const PLAYWRIGHT_SETUP_SCRIPT = `
@@ -209,7 +209,7 @@ const templateImports = {
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
 	'scripts-cloud-login-sh': scriptsCloudLoginSh,
-	'scripts-run-wrangler-dev-sh': scriptsRunWranglerDevSh,
+	'scripts-run-wrangler-dev-sh': scriptsRunWranglerDevelopmentSh,
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
 	gitignore: gitignoreTemplate,
 	'dependabot-config': dependabotConfig,
@@ -249,23 +249,27 @@ export class TemplateEngine {
 
 	getTemplate(name) {
 		const template = this.templates.get(name);
+		// eslint-disable-next-line unicorn/no-null
 		return template || null;
 	}
 
 	compileTemplate(templateString, data) {
 		let content = templateString;
-		const regex = /{{(.*?)}}/g;
+		const regex = /{{([^{}]+)}}/g;
 
 		content = content.replaceAll(regex, (match, key) => {
 			const trimmedKey = key.trim();
-			if (data.hasOwnProperty(trimmedKey)) {
+			if (Object.hasOwn(data, trimmedKey)) {
+				// eslint-disable-next-line security/detect-object-injection
 				return data[trimmedKey];
 			}
 
 			const keys = trimmedKey.split('.');
 			let value = data;
 			for (const k of keys) {
+				 
 				if (value && typeof value === 'object' && k in value) {
+					// eslint-disable-next-line security/detect-object-injection
 					value = value[k];
 				} else {
 					return match;
@@ -304,6 +308,58 @@ export class TemplateEngine {
 	}
 }
 
+function collectSingleTemplateFile(
+	templateEngine,
+	context,
+	capabilityId,
+	capability,
+	template
+) {
+	try {
+		const extraData = getCapabilityTemplateData(capabilityId, {
+			capabilities: context.capabilities,
+			configuration: context.configuration
+		});
+
+		// Special handling for SvelteKit config adapter
+		let adapterPackage = '@sveltejs/adapter-auto';
+		let adapterComment =
+			'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
+			'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
+			'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
+
+		if (
+			capabilityId === 'sveltekit' &&
+			context.capabilities.includes('cloudflare-wrangler')
+		) {
+			adapterPackage = '@sveltejs/adapter-cloudflare';
+			adapterComment =
+				'// adapter-cloudflare is configured for Wrangler deployment\n' +
+				'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+		}
+
+		// eslint-disable-next-line security/detect-object-injection
+		const capabilityConfig = context.configuration?.[capabilityId] || {};
+
+		const content = templateEngine.generateFile(template.templateId, {
+			...context,
+			...extraData,
+			projectName: context.projectName || context.name || 'my-project',
+			capabilityConfig,
+			capability,
+			adapterPackage,
+			adapterComment
+		});
+		return {
+			filePath: template.filePath,
+			content: content
+		};
+	} catch (error) {
+		console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+		return;
+	}
+}
+
 // Helper to collect files for non-dev-container capabilities
 export function collectNonDevelopmentContainerFiles(templateEngine, context, otherCapabilities) {
 	const files = [];
@@ -312,44 +368,15 @@ export function collectNonDevelopmentContainerFiles(templateEngine, context, oth
 		const capability = capabilities.find((c) => c.id === capabilityId);
 		if (capability && capability.templates) {
 			for (const template of capability.templates) {
-				try {
-					const extraData = getCapabilityTemplateData(capabilityId, {
-						capabilities: context.capabilities,
-						configuration: context.configuration
-					});
-
-					// Special handling for SvelteKit config adapter
-					let adapterPackage = '@sveltejs/adapter-auto';
-					let adapterComment =
-						'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
-						'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
-						'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
-
-					if (
-						capabilityId === 'sveltekit' &&
-						context.capabilities.includes('cloudflare-wrangler')
-					) {
-						adapterPackage = '@sveltejs/adapter-cloudflare';
-						adapterComment =
-							'// adapter-cloudflare is configured for Wrangler deployment\n' +
-							'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
-					}
-
-					const content = templateEngine.generateFile(template.templateId, {
-						...context,
-						...extraData,
-						projectName: context.projectName || context.name || 'my-project',
-						capabilityConfig: context.configuration?.[capabilityId] || {},
-						capability,
-						adapterPackage,
-						adapterComment
-					});
-					files.push({
-						filePath: template.filePath,
-						content: content
-					});
-				} catch (error) {
-					console.warn(`⚠️ Failed to process template ${template.templateId}:`, error);
+				const file = collectSingleTemplateFile(
+					templateEngine,
+					context,
+					capabilityId,
+					capability,
+					template
+				);
+				if (file) {
+					files.push(file);
 				}
 			}
 		}
@@ -382,6 +409,7 @@ function processAdditionalDevelopmentContainer(
 	allExtensions
 ) {
 	const capability = capabilities.find((c) => c.id === capabilityId);
+	// eslint-disable-next-line security/detect-object-injection
 	const capabilityConfig = applyDefaults(capability, context.configuration?.[capabilityId] || {});
 
 	const otherJsonContent = templateEngine.generateFile(
@@ -407,8 +435,10 @@ function generateAndMergeDevcontainerJson(
 ) {
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
+	 
 	const baseCapabilityConfig = applyDefaults(
 		baseCapability,
+		// eslint-disable-next-line security/detect-object-injection
 		context.configuration?.[baseDevelopmentContainerId] || {}
 	);
 
@@ -429,6 +459,7 @@ function generateAndMergeDevcontainerJson(
 
 	// 3. From other devcontainer JSONs (merged ones)
 	for (let index = 1; index < developmentContainerCapabilities.length; index++) {
+		// eslint-disable-next-line security/detect-object-injection
 		const capabilityId = developmentContainerCapabilities[index];
 		processAdditionalDevelopmentContainer(
 			capabilityId,
@@ -451,7 +482,7 @@ function generateAndMergeDevcontainerJson(
 
 	return {
 		filePath: '.devcontainer/devcontainer.json',
-		content: JSON.stringify(mergedDevelopmentContainerJson, null, 2)
+		content: JSON.stringify(mergedDevelopmentContainerJson, undefined, 2)
 	};
 }
 
@@ -467,8 +498,10 @@ export function generateMergedDevelopmentContainerFiles(
 
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
+	 
 	const baseCapabilityConfig = applyDefaults(
 		baseCapability,
+		// eslint-disable-next-line security/detect-object-injection
 		context.configuration?.[baseDevelopmentContainerId] || {}
 	);
 
@@ -534,7 +567,7 @@ export function generatePackageJson(templateEngine, context) {
 	let scripts = ',\n    "build": "echo \'No build step required\'"';
 	let devDependencies = '';
 	let dependencies = '';
-	let typeField = '';
+	let typeField;
 	let overrides = '';
 
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
@@ -583,12 +616,11 @@ export function generatePackageJson(templateEngine, context) {
 			content
 		};
 	}
-	return null;
 }
 
 export function generatePyProjectToml(context) {
 	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return null;
+	if (!hasPython) return;
 
 	const hasDagster = context.capabilities.includes('dagster');
 	const projectName = context.projectName || context.name || 'my-project';
@@ -757,7 +789,7 @@ export function generateGitignoreFile(templateEngine, context) {
 
 export function generateVscodeSettingsFile(templateEngine, context) {
 	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return null;
+	if (!hasPython) return;
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...context,
