@@ -555,7 +555,13 @@ export function generateMergedDevelopmentContainerFiles(
 					context.projectName || context.name || 'my-project'
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
-				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
+				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
+				cloudLoginSetup:
+					context.capabilities.includes('doppler') ||
+					context.capabilities.includes('cloudflare-wrangler') ||
+					context.capabilities.includes('google-cloud')
+						? `echo -e "\\nINFO: Custom container setup script finished."\necho -e "\\n⚠️  To complete cloud login, run:"\necho "    cd /workspaces/${context.projectName || context.name || 'my-project'} && bash scripts/cloud_login.sh"`
+						: 'echo "INFO: Custom container setup script finished."'
 			})
 		}
 	);
