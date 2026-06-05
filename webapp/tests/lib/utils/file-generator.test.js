@@ -278,7 +278,7 @@ describe('TemplateEngine', () => {
 		const content = engine.generateFile('circleci-config', templateData);
 
 		expect(content).toContain('deploy-to-cloudflare');
-		expect(content).toContain('command: npx wrangler deploy');
+		expect(content).toContain('npx wrangler deploy');
 	});
 
 	it('should generate CircleCI config with Doppler and Cloudflare secret sync step when both are present', () => {
@@ -296,14 +296,15 @@ describe('TemplateEngine', () => {
 
 		expect(content).toContain('doppler: conpago/doppler@1.3.5');
 		expect(content).toContain('deploy-to-cloudflare:');
-		expect(content).toContain('deploy-to-cloudflare-preview:');
+		expect(content).toContain('parameters:');
+		expect(content).toContain('environment:');
 		expect(content).toContain('doppler/install');
-		expect(content).toContain('Sync Doppler Secrets to Cloudflare (production)');
-		expect(content).toContain('Sync Doppler Secrets to Cloudflare (preview)');
-		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config prod');
-		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config stg --env preview');
+		expect(content).toContain('Sync Doppler Secrets to Cloudflare');
+		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"');
+		expect(content).toContain('npx wrangler deploy --env "<< parameters.environment >>"');
 		expect(content).toContain('only: main');
 		expect(content).toContain('ignore: main');
+		expect(content).toContain('name: deploy-to-cloudflare-preview');
 	});
 
 

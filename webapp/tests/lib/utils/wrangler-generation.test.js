@@ -45,7 +45,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 
 		expect(circleCiConfig).toBeDefined();
 		expect(circleCiConfig.content).toContain('deploy-to-cloudflare');
-		expect(circleCiConfig.content).toContain('command: npx wrangler deploy');
+		expect(circleCiConfig.content).toContain('npx wrangler deploy');
 	});
 
 	it('generates wrangler.jsonc and cloud_login.sh when only Cloudflare is selected', async () => {

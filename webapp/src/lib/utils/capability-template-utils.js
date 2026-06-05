@@ -148,47 +148,41 @@ function getCircleCiTemplateData(context) {
 
 	// Check if wrangler capability is present which implies cloudflare deployment
 	if (context.capabilities.includes('cloudflare-wrangler')) {
-		let setupWranglerStepProd = '';
-		let syncSecretsStepProd = '';
-		let setupWranglerStepPreview = '';
-		let syncSecretsStepPreview = '';
+		let setupWranglerStep = '';
+		let syncSecretsStep = '';
 		if (context.capabilities.includes('doppler')) {
-			setupWranglerStepProd = `
+			setupWranglerStep = `
       - doppler/install
       - run:
-          name: Setup Wrangler Config (production)
+          name: Setup Wrangler Config
           command: |
             chmod +x scripts/setup-wrangler-config.sh
-            ./scripts/setup-wrangler-config.sh prod`;
+            ./scripts/setup-wrangler-config.sh << parameters.doppler_config >>`;
 			
-			syncSecretsStepProd = `
+			syncSecretsStep = `
       - run:
-          name: Sync Doppler Secrets to Cloudflare (production)
+          name: Sync Doppler Secrets to Cloudflare
           command: |
             chmod +x scripts/sync-doppler-secrets.sh
-            ./scripts/sync-doppler-secrets.sh --config prod`;
-
-			setupWranglerStepPreview = `
-      - doppler/install
-      - run:
-          name: Setup Wrangler Config (preview)
-          command: |
-            chmod +x scripts/setup-wrangler-config.sh
-            ./scripts/setup-wrangler-config.sh stg`;
-			
-			syncSecretsStepPreview = `
-      - run:
-          name: Sync Doppler Secrets to Cloudflare (preview)
-          command: |
-            chmod +x scripts/sync-doppler-secrets.sh
-            if ! ./scripts/sync-doppler-secrets.sh --config stg --env preview; then
-              echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview."
+            if [ "<< parameters.environment >>" = "default" ] || [ -z "<< parameters.environment >>" ]; then
+              ./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"
+            else
+              if ! ./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"; then
+                echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview."
+              fi
             fi`;
 		}
 
 		data.deployJobDefinition = `
   deploy-to-cloudflare:
     executor: node/default
+    parameters:
+      environment:
+        type: string
+        default: "default"
+      doppler_config:
+        type: string
+        default: "prod"
     steps:
       - checkout
       - restore_cache:
@@ -206,49 +200,32 @@ function getCircleCiTemplateData(context) {
       - save_cache:
           paths:
             - node_modules
-          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStepProd}${syncSecretsStepProd}
+          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}${syncSecretsStep}
       - run:
           name: Build
           command: npm run build
       - run:
-          name: Deploy to Cloudflare Workers (production)
-          command: npx wrangler deploy
-
-  deploy-to-cloudflare-preview:
-    executor: node/default
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-deps-{{ checksum "package.json" }}
-            - v1-deps-
-      - run:
-          name: Install Packages
+          name: Deploy to Cloudflare Workers
           command: |
-            if [ -f package-lock.json ]; then
-              npm ci
+            if [ "<< parameters.environment >>" = "default" ] || [ -z "<< parameters.environment >>" ]; then
+              npx wrangler deploy
             else
-              npm install
-            fi
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStepPreview}${syncSecretsStepPreview}
-      - run:
-          name: Build
-          command: npm run build
-      - run:
-          name: Deploy to Cloudflare Workers (preview)
-          command: npx wrangler deploy --env preview`;
+              npx wrangler deploy --env "<< parameters.environment >>"
+            fi`;
 
 		data.deployWorkflowJob = `
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
+          environment: "default"
+          doppler_config: "prod"
           requires:
             - build
           filters:
             branches:
               only: main
-      - deploy-to-cloudflare-preview:${contextEnabled ? `\n          context: ${contextName}` : ''}
+      - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
+          name: deploy-to-cloudflare-preview
+          environment: "preview"
+          doppler_config: "stg"
           requires:
             - build
           filters:
