@@ -23,6 +23,8 @@ import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template
 import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?raw';
 import scriptsRunWranglerDevelopmentSh from '../templates/scripts-run-wrangler-dev-sh.template?raw';
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
+import scriptsSyncDopplerSecretsSh from '../templates/scripts-sync-doppler-secrets-sh.template?raw';
+
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
 import dependabotAutoMerge from '../templates/dependabot-auto-merge.yml.template?raw';
@@ -211,6 +213,8 @@ const templateImports = {
 	'scripts-cloud-login-sh': scriptsCloudLoginSh,
 	'scripts-run-wrangler-dev-sh': scriptsRunWranglerDevelopmentSh,
 	'scripts-setup-wrangler-config-sh': scriptsSetupWranglerConfigSh,
+	'scripts-sync-doppler-secrets-sh': scriptsSyncDopplerSecretsSh,
+
 	gitignore: gitignoreTemplate,
 	'dependabot-config': dependabotConfig,
 	'dependabot-auto-merge': dependabotAutoMerge,
@@ -756,6 +760,16 @@ export function generateCloudLoginFiles(templateEngine, context) {
 
 	if (hasWrangler) {
 		pushWranglerFiles(templateEngine, context, files, projectName, compatibilityDate);
+	}
+
+	if (hasWrangler && hasDoppler) {
+		files.push({
+			filePath: 'scripts/sync-doppler-secrets.sh',
+			content: templateEngine.generateFile('scripts-sync-doppler-secrets-sh', {
+				...context,
+				projectName
+			})
+		});
 	}
 
 	return files;

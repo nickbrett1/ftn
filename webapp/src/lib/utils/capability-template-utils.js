@@ -102,11 +102,16 @@ function getCircleCiTemplateData(context) {
           revision: <<pipeline.git.revision>>`;
 	}
 
+	if (context.capabilities.includes('doppler')) {
+		data.orbs += `  doppler: conpago/doppler@1.3.5\n`;
+	}
+
 	if (
 		context.capabilities.includes('cloudflare-wrangler') &&
 		context.capabilities.includes('doppler')
 	) {
 		data.preBuildSteps = `
+      - doppler/install
       - run:
           name: Setup Wrangler Config
           command: |
@@ -143,13 +148,22 @@ function getCircleCiTemplateData(context) {
 	// Check if wrangler capability is present which implies cloudflare deployment
 	if (context.capabilities.includes('cloudflare-wrangler')) {
 		let setupWranglerStep = '';
+		let syncSecretsStep = '';
 		if (context.capabilities.includes('doppler')) {
 			setupWranglerStep = `
+      - doppler/install
       - run:
           name: Setup Wrangler Config
           command: |
             chmod +x scripts/setup-wrangler-config.sh
             ./scripts/setup-wrangler-config.sh`;
+			
+			syncSecretsStep = `
+      - run:
+          name: Sync Doppler Secrets to Cloudflare (production)
+          command: |
+            chmod +x scripts/sync-doppler-secrets.sh
+            ./scripts/sync-doppler-secrets.sh`;
 		}
 
 		data.deployJobDefinition = `
@@ -172,7 +186,7 @@ function getCircleCiTemplateData(context) {
       - save_cache:
           paths:
             - node_modules
-          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}
+          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}${syncSecretsStep}
       - run:
           name: Build
           command: npm run build

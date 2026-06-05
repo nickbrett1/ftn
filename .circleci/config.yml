@@ -202,21 +202,9 @@ jobs:
       - run:
           name: Sync Doppler secrets to Cloudflare (production)
           command: |
-            cd webapp
-            echo "Attempting to sync secrets to Cloudflare production environment..."
-            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets.json
-            jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
-            SUCCESS=true
-            while read -r batch; do
-                echo "$batch" | npx wrangler secret bulk --env production || SUCCESS=false
-            done < doppler_secrets_batches.json
-            rm doppler_secrets.json doppler_secrets_batches.json
-            if [ "$SUCCESS" = true ]; then
-              echo "✅ Secrets successfully synced to Cloudflare production"
-            else
-              echo "❌ Error: Failed to sync secrets to Cloudflare production. This is critical for production deployments."
-              exit 1
-            fi
+            chmod +x webapp/scripts/sync-doppler-secrets.sh
+            ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prod --env production
+
       - run:
           name: Deploying to Cloudflare
           command: |
@@ -256,21 +244,12 @@ jobs:
       - run:
           name: Sync Doppler secrets to Cloudflare (preview)
           command: |
-            cd webapp
-            echo "Attempting to sync secrets to Cloudflare preview environment..."
-            doppler secrets --json | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets.json
-            jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
-            SUCCESS=true
-            while read -r batch; do
-                echo "$batch" | npx wrangler secret bulk --env preview || SUCCESS=false
-            done < doppler_secrets_batches.json
-            rm doppler_secrets.json doppler_secrets_batches.json
-            if [ "$SUCCESS" = true ]; then
-              echo "✅ Secrets successfully synced to Cloudflare preview"
-            else
+            chmod +x webapp/scripts/sync-doppler-secrets.sh
+            if ! ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview; then
               echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview. This may be due to script settings conflicts."
               echo "Continuing with deployment as this is not critical for preview environments..."
             fi
+
       - run:
           name: Deploying preview to Cloudflare
           command: |

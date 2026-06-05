@@ -281,6 +281,27 @@ describe('TemplateEngine', () => {
 		expect(content).toContain('command: npx wrangler deploy');
 	});
 
+	it('should generate CircleCI config with Doppler and Cloudflare secret sync step when both are present', () => {
+		const selectedCapabilities = ['circleci', 'cloudflare-wrangler', 'doppler'];
+		const capabilitiesConfig = {};
+		const projectMetadata = { name: 'test-project' };
+		const context = {
+			capabilities: selectedCapabilities,
+			configuration: capabilitiesConfig,
+			projectMetadata: projectMetadata
+		};
+
+		const templateData = getCapabilityTemplateData('circleci', context);
+		const content = engine.generateFile('circleci-config', templateData);
+
+		expect(content).toContain('doppler: conpago/doppler@1.3.5');
+		expect(content).toContain('deploy-to-cloudflare');
+		expect(content).toContain('doppler/install');
+		expect(content).toContain('Sync Doppler Secrets to Cloudflare (production)');
+		expect(content).toContain('./scripts/sync-doppler-secrets.sh');
+	});
+
+
 	it('should NOT generate CircleCI config with Cloudflare deployment steps when cloudflare-wrangler capability is NOT present', () => {
 		const selectedCapabilities = ['circleci'];
 		const capabilitiesConfig = {};
