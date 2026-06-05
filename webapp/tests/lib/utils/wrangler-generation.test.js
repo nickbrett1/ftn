@@ -74,6 +74,13 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(cloudLogin.content).toContain('npx wrangler login');
 		expect(cloudLogin.content).not.toContain('doppler login');
 
+		const packageJson = files.find((f) => f.filePath === 'package.json');
+		expect(packageJson).toBeDefined();
+		const packageJsonContent = JSON.parse(packageJson.content);
+		expect(packageJsonContent.scripts).toHaveProperty('build', "echo 'No build step required'");
+		expect(packageJsonContent.scripts).toHaveProperty('deploy', 'wrangler deploy');
+
+
 		const wranglerTemplate = files.find((f) => f.filePath === 'wrangler.template.jsonc');
 		expect(wranglerTemplate).toBeUndefined();
 	});

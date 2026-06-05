@@ -609,7 +609,7 @@ export function generatePackageJson(templateEngine, context) {
 		typeField = 'commonjs';
 	}
 
-	if (context.capabilities.includes('devcontainer-node')) {
+	if (context.capabilities.includes('devcontainer-node') || context.capabilities.includes('cloudflare-wrangler')) {
 		// Add explicit package.json only if Node.js container is selected
 		// or we can generate it for all, but user requested "if node.js is selected"
 		const content = templateEngine.generateFile('package-json', {

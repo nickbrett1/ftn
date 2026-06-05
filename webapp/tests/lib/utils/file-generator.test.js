@@ -295,10 +295,15 @@ describe('TemplateEngine', () => {
 		const content = engine.generateFile('circleci-config', templateData);
 
 		expect(content).toContain('doppler: conpago/doppler@1.3.5');
-		expect(content).toContain('deploy-to-cloudflare');
+		expect(content).toContain('deploy-to-cloudflare:');
+		expect(content).toContain('deploy-to-cloudflare-preview:');
 		expect(content).toContain('doppler/install');
 		expect(content).toContain('Sync Doppler Secrets to Cloudflare (production)');
-		expect(content).toContain('./scripts/sync-doppler-secrets.sh');
+		expect(content).toContain('Sync Doppler Secrets to Cloudflare (preview)');
+		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config prod');
+		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config stg --env preview');
+		expect(content).toContain('only: main');
+		expect(content).toContain('ignore: main');
 	});
 
 

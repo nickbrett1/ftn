@@ -159,8 +159,8 @@ describe('capability-template-utils', () => {
 			};
 			const data = getCapabilityTemplateData('circleci', context);
 			expect(data.orbs).toContain('ggshield: gitguardian/ggshield@1');
-			expect(data.additionalWorkflowJobs).toContain('ggshield/scan');
-			expect(data.additionalWorkflowJobs).toContain('context: ctx');
+			expect(data.buildWorkflowJob).toContain('ggshield/scan');
+			expect(data.buildWorkflowJob).toContain('context: ctx');
 		});
 
 		it('should configure wrangler setup with doppler', () => {

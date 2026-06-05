@@ -28,6 +28,7 @@ describe('GitGuardian Generation', () => {
 		// Verify Job injection in Workflow
 		expect(circleCiConfig.content).toContain('- ggshield/scan:');
 		expect(circleCiConfig.content).toContain('base_revision: << pipeline.git.base_revision >>');
+		expect(circleCiConfig.content).toContain('requires:\n            - ggshield-scan');
 	});
 
 	it('should not add GitGuardian config if capability is not selected', async () => {
