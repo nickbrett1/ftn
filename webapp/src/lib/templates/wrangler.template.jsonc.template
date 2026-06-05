@@ -12,5 +12,13 @@
 			"invocation_logs": true,
 			"persist": true
 		}
+	},
+	"env": {
+		"production": {
+			"main": "{{mainEntryPoint}}"{{assetsConfig}}
+		},
+		"preview": {
+			"main": "{{mainEntryPoint}}"{{assetsConfig}}
+		}
 	}
 }

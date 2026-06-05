@@ -13,7 +13,7 @@ cd "$WEBAPP_DIR"
 # Defaults
 DOPPLER_PROJECT="webapp"
 DOPPLER_CONFIG="prod"
-CLOUDFLARE_ENV="production"
+CLOUDFLARE_ENV=""
 
 # Parse optional arguments to override defaults
 while [[ "$#" -gt 0 ]]; do
@@ -26,7 +26,7 @@ while [[ "$#" -gt 0 ]]; do
             echo "Options:"
             echo "  --project <name>      Doppler project name (default: webapp)"
             echo "  --config <name>       Doppler config name (default: prod)"
-            echo "  --env <name>          Cloudflare Wrangler environment (default: production)"
+            echo "  --env <name>          Cloudflare Wrangler environment (default: primary Worker, use 'default' to omit)"
             exit 0
             ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
@@ -85,15 +85,23 @@ fi
 # Split into batches of 20 (Wrangler bulk upload limit)
 jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
 
-echo "🚀 Syncing secrets to Cloudflare environment: $CLOUDFLARE_ENV..."
+# Build wrangler environment arguments
+WRANGLER_ARGS=""
+ENV_DISPLAY_NAME="primary Worker"
+if [ -n "$CLOUDFLARE_ENV" ] && [ "$CLOUDFLARE_ENV" != "default" ]; then
+    WRANGLER_ARGS="--env $CLOUDFLARE_ENV"
+    ENV_DISPLAY_NAME="environment: $CLOUDFLARE_ENV"
+fi
+
+echo "🚀 Syncing secrets to Cloudflare ($ENV_DISPLAY_NAME)..."
 SUCCESS=true
 while read -r batch; do
-    echo "$batch" | npx wrangler secret bulk --env "$CLOUDFLARE_ENV" || SUCCESS=false
+    echo "$batch" | npx wrangler secret bulk $WRANGLER_ARGS || SUCCESS=false
 done < doppler_secrets_batches.json
 
 if [ "$SUCCESS" = true ]; then
-    echo "✅ Secrets successfully synced to Cloudflare ($CLOUDFLARE_ENV)"
+    echo "✅ Secrets successfully synced to Cloudflare ($ENV_DISPLAY_NAME)"
 else
-    echo "❌ Error: Failed to sync secrets to Cloudflare ($CLOUDFLARE_ENV)"
+    echo "❌ Error: Failed to sync secrets to Cloudflare ($ENV_DISPLAY_NAME)"
     exit 1
 fi

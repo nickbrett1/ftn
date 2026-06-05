@@ -64,6 +64,10 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const today = new Date().toISOString().split('T')[0];
 		expect(wranglerJsonc.content).toContain(`"compatibility_date": "${today}"`);
 		expect(wranglerJsonc.content).not.toContain('"assets"');
+		expect(wranglerJsonc.content).toContain('"env"');
+		expect(wranglerJsonc.content).toContain('"production"');
+		expect(wranglerJsonc.content).toContain('"preview"');
+
 
 		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
 		expect(cloudLogin).toBeDefined();
@@ -90,6 +94,10 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const today = new Date().toISOString().split('T')[0];
 		expect(wranglerTemplate.content).toContain(`"compatibility_date": "${today}"`);
 		expect(wranglerTemplate.content).not.toContain('"assets"');
+		expect(wranglerTemplate.content).toContain('"env"');
+		expect(wranglerTemplate.content).toContain('"production"');
+		expect(wranglerTemplate.content).toContain('"preview"');
+
 
 		const setupScript = files.find((f) => f.filePath === 'scripts/setup-wrangler-config.sh');
 		expect(setupScript).toBeDefined();
