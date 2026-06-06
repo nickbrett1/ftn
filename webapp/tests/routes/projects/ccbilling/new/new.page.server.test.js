@@ -29,6 +29,7 @@ describe('/projects/ccbilling/new/+page.server.js', () => {
 	});
 
 	it('redirects if user is not authenticated', async () => {
+		mockEvent.url = { pathname: '/projects/ccbilling/new' };
 		requireUser.requireUser.mockResolvedValue(
 			new Response(null, { status: 307, headers: { Location: '/notauthorised' } })
 		);
@@ -39,7 +40,7 @@ describe('/projects/ccbilling/new/+page.server.js', () => {
 		} catch (error) {
 			const redirectError = /** @type {any} */ (error);
 			expect(redirectError.status).toBe(307);
-			expect(redirectError.location).toBe('/notauthorised');
+			expect(redirectError.location).toBe(`/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`);
 		}
 	});
 

@@ -7,7 +7,8 @@ const HTML_TEMPORARY_REDIRECT = 307;
 export async function load(event) {
 	const authResult = await requireUser(event);
 	if (authResult instanceof Response) {
-		throw redirect(HTML_TEMPORARY_REDIRECT, '/notauthorised');
+		const redirectPath = encodeURIComponent(event.url.pathname);
+		throw redirect(HTML_TEMPORARY_REDIRECT, `/notauthorised?redirectTo=${redirectPath}`);
 	}
 	return {};
 }

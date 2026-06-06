@@ -19,11 +19,11 @@ describe('Home', () => {
 	it('redirects to notauthorised if not logged in', async () => {
 		expect.assertions(1);
 		try {
-			await load({ cookies: { get: () => null }, platform: {} });
+			await load({ cookies: { get: () => null }, platform: {}, url: { pathname: '/' } });
 		} catch (error) {
 			let expected;
 			try {
-				redirect(307, '/notauthorised');
+				redirect(307, '/notauthorised?redirectTo=%2F');
 			} catch (error_) {
 				expected = error_;
 			}
@@ -50,12 +50,13 @@ describe('Home', () => {
 				cookies: { get: () => [0, '123'] },
 				platform: {
 					env: { KV: { get: () => null } }
-				}
+				},
+				url: { pathname: '/' }
 			});
 		} catch (error) {
 			let expected;
 			try {
-				redirect(307, '/notauthorised');
+				redirect(307, '/notauthorised?redirectTo=%2F');
 			} catch (error_) {
 				expected = error_;
 			}

@@ -136,6 +136,7 @@ describe('Budget Detail Page Server', () => {
 	});
 
 	it('redirects unauthenticated user', async () => {
+		mockEvent.url = { pathname: '/projects/ccbilling/budgets/1' };
 		const redirectResponse = new Response(null, {
 			status: 307,
 			headers: { Location: '/notauthorised' }
@@ -148,7 +149,8 @@ describe('Budget Detail Page Server', () => {
 		} catch (error) {
 			let expected;
 			try {
-				redirect(307, '/notauthorised');
+				const redirectPath = encodeURIComponent(mockEvent.url.pathname);
+				redirect(307, `/notauthorised?redirectTo=${redirectPath}`);
 			} catch (redirectError) {
 				expected = redirectError;
 			}

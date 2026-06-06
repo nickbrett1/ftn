@@ -13,12 +13,12 @@ describe('/projects/agent-swarm/+page.server.js load', () => {
 		);
 
 		try {
-			await load({});
+			await load({ url: { pathname: '/projects/agent-swarm' } });
 			expect.fail('The load function should have thrown a redirect.');
 		} catch (error) {
 			const redirectError = /** @type {any} */ (error);
 			expect(redirectError.status).toBe(307);
-			expect(redirectError.location).toBe('/notauthorised');
+			expect(redirectError.location).toBe('/notauthorised?redirectTo=%2Fprojects%2Fagent-swarm');
 		}
 	});
 

@@ -7,6 +7,8 @@
 	import { createAuthParticleConfig } from '$lib/client/particleConfig.js';
 	import { initiateGoogleAuth } from '$lib/client/google-auth.js';
 
+	export let data;
+
 	// Create the particle configuration using the utility
 	const particlesConfig = createAuthParticleConfig();
 
@@ -90,7 +92,7 @@
 					If your session expired or you need to log back in, you can quickly re-authenticate here.
 				</p>
 				<div class="pt-2">
-					<Button onclick={() => initiateGoogleAuth()} variant="primary" size="lg">Sign In</Button>
+					<Button onclick={() => initiateGoogleAuth(data.redirectTo)} variant="primary" size="lg">Sign In</Button>
 				</div>
 			</div>
 		</div>

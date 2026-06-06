@@ -79,11 +79,12 @@ describe('CCBilling Page Server Route', () => {
 
 	describe('load function', () => {
 		it('should redirect to /notauthorised when user is not authenticated', async () => {
+			mockEvent.url = { pathname: '/projects/ccbilling' };
 			const authResponse = new Response('Not authenticated', { status: 401 });
 			mockRequireUser.mockResolvedValue(authResponse);
 
 			await expect(load(mockEvent)).rejects.toThrow();
-			expect(mockRedirect).toHaveBeenCalledWith(307, '/notauthorised');
+			expect(mockRedirect).toHaveBeenCalledWith(307, `/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`);
 		});
 
 		it('should redirect to /projects/ccbilling when billing cycle is not found', async () => {
