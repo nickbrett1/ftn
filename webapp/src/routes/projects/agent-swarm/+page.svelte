@@ -78,12 +78,22 @@
 			addLog(`2. Connecting to WebSocket swarm at ${workerHost}...`, 'step');
 			addLog(`Session ID: ${sessionId}`, 'info');
 
-			const host = `${workerHost}/ws?expiry=${expiry}&signature=${signature}`;
-
 			const client = new AgentClientClass({
 				agent: 'ShopperAgent',
 				name: sessionId,
-				host: host,
+				host: workerHost,
+				query: {
+					expiry,
+					signature
+				},
+				onClose: (event) => {
+					if (!client.identified) {
+						addLog(`❌ WebSocket connection closed unexpectedly. Code: ${event?.code}`, 'system-error');
+					}
+				},
+				onError: (error) => {
+					addLog(`❌ WebSocket error: ${error?.message || 'Unknown error'}`, 'system-error');
+				},
 				onStateUpdate: (state) => {
 					if (state.status) {
 						status = state.status;
