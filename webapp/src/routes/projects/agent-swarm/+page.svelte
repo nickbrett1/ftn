@@ -9,7 +9,7 @@
 	let status = $state('idle');
 	let errorMsg = $state('');
 	let persona = $state('Shop for tech stickers under $15');
-	let workerHost = $state('agent-swarm.nickbrett1.workers.dev');
+	let workerHost = $state('agent-swarm.nick-brett1.workers.dev');
 	let sessionId = $state('');
 	let isConnecting = $state(false);
 
