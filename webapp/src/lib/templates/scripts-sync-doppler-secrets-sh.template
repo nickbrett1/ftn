@@ -68,14 +68,30 @@ echo "🔄 Fetching secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
 
 # Fetch secrets, compute values, and format for Cloudflare
 cleanup() {
-    rm -f doppler_secrets.json doppler_secrets_batches.json
+    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json
 }
 trap cleanup EXIT
 
-if ! doppler secrets --json $DOPPLER_ARGS | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets.json; then
+# Fetch common secrets first
+echo "{}" > doppler_secrets_common.json
+if [[ -z "$DOPPLER_TOKEN" || ! "$DOPPLER_TOKEN" =~ ^dp\.st\. ]]; then
+    echo "🔄 Fetching common secrets from Doppler (common/$DOPPLER_CONFIG)..."
+    if ! doppler secrets --json --project common --config "$DOPPLER_CONFIG" 2>/dev/null | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets_common.json; then
+        echo "⚠️ Warning: Could not fetch common secrets (they may not exist or access is denied)."
+        echo "{}" > doppler_secrets_common.json
+    fi
+else
+    echo "⚠️ Warning: Using a service token. Skipping common secrets fetch."
+fi
+
+echo "🔄 Fetching project secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
+if ! doppler secrets --json $DOPPLER_ARGS | jq -c 'with_entries(.value = .value.computed)' > doppler_secrets_project.json; then
     echo "❌ Error: Failed to fetch secrets from Doppler."
     exit 1
 fi
+
+# Merge common and project secrets, project overrides common
+jq -s '.[0] * .[1]' doppler_secrets_common.json doppler_secrets_project.json > doppler_secrets.json
 
 if [ ! -s doppler_secrets.json ] || [ "$(cat doppler_secrets.json)" = "{}" ]; then
     echo "⚠️ Warning: No secrets found to sync."
