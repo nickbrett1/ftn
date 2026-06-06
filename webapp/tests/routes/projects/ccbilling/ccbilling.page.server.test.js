@@ -23,13 +23,13 @@ describe('/projects/ccbilling/+page.server.js', () => {
 		// The `load` function throws a `Redirect` object, which is not a standard Error.
 		// Using a try/catch block is a reliable way to test this.
 		try {
-			await load({});
+			await load({ url: { pathname: '/projects/ccbilling' } });
 			expect.fail('The load function should have thrown a redirect.');
 		} catch (error) {
 			// Now, we can assert the properties of the thrown redirect object.
 			const redirectError = /** @type {any} */ (error);
 			expect(redirectError.status).toBe(307);
-			expect(redirectError.location).toBe('/notauthorised');
+			expect(redirectError.location).toBe('/notauthorised?redirectTo=%2Fprojects%2Fccbilling');
 		}
 	});
 
