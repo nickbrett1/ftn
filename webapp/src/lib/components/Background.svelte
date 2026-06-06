@@ -9,10 +9,10 @@
 	const particlesConfig = createFinancialParticleConfig();
 
 	onMount(async () => {
-		loadSlim(tsParticles);
-		loadTextShape(tsParticles);
+		await loadSlim(tsParticles);
+		await loadTextShape(tsParticles);
 
-		tsParticles.load({
+		await tsParticles.load({
 			id: 'tsparticles',
 			options: particlesConfig
 		});

@@ -1,6 +1,6 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { loadSlim } from '@tsparticles/slim';
+	import { loadFull } from 'tsparticles';
 	import { tsParticles } from '@tsparticles/engine';
 
 	/** @type {boolean} */
@@ -10,83 +10,135 @@
 
 	// Fireworks configuration for tsparticles - MEGA SPECTACULAR celebration!
 	const fireworksConfig = {
-		particles: {
-			number: {
-				value: 150
-			},
-			color: {
-				value: [
-					'#ff0000',
-					'#00ff00',
-					'#0000ff',
-					'#ffff00',
-					'#ff00ff',
-					'#00ffff',
-					'#ff8800',
-					'#8800ff',
-					'#ff6b6b',
-					'#4ecdc4',
-					'#45b7d1',
-					'#96ceb4',
-					'#feca57',
-					'#ff9ff3',
-					'#54a0ff',
-					'#ff6b9d',
-					'#c44569',
-					'#f8b500',
-					'#ff1744',
-					'#00e676',
-					'#2196f3',
-					'#ffeb3b',
-					'#e91e63',
-					'#00bcd4'
-				]
-			},
-			shape: {
-				type: 'circle'
-			},
-			opacity: {
-				value: 1,
-				animation: {
-					enable: true,
-					speed: 0.2,
-					sync: false
-				}
-			},
-			size: {
-				value: { min: 2, max: 8 },
-				animation: {
-					enable: true,
-					speed: 1,
-					minimumValue: 0.5,
-					sync: false
-				}
-			},
-			move: {
-				enable: true,
-				speed: { min: 2, max: 6 },
-				direction: 'none',
-				random: true,
-				straight: false,
-				outModes: {
-					default: 'destroy'
-				}
-			}
-		},
-		background: {
-			color: 'transparent'
-		},
 		fullScreen: {
 			enable: true,
 			zIndex: 50
 		},
-		detectRetina: true
+		background: {
+			color: 'transparent'
+		},
+		emitters: {
+			direction: 'top',
+			life: {
+				count: 0,
+				duration: 0.1,
+				delay: 0.1
+			},
+			rate: {
+				delay: 0.15,
+				quantity: 1
+			},
+			size: {
+				width: 100,
+				height: 0
+			},
+			position: {
+				y: 100,
+				x: 50
+			},
+			particles: {
+				move: {
+					enable: true,
+					speed: { min: 10, max: 25 },
+					physics: {
+						enable: true,
+						gravity: {
+							enable: true,
+							acceleration: 9.81
+						}
+					},
+					outModes: {
+						default: 'destroy',
+						top: 'none'
+					}
+				},
+				number: {
+					value: 0
+				},
+				color: {
+					value: '#ffffff'
+				},
+				shape: {
+					type: 'circle'
+				},
+				opacity: {
+					value: 1
+				},
+				size: {
+					value: { min: 1, max: 3 }
+				},
+				destroy: {
+					mode: 'split',
+					split: {
+						count: 1,
+						factor: { value: 1 / 3 },
+						rate: { value: 3 },
+						particles: {
+							color: {
+								value: [
+									'#ff595e',
+									'#ffca3a',
+									'#8ac926',
+									'#1982c4',
+									'#6a4c93',
+									'#ff6b6b',
+									'#4ecdc4',
+									'#feca57',
+									'#ff9ff3',
+									'#54a0ff'
+								]
+							},
+							move: {
+								enable: true,
+								destroy: {
+									mode: 'none'
+								},
+								speed: { min: 2, max: 8 },
+								direction: 'none',
+								random: true,
+								straight: false,
+								outModes: {
+									default: 'destroy'
+								},
+								gravity: {
+									enable: true,
+									acceleration: 2
+								},
+								decay: 0.05
+							},
+							number: {
+								value: 0
+							},
+							opacity: {
+								value: 1,
+								animation: {
+									enable: true,
+									speed: 0.3,
+									minimumValue: 0,
+									sync: false,
+									startValue: 'max'
+								}
+							},
+							size: {
+								value: { min: 1, max: 4 }
+							},
+							life: {
+								duration: {
+									sync: true,
+									value: 1.5
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	};
 
 	async function initParticles() {
 		try {
-			// Load tsparticles
-			loadSlim(tsParticles);
+			// Load tsparticles with full features (including emitters & split destroy mode)
+			await loadFull(tsParticles);
 
 			// Initialize particles with id approach (like other components)
 			particlesInstance = await tsParticles.load({

@@ -4,8 +4,8 @@ import { mount, unmount, flushSync, tick } from 'svelte';
 import Fireworks from '../../../src/lib/components/Fireworks.svelte';
 
 // Mock tsparticles
-vi.mock('@tsparticles/slim', () => ({
-	loadSlim: vi.fn().mockResolvedValue()
+vi.mock('tsparticles', () => ({
+	loadFull: vi.fn().mockResolvedValue()
 }));
 
 vi.mock('@tsparticles/engine', () => ({
