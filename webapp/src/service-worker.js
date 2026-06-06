@@ -9,7 +9,7 @@ const CACHE = `cache-${version}`;
 
 const ASSETS = [
 	...build, // the app itself
-	...files // everything in `static`
+	...files.filter(file => !file.includes('pdf.worker') && !file.includes('pdf-worker'))
 ];
 
 self.addEventListener('install', (event) => {
