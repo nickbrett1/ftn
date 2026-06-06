@@ -83,7 +83,7 @@
 				name: sessionId,
 				host: workerHost,
 				query: {
-					expiry,
+					expiry: expiry.toString(),
 					signature
 				},
 				onClose: (event) => {
@@ -103,14 +103,21 @@
 						const newLogs = state.history;
 						// To avoid duplicating logs, reset and add them
 						logs = logs.filter(l => l.type === 'step' || l.type === 'success' || l.type === 'system-error');
-						for (const step of newLogs) {
+						newLogs.forEach(step => {
 							addLog(step, 'agent');
-						}
+						});
 					}
 				}
 			});
 
-			await client.ready;
+			// Add a timeout for the ready signal in case the server fails to send identity
+			let timeoutId;
+			const readyTimeout = new Promise((_, reject) => {
+				timeoutId = setTimeout(() => reject(new Error('Timed out waiting for Agent identity signal. The worker might be unreachable or not returning the correct cf_agent_identity.')), 15000);
+			});
+
+			await Promise.race([client.ready, readyTimeout]);
+			clearTimeout(timeoutId);
 			addLog('✅ WebSocket connection established. Agent ready.', 'success');
 
 			status = 'running';
