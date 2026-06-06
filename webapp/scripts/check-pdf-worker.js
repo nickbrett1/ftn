@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const sourceFile = join(__dirname, '../node_modules/pdfjs-dist/build/pdf.worker.min.mjs');
+const sourceFile = join(__dirname, '../node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs');
 const targetFile = join(__dirname, '../static/pdf.worker.min.mjs');
 
 async function checkPDFWorker() {

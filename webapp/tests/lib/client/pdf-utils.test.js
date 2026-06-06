@@ -307,3 +307,34 @@ describe('parsing failures handling', () => {
 		);
 	});
 });
+
+describe('PDF Worker Version Consistency', () => {
+	it('should have a copied worker file in static matching node_modules pdfjs-dist version', async () => {
+		const fs = await import('node:fs');
+		const path = await import('node:path');
+		const { fileURLToPath } = await import('node:url');
+
+		const filename = fileURLToPath(import.meta.url);
+		const dirnamePath = path.dirname(filename);
+		const webappDir = path.resolve(dirnamePath, '../../../../');
+		const workerPath = path.join(webappDir, 'static/pdf.worker.min.mjs');
+		const nodeModulesPkgPath = path.join(webappDir, 'node_modules/pdfjs-dist/package.json');
+
+		expect(fs.existsSync(nodeModulesPkgPath)).toBe(true);
+		const nodeModulesPkg = JSON.parse(fs.readFileSync(nodeModulesPkgPath, 'utf8'));
+		const installedVersion = nodeModulesPkg.version;
+		expect(installedVersion).toBeDefined();
+
+		expect(fs.existsSync(workerPath)).toBe(true);
+		const workerContent = fs.readFileSync(workerPath, 'utf8').substring(0, 5000);
+
+		// Look for version inside the worker code
+		const versionRegex = /version\s*[:=]\s*['"]([^'"]+)['"]/i;
+		const match = workerContent.match(versionRegex) || workerContent.match(/([0-9]+\.[0-9]+\.[0-9]+)/);
+		
+		expect(match).not.toBeNull();
+		const workerVersion = match[1];
+
+		expect(workerVersion).toBe(installedVersion);
+	});
+});
