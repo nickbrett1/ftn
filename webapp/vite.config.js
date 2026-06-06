@@ -35,7 +35,7 @@ export default defineConfig(({ command, mode }) => {
 		imagetools({
 			defaultDirectives: isDevelopment
 				? new URLSearchParams(`?width=480&format=webp`) // Faster for dev
-				: new URLSearchParams(`?width=480;1024;1920&format=avif;webp;jpg&effort=2`)
+				: new URLSearchParams(`?width=480;1024;1920&format=webp;jpg&effort=2`)
 		})
 	];
 
