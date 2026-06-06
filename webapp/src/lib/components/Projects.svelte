@@ -7,9 +7,9 @@
 		PenToSquareRegular,
 		ToolboxSolid,
 		PlaneDepartureSolid,
-		RobotSolid,
 		ProjectDiagramSolid,
-		ClipboardCheckSolid
+		ClipboardCheckSolid,
+		RobotSolid
 	} from 'svelte-awesome-icons';
 </script>
 

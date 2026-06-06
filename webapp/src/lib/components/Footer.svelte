@@ -5,7 +5,8 @@
 		EnvelopeRegular,
 		CreditCardSolid,
 		RocketSolid,
-		CartShoppingSolid
+		CartShoppingSolid,
+		RobotSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -50,6 +51,9 @@
 		const shopTooltips = tippy('#shop', {
 			content: 'Virtual Shop'
 		});
+		const agentSwarmTooltips = tippy('#agent-swarm', {
+			content: 'Agent Swarm'
+		});
 
 		// Clean up tooltips when component unmounts
 		return () => {
@@ -75,6 +79,12 @@
 				for (const tooltip of shopTooltips) tooltip.destroy();
 			} else {
 				shopTooltips.destroy();
+			}
+
+			if (Array.isArray(agentSwarmTooltips)) {
+				for (const tooltip of agentSwarmTooltips) tooltip.destroy();
+			} else {
+				agentSwarmTooltips.destroy();
 			}
 		};
 	});
@@ -140,6 +150,18 @@
 					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
 					title="Virtual Shop"
 					ariaLabel="Virtual Shop"
+					focusable="true"
+				/>
+
+				<!-- Agent Swarm icon -->
+				<RobotSolid
+					id="agent-swarm"
+					onclick={() => {
+						goto('/projects/agent-swarm');
+					}}
+					class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+					title="Agent Swarm"
+					ariaLabel="Agent Swarm"
 					focusable="true"
 				/>
 			</div>
