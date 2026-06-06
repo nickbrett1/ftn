@@ -4,10 +4,12 @@ import { createServer } from 'miragejs';
 
 const TEST_USER = 'test@test.com';
 
-vi.mock('$env/static/private', async () => {
+vi.mock('$env/dynamic/private', async () => {
 	return {
-		GOOGLE_CLIENT_SECRET: '123',
-		GOOGLE_CLIENT_ID: '123'
+		env: {
+			GOOGLE_CLIENT_SECRET: '123',
+			GOOGLE_CLIENT_ID: '123'
+		}
 	};
 });
 

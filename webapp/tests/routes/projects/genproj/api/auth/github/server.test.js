@@ -3,13 +3,15 @@ import { dev } from '$app/environment';
 import { RequestEvent } from '@sveltejs/kit';
 import { vi, describe, it, expect } from 'vitest';
 
-vi.mock('$env/static/private', () => ({
-	DEV_GITHUB_CLIENT_ID: 'test-client-id',
-	DEV_GITHUB_CLIENT_SECRET: 'test-client-secret',
-	PREVIEW_GITHUB_CLIENT_ID: 'preview-test-client-id',
-	PREVIEW_GITHUB_CLIENT_SECRET: 'preview-test-client-secret',
-	PROD_GITHUB_CLIENT_ID: 'prod-test-client-id',
-	PROD_GITHUB_CLIENT_SECRET: 'prod-test-client-secret'
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		DEV_GITHUB_CLIENT_ID: 'test-client-id',
+		DEV_GITHUB_CLIENT_SECRET: 'test-client-secret',
+		PREVIEW_GITHUB_CLIENT_ID: 'preview-test-client-id',
+		PREVIEW_GITHUB_CLIENT_SECRET: 'preview-test-client-secret',
+		PROD_GITHUB_CLIENT_ID: 'prod-test-client-id',
+		PROD_GITHUB_CLIENT_SECRET: 'prod-test-client-secret'
+	}
 }));
 
 vi.mock('$app/environment', () => ({

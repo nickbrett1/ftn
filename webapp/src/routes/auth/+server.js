@@ -1,14 +1,4 @@
-// Try to import environment variables, with fallbacks for build time
-let GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET;
-try {
-	const environment = await import('$env/static/private');
-	GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
-	GOOGLE_CLIENT_SECRET = environment.GOOGLE_CLIENT_SECRET;
-} catch {
-	// During build time, these might not be available
-	GOOGLE_CLIENT_ID = process.env?.GOOGLE_CLIENT_ID || 'placeholder';
-	GOOGLE_CLIENT_SECRET = process.env?.GOOGLE_CLIENT_SECRET || 'placeholder';
-}
+import { env } from '$env/dynamic/private';
 import { isUserAllowed } from '$lib/server/user-validation.js';
 
 const logPrefix = '[AUTH_HANDLER]';
@@ -16,12 +6,12 @@ const logPrefix = '[AUTH_HANDLER]';
 const tokenExchange = async (url, code) => {
 	const body = new URLSearchParams();
 
-	if (!GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
-	if (!GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
+	if (!env.GOOGLE_CLIENT_SECRET) throw new Error('Must set GOOGLE_CLIENT_SECRET');
+	if (!env.GOOGLE_CLIENT_ID) throw new Error('Must set GOOGLE_CLIENT_ID');
 
 	const parameters = {
-		client_id: GOOGLE_CLIENT_ID,
-		client_secret: GOOGLE_CLIENT_SECRET,
+		client_id: env.GOOGLE_CLIENT_ID,
+		client_secret: env.GOOGLE_CLIENT_SECRET,
 
 		code,
 		grant_type: 'authorization_code',

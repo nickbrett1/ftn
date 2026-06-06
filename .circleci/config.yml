@@ -64,6 +64,7 @@ jobs:
           root: webapp
           paths:
             - .svelte-kit
+            - static/pdf.worker.min.mjs
 
   code_test:
     docker:

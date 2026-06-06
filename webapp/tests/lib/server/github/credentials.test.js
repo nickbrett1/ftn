@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock the environment module
-vi.mock('$env/static/private', () => ({
-	DEV_GITHUB_CLIENT_ID: 'dev-id',
-	DEV_GITHUB_CLIENT_SECRET: 'dev-secret',
-	PREVIEW_GITHUB_CLIENT_ID: 'preview-id',
-	PREVIEW_GITHUB_CLIENT_SECRET: 'preview-secret',
-	PROD_GITHUB_CLIENT_ID: 'prod-id',
-	PROD_GITHUB_CLIENT_SECRET: 'prod-secret',
-	GITHUB_CLIENT_ID: 'default-id',
-	GITHUB_CLIENT_SECRET: 'default-secret'
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		DEV_GITHUB_CLIENT_ID: 'dev-id',
+		DEV_GITHUB_CLIENT_SECRET: 'dev-secret',
+		PREVIEW_GITHUB_CLIENT_ID: 'preview-id',
+		PREVIEW_GITHUB_CLIENT_SECRET: 'preview-secret',
+		PROD_GITHUB_CLIENT_ID: 'prod-id',
+		PROD_GITHUB_CLIENT_SECRET: 'prod-secret',
+		GITHUB_CLIENT_ID: 'default-id',
+		GITHUB_CLIENT_SECRET: 'default-secret'
+	}
 }));
 
 // Import the function under test using relative path

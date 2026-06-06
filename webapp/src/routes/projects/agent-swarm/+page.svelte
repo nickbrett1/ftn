@@ -169,7 +169,7 @@
 
 				<!-- Persona Selection -->
 				<div class="space-y-3">
-					<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Buyer Persona</label>
+					<span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Buyer Persona</span>
 					<div class="flex flex-col gap-2">
 						{#each personas as p}
 							<button

@@ -5,9 +5,11 @@ let randomValuesSpy;
 
 const mockIsUserAllowed = vi.fn();
 
-vi.mock('$env/static/private', () => ({
-	GOOGLE_CLIENT_ID: 'unit-test-client',
-	GOOGLE_CLIENT_SECRET: 'unit-test-secret'
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		GOOGLE_CLIENT_ID: 'unit-test-client',
+		GOOGLE_CLIENT_SECRET: 'unit-test-secret'
+	}
 }));
 
 vi.mock('$lib/server/user-validation.js', () => ({
