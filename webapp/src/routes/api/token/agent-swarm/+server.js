@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { AGENT_SWARM_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
@@ -9,7 +9,7 @@ export async function GET(event) {
 		return authResult;
 	}
 
-	if (!AGENT_SWARM_SECRET) {
+	if (!env.AGENT_SWARM_SECRET) {
 		return json({ error: 'AGENT_SWARM_SECRET is not configured on the server.' }, { status: 500 });
 	}
 
@@ -19,7 +19,7 @@ export async function GET(event) {
 	// Import the secret key
 	const key = await crypto.subtle.importKey(
 		'raw',
-		encoder.encode(AGENT_SWARM_SECRET),
+		encoder.encode(env.AGENT_SWARM_SECRET),
 		{ name: 'HMAC', hash: 'SHA-256' },
 		false,
 		['sign']

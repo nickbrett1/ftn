@@ -1,8 +1,10 @@
 import { GET } from '../../../../../src/routes/api/token/agent-swarm/+server.js';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-vi.mock('$env/static/private', () => ({
-	AGENT_SWARM_SECRET: 'test-secret-key-1234567890'
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		AGENT_SWARM_SECRET: 'test-secret-key-1234567890'
+	}
 }));
 
 vi.mock('$lib/server/require-user.js', () => ({

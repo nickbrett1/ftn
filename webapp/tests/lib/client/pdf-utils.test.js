@@ -316,7 +316,7 @@ describe('PDF Worker Version Consistency', () => {
 
 		const filename = fileURLToPath(import.meta.url);
 		const dirnamePath = path.dirname(filename);
-		const webappDir = path.resolve(dirnamePath, '../../../../');
+		const webappDir = path.resolve(dirnamePath, '../../../');
 		const workerPath = path.join(webappDir, 'static/pdf.worker.min.mjs');
 		const nodeModulesPkgPath = path.join(webappDir, 'node_modules/pdfjs-dist/package.json');
 
