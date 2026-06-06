@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 // /workspaces/ftn/webapp/tests/mdsvex-footnotes.test.js
 // The footnote support is provided by the `remark-footnotes` and `remark-gfm` plugins is fragile
 // It relies on v2 of 'remark-footnotes', not any later version.

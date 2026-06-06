@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { describe, it, expect } from 'vitest';
 import DataArchitectureHTML from '../../../../src/routes/projects/data-arch-diagram/DataArchitectureHTML.svelte';

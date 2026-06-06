@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
 import { vi, describe, it, expect, beforeEach, beforeAll } from 'vitest';

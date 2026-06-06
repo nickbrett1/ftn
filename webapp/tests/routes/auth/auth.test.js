@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { expect, describe, it, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from '../../../src/routes/auth/+server.js';
 import { createServer } from 'miragejs';

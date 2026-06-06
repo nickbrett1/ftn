@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { expect, describe, it } from 'vitest';
 import { mount, unmount } from 'svelte';
 import Home from '../../../src/routes/home/+page.svelte';

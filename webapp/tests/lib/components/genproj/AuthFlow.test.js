@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 // webapp/tests/lib/components/genproj/AuthFlow.test.js
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/svelte';

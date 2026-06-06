@@ -35,7 +35,7 @@ export default defineConfig(({ command, mode }) => {
 		imagetools({
 			defaultDirectives: isDevelopment
 				? new URLSearchParams(`?width=480&format=webp`) // Faster for dev
-				: new URLSearchParams(`?width=480;960;1024;1920&format=avif;webp;jpg`)
+				: new URLSearchParams(`?width=480;1024;1920&format=avif;webp;jpg&effort=2`)
 		})
 	];
 
@@ -63,7 +63,7 @@ export default defineConfig(({ command, mode }) => {
 				'node_modules/**'
 			],
 			globals: true,
-			environment: 'jsdom',
+			environment: 'node',
 			// Add explicit setup and teardown to prevent race conditions
 			setupFiles: ['src/test-setup.js'], // Remove global setup file
 			teardownTimeout: 10_000, // 10 seconds for cleanup

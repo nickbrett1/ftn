@@ -217,20 +217,26 @@ Object.defineProperty(globalThis, 'cancelAnimationFrame', {
 	value: vi.fn()
 });
 
-// Mock performance.now for timing-sensitive code
-Object.defineProperty(globalThis, 'performance', {
-	writable: true,
-	value: {
-		now: vi.fn(() => Date.now())
-	}
-});
+// Mock performance.now for timing-sensitive code without destroying other native performance properties
+if (globalThis.performance) {
+	globalThis.performance.now = vi.fn(() => Date.now());
+} else {
+	Object.defineProperty(globalThis, 'performance', {
+		writable: true,
+		value: {
+			now: vi.fn(() => Date.now())
+		}
+	});
+}
 
 // Mock Element.prototype.animate for Svelte transitions in JSDOM
-Element.prototype.animate = vi.fn().mockImplementation(() => ({
-	finished: Promise.resolve(),
-	onfinish: null,
-	cancel: vi.fn(),
-	play: vi.fn(),
-	pause: vi.fn(),
-	reverse: vi.fn()
-}));
+if (typeof Element !== 'undefined') {
+	Element.prototype.animate = vi.fn().mockImplementation(() => ({
+		finished: Promise.resolve(),
+		onfinish: null,
+		cancel: vi.fn(),
+		play: vi.fn(),
+		pause: vi.fn(),
+		reverse: vi.fn()
+	}));
+}

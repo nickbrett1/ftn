@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte/svelte5';
 import CardsPage from '../../../../../src/routes/projects/ccbilling/cards/+page.svelte';

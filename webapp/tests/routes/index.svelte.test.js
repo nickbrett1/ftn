@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { expect, describe, it, vi } from 'vitest';
 import ResizeObserver from 'resize-observer-polyfill';
 import { mount, unmount, flushSync } from 'svelte';

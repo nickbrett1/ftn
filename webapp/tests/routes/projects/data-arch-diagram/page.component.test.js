@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen } from '@testing-library/svelte';
 import Page from '../../../../src/routes/projects/data-arch-diagram/+page.svelte';
 import { vi, describe, it, expect } from 'vitest';

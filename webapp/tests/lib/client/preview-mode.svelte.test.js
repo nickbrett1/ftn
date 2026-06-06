@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, waitFor, cleanup, screen, fireEvent } from '@testing-library/svelte';
 import PreviewMode from '../../../src/lib/components/genproj/PreviewMode.svelte';

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, fireEvent, screen } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Page from '../../../../src/routes/projects/genproj/+page.svelte';

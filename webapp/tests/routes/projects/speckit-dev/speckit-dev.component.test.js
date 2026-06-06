@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen } from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import SpeckitDevelopment from '../../../../src/routes/projects/speckit-dev/speckit-dev.svx';

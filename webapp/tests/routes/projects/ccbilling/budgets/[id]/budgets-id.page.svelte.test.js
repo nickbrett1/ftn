@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
 import BudgetPage from '../../../../../../src/routes/projects/ccbilling/budgets/[id]/+page.svelte';
