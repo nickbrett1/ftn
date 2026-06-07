@@ -102,7 +102,7 @@ export default defineConfig(({ command, mode }) => {
 				'import.meta.vitest': 'undefined'
 			},
 			// Add explicit reporter configuration for both console and JUnit output
-			reporter: ['default', 'junit', './scripts/shared-reporter.js'],
+			reporter: ['default', 'junit'],
 			outputFile: {
 				junit: './reports/junit.xml'
 			},

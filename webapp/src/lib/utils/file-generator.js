@@ -614,7 +614,7 @@ export function generatePackageJson(templateEngine, context) {
 		if (!devDependencies.includes('"vitest"')) {
 			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
 		}
-		scripts += ',\n    "test": "vitest",\n    "test:once": "node scripts/run-shared-tests.js"';
+		scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 	}
 
 	if (context.capabilities.includes('devcontainer-node') || context.capabilities.includes('cloudflare-wrangler')) {
@@ -835,6 +835,66 @@ export function generateVscodeSettingsFile(templateEngine, context) {
 	};
 }
 
+export function generateAgentRulesFiles() {
+	const gitGuidelines = `# Git, Code Review, and Deployment Rules
+
+- **No Git Commits**: Never run \`git commit\` to package changes. Always leave files modified in the working directory (unstaged or staged).
+- **No Git Pushes**: Never run \`git push\` to push local branch commits to any remote repository.
+- **No Deployments**: Never run \`wrangler deploy\`, \`npm run deploy\`, or any other deployment command to push code to the production/default environment.
+- **Goal**: Keep all modifications fully visible in the local git working directory so the user can easily review the side-by-side diffs in the VS Code Source Control view before staging, committing, pushing, or deploying them manually.
+`;
+
+	const testingGuidelines = `# Testing Guidelines
+
+## Run Focused Tests on Changed Files Only
+
+When running tests, always scope them to the files that have actually changed rather than running the full test suite. This keeps feedback fast and avoids noise from unrelated tests.
+
+### How to identify changed files
+
+Use \`git\` to find what has changed relative to the working directory:
+
+\`\`\`bash
+# Unstaged + staged changes (everything modified vs HEAD)
+git diff --name-only HEAD
+\`\`\`
+
+Then map each changed source file to its corresponding test file:
+
+| Source file      | Test file             |
+| ---------------- | --------------------- |
+| \`src/browser.ts\` | \`src/browser.test.ts\` |
+| \`src/index.ts\`   | \`src/index.test.ts\`   |
+
+### Running focused tests with Vitest
+
+Pass the test file(s) directly to Vitest to limit the run:
+
+\`\`\`bash
+# Single test file
+npx vitest run src/browser.test.ts
+
+# Multiple test files
+npx vitest run src/browser.test.ts src/index.test.ts
+
+# With coverage for the specific files only
+npx vitest run --coverage src/browser.test.ts
+\`\`\`
+
+### Full suite
+
+Only run the full suite (\`npm test\`) when:
+
+- You have changed shared utilities used by many tests, or
+- You are doing a final pre-commit validation of a large change set.
+`;
+
+	return [
+		{ filePath: '.agents/.rules/git_guidelines.md', content: gitGuidelines },
+		{ filePath: '.agents/.rules/testing_guidelines.md', content: testingGuidelines }
+	];
+}
+
 export async function generateAllFiles(context) {
 	const templateEngine = new TemplateEngine();
 	await templateEngine.initialize();
@@ -861,17 +921,14 @@ export async function generateAllFiles(context) {
 			developmentContainerCapabilities
 		),
 		...cloudLoginFiles,
-		...otherFiles
+		...otherFiles,
+		...generateAgentRulesFiles()
 	];
 
 	if (context.capabilities.includes('devcontainer-node')) {
 		// Filter out any template-generated vite.config.js
 		allGeneratedFiles = allGeneratedFiles.filter((f) => f.filePath !== 'vite.config.js');
-		allGeneratedFiles.push(
-			generateViteConfigFile(context),
-			generateSharedReporterFile(),
-			generateRunSharedTestsFile()
-		);
+		allGeneratedFiles.push(generateViteConfigFile(context));
 	}
 
 	return allGeneratedFiles;
@@ -888,7 +945,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
-		reporter: ['default', 'junit', './scripts/shared-reporter.js'],
+		reporter: ['default', 'junit'],
 		outputFile: {
 			junit: './reports/junit.xml'
 		}
@@ -900,7 +957,7 @@ export default defineConfig({
 
 export default defineConfig({
 	test: {
-		reporter: ['default', './scripts/shared-reporter.js']
+		reporter: ['default']
 	}
 });
 `;
@@ -908,296 +965,6 @@ export default defineConfig({
 
 	return {
 		filePath: 'vite.config.js',
-		content
-	};
-}
-
-export function generateSharedReporterFile() {
-	const content = `import http from 'http';
-
-// Initialize global state to share across re-instantiations of the reporter class
-globalThis.__sharedRunnerState = globalThis.__sharedRunnerState || {
-  status: 'idle',
-  results: null,
-  ctx: null,
-  server: null
-};
-
-const state = globalThis.__sharedRunnerState;
-
-export default class SharedRunnerReporter {
-  onInit(vitest) {
-    state.ctx = vitest;
-    
-    if (state.server) return;
-
-    state.server = http.createServer(async (req, res) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Content-Type', 'application/json');
-
-      if (req.method === 'OPTIONS') {
-        res.statusCode = 204;
-        res.end();
-        return;
-      }
-
-      if (req.url === '/status') {
-        res.statusCode = 200;
-        res.end(JSON.stringify({ status: state.status, results: state.results }));
-      } else if (req.url === '/run' && req.method === 'POST') {
-        res.statusCode = 200;
-        res.end(JSON.stringify({ status: 'triggered' }));
-        
-        try {
-          if (state.ctx) {
-            await state.ctx.start();
-          }
-        } catch (err) {
-          console.error('[SharedRunnerReporter] Error triggering test run:', err);
-        }
-      } else {
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: 'Not Found' }));
-      }
-    });
-
-    state.server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.warn('[SharedRunnerReporter] Port 51204 is already in use. Shared runner API not started.');
-      } else {
-        console.error('[SharedRunnerReporter] Server error:', err);
-      }
-    });
-
-    state.server.listen(51204, '127.0.0.1', () => {
-      console.log('[SharedRunnerReporter] Shared test runner API listening on http://127.0.0.1:51204');
-    });
-
-    state.server.unref();
-  }
-
-  onTestRunStart() {
-    state.status = 'running';
-  }
-
-  onFinished(files, errors) {
-    const hasErrors = (errors && errors.length > 0) || 
-                      (files && files.some(f => f.result?.state === 'fail' || (f.tasks && f.tasks.some(t => t.result?.state === 'fail'))));
-
-    state.status = hasErrors ? 'failed' : 'passed';
-
-    let passed = 0;
-    let failed = 0;
-    let total = 0;
-
-    const countTasks = (tasks) => {
-      for (const task of tasks || []) {
-        if (task.type === 'test') {
-          total++;
-          if (task.result?.state === 'pass') passed++;
-          else if (task.result?.state === 'fail') failed++;
-        } else if (task.type === 'suite') {
-          countTasks(task.tasks);
-        }
-      }
-    };
-
-    for (const file of files || []) {
-      countTasks(file.tasks);
-    }
-
-    state.results = {
-      passed,
-      failed,
-      total,
-      time: new Date().toISOString(),
-      errors: errors?.map(e => e.message || e.toString()) || []
-    };
-  }
-}
-`;
-	return {
-		filePath: 'scripts/shared-reporter.js',
-		content
-	};
-}
-
-export function generateRunSharedTestsFile() {
-	const content = `import http from 'http';
-import { spawn } from 'child_process';
-
-const PORT = 51204;
-const HOST = '127.0.0.1';
-
-function checkRunnerActive() {
-  return new Promise((resolve) => {
-    const req = http.request({
-      host: HOST,
-      port: PORT,
-      path: '/status',
-      method: 'GET',
-      timeout: 1000
-    }, (res) => {
-      resolve(res.statusCode === 200);
-    });
-
-    req.on('error', () => {
-      resolve(false);
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      resolve(false);
-    });
-
-    req.end();
-  });
-}
-
-function triggerRun() {
-  return new Promise((resolve, reject) => {
-    const req = http.request({
-      host: HOST,
-      port: PORT,
-      path: '/run',
-      method: 'POST'
-    }, (res) => {
-      if (res.statusCode === 200) {
-        resolve();
-      } else {
-        reject(new Error(\`Failed to trigger: Status code \${res.statusCode}\`));
-      }
-    });
-
-    req.on('error', reject);
-    req.end();
-  });
-}
-
-function getStatus() {
-  return new Promise((resolve, reject) => {
-    const req = http.request({
-      host: HOST,
-      port: PORT,
-      path: '/status',
-      method: 'GET'
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    req.on('error', reject);
-    req.end();
-  });
-}
-
-async function run() {
-  const isActive = await checkRunnerActive();
-
-  if (isActive) {
-    console.log(\`[SharedTestRunner] Connecting to active Vitest watch runner on port \${PORT}...\`);
-    try {
-      const startTime = Date.now();
-      console.log('[SharedTestRunner] Checking for watch runner activity or pending runs...');
-
-      let statusObj = await getStatus();
-      let hasSeenRunning = statusObj.status === 'running';
-      
-      const gracePeriod = 1500;
-      const checkInterval = 200;
-      let elapsed = 0;
-
-      while (true) {
-        statusObj = await getStatus();
-        const runTime = statusObj.results ? new Date(statusObj.results.time).getTime() : 0;
-
-        if (statusObj.status === 'running') {
-          hasSeenRunning = true;
-        }
-
-        if (runTime >= startTime && statusObj.status !== 'running') {
-          console.log(\`\\n[SharedTestRunner] Watch runner completed a new run.\`);
-          break;
-        }
-
-        if (statusObj.status !== 'running' && runTime < startTime) {
-          if (!hasSeenRunning && elapsed >= gracePeriod) {
-            console.log('\\n[SharedTestRunner] No automatic run detected. Triggering a run...');
-            await triggerRun();
-            hasSeenRunning = true;
-          }
-        }
-
-        const maxTimeout = 100000; // 100 seconds
-        const warnInterval = 15000; // 15 seconds
-        const elapsedSinceLastWarn = elapsed % warnInterval;
-        if (elapsed > 0 && elapsedSinceLastWarn < checkInterval) {
-          console.log(\`\\n[SharedTestRunner] Still waiting for watch runner (elapsed: \${Math.round(elapsed/1000)}s)...\`);
-          console.log(\`[SharedTestRunner] Status: \${statusObj.status}, Results: \${statusObj.results ? 'available' : 'none'}\`);
-          console.log(\`[SharedTestRunner] Tip: If the runner is hung, run 'npx kill-port 51204' or kill the node process.\`);
-        }
-
-        if (elapsed >= maxTimeout) {
-          console.log(\`\\n[SharedTestRunner] Watch runner timed out after \${maxTimeout/1000}s.\`);
-          console.log(\`[SharedTestRunner] Falling back to standard vitest run...\`);
-          runFallback();
-          return;
-        }
-
-        process.stdout.write('.');
-        await new Promise(r => setTimeout(r, checkInterval));
-        elapsed += checkInterval;
-      }
-
-      console.log(\`[SharedTestRunner] Tests finished with status: \${statusObj.status}\`);
-      if (statusObj.results) {
-        const { passed, failed, total } = statusObj.results;
-        console.log(\`[SharedTestRunner] Summary: \${passed} passed, \${failed} failed, \${total} total\`);
-        if (statusObj.results.errors && statusObj.results.errors.length > 0) {
-          console.error('[SharedTestRunner] Errors encountered:');
-          statusObj.results.errors.forEach(err => console.error(\`  - \${err}\`));
-        }
-      }
-
-      if (statusObj.status === 'passed') {
-        process.exit(0);
-      } else {
-        process.exit(1);
-      }
-    } catch (err) {
-      console.error('[SharedTestRunner] Error communicating with shared runner:', err.message);
-      console.log('[SharedTestRunner] Falling back to standard vitest run...');
-      runFallback();
-    }
-  } else {
-    console.log('[SharedTestRunner] No active watch runner detected on port 51204. Running vitest directly...');
-    runFallback();
-  }
-}
-
-function runFallback() {
-  const child = spawn('npx', ['vitest', 'run'], {
-    stdio: 'inherit',
-    shell: true
-  });
-
-  child.on('close', (code) => {
-    process.exit(code ?? 0);
-  });
-}
-
-run();
-`;
-	return {
-		filePath: 'scripts/run-shared-tests.js',
 		content
 	};
 }

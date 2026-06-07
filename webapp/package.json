@@ -22,7 +22,7 @@
 		"format": "prettier --write .",
 		"clean": "node -e \"fs.rmSync('.svelte-kit', { recursive: true, force: true })\"",
 		"test": "node scripts/copy-pdf-worker.js && vitest --coverage",
-		"test:once": "node scripts/copy-pdf-worker.js && node scripts/run-shared-tests.js",
+		"test:once": "node scripts/copy-pdf-worker.js && npx vitest run --changed",
 		"test-staging": "node scripts/copy-pdf-worker.js && vitest --coverage --reporter=junit --outputFile=./reports/junit.xml",
 		"test-ci": "node scripts/copy-pdf-worker.js && vitest --coverage --run --no-watch",
 		"storybook": "storybook dev -p 6006",

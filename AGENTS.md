@@ -14,6 +14,10 @@ This document provides information for AI agents working on this codebase.
   ```bash
   cd webapp && npm run test:once
   ```
+  This runs `vitest run --changed`, which **only executes tests for files you have changed** (based on git diff). This is faster and more focused than running the full suite. If you need to run all tests (e.g. in CI), use `test-ci` instead:
+  ```bash
+  cd webapp && npm run test-ci
+  ```
 - **UI Verification**: Do **not** use Playwright for UI validation or end-to-end testing, as the environment is unreliable for external connections. Instead, rely on:
   - **Unit Tests**: For logic and utility functions.
   - **Component Tests**: Using `vitest` and `@testing-library/svelte` to verify frontend rendering and interactions.
