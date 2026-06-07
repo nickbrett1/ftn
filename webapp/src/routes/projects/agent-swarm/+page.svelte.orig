@@ -204,7 +204,7 @@
 
 			status = 'running';
 			addLog(`3. Invoking RPC runShopping with persona: "${persona}"`, 'step');
-			
+
 			const result = await client.call('runShopping', [persona]);
 			status = 'completed';
 			addLog('🎉 Swarm session completed successfully!', 'success');
@@ -366,7 +366,7 @@
 							{/if}
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
 								<span class="text-slate-400">Browser Time Used</span>
-								<span class="text-slate-200 font-mono">{formatSeconds(limits.browser.usedBrowserTimeSeconds)} / {limits.browser.timeLimitSeconds ? formatSeconds(limits.browser.timeLimitSeconds) : 'N/A'}</span>
+								<span class="text-slate-200 font-mono">{formatSeconds(limits.browser.usedBrowserTimeSeconds)}</span>
 							</div>
 							{#if limits.ai?.model}
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
@@ -425,7 +425,7 @@
 					{#each logs as log}
 						<div class="flex items-start gap-3 transition-all">
 							<span class="text-slate-600 select-none">[{log.timestamp}]</span>
-							
+
 							{#if log.type === 'step'}
 								<span class="text-indigo-400 font-semibold">{log.message}</span>
 							{:else if log.type === 'success'}
