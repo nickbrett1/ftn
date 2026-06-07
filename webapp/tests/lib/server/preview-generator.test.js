@@ -46,7 +46,19 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		WRANGLER_LOGIN_SCRIPT: 'wrangler-login-mock',
 		SETUP_WRANGLER_SCRIPT: 'setup-wrangler-mock',
 		DOPPLER_INSTALL_SCRIPT: 'doppler-install-mock',
-		generateVscodeSettingsFile: vi.fn()
+		generateVscodeSettingsFile: vi.fn(),
+		generateViteConfigFile: vi.fn((context) => ({
+			filePath: 'vite.config.js',
+			content: 'mock vite config'
+		})),
+		generateSharedReporterFile: vi.fn(() => ({
+			filePath: 'scripts/shared-reporter.js',
+			content: 'mock shared reporter'
+		})),
+		generateRunSharedTestsFile: vi.fn(() => ({
+			filePath: 'scripts/run-shared-tests.js',
+			content: 'mock run shared tests'
+		}))
 	};
 });
 
@@ -251,6 +263,26 @@ describe('generatePreview', () => {
 		const settingsFile = vscodeFolder.children.find((f) => f.name === 'settings.json');
 		expect(settingsFile).toBeDefined();
 		expect(settingsFile.content).toBe('content for vscode-settings-json');
+	});
+
+	it('generates vite.config.js and test runner scripts when devcontainer-node is selected', async () => {
+		const projectConfig = { name: 'NodeProject' };
+		const preview = await generatePreview(projectConfig, ['devcontainer-node']);
+
+		const viteConfig = preview.files.find((f) => f.name === 'vite.config.js');
+		expect(viteConfig).toBeDefined();
+		expect(viteConfig.content).toBe('mock vite config');
+
+		const scriptsFolder = preview.files.find((f) => f.name === 'scripts' && f.type === 'folder');
+		expect(scriptsFolder).toBeDefined();
+
+		const sharedReporter = scriptsFolder.children.find((f) => f.name === 'shared-reporter.js');
+		expect(sharedReporter).toBeDefined();
+		expect(sharedReporter.content).toBe('mock shared reporter');
+
+		const runSharedTests = scriptsFolder.children.find((f) => f.name === 'run-shared-tests.js');
+		expect(runSharedTests).toBeDefined();
+		expect(runSharedTests.content).toBe('mock run shared tests');
 	});
 
 	it('handles errors during preview generation', async () => {

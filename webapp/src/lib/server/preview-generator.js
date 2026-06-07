@@ -22,7 +22,10 @@ import {
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
-	DOPPLER_INSTALL_SCRIPT
+	DOPPLER_INSTALL_SCRIPT,
+	generateViteConfigFile,
+	generateSharedReporterFile,
+	generateRunSharedTestsFile
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -415,6 +418,12 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 			}
 		}
 
+		typeField = 'module';
+		if (!devDependencies.includes('"vitest"')) {
+			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
+		}
+		scripts += ',\n    "test": "vitest",\n    "test:once": "node scripts/run-shared-tests.js"';
+
 		const content = templateEngine.generateFile('package-json', {
 			...projectConfig,
 			scripts,
@@ -637,6 +646,43 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 
 	// Generate Cloud Deployment files (Cloudflare, Google Cloud, etc.)
 	await generateCloudDeploymentFiles(templateEngine, projectConfig, executionOrder, files);
+
+	if (executionOrder.includes('devcontainer-node')) {
+		const context = { capabilities: executionOrder, ...projectConfig };
+		const viteConfig = generateViteConfigFile(context);
+		const sharedReporter = generateSharedReporterFile();
+		const runSharedTests = generateRunSharedTestsFile();
+
+		// Filter out any existing template-generated vite.config.js
+		const index = files.findIndex((f) => f.path === 'vite.config.js');
+		if (index !== -1) {
+			files.splice(index, 1);
+		}
+
+		files.push(
+			{
+				path: 'vite.config.js',
+				name: 'vite.config.js',
+				content: viteConfig.content,
+				size: viteConfig.content.length,
+				type: 'file'
+			},
+			{
+				path: 'scripts/shared-reporter.js',
+				name: 'shared-reporter.js',
+				content: sharedReporter.content,
+				size: sharedReporter.content.length,
+				type: 'file'
+			},
+			{
+				path: 'scripts/run-shared-tests.js',
+				name: 'run-shared-tests.js',
+				content: runSharedTests.content,
+				size: runSharedTests.content.length,
+				type: 'file'
+			}
+		);
+	}
 
 	// Generate package.json
 	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);
