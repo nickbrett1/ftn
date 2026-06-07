@@ -347,7 +347,7 @@
 								<span class="text-slate-200 font-mono">{limits.browser.activeSessionsCount} / {limits.browser.maxConcurrentSessions}</span>
 							</div>
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
-								<span class="text-slate-400">Remaining Acquisitions</span>
+								<span class="text-slate-400 cursor-help border-b border-dotted border-slate-500" title="Number of new browser sessions that can be started within the current minute.">Remaining Browser Starts / Min</span>
 								<span class="text-slate-200 font-mono">{limits.browser.allowedBrowserAcquisitions}</span>
 							</div>
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
