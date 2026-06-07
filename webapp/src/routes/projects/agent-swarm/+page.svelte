@@ -22,6 +22,53 @@
 		'Add the cheapest item to cart and purchase it'
 	];
 
+	// Helper functions to get CSS classes for agent status to avoid nested ternary expressions and object injection sink warnings
+	function getStatusClass(currentStatus) {
+		switch (currentStatus) {
+			case 'idle': {
+				return 'bg-slate-800/40 border-slate-700 text-slate-400';
+			}
+			case 'fetching_token': {
+				return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
+			}
+			case 'connecting': {
+				return 'bg-blue-500/10 border-blue-500/20 text-blue-400 animate-pulse';
+			}
+			case 'running': {
+				return 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400 font-bold animate-pulse';
+			}
+			case 'completed': {
+				return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold';
+			}
+			default: {
+				return 'bg-rose-500/10 border-rose-500/20 text-rose-400 font-bold';
+			}
+		}
+	}
+
+	function getStatusDotClass(currentStatus) {
+		switch (currentStatus) {
+			case 'idle': {
+				return 'bg-slate-400';
+			}
+			case 'fetching_token': {
+				return 'bg-cyan-400';
+			}
+			case 'connecting': {
+				return 'bg-blue-400';
+			}
+			case 'running': {
+				return 'bg-indigo-400';
+			}
+			case 'completed': {
+				return 'bg-emerald-400';
+			}
+			default: {
+				return 'bg-rose-400';
+			}
+		}
+	}
+
 	// Browser-only dynamic import for AgentClient
 	let AgentClientClass = null;
 
@@ -220,22 +267,8 @@
 				<div class="pt-4 border-t border-slate-800/60 space-y-4">
 					<div class="flex items-center justify-between">
 						<span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Agent Status</span>
-						<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border uppercase tracking-wider transition-all duration-200 {
-							status === 'idle' ? 'bg-slate-800/40 border-slate-700 text-slate-400' :
-							status === 'fetching_token' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' :
-							status === 'connecting' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 animate-pulse' :
-							status === 'running' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400 font-bold animate-pulse' :
-							status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold' :
-							'bg-rose-500/10 border-rose-500/20 text-rose-400 font-bold'
-						}">
-							<span class="w-1.5 h-1.5 rounded-full {
-								status === 'idle' ? 'bg-slate-400' :
-								status === 'fetching_token' ? 'bg-cyan-400' :
-								status === 'connecting' ? 'bg-blue-400' :
-								status === 'running' ? 'bg-indigo-400' :
-								status === 'completed' ? 'bg-emerald-400' :
-								'bg-rose-400'
-							}"></span>
+						<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border uppercase tracking-wider transition-all duration-200 {getStatusClass(status)}">
+							<span class="w-1.5 h-1.5 rounded-full {getStatusDotClass(status)}"></span>
 							{status.replace('_', ' ')}
 						</span>
 					</div>
