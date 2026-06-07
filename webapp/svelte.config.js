@@ -57,7 +57,9 @@ const config = {
 					'https://accounts.google.com/gsi/',
 					'https://www.gstatic.com',
 					'https://ftn-preview.nick-brett1.workers.dev',
-					'https://ftn-production.nick-brett1.workers.dev'
+					'https://ftn-production.nick-brett1.workers.dev',
+					'https://agent-swarm.nick-brett1.workers.dev',
+					'wss://agent-swarm.nick-brett1.workers.dev'
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
 				'frame-src': ['self', 'https://accounts.google.com/gsi/'],
