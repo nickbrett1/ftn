@@ -13,6 +13,9 @@
 	let sessionId = $state('');
 	let isConnecting = $state(false);
 
+	let limits = $state(null);
+	let isFetchingLimits = $state(false);
+
 	let consoleElement = $state(null);
 
 	// Pre-configured personas
@@ -81,8 +84,26 @@
 				console.error('Failed to load agents SDK:', err);
 				addLog('Error: Failed to load agents client SDK.', 'system-error');
 			}
+			await fetchLimits();
 		}
 	});
+
+	async function fetchLimits() {
+		if (!workerHost) return;
+		isFetchingLimits = true;
+		try {
+			const res = await fetch(`https://${workerHost}/limits`);
+			if (res.ok) {
+				limits = await res.json();
+			} else {
+				console.warn('Failed to fetch worker limits:', res.status, res.statusText);
+			}
+		} catch (err) {
+			console.error('Error fetching worker limits:', err);
+		} finally {
+			isFetchingLimits = false;
+		}
+	}
 
 	function addLog(message, type = 'info') {
 		logs.push({
@@ -187,6 +208,7 @@
 			addLog(`❌ Error: ${errorMsg}`, 'system-error');
 		} finally {
 			isConnecting = false;
+			await fetchLimits();
 		}
 	}
 </script>
@@ -216,8 +238,10 @@
 
 		<!-- Main Dashboard Layout -->
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Configuration & Limits Column -->
+			<div class="space-y-8 lg:col-span-1">
 			<!-- Configuration Panel -->
-			<div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 space-y-6 lg:col-span-1 shadow-xl">
+			<div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 space-y-6 shadow-xl">
 				<h2 class="text-lg font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
 					<svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -296,6 +320,60 @@
 						</div>
 					{/if}
 				</div>
+			</div>
+
+			<!-- Limits Panel -->
+			<div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-xl">
+				<div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+					<h2 class="text-lg font-bold text-white flex items-center gap-2">
+						<svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+						</svg>
+						Resource Usage & Limits
+					</h2>
+					{#if isFetchingLimits}
+						<svg class="animate-spin h-4 w-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+					{/if}
+				</div>
+
+				<div class="space-y-3">
+					{#if limits}
+						<div class="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 space-y-3">
+							<div class="flex justify-between items-center text-xs">
+								<span class="text-slate-400">Concurrent Sessions</span>
+								<span class="text-slate-200 font-mono">{limits.browser.activeSessionsCount} / {limits.browser.maxConcurrentSessions}</span>
+							</div>
+							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
+								<span class="text-slate-400">Remaining Acquisitions</span>
+								<span class="text-slate-200 font-mono">{limits.browser.allowedBrowserAcquisitions}</span>
+							</div>
+							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
+								<span class="text-slate-400">Browser Time Used</span>
+								<span class="text-slate-200 font-mono">{limits.browser.usedBrowserTimeSeconds.toFixed(2)}s</span>
+							</div>
+							{#if limits.ai?.model}
+							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
+								<span class="text-slate-400">Primary AI Model</span>
+								<span class="text-indigo-300 font-mono text-[10px] truncate ml-2">{limits.ai.model}</span>
+							</div>
+							{/if}
+							{#if limits.gemini?.model}
+							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
+								<span class="text-slate-400">Vision Model</span>
+								<span class="text-indigo-300 font-mono text-[10px] truncate ml-2">{limits.gemini.model}</span>
+							</div>
+							{/if}
+						</div>
+					{:else if isFetchingLimits}
+						<div class="text-xs text-slate-500 animate-pulse text-center py-4">Fetching limits...</div>
+					{:else}
+						<div class="text-xs text-slate-500 text-center py-4">No limit data available.</div>
+					{/if}
+				</div>
+			</div>
 			</div>
 
 			<!-- Terminal / Log Output Panel -->
