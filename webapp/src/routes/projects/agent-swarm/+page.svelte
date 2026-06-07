@@ -21,6 +21,8 @@
 	// Helper for formatting seconds into m s format
 	function formatSeconds(seconds) {
 		if (seconds == null) return '0s';
+		if (typeof seconds === 'string' && isNaN(Number(seconds))) return seconds;
+		if (isNaN(seconds)) return '0s';
 		const m = Math.floor(seconds / 60);
 		const s = Math.floor(seconds % 60);
 		return m > 0 ? `${m}m ${s}s` : `${s}s`;
