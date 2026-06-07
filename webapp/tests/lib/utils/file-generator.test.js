@@ -383,4 +383,25 @@ describe('TemplateEngine', () => {
 		expect(gitignore).toBeDefined();
 		expect(gitignore.content).toContain('.antigravitycli');
 	});
+
+	it('should include agent rules files under .agents/.rules in generated project files', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node'],
+			configuration: {
+				'devcontainer-node': {}
+			}
+		};
+
+		const files = await generateAllFiles(context);
+
+		const gitGuidelines = files.find((f) => f.filePath === '.agents/.rules/git_guidelines.md');
+		const testingGuidelines = files.find((f) => f.filePath === '.agents/.rules/testing_guidelines.md');
+
+		expect(gitGuidelines).toBeDefined();
+		expect(gitGuidelines.content).toContain('# Git, Code Review, and Deployment Rules');
+
+		expect(testingGuidelines).toBeDefined();
+		expect(testingGuidelines.content).toContain('# Testing Guidelines');
+	});
 });
