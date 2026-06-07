@@ -89,13 +89,19 @@
 				onClose: (event) => {
 					if (!client.identified) {
 						addLog(`❌ WebSocket connection closed unexpectedly. Code: ${event?.code}`, 'system-error');
+					} else if (status !== 'completed' && status !== 'failed') {
+						addLog(`❌ WebSocket connection closed. Code: ${event?.code}`, 'system-error');
+					}
+					if (status !== 'completed') {
+						status = 'failed';
+						isConnecting = false;
 					}
 				},
 				onError: (error) => {
 					addLog(`❌ WebSocket error: ${error?.message || 'Unknown error'}`, 'system-error');
 				},
 				onStateUpdate: (state) => {
-					if (state.status) {
+					if (state.status && status !== 'completed' && status !== 'failed') {
 						status = state.status;
 					}
 					if (state.history && state.history.length > 0) {
