@@ -366,7 +366,7 @@
 							{/if}
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
 								<span class="text-slate-400">Browser Time Used</span>
-								<span class="text-slate-200 font-mono">{formatSeconds(limits.browser.usedBrowserTimeSeconds)} / {limits.browser.timeLimitSeconds ? formatSeconds(limits.browser.timeLimitSeconds) : 'N/A'}</span>
+								<span class="text-slate-200 font-mono">{formatSeconds(limits.browser.usedBrowserTimeSeconds)} / {limits.browser.browserTimeSecondsLimit ? formatSeconds(limits.browser.browserTimeSecondsLimit) : 'N/A'}</span>
 							</div>
 							{#if limits.ai?.model}
 							<div class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3">
