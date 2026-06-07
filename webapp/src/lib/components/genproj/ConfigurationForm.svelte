@@ -2,12 +2,12 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { ProjectConfig } from '$lib/models/project-config';
-	import { capabilities } from '$lib/config/capabilities';
 	import { isNotEmpty } from '$lib/utils/validation';
 	import CapabilitySelector from './CapabilitySelector.svelte';
 
 	const dispatch = createEventDispatcher();
 
+	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {ProjectConfig} */
 	export let projectConfig;
 

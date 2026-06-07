@@ -1,3 +1,4 @@
+<!-- eslint-disable sonarjs/no-use-of-empty-return-value -->
 <script>
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';

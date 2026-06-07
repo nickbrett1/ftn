@@ -83,7 +83,7 @@
 
 	// Check URL for auth completion
 	function checkAuthCallback() {
-		// Skip if window.location is not available (test environment)
+		// Skip if window location is not available in test environment
 		if (globalThis.window === undefined || !globalThis.location || !globalThis.location.href) {
 			return;
 		}

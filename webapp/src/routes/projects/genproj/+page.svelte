@@ -7,7 +7,6 @@
 	import { onMount } from 'svelte';
 	import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
 	import PreviewMode from '$lib/components/genproj/PreviewMode.svelte';
-	import AuthFlow from '$lib/components/genproj/AuthFlow.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { logger } from '$lib/utils/logging.js';
@@ -366,7 +365,6 @@
 	}
 
 	function handleAuthComplete() {
-		showAuthFlow = false;
 		// Proceed with project generation
 		logger.info('All authentication complete, ready to generate project');
 	}

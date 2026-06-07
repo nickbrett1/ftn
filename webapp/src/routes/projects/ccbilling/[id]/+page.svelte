@@ -11,6 +11,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { onDestroy } from 'svelte';
 
+	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
@@ -120,6 +121,11 @@
 	let showToast = $state(false);
 	let toastMessage = $state('');
 	let toastType = $state('success'); // 'success', 'error', 'info'
+	let toastBorderColor = $derived.by(() => {
+		if (toastType === 'success') return 'green';
+		if (toastType === 'error') return 'red';
+		return 'blue';
+	});
 	let toastTimeout = $state(null);
 
 	// Delete statement state
@@ -1919,13 +1925,7 @@
 <!-- Toast Notifications -->
 {#if showToast}
 	<div class="fixed top-4 right-4 z-50 max-w-sm">
-		<div
-			class="bg-white border-l-4 border-{toastType === 'success'
-				? 'green'
-				: toastType === 'error'
-					? 'red'
-					: 'blue'}-500 shadow-lg rounded-lg p-4"
-		>
+		<div class="bg-white border-l-4 border-{toastBorderColor}-500 shadow-lg rounded-lg p-4">
 			<div class="flex items-center">
 				<div class="shrink-0">
 					{#if toastType === 'success'}

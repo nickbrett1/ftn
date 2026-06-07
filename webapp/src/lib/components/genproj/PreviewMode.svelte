@@ -12,10 +12,9 @@
 	- Accessibility support
 -->
 
+<!-- eslint-disable sonarjs/no-use-of-empty-return-value -->
 <script>
-	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import { selectedCapabilities, capabilityValidation } from '$lib/client/capability-store.js';
-	import { CAPABILITIES as capabilities } from '$lib/utils/capabilities.js';
+	import { createEventDispatcher, tick } from 'svelte';
 
 	// Props
 	export let previewData = null;

@@ -30,6 +30,16 @@
 	let isDeleting = $state(false);
 	let deleteError = $state('');
 
+	function getIconClass(icon, isUsed) {
+		if (newBudgetIcon === icon) {
+			return 'bg-blue-600';
+		}
+		if (isUsed) {
+			return 'bg-gray-700 text-gray-500 cursor-not-allowed';
+		}
+		return 'bg-gray-800 hover:bg-gray-700';
+	}
+
 	async function addBudget() {
 		if (!newBudgetName.trim()) {
 			addError = 'Please enter a budget name';
@@ -138,12 +148,10 @@
 							<button
 								type="button"
 								onclick={() => (newBudgetIcon = icon)}
-								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {newBudgetIcon ===
-								icon
-									? 'bg-blue-600'
-									: isUsed
-										? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-										: 'bg-gray-800 hover:bg-gray-700'}"
+								class="p-2 text-2xl rounded transition-colors flex items-center justify-center {getIconClass(
+									icon,
+									isUsed
+								)}"
 								title={isUsed
 									? `${getIconDescription(icon)} (used by ${usedByBudget})`
 									: getIconDescription(icon)}

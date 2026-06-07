@@ -1,6 +1,5 @@
 <script>
 	import Card from '$lib/components/Card.svelte';
-	import HoverFadeCard from '$lib/components/HoverFadeCard.svelte';
 	import {
 		GithubBrands,
 		DatabaseSolid,

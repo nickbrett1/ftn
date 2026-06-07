@@ -202,10 +202,7 @@
 	// Helper function to determine if a rule should be displayed
 	function shouldDisplayRule(property) {
 		// Hide if it's an enum with only one option
-		if (property.enum && property.enum.length === 1) {
-			return false;
-		}
-		return true;
+		return !(property.enum && property.enum.length === 1);
 	}
 
 	// Helper function to format camelCase strings into human-readable labels

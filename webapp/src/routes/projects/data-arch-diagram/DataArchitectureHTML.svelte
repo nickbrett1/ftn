@@ -1,3 +1,4 @@
+<!-- eslint-disable sonarjs/no-use-of-empty-return-value -->
 <script>
 	import { fly } from 'svelte/transition';
 

@@ -12,6 +12,19 @@
 	let autoRefreshInterval = null;
 	let fetchingWorkerInfo = false;
 
+	let statusMeta;
+	$: {
+		if (loading) {
+			statusMeta = 'loading';
+		} else if (error) {
+			statusMeta = 'error';
+		} else if (deployments.length > 0) {
+			statusMeta = 'active';
+		} else {
+			statusMeta = 'empty';
+		}
+	}
+
 	async function fetchDeployments() {
 		try {
 			const response = await fetch('/api/deploys');
@@ -164,10 +177,7 @@
 <svelte:head>
 	<title>Deployments - Fintech Nick</title>
 	<meta name="description" content="View all active deployments and preview environments." />
-	<meta
-		name="deployment:status"
-		content={loading ? 'loading' : error ? 'error' : deployments.length > 0 ? 'active' : 'empty'}
-	/>
+	<meta name="deployment:status" content={statusMeta} />
 	<meta property="og:title" content="Deployments - Fintech Nick" />
 	<meta property="og:description" content="View all active deployments and preview environments." />
 	<link

@@ -48,6 +48,16 @@
 	let isSavingName = $state(false);
 	let nameEditError = $state('');
 
+	function getIconClass(icon, isUsed) {
+		if (editIcon === icon) {
+			return 'bg-blue-600';
+		}
+		if (isUsed) {
+			return 'bg-gray-700 text-gray-500 cursor-not-allowed';
+		}
+		return 'bg-gray-800 hover:bg-gray-700';
+	}
+
 	// Budget deletion state
 	let showDeleteDialog = $state(false);
 	let isDeletingBudget = $state(false);
@@ -300,12 +310,10 @@
 						<button
 							type="button"
 							onclick={() => handleIconSelect(icon)}
-							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {editIcon ===
-							icon
-								? 'bg-blue-600'
-								: isUsed
-									? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-									: 'bg-gray-800 hover:bg-gray-700'} {isSavingName ? 'opacity-50' : ''}"
+							class="p-2 text-2xl rounded transition-colors flex items-center justify-center {getIconClass(
+								icon,
+								isUsed
+							)} {isSavingName ? 'opacity-50' : ''}"
 							title={isUsed
 								? `${getIconDescription(icon)} (used by ${usedByBudget})`
 								: getIconDescription(icon)}

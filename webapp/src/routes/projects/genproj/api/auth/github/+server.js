@@ -6,7 +6,7 @@ import { dev } from '$app/environment';
  * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export async function GET({ url, cookies }) {
-	const sessionId = Math.random().toString(36).slice(2);
+	const sessionId = crypto.randomUUID();
 	const state = {
 		sessionId,
 		// Pass-through query params from the initial request

@@ -23,8 +23,7 @@ import {
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
 	DOPPLER_INSTALL_SCRIPT,
-	generateViteConfigFile,
-	generateAgentRulesFiles
+	generateViteConfigFile
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -135,7 +134,7 @@ function createMergedDevelopmentContainerJson(
 		const capConfig = applyDefaults(cap, projectConfig.configuration?.[capId] || {});
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capId.split('-')[1]}-json`,
-			 
+
 			{ ...projectConfig, capabilityConfig: capConfig, capability: cap }
 		);
 		const otherJson = JSON.parse(otherJsonContent);
@@ -384,14 +383,13 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 		let scripts = ',\n    "build": "echo \'No build step required\'"';
 		let devDependencies = '';
 		let dependencies = '';
-		let typeField;
+		const typeField = 'module';
 		let overrides = '';
 
 		const hasSvelteKit = allCapabilities.includes('sveltekit');
 		const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
 
 		if (hasSvelteKit) {
-			typeField = 'module';
 			overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2"\n  }';
 			scripts =
 				',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
@@ -411,13 +409,9 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 			if (hasWrangler) {
 				scripts += ',\n    "deploy": "wrangler deploy"';
 				devDependencies += '"wrangler": "^4.56.0"';
-				typeField = 'module'; // Wrangler projects are usually modules
-			} else {
-				typeField = 'commonjs';
 			}
 		}
 
-		typeField = 'module';
 		if (!devDependencies.includes('"vitest"')) {
 			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
 		}

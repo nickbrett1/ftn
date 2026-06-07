@@ -4,6 +4,7 @@
 	import Button from './Button.svelte';
 	import Img from '@zerodevx/svelte-img';
 
+	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {{ product: any }} */
 	let { product } = $props();
 

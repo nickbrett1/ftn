@@ -7,6 +7,7 @@
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import { onMount } from 'svelte';
 
+	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {{ data: any }} */
 	let { data } = $props();
 
