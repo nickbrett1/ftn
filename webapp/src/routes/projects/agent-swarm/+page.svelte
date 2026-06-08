@@ -502,23 +502,23 @@
 											: 'N/A'}</span
 									>
 								</div>
-								{#if limits.ai?.model}
+								{#if limits.primary_llm?.model}
 									<div
 										class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
 									>
 										<span class="text-slate-400">Primary AI Model</span>
 										<span class="text-indigo-300 font-mono text-[10px] truncate ml-2"
-											>{limits.ai.model}</span
+											>{limits.primary_llm.model}</span
 										>
 									</div>
 								{/if}
-								{#if limits.gemini?.model}
+								{#if limits.secondary_llm?.model}
 									<div
 										class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
 									>
-										<span class="text-slate-400">Vision Model</span>
+										<span class="text-slate-400">Secondary AI Model</span>
 										<span class="text-indigo-300 font-mono text-[10px] truncate ml-2"
-											>{limits.gemini.model}</span
+											>{limits.secondary_llm.model}</span
 										>
 									</div>
 								{/if}
