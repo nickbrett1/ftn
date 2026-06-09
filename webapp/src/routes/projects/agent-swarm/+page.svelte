@@ -33,7 +33,7 @@
 	// Pre-configured personas
 	const personas = [
 		'Shop for tech stickers under $15',
-		'Find a developer sticker and buy it in Stripe test-mode',
+		'Find the Svelte 5 "Runes" Keychain and purchase it',
 		'Add the cheapest item to cart and purchase it'
 	];
 
