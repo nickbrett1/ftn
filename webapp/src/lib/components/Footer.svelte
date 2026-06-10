@@ -6,7 +6,7 @@
 		CreditCardSolid,
 		RocketSolid,
 		CartShoppingSolid,
-		RobotSolid
+		NetworkWiredSolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -154,7 +154,7 @@
 				/>
 
 				<!-- Agent Swarm icon -->
-				<RobotSolid
+				<NetworkWiredSolid
 					id="agent-swarm"
 					onclick={() => {
 						goto('/projects/agent-swarm');
