@@ -45,6 +45,7 @@ vi.mock('svelte-awesome-icons', () => {
 		FileInvoiceDollarSolid: createMockIcon(),
 		UserSecretSolid: createMockIcon(),
 		RobotSolid: createMockIcon(),
+		NetworkWiredSolid: createMockIcon(),
 		DatabaseSolid: createMockIcon(),
 		PenToSquareRegular: createMockIcon(),
 		ToolboxSolid: createMockIcon(),
