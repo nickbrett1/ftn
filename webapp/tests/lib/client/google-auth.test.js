@@ -52,11 +52,18 @@ describe('Google Auth Utils', () => {
 	});
 
 	describe('getRedirectUri', () => {
-		it('should return development URI in development environment', () => {
+		it('should return dynamic origin URI in browser environment (development)', () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
-			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true); // Dev is usually browser too
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(true);
+
+			const originalLocation = globalThis.location;
+			delete globalThis.location;
+			globalThis.location = { origin: 'http://127.0.0.1:5173' };
+
 			const uri = getRedirectUri();
 			expect(uri).toBe('http://127.0.0.1:5173/auth');
+
+			globalThis.location = originalLocation;
 		});
 
 		it('should return production URI in production environment (browser)', () => {
@@ -92,12 +99,20 @@ describe('Google Auth Utils', () => {
 			globalThis.location = originalLocation;
 		});
 
-		it('should return fallback URI in SSR environment', () => {
+		it('should return fallback URI in SSR environment (production)', () => {
 			vi.spyOn(environment, 'dev', 'get').mockReturnValue(false);
 			vi.spyOn(environment, 'browser', 'get').mockReturnValue(false);
 
 			const uri = getRedirectUri();
 			expect(uri).toBe('https://fintechnick.com/auth');
+		});
+
+		it('should return fallback URI in SSR environment (development)', () => {
+			vi.spyOn(environment, 'dev', 'get').mockReturnValue(true);
+			vi.spyOn(environment, 'browser', 'get').mockReturnValue(false);
+
+			const uri = getRedirectUri();
+			expect(uri).toBe('http://127.0.0.1:5173/auth');
 		});
 	});
 
