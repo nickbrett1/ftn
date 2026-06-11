@@ -530,6 +530,49 @@
 						{:else}
 							<div class="text-xs text-slate-500 text-center py-4">No limit data available.</div>
 						{/if}
+
+						<!-- Cloudflare AI Gateway Link -->
+						<a
+							href="https://dash.cloudflare.com/?to=/:account/ai/ai-gateway"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex items-center justify-between text-xs px-4 py-3 bg-slate-950/40 hover:bg-amber-500/5 border border-slate-800/80 hover:border-amber-500/30 rounded-xl text-slate-400 hover:text-amber-200 transition-all duration-200 group"
+						>
+							<span class="flex items-center gap-2">
+								<svg
+									class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+									/>
+								</svg>
+								Cloudflare AI Gateway
+							</span>
+							<span
+								class="flex items-center gap-1 text-[10px] text-slate-500 group-hover:text-amber-400/80 transition-colors"
+							>
+								Dashboard
+								<svg
+									class="w-3.5 h-3.5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+									/>
+								</svg>
+							</span>
+						</a>
 					</div>
 				</div>
 			</div>
