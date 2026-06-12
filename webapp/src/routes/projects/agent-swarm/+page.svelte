@@ -265,8 +265,7 @@
 				Agent Swarm Console
 			</h1>
 			<p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-				Generate short-lived HMAC signatures, instantiate Durable Object agent clients, and
-				orchestrate browser-rendering Puppeteer sessions in real-time.
+				Control and monitor AI browser agents executing tasks in real-time.
 			</p>
 		</div>
 
