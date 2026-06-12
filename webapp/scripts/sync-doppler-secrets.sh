@@ -68,7 +68,7 @@ echo "🔄 Fetching secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
 
 # Fetch secrets, compute values, and format for Cloudflare
 cleanup() {
-    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json
+    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json doppler_secrets_batch_temp.json
 }
 trap cleanup EXIT
 
@@ -112,7 +112,8 @@ fi
 echo "🚀 Syncing secrets to Cloudflare ($ENV_DISPLAY_NAME)..."
 SUCCESS=true
 while read -r batch; do
-    echo "$batch" | npx wrangler secret bulk $WRANGLER_ARGS || SUCCESS=false
+    echo "$batch" > doppler_secrets_batch_temp.json
+    npx wrangler versions secret bulk doppler_secrets_batch_temp.json $WRANGLER_ARGS || SUCCESS=false
 done < doppler_secrets_batches.json
 
 if [ "$SUCCESS" = true ]; then
