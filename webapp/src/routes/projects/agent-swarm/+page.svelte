@@ -501,6 +501,16 @@
 											: 'N/A'}</span
 									>
 								</div>
+								{#if limits.browser.timeUntilBrowserTimeReset > 0 && limits.browser.browserTimeSecondsLimit && typeof limits.browser.browserTimeSecondsLimit !== 'string' && limits.browser.usedBrowserTimeSeconds >= limits.browser.browserTimeSecondsLimit}
+									<div
+										class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
+									>
+										<span class="text-slate-400">Time Until Reset</span>
+										<span class="text-rose-400 font-mono"
+											>{formatSeconds(limits.browser.timeUntilBrowserTimeReset)}</span
+										>
+									</div>
+								{/if}
 								{#if limits.primary_llm?.model}
 									<div
 										class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
