@@ -20,14 +20,21 @@
 
 	let consoleElement = $state(null);
 
-	// Helper for formatting seconds into m s format
+	// Helper for formatting seconds into h m s format
 	function formatSeconds(seconds) {
 		if (seconds == null) return '0s';
-		if (typeof seconds === 'string' && isNaN(Number(seconds))) return seconds;
-		if (isNaN(seconds)) return '0s';
-		const m = Math.floor(seconds / 60);
-		const s = Math.floor(seconds % 60);
-		return m > 0 ? `${m}m ${s}s` : `${s}s`;
+		if (typeof seconds === 'string' && Number.isNaN(Number(seconds))) return seconds;
+		const secs = Number(seconds);
+		if (Number.isNaN(secs)) return '0s';
+		const h = Math.floor(secs / 3600);
+		const m = Math.floor((secs % 3600) / 60);
+		const s = Math.floor(secs % 60);
+
+		const parts = [];
+		if (h > 0) parts.push(`${h}h`);
+		if (m > 0) parts.push(`${m}m`);
+		if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+		return parts.join(' ');
 	}
 
 	// Pre-configured personas
@@ -108,6 +115,8 @@
 			const res = await fetch(`https://${workerHost}/limits`);
 			if (res.ok) {
 				limits = await res.json();
+				await tick();
+				tippy('[data-tippy-content]');
 			} else {
 				console.warn('Failed to fetch worker limits:', res.status, res.statusText);
 			}
@@ -501,13 +510,66 @@
 											: 'N/A'}</span
 									>
 								</div>
+								{#if limits.browser.browserTimeSecondsIncluded !== undefined && limits.browser.browserTimeSecondsIncluded !== null}
+									<div class="flex flex-col border-t border-slate-800/60 pt-3 gap-1.5">
+										<div class="flex justify-between items-center text-xs">
+											<span
+												class="text-slate-400 cursor-help border-b border-dotted border-slate-500"
+												data-tippy-content="Amount of browser execution time included in the current billing cycle at no charge."
+												>Included Time (No Charge)</span
+											>
+											<span class="text-slate-200 font-mono"
+												>{formatSeconds(
+													Math.min(
+														limits.browser.usedBrowserTimeSeconds,
+														limits.browser.browserTimeSecondsIncluded
+													)
+												)} / {formatSeconds(limits.browser.browserTimeSecondsIncluded)}</span
+											>
+										</div>
+										<div
+											class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800/40"
+										>
+											<div
+												class="bg-gradient-to-r from-indigo-500 to-cyan-500 h-full rounded-full transition-all duration-500 ease-out"
+												style="width: {limits.browser.browserTimeSecondsIncluded > 0
+													? Math.min(
+															100,
+															(limits.browser.usedBrowserTimeSeconds /
+																limits.browser.browserTimeSecondsIncluded) *
+																100
+														)
+													: 0}%"
+											></div>
+										</div>
+									</div>
+									{#if limits.browser.usedBrowserTimeSeconds > limits.browser.browserTimeSecondsIncluded}
+										<div
+											class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
+										>
+											<span
+												class="text-amber-400 cursor-help border-b border-dotted border-amber-500/50 font-medium"
+												data-tippy-content="Browser usage time exceeding the free included tier, subject to additional charges."
+												>Billable Time Used</span
+											>
+											<span class="text-amber-400 font-mono font-medium"
+												>+{formatSeconds(
+													limits.browser.usedBrowserTimeSeconds -
+														limits.browser.browserTimeSecondsIncluded
+												)}</span
+											>
+										</div>
+									{/if}
+								{/if}
 								{#if limits.browser.browserTimeSecondsLimit && typeof limits.browser.browserTimeSecondsLimit !== 'string' && limits.browser.usedBrowserTimeSeconds >= limits.browser.browserTimeSecondsLimit}
 									<div
 										class="flex justify-between items-center text-xs border-t border-slate-800/60 pt-3"
 									>
 										<span class="text-slate-400">Time Until Reset</span>
 										<span class="text-rose-400 font-mono"
-											>{limits.browser.timeUntilBrowserTimeReset > 0 ? formatSeconds(limits.browser.timeUntilBrowserTimeReset) : 'Unknown'}</span
+											>{limits.browser.timeUntilBrowserTimeReset > 0
+												? formatSeconds(limits.browser.timeUntilBrowserTimeReset)
+												: 'Unknown'}</span
 										>
 									</div>
 								{/if}

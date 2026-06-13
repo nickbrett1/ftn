@@ -23,7 +23,10 @@ export const PDFUtils = {
 					console.log('📄 PDF.js worker disabled for test environment');
 				} else {
 					pdfjsLibrary.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs?v=${pdfjsLibrary.version}`;
-					console.log('📄 PDF.js worker configured with local file and version query parameter:', pdfjsLibrary.version);
+					console.log(
+						'📄 PDF.js worker configured with local file and version query parameter:',
+						pdfjsLibrary.version
+					);
 				}
 			})
 			.catch((error) => {
@@ -128,7 +131,9 @@ export const PDFUtils = {
 		// Configure worker if not already done
 		if (globalThis.process && process.env.NODE_ENV === 'test') {
 			console.log('📄 Using PDF.js legacy build for test environment');
-		} else if (pdfjsLibrary.GlobalWorkerOptions.workerSrc !== `/pdf.worker.min.mjs?v=${pdfjsLibrary.version}`) {
+		} else if (
+			pdfjsLibrary.GlobalWorkerOptions.workerSrc !== `/pdf.worker.min.mjs?v=${pdfjsLibrary.version}`
+		) {
 			pdfjsLibrary.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs?v=${pdfjsLibrary.version}`;
 		}
 

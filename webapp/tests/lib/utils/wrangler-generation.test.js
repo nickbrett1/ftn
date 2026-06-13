@@ -68,7 +68,6 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(wranglerJsonc.content).toContain('"production"');
 		expect(wranglerJsonc.content).toContain('"preview"');
 
-
 		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
 		expect(cloudLogin).toBeDefined();
 		expect(cloudLogin.content).toContain('npx wrangler login');
@@ -79,7 +78,6 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const packageJsonContent = JSON.parse(packageJson.content);
 		expect(packageJsonContent.scripts).toHaveProperty('build', "echo 'No build step required'");
 		expect(packageJsonContent.scripts).toHaveProperty('deploy', 'wrangler deploy');
-
 
 		const wranglerTemplate = files.find((f) => f.filePath === 'wrangler.template.jsonc');
 		expect(wranglerTemplate).toBeUndefined();
@@ -104,7 +102,6 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(wranglerTemplate.content).toContain('"env"');
 		expect(wranglerTemplate.content).toContain('"production"');
 		expect(wranglerTemplate.content).toContain('"preview"');
-
 
 		const setupScript = files.find((f) => f.filePath === 'scripts/setup-wrangler-config.sh');
 		expect(setupScript).toBeDefined();

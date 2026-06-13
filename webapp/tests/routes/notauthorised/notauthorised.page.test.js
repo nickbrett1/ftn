@@ -14,7 +14,7 @@ describe('Not Authorised Page Load', () => {
 		expect(result).toEqual({ redirectTo: '/' });
 	});
 
-    it('should default to / when redirectTo parameter is empty', () => {
+	it('should default to / when redirectTo parameter is empty', () => {
 		const url = new URL('http://localhost/notauthorised?redirectTo=');
 		const result = load({ url });
 		expect(result).toEqual({ redirectTo: '/' });

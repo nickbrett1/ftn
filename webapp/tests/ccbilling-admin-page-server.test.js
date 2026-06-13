@@ -58,7 +58,10 @@ describe('CCBilling Admin Page Server Route', () => {
 			mockRequireUser.mockResolvedValue(authResponse);
 
 			await expect(load(mockEvent)).rejects.toThrow();
-			expect(mockRedirect).toHaveBeenCalledWith(307, `/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`);
+			expect(mockRedirect).toHaveBeenCalledWith(
+				307,
+				`/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`
+			);
 		});
 
 		it('should return empty data when user is authenticated', async () => {

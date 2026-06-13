@@ -300,13 +300,14 @@ describe('TemplateEngine', () => {
 		expect(content).toContain('environment:');
 		expect(content).toContain('doppler/install');
 		expect(content).toContain('Sync Doppler Secrets to Cloudflare');
-		expect(content).toContain('./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"');
+		expect(content).toContain(
+			'./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"'
+		);
 		expect(content).toContain('npx wrangler deploy --env "<< parameters.environment >>"');
 		expect(content).toContain('only: main');
 		expect(content).toContain('ignore: main');
 		expect(content).toContain('name: deploy-to-cloudflare-preview');
 	});
-
 
 	it('should NOT generate CircleCI config with Cloudflare deployment steps when cloudflare-wrangler capability is NOT present', () => {
 		const selectedCapabilities = ['circleci'];
@@ -396,7 +397,9 @@ describe('TemplateEngine', () => {
 		const files = await generateAllFiles(context);
 
 		const gitGuidelines = files.find((f) => f.filePath === '.agents/.rules/git_guidelines.md');
-		const testingGuidelines = files.find((f) => f.filePath === '.agents/.rules/testing_guidelines.md');
+		const testingGuidelines = files.find(
+			(f) => f.filePath === '.agents/.rules/testing_guidelines.md'
+		);
 
 		expect(gitGuidelines).toBeDefined();
 		expect(gitGuidelines.content).toContain('# Git, Code Review, and Deployment Rules');

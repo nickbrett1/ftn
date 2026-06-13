@@ -331,8 +331,9 @@ describe('PDF Worker Version Consistency', () => {
 
 		// Look for version inside the worker code
 		const versionRegex = /version\s*[:=]\s*['"]([^'"]+)['"]/i;
-		const match = workerContent.match(versionRegex) || workerContent.match(/([0-9]+\.[0-9]+\.[0-9]+)/);
-		
+		const match =
+			workerContent.match(versionRegex) || workerContent.match(/([0-9]+\.[0-9]+\.[0-9]+)/);
+
 		expect(match).not.toBeNull();
 		const workerVersion = match[1];
 

@@ -271,7 +271,6 @@ export class TemplateEngine {
 			const keys = trimmedKey.split('.');
 			let value = data;
 			for (const k of keys) {
-				 
 				if (value && typeof value === 'object' && k in value) {
 					// eslint-disable-next-line security/detect-object-injection
 					value = value[k];
@@ -312,13 +311,7 @@ export class TemplateEngine {
 	}
 }
 
-function collectSingleTemplateFile(
-	templateEngine,
-	context,
-	capabilityId,
-	capability,
-	template
-) {
+function collectSingleTemplateFile(templateEngine, context, capabilityId, capability, template) {
 	try {
 		const extraData = getCapabilityTemplateData(capabilityId, {
 			capabilities: context.capabilities,
@@ -332,10 +325,7 @@ function collectSingleTemplateFile(
 			'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
 			'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
 
-		if (
-			capabilityId === 'sveltekit' &&
-			context.capabilities.includes('cloudflare-wrangler')
-		) {
+		if (capabilityId === 'sveltekit' && context.capabilities.includes('cloudflare-wrangler')) {
 			adapterPackage = '@sveltejs/adapter-cloudflare';
 			adapterComment =
 				'// adapter-cloudflare is configured for Wrangler deployment\n' +
@@ -439,7 +429,7 @@ function generateAndMergeDevcontainerJson(
 ) {
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	 
+
 	const baseCapabilityConfig = applyDefaults(
 		baseCapability,
 		// eslint-disable-next-line security/detect-object-injection
@@ -502,7 +492,7 @@ export function generateMergedDevelopmentContainerFiles(
 
 	const baseDevelopmentContainerId = developmentContainerCapabilities[0];
 	const baseCapability = capabilities.find((c) => c.id === baseDevelopmentContainerId);
-	 
+
 	const baseCapabilityConfig = applyDefaults(
 		baseCapability,
 		// eslint-disable-next-line security/detect-object-injection
@@ -617,7 +607,10 @@ export function generatePackageJson(templateEngine, context) {
 		scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 	}
 
-	if (context.capabilities.includes('devcontainer-node') || context.capabilities.includes('cloudflare-wrangler')) {
+	if (
+		context.capabilities.includes('devcontainer-node') ||
+		context.capabilities.includes('cloudflare-wrangler')
+	) {
 		// Add explicit package.json only if Node.js container is selected
 		// or we can generate it for all, but user requested "if node.js is selected"
 		const content = templateEngine.generateFile('package-json', {

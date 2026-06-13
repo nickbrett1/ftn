@@ -84,7 +84,10 @@ describe('CCBilling Page Server Route', () => {
 			mockRequireUser.mockResolvedValue(authResponse);
 
 			await expect(load(mockEvent)).rejects.toThrow();
-			expect(mockRedirect).toHaveBeenCalledWith(307, `/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`);
+			expect(mockRedirect).toHaveBeenCalledWith(
+				307,
+				`/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`
+			);
 		});
 
 		it('should redirect to /projects/ccbilling when billing cycle is not found', async () => {

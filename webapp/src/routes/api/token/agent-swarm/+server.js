@@ -26,11 +26,7 @@ export async function GET(event) {
 	);
 
 	// Sign the expiry timestamp
-	const signatureBuffer = await crypto.subtle.sign(
-		'HMAC',
-		key,
-		encoder.encode(String(expiry))
-	);
+	const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(String(expiry)));
 
 	// Convert signature to a hex string
 	const signature = Array.from(new Uint8Array(signatureBuffer))

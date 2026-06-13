@@ -3,16 +3,19 @@ import { env } from '$env/dynamic/private';
 
 // Use a Proxy to dynamically instantiate/access GitHub client at runtime,
 // which prevents accessing env at module load time (build time).
-export const github = new Proxy({}, {
-	get(target, prop) {
-		const client = new GitHub(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET, null);
-		const value = Reflect.get(client, prop);
-		if (typeof value === 'function') {
-			return value.bind(client);
+export const github = new Proxy(
+	{},
+	{
+		get(target, prop) {
+			const client = new GitHub(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET, null);
+			const value = Reflect.get(client, prop);
+			if (typeof value === 'function') {
+				return value.bind(client);
+			}
+			return value;
 		}
-		return value;
 	}
-});
+);
 
 /**
  * Get current authenticated user from request

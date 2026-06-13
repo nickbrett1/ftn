@@ -35,7 +35,9 @@ describe('/projects/ccbilling/[id]/+page.server.js', () => {
 		} catch (error) {
 			const redirectError = /** @type {any} */ (error);
 			expect(redirectError.status).toBe(307);
-			expect(redirectError.location).toBe(`/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`);
+			expect(redirectError.location).toBe(
+				`/notauthorised?redirectTo=${encodeURIComponent(mockEvent.url.pathname)}`
+			);
 		}
 	});
 

@@ -201,7 +201,9 @@ export class GitHubAPIService extends BaseAPIService {
 		console.log(`🔄 Creating ${files.length} files in ${owner}/${repo} on branch ${branch}`);
 
 		// Get the latest commit SHA
-		const referenceResponse = await this.makeRequest(`/repos/${owner}/${repo}/git/refs/heads/${branch}`);
+		const referenceResponse = await this.makeRequest(
+			`/repos/${owner}/${repo}/git/refs/heads/${branch}`
+		);
 		const referenceData = await referenceResponse.json();
 		const latestCommitSha = referenceData.object.sha;
 

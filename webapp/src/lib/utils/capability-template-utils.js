@@ -158,7 +158,7 @@ function getCircleCiTemplateData(context) {
           command: |
             chmod +x scripts/setup-wrangler-config.sh
             ./scripts/setup-wrangler-config.sh << parameters.doppler_config >>`;
-			
+
 			syncSecretsStep = `
       - run:
           name: Sync Doppler Secrets to Cloudflare
