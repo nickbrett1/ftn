@@ -13,6 +13,7 @@
 	let persona = $state('Shop for tech stickers under $15');
 	let workerHost = $state('agent-swarm.nick-brett1.workers.dev');
 	let sessionId = $state('');
+	let historyIndex = 0;
 	let isConnecting = $state(false);
 
 	let limits = $state(null);
@@ -162,6 +163,7 @@
 		errorMsg = '';
 		isConnecting = true;
 		logs = [];
+		historyIndex = 0;
 
 		addLog('1. Fetching pre-signed HMAC token from SvelteKit backend...', 'step');
 
@@ -208,16 +210,13 @@
 					if (state.status && status !== 'completed' && status !== 'failed') {
 						status = state.status;
 					}
-					if (state.history && state.history.length > 0) {
+					if (state.history && state.history.length > historyIndex) {
 						// Sync logs
-						const newLogs = state.history;
-						// To avoid duplicating logs, reset and add them
-						logs = logs.filter(
-							(l) => l.type === 'step' || l.type === 'success' || l.type === 'system-error'
-						);
+						const newLogs = state.history.slice(historyIndex);
 						newLogs.forEach((step) => {
 							addLog(step, 'agent');
 						});
+						historyIndex = state.history.length;
 					}
 				}
 			});
