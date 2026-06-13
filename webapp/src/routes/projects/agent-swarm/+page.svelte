@@ -141,6 +141,17 @@
 		});
 	}
 
+	async function copyConsole() {
+		try {
+			const textToCopy = logs.map(log => `[${log.timestamp}] ${log.message}`).join('\n');
+			await navigator.clipboard.writeText(textToCopy);
+			addLog('Console contents copied to clipboard.', 'success');
+		} catch (err) {
+			console.error('Failed to copy console logs:', err);
+			addLog('Failed to copy console logs.', 'system-error');
+		}
+	}
+
 	async function startSwarm() {
 		if (!AgentClientClass) {
 			errorMsg = 'Client SDK not loaded yet. Please wait.';
@@ -669,13 +680,22 @@
 						</svg>
 						Live Execution Console
 					</h2>
-					<button
-						type="button"
-						onclick={() => (logs = [])}
-						class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
-					>
-						Clear Console
-					</button>
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							onclick={copyConsole}
+							class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+						>
+							Copy Console
+						</button>
+						<button
+							type="button"
+							onclick={() => (logs = [])}
+							class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+						>
+							Clear Console
+						</button>
+					</div>
 				</div>
 
 				<!-- Console Logs Display -->
