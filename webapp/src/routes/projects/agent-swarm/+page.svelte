@@ -243,7 +243,7 @@
 			status = 'running';
 			addLog(`3. Invoking RPC runShopping with persona: "${persona}"`, 'step');
 
-			const result = await client.call('runShopping', [persona]);
+			const result = await client.call('runShopping', [persona], { timeout: 0 });
 			status = 'completed';
 			addLog('🎉 Swarm session completed successfully!', 'success');
 			addLog(`Result outcome: ${result}`, 'info');
