@@ -144,7 +144,7 @@
 
 	async function copyConsole() {
 		try {
-			const textToCopy = logs.map(log => `[${log.timestamp}] ${log.message}`).join('\n');
+			const textToCopy = logs.map((log) => `[${log.timestamp}] ${log.message}`).join('\n');
 			await navigator.clipboard.writeText(textToCopy);
 			addLog('Console contents copied to clipboard.', 'success');
 		} catch (err) {

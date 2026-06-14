@@ -45,6 +45,12 @@ export default defineConfig(({ command, mode }) => {
 	}
 	return {
 		plugins,
+		resolve: {
+			alias: {
+				'cloudflare:email': '/workspaces/ftn/webapp/src/lib/server/cloudflare-mocks.js',
+				'cloudflare:workers': '/workspaces/ftn/webapp/src/lib/server/cloudflare-mocks.js'
+			}
+		},
 		logLevel: 'info',
 		server: {
 			host: 'localhost',
