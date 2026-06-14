@@ -1,8 +1,8 @@
 // webapp/src/routes/shop/+page.server.js
 import { redirect, error } from '@sveltejs/kit';
-import Stripe from 'stripe';
 import { env } from '$env/dynamic/private';
 import { products } from '$lib/data/products.js';
+import { createStripeSession } from '$lib/server/shop.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {
@@ -17,9 +17,11 @@ export const actions = {
 		const formData = await request.formData();
 		const productId = formData.get('productId');
 
-		const product = products.find((p) => p.id === productId);
+		if (typeof productId !== 'string') {
+			throw error(400, 'Invalid product ID');
+		}
 
-		if (!product) {
+		if (!products.some((p) => p.id === productId)) {
 			throw error(404, 'Product not found');
 		}
 
@@ -31,36 +33,11 @@ export const actions = {
 			};
 		}
 
-		const stripe = new Stripe(stripeSecretKey);
-
-		const imageSource = typeof product.image === 'object' ? product.image.img?.src : product.image;
-		const imageUrl = imageSource ? new URL(imageSource, url.origin).href : undefined;
-
-		let session;
+		let sessionResult;
 		try {
-			// Create a Stripe Checkout Session
-			session = await stripe.checkout.sessions.create({
-				payment_method_types: ['card'],
-				line_items: [
-					{
-						price_data: {
-							currency: product.currency,
-							product_data: {
-								name: product.name,
-								description: product.description,
-								images: imageUrl ? [imageUrl] : []
-							},
-							unit_amount: product.price
-						},
-						quantity: 1
-					}
-				],
-				mode: 'payment',
-				success_url: `${url.origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-				cancel_url: `${url.origin}/shop/cancel`
-			});
+			sessionResult = await createStripeSession(productId, url.origin);
 		} catch (error_) {
-			console.error('Stripe error:', error_);
+			console.error('Checkout error:', error_);
 			return {
 				success: false,
 				error: 'Failed to create checkout session. Please try again.'
@@ -68,6 +45,6 @@ export const actions = {
 		}
 
 		// Redirect to Stripe Checkout
-		throw redirect(303, session.url);
+		throw redirect(303, sessionResult.checkoutUrl);
 	}
 };
