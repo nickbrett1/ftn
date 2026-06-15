@@ -63,7 +63,7 @@
 		"eslint-plugin-security": "^4.0.1",
 		"eslint-plugin-sonarjs": "^4.0.3",
 		"eslint-plugin-svelte": "^3.19.0",
-		"eslint-plugin-unicorn": "^65.0.1",
+		"eslint-plugin-unicorn": "^66.0.0",
 		"fs-extra": "^11.3.5",
 		"highlight.js": "^11.11.1",
 		"jsdom": "^29.1.1",
