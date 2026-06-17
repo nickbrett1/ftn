@@ -101,10 +101,10 @@
 		"@stripe/stripe-js": "^9.8.0",
 		"@threlte/core": "^8.5.16",
 		"@threlte/extras": "^9.21.0",
-		"@tsparticles/engine": "^4.1.3",
+		"@tsparticles/engine": "^4.2.0",
 		"@tsparticles/interaction-external-trail": "^4.1.0",
 		"@tsparticles/shape-text": "^4.1.0",
-		"@tsparticles/slim": "^4.1.3",
+		"@tsparticles/slim": "^4.2.0",
 		"agents": "^0.16.1",
 		"apexcharts": "^5.15.0",
 		"arctic": "^3.7.0",
@@ -120,6 +120,6 @@
 		"stripe": "^22.2.1",
 		"three": "^0.184.0",
 		"tippy.js": "^6.3.7",
-		"tsparticles": "^4.1.3"
+		"tsparticles": "^4.2.0"
 	}
 }
