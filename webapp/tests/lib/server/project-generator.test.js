@@ -278,7 +278,11 @@ describe('ProjectGeneratorService', () => {
 			capabilities: ['circleci', 'doppler', 'sonarcloud']
 		};
 
-		it('should configure all selected services', async () => {
+		it('should configure all selected services including dependabot', async () => {
+			const contextWithDependabot = {
+				...context,
+				capabilities: ['circleci', 'doppler', 'sonarcloud', 'dependabot']
+			};
 			service.services.circleci.followProject.mockResolvedValue({ success: true });
 			service.services.doppler.createProject.mockResolvedValue({ slug: 'test-project' });
 			service.services.doppler.createEnvironment.mockResolvedValue({ success: true });
@@ -287,12 +291,14 @@ describe('ProjectGeneratorService', () => {
 				{ id: '1', isDefault: true }
 			]);
 			service.services.sonarcloud.associateQualityGate.mockResolvedValue({ success: true });
+			service.services.github.createRepositorySecret = vi.fn().mockResolvedValue();
 
-			const results = await service.configureExternalServices(context, repository);
+			const results = await service.configureExternalServices(contextWithDependabot, repository);
 
 			expect(results.circleci.success).toBe(true);
 			expect(results.doppler.success).toBe(true);
 			expect(results.sonarcloud.success).toBe(true);
+			expect(results.dependabot.success).toBe(true);
 			expect(service.services.circleci.followProject).toHaveBeenCalledWith(
 				'github',
 				'owner',
@@ -300,6 +306,26 @@ describe('ProjectGeneratorService', () => {
 			);
 			expect(service.services.doppler.createProject).toHaveBeenCalled();
 			expect(service.services.sonarcloud.createProject).toHaveBeenCalled();
+			expect(service.services.github.createRepositorySecret).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				'MYTOKEN',
+				'gh-token'
+			);
+		});
+
+		it('should handle dependabot failures gracefully', async () => {
+			const contextWithDependabot = {
+				...context,
+				capabilities: ['dependabot']
+			};
+			const error = new Error('GitHub API Error');
+			service.services.github.createRepositorySecret = vi.fn().mockRejectedValue(error);
+
+			const results = await service.configureExternalServices(contextWithDependabot, repository);
+
+			expect(results.dependabot.success).toBe(false);
+			expect(results.dependabot.error).toBe(error.message);
 		});
 
 		it('should handle failures gracefully', async () => {

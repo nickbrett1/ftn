@@ -270,6 +270,29 @@ export class ProjectGeneratorService {
 			}
 		}
 
+		// Configure Dependabot secret if selected
+		if (context.capabilities.includes('dependabot') && this.services.github) {
+			try {
+				console.log('🔄 Configuring Dependabot...');
+				await this.services.github.createRepositorySecret(
+					owner,
+					repo,
+					'MYTOKEN',
+					this.authTokens.github
+				);
+				results.dependabot = {
+					success: true
+				};
+				console.log('✅ Dependabot secret configured successfully');
+			} catch (error) {
+				console.error(`❌ Dependabot configuration failed: ${error.message}`);
+				results.dependabot = {
+					success: false,
+					error: error.message
+				};
+			}
+		}
+
 		// Configure SonarCloud if selected
 		if (context.capabilities.includes('sonarcloud') && this.services.sonarcloud) {
 			try {

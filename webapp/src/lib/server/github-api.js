@@ -25,6 +25,7 @@
  */
 
 import { BaseAPIService } from './base-api-service.js';
+import _sodium from 'libsodium-wrappers';
 
 /**
  * GitHub API service class
@@ -336,6 +337,49 @@ export class GitHubAPIService extends BaseAPIService {
 
 		const response = await this.makeRequest(`/user/repos?${parameters.toString()}`);
 		return response.json();
+	}
+
+	/**
+	 * Creates or updates a repository secret
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @param {string} secretName - Name of the secret
+	 * @param {string} secretValue - Unencrypted value of the secret
+	 * @returns {Promise<void>}
+	 */
+	async createRepositorySecret(owner, repo, secretName, secretValue) {
+		console.log(`🔄 Creating/updating secret ${secretName} for ${owner}/${repo}`);
+
+		// 1. Get the repository public key
+		const keyResponse = await this.makeRequest(
+			`/repos/${owner}/${repo}/actions/secrets/public-key`
+		);
+		const { key, key_id } = await keyResponse.json();
+
+		// 2. Encrypt the secret using libsodium
+		await _sodium.ready;
+		const sodium = _sodium;
+
+		// Convert strings to Uint8Arrays
+		const binkey = sodium.from_base64(key, sodium.base64_variants.ORIGINAL);
+		const binsec = sodium.from_string(secretValue);
+
+		// Encrypt the secret
+		const encBytes = sodium.crypto_box_seal(binsec, binkey);
+
+		// Convert to base64
+		const encryptedValue = sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+
+		// 3. Create or update the secret
+		await this.makeRequest(`/repos/${owner}/${repo}/actions/secrets/${secretName}`, {
+			method: 'PUT',
+			body: JSON.stringify({
+				encrypted_value: encryptedValue,
+				key_id: key_id
+			})
+		});
+
+		console.log(`✅ Secret ${secretName} created/updated successfully`);
 	}
 
 	/**
