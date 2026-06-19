@@ -119,7 +119,7 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		ssr: {
-			noExternal: ['three']
+			noExternal: ['three', 'tippy.js']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {
