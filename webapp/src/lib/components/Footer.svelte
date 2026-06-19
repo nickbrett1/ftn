@@ -56,17 +56,8 @@
 			content: 'Agent Swarm'
 		});
 
-		let apiKeysTooltips;
-
-		$effect(() => {
-			if (isLoggedIn) {
-				// Need slight delay for DOM update
-				setTimeout(() => {
-					apiKeysTooltips = tippy('#api-keys', {
-						content: 'API Keys'
-					});
-				}, 50);
-			}
+		const apiKeysTooltips = tippy('#api-keys', {
+			content: 'API Keys'
 		});
 
 		// Clean up tooltips when component unmounts
@@ -101,12 +92,10 @@
 				agentSwarmTooltips.destroy();
 			}
 
-			if (apiKeysTooltips) {
-				if (Array.isArray(apiKeysTooltips)) {
-					for (const tooltip of apiKeysTooltips) tooltip.destroy();
-				} else {
-					apiKeysTooltips.destroy();
-				}
+			if (Array.isArray(apiKeysTooltips)) {
+				for (const tooltip of apiKeysTooltips) tooltip.destroy();
+			} else {
+				apiKeysTooltips.destroy();
 			}
 		};
 	});
@@ -115,8 +104,13 @@
 		if (isLoggedIn) {
 			// User is already logged in, go directly to billing page
 			goto('/projects/ccbilling');
-		} else {
-			// User is not logged in, show login modal
+		}
+	}
+
+	function handleApiKeysClick() {
+		if (isLoggedIn) {
+			// User is already logged in, go directly to api-keys page
+			goto('/api-keys');
 		}
 	}
 </script>
@@ -191,14 +185,22 @@
 				{#if isLoggedIn}
 					<KeySolid
 						id="api-keys"
-						onclick={() => {
-							goto('/api-keys');
-						}}
+						onclick={handleApiKeysClick}
 						class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
 						title="API Keys"
 						ariaLabel="API Keys"
 						focusable="true"
 					/>
+				{:else}
+					<!-- User is not logged in, show login modal -->
+					<Login redirectOnSuccess="/api-keys">
+						<KeySolid
+							id="api-keys"
+							class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+							ariaLabel="API Keys"
+							focusable="true"
+						/>
+					</Login>
 				{/if}
 			</div>
 
