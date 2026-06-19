@@ -16,12 +16,15 @@ vi.mock('$lib/server/mcp.js', () => ({
 
 describe('/api/mcp API', () => {
 	it('handles POST requests by calling mcp handler', async () => {
-		const request = new Request('http://localhost/api/mcp', { method: 'POST', body: JSON.stringify({}) });
+		const request = new Request('http://localhost/api/mcp', {
+			method: 'POST',
+			body: JSON.stringify({})
+		});
 
 		const response = await POST({ request });
 		expect(response.status).toBe(200);
 
-        const text = await response.text();
-        expect(text).toBe('mock response');
+		const text = await response.text();
+		expect(text).toBe('mock response');
 	});
 });

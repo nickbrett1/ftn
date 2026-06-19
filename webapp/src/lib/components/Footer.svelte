@@ -6,7 +6,8 @@
 		CreditCardSolid,
 		RocketSolid,
 		CartShoppingSolid,
-		UsersSolid
+		UsersSolid,
+		KeySolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -55,6 +56,19 @@
 			content: 'Agent Swarm'
 		});
 
+		let apiKeysTooltips;
+
+		$effect(() => {
+			if (isLoggedIn) {
+				// Need slight delay for DOM update
+				setTimeout(() => {
+					apiKeysTooltips = tippy('#api-keys', {
+						content: 'API Keys'
+					});
+				}, 50);
+			}
+		});
+
 		// Clean up tooltips when component unmounts
 		return () => {
 			clearInterval(authCheckInterval);
@@ -85,6 +99,14 @@
 				for (const tooltip of agentSwarmTooltips) tooltip.destroy();
 			} else {
 				agentSwarmTooltips.destroy();
+			}
+
+			if (apiKeysTooltips) {
+				if (Array.isArray(apiKeysTooltips)) {
+					for (const tooltip of apiKeysTooltips) tooltip.destroy();
+				} else {
+					apiKeysTooltips.destroy();
+				}
 			}
 		};
 	});
@@ -164,6 +186,20 @@
 					ariaLabel="Agent Swarm"
 					focusable="true"
 				/>
+
+				<!-- API Keys icon -->
+				{#if isLoggedIn}
+					<KeySolid
+						id="api-keys"
+						onclick={() => {
+							goto('/api-keys');
+						}}
+						class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+						title="API Keys"
+						ariaLabel="API Keys"
+						focusable="true"
+					/>
+				{/if}
 			</div>
 
 			<div class="flex gap-4">
