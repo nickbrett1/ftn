@@ -1,30 +1,17 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import Handlebars from 'handlebars';
 
-describe('precompiled-templates.js', () => {
-	beforeEach(() => {
-		// Expose Handlebars globally as expected by the generated precompiled IIFE
-		globalThis.Handlebars = Handlebars;
-		globalThis.Handlebars.templates = {};
-		vi.resetModules();
-	});
+describe('precompiled-templates', () => {
+    beforeAll(async () => {
+        globalThis.Handlebars = Handlebars;
+        await import('../../../src/lib/server/precompiled-templates.js');
+    });
 
-	it('should populate Handlebars.templates with precompiled templates', async () => {
-		// Importing the file should execute the IIFE and populate Handlebars.templates
-		await import('../../../src/lib/server/precompiled-templates.js');
+    it('should register templates in Handlebars.templates', () => {
+        expect(Handlebars.templates).toBeDefined();
+        expect(Handlebars.templates['playwright-config.hbs']).toBeDefined();
 
-		expect(globalThis.Handlebars.templates).toBeDefined();
-		expect(Object.keys(globalThis.Handlebars.templates).length).toBeGreaterThan(0);
-
-		// Spot check a few known templates
-		expect(globalThis.Handlebars.templates['devcontainer-node-dockerfile.hbs']).toBeDefined();
-		expect(typeof globalThis.Handlebars.templates['devcontainer-node-dockerfile.hbs']).toBe(
-			'function'
-		);
-
-		expect(globalThis.Handlebars.templates['devcontainer-java-dockerfile.hbs']).toBeDefined();
-		expect(typeof globalThis.Handlebars.templates['devcontainer-java-dockerfile.hbs']).toBe(
-			'function'
-		);
-	});
+        const output = Handlebars.templates['playwright-config.hbs']({});
+        expect(output).toContain('export default defineConfig');
+    });
 });
