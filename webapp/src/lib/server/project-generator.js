@@ -77,17 +77,17 @@ export class ProjectGeneratorService {
 
 			// Step 2: Create GitHub repository
 			console.log('🐙 Creating GitHub repository...');
-			const repository = await this.createGitHubRepository(context);
-			console.log(`✅ GitHub repository created: ${repository.fullName}`);
+			const repo = await this.createGitHubRepository(context);
+			console.log(`✅ GitHub repository created: ${repo.fullName}`);
 
 			// Step 3: Commit files to repository
 			console.log('📤 Committing files to repository...');
-			await this.commitFilesToRepository(repository, generatedFiles, context);
+			await this.commitFilesToRepository(repo, generatedFiles, context);
 			console.log(`✅ Committed ${generatedFiles.length} files to repository`);
 
 			// Step 4: Configure external services
 			console.log('🔧 Configuring external services...');
-			const externalServices = await this.configureExternalServices(context, repository);
+			const externalServices = await this.configureExternalServices(context, repo);
 			console.log(`✅ Configured ${Object.keys(externalServices).length} external services`);
 
 			const generationTimeMs = Date.now() - startTime;
@@ -95,7 +95,7 @@ export class ProjectGeneratorService {
 
 			return {
 				success: true,
-				repository,
+				repository: repo,
 				externalServices,
 				generatedFiles,
 				generationTimeMs
@@ -145,13 +145,13 @@ export class ProjectGeneratorService {
 
 		// Create repository
 		try {
-			const repository = await this.services.github.createRepository(
+			const repo = await this.services.github.createRepository(
 				projectName,
 				description,
 				false, // public
 				true // auto-init
 			);
-			return repository;
+			return repo;
 		} catch (error) {
 			if (error.code === 'REPOSITORY_EXISTS' && overwrite) {
 				console.log(`⚠️ Repository exists, overwriting: ${projectName}`);
@@ -225,7 +225,15 @@ export class ProjectGeneratorService {
 		const results = {};
 		const [owner, repo] = repository.fullName.split('/');
 
-		// Configure CircleCI if selected
+		await this.#configureCircleCI(context, owner, repo, results);
+		await this.#configureDoppler(context, results);
+		await this.#configureDependabot(context, owner, repo, results);
+		await this.#configureSonarCloud(context, owner, repo, results);
+
+		return results;
+	}
+
+	async #configureCircleCI(context, owner, repo, results) {
 		if (context.capabilities.includes('circleci') && this.services.circleci) {
 			try {
 				console.log('🔄 Configuring CircleCI...');
@@ -243,8 +251,9 @@ export class ProjectGeneratorService {
 				};
 			}
 		}
+	}
 
-		// Configure Doppler if selected
+	async #configureDoppler(context, results) {
 		if (context.capabilities.includes('doppler') && this.services.doppler) {
 			try {
 				console.log('🔄 Configuring Doppler...');
@@ -269,8 +278,9 @@ export class ProjectGeneratorService {
 				};
 			}
 		}
+	}
 
-		// Configure Dependabot secret if selected
+	async #configureDependabot(context, owner, repo, results) {
 		if (context.capabilities.includes('dependabot') && this.services.github) {
 			try {
 				console.log('🔄 Configuring Dependabot...');
@@ -292,8 +302,9 @@ export class ProjectGeneratorService {
 				};
 			}
 		}
+	}
 
-		// Configure SonarCloud if selected
+	async #configureSonarCloud(context, owner, repo, results) {
 		if (context.capabilities.includes('sonarcloud') && this.services.sonarcloud) {
 			try {
 				console.log('🔄 Configuring SonarCloud...');
@@ -324,8 +335,6 @@ export class ProjectGeneratorService {
 				};
 			}
 		}
-
-		return results;
 	}
 
 	/**

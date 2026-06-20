@@ -70,26 +70,7 @@ function getSonarCloudTemplateData(context) {
 	};
 }
 
-function getCircleCiTemplateData(context) {
-	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
-	const data = {
-		preBuildSteps: '',
-		lighthouseJobDefinition: '',
-		lighthouseWorkflowJob: '',
-		deployJobDefinition: '',
-		deployWorkflowJob: '',
-		orbs: '',
-		additionalWorkflowJobs: '',
-		buildWorkflowJob: '      - build'
-	};
-
-	const contextConfig = context.configuration?.circleci?.context;
-	// Default enabled is true, default name is 'common'
-	const contextEnabled = contextConfig?.enabled ?? true;
-	const contextName = contextConfig?.name || 'common';
-
-	const buildJobContext = contextEnabled ? `\n          context: ${contextName}` : '';
-
+function _applyGitGuardianConfig(data, context, contextEnabled, contextName, buildJobContext) {
 	if (context.capabilities.includes('gitguardian')) {
 		data.orbs += `  ggshield: gitguardian/ggshield@1\n`;
 		data.buildWorkflowJob = `      - ggshield/scan:
@@ -102,7 +83,9 @@ function getCircleCiTemplateData(context) {
 	} else if (contextEnabled) {
 		data.buildWorkflowJob = `      - build:${buildJobContext}`;
 	}
+}
 
+function _applyDopplerConfig(data, context) {
 	if (context.capabilities.includes('doppler')) {
 		data.orbs += `  doppler: conpago/doppler@1.3.5\n`;
 	}
@@ -119,7 +102,10 @@ function getCircleCiTemplateData(context) {
             chmod +x scripts/setup-wrangler-config.sh
             ./scripts/setup-wrangler-config.sh`;
 	}
+}
 
+function _applyLighthouseConfig(data, context, contextEnabled, contextName) {
+	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 	if (hasLighthouse) {
 		data.lighthouseJobDefinition = `
   lighthouse:
@@ -145,8 +131,9 @@ function getCircleCiTemplateData(context) {
           requires:
             - build`;
 	}
+}
 
-	// Check if wrangler capability is present which implies cloudflare deployment
+function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 	if (context.capabilities.includes('cloudflare-wrangler')) {
 		let setupWranglerStep = '';
 		let syncSecretsStep = '';
@@ -232,6 +219,31 @@ function getCircleCiTemplateData(context) {
             branches:
               ignore: main`;
 	}
+}
+
+function getCircleCiTemplateData(context) {
+	const data = {
+		preBuildSteps: '',
+		lighthouseJobDefinition: '',
+		lighthouseWorkflowJob: '',
+		deployJobDefinition: '',
+		deployWorkflowJob: '',
+		orbs: '',
+		additionalWorkflowJobs: '',
+		buildWorkflowJob: '      - build'
+	};
+
+	const contextConfig = context.configuration?.circleci?.context;
+	// Default enabled is true, default name is 'common'
+	const contextEnabled = contextConfig?.enabled ?? true;
+	const contextName = contextConfig?.name || 'common';
+
+	const buildJobContext = contextEnabled ? `\n          context: ${contextName}` : '';
+
+	_applyGitGuardianConfig(data, context, contextEnabled, contextName, buildJobContext);
+	_applyDopplerConfig(data, context);
+	_applyLighthouseConfig(data, context, contextEnabled, contextName);
+	_applyCloudflareConfig(data, context, contextEnabled, contextName);
 
 	return data;
 }

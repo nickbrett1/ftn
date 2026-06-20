@@ -379,62 +379,62 @@ async function generateNonDevelopmentContainerFiles(
 }
 
 function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities) {
-	if (allCapabilities.includes('devcontainer-node')) {
-		let scripts = ',\n    "build": "echo \'No build step required\'"';
-		let devDependencies = '';
-		let dependencies = '';
-		const typeField = 'module';
-		let overrides = '';
-
-		const hasSvelteKit = allCapabilities.includes('sveltekit');
-		const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
-
-		if (hasSvelteKit) {
-			overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2"\n  }';
-			scripts =
-				',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
-			devDependencies +=
-				'"@sveltejs/kit": "^2.49.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "svelte": "^5.46.1",\n    "svelte-check": "^4.1.1",\n    "typescript": "^5.7.2",\n    "vite": "^7.3.0"';
-
-			if (hasWrangler) {
-				scripts += ',\n    "deploy": "wrangler deploy"';
-				devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4"';
-				// Wrangler is also needed as dev dep
-				devDependencies += ',\n    "wrangler": "^4.56.0"';
-			} else {
-				devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
-			}
-		} else {
-			// Normal Node.js setup
-			if (hasWrangler) {
-				scripts += ',\n    "deploy": "wrangler deploy"';
-				devDependencies += '"wrangler": "^4.56.0"';
-			}
-		}
-
-		if (!devDependencies.includes('"vitest"')) {
-			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
-		}
-		scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
-
-		const content = templateEngine.generateFile('package-json', {
-			...projectConfig,
-			scripts,
-			devDependencies,
-			dependencies,
-			typeField,
-			overrides,
-			projectName: projectConfig.name || 'my-project'
-		});
-
-		return {
-			path: 'package.json',
-			name: 'package.json',
-			content,
-			size: content.length,
-			type: 'file'
-		};
+	if (!allCapabilities.includes('devcontainer-node')) {
+		return;
 	}
+
+	let scripts = ',\n    "build": "echo \'No build step required\'"';
+	let devDependencies = '';
+	const dependencies = '';
+	const typeField = 'module';
+	let overrides = '';
+
+	const hasSvelteKit = allCapabilities.includes('sveltekit');
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+
+	if (hasSvelteKit) {
+		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2"\n  }';
+		scripts =
+			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
+		devDependencies +=
+			'"@sveltejs/kit": "^2.49.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "svelte": "^5.46.1",\n    "svelte-check": "^4.1.1",\n    "typescript": "^5.7.2",\n    "vite": "^7.3.0"';
+
+		if (hasWrangler) {
+			scripts += ',\n    "deploy": "wrangler deploy"';
+			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4"';
+			// Wrangler is also needed as dev dep
+			devDependencies += ',\n    "wrangler": "^4.56.0"';
+		} else {
+			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
+		}
+	} else if (hasWrangler) {
+		// Normal Node.js setup
+		scripts += ',\n    "deploy": "wrangler deploy"';
+		devDependencies += '"wrangler": "^4.56.0"';
+	}
+
+	if (!devDependencies.includes('"vitest"')) {
+		devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
+	}
+	scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
+
+	const content = templateEngine.generateFile('package-json', {
+		...projectConfig,
+		scripts,
+		devDependencies,
+		dependencies,
+		typeField,
+		overrides,
+		projectName: projectConfig.name || 'my-project'
+	});
+
+	return {
+		path: 'package.json',
+		name: 'package.json',
+		content,
+		size: content.length,
+		type: 'file'
+	};
 }
 
 async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCapabilities, files) {
