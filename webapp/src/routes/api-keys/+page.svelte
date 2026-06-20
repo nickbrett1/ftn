@@ -75,11 +75,12 @@
 				body: JSON.stringify({ name: newKeyName })
 			});
 
+			const data = await res.json();
+
 			if (!res.ok) {
-				throw new Error('Failed to create key');
+				throw new Error(data.error || 'Failed to create key');
 			}
 
-			const data = await res.json();
 			generatedKey = data.key;
 			newKeyName = '';
 			await fetchKeys();
