@@ -72,3 +72,29 @@ export async function getCurrentUser(event) {
 }
 
 // Other authentication-related functions will be added here.
+
+import { redirect } from '@sveltejs/kit';
+
+/**
+ * Require authentication for a route or throw a redirect
+ * @param {import('@sveltejs/kit').RequestEvent} event - SvelteKit request event
+ * @returns {Promise<Object>} Current user object
+ * @throws {Redirect} If not authenticated
+ */
+export async function requireUser(event) {
+	const user = await getCurrentUser(event);
+
+	if (!user) {
+		const isApi = event.url.pathname.startsWith('/api/');
+
+		if (isApi) {
+			// For API routes, return 401 instead of redirect
+			throw new Error('Unauthorized');
+		} else {
+			// For page routes, redirect to login/notauthorised
+			throw redirect(303, `/notauthorised?redirectTo=${encodeURIComponent(event.url.pathname)}`);
+		}
+	}
+
+	return user;
+}
