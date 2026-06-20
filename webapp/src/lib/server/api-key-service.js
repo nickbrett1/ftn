@@ -29,7 +29,7 @@ export class ApiKeyService {
 	}
 
 	generateKey() {
-		return `pat_${crypto.randomUUID().replace(/-/g, '')}`;
+		return `pat_${crypto.randomUUID().replaceAll('-', '')}`;
 	}
 
 	async createKey(userEmail, name) {
@@ -83,7 +83,7 @@ export class ApiKeyService {
 	}
 
 	async validateKey(rawKey) {
-		if (!rawKey || !rawKey.startsWith('pat_')) {
+		if (!rawKey?.startsWith('pat_')) {
 			return null;
 		}
 

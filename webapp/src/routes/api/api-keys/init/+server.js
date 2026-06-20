@@ -3,7 +3,7 @@ import { requireUser } from '$lib/server/auth.js';
 import { ApiKeyService } from '$lib/server/api-key-service.js';
 
 export async function POST(event) {
-	const user = await requireUser(event);
+	await requireUser(event);
 
 	try {
 		const apiKeyService = new ApiKeyService(event.platform?.env);
