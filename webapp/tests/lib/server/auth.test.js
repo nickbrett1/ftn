@@ -162,3 +162,77 @@ describe('getCurrentUser', () => {
 		expect(console.error).toHaveBeenCalled();
 	});
 });
+
+import { requireUser } from '../../../src/lib/server/auth.js';
+
+vi.mock('@sveltejs/kit', async () => {
+    const actual = await vi.importActual('@sveltejs/kit');
+    return {
+        ...actual,
+        redirect: vi.fn((status, location) => {
+            const err = new Error('REDIRECT');
+            err.status = status;
+            err.location = location;
+            return err;
+        })
+    };
+});
+
+describe('requireUser', () => {
+	let mockEvent;
+
+	beforeEach(() => {
+		mockEvent = {
+			request: {
+				headers: {
+					get: vi.fn().mockReturnValue(null) // Not logged in
+				}
+			},
+			url: new URL('http://localhost/protected-page'),
+			platform: {
+				env: {
+					KV: {
+						get: vi.fn()
+					}
+				}
+			}
+		};
+	});
+
+	it('redirects to notauthorised for page routes when not authenticated', async () => {
+		await expect(requireUser(mockEvent)).rejects.toThrow('REDIRECT');
+
+		try {
+			await requireUser(mockEvent);
+		} catch (err) {
+			expect(err.status).toBe(303);
+			expect(err.location).toBe('/notauthorised?redirectTo=%2Fprotected-page');
+		}
+	});
+
+	it('throws an error for API routes when not authenticated', async () => {
+		mockEvent.url = new URL('http://localhost/api/protected-data');
+
+		await expect(requireUser(mockEvent)).rejects.toThrow('Unauthorized');
+	});
+
+	it('returns the user object when authenticated', async () => {
+		mockEvent.request.headers.get.mockReturnValue('auth=valid-cookie');
+		mockEvent.platform.env.KV.get.mockResolvedValue('valid-google-token');
+
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				id: '123',
+				email: 'test@example.com',
+				name: 'Test User'
+			})
+		});
+
+		const user = await requireUser(mockEvent);
+
+		expect(user).toBeDefined();
+		expect(user.email).toBe('test@example.com');
+		expect(user.name).toBe('Test User');
+	});
+});
