@@ -133,16 +133,19 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	});
 });
 
-    describe('fallback methods', () => {
+describe('fallback methods', () => {
 	let mockEvent;
 	beforeEach(() => {
-		mockEvent = { params: { id: "1" }, platform: { env: { LLAMA_API_KEY: "test_key", LLAMA_API_MODEL: "llama3.1-8b-instruct" } } };
-        requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
-        getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN' });
+		mockEvent = {
+			params: { id: '1' },
+			platform: { env: { LLAMA_API_KEY: 'test_key', LLAMA_API_MODEL: 'llama3.1-8b-instruct' } }
+		};
+		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
+		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN' });
 	});
 	it('extracts from choices array of parts', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
-			choices: [{ message: { content: [{text: 'part1 '}, {text: 'part2'}] } }]
+			choices: [{ message: { content: [{ text: 'part1 ' }, { text: 'part2' }] } }]
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -150,7 +153,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('part1 \npart2');
 	});
 
-    it('extracts from root message directly', async () => {
+	it('extracts from root message directly', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			message: { content: 'root message' }
 		});
@@ -160,7 +163,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('root message');
 	});
 
-    it('extracts from root message object', async () => {
+	it('extracts from root message object', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			message: { content: { text: 'root message object' } }
 		});
@@ -170,7 +173,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('root message object');
 	});
 
-    it('extracts from completion_message', async () => {
+	it('extracts from completion_message', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			completion_message: 'completion'
 		});
@@ -180,7 +183,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('completion');
 	});
 
-    it('extracts from completion_message object', async () => {
+	it('extracts from completion_message object', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			completion_message: { content: 'completion obj' }
 		});
@@ -190,7 +193,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('completion obj');
 	});
 
-    it('extracts from direct content', async () => {
+	it('extracts from direct content', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			content: 'direct text'
 		});
@@ -200,7 +203,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('direct text');
 	});
 
-    it('extracts from direct output_text', async () => {
+	it('extracts from direct output_text', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			output_text: 'direct output_text'
 		});
@@ -210,7 +213,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('direct output_text');
 	});
 
-    it('extracts from completion_message.content.text', async () => {
+	it('extracts from completion_message.content.text', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({
 			completion_message: { content: { text: 'nested completion text' } }
 		});
@@ -220,7 +223,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.text).toBe('nested completion text');
 	});
 
-    it('returns empty text and 502 for unparseable response', async () => {
+	it('returns empty text and 502 for unparseable response', async () => {
 		globalThis.__llamaCreateMock.mockResolvedValue({});
 		const response = await GET(mockEvent);
 		const body = await response.json();

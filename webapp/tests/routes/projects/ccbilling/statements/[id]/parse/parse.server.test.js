@@ -623,157 +623,156 @@ describe('/projects/ccbilling/statements/[id]/parse API', () => {
 	});
 });
 
+describe('fallback card matching', () => {
+	let mockEvent;
+	beforeEach(() => {
+		mockEvent = {
+			params: { id: '1' },
+			request: {
+				method: 'POST',
+				json: vi.fn(),
+				headers: new Headers()
+			},
+			locals: { user: { id: 1, email: 'test@example.com' } }
+		};
+	});
 
-	describe('fallback card matching', () => {
-        let mockEvent;
-        beforeEach(() => {
-            mockEvent = {
-                params: { id: '1' },
-                request: {
-                    method: 'POST',
-                    json: vi.fn(),
-                    headers: new Headers()
-                },
-                locals: { user: { id: 1, email: 'test@example.com' } }
-            };
-        });
+	it('should identify card by exact name match', async () => {
+		const mockStatement = {
+			id: 1,
+			filename: 'statement.pdf',
+			billing_cycle_id: 1
+		};
+		const mockBillingCycle = {
+			id: 1,
+			start_date: '2024-01-01',
+			end_date: '2024-01-31'
+		};
+		getStatement.mockResolvedValue(mockStatement);
+		getBillingCycle.mockResolvedValue(mockBillingCycle);
+		deletePaymentsForStatement.mockResolvedValue();
+		createPayment.mockResolvedValue();
+		listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '5678' }]);
+		getBudgetByMerchant.mockResolvedValue({ id: 9, name: 'Both' });
+		updateStatementCreditCard.mockResolvedValue();
 
-        it('should identify card by exact name match', async () => {
-			const mockStatement = {
-				id: 1,
-				filename: 'statement.pdf',
-				billing_cycle_id: 1
-			};
-			const mockBillingCycle = {
-				id: 1,
-				start_date: '2024-01-01',
-				end_date: '2024-01-31'
-			};
-			getStatement.mockResolvedValue(mockStatement);
-			getBillingCycle.mockResolvedValue(mockBillingCycle);
-			deletePaymentsForStatement.mockResolvedValue();
-			createPayment.mockResolvedValue();
-			listCreditCards.mockResolvedValue([{ id: 1, name: 'Chase Freedom', last4: '5678' }]);
-			getBudgetByMerchant.mockResolvedValue({ id: 9, name: 'Both' });
-			updateStatementCreditCard.mockResolvedValue();
-
-			mockEvent.request.json.mockResolvedValue({
-				parsedData: {
-					last4: '0000', // Invalid, so it falls back to name
-                    card_name: 'Chase Freedom',
-					charges: [
-						{
-							merchant: 'Test Store',
-							amount: 100.5,
-							date: '2024-01-10',
-							allocated_to: 'Both'
-						}
-					]
-				}
-			});
-
-			const response = await POST(mockEvent);
-			const result = await response.json();
-
-			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
-			expect(result.success).toBe(true);
+		mockEvent.request.json.mockResolvedValue({
+			parsedData: {
+				last4: '0000', // Invalid, so it falls back to name
+				card_name: 'Chase Freedom',
+				charges: [
+					{
+						merchant: 'Test Store',
+						amount: 100.5,
+						date: '2024-01-10',
+						allocated_to: 'Both'
+					}
+				]
+			}
 		});
 
-        it('should identify card by substring name match', async () => {
-			const mockStatement = {
-				id: 1,
-				filename: 'statement.pdf',
-				billing_cycle_id: 1
-			};
-			const mockBillingCycle = {
-				id: 1,
-				start_date: '2024-01-01',
-				end_date: '2024-01-31'
-			};
-			getStatement.mockResolvedValue(mockStatement);
-			getBillingCycle.mockResolvedValue(mockBillingCycle);
-			deletePaymentsForStatement.mockResolvedValue();
-			createPayment.mockResolvedValue();
-			listCreditCards.mockResolvedValue([{ id: 1, name: 'Amex Platinum', last4: '5678' }]);
-			updateStatementCreditCard.mockResolvedValue();
+		const response = await POST(mockEvent);
+		const result = await response.json();
 
-			mockEvent.request.json.mockResolvedValue({
-				parsedData: {
-					last4: '',
-                    card_name: 'Platinum',
-					charges: []
-				}
-			});
+		expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
+		expect(result.success).toBe(true);
+	});
 
-			const response = await POST(mockEvent);
-			const result = await response.json();
+	it('should identify card by substring name match', async () => {
+		const mockStatement = {
+			id: 1,
+			filename: 'statement.pdf',
+			billing_cycle_id: 1
+		};
+		const mockBillingCycle = {
+			id: 1,
+			start_date: '2024-01-01',
+			end_date: '2024-01-31'
+		};
+		getStatement.mockResolvedValue(mockStatement);
+		getBillingCycle.mockResolvedValue(mockBillingCycle);
+		deletePaymentsForStatement.mockResolvedValue();
+		createPayment.mockResolvedValue();
+		listCreditCards.mockResolvedValue([{ id: 1, name: 'Amex Platinum', last4: '5678' }]);
+		updateStatementCreditCard.mockResolvedValue();
 
-			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
-			expect(result.success).toBe(true);
+		mockEvent.request.json.mockResolvedValue({
+			parsedData: {
+				last4: '',
+				card_name: 'Platinum',
+				charges: []
+			}
 		});
 
-        it('should identify Bilt palladium cards', async () => {
-			const mockStatement = {
-				id: 1,
-				filename: 'statement.pdf',
-				billing_cycle_id: 1
-			};
-			const mockBillingCycle = {
-				id: 1,
-				start_date: '2024-01-01',
-				end_date: '2024-01-31'
-			};
-			getStatement.mockResolvedValue(mockStatement);
-			getBillingCycle.mockResolvedValue(mockBillingCycle);
-			deletePaymentsForStatement.mockResolvedValue();
-			createPayment.mockResolvedValue();
-			listCreditCards.mockResolvedValue([{ id: 1, name: 'Bilt Paladium', last4: '5678' }]);
-			updateStatementCreditCard.mockResolvedValue();
+		const response = await POST(mockEvent);
+		const result = await response.json();
 
-			mockEvent.request.json.mockResolvedValue({
-				parsedData: {
-					last4: '',
-                    card_name: 'Bilt Palladium',
-					charges: []
-				}
-			});
+		expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
+		expect(result.success).toBe(true);
+	});
 
-			const response = await POST(mockEvent);
-			const result = await response.json();
+	it('should identify Bilt palladium cards', async () => {
+		const mockStatement = {
+			id: 1,
+			filename: 'statement.pdf',
+			billing_cycle_id: 1
+		};
+		const mockBillingCycle = {
+			id: 1,
+			start_date: '2024-01-01',
+			end_date: '2024-01-31'
+		};
+		getStatement.mockResolvedValue(mockStatement);
+		getBillingCycle.mockResolvedValue(mockBillingCycle);
+		deletePaymentsForStatement.mockResolvedValue();
+		createPayment.mockResolvedValue();
+		listCreditCards.mockResolvedValue([{ id: 1, name: 'Bilt Paladium', last4: '5678' }]);
+		updateStatementCreditCard.mockResolvedValue();
 
-			expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
-			expect(result.success).toBe(true);
+		mockEvent.request.json.mockResolvedValue({
+			parsedData: {
+				last4: '',
+				card_name: 'Bilt Palladium',
+				charges: []
+			}
 		});
 
-        it('should return error when name has no match at all', async () => {
-			const mockStatement = {
-				id: 1,
-				filename: 'statement.pdf',
-				billing_cycle_id: 1
-			};
-			const mockBillingCycle = {
-				id: 1,
-				start_date: '2024-01-01',
-				end_date: '2024-01-31'
-			};
-			getStatement.mockResolvedValue(mockStatement);
-			getBillingCycle.mockResolvedValue(mockBillingCycle);
-			deletePaymentsForStatement.mockResolvedValue();
-			createPayment.mockResolvedValue();
-			listCreditCards.mockResolvedValue([{ id: 1, name: 'Bilt Paladium', last4: '5678' }]);
+		const response = await POST(mockEvent);
+		const result = await response.json();
 
-			mockEvent.request.json.mockResolvedValue({
-				parsedData: {
-					last4: '',
-                    card_name: 'Capital One',
-					charges: []
-				}
-			});
+		expect(updateStatementCreditCard).toHaveBeenCalledWith(mockEvent, 1, 1);
+		expect(result.success).toBe(true);
+	});
 
-			const response = await POST(mockEvent);
-			const result = await response.json();
+	it('should return error when name has no match at all', async () => {
+		const mockStatement = {
+			id: 1,
+			filename: 'statement.pdf',
+			billing_cycle_id: 1
+		};
+		const mockBillingCycle = {
+			id: 1,
+			start_date: '2024-01-01',
+			end_date: '2024-01-31'
+		};
+		getStatement.mockResolvedValue(mockStatement);
+		getBillingCycle.mockResolvedValue(mockBillingCycle);
+		deletePaymentsForStatement.mockResolvedValue();
+		createPayment.mockResolvedValue();
+		listCreditCards.mockResolvedValue([{ id: 1, name: 'Bilt Paladium', last4: '5678' }]);
 
-			expect(result.success).toBe(false);
-            expect(result.error).toContain('No matching credit card found with name: "Capital One"');
-    });
+		mockEvent.request.json.mockResolvedValue({
+			parsedData: {
+				last4: '',
+				card_name: 'Capital One',
+				charges: []
+			}
+		});
+
+		const response = await POST(mockEvent);
+		const result = await response.json();
+
+		expect(result.success).toBe(false);
+		expect(result.error).toContain('No matching credit card found with name: "Capital One"');
+	});
 });

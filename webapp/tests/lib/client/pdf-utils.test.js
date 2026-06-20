@@ -343,15 +343,15 @@ describe('PDF Worker Version Consistency', () => {
 
 describe('extraction error handling and parsing fallbacks', () => {
 	let originalInitializePDFJs;
-    let originalWindow;
+	let originalWindow;
 	beforeEach(() => {
 		originalInitializePDFJs = PDFUtilities._initializePDFJs;
-        originalWindow = globalThis.window;
+		originalWindow = globalThis.window;
 	});
 
 	afterEach(() => {
 		PDFUtilities._initializePDFJs = originalInitializePDFJs;
-        globalThis.window = originalWindow;
+		globalThis.window = originalWindow;
 	});
 
 	it('should throw if getTextContent throws an error', async () => {
@@ -374,28 +374,28 @@ describe('extraction error handling and parsing fallbacks', () => {
 		);
 	});
 
-    it('should polyfill ReadableStream async iterator if missing', async () => {
+	it('should polyfill ReadableStream async iterator if missing', async () => {
 		const buffer = new ArrayBuffer(100);
 
-        // Remove async iterator from ReadableStream
-        const oldIterator = globalThis.ReadableStream.prototype[Symbol.asyncIterator];
-        globalThis.ReadableStream.prototype[Symbol.asyncIterator] = undefined;
+		// Remove async iterator from ReadableStream
+		const oldIterator = globalThis.ReadableStream.prototype[Symbol.asyncIterator];
+		globalThis.ReadableStream.prototype[Symbol.asyncIterator] = undefined;
 
-        await PDFUtilities._initializePDFJs();
+		await PDFUtilities._initializePDFJs();
 
-        expect(globalThis.ReadableStream.prototype[Symbol.asyncIterator]).toBeDefined();
+		expect(globalThis.ReadableStream.prototype[Symbol.asyncIterator]).toBeDefined();
 
-        // Restore original
-        globalThis.ReadableStream.prototype[Symbol.asyncIterator] = oldIterator;
+		// Restore original
+		globalThis.ReadableStream.prototype[Symbol.asyncIterator] = oldIterator;
 	});
 
-    it('should extract from Buffer via isBuffer', async () => {
-        // Need to simulate browser environment since parsePDFFile requires window
-        const mockBuffer = Buffer.alloc(10);
+	it('should extract from Buffer via isBuffer', async () => {
+		// Need to simulate browser environment since parsePDFFile requires window
+		const mockBuffer = Buffer.alloc(10);
 
-        // Use spy to confirm _getArrayBuffer returns the slice correctly
-        const result = await PDFUtilities._getArrayBuffer(mockBuffer);
-        expect(result.byteLength).toBeDefined();
-        expect(result.byteLength).toBe(10);
+		// Use spy to confirm _getArrayBuffer returns the slice correctly
+		const result = await PDFUtilities._getArrayBuffer(mockBuffer);
+		expect(result.byteLength).toBeDefined();
+		expect(result.byteLength).toBe(10);
 	});
 });
