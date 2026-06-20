@@ -28,6 +28,6 @@ export async function POST(event) {
 		return json({ key: newKey });
 	} catch (error) {
 		console.error('Failed to create API key:', error);
-		return json({ error: 'Failed to create API key' }, { status: 500 });
+		return json({ error: 'Failed to create API key: ' + error.message }, { status: 500 });
 	}
 }

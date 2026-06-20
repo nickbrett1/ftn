@@ -166,16 +166,16 @@ describe('getCurrentUser', () => {
 import { requireUser } from '../../../src/lib/server/auth.js';
 
 vi.mock('@sveltejs/kit', async () => {
-    const actual = await vi.importActual('@sveltejs/kit');
-    return {
-        ...actual,
-        redirect: vi.fn((status, location) => {
-            const err = new Error('REDIRECT');
-            err.status = status;
-            err.location = location;
-            return err;
-        })
-    };
+	const actual = await vi.importActual('@sveltejs/kit');
+	return {
+		...actual,
+		redirect: vi.fn((status, location) => {
+			const err = new Error('REDIRECT');
+			err.status = status;
+			err.location = location;
+			return err;
+		})
+	};
 });
 
 describe('requireUser', () => {

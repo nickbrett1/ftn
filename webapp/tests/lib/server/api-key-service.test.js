@@ -10,20 +10,20 @@ vi.mock('../../../src/lib/server/db.js', () => ({
 
 // Mock crypto module directly for testing
 if (!globalThis.crypto) {
-    globalThis.crypto = {
-        subtle: {
-            digest: vi.fn().mockResolvedValue(new ArrayBuffer(32))
-        },
-        randomUUID: vi.fn().mockReturnValue('1234-5678')
-    };
+	globalThis.crypto = {
+		subtle: {
+			digest: vi.fn().mockResolvedValue(new ArrayBuffer(32))
+		},
+		randomUUID: vi.fn().mockReturnValue('1234-5678')
+	};
 } else {
-    // If it exists, wrap the real one with mocks if not already mocked
-    if (!vi.isMockFunction(globalThis.crypto.subtle?.digest)) {
-        vi.spyOn(globalThis.crypto.subtle, 'digest').mockResolvedValue(new ArrayBuffer(32));
-    }
-    if (!vi.isMockFunction(globalThis.crypto.randomUUID)) {
-        vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('1234-5678');
-    }
+	// If it exists, wrap the real one with mocks if not already mocked
+	if (!vi.isMockFunction(globalThis.crypto.subtle?.digest)) {
+		vi.spyOn(globalThis.crypto.subtle, 'digest').mockResolvedValue(new ArrayBuffer(32));
+	}
+	if (!vi.isMockFunction(globalThis.crypto.randomUUID)) {
+		vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('1234-5678');
+	}
 }
 
 describe('ApiKeyService', () => {
@@ -35,8 +35,8 @@ describe('ApiKeyService', () => {
 		mockEnv = { GENPROJ_DB: {} };
 		db.getGenprojDb.mockReturnValue(mockEnv.GENPROJ_DB);
 		service = new ApiKeyService(mockEnv);
-        globalThis.crypto.randomUUID.mockReturnValue('1234-5678');
-        globalThis.crypto.subtle.digest.mockResolvedValue(new ArrayBuffer(32));
+		globalThis.crypto.randomUUID.mockReturnValue('1234-5678');
+		globalThis.crypto.subtle.digest.mockResolvedValue(new ArrayBuffer(32));
 	});
 
 	it('initializes the database', async () => {

@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { TrashCanSolid, PlusSolid, CheckCircleSolid, CopyRegular } from 'svelte-awesome-icons';
 	import { formatDate } from '$lib/utils/date-utils.js';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 
 	let keys = $state([]);
 	let loading = $state(true);
@@ -89,7 +91,12 @@
 	}
 
 	async function revokeKey(id) {
-		if (!confirm('Are you sure you want to revoke this key? Any systems using it will lose access immediately.')) return;
+		if (
+			!confirm(
+				'Are you sure you want to revoke this key? Any systems using it will lose access immediately.'
+			)
+		)
+			return;
 		try {
 			error = null;
 			const res = await fetch(`/api/api-keys/${id}`, {
@@ -126,11 +133,13 @@
 	<title>API Keys | Nick Brett</title>
 </svelte:head>
 
+<Header />
 <div class="mx-auto max-w-4xl px-4 py-12 md:py-24">
 	<div class="mb-8">
 		<h1 class="text-3xl font-bold tracking-tight text-white mb-2">API Keys</h1>
 		<p class="text-white/60">
-			Manage your Personal Access Tokens (PATs) for programmatic access to the MCP server and other APIs.
+			Manage your Personal Access Tokens (PATs) for programmatic access to the MCP server and other
+			APIs.
 		</p>
 	</div>
 
@@ -161,9 +170,13 @@
 
 			{#if generatedKey}
 				<div class="bg-amber-500/10 border border-amber-500/50 rounded-lg p-4 mb-4">
-					<p class="text-amber-400 font-semibold mb-2">Make sure to copy your personal access token now. You won't be able to see it again!</p>
+					<p class="text-amber-400 font-semibold mb-2">
+						Make sure to copy your personal access token now. You won't be able to see it again!
+					</p>
 					<div class="flex items-center gap-2">
-						<code class="flex-1 bg-black/50 px-3 py-2 rounded text-green-400 font-mono text-sm break-all">
+						<code
+							class="flex-1 bg-black/50 px-3 py-2 rounded text-green-400 font-mono text-sm break-all"
+						>
 							{generatedKey.rawKey}
 						</code>
 						<button
@@ -180,7 +193,7 @@
 					</div>
 				</div>
 				<button
-					onclick={() => generatedKey = null}
+					onclick={() => (generatedKey = null)}
 					class="text-sm text-white/60 hover:text-white transition-colors"
 				>
 					Clear this message
@@ -261,3 +274,4 @@
 		</div>
 	{/if}
 </div>
+<Footer />
