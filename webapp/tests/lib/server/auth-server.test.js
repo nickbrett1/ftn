@@ -1,83 +1,179 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requireUser, getCurrentUser } from '../../../src/lib/server/auth.js';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
-// The auth.js module is hard to mock internally (getCurrentUser from requireUser),
-// so we'll test requireUser by passing an event that will make getCurrentUser succeed or fail.
+const originalFetch = globalThis.fetch;
+let randomValuesSpy;
 
-// Mock redirect from sveltejs/kit
-vi.mock('@sveltejs/kit', async () => {
-    const actual = await vi.importActual('@sveltejs/kit');
-    return {
-        ...actual,
-        redirect: vi.fn((status, location) => {
-            const err = new Error('REDIRECT');
-            err.status = status;
-            err.location = location;
-            return err;
-        })
-    };
-});
+const mockIsUserAllowed = vi.fn();
 
-describe('auth.js', () => {
-    describe('requireUser', () => {
-        let mockEvent;
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		GOOGLE_CLIENT_ID: 'unit-test-client',
+		GOOGLE_CLIENT_SECRET: 'unit-test-secret'
+	}
+}));
 
-        beforeEach(() => {
-            // Mock a request event that will fail getCurrentUser (no auth cookie)
-            mockEvent = {
-                request: {
-                    headers: new Headers()
-                },
-                url: new URL('http://localhost/some-page'),
-                platform: {
-                    env: {
-                        KV: {
-                            get: vi.fn()
-                        }
-                    }
-                }
-            };
-        });
+vi.mock('$lib/server/user-validation.js', () => ({
+	isUserAllowed: (...arguments_) => mockIsUserAllowed(...arguments_)
+}));
 
-        it('redirects to notauthorised for page routes when not authenticated', async () => {
-            mockEvent.url = new URL('http://localhost/protected-page');
+const createJsonResponse = (data, init = {}) =>
+	Response.json(data, {
+		status: init.status ?? 200,
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	});
 
-            await expect(requireUser(mockEvent)).rejects.toThrow('REDIRECT');
+describe('Auth server route', () => {
+	beforeEach(() => {
+		vi.resetModules();
+		mockIsUserAllowed.mockReset();
+		globalThis.fetch = vi.fn();
+		randomValuesSpy = vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation((array) => {
+			const values = Array.from({ length: array.length }, (_, index) => (index * 7) % 256);
+			array.set(values);
+			return array;
+		});
+	});
 
-            try {
-                await requireUser(mockEvent);
-            } catch (err) {
-                expect(err.status).toBe(303);
-                expect(err.location).toBe('/notauthorised?redirectTo=%2Fprotected-page');
-            }
-        });
+	afterEach(() => {
+		vi.clearAllMocks();
+		randomValuesSpy.mockRestore();
+	});
 
-        it('throws an error for API routes when not authenticated', async () => {
-            mockEvent.url = new URL('http://localhost/api/protected-data');
+	afterAll(() => {
+		globalThis.fetch = originalFetch;
+	});
 
-            await expect(requireUser(mockEvent)).rejects.toThrow('Unauthorized');
-        });
+	const loadModule = () => import('../../../src/routes/auth/+server.js');
 
-        it('returns the user object when authenticated', async () => {
-            // Setup a mock event that will succeed getCurrentUser
-            // This is complex because we need to mock KV and fetch
-            mockEvent.request.headers.set('cookie', 'auth=valid-cookie');
-            mockEvent.platform.env.KV.get.mockResolvedValue('valid-google-token');
+	it('exchanges a code and sets auth cookie for allowed users', async () => {
+		const { GET } = await loadModule();
+		mockIsUserAllowed.mockResolvedValue(true);
 
-            globalThis.fetch = vi.fn().mockResolvedValue({
-                ok: true,
-                json: async () => ({
-                    id: '123',
-                    email: 'test@example.com',
-                    name: 'Test User'
-                })
-            });
+		globalThis.fetch
+			.mockResolvedValueOnce(
+				createJsonResponse({
+					access_token: 'google-access-token',
+					expires_in: 3600
+				})
+			)
+			.mockResolvedValueOnce(
+				createJsonResponse({
+					verified_email: true,
+					email: 'user@example.com'
+				})
+			);
 
-            const user = await requireUser(mockEvent);
+		const kvPut = vi.fn().mockResolvedValue();
+		const platform = {
+			env: {
+				KV: {
+					put: kvPut
+				}
+			}
+		};
 
-            expect(user).toBeDefined();
-            expect(user.email).toBe('test@example.com');
-            expect(user.name).toBe('Test User');
-        });
-    });
+		const request = new Request('https://app.test/auth?code=abc123', {
+			headers: {
+				Cookie: 'redirectPath=/projects/ccbilling'
+			}
+		});
+		const response = await GET({ request, platform });
+
+		expect(response.status).toBe(307);
+		expect(response.headers.get('location')).toBe('https://app.test/projects/ccbilling');
+		expect(response.headers.get('Set-Cookie')).toMatch(
+			/^auth=.+; Expires=.+; Path=\/; Secure; SameSite=Lax$/
+		);
+
+		expect(mockIsUserAllowed).toHaveBeenCalledWith('user@example.com', platform.env.KV);
+		expect(kvPut).toHaveBeenCalledTimes(1);
+
+		const [authKey, tokenValue, options] = kvPut.mock.calls[0];
+		expect(authKey).toMatch(/^[0-9a-z]+$/);
+		expect(authKey.length).toBeGreaterThanOrEqual(20);
+		expect(tokenValue).toBe('google-access-token');
+		expect(options.expiration).toBeGreaterThan(Math.floor(Date.now() / 1000));
+	});
+
+	it('redirects disallowed users to the notauthorised page', async () => {
+		const { GET } = await loadModule();
+		mockIsUserAllowed.mockResolvedValue(false);
+
+		globalThis.fetch
+			.mockResolvedValueOnce(
+				createJsonResponse({
+					access_token: 'blocked-token',
+					expires_in: 3600
+				})
+			)
+			.mockResolvedValueOnce(
+				createJsonResponse({
+					verified_email: true,
+					email: 'blocked@example.com'
+				})
+			);
+
+		const platform = {
+			env: {
+				KV: {
+					put: vi.fn()
+				}
+			}
+		};
+
+		const response = await GET({
+			request: new Request('https://app.test/auth?code=abc123'),
+			platform
+		});
+
+		expect(response.status).toBe(307);
+		expect(response.headers.get('location')).toBe('https://app.test/notauthorised');
+		expect(platform.env.KV.put).not.toHaveBeenCalled();
+	});
+
+	it('returns a server error when the provider reports an error', async () => {
+		const { GET } = await loadModule();
+
+		const response = await GET({
+			request: new Request('https://app.test/auth?error=access_denied'),
+			platform: { env: { KV: { put: vi.fn() } } }
+		});
+
+		expect(response.status).toBe(500);
+		expect(await response.text()).toContain('Authentication failed');
+	});
+
+	it('handles token exchange failures gracefully', async () => {
+		const { GET } = await loadModule();
+		mockIsUserAllowed.mockResolvedValue(true);
+
+		globalThis.fetch.mockResolvedValueOnce(
+			createJsonResponse({
+				error: 'invalid_grant',
+				error_description: 'invalid code'
+			})
+		);
+		const response = await GET({
+			request: new Request('https://app.test/auth?code=badcode'),
+			platform: { env: { KV: { put: vi.fn() } } }
+		});
+
+		expect(response.status).toBe(500);
+		expect(await response.text()).toContain('Authentication failed');
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+	});
+
+	it('responds with an error when the auth code parameter is missing', async () => {
+		const { GET } = await loadModule();
+
+		const response = await GET({
+			request: new Request('https://app.test/auth'),
+			platform: { env: { KV: { put: vi.fn() } } }
+		});
+
+		expect(response.status).toBe(500);
+		expect(await response.text()).toContain('Authentication failed');
+	});
 });
