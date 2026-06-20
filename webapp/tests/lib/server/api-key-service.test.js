@@ -50,6 +50,7 @@ describe('ApiKeyService', () => {
 	it('creates a new key', async () => {
 		const userEmail = 'test@example.com';
 		const name = 'Test Key';
+		db.getGenprojFirstResult.mockResolvedValue(null);
 
 		const key = await service.createKey(userEmail, name);
 
@@ -65,13 +66,23 @@ describe('ApiKeyService', () => {
 		);
 	});
 
+	it('throws error when creating a key with duplicate name', async () => {
+		const userEmail = 'test@example.com';
+		const name = 'Duplicate Key';
+		db.getGenprojFirstResult.mockResolvedValue({ id: '1' });
+
+		await expect(service.createKey(userEmail, name)).rejects.toThrow(
+			'An API key with this name already exists'
+		);
+	});
+
 	it('retrieves keys for a user', async () => {
-		const mockKeys = [{ id: '1', name: 'Key 1' }];
+		const mockKeys = [{ id: '1', name: 'Key 1', createdAt: '2026-06-20 18:48:00', lastUsedAt: '2026-06-20 19:48:00' }];
 		db.executeGenprojQuery.mockResolvedValue(mockKeys);
 
 		const result = await service.getKeysForUser('test@example.com');
 
-		expect(result).toBe(mockKeys);
+		expect(result).toEqual([{ id: '1', name: 'Key 1', createdAt: '2026-06-20T18:48:00.000Z', lastUsedAt: '2026-06-20T19:48:00.000Z' }]);
 		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
 			mockEnv.GENPROJ_DB,
 			expect.stringContaining('SELECT id, name'),

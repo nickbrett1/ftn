@@ -33,6 +33,14 @@ export class ApiKeyService {
 	}
 
 	async createKey(userEmail, name) {
+		const checkSql = `
+			SELECT id FROM ApiKeys WHERE user_email = ? AND name = ?
+		`;
+		const existing = await getGenprojFirstResult(this.db, checkSql, [userEmail, name]);
+		if (existing) {
+			throw new Error('An API key with this name already exists');
+		}
+
 		const rawKey = this.generateKey();
 		const hashedKey = await this.hashKey(rawKey);
 		const id = crypto.randomUUID();
@@ -58,7 +66,12 @@ export class ApiKeyService {
 			WHERE user_email = ?
 			ORDER BY created_at DESC
 		`;
-		return executeGenprojQuery(this.db, sql, [userEmail]);
+		const results = await executeGenprojQuery(this.db, sql, [userEmail]);
+		return results.map((row) => ({
+			...row,
+			createdAt: row.createdAt ? new Date(row.createdAt.replace(' ', 'T') + 'Z').toISOString() : null,
+			lastUsedAt: row.lastUsedAt ? new Date(row.lastUsedAt.replace(' ', 'T') + 'Z').toISOString() : null
+		}));
 	}
 
 	async revokeKey(id, userEmail) {
