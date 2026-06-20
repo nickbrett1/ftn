@@ -53,6 +53,11 @@
 				throw new Error('Failed to initialize database');
 			}
 			await fetchKeys();
+
+			// Clear the generated key display if we just revoked the newly created key
+			if (generatedKey && generatedKey.id === id) {
+				generatedKey = null;
+			}
 		} catch (e) {
 			error = e.message;
 			console.error(e);
@@ -82,6 +87,11 @@
 			generatedKey = data.key;
 			newKeyName = '';
 			await fetchKeys();
+
+			// Clear the generated key display if we just revoked the newly created key
+			if (generatedKey && generatedKey.id === id) {
+				generatedKey = null;
+			}
 		} catch (e) {
 			error = e.message;
 			console.error(e);
@@ -108,6 +118,11 @@
 			}
 
 			await fetchKeys();
+
+			// Clear the generated key display if we just revoked the newly created key
+			if (generatedKey && generatedKey.id === id) {
+				generatedKey = null;
+			}
 		} catch (e) {
 			error = e.message;
 			console.error(e);
