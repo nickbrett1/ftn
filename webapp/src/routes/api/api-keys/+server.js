@@ -11,7 +11,7 @@ export async function GET(event) {
 		return json({ keys });
 	} catch (error) {
 		console.error('Failed to fetch API keys:', error);
-		return json({ error: 'Failed to fetch API keys' }, { status: 500 });
+		return json({ error: 'Failed to fetch API keys: ' + error.message }, { status: 500 });
 	}
 }
 
