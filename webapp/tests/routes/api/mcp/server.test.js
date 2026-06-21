@@ -11,7 +11,7 @@ vi.mock('agents/mcp', () => {
 
 // Mock $lib/server/mcp.js
 vi.mock('$lib/server/mcp.js', () => ({
-	mcpServer: { mockServer: true }
+	createMcpServer: vi.fn(() => ({ mockServer: true }))
 }));
 
 import { ApiKeyService } from '$lib/server/api-key-service.js';

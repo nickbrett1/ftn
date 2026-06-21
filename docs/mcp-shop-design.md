@@ -1,5 +1,7 @@
 # Design Specification: MCP Server for Virtual Shop (fintechnick.com)
 
+> **Note:** This document describes the initial design of the shop tools for the MCP server. The server has since been unified to include other tools (such as Genproj). For a complete overview of the unified MCP endpoint (`/api/mcp`), see [Unified MCP Server](unified-mcp-server.md).
+
 This document outlines the architecture and design for exposing the `/shop` functionality of fintechnick.com as a Model Context Protocol (MCP) server. By doing so, autonomous AI agents can query products and execute checkout/payment simulations directly without the latency, cost, and flakiness associated with headless browser scraping (e.g. Stagehand, Playwright).
 
 ---
