@@ -227,6 +227,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 function getCircleCiTemplateData(context) {
 	const data = {
 		preBuildSteps: '',
+		testSteps: '',
 		lighthouseJobDefinition: '',
 		lighthouseWorkflowJob: '',
 		deployJobDefinition: '',
@@ -247,6 +248,12 @@ function getCircleCiTemplateData(context) {
 	_applyDopplerConfig(data, context);
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName);
+
+	if (context.capabilities.includes('devcontainer-node') && context.capabilities.includes('circleci')) {
+		data.testSteps = `      - run:
+          name: Test
+          command: npm run test`;
+	}
 
 	return data;
 }
