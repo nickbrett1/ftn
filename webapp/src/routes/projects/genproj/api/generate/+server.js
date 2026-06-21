@@ -3,11 +3,12 @@ import { ProjectGeneratorService } from '$lib/server/project-generator';
 import { TokenService } from '$lib/server/token-service';
 import { getCurrentUser } from '$lib/server/auth';
 import { logger } from '$lib/utils/logging';
+import { handleGenprojErrorResult, buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils';
 
 export async function POST({ request, platform, cookies }) {
 	try {
 		const body = await request.json();
-		const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions } = body;
+		const { name, selectedCapabilities } = body;
 
 		if (!name || !selectedCapabilities) {
 			return json({ message: 'Missing required fields' }, { status: 400 });
@@ -24,55 +25,19 @@ export async function POST({ request, platform, cookies }) {
 		const storedTokens = await tokenService.getTokensByUserId(user.id);
 
 		// Construct authTokens object
-		const authTokens = {
-			github: storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken,
-			circleci: storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken,
-			doppler: storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken,
-			sonarcloud: storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken
-		};
-
-		// Also check cookies for GitHub token if not in DB (fallback/hybrid auth)
-		// The client-side auth flow sets 'github_access_token' cookie
-		if (!authTokens.github) {
-			authTokens.github = cookies.get('github_access_token');
-		}
+		const authTokens = buildAuthTokensFromStored(storedTokens, cookies);
 
 		// Instantiate the robust service
 		const service = new ProjectGeneratorService(authTokens);
 
 		// Prepare context for generation
-		const projectContext = {
-			projectName: name,
-			repositoryUrl: repositoryUrl || '',
-			capabilities: selectedCapabilities,
-			configuration: {}, // Defaults will be applied by generators
-			authTokens, // Redundant but harmless if included
-			userId: user.id,
-			overwrite: overwrite || false,
-			resolutions: resolutions || null
-		};
+		const projectContext = buildProjectContext(body, user.id, authTokens);
 
 		// Run generation
 		const result = await service.generateProject(projectContext);
 
 		if (!result.success) {
-			// Handle authentication errors specifically
-			if (
-				result.error &&
-				(result.error.includes('Unauthorized') || result.error.includes('GitHub token not found'))
-			) {
-				return json({ message: result.error }, { status: 401 });
-			}
-			if (result.errorCode === 'REPOSITORY_EXISTS') {
-				return json(
-					{
-						message: 'Repository already exists',
-						code: 'REPOSITORY_EXISTS'
-					},
-					{ status: 409 }
-				);
-			}
-			return json({ message: result.error || 'Project generation failed' }, { status: 500 });
+			return handleGenprojErrorResult(result);
 		}
 
 		// Return success response
