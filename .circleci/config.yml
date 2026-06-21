@@ -70,6 +70,8 @@ jobs:
     docker:
       - image: cimg/node:current-browsers
     resource_class: large # Increase to large for more memory and CPU resources
+    environment:
+      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"
     steps:
       - checkout:
           method: full
