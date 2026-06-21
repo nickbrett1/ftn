@@ -331,7 +331,7 @@ export class ExternalServiceIntegrationService {
 			'6. Set up quality gate (recommended: Sonar way)',
 			'7. Generate project token in Project Settings > Security',
 			'8. Add SONAR_TOKEN to your CI/CD environment variables',
-			'9. Configure sonar-project.properties file in your repository'
+			'9. Configure .sonarcloud.properties file in your repository'
 		];
 	}
 

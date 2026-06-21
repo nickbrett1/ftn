@@ -212,7 +212,7 @@ describe('TemplateEngine', () => {
 		expect(result).toBe(pythonDockerfileTemplateContent);
 	});
 
-	it('generates sonar-project.properties with correct variables', () => {
+	it('generates .sonarcloud.properties with correct variables', () => {
 		const data = {
 			projectName: 'my-project',
 			organization: 'my-org',
