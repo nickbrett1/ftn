@@ -31,4 +31,22 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).toContain('executor: node/default');
 		expect(circleCiFile.content).toContain('node: circleci/node@5.0.2');
 	});
+
+	it('should generate a test step when devcontainer-node is selected', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {}
+		};
+
+		const selectedCapabilities = ['circleci', 'devcontainer-node'];
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+
+		expect(circleCiFile.content).toContain('npm run test');
+	});
 });

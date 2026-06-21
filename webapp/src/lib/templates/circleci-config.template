@@ -27,6 +27,7 @@ jobs:
       - run:
           name: Build
           command: npm run build
+{{testSteps}}
 {{lighthouseJobDefinition}}
 {{deployJobDefinition}}
 workflows:
