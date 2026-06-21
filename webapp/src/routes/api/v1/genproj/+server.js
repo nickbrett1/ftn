@@ -3,6 +3,7 @@ import { ProjectGeneratorService } from '$lib/server/project-generator';
 import { TokenService } from '$lib/server/token-service';
 import { ApiKeyService } from '$lib/server/api-key-service';
 import { logger } from '$lib/utils/logging';
+import { handleGenprojErrorResult, buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils';
 
 export async function POST({ request, platform }) {
 	try {
@@ -33,7 +34,7 @@ export async function POST({ request, platform }) {
 			return json({ message: 'Invalid JSON payload' }, { status: 400 });
 		}
 
-		const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions } = body;
+		const { name, selectedCapabilities } = body;
 
 		if (!name || !selectedCapabilities) {
 			return json({ message: 'Missing required fields: name, selectedCapabilities' }, { status: 400 });
@@ -46,49 +47,19 @@ export async function POST({ request, platform }) {
 		const storedTokens = await tokenService.getTokensByUserId(userId);
 
 		// Construct authTokens object
-		const authTokens = {
-			github: storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken,
-			circleci: storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken,
-			doppler: storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken,
-			sonarcloud: storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken
-		};
+		const authTokens = buildAuthTokensFromStored(storedTokens);
 
 		// 4. Instantiate ProjectGeneratorService
 		const service = new ProjectGeneratorService(authTokens);
 
 		// Prepare context for generation
-		const projectContext = {
-			projectName: name,
-			repositoryUrl: repositoryUrl || '',
-			capabilities: selectedCapabilities,
-			configuration: {}, // Defaults will be applied by generators
-			authTokens, // Passed down for specific needs
-			userId: userId,
-			overwrite: overwrite || false,
-			resolutions: resolutions || null
-		};
+		const projectContext = buildProjectContext(body, userId, authTokens);
 
 		// 5. Run generation
 		const result = await service.generateProject(projectContext);
 
 		if (!result.success) {
-			// Handle specific errors
-			if (
-				result.error &&
-				(result.error.includes('Unauthorized') || result.error.includes('GitHub token not found'))
-			) {
-				return json({ message: result.error }, { status: 401 });
-			}
-			if (result.errorCode === 'REPOSITORY_EXISTS') {
-				return json(
-					{
-						message: 'Repository already exists',
-						code: 'REPOSITORY_EXISTS'
-					},
-					{ status: 409 }
-				);
-			}
-			return json({ message: result.error || 'Project generation failed' }, { status: 500 });
+			return handleGenprojErrorResult(result);
 		}
 
 		// 6. Return success response
