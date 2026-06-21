@@ -11,9 +11,10 @@ export const POST = async ({ request, platform }) => {
 
 	const token = authHeader.substring(7);
 
+	let userEmail;
 	try {
 		const apiKeyService = new ApiKeyService(platform?.env);
-		const userEmail = await apiKeyService.validateKey(token);
+		userEmail = await apiKeyService.validateKey(token);
 
 		if (!userEmail) {
 			return json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
@@ -25,10 +26,12 @@ export const POST = async ({ request, platform }) => {
 
 	// Proceed to the MCP handler
 	const { createMcpHandler } = await import('agents/mcp');
-	const { mcpServer } = await import('$lib/server/mcp.js');
+	const { createMcpServer } = await import('$lib/server/mcp.js');
+
+	const server = createMcpServer({ userEmail, platform });
 
 	const handler = createMcpHandler({
-		server: mcpServer
+		server
 	});
 
 	return handler(request);
