@@ -224,6 +224,14 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 	}
 }
 
+function _applySonarCloudConfig(data, context, contextEnabled, contextName) {
+	if (context.capabilities.includes('sonarcloud')) {
+		data.jobEnvironment = '\n    environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"';
+		data.orbs += `  sonarcloud: sonarsource/sonarcloud@2.0.0\n`;
+		data.testSteps += `      - sonarcloud/scan${contextEnabled ? `:\n          context: ${contextName}` : ''}\n`;
+	}
+}
+
 function getCircleCiTemplateData(context) {
 	const data = {
 		preBuildSteps: '',
@@ -234,7 +242,8 @@ function getCircleCiTemplateData(context) {
 		deployWorkflowJob: '',
 		orbs: '',
 		additionalWorkflowJobs: '',
-		buildWorkflowJob: '      - build'
+		buildWorkflowJob: '      - build',
+		jobEnvironment: ''
 	};
 
 	const contextConfig = context.configuration?.circleci?.context;
@@ -248,9 +257,10 @@ function getCircleCiTemplateData(context) {
 	_applyDopplerConfig(data, context);
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName);
+	_applySonarCloudConfig(data, context, contextEnabled, contextName);
 
 	if (context.capabilities.includes('devcontainer-node') && context.capabilities.includes('circleci')) {
-		data.testSteps = `      - run:
+		data.testSteps += `      - run:
           name: Test
           command: npm run test`;
 	}

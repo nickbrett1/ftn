@@ -49,4 +49,60 @@ describe('CircleCI Capability Generation', () => {
 
 		expect(circleCiFile.content).toContain('npm run test');
 	});
+
+	it('should generate sonarcloud configuration when sonarcloud is selected', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: {
+					deployTarget: 'none',
+					context: {
+						enabled: true,
+						name: 'common'
+					}
+				}
+			}
+		};
+
+		const selectedCapabilities = ['circleci', 'sonarcloud'];
+
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		expect(circleCiFolder).toBeDefined();
+
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+		expect(circleCiFile).toBeDefined();
+
+		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@2.0.0');
+		expect(circleCiFile.content).toContain('environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"');
+		expect(circleCiFile.content).toContain('- sonarcloud/scan:\n          context: common');
+	});
+
+	it('should not contain jobEnvironment if sonarcloud is not selected', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: {
+					deployTarget: 'none'
+				}
+			}
+		};
+
+		const selectedCapabilities = ['circleci'];
+
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+
+		expect(circleCiFile.content).not.toContain('environment:');
+		expect(circleCiFile.content).not.toContain('SONAR_SCANNER_OPTS');
+	});
 });
