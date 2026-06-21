@@ -345,7 +345,7 @@ export class TemplateEngineService {
 			dockerfile: 'Dockerfile',
 			circleci: '.circleci/config.yml',
 			doppler: 'doppler.yaml',
-			sonarcloud: 'sonar-project.properties',
+			sonarcloud: '.sonarcloud.properties',
 			dependabot: '.github/dependabot.yml',
 			tailwind: 'tailwind.config.js',
 			postcss: 'postcss.config.js',

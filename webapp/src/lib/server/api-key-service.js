@@ -69,8 +69,12 @@ export class ApiKeyService {
 		const results = await executeGenprojQuery(this.db, sql, [userEmail]);
 		return results.map((row) => ({
 			...row,
-			createdAt: row.createdAt ? new Date(row.createdAt.replace(' ', 'T') + 'Z').toISOString() : null,
-			lastUsedAt: row.lastUsedAt ? new Date(row.lastUsedAt.replace(' ', 'T') + 'Z').toISOString() : null
+			createdAt: row.createdAt
+				? new Date(row.createdAt.replace(' ', 'T') + 'Z').toISOString()
+				: null,
+			lastUsedAt: row.lastUsedAt
+				? new Date(row.lastUsedAt.replace(' ', 'T') + 'Z').toISOString()
+				: null
 		}));
 	}
 

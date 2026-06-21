@@ -45,7 +45,9 @@ describe('capability-template-utils', () => {
 				}
 			};
 			const data = getCapabilityTemplateData('sonarcloud', context);
-			expect(data.sonarLanguageSettings).toContain('sonar.python.coverage.reportPaths=coverage.xml');
+			expect(data.sonarLanguageSettings).toContain(
+				'sonar.python.coverage.reportPaths=coverage.xml'
+			);
 			expect(data.sonarLanguageSettings).toContain('sonar.python.version=3.12');
 		});
 

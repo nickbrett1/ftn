@@ -5,7 +5,7 @@ sonar.organization={{organization}}
 sonar.projectName={{projectName}}
 #sonar.projectVersion=1.0
 
-# Path is relative to the sonar-project.properties file. Replace "\" by "/" on Windows.
+# Path is relative to the .sonarcloud.properties file. Replace "\" by "/" on Windows.
 sonar.sources=src
 
 # Encoding of the source code. Default is default system encoding

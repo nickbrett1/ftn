@@ -53,7 +53,6 @@
 				throw new Error('Failed to initialize database');
 			}
 			await fetchKeys();
-
 		} catch (e) {
 			error = e.message;
 			console.error(e);
@@ -84,7 +83,6 @@
 			generatedKey = data.key;
 			newKeyName = '';
 			await fetchKeys();
-
 		} catch (e) {
 			error = e.message;
 			console.error(e);
