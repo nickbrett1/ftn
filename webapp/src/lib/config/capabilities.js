@@ -448,9 +448,9 @@ export const capabilities = [
 		],
 		templates: [
 			{
-				id: 'sonar-project-properties',
+				id: '.sonarcloud.properties',
 				filePath: '.sonarcloud.properties',
-				templateId: 'sonar-project-properties'
+				templateId: '.sonarcloud.properties'
 			}
 		],
 		website: 'https://sonarcloud.io/'
