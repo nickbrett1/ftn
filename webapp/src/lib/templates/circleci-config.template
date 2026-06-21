@@ -4,7 +4,7 @@ orbs:
 {{orbs}}
 jobs:
   build:
-    executor: node/default
+    executor: node/default{{jobEnvironment}}
     steps:
       - checkout
       - restore_cache:
