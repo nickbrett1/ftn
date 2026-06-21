@@ -151,7 +151,7 @@ As a developer generating a project, I want the system to automatically configur
 **Acceptance Scenarios**:
 
 1. **Given** I select CircleCI capability with authentication, **When** the system generates the project, **Then** a CircleCI project is created and config.yml is committed to the repository
-2. **Given** I select SonarCloud capability with authentication, **When** the system generates the project, **Then** a SonarCloud project is created and sonar-project.properties is committed to the repository
+2. **Given** I select SonarCloud capability with authentication, **When** the system generates the project, **Then** a SonarCloud project is created and .sonarcloud.properties is committed to the repository
 3. **Given** I select Doppler capability with authentication, **When** the system generates the project, **Then** a Doppler project is created and doppler.yaml is committed to the repository
 4. **Given** external service creation fails, **When** the system encounters the error, **Then** clear instructions are provided for manual setup
 
