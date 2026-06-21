@@ -30,8 +30,8 @@ export const POST = async ({ request, platform }) => {
 
 	const server = createMcpServer({ userEmail, platform });
 
-	const handler = createMcpHandler({
-		server
+	const handler = createMcpHandler(server, {
+		route: '/api/mcp'
 	});
 
 	return handler(request);
