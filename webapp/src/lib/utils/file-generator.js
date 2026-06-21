@@ -204,7 +204,7 @@ const templateImports = {
 	'playwright-config': playwrightConfig,
 	'lighthouse-ci-config': lighthouseCiConfig,
 	'circleci-config': circleCiConfig,
-	'sonar-project-properties': sonarProjectProperties,
+	'.sonarcloud.properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
 	'mcp-config-json': mcpConfigJson,
 	'package-json': packageJsonTemplate,
