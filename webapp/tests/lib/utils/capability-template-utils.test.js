@@ -26,7 +26,7 @@ describe('capability-template-utils', () => {
 	});
 
 	describe('getSonarCloudTemplateData', () => {
-		it('should return correct settings for Python', () => {
+		it('should return correct settings for Python without devcontainer', () => {
 			const context = {
 				capabilities: ['sonarcloud'],
 				configuration: {
@@ -35,6 +35,18 @@ describe('capability-template-utils', () => {
 			};
 			const data = getCapabilityTemplateData('sonarcloud', context);
 			expect(data.sonarLanguageSettings).toBe('sonar.python.coverage.reportPaths=coverage.xml');
+		});
+
+		it('should return correct settings for Python with devcontainer', () => {
+			const context = {
+				capabilities: ['sonarcloud', 'devcontainer-python'],
+				configuration: {
+					sonarcloud: { language: 'Python' }
+				}
+			};
+			const data = getCapabilityTemplateData('sonarcloud', context);
+			expect(data.sonarLanguageSettings).toContain('sonar.python.coverage.reportPaths=coverage.xml');
+			expect(data.sonarLanguageSettings).toContain('sonar.python.version=3.12');
 		});
 
 		it('should return correct settings for Java', () => {
