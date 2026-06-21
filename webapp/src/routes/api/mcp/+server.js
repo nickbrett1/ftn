@@ -34,5 +34,5 @@ export const POST = async ({ request, platform }) => {
 		route: '/api/mcp'
 	});
 
-	return handler(request);
+	return handler(request, platform?.env, platform?.context || {});
 };
