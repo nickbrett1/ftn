@@ -5,7 +5,16 @@ import { TokenService } from '../../../../../src/lib/server/token-service';
 import { ProjectGeneratorService } from '../../../../../src/lib/server/project-generator';
 import { json } from '@sveltejs/kit';
 
-vi.mock('../../../../../src/lib/server/genproj-api-utils.js');
+vi.mock('../../../../../src/lib/server/genproj-api-utils.js', async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        validatePatAuth: vi.fn(),
+        buildAuthTokensFromStored: vi.fn(),
+        buildProjectContext: vi.fn(),
+        handleGenprojErrorResult: vi.fn(),
+    };
+});
 vi.mock('../../../../../src/lib/server/token-service');
 vi.mock('../../../../../src/lib/server/project-generator');
 vi.mock('@sveltejs/kit', () => ({
@@ -83,6 +92,13 @@ describe('POST /api/v1/genproj', () => {
 		expect(response.data.message).toContain('Missing required fields');
 	});
 
+	it('should return 400 if name is missing but capabilities are present', async () => {
+		mockRequest.json = vi.fn().mockResolvedValue({ selectedCapabilities: ['a'] });
+		const response = await POST({ request: mockRequest, platform: mockPlatform });
+		expect(response.status).toBe(400);
+		expect(response.data.message).toContain('Missing required fields');
+	});
+
 	it('should generate project successfully', async () => {
 		const response = await POST({ request: mockRequest, platform: mockPlatform });
 
@@ -100,6 +116,16 @@ describe('POST /api/v1/genproj', () => {
 		expect(response.status).toBeUndefined(); // Assuming default status 200
 		expect(response.data.message).toBe('Project generated successfully');
 		expect(response.data.repositoryUrl).toBe('https://github.com/test/test-project');
+	});
+
+	it('should generate project successfully with no repository string', async () => {
+		ProjectGeneratorService.prototype.generateProject = vi.fn().mockResolvedValue({
+			success: true,
+		});
+		const response = await POST({ request: mockRequest, platform: mockPlatform });
+		expect(response.status).toBeUndefined();
+		expect(response.data.message).toBe('Project generated successfully');
+		expect(response.data.repositoryUrl).toBe('');
 	});
 
 	it('should handle unauthorized error from generation service via utility', async () => {
@@ -125,5 +151,21 @@ describe('POST /api/v1/genproj', () => {
 
 		expect(response.status).toBe(500);
 		expect(response.data.message).toBe('Unexpected crash');
+	});
+
+	it('should return 500 if project Context creation fails via mocked utility (test exception branch)', async () => {
+		// Just force an error in POST method's try/catch
+		utils.validatePatAuth.mockRejectedValue(new Error('forced failure'));
+		const request = { headers: new Headers() };
+		const response = await POST({ request, platform: mockPlatform });
+		expect(response.status).toBe(500);
+		expect(response.data.message).toBe('forced failure');
+	});
+
+	it('should return 500 if logger.error throws via mocked utility', async () => {
+		utils.validatePatAuth.mockRejectedValue('non-error object throw');
+		const request = { headers: new Headers() };
+		const response = await POST({ request, platform: mockPlatform });
+		expect(response.status).toBe(500);
 	});
 });

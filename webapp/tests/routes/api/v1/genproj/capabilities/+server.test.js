@@ -3,7 +3,13 @@ import { GET } from '../../../../../../src/routes/api/v1/genproj/capabilities/+s
 import * as utils from '../../../../../../src/lib/server/genproj-api-utils.js';
 import { json } from '@sveltejs/kit';
 
-vi.mock('../../../../../../src/lib/server/genproj-api-utils.js');
+vi.mock('../../../../../../src/lib/server/genproj-api-utils.js', async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        validatePatAuth: vi.fn(),
+    };
+});
 vi.mock('@sveltejs/kit', () => ({
 	json: vi.fn((data, options) => ({ data, ...options }))
 }));
@@ -56,5 +62,12 @@ describe('GET /api/v1/genproj/capabilities', () => {
 
 		expect(response.status).toBe(500);
 		expect(response.data.message).toBe('Crash');
+	});
+
+	it('should return 500 if error thrown in try/catch (non-Error object)', async () => {
+		utils.validatePatAuth.mockRejectedValue('non-error object throw');
+		const request = { headers: new Headers() };
+		const response = await GET({ request, platform: mockPlatform });
+		expect(response.status).toBe(500);
 	});
 });

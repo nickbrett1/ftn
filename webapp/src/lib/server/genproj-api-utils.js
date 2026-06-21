@@ -56,7 +56,7 @@ export async function validatePatAuth(request, platform) {
 	}
 
 	const pat = authHeader.split(' ')[1];
-	if (!pat) {
+	if (!pat || typeof pat !== "string" || pat === "" || pat === "undefined") {
 		return { errorResponse: json({ message: 'Unauthorized: Missing PAT token' }, { status: 401 }) };
 	}
 
