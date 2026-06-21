@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { ApiKeyService } from '$lib/server/api-key-service';
 
 export function handleGenprojErrorResult(result) {
 	if (
@@ -46,4 +47,26 @@ export function buildProjectContext(payload, userId, authTokens) {
 		overwrite: overwrite || false,
 		resolutions: resolutions || null
 	};
+}
+
+export async function validatePatAuth(request, platform) {
+	const authHeader = request.headers.get('Authorization');
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		return { errorResponse: json({ message: 'Unauthorized: Missing or invalid PAT' }, { status: 401 }) };
+	}
+
+	const pat = authHeader.split(' ')[1];
+	if (!pat) {
+		return { errorResponse: json({ message: 'Unauthorized: Missing PAT token' }, { status: 401 }) };
+	}
+
+	// Use ApiKeyService to validate PAT
+	const apiKeyService = new ApiKeyService(platform.env);
+	const userEmail = await apiKeyService.validateKey(pat);
+
+	if (!userEmail) {
+		return { errorResponse: json({ message: 'Unauthorized: Invalid PAT' }, { status: 401 }) };
+	}
+
+	return { userEmail };
 }

@@ -1,30 +1,14 @@
 import { json } from '@sveltejs/kit';
 import { ProjectGeneratorService } from '$lib/server/project-generator';
 import { TokenService } from '$lib/server/token-service';
-import { ApiKeyService } from '$lib/server/api-key-service';
 import { logger } from '$lib/utils/logging';
-import { handleGenprojErrorResult, buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils';
+import { handleGenprojErrorResult, buildAuthTokensFromStored, buildProjectContext, validatePatAuth } from '$lib/server/genproj-api-utils';
 
 export async function POST({ request, platform }) {
 	try {
 		// 1. Verify PAT from Authorization header
-		const authHeader = request.headers.get('Authorization');
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return json({ message: 'Unauthorized: Missing or invalid PAT' }, { status: 401 });
-		}
-
-		const pat = authHeader.split(' ')[1];
-		if (!pat) {
-			return json({ message: 'Unauthorized: Missing PAT token' }, { status: 401 });
-		}
-
-		// Use ApiKeyService to validate PAT
-		const apiKeyService = new ApiKeyService(platform.env);
-		const userEmail = await apiKeyService.validateKey(pat);
-
-		if (!userEmail) {
-			return json({ message: 'Unauthorized: Invalid PAT' }, { status: 401 });
-		}
+		const { userEmail, errorResponse } = await validatePatAuth(request, platform);
+		if (errorResponse) return errorResponse;
 
 		// 2. Parse request body
 		let body;
