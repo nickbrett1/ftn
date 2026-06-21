@@ -5,7 +5,9 @@ import { POST } from '../../../../../src/routes/api/mcp/+server.js';
 vi.mock('agents/mcp', () => {
 	const handlerMock = vi.fn((request) => new Response('mock response', { status: 200 }));
 	return {
-		createMcpHandler: vi.fn(() => handlerMock)
+		createMcpHandler: vi.fn((server, options) => {
+			return handlerMock;
+		})
 	};
 });
 
