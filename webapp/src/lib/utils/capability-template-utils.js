@@ -53,6 +53,9 @@ function getSonarCloudTemplateData(context) {
 		}
 		case 'Python': {
 			languageSettings = 'sonar.python.coverage.reportPaths=coverage.xml';
+			if (context.capabilities?.includes('devcontainer-python')) {
+				languageSettings += '\nsonar.python.version=3.12';
+			}
 
 			break;
 		}
