@@ -51,12 +51,14 @@ export function buildProjectContext(payload, userId, authTokens) {
 
 export async function validatePatAuth(request, platform) {
 	const authHeader = request.headers.get('Authorization');
-	if (!authHeader || !authHeader.startsWith('Bearer ')) {
-		return { errorResponse: json({ message: 'Unauthorized: Missing or invalid PAT' }, { status: 401 }) };
+	if (!authHeader?.startsWith('Bearer ')) {
+		return {
+			errorResponse: json({ message: 'Unauthorized: Missing or invalid PAT' }, { status: 401 })
+		};
 	}
 
 	const pat = authHeader.split(' ')[1];
-	if (!pat || typeof pat !== "string" || pat === "" || pat === "undefined") {
+	if (!pat || typeof pat !== 'string' || pat === '' || pat === 'undefined') {
 		return { errorResponse: json({ message: 'Unauthorized: Missing PAT token' }, { status: 401 }) };
 	}
 
