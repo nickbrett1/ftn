@@ -1,5 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { ApiKeyService } from '$lib/server/api-key-service.js';
+import { createMcpHandler } from 'agents/mcp';
+import { createMcpServer } from '$lib/server/mcp.js';
 
 const ALLOWED_ORIGINS = [
 	'http://localhost:5173',
@@ -48,22 +50,15 @@ async function handleMcpRequest(request, platform) {
 
 	const { userEmail, token } = authResult;
 
-	const { createMcpHandler } = await import('agents/mcp');
-	const { createMcpServer } = await import('$lib/server/mcp.js');
-
 	const server = createMcpServer({ userEmail, platform });
 
 	const requestOrigin = request.headers.get('Origin');
 	const corsOrigin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
 
-	// Session Generator that binds the user email or token to the sessionId
-	const sessionIdGenerator = () => `${crypto.randomUUID()}--${token}`;
-
 	const handler = createMcpHandler(server, {
 		route: '/api/mcp',
 		allowedOrigins: ALLOWED_ORIGINS,
 		enableDnsRebindingProtection: true,
-		sessionIdGenerator,
 		corsOptions: {
 			origin: corsOrigin,
 			methods: 'GET, POST, OPTIONS',

@@ -20,12 +20,17 @@ export class ApiKeyService {
 		`;
 		await executeGenprojQuery(this.db, sql);
 
-		// Try to add columns to existing table if they don't exist
+		// Try to add columns to existing table individually if they don't exist
 		try {
 			await executeGenprojQuery(this.db, `ALTER TABLE ApiKeys ADD COLUMN rate_limit_count INTEGER DEFAULT 0`);
+		} catch {
+			// Column likely already exists
+		}
+
+		try {
 			await executeGenprojQuery(this.db, `ALTER TABLE ApiKeys ADD COLUMN rate_limit_reset_at DATETIME`);
 		} catch {
-			// Columns likely already exist
+			// Column likely already exists
 		}
 	}
 
@@ -71,7 +76,7 @@ export class ApiKeyService {
 
 	async getKeysForUser(userEmail) {
 		const sql = `
-			SELECT id, name, created_at as createdAt, last_used_at as lastUsedAt
+			SELECT id, name, created_at as createdAt, last_used_at as lastUsedAt, rate_limit_count
 			FROM ApiKeys
 			WHERE user_email = ?
 			ORDER BY created_at DESC

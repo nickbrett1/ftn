@@ -1,18 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { EmailMessage, RpcTarget, exports } from '../../../src/lib/server/cloudflare-mocks.js';
+import * as mocks from '../../../src/lib/server/cloudflare-mocks.js';
 
 describe('cloudflare-mocks', () => {
-	it('exports EmailMessage class', () => {
-		const message = new EmailMessage();
-		expect(message).toBeInstanceOf(EmailMessage);
+	it('exports expected classes', () => {
+		expect(new mocks.EmailMessage().isMock).toBe(true);
+		expect(new mocks.RpcTarget().isMock).toBe(true);
+		expect(new mocks.WorkflowEntrypoint().isMock).toBe(true);
+		expect(new mocks.WorkflowEvent().isMock).toBe(true);
+		expect(new mocks.DurableObject().isMock).toBe(true);
 	});
 
-	it('exports RpcTarget class', () => {
-		const target = new RpcTarget();
-		expect(target).toBeInstanceOf(RpcTarget);
+	it('exports expected functions', () => {
+		expect(mocks.connect()).toBeNull();
 	});
 
-	it('exports an empty exports object', () => {
-		expect(exports).toEqual({});
+	it('exports expected constants', () => {
+		expect(mocks.env).toEqual({});
+		expect(mocks.exports).toEqual({});
 	});
 });
