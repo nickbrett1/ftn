@@ -52,7 +52,7 @@
 		"@tailwindcss/vite": "^4.3.1",
 		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^6.9.1",
-		"@testing-library/svelte": "^5.3.1",
+		"@testing-library/svelte": "^5.4.1",
 		"@types/node": "^26.0.0",
 		"@vitest/coverage-v8": "^4.1.9",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
