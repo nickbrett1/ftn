@@ -23,7 +23,7 @@
 
 			if (res.status === 500) {
 				const data = await res.json();
-				if (data.error && data.error.includes('no such table')) {
+				if (data.error && (data.error.includes('no such table') || data.error.includes('no such column'))) {
 					showInitPrompt = true;
 					loading = false;
 					return;
@@ -161,14 +161,14 @@
 		<div class="bg-green-500/10 border border-green-500/50 rounded-lg p-6 mb-8 text-center">
 			<h2 class="text-xl font-semibold text-white mb-2">Setup Required</h2>
 			<p class="text-white/70 mb-4">
-				The API Keys database table has not been created yet. Please initialize it to continue.
+				The API Keys database table is missing or needs a schema update. Please initialize it to continue.
 			</p>
 			<button
 				onclick={initializeDb}
 				disabled={initializing}
 				class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded transition-colors disabled:opacity-50"
 			>
-				{initializing ? 'Initializing...' : 'Initialize Database'}
+				{initializing ? 'Initializing...' : 'Initialize Database Schema'}
 			</button>
 		</div>
 	{:else if !loading}
