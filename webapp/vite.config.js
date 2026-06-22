@@ -53,6 +53,7 @@ export default defineConfig(({ command, mode }) => {
 		resolve: {
 			alias: {
 				'cloudflare:email': path.resolve(__dirname, 'src/lib/server/cloudflare-mocks.js'),
+				'cloudflare:sockets': path.resolve(__dirname, 'src/lib/server/cloudflare-mocks.js'),
 				'cloudflare:workers': path.resolve(__dirname, 'src/lib/server/cloudflare-mocks.js')
 			}
 		},
@@ -124,7 +125,7 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		ssr: {
-			noExternal: ['three', 'tippy.js', 'agents']
+			noExternal: ['three', 'tippy.js', 'agents', 'agents/mcp', 'partyserver']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {
