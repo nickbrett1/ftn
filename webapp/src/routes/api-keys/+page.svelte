@@ -12,8 +12,6 @@
 	let generatingKey = $state(false);
 	let generatedKey = $state(null);
 	let showCopied = $state(false);
-	let showInitPrompt = $state(false);
-	let initializing = $state(false);
 
 	async function fetchKeys() {
 		try {
@@ -21,44 +19,16 @@
 			error = null;
 			const res = await fetch('/api/api-keys');
 
-			if (res.status === 500) {
-				const data = await res.json();
-				if (data.error && (data.error.includes('no such table') || data.error.includes('no such column'))) {
-					showInitPrompt = true;
-					loading = false;
-					return;
-				}
-			}
-
 			if (!res.ok) {
 				throw new Error('Failed to fetch keys');
 			}
 			const data = await res.json();
 			keys = data.keys || [];
-			showInitPrompt = false;
 		} catch (e) {
 			error = e.message;
 			console.error(e);
 		} finally {
 			loading = false;
-		}
-	}
-
-	async function initializeDb() {
-		try {
-			initializing = true;
-			error = null;
-			const res = await fetch('/api/api-keys/init', { method: 'POST' });
-			if (!res.ok) {
-				throw new Error('Failed to initialize database');
-			}
-			await fetchKeys();
-
-		} catch (e) {
-			error = e.message;
-			console.error(e);
-		} finally {
-			initializing = false;
 		}
 	}
 
@@ -157,21 +127,7 @@
 		</div>
 	{/if}
 
-	{#if showInitPrompt}
-		<div class="bg-green-500/10 border border-green-500/50 rounded-lg p-6 mb-8 text-center">
-			<h2 class="text-xl font-semibold text-white mb-2">Setup Required</h2>
-			<p class="text-white/70 mb-4">
-				The API Keys database table is missing or needs a schema update. Please initialize it to continue.
-			</p>
-			<button
-				onclick={initializeDb}
-				disabled={initializing}
-				class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded transition-colors disabled:opacity-50"
-			>
-				{initializing ? 'Initializing...' : 'Initialize Database Schema'}
-			</button>
-		</div>
-	{:else if !loading}
+	{#if !loading}
 		<!-- Generate New Key Section -->
 		<div class="bg-[#1C1C1E] border border-white/10 rounded-xl p-6 mb-8">
 			<h2 class="text-xl font-semibold text-white mb-4">Generate New Token</h2>

@@ -35,20 +35,4 @@ describe('ApiKeys Page', () => {
         const keyName = await screen.findByText('Test Key');
         expect(keyName).toBeTruthy();
     });
-
-    it('shows init prompt when fetch fails with no such column error', async () => {
-        globalThis.fetch.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            json: () => Promise.resolve({ error: 'SQLITE_ERROR: no such column: rate_limit_count at offset 27' })
-        });
-
-        render(ApiKeysPage);
-
-        const initButton = await screen.findByText('Initialize Database Schema');
-        expect(initButton).toBeTruthy();
-
-        const promptText = await screen.findByText(/The API Keys database table is missing or needs a schema update/i);
-        expect(promptText).toBeTruthy();
-    });
 });
