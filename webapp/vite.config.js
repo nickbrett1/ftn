@@ -6,6 +6,11 @@ import { threeMinifier } from '@yushijinhun/three-minifier-rollup';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get git info at build time
 function getGitInfo() {
@@ -47,8 +52,8 @@ export default defineConfig(({ command, mode }) => {
 		plugins,
 		resolve: {
 			alias: {
-				'cloudflare:email': '/workspaces/ftn/webapp/src/lib/server/cloudflare-mocks.js',
-				'cloudflare:workers': '/workspaces/ftn/webapp/src/lib/server/cloudflare-mocks.js'
+				'cloudflare:email': path.resolve(__dirname, 'src/lib/server/cloudflare-mocks.js'),
+				'cloudflare:workers': path.resolve(__dirname, 'src/lib/server/cloudflare-mocks.js')
 			}
 		},
 		logLevel: 'info',
@@ -119,7 +124,7 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		ssr: {
-			noExternal: ['three', 'tippy.js']
+			noExternal: ['three', 'tippy.js', 'agents']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {
