@@ -76,7 +76,7 @@ export class ApiKeyService {
 
 	async getKeysForUser(userEmail) {
 		const sql = `
-			SELECT id, name, created_at as createdAt, last_used_at as lastUsedAt
+			SELECT id, name, created_at as createdAt, last_used_at as lastUsedAt, rate_limit_count
 			FROM ApiKeys
 			WHERE user_email = ?
 			ORDER BY created_at DESC
