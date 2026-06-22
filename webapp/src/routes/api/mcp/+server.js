@@ -55,14 +55,10 @@ async function handleMcpRequest(request, platform) {
 	const requestOrigin = request.headers.get('Origin');
 	const corsOrigin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
 
-	// Session Generator that binds the user email or token to the sessionId
-	const sessionIdGenerator = () => `${crypto.randomUUID()}--${token}`;
-
 	const handler = createMcpHandler(server, {
 		route: '/api/mcp',
 		allowedOrigins: ALLOWED_ORIGINS,
 		enableDnsRebindingProtection: true,
-		sessionIdGenerator,
 		corsOptions: {
 			origin: corsOrigin,
 			methods: 'GET, POST, OPTIONS',
