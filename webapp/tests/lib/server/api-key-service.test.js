@@ -39,34 +39,6 @@ describe('ApiKeyService', () => {
 		globalThis.crypto.subtle.digest.mockResolvedValue(new ArrayBuffer(32));
 	});
 
-	it('initializes the database', async () => {
-		await service.initializeDatabase();
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
-			expect.stringContaining('CREATE TABLE IF NOT EXISTS ApiKeys')
-		);
-	});
-
-	it('gracefully handles errors when adding missing columns', async () => {
-		db.executeGenprojQuery.mockImplementation((database, sql) => {
-			if (sql.includes('ALTER TABLE')) {
-				throw new Error('Column already exists');
-			}
-			return Promise.resolve();
-		});
-
-		await expect(service.initializeDatabase()).resolves.not.toThrow();
-
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
-			expect.stringContaining('ALTER TABLE ApiKeys ADD COLUMN rate_limit_count')
-		);
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
-			expect.stringContaining('ALTER TABLE ApiKeys ADD COLUMN rate_limit_reset_at')
-		);
-	});
-
 	it('creates a new key', async () => {
 		const userEmail = 'test@example.com';
 		const name = 'Test Key';

@@ -5,35 +5,6 @@ export class ApiKeyService {
 		this.db = getGenprojDatabase(environment);
 	}
 
-	async initializeDatabase() {
-		const sql = `
-			CREATE TABLE IF NOT EXISTS ApiKeys (
-				id TEXT PRIMARY KEY,
-				user_email TEXT NOT NULL,
-				hashed_key TEXT NOT NULL,
-				name TEXT NOT NULL,
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-				last_used_at DATETIME,
-				rate_limit_count INTEGER DEFAULT 0,
-				rate_limit_reset_at DATETIME
-			);
-		`;
-		await executeGenprojQuery(this.db, sql);
-
-		// Try to add columns to existing table individually if they don't exist
-		try {
-			await executeGenprojQuery(this.db, `ALTER TABLE ApiKeys ADD COLUMN rate_limit_count INTEGER DEFAULT 0`);
-		} catch {
-			// Column likely already exists
-		}
-
-		try {
-			await executeGenprojQuery(this.db, `ALTER TABLE ApiKeys ADD COLUMN rate_limit_reset_at DATETIME`);
-		} catch {
-			// Column likely already exists
-		}
-	}
-
 	async hashKey(key) {
 		const encoder = new TextEncoder();
 		const data = encoder.encode(key);
