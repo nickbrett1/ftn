@@ -101,21 +101,21 @@ describe('ApiKeyService', () => {
 	});
 
 	describe('validateKey', () => {
-		it('returns null for invalid prefix', async () => {
+		it('returns undefined for invalid prefix', async () => {
 			const result = await service.validateKey('invalid_key');
-			expect(result).toBeNull();
+			expect(result).toBeUndefined();
 			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
 		});
 
-		it('returns null for empty key', async () => {
+		it('returns undefined for empty key', async () => {
 			const result = await service.validateKey('');
-			expect(result).toBeNull();
+			expect(result).toBeUndefined();
 			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
 		});
 
-		it('returns null for null key', async () => {
+		it('returns undefined for null key', async () => {
 			const result = await service.validateKey(null);
-			expect(result).toBeNull();
+			expect(result).toBeUndefined();
 			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
 		});
 
@@ -129,16 +129,16 @@ describe('ApiKeyService', () => {
 			expect(db.executeGenprojQuery).toHaveBeenCalledWith(
 				mockEnv.GENPROJ_DB,
 				expect.stringContaining('UPDATE ApiKeys'),
-				['1']
+				expect.any(Array)
 			);
 		});
 
-		it('returns null when key not found in db', async () => {
+		it('returns undefined when key not found in db', async () => {
 			db.getGenprojFirstResult.mockResolvedValue(null);
 
 			const result = await service.validateKey('pat_123456');
 
-			expect(result).toBeNull();
+			expect(result).toBeUndefined();
 			expect(db.getGenprojFirstResult).toHaveBeenCalled();
 			expect(db.executeGenprojQuery).not.toHaveBeenCalledWith(
 				mockEnv.GENPROJ_DB,
@@ -146,5 +146,53 @@ describe('ApiKeyService', () => {
 				expect.any(Array)
 			);
 		});
+	});
+});
+
+describe('Rate Limiting in ApiKeyService', () => {
+	let service;
+	let mockEnv;
+
+	beforeEach(() => {
+		vi.resetAllMocks();
+		mockEnv = { GENPROJ_DB: {} };
+		db.getGenprojDb.mockReturnValue(mockEnv.GENPROJ_DB);
+		service = new ApiKeyService(mockEnv);
+	});
+
+	it('throws error when rate limit is exceeded', async () => {
+		const futureDate = new Date();
+		futureDate.setMinutes(futureDate.getMinutes() + 1);
+
+		db.getGenprojFirstResult.mockResolvedValue({
+			id: '1',
+			user_email: 'test@example.com',
+			rate_limit_count: 100,
+			rate_limit_reset_at: futureDate.toISOString().replace('T', ' ').replace('Z', '')
+		});
+
+		await expect(service.validateKey('pat_123456')).rejects.toThrow('Rate limit exceeded');
+	});
+
+	it('resets rate limit counter after reset time has passed', async () => {
+		const pastDate = new Date();
+		pastDate.setMinutes(pastDate.getMinutes() - 1);
+
+		db.getGenprojFirstResult.mockResolvedValue({
+			id: '1',
+			user_email: 'test@example.com',
+			rate_limit_count: 100,
+			rate_limit_reset_at: pastDate.toISOString().replace('T', ' ').replace('Z', '')
+		});
+
+		const result = await service.validateKey('pat_123456');
+		expect(result).toBe('test@example.com');
+
+		// The update query should reset count to 1
+		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
+			mockEnv.GENPROJ_DB,
+			expect.stringContaining('UPDATE ApiKeys'),
+			expect.arrayContaining([1, expect.any(String), '1'])
+		);
 	});
 });

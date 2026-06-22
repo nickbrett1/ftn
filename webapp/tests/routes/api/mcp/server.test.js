@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from '../../../../../src/routes/api/mcp/+server.js';
+import { POST, GET, OPTIONS } from '../../../../../src/routes/api/mcp/+server.js';
 
 // Mock agents/mcp
 vi.mock('agents/mcp', () => {
@@ -41,13 +41,22 @@ describe('/api/mcp API', () => {
 		});
 	});
 
-	it('returns 401 if Authorization header is missing', async () => {
+	it('returns 401 if Authorization header is missing on POST', async () => {
 		const request = new Request('http://localhost/api/mcp', {
 			method: 'POST',
 			body: JSON.stringify({})
 		});
 
 		const response = await POST({ request, platform: {} });
+		expect(response.status).toBe(401);
+	});
+
+	it('returns 401 if Authorization header is missing on GET', async () => {
+		const request = new Request('http://localhost/api/mcp', {
+			method: 'GET'
+		});
+
+		const response = await GET({ request, platform: {} });
 		expect(response.status).toBe(401);
 	});
 
@@ -62,6 +71,19 @@ describe('/api/mcp API', () => {
 
 		const response = await POST({ request, platform: {} });
 		expect(response.status).toBe(500);
+	});
+
+	it('returns 429 if ApiKeyService throws Rate limit exceeded', async () => {
+		mockValidateKey.mockRejectedValue(new Error('Rate limit exceeded'));
+
+		const request = new Request('http://localhost/api/mcp', {
+			method: 'POST',
+			headers: { Authorization: 'Bearer valid-token' },
+			body: JSON.stringify({})
+		});
+
+		const response = await POST({ request, platform: {} });
+		expect(response.status).toBe(429);
 	});
 
 	it('returns 401 if Authorization header is invalid', async () => {
@@ -87,5 +109,28 @@ describe('/api/mcp API', () => {
 
 		const text = await response.text();
 		expect(text).toBe('mock response');
+	});
+
+	it('handles GET requests via token query param', async () => {
+		const request = new Request('http://localhost/api/mcp?token=valid-token', {
+			method: 'GET'
+		});
+
+		const response = await GET({ request, platform: {} });
+		expect(response.status).toBe(200);
+
+		const text = await response.text();
+		expect(text).toBe('mock response');
+	});
+
+	it('handles OPTIONS requests properly', async () => {
+		const request = new Request('http://localhost/api/mcp', {
+			method: 'OPTIONS',
+			headers: { Origin: 'https://www.fintechnick.com' }
+		});
+
+		const response = await OPTIONS({ request });
+		expect(response.status).toBe(204);
+		expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://www.fintechnick.com');
 	});
 });
