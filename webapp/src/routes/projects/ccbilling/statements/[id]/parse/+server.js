@@ -98,6 +98,19 @@ async function processCharges(event, statement_id, charges, billingCycleInfo) {
 	}
 }
 
+function getCardIdentificationErrorMessage(parsedData) {
+	if (!parsedData.last4 && !parsedData.card_name) {
+		return 'No credit card information found in the statement. Please ensure the statement contains valid credit card details.';
+	}
+	if (parsedData.last4 && parsedData.last4 !== '0000') {
+		return `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
+	}
+	if (parsedData.card_name) {
+		return `No matching credit card found with name: "${parsedData.card_name}". Please add a credit card with a similar name before uploading this statement.`;
+	}
+	return 'Could not identify the credit card for this statement.';
+}
+
 export const POST = RouteUtils.createRouteHandler(
 	async (event, parsedBody) => {
 		const { params } = event;
@@ -156,22 +169,10 @@ export const POST = RouteUtils.createRouteHandler(
 		if (!identifiedCreditCard) {
 			console.warn('⚠️ Could not identify credit card from statement');
 
-			let errorMessage;
-			if (!parsedData.last4 && !parsedData.card_name) {
-				errorMessage =
-					'No credit card information found in the statement. Please ensure the statement contains valid credit card details.';
-			} else if (parsedData.last4 && parsedData.last4 !== '0000') {
-				errorMessage = `No matching credit card found for last4: ${parsedData.last4}. Please add a credit card with last4: ${parsedData.last4} before uploading this statement.`;
-			} else if (parsedData.card_name) {
-				errorMessage = `No matching credit card found with name: "${parsedData.card_name}". Please add a credit card with a similar name before uploading this statement.`;
-			} else {
-				errorMessage = 'Could not identify the credit card for this statement.';
-			}
-
 			return json(
 				{
 					success: false,
-					error: errorMessage
+					error: getCardIdentificationErrorMessage(parsedData)
 				},
 				{ status: 400 }
 			);

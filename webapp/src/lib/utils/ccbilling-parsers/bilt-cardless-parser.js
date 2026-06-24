@@ -58,11 +58,9 @@ export class BiltCardlessParser extends BaseParser {
 			const accountMatch = /account number:?\s*\d*(\d{4})/i.exec(pdfText);
 			if (accountMatch) {
 				result.last4 = accountMatch[1];
-			} else {
+			} else if (result.statement_date && result.charges.length > 0) {
 				// If we still have nothing, use a placeholder if we have charges and date
-				if (result.statement_date && result.charges.length > 0) {
-					result.last4 = '0000';
-				}
+				result.last4 = '0000';
 			}
 		}
 
@@ -98,9 +96,9 @@ export class BiltCardlessParser extends BaseParser {
 	 */
 	getStatementDatePatterns() {
 		return [
-			/New balance as of\s+([A-Z][a-z]+ \d{1,2}, \d{4})/i,
-			/([A-Z][a-z]+ \d{1,2})\s*–\s*([A-Z][a-z]+ \d{1,2}, \d{4})/i,
-			/Statement Date:?\s*([A-Z][a-z]+ \d{1,2}, \d{4})/i
+			/New balance as of\s+([A-Z][a-z]{2,8} \d{1,2}, \d{4})/i,
+			/([A-Z][a-z]{2,8} \d{1,2})\s*–\s*([A-Z][a-z]{2,8} \d{1,2}, \d{4})/i,
+			/Statement Date:?\s*([A-Z][a-z]{2,8} \d{1,2}, \d{4})/i
 		];
 	}
 
@@ -120,9 +118,6 @@ export class BiltCardlessParser extends BaseParser {
 		let inTransactions = false;
 		let inPayments = false;
 		let inFees = false;
-
-		// Date pattern like "Feb 7, 2026"
-		const datePattern = /^([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/;
 
 		for (let index = 0; index < lines.length; index++) {
 			const line = lines[index];
@@ -163,116 +158,149 @@ export class BiltCardlessParser extends BaseParser {
 			}
 
 			if (inTransactions || inPayments || inFees) {
-				const dateMatch = datePattern.exec(line);
-				if (dateMatch) {
-					const monthString = dateMatch[1];
-					const day = dateMatch[2];
-					const year = dateMatch[3];
-
-					// Full date in ISO format
-					const date = this.parseDate(`${monthString} ${day}, ${year}`);
-
-					// Description and amount might be on this line or next lines
-					let description = line.replace(dateMatch[0], '').trim();
-					let amount = null;
-					let fullStatementText = line;
-
-					// Check if amount is on the same line
-					const amountOnSameLineMatch = /(-?)\$([\d,]+\.\d{2})$/.exec(line);
-					if (amountOnSameLineMatch) {
-						const isNegative = amountOnSameLineMatch[1] === '-';
-						amount = this.parseAmount(amountOnSameLineMatch[2]);
-						if (isNegative) amount = -Math.abs(amount);
-						description = description.replace(amountOnSameLineMatch[0], '').trim();
-					}
-
-					// Look ahead for additional description lines and/or the amount if not found
-					let lookAhead = 1;
-					let amountFoundInLookahead = false;
-					while (lookAhead < 5 && index + lookAhead < lines.length) {
-						const nextLine = lines[index + lookAhead];
-
-						// If we hit another date, we went too far
-						if (datePattern.test(nextLine)) break;
-
-						// Try to match the amount if we haven't found it yet
-						if (amount === null && !amountFoundInLookahead) {
-							const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
-							if (amountMatch) {
-								const isNegative = amountMatch[1] === '-';
-								amount = this.parseAmount(amountMatch[2]);
-								if (isNegative) amount = -Math.abs(amount);
-								fullStatementText += '\n' + nextLine;
-								amountFoundInLookahead = true;
-								lookAhead++;
-								continue;
-							}
-						}
-
-						// If this line is an amount that was already found, we should stop
-						// This happens if amount was on the first line and we hit the NEXT transaction's amount (which shouldn't happen without a date, but just in case)
-						if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
-							break;
-						}
-
-						// Avoid including section headers or totals from subsequent lines
-						const nextLineUpper = nextLine.toUpperCase();
-						if (
-							nextLineUpper === 'TRANSACTIONS' ||
-							nextLineUpper === 'PAYMENTS AND CREDITS' ||
-							nextLineUpper === 'FEES' ||
-							nextLineUpper.startsWith('TOTAL NEW CHARGES') ||
-							nextLineUpper.startsWith('TOTAL PAYMENTS') ||
-							nextLineUpper.startsWith('TOTAL FEES') ||
-							nextLineUpper === 'INTEREST CHARGED' ||
-							nextLineUpper === 'DATE DESCRIPTION AMOUNT'
-						) {
-							break;
-						}
-
-						// Add to full statement text if it's not a page footer
-						if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
-							fullStatementText += '\n' + nextLine;
-						}
-						lookAhead++;
-					}
-
-					// Skip fast-forwarding the outer loop; it only processes lines with datePattern anyway.
-
-					if (date && amount !== null && description.length > 1) {
-						// Skip payments in the payments section, but keep refunds (negative amounts in credits)
-						if (inPayments && amount > 0) continue; // Positive in payments section is likely a payment
-
-						// Skip if this is a payment using shared base parser method
-						if (this.isPaymentToCard(description)) continue;
-
-						const charge = {
-							merchant: this.cleanMerchantName(description),
-							amount: amount, // Use raw amount (negative for credits)
-							date,
-							allocated_to: null,
-							is_foreign_currency: false,
-							foreign_currency_amount: null,
-							foreign_currency_type: null,
-							full_statement_text: fullStatementText
-						};
-
-						// Check for foreign currency in description or next lines
-						if (
-							description.includes('FRA') ||
-							description.includes('GBR') ||
-							description.includes('NLD')
-						) {
-							charge.is_foreign_currency = true;
-						}
-
-						charges.push(charge);
-					}
+				const charge = this.processLineWithDate(line, index, lines, inPayments);
+				if (charge) {
+					charges.push(charge);
 				}
 			}
 		}
 
 		return charges;
+	}
+
+	/**
+	 * Process a single line looking for a transaction date and corresponding charge info.
+	 * @param {string} line - Current line
+	 * @param {number} index - Line index
+	 * @param {string[]} lines - All lines
+	 * @param {boolean} inPayments - Whether currently in payments section
+	 * @returns {Object|null} - Charge object or null
+	 */
+	processLineWithDate(line, index, lines, inPayments) {
+		const datePattern = /^([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/;
+		const dateMatch = datePattern.exec(line);
+		if (!dateMatch) return null;
+
+		const monthString = dateMatch[1];
+		const day = dateMatch[2];
+		const year = dateMatch[3];
+
+		// Full date in ISO format
+		const date = this.parseDate(`${monthString} ${day}, ${year}`);
+		if (!date) return null;
+
+		const parsedResult = this.parseAmountAndDescriptionFromLines(line, index, lines);
+		if (!parsedResult || parsedResult.amount === null || parsedResult.description.length <= 1) {
+			return null;
+		}
+
+		const { amount, description, fullStatementText } = parsedResult;
+
+		// Skip payments in the payments section, but keep refunds (negative amounts in credits)
+		if (inPayments && amount > 0) return null; // Positive in payments section is likely a payment
+
+		// Skip if this is a payment using shared base parser method
+		if (this.isPaymentToCard(description)) return null;
+
+		const charge = {
+			merchant: this.cleanMerchantName(description),
+			amount, // Use raw amount (negative for credits)
+			date,
+			allocated_to: null,
+			is_foreign_currency: false,
+			foreign_currency_amount: null,
+			foreign_currency_type: null,
+			full_statement_text: fullStatementText
+		};
+
+		// Check for foreign currency in description or next lines
+		if (
+			description.includes('FRA') ||
+			description.includes('GBR') ||
+			description.includes('NLD')
+		) {
+			charge.is_foreign_currency = true;
+		}
+
+		return charge;
+	}
+
+	/**
+	 * Parse description and amount from lines using lookahead.
+	 * @param {string} line - Current line starting with a date
+	 * @param {number} index - Current line index
+	 * @param {string[]} lines - All lines
+	 * @returns {Object|null} - Parse result or null
+	 */
+	parseAmountAndDescriptionFromLines(line, index, lines) {
+		const datePattern = /^([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/;
+		const dateMatch = datePattern.exec(line);
+		if (!dateMatch) return null;
+
+		let description = line.replace(dateMatch[0], '').trim();
+		let amount = null;
+		let fullStatementText = line;
+
+		// Check if amount is on the same line
+		const amountOnSameLineMatch = /(-?)\$([\d,]+\.\d{2})$/.exec(line);
+		if (amountOnSameLineMatch) {
+			const isNegative = amountOnSameLineMatch[1] === '-';
+			amount = this.parseAmount(amountOnSameLineMatch[2]);
+			if (isNegative) amount = -Math.abs(amount);
+			description = description.replace(amountOnSameLineMatch[0], '').trim();
+		}
+
+		// Look ahead for additional description lines and/or the amount if not found
+		let lookAhead = 1;
+		let amountFoundInLookahead = false;
+		while (lookAhead < 5 && index + lookAhead < lines.length) {
+			const nextLine = lines[index + lookAhead];
+
+			// If we hit another date, we went too far
+			if (datePattern.test(nextLine)) break;
+
+			// Try to match the amount if we haven't found it yet
+			if (amount === null && !amountFoundInLookahead) {
+				const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
+				if (amountMatch) {
+					const isNegative = amountMatch[1] === '-';
+					amount = this.parseAmount(amountMatch[2]);
+					if (isNegative) amount = -Math.abs(amount);
+					fullStatementText += '\n' + nextLine;
+					amountFoundInLookahead = true;
+					lookAhead++;
+					continue;
+				}
+			}
+
+			// If this line is an amount that was already found, we should stop
+			if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
+				break;
+			}
+
+			// Avoid including section headers or totals from subsequent lines
+			const nextLineUpper = nextLine.toUpperCase();
+			if (
+				nextLineUpper === 'TRANSACTIONS' ||
+				nextLineUpper === 'PAYMENTS AND CREDITS' ||
+				nextLineUpper === 'FEES' ||
+				nextLineUpper.startsWith('TOTAL NEW CHARGES') ||
+				nextLineUpper.startsWith('TOTAL PAYMENTS') ||
+				nextLineUpper.startsWith('TOTAL FEES') ||
+				nextLineUpper === 'INTEREST CHARGED' ||
+				nextLineUpper === 'DATE DESCRIPTION AMOUNT'
+			) {
+				break;
+			}
+
+			// Add to full statement text if it's not a page footer
+			if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
+				fullStatementText += '\n' + nextLine;
+			}
+			lookAhead++;
+		}
+
+		return { amount, description, fullStatementText };
 	}
 
 	/**

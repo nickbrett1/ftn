@@ -94,7 +94,7 @@ export class ChaseParser extends BaseParser {
 			/Card Number.*?(\d{4})/i,
 			/ending\s+in\s+(\d{4})/i,
 			/\*{4}\s*(\d{4})/i,
-			/\*+\s*(\d{4})/i
+			/\*{3,16}\s*(\d{4})/i
 		];
 	}
 
@@ -324,7 +324,7 @@ export class ChaseParser extends BaseParser {
 	}
 
 	_isTransactionLine(line) {
-		return /^\d{2}\/\d{2}\s+/.test(line) && /\d+\.\d{2}$/.test(line);
+		return /^\d{2}\/\d{2}\s+/.test(line) && /\d{1,10}\.\d{2}$/.test(line);
 	}
 
 	_parseCurrencyInfo(line, lines, index) {
@@ -652,7 +652,7 @@ export class ChaseParser extends BaseParser {
 
 		// Only return true if it has a currency keyword and matches the pattern
 		const matchesPattern =
-			/^[A-Z\s]+$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z\s]+$/.test(lineTrimmed);
+			/^[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed);
 
 		return matchesPattern && hasCurrencyKeyword;
 	}
@@ -664,7 +664,7 @@ export class ChaseParser extends BaseParser {
 	 */
 	safeMatchExchangeRate(line) {
 		// Look for pattern like "123.45 X 0.67" or "123.45 X 0.67 (EXCHG RATE)"
-		const parts = line.trim().split(/\s+X\s+/);
+		const parts = line.trim().replace(/\s+/g, ' ').split(' X ');
 		if (parts.length !== 2) {
 			return null;
 		}

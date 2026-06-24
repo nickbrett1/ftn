@@ -394,13 +394,13 @@ export const ParsingUtils = {
 		// Remove common suffixes
 		if (removeCommonSuffixes) {
 			const suffixes = [
-				/\s+LLC\s*$/i,
-				/\s+INC\s*$/i,
-				/\s+CORP\s*$/i,
-				/\s+CO\s*$/i,
-				/\s+LTD\s*$/i,
-				/\s+LP\s*$/i,
-				/\s+LLP\s*$/i
+				/\bLLC\s*$/i,
+				/\bINC\s*$/i,
+				/\bCORP\s*$/i,
+				/\bCO\s*$/i,
+				/\bLTD\s*$/i,
+				/\bLP\s*$/i,
+				/\bLLP\s*$/i
 			];
 
 			for (const suffix of suffixes) {

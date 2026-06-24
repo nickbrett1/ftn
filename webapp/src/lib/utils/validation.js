@@ -30,7 +30,7 @@ export function isValidUuid(value) {
  * @returns {boolean} True if the string is a valid email, false otherwise.
  */
 export function isValidEmail(value) {
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 	return typeof value === 'string' && emailRegex.test(value);
 }
 

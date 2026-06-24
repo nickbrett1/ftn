@@ -197,10 +197,10 @@ export async function GET() {
 		validateEnvironmentVariables(accountId, apiToken);
 
 		const workers = await getCloudflareWorkers(accountId, apiToken);
-		const previewWorker = workers.find((worker) => worker.id === 'ftn-preview');
-		const productionWorker = workers.find((worker) => worker.id === 'ftn-production');
+		const hasPreviewWorker = workers.some((worker) => worker.id === 'ftn-preview');
+		const hasProductionWorker = workers.some((worker) => worker.id === 'ftn-production');
 
-		if (!previewWorker && !productionWorker) {
+		if (!hasPreviewWorker && !hasProductionWorker) {
 			const availableWorkers = workers.map((w) => w.id).join(', ');
 			throw error(
 				404,
@@ -212,11 +212,11 @@ export async function GET() {
 
 		const deployments = [];
 
-		if (previewWorker) {
+		if (hasPreviewWorker) {
 			deployments.push(await getPreviewDeployment(accountId, apiToken));
 		}
 
-		if (productionWorker) {
+		if (hasProductionWorker) {
 			const productionDeployments = await getProductionDeployments(accountId, apiToken);
 			deployments.push(...productionDeployments);
 		}

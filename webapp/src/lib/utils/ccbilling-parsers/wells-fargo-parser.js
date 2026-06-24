@@ -244,7 +244,7 @@ export class WellsFargoParser extends BaseParser {
 		// Look for Wells Fargo transaction format: MM/DD MM/DD REFERENCE_NUMBER DESCRIPTION AMOUNT
 
 		const transactionMatch =
-			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^$]+?)\s+\$(-?[\d,]+\.?\d*)-?$/.exec(
+			/^(\d{1,2}\/\d{1,2})\s+(\d{1,2}\/\d{1,2})\s+\d+\s+\w+\s+([^\s$]+(?:\s+[^\s$]+)*)\s+\$(-?[\d,]+\.?\d*)-?$/.exec(
 				line
 			);
 
@@ -283,7 +283,7 @@ export class WellsFargoParser extends BaseParser {
 	parseWellsFargoTransaction(line) {
 		// Wells Fargo format has multiple columns - we need to find the description and amount
 		// Amount is in the last column with $ sign, e.g. $2.90 or -$2.90
-		const amountMatch = /(.+?)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/.exec(line);
+		const amountMatch = /([^\s$]+(?:\s+[^\s$]+)*)\s+\$(-?\d+(?:,\d{3})*\.\d{2})$/.exec(line);
 		if (!amountMatch) return null;
 
 		const description = amountMatch[1].trim();
@@ -395,13 +395,17 @@ export class WellsFargoParser extends BaseParser {
 	 * @returns {Object|null} - Object with foreign amount and exchange rate, or null
 	 */
 	parseExchangeRate(line) {
-		// Look for pattern like "123.45 X 0.67" or similar
-		const rateMatch = /(\d+\.\d+)\s*X\s*(\d+\.\d+)/.exec(line);
-		if (!rateMatch) return null;
+		// Look for pattern like "123.45 X 0.67" or similar without backtracking regex
+		const parts = line.replace(/\s+/g, ' ').split(' X ');
+		if (parts.length < 2) return null;
+
+		const amount1 = parts[0].trim().match(/\d+\.\d+$/)?.[0];
+		const amount2 = parts[1].trim().match(/^\d+\.\d+/)?.[0];
+		if (!amount1 || !amount2) return null;
 
 		return {
-			foreignAmount: Number.parseFloat(rateMatch[1]),
-			exchangeRate: Number.parseFloat(rateMatch[2])
+			foreignAmount: Number.parseFloat(amount1),
+			exchangeRate: Number.parseFloat(amount2)
 		};
 	}
 
