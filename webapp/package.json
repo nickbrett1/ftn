@@ -116,7 +116,7 @@
 		"linkify-it": "^5.0.1",
 		"llama-api-client": "^0.3.0",
 		"most-visible": "^2.0.0",
-		"nanoid": "^5.1.15",
+		"nanoid": "^5.1.16",
 		"pdfjs-dist": "^6.0.227",
 		"stripe": "^22.2.3",
 		"three": "^0.184.0",
