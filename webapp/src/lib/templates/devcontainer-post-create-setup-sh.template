@@ -41,7 +41,14 @@ fi
 
 if ! pgrep -x tailscaled > /dev/null; then
     echo "INFO: Starting Tailscale daemon..."
-    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &
+    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state &
+fi
+
+echo "INFO: Checking Nanobanana MCP installation..."
+if [ -f "webapp/scripts/install-nanobanana.sh" ]; then
+    bash webapp/scripts/install-nanobanana.sh
+elif [ -f "scripts/install-nanobanana.sh" ]; then
+    bash scripts/install-nanobanana.sh
 fi
 
 {{cloudLoginSetup}}

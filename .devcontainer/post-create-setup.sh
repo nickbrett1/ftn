@@ -66,6 +66,13 @@ if ! pgrep -x tailscaled > /dev/null; then
     sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &
 fi
 
+echo "INFO: Checking Nanobanana MCP installation..."
+if [ -f "webapp/scripts/install-nanobanana.sh" ]; then
+    bash webapp/scripts/install-nanobanana.sh
+elif [ -f "scripts/install-nanobanana.sh" ]; then
+    bash scripts/install-nanobanana.sh
+fi
+
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"
 echo "    cd /workspaces/ftn/webapp && bash scripts/cloud-login.sh"
