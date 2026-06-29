@@ -152,17 +152,25 @@ if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- 
   fi
 
   if tmux has-session -t "$session_name" 2>/dev/null; then
-    # Create a new session in the background grouped with $session_name, named with the shell's PID
-    unique_name="${session_name}-$$"
-    tmux new-session -t "$session_name" -s "$unique_name" -d
-    # Create a new window so this shell gets its own window
-    tmux new-window -t "$unique_name"
-    # Destroy the temporary session when it is detached or has no windows (using a hook to prevent early destruction)
-    tmux set-hook -t "$unique_name" client-attached 'set-option destroy-unattached on'
-    # Attach to the session
-    exec tmux attach-session -t "$unique_name"
+    # Add a new window (tab) to the existing session
+    tmux new-window -t "$session_name"
+    exit
   else
     # First terminal: start the main session
     exec tmux new-session -s "$session_name"
   fi
+fi
+
+# Automatically update environment variables from tmux session inside tmux
+tmux_update_environment() {
+  if [ -n "$TMUX" ]; then
+    eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH")
+  fi
+}
+if [ -n "$TMUX" ]; then
+  # Run once on startup
+  tmux_update_environment
+  # Run before every command
+  autoload -Uz add-zsh-hook
+  add-zsh-hook preexec tmux_update_environment
 fi
