@@ -257,6 +257,20 @@ describe('generatePreview', () => {
 		expect(settingsFile.content).toBe('content for vscode-settings-json');
 	});
 
+	it('generates .vscode/extensions.json in preview recommending tmux-integrated', async () => {
+		const projectConfig = { name: 'TestProject' };
+		const preview = await generatePreview(projectConfig, []);
+
+		const vscodeFolder = preview.files.find((f) => f.name === '.vscode' && f.type === 'folder');
+		expect(vscodeFolder).toBeDefined();
+
+		const extensionsFile = vscodeFolder.children.find((f) => f.name === 'extensions.json');
+		expect(extensionsFile).toBeDefined();
+		const content = JSON.parse(extensionsFile.content);
+		expect(content.recommendations).toContain('pcassidy75.tmux-integrated');
+	});
+
+
 	it('generates vite.config.js when devcontainer-node is selected', async () => {
 		const projectConfig = { name: 'NodeProject' };
 		const preview = await generatePreview(projectConfig, ['devcontainer-node']);

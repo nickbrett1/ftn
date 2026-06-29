@@ -118,4 +118,52 @@ describe('File Generator - Extensions', () => {
 		expect(extensions).toContain('ecmel.vscode-html-css');
 		expect(extensions).toContain('GraphQL.vscode-graphql-syntax');
 	});
+
+	it('should always include tmux-integrated extension in devcontainer extensions', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node'],
+			configuration: {
+				'devcontainer-node': { nodeVersion: '22' }
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const devcontainerFile = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		expect(devcontainerFile).toBeDefined();
+		const content = JSON.parse(devcontainerFile.content);
+		expect(content.customizations.vscode.extensions).toContain('pcassidy75.tmux-integrated');
+	});
+
+	it('should always generate .vscode/extensions.json recommending tmux-integrated', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: [],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(context);
+		const extensionsFile = files.find((f) => f.filePath === '.vscode/extensions.json');
+		expect(extensionsFile).toBeDefined();
+		const content = JSON.parse(extensionsFile.content);
+		expect(content.recommendations).toContain('pcassidy75.tmux-integrated');
+	});
+
+	it('should always generate .vscode/settings.json with tmux-integrated default profiles', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: [],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(context);
+		const settingsFile = files.find((f) => f.filePath === '.vscode/settings.json');
+		expect(settingsFile).toBeDefined();
+		const content = JSON.parse(settingsFile.content);
+		expect(content['terminal.integrated.defaultProfile.linux']).toBe('tmux-integrated');
+		expect(content['terminal.integrated.defaultProfile.osx']).toBe('tmux-integrated');
+		expect(content['terminal.integrated.defaultProfile.windows']).toBe('tmux-integrated');
+		expect(content['python.defaultInterpreterPath']).toBeUndefined();
+	});
 });
+

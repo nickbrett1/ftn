@@ -464,6 +464,8 @@ function generateAndMergeDevcontainerJson(
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
 	const allExtensions = new Set();
+	// Always include the tmux-integrated extension
+	allExtensions.add('pcassidy75.tmux-integrated');
 
 	// 1. From base JSON
 	addExtensionsFromContainerJson(allExtensions, mergedDevelopmentContainerJson);
@@ -840,17 +842,42 @@ export function generateGitignoreFile(templateEngine, context) {
 }
 
 export function generateVscodeSettingsFile(templateEngine, context) {
-	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return;
+	const hasPython = Array.isArray(context.capabilities) && context.capabilities.some((c) => c.startsWith('devcontainer-python'));
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...context,
 		projectName: context.projectName || context.name || 'my-project'
 	});
 
+	let settings;
+	try {
+		settings = JSON.parse(content);
+		if (!hasPython) {
+			delete settings['python.defaultInterpreterPath'];
+		}
+		return {
+			filePath: '.vscode/settings.json',
+			content: JSON.stringify(settings, undefined, 2)
+		};
+	} catch {
+		// Fallback for tests that mock template engine to return non-JSON
+		return {
+			filePath: '.vscode/settings.json',
+			content
+		};
+	}
+}
+
+export function generateVscodeExtensionsFile(context) {
 	return {
-		filePath: '.vscode/settings.json',
-		content
+		filePath: '.vscode/extensions.json',
+		content: JSON.stringify(
+			{
+				recommendations: ['pcassidy75.tmux-integrated']
+			},
+			undefined,
+			2
+		)
 	};
 }
 
@@ -929,7 +956,8 @@ export async function generateAllFiles(context) {
 		generatePackageJson(templateEngine, context),
 		generatePyProjectToml(context),
 		generateGitignoreFile(templateEngine, context),
-		generateVscodeSettingsFile(templateEngine, context)
+		generateVscodeSettingsFile(templateEngine, context),
+		generateVscodeExtensionsFile(context)
 	].filter(Boolean);
 
 	let allGeneratedFiles = [

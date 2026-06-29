@@ -117,6 +117,7 @@ function createMergedDevelopmentContainerJson(
 	});
 	const mergedJson = JSON.parse(baseJsonContent);
 	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
+	allExtensions.add('pcassidy75.tmux-integrated');
 
 	for (const id of allCapabilities) {
 		const cap = capabilities.find((c) => c.id === id);
@@ -585,17 +586,51 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 }
 
 function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabilities) {
-	const hasPython = allCapabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return;
+	const hasPython = Array.isArray(allCapabilities) && allCapabilities.some((c) => c.startsWith('devcontainer-python'));
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...projectConfig,
 		projectName: projectConfig.name || 'my-project'
 	});
 
+	let settings;
+	try {
+		settings = JSON.parse(content);
+		if (!hasPython) {
+			delete settings['python.defaultInterpreterPath'];
+		}
+		const serializedContent = JSON.stringify(settings, undefined, 2);
+		return {
+			path: '.vscode/settings.json',
+			name: 'settings.json',
+			content: serializedContent,
+			size: serializedContent.length,
+			type: 'file'
+		};
+	} catch {
+		// Fallback for tests that mock template engine to return non-JSON
+		return {
+			path: '.vscode/settings.json',
+			name: 'settings.json',
+			content,
+			size: content.length,
+			type: 'file'
+		};
+	}
+}
+
+function generateVscodeExtensionsPreview() {
+	const content = JSON.stringify(
+		{
+			recommendations: ['pcassidy75.tmux-integrated']
+		},
+		undefined,
+		2
+	);
+
 	return {
-		path: '.vscode/settings.json',
-		name: 'settings.json',
+		path: '.vscode/extensions.json',
+		name: 'extensions.json',
 		content,
 		size: content.length,
 		type: 'file'
@@ -679,6 +714,7 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 	if (vscodeSettingsFile) {
 		files.push(vscodeSettingsFile);
 	}
+	files.push(generateVscodeExtensionsPreview());
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);
