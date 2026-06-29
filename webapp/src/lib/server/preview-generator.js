@@ -111,6 +111,7 @@ function createMergedDevelopmentContainerJson(
 
 	const baseJsonContent = templateEngine.generateFile(`devcontainer-${baseId.split('-')[1]}-json`, {
 		...projectConfig,
+		projectName: projectConfig.name || 'my-project',
 		capabilityConfig: baseConfig,
 		capability: baseCap
 	});
@@ -135,7 +136,12 @@ function createMergedDevelopmentContainerJson(
 		const otherJsonContent = templateEngine.generateFile(
 			`devcontainer-${capId.split('-')[1]}-json`,
 
-			{ ...projectConfig, capabilityConfig: capConfig, capability: cap }
+			{
+				...projectConfig,
+				projectName: projectConfig.name || 'my-project',
+				capabilityConfig: capConfig,
+				capability: cap
+			}
 		);
 		const otherJson = JSON.parse(otherJsonContent);
 

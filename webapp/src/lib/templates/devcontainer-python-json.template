@@ -20,9 +20,10 @@
     }
   },
   "mounts": [
-    "source=wrangler-config,target=/home/vscode/.wrangler,type=volume",
-    "source=doppler-config,target=/home/vscode/.doppler,type=volume",
-    "source=gemini-cli-settings,target=/home/vscode/.gemini,type=volume"
+    "source={{projectName}}-wrangler-config,target=/home/vscode/.wrangler,type=volume",
+    "source={{projectName}}-doppler-config,target=/home/vscode/.doppler,type=volume",
+    "source=gemini-cli-settings,target=/home/vscode/.gemini,type=volume",
+    "source={{projectName}}-tailscale-state,target=/var/lib/tailscale,type=volume"
   ],
   "forwardPorts": [8788, 8976, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh"

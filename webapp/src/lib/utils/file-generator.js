@@ -418,7 +418,12 @@ function processAdditionalDevelopmentContainer(
 
 	const otherJsonContent = templateEngine.generateFile(
 		`devcontainer-${capabilityId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: capabilityConfig, capability: capability }
+		{
+			...context,
+			projectName: context.projectName || context.name || 'my-project',
+			capabilityConfig: capabilityConfig,
+			capability: capability
+		}
 	);
 	const otherJson = JSON.parse(otherJsonContent);
 
@@ -449,7 +454,12 @@ function generateAndMergeDevcontainerJson(
 	// Process devcontainer.json merging
 	const baseJsonContent = templateEngine.generateFile(
 		`devcontainer-${baseDevelopmentContainerId.split('-')[1]}-json`,
-		{ ...context, capabilityConfig: baseCapabilityConfig, capability: baseCapability }
+		{
+			...context,
+			projectName: context.projectName || context.name || 'my-project',
+			capabilityConfig: baseCapabilityConfig,
+			capability: baseCapability
+		}
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
