@@ -145,19 +145,24 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
       - doppler/install
       - run:
           name: Setup Wrangler Config
+          environment:
+            DOPPLER_CONFIG: << parameters.doppler_config >>
           command: |
             chmod +x scripts/setup-wrangler-config.sh
-            ./scripts/setup-wrangler-config.sh << parameters.doppler_config >>`;
+            ./scripts/setup-wrangler-config.sh "$DOPPLER_CONFIG"`;
 
 			syncSecretsStep = `
       - run:
           name: Sync Doppler Secrets to Cloudflare
+          environment:
+            CLOUDFLARE_ENV: << parameters.environment >>
+            DOPPLER_CONFIG: << parameters.doppler_config >>
           command: |
             chmod +x scripts/sync-doppler-secrets.sh
-            if [ "<< parameters.environment >>" = "default" ] || [ -z "<< parameters.environment >>" ]; then
-              ./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"
+            if [ "$CLOUDFLARE_ENV" = "default" ] || [ -z "$CLOUDFLARE_ENV" ]; then
+              ./scripts/sync-doppler-secrets.sh --config "$DOPPLER_CONFIG" --env "$CLOUDFLARE_ENV"
             else
-              if ! ./scripts/sync-doppler-secrets.sh --config << parameters.doppler_config >> --env "<< parameters.environment >>"; then
+              if ! ./scripts/sync-doppler-secrets.sh --config "$DOPPLER_CONFIG" --env "$CLOUDFLARE_ENV"; then
                 echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview."
               fi
             fi`;
@@ -196,11 +201,13 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           command: npm run build
       - run:
           name: Deploy to Cloudflare Workers
+          environment:
+            CLOUDFLARE_ENV: << parameters.environment >>
           command: |
-            if [ "<< parameters.environment >>" = "default" ] || [ -z "<< parameters.environment >>" ]; then
+            if [ "$CLOUDFLARE_ENV" = "default" ] || [ -z "$CLOUDFLARE_ENV" ]; then
               npx wrangler deploy
             else
-              npx wrangler deploy --env "<< parameters.environment >>"
+              npx wrangler deploy --env "$CLOUDFLARE_ENV"
             fi`;
 
 		data.deployWorkflowJob = `
