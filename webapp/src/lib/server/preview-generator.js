@@ -495,19 +495,7 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 
 		const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
 
-		if (!hasSvelteKit) {
-			const indexJsContent = templateEngine.generateFile(
-				'cloudflare-worker-index-js',
-				projectConfig
-			);
-			files.push({
-				path: 'src/index.js',
-				name: 'index.js',
-				content: indexJsContent,
-				size: indexJsContent.length,
-				type: 'file'
-			});
-		}
+
 
 		if (hasDoppler) {
 			const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {

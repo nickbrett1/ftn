@@ -32,7 +32,7 @@ const nodeJsonTemplateContent = `{
 
 const javaDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg openssh-server mosh
+    && apt-get -y install --no-install-recommends git socat curl gnupg openssh-server mosh tmux
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
@@ -66,7 +66,7 @@ USER vscode
 
 const pythonDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/python
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm openssh-server mosh{{dopplerInstallation}}
+    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm openssh-server mosh tmux{{dopplerInstallation}}
 
 USER vscode
 
@@ -97,7 +97,7 @@ USER vscode
 
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates openssh-server mosh \\
+    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates openssh-server mosh tmux \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER node

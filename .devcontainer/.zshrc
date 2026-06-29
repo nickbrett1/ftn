@@ -137,3 +137,32 @@ agy-dev() {
   # Execute the main command, passing along all arguments you gave to the function
   doppler run --project webapp --config dev -- agy "$@"
 }
+
+# Change directory to the workspace if starting in the home directory
+if [[ "$PWD" == "$HOME" ]]; then
+  cd /workspaces/ftn 2>/dev/null
+fi
+
+# Automatically start or attach to a tmux session for interactive shells
+if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- == *i* && -t 0 && -t 1 ]]; then
+  # Determine a session name. If we are in /workspaces/something, use that folder name. Else default to "main".
+  session_name="main"
+  if [[ "$PWD" =~ ^/workspaces/([^/]+) ]]; then
+    session_name="${match[1]}"
+  fi
+
+  if tmux has-session -t "$session_name" 2>/dev/null; then
+    # Create a new session in the background grouped with $session_name, named with the shell's PID
+    unique_name="${session_name}-$$"
+    tmux new-session -t "$session_name" -s "$unique_name" -d
+    # Create a new window so this shell gets its own window
+    tmux new-window -t "$unique_name"
+    # Destroy the temporary session when it is detached or has no windows (using a hook to prevent early destruction)
+    tmux set-hook -t "$unique_name" client-attached 'set-option destroy-unattached on'
+    # Attach to the session
+    exec tmux attach-session -t "$unique_name"
+  else
+    # First terminal: start the main session
+    exec tmux new-session -s "$session_name"
+  fi
+fi

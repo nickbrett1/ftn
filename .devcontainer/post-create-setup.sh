@@ -45,6 +45,15 @@ else
     echo "INFO: /workspaces/ftn/.devcontainer/.p10k.zsh not found, skipping copy."
 fi
 
+if [ -f "/workspaces/ftn/.devcontainer/.tmux.conf" ]; then
+    echo "INFO: Copying .tmux.conf to $USER_HOME_DIR/.tmux.conf"
+    cp "/workspaces/ftn/.devcontainer/.tmux.conf" "$USER_HOME_DIR/.tmux.conf"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.tmux.conf"
+else
+    echo "INFO: /workspaces/ftn/.devcontainer/.tmux.conf not found, skipping copy."
+fi
+
+
 echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."

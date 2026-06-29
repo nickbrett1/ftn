@@ -12,6 +12,7 @@ RUN apt-get update \
 				gnupg \
 				openssh-server \
 				mosh \
+				tmux \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \

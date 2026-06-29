@@ -11,6 +11,7 @@ import devcontainerPythonDockerfile from '../templates/devcontainer-python-docke
 import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
+import devcontainerTmuxConf from '../templates/devcontainer-tmux-conf.template?raw';
 import dopplerYaml from '../templates/doppler-yaml.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
@@ -79,6 +80,14 @@ if [ -f "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" ]; then
     sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
 else
     echo "INFO: /workspaces/{{projectName}}/.devcontainer/.p10k.zsh not found, skipping copy."
+fi
+
+if [ -f "/workspaces/{{projectName}}/.devcontainer/.tmux.conf" ]; then
+    echo "INFO: Copying .tmux.conf to $USER_HOME_DIR/.tmux.conf"
+    cp "/workspaces/{{projectName}}/.devcontainer/.tmux.conf" "$USER_HOME_DIR/.tmux.conf"
+    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.tmux.conf"
+else
+    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.tmux.conf not found, skipping copy."
 fi
 
 echo "INFO: Installing uv tool..."
@@ -201,6 +210,7 @@ const templateImports = {
 	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
+	'devcontainer-tmux-conf': devcontainerTmuxConf,
 	'playwright-config': playwrightConfig,
 	'lighthouse-ci-config': lighthouseCiConfig,
 	'circleci-config': circleCiConfig,
@@ -522,6 +532,7 @@ export function generateMergedDevelopmentContainerFiles(
 			filePath: '.devcontainer/.zshrc',
 			content: templateEngine.generateFile('devcontainer-zshrc-full', {
 				...context,
+				projectName: context.projectName || context.name || 'my-project',
 				agyDevAlias: context.capabilities.includes('doppler')
 					? AGY_DEV_ALIAS.replaceAll(
 							'{{projectName}}',
@@ -533,6 +544,10 @@ export function generateMergedDevelopmentContainerFiles(
 		{
 			filePath: '.devcontainer/.p10k.zsh',
 			content: templateEngine.generateFile('devcontainer-p10k-zsh-full', context)
+		},
+		{
+			filePath: '.devcontainer/.tmux.conf',
+			content: templateEngine.generateFile('devcontainer-tmux-conf', context)
 		},
 		{
 			filePath: '.devcontainer/post-create-setup.sh',
@@ -681,12 +696,7 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 		})
 	});
 
-	if (!hasSvelteKit) {
-		files.push({
-			filePath: 'src/index.js',
-			content: templateEngine.generateFile('cloudflare-worker-index-js', context)
-		});
-	}
+
 
 	if (hasDoppler) {
 		files.push(
