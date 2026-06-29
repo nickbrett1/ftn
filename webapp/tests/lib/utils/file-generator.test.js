@@ -7,6 +7,7 @@ const nodeJsonTemplateContent = `{
   "name": "Node.js",
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],
   "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "node",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -114,6 +115,11 @@ RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
 RUN mkdir -p \$HOME/.wrangler
 
 USER root
+
+# Ensure zsh is the default shell for the node user
+RUN chsh -s /usr/bin/zsh node
+
+COPY --chown=node:node .zshrc .p10k.zsh /home/node/
 
 # Create the .ssh directory
 RUN mkdir -p /home/node/.ssh

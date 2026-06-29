@@ -83,4 +83,45 @@ describe('DevContainer Generation Tests', () => {
 		expect(dockerfileFile).toBeDefined();
 		expect(dockerfileFile.content).toContain('USER vscode');
 	});
+
+	it('should generate valid Node devcontainer.json with node username and remoteUser', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+
+		const devcontainerJsonFile = files.find(
+			(f) => f.filePath === '.devcontainer/devcontainer.json'
+		);
+		expect(devcontainerJsonFile).toBeDefined();
+
+		const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
+
+		// Check for unresolved variables in build
+		expect(devcontainerJson.build).toEqual({ dockerfile: 'Dockerfile' });
+
+		// Check for runArgs
+		expect(devcontainerJson.runArgs).toContain('--sysctl');
+		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
+
+		// Check for correct username in features
+		expect(
+			devcontainerJson.features['ghcr.io/devcontainers/features/common-utils:2'].username
+		).toBe('node');
+
+		// Check for remoteUser
+		expect(devcontainerJson.remoteUser).toBe('node');
+
+		// Check Dockerfile copy and shell configuration
+		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
+		expect(dockerfileFile).toBeDefined();
+		expect(dockerfileFile.content).toContain('COPY --chown=node:node .zshrc .p10k.zsh /home/node/');
+		expect(dockerfileFile.content).toContain('# Ensure zsh is the default shell for the node user');
+		expect(dockerfileFile.content).toContain('RUN chsh -s /usr/bin/zsh node');
+	});
 });

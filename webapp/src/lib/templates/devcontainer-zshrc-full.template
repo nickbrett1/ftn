@@ -133,7 +133,13 @@ if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- 
     session_name="${match[1]}"
   fi
 
-  if tmux has-session -t "$session_name" 2>/dev/null; then
+  if [[ -n "$SSH_CONNECTION" || -n "$MOSH_CLIENT" ]]; then
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+      exec tmux attach-session -t "$session_name"
+    else
+      exec tmux new-session -s "$session_name"
+    fi
+  elif tmux has-session -t "$session_name" 2>/dev/null; then
     # Add a new window (tab) to the existing session
     tmux new-window -t "$session_name"
     exit
