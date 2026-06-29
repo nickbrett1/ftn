@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates \
+    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates openssh-server mosh \
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER node
@@ -14,3 +14,18 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 
 RUN mkdir -p $HOME/.wrangler
+
+USER root
+
+# Create the .ssh directory
+RUN mkdir -p /home/node/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/node/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R node:node /home/node/.ssh \
+    && chmod 700 /home/node/.ssh \
+    && chmod 600 /home/node/.ssh/authorized_keys
+
+USER node

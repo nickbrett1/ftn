@@ -3,6 +3,9 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "INFO: Starting custom container setup script..."
 
+echo "INFO: Ensuring SSH service is running..."
+sudo service ssh start
+
 CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
 
@@ -51,6 +54,17 @@ git config --global --add safe.directory /workspaces/ftn
 
 echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
 socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &
+
+echo "INFO: Checking Tailscale status..."
+if ! command -v tailscale &> /dev/null; then
+    echo "INFO: Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+fi
+
+if ! pgrep -x tailscaled > /dev/null; then
+    echo "INFO: Starting Tailscale daemon..."
+    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &
+fi
 
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"

@@ -9,6 +9,8 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Change to the project root directory so that relative paths work correctly
 cd "$PROJECT_ROOT"
 
+{{tailscaleLogin}}
+
 {{dopplerLogin}}
 
 {{wranglerLogin}}

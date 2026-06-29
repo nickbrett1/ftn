@@ -5,7 +5,7 @@ import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.
 // Manually define the content of the templates for testing purposes
 const nodeJsonTemplateContent = `{
   "name": "Node.js",
-  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1"],
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],
   "build": { "dockerfile": "Dockerfile" },
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -32,55 +32,100 @@ const nodeJsonTemplateContent = `{
 
 const javaDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg
+    && apt-get -y install --no-install-recommends git socat curl gnupg openssh-server mosh
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER vscode
 
-RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
-    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
+RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
+    && sh -c "\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 
-RUN mkdir -p $HOME/.wrangler
+RUN mkdir -p \$HOME/.wrangler
+
+USER root
+
+# Create the .ssh directory
+RUN mkdir -p /home/vscode/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R vscode:vscode /home/vscode/.ssh \\
+    && chmod 700 /home/vscode/.ssh \\
+    && chmod 600 /home/vscode/.ssh/authorized_keys
+
+USER vscode
 `;
 
 const pythonDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/python
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm{{dopplerInstallation}}
+    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm openssh-server mosh{{dopplerInstallation}}
 
 USER vscode
 
-RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
-    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
+RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
+    && sh -c "\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash
 
-RUN mkdir -p $HOME/.wrangler
+RUN mkdir -p \$HOME/.wrangler
+
+USER root
+
+# Create the .ssh directory
+RUN mkdir -p /home/vscode/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R vscode:vscode /home/vscode/.ssh \\
+    && chmod 700 /home/vscode/.ssh \\
+    && chmod 600 /home/vscode/.ssh/authorized_keys
+
+USER vscode
 `;
 
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates \\
+    && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates openssh-server mosh \\
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER node
 
-RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
-    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
+RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
+    && sh -c "\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 
-RUN mkdir -p $HOME/.wrangler
+RUN mkdir -p \$HOME/.wrangler
+
+USER root
+
+# Create the .ssh directory
+RUN mkdir -p /home/node/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/node/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R node:node /home/node/.ssh \\
+    && chmod 700 /home/node/.ssh \\
+    && chmod 600 /home/node/.ssh/authorized_keys
+
+USER node
 `;
 
 const dopplerYamlTemplateContent = `setup:

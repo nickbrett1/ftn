@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/java
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends git socat curl gnupg
+    && apt-get -y install --no-install-recommends git socat curl gnupg openssh-server mosh
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
@@ -15,3 +15,18 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
 
 RUN mkdir -p $HOME/.wrangler
+
+USER root
+
+# Create the .ssh directory
+RUN mkdir -p /home/vscode/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R vscode:vscode /home/vscode/.ssh \
+    && chmod 700 /home/vscode/.ssh \
+    && chmod 600 /home/vscode/.ssh/authorized_keys
+
+USER vscode

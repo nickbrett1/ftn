@@ -10,6 +10,8 @@ RUN apt-get update \
         git \
 				socat \
 				gnupg \
+				openssh-server \
+				mosh \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -44,4 +46,17 @@ RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zs
 ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
 
 USER root 
+
+# Create the .ssh directory
+RUN mkdir -p /home/node/.ssh
+
+# Dynamically pull all your public keys from GitHub
+RUN curl -fsSL https://github.com/nickbrett1.keys > /home/node/.ssh/authorized_keys
+
+# Set permissions
+RUN chown -R node:node /home/node/.ssh \
+    && chmod 700 /home/node/.ssh \
+    && chmod 600 /home/node/.ssh/authorized_keys
+
+USER node
  

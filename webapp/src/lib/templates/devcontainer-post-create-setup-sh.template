@@ -8,6 +8,9 @@ CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
 
 echo "INFO: Ensuring wrangler directory permissions..."
+
+echo "INFO: Ensuring SSH service is running..."
+sudo service ssh start
 mkdir -p "$USER_HOME_DIR/.wrangler"
 sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"
 
@@ -29,5 +32,16 @@ sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"
 
 echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
 socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &
+
+echo "INFO: Checking Tailscale status..."
+if ! command -v tailscale &> /dev/null; then
+    echo "INFO: Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+fi
+
+if ! pgrep -x tailscaled > /dev/null; then
+    echo "INFO: Starting Tailscale daemon..."
+    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &
+fi
 
 {{cloudLoginSetup}}

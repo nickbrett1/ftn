@@ -441,8 +441,9 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
 	const hasDoppler = allCapabilities.includes('doppler');
 	const hasGoogleCloud = allCapabilities.includes('google-cloud');
+	const hasDevcontainer = allCapabilities.some((c) => c.startsWith('devcontainer-'));
 
-	if (!hasWrangler && !hasDoppler && !hasGoogleCloud) return;
+	if (!hasWrangler && !hasDoppler && !hasGoogleCloud && !hasDevcontainer) return;
 
 	const hasSvelteKit = allCapabilities.includes('sveltekit');
 	const projectName = projectConfig.name || 'my-project';
@@ -466,8 +467,13 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 		? `gcloud auth login && gcloud config set project ${projectName}`
 		: '';
 
+	const tailscaleLogin = hasDevcontainer
+		? `# Tailscale login\nif command -v tailscale &> /dev/null; then\n  if ! pgrep -x tailscaled > /dev/null; then\n    echo "INFO: Starting Tailscale daemon..."\n    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &\n    sleep 2\n  fi\n  if ! sudo tailscale status &> /dev/null; then\n    echo "INFO: Logging into Tailscale..."\n    sudo tailscale up --hostname=${projectName}\n  else\n    echo "✅ Already logged in to Tailscale."\n  fi\nfi`
+		: '';
+
 	const cloudLoginContent = templateEngine.generateFile('scripts-cloud-login-sh', {
 		...projectConfig,
+		tailscaleLogin,
 		dopplerLogin,
 		wranglerLogin,
 		setupWrangler,

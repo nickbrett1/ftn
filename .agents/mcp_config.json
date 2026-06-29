@@ -44,6 +44,20 @@
       "env": {
         "NANOBANANA_GEMINI_API_KEY": "$NANOBANANA_GEMINI_API_KEY"
       }
+    },
+    "fintechnick": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--project",
+        "webapp",
+        "--config",
+        "dev",
+        "--",
+        "sh",
+        "-c",
+        "npx -y mcp-remote https://www.fintechnick.com/api/mcp --header \"Authorization: Bearer $FINTECHNICK_MCP\""
+      ]
     }
   }
 }
