@@ -41,6 +41,7 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
+        "pcassidy75.tmux-integrated",
         "dbaeumer.vscode-eslint",
         "pejmannikram.vscode-auto-scroll",
         "mgmcdermott.vscode-language-babel",

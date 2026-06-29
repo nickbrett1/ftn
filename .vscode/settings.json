@@ -28,7 +28,7 @@
     "connectionId": "bem",
     "projectKey": "nickbrett1_bem"
   },
-  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.defaultProfile.linux": "tmux-integrated",
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode",
     "javascript.validate.enable": false,
