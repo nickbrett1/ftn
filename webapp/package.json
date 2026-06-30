@@ -108,7 +108,7 @@
 		"agents": "^0.17.3",
 		"apexcharts": "^5.15.2",
 		"arctic": "^3.7.0",
-		"cookie": "^1.1.1",
+		"cookie": "^2.0.1",
 		"gsap": "^3.15.0",
 		"handlebars": "^4.7.9",
 		"hi-base32": "^0.5.1",
