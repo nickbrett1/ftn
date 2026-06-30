@@ -61,8 +61,10 @@ echo "INFO: Playwright Chromium installation complete."
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
-echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
-socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 &
+if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then
+    echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
+    nohup setsid socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 </dev/null >/dev/null 2>&1 &
+fi
 
 echo "INFO: Checking Tailscale status..."
 if ! command -v tailscale &> /dev/null; then
@@ -72,7 +74,7 @@ fi
 
 if ! pgrep -x tailscaled > /dev/null; then
     echo "INFO: Starting Tailscale daemon..."
-    sudo tailscaled --state=/var/lib/tailscale/tailscaled.state > /dev/null 2>&1 &
+    sudo nohup setsid tailscaled --state=/var/lib/tailscale/tailscaled.state </dev/null >/dev/null 2>&1 &
 fi
 
 echo "INFO: Checking Nanobanana MCP installation..."

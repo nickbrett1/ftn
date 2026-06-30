@@ -103,7 +103,8 @@
 
   // Use 'postCreateCommand' to run commands after the container is created.
   // wrangler login command is used to workaround https://github.com/cloudflare/workers-sdk/issues/5937
-  "postCreateCommand": "bash /workspaces/ftn/.devcontainer/post-create-setup.sh"
+  "postCreateCommand": "bash /workspaces/ftn/.devcontainer/post-create-setup.sh",
+  "postStartCommand": "sudo service ssh start && (pgrep -x tailscaled >/dev/null || sudo nohup setsid tailscaled --state=/var/lib/tailscale/tailscaled.state </dev/null >/dev/null 2>&1 &) && (pgrep -f 'socat TCP-LISTEN:9222' >/dev/null || nohup setsid socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 </dev/null >/dev/null 2>&1 &)"
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "root"
