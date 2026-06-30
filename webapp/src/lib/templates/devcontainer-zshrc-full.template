@@ -149,10 +149,60 @@ if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- 
   fi
 fi
 
+# Automatically restore VS Code sockets from /tmp if missing or stale
+restore_vscode_sockets() {
+  local current_user
+  current_user=$(whoami)
+
+  # 1. REMOTE_CONTAINERS_IPC (Git credential helper socket)
+  if [[ -z "$REMOTE_CONTAINERS_IPC" || ! -S "$REMOTE_CONTAINERS_IPC" ]]; then
+    local sockets
+    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-remote-containers-ipc-*.sock" 2>/dev/null))
+    if [ ${#sockets[@]} -gt 0 ]; then
+      local socket
+      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)
+      if [[ -n "$socket" ]]; then
+        export REMOTE_CONTAINERS_IPC="$socket"
+      fi
+    fi
+  fi
+
+  # 2. SSH_AUTH_SOCK (SSH Agent forwarding socket)
+  if [[ -z "$SSH_AUTH_SOCK" || ! -S "$SSH_AUTH_SOCK" ]]; then
+    local sockets
+    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ssh-auth-*.sock" 2>/dev/null))
+    if [ ${#sockets[@]} -gt 0 ]; then
+      local socket
+      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)
+      if [[ -n "$socket" ]]; then
+        export SSH_AUTH_SOCK="$socket"
+      fi
+    fi
+  fi
+
+  # 3. VSCODE_IPC_HOOK_CLI (VS Code CLI communication socket)
+  if [[ -z "$VSCODE_IPC_HOOK_CLI" || ! -S "$VSCODE_IPC_HOOK_CLI" ]]; then
+    local sockets
+    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ipc-*.sock" 2>/dev/null))
+    if [ ${#sockets[@]} -gt 0 ]; then
+      local socket
+      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)
+      if [[ -n "$socket" ]]; then
+        export VSCODE_IPC_HOOK_CLI="$socket"
+      fi
+    fi
+  fi
+}
+
+# Run once on shell startup
+restore_vscode_sockets
+
 # Automatically update environment variables from tmux session inside tmux
 tmux_update_environment() {
   if [ -n "$TMUX" ]; then
     eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH")
+    # Also verify and restore sockets if they became stale/missing after tmux update
+    restore_vscode_sockets
   fi
 }
 if [ -n "$TMUX" ]; then
