@@ -717,8 +717,6 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 		})
 	});
 
-
-
 	if (hasDoppler) {
 		files.push(
 			{
@@ -851,7 +849,9 @@ export function generateGitignoreFile(templateEngine, context) {
 }
 
 export function generateVscodeSettingsFile(templateEngine, context) {
-	const hasPython = Array.isArray(context.capabilities) && context.capabilities.some((c) => c.startsWith('devcontainer-python'));
+	const hasPython =
+		Array.isArray(context.capabilities) &&
+		context.capabilities.some((c) => c.startsWith('devcontainer-python'));
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...context,

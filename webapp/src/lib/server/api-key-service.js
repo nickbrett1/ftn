@@ -1,4 +1,8 @@
-import { getGenprojDb as getGenprojDatabase, executeGenprojQuery, getGenprojFirstResult } from './db.js';
+import {
+	getGenprojDb as getGenprojDatabase,
+	executeGenprojQuery,
+	getGenprojFirstResult
+} from './db.js';
 
 export class ApiKeyService {
 	constructor(environment) {
@@ -55,8 +59,12 @@ export class ApiKeyService {
 		const results = await executeGenprojQuery(this.db, sql, [userEmail]);
 		return results.map((row) => ({
 			...row,
-			createdAt: row.createdAt ? new Date(row.createdAt.replace(' ', 'T') + 'Z').toISOString() : undefined,
-			lastUsedAt: row.lastUsedAt ? new Date(row.lastUsedAt.replace(' ', 'T') + 'Z').toISOString() : undefined
+			createdAt: row.createdAt
+				? new Date(row.createdAt.replace(' ', 'T') + 'Z').toISOString()
+				: undefined,
+			lastUsedAt: row.lastUsedAt
+				? new Date(row.lastUsedAt.replace(' ', 'T') + 'Z').toISOString()
+				: undefined
 		}));
 	}
 
@@ -85,7 +93,9 @@ export class ApiKeyService {
 		if (keyRecord) {
 			const now = new Date();
 			let count = keyRecord.rate_limit_count || 0;
-			let resetAt = keyRecord.rate_limit_reset_at ? new Date(keyRecord.rate_limit_reset_at.replace(' ', 'T') + 'Z') : new Date(0);
+			let resetAt = keyRecord.rate_limit_reset_at
+				? new Date(keyRecord.rate_limit_reset_at.replace(' ', 'T') + 'Z')
+				: new Date(0);
 
 			// Reset the counter if the reset time has passed (1 minute window)
 			if (now >= resetAt) {
@@ -93,7 +103,8 @@ export class ApiKeyService {
 				resetAt = new Date(now.getTime() + 60 * 1000); // Reset in 1 minute
 			}
 
-			if (count >= 100) { // Limit to 100 requests per minute
+			if (count >= 100) {
+				// Limit to 100 requests per minute
 				throw new Error('Rate limit exceeded');
 			}
 
@@ -105,7 +116,11 @@ export class ApiKeyService {
 					rate_limit_reset_at = ?
 				WHERE id = ?
 			`;
-			await executeGenprojQuery(this.db, updateSql, [count + 1, resetAt.toISOString().replace('T', ' ').replace('Z', ''), keyRecord.id]);
+			await executeGenprojQuery(this.db, updateSql, [
+				count + 1,
+				resetAt.toISOString().replace('T', ' ').replace('Z', ''),
+				keyRecord.id
+			]);
 
 			return keyRecord.user_email;
 		}

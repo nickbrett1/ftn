@@ -127,7 +127,7 @@ export default defineConfig(({ command, mode }) => {
 			}
 		},
 		ssr: {
-			noExternal: ['three', 'tippy.js', 'agents', 'agents/mcp', 'partyserver']
+			noExternal: ['three', 'tippy.js', 'agents', 'agents/mcp', 'partyserver', 'cookie']
 		},
 		assetsInclude: ['**/*.glb', '**/*.fbx', '**/*.worker.min.mjs'],
 		build: {

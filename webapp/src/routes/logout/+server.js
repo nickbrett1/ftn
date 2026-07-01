@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import * as cookie from 'cookie';
+import { stringifySetCookie } from 'cookie';
 import { createGenprojAuth } from '$lib/server/genproj-auth.js';
 
 const revokeGoogleToken = async (token) => {
@@ -37,7 +37,7 @@ export async function GET({ request, platform }) {
 	let response = new Response('', {
 		status: HTML_TEMPORARY_REDIRECT,
 		headers: {
-			'set-cookie': cookie.serialize('auth', '', { httpOnly: false }),
+			'set-cookie': stringifySetCookie({ name: 'auth', value: '', httpOnly: false }),
 			location: '/'
 		}
 	});

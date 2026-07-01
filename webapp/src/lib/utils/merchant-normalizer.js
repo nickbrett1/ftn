@@ -586,7 +586,10 @@ function extractAddressDetails(merchant) {
 		const restOfAddress = addressMatch[4];
 
 		// Remove the dash from business name if present
-		const cleanBusinessName = businessName.trim().replace(/[-*]+$/, '').trim();
+		const cleanBusinessName = businessName
+			.trim()
+			.replace(/[-*]+$/, '')
+			.trim();
 
 		return {
 			merchant_normalized: cleanBusinessName,

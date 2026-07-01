@@ -214,11 +214,7 @@ export class BiltCardlessParser extends BaseParser {
 		};
 
 		// Check for foreign currency in description or next lines
-		if (
-			description.includes('FRA') ||
-			description.includes('GBR') ||
-			description.includes('NLD')
-		) {
+		if (description.includes('FRA') || description.includes('GBR') || description.includes('NLD')) {
 			charge.is_foreign_currency = true;
 		}
 

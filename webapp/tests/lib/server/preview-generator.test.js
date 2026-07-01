@@ -270,7 +270,6 @@ describe('generatePreview', () => {
 		expect(content.recommendations).toContain('pcassidy75.tmux-integrated');
 	});
 
-
 	it('generates vite.config.js when devcontainer-node is selected', async () => {
 		const projectConfig = { name: 'NodeProject' };
 		const preview = await generatePreview(projectConfig, ['devcontainer-node']);

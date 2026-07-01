@@ -54,7 +54,6 @@
 			generatedKey = data.key;
 			newKeyName = '';
 			await fetchKeys();
-
 		} catch (e) {
 			error = e.message;
 			console.error(e);

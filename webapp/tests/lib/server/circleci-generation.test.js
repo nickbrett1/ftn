@@ -78,7 +78,9 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile).toBeDefined();
 
 		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@2.0.0');
-		expect(circleCiFile.content).toContain('environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"');
+		expect(circleCiFile.content).toContain(
+			'environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"'
+		);
 		expect(circleCiFile.content).toContain('- sonarcloud/scan:\n          context: common');
 	});
 

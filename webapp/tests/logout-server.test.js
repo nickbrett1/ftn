@@ -11,7 +11,7 @@ vi.mock('@sveltejs/kit', () => ({
 
 // Mock the cookie module
 vi.mock('cookie', () => ({
-	serialize: vi.fn(() => 'auth=; Path=/; HttpOnly; Secure; SameSite=Strict')
+	stringifySetCookie: vi.fn(() => 'auth=; Path=/; HttpOnly; Secure; SameSite=Strict')
 }));
 
 describe('Logout Server Route', () => {

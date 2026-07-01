@@ -166,4 +166,3 @@ describe('File Generator - Extensions', () => {
 		expect(content['python.defaultInterpreterPath']).toBeUndefined();
 	});
 });
-

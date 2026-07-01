@@ -652,7 +652,8 @@ export class ChaseParser extends BaseParser {
 
 		// Only return true if it has a currency keyword and matches the pattern
 		const matchesPattern =
-			/^[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed) || /^\d{2}\/\d{2}\s+[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed);
+			/^[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed) ||
+			/^\d{2}\/\d{2}\s+[A-Z]+(?:\s+[A-Z]+)*$/.test(lineTrimmed);
 
 		return matchesPattern && hasCurrencyKeyword;
 	}

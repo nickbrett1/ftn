@@ -12,12 +12,12 @@ export class WorkflowEvent {
 	isMock = true;
 }
 export class DurableObject {
-    isMock = true;
+	isMock = true;
 }
 export const env = {};
 
 export function connect() {
-    return null;
+	return null;
 }
 
 export const exports = {};

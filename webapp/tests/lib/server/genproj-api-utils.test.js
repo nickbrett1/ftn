@@ -38,11 +38,11 @@ describe('genproj-api-utils', () => {
 			expect(res.data.message).toBe('Project generation failed');
 		});
 
-        it('returns 500 when error code is present but not REPOSITORY_EXISTS', () => {
-            const res = utils.handleGenprojErrorResult({ errorCode: 'OTHER_CODE' });
-            expect(res.status).toBe(500);
-            expect(res.data.message).toBe('Project generation failed');
-        });
+		it('returns 500 when error code is present but not REPOSITORY_EXISTS', () => {
+			const res = utils.handleGenprojErrorResult({ errorCode: 'OTHER_CODE' });
+			expect(res.status).toBe(500);
+			expect(res.data.message).toBe('Project generation failed');
+		});
 	});
 
 	describe('buildAuthTokensFromStored', () => {
@@ -130,7 +130,7 @@ describe('genproj-api-utils', () => {
 			expect(res.errorResponse.status).toBe(401);
 		});
 
-        it('returns 401 if token part is completely missing', async () => {
+		it('returns 401 if token part is completely missing', async () => {
 			const request = { headers: new Headers({ Authorization: 'Bearer' }) };
 			const res = await utils.validatePatAuth(request, { env: {} });
 			expect(res.errorResponse.status).toBe(401);
@@ -151,62 +151,62 @@ describe('genproj-api-utils', () => {
 		});
 
 		it('returns 401 if token part is empty whitespace', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer' }) };
+			const request = { headers: new Headers({ Authorization: 'Bearer' }) };
 			const res = await utils.validatePatAuth(request, { env: {} });
 			expect(res.errorResponse.status).toBe(401);
 		});
 	});
 });
-	describe('validatePatAuth empty or missing token specifically (full coverage map part 6)', () => {
-		it('returns 401 if token part is undefined (split length 1)', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+describe('validatePatAuth empty or missing token specifically (full coverage map part 6)', () => {
+	it('returns 401 if token part is undefined (split length 1)', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
+});
 
-	describe('validatePatAuth completely empty part array edge case', () => {
-		it('returns 401 if split result is completely absent', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+describe('validatePatAuth completely empty part array edge case', () => {
+	it('returns 401 if split result is completely absent', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
+});
 
-	describe('validatePatAuth string empty check', () => {
-		it('returns 401 if pat.trim() is falsy', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer      ' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+describe('validatePatAuth string empty check', () => {
+	it('returns 401 if pat.trim() is falsy', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer      ' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
+});
 
-	describe('validatePatAuth empty or missing token specifically (full coverage map part 6)', () => {
-		it('returns 401 if token part is undefined (split length 1)', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+describe('validatePatAuth empty or missing token specifically (full coverage map part 6)', () => {
+	it('returns 401 if token part is undefined (split length 1)', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
+});
 
-	describe('validatePatAuth empty or missing token specifically (full coverage map part 7)', () => {
-		it('returns 401 if token part is purely empty spaces', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer   ' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+describe('validatePatAuth empty or missing token specifically (full coverage map part 7)', () => {
+	it('returns 401 if token part is purely empty spaces', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer   ' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
-	describe('validatePatAuth string empty check', () => {
-		it('returns 401 if pat is an empty string specifically', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer ' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+});
+describe('validatePatAuth string empty check', () => {
+	it('returns 401 if pat is an empty string specifically', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer ' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
-	describe('validatePatAuth string literal undefined check', () => {
-		it('returns 401 if pat is the string "undefined"', async () => {
-            const request = { headers: new Headers({ Authorization: 'Bearer undefined' }) };
-			const res = await utils.validatePatAuth(request, { env: {} });
-			expect(res.errorResponse.status).toBe(401);
-		});
+});
+describe('validatePatAuth string literal undefined check', () => {
+	it('returns 401 if pat is the string "undefined"', async () => {
+		const request = { headers: new Headers({ Authorization: 'Bearer undefined' }) };
+		const res = await utils.validatePatAuth(request, { env: {} });
+		expect(res.errorResponse.status).toBe(401);
 	});
+});

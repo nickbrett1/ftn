@@ -74,7 +74,10 @@ describe('mcpServer', () => {
 	let server;
 
 	beforeEach(() => {
-		server = createMcpServer({ userEmail: 'test@example.com', platform: { env: { D1_DATABASE: {} } } });
+		server = createMcpServer({
+			userEmail: 'test@example.com',
+			platform: { env: { D1_DATABASE: {} } }
+		});
 		// Find registered handlers. In the SDK, they are stored on the server object.
 		const handlers = server._requestHandlers;
 		for (const [key, value] of handlers.entries()) {
@@ -200,7 +203,10 @@ describe('mcpServer', () => {
 			method: 'tools/call',
 			jsonrpc: '2.0',
 			id: 10,
-			params: { name: 'generate_project', arguments: { name: 'test_proj', selectedCapabilities: [] } }
+			params: {
+				name: 'generate_project',
+				arguments: { name: 'test_proj', selectedCapabilities: [] }
+			}
 		});
 		expect(result.content[0].type).toBe('text');
 		const data = JSON.parse(result.content[0].text);
@@ -213,7 +219,10 @@ describe('mcpServer', () => {
 			method: 'tools/call',
 			jsonrpc: '2.0',
 			id: 11,
-			params: { name: 'generate_project', arguments: { name: 'error_proj', selectedCapabilities: [] } }
+			params: {
+				name: 'generate_project',
+				arguments: { name: 'error_proj', selectedCapabilities: [] }
+			}
 		});
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('Generation failed');
@@ -230,7 +239,10 @@ describe('mcpServer', () => {
 			method: 'tools/call',
 			jsonrpc: '2.0',
 			id: 12,
-			params: { name: 'generate_project', arguments: { name: 'test_proj', selectedCapabilities: [] } }
+			params: {
+				name: 'generate_project',
+				arguments: { name: 'test_proj', selectedCapabilities: [] }
+			}
 		});
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('Missing authentication or database context');

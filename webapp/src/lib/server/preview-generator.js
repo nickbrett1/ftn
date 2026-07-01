@@ -237,7 +237,10 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
 
-	const postStartContent = templateEngine.generateFile('devcontainer-post-start-setup-sh', projectConfig);
+	const postStartContent = templateEngine.generateFile(
+		'devcontainer-post-start-setup-sh',
+		projectConfig
+	);
 
 	return [
 		{
@@ -511,8 +514,6 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 
 		const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
 
-
-
 		if (hasDoppler) {
 			const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
 				...projectConfig,
@@ -595,7 +596,9 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 }
 
 function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabilities) {
-	const hasPython = Array.isArray(allCapabilities) && allCapabilities.some((c) => c.startsWith('devcontainer-python'));
+	const hasPython =
+		Array.isArray(allCapabilities) &&
+		allCapabilities.some((c) => c.startsWith('devcontainer-python'));
 
 	const content = templateEngine.generateFile('vscode-settings-json', {
 		...projectConfig,

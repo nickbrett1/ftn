@@ -71,7 +71,10 @@ async function handleMcpRequest(request, platform) {
 		const url = new URL(request.url);
 		const sessionId = url.searchParams.get('sessionId');
 		if (sessionId && !sessionId.endsWith(`--${token}`)) {
-			return json({ error: 'Forbidden: Session does not match authentication token' }, { status: 403 });
+			return json(
+				{ error: 'Forbidden: Session does not match authentication token' },
+				{ status: 403 }
+			);
 		}
 	}
 

@@ -3,7 +3,11 @@ import { ProjectGeneratorService } from '$lib/server/project-generator';
 import { TokenService } from '$lib/server/token-service';
 import { getCurrentUser } from '$lib/server/auth';
 import { logger } from '$lib/utils/logging';
-import { handleGenprojErrorResult, buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils';
+import {
+	handleGenprojErrorResult,
+	buildAuthTokensFromStored,
+	buildProjectContext
+} from '$lib/server/genproj-api-utils';
 
 export async function POST({ request, platform, cookies }) {
 	try {
