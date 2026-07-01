@@ -3,8 +3,21 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "INFO: Starting custom container setup script..."
 
+echo "INFO: Restoring or backing up SSH host keys..."
+sudo mkdir -p /var/lib/tailscale/ssh
+if [ -n "$(ls -A /var/lib/tailscale/ssh/ssh_host_* 2>/dev/null)" ]; then
+    echo "INFO: Restoring SSH host keys from /var/lib/tailscale/ssh..."
+    sudo cp -f /var/lib/tailscale/ssh/ssh_host_* /etc/ssh/
+    sudo chmod 600 /etc/ssh/ssh_host_*_key
+    sudo chmod 644 /etc/ssh/ssh_host_*_key.pub 2>/dev/null || true
+else
+    echo "INFO: Backing up SSH host keys to /var/lib/tailscale/ssh..."
+    sudo ssh-keygen -A || true
+    sudo cp -f /etc/ssh/ssh_host_* /var/lib/tailscale/ssh/
+fi
+
 echo "INFO: Ensuring SSH service is running..."
-sudo service ssh start
+sudo service ssh restart
 
 CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
@@ -63,7 +76,7 @@ git config --global --add safe.directory /workspaces/ftn
 
 if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then
     echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
-    nohup setsid socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 </dev/null >/dev/null 2>&1 &
+    sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid node:node --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222
 fi
 
 echo "INFO: Checking Tailscale status..."
@@ -74,7 +87,7 @@ fi
 
 if ! pgrep -x tailscaled > /dev/null; then
     echo "INFO: Starting Tailscale daemon..."
-    sudo nohup setsid tailscaled --state=/var/lib/tailscale/tailscaled.state </dev/null >/dev/null 2>&1 &
+    sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/tailscaled.pid --make-pidfile --exec /usr/sbin/tailscaled -- --state=/var/lib/tailscale/tailscaled.state
 fi
 
 echo "INFO: Checking Nanobanana MCP installation..."

@@ -5,19 +5,19 @@
 echo "INFO: Checking SSH service status..."
 if ! pgrep -x sshd >/dev/null; then
     echo "INFO: SSH service not running. Starting it..."
-    sudo service ssh start
+    sudo service ssh restart
 fi
 
 echo "INFO: Checking Tailscale status..."
 if ! pgrep -x tailscaled >/dev/null; then
     echo "INFO: Tailscale daemon not running. Starting it..."
-    sudo nohup setsid tailscaled --state=/var/lib/tailscale/tailscaled.state >/dev/null 2>&1 &
+    sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/tailscaled.pid --make-pidfile --exec /usr/sbin/tailscaled -- --state=/var/lib/tailscale/tailscaled.state
 fi
 
 echo "INFO: Checking socat tunnel status..."
 if ! pgrep -f 'socat TCP-LISTEN:9222' >/dev/null; then
     echo "INFO: socat tunnel not running. Starting it..."
-    nohup setsid socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 >/dev/null 2>&1 &
+    sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid node:node --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222
 fi
 
 echo "INFO: Services check/startup complete."
