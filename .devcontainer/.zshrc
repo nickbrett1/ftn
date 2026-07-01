@@ -1,3 +1,17 @@
+# Automatically heal/resolve VS Code Remote Containers IPC and SSH auth sockets
+if [ -z "$REMOTE_CONTAINERS_IPC" ] || [ ! -S "$REMOTE_CONTAINERS_IPC" ]; then
+  latest_ipc=$(ls -t /tmp/vscode-remote-containers-ipc-*.sock 2>/dev/null | head -n 1)
+  if [ -n "$latest_ipc" ]; then
+    export REMOTE_CONTAINERS_IPC="$latest_ipc"
+  fi
+fi
+if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
+  latest_ssh=$(ls -t /tmp/vscode-ssh-auth-*.sock 2>/dev/null | head -n 1)
+  if [ -n "$latest_ssh" ]; then
+    export SSH_AUTH_SOCK="$latest_ssh"
+  fi
+fi
+
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
