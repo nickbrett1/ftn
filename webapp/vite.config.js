@@ -95,7 +95,9 @@ export default defineConfig(({ command, mode }) => {
 					'**/*.spec.{js,ts}',
 					'**/*.config.{js,ts}',
 					'**/*.setup.{js,ts}',
-					'**/*.stories.{js,ts}'
+					'**/*.stories.{js,ts}',
+					'src/lib/server/precompiled-templates.js',
+					'src/lib/templates/**'
 				],
 				// Include all source files
 				include: ['src/**/*.{js,ts}']
