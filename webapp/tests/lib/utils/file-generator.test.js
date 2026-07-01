@@ -29,7 +29,7 @@ const nodeJsonTemplateContent = `{
   ],
   "forwardPorts": [8788, 8976, 36079, 33301, 37677],
   "postCreateCommand": ".devcontainer/post-create-setup.sh",
-  "postStartCommand": "sudo service ssh start && (pgrep -x tailscaled >/dev/null || sudo nohup setsid tailscaled --state=/var/lib/tailscale/tailscaled.state </dev/null >/dev/null 2>&1 &) && (pgrep -f 'socat TCP-LISTEN:9222' >/dev/null || nohup setsid socat TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222 </dev/null >/dev/null 2>&1 &)"
+  "postStartCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-start-setup.sh"
 }
 `;
 

@@ -94,6 +94,12 @@ function createDevelopmentContainerCapability(
 				filePath: '.devcontainer/post-create-setup.sh',
 				templateId: 'devcontainer-post-create-setup-sh',
 				isExecutable: true
+			},
+			{
+				id: 'start-sh',
+				filePath: '.devcontainer/post-start-setup.sh',
+				templateId: 'devcontainer-post-start-setup-sh',
+				isExecutable: true
 			}
 		],
 		website: 'https://code.visualstudio.com/docs/devcontainers/containers'

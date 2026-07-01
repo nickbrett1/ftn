@@ -7,6 +7,7 @@ import devcontainerNodeJson from '../templates/devcontainer-node-json.template?r
 import devcontainerP10kZshFull from '../templates/devcontainer-p10k-zsh-full.template?raw';
 import devcontainerP10kZsh from '../templates/devcontainer-p10k-zsh.template?raw';
 import devcontainerPostCreateSetupSh from '../templates/devcontainer-post-create-setup-sh.template?raw';
+import devcontainerPostStartSetupSh from '../templates/devcontainer-post-start-setup-sh.template?raw';
 import devcontainerPythonDockerfile from '../templates/devcontainer-python-dockerfile.template?raw';
 import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
@@ -206,6 +207,7 @@ const templateImports = {
 	'devcontainer-p10k-zsh-full': devcontainerP10kZshFull,
 	'devcontainer-p10k-zsh': devcontainerP10kZsh,
 	'devcontainer-post-create-setup-sh': devcontainerPostCreateSetupSh,
+	'devcontainer-post-start-setup-sh': devcontainerPostStartSetupSh,
 	'devcontainer-python-dockerfile': devcontainerPythonDockerfile,
 	'devcontainer-python-json': devcontainerPythonJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
@@ -560,6 +562,10 @@ export function generateMergedDevelopmentContainerFiles(
 		{
 			filePath: '.devcontainer/.tmux.conf',
 			content: templateEngine.generateFile('devcontainer-tmux-conf', context)
+		},
+		{
+			filePath: '.devcontainer/post-start-setup.sh',
+			content: templateEngine.generateFile('devcontainer-post-start-setup-sh', context)
 		},
 		{
 			filePath: '.devcontainer/post-create-setup.sh',

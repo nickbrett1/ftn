@@ -12,6 +12,7 @@ const templatesToCompile = [
 	{ file: 'devcontainer-p10k-zsh-full.template', hbs: 'devcontainer-p10k-zsh-full.hbs' },
 	{ file: 'devcontainer-p10k-zsh.template', hbs: 'devcontainer-p10k-zsh.hbs' },
 	{ file: 'devcontainer-post-create-setup-sh.template', hbs: 'devcontainer-post-create-setup-sh.hbs' },
+	{ file: 'devcontainer-post-start-setup-sh.template', hbs: 'devcontainer-post-start-setup-sh.hbs' },
 	{ file: 'devcontainer-python-dockerfile.template', hbs: 'devcontainer-python-dockerfile.hbs' },
 	{ file: 'devcontainer-zshrc-full.template', hbs: 'devcontainer-zshrc-full.hbs' },
 	{ file: 'devcontainer-zshrc.template', hbs: 'devcontainer-zshrc.hbs' },

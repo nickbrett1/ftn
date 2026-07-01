@@ -164,7 +164,7 @@ describe('generatePreview', () => {
 		expect(dockerfile.content).toBe('content for devcontainer-node-dockerfile');
 
 		// Check that there is only one of each devcontainer file
-		expect(devcontainerFolder.children.length).toBe(5); // devcontainer.json, Dockerfile, .zshrc, .p10k.zsh, post-create-setup.sh
+		expect(devcontainerFolder.children.length).toBe(6); // devcontainer.json, Dockerfile, .zshrc, .p10k.zsh, post-create-setup.sh, post-start-setup.sh
 
 		// Check the merged devcontainer.json content
 		const mergedJson = JSON.parse(devcontainerJsonFile.content);

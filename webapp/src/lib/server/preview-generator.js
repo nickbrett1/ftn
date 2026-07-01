@@ -237,6 +237,8 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
 
+	const postStartContent = templateEngine.generateFile('devcontainer-post-start-setup-sh', projectConfig);
+
 	return [
 		{
 			path: '.devcontainer/.zshrc',
@@ -257,6 +259,13 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			name: 'post-create-setup.sh',
 			content: postCreateContent,
 			size: postCreateContent.length,
+			type: 'file'
+		},
+		{
+			path: '.devcontainer/post-start-setup.sh',
+			name: 'post-start-setup.sh',
+			content: postStartContent,
+			size: postStartContent.length,
 			type: 'file'
 		}
 	];
