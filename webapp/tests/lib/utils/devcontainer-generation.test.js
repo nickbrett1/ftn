@@ -123,5 +123,10 @@ describe('DevContainer Generation Tests', () => {
 		expect(dockerfileFile.content).toContain('COPY --chown=node:node .zshrc .p10k.zsh /home/node/');
 		expect(dockerfileFile.content).toContain('# Ensure zsh is the default shell for the node user');
 		expect(dockerfileFile.content).toContain('RUN chsh -s /usr/bin/zsh node');
+
+		// Check tmux configuration
+		const tmuxConfFile = files.find((f) => f.filePath === '.devcontainer/.tmux.conf');
+		expect(tmuxConfFile).toBeDefined();
+		expect(tmuxConfFile.content).toContain('set -g status-right "my-project"');
 	});
 });

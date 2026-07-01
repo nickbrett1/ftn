@@ -561,7 +561,10 @@ export function generateMergedDevelopmentContainerFiles(
 		},
 		{
 			filePath: '.devcontainer/.tmux.conf',
-			content: templateEngine.generateFile('devcontainer-tmux-conf', context)
+			content: templateEngine.generateFile('devcontainer-tmux-conf', {
+				...context,
+				projectName: context.projectName || context.name || 'my-project'
+			})
 		},
 		{
 			filePath: '.devcontainer/post-start-setup.sh',
