@@ -15,25 +15,7 @@ vi.mock('@sveltejs/kit', () => ({
 	})
 }));
 
-// Expose a controllable create() fn for the llama client mock
-
-globalThis.__llamaCreateMock = vi.fn();
-
-// Mock llama-api-client default export
-vi.mock('llama-api-client', () => {
-	class MockLlamaClient {
-		constructor() {
-			return {
-				chat: {
-					completions: {
-						create: (...arguments_) => globalThis.__llamaCreateMock(...arguments_)
-					}
-				}
-			};
-		}
-	}
-	return { default: MockLlamaClient };
-});
+const fetchMock = vi.fn();
 
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
@@ -43,8 +25,8 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		globalThis.__llamaCreateMock = vi.fn();
+		fetchMock.mockReset();
+		globalThis.fetch = fetchMock;
 
 		mockEvent = {
 			params: { id: '1' },
@@ -57,6 +39,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		// Charge found by default
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN Mktp US*AB12C' });
 	});
+
 	it('returns model text on success', async () => {
 		const modelResponse = {
 			choices: [
@@ -69,7 +52,10 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 			]
 		};
 
-		globalThis.__llamaCreateMock.mockResolvedValue(modelResponse);
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(modelResponse)
+		});
 
 		const response = await GET(mockEvent);
 		expect(response.status).toBe(200);
@@ -77,9 +63,8 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 		expect(body.merchant).toBe('AMZN Mktp US*AB12C');
 		expect(typeof body.text).toBe('string');
 		expect(body.text).toContain('Amazon');
-		// Ensure llama client was called with our prompt
 
-		expect(globalThis.__llamaCreateMock).toHaveBeenCalledTimes(1);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 
 	it('returns 501 if LLAMA_API_KEY missing', async () => {
@@ -107,8 +92,11 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	});
 
 	it('returns 200 with raw text when model output is not JSON', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			choices: [{ message: { content: 'not json' } }]
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				choices: [{ message: { content: 'not json' } }]
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -117,7 +105,7 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	});
 
 	it('returns 502 when llama client throws', async () => {
-		globalThis.__llamaCreateMock.mockRejectedValue(new Error('network'));
+		fetchMock.mockRejectedValue(new Error('network'));
 		const response = await GET(mockEvent);
 		const body = await response.json();
 		expect(response.status).toBe(502);
@@ -142,10 +130,16 @@ describe('fallback methods', () => {
 		};
 		requireUser.mockResolvedValue({ user: { email: 'test@example.com' } });
 		getPayment.mockResolvedValue({ id: 1, merchant: 'AMZN' });
+		fetchMock.mockReset();
+		globalThis.fetch = fetchMock;
 	});
+
 	it('extracts from choices array of parts', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			choices: [{ message: { content: [{ text: 'part1 ' }, { text: 'part2' }] } }]
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				choices: [{ message: { content: [{ text: 'part1 ' }, { text: 'part2' }] } }]
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -154,8 +148,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from root message directly', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			message: { content: 'root message' }
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				message: { content: 'root message' }
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -164,8 +161,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from root message object', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			message: { content: { text: 'root message object' } }
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				message: { content: { text: 'root message object' } }
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -174,8 +174,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from completion_message', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			completion_message: 'completion'
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				completion_message: 'completion'
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -184,8 +187,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from completion_message object', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			completion_message: { content: 'completion obj' }
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				completion_message: { content: 'completion obj' }
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -194,8 +200,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from direct content', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			content: 'direct text'
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				content: 'direct text'
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -204,8 +213,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from direct output_text', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			output_text: 'direct output_text'
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				output_text: 'direct output_text'
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -214,8 +226,11 @@ describe('fallback methods', () => {
 	});
 
 	it('extracts from completion_message.content.text', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({
-			completion_message: { content: { text: 'nested completion text' } }
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({
+				completion_message: { content: { text: 'nested completion text' } }
+			})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -224,7 +239,10 @@ describe('fallback methods', () => {
 	});
 
 	it('returns empty text and 502 for unparseable response', async () => {
-		globalThis.__llamaCreateMock.mockResolvedValue({});
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({})
+		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
 		expect(response.status).toBe(502);

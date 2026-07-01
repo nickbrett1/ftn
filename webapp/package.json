@@ -114,7 +114,6 @@
 		"hi-base32": "^0.5.1",
 		"libsodium-wrappers": "^0.8.4",
 		"linkify-it": "^5.0.1",
-		"llama-api-client": "^0.3.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^5.1.16",
 		"pdfjs-dist": "^6.1.200",

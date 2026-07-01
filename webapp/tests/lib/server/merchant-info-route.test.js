@@ -2,9 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const requireUserMock = vi.fn();
 const getPaymentMock = vi.fn();
-const llamaCreateMock = vi.fn();
-const llamaCtorMock = vi.fn();
-const llamaClientOptions = [];
+const fetchMock = vi.fn();
 
 vi.mock('$env/static/private', () => ({
 	LLAMA_API_MODEL: 'unit-test-model'
@@ -18,28 +16,13 @@ vi.mock('$lib/server/ccbilling-db.js', () => ({
 	getPayment: (...arguments_) => getPaymentMock(...arguments_)
 }));
 
-vi.mock('llama-api-client', () => ({
-	default: class {
-		constructor(options) {
-			llamaCtorMock(options);
-			llamaClientOptions.push(options);
-			this.chat = {
-				completions: {
-					create: llamaCreateMock
-				}
-			};
-		}
-	}
-}));
-
 describe('merchant info route', () => {
 	beforeEach(() => {
 		vi.resetModules();
 		requireUserMock.mockReset();
 		getPaymentMock.mockReset();
-		llamaCreateMock.mockReset();
-		llamaCtorMock.mockClear();
-		llamaClientOptions.length = 0;
+		fetchMock.mockReset();
+		globalThis.fetch = fetchMock;
 	});
 
 	afterEach(() => {
@@ -64,7 +47,8 @@ describe('merchant info route', () => {
 		const { GET } = await loadModule();
 		requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
 		getPaymentMock.mockResolvedValue({ merchant: 'ACME CORP' });
-		llamaCreateMock.mockResolvedValue({
+
+		const mockResponse = {
 			choices: [
 				{
 					message: {
@@ -72,6 +56,10 @@ describe('merchant info route', () => {
 					}
 				}
 			]
+		};
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(mockResponse)
 		});
 
 		const event = buildEvent();
@@ -81,11 +69,13 @@ describe('merchant info route', () => {
 		const body = await response.json();
 		expect(body.merchant).toBe('ACME CORP');
 		expect(body.text).toBe('ACME Corp ? online retail');
-		expect(llamaCreateMock).toHaveBeenCalledTimes(1);
-		expect(llamaClientOptions[0]).toEqual({
-			apiKey: 'api-key-123',
-			baseURL: 'https://llama.api'
-		});
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+
+		const fetchArgs = fetchMock.mock.calls[0];
+		expect(fetchArgs[0]).toBe('https://llama.api/chat/completions');
+		const fetchOptions = fetchArgs[1];
+		expect(fetchOptions.method).toBe('POST');
+		expect(fetchOptions.headers['Authorization']).toBe('Bearer api-key-123');
 	});
 
 	it('returns a 501 response when the API key is missing', async () => {
@@ -99,7 +89,7 @@ describe('merchant info route', () => {
 		expect(response.status).toBe(501);
 		const body = await response.json();
 		expect(body.error).toBe('LLAMA API not configured');
-		expect(llamaCtorMock).not.toHaveBeenCalled();
+		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
 	it('returns the upstream response when authentication fails', async () => {
@@ -143,7 +133,7 @@ describe('merchant info route', () => {
 		const { GET } = await loadModule();
 		requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
 		getPaymentMock.mockResolvedValue({ merchant: 'ACME CORP' });
-		llamaCreateMock.mockRejectedValue(new Error('network down'));
+		fetchMock.mockRejectedValue(new Error('network down'));
 
 		const event = buildEvent();
 		const response = await GET(event);
@@ -157,7 +147,8 @@ describe('merchant info route', () => {
 		const { GET } = await loadModule();
 		requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
 		getPaymentMock.mockResolvedValue({ merchant: 'ACME CORP' });
-		llamaCreateMock.mockResolvedValue({
+
+		const mockResponse = {
 			choices: [
 				{
 					message: {
@@ -165,6 +156,10 @@ describe('merchant info route', () => {
 					}
 				}
 			]
+		};
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(mockResponse)
 		});
 
 		const event = buildEvent();

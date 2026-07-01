@@ -2,10 +2,9 @@ import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { getPayment } from '$lib/server/ccbilling-db.js';
 import { requireUser } from '$lib/server/require-user.js';
-import LlamaAPIClient from 'llama-api-client';
 
 /**
- * Use the official llama-api-client. Base URL is handled by the client.
+ * Use native fetch for the OpenAI-compatible chat/completions endpoint.
  * Required env: LLAMA_API_KEY
  * Optional env: LLAMA_API_MODEL (default: llama3.1-8b-instruct)
  */
@@ -36,8 +35,6 @@ async function runLlamaClient(event, prompt) {
 	}
 
 	try {
-		// Some deployments require a custom base URL; support optional override
-		const client = new LlamaAPIClient(baseURL ? { apiKey, baseURL } : { apiKey });
 		const requestPayload = {
 			model,
 			messages: [
@@ -58,7 +55,23 @@ async function runLlamaClient(event, prompt) {
 			messagesCount: requestPayload.messages.length,
 			promptChars: requestPayload.messages[1]?.content?.length || 0
 		});
-		const resp = await client.chat.completions.create(requestPayload);
+
+		const cleanBaseURL = (baseURL || 'https://api.llama-api.com').replace(/\/$/, '');
+		const response = await fetch(`${cleanBaseURL}/chat/completions`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${apiKey}`
+			},
+			body: JSON.stringify(requestPayload)
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`API error (${response.status}): ${errorText}`);
+		}
+
+		const resp = await response.json();
 
 		function extractMessageText(response) {
 			try {
