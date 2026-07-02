@@ -356,7 +356,7 @@ describe('TemplateEngine', () => {
 		expect(content).toContain(
 			'./scripts/sync-doppler-secrets.sh --config "$DOPPLER_CONFIG" --env "$CLOUDFLARE_ENV"'
 		);
-		expect(content).toContain('npx wrangler deploy --env "$CLOUDFLARE_ENV"');
+		expect(content).toContain('npx wrangler deploy --env "$ENV_VAL"');
 		expect(content).toContain('only: main');
 		expect(content).toContain('ignore: main');
 		expect(content).toContain('name: deploy-to-cloudflare-preview');
