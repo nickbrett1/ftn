@@ -196,7 +196,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./scripts/setup-wrangler-config.sh prd
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
 
       - run:
           name: Install jq
