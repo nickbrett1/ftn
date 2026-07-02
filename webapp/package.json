@@ -31,7 +31,7 @@
 		"lighthouse": "sh -c 'LIGHTHOUSE_ENABLED=true vite preview --host 127.0.0.1'",
 		"lighthouse-server": "sh -c 'LIGHTHOUSE_ENABLED=true vite preview --host 127.0.0.1'",
 		"lighthouse-dev": "doppler run --project webapp --config dev -- lhci autorun --config=./.lighthouserc-dev.cjs",
-		"lighthouse-staging": "doppler run --project webapp --config stg -- lhci autorun --config=./.lighthouserc.cjs",
+		"lighthouse-staging": "doppler run --project webapp --config stg -- ./scripts/run-lhci.sh",
 		"deploy": "npx wrangler deploy -e production",
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
