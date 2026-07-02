@@ -107,4 +107,37 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).not.toContain('environment:');
 		expect(circleCiFile.content).not.toContain('SONAR_SCANNER_OPTS');
 	});
+
+	it('should use ENV_VAL shell variable (not CLOUDFLARE_ENV env var) in the Wrangler deploy step', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: {
+					deployTarget: 'cloudflare-workers',
+					context: {
+						enabled: true,
+						name: 'common'
+					}
+				}
+			}
+		};
+
+		const selectedCapabilities = ['circleci', 'cloudflare-wrangler'];
+
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+		expect(circleCiFile).toBeDefined();
+
+		// CLOUDFLARE_ENV must NOT appear as a step-level environment variable
+		// because Wrangler intercepts it and would attempt to deploy to env "default"
+		expect(circleCiFile.content).not.toContain('CLOUDFLARE_ENV:');
+		// ENV_VAL local shell variable MUST be used instead
+		expect(circleCiFile.content).toContain('ENV_VAL=');
+		expect(circleCiFile.content).toContain('npx wrangler deploy --env "$ENV_VAL"');
+	});
 });
