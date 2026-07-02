@@ -57,6 +57,19 @@ BOOTSTRAP_SQL_FILE="$BOOTSTRAP_SQL_DIR/0000_bootstrap_schema_and_sample_data_${D
 # Ensure migrations directory exists
 mkdir -p "$BOOTSTRAP_SQL_DIR"
 
+# Create temporary jq filter for optimized SQLite insert statement generation
+JQ_FILTER_FILE=$(mktemp)
+cat << 'EOF' > "$JQ_FILTER_FILE"
+def escape_sql:
+  if . == null then "NULL"
+  elif type == "number" then tostring
+  elif type == "boolean" then (if . then "1" else "0" end)
+  else "'" + (tostring | gsub("'"; "''")) + "'"
+  end;
+.[0].results[] as $row | $cols | map($row[.]) | map(escape_sql) | join(", ") | "INSERT INTO \"" + $table + "\" (" + ($cols | map("\"" + . + "\"") | join(", ")) + ") VALUES (" + . + ");"
+EOF
+trap 'rm -f "$JQ_FILTER_FILE"' EXIT
+
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
     echo "Error: jq could not be found. Please install jq to run this script."
@@ -147,36 +160,12 @@ if [ "$NO_TABLES_FOUND" = false ]; then
             continue
         fi
 
-        # Iterate over each row in results (each row is a JSON object)
-        echo "$SAMPLE_DATA_JSON" | jq -c '.[0].results[]' | while IFS= read -r ROW_JSON; do
-            VALUES_SQL_LIST=""
-            FIRST_COL=true
-            for COL_NAME in "${COLUMN_NAMES_ARRAY[@]}"; do
-                VALUE_RAW=$(echo "$ROW_JSON" | jq --arg COL_NAME "$COL_NAME" '.[$COL_NAME]') # Keep as JSON value
-
-                VALUE_FORMATTED=""
-                if [[ "$VALUE_RAW" == "null" ]]; then
-                    VALUE_FORMATTED="NULL"
-                elif [[ "$VALUE_RAW" =~ ^[0-9]+(\.[0-9]+)?$ ]] || [[ "$VALUE_RAW" =~ ^\"[0-9]+(\.[0-9]+)?\"$ ]]; then # Numeric (raw or string-quoted)
-                    # Remove quotes if they exist for numbers that jq might stringify
-                    VALUE_UNQUOTED=$(echo "$VALUE_RAW" | sed 's/^"//;s/"$//')
-                    VALUE_FORMATTED="$VALUE_UNQUOTED"
-                else # String or other type that needs to be quoted
-                    # Remove surrounding quotes added by jq, then escape internal single quotes
-                    VALUE_UNQUOTED=$(echo "$VALUE_RAW" | jq -r '.')
-                    VALUE_ESCAPED=$(echo "$VALUE_UNQUOTED" | sed "s/'/''/g")
-                    VALUE_FORMATTED="'$VALUE_ESCAPED'"
-                fi
-
-                if [ "$FIRST_COL" = true ]; then
-                    VALUES_SQL_LIST="$VALUE_FORMATTED"
-                    FIRST_COL=false
-                else
-                    VALUES_SQL_LIST="$VALUES_SQL_LIST, $VALUE_FORMATTED"
-                fi
-            done
-            echo "INSERT INTO \"$TABLE_NAME\" ($COLUMN_NAMES_SQL_LIST) VALUES ($VALUES_SQL_LIST);" >> "$BOOTSTRAP_SQL_FILE"
-        done
+        # Generate all INSERT statements using the optimized jq filter
+        COLUMNS_JSON=$(echo "$COLUMNS_INFO_JSON" | jq -c '.[0].results | map(.name)')
+        if ! echo "$SAMPLE_DATA_JSON" | jq -r --argjson cols "$COLUMNS_JSON" --arg table "$TABLE_NAME" -f "$JQ_FILTER_FILE" >> "$BOOTSTRAP_SQL_FILE"; then
+            echo "Error: Failed to generate INSERT statements for table $TABLE_NAME"
+            exit 1
+        fi
         echo "" >> "$BOOTSTRAP_SQL_FILE"
     done
 

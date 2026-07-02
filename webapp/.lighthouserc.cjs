@@ -2,13 +2,13 @@ module.exports = {
 	ci: {
 		collect: {
 			startServerCommand: 'npm run lighthouse-server',
-			startServerReadyPattern: 'Local:.*4173',
+			startServerReadyPattern: '4173',
 			startServerReadyTimeout: 30000,
 			url: ['http://127.0.0.1:4173'],
 			numberOfRuns: 1,
 			extends: 'lighthouse:default',
 			settings: {
-				chromeFlags: '--no-sandbox'
+				chromeFlags: '--no-sandbox --disable-dev-shm-usage --disable-gpu --ignore-certificate-errors'
 			},
 			// Add a delay to ensure manifest is properly generated
 			waitForServer: 5000

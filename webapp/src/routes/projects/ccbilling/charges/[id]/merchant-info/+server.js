@@ -49,12 +49,18 @@ async function runLlamaClient(event, prompt) {
 	try {
 		// 1. Native Cloudflare AI Binding
 		if (aiBinding && typeof aiBinding.run === 'function') {
-			console.log('[AI] Using native Cloudflare Workers AI binding', { model: resolvedModel });
-			const resp = await aiBinding.run(resolvedModel, { messages });
-			const textRaw = resp.response || resp.result?.response || '';
-			const text = String(textRaw).trim();
-			console.log('[AI] Response received from native binding', { textLength: text.length });
-			return { ok: true, text };
+			try {
+				console.log('[AI] Using native Cloudflare Workers AI binding', { model: resolvedModel });
+				const resp = await aiBinding.run(resolvedModel, { messages });
+				const textRaw = resp.response || resp.result?.response || '';
+				const text = String(textRaw).trim();
+				console.log('[AI] Response received from native binding', { textLength: text.length });
+				if (text) {
+					return { ok: true, text };
+				}
+			} catch (bindingError) {
+				console.warn('[AI] Native Cloudflare Workers AI binding failed, falling back...', bindingError.message);
+			}
 		}
 
 		// 2. Cloudflare External HTTP API Fallback
