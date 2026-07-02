@@ -8,6 +8,12 @@ vi.mock('$env/static/private', () => ({
 	LLAMA_API_MODEL: 'unit-test-model'
 }));
 
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		LLAMA_API_MODEL: 'llama3.1-8b-instruct'
+	}
+}));
+
 vi.mock('$lib/server/require-user.js', () => ({
 	requireUser: (...arguments_) => requireUserMock(...arguments_)
 }));
@@ -168,5 +174,68 @@ describe('merchant info route', () => {
 		expect(response.status).toBe(502);
 		const body = await response.json();
 		expect(body.error).toBe('Empty response from model');
+	});
+
+	it('calls native Cloudflare Workers AI binding when present', async () => {
+		const { GET } = await loadModule();
+		requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
+		getPaymentMock.mockResolvedValue({ merchant: 'ACME CORP' });
+
+		const runMock = vi.fn().mockResolvedValue({ response: 'ACME Corp from native AI binding' });
+		const event = buildEvent({
+			platform: {
+				env: {
+					AI: { run: runMock }
+				}
+			}
+		});
+
+		const response = await GET(event);
+		expect(response.status).toBe(200);
+		const body = await response.json();
+		expect(body.text).toBe('ACME Corp from native AI binding');
+		expect(runMock).toHaveBeenCalledWith('@cf/meta/llama-3.1-8b-instruct', {
+			messages: [
+				{
+					role: 'system',
+					content: expect.any(String)
+				},
+				{
+					role: 'user',
+					content: expect.any(String)
+				}
+			]
+		});
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('calls Cloudflare external HTTP API when API token and account ID are present without baseURL', async () => {
+		const { GET } = await loadModule();
+		requireUserMock.mockResolvedValue({ user: { id: 'user-1' } });
+		getPaymentMock.mockResolvedValue({ merchant: 'ACME CORP' });
+
+		fetchMock.mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ result: { response: 'ACME Corp from external Cloudflare API' } })
+		});
+
+		const event = buildEvent({
+			platform: {
+				env: {
+					CLOUDFLARE_API_TOKEN: 'cf-token',
+					CLOUDFLARE_ACCOUNT_ID: 'cf-account-id'
+				}
+			}
+		});
+
+		const response = await GET(event);
+		expect(response.status).toBe(200);
+		const body = await response.json();
+		expect(body.text).toBe('ACME Corp from external Cloudflare API');
+
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		const fetchArgs = fetchMock.mock.calls[0];
+		expect(fetchArgs[0]).toBe('https://api.cloudflare.com/client/v4/accounts/cf-account-id/ai/run/@cf/meta/llama-3.1-8b-instruct');
+		expect(fetchArgs[1].headers['Authorization']).toBe('Bearer cf-token');
 	});
 });
