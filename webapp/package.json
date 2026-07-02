@@ -30,8 +30,8 @@
 		"build-storybook": "storybook build",
 		"lighthouse": "sh -c 'LIGHTHOUSE_ENABLED=true vite preview --host 127.0.0.1'",
 		"lighthouse-server": "sh -c 'LIGHTHOUSE_ENABLED=true vite preview --host 127.0.0.1'",
-		"lighthouse-dev": "lhci autorun --config=./.lighthouserc-dev.cjs",
-		"lighthouse-staging": "lhci autorun --config=./.lighthouserc.cjs",
+		"lighthouse-dev": "doppler run --project webapp --config dev -- lhci autorun --config=./.lighthouserc-dev.cjs",
+		"lighthouse-staging": "doppler run --project webapp --config stg -- lhci autorun --config=./.lighthouserc.cjs",
 		"deploy": "npx wrangler deploy -e production",
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
