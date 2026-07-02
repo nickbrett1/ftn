@@ -196,7 +196,7 @@ jobs:
       - run:
           name: Setup Wrangler configuration
           command: |
-            cd webapp && ./scripts/setup-wrangler-config.sh prod
+            cd webapp && ./scripts/setup-wrangler-config.sh prd
 
       - run:
           name: Install jq
@@ -206,7 +206,7 @@ jobs:
           name: Sync Doppler secrets to Cloudflare (production)
           command: |
             chmod +x webapp/scripts/sync-doppler-secrets.sh
-            ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prod --env production
+            ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
 
       - run:
           name: Deploying to Cloudflare

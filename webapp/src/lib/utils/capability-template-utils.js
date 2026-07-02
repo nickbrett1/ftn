@@ -177,7 +177,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
         default: "default"
       doppler_config:
         type: string
-        default: "prod"
+        default: "prd"
     steps:
       - checkout
       - restore_cache:
@@ -212,7 +212,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 		data.deployWorkflowJob = `
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
           environment: "default"
-          doppler_config: "prod"
+          doppler_config: "prd"
           requires:
             - build
           filters:
