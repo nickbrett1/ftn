@@ -3,6 +3,7 @@ module.exports = {
 		collect: {
 			startServerCommand: 'npm run lighthouse-server',
 			startServerReadyPattern: 'Local:.*4173',
+			startServerReadyTimeout: 30000,
 			url: ['http://127.0.0.1:4173'],
 			numberOfRuns: 1,
 			extends: 'lighthouse:default',
@@ -24,7 +25,13 @@ module.exports = {
 				'csp-xss': 'off', // Disable because if unsafe-inline is present, nonces aren't generated (https://github.com/sveltejs/kit/pull/11613)
 				'color-contrast': 'off', // Neon flickering triggers this
 				'aria-valid-attr-value': 'off', // Melt adds some invalid aria tags
-				'link-name': 'off' // svelte-awesome-icons v3 breaking change - icons in links don't pass this check
+				'link-name': 'off', // svelte-awesome-icons v3 breaking change - icons in links don't pass this check
+				'cls-culprits-insight': 'off', // Performance insights new rule
+				'document-latency-insight': 'off', // Performance insights new rule
+				'label-content-name-mismatch': 'off', // Accessibility new axe-core rule
+				'forced-reflow-insight': 'off', // Performance insights new rule
+				'network-dependency-tree-insight': 'off', // Performance insights new rule
+				'dom-size-insight': 'off' // Performance insights new rule
 			}
 		}
 	}

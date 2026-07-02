@@ -15,6 +15,12 @@ vi.mock('@sveltejs/kit', () => ({
 	})
 }));
 
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		LLAMA_API_MODEL: 'llama3.1-8b-instruct'
+	}
+}));
+
 const fetchMock = vi.fn();
 
 import { getPayment } from '$lib/server/ccbilling-db.js';

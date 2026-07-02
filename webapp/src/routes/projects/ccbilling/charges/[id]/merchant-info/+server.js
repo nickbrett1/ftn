@@ -11,10 +11,19 @@ import { requireUser } from '$lib/server/require-user.js';
 async function runLlamaClient(event, prompt) {
 	const environment = event.platform?.env ?? {};
 	const aiBinding = environment.AI;
-	const apiKey = environment.LLAMA_API_KEY || environment.CLOUDFLARE_API_TOKEN || environment.CF_API_TOKEN;
-	const accountId = environment.CLOUDFLARE_ACCOUNT_ID || environment.CF_ACCOUNT_ID;
+	// Resolve Cloudflare specific credentials from Doppler/process env or platform env
+	const cfToken = env.CLOUDFLARE_API_TOKEN || env.CF_API_TOKEN ||
+	                environment.CLOUDFLARE_API_TOKEN || environment.CF_API_TOKEN;
+	const cfAccountId = env.CLOUDFLARE_ACCOUNT_ID || env.CF_ACCOUNT_ID ||
+	                    environment.CLOUDFLARE_ACCOUNT_ID || environment.CF_ACCOUNT_ID;
+
+	// Resolve Llama API specific credentials
+	const llamaKey = env.LLAMA_API_KEY || environment.LLAMA_API_KEY || cfToken;
 	const model = env.LLAMA_API_MODEL || environment.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
+		env.LLAMA_API_BASE_URL ||
+		env.LLAMA_BASE_URL ||
+		env.LLAMA_API_ENDPOINT ||
 		environment.LLAMA_API_BASE_URL ||
 		environment.LLAMA_BASE_URL ||
 		environment.LLAMA_API_ENDPOINT ||
@@ -32,7 +41,7 @@ async function runLlamaClient(event, prompt) {
 
 	// Map default model to Cloudflare equivalent if using Cloudflare
 	let resolvedModel = model;
-	const isCloudflare = aiBinding || (apiKey && accountId);
+	const isCloudflare = aiBinding || (cfToken && cfAccountId);
 	if (isCloudflare && resolvedModel === 'llama3.1-8b-instruct') {
 		resolvedModel = '@cf/meta/llama-3.1-8b-instruct';
 	}
@@ -49,14 +58,14 @@ async function runLlamaClient(event, prompt) {
 		}
 
 		// 2. Cloudflare External HTTP API Fallback
-		if (apiKey && accountId && !baseURL) {
+		if (cfToken && cfAccountId && !baseURL) {
 			console.log('[AI] Using Cloudflare external HTTP API', { model: resolvedModel });
-			const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${resolvedModel}`;
+			const url = `https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/${resolvedModel}`;
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${apiKey}`
+					'Authorization': `Bearer ${cfToken}`
 				},
 				body: JSON.stringify({ messages })
 			});
@@ -74,15 +83,14 @@ async function runLlamaClient(event, prompt) {
 		}
 
 		// 3. Generic OpenAI-compatible API Fallback (Together, Groq, Llama API, etc.)
-		const genericApiKey = environment.LLAMA_API_KEY || apiKey;
-		if (genericApiKey) {
+		if (llamaKey) {
 			const cleanBaseURL = (baseURL || 'https://api.llama-api.com').replace(/\/$/, '');
 			console.log('[AI] Using generic OpenAI-compatible API', { baseURL: cleanBaseURL, model: resolvedModel });
 			const response = await fetch(`${cleanBaseURL}/chat/completions`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${genericApiKey}`
+					'Authorization': `Bearer ${llamaKey}`
 				},
 				body: JSON.stringify({
 					model: resolvedModel,
