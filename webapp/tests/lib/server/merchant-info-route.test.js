@@ -194,7 +194,7 @@ describe('merchant info route', () => {
 		expect(response.status).toBe(200);
 		const body = await response.json();
 		expect(body.text).toBe('ACME Corp from native AI binding');
-		expect(runMock).toHaveBeenCalledWith('@cf/meta/llama-3.1-8b-instruct', {
+		expect(runMock).toHaveBeenCalledWith('@cf/meta/llama-3.1-8b-instruct-fast', {
 			messages: [
 				{
 					role: 'system',
@@ -235,7 +235,7 @@ describe('merchant info route', () => {
 
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		const fetchArgs = fetchMock.mock.calls[0];
-		expect(fetchArgs[0]).toBe('https://api.cloudflare.com/client/v4/accounts/cf-account-id/ai/run/@cf/meta/llama-3.1-8b-instruct');
+		expect(fetchArgs[0]).toBe('https://api.cloudflare.com/client/v4/accounts/cf-account-id/ai/run/@cf/meta/llama-3.1-8b-instruct-fast');
 		expect(fetchArgs[1].headers['Authorization']).toBe('Bearer cf-token');
 	});
 });

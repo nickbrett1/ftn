@@ -43,7 +43,7 @@ async function runLlamaClient(event, prompt) {
 	let resolvedModel = model;
 	const isCloudflare = aiBinding || (cfToken && cfAccountId);
 	if (isCloudflare && resolvedModel === 'llama3.1-8b-instruct') {
-		resolvedModel = '@cf/meta/llama-3.1-8b-instruct';
+		resolvedModel = '@cf/meta/llama-3.1-8b-instruct-fast';
 	}
 
 	try {
