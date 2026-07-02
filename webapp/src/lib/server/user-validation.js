@@ -19,7 +19,7 @@ export async function isUserAllowed(email, kv) {
 		console.log(`[AUTH_HANDLER] User ${email} allowed status from KV: ${isAllowed}`);
 		console.log(`[AUTH_HANDLER] To add this user for development, run:`);
 		console.log(
-			`[AUTH_HANDLER] npx wrangler kv key put "${email}" "dev-user" --binding=KV --preview`
+			`[AUTH_HANDLER] npx wrangler kv key put "${email}" "dev-user" --binding=KV --local --preview`
 		);
 		console.log(
 			`[AUTH_HANDLER] Or for production: npx wrangler kv key put "${email}" "dev-user" --binding=KV`
