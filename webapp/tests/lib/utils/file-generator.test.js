@@ -272,7 +272,7 @@ describe('TemplateEngine', () => {
 			sonarLanguageSettings: 'sonar.foo=bar'
 		};
 		const content = engine.generateFile('.sonarcloud.properties', data);
-		expect(content).toContain('sonar.projectKey=my-project');
+		expect(content).toContain('sonar.projectKey=nickbrett1_my-project');
 		expect(content).toContain('sonar.projectName=my-project');
 		expect(content).toContain('sonar.organization=my-org');
 		expect(content).toContain('sonar.foo=bar');

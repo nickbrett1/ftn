@@ -50,7 +50,7 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).toContain('npm run test');
 	});
 
-	it('should generate sonarcloud configuration when sonarcloud is selected', async () => {
+	it('should generate Export SonarCloud Token step in circleci config but not sonarcloud scanner orbs/steps when sonarcloud is selected', async () => {
 		const projectConfig = {
 			name: 'test-project',
 			description: 'A test project',
@@ -77,11 +77,11 @@ describe('CircleCI Capability Generation', () => {
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
 		expect(circleCiFile).toBeDefined();
 
-		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@2.0.0');
-		expect(circleCiFile.content).toContain(
-			'environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"'
-		);
-		expect(circleCiFile.content).toContain('- sonarcloud/scan:\n          context: common');
+		expect(circleCiFile.content).not.toContain('sonarcloud: sonarsource/sonarcloud@2.0.0');
+		expect(circleCiFile.content).not.toContain('SONAR_SCANNER_OPTS');
+		expect(circleCiFile.content).not.toContain('sonarcloud/scan');
+		expect(circleCiFile.content).toContain('Export SonarCloud Token');
+		expect(circleCiFile.content).toContain('echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV');
 	});
 
 	it('should not contain jobEnvironment if sonarcloud is not selected', async () => {

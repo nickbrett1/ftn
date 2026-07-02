@@ -69,7 +69,7 @@ function getSonarCloudTemplateData(context) {
 
 	return {
 		sonarLanguageSettings: languageSettings,
-		organization: ''
+		organization: config.organization || 'bem'
 	};
 }
 
@@ -201,13 +201,12 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           command: npm run build
       - run:
           name: Deploy to Cloudflare Workers
-          environment:
-            CLOUDFLARE_ENV: << parameters.environment >>
           command: |
-            if [ "$CLOUDFLARE_ENV" = "default" ] || [ -z "$CLOUDFLARE_ENV" ]; then
+            ENV_VAL="<< parameters.environment >>"
+            if [ "$ENV_VAL" = "default" ] || [ -z "$ENV_VAL" ]; then
               npx wrangler deploy
             else
-              npx wrangler deploy --env "$CLOUDFLARE_ENV"
+              npx wrangler deploy --env "$ENV_VAL"
             fi`;
 
 		data.deployWorkflowJob = `
@@ -230,17 +229,6 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
               ignore: main`;
 	}
 }
-
-function _applySonarCloudConfig(data, context, contextEnabled, contextName) {
-	if (context.capabilities.includes('sonarcloud')) {
-		data.jobEnvironment =
-			'\n    environment:\n      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"';
-		data.orbs += `  sonarcloud: sonarsource/sonarcloud@2.0.0\n`;
-		const contextBlock = contextEnabled ? `:\n          context: ${contextName}` : '';
-		data.testSteps += `      - sonarcloud/scan${contextBlock}\n`;
-	}
-}
-
 function getCircleCiTemplateData(context) {
 	const data = {
 		preBuildSteps: '',
@@ -266,7 +254,13 @@ function getCircleCiTemplateData(context) {
 	_applyDopplerConfig(data, context);
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName);
-	_applySonarCloudConfig(data, context, contextEnabled, contextName);
+
+	if (context.capabilities.includes('sonarcloud')) {
+		data.preBuildSteps += `
+      - run:
+          name: Export SonarCloud Token
+          command: echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV`;
+	}
 
 	if (
 		context.capabilities.includes('devcontainer-node') &&
