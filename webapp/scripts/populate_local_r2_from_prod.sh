@@ -174,9 +174,9 @@ readarray -t ALL_BUCKETS <<< "$bucket_names"
 echo "Discovered ${#ALL_BUCKETS[@]} R2 bucket(s): ${ALL_BUCKETS[*]}"
 echo ""
 
-declare -a BUCKETS_TO_SYNC
+declare -a BUCKETS_TO_SYNC=()
 
-if [[ -n "$TARGET_DB" ]]; then
+if [[ -n "$TARGET_DB" && "$TARGET_DB" != "all" ]]; then
     echo "Filtering buckets for target database: $TARGET_DB"
     for bucket in "${ALL_BUCKETS[@]}"; do
         if [[ "$TARGET_DB" == "genproj" && "$bucket" == "genproj-templates" ]]; then

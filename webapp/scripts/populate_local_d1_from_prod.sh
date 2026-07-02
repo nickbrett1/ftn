@@ -83,7 +83,7 @@ else
 fi
 
 # Now process TABLE_NAMES_JSON, which is guaranteed to be valid JSON
-TABLE_NAMES=$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results[]? // empty') # Use '[]?' to handle cases where .[0].results is not an array or doesn't exist, and 'empty' to ensure no output if no tables.
+TABLE_NAMES=$(echo "$TABLE_NAMES_JSON" | jq -r '.[0].results[]?.name // empty') # Use '[]?' to handle cases where .[0].results is not an array or doesn't exist, and 'empty' to ensure no output if no tables.
 
 NUM_TABLES=0
 if [ -n "$TABLE_NAMES" ]; then

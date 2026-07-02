@@ -414,7 +414,7 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	if (hasSvelteKit) {
 		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2"\n  }';
 		scripts =
-			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
+			',\n    "dev": "vite dev",\n    "build": "vite build",\n    "preview": "vite preview --host 127.0.0.1",\n    "check": "svelte-kit sync && svelte-check",\n    "check:watch": "svelte-kit sync && svelte-check --watch"';
 		devDependencies +=
 			'"@sveltejs/kit": "^2.49.2",\n    "@sveltejs/vite-plugin-svelte": "^6.2.1",\n    "svelte": "^5.46.1",\n    "svelte-check": "^4.1.1",\n    "typescript": "^5.7.2",\n    "vite": "^7.3.0"';
 
