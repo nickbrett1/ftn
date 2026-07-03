@@ -106,7 +106,7 @@
 		"@tsparticles/shape-text": "^4.1.0",
 		"@tsparticles/slim": "^4.3.1",
 		"agents": "^0.17.3",
-		"apexcharts": "^5.15.2",
+		"apexcharts": "^5.16.0",
 		"arctic": "^3.7.0",
 		"cookie": "^2.0.1",
 		"gsap": "^3.15.0",
