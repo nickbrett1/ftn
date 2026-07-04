@@ -640,6 +640,9 @@ export function generatePackageJson(templateEngine, context) {
 		if (!devDependencies.includes('"vitest"')) {
 			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
 		}
+		if (context.capabilities.includes('sonarcloud') && !devDependencies.includes('"@vitest/coverage-v8"')) {
+			devDependencies += devDependencies ? ',\n    "@vitest/coverage-v8": "^2.1.8"' : '"@vitest/coverage-v8": "^2.1.8"';
+		}
 		scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 	}
 
@@ -987,6 +990,16 @@ export async function generateAllFiles(context) {
 		allGeneratedFiles.push(generateViteConfigFile(context));
 	}
 
+	if (context.capabilities.includes('sonarcloud')) {
+
+		let sonarContent = '';
+		if (context.capabilities.includes('devcontainer-node')) {
+			sonarContent = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info\n';
+		}
+		allGeneratedFiles.push({ filePath: 'sonar-project.properties', content: sonarContent });
+
+	}
+
 	return allGeneratedFiles;
 }
 
@@ -994,27 +1007,41 @@ export function generateViteConfigFile(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 
 	let content = '';
+	const hasSonarcloud = context.capabilities.includes('sonarcloud');
+	const testConfigSvelte = hasSonarcloud ? `	test: {
+		reporter: ['default', 'junit'],
+		outputFile: {
+			junit: './reports/junit.xml'
+		},
+		coverage: { reporter: ['lcov', 'text'] }
+	}` : `	test: {
+		reporter: ['default', 'junit'],
+		outputFile: {
+			junit: './reports/junit.xml'
+		}
+	}`;
+
+	const testConfigVanilla = hasSonarcloud ? `	test: {
+		reporter: ['default'],
+		coverage: { reporter: ['lcov', 'text'] }
+	}` : `	test: {
+		reporter: ['default']
+	}`;
+
 	if (hasSvelteKit) {
 		content = `import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	test: {
-		reporter: ['default', 'junit'],
-		outputFile: {
-			junit: './reports/junit.xml'
-		}
-	}
+${testConfigSvelte}
 });
 `;
 	} else {
 		content = `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-	test: {
-		reporter: ['default']
-	}
+${testConfigVanilla}
 });
 `;
 	}
