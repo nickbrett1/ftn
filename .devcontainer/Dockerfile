@@ -13,6 +13,8 @@ RUN apt-get update \
 				openssh-server \
 				mosh \
 				tmux \
+				micro \
+				xclip \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
