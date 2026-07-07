@@ -37,6 +37,9 @@ import svelteAppHtml from '../templates/svelte-app-html.template?raw';
 import sveltePageSvelte from '../templates/svelte-page-svelte.template?raw';
 import svelteConfigJs from '../templates/svelte-config-js.template?raw';
 import svelteViteConfigJs from '../templates/svelte-vite-config-js.template?raw';
+import docsifyIndex from '../templates/docsify-index.template?raw';
+import docsifyReadme from '../templates/docsify-readme.template?raw';
+import docsifySidebar from '../templates/docsify-sidebar.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -236,7 +239,10 @@ const templateImports = {
 	'svelte-app-html': svelteAppHtml,
 	'svelte-page-svelte': sveltePageSvelte,
 	'svelte-config-js': svelteConfigJs,
-	'svelte-vite-config-js': svelteViteConfigJs
+	'svelte-vite-config-js': svelteViteConfigJs,
+	'docsify-index': docsifyIndex,
+	'docsify-readme': docsifyReadme,
+	'docsify-sidebar': docsifySidebar
 };
 
 export class TemplateEngine {
@@ -498,6 +504,15 @@ function generateAndMergeDevcontainerJson(
 		mergedDevelopmentContainerJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
+	if (context.capabilities.includes('docsify')) {
+		if (!mergedDevelopmentContainerJson.forwardPorts) {
+			mergedDevelopmentContainerJson.forwardPorts = [];
+		}
+		if (!mergedDevelopmentContainerJson.forwardPorts.includes(3000)) {
+			mergedDevelopmentContainerJson.forwardPorts.unshift(3000);
+		}
+	}
+
 	return {
 		filePath: '.devcontainer/devcontainer.json',
 		content: JSON.stringify(mergedDevelopmentContainerJson, undefined, 2)
@@ -532,6 +547,9 @@ export function generateMergedDevelopmentContainerFiles(
 			capability: baseCapability,
 			dopplerInstallation: context.capabilities.includes('doppler')
 				? ` \\\n    && ${DOPPLER_INSTALL_SCRIPT} \\\n    && apt-get update && apt-get install -y doppler`
+				: '',
+			docsifyInstallation: context.capabilities.includes('docsify')
+				? ' \\\n    && npm install -g docsify-cli'
 				: ''
 		}
 	);
@@ -568,7 +586,12 @@ export function generateMergedDevelopmentContainerFiles(
 		},
 		{
 			filePath: '.devcontainer/post-start-setup.sh',
-			content: templateEngine.generateFile('devcontainer-post-start-setup-sh', context)
+			content: templateEngine.generateFile('devcontainer-post-start-setup-sh', {
+				...context,
+				docsifyService: context.capabilities.includes('docsify')
+					? `\n# Start Docsify server\necho "INFO: Checking Docsify status..."\nif ! pgrep -f 'docsify serve' >/dev/null; then\n    echo "INFO: Docsify not running. Starting it..."\n    DOCSIFY_BIN=$(which docsify || echo "/usr/local/share/npm-global/bin/docsify")\n    if [ -f "$DOCSIFY_BIN" ]; then\n        sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/docsify.pid --make-pidfile --chuid node:node --exec "$DOCSIFY_BIN" -- serve /workspaces/${context.projectName || context.name || 'my-project'}/docs --port 3000\n    else\n        echo "WARNING: docsify binary not found, skipping startup."\n    fi\nfi\n`
+					: ''
+			})
 		},
 		{
 			filePath: '.devcontainer/post-create-setup.sh',

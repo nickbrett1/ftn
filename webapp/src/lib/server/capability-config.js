@@ -274,6 +274,18 @@ export class CapabilityConfigurationService {
 				},
 				requiresAuth: false,
 				authService: null
+			},
+
+			docsify: {
+				id: 'docsify',
+				name: 'Docsify',
+				description: 'Expose and preview project markdown documentation in a web browser',
+				category: 'maintenance',
+				dependencies: ['devcontainer-node'],
+				conflicts: [],
+				configuration: {},
+				requiresAuth: false,
+				authService: undefined
 			}
 		};
 	}

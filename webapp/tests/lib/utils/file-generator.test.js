@@ -101,7 +101,7 @@ USER vscode
 const nodeDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/typescript-node
 RUN apt-get update \\
     && apt-get -y install --no-install-recommends git socat curl gnupg gnupg2 apt-transport-https ca-certificates openssh-server mosh tmux \\
-    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
+    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}{{docsifyInstallation}}
 
 USER node
 

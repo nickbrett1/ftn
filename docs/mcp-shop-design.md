@@ -75,7 +75,7 @@ sequenceDiagram
 The MCP server will expose the following tools to the AI agents:
 
 | Tool Name | Description | Arguments | Returns |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `list_products` | Returns the list of products available in the shop with their metadata. | None | `Array<{ id: string, name: string, description: string, price: number, currency: string, category: string }>` |
 | `get_product` | Returns detailed information about a single product by its ID. | `productId` (string, required) | Product object matching target ID |
 | `purchase_product_direct` | Directly processes a purchase using Stripe test payment details. | `productId` (string, required), `stripeToken` (string, optional, defaults to `tok_visa`) | `{ success: boolean, orderId: string, chargeId: string }` |
@@ -322,15 +322,15 @@ export const POST = async ({ request }) => {
 To implement this design, the following steps are required:
 
 1. **Install Dependencies**:
-   - `npm install @modelcontextprotocol/sdk` (MCP Server Framework)
-   - `npm install @cloudflare/agents` (Cloudflare Workers MCP Streamable HTTP helper)
+  - `npm install @modelcontextprotocol/sdk` (MCP Server Framework)
+  - `npm install @cloudflare/agents` (Cloudflare Workers MCP Streamable HTTP helper)
 2. **Refactor existing `+page.server.js`**:
-   - Move the Stripe Checkout Session creation from `+page.server.js` into the shared core `src/lib/server/shop.js`.
-   - Update `+page.server.js` to call `createStripeSession(productId, url.origin)` to maintain DRY compliance.
+  - Move the Stripe Checkout Session creation from `+page.server.js` into the shared core `src/lib/server/shop.js`.
+  - Update `+page.server.js` to call `createStripeSession(productId, url.origin)` to maintain DRY compliance.
 3. **Configure private environment variables**:
-   - Ensure `STRIPE_SECRET_KEY` is present in Cloudflare Wrangler secrets or Doppler.
+  - Ensure `STRIPE_SECRET_KEY` is present in Cloudflare Wrangler secrets or Doppler.
 4. **Agent Integration**:
-   - Point your stagehand/headless-browser agent swarm to make HTTP POST requests to `https://www.fintechnick.com/api/mcp` with the MCP tool payload.
+  - Point your stagehand/headless-browser agent swarm to make HTTP POST requests to `https://www.fintechnick.com/api/mcp` with the MCP tool payload.
 
 ---
 

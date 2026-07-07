@@ -322,6 +322,42 @@ export const CAPABILITIES = {
 		authService: null,
 		icon: 'lighthouse',
 		tags: ['performance', 'accessibility', 'audit', 'ci']
+	},
+
+	docsify: {
+		id: 'docsify',
+		name: 'Docsify',
+		description: 'Expose and preview project markdown documentation in a web browser.',
+		category: 'maintenance',
+		dependencies: ['devcontainer-node'],
+		conflicts: [],
+		requiresAuth: [],
+		configurationSchema: { type: 'object', properties: {} },
+		configuration: {},
+		benefits: [
+			'Instant in-browser preview of your project markdown documentation',
+			'Clean dark theme with search, copy-code button, and image zoom plugins',
+			'Runs automatically in the background on devcontainer startup'
+		],
+		templates: [
+			{
+				id: 'docsify-index',
+				filePath: 'docs/index.html',
+				templateId: 'docsify-index'
+			},
+			{
+				id: 'docsify-readme',
+				filePath: 'docs/README.md',
+				templateId: 'docsify-readme'
+			},
+			{
+				id: 'docsify-sidebar',
+				filePath: 'docs/_sidebar.md',
+				templateId: 'docsify-sidebar'
+			}
+		],
+		website: 'https://docsify.js.org/',
+		tags: ['documentation', 'preview', 'markdown', 'server']
 	}
 };
 

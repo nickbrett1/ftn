@@ -1,0 +1,10 @@
+# {{projectName}} Documentation
+
+Welcome to the internal documentation portal for the **{{projectName}}** project.
+
+This site serves as a central hub for architecture designs, integration specifications, developer notes, and guides. You can browse through the available documents using the sidebar navigation.
+
+## Quick Links
+
+- [Project Repository](https://github.com/nickbrett1/{{projectName}})
+- [Workspace Root](file:///workspaces/{{projectName}})
