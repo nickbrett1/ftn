@@ -51,7 +51,7 @@ July 2026
 <ProjectLinkButton href={projectUrl} />
 
 <div class="my-8">
-	<Img src={shockedRobotBill} alt="Meme showing shocked robot looking at a credit card bill with flying dollar bills" class="mx-auto rounded-2xl shadow-2xl border border-gray-800 max-w-lg" />
+	<Img src={shockedRobotBill} alt="Meme showing shocked robot looking at a credit card bill with flying dollar bills" class="mx-auto rounded-2xl shadow-2xl border border-gray-800 w-full max-w-lg" />
 </div>
 
 ## Introduction
