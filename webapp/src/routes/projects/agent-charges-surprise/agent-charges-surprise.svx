@@ -80,7 +80,7 @@ Here is how OpenClaw is structurally architected:
 	</div>
 </div>
 
-It seemed like the perfect setup. However, in a matter of minutes, I managed to run up an unexpected **~$50 agent API bill**. This postmortem details how a massive data file was silently injected into the prompt, combined with delayed billing, cache-write penalties, and uncached "cold-start" uploads to create the perfect storm—and how you can avoid the same fate.
+It seemed like the perfect setup. However, in a matter of minutes, I managed to run up an unexpected **~$44.08 agent API bill**. This postmortem details how a massive data file was silently injected into the prompt, combined with delayed billing, cache-write penalties, and uncached "cold-start" uploads to create the perfect storm—and how you can avoid the same fate.
 
 ---
 
@@ -178,29 +178,3 @@ These lessons apply generally when working with LLMs, but particularly if costs 
 
 - **Action:** Treat any session errors or auto-compaction warnings (such as `⚠️ Auto-compaction could not recover this turn`) as a warning to immediately halt, inspect the trajectory, and manually purge the bloated data or reset the session.
 - **Rule:** Never ignore framework warnings when auto-compaction fails. Summarization algorithms are designed for conversational text, not structured databases (like CSVs or log files). When they fail, the system falls back to carrying the raw, uncompressed payload, exponentially multiplying your costs on every subsequent message if you continue.
-
----
-
-## Forensic Case Study & Key Facts
-
-### 1. The Trigger Incident
-
-- **Timestamp:** June 25, 2026 (Active during late-night hours EDT, logged as June 25 UTC).
-- **The Context:** Deployment and automation of a Tdarr transcoding farm.
-- **The "Smoking Gun":** The injection of 1,602 lines of movie data from the generated CSV directly into the conversation history, forcing the agent to re-ingest the entire dataset into the context window for every single subsequent message.
-
-### 2. The Math Breakdown
-
-- **Token Footprint:** 135,000+ tokens per interaction.
-- **The Cost Drivers:** A combination of high-frequency tool calls (460+ requests) + Cache-Write surcharges + Uncached re-uploads after idle time.
-- **The Total Impact:** A $44.08 spike on June 25th caused by high-intensity engineering tool use and automated context bloat, compounded by the time-zone shift between user activity and UTC server logs.
-
-### 3. The Evidence Log (The Warning)
-
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-
-```text
-⚠️ Auto-compaction could not recover this turn. I kept this conversation mapped to the current session. Please try again, use /compact, or use /new to start a fresh session.
-```
-
-_This warning was the signal that the agent had failed to manage its memory and was actively dragging the bloated file through the expensive API cache-write pipeline._
