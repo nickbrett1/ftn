@@ -30,7 +30,7 @@
 		};
 	});
 
-	const projectUrl = "https://github.com/nickbrett1/ftn";
+	const projectUrl = "https://github.com/nickbrett1/openclaw-nas";
 </script>
 
 <svelte:window bind:scrollY />
