@@ -8,16 +8,94 @@ import { requireUser } from '$lib/server/require-user.js';
  * Required env: LLAMA_API_KEY
  * Optional env: LLAMA_API_MODEL (default: llama3.1-8b-instruct)
  */
-async function runLlamaClient(event, prompt) {
+function extractFromPart(part) {
+	if (typeof part === 'string') return part;
+	if (typeof part?.text === 'string') return part.text;
+	if (typeof part?.content === 'string') return part.content;
+	return '';
+}
+
+function extractFromDirectProperties(response) {
+	if (typeof response?.content === 'string') return response.content;
+	if (typeof response?.text === 'string') return response.text;
+	if (typeof response?.output_text === 'string') return response.output_text;
+	if (typeof response?.completion_message?.content?.text === 'string') {
+		return response.completion_message.content.text;
+	}
+	return null;
+}
+
+function extractFromMessage(message) {
+	if (!message) return null;
+
+	if (typeof message.content === 'string') return message.content;
+
+	if (Array.isArray(message.content)) {
+		const parts = message.content.map((part) => extractFromPart(part)).filter(Boolean);
+		return parts.length > 0 ? parts.join('\n') : null;
+	}
+
+	if (message.content && typeof message.content === 'object') {
+		return extractFromPart(message.content);
+	}
+
+	return null;
+}
+
+function extractFromCompletionMessage(completionMessage) {
+	if (!completionMessage) return null;
+
+	if (typeof completionMessage === 'string') return completionMessage;
+	if (typeof completionMessage === 'object') {
+		return extractFromMessage(completionMessage);
+	}
+
+	return null;
+}
+
+function extractFromChoices(choices) {
+	if (!Array.isArray(choices) || choices.length === 0) return null;
+
+	const firstChoice = choices[0];
+	const choiceText =
+		extractFromMessage(firstChoice?.message) || extractFromMessage(firstChoice);
+	if (choiceText) return choiceText;
+
+	const joined = choices
+		.map((choice) => extractFromMessage(choice?.message) || extractFromMessage(choice))
+		.filter(Boolean)
+		.join('\n')
+		.trim();
+	return joined || null;
+}
+
+function extractMessageText(response) {
+	try {
+		const choicesText = extractFromChoices(response?.choices);
+		if (choicesText) return choicesText;
+
+		const messageText = extractFromMessage(response?.message);
+		if (messageText) return messageText;
+
+		const completionText = extractFromCompletionMessage(response?.completion_message);
+		if (completionText) return completionText;
+
+		return extractFromDirectProperties(response);
+	} catch {
+		// Ignore parsing errors and return empty string
+	}
+	return '';
+}
+
+function _resolveLlamaCredentials(event) {
 	const environment = event.platform?.env ?? {};
 	const aiBinding = environment.AI;
-	// Resolve Cloudflare specific credentials from Doppler/process env or platform env
+
 	const cfToken = env.CLOUDFLARE_API_TOKEN || env.CF_API_TOKEN ||
 	                environment.CLOUDFLARE_API_TOKEN || environment.CF_API_TOKEN;
 	const cfAccountId = env.CLOUDFLARE_ACCOUNT_ID || env.CF_ACCOUNT_ID ||
 	                    environment.CLOUDFLARE_ACCOUNT_ID || environment.CF_ACCOUNT_ID;
 
-	// Resolve Llama API specific credentials
 	const llamaKey = env.LLAMA_API_KEY || environment.LLAMA_API_KEY || cfToken;
 	const model = env.LLAMA_API_MODEL || environment.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
 	const baseURL =
@@ -29,7 +107,18 @@ async function runLlamaClient(event, prompt) {
 		environment.LLAMA_API_ENDPOINT ||
 		undefined;
 
-	// Define system and user messages
+	let resolvedModel = model;
+	const isCloudflare = aiBinding || (cfToken && cfAccountId);
+	if (isCloudflare && resolvedModel === 'llama3.1-8b-instruct') {
+		resolvedModel = '@cf/meta/llama-3.1-8b-instruct-fast';
+	}
+
+	return { aiBinding, cfToken, cfAccountId, llamaKey, model, baseURL, resolvedModel };
+}
+
+async function runLlamaClient(event, prompt) {
+	const { aiBinding, cfToken, cfAccountId, llamaKey, baseURL, resolvedModel } = _resolveLlamaCredentials(event);
+
 	const messages = [
 		{
 			role: 'system',
@@ -38,13 +127,6 @@ async function runLlamaClient(event, prompt) {
 		},
 		{ role: 'user', content: prompt }
 	];
-
-	// Map default model to Cloudflare equivalent if using Cloudflare
-	let resolvedModel = model;
-	const isCloudflare = aiBinding || (cfToken && cfAccountId);
-	if (isCloudflare && resolvedModel === 'llama3.1-8b-instruct') {
-		resolvedModel = '@cf/meta/llama-3.1-8b-instruct-fast';
-	}
 
 	try {
 		// 1. Native Cloudflare AI Binding
@@ -114,94 +196,6 @@ async function runLlamaClient(event, prompt) {
 			}
 
 			const resp = await response.json();
-
-			function extractMessageText(response) {
-				try {
-					// Extract text from choices array (OpenAI-style)
-					const choicesText = extractFromChoices(response?.choices);
-					if (choicesText) return choicesText;
-
-					// Extract from top-level message
-					const messageText = extractFromMessage(response?.message);
-					if (messageText) return messageText;
-
-					// Extract from completion_message
-					const completionText = extractFromCompletionMessage(response?.completion_message);
-					if (completionText) return completionText;
-
-					// Fallback to direct properties
-					return extractFromDirectProperties(response);
-				} catch {
-					// Ignore parsing errors and return empty string
-				}
-				return '';
-			}
-
-			function extractFromChoices(choices) {
-				if (!Array.isArray(choices) || choices.length === 0) return null;
-
-				const firstChoice = choices[0];
-				const choiceText =
-					extractFromMessage(firstChoice?.message) || extractFromMessage(firstChoice);
-				if (choiceText) return choiceText;
-
-				// Join all choices if they have fragments
-				const joined = choices
-					.map((choice) => extractFromMessage(choice?.message) || extractFromMessage(choice))
-					.filter(Boolean)
-					.join('\n')
-					.trim();
-				return joined || null;
-			}
-
-			function extractFromMessage(message) {
-				if (!message) return null;
-
-				// Direct string content
-				if (typeof message.content === 'string') return message.content;
-
-				// Array of content parts
-				if (Array.isArray(message.content)) {
-					const parts = message.content.map((part) => extractFromPart(part)).filter(Boolean);
-					return parts.length > 0 ? parts.join('\n') : null;
-				}
-
-				// Object with text/content
-				if (message.content && typeof message.content === 'object') {
-					return extractFromPart(message.content);
-				}
-
-				return null;
-			}
-
-			function extractFromCompletionMessage(completionMessage) {
-				if (!completionMessage) return null;
-
-				if (typeof completionMessage === 'string') return completionMessage;
-				if (typeof completionMessage === 'object') {
-					return extractFromMessage(completionMessage);
-				}
-
-				return null;
-			}
-
-			function extractFromDirectProperties(response) {
-				if (typeof response?.content === 'string') return response.content;
-				if (typeof response?.text === 'string') return response.text;
-				if (typeof response?.output_text === 'string') return response.output_text;
-				if (typeof response?.completion_message?.content?.text === 'string') {
-					return response.completion_message.content.text;
-				}
-				return null;
-			}
-
-			function extractFromPart(part) {
-				if (typeof part === 'string') return part;
-				if (typeof part?.text === 'string') return part.text;
-				if (typeof part?.content === 'string') return part.content;
-				return '';
-			}
-
 			const textRaw = extractMessageText(resp) || '';
 			const text = String(textRaw).trim();
 			console.log('[AI] Response received from generic API', {

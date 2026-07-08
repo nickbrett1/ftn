@@ -8,7 +8,8 @@
 		PlaneDepartureSolid,
 		ProjectDiagramSolid,
 		ClipboardCheckSolid,
-		RobotSolid
+		RobotSolid,
+		CreditCardSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -34,6 +35,7 @@
 				</p>
 			</div>
 		</Card>
+
 		<Card onclick={() => (globalThis.location.href = '/projects/building-with-ai')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">

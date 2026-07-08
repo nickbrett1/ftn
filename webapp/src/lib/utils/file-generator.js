@@ -622,15 +622,13 @@ export function generateMergedDevelopmentContainerFiles(
 	return files;
 }
 
-export function generatePackageJson(templateEngine, context) {
-	let scripts = ',\n    "build": "echo \'No build step required\'"';
-	let devDependencies = '';
-	let dependencies = '';
-	let typeField;
-	let overrides = '';
-
+function _getFrameworkConfig(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
+	let scripts = ',\n    "build": "echo \'No build step required\'"';
+	let devDependencies = '';
+	let typeField = 'commonjs';
+	let overrides = '';
 
 	if (hasSvelteKit) {
 		typeField = 'module';
@@ -643,45 +641,47 @@ export function generatePackageJson(templateEngine, context) {
 
 		if (hasWrangler) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4"';
-			// Wrangler is also needed as dev dep
-			devDependencies += ',\n    "wrangler": "^4.56.0"';
+			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4",\n    "wrangler": "^4.56.0"';
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}
 	} else if (hasWrangler) {
-		// Normal Node.js setup
 		scripts += ',\n    "deploy": "wrangler deploy"';
 		devDependencies += '"wrangler": "^3.57.0"';
-		typeField = 'module'; // Wrangler projects are usually modules
-	} else {
-		typeField = 'commonjs';
+		typeField = 'module';
 	}
 
+	return { typeField, scripts, devDependencies, overrides };
+}
+
+function _addNodeDevcontainerConfig(context, config) {
 	if (context.capabilities.includes('devcontainer-node')) {
-		typeField = 'module';
-		if (!devDependencies.includes('"vitest"')) {
-			devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
+		config.typeField = 'module';
+		if (!config.devDependencies.includes('"vitest"')) {
+			config.devDependencies += config.devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
 		}
-		if (context.capabilities.includes('sonarcloud') && !devDependencies.includes('"@vitest/coverage-v8"')) {
-			devDependencies += devDependencies ? ',\n    "@vitest/coverage-v8": "^2.1.8"' : '"@vitest/coverage-v8": "^2.1.8"';
+		if (context.capabilities.includes('sonarcloud') && !config.devDependencies.includes('"@vitest/coverage-v8"')) {
+			config.devDependencies += config.devDependencies ? ',\n    "@vitest/coverage-v8": "^2.1.8"' : '"@vitest/coverage-v8": "^2.1.8"';
 		}
-		scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
+		config.scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 	}
+}
+
+export function generatePackageJson(templateEngine, context) {
+	const config = _getFrameworkConfig(context);
+	_addNodeDevcontainerConfig(context, config);
 
 	if (
 		context.capabilities.includes('devcontainer-node') ||
 		context.capabilities.includes('cloudflare-wrangler')
 	) {
-		// Add explicit package.json only if Node.js container is selected
-		// or we can generate it for all, but user requested "if node.js is selected"
 		const content = templateEngine.generateFile('package-json', {
 			...context,
-			scripts,
-			devDependencies,
-			dependencies,
-			typeField,
-			overrides,
+			scripts: config.scripts,
+			devDependencies: config.devDependencies,
+			dependencies: '',
+			typeField: config.typeField,
+			overrides: config.overrides,
 			projectName: context.projectName || context.name || 'my-project'
 		});
 		return {

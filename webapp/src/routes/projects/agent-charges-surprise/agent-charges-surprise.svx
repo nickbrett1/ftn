@@ -1,0 +1,206 @@
+<script>
+	import { onMount } from 'svelte';
+	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+	import Img from '@zerodevx/svelte-img';
+	import shockedRobotBill from "$lib/images/shocked-robot-bill.jpg?as=run";
+
+	let scrollY = $state(0);
+	let innerHeight = $state(0);
+	let scrollHeight = $state(0);
+
+	// Interpolate cost based on scroll progress (0% -> 0.00, 100% -> 44.08)
+	let scrollPercent = $derived(scrollHeight > innerHeight ? scrollY / (scrollHeight - innerHeight) : 0);
+	let currentCost = $derived((scrollPercent * 44.08).toFixed(2));
+
+	onMount(() => {
+		scrollHeight = document.documentElement.scrollHeight;
+		innerHeight = window.innerHeight;
+
+		const handleResize = () => {
+			scrollHeight = document.documentElement.scrollHeight;
+			innerHeight = window.innerHeight;
+		};
+
+		window.addEventListener('resize', handleResize);
+		window.addEventListener('scroll', handleResize); // Keep measurements updated
+
+		return () => {
+			window.removeEventListener('resize', handleResize);
+			window.removeEventListener('scroll', handleResize);
+		};
+	});
+
+	const projectUrl = "https://github.com/nickbrett1/ftn";
+</script>
+
+<svelte:window bind:scrollY />
+
+<!-- Dynamic Cost Meter widget -->
+<div class="fixed top-24 right-4 md:right-8 bg-black/90 backdrop-blur-md border border-red-500/40 rounded-xl p-4 shadow-2xl z-50 text-center font-mono max-w-[160px] transition-all hover:scale-105">
+	<div class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Turn cost meter</div>
+	<div class="text-3xl font-extrabold text-red-500 mt-1">${currentCost}</div>
+	<div class="text-[9px] text-gray-500 mt-1">Scroll to watch bill grow</div>
+</div>
+
+<h1 class="!mb-0 no-underline text-4xl md:text-5xl font-black tracking-tight text-white">
+	Anatomy of a Runaway Agent Bill: Context Caching & Bloat Postmortem
+</h1>
+<p class="text-xl md:text-2xl text-gray-300 !mt-2 !mb-6">
+	How an autonomous AI agent ran up a surprise credit card bill by dragging a massive CSV into conversation context, and how to prevent it.
+</p>
+July 2026
+<ProjectLinkButton href={projectUrl} />
+
+<div class="my-8">
+	<Img src={shockedRobotBill} alt="Meme showing shocked robot looking at a credit card bill with flying dollar bills" class="mx-auto rounded-2xl shadow-2xl border border-gray-800 max-w-lg" />
+</div>
+
+## Introduction
+
+In my previous article, [Building with AI Agents](/projects/building-with-ai), I detailed my experience using Cursor's agent mode to develop components of a 14,500-line personal finance tool. Having enjoyed the velocity of agent-assisted development, I decided to take the next logical step: setting up a fully autonomous agent framework locally.
+
+Specifically, I wanted to experiment with **OpenClaw**, an open-source framework that runs locally and integrates with LLM APIs to perform multi-step file manipulation, directory analysis, and script execution. My goal was simple: use OpenClaw to analyze my local Network Attached Storage (NAS) media folders, look at conversions, and help optimize storage.
+
+Here is how OpenClaw is structurally architected:
+
+<!-- Responsive CSS diagram -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center my-8 p-6 bg-base-800/50 rounded-xl border border-gray-800 text-center font-mono text-sm">
+	<div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+		<div class="font-bold text-green-400">User / Cron Trigger</div>
+		<div class="text-xs text-gray-400 mt-1">Initiates storage check</div>
+	</div>
+	<div class="flex flex-col items-center justify-center p-4 bg-gray-900 rounded-lg border border-green-500/40 relative">
+		<div class="absolute -top-3 px-2 bg-green-900/60 border border-green-500/30 text-[10px] text-green-300 rounded">OpenClaw Agent</div>
+		<div class="font-bold text-white mt-1">Runs Local Python Scripts</div>
+		<div class="text-xs text-gray-400 mt-1">Traverses directories, parses logs</div>
+	</div>
+	<div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+		<div class="font-bold text-blue-400">Gemini 3.5 API</div>
+		<div class="text-xs text-gray-400 mt-1">Context Caching enabled</div>
+	</div>
+</div>
+
+It seemed like the perfect setup. However, in a matter of minutes, I managed to run up an unexpected **~$50 agent API bill**. This postmortem details how a massive data file was silently injected into the prompt, combined with delayed billing, cache-write penalties, and uncached "cold-start" uploads to create the perfect storm—and how you can avoid the same fate.
+
+---
+
+## Timeline of the Bloat
+
+The timeline below tracks the key chat events that led to the massive bill, starting from the goal of analyzing my ripped DVD collection to check sizes and conversions.
+
+### 1. Opening the Gates (The Potential for Bloat)
+
+- **Timestamp:** June 23, 2026 at 9:38 PM EDT
+- **User:** _"OK, done that. Let's get back to the analysis"_
+- **Agent:** _"We are in! The read-only gates have successfully swung wide open. I’ve just run a scan on `/home/node/nas_storage/media/movies`, and I have some absolutely brilliant (and rather shocking) news for you..."_
+- **Context:** This was the initial directory traversal. The door was open, but the large data payload hadn't entered the conversation history yet.
+
+### 2. The CSV Generation (The Bloat Occurs)
+
+- **Timestamp:** June 23, 2026 at 9:51 PM EDT
+- **User:** _"I have the DS220+"_
+- **Agent:** _"The Movie Vault Scan Results 📊 I wrote a python script to scan every movie, featurette, and Plex version inside `/movies` recursively, calculating file sizes and categorizing them. We scanned **1,823 files** in total. The results are staggering. The CSV report is sitting in our workspace (`movie_storage_analysis.csv`)..."_
+- **Context:** This was the critical inflection point. The agent generated a 165 KB CSV file detailing all 1,823 movies. Crucially, the entire CSV output was printed/returned directly into the agent's tool execution history. This added roughly 50,000 to 65,000 tokens into the prompt context transcript, which was now resent for _every single subsequent message_.
+
+### 3. The Status Checks (The Compounding Tax)
+
+- **Timestamp:** June 25, 2026 at 5:50 AM EDT
+- **User:** _"Cool - and can you provide a report on how the current tdarr conversions are going?"_
+- **Agent:** _"⚠️ Something went wrong while processing your request. Please try again, or use /new to start a fresh session."_
+- **Context:** Tdarr is a distributed transcoder system running on the NAS to convert ripped video files. Although this query failed initially (a warning sign of context limits stretching, which I ignored), I retried at 5:52 AM. The agent parsed logs and hit API endpoints, all while dragging the massive 65k-token CSV payload. At 135,000+ input tokens under Gemini 3.5 Flash pricing, a single uncached request cost ~$0.22 (and ~$0.04 even with a warm cache). Because agentic workflows make multiple sequential tool calls per turn, a single status check query requiring 5 tool calls cost anywhere from $0.20 (fully cached) to $1.10 (uncached), rapidly multiplying the billing.
+
+### 4. The Compaction Intervention
+
+- **Timestamp:** June 25, 2026 at 11:02 AM EDT
+- **User:** _"We just blasted through $10 in under 2 hours despite the improvements to reduce context. We’re clearly not spending low amount per turn as it’s only been this chat thread making requests. We have to fix this now."_
+- **Agent:** _"To put an immediate stop to this token hemorrhage, we must execute two structural changes: #### Step A: We Need to Compact this Thread Immediately Our active trajectory file (`dd6a100d-3576-475a-9b51-5feb18b9ecf0.jsonl`) is bloated at **778 KB of raw historical exchanges**... I am going to force an immediate **Session Compaction** on our current thread. This will condense our entire 450-message history down into a tiny, lightweight narrative summary, dropping our active input tokens from **135,000 down to under 5,000 tokens**."_
+- **Context:** The automated compaction had failed to manage the structural bloat (since standard text models fail to compress structured CSV data), forcing me to stop and have the agent manually execute a truncation script to shrink the payload. This stopped the bleeding.
+
+### 5. The Final Cost-Control Constraint
+
+- **Timestamp:** June 25, 2026 at 11:06 AM EDT
+- **User:** _"Cool - can we also report the expected cost of each turn so I can more easily monitor this. And what’s the new compaction limits?"_
+- **Agent:** _"Understood. I have manually configured your system limits directly inside the core configuration file (`/home/node/.openclaw/openclaw.json`) to force cost control. Here are your new context and compaction settings: - **Max Context Limit (`contextTokens`):** Reduced down to **65,000 tokens** (previously 1,000,000)..."_
+- **Context:** This was the structural fix that permanently stopped the drain. Under Gemini 3.5 Flash pricing ($1.50/1M input, $9.00/1M output), capping the max context at 65k tokens and dropping the history share to 40% (26k tokens) keeps warm cached turns (benefiting from the 90% cache read discount) at around $0.03, while a cold start/uncached turn can cost up to ~$0.11, keeping the average cost per turn around or below $0.05 depending on cache efficiency.
+
+---
+
+## The "Four Horsemen" of Agentic Context Bloat
+
+How did a simple script check generate a $44.08 bill on a model as cheap as Gemini Flash? The cost was driven by four compounding issues:
+
+### 1. The Real Trigger (Large Tool Output Ingestion)
+
+Instead of the framework scanning and auto-injecting workspace files, the large dataset from the CSV generation was returned directly into the agent's tool execution history. Once written into the active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on _every single subsequent turn_—ballooning the context to over 135,000+ tokens.
+
+### 2. The Hidden Tax (The Cache-Write & Cold-Cache Penalties)
+
+Because the token footprint stayed within the context window, the API never rejected the requests. Instead, it triggered massive **Cache-Write surcharges** ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state for a bloated 135k-token payload on every tool execution. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging a premium to re-upload the entire bloated conversation history to Google’s servers.
+
+### 3. The Blind Guide (The False Reassurance)
+
+Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, the agent remained blind to its own API wrapper—it had no real-time visibility into the "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
+
+### 4. The Fail-Safe Failure (The Compaction Trap)
+
+OpenClaw attempted to run "Auto-Compaction" to summarize the bloated history. However, the compaction model failed to compress the structured CSV data and threw a system warning: `⚠️ Auto-compaction could not recover this turn`. The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
+
+### 5. The Delayed Shock (UTC/EDT Time-Zone Desync)
+
+My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This desync is due to Google Cloud logs being generated in **UTC**. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement.
+
+---
+
+## Practical Guardrails for Developers
+
+These lessons apply generally when working with LLMs, but particularly if costs are unbounded and the agent is semi-supervised or unsupervised:
+
+### 1. Guard Tool and Command Outputs
+
+- **Action:** Prevent the agent from returning large raw datasets (like full CSVs or extensive log dumps) directly into the conversation history.
+- **Rule:** If a script or command outputs a large volume of data, redirect that output to a file (e.g., `output.txt` or `/data/`) and have the agent print only a high-level summary (e.g., row count or top 5 lines) in the chat transcript to keep the active history lightweight.
+
+### 2. Monitor Cache-Write Behavior
+
+- **Action:** Be aware that "stateful" agents incur higher costs not just for input tokens, but for cache maintenance.
+- **Implementation:** Use framework tools to monitor if you are triggering constant "Cache Writes" or "Uncached Uploads".
+
+### 3. Treat Heavy-Data Sessions as "Disposable"
+
+- **Rule:** If an agent performs a task that generates a significant file, consider the session "burned". Use `/new` or `/reset` to start a clean transcript before resuming standard tasks.
+
+### 4. Implement Hard API Budget Caps
+
+- **Action:** Configure strict budget alerts, usage quotas, and hard spending limits directly within your LLM developer console (e.g., Google AI Studio, Google Cloud Console, or Vertex AI).
+- **Rule:** Never execute autonomous agents or script loops using open-ended, pay-as-you-go API keys without billing safeguards. While consumer frontends or CLI sandboxes often enforce a natural rate limit (like Gemini's 5-hour window), direct API calls are unbounded—making cloud-level budget caps your only reliable safety net against runaway charges.
+
+### 5. Treat Compaction Failures as an Immediate Stop-Work Signal
+
+- **Action:** Treat any session errors or auto-compaction warnings (such as `⚠️ Auto-compaction could not recover this turn`) as a warning to immediately halt, inspect the trajectory, and manually purge the bloated data or reset the session.
+- **Rule:** Never ignore framework warnings when auto-compaction fails. Summarization algorithms are designed for conversational text, not structured databases (like CSVs or log files). When they fail, the system falls back to carrying the raw, uncompressed payload, exponentially multiplying your costs on every subsequent message if you continue.
+
+---
+
+## Forensic Case Study & Key Facts
+
+### 1. The Trigger Incident
+
+- **Timestamp:** June 25, 2026 (Active during late-night hours EDT, logged as June 25 UTC).
+- **The Context:** Deployment and automation of a Tdarr transcoding farm.
+- **The "Smoking Gun":** The injection of 1,602 lines of movie data from the generated CSV directly into the conversation history, forcing the agent to re-ingest the entire dataset into the context window for every single subsequent message.
+
+### 2. The Math Breakdown
+
+- **Token Footprint:** 135,000+ tokens per interaction.
+- **The Cost Drivers:** A combination of high-frequency tool calls (460+ requests) + Cache-Write surcharges + Uncached re-uploads after idle time.
+- **The Total Impact:** A $44.08 spike on June 25th caused by high-intensity engineering tool use and automated context bloat, compounded by the time-zone shift between user activity and UTC server logs.
+
+### 3. The Evidence Log (The Warning)
+
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
+```text
+⚠️ Auto-compaction could not recover this turn. I kept this conversation mapped to the current session. Please try again, use /compact, or use /new to start a fresh session.
+```
+
+_This warning was the signal that the agent had failed to manage its memory and was actively dragging the bloated file through the expensive API cache-write pipeline._

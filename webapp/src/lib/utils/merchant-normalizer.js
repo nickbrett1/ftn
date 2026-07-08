@@ -385,7 +385,7 @@ function extractDigInnDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
 	// Pattern for Dig Inn with address: TST* DIG INN- 100 W 67 NEW YORK
 	// Prefix optional, name mandatory, dash optional, number mandatory
-	const pattern = /(DIG INN)(?:\s*[-*]\s*|\s+)(\d+)\s+(.+)$/i;
+	const pattern = /(DIG INN)\s*[-*]?\s+(\d+)\s+(.+)$/i;
 	const match = merchantUpper.match(pattern);
 
 	if (match) {
@@ -534,7 +534,7 @@ function extractAppleDetails(merchant) {
 function hasStoreNumberPattern(merchantUpper) {
 	// Pattern: MERCHANT_NAME [STORE_NUMBER] [LOCATION]
 	// Require at least 4 digits for store number to avoid matching things like \"87 CORP\"
-	const storeNumberPattern = /^([^\s]+(?:\s+[^\s]+)*)\s+(\d{4,})\s+(.+)$/;
+	const storeNumberPattern = /^(.+?)\s+(\d{4,})\s+(.+)$/;
 	return storeNumberPattern.test(merchantUpper);
 }
 
@@ -543,7 +543,7 @@ function hasStoreNumberPattern(merchantUpper) {
  */
 function extractStoreNumberDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	const storeNumberMatch = merchantUpper.match(/^([^\s]+(?:\s+[^\s]+)*)\s+(\d{4,})\s+(.+)$/);
+	const storeNumberMatch = merchantUpper.match(/^(.+?)\s+(\d{4,})\s+(.+)$/);
 
 	if (storeNumberMatch) {
 		const [, baseName, storeNumber, location] = storeNumberMatch;
@@ -564,7 +564,7 @@ function extractStoreNumberDetails(merchant) {
  */
 function hasAddressPattern(merchantUpper) {
 	// Pattern: (OPTIONAL PREFIX) BUSINESS NAME (SPACE) NUMBER (SPACE) REST
-	const addressPattern = /^(?:([A-Z0-9*]+[\s*-]+))?([^\s]+(?:\s+[^\s]+)*)\s+(\d+)\s+(.+)$/;
+	const addressPattern = /^(?:([A-Z0-9*]+[\s*-]+))?(.+?)\s+(\d+)\s+(.+)$/;
 	return addressPattern.test(merchantUpper);
 }
 
@@ -573,7 +573,7 @@ function hasAddressPattern(merchantUpper) {
  */
 function extractAddressDetails(merchant) {
 	const merchantUpper = merchant.toUpperCase();
-	const addressPattern = /^(?:([A-Z0-9*]+[\s*-]+))?([^\s]+(?:\s+[^\s]+)*)\s+(\d+)\s+(.+)$/;
+	const addressPattern = /^(?:([A-Z0-9*]+[\s*-]+))?(.+?)\s+(\d+)\s+(.+)$/;
 	const addressMatch = merchantUpper.match(addressPattern);
 
 	if (addressMatch) {

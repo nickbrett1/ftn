@@ -233,10 +233,10 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 function _applySonarCloudConfig(data, context) {
 	if (context.capabilities.includes('sonarcloud')) {
 		data.orbs += `  sonarcloud: sonarsource/sonarcloud@2.0.0\n`;
-		data.preBuildSteps += `
+		data.preBuildSteps += String.raw`
       - run:
           name: Export SonarCloud Token
-          command: echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV`;
+          command: echo "export SONAR_TOKEN=\$SONARQUBE_TOKEN" >> $BASH_ENV`;
 
 		data.testSteps += `      - sonarcloud/scan\n`;
 	}

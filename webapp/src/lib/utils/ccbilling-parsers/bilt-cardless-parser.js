@@ -221,6 +221,71 @@ export class BiltCardlessParser extends BaseParser {
 		return charge;
 	}
 
+	_parseAmountFromMatch(match) {
+		if (!match) return null;
+		const isNegative = match[1] === '-';
+		const amount = this.parseAmount(match[2]);
+		return isNegative ? -Math.abs(amount) : amount;
+	}
+
+	_isSectionHeaderOrTotal(line) {
+		const lineUpper = line.toUpperCase();
+		return (
+			lineUpper === 'TRANSACTIONS' ||
+			lineUpper === 'PAYMENTS AND CREDITS' ||
+			lineUpper === 'FEES' ||
+			lineUpper.startsWith('TOTAL NEW CHARGES') ||
+			lineUpper.startsWith('TOTAL PAYMENTS') ||
+			lineUpper.startsWith('TOTAL FEES') ||
+			lineUpper === 'INTEREST CHARGED' ||
+			lineUpper === 'DATE DESCRIPTION AMOUNT'
+		);
+	}
+
+	_scanLookahead(index, lines, initialAmount, initialFullStatementText) {
+		const datePattern = /^([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/;
+		let amount = initialAmount;
+		let fullStatementText = initialFullStatementText;
+		let lookAhead = 1;
+		let amountFoundInLookahead = false;
+
+		while (lookAhead < 5 && index + lookAhead < lines.length) {
+			const nextLine = lines[index + lookAhead];
+
+			// If we hit another date, we went too far
+			if (datePattern.test(nextLine)) break;
+
+			// Try to match the amount if we haven't found it yet
+			if (amount === null && !amountFoundInLookahead) {
+				const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
+				if (amountMatch) {
+					amount = this._parseAmountFromMatch(amountMatch);
+					fullStatementText += '\n' + nextLine;
+					amountFoundInLookahead = true;
+					lookAhead++;
+					continue;
+				}
+			}
+
+			// If this line is an amount that was already found, we should stop
+			if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
+				break;
+			}
+
+			if (this._isSectionHeaderOrTotal(nextLine)) {
+				break;
+			}
+
+			// Add to full statement text if it's not a page footer
+			if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
+				fullStatementText += '\n' + nextLine;
+			}
+			lookAhead++;
+		}
+
+		return { amount, fullStatementText };
+	}
+
 	/**
 	 * Parse description and amount from lines using lookahead.
 	 * @param {string} line - Current line starting with a date
@@ -235,68 +300,20 @@ export class BiltCardlessParser extends BaseParser {
 
 		let description = line.replace(dateMatch[0], '').trim();
 		let amount = null;
-		let fullStatementText = line;
 
 		// Check if amount is on the same line
 		const amountOnSameLineMatch = /(-?)\$([\d,]+\.\d{2})$/.exec(line);
 		if (amountOnSameLineMatch) {
-			const isNegative = amountOnSameLineMatch[1] === '-';
-			amount = this.parseAmount(amountOnSameLineMatch[2]);
-			if (isNegative) amount = -Math.abs(amount);
+			amount = this._parseAmountFromMatch(amountOnSameLineMatch);
 			description = description.replace(amountOnSameLineMatch[0], '').trim();
 		}
 
-		// Look ahead for additional description lines and/or the amount if not found
-		let lookAhead = 1;
-		let amountFoundInLookahead = false;
-		while (lookAhead < 5 && index + lookAhead < lines.length) {
-			const nextLine = lines[index + lookAhead];
-
-			// If we hit another date, we went too far
-			if (datePattern.test(nextLine)) break;
-
-			// Try to match the amount if we haven't found it yet
-			if (amount === null && !amountFoundInLookahead) {
-				const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
-				if (amountMatch) {
-					const isNegative = amountMatch[1] === '-';
-					amount = this.parseAmount(amountMatch[2]);
-					if (isNegative) amount = -Math.abs(amount);
-					fullStatementText += '\n' + nextLine;
-					amountFoundInLookahead = true;
-					lookAhead++;
-					continue;
-				}
-			}
-
-			// If this line is an amount that was already found, we should stop
-			if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
-				break;
-			}
-
-			// Avoid including section headers or totals from subsequent lines
-			const nextLineUpper = nextLine.toUpperCase();
-			if (
-				nextLineUpper === 'TRANSACTIONS' ||
-				nextLineUpper === 'PAYMENTS AND CREDITS' ||
-				nextLineUpper === 'FEES' ||
-				nextLineUpper.startsWith('TOTAL NEW CHARGES') ||
-				nextLineUpper.startsWith('TOTAL PAYMENTS') ||
-				nextLineUpper.startsWith('TOTAL FEES') ||
-				nextLineUpper === 'INTEREST CHARGED' ||
-				nextLineUpper === 'DATE DESCRIPTION AMOUNT'
-			) {
-				break;
-			}
-
-			// Add to full statement text if it's not a page footer
-			if (!nextLine.includes('Page') && !nextLine.includes('Cardless Inc.')) {
-				fullStatementText += '\n' + nextLine;
-			}
-			lookAhead++;
-		}
-
-		return { amount, description, fullStatementText };
+		const scanResult = this._scanLookahead(index, lines, amount, line);
+		return {
+			amount: scanResult.amount,
+			description,
+			fullStatementText: scanResult.fullStatementText
+		};
 	}
 
 	/**

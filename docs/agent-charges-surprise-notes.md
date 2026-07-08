@@ -1,4 +1,4 @@
-I'd like to create an article with a similar style (both the style of writing and the layout, fonts, styling etc..) to that in webapp/src/routes/building-with-ai/building-with-ai.svx that will discuss some surprising behavior from my use of autonomous agents, and a runaway charge. It would be nice if it could have a nice gimmick or meme to hook people in with an image - like we had for building-with-ai.svx.
+I'd like to create an article with a similar style (both the style of writing and the layout, fonts, styling etc..) to that in webapp/src/routes/building-with-ai/building-with-ai.svx that will discuss some surprising behavior from my use of autonomous agents, and a runaway charge. It would be nice if it could have a nice gimmick or meme to hook people in with an image - like we had for building-with-ai.svx. You can use a placeholder for the image - but give me a suggestion as to the one to use based on the article content.
 
 I want you to create a first draft of this article under webapp/src/projects/agent-charges-surprise/agent-charges-surprise.svx
 
