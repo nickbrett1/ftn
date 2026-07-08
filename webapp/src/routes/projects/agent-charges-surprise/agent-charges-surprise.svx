@@ -36,10 +36,9 @@
 <svelte:window bind:scrollY />
 
 <!-- Dynamic Cost Meter widget -->
-<div class="fixed top-24 right-4 md:right-8 bg-black/90 backdrop-blur-md border border-red-500/40 rounded-xl p-4 shadow-2xl z-50 text-center font-mono max-w-[160px] transition-all hover:scale-105">
-	<div class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Turn cost meter</div>
-	<div class="text-3xl font-extrabold text-red-500 mt-1">${currentCost}</div>
-	<div class="text-[9px] text-gray-500 mt-1">Scroll to watch bill grow</div>
+<div class="fixed bottom-4 right-4 md:bottom-auto md:top-24 md:right-8 bg-black/90 backdrop-blur-md border border-red-500/40 rounded-full md:rounded-xl px-3 py-1.5 md:p-4 shadow-2xl z-50 text-center font-mono transition-all hover:scale-105 flex md:flex-col items-center justify-center gap-2 md:gap-1 max-w-fit md:max-w-[160px]">
+	<div class="text-[10px] md:text-[11px] text-gray-400 uppercase tracking-widest font-semibold whitespace-nowrap">Agent Costs</div>
+	<div class="text-sm md:text-3xl font-extrabold text-red-500">${currentCost}</div>
 </div>
 
 <h1 class="!mb-0 no-underline text-4xl md:text-5xl font-black tracking-tight text-white">
