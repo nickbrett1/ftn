@@ -77,7 +77,7 @@ describe('CircleCI Capability Generation', () => {
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
 		expect(circleCiFile).toBeDefined();
 
-		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@4.1.0');
+		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@4.0.0');
 				expect(circleCiFile.content).toContain('sonarcloud/scan');
 		expect(circleCiFile.content).toContain('Export SonarCloud Token');
 		expect(circleCiFile.content).toContain('echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV');

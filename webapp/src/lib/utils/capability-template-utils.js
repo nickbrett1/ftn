@@ -232,7 +232,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 
 function _applySonarCloudConfig(data, context) {
 	if (context.capabilities.includes('sonarcloud')) {
-		data.orbs += `  sonarcloud: sonarsource/sonarcloud@4.1.0\n`;
+		data.orbs += `  sonarcloud: sonarsource/sonarcloud@4.0.0\n`;
 		data.preBuildSteps += String.raw`
       - run:
           name: Export SonarCloud Token
