@@ -15,7 +15,7 @@
     .markdown-section {
       max-width: 55em;
       margin: 0 auto;
-      padding: 30px 15px 40px 15px;
+      padding: 80px 25px 40px 25px !important;
     }
     .markdown-section img {
       max-width: 100%;
@@ -25,6 +25,78 @@
     }
     .markdown-section pre > code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    }
+
+    /* Floating Sidebar Toggle Button (Hamburger) */
+    .sidebar-toggle {
+      position: fixed !important;
+      top: 20px !important;
+      bottom: auto !important;
+      left: 20px !important;
+      width: 40px !important;
+      height: 40px !important;
+      padding: 0 !important;
+      background: var(--sidebarBackground) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+      border: 1px solid rgba(128, 128, 128, 0.2) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      z-index: 9999 !important;
+      transition: all 0.2s ease-in-out !important;
+    }
+
+    .sidebar-toggle:hover {
+      opacity: 0.9 !important;
+      transform: scale(1.05);
+    }
+
+    .sidebar-toggle span {
+      background-color: var(--accent) !important;
+      width: 18px !important;
+      height: 2px !important;
+      margin: 2px 0 !important;
+      display: block !important;
+    }
+
+    /* Floating Mode Toggle (Sun/Moon) */
+    #docsify-darklight-theme {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      left: auto !important;
+      width: 40px !important;
+      height: 40px !important;
+      background-position: center !important;
+      background-size: 20px !important;
+      background-color: var(--sidebarBackground) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+      border: 1px solid rgba(128, 128, 128, 0.2) !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      z-index: 9999 !important;
+      transition: all 0.2s ease-in-out !important;
+    }
+
+    #docsify-darklight-theme:hover {
+      transform: scale(1.05);
+    }
+
+    /* Give sidebar items some top spacing so the floating hamburger doesn't overlap them */
+    .sidebar {
+      padding-top: 80px !important;
+    }
+
+    /* Mobile specific adjustments */
+    @media screen and (max-width: 768px) {
+      /* When sidebar is open on mobile, hide the mode toggle to prevent UI collision */
+      body:not(.close) #docsify-darklight-theme {
+        display: none !important;
+      }
     }
   </style>
 </head>
