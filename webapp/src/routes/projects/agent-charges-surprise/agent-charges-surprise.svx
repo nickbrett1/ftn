@@ -58,7 +58,7 @@ July 2026
 
 In my previous article, [Building with AI Agents](/projects/building-with-ai), I detailed my experience using Cursor's agent mode to develop components of a 14,500-line personal finance tool. Having enjoyed the velocity of agent-assisted development, I decided to take the next logical step: setting up a fully autonomous agent framework locally.
 
-Specifically, I wanted to experiment with **OpenClaw**, an open-source framework that runs locally and integrates with LLM APIs to perform multi-step file manipulation, directory analysis, and script execution. My goal was simple: use OpenClaw to analyze my local Network Attached Storage (NAS) media folders, look at conversions, and help optimize storage.
+Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw/openclaw), an open-source framework that runs locally and integrates with LLM APIs to perform multi-step file manipulation, directory analysis, and script execution. My goal was simple: use OpenClaw to analyze my local Network Attached Storage (NAS) media folders, look at conversions, and help optimize storage.
 
 Here is how OpenClaw is structurally architected:
 
