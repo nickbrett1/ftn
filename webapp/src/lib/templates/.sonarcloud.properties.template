@@ -18,4 +18,4 @@ sonar.sourceEncoding=UTF-8
 sonar.coverage.exclusions=**/tests/**,**/*.test.js,**/*.spec.js,**/*.test.ts,**/*.spec.ts,**/*test-utils.js,**/*test-helpers.js,**/*-test-utils.js,**/*-test-helpers.js,**/shared-test-*.js,**/test-*.js
 
 # Also exclude test utilities from general analysis (not just coverage)
-sonar.exclusions=**/tests/**,**/*.test.js,**/*.spec.js,**/*.test.ts,**/*.spec.ts,**/*test-utils.js,**/*test-helpers.js,**/*-test-utils.js,**/*-test-helpers.js,**/shared-test-*.js,**/test-*.js
+sonar.exclusions=**/tests/**,**/*.test.js,**/*.spec.js,**/*.test.ts,**/*.spec.ts,**/*test-utils.js,**/*test-helpers.js,**/*-test-utils.js,**/*-test-helpers.js,**/shared-test-*.js,**/test-*.js,**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.svg,**/*.ico
