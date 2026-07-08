@@ -62,20 +62,88 @@ Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw
 
 Here is how OpenClaw is structurally architected:
 
-<!-- Responsive CSS diagram -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center my-8 p-6 bg-base-800/50 rounded-xl border border-gray-800 text-center font-mono text-sm">
-	<div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
-		<div class="font-bold text-green-400">User / Cron Trigger</div>
-		<div class="text-xs text-gray-400 mt-1">Initiates storage check</div>
-	</div>
-	<div class="flex flex-col items-center justify-center p-4 bg-gray-900 rounded-lg border border-green-500/40 relative">
-		<div class="absolute -top-3 px-2 bg-green-900/60 border border-green-500/30 text-[10px] text-green-300 rounded">OpenClaw Agent</div>
-		<div class="font-bold text-white mt-1">Runs Local Python Scripts</div>
-		<div class="text-xs text-gray-400 mt-1">Traverses directories, parses logs</div>
-	</div>
-	<div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
-		<div class="font-bold text-blue-400">Gemini 3.5 API</div>
-		<div class="text-xs text-gray-400 mt-1">Context Caching enabled</div>
+<!-- Responsive Architecture Diagram -->
+<div class="my-8 space-y-4">
+	<div class="text-center font-semibold text-xs tracking-wider uppercase text-gray-400">System Architecture Flow</div>
+	
+	<div class="flex flex-col lg:flex-row items-stretch justify-between gap-4 lg:gap-2">
+		<!-- Card 1: External Interfaces -->
+		<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-blue-500/20 shadow-lg flex flex-col justify-between">
+			<div class="space-y-3">
+				<div class="flex items-center gap-2">
+					<span class="text-xl">💬</span>
+					<div class="font-bold text-blue-400 font-mono tracking-tight text-sm">External Interfaces</div>
+				</div>
+				<p class="text-xs text-gray-400 leading-relaxed">
+					Slack, Discord, Telegram, or system Cron triggers. Where users initiate requests, query agent status, and receive real-time alerts.
+				</p>
+			</div>
+		</div>
+
+		<!-- Connector 1 -->
+		<div class="flex items-center justify-center text-blue-500 font-bold font-mono py-1 lg:py-0">
+			<span class="lg:hidden">▼</span>
+			<span class="hidden lg:inline text-lg px-2">➔</span>
+		</div>
+
+		<!-- Card 2: Local NAS Machine (Central Orchestration) -->
+		<div class="w-full lg:w-[38%] p-5 bg-green-950/10 rounded-2xl border-2 border-green-500/40 shadow-2xl relative flex flex-col justify-between">
+			<div class="absolute -top-3 left-4 px-2 py-0.5 bg-green-900 border border-green-500/60 text-[9px] text-green-300 font-bold uppercase tracking-widest rounded-md font-mono">
+				Local NAS Machine
+			</div>
+			
+			<div class="space-y-4 mt-2">
+				<!-- Core Agent -->
+				<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
+					<div class="flex items-center gap-2">
+						<span class="text-sm">🤖</span>
+						<div class="font-bold text-white font-mono text-xs">OpenClaw Agent Core</div>
+					</div>
+					<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
+						Runs locally on the NAS. Coordinates execution, retains local history, and runs personal automated loops.
+					</p>
+				</div>
+				
+				<!-- Local Access arrow -->
+				<div class="flex justify-center text-green-500 font-bold font-mono text-xs">
+					<span>⇅</span>
+					<span class="text-[9px] text-gray-500 font-normal uppercase tracking-wider ml-1.5 self-center">Local Network Access</span>
+				</div>
+
+				<!-- Local File System and Services -->
+				<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
+					<div class="flex items-center gap-2">
+						<span class="text-sm">📁</span>
+						<div class="font-bold text-green-400 font-mono text-xs">NAS Files & Local Services</div>
+					</div>
+					<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
+						Direct read/write access to NAS storage (e.g. video files), executes local shell scripts, and calls local services (like Tdarr containers).
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Connector 2 -->
+		<div class="flex items-center justify-center text-purple-500 font-bold font-mono py-1 lg:py-0">
+			<span class="lg:hidden">▲▼</span>
+			<span class="hidden lg:inline text-lg px-2">↔</span>
+		</div>
+
+		<!-- Card 3: Google Servers (Brain) -->
+		<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-purple-500/20 shadow-lg flex flex-col justify-between">
+			<div class="space-y-3">
+				<div class="flex items-center gap-2">
+					<span class="text-xl">🧠</span>
+					<div class="font-bold text-purple-400 font-mono tracking-tight text-sm">Google Cloud (External)</div>
+				</div>
+				<p class="text-xs text-gray-400 leading-relaxed font-sans">
+					Gemini 3.5 API. Processes context payload, returns logical plans, and emits commands back to the local agent tools.
+				</p>
+				<div class="text-[9px] bg-purple-950/40 text-purple-300 border border-purple-800/30 rounded p-1.5 font-mono text-center">
+					⚡ Context Caching Enabled
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
