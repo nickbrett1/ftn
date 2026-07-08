@@ -42,7 +42,7 @@
 </div>
 
 <h1 class="!mb-0 no-underline text-4xl md:text-5xl font-black tracking-tight text-white">
-	Anatomy of a Runaway Agent Bill: Context Caching & Bloat Postmortem
+	5 Lessons from a Runaway Agent Bill: Context Caching & Bloat Postmortem
 </h1>
 <p class="text-xl md:text-2xl text-gray-300 !mt-2 !mb-6">
 	How an autonomous AI agent ran up a surprise credit card bill by dragging a massive CSV into conversation context, and how to prevent it.
@@ -192,9 +192,9 @@ The timeline below tracks the key chat events that led to the massive bill, star
 
 ---
 
-## The "Four Horsemen" of Agentic Context Bloat
+## The "Five Horsemen" of Agentic Context Bloat
 
-How did a simple script check generate a $44.08 bill on a model as cheap as Gemini Flash? The cost was driven by four compounding issues:
+How did a simple script check generate a $44.08 bill on a model as cheap as Gemini Flash? The cost was driven by five compounding issues:
 
 ### 1. The Real Trigger (Large Tool Output Ingestion)
 
@@ -218,9 +218,9 @@ My logs showed the heavy Tdarr work happening on the night of June 24th, while b
 
 ---
 
-## Practical Guardrails for Developers
+## Practical Guardrails: 5 Lessons Learned
 
-These lessons apply generally when working with LLMs, but particularly if costs are unbounded and the agent is semi-supervised or unsupervised:
+These 5 lessons learned apply generally when working with LLMs, but particularly if costs are unbounded and the agent is semi-supervised or unsupervised:
 
 ### 1. Guard Tool and Command Outputs
 
