@@ -7,33 +7,22 @@
   <meta name="description" content="Documentation for the FTN Webapp.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   
-  <!-- Modern docsify-themeable Theme: Simple Dark -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+  <!-- Docsify Darklight Theme CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css" title="docsify-darklight-theme" type="text/css" />
   
   <style>
-    :root {
-      /* Custom variables for docsify-themeable to match a high-end dark design */
-      --theme-color: #3b82f6; /* Vibrant Blue accent */
-      --base-background: #0f172a; /* Slate 900 background */
-      --sidebar-background: #1e293b; /* Slate 800 sidebar */
-      --sidebar-width: 280px;
-      --content-max-width: 55em;
-      --code-theme-background: #0b0f19;
-      --heading-color: #f8fafc;
-      --base-color: #cbd5e1;
-      --sidebar-name-color: #f8fafc;
-      --sidebar-name-font-weight: 700;
-      --sidebar-nav-link-color: #94a3b8;
-      --sidebar-nav-link-color--active: #3b82f6;
-      --link-color: #38bdf8; /* Light Blue link color */
-      --link-color--hover: #58d3ff;
-      
-      /* Make sure images look nice */
-      --content-image-max-width: 100%;
-      --content-image-box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    /* Layout styling overrides */
+    .markdown-section {
+      max-width: 55em;
+      margin: 0 auto;
+      padding: 30px 15px 40px 15px;
     }
-    
-    /* Small UI adjustment to docsify-themeable's styling */
+    .markdown-section img {
+      max-width: 100%;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
     .markdown-section pre > code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
     }
@@ -62,6 +51,24 @@
         buttonText: 'Copy to clipboard',
         errorText: 'Error',
         successText: 'Copied'
+      },
+      darklightTheme: {
+        siteFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        defaultTheme: 'dark',
+        codeFontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        bodyFontSize: '16px',
+        dark: {
+          accent: '#3b82f6',
+          sidebarBackground: '#1e293b',
+          background: '#0f172a',
+          textColor: '#cbd5e1'
+        },
+        light: {
+          accent: '#2563eb',
+          sidebarBackground: '#f8fafc',
+          background: '#ffffff',
+          textColor: '#334155'
+        }
       }
     }
   </script>
@@ -70,7 +77,7 @@
   <!-- Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
 </body>
 </html>
