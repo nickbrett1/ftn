@@ -542,24 +542,30 @@ These 5 lessons learned apply generally when working with LLMs, but particularly
 
 ### 1. Guard Tool and Command Outputs
 
-- **Action:** Prevent the agent from returning large raw datasets (like full CSVs or extensive log dumps) directly into the conversation history.
-- **Rule:** If a script or command outputs a large volume of data, redirect that output to a file (e.g., `output.txt` or `/data/`) and have the agent print only a high-level summary (e.g., row count or top 5 lines) in the chat transcript to keep the active history lightweight.
+> **Key Insight:** Prevent agents from outputting large raw datasets directly into the conversation history, which causes subsequent requests to balloon in size.
+
+If a script or command outputs a large volume of data (like a full CSV file, database dump, or extensive logs), do not allow the agent to ingest it directly into the chat transcript. Instead, write the output to a temporary file (e.g., `output.txt` or a `/data/` folder) and have the agent print only a high-level summary (such as row count or the top 5 lines) in the conversation history. This keeps the active history lightweight and prevents tokens from compounding across every subsequent turn.
 
 ### 2. Monitor Cache-Write Behavior
 
-- **Action:** Be aware that "stateful" agents incur higher costs not just for input tokens, but for cache maintenance.
-- **Implementation:** Use framework tools to monitor if you are triggering constant "Cache Writes" or "Uncached Uploads".
+> **Key Insight:** Stateful agents incur significant hidden costs through cache maintenance, not just base input and output tokens.
+
+Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties (Uncached Uploads) if the agent sits idle. Use framework tools or API wrappers to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
 
 ### 3. Treat Heavy-Data Sessions as "Disposable"
 
-- **Rule:** If an agent performs a task that generates a significant file, consider the session "burned". Use `/new` or `/reset` to start a clean transcript before resuming standard tasks.
+> **Key Insight:** When a session is loaded with heavy data, consider it "burned" and reset the conversation context immediately.
+
+If an agent needs to perform an intensive task that imports a large file, don't keep chatting in that same window. Once the task is complete, use commands like `/new` or `/reset` to clear the transcript. This purges the temporary data from the active context, so you don't carry the token weight into normal coding tasks.
 
 ### 4. Implement Hard API Budget Caps
 
-- **Action:** Configure strict budget alerts, usage quotas, and hard spending limits directly within your LLM developer console (e.g., Google AI Studio, Google Cloud Console, or Vertex AI).
-- **Rule:** Never execute autonomous agents or script loops using open-ended, pay-as-you-go API keys without billing safeguards. While consumer frontends or CLI sandboxes often enforce a natural rate limit (like Gemini's 5-hour window), direct API calls are unbounded—making cloud-level budget caps your only reliable safety net against runaway charges.
+> **Key Insight:** Never run autonomous loops or agents on open-ended, pay-as-you-go API keys without strict cloud-level spending limits.
+
+Configure budget alerts, usage quotas, and hard spending limits directly within your LLM developer console (such as Google AI Studio, Google Cloud Console, or Vertex AI). Consumer applications or CLI sandboxes often enforce safety limits, but raw API keys are unbounded. Cloud-level budget caps are your only definitive safety net against a runaway script loop.
 
 ### 5. Treat Compaction Failures as an Immediate Stop-Work Signal
 
-- **Action:** Treat any session errors or auto-compaction warnings (such as `⚠️ Auto-compaction could not recover this turn`) as a warning to immediately halt, inspect the trajectory, and manually purge the bloated data or reset the session.
-- **Rule:** Never ignore framework warnings when auto-compaction fails. Summarization algorithms are designed for conversational text, not structured databases (like CSVs or log files). When they fail, the system falls back to carrying the raw, uncompressed payload, exponentially multiplying your costs on every subsequent message if you continue.
+> **Key Insight:** If a framework's history compaction or summarization fails, halt execution immediately to prevent exponential cost compounding.
+
+When a framework warning like `⚠️ Auto-compaction could not recover this turn` appears, do not ignore it. Summarization models are designed for conversational text, not structured database tables or CSVs. If the compaction fails, the system will fall back to carrying the raw, uncompressed payload through the rest of the run, exponentially multiplying your per-turn costs until you reset the session.
