@@ -6,10 +6,10 @@
 </script>
 
 <svelte:head>
-	<title>5 Lessons from a Runaway Agent Bill: Context Caching & Bloat Postmortem</title>
+	<title>Runaway AI Agents: 5 Lessons from a $44 Surprise Bill</title>
 	<meta
 		name="description"
-		content="How an autonomous AI agent ran up a surprise credit card bill by dragging a massive CSV into conversation context, and how to prevent it."
+		content="What I learned when an autonomous assistant silently ran up my API costs in minutes, and how to prevent it."
 	/>
 </svelte:head>
 

@@ -36,16 +36,16 @@
 <svelte:window bind:scrollY />
 
 <!-- Dynamic Cost Meter widget -->
-<div class="fixed bottom-4 right-4 md:bottom-auto md:top-24 md:right-8 bg-black/90 backdrop-blur-md border border-red-500/40 rounded-full md:rounded-xl px-3 py-1.5 md:p-4 shadow-2xl z-50 text-center font-mono transition-all hover:scale-105 flex md:flex-col items-center justify-center gap-2 md:gap-1 max-w-fit md:max-w-[160px]">
+<div class="fixed bottom-4 right-4 md:bottom-auto md:top-24 md:right-8 bg-black/90 backdrop-blur-md border border-red-500/40 rounded-full md:rounded-xl px-3 py-1.5 md:p-4 shadow-2xl z-50 text-center font-mono transition-all hover:scale-105 flex md:flex-col items-center justify-center gap-2 md:gap-1 max-w-fit md:max-w-40">
 	<div class="text-[10px] md:text-[11px] text-gray-400 uppercase tracking-widest font-semibold whitespace-nowrap">Agent Costs</div>
 	<div class="text-sm md:text-3xl font-extrabold text-red-500">${currentCost}</div>
 </div>
 
-<h1 class="!mb-0 no-underline text-4xl md:text-5xl font-black tracking-tight text-white">
-	5 Lessons from a Runaway Agent Bill: Context Caching & Bloat Postmortem
+<h1 class="mb-0! no-underline text-4xl md:text-5xl font-black tracking-tight text-white">
+	Runaway AI Agents: 5 Lessons from a $44 Surprise Bill
 </h1>
-<p class="text-xl md:text-2xl text-gray-300 !mt-2 !mb-6">
-	How an autonomous AI agent ran up a surprise credit card bill by dragging a massive CSV into conversation context, and how to prevent it.
+<p class="text-xl md:text-2xl text-gray-300 mt-2! mb-6!">
+	What I learned when an autonomous assistant silently ran up my API costs in minutes, and how to prevent it.
 </p>
 July 2026
 <ProjectLinkButton href={projectUrl} />
@@ -56,104 +56,105 @@ July 2026
 
 ## Introduction
 
-In my previous article, [Building with AI Agents](/projects/building-with-ai), I detailed my experience using Cursor's agent mode to develop components of a 14,500-line personal finance tool. Having enjoyed the velocity of agent-assisted development, I decided to take the next logical step: setting up a fully autonomous agent framework locally.
+In my previous article, [Building with AI Agents](/projects/building-with-ai), I wrote about my experience using Cursor's agent mode to develop components of a 14,500-line personal finance tool. Having enjoyed the velocity of agent-assisted development, I decided to try something a bit more ambitious: setting up a fully autonomous agent framework locally.
 
-Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw/openclaw), an open-source framework that runs locally and integrates with LLM APIs to perform multi-step file manipulation, directory analysis, and script execution. My goal was simple: use OpenClaw to analyze my local Network Attached Storage (NAS) media folders, look at conversions, and help optimize storage.
-
-Here is how OpenClaw is structurally architected:
+Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw/openclaw), an open-source framework that runs locally and integrates with LLM APIs and acts as a personal assistant, with full access (if you want) to all your private files and applications. I have an old NAS sitting on my home network which I stored files on, but didn't do much else, and had become a bit of a dumping ground, disorganized, bloated and underutilized. With OpenClaw installed on the NAS, here's how the architecture looks:
 
 <!-- Responsive Architecture Diagram -->
 <div class="my-8 space-y-4">
 	<div class="text-center font-semibold text-xs tracking-wider uppercase text-gray-400">System Architecture Flow</div>
-	
-	<div class="flex flex-col lg:flex-row items-stretch justify-between gap-4 lg:gap-2">
-		<!-- Card 1: External Interfaces -->
-		<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-blue-500/20 shadow-lg flex flex-col justify-between">
-			<div class="space-y-3">
-				<div class="flex items-center gap-2">
-					<span class="text-xl">💬</span>
-					<div class="font-bold text-blue-400 font-mono tracking-tight text-sm">External Interfaces</div>
-				</div>
-				<p class="text-xs text-gray-400 leading-relaxed">
-					Slack, Discord, Telegram, or system Cron triggers. Where users initiate requests, query agent status, and receive real-time alerts.
-				</p>
-			</div>
-		</div>
 
-		<!-- Connector 1 -->
-		<div class="flex items-center justify-center text-blue-500 font-bold font-mono py-1 lg:py-0">
-			<span class="lg:hidden">▼</span>
-			<span class="hidden lg:inline text-lg px-2">➔</span>
-		</div>
+    <div class="flex flex-col lg:flex-row items-stretch justify-between gap-4 lg:gap-2">
+    	<!-- Card 1: External Interfaces -->
+    	<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-blue-500/20 shadow-lg flex flex-col justify-between">
+    		<div class="space-y-3">
+    			<div class="flex items-center gap-2">
+    				<span class="text-xl">💬</span>
+    				<div class="font-bold text-blue-400 font-mono tracking-tight text-sm">External Interfaces</div>
+    			</div>
+    			<p class="text-xs text-gray-400 leading-relaxed">
+    				Slack, Discord, Telegram, or system Cron triggers. Where users initiate requests, query agent status, and receive real-time alerts.
+    			</p>
+    		</div>
+    	</div>
 
-		<!-- Card 2: Local NAS Machine (Central Orchestration) -->
-		<div class="w-full lg:w-[38%] p-5 bg-green-950/10 rounded-2xl border-2 border-green-500/40 shadow-2xl relative flex flex-col justify-between">
-			<div class="absolute -top-3 left-4 px-2 py-0.5 bg-green-900 border border-green-500/60 text-[9px] text-green-300 font-bold uppercase tracking-widest rounded-md font-mono">
-				Local NAS Machine
-			</div>
-			
-			<div class="space-y-4 mt-2">
-				<!-- Core Agent -->
-				<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
-					<div class="flex items-center gap-2">
-						<span class="text-sm">🤖</span>
-						<div class="font-bold text-white font-mono text-xs">OpenClaw Agent Core</div>
-					</div>
-					<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
-						Runs locally on the NAS. Coordinates execution, retains local history, and runs personal automated loops.
-					</p>
-				</div>
-				
-				<!-- Local Access arrow -->
-				<div class="flex justify-center text-green-500 font-bold font-mono text-xs">
-					<span>⇅</span>
-					<span class="text-[9px] text-gray-500 font-normal uppercase tracking-wider ml-1.5 self-center">Local Network Access</span>
-				</div>
+    	<!-- Connector 1 -->
+    	<div class="flex items-center justify-center text-blue-500 font-bold font-mono py-1 lg:py-0">
+    		<span class="lg:hidden">▼</span>
+    		<span class="hidden lg:inline text-lg px-2">➔</span>
+    	</div>
 
-				<!-- Local File System and Services -->
-				<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
-					<div class="flex items-center gap-2">
-						<span class="text-sm">📁</span>
-						<div class="font-bold text-green-400 font-mono text-xs">NAS Files & Local Services</div>
-					</div>
-					<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
-						Direct read/write access to NAS storage (e.g. video files), executes local shell scripts, and calls local services (like Tdarr containers).
-					</p>
-				</div>
-			</div>
-		</div>
+    	<!-- Card 2: Local NAS Machine (Central Orchestration) -->
+    	<div class="w-full lg:w-[38%] p-5 bg-green-950/10 rounded-2xl border-2 border-green-500/40 shadow-2xl relative flex flex-col justify-between">
+    		<div class="absolute -top-3 left-4 px-2 py-0.5 bg-green-900 border border-green-500/60 text-[9px] text-green-300 font-bold uppercase tracking-widest rounded-md font-mono">
+    			Local NAS Machine
+    		</div>
 
-		<!-- Connector 2 -->
-		<div class="flex items-center justify-center text-purple-500 font-bold font-mono py-1 lg:py-0">
-			<span class="lg:hidden">▲▼</span>
-			<span class="hidden lg:inline text-lg px-2">↔</span>
-		</div>
+    		<div class="space-y-4 mt-2">
+    			<!-- Core Agent -->
+    			<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
+    				<div class="flex items-center gap-2">
+    					<span class="text-sm">🤖</span>
+    					<div class="font-bold text-white font-mono text-xs">OpenClaw Agent Core</div>
+    				</div>
+    				<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
+    					Runs locally on the NAS. Coordinates execution, retains local history, and runs personal automated loops.
+    				</p>
+    			</div>
 
-		<!-- Card 3: Google Servers (Brain) -->
-		<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-purple-500/20 shadow-lg flex flex-col justify-between">
-			<div class="space-y-3">
-				<div class="flex items-center gap-2">
-					<span class="text-xl">🧠</span>
-					<div class="font-bold text-purple-400 font-mono tracking-tight text-sm">Google Cloud (External)</div>
-				</div>
-				<p class="text-xs text-gray-400 leading-relaxed font-sans">
-					Gemini 3.5 API. Processes context payload, returns logical plans, and emits commands back to the local agent tools.
-				</p>
-				<div class="text-[9px] bg-purple-950/40 text-purple-300 border border-purple-800/30 rounded p-1.5 font-mono text-center">
-					⚡ Context Caching Enabled
-				</div>
-			</div>
-		</div>
-	</div>
+    			<!-- Local Access arrow -->
+    			<div class="flex justify-center text-green-500 font-bold font-mono text-xs">
+    				<span>⇅</span>
+    				<span class="text-[9px] text-gray-500 font-normal uppercase tracking-wider ml-1.5 self-center">Local Network Access</span>
+    			</div>
+
+    			<!-- Local File System and Services -->
+    			<div class="p-3 bg-black/50 rounded-xl border border-green-500/20">
+    				<div class="flex items-center gap-2">
+    					<span class="text-sm">📁</span>
+    					<div class="font-bold text-green-400 font-mono text-xs">NAS Files & Local Services</div>
+    				</div>
+    				<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
+    					Direct read/write access to NAS storage (e.g. video files), executes local shell scripts, and calls local services (like Tdarr containers).
+    				</p>
+    			</div>
+    		</div>
+    	</div>
+
+    	<!-- Connector 2 -->
+    	<div class="flex items-center justify-center text-purple-500 font-bold font-mono py-1 lg:py-0">
+    		<span class="lg:hidden">▲▼</span>
+    		<span class="hidden lg:inline text-lg px-2">↔</span>
+    	</div>
+
+    	<!-- Card 3: Google Servers (Brain) -->
+    	<div class="w-full lg:w-[28%] p-5 bg-black/60 rounded-xl border border-purple-500/20 shadow-lg flex flex-col justify-between">
+    		<div class="space-y-3">
+    			<div class="flex items-center gap-2">
+    				<span class="text-xl">🧠</span>
+    				<div class="font-bold text-purple-400 font-mono tracking-tight text-sm">Google Cloud (External)</div>
+    			</div>
+    			<p class="text-xs text-gray-400 leading-relaxed font-sans">
+    				Gemini 3.5 API. Processes context payload, returns logical plans, and emits commands back to the local agent tools.
+    			</p>
+    			<div class="text-[9px] bg-purple-950/40 text-purple-300 border border-purple-800/30 rounded p-1.5 font-mono text-center">
+    				⚡ Context Caching Enabled
+    			</div>
+    		</div>
+    	</div>
+    </div>
+
 </div>
 
-It seemed like the perfect setup. However, in a matter of minutes, I managed to run up an unexpected **~$44.08 agent API bill**. This postmortem details how a massive data file was silently injected into the prompt, combined with delayed billing, cache-write penalties, and uncached "cold-start" uploads to create the perfect storm—and how you can avoid the same fate.
+My first goal after setup was to use OpenClaw to analyze my files and see if we could optimize my storage.
+
+However, in a matter of minutes, with only a small number of chat requests, I managed to run up an unexpected **~$44.08 agent API bill**. This article details how this could happen, and what lessons I can share to prevent it ever happening again.
 
 ---
 
-## Timeline of the Bloat
+## Timeline
 
-The timeline below tracks the key chat events that led to the massive bill, starting from the goal of analyzing my ripped DVD collection to check sizes and conversions.
+The timeline below tracks the key chat events that led to the massive bill, starting from the goal of giving OpenClaw access to my media collection so it could find opportunities to optimize the storage use.
 
 ### 1. Opening the Gates (The Potential for Bloat)
 
