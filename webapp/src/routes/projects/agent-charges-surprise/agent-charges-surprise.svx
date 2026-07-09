@@ -140,11 +140,8 @@ Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw
     				<div class="font-bold text-purple-400 font-mono tracking-tight text-sm">Google Cloud (External)</div>
     			</div>
     			<p class="text-xs text-gray-400 leading-relaxed font-sans">
-    				Gemini 3.5 API. Processes context payload, returns logical plans, and emits commands back to the local agent tools.
+    				Gemini 3.5 API.
     			</p>
-    			<div class="text-[9px] bg-purple-950/40 text-purple-300 border border-purple-800/30 rounded p-1.5 font-mono text-center">
-    				⚡ Context Caching Enabled
-    			</div>
     		</div>
     	</div>
     </div>
