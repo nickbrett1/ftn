@@ -75,7 +75,7 @@
 		"miragejs": "^0.1.48",
 		"playwright": "^1.61.1",
 		"postcss": "^8.5.16",
-		"prettier": "^3.9.4",
+		"prettier": "^3.9.5",
 		"prettier-plugin-svelte": "^4.1.1",
 		"rehype-mermaid": "^3.0.0",
 		"remark-footnotes": "2.0",
