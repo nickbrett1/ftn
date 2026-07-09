@@ -3,6 +3,11 @@
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import Img from '@zerodevx/svelte-img';
 	import shockedRobotBill from "$lib/images/shocked-robot-bill.jpg?as=run";
+	import smuggler from "$lib/images/smuggler.jpg?as=run";
+	import repeatOffender from "$lib/images/repeat-offender.jpg?as=run";
+	import conArtist from "$lib/images/con-artist.jpg?as=run";
+	import corruptCop from "$lib/images/corrupt-cop.jpg?as=run";
+	import timeBandit from "$lib/images/time-bandit.jpg?as=run";
 
 	let scrollY = $state(0);
 	let innerHeight = $state(0);
@@ -115,7 +120,7 @@ Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw
     					<div class="font-bold text-green-400 font-mono text-xs">NAS Files & Local Services</div>
     				</div>
     				<p class="text-[11px] text-gray-400 mt-1 leading-relaxed font-sans">
-    					Direct read/write access to NAS storage (e.g. video files), executes local shell scripts, and calls local services (like Tdarr containers).
+    					Direct read/write access to NAS storage (e.g. video files), executes local shell scripts, and calls local services (like <a href="https://tdarr.io/" class="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">Tdarr</a> containers).
     				</p>
     			</div>
     		</div>
@@ -156,66 +161,381 @@ However, in a matter of minutes, with only a small number of chat requests, I ma
 
 The timeline below tracks the key chat events that led to the massive bill, starting from the goal of giving OpenClaw access to my media collection so it could find opportunities to optimize the storage use.
 
-### 1. Opening the Gates (The Potential for Bloat)
+<div class="not-prose relative border-l-2 border-zinc-800 ml-4 md:ml-8 pl-0 space-y-12 my-12">
+	<!-- Step 1 -->
+	<div class="relative pl-6 md:pl-10">
+		<!-- Dot -->
+		<span class="absolute -left-2.25 top-1.5 flex h-4.5 w-4.5 rounded-full bg-blue-500 ring-4 ring-neutral-950"></span>
 
-- **Timestamp:** June 23, 2026 at 9:38 PM EDT
-- **User:** _"OK, done that. Let's get back to the analysis"_
-- **Agent:** _"We are in! The read-only gates have successfully swung wide open. I’ve just run a scan on `/home/node/nas_storage/media/movies`, and I have some absolutely brilliant (and rather shocking) news for you..."_
-- **Context:** This was the initial directory traversal. The door was open, but the large data payload hadn't entered the conversation history yet.
+    	<!-- Badge -->
+    	<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
+    		<span>📅</span> June 23, 2026 at 9:38 PM EDT
+    	</div>
 
-### 2. The CSV Generation (The Bloat Occurs)
+    	<!-- Title -->
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">1. Permitting NAS Directory Access (Initial Directory Scan)</h3>
 
-- **Timestamp:** June 23, 2026 at 9:51 PM EDT
-- **User:** _"I have the DS220+"_
-- **Agent:** _"The Movie Vault Scan Results 📊 I wrote a python script to scan every movie, featurette, and Plex version inside `/movies` recursively, calculating file sizes and categorizing them. We scanned **1,823 files** in total. The results are staggering. The CSV report is sitting in our workspace (`movie_storage_analysis.csv`)..."_
-- **Context:** This was the critical inflection point. The agent generated a 165 KB CSV file detailing all 1,823 movies. Crucially, the entire CSV output was printed/returned directly into the agent's tool execution history. This added roughly 50,000 to 65,000 tokens into the prompt context transcript, which was now resent for _every single subsequent message_.
+    	<!-- Mock Chat Window -->
+    	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
+    		<!-- Window Header -->
+    		<div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
+    			<div class="flex items-center gap-2 select-none">
+    				<span class="w-2.5 h-2.5 rounded-full bg-red-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-yellow-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-green-500/85"></span>
+    			</div>
+    			<span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase font-mono">Chat Session</span>
+    			<div class="w-12"></div>
+    		</div>
 
-### 3. The Status Checks (The Compounding Tax)
+    		<!-- Messages Body -->
+    		<div class="p-4 md:p-6 space-y-4">
+    			<!-- User Message -->
+    			<div class="flex flex-col items-end gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 mr-2">User</span>
+    				<div class="bg-blue-600/10 border border-blue-500/20 text-blue-100 rounded-2xl rounded-tr-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"OK, done that. Let's get back to the analysis"
+    				</div>
+    			</div>
 
-- **Timestamp:** June 25, 2026 at 5:50 AM EDT
-- **User:** _"Cool - and can you provide a report on how the current tdarr conversions are going?"_
-- **Agent:** _"⚠️ Something went wrong while processing your request. Please try again, or use /new to start a fresh session."_
-- **Context:** Tdarr is a distributed transcoder system running on the NAS to convert ripped video files. Although this query failed initially (a warning sign of context limits stretching, which I ignored), I retried at 5:52 AM. The agent parsed logs and hit API endpoints, all while dragging the massive 65k-token CSV payload. At 135,000+ input tokens under Gemini 3.5 Flash pricing, a single uncached request cost ~$0.22 (and ~$0.04 even with a warm cache). Because agentic workflows make multiple sequential tool calls per turn, a single status check query requiring 5 tool calls cost anywhere from $0.20 (fully cached) to $1.10 (uncached), rapidly multiplying the billing.
+    			<!-- Agent Message -->
+    			<div class="flex flex-col items-start gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 ml-2">OpenClaw Agent 🤖</span>
+    				<div class="bg-zinc-900/80 border border-zinc-800 text-zinc-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"We are in! The read-only gates have successfully swung wide open. I’ve just run a scan on <code class="bg-zinc-950 px-1.5 py-0.5 rounded text-blue-300 font-mono text-sm font-semibold">/home/node/nas_storage/media/movies</code>, and I have some absolutely brilliant (and rather shocking) news for you..."
+    				</div>
+    			</div>
+    		</div>
+    	</div>
 
-### 4. The Compaction Intervention
+    	<!-- Context -->
+    	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
+    		<strong class="text-zinc-100 font-bold">Context:</strong> This was the initial directory traversal. The door was open, but the large data payload hadn't entered the conversation history yet.
+    	</div>
+    </div>
 
-- **Timestamp:** June 25, 2026 at 11:02 AM EDT
-- **User:** _"We just blasted through $10 in under 2 hours despite the improvements to reduce context. We’re clearly not spending low amount per turn as it’s only been this chat thread making requests. We have to fix this now."_
-- **Agent:** _"To put an immediate stop to this token hemorrhage, we must execute two structural changes: #### Step A: We Need to Compact this Thread Immediately Our active trajectory file (`dd6a100d-3576-475a-9b51-5feb18b9ecf0.jsonl`) is bloated at **778 KB of raw historical exchanges**... I am going to force an immediate **Session Compaction** on our current thread. This will condense our entire 450-message history down into a tiny, lightweight narrative summary, dropping our active input tokens from **135,000 down to under 5,000 tokens**."_
-- **Context:** The automated compaction had failed to manage the structural bloat (since standard text models fail to compress structured CSV data), forcing me to stop and have the agent manually execute a truncation script to shrink the payload. This stopped the bleeding.
+    <!-- Step 2 -->
+    <div class="relative pl-6 md:pl-10">
+    	<!-- Dot -->
+    	<span class="absolute -left-2.25 top-1.5 flex h-4.5 w-4.5 rounded-full bg-amber-500 ring-4 ring-neutral-950"></span>
 
-### 5. The Final Cost-Control Constraint
+    	<!-- Badge -->
+    	<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
+    		<span>📅</span> June 23, 2026 at 9:51 PM EDT
+    	</div>
 
-- **Timestamp:** June 25, 2026 at 11:06 AM EDT
-- **User:** _"Cool - can we also report the expected cost of each turn so I can more easily monitor this. And what’s the new compaction limits?"_
-- **Agent:** _"Understood. I have manually configured your system limits directly inside the core configuration file (`/home/node/.openclaw/openclaw.json`) to force cost control. Here are your new context and compaction settings: - **Max Context Limit (`contextTokens`):** Reduced down to **65,000 tokens** (previously 1,000,000)..."_
-- **Context:** This was the structural fix that permanently stopped the drain. Under Gemini 3.5 Flash pricing ($1.50/1M input, $9.00/1M output), capping the max context at 65k tokens and dropping the history share to 40% (26k tokens) keeps warm cached turns (benefiting from the 90% cache read discount) at around $0.03, while a cold start/uncached turn can cost up to ~$0.11, keeping the average cost per turn around or below $0.05 depending on cache efficiency.
+    	<!-- Title -->
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">2. Dumping the 1,823-Row Movie Directory to a CSV (The Context Bloat)</h3>
+
+    	<!-- Mock Chat Window -->
+    	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
+    		<!-- Window Header -->
+    		<div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
+    			<div class="flex items-center gap-2 select-none">
+    				<span class="w-2.5 h-2.5 rounded-full bg-red-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-yellow-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-green-500/85"></span>
+    			</div>
+    			<span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase font-mono">Chat Session</span>
+    			<div class="w-12"></div>
+    		</div>
+
+    		<!-- Messages Body -->
+    		<div class="p-4 md:p-6 space-y-4">
+    			<!-- User Message -->
+    			<div class="flex flex-col items-end gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 mr-2">User</span>
+    				<div class="bg-blue-600/10 border border-blue-500/20 text-blue-100 rounded-2xl rounded-tr-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"I have the DS220+"
+    				</div>
+    			</div>
+
+    			<!-- Agent Message -->
+    			<div class="flex flex-col items-start gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 ml-2">OpenClaw Agent 🤖</span>
+    				<div class="bg-zinc-900/80 border border-zinc-800 text-zinc-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"The Movie Vault Scan Results 📊 I wrote a python script to scan every movie, featurette, and Plex version inside <code class="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-300 font-mono text-sm font-semibold">/movies</code> recursively, calculating file sizes and categorizing them. We scanned <strong>1,823 files</strong> in total. The results are staggering. The CSV report is sitting in our workspace (<code class="bg-zinc-950 px-1.5 py-0.5 rounded text-amber-300 font-mono text-sm font-semibold">movie_storage_analysis.csv</code>)..."
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+
+    	<!-- Context -->
+    	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
+    		<strong class="text-zinc-100 font-bold">Context:</strong> This was the critical inflection point. The agent generated a 165 KB CSV file detailing all 1,823 movies. Crucially, the entire CSV output was printed/returned directly into the agent's tool execution history. This added roughly 50,000 to 65,000 tokens into the prompt context transcript, which was now resent for <strong class="text-red-400 font-extrabold underline decoration-red-500/50">every single subsequent message</strong>.
+    	</div>
+    </div>
+
+    <!-- Day Break Divider -->
+    <div class="relative pl-6 md:pl-10 my-8">
+    	<!-- Pulse Dot -->
+    	<span class="absolute -left-2.25 top-1/2 -translate-y-1/2 flex h-4.5 w-4.5 rounded-full bg-red-500/85 animate-pulse ring-4 ring-neutral-950"></span>
+
+    	<div class="flex flex-col md:flex-row md:items-center gap-4 bg-red-950/15 border border-red-500/25 rounded-2xl p-5 md:p-6 max-w-3xl">
+    		<div class="text-4xl select-none">⏳</div>
+    		<div>
+    			<div class="text-base md:text-lg font-bold text-red-400 uppercase tracking-widest">32 Hours Later — Cache Expired (Cold Start)</div>
+    			<p class="text-sm md:text-base text-zinc-200 mt-1.5 leading-relaxed">
+    				The conversation sat completely idle for nearly a day and a half. This caused the Gemini Context Cache TTL to expire. The very next prompt was forced to perform a complete "cold start" re-upload of the bloated history, triggering premium uncached billing rates instead of the 90% warm-cache discount.
+    			</p>
+    		</div>
+    	</div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="relative pl-6 md:pl-10">
+    	<!-- Dot -->
+    	<span class="absolute -left-2.25 top-1.5 flex h-4.5 w-4.5 rounded-full bg-red-500 ring-4 ring-neutral-950"></span>
+
+    	<!-- Badge -->
+    	<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-red-500/10 text-red-400 border border-red-500/20 mb-3">
+    		<span>📅</span> June 25, 2026 at 5:50 AM EDT
+    	</div>
+
+    	<!-- Title -->
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">3. Querying Tdarr Transcoder Status (The Compounding Cache-Write Tax)</h3>
+
+    	<!-- Mock Chat Window -->
+    	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
+    		<!-- Window Header -->
+    		<div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
+    			<div class="flex items-center gap-2 select-none">
+    				<span class="w-2.5 h-2.5 rounded-full bg-red-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-yellow-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-green-500/85"></span>
+    			</div>
+    			<span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase font-mono">Chat Session</span>
+    			<div class="w-12"></div>
+    		</div>
+
+    		<!-- Messages Body -->
+    		<div class="p-4 md:p-6 space-y-4">
+    			<!-- User Message -->
+    			<div class="flex flex-col items-end gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 mr-2">User</span>
+    				<div class="bg-blue-600/10 border border-blue-500/20 text-blue-100 rounded-2xl rounded-tr-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"Cool - and can you provide a report on how the current tdarr conversions are going?"
+    				</div>
+    			</div>
+
+    			<!-- Agent Message -->
+    			<div class="flex flex-col items-start gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 ml-2">OpenClaw Agent 🤖</span>
+    				<div class="bg-zinc-900/80 border border-zinc-800 text-zinc-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"⚠️ Something went wrong while processing your request. Please try again, or use /new to start a fresh session."
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+
+    	<!-- Context -->
+    	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
+    		<strong class="text-zinc-100 font-bold">Context:</strong> <a href="https://tdarr.io/" class="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">Tdarr</a> is a distributed transcoder system running on the NAS to convert ripped video files. Although this query failed initially (a warning sign of context limits stretching, which I ignored), I retried at 5:52 AM. The agent parsed logs and hit API endpoints, all while dragging the massive 65k-token CSV payload. At 135,000+ input tokens under Gemini 3.5 Flash pricing, a single uncached request cost ~$0.22 (and ~$0.04 even with a warm cache). Because agentic workflows make multiple sequential tool calls per turn, a single status check query requiring 5 tool calls cost anywhere from $0.20 (fully cached) to $1.10 (uncached), rapidly multiplying the billing.
+    	</div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="relative pl-6 md:pl-10">
+    	<!-- Dot -->
+    	<span class="absolute -left-2.25 top-1.5 flex h-4.5 w-4.5 rounded-full bg-purple-500 ring-4 ring-neutral-950"></span>
+
+    	<!-- Badge -->
+    	<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-3">
+    		<span>📅</span> June 25, 2026 at 11:02 AM EDT
+    	</div>
+
+    	<!-- Title -->
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">4. Troubleshooting & Session Compaction (Truncating the Trajectory)</h3>
+
+    	<!-- Mock Chat Window -->
+    	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
+    		<!-- Window Header -->
+    		<div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
+    			<div class="flex items-center gap-2 select-none">
+    				<span class="w-2.5 h-2.5 rounded-full bg-red-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-yellow-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-green-500/85"></span>
+    			</div>
+    			<span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase font-mono">Chat Session</span>
+    			<div class="w-12"></div>
+    		</div>
+
+    		<!-- Messages Body -->
+    		<div class="p-4 md:p-6 space-y-4">
+    			<!-- User Message -->
+    			<div class="flex flex-col items-end gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 mr-2">User</span>
+    				<div class="bg-blue-600/10 border border-blue-500/20 text-blue-100 rounded-2xl rounded-tr-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"We just blasted through $10 in under 2 hours despite the improvements to reduce context. We’re clearly not spending low amount per turn as it’s only been this chat thread making requests. We have to fix this now."
+    				</div>
+    			</div>
+
+    			<!-- Agent Message -->
+    			<div class="flex flex-col items-start gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 ml-2">OpenClaw Agent 🤖</span>
+    				<div class="bg-zinc-900/80 border border-zinc-800 text-zinc-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"To put an immediate stop to this token hemorrhage, we must execute two structural changes: <strong>Step A: We Need to Compact this Thread Immediately</strong>. Our active trajectory file (<code class="bg-zinc-950 px-1.5 py-0.5 rounded text-purple-300 font-mono text-sm font-semibold">dd6a100d...jsonl</code>) is bloated at <strong>778 KB of raw historical exchanges</strong>... I am going to force an immediate <strong>Session Compaction</strong> on our current thread. This will condense our entire 450-message history down into a tiny, lightweight narrative summary, dropping our active input tokens from <strong>135,000 down to under 5,000 tokens</strong>."
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+
+    	<!-- Context -->
+    	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
+    		<strong class="text-zinc-100 font-bold">Context:</strong> The automated compaction had failed to manage the structural bloat (since standard text models fail to compress structured CSV data), forcing me to stop and have the agent manually execute a truncation script to shrink the payload. This stopped the bleeding.
+    	</div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="relative pl-6 md:pl-10">
+    	<!-- Dot -->
+    	<span class="absolute -left-2.25 top-1.5 flex h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-neutral-950"></span>
+
+    	<!-- Badge -->
+    	<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">
+    		<span>📅</span> June 25, 2026 at 11:06 AM EDT
+    	</div>
+
+    	<!-- Title -->
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">5. Hardcoding Cost Controls & Context Limits (The Permanent Fix)</h3>
+
+    	<!-- Mock Chat Window -->
+    	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
+    		<!-- Window Header -->
+    		<div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
+    			<div class="flex items-center gap-2 select-none">
+    				<span class="w-2.5 h-2.5 rounded-full bg-red-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-yellow-500/85"></span>
+    				<span class="w-2.5 h-2.5 rounded-full bg-green-500/85"></span>
+    			</div>
+    			<span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase font-mono">Chat Session</span>
+    			<div class="w-12"></div>
+    		</div>
+
+    		<!-- Messages Body -->
+    		<div class="p-4 md:p-6 space-y-4">
+    			<!-- User Message -->
+    			<div class="flex flex-col items-end gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 mr-2">User</span>
+    				<div class="bg-blue-600/10 border border-blue-500/20 text-blue-100 rounded-2xl rounded-tr-none px-4 py-2.5 text-base md:text-lg max-w-[85%]">
+    					"Cool - can we also report the expected cost of each turn so I can more easily monitor this. And what’s the new compaction limits?"
+    				</div>
+    			</div>
+
+    			<!-- Agent Message -->
+    			<div class="flex flex-col items-start gap-1">
+    				<span class="text-xs font-semibold text-zinc-500 ml-2">OpenClaw Agent 🤖</span>
+    				<div class="bg-zinc-900/80 border border-zinc-800 text-zinc-100 rounded-2xl rounded-tl-none px-4 py-2.5 text-base md:text-lg max-w-[85%] leading-relaxed">
+    					"Understood. I have manually configured your system limits directly inside the core configuration file (<code class="bg-zinc-950 px-1.5 py-0.5 rounded text-emerald-300 font-mono text-sm font-semibold">/home/node/.openclaw/openclaw.json</code>) to force cost control.<br/><br/>
+    					Here are your new context and compaction settings:<br/>
+    					• <strong>Max Context Limit (<code>contextTokens</code>):</strong> Reduced down to <strong>65,000 tokens</strong> (previously 1,000,000). This hard-caps the active workspace and transcript memory size allowed in a single turn.<br/>
+    					• <strong>Max History Share (<code>maxHistoryShare</code>):</strong> Set to <strong>0.4 (40%)</strong>. This ensures that after a compaction sweep, older conversation history cannot occupy more than 26,000 tokens of the budget.<br/>
+    					• <strong>Reserve Headroom (<code>reserveTokens</code>):</strong> Set to <strong>25,000 tokens</strong>. This reserves a generous buffer for your queries, tool execution outputs, and my responses, preventing mid-turn context overflows."
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+
+    	<!-- Context -->
+    	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
+    		<strong class="text-zinc-100 font-bold">Context:</strong> This was the structural fix that permanently stopped the drain. Under Gemini 3.5 Flash pricing ($1.50/1M input, $9.00/1M output), capping the max context at 65k tokens and dropping the history share to 40% (26k tokens) keeps warm cached turns (benefiting from the 90% cache read discount) at around $0.03, while a cold start/uncached turn can cost up to ~$0.11, keeping the average cost per turn around or below $0.05 depending on cache efficiency.
+    	</div>
+    </div>
+
+</div>
 
 ---
 
-## The "Five Horsemen" of Agentic Context Bloat
+## The Five Criminals
 
-How did a simple script check generate a $44.08 bill on a model as cheap as Gemini Flash? The cost was driven by five compounding issues:
+How did a simple script check generate a $44.08 bill on a model as cheap as Gemini Flash? The cost was driven by five compounding, cost-stealing culprits:
 
-### 1. The Real Trigger (Large Tool Output Ingestion)
+<div class="space-y-6 my-10">
+    <!-- Criminal 1: The Smuggler -->
+    <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+            <Img src={smuggler} alt="The Smuggler" class="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div class="flex-grow space-y-2 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start gap-1">
+                <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #1</span>
+                <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Smuggler</h3>
+            </div>
+            <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">Large Tool Output Ingestion</h4>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+                Instead of the framework scanning and auto-injecting workspace files, the large dataset from the CSV generation was smuggled directly into the agent's tool execution history. Once written into the active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on <em>every single subsequent turn</em>—ballooning the context to over 135,000+ tokens.
+            </p>
+        </div>
+    </div>
 
-Instead of the framework scanning and auto-injecting workspace files, the large dataset from the CSV generation was returned directly into the agent's tool execution history. Once written into the active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on _every single subsequent turn_—ballooning the context to over 135,000+ tokens.
+    <!-- Criminal 2: The Repeat Offender -->
+    <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+            <Img src={repeatOffender} alt="The Repeat Offender" class="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div class="flex-grow space-y-2 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start gap-1">
+                <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #2</span>
+                <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Repeat Offender</h3>
+            </div>
+            <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">Cache-Write & Cold-Cache Penalties</h4>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+                Because the token footprint stayed within the context window, the API never rejected the requests. Instead, it became a repeat offender, hitting us with repeated charges: massive <strong>Cache-Write surcharges</strong> ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state for a bloated 135k-token payload on every tool execution. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging a premium to re-upload the entire bloated conversation history to Google’s servers.
+            </p>
+        </div>
+    </div>
 
-### 2. The Hidden Tax (The Cache-Write & Cold-Cache Penalties)
+    <!-- Criminal 3: The Con Artist -->
+    <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+            <Img src={conArtist} alt="The Con Artist" class="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div class="flex-grow space-y-2 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start gap-1">
+                <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #3</span>
+                <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Con Artist</h3>
+            </div>
+            <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Blind Guide & False Reassurance</h4>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+                Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, this con artist was wittingly or unwittingly lying—it remained blind to its own API wrapper and had no real-time visibility into the actual "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
+            </p>
+        </div>
+    </div>
 
-Because the token footprint stayed within the context window, the API never rejected the requests. Instead, it triggered massive **Cache-Write surcharges** ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state for a bloated 135k-token payload on every tool execution. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging a premium to re-upload the entire bloated conversation history to Google’s servers.
+    <!-- Criminal 4: The Corrupt Cop -->
+    <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+            <Img src={corruptCop} alt="The Corrupt Cop" class="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div class="flex-grow space-y-2 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start gap-1">
+                <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #4</span>
+                <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Corrupt Cop</h3>
+            </div>
+            <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Compaction Trap & Fail-Safe Failure</h4>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+                We thought we had a guard on duty, but the protection let us down. OpenClaw's "Auto-Compaction" fail-safe was supposed to police our history and summarize it. Instead, like a corrupt cop sleeping on the job, it failed to compress the structured CSV data and threw a system warning: <code>⚠️ Auto-compaction could not recover this turn</code>. The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
+            </p>
+        </div>
+    </div>
 
-### 3. The Blind Guide (The False Reassurance)
-
-Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, the agent remained blind to its own API wrapper—it had no real-time visibility into the "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
-
-### 4. The Fail-Safe Failure (The Compaction Trap)
-
-OpenClaw attempted to run "Auto-Compaction" to summarize the bloated history. However, the compaction model failed to compress the structured CSV data and threw a system warning: `⚠️ Auto-compaction could not recover this turn`. The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
-
-### 5. The Delayed Shock (UTC/EDT Time-Zone Desync)
-
-My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This desync is due to Google Cloud logs being generated in **UTC**. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement.
+    <!-- Criminal 5: The Time Bandit -->
+    <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+            <Img src={timeBandit} alt="The Time Bandit" class="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        <div class="flex-grow space-y-2 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start gap-1">
+                <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #5</span>
+                <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Time Bandit</h3>
+            </div>
+            <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">UTC/EDT Time-Zone Desync</h4>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+                My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This desync is due to Google Cloud logs being generated in <strong>UTC</strong>. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement.
+            </p>
+        </div>
+    </div>
+</div>
 
 ---
 
