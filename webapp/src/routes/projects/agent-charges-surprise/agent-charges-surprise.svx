@@ -150,7 +150,7 @@ Specifically, I wanted to experiment with [OpenClaw](https://github.com/openclaw
 
 My first goal after setup was to use OpenClaw to analyze my files and see if we could optimize my storage.
 
-However, in a matter of minutes, with only a small number of chat requests, I managed to run up an unexpected **~$44.08 agent API bill**. This article details how this could happen, and what lessons I can share to prevent it ever happening again.
+However, in a matter of minutes, with only a small number of chat requests, I managed to run up an unexpected **$44.08 agent API bill**. This article details how this could happen, and what lessons I can share to prevent it ever happening again.
 
 ---
 
