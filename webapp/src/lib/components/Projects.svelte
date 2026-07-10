@@ -48,6 +48,17 @@
 				</p>
 			</div>
 		</Card>
+		<Card onclick={() => (globalThis.location.href = '/projects/agent-charges-surprise')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow">Runaway AI Agents</span>
+					<CreditCardSolid class="size-10" aria-label="Runaway AI Agents Project" />
+				</div>
+				<p class="grow pt-5">
+					5 lessons learned when an autonomous assistant silently ran up a $44 API bill in minutes, and how to prevent it.
+				</p>
+			</div>
+		</Card>
 		<Card onclick={() => (globalThis.location.href = '/projects/data-arch-diagram')}>
 			<div class="flex flex-col grow">
 				<div class="flex flex-row">
