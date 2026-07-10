@@ -554,7 +554,7 @@ If a script or command outputs a large volume of data (like a full CSV file, dat
 
 > **Key Insight:** Stateful agents incur significant hidden costs through cache maintenance, not just base input and output tokens.
 
-Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties if the agent sits idle. Use tools like [ZeroLimit](https://github.com/0xtbug/zero-limit) to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
+Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties if the agent sits idle. Use tools like [ZeroLimit](https://github.com/0xtbug/zero-limit) or proxy layers like [LiteLLM](https://www.litellm.ai/) to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
 
 ### 3. Treat Heavy-Data Sessions as "Disposable"
 
