@@ -462,7 +462,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
             </div>
             <h4 class="text-base lg:text-lg font-mono text-zinc-400 font-semibold tracking-wide uppercase">Large Tool Output Ingestion</h4>
             <p class="text-zinc-200 text-base lg:text-xl leading-relaxed pt-1">
-                Instead of the framework scanning and auto-injecting workspace files, the large dataset from the CSV generation was smuggled directly into the agent's tool execution history. Once written into the active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on <em>every single subsequent turn</em>—ballooning the context to over 135,000+ tokens.
+                After running the CSV generation, the large resulting dataset was smuggled directly into the agent's tool execution history. Once written into this active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on <em>every single subsequent turn</em>—ballooning the context to over 135,000+ tokens.
             </p>
         </div>
     </div>
@@ -479,7 +479,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
             </div>
             <h4 class="text-base lg:text-lg font-mono text-zinc-400 font-semibold tracking-wide uppercase">Cache-Write & Cold-Cache Penalties</h4>
             <p class="text-zinc-200 text-base lg:text-xl leading-relaxed pt-1">
-                Because the token footprint stayed within the context window, the API never rejected the requests. Instead, it became a repeat offender, hitting us with repeated charges: massive <strong>Cache-Write surcharges</strong> ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state for a bloated 135k-token payload on every tool execution. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging a premium to re-upload the entire bloated conversation history to Google’s servers.
+                Because the token footprint stayed within the context window (a 'benefit' of newer large context window models), the API never rejected the requests. Instead, each request became a repeat offender, hitting us with repeated charges: specifically large cache-write surcharges ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state using a bloated 135k-token payload on every model request. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging an even higher premium to re-upload the entire bloated conversation history to Google’s servers.
             </p>
         </div>
     </div>
@@ -496,7 +496,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
             </div>
             <h4 class="text-base lg:text-lg font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Blind Guide & False Reassurance</h4>
             <p class="text-zinc-200 text-base lg:text-xl leading-relaxed pt-1">
-                Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, this con artist was wittingly or unwittingly lying—it remained blind to its own API wrapper and had no real-time visibility into the actual "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
+                Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, this con artist was not being honest, it remained blind to its own API wrapper and had no real-time visibility into the actual "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
             </p>
         </div>
     </div>
@@ -513,7 +513,8 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
             </div>
             <h4 class="text-base lg:text-lg font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Compaction Trap & Fail-Safe Failure</h4>
             <p class="text-zinc-200 text-base lg:text-xl leading-relaxed pt-1">
-                We thought we had a guard on duty, but the protection let us down. OpenClaw's "Auto-Compaction" fail-safe was supposed to police our history and summarize it. Instead, like a corrupt cop sleeping on the job, it failed to compress the structured CSV data and threw a system warning: <code>⚠️ Auto-compaction could not recover this turn</code>. The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
+                We thought we had a guard on duty, but the protection let us down. OpenClaw's "Auto-Compaction" fail-safe was supposed to police our history and summarize it. Instead, like a corrupt cop sleeping on the job, it failed to compress the structured CSV data (likely because to compress it requires a call to the model and this could well have exceeded the API limit) and threw a system warning: <br><br><code>⚠️ Auto-compaction could not recover this turn</code><br><br>
+                The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
             </p>
         </div>
     </div>
@@ -530,7 +531,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
             </div>
             <h4 class="text-base lg:text-lg font-mono text-zinc-400 font-semibold tracking-wide uppercase">UTC/EDT Time-Zone Desync</h4>
             <p class="text-zinc-200 text-base lg:text-xl leading-relaxed pt-1">
-                My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This desync is due to Google Cloud logs being generated in <strong>UTC</strong>. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement.
+                My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This led me to try to debug only requests made on June 25th. However Google Cloud logs are generated in <strong>UTC</strong>. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement causing me to miss the root cause.
             </p>
         </div>
     </div>
@@ -541,19 +542,19 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 
 ## Practical Guardrails: 5 Lessons Learned
 
-These 5 lessons learned apply generally when working with LLMs, but particularly if costs are unbounded and the agent is semi-supervised or unsupervised:
+These 5 lessons I think apply generally when working with LLMs, but particularly if costs are unbounded and the agent is semi-supervised or unsupervised:
 
 ### 1. Guard Tool and Command Outputs
 
 > **Key Insight:** Prevent agents from outputting large raw datasets directly into the conversation history, which causes subsequent requests to balloon in size.
 
-If a script or command outputs a large volume of data (like a full CSV file, database dump, or extensive logs), do not allow the agent to ingest it directly into the chat transcript. Instead, write the output to a temporary file (e.g., `output.txt` or a `/data/` folder) and have the agent print only a high-level summary (such as row count or the top 5 lines) in the conversation history. This keeps the active history lightweight and prevents tokens from compounding across every subsequent turn.
+If a script or command outputs a large volume of data (like a full CSV file, database dump, or extensive logs), do not allow the agent to ingest it directly into the chat transcript. Instead, write the output to a temporary file and have the agent print only a high-level summary in the conversation history. This keeps the active history lightweight and prevents tokens from compounding across every subsequent turn.
 
 ### 2. Monitor Cache-Write Behavior
 
 > **Key Insight:** Stateful agents incur significant hidden costs through cache maintenance, not just base input and output tokens.
 
-Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties (Uncached Uploads) if the agent sits idle. Use framework tools or API wrappers to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
+Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties if the agent sits idle. Use tools like [ZeroLimit](https://github.com/0xtbug/zero-limit) to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
 
 ### 3. Treat Heavy-Data Sessions as "Disposable"
 
