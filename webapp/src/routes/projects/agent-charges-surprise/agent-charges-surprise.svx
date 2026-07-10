@@ -554,22 +554,34 @@ If a script or command outputs a large volume of data (like a full CSV file, dat
 
 > **Key Insight:** Stateful agents incur significant hidden costs through cache maintenance, not just base input and output tokens.
 
-Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties if the agent sits idle. Use tools like [ZeroLimit](https://github.com/0xtbug/zero-limit) or proxy layers like [LiteLLM](https://www.litellm.ai/) to monitor caching patterns and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
+Be aware that features like Gemini's Context Caching can introduce Cache-Write surcharges when the cache is updated frequently, or cold-cache penalties if the agent sits idle. Use tools like [ZeroLimit](https://github.com/0xtbug/zero-limit) or proxy layers like [LiteLLM](https://www.litellm.ai/) to monitor usage and ensure you aren't paying premium rates to continuously re-upload a bloated context payload.
 
 ### 3. Treat Heavy-Data Sessions as "Disposable"
 
 > **Key Insight:** When a session is loaded with heavy data, consider it "burned" and reset the conversation context immediately.
 
-If an agent needs to perform an intensive task that imports a large file, don't keep chatting in that same window. Once the task is complete, use commands like `/new` or `/reset` to clear the transcript. This purges the temporary data from the active context, so you don't carry the token weight into normal coding tasks.
+If an agent needs to perform an intensive task that imports a large file, don't keep chatting in that same window. Once the task is complete, use commands like `/new`, `/clear` or `/reset` to clear the transcript. This purges the temporary data from the active context, so you don't carry the token weight forward.
 
 ### 4. Implement Hard API Budget Caps
 
 > **Key Insight:** Never run autonomous loops or agents on open-ended, pay-as-you-go API keys without strict cloud-level spending limits.
 
-Configure budget alerts, usage quotas, and hard spending limits directly within your LLM developer console (such as Google AI Studio, Google Cloud Console, or Vertex AI). Consumer applications or CLI sandboxes often enforce safety limits, but raw API keys are unbounded. Cloud-level budget caps are your only definitive safety net against a runaway script loop.
+Configure budget alerts, usage quotas, and hard spending limits directly within your LLM developer console (such as Google AI Studio, Google Cloud Console, or Vertex AI). Consumer applications or CLI sandboxes often enforce safety limits, e.g. limits within a 5-hour window but by default raw API keys are unbounded. Cloud-level budget caps are a good safety net against a runaway script loop. However there are delays to billing and even with caps, so it is still possible to overrun limits.
 
 ### 5. Treat Compaction Failures as an Immediate Stop-Work Signal
 
 > **Key Insight:** If a framework's history compaction or summarization fails, halt execution immediately to prevent exponential cost compounding.
 
-When a framework warning like `⚠️ Auto-compaction could not recover this turn` appears, do not ignore it. Summarization models are designed for conversational text, not structured database tables or CSVs. If the compaction fails, the system will fall back to carrying the raw, uncompressed payload through the rest of the run, exponentially multiplying your per-turn costs until you reset the session.
+When a framework warning like `⚠️ Auto-compaction could not recover this turn` appears, do not ignore it. Models are designed for conversational text, not structured database tables or CSVs. If the compaction fails, the system will fall back to carrying the raw, uncompressed payload through the rest of the run, exponentially multiplying per-turn costs until the session is reset.
+
+---
+
+## Looking Forward: Navigating the New Frontier
+
+As painful as a surprise $44.08 bill can be, this experience hasn't dimmed my optimism about the future of agentic development. The shift toward fully autonomous LLM assistants is genuinely transformative, allowing us to offload complex, multi-step workflows that would have taken hours of manual scripting. 
+
+However, as with any major technology paradigm shift, early adopters will inevitably stub their toes on the lack of standard guardrails and a general misunderstanding of how these new systems consume resources. Running stateful LLMs locally introduces entirely new categories of operational costs—such as cache-write surcharges and compaction failures—that developers have never had to think about in traditional software engineering.
+
+In time, I have no doubt that framework designers, developer tool creators, and API providers will solve these problems. We will see standard, client-side billing safety valves, smarter out-of-the-box history management, and real-time cost feedback built directly into the wrappers. Until then, the onus is on us to establish these guardrails ourselves. 
+
+By understanding the "criminals" of context bloat and building practical cost controls into our codebases, we can safely harness the incredible velocity that autonomous agents provide—without the surprise invoice.
