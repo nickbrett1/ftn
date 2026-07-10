@@ -3,7 +3,7 @@
 		GithubBrands,
 		LinkedinInBrands,
 		EnvelopeRegular,
-		FileInvoiceDollarSolid,
+		CreditCardSolid,
 		RocketSolid,
 		CartShoppingSolid,
 		UsersSolid,
@@ -137,7 +137,7 @@
 				<!-- Credit Card Billing Tool icon -->
 				{#if isLoggedIn}
 					<!-- User is logged in, show clickable icon that goes directly to billing -->
-					<FileInvoiceDollarSolid
+					<CreditCardSolid
 						id="login"
 						onclick={handleCreditCardClick}
 						class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
@@ -148,7 +148,7 @@
 				{:else}
 					<!-- User is not logged in, show login modal -->
 					<Login loginCallback={loginStateUpdated} redirectOnSuccess="/projects/ccbilling">
-						<FileInvoiceDollarSolid
+						<CreditCardSolid
 							id="login"
 							class="hover:text-green-400 cursor-pointer size-8 md:size-12"
 							ariaLabel="Credit Card Billing Tool"
