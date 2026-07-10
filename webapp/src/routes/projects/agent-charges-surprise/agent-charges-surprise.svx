@@ -170,7 +170,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     	</div>
 
     	<!-- Title -->
-    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">1. Permitting NAS Directory Access (Initial Directory Scan)</h3>
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">1. Permitting NAS Directory Access</h3>
 
     	<!-- Mock Chat Window -->
     	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
@@ -207,7 +207,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
 
     	<!-- Explanation -->
     	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
-    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the initial directory traversal. The door was open, but the large data payload hadn't entered the conversation history yet.
+    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the initial directory traversal, and where our story begins.
     	</div>
     </div>
 
@@ -222,7 +222,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     	</div>
 
     	<!-- Title -->
-    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">2. Dumping the 1,823-Row Movie Directory to a CSV (The Context Bloat)</h3>
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">2. Dumping the 1,823-Row Movie Directory to a CSV</h3>
 
     	<!-- Mock Chat Window -->
     	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
@@ -259,7 +259,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
 
     	<!-- Explanation -->
     	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
-    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the critical inflection point. The agent generated a 165 KB CSV file detailing all 1,823 movies. Crucially, the entire CSV output was printed/returned directly into the agent's tool execution history. This added roughly 50,000 to 65,000 tokens into the prompt context transcript, which was now resent for <strong class="text-red-400 font-extrabold underline decoration-red-500/50">every single subsequent message</strong>.
+    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the point things started going wrong. The agent generated a 165 KB CSV file detailing 1,823 movies. Crucially, the entire CSV output was printed/returned directly into the agent's tool execution history. This added roughly 50,000 to 65,000 tokens into the prompt context transcript, which was then resent with <strong class="text-red-400 font-extrabold underline decoration-red-500/50">every single subsequent message</strong>.
     	</div>
     </div>
 
@@ -273,7 +273,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     		<div>
     			<div class="text-base md:text-lg font-bold text-red-400 uppercase tracking-widest">32 Hours Later — Cache Expired (Cold Start)</div>
     			<p class="text-sm md:text-base text-zinc-200 mt-1.5 leading-relaxed">
-    				The conversation sat completely idle for nearly a day and a half. This caused the Gemini Context Cache TTL to expire. The very next prompt was forced to perform a complete "cold start" re-upload of the bloated history, triggering premium uncached billing rates instead of the 90% warm-cache discount.
+    				The conversation sat completely idle for nearly a day and a half. This caused a cache (Gemini Context Cache) used by the agent on the server to expire. The very next prompt was forced to perform a complete "cold start" and re-upload the bloated history, triggering premium uncached billing rates instead of the usual 90% warm-cache discount.
     			</p>
     		</div>
     	</div>
@@ -290,7 +290,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     	</div>
 
     	<!-- Title -->
-    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">3. Querying Tdarr Transcoder Status (The Compounding Cache-Write Tax)</h3>
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">3. Querying Tdarr Transcoder Status</h3>
 
     	<!-- Mock Chat Window -->
     	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
@@ -327,7 +327,9 @@ The timeline below tracks the key chat events that led to the massive bill, star
 
     	<!-- Explanation -->
     	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
-    		<strong class="text-zinc-100 font-bold">Explanation:</strong> <a href="https://tdarr.io/" class="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">Tdarr</a> is a distributed transcoder system running on the NAS to convert ripped video files. Although this query failed initially (a warning sign of context limits stretching, which I ignored), I retried at 5:52 AM. The agent parsed logs and hit API endpoints, all while dragging the massive 65k-token CSV payload. At 135,000+ input tokens under Gemini 3.5 Flash pricing, a single uncached request cost ~$0.22 (and ~$0.04 even with a warm cache). Because agentic workflows make multiple sequential tool calls per turn, a single status check query requiring 5 tool calls cost anywhere from $0.20 (fully cached) to $1.10 (uncached), rapidly multiplying the billing.
+    		<strong class="text-zinc-100 font-bold">Explanation:</strong> At this point, I had separately started running in a container on the NAS, <a href="https://tdarr.io/" class="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">Tdarr</a>, a distributed transcoder to convert the video files to more efficient formats. Although this query failed initially (a warning sign of indicating I was hitting context limits, which I ignored), I retried at 5:52 AM.<br><br>
+
+        The agent parsed logs and hit API endpoints to determine the latest status, all while dragging along the massive 65k-token CSV payload. At 135,000+ input tokens under Gemini 3.5 Flash pricing, a single uncached request cost ~$0.22 (and ~$0.04 even with a warm cache). Because agentic workflows make multiple sequential tool calls per turn, a single status check query requiring 5 tool calls cost anywhere from $0.20 (fully cached) to $1.10 (uncached), rapidly multiplying the billing.
     	</div>
     </div>
 
@@ -342,7 +344,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     	</div>
 
     	<!-- Title -->
-    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">4. Troubleshooting & Session Compaction (Truncating the Trajectory)</h3>
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">4. Troubleshooting & Session Compaction</h3>
 
     	<!-- Mock Chat Window -->
     	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
@@ -394,7 +396,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
     	</div>
 
     	<!-- Title -->
-    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">5. Hardcoding Cost Controls & Context Limits (The Permanent Fix)</h3>
+    	<h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">5. Hardcoding Cost Controls & Context Limits</h3>
 
     	<!-- Mock Chat Window -->
     	<div class="mt-4 max-w-3xl rounded-2xl border border-zinc-800/80 bg-zinc-950/40 overflow-hidden shadow-xl">
@@ -435,7 +437,7 @@ The timeline below tracks the key chat events that led to the massive bill, star
 
     	<!-- Explanation -->
     	<div class="mt-4 p-4 md:p-5 rounded-xl bg-zinc-900/45 border border-zinc-800/60 text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl">
-    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the structural fix that permanently stopped the drain. Under Gemini 3.5 Flash pricing ($1.50/1M input, $9.00/1M output), capping the max context at 65k tokens and dropping the history share to 40% (26k tokens) keeps warm cached turns (benefiting from the 90% cache read discount) at around $0.03, while a cold start/uncached turn can cost up to ~$0.11, keeping the average cost per turn around or below $0.05 depending on cache efficiency.
+    		<strong class="text-zinc-100 font-bold">Explanation:</strong> This was the structural fix that permanently stopped the drain from reoccurring. Under Gemini 3.5 Flash pricing, capping the max context at 65k tokens and dropping the percentage of that for conversation history to 40% (26k tokens) keeps the price of context cached turns (assuming they are frequent enough to benefit) at around $0.03, while a cold start/uncached turn would cost up to ~$0.11, keeping the average cost per turn around or below $0.05 depending on cache efficiency.
     	</div>
     </div>
 
@@ -459,7 +461,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Smuggler</h3>
             </div>
             <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">Large Tool Output Ingestion</h4>
-            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed pt-1">
                 Instead of the framework scanning and auto-injecting workspace files, the large dataset from the CSV generation was smuggled directly into the agent's tool execution history. Once written into the active conversation history/transcript, the 165 KB of data (amounting to 50,000+ tokens) was sent to the API on <em>every single subsequent turn</em>—ballooning the context to over 135,000+ tokens.
             </p>
         </div>
@@ -476,7 +478,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Repeat Offender</h3>
             </div>
             <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">Cache-Write & Cold-Cache Penalties</h4>
-            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed pt-1">
                 Because the token footprint stayed within the context window, the API never rejected the requests. Instead, it became a repeat offender, hitting us with repeated charges: massive <strong>Cache-Write surcharges</strong> ($0.30 per 1M tokens) as the framework repeatedly forced the Gemini API to update the cache state for a bloated 135k-token payload on every tool execution. Furthermore, when the agent sat idle, the Gemini cache TTL expired. Every subsequent message sent after a break performed an "Uncached Upload," charging a premium to re-upload the entire bloated conversation history to Google’s servers.
             </p>
         </div>
@@ -493,7 +495,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Con Artist</h3>
             </div>
             <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Blind Guide & False Reassurance</h4>
-            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed pt-1">
                 Throughout the troubleshooting, the agent repeatedly assured me that the session was cheap, citing Gemini Flash’s low base pricing. However, this con artist was wittingly or unwittingly lying—it remained blind to its own API wrapper and had no real-time visibility into the actual "cost-per-turn" driven by the injected CSV file, acting as an optimistic guide while the billing meter accelerated in the background.
             </p>
         </div>
@@ -510,7 +512,7 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Corrupt Cop</h3>
             </div>
             <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">The Compaction Trap & Fail-Safe Failure</h4>
-            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed pt-1">
                 We thought we had a guard on duty, but the protection let us down. OpenClaw's "Auto-Compaction" fail-safe was supposed to police our history and summarize it. Instead, like a corrupt cop sleeping on the job, it failed to compress the structured CSV data and threw a system warning: <code>⚠️ Auto-compaction could not recover this turn</code>. The framework kept the raw, uncompressed CSV data mapped to the session, ensuring that the financial damage continued through every subsequent automated Tdarr status check.
             </p>
         </div>
@@ -527,11 +529,12 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Time Bandit</h3>
             </div>
             <h4 class="text-sm font-mono text-zinc-400 font-semibold tracking-wide uppercase">UTC/EDT Time-Zone Desync</h4>
-            <p class="text-zinc-300 text-sm md:text-base leading-relaxed pt-1">
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed pt-1">
                 My logs showed the heavy Tdarr work happening on the night of June 24th, while billing reports showed a massive $44.08 spike on June 25th. This desync is due to Google Cloud logs being generated in <strong>UTC</strong>. The intensive troubleshooting session that took place late in the evening (EDT) crossed the midnight boundary into UTC time, causing the entire cost to appear on the following day’s billing statement.
             </p>
         </div>
     </div>
+
 </div>
 
 ---
