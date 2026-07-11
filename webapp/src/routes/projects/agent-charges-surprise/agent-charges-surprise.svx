@@ -452,10 +452,10 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 <div class="space-y-6 my-10">
     <!-- Criminal 1: The Smuggler -->
     <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
-        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
             <Img src={smuggler} alt="The Smuggler" class="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <div class="flex-grow space-y-2 text-center md:text-left">
+        <div class="grow space-y-2 text-center md:text-left">
             <div class="flex flex-col items-center md:items-start gap-1">
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #1</span>
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Smuggler</h3>
@@ -469,10 +469,10 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 
     <!-- Criminal 2: The Repeat Offender -->
     <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
-        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
             <Img src={repeatOffender} alt="The Repeat Offender" class="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <div class="flex-grow space-y-2 text-center md:text-left">
+        <div class="grow space-y-2 text-center md:text-left">
             <div class="flex flex-col items-center md:items-start gap-1">
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #2</span>
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Repeat Offender</h3>
@@ -486,10 +486,10 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 
     <!-- Criminal 3: The Con Artist -->
     <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
-        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
             <Img src={conArtist} alt="The Con Artist" class="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <div class="flex-grow space-y-2 text-center md:text-left">
+        <div class="grow space-y-2 text-center md:text-left">
             <div class="flex flex-col items-center md:items-start gap-1">
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #3</span>
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Con Artist</h3>
@@ -503,10 +503,10 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 
     <!-- Criminal 4: The Corrupt Cop -->
     <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
-        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
             <Img src={corruptCop} alt="The Corrupt Cop" class="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <div class="flex-grow space-y-2 text-center md:text-left">
+        <div class="grow space-y-2 text-center md:text-left">
             <div class="flex flex-col items-center md:items-start gap-1">
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #4</span>
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Corrupt Cop</h3>
@@ -521,10 +521,10 @@ How did a simple script check generate a $44.08 bill on a model as cheap as Gemi
 
     <!-- Criminal 5: The Time Bandit -->
     <div class="flex flex-col md:flex-row-reverse gap-6 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-red-500/30 transition-all duration-300 shadow-xl items-center md:items-start group">
-        <div class="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 overflow-hidden rounded-xl border border-zinc-850 bg-zinc-950 group-hover:scale-105 transition-transform duration-300">
             <Img src={timeBandit} alt="The Time Bandit" class="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <div class="flex-grow space-y-2 text-center md:text-left">
+        <div class="grow space-y-2 text-center md:text-left">
             <div class="flex flex-col items-center md:items-start gap-1">
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold tracking-wider uppercase bg-red-950/40 text-red-400 border border-red-800/50 rounded-md">Criminal #5</span>
                 <h3 class="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors">The Time Bandit</h3>
