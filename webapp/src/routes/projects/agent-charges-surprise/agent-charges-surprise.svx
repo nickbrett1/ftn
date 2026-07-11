@@ -580,7 +580,7 @@ When a framework warning like `⚠️ Auto-compaction could not recover this tur
 
 As painful as a surprise $44.08 bill can be, this experience hasn't dimmed my optimism about the future of agentic development. The shift toward fully autonomous LLM assistants is genuinely transformative, allowing us to offload complex, multi-step workflows that would have taken hours of manual scripting.
 
-However, as with any major technology paradigm shift, we'll have some cases, like me, of people stubbingtheir toes on the lack of standard guardrails and a general misunderstanding of how these new systems consume resources.
+However, as with any major technology paradigm shift, we'll have some cases, like me, of people stubbing their toes on the lack of standard guardrails and a general misunderstanding of how these new systems consume resources.
 
 In time, I have no doubt that framework designers, developer tool creators, and API providers will solve these problems. We will see standard, client-side billing safety valves, smarter out-of-the-box history management, and real-time cost feedback built directly into the wrappers. Until then, the onus is on us to establish these guardrails ourselves.
 
