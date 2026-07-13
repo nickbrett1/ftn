@@ -115,7 +115,7 @@
 		"libsodium-wrappers": "^0.8.4",
 		"linkify-it": "^6.0.0",
 		"most-visible": "^2.0.0",
-		"nanoid": "^5.1.16",
+		"nanoid": "^6.0.0",
 		"pdfjs-dist": "^6.1.200",
 		"stripe": "^22.3.1",
 		"three": "^0.185.1",
