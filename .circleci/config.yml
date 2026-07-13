@@ -9,7 +9,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:22.23.1
     steps:
       - checkout:
           method: blobless
@@ -68,7 +68,7 @@ jobs:
 
   code_test:
     docker:
-      - image: cimg/node:current-browsers
+      - image: cimg/node:22.23.1-browsers
     resource_class: large # Increase to large for more memory and CPU resources
     environment:
       SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"
@@ -130,7 +130,7 @@ jobs:
       SENTRY_RELEASE: << pipeline.git.revision >>
       LIGHTHOUSE_ENABLED: "true"
     docker:
-      - image: cimg/node:current-browsers
+      - image: cimg/node:22.23.1-browsers
     steps:
       - run: sudo apt-get update
       - browser-tools/install-chrome:
@@ -179,7 +179,7 @@ jobs:
       SENTRY_ENVIRONMENT: production
       SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:22.23.1
     steps:
       - checkout:
           method: blobless
@@ -221,7 +221,7 @@ jobs:
       SENTRY_ENVIRONMENT: preview
       SENTRY_RELEASE: << pipeline.git.revision >>
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:22.23.1
     steps:
       - checkout:
           method: blobless
