@@ -351,9 +351,9 @@ export const CAPABILITIES = {
 				templateId: 'docsify-readme'
 			},
 			{
-				id: 'docsify-sidebar',
-				filePath: 'docs/_sidebar.md',
-				templateId: 'docsify-sidebar'
+				id: 'devcontainer-serve-docs-cjs',
+				filePath: '.devcontainer/serve-docs.cjs',
+				templateId: 'devcontainer-serve-docs-cjs'
 			}
 		],
 		website: 'https://docsify.js.org/',

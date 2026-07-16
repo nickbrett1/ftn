@@ -20,6 +20,8 @@ const templatesToCompile = [
 		hbs: 'devcontainer-post-start-setup-sh.hbs'
 	},
 	{ file: 'devcontainer-python-dockerfile.template', hbs: 'devcontainer-python-dockerfile.hbs' },
+	{ file: 'devcontainer-rust-dockerfile.template', hbs: 'devcontainer-rust-dockerfile.hbs' },
+	{ file: 'devcontainer-rust-json.template', hbs: 'devcontainer-rust-json.hbs' },
 	{ file: 'devcontainer-zshrc-full.template', hbs: 'devcontainer-zshrc-full.hbs' },
 	{ file: 'devcontainer-zshrc.template', hbs: 'devcontainer-zshrc.hbs' },
 	{ file: 'playwright-config.template', hbs: 'playwright-config.hbs' }

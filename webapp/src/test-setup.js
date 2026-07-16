@@ -57,6 +57,7 @@ vi.mock('svelte-awesome-icons', () => {
 		PythonBrands: createMockIcon(),
 		NodeJsBrands: createMockIcon(),
 		JavaBrands: createMockIcon(),
+		RustBrands: createMockIcon(),
 		DockerBrands: createMockIcon(),
 		CloudflareBrands: createMockIcon(),
 		CircleNotchSolid: createMockIcon(),

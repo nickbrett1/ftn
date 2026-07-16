@@ -10,6 +10,8 @@ import devcontainerPostCreateSetupSh from '../templates/devcontainer-post-create
 import devcontainerPostStartSetupSh from '../templates/devcontainer-post-start-setup-sh.template?raw';
 import devcontainerPythonDockerfile from '../templates/devcontainer-python-dockerfile.template?raw';
 import devcontainerPythonJson from '../templates/devcontainer-python-json.template?raw';
+import devcontainerRustDockerfile from '../templates/devcontainer-rust-dockerfile.template?raw';
+import devcontainerRustJson from '../templates/devcontainer-rust-json.template?raw';
 import devcontainerZshrcFull from '../templates/devcontainer-zshrc-full.template?raw';
 import devcontainerZshrc from '../templates/devcontainer-zshrc.template?raw';
 import devcontainerTmuxConf from '../templates/devcontainer-tmux-conf.template?raw';
@@ -19,6 +21,7 @@ import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/.sonarcloud.properties.template?raw';
 import mcpConfigJson from '../templates/mcp-config-json.template?raw';
+import mcpSseProxyJs from '../templates/mcp-sse-proxy-js.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
@@ -39,7 +42,7 @@ import svelteConfigJs from '../templates/svelte-config-js.template?raw';
 import svelteViteConfigJs from '../templates/svelte-vite-config-js.template?raw';
 import docsifyIndex from '../templates/docsify-index.template?raw';
 import docsifyReadme from '../templates/docsify-readme.template?raw';
-import docsifySidebar from '../templates/docsify-sidebar.template?raw';
+import devcontainerServeDocsCjs from '../templates/devcontainer-serve-docs-cjs.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -213,6 +216,8 @@ const templateImports = {
 	'devcontainer-post-start-setup-sh': devcontainerPostStartSetupSh,
 	'devcontainer-python-dockerfile': devcontainerPythonDockerfile,
 	'devcontainer-python-json': devcontainerPythonJson,
+	'devcontainer-rust-dockerfile': devcontainerRustDockerfile,
+	'devcontainer-rust-json': devcontainerRustJson,
 	'devcontainer-zshrc-full': devcontainerZshrcFull,
 	'devcontainer-zshrc': devcontainerZshrc,
 	'devcontainer-tmux-conf': devcontainerTmuxConf,
@@ -222,6 +227,7 @@ const templateImports = {
 	'.sonarcloud.properties': sonarProjectProperties,
 	'doppler-yaml': dopplerYaml,
 	'mcp-config-json': mcpConfigJson,
+	'mcp-sse-proxy-js': mcpSseProxyJs,
 	'package-json': packageJsonTemplate,
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
@@ -242,7 +248,7 @@ const templateImports = {
 	'svelte-vite-config-js': svelteViteConfigJs,
 	'docsify-index': docsifyIndex,
 	'docsify-readme': docsifyReadme,
-	'docsify-sidebar': docsifySidebar
+	'devcontainer-serve-docs-cjs': devcontainerServeDocsCjs
 };
 
 export class TemplateEngine {
@@ -589,7 +595,7 @@ export function generateMergedDevelopmentContainerFiles(
 			content: templateEngine.generateFile('devcontainer-post-start-setup-sh', {
 				...context,
 				docsifyService: context.capabilities.includes('docsify')
-					? `\n# Start Docsify server\necho "INFO: Checking Docsify status..."\nif ! pgrep -f 'docsify serve' >/dev/null; then\n    echo "INFO: Docsify not running. Starting it..."\n    DOCSIFY_BIN=$(which docsify || echo "/usr/local/share/npm-global/bin/docsify")\n    if [ -f "$DOCSIFY_BIN" ]; then\n        sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/docsify.pid --make-pidfile --chuid node:node --exec "$DOCSIFY_BIN" -- serve /workspaces/${context.projectName || context.name || 'my-project'}/docs --port 3000\n    else\n        echo "WARNING: docsify binary not found, skipping startup."\n    fi\nfi\n`
+					? `\n# Start documentation server\n# Ensure symlink for specs exists in docs folder for the documentation server\nif [ ! -L /workspaces/${context.projectName || context.name || 'my-project'}/docs/specs ] && [ ! -e /workspaces/${context.projectName || context.name || 'my-project'}/docs/specs ]; then\n    echo "INFO: Creating specs symlink in docs folder..."\n    ln -s ../specs /workspaces/${context.projectName || context.name || 'my-project'}/docs/specs\nfi\n\necho "INFO: Checking documentation server status..."\nif ! pgrep -f 'serve-docs.cjs' >/dev/null; then\n    echo "INFO: Documentation server not running. Starting custom Node server..."\n    if [ -f "/workspaces/${context.projectName || context.name || 'my-project'}/.devcontainer/serve-docs.cjs" ]; then\n        sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/serve-docs.pid --make-pidfile --chuid node:node --exec "/usr/local/bin/node" -- /workspaces/${context.projectName || context.name || 'my-project'}/.devcontainer/serve-docs.cjs\n    else\n        echo "WARNING: serve-docs.cjs not found, skipping startup."\n    fi\nfi\n`
 					: ''
 			})
 		},
@@ -641,7 +647,8 @@ function _getFrameworkConfig(context) {
 
 		if (hasWrangler) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
-			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4",\n    "wrangler": "^4.56.0"';
+			devDependencies +=
+				',\n    "@sveltejs/adapter-cloudflare": "^7.2.4",\n    "wrangler": "^4.56.0"';
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}
@@ -658,10 +665,17 @@ function _addNodeDevcontainerConfig(context, config) {
 	if (context.capabilities.includes('devcontainer-node')) {
 		config.typeField = 'module';
 		if (!config.devDependencies.includes('"vitest"')) {
-			config.devDependencies += config.devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
+			config.devDependencies += config.devDependencies
+				? ',\n    "vitest": "^2.1.8"'
+				: '"vitest": "^2.1.8"';
 		}
-		if (context.capabilities.includes('sonarcloud') && !config.devDependencies.includes('"@vitest/coverage-v8"')) {
-			config.devDependencies += config.devDependencies ? ',\n    "@vitest/coverage-v8": "^2.1.8"' : '"@vitest/coverage-v8": "^2.1.8"';
+		if (
+			context.capabilities.includes('sonarcloud') &&
+			!config.devDependencies.includes('"@vitest/coverage-v8"')
+		) {
+			config.devDependencies += config.devDependencies
+				? ',\n    "@vitest/coverage-v8": "^2.1.8"'
+				: '"@vitest/coverage-v8": "^2.1.8"';
 		}
 		config.scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 	}
@@ -730,9 +744,22 @@ python_files = "*.test.py"
 function pushWranglerFiles(templateEngine, context, files, projectName, compatibilityDate) {
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
-	const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = wranglerConfig.workerType === 'rust';
+
+	let mainEntryPoint = 'src/index.js';
+	if (hasSvelteKit) {
+		mainEntryPoint = '.svelte-kit/cloudflare/_worker.js';
+	} else if (isRustWorker) {
+		mainEntryPoint = 'build/worker/index.js';
+	}
+
 	const assetsConfig = hasSvelteKit
 		? ',\n\t"assets": {\n\t\t"binding": "ASSETS",\n\t\t"directory": ".svelte-kit/cloudflare"\n\t}'
+		: '';
+
+	const buildConfig = isRustWorker
+		? ',\n\t"build": {\n\t\t"command": "cargo install -q worker-build && worker-build --release"\n\t}'
 		: '';
 
 	files.push({
@@ -752,7 +779,8 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 					projectName,
 					compatibilityDate,
 					mainEntryPoint,
-					assetsConfig
+					assetsConfig,
+					buildConfig
 				})
 			},
 			{
@@ -768,7 +796,8 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 				projectName,
 				compatibilityDate,
 				mainEntryPoint,
-				assetsConfig
+				assetsConfig,
+				buildConfig
 			})
 		});
 	}
@@ -863,13 +892,20 @@ export function generateGitignoreFile(templateEngine, context) {
 		? '\n# Java\n*.class\n*.log\n*.ctxt\n.mtj.tmp/\n*.jar\n*.war\n*.nar\n*.ear\n*.zip\n*.tar.gz\n*.rar\ntarget/'
 		: '';
 
+	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
+	const hasRust =
+		context.capabilities.some((c) => c.startsWith('devcontainer-rust')) || isRustWorker;
+	const rustIgnore = hasRust ? '\n# Rust\n/target\nCargo.lock' : '';
+
 	return {
 		filePath: '.gitignore',
 		content: templateEngine.generateFile('gitignore', {
 			...context,
 			wranglerIgnore,
 			pythonIgnore,
-			javaIgnore
+			javaIgnore,
+			rustIgnore
 		})
 	};
 }
@@ -976,6 +1012,59 @@ Only run the full suite (\`npm test\`) when:
 	];
 }
 
+export function generateCargoToml(context) {
+	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
+	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
+
+	if (!isRustWorker) return;
+
+	const projectName = context.projectName || context.name || 'my-project';
+	const content = `[package]
+name = "${projectName}"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+worker = "0.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+`;
+
+	return {
+		filePath: 'Cargo.toml',
+		content
+	};
+}
+
+export function generateRustWorkerLibrary(context) {
+	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
+	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
+
+	if (!isRustWorker) return;
+
+	const content = `use worker::*;
+
+#[event(fetch)]
+pub async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
+    Response::ok("Hello, World!")
+}
+`;
+
+	return {
+		filePath: 'src/lib.rs',
+		content
+	};
+}
+
 export async function generateAllFiles(context) {
 	const templateEngine = new TemplateEngine();
 	await templateEngine.initialize();
@@ -990,6 +1079,8 @@ export async function generateAllFiles(context) {
 	const otherFiles = [
 		generatePackageJson(templateEngine, context),
 		generatePyProjectToml(context),
+		generateCargoToml(context),
+		generateRustWorkerLibrary(context),
 		generateGitignoreFile(templateEngine, context),
 		generateVscodeSettingsFile(templateEngine, context),
 		generateVscodeExtensionsFile(context)
@@ -1014,13 +1105,11 @@ export async function generateAllFiles(context) {
 	}
 
 	if (context.capabilities.includes('sonarcloud')) {
-
 		let sonarContent = '';
 		if (context.capabilities.includes('devcontainer-node')) {
 			sonarContent = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info\n';
 		}
 		allGeneratedFiles.push({ filePath: 'sonar-project.properties', content: sonarContent });
-
 	}
 
 	return allGeneratedFiles;
@@ -1031,23 +1120,27 @@ export function generateViteConfigFile(context) {
 
 	let content = '';
 	const hasSonarcloud = context.capabilities.includes('sonarcloud');
-	const testConfigSvelte = hasSonarcloud ? `	test: {
+	const testConfigSvelte = hasSonarcloud
+		? `	test: {
 		reporter: ['default', 'junit'],
 		outputFile: {
 			junit: './reports/junit.xml'
 		},
 		coverage: { reporter: ['lcov', 'text'] }
-	}` : `	test: {
+	}`
+		: `	test: {
 		reporter: ['default', 'junit'],
 		outputFile: {
 			junit: './reports/junit.xml'
 		}
 	}`;
 
-	const testConfigVanilla = hasSonarcloud ? `	test: {
+	const testConfigVanilla = hasSonarcloud
+		? `	test: {
 		reporter: ['default'],
 		coverage: { reporter: ['lcov', 'text'] }
-	}` : `	test: {
+	}`
+		: `	test: {
 		reporter: ['default']
 	}`;
 

@@ -217,7 +217,7 @@ describe('validation utilities', () => {
 
 		it('returns valid when all configurations pass', () => {
 			const configuration = {
-				'cloudflare-wrangler': { workerType: 'web' },
+				'cloudflare-wrangler': { workerType: 'rust' },
 				dependabot: { ecosystems: ['npm'], updateSchedule: 'weekly' }
 			};
 

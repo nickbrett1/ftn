@@ -168,4 +168,38 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(gitignore.content).toContain('.wrangler');
 		expect(gitignore.content).not.toContain('wrangler.jsonc');
 	});
+
+	it('generates Cargo.toml, src/lib.rs and sets up wrangler.jsonc build configuration when workerType is rust', async () => {
+		const context = {
+			name: 'rust-worker-project',
+			capabilities: ['cloudflare-wrangler', 'devcontainer-rust'],
+			configuration: {
+				'cloudflare-wrangler': { workerType: 'rust' }
+			}
+		};
+
+		const files = await generateAllFiles(context);
+
+		const cargoToml = files.find((f) => f.filePath === 'Cargo.toml');
+		expect(cargoToml).toBeDefined();
+		expect(cargoToml.content).toContain('name = "rust-worker-project"');
+		expect(cargoToml.content).toContain('worker = "0.2.0"');
+
+		const libraryRs = files.find((f) => f.filePath === 'src/lib.rs');
+		expect(libraryRs).toBeDefined();
+		expect(libraryRs.content).toContain('pub async fn main');
+
+		const wranglerJsonc = files.find((f) => f.filePath === 'wrangler.jsonc');
+		expect(wranglerJsonc).toBeDefined();
+		expect(wranglerJsonc.content).toContain('"main": "build/worker/index.js"');
+		expect(wranglerJsonc.content).toContain('"build"');
+		expect(wranglerJsonc.content).toContain(
+			'"command": "cargo install -q worker-build && worker-build --release"'
+		);
+
+		const gitignore = files.find((f) => f.filePath === '.gitignore');
+		expect(gitignore).toBeDefined();
+		expect(gitignore.content).toContain('/target');
+		expect(gitignore.content).toContain('Cargo.lock');
+	});
 });

@@ -20,14 +20,19 @@ if ! pgrep -f 'socat TCP-LISTEN:9222' >/dev/null; then
     sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid node:node --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222
 fi
 
-echo "INFO: Checking Docsify status..."
-if ! pgrep -f 'docsify serve' >/dev/null; then
-    echo "INFO: Docsify not running. Starting it..."
-    DOCSIFY_BIN=$(which docsify || echo "/usr/local/share/npm-global/bin/docsify")
-    if [ -f "$DOCSIFY_BIN" ]; then
-        sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/docsify.pid --make-pidfile --chuid node:node --exec "$DOCSIFY_BIN" -- serve /workspaces/ftn/docs --port 3000
+# Ensure symlink for specs exists in docs folder for the documentation server
+if [ ! -L /workspaces/ftn/docs/specs ] && [ ! -e /workspaces/ftn/docs/specs ]; then
+    echo "INFO: Creating specs symlink in docs folder..."
+    ln -s ../specs /workspaces/ftn/docs/specs
+fi
+
+echo "INFO: Checking documentation server status..."
+if ! pgrep -f 'serve-docs.cjs' >/dev/null; then
+    echo "INFO: Documentation server not running. Starting custom Node server..."
+    if [ -f "/workspaces/ftn/.devcontainer/serve-docs.cjs" ]; then
+        sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/serve-docs.pid --make-pidfile --chuid node:node --exec "/usr/local/bin/node" -- /workspaces/ftn/.devcontainer/serve-docs.cjs
     else
-        echo "WARNING: docsify binary not found, skipping startup."
+        echo "WARNING: serve-docs.cjs not found, skipping startup."
     fi
 fi
 

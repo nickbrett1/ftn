@@ -27,7 +27,12 @@
     }
   },
 
-  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"], // Moved from build.runArgs
+  "runArgs": [
+    "--sysctl",
+    "net.ipv6.conf.all.disable_ipv6=1",
+    "--cap-add=NET_ADMIN",
+    "--device=/dev/net/tun"
+  ], // Moved from build.runArgs
   "mounts": [
     "source=ftn-wrangler-config,target=/home/node/.wrangler,type=volume",
     "source=ftn-doppler-config,target=/home/node/.doppler,type=volume",
@@ -70,7 +75,6 @@
         "THEARC.doppler",
         "nicollasr.vscode-streamdeck",
         "mhutchie.git-graph",
-        "yatki.vscode-surround",
         "mutantdino.resourcemonitor",
         "unifiedjs.vscode-mdx",
         "bradlc.vscode-tailwindcss",
@@ -83,9 +87,9 @@
         "tamasfe.even-better-toml",
         "usernamehw.errorlens",
         "streetsidesoftware.code-spell-checker",
-        "google.geminicodeassist",
         "saoudrizwan.claude-dev",
-        "vitest.explorer"
+        "vitest.explorer",
+        "pomdtr.excalidraw-editor"
       ]
     },
     // Add VS Code settings for the container

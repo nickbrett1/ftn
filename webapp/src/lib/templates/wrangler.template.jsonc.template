@@ -4,7 +4,7 @@
 	"compatibility_date": "{{compatibilityDate}}",
 	"compatibility_flags": [
 		"nodejs_compat"
-	]{{assetsConfig}},
+	]{{assetsConfig}}{{buildConfig}},
 	"observability": {
 		"logs": {
 			"enabled": true,
@@ -15,10 +15,10 @@
 	},
 	"env": {
 		"production": {
-			"main": "{{mainEntryPoint}}"{{assetsConfig}}
+			"main": "{{mainEntryPoint}}"{{assetsConfig}}{{buildConfig}}
 		},
 		"preview": {
-			"main": "{{mainEntryPoint}}"{{assetsConfig}}
+			"main": "{{mainEntryPoint}}"{{assetsConfig}}{{buildConfig}}
 		}
 	}
 }

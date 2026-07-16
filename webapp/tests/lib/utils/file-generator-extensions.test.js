@@ -97,11 +97,11 @@ describe('File Generator - Extensions', () => {
 		const extensions = content.customizations.vscode.extensions;
 
 		// Coding Agents
-		expect(extensions).toContain('google.geminicodeassist');
 		expect(extensions).toContain('saoudrizwan.claude-dev');
 		expect(extensions).toContain('GitHub.copilot');
 
 		// Editor Tools
+		expect(extensions).toContain('pomdtr.excalidraw-editor');
 		expect(extensions).toContain('GitHub.vscode-pull-request-github');
 		expect(extensions).toContain('shyykoserhiy.git-autoconfig');
 		expect(extensions).toContain('actboy168.tasks');

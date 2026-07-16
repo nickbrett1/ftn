@@ -203,7 +203,7 @@ const capabilityValidators = {
 	},
 
 	'cloudflare-wrangler': (config) => {
-		if (config.workerType && !['web', 'api'].includes(config.workerType)) {
+		if (config.workerType && !['web', 'api', 'rust'].includes(config.workerType)) {
 			return ['Invalid worker type'];
 		}
 		return [];

@@ -116,7 +116,7 @@ export const capabilities = [
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
-		vscodeExtensions: ['google.geminicodeassist', 'saoudrizwan.claude-dev', 'GitHub.copilot'],
+		vscodeExtensions: ['saoudrizwan.claude-dev', 'GitHub.copilot'],
 		benefits: [
 			'Antigravity CLI pre-installed',
 			'Cursor CLI pre-installed',
@@ -127,6 +127,11 @@ export const capabilities = [
 				id: 'mcp-config',
 				filePath: '.agents/mcp_config.json',
 				templateId: 'mcp-config-json'
+			},
+			{
+				id: 'mcp-sse-proxy',
+				filePath: '.agents/mcp-sse-proxy.js',
+				templateId: 'mcp-sse-proxy-js'
 			}
 		],
 		links: [
@@ -156,13 +161,13 @@ export const capabilities = [
 			'redhat.vscode-yaml',
 			'tamasfe.even-better-toml',
 			'bierner.markdown-mermaid',
+			'pomdtr.excalidraw-editor',
 			'pejmannikram.vscode-auto-scroll',
 			'naumovs.color-highlight',
 			'oderwat.indent-rainbow',
 			'wix.vscode-import-cost',
 			'mkxml.vscode-filesize',
 			'christian-kohler.npm-intellisense',
-			'yatki.vscode-surround',
 			'GitHub.vscode-pull-request-github',
 			'shyykoserhiy.git-autoconfig',
 			'actboy168.tasks',
@@ -315,6 +320,13 @@ export const capabilities = [
 		'Sets up a VS Code DevContainer with Java environment.',
 		CONFIG_SCHEMA_EMPTY,
 		['redhat.java', 'vscjava.vscode-java-debug', 'vscjava.vscode-java-test']
+	),
+	createDevelopmentContainerCapability(
+		'devcontainer-rust',
+		'Rust DevContainer',
+		'Sets up a VS Code DevContainer with Rust environment.',
+		CONFIG_SCHEMA_EMPTY,
+		['rust-lang.rust-analyzer', 'tamasfe.even-better-toml', 'serayuzgur.crates']
 	),
 	{
 		id: 'circleci',
@@ -492,7 +504,7 @@ export const capabilities = [
 			properties: {
 				workerType: {
 					type: 'string',
-					enum: ['web'],
+					enum: ['web', 'rust'],
 					default: 'web'
 				}
 			}

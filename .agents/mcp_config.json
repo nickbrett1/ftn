@@ -3,6 +3,13 @@
     "svelte": {
       "serverUrl": "https://mcp.svelte.dev/mcp"
     },
+    "xcode-native": {
+      "command": "node",
+      "args": [
+        ".agents/mcp-sse-proxy.js",
+        "http://host.docker.internal:9876/sse"
+      ]
+    },
     "chrome-devtools": {
       "command": "npx",
       "args": [
@@ -14,10 +21,7 @@
     },
     "circleci": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ],
+      "args": ["-y", "@circleci/mcp-server-circleci"],
       "env": {
         "CIRCLECI_TOKEN": "$CIRCLECI_TOKEN",
         "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
@@ -25,10 +29,7 @@
     },
     "sonarqube": {
       "command": "npx",
-      "args": [
-        "-y",
-        "sonarqube-mcp-server"
-      ],
+      "args": ["-y", "sonarqube-mcp-server"],
       "env": {
         "SONARQUBE_TOKEN": "$SONARQUBE_TOKEN",
         "SONARQUBE_ORG": "$SONARQUBE_ORG",
@@ -38,9 +39,7 @@
     },
     "nanobanana": {
       "command": "node",
-      "args": [
-        "/home/node/nanobanana-mcp/mcp-server/dist/index.js"
-      ],
+      "args": ["/home/node/nanobanana-mcp/mcp-server/dist/index.js"],
       "env": {
         "NANOBANANA_GEMINI_API_KEY": "$NANOBANANA_GEMINI_API_KEY"
       }

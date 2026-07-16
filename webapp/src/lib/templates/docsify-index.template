@@ -7,7 +7,8 @@
   <meta name="description" content="Documentation for the {{projectName}} project.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   
-  <!-- Docsify Darklight Theme CSS -->
+
+  <!-- Theme Styling (Docsify Darklight) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css" title="docsify-darklight-theme" type="text/css" />
   
   <style>
@@ -103,6 +104,206 @@
 <body>
   <div id="app">Loading documentation...</div>
   <script>
+    // Helper to format the full tree to sidebar markdown dynamically
+    function formatTreeToSidebar(tree) {
+      let md = '* [Home](README.md)\n';
+      
+      const files = [];
+      const dirs = [];
+      for (const item of tree) {
+        if (item.name === '_sidebar.md' || item.name === 'index.html' || item.name === 'README.md' || item.name === 'other-docs.md') {
+          continue;
+        }
+        if (item.type === 'directory') {
+          dirs.push(item);
+        } else {
+          files.push(item);
+        }
+      }
+
+      files.sort((a, b) => a.name.localeCompare(b.name));
+      dirs.sort((a, b) => a.name.localeCompare(b.name));
+
+      // 1. Root level files
+      for (const file of files) {
+        const ext = file.name.split('.').pop();
+        const rawName = file.name.replace('.' + ext, '');
+        let title = rawName
+          .split(/[-_]/)
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        if (ext === 'excalidraw') {
+          title += ' (Wireframe)';
+        } else if (rawName.toLowerCase() === 'spec') {
+          title = 'Specification';
+        }
+        md += `* [${title}](${file.relativePath})\n`;
+      }
+
+      // 2. Directories recursively
+      const renderDir = (dirNode, depth = 0) => {
+        let dirMd = '';
+        const indent = '  '.repeat(depth);
+        const prettyName = dirNode.name
+          .split(/[-_]/)
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        dirMd += `${indent}* **${prettyName}**\n`;
+
+        const dirFiles = [];
+        const dirDirs = [];
+        for (const child of dirNode.children) {
+          if (child.name === 'README.md') continue;
+          if (child.type === 'directory') {
+            dirDirs.push(child);
+          } else {
+            dirFiles.push(child);
+          }
+        }
+        dirFiles.sort((a, b) => a.name.localeCompare(b.name));
+        dirDirs.sort((a, b) => a.name.localeCompare(b.name));
+
+        for (const file of dirFiles) {
+          const ext = file.name.split('.').pop();
+          const rawName = file.name.replace('.' + ext, '');
+          let title = rawName
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          if (ext === 'excalidraw') {
+            title += ' (Wireframe)';
+          } else if (rawName.toLowerCase() === 'spec') {
+            title = 'Specification';
+          }
+          dirMd += `${indent}  * [${title}](${file.relativePath})\n`;
+        }
+
+        for (const subDir of dirDirs) {
+          dirMd += renderDir(subDir, depth + 1);
+        }
+
+        return dirMd;
+      };
+
+      for (const dir of dirs) {
+        md += renderDir(dir, 0);
+      }
+
+      return md;
+    }
+
+
+
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      let url = args[0];
+      if (url instanceof Request) {
+        url = url.url;
+      }
+      if (typeof url === 'string') {
+        const urlObj = new URL(url, window.location.href);
+        const pathname = urlObj.pathname;
+        
+        if (pathname.endsWith('.excalidraw.md')) {
+          const excalidrawUrl = pathname.replace(/\.md$/, '').slice(1);
+          const filename = pathname.split('/').pop();
+          const title = filename.replace(/\.excalidraw\.md$/, '')
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          const markdown = `# ${title} Mockup\n\n<div class="excalidraw-viewer" data-src="${excalidrawUrl}" style="width: 100%; height: 80vh; border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 8px; overflow: hidden; margin-top: 1rem;"></div>\n`;
+          
+          return Promise.resolve(new Response(markdown, {
+            status: 200,
+            headers: { 'Content-Type': 'text/markdown' }
+          }));
+        }
+        
+        if (pathname.endsWith('_sidebar.md')) {
+          return originalFetch('/api/docs')
+            .then(r => r.json())
+            .then(docsTree => {
+              const content = formatTreeToSidebar(docsTree);
+              return new Response(content, {
+                status: 200,
+                headers: { 'Content-Type': 'text/markdown' }
+              });
+            });
+        }
+      }
+      return originalFetch.apply(this, args);
+    };
+
+    // Intercept XMLHttpRequests
+    const originalOpen = XMLHttpRequest.prototype.open;
+    const originalSend = XMLHttpRequest.prototype.send;
+    
+    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+      this._url = url;
+      this._method = method;
+      return originalOpen.apply(this, [method, url, ...args]);
+    };
+    
+    XMLHttpRequest.prototype.send = function(...args) {
+      const self = this;
+      
+      // Dynamic mock response helper
+      function respondWith(val) {
+        Object.defineProperties(self, {
+          status: { writable: true, value: 200 },
+          statusText: { writable: true, value: 'OK' },
+          readyState: { writable: true, value: 4 },
+          response: { writable: true, value: val },
+          responseText: { writable: true, value: val }
+        });
+        
+        setTimeout(() => {
+          if (typeof self.onreadystatechange === 'function') {
+            self.onreadystatechange();
+          }
+          if (typeof self.onload === 'function') {
+            self.onload();
+          }
+          self.dispatchEvent(new Event('readystatechange'));
+          self.dispatchEvent(new Event('load'));
+        }, 0);
+      }
+
+      if (typeof self._url === 'string') {
+        const urlObj = new URL(self._url, window.location.href);
+        const pathname = urlObj.pathname;
+
+        if (pathname.endsWith('.excalidraw.md')) {
+          const excalidrawUrl = pathname.replace(/\.md$/, '').slice(1);
+          const filename = pathname.split('/').pop();
+          const title = filename.replace(/\.excalidraw\.md$/, '')
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          const markdown = `# ${title} Mockup\n\n<div class="excalidraw-viewer" data-src="${excalidrawUrl}" style="width: 100%; height: 80vh; border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 8px; overflow: hidden; margin-top: 1rem;"></div>\n`;
+          respondWith(markdown);
+          return;
+        }
+
+        if (pathname.endsWith('_sidebar.md')) {
+          originalFetch('/api/docs')
+            .then(r => r.json())
+            .then(docsTree => {
+              const content = formatTreeToSidebar(docsTree);
+              respondWith(content);
+            }).catch(err => {
+              console.error("Failed to dynamically build sidebar:", err);
+              originalSend.apply(self, args);
+            });
+          return;
+        }
+      }
+      return originalSend.apply(self, args);
+    };
+
     window.$docsify = {
       name: '{{projectName}} Docs',
       repo: '',
@@ -141,10 +342,70 @@
           background: '#ffffff',
           textColor: '#334155'
         }
-      }
+      },
+      plugins: [
+        function(hook, vm) {
+          hook.beforeEach(function(content) {
+            return content;
+          });
+
+          hook.doneEach(async function() {
+            const containers = document.querySelectorAll(".excalidraw-viewer");
+            if (containers.length > 0) {
+              try {
+                const { exportToSvg } = await import("https://esm.sh/@excalidraw/utils");
+
+                for (const container of containers) {
+                  const src = container.getAttribute("data-src");
+                  if (!src) continue;
+                  
+                  container.innerText = "Loading Excalidraw mockup...";
+                  try {
+                    const response = await fetch(src);
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    const rawJson = await response.text();
+                    let elements = [];
+                    let appState = {};
+                    if (rawJson.trim()) {
+                      const data = JSON.parse(rawJson);
+                      elements = data.elements || [];
+                      appState = data.appState || {};
+                    }
+                    
+                    const svg = await exportToSvg({
+                      elements: elements,
+                      appState: {
+                        ...appState,
+                        exportBackground: true,
+                        viewBackgroundColor: appState.viewBackgroundColor || "transparent"
+                      },
+                      files: null
+                    });
+                    
+                    svg.style.width = "100%";
+                    svg.style.height = "100%";
+                    svg.style.display = "block";
+                    
+                    container.innerHTML = "";
+                    container.appendChild(svg);
+                  } catch (fetchErr) {
+                    console.error("Failed to load/render excalidraw file " + src + ":", fetchErr);
+                    container.innerText = "Failed to load Excalidraw: " + fetchErr.message;
+                  }
+                }
+              } catch (err) {
+                console.error("Failed to load Excalidraw utility:", err);
+                for (const container of containers) {
+                  container.innerText = "Failed to initialize Excalidraw utility: " + err.message;
+                }
+              }
+            }
+          });
+        }
+      ]
     }
   </script>
-  <!-- Docsify v4 -->
+  <!-- Core Documentation Viewer Engine (Docsify v4) -->
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
   <!-- Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>

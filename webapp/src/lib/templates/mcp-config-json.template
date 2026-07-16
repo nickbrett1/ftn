@@ -19,6 +19,13 @@
       "env": {
         "FINTECHNICK_MCP": "$FINTECHNICK_MCP"
       }
+    },
+    "xcode-native": {
+      "command": "node",
+      "args": [
+        ".agents/mcp-sse-proxy.js",
+        "http://host.docker.internal:9876/sse"
+      ]
     }{{sonarQubeMcpConfig}}{{circleCiMcpConfig}}
   },
   "security": {

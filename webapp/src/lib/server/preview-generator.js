@@ -398,7 +398,10 @@ async function generateNonDevelopmentContainerFiles(
 }
 
 function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities) {
-	if (!allCapabilities.includes('devcontainer-node')) {
+	if (
+		!allCapabilities.includes('devcontainer-node') &&
+		!allCapabilities.includes('cloudflare-wrangler')
+	) {
 		return;
 	}
 
@@ -450,6 +453,65 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	return {
 		path: 'package.json',
 		name: 'package.json',
+		content,
+		size: content.length,
+		type: 'file'
+	};
+}
+
+function generateCargoTomlFile(projectConfig, allCapabilities) {
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+	const wranglerConfig = projectConfig.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
+
+	if (!isRustWorker) return;
+
+	const projectName = projectConfig.name || 'my-project';
+	const content = `[package]
+name = "${projectName}"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+worker = "0.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+`;
+
+	return {
+		path: 'Cargo.toml',
+		name: 'Cargo.toml',
+		content,
+		size: content.length,
+		type: 'file'
+	};
+}
+
+function generateRustWorkerLibraryFile(projectConfig, allCapabilities) {
+	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+	const wranglerConfig = projectConfig.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
+
+	if (!isRustWorker) return;
+
+	const content = `use worker::*;
+
+#[event(fetch)]
+pub async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
+    Response::ok("Hello, World!")
+}
+`;
+
+	return {
+		path: 'src/lib.rs',
+		name: 'lib.rs',
 		content,
 		size: content.length,
 		type: 'file'
@@ -512,14 +574,27 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 		// because SvelteKit manages its own entry point via the adapter.
 		// But we still need wrangler configuration.
 
-		const mainEntryPoint = hasSvelteKit ? '.svelte-kit/cloudflare/_worker.js' : 'src/index.js';
+		const wranglerConfig = projectConfig.configuration?.['cloudflare-wrangler'] || {};
+		const isRustWorker = wranglerConfig.workerType === 'rust';
+
+		let mainEntryPoint = 'src/index.js';
+		if (hasSvelteKit) {
+			mainEntryPoint = '.svelte-kit/cloudflare/_worker.js';
+		} else if (isRustWorker) {
+			mainEntryPoint = 'build/worker/index.js';
+		}
+
+		const buildConfig = isRustWorker
+			? ',\n\t"build": {\n\t\t"command": "cargo install -q worker-build && worker-build --release"\n\t}'
+			: '';
 
 		if (hasDoppler) {
 			const templateContent = templateEngine.generateFile('wrangler-template-jsonc', {
 				...projectConfig,
 				projectName: projectConfig.name || 'my-project',
 				compatibilityDate,
-				mainEntryPoint
+				mainEntryPoint,
+				buildConfig
 			});
 			files.push({
 				path: 'wrangler.template.jsonc',
@@ -545,7 +620,8 @@ async function generateCloudDeploymentFiles(templateEngine, projectConfig, allCa
 				...projectConfig,
 				projectName: projectConfig.name || 'my-project',
 				compatibilityDate,
-				mainEntryPoint
+				mainEntryPoint,
+				buildConfig
 			});
 			files.push({
 				path: 'wrangler.jsonc',
@@ -710,6 +786,16 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 	const packageJsonFile = generatePackageJsonFile(templateEngine, projectConfig, executionOrder);
 	if (packageJsonFile) {
 		files.push(packageJsonFile);
+	}
+
+	const cargoTomlFile = generateCargoTomlFile(projectConfig, executionOrder);
+	if (cargoTomlFile) {
+		files.push(cargoTomlFile);
+	}
+
+	const rustWorkerLibraryFile = generateRustWorkerLibraryFile(projectConfig, executionOrder);
+	if (rustWorkerLibraryFile) {
+		files.push(rustWorkerLibraryFile);
 	}
 
 	// Generate .gitignore and README.md

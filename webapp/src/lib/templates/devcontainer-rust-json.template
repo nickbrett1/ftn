@@ -1,0 +1,30 @@
+{
+  "name": "Rust",
+  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode"
+    },
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": "socat"
+    },
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "mounts": [
+    "source={{projectName}}-wrangler-config,target=/home/vscode/.wrangler,type=volume",
+    "source={{projectName}}-doppler-config,target=/home/vscode/.doppler,type=volume",
+    "source=gemini-cli-settings,target=/home/vscode/.gemini,type=volume",
+    "source={{projectName}}-tailscale-state,target=/var/lib/tailscale,type=volume"
+  ],
+  "forwardPorts": [8788, 8976, 36079, 33301, 37677],
+  "postCreateCommand": ".devcontainer/post-create-setup.sh",
+  "postStartCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-start-setup.sh"
+}
