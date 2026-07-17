@@ -1,0 +1,38 @@
+graph TD
+    %% Nodes
+    subgraph ClientDevices [Client Devices & Peripherals]
+        iPadApp[iPad POS App<br/>Swift / iOS]
+        BarcodeScanner[Tera Mini Barcode Scanner<br/>Bluetooth HID Mode]
+        StripeReader[Stripe Reader M2<br/>Bluetooth BLE Mode]
+        AveryPrinter[Avery Label Printer<br/>AirPrint / Browser Print]
+    end
+
+    subgraph ExternalServices [External Integrations]
+        StripeAPI[Stripe API<br/>Terminal & Payments]
+        AppAttest[Apple App Attest Service<br/>Device Verification]
+    end
+
+    subgraph EdgeBackend [Cloudflare Workers Edge Platform]
+        RustWorker[Payments & Admin API Worker<br/>Rust / Wasm]
+        subgraph CloudflareStorage [Cloudflare Storage]
+            D1Db[D1 Relational DB<br/>SQLite Transactions]
+            KVStore[KV Namespace<br/>Inventory Data]
+        end
+    end
+
+    subgraph AdminControl [Admin Portal]
+        AdminUI[Admin Web App<br/>www.fintechnick.com]
+    end
+
+    %% Connections & Protocols
+    BarcodeScanner -->|Bluetooth HID / Keystrokes| iPadApp
+    StripeReader <-->|Bluetooth BLE / Stripe Terminal SDK| iPadApp
+    iPadApp <-->|HTTPS REST / App Attest Signed| RustWorker
+    AdminUI <-->|HTTPS REST / Auth API Key| RustWorker
+
+    RustWorker <-->|Cloudflare Binding| D1Db
+    RustWorker <-->|Cloudflare Binding| KVStore
+
+    RustWorker <-->|HTTPS / REST API| StripeAPI
+    RustWorker -->|HTTPS / Validation Requests| AppAttest
+    AdminUI -->|Browser Render / CSS @media print| AveryPrinter

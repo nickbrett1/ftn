@@ -119,7 +119,7 @@ describe('File Generator - Extensions', () => {
 		expect(extensions).toContain('GraphQL.vscode-graphql-syntax');
 	});
 
-	it('should always include tmux-integrated extension in devcontainer extensions', async () => {
+	it('should always include tmux-integrated and mermaid-preview extensions in devcontainer extensions', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['devcontainer-node'],
@@ -133,9 +133,10 @@ describe('File Generator - Extensions', () => {
 		expect(devcontainerFile).toBeDefined();
 		const content = JSON.parse(devcontainerFile.content);
 		expect(content.customizations.vscode.extensions).toContain('pcassidy75.tmux-integrated');
+		expect(content.customizations.vscode.extensions).toContain('vsc-mermaid.mermaid-preview');
 	});
 
-	it('should always generate .vscode/extensions.json recommending tmux-integrated', async () => {
+	it('should always generate .vscode/extensions.json recommending tmux-integrated and mermaid-preview', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: [],
@@ -147,6 +148,7 @@ describe('File Generator - Extensions', () => {
 		expect(extensionsFile).toBeDefined();
 		const content = JSON.parse(extensionsFile.content);
 		expect(content.recommendations).toContain('pcassidy75.tmux-integrated');
+		expect(content.recommendations).toContain('vsc-mermaid.mermaid-preview');
 	});
 
 	it('should always generate .vscode/settings.json with tmux-integrated default profiles', async () => {

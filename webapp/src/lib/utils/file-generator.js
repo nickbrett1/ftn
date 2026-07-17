@@ -478,8 +478,9 @@ function generateAndMergeDevcontainerJson(
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
 
 	const allExtensions = new Set();
-	// Always include the tmux-integrated extension
+	// Always include the tmux-integrated and mermaid-preview extensions
 	allExtensions.add('pcassidy75.tmux-integrated');
+	allExtensions.add('vsc-mermaid.mermaid-preview');
 
 	// 1. From base JSON
 	addExtensionsFromContainerJson(allExtensions, mergedDevelopmentContainerJson);
@@ -944,7 +945,10 @@ export function generateVscodeExtensionsFile(context) {
 		filePath: '.vscode/extensions.json',
 		content: JSON.stringify(
 			{
-				recommendations: ['pcassidy75.tmux-integrated']
+				recommendations: [
+					'pcassidy75.tmux-integrated',
+					'vsc-mermaid.mermaid-preview'
+				]
 			},
 			undefined,
 			2

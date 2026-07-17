@@ -89,7 +89,8 @@
         "streetsidesoftware.code-spell-checker",
         "saoudrizwan.claude-dev",
         "vitest.explorer",
-        "pomdtr.excalidraw-editor"
+        "pomdtr.excalidraw-editor",
+        "vstirbu.vscode-mermaid-preview"
       ]
     },
     // Add VS Code settings for the container

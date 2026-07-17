@@ -16,7 +16,8 @@ const MIME_TYPES = {
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.excalidraw': 'application/json'
+  '.excalidraw': 'application/json',
+  '.mmd': 'text/plain'
 };
 
 const server = http.createServer((req, res) => {
@@ -45,7 +46,7 @@ const server = http.createServer((req, res) => {
             }
           } else {
             const ext = path.extname(file);
-            if (ext === '.md' || ext === '.excalidraw') {
+            if (ext === '.md' || ext === '.excalidraw' || ext === '.mmd') {
               results.push({
                 name: file,
                 type: 'file',
