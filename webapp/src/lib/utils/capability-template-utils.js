@@ -90,7 +90,15 @@ function _applyGitGuardianConfig(data, context, contextEnabled, contextName, bui
 
 function _applyDopplerConfig(data, context) {
 	if (context.capabilities.includes('doppler')) {
-		data.orbs += `  doppler: conpago/doppler@1.3.5\n`;
+		data.commands += `  install_doppler:
+    description: "Install Doppler CLI"
+    steps:
+      - run:
+          name: Install Doppler CLI
+          command: |
+            if ! command -v doppler &> /dev/null; then
+              (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
+            fi\n`;
 	}
 
 	if (
@@ -98,7 +106,7 @@ function _applyDopplerConfig(data, context) {
 		context.capabilities.includes('doppler')
 	) {
 		data.preBuildSteps = `
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler Config
           command: |
@@ -142,7 +150,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 		let syncSecretsStep = '';
 		if (context.capabilities.includes('doppler')) {
 			setupWranglerStep = `
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler Config
           environment:
@@ -250,6 +258,7 @@ function getCircleCiTemplateData(context) {
 		deployJobDefinition: '',
 		deployWorkflowJob: '',
 		orbs: '',
+		commands: '',
 		additionalWorkflowJobs: '',
 		buildWorkflowJob: '      - build',
 		jobEnvironment: ''
@@ -283,6 +292,10 @@ function getCircleCiTemplateData(context) {
 	}
 
 	_applySonarCloudConfig(data, context);
+
+	if (data.commands) {
+		data.commands = `commands:\n${data.commands}`;
+	}
 
 	return data;
 }

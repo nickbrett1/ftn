@@ -347,11 +347,12 @@ describe('TemplateEngine', () => {
 		const templateData = getCapabilityTemplateData('circleci', context);
 		const content = engine.generateFile('circleci-config', templateData);
 
-		expect(content).toContain('doppler: conpago/doppler@1.3.5');
+		expect(content).not.toContain('doppler: conpago/doppler@1.3.5');
+		expect(content).toContain('install_doppler:');
 		expect(content).toContain('deploy-to-cloudflare:');
 		expect(content).toContain('parameters:');
 		expect(content).toContain('environment:');
-		expect(content).toContain('doppler/install');
+		expect(content).toContain('install_doppler');
 		expect(content).toContain('Sync Doppler Secrets to Cloudflare');
 		expect(content).toContain(
 			'./scripts/sync-doppler-secrets.sh --config "$DOPPLER_CONFIG" --env "$CLOUDFLARE_ENV"'

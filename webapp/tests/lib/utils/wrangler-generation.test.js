@@ -135,6 +135,10 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const circleCiConfig = files.find((f) => f.filePath === '.circleci/config.yml');
 		expect(circleCiConfig).toBeDefined();
 		expect(circleCiConfig.content).toContain('./scripts/setup-wrangler-config.sh');
+		expect(circleCiConfig.content).toContain('install_doppler:');
+		expect(circleCiConfig.content).toContain('install_doppler');
+		expect(circleCiConfig.content).not.toContain('doppler: conpago/doppler@1.3.5');
+		expect(circleCiConfig.content).not.toContain('doppler/install');
 	});
 
 	it('generates wrangler.jsonc with assets when Cloudflare and SvelteKit are selected', async () => {
