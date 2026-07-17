@@ -4,7 +4,17 @@ orbs:
   ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.5.3
   sonarcloud: sonarsource/sonarcloud@4.0.0
-  doppler: conpago/doppler@1.3.5
+
+commands:
+  install_doppler:
+    description: "Install Doppler CLI"
+    steps:
+      - run:
+          name: Install Doppler CLI
+          command: |
+            if ! command -v doppler &> /dev/null; then
+              (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
+            fi
 
 jobs:
   build:
@@ -45,7 +55,7 @@ jobs:
           paths:
             - ~/.cache/ms-playwright
           key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
@@ -94,7 +104,7 @@ jobs:
             cd webapp && npx playwright install chromium
       - attach_workspace:
           at: webapp
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
@@ -152,7 +162,7 @@ jobs:
             - node-v7-fresh-
       - attach_workspace:
           at: webapp
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
@@ -192,7 +202,7 @@ jobs:
             - node-v7-fresh-
       - attach_workspace:
           at: webapp
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
@@ -234,7 +244,7 @@ jobs:
             - node-v7-fresh-
       - attach_workspace:
           at: webapp
-      - doppler/install
+      - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
