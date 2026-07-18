@@ -17,7 +17,11 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.excalidraw': 'application/json',
-  '.mmd': 'text/plain'
+  '.mmd': 'text/plain',
+  '.yaml': 'text/plain',
+  '.yml': 'text/plain',
+  '.sql': 'text/plain',
+  '.rs': 'text/plain'
 };
 
 const server = http.createServer((req, res) => {
@@ -46,7 +50,7 @@ const server = http.createServer((req, res) => {
             }
           } else {
             const ext = path.extname(file);
-            if (ext === '.md' || ext === '.excalidraw' || ext === '.mmd') {
+            if (ext === '.md' || ext === '.excalidraw' || ext === '.mmd' || ext === '.yaml' || ext === '.yml' || ext === '.sql' || ext === '.json' || ext === '.rs') {
               results.push({
                 name: file,
                 type: 'file',

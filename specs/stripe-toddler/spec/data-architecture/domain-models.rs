@@ -16,6 +16,8 @@ pub struct InventoryItem {
     pub price_cents: u32,
     /// Public URL pointing to R2-hosted image.
     pub image_url: String,
+    /// Epoch unix timestamp of item creation.
+    pub created_at: u64,
 }
 
 // ==========================================

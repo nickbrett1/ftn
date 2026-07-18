@@ -99,6 +99,96 @@
         display: none !important;
       }
     }
+
+    /* Mermaid dark mode dynamic readability */
+    .mermaid, .mermaid svg {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* Bind Mermaid styles to active Docsify theme variables */
+    .mermaid text, 
+    .mermaid tspan,
+    .mermaid span,
+    .mermaid .messageText, 
+    .mermaid .noteText, 
+    .mermaid .loopText,
+    .mermaid .labelText,
+    .mermaid .actor {
+      fill: var(--textColor) !important;
+      color: var(--textColor) !important;
+    }
+
+    .mermaid path, 
+    .mermaid line,
+    .mermaid .actor-line, 
+    .mermaid .messageLine0, 
+    .mermaid .messageLine1,
+    .mermaid .loopLine {
+      stroke: var(--textColor) !important;
+    }
+
+    .mermaid marker path, 
+    .mermaid #arrowhead, 
+    .mermaid #arrowhead2,
+    .mermaid .arrowheadPath {
+      fill: var(--textColor) !important;
+      stroke: var(--textColor) !important;
+    }
+
+    .mermaid rect:not(.background),
+    .mermaid .note {
+      fill: var(--sidebarBackground) !important;
+      stroke: var(--accent) !important;
+    }
+
+    /* Fallback filter logic in case text elements have inline SVG styling overrides */
+    html.dark .mermaid svg,
+    html.darkmode .mermaid svg,
+    html[class*="dark"] .mermaid svg,
+    html[class*="dark"] .mermaid,
+    body.dark .mermaid svg,
+    body.darkmode .mermaid svg,
+    body[class*="dark"] .mermaid svg,
+    body[class*="dark"] .mermaid,
+    html[data-theme="dark"] .mermaid svg,
+    html[data-theme="dark"] .mermaid,
+    body[data-theme="dark"] .mermaid svg,
+    body[data-theme="dark"] .mermaid {
+    }
+
+    /* Click-to-fullscreen styling for diagrams and wireframes */
+    .mermaid, .excalidraw-viewer {
+      cursor: zoom-in;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .mermaid.fullscreen, .excalidraw-viewer.fullscreen {
+      cursor: zoom-out;
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      background-color: var(--background) !important;
+      z-index: 99999 !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .mermaid.fullscreen svg, .excalidraw-viewer.fullscreen svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+    }
+
+    body.has-fullscreen-viewer {
+      overflow: hidden !important;
+    }
   </style>
 </head>
 <body>
@@ -136,6 +226,14 @@
           title += ' (Wireframe)';
         } else if (ext === 'mmd') {
           title += ' (Diagram)';
+        } else if (ext === 'yaml' || ext === 'yml') {
+          title += ' (YAML)';
+        } else if (ext === 'sql') {
+          title += ' (SQL)';
+        } else if (ext === 'json') {
+          title += ' (JSON)';
+        } else if (ext === 'rs') {
+          title += ' (Rust)';
         } else if (rawName.toLowerCase() === 'spec') {
           title = 'Specification';
         }
@@ -177,6 +275,14 @@
             title += ' (Wireframe)';
           } else if (ext === 'mmd') {
             title += ' (Diagram)';
+          } else if (ext === 'yaml' || ext === 'yml') {
+            title += ' (YAML)';
+          } else if (ext === 'sql') {
+            title += ' (SQL)';
+          } else if (ext === 'json') {
+            title += ' (JSON)';
+          } else if (ext === 'rs') {
+            title += ' (Rust)';
           } else if (rawName.toLowerCase() === 'spec') {
             title = 'Specification';
           }
@@ -237,6 +343,29 @@
             .then(r => r.text())
             .then(mmdContent => {
               const markdown = `# ${title} Diagram\n\n\`\`\`mermaid\n${mmdContent}\n\`\`\`\n`;
+              return new Response(markdown, {
+                status: 200,
+                headers: { 'Content-Type': 'text/markdown' }
+              });
+            });
+        }
+        
+        const codeExtensions = ['yaml', 'yml', 'sql', 'json', 'rs'];
+        const matchedFetchExt = codeExtensions.find(e => pathname.endsWith(`.${e}.md`));
+        if (matchedFetchExt) {
+          const rawUrl = pathname.replace(/\.md$/, '').slice(1);
+          const filename = pathname.split('/').pop();
+          const title = filename.replace(new RegExp(`\\.${matchedFetchExt}\\.md$`), '')
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          const lang = matchedFetchExt === 'rs' ? 'rust' : matchedFetchExt;
+          
+          return originalFetch(rawUrl)
+            .then(r => r.text())
+            .then(codeContent => {
+              const markdown = `# ${title}\n\n\`\`\`${lang}\n${codeContent}\n\`\`\`\n`;
               return new Response(markdown, {
                 status: 200,
                 headers: { 'Content-Type': 'text/markdown' }
@@ -326,6 +455,30 @@
             }).catch(err => {
               console.error("Failed to load mmd file " + mmdUrl + ":", err);
               respondWith("# Error\n\nFailed to load diagram: " + err.message);
+            });
+          return;
+        }
+
+        const codeExtensions = ['yaml', 'yml', 'sql', 'json', 'rs'];
+        const matchedXhrExt = codeExtensions.find(e => pathname.endsWith(`.${e}.md`));
+        if (matchedXhrExt) {
+          const rawUrl = pathname.replace(/\.md$/, '').slice(1);
+          const filename = pathname.split('/').pop();
+          const title = filename.replace(new RegExp(`\\.${matchedXhrExt}\\.md$`), '')
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          const lang = matchedXhrExt === 'rs' ? 'rust' : matchedXhrExt;
+          
+          originalFetch(rawUrl)
+            .then(r => r.text())
+            .then(codeContent => {
+              const markdown = `# ${title}\n\n\`\`\`${lang}\n${codeContent}\n\`\`\`\n`;
+              respondWith(markdown);
+            }).catch(err => {
+              console.error("Failed to load file " + rawUrl + ":", err);
+              respondWith("# Error\n\nFailed to load code file: " + err.message);
             });
           return;
         }
@@ -442,18 +595,51 @@
                 }
               }
             }
+
+            // Typeset LaTeX equations dynamically with MathJax
+            if (window.MathJax && typeof window.MathJax.typeset === "function") {
+              window.MathJax.typeset();
+            }
           });
         }
       ]
     }
+
+    // Click-to-fullscreen for Mermaid diagrams and Excalidraw mockups
+    document.addEventListener('click', function(e) {
+      const viewerDiv = e.target.closest('.mermaid, .excalidraw-viewer');
+      if (viewerDiv) {
+        viewerDiv.classList.toggle('fullscreen');
+        document.body.classList.toggle('has-fullscreen-viewer', viewerDiv.classList.contains('fullscreen'));
+      }
+    });
   </script>
   <!-- Core Documentation Viewer Engine (Docsify v4) -->
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!-- MathJax Configuration and Engine -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <!-- Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2"></script>
+  <!-- Prism language highlighters -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-rust.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
 </body>

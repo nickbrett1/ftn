@@ -18,7 +18,7 @@
           },
           "schema": {
             "type": "object",
-            "required": ["barcode", "name", "price_cents", "image_url"],
+            "required": ["barcode", "name", "price_cents", "image_url", "created_at"],
             "properties": {
               "barcode": {
                 "type": "string",
@@ -39,6 +39,10 @@
                 "type": "string",
                 "format": "uri",
                 "description": "Public URL pointing to R2-hosted photo asset."
+              },
+              "created_at": {
+                "type": "integer",
+                "description": "Unix timestamp of when the toy was added to the inventory catalog."
               }
             }
           }

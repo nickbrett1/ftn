@@ -32,7 +32,7 @@ We are building a simple payment system aimed to help achieve two goals:
 1. Allow me learn about Stripe and its APIs and services
 2. Provide a fun experience for a 3-year old toddler.
 
-The system will have two user interfaces. One is on an iPad, and be represented as an iPad application which will provide a point of sale workflow for the toddler. This ipad app will connect over Bluetooth to a Tera Mini 1D 2D QR Wireless Barcode Scanner which will allow items for the shop to be scanned. There will also be a Bluetooth connection to a Stripe Reader M2, and payments can be made using Stripe Terminal Test Cards. The toddler will scan items, typically toys which have had a barcode sticker attached, and they will appear on the iPad application with a price. When payment is made, a charge is made via Stripe and the transaction logged in a backend service. Transactions should always succeed. The app will be designed for a toddler, with bright colors, strong feedback, big buttons, etc...
+The system will have two user interfaces. One is on an iPad, and be represented as an iPad application which will provide a point of sale workflow for the toddler. This ipad app will connect over Bluetooth to a Tera Mini 1D 2D QR Wireless Barcode Scanner which will allow items for the shop to be scanned. There will also be a Bluetooth connection to a Stripe Reader M2, and payments can be made using Stripe Terminal Test Cards. The toddler will scan items (typically toys or other household objects) which have had a barcode sticker attached, and they will appear on the iPad application with a price. When payment is made, a charge is made via Stripe and the transaction logged in a backend service. Transactions should always succeed. The app will be designed for a toddler, with bright colors, strong feedback, big buttons, etc...
 
 There will also be an admin service that allows for inventory management, with the creation of new inventory by associating a photo and then enable the generation of a barcode. And it will also provide a view into various sales analytics, e.g. past transaction history. As necessary this will pull data down from Stripe. This will be designed for use by an executive.
 
@@ -77,8 +77,12 @@ For the iPad to payments backend authentication, we should use Apple App Attest 
    - **Cloudflare D1**: Stores sales transaction logs and history for relational SQLite queries and analytics.
 4. **Barcode Scanner**: Keyboard Wedge Mode (HID).
    - Paired via Bluetooth as a keyboard. The iPad App captures global keystrokes and processes the barcode string once a carriage return (`\r` or `\n`) is scanned.
-5. **Barcode Printing**: Browser-side CSS Print Layout.
+5. **Barcode Printing & Selection Filters**: Browser-side CSS Print Layout with Selectors.
    - The Admin Web UI handles printing layout using CSS `@media print` rules, formatted exactly for Avery 1" x 2-5/8" address labels (30-up templates: 3 columns, 10 rows).
+   - **Print Filters**: The UI provides filters to select what to print:
+     - *Added this session (Default)*: Automatically selects all toys registered in the current active web browser session.
+     - *All Toys*: Selects the entire inventory database for bulk printing.
+     - *Custom Selection*: Allows the admin to check/uncheck individual checkboxes in the corners of each label card to print specific tags (e.g. for replacing torn/broken labels).
 6. **Wireframe Format**: Raw Excalidraw JSON.
    - Low-fidelity wireframes will be saved as raw `.excalidraw` files under `ui/wireframes/` so they can be imported directly into [excalidraw.com](https://excalidraw.com).
 
