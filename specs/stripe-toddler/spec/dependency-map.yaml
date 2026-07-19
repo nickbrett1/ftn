@@ -1,0 +1,319 @@
+# yaml-language-server: $schema=../../references/schema.json
+graph:
+  id: stripe-toddler-spec
+  kind: spec_dependency
+  topology: dag
+  status: draft
+
+nodes:
+  # 1. Intents (Toddler & Admin Goals)
+  - id: intent.scan-item
+    type: intent
+    title: "Toddler can scan items to check descriptions and integer prices"
+    owner: "nickbrett1"
+  - id: intent.checkout-payment
+    type: intent
+    title: "Toddler can check out and authorize terminal card payments"
+    owner: "nickbrett1"
+  - id: intent.celebrate-checkout
+    type: intent
+    title: "Toddler gets celebratory animations and audio on success"
+    owner: "nickbrett1"
+  - id: intent.manage-inventory
+    type: intent
+    title: "Admin can manage inventory metadata and print customized barcode sheets"
+    owner: "nickbrett1"
+  - id: intent.provide-analytics-api
+    type: intent
+    title: "Provide backend API endpoints to support external sales analytics and transaction history screens"
+    owner: "nickbrett1"
+
+  # 2. Expectations (Success Criteria)
+  - id: expectation.scan-item-success
+    type: expectation
+    title: "Scan string matches KV records and correct product info is shown instantly"
+    owner: "nickbrett1"
+  - id: expectation.checkout-success
+    type: expectation
+    title: "PaymentIntent created, authorized by terminal, captured by backend, and logged in D1"
+    owner: "nickbrett1"
+  - id: expectation.celebration-success
+    type: expectation
+    title: "Fireworks bounce and celebratory band video plays correctly on POS screen"
+    owner: "nickbrett1"
+  - id: expectation.inventory-success
+    type: expectation
+    title: "Catalog is updated at edge, photos stored in R2, and filtered labels print successfully"
+    owner: "nickbrett1"
+  - id: expectation.analytics-api-success
+    type: expectation
+    title: "API exposes transactional sales data from D1 matching Stripe events over a secure contract"
+    owner: "nickbrett1"
+
+  # 3. Jobs (Active Implementations)
+  - id: job.payments-backend
+    type: job
+    title: "Cloudflare Rust Worker Backend"
+    owner: "nickbrett1"
+  - id: job.ipad-pos-client
+    type: job
+    title: "iPad Swift POS Application"
+    owner: "nickbrett1"
+  - id: job.admin-portal
+    type: job
+    title: "Admin Web UI Portal"
+    owner: "nickbrett1"
+
+  # 4. Artifacts (Specs & Documents)
+  - id: artifact.component-graph
+    type: artifact
+    title: "Component Graph Diagram"
+    ref: "topology/component-graph.mmd"
+    owner: "nickbrett1"
+  - id: artifact.deployment-targets
+    type: artifact
+    title: "Deployment Targets Spec"
+    ref: "topology/deployment-targets.md"
+    owner: "nickbrett1"
+  - id: artifact.d1-schema
+    type: artifact
+    title: "D1 SQLite Relational Schema"
+    ref: "data-architecture/d1-schema.sql"
+    owner: "nickbrett1"
+  - id: artifact.kv-layout
+    type: artifact
+    title: "KV Key Layout Specification"
+    ref: "data-architecture/kv-layout.json"
+    owner: "nickbrett1"
+  - id: artifact.domain-models
+    type: artifact
+    title: "Rust/Swift Serialization Structs"
+    ref: "data-architecture/domain-models.rs"
+    owner: "nickbrett1"
+  - id: artifact.checkout-sequence
+    type: artifact
+    title: "Checkout Flow Sequence Diagram"
+    ref: "flows/checkout-sequence.md"
+    owner: "nickbrett1"
+  - id: artifact.payment-state
+    type: artifact
+    title: "Payment State Machine Diagram"
+    ref: "flows/payment-state-machine.md"
+    owner: "nickbrett1"
+  - id: artifact.checkout-screen
+    type: artifact
+    title: "Checkout POS Wireframe Layout"
+    ref: "ui/wireframes/checkout-screen.excalidraw"
+    owner: "nickbrett1"
+  - id: artifact.admin-screen
+    type: artifact
+    title: "Admin Console Wireframe Layout"
+    ref: "ui/wireframes/admin-screen.excalidraw"
+    owner: "nickbrett1"
+  - id: artifact.load-model
+    type: artifact
+    title: "Capacity Sizing and IOPS Model"
+    ref: "capacity/load-model.md"
+    owner: "nickbrett1"
+
+  # 5. Contracts (API Schemas)
+  - id: contract.worker-openapi
+    type: contract
+    title: "Rust Worker API Swagger Spec"
+    ref: "api/worker-openapi.yaml"
+    owner: "nickbrett1"
+  - id: contract.swift-protocols
+    type: contract
+    title: "iPad iOS Client Protocol Contracts"
+    ref: "api/swift-protocols.md"
+    owner: "nickbrett1"
+
+  # 6. Verifiers (Verification checks linked to specs)
+  - id: verifier.component-graph
+    type: verifier
+    title: "Topology Verifier"
+    owner: "nickbrett1"
+  - id: verifier.deployment-targets
+    type: verifier
+    title: "Infrastructure Verifier"
+    owner: "nickbrett1"
+  - id: verifier.d1-schema
+    type: verifier
+    title: "D1 Schema Verifier"
+    owner: "nickbrett1"
+  - id: verifier.kv-layout
+    type: verifier
+    title: "KV Layout Verifier"
+    owner: "nickbrett1"
+  - id: verifier.domain-models
+    type: verifier
+    title: "Domain Models Verifier"
+    owner: "nickbrett1"
+  - id: verifier.checkout-sequence
+    type: verifier
+    title: "Checkout Flow Verifier"
+    owner: "nickbrett1"
+  - id: verifier.payment-state
+    type: verifier
+    title: "State Machine Verifier"
+    owner: "nickbrett1"
+  - id: verifier.checkout-screen
+    type: verifier
+    title: "POS UI Verifier"
+    owner: "nickbrett1"
+  - id: verifier.admin-screen
+    type: verifier
+    title: "Admin UI Verifier"
+    owner: "nickbrett1"
+  - id: verifier.load-model
+    type: verifier
+    title: "Capacity Verifier"
+    owner: "nickbrett1"
+  - id: verifier.worker-openapi
+    type: verifier
+    title: "OpenAPI Verifier"
+    owner: "nickbrett1"
+  - id: verifier.swift-protocols
+    type: verifier
+    title: "iOS Protocols Verifier"
+    owner: "nickbrett1"
+
+edges:
+  # Intent success mappings (defines_success_for)
+  - from: intent.scan-item
+    to: expectation.scan-item-success
+    type: defines_success_for
+  - from: intent.checkout-payment
+    to: expectation.checkout-success
+    type: defines_success_for
+  - from: intent.celebrate-checkout
+    to: expectation.celebration-success
+    type: defines_success_for
+  - from: intent.manage-inventory
+    to: expectation.inventory-success
+    type: defines_success_for
+  - from: intent.provide-analytics-api
+    to: expectation.analytics-api-success
+    type: defines_success_for
+
+  # Verifiers executing to verify expectations (verifies)
+  - from: verifier.component-graph
+    to: expectation.scan-item-success
+    type: verifies
+  - from: verifier.kv-layout
+    to: expectation.scan-item-success
+    type: verifies
+  - from: verifier.checkout-screen
+    to: expectation.scan-item-success
+    type: verifies
+
+  - from: verifier.checkout-sequence
+    to: expectation.checkout-success
+    type: verifies
+  - from: verifier.payment-state
+    to: expectation.checkout-success
+    type: verifies
+  - from: verifier.worker-openapi
+    to: expectation.checkout-success
+    type: verifies
+  - from: verifier.d1-schema
+    to: expectation.checkout-success
+    type: verifies
+
+  - from: verifier.checkout-sequence
+    to: expectation.celebration-success
+    type: verifies
+  - from: verifier.checkout-screen
+    to: expectation.celebration-success
+    type: verifies
+
+  - from: verifier.admin-screen
+    to: expectation.inventory-success
+    type: verifies
+  - from: verifier.worker-openapi
+    to: expectation.inventory-success
+    type: verifies
+  - from: verifier.kv-layout
+    to: expectation.inventory-success
+    type: verifies
+
+  - from: verifier.worker-openapi
+    to: expectation.analytics-api-success
+    type: verifies
+  - from: verifier.d1-schema
+    to: expectation.analytics-api-success
+    type: verifies
+  - from: verifier.admin-screen
+    to: expectation.analytics-api-success
+    type: verifies
+
+  # Spec Artifacts verifying by their verifier engines (verified_by)
+  - from: artifact.component-graph
+    to: verifier.component-graph
+    type: verified_by
+  - from: artifact.deployment-targets
+    to: verifier.deployment-targets
+    type: verified_by
+  - from: artifact.d1-schema
+    to: verifier.d1-schema
+    type: verified_by
+  - from: artifact.kv-layout
+    to: verifier.kv-layout
+    type: verified_by
+  - from: artifact.domain-models
+    to: verifier.domain-models
+    type: verified_by
+  - from: artifact.checkout-sequence
+    to: verifier.checkout-sequence
+    type: verified_by
+  - from: artifact.payment-state
+    to: verifier.payment-state
+    type: verified_by
+  - from: artifact.checkout-screen
+    to: verifier.checkout-screen
+    type: verified_by
+  - from: artifact.admin-screen
+    to: verifier.admin-screen
+    type: verified_by
+  - from: artifact.load-model
+    to: verifier.load-model
+    type: verified_by
+
+  # Jobs consuming API contracts and data artifacts (consumes)
+  - from: job.payments-backend
+    to: contract.worker-openapi
+    type: consumes
+  - from: job.payments-backend
+    to: artifact.kv-layout
+    type: consumes
+  - from: job.payments-backend
+    to: artifact.d1-schema
+    type: consumes
+  - from: job.payments-backend
+    to: artifact.domain-models
+    type: consumes
+
+  - from: job.ipad-pos-client
+    to: contract.swift-protocols
+    type: consumes
+  - from: job.ipad-pos-client
+    to: artifact.domain-models
+    type: consumes
+
+  - from: job.admin-portal
+    to: contract.worker-openapi
+    type: consumes
+  - from: job.admin-portal
+    to: artifact.domain-models
+    type: consumes
+
+  # Jobs verified by their verifiers (verified_by)
+  - from: job.payments-backend
+    to: verifier.worker-openapi
+    type: verified_by
+  - from: job.ipad-pos-client
+    to: verifier.swift-protocols
+    type: verified_by
+  - from: job.admin-portal
+    to: verifier.admin-screen
+    type: verified_by

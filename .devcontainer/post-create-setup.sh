@@ -67,6 +67,9 @@ else
 fi
 
 
+echo "INFO: Installing specdag globally..."
+npm install -g @japorto100/specdag
+
 echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."

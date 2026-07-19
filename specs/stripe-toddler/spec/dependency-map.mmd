@@ -1,0 +1,82 @@
+```mermaid
+graph TD
+    n_969481b75d(["Toddler can scan items to check descriptions and integer prices (intent) [nickbrett1]"])
+    n_5327e467a0(["Toddler can check out and authorize terminal card payments (intent) [nickbrett1]"])
+    n_ae7f4c07d7(["Toddler gets celebratory animations and audio on success (intent) [nickbrett1]"])
+    n_8aae75d7c5(["Admin can manage inventory metadata and print customized barcode sheets (intent) [nickbrett1]"])
+    n_6746f016ad(["Provide backend API endpoints to support external sales analytics and transaction history screens (intent) [nickbrett1]"])
+    n_7380cf4555{{"Scan string matches KV records and correct product info is shown instantly (expectation) [nickbrett1]"}}
+    n_6189e7788c{{"PaymentIntent created, authorized by terminal, captured by backend, and logged in D1 (expectation) [nickbrett1]"}}
+    n_14d7f10679{{"Fireworks bounce and celebratory band video plays correctly on POS screen (expectation) [nickbrett1]"}}
+    n_06463b138d{{"Catalog is updated at edge, photos stored in R2, and filtered labels print successfully (expectation) [nickbrett1]"}}
+    n_4a7733432e{{"API exposes transactional sales data from D1 matching Stripe events over a secure contract (expectation) [nickbrett1]"}}
+    n_b17ce5dea5["Cloudflare Rust Worker Backend (job) [nickbrett1]"]
+    n_47659005ae["iPad Swift POS Application (job) [nickbrett1]"]
+    n_999212961e["Admin Web UI Portal (job) [nickbrett1]"]
+    n_9cacf10259[("Component Graph Diagram (artifact) [nickbrett1]")]
+    n_799ed24857[("Deployment Targets Spec (artifact) [nickbrett1]")]
+    n_bbae8c2046[("D1 SQLite Relational Schema (artifact) [nickbrett1]")]
+    n_6fc8ea2a1b[("KV Key Layout Specification (artifact) [nickbrett1]")]
+    n_809739b836[("Rust/Swift Serialization Structs (artifact) [nickbrett1]")]
+    n_95f358c504[("Checkout Flow Sequence Diagram (artifact) [nickbrett1]")]
+    n_d127c47e5d[("Payment State Machine Diagram (artifact) [nickbrett1]")]
+    n_ebcb34f0ca[("Checkout POS Wireframe Layout (artifact) [nickbrett1]")]
+    n_2828f6bc69[("Admin Console Wireframe Layout (artifact) [nickbrett1]")]
+    n_9b6afb39e7[("Capacity Sizing and IOPS Model (artifact) [nickbrett1]")]
+    n_a24b69ac84["Rust Worker API Swagger Spec (contract) [nickbrett1]"]
+    n_06638893a7["iPad iOS Client Protocol Contracts (contract) [nickbrett1]"]
+    n_6f1b8bf246("Topology Verifier (verifier) [nickbrett1]")
+    n_bd251a44ea("Infrastructure Verifier (verifier) [nickbrett1]")
+    n_45d19b9f38("D1 Schema Verifier (verifier) [nickbrett1]")
+    n_45c2d3a4e5("KV Layout Verifier (verifier) [nickbrett1]")
+    n_f392419267("Domain Models Verifier (verifier) [nickbrett1]")
+    n_ca33b7b15b("Checkout Flow Verifier (verifier) [nickbrett1]")
+    n_35d472cae8("State Machine Verifier (verifier) [nickbrett1]")
+    n_5294393215("POS UI Verifier (verifier) [nickbrett1]")
+    n_49e058e682("Admin UI Verifier (verifier) [nickbrett1]")
+    n_99f85f7d21("Capacity Verifier (verifier) [nickbrett1]")
+    n_ddd54492fc("OpenAPI Verifier (verifier) [nickbrett1]")
+    n_78b2819b32("iOS Protocols Verifier (verifier) [nickbrett1]")
+
+    n_969481b75d -->|"defines_success_for"| n_7380cf4555
+    n_5327e467a0 -->|"defines_success_for"| n_6189e7788c
+    n_ae7f4c07d7 -->|"defines_success_for"| n_14d7f10679
+    n_8aae75d7c5 -->|"defines_success_for"| n_06463b138d
+    n_6746f016ad -->|"defines_success_for"| n_4a7733432e
+    n_6f1b8bf246 -->|"verifies"| n_7380cf4555
+    n_45c2d3a4e5 -->|"verifies"| n_7380cf4555
+    n_5294393215 -->|"verifies"| n_7380cf4555
+    n_ca33b7b15b -->|"verifies"| n_6189e7788c
+    n_35d472cae8 -->|"verifies"| n_6189e7788c
+    n_ddd54492fc -->|"verifies"| n_6189e7788c
+    n_45d19b9f38 -->|"verifies"| n_6189e7788c
+    n_ca33b7b15b -->|"verifies"| n_14d7f10679
+    n_5294393215 -->|"verifies"| n_14d7f10679
+    n_49e058e682 -->|"verifies"| n_06463b138d
+    n_ddd54492fc -->|"verifies"| n_06463b138d
+    n_45c2d3a4e5 -->|"verifies"| n_06463b138d
+    n_ddd54492fc -->|"verifies"| n_4a7733432e
+    n_45d19b9f38 -->|"verifies"| n_4a7733432e
+    n_49e058e682 -->|"verifies"| n_4a7733432e
+    n_9cacf10259 -->|"verified_by"| n_6f1b8bf246
+    n_799ed24857 -->|"verified_by"| n_bd251a44ea
+    n_bbae8c2046 -->|"verified_by"| n_45d19b9f38
+    n_6fc8ea2a1b -->|"verified_by"| n_45c2d3a4e5
+    n_809739b836 -->|"verified_by"| n_f392419267
+    n_95f358c504 -->|"verified_by"| n_ca33b7b15b
+    n_d127c47e5d -->|"verified_by"| n_35d472cae8
+    n_ebcb34f0ca -->|"verified_by"| n_5294393215
+    n_2828f6bc69 -->|"verified_by"| n_49e058e682
+    n_9b6afb39e7 -->|"verified_by"| n_99f85f7d21
+    n_b17ce5dea5 -->|"consumes"| n_a24b69ac84
+    n_b17ce5dea5 -->|"consumes"| n_6fc8ea2a1b
+    n_b17ce5dea5 -->|"consumes"| n_bbae8c2046
+    n_b17ce5dea5 -->|"consumes"| n_809739b836
+    n_47659005ae -->|"consumes"| n_06638893a7
+    n_47659005ae -->|"consumes"| n_809739b836
+    n_999212961e -->|"consumes"| n_a24b69ac84
+    n_999212961e -->|"consumes"| n_809739b836
+    n_b17ce5dea5 -->|"verified_by"| n_ddd54492fc
+    n_47659005ae -->|"verified_by"| n_78b2819b32
+    n_999212961e -->|"verified_by"| n_49e058e682
+```

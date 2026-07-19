@@ -43,6 +43,9 @@ sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"
 
 {{agySetup}}
 
+echo "INFO: Installing specdag globally..."
+npm install -g @japorto100/specdag
+
 if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then
     echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
     sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid node:node --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222
