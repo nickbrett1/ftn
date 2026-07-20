@@ -60,7 +60,6 @@ Use SF Symbols or the exact assets specified below. Do not invent custom label t
 |--------|-----------|-------|
 | Confirm / Pay | `checkmark.circle.fill` | Always green (`ToddlerGreen`) |
 | Cancel / Remove | `xmark.circle.fill` | Always red (`ToddlerRed`) |
-| Apple Pay | Use Apple Pay logo asset | Never substitute text "Apple Pay" |
 | Scan Barcode | `barcode.viewfinder` | |
 | Add Item | `plus.circle.fill` | |
 | Delete Item | `minus.circle.fill` | |
@@ -69,10 +68,15 @@ Use SF Symbols or the exact assets specified below. Do not invent custom label t
 | Basket / Cart | `cart.fill` | |
 | Print | `printer.fill` | |
 
-### 2.3 Apple Pay Logo Rule
-- The Apple Pay payment button **must** use Apple's native `PKPaymentButton` or `PassKit` payment button component.
-- **NEVER** replace it with a custom button styled to look like Apple Pay.
-- Minimum size: `PKPaymentButtonStyle.black`, width full-available, height minimum 120pt.
+### 2.3 Payment UI — Stripe Reader M2, Not Apple Pay Sheet
+
+This app does **not** implement a native Apple Pay sheet or use `PKPaymentButton` / `PassKit`. All payment is handled by the **Stripe Reader M2** physical card reader. When a customer taps their iPhone or Apple Watch to the reader, the contactless transaction (including Apple Pay) is processed entirely by the Stripe Terminal SDK and the reader's NFC hardware — no PassKit entitlement or Merchant ID is required from the app.
+
+The payment interaction from the iPad UI perspective is:
+- User taps the **Confirm / Pay** button (green `checkmark.circle.fill`, full `ToddlerButtonStyle`).
+- The app calls the Stripe Terminal SDK to present the reader.
+- The reader handles all subsequent payment UI (lights, beeps).
+- On success, the app shows the `SuccessOverlay`.
 
 ### 2.4 Text Usage Rules
 - Text may appear as **item names** in product cards only.
