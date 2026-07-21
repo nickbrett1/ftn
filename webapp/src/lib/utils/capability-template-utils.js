@@ -94,13 +94,10 @@ function getCodingAgentsTemplateData(context) {
 	if (hasDoppler) {
 		dopplerMcpConfig = `,
     "doppler": {
-      "command": "doppler",
+      "command": "sh",
       "args": [
-        "run",
-        "--",
-        "npx",
-        "-y",
-        "@dopplerhq/mcp-server"
+        "-c",
+        "DOPPLER_TOKEN=$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"
       ]
     }`;
 	}

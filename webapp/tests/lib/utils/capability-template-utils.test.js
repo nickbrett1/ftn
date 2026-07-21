@@ -32,7 +32,7 @@ describe('capability-template-utils', () => {
 			expect(data.githubMcpConfig).toContain('"command": "doppler"');
 			expect(data.githubMcpConfig).toContain('"run"');
 			expect(data.dopplerMcpConfig).toContain('@dopplerhq/mcp-server');
-			expect(data.dopplerMcpConfig).toContain('"command": "doppler"');
+			expect(data.dopplerMcpConfig).toContain('"command": "sh"');
 		});
 
 		it('should generate empty config if no dependencies', () => {
