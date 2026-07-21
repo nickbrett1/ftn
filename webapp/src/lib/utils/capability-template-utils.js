@@ -246,7 +246,55 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
             fi`;
 		}
 
-		data.deployJobDefinition = `
+		const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+		const isRustWorker = wranglerConfig.workerType === 'rust';
+		let rustJobDefinition = '';
+		let rustWorkflowJob = '';
+		let installRustStep = '';
+		let requiresList = '\n            - build';
+
+		if (isRustWorker) {
+			rustJobDefinition = `
+  test-rust:
+    docker:
+      - image: cimg/rust:1.81.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - cargo-cache-{{ checksum "worker/Cargo.toml" }}
+            - cargo-cache-
+      - run:
+          name: Rust Toolchain Info
+          command: rustc --version && cargo --version
+      - run:
+          name: Rust Test
+          command: cd worker && cargo test
+      - save_cache:
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - worker/target
+          key: cargo-cache-{{ checksum "worker/Cargo.toml" }}\n`;
+
+			rustWorkflowJob = `
+      - test-rust:${contextEnabled ? `\n          context: ${contextName}` : ''}
+          requires:
+            - build`;
+
+			installRustStep = `
+      - run:
+          name: Install Rust
+          command: |
+            if ! command -v cargo &> /dev/null; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              echo 'source "$HOME/.cargo/env"' >> $BASH_ENV
+            fi`;
+
+			requiresList = `\n            - build\n            - test-rust`;
+		}
+
+		data.deployJobDefinition = rustJobDefinition + `
   deploy-to-cloudflare:
     executor: node/default
     parameters:
@@ -276,7 +324,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}${syncSecretsStep}
       - run:
           name: Build
-          command: npm run build
+          command: npm run build${installRustStep}
       - run:
           name: Deploy to Cloudflare Workers
           command: |
@@ -287,12 +335,11 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
               npx wrangler deploy --env "$ENV_VAL"
             fi`;
 
-		data.deployWorkflowJob = `
+		data.deployWorkflowJob = rustWorkflowJob + `
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
           environment: "default"
           doppler_config: "stg"
-          requires:
-            - build
+          requires:${requiresList}
           filters:
             branches:
               only: main
@@ -300,8 +347,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           name: deploy-to-cloudflare-preview
           environment: "preview"
           doppler_config: "stg"
-          requires:
-            - build
+          requires:${requiresList}
           filters:
             branches:
               ignore: main`;
