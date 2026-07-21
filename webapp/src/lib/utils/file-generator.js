@@ -897,7 +897,7 @@ export function generateGitignoreFile(templateEngine, context) {
 	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
 	const hasRust =
 		context.capabilities.some((c) => c.startsWith('devcontainer-rust')) || isRustWorker;
-	const rustIgnore = hasRust ? '\n# Rust\n/target\nCargo.lock' : '';
+	const rustIgnore = hasRust ? '\n# Rust\ntarget/\n**/target/\nCargo.lock\n.rustc_info.json\n**/.rustc_info.json' : '';
 
 	return {
 		filePath: '.gitignore',
