@@ -76,7 +76,7 @@ describe('mcpServer', () => {
 	beforeEach(() => {
 		server = createMcpServer({
 			userEmail: 'test@example.com',
-			platform: { env: { D1_DATABASE: {} } }
+			platform: { env: { GENPROJ_DB: {}, D1_DATABASE: {} } }
 		});
 		// Find registered handlers. In the SDK, they are stored on the server object.
 		const handlers = server._requestHandlers;

@@ -91,6 +91,7 @@ describe('POST /projects/genproj/api/generate', () => {
 
 		platform = {
 			env: {
+				GENPROJ_DB: {},
 				D1_DATABASE: {}
 			}
 		};
@@ -136,7 +137,7 @@ describe('POST /projects/genproj/api/generate', () => {
 	it('should use tokens from database', async () => {
 		await POST({ request, platform, cookies });
 
-		expect(TokenService).toHaveBeenCalledWith(platform.env.D1_DATABASE);
+		expect(TokenService).toHaveBeenCalledWith(platform.env.GENPROJ_DB || platform.env.D1_DATABASE);
 		expect(mockGetTokensByUserId).toHaveBeenCalledWith('user-123');
 
 		expect(ProjectGeneratorService).toHaveBeenCalledWith(

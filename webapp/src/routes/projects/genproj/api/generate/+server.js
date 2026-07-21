@@ -25,7 +25,8 @@ export async function POST({ request, platform, cookies }) {
 		}
 
 		// Get stored tokens
-		const tokenService = new TokenService(platform.env.D1_DATABASE);
+		const database = platform.env.GENPROJ_DB || platform.env.D1_DATABASE;
+		const tokenService = new TokenService(database);
 		const storedTokens = await tokenService.getTokensByUserId(user.id);
 
 		// Construct authTokens object

@@ -163,7 +163,8 @@ export function createMcpServer(context = {}) {
 					};
 				}
 				case 'generate_project': {
-					if (!context.userEmail || !context.platform?.env?.D1_DATABASE) {
+					const database = context.platform?.env?.GENPROJ_DB || context.platform?.env?.D1_DATABASE;
+					if (!context.userEmail || !database) {
 						throw new Error('Missing authentication or database context for genproj tools.');
 					}
 					const {
@@ -174,7 +175,7 @@ export function createMcpServer(context = {}) {
 						resolutions
 					} = toolArguments;
 
-					const tokenService = new TokenService(context.platform.env.D1_DATABASE);
+					const tokenService = new TokenService(database);
 					const storedTokens = await tokenService.getTokensByUserId(context.userEmail);
 					const authTokens = buildAuthTokensFromStored(storedTokens);
 
