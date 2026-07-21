@@ -4,7 +4,6 @@ import { products } from '$lib/data/products.js';
 import { getProductById, processTestPurchase, createStripeSession } from './shop.js';
 import { capabilities } from '$lib/config/capabilities.js';
 import { ProjectGeneratorService } from '$lib/server/project-generator.js';
-import { TokenService } from '$lib/server/token-service.js';
 import { buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils.js';
 
 export function createMcpServer(context = {}) {
@@ -163,9 +162,8 @@ export function createMcpServer(context = {}) {
 					};
 				}
 				case 'generate_project': {
-					const database = context.platform?.env?.GENPROJ_DB || context.platform?.env?.D1_DATABASE;
-					if (!context.userEmail || !database) {
-						throw new Error('Missing authentication or database context for genproj tools.');
+					if (!context.userEmail) {
+						throw new Error('Missing authentication context for genproj tools.');
 					}
 					const {
 						name: projectName,
@@ -175,9 +173,7 @@ export function createMcpServer(context = {}) {
 						resolutions
 					} = toolArguments;
 
-					const tokenService = new TokenService(database);
-					const storedTokens = await tokenService.getTokensByUserId(context.userEmail);
-					const authTokens = buildAuthTokensFromStored(storedTokens);
+					const authTokens = buildAuthTokensFromStored();
 
 					const service = new ProjectGeneratorService(authTokens);
 					const projectContext = buildProjectContext(

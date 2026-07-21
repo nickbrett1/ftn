@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { ApiKeyService } from '$lib/server/api-key-service';
 
 export function handleGenprojErrorResult(result) {
@@ -20,12 +21,12 @@ export function handleGenprojErrorResult(result) {
 	return json({ message: result.error || 'Project generation failed' }, { status: 500 });
 }
 
-export function buildAuthTokensFromStored(storedTokens, cookies = null) {
+export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 	const authTokens = {
-		github: storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken,
-		circleci: storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken,
-		doppler: storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken,
-		sonarcloud: storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken
+		github: storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken || env.GITHUB_TOKEN || env.GITHUB_ACCESS_TOKEN,
+		circleci: storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken || env.CIRCLECI_TOKEN,
+		doppler: storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken || env.DOPPLER_TOKEN,
+		sonarcloud: storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken || env.SONARQUBE_TOKEN
 	};
 
 	if (!authTokens.github && cookies) {

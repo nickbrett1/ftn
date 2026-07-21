@@ -1,17 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from '../../../../../src/routes/projects/genproj/api/conflicts/+server.js';
 import { ProjectGeneratorService } from '$lib/server/project-generator';
-import { TokenService } from '$lib/server/token-service';
 import { getCurrentUser } from '$lib/server/auth';
 import { logger } from '$lib/utils/logging';
 
 // Mock dependencies
 vi.mock('$lib/server/project-generator');
-vi.mock('$lib/server/token-service');
 vi.mock('$lib/server/auth');
 vi.mock('$lib/utils/logging');
 vi.mock('@sveltejs/kit', () => ({
 	json: (data, options) => ({ body: data, status: options?.status || 200 })
+}));
+
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		GITHUB_TOKEN: 'gh-token'
+	}
 }));
 
 describe('POST /projects/genproj/api/conflicts', () => {
@@ -19,7 +23,6 @@ describe('POST /projects/genproj/api/conflicts', () => {
 	let platform;
 	let cookies;
 	let mockUser;
-	let mockTokens;
 	let mockConflicts;
 
 	beforeEach(() => {
@@ -39,12 +42,10 @@ describe('POST /projects/genproj/api/conflicts', () => {
 		};
 
 		mockUser = { id: 'user-123' };
-		mockTokens = [{ serviceName: 'GitHub', accessToken: 'gh-token' }];
 		mockConflicts = [];
 
 		getCurrentUser.mockResolvedValue(mockUser);
 
-		TokenService.prototype.getTokensByUserId = vi.fn().mockResolvedValue(mockTokens);
 		ProjectGeneratorService.prototype.checkConflicts = vi.fn().mockResolvedValue(mockConflicts);
 	});
 
@@ -71,14 +72,17 @@ describe('POST /projects/genproj/api/conflicts', () => {
 		expect(response.body).toEqual({ message: 'Unauthorized' });
 	});
 
-	it('should use cookie token if DB token is missing', async () => {
+	it('should use cookie token if environment token is missing', async () => {
+		const { env } = await import('$env/dynamic/private');
+		const oldGitHubToken = env.GITHUB_TOKEN;
+		env.GITHUB_TOKEN = undefined;
 		request.json.mockResolvedValue({ name: 'test-project', selectedCapabilities: [] });
-		TokenService.prototype.getTokensByUserId.mockResolvedValue([]);
 		cookies.get.mockReturnValue('cookie-gh-token');
 
 		await POST({ request, platform, cookies });
 
-		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'cookie-gh-token' });
+		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'cookie-gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined });
+		env.GITHUB_TOKEN = oldGitHubToken;
 	});
 
 	it('should return 200 with conflicts on success', async () => {
@@ -90,12 +94,12 @@ describe('POST /projects/genproj/api/conflicts', () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual({ conflicts: expectedConflicts });
-		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'gh-token' });
+		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined });
 		expect(ProjectGeneratorService.prototype.checkConflicts).toHaveBeenCalledWith({
 			projectName: 'test-project',
 			capabilities: ['cap1'],
 			configuration: {},
-			authTokens: { github: 'gh-token' },
+			authTokens: { github: 'gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined },
 			userId: 'user-123'
 		});
 	});

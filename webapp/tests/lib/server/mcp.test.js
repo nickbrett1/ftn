@@ -245,6 +245,6 @@ describe('mcpServer', () => {
 			}
 		});
 		expect(result.isError).toBe(true);
-		expect(result.content[0].text).toContain('Missing authentication or database context');
+		expect(result.content[0].text).toContain('Missing authentication context');
 	});
 });

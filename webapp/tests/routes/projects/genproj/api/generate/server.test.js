@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 1. Define Hoisted Mocks
-const { mockGenerateProject, mockGetTokensByUserId, mockGetCurrentUser, mockLoggerError } =
+const { mockGenerateProject, mockGetCurrentUser, mockLoggerError } =
 	vi.hoisted(() => ({
 		mockGenerateProject: vi.fn(),
-		mockGetTokensByUserId: vi.fn(),
 		mockGetCurrentUser: vi.fn(),
 		mockLoggerError: vi.fn()
 	}));
@@ -25,15 +24,14 @@ vi.mock('$lib/server/project-generator', () => {
 	};
 });
 
-vi.mock('$lib/server/token-service', () => {
-	// The consumer uses: import { TokenService } from ...
-	// and does new TokenService(db)
-	const MockTokenService = vi.fn();
-	MockTokenService.prototype.getTokensByUserId = mockGetTokensByUserId;
-	return {
-		TokenService: MockTokenService
-	};
-});
+vi.mock('$env/dynamic/private', () => ({
+	env: {
+		GITHUB_TOKEN: 'env-gh-token',
+		CIRCLECI_TOKEN: 'env-circle-token',
+		DOPPLER_TOKEN: 'env-doppler-token',
+		SONARQUBE_TOKEN: 'env-sonar-token'
+	}
+}));
 
 vi.mock('$lib/utils/logging', () => ({
 	logger: {
@@ -49,7 +47,6 @@ vi.mock('@sveltejs/kit', () => ({
 // Import the function under test
 import { POST } from '../../../../../../src/routes/projects/genproj/api/generate/+server.js';
 import { ProjectGeneratorService } from '$lib/server/project-generator';
-import { TokenService } from '$lib/server/token-service';
 
 describe('POST /projects/genproj/api/generate', () => {
 	let request;
@@ -73,7 +70,6 @@ describe('POST /projects/genproj/api/generate', () => {
 			success: true,
 			repository: { htmlUrl: 'http://repo.url' }
 		});
-		mockGetTokensByUserId.mockResolvedValue(mockTokens);
 		mockGetCurrentUser.mockResolvedValue(mockUser);
 
 		// Ensure constructor mocks are reset
@@ -134,23 +130,25 @@ describe('POST /projects/genproj/api/generate', () => {
 		expect(response.body).toEqual({ message: 'Unauthorized' });
 	});
 
-	it('should use tokens from database', async () => {
+	it('should use tokens from environment variables', async () => {
 		await POST({ request, platform, cookies });
-
-		expect(TokenService).toHaveBeenCalledWith(platform.env.GENPROJ_DB || platform.env.D1_DATABASE);
-		expect(mockGetTokensByUserId).toHaveBeenCalledWith('user-123');
 
 		expect(ProjectGeneratorService).toHaveBeenCalledWith(
 			expect.objectContaining({
-				github: 'gh-token',
-				circleci: 'circle-token',
-				doppler: undefined
+				github: 'env-gh-token',
+				circleci: 'env-circle-token',
+				doppler: 'env-doppler-token',
+				sonarcloud: 'env-sonar-token'
 			})
 		);
 	});
 
-	it('should fallback to cookie for GitHub token if not in database', async () => {
-		mockGetTokensByUserId.mockResolvedValueOnce([]); // No tokens in DB
+	it('should fallback to cookie for GitHub token if not in environment', async () => {
+		const { env } = await import('$env/dynamic/private');
+		const oldGitHubToken = env.GITHUB_TOKEN;
+		const oldGitHubAccess = env.GITHUB_ACCESS_TOKEN;
+		env.GITHUB_TOKEN = undefined;
+		env.GITHUB_ACCESS_TOKEN = undefined;
 		cookies.get.mockReturnValue('cookie-gh-token');
 
 		await POST({ request, platform, cookies });
@@ -160,6 +158,9 @@ describe('POST /projects/genproj/api/generate', () => {
 				github: 'cookie-gh-token'
 			})
 		);
+
+		env.GITHUB_TOKEN = oldGitHubToken;
+		env.GITHUB_ACCESS_TOKEN = oldGitHubAccess;
 	});
 
 	it('should call generateProject with correct context', async () => {

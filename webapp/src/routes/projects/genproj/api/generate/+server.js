@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { ProjectGeneratorService } from '$lib/server/project-generator';
-import { TokenService } from '$lib/server/token-service';
+
 import { getCurrentUser } from '$lib/server/auth';
 import { logger } from '$lib/utils/logging';
 import {
@@ -24,13 +24,8 @@ export async function POST({ request, platform, cookies }) {
 			return json({ message: 'Unauthorized' }, { status: 401 });
 		}
 
-		// Get stored tokens
-		const database = platform.env.GENPROJ_DB || platform.env.D1_DATABASE;
-		const tokenService = new TokenService(database);
-		const storedTokens = await tokenService.getTokensByUserId(user.id);
-
 		// Construct authTokens object
-		const authTokens = buildAuthTokensFromStored(storedTokens, cookies);
+		const authTokens = buildAuthTokensFromStored([], cookies);
 
 		// Instantiate the robust service
 		const service = new ProjectGeneratorService(authTokens);
