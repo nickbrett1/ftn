@@ -257,7 +257,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 			rustJobDefinition = `
   test-rust:
     docker:
-      - image: cimg/rust:1.85.0
+      - image: cimg/rust:1.86.0
     steps:
       - checkout
       - restore_cache:

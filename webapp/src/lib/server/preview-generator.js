@@ -476,7 +476,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-worker = "0.2.0"
+worker = { version = "0.8.5", features = ["d1"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
