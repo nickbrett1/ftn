@@ -187,7 +187,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const cargoToml = files.find((f) => f.filePath === 'Cargo.toml');
 		expect(cargoToml).toBeDefined();
 		expect(cargoToml.content).toContain('name = "rust-worker-project"');
-		expect(cargoToml.content).toContain('worker = "0.2.0"');
+		expect(cargoToml.content).toContain('worker = { version = "0.8.5", features = ["d1"] }');
 
 		const libraryRs = files.find((f) => f.filePath === 'src/lib.rs');
 		expect(libraryRs).toBeDefined();
