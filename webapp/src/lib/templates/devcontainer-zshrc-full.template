@@ -211,10 +211,14 @@ restore_vscode_sockets() {
 # Run once on shell startup
 restore_vscode_sockets
 
+# Set default UTF-8 locale
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 # Automatically update environment variables from tmux session inside tmux
 tmux_update_environment() {
   if [ -n "$TMUX" ]; then
-    eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH")
+    eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH|LANG|LC_")
     # Also verify and restore sockets if they became stale/missing after tmux update
     restore_vscode_sockets
   fi

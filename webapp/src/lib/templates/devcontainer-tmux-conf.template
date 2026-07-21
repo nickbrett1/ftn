@@ -2,7 +2,7 @@
 set -g mouse on
 
 # Update environment variables when attaching
-set -ga update-environment " VSCODE_GIT_IPC_HANDLE VSCODE_GIT_ASKPASS_NODE GIT_ASKPASS VSCODE_GIT_ASKPASS_EXTRA_ARGS VSCODE_GIT_ASKPASS_MAIN VSCODE_IPC_HOOK_CLI REMOTE_CONTAINERS_IPC SSH_AUTH_SOCK"
+set -ga update-environment " VSCODE_GIT_IPC_HANDLE VSCODE_GIT_ASKPASS_NODE GIT_ASKPASS VSCODE_GIT_ASKPASS_EXTRA_ARGS VSCODE_GIT_ASKPASS_MAIN VSCODE_IPC_HOOK_CLI REMOTE_CONTAINERS_IPC SSH_AUTH_SOCK LANG LC_ALL LC_CTYPE"
 
 # Show the project name ('{{projectName}}') in the bottom right status bar
 set -g status-right "{{projectName}}"
