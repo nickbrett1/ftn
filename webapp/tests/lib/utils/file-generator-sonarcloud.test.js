@@ -23,7 +23,7 @@ describe('file-generator sonarcloud capabilities', () => {
 		const sonarFile = files.find(f => f.filePath === 'sonar-project.properties');
 
 		expect(sonarFile).toBeDefined();
-		expect(sonarFile.content).toBe('');
+		expect(sonarFile.content).toContain('sonar.projectKey');
 	});
 
 	it('should include lcov paths in sonar-project.properties for devcontainer-node', async () => {

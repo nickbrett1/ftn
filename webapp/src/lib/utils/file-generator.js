@@ -1109,10 +1109,8 @@ export async function generateAllFiles(context) {
 	}
 
 	if (context.capabilities.includes('sonarcloud')) {
-		let sonarContent = '';
-		if (context.capabilities.includes('devcontainer-node')) {
-			sonarContent = 'sonar.javascript.lcov.reportPaths=coverage/lcov.info\n';
-		}
+		const sonarCloudFile = allGeneratedFiles.find((f) => f.filePath === '.sonarcloud.properties');
+		const sonarContent = sonarCloudFile ? sonarCloudFile.content : '';
 		allGeneratedFiles.push({ filePath: 'sonar-project.properties', content: sonarContent });
 	}
 
