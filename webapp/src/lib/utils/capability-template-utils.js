@@ -321,7 +321,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
       - save_cache:
           paths:
             - node_modules
-          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}${syncSecretsStep}
+          key: v1-deps-{{ checksum "package.json" }}${setupWranglerStep}
       - run:
           name: Build
           command: npm run build${installRustStep}
@@ -333,7 +333,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
               npx wrangler deploy
             else
               npx wrangler deploy --env "$ENV_VAL"
-            fi`;
+            fi${syncSecretsStep}`;
 
 		data.deployWorkflowJob = rustWorkflowJob + `
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
