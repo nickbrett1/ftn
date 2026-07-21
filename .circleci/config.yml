@@ -30,37 +30,17 @@ jobs:
             - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v7-fresh-{{ .Branch }}-
             - node-v7-fresh-
-      - restore_cache:
-          name: Restore Playwright cache
-          keys:
-            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - playwright-{{ .Branch }}-
-            - playwright-
       - run:
           name: Install modules
           command: |
             cd webapp
-            # Install dependencies using the lockfile for consistency
             npm install
-            # Rollup 4+ uses native binaries. We explicitly install the linux-x64 version with --force
-            # to prevent build failures caused by npm failing to resolve optional platform-specific 
-            # dependencies, which often happens when the lockfile was generated on a different OS.
-            npm install rollup @rollup/rollup-linux-x64-gnu --force
-      - run:
-          name: Install Playwright Chromium (if not cached)
-          command: |
-            cd webapp && npx playwright install --with-deps chromium
-      - save_cache:
-          name: Cache Playwright
-          paths:
-            - ~/.cache/ms-playwright
-          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - install_doppler
       - run:
           name: Setup Wrangler configuration
           command: |
             cd webapp && ./scripts/setup-wrangler-config.sh stg
-
+ 
       - run:
           name: Build app
           command: |
@@ -92,16 +72,6 @@ jobs:
             - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v7-fresh-{{ .Branch }}-
             - node-v7-fresh-
-      - restore_cache:
-          name: Restore Playwright cache
-          keys:
-            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - playwright-{{ .Branch }}-
-            - playwright-
-      - run:
-          name: Install Playwright Chromium (if not cached)
-          command: |
-            cd webapp && npx playwright install chromium
       - attach_workspace:
           at: webapp
       - install_doppler
@@ -123,11 +93,6 @@ jobs:
             echo "Disk usage:"
             df -h
           when: always
-      - save_cache:
-          name: Cache Playwright
-          paths:
-            - ~/.cache/ms-playwright
-          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - store_test_results:
           path: ./webapp/reports/
       - sonarcloud/scan
