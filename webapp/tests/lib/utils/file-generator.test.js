@@ -28,6 +28,10 @@ const nodeJsonTemplateContent = `{
     "source={{projectName}}-tailscale-state,target=/var/lib/tailscale,type=volume"
   ],
   "forwardPorts": [8788, 8976, 36079, 33301, 37677],
+  "containerEnv": {
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8"
+  },
   "postCreateCommand": ".devcontainer/post-create-setup.sh",
   "postStartCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-start-setup.sh"
 }
