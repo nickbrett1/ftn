@@ -333,6 +333,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
       - run:
           name: Deploy to Cloudflare Workers
           command: |
+            export PATH="$HOME/.cargo/bin:$PATH"
             ENV_VAL="<< parameters.environment >>"
             if [ -d worker ]; then cd worker; fi
             if [ "$ENV_VAL" = "default" ] || [ -z "$ENV_VAL" ]; then
