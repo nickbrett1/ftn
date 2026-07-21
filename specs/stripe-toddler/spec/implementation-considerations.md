@@ -399,8 +399,8 @@ Phase 3: iOS App Foundation
 
 Phase 4: Integration
   ├─ Connect iOS app to live Worker endpoints
-  ├─ Apple Pay flow (requires Developer account + Merchant ID)
-  └─ Admin portal wireframe implementation
+  ├─ App Attest device registration flow
+  └─ End-to-end Simulator test (scan → pay → celebrate)
 
 Phase 5: Hardware Validation (Manual Sessions)
   ├─ Pair Tera scanner and validate scan-to-checkout flow

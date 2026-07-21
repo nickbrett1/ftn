@@ -255,6 +255,52 @@ paths:
         '400':
           description: Malformed payload.
 
+  /api/admin/inventory/upload:
+    post:
+      summary: Upload Inventory Item Image
+      description: Accepts a multipart image upload, stores the file in Cloudflare R2 under a deterministic key derived from the barcode, and returns the public URL. Designed to be called before or during inventory item creation — the returned `image_url` is then included in the `POST /api/admin/inventory` payload.
+      operationId: uploadInventoryImage
+      security:
+        - AdminApiKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - barcode
+                - image
+              properties:
+                barcode:
+                  type: string
+                  description: The barcode identifier for the item. Used to derive the R2 object key (`images/<barcode>.jpg`).
+                image:
+                  type: string
+                  format: binary
+                  description: The image file (JPEG or PNG, max 5 MB).
+      responses:
+        '200':
+          description: Image uploaded successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image_url:
+                    type: string
+                    format: uri
+                    description: Public URL of the uploaded image on R2.
+                  barcode:
+                    type: string
+                    description: The barcode the image was associated with.
+        '400':
+          description: Missing barcode or image, or image exceeds size limit.
+        '401':
+          description: Unauthenticated request.
+        '413':
+          description: Image file exceeds the 5 MB size limit.
+
   /api/admin/analytics:
     get:
       summary: Retrieve Store Sales History

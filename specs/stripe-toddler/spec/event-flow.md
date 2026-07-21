@@ -44,21 +44,20 @@ This document defines the event schemas, flows, and asynchronous contracts for t
 * **Idempotency**: Unique payment intents are generated per transaction token to prevent double-charging.
 
 ### 3. `PaymentCaptured`
-* **Type**: Event (Stripe Integration Webhook Event)
-* **Producer**: `Stripe API Engine`
-* **Consumer**: `job.payments-backend` (captures webhook/terminal callbacks)
-* **Description**: Emitted when Stripe successfully captures funds from the terminal card reader.
+* **Type**: Event (Synchronous Integration Event)
+* **Producer**: `job.payments-backend` (Rust Worker captures via Stripe API)
+* **Consumer**: `job.ipad-pos-client` (receives capture confirmation to trigger celebration)
+* **Description**: Emitted when the Rust Worker successfully captures a previously-authorized PaymentIntent by calling `POST /v1/payment_intents/{id}/capture` on the Stripe API. This is a synchronous, client-initiated flow — the iPad calls `POST /api/terminal/capture` on the Worker, which captures the payment and logs the transaction to D1, then returns the result to the iPad. There is no asynchronous Stripe webhook involved.
 * **Payload Schema**:
   ```json
   {
-    "payment_intent_id": "string",
-    "charge_id": "string",
-    "status": "succeeded",
-    "captured_at": "timestamp"
+    "status": "captured",
+    "transaction_id": "string",
+    "payment_intent_id": "string"
   }
   ```
-* **Ordering**: Out-of-order delivery possible; must be reconciled against intent ID.
-* **Idempotency**: Captures are idempotent; backend filters duplicates using `payment_intent_id` as the primary key.
+* **Ordering**: Strictly sequential — one capture per checkout session.
+* **Idempotency**: Captures are idempotent; D1 enforces uniqueness on `payment_intent_id` to prevent duplicate transaction logging.
 
 ### 4. `TransactionLogged`
 * **Type**: Event (Data Sync Event)

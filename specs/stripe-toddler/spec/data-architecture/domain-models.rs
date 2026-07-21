@@ -122,3 +122,12 @@ pub struct CaptureTransactionResponse {
     pub status: String,
     pub transaction_id: String,
 }
+
+/// Response payload from inventory image upload to R2.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImageUploadResponse {
+    /// Public URL of the uploaded image on R2.
+    pub image_url: String,
+    /// The barcode the image was associated with.
+    pub barcode: String,
+}
