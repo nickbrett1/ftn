@@ -17,6 +17,7 @@ describe('capability-template-utils', () => {
 			expect(data.circleCiMcpConfig).toContain('"command": "npx"');
 			expect(data.githubMcpConfig).toContain('@modelcontextprotocol/server-github');
 			expect(data.githubMcpConfig).toContain('"command": "npx"');
+			expect(data.dopplerMcpConfig).toBe('');
 		});
 
 		it('should generate doppler-wrapped configs if doppler is present', () => {
@@ -30,6 +31,8 @@ describe('capability-template-utils', () => {
 			expect(data.circleCiMcpConfig).toContain('"run"');
 			expect(data.githubMcpConfig).toContain('"command": "doppler"');
 			expect(data.githubMcpConfig).toContain('"run"');
+			expect(data.dopplerMcpConfig).toContain('@dopplerhq/mcp-server');
+			expect(data.dopplerMcpConfig).toContain('"command": "doppler"');
 		});
 
 		it('should generate empty config if no dependencies', () => {

@@ -90,10 +90,26 @@ function getCodingAgentsTemplateData(context) {
     }`;
 	}
 
+	let dopplerMcpConfig = '';
+	if (hasDoppler) {
+		dopplerMcpConfig = `,
+    "doppler": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--",
+        "npx",
+        "-y",
+        "@dopplerhq/mcp-server"
+      ]
+    }`;
+	}
+
 	return {
 		sonarQubeMcpConfig,
 		circleCiMcpConfig,
-		githubMcpConfig
+		githubMcpConfig,
+		dopplerMcpConfig
 	};
 }
 

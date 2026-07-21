@@ -1,4 +1,5 @@
 # Enable mouse mode (scrolling, selecting, resizing)
+# Support UTF-8 locale variables and tmux synchronization
 set -g mouse on
 
 # Update environment variables when attaching

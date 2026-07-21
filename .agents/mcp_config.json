@@ -81,6 +81,20 @@
         "-y",
         "@modelcontextprotocol/server-github"
       ]
+    },
+    "doppler": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--project",
+        "webapp",
+        "--config",
+        "dev",
+        "--",
+        "npx",
+        "-y",
+        "@dopplerhq/mcp-server"
+      ]
     }
   }
 }
