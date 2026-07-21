@@ -63,9 +63,37 @@ function getCodingAgentsTemplateData(context) {
 		}
 	}
 
+	let githubMcpConfig = '';
+	if (hasDoppler) {
+		githubMcpConfig = `,
+    "github": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ]
+    }`;
+	} else {
+		githubMcpConfig = `,
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_PERSONAL_ACCESS_TOKEN"
+      }
+    }`;
+	}
+
 	return {
 		sonarQubeMcpConfig,
-		circleCiMcpConfig
+		circleCiMcpConfig,
+		githubMcpConfig
 	};
 }
 
