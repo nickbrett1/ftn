@@ -137,9 +137,14 @@ function getSonarCloudTemplateData(context) {
 		// No default
 	}
 
+	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+	const isRustWorker = wranglerConfig.workerType === 'rust';
+	const sonarSources = isRustWorker ? 'worker/src' : 'src';
+
 	return {
 		sonarLanguageSettings: languageSettings,
-		organization: config.organization || 'bem'
+		organization: config.organization || 'bem',
+		sonarSources
 	};
 }
 
