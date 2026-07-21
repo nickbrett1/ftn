@@ -8,8 +8,10 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Change to the project root directory so that relative paths work correctly
 cd "$PROJECT_ROOT"
-
-echo "Generating wrangler.jsonc from template..."
+if [ -d "worker" ]; then
+    echo "Rust worker detected. Skipping wrangler.jsonc generation."
+    exit 0
+fi
 if command -v envsubst >/dev/null 2>&1; then
     envsubst < wrangler.template.jsonc > wrangler.jsonc
 else
