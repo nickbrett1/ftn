@@ -329,6 +329,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           name: Deploy to Cloudflare Workers
           command: |
             ENV_VAL="<< parameters.environment >>"
+            if [ -d worker ]; then cd worker; fi
             if [ "$ENV_VAL" = "default" ] || [ -z "$ENV_VAL" ]; then
               npx wrangler deploy
             else
