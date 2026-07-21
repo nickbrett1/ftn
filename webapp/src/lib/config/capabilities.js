@@ -326,7 +326,7 @@ export const capabilities = [
 		'Rust DevContainer',
 		'Sets up a VS Code DevContainer with Rust environment.',
 		CONFIG_SCHEMA_EMPTY,
-		['rust-lang.rust-analyzer', 'tamasfe.even-better-toml', 'serayuzgur.crates']
+		['rust-lang.rust-analyzer', 'tamasfe.even-better-toml']
 	),
 	{
 		id: 'circleci',
