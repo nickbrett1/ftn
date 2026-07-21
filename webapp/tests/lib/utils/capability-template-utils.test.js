@@ -12,7 +12,20 @@ describe('capability-template-utils', () => {
 			};
 			const data = getCapabilityTemplateData('coding-agents', context);
 			expect(data.sonarQubeMcpConfig).toContain('sonarqube-mcp-server');
+			expect(data.sonarQubeMcpConfig).toContain('"command": "npx"');
 			expect(data.circleCiMcpConfig).toContain('@circleci/mcp-server-circleci');
+			expect(data.circleCiMcpConfig).toContain('"command": "npx"');
+		});
+
+		it('should generate doppler-wrapped configs if doppler is present', () => {
+			const context = {
+				capabilities: ['coding-agents', 'sonarcloud', 'circleci', 'doppler']
+			};
+			const data = getCapabilityTemplateData('coding-agents', context);
+			expect(data.sonarQubeMcpConfig).toContain('"command": "doppler"');
+			expect(data.sonarQubeMcpConfig).toContain('"run"');
+			expect(data.circleCiMcpConfig).toContain('"command": "doppler"');
+			expect(data.circleCiMcpConfig).toContain('"run"');
 		});
 
 		it('should generate empty config if no dependencies', () => {

@@ -1,10 +1,24 @@
 function getCodingAgentsTemplateData(context) {
 	const hasSonarQube = context.capabilities.includes('sonarcloud');
 	const hasCircleCI = context.capabilities.includes('circleci');
+	const hasDoppler = context.capabilities.includes('doppler');
 
 	let sonarQubeMcpConfig = '';
 	if (hasSonarQube) {
-		sonarQubeMcpConfig = `,
+		if (hasDoppler) {
+			sonarQubeMcpConfig = `,
+    "sonarqube": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--",
+        "npx",
+        "-y",
+        "sonarqube-mcp-server"
+      ]
+    }`;
+		} else {
+			sonarQubeMcpConfig = `,
     "sonarqube": {
       "command": "npx",
       "args": [
@@ -16,11 +30,25 @@ function getCodingAgentsTemplateData(context) {
         "SONAR_HOST_URL": "$SONAR_HOST_URL"
       }
     }`;
+		}
 	}
 
 	let circleCiMcpConfig = '';
 	if (hasCircleCI) {
-		circleCiMcpConfig = `,
+		if (hasDoppler) {
+			circleCiMcpConfig = `,
+    "circleci": {
+      "command": "doppler",
+      "args": [
+        "run",
+        "--",
+        "npx",
+        "-y",
+        "@circleci/mcp-server-circleci"
+      ]
+    }`;
+		} else {
+			circleCiMcpConfig = `,
     "circleci": {
       "command": "npx",
       "args": [
@@ -32,6 +60,7 @@ function getCodingAgentsTemplateData(context) {
         "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
       }
     }`;
+		}
 	}
 
 	return {

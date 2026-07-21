@@ -20,22 +20,32 @@
       ]
     },
     "circleci": {
-      "command": "npx",
-      "args": ["-y", "@circleci/mcp-server-circleci"],
-      "env": {
-        "CIRCLECI_TOKEN": "$CIRCLECI_TOKEN",
-        "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
-      }
+      "command": "doppler",
+      "args": [
+        "run",
+        "--project",
+        "webapp",
+        "--config",
+        "dev",
+        "--",
+        "npx",
+        "-y",
+        "@circleci/mcp-server-circleci"
+      ]
     },
     "sonarqube": {
-      "command": "npx",
-      "args": ["-y", "sonarqube-mcp-server"],
-      "env": {
-        "SONARQUBE_TOKEN": "$SONARQUBE_TOKEN",
-        "SONARQUBE_ORG": "$SONARQUBE_ORG",
-        "SONARQUBE_URL": "https://sonarcloud.io",
-        "SONARQUBE_IDE_PORT": "$SONARQUBE_IDE_PORT"
-      }
+      "command": "doppler",
+      "args": [
+        "run",
+        "--project",
+        "webapp",
+        "--config",
+        "dev",
+        "--",
+        "npx",
+        "-y",
+        "sonarqube-mcp-server"
+      ]
     },
     "nanobanana": {
       "command": "node",
