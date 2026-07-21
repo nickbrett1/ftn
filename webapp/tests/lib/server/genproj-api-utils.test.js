@@ -7,6 +7,9 @@ vi.mock('../../../src/lib/server/api-key-service');
 vi.mock('@sveltejs/kit', () => ({
 	json: vi.fn((data, options) => ({ data, ...options }))
 }));
+vi.mock('$env/dynamic/private', () => ({
+	env: {}
+}));
 
 describe('genproj-api-utils', () => {
 	describe('handleGenprojErrorResult', () => {
