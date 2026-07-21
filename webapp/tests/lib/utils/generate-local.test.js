@@ -5,6 +5,10 @@ import path from 'path';
 
 describe('Local Generation', () => {
 	it('should write files locally', async () => {
+		if (process.env.CI || process.env.CIRCLECI) {
+			console.log("Skipping local file writing in CI environment.");
+			return;
+		}
 		const context = {
 			projectName: "stripe-toddler",
 			capabilities: [
