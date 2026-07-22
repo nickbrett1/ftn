@@ -114,7 +114,7 @@
 		"handlebars": "^4.7.9",
 		"hi-base32": "^0.5.1",
 		"libsodium-wrappers": "^0.8.4",
-		"linkify-it": "^6.0.0",
+		"linkify-it": "^6.1.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^6.0.0",
 		"pdfjs-dist": "^6.1.200",
