@@ -24,7 +24,7 @@
       "command": "node",
       "args": [
         ".agents/mcp-sse-proxy.js",
-        "http://host.docker.internal:9876/sse"
+        "http://mac-studio:9876/sse"
       ]
     }{{sonarQubeMcpConfig}}{{circleCiMcpConfig}}{{githubMcpConfig}}{{dopplerMcpConfig}}
   },

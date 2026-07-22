@@ -1,115 +1,205 @@
-const http = require('http');
-const readline = require('readline');
+const http = require("http");
+const https = require("https");
+const readline = require("readline");
 
-const sseUrlStr = process.argv[2] || 'http://host.docker.internal:9876/sse';
-console.error(`[Proxy] Connecting to SSE at ${sseUrlStr}...`);
+const sseUrlStr = process.argv[2] || "http://mac-studio:9876/sse";
+console.error(`[Proxy] Starting SSE proxy. Target SSE: ${sseUrlStr}`);
 
 let postUrl = null;
 const messageQueue = [];
+
+// Keep alive agents to optimize connection reuse and prevent socket exhaustion
+const httpAgent = new http.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 1000,
+  maxSockets: 100,
+});
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 1000,
+  maxSockets: 100,
+});
 
 // Read JSON-RPC from stdin line-by-line
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  terminal: false
+  terminal: false,
 });
 
-rl.on('line', (line) => {
+rl.on("line", (line) => {
   if (!line.trim()) return;
   if (postUrl) {
     sendPost(line);
   } else {
-    messageQueue.push(line);
+    if (messageQueue.length < 1000) {
+      messageQueue.push(line);
+    } else {
+      console.error(
+        `[Proxy] Message queue full (1000), dropping oldest message`,
+      );
+      messageQueue.shift();
+      messageQueue.push(line);
+    }
   }
 });
 
 // Establish SSE GET connection
 let sseReq = null;
+let isConnecting = false;
+let reconnectTimeout = null;
 
 function connectSSE() {
+  if (isConnecting) return;
+  isConnecting = true;
+  postUrl = null; // Reset endpoint on new connection
+
+  if (sseReq) {
+    try {
+      sseReq.destroy();
+    } catch (e) {}
+    sseReq = null;
+  }
+
   const url = new URL(sseUrlStr);
+  const client = url.protocol === "https:" ? https : http;
+  const agent = url.protocol === "https:" ? httpsAgent : httpAgent;
+
   const options = {
-    method: 'GET',
+    method: "GET",
+    agent: agent,
     headers: {
-      'Accept': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
-    }
+      Accept: "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
   };
 
-  sseReq = http.request(url, options, (res) => {
+  console.error(`[Proxy] Connecting to SSE at ${sseUrlStr}...`);
+
+  sseReq = client.request(url, options, (res) => {
+    isConnecting = false;
     if (res.statusCode !== 200) {
       console.error(`[Proxy] SSE Server returned status ${res.statusCode}`);
-      process.exit(1);
+      scheduleReconnect();
+      return;
     }
 
-    let buffer = '';
-    res.on('data', (chunk) => {
+    let buffer = "";
+    let eventType = "";
+    const dataBuffer = [];
+
+    res.on("data", (chunk) => {
       buffer += chunk.toString();
-      let lines = buffer.split(/\r?\n/);
+      const lines = buffer.split(/\r?\n/);
       // Keep the last incomplete line in buffer
       buffer = lines.pop();
 
-      let eventType = '';
       for (const line of lines) {
-        if (line.startsWith('event:')) {
-          eventType = line.slice(6).trim();
-        } else if (line.startsWith('data:')) {
-          const data = line.slice(5).trim();
-          if (eventType === 'endpoint') {
-            postUrl = new URL(data, url).toString();
-            console.error(`[Proxy] Received POST endpoint: ${postUrl}`);
-            // Flush queued messages
-            while (messageQueue.length > 0) {
-              sendPost(messageQueue.shift());
+        if (line === "") {
+          // Event boundary: dispatch accumulated event
+          const data = dataBuffer.join("\n");
+          if (eventType === "endpoint") {
+            try {
+              postUrl = new URL(data, url).toString();
+              console.error(
+                `[Proxy] Connected. Received POST endpoint: ${postUrl}`,
+              );
+              // Flush queued messages
+              while (messageQueue.length > 0) {
+                sendPost(messageQueue.shift());
+              }
+            } catch (err) {
+              console.error(
+                `[Proxy] Invalid POST endpoint URL received: ${data}. Error: ${err.message}`,
+              );
             }
-          } else if (eventType === 'message' || eventType === '') {
-            // Forward message to stdout
-            process.stdout.write(data + '\n');
+          } else if (eventType === "message" || eventType === "") {
+            if (data) {
+              process.stdout.write(data + "\n");
+            }
           }
-        } else if (line === '') {
-          eventType = '';
+          // Reset event state
+          eventType = "";
+          dataBuffer.length = 0;
+        } else {
+          const colonIdx = line.indexOf(":");
+          if (colonIdx === 0) {
+            continue; // Ignore comment
+          }
+          let field = line;
+          let value = "";
+          if (colonIdx > 0) {
+            field = line.slice(0, colonIdx);
+            value = line.slice(colonIdx + 1);
+            if (value.startsWith(" ")) {
+              value = value.slice(1);
+            }
+          }
+
+          if (field === "event") {
+            eventType = value;
+          } else if (field === "data") {
+            dataBuffer.push(value);
+          }
         }
       }
     });
 
-    res.on('end', () => {
-      console.error('[Proxy] SSE stream ended by server');
-      process.exit(0);
+    res.on("end", () => {
+      console.error("[Proxy] SSE stream ended by server");
+      scheduleReconnect();
+    });
+
+    res.on("error", (err) => {
+      console.error(`[Proxy] SSE response stream error: ${err.message}`);
+      scheduleReconnect();
     });
   });
 
-  sseReq.on('error', (e) => {
+  sseReq.on("error", (e) => {
+    isConnecting = false;
     console.error(`[Proxy] SSE request error: ${e.message}`);
-    process.exit(1);
+    scheduleReconnect();
   });
 
   sseReq.end();
 }
 
+function scheduleReconnect() {
+  if (reconnectTimeout) return;
+  console.error("[Proxy] Scheduling reconnect in 2 seconds...");
+  reconnectTimeout = setTimeout(() => {
+    reconnectTimeout = null;
+    connectSSE();
+  }, 2000);
+}
+
 function sendPost(payload) {
   if (!postUrl) return;
-  
+
   const url = new URL(postUrl);
-  const postData = Buffer.from(payload, 'utf8');
-  
+  const postData = Buffer.from(payload, "utf8");
+  const client = url.protocol === "https:" ? https : http;
+  const agent = url.protocol === "https:" ? httpsAgent : httpAgent;
+
   const options = {
-    method: 'POST',
+    method: "POST",
+    agent: agent,
     headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': postData.length
-    }
+      "Content-Type": "application/json",
+      "Content-Length": postData.length,
+    },
   };
 
-  const req = http.request(url, options, (res) => {
-    // Consume response data to free socket
-    res.resume();
+  const req = client.request(url, options, (res) => {
+    res.resume(); // Consume response data to free socket
     if (res.statusCode >= 400) {
       console.error(`[Proxy] POST failed with status ${res.statusCode}`);
     }
   });
 
-  req.on('error', (e) => {
+  req.on("error", (e) => {
     console.error(`[Proxy] POST error: ${e.message}`);
   });
 

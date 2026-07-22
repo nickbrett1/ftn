@@ -5,10 +5,7 @@
     },
     "xcode-native": {
       "command": "node",
-      "args": [
-        ".agents/mcp-sse-proxy.js",
-        "http://host.docker.internal:9876/sse"
-      ]
+      "args": [".agents/mcp-sse-proxy.js", "http://mac-studio:9876/sse"]
     },
     "chrome-devtools": {
       "command": "npx",
