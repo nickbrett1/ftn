@@ -23,7 +23,7 @@
     "xcode-native": {
       "command": "node",
       "args": [
-        ".agents/mcp-sse-proxy.js",
+        ".agents/mcp-sse-proxy.cjs",
         "http://mac-studio:9876/sse"
       ]
     }{{sonarQubeMcpConfig}}{{circleCiMcpConfig}}{{githubMcpConfig}}{{dopplerMcpConfig}}

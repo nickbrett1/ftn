@@ -131,7 +131,7 @@ export const capabilities = [
 			},
 			{
 				id: 'mcp-sse-proxy',
-				filePath: '.agents/mcp-sse-proxy.js',
+				filePath: '.agents/mcp-sse-proxy.cjs',
 				templateId: 'mcp-sse-proxy-js'
 			}
 		],
