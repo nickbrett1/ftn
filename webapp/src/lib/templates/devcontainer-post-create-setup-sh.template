@@ -64,6 +64,8 @@ fi
 
 {{shellSetup}}
 
+{{pythonSetup}}
+
 {{gitSafeDirectory}}
 
 {{playwrightSetup}}

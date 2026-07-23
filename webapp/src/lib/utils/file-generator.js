@@ -105,6 +105,22 @@ echo "INFO: Installing Playwright and its Chromium dependencies..."
 npx --yes playwright install --with-deps chromium
 echo "INFO: Playwright Chromium installation complete."`;
 
+export const PYTHON_SETUP_SCRIPT = `
+# Setup python virtual environment and install dependencies
+if [ ! -d ".venv" ]; then
+    echo "INFO: Creating Python virtual environment (.venv)..."
+    python3 -m venv .venv
+fi
+
+if [ -f "requirements.txt" ]; then
+    echo "INFO: Installing dependencies from requirements.txt..."
+    .venv/bin/pip install -r requirements.txt
+elif [ -f "pyproject.toml" ]; then
+    echo "INFO: Installing dependencies from pyproject.toml..."
+    .venv/bin/pip install -e .
+fi
+`;
+
 export const DOPPLER_LOGIN_SCRIPT = `
 # Doppler login/setup
 if command -v doppler &> /dev/null; then
@@ -586,6 +602,7 @@ export function generateMergedDevelopmentContainerFiles(
 							context.projectName || context.name || 'my-project'
 						)
 					: '',
+				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python')) ? PYTHON_SETUP_SCRIPT : '',
 				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 					'{{projectName}}',
 					context.projectName || context.name || 'my-project'

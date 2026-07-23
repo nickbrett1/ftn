@@ -42,6 +42,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script-mock',
 		AGY_SETUP_SCRIPT: 'agy-setup-script-mock',
 		PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script-mock',
+		PYTHON_SETUP_SCRIPT: 'python-setup-script-mock',
 		DOPPLER_LOGIN_SCRIPT: 'doppler-login-mock',
 		WRANGLER_LOGIN_SCRIPT: 'wrangler-login-mock',
 		SETUP_WRANGLER_SCRIPT: 'setup-wrangler-mock',

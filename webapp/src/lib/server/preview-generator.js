@@ -19,6 +19,7 @@ import {
 	GIT_SAFE_DIR_SCRIPT,
 	AGY_SETUP_SCRIPT,
 	PLAYWRIGHT_SETUP_SCRIPT,
+	PYTHON_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
@@ -234,6 +235,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		shellSetup: allCapabilities.includes('shell-tools')
 			? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
+		pythonSetup: allCapabilities.some((c) => c.startsWith('devcontainer-python')) ? PYTHON_SETUP_SCRIPT : '',
 		gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 			'{{projectName}}',
 			projectConfig.name || 'my-project'

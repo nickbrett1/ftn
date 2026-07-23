@@ -18,6 +18,7 @@ vi.mock('$lib/utils/file-generator', () => ({
 	GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script',
 	AGY_SETUP_SCRIPT: 'agy-setup-script',
 	PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script',
+	PYTHON_SETUP_SCRIPT: 'python-setup-script',
 	DOPPLER_LOGIN_SCRIPT: 'doppler-login-script',
 	WRANGLER_LOGIN_SCRIPT: 'wrangler-login-script',
 	SETUP_WRANGLER_SCRIPT: 'setup-wrangler-script',
