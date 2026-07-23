@@ -51,7 +51,8 @@ RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
-    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
+    && curl -fsSL https://antigravity.google/cli/install.sh | bash
 
 RUN mkdir -p \$HOME/.wrangler
 
@@ -73,7 +74,8 @@ USER vscode
 
 const pythonDockerfileTemplateContent = `FROM mcr.microsoft.com/devcontainers/python
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm openssh-server mosh tmux micro xclip{{dopplerInstallation}}
+    && apt-get -y install --no-install-recommends git socat curl gnupg nodejs npm openssh-server mosh tmux micro xclip \\
+    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh{{dopplerInstallation}}
 
 USER vscode
 
@@ -82,7 +84,9 @@ RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
-    && curl https://cursor.com/install -fsS | bash
+    && curl https://cursor.com/install -fsS | bash \\
+    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
+    && curl -fsSL https://antigravity.google/cli/install.sh | bash
 
 RUN mkdir -p \$HOME/.wrangler
 
@@ -115,7 +119,8 @@ RUN if [ -d "\$HOME/.oh-my-zsh" ]; then rm -rf "\$HOME/.oh-my-zsh"; fi \\
     && git clone https://github.com/zsh-users/zsh-autosuggestions \$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \$HOME/.oh-my-zsh/custom/themes/powerlevel10k \\
     && curl https://cursor.com/install -fsS | bash \\
-    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
+    && curl -fsSL https://antigravity.google/cli/install.sh | bash
 
 RUN mkdir -p \$HOME/.wrangler
 
