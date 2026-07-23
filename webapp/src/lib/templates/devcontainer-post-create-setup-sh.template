@@ -7,6 +7,9 @@
 CURRENT_USER=$(whoami)
 USER_HOME_DIR="$HOME"
 
+echo "INFO: Configuring Zsh as the default shell for $CURRENT_USER..."
+sudo chsh -s /bin/zsh "$CURRENT_USER"
+
 echo "INFO: Ensuring wrangler directory permissions..."
 
 echo "INFO: Restoring or backing up SSH host keys..."
