@@ -116,7 +116,11 @@ function connectSSE() {
             }
           } else if (eventType === "message" || eventType === "") {
             if (data) {
-              process.stdout.write(data + "\n");
+              if (data.includes("SSE Connection established")) {
+                console.error(`[Proxy] Intercepted gateway notification: ${data}`);
+              } else {
+                process.stdout.write(data + "\n");
+              }
             }
           }
           // Reset event state
