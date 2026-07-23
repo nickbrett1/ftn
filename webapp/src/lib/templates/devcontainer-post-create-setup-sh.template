@@ -10,6 +10,11 @@ USER_HOME_DIR="$HOME"
 echo "INFO: Configuring Zsh as the default shell for $CURRENT_USER..."
 sudo chsh -s /bin/zsh "$CURRENT_USER"
 
+if ! grep -q "exec /bin/zsh" "$USER_HOME_DIR/.bashrc"; then
+    echo "INFO: Adding auto-exec zsh to .bashrc..."
+    echo -e "\n# Automatically switch to zsh for interactive shells\nif [ -t 1 ] && [ -x /bin/zsh ]; then\n    exec /bin/zsh -l\nfi" >> "$USER_HOME_DIR/.bashrc"
+fi
+
 echo "INFO: Ensuring wrangler directory permissions..."
 
 echo "INFO: Restoring or backing up SSH host keys..."
