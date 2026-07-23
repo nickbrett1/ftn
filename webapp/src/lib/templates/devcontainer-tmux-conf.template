@@ -1,3 +1,6 @@
+# Set default shell to Zsh inside Tmux
+set-option -g default-shell /bin/zsh
+
 # Enable mouse mode (scrolling, selecting, resizing)
 # Support UTF-8 locale variables and tmux synchronization
 set -g mouse on

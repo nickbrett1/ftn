@@ -1,7 +1,7 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/{{projectName}}/.venv/bin/python",
-  "terminal.integrated.defaultProfile.linux": "zsh",
-  "terminal.integrated.defaultProfile.osx": "zsh",
-  "terminal.integrated.defaultProfile.windows": "zsh"
+  "terminal.integrated.defaultProfile.linux": "tmux-integrated",
+  "terminal.integrated.defaultProfile.osx": "tmux-integrated",
+  "terminal.integrated.defaultProfile.windows": "tmux-integrated"
 }
 
