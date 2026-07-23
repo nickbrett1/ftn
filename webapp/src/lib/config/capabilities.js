@@ -89,6 +89,7 @@ function createDevelopmentContainerCapability(
 			},
 			{ id: 'zshrc', filePath: '.devcontainer/.zshrc', templateId: 'devcontainer-zshrc-full' },
 			{ id: 'p10k', filePath: '.devcontainer/.p10k.zsh', templateId: 'devcontainer-p10k-zsh-full' },
+			{ id: 'tmux', filePath: '.devcontainer/.tmux.conf', templateId: 'devcontainer-tmux-conf' },
 			{
 				id: 'setup-sh',
 				filePath: '.devcontainer/post-create-setup.sh',

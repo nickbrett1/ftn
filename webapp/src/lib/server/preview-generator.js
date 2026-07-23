@@ -224,6 +224,11 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 
 	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
 
+	const tmuxContent = templateEngine.generateFile('devcontainer-tmux-conf', {
+		...projectConfig,
+		projectName: projectConfig.name || 'my-project'
+	});
+
 	const postCreateContent = templateEngine.generateFile('devcontainer-post-create-setup-sh', {
 		...projectConfig,
 		shellSetup: allCapabilities.includes('shell-tools')
@@ -255,6 +260,13 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			name: '.p10k.zsh',
 			content: p10kContent,
 			size: p10kContent.length,
+			type: 'file'
+		},
+		{
+			path: '.devcontainer/.tmux.conf',
+			name: '.tmux.conf',
+			content: tmuxContent,
+			size: tmuxContent.length,
 			type: 'file'
 		},
 		{

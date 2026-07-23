@@ -70,33 +70,6 @@ agy-dev() {
 }`;
 
 export const SHELL_SETUP_SCRIPT = `
-echo "INFO: Creating Oh My Zsh custom directories..."
-mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
-
-if [ -f "/workspaces/{{projectName}}/.devcontainer/.zshrc" ]; then
-    echo "INFO: Copying .zshrc to $USER_HOME_DIR/.zshrc"
-    cp "/workspaces/{{projectName}}/.devcontainer/.zshrc" "$USER_HOME_DIR/.zshrc"
-    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.zshrc"
-else
-    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.zshrc not found, skipping copy."
-fi
-
-if [ -f "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" ]; then
-    echo "INFO: Copying .p10k.zsh to $USER_HOME_DIR/.p10k.zsh"
-    cp "/workspaces/{{projectName}}/.devcontainer/.p10k.zsh" "$USER_HOME_DIR/.p10k.zsh"
-    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.p10k.zsh"
-else
-    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.p10k.zsh not found, skipping copy."
-fi
-
-if [ -f "/workspaces/{{projectName}}/.devcontainer/.tmux.conf" ]; then
-    echo "INFO: Copying .tmux.conf to $USER_HOME_DIR/.tmux.conf"
-    cp "/workspaces/{{projectName}}/.devcontainer/.tmux.conf" "$USER_HOME_DIR/.tmux.conf"
-    sudo chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.tmux.conf"
-else
-    echo "INFO: /workspaces/{{projectName}}/.devcontainer/.tmux.conf not found, skipping copy."
-fi
-
 echo "INFO: Installing uv tool..."
 curl -LsSf https://astral.sh/uv/install.sh | sudo env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
