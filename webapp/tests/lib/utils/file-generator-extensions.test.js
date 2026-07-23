@@ -151,7 +151,7 @@ describe('File Generator - Extensions', () => {
 		expect(content.recommendations).toContain('vsc-mermaid.mermaid-preview');
 	});
 
-	it('should always generate .vscode/settings.json with tmux-integrated default profiles', async () => {
+	it('should always generate .vscode/settings.json with zsh default profiles', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: [],
@@ -162,9 +162,9 @@ describe('File Generator - Extensions', () => {
 		const settingsFile = files.find((f) => f.filePath === '.vscode/settings.json');
 		expect(settingsFile).toBeDefined();
 		const content = JSON.parse(settingsFile.content);
-		expect(content['terminal.integrated.defaultProfile.linux']).toBe('tmux-integrated');
-		expect(content['terminal.integrated.defaultProfile.osx']).toBe('tmux-integrated');
-		expect(content['terminal.integrated.defaultProfile.windows']).toBe('tmux-integrated');
+		expect(content['terminal.integrated.defaultProfile.linux']).toBe('zsh');
+		expect(content['terminal.integrated.defaultProfile.osx']).toBe('zsh');
+		expect(content['terminal.integrated.defaultProfile.windows']).toBe('zsh');
 		expect(content['python.defaultInterpreterPath']).toBeUndefined();
 	});
 });
