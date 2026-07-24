@@ -131,7 +131,8 @@ describe('Capabilities Config', () => {
 				'monitoring',
 				'project-structure',
 				'internal',
-				'frameworks'
+				'frameworks',
+				'apple-development'
 			];
 			for (const capability of capabilities) {
 				expect(validCategories).toContain(capability.category);
