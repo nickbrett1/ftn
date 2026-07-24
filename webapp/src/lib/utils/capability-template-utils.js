@@ -2,6 +2,7 @@ function getCodingAgentsTemplateData(context) {
 	const hasSonarQube = context.capabilities.includes('sonarcloud');
 	const hasCircleCI = context.capabilities.includes('circleci');
 	const hasDoppler = context.capabilities.includes('doppler');
+	const hasXcode = context.capabilities.includes('xcode-development');
 
 	let sonarQubeMcpConfig = '';
 	if (hasSonarQube) {
@@ -102,11 +103,24 @@ function getCodingAgentsTemplateData(context) {
     }`;
 	}
 
+	let xcodeNativeMcpConfig = '';
+	if (hasXcode) {
+		xcodeNativeMcpConfig = `,
+    "xcode-native": {
+      "command": "node",
+      "args": [
+        ".agents/mcp-sse-proxy.cjs",
+        "http://mac-studio:9876/sse"
+      ]
+    }`;
+	}
+
 	return {
 		sonarQubeMcpConfig,
 		circleCiMcpConfig,
 		githubMcpConfig,
-		dopplerMcpConfig
+		dopplerMcpConfig,
+		xcodeNativeMcpConfig
 	};
 }
 

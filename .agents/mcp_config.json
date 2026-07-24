@@ -3,10 +3,6 @@
     "svelte": {
       "serverUrl": "https://mcp.svelte.dev/mcp"
     },
-    "xcode-native": {
-      "command": "node",
-      "args": [".agents/mcp-sse-proxy.js", "http://mac-studio:9876/sse"]
-    },
     "chrome-devtools": {
       "command": "npx",
       "args": [
@@ -46,7 +42,9 @@
     },
     "nanobanana": {
       "command": "node",
-      "args": ["/home/node/nanobanana-mcp/mcp-server/dist/index.js"],
+      "args": [
+        "/home/node/nanobanana-mcp/mcp-server/dist/index.js"
+      ],
       "env": {
         "NANOBANANA_GEMINI_API_KEY": "$NANOBANANA_GEMINI_API_KEY"
       }

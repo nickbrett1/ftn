@@ -15,6 +15,7 @@ const CATEGORY_DEPLOYMENT = 'deployment';
 const CATEGORY_MONITORING = 'monitoring';
 const CATEGORY_CI_CD = 'ci-cd';
 const CATEGORY_FRAMEWORKS = 'frameworks';
+const CATEGORY_APPLE = 'apple-development';
 
 const REQ_DOCKER = ['docker'];
 const EMPTY_ARRAY = [];
@@ -140,6 +141,24 @@ export const capabilities = [
 			{ label: 'Cursor', url: 'https://cursor.sh' },
 			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
 		]
+	},
+	{
+		id: 'xcode-development',
+		name: 'Xcode Development',
+		description:
+			'Connects to a remote Xcode instance via SSE proxy for AI-assisted iOS/macOS development. Requires Xcode running on a Mac with the Antigravity Xcode plugin installed.',
+		category: CATEGORY_APPLE,
+		dependencies: ['coding-agents'],
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		benefits: [
+			'Build, run, and test Xcode projects from within the devcontainer',
+			'AI can read, write, and grep Xcode project files',
+			'Real-time build logs and test results from Xcode'
+		],
+		templates: EMPTY_ARRAY,
+		website: 'https://developer.apple.com/xcode/'
 	},
 	{
 		id: 'editor-tools',
