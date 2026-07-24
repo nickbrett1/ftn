@@ -102,6 +102,7 @@
 		deployment: 'Deployment',
 		monitoring: 'Monitoring & Testing',
 		'project-structure': 'Dependency Management',
+		'apple-development': 'Apple Development',
 		Other: 'Other Capabilities'
 	};
 
@@ -110,6 +111,7 @@
 		'core',
 		'frameworks',
 		'devcontainer',
+		'apple-development',
 		'ci-cd',
 		'code-quality',
 		'secrets',
@@ -284,7 +286,8 @@
 			'google-cloud': CloudSolid,
 			dependabot: RobotSolid,
 			'lighthouse-ci': ChartLineSolid,
-			dagster: GlobeSolid
+			dagster: GlobeSolid,
+			'xcode-development': CodeSolid
 		};
 		return iconMap[capabilityId] || GlobeSolid;
 	}
@@ -310,7 +313,8 @@
 			'google-cloud': 'text-blue-500',
 			dependabot: 'text-blue-500',
 			'lighthouse-ci': 'text-orange-500',
-			dagster: 'text-purple-400'
+			dagster: 'text-purple-400',
+			'xcode-development': 'text-gray-300'
 		};
 		return colorMap[capabilityId] || 'text-gray-400';
 	}
