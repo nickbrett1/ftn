@@ -230,6 +230,27 @@ describe('capability-template-utils', () => {
 			const data = getCapabilityTemplateData('dependabot', context);
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "maven"');
 		});
+
+		it('should include cargo ecosystem for rust devcontainer', () => {
+			const context = {
+				capabilities: ['dependabot', 'devcontainer-rust']
+			};
+			const data = getCapabilityTemplateData('dependabot', context);
+			expect(data.dependabotUpdates).toContain('package-ecosystem: "cargo"');
+		});
+
+		it('should include cargo ecosystem for cloudflare wrangler with rust workerType', () => {
+			const context = {
+				capabilities: ['dependabot', 'cloudflare-wrangler'],
+				configuration: {
+					'cloudflare-wrangler': {
+						workerType: 'rust'
+					}
+				}
+			};
+			const data = getCapabilityTemplateData('dependabot', context);
+			expect(data.dependabotUpdates).toContain('package-ecosystem: "cargo"');
+		});
 	});
 
 	describe('applyDefaults', () => {
