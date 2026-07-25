@@ -236,6 +236,7 @@ describe('generatePreview', () => {
 		const gitignore = preview.files.find((f) => f.name === '.gitignore');
 		expect(gitignore).toBeDefined();
 		expect(gitignore.content).toContain('__pycache__');
+		expect(gitignore.content).toContain('*.egg-info/');
 	});
 
 	it('generates correct gitignore for java', async () => {

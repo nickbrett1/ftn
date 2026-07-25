@@ -13,6 +13,17 @@ describe('file-generator misc coverage', () => {
 		expect(result.content).toContain('dagster');
 	});
 
+	it('should include setuptools package discovery config to prevent flat-layout errors', () => {
+		const context = {
+			capabilities: ['devcontainer-python'],
+			projectName: 'test-project'
+		};
+
+		const result = generatePyProjectToml(context);
+		expect(result.content).toContain('[tool.setuptools]');
+		expect(result.content).toContain('packages = []');
+	});
+
 	it('should process wrangler capabilities properly', () => {
 		const context = {
 			capabilities: ['doppler', 'cloudflare-wrangler'],
