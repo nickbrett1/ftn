@@ -1042,7 +1042,7 @@ lto = true
 `;
 
 	return {
-		filePath: 'Cargo.toml',
+		filePath: 'worker/Cargo.toml',
 		content
 	};
 }
@@ -1063,7 +1063,7 @@ pub async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
 `;
 
 	return {
-		filePath: 'src/lib.rs',
+		filePath: 'worker/src/lib.rs',
 		content
 	};
 }

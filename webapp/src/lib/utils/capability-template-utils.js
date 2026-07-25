@@ -481,9 +481,10 @@ function getDependabotTemplateData(context) {
 		context.capabilities.includes('cloudflare-wrangler') &&
 		context.configuration?.['cloudflare-wrangler']?.workerType === 'rust';
 	if (hasRustDevcontainer || hasRustWorker) {
+		const directory = hasRustWorker ? "/worker" : "/";
 		updates.push(`
   - package-ecosystem: "cargo"
-    directory: "/"
+    directory: "${directory}"
     schedule:
       interval: "${interval}"`);
 	}
