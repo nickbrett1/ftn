@@ -185,12 +185,12 @@ describe('Cloudflare Wrangler File Generation', () => {
 
 		const files = await generateAllFiles(context);
 
-		const cargoToml = files.find((f) => f.filePath === 'Cargo.toml');
+		const cargoToml = files.find((f) => f.filePath === 'worker/Cargo.toml');
 		expect(cargoToml).toBeDefined();
 		expect(cargoToml.content).toContain('name = "rust-worker-project"');
 		expect(cargoToml.content).toContain('worker = { version = "0.8.5", features = ["d1"] }');
 
-		const libraryRs = files.find((f) => f.filePath === 'src/lib.rs');
+		const libraryRs = files.find((f) => f.filePath === 'worker/src/lib.rs');
 		expect(libraryRs).toBeDefined();
 		expect(libraryRs.content).toContain('pub async fn main');
 

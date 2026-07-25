@@ -500,7 +500,7 @@ lto = true
 `;
 
 	return {
-		path: 'Cargo.toml',
+		path: 'worker/Cargo.toml',
 		name: 'Cargo.toml',
 		content,
 		size: content.length,
@@ -524,7 +524,7 @@ pub async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
 `;
 
 	return {
-		path: 'src/lib.rs',
+		path: 'worker/src/lib.rs',
 		name: 'lib.rs',
 		content,
 		size: content.length,
