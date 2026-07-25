@@ -133,6 +133,8 @@ DISABLE_AUTO_UPDATE=true
 DISABLE_UPDATE_PROMPT=true
 
 # A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
+# Secrets are loaded from the 'common' project first, then the current project's secrets layer on
+# top (project-specific secrets take precedence over common ones).
 agy-dev() {
   # Define the name of the container to check for
   local container_name="sonarqube-mcp-server"
@@ -147,9 +149,10 @@ agy-dev() {
     docker rm -f "$container_id"
   fi
 
-  echo "Starting Antigravity with Doppler..."
-  # Execute the main command, passing along all arguments you gave to the function
-  doppler run --project webapp --config dev -- agy "$@"
+  echo "Starting Antigravity with Doppler (common + webapp)..."
+  # Load common secrets first, then layer project-specific secrets on top.
+  # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to agy.
+  doppler run --project common --config dev -- doppler run --forward-signals --project webapp --config dev -- agy "$@"
 }
 
 # Change directory to the workspace if starting in the home directory

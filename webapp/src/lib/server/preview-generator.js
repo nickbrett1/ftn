@@ -663,7 +663,7 @@ function generateGitignoreFile(templateEngine, projectConfig, allCapabilities) {
 	}
 
 	const pythonIgnore = hasPython
-		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest'
+		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest\n*.egg-info/'
 		: '';
 	const javaIgnore = hasJava
 		? '\n# Java\n*.class\n*.log\n*.ctxt\n.mtj.tmp/\n*.jar\n*.war\n*.nar\n*.ear\n*.zip\n*.tar.gz\n*.rar\ntarget/'

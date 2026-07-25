@@ -404,6 +404,7 @@ describe('TemplateEngine', () => {
 		expect(zshrc).toBeDefined();
 		expect(zshrc.content).toContain('agy-dev()');
 		expect(zshrc.content).toContain('doppler run');
+		expect(zshrc.content).toContain('--project common');
 		expect(zshrc.content).toContain('--project test-project');
 		expect(zshrc.content).not.toContain('{{projectName}}');
 	});
@@ -427,8 +428,9 @@ describe('TemplateEngine', () => {
 
 	it('agy-dev alias content should match expected constant', () => {
 		expect(AGY_DEV_ALIAS).toContain('agy-dev()');
+		expect(AGY_DEV_ALIAS).toContain('--project common --config dev');
 		expect(AGY_DEV_ALIAS).toContain(
-			'doppler run --project {{projectName}} --config dev -- agy "$@"'
+			'doppler run --forward-signals --project {{projectName}} --config dev -- agy "$@"'
 		);
 	});
 

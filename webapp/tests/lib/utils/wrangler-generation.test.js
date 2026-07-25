@@ -169,6 +169,7 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(gitignore).toBeDefined();
 		expect(gitignore.content).toContain('__pycache__');
 		expect(gitignore.content).toContain('.venv');
+		expect(gitignore.content).toContain('*.egg-info/');
 		expect(gitignore.content).toContain('.wrangler');
 		expect(gitignore.content).not.toContain('wrangler.jsonc');
 	});

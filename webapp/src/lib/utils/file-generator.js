@@ -47,6 +47,8 @@ import { capabilities } from '$lib/config/capabilities.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
 export const AGY_DEV_ALIAS = `# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
+# Secrets are loaded from the 'common' project first, then the current project's secrets layer on
+# top (project-specific secrets take precedence over common ones).
 agy-dev() {
   # Only check for Docker containers if Docker is installed
   if command -v docker &> /dev/null; then
@@ -64,9 +66,10 @@ agy-dev() {
     fi
   fi
 
-  echo "Starting Antigravity with Doppler..."
-  # Execute the main command, passing along all arguments you gave to the function
-  doppler run --project {{projectName}} --config dev -- agy "$@"
+  echo "Starting Antigravity with Doppler (common + {{projectName}})..."
+  # Load common secrets first, then layer project-specific secrets on top.
+  # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to agy.
+  doppler run --project common --config dev -- doppler run --forward-signals --project {{projectName}} --config dev -- agy "$@"
 }`;
 
 export const SHELL_SETUP_SCRIPT = `
@@ -724,6 +727,9 @@ dependencies = ${dependencies}
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = []
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "*.test.py"
@@ -876,7 +882,7 @@ export function generateGitignoreFile(templateEngine, context) {
 	}
 
 	let pythonIgnore = hasPython
-		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest'
+		? '\n# Python\n__pycache__/\n*.py[cod]\n*$py.class\n.venv\nvenv/\n*.manifest\n*.egg-info/'
 		: '';
 
 	if (hasDagster) {
