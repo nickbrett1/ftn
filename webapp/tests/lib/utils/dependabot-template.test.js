@@ -35,6 +35,14 @@ describe('capability-template-utils', () => {
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "maven"');
 		});
 
+		it('should include cargo when devcontainer-rust is selected', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-rust']
+			});
+			expect(data.dependabotUpdates).toContain('package-ecosystem: "github-actions"');
+			expect(data.dependabotUpdates).toContain('package-ecosystem: "cargo"');
+		});
+
 		it('should include multiple ecosystems when multiple containers are selected', () => {
 			const data = getCapabilityTemplateData('dependabot', {
 				capabilities: ['dependabot', 'devcontainer-node', 'devcontainer-python']
