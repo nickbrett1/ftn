@@ -38,6 +38,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 	return {
 		TemplateEngine: MockTemplateEngine,
 		AGY_DEV_ALIAS: 'agy-dev-{{projectName}}-mock',
+		GOOSE_DEV_ALIAS: 'goose-dev-{{projectName}}-mock',
 		SHELL_SETUP_SCRIPT: 'shell-setup-script-mock',
 		GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script-mock',
 		AGY_SETUP_SCRIPT: 'agy-setup-script-mock',
