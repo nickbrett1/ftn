@@ -117,7 +117,7 @@
 		"linkify-it": "^6.1.0",
 		"most-visible": "^2.0.0",
 		"nanoid": "^6.0.0",
-		"pdfjs-dist": "^6.1.200",
+		"pdfjs-dist": "^6.2.108",
 		"stripe": "^22.3.2",
 		"three": "^0.185.1",
 		"tippy.js": "^6.3.7",
