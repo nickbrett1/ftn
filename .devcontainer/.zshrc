@@ -155,6 +155,17 @@ agy-dev() {
   doppler run --project common --config dev -- doppler run --forward-signals --project webapp --config dev -- agy "$@"
 }
 
+# A robust function to run goose with Doppler, ensuring all secrets are available.
+# Secrets are loaded from the 'common' project first, then the 'goose' project's secrets layer on
+# top (project-specific secrets take precedence over common ones).
+goose-dev() {
+  echo "Starting goose with Doppler (common + goose)..."
+  # Load common secrets first, then layer goose project secrets on top.
+  # Uses 'prd' config for the goose project to pick up LITELLM endpoint env vars.
+  # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to goose.
+  doppler run --project common --config dev -- doppler run --forward-signals --project goose --config prd -- goose "$@"
+}
+
 # Change directory to the workspace if starting in the home directory
 if [[ "$PWD" == "$HOME" ]]; then
   cd /workspaces/ftn 2>/dev/null

@@ -124,6 +124,61 @@ function getCodingAgentsTemplateData(context) {
 	};
 }
 
+/**
+ * Generates goose MCP server configuration YAML entries based on project capabilities.
+ * Similar to the agy MCP config but for goose's ~/.config/goose/config.yaml format.
+ * @param {object} context - The project generation context with capabilities
+ * @returns {object} Object with goose YAML config parts for each optional MCP server
+ */
+function getGooseMcpConfig(context) {
+	const hasSonarQube = context.capabilities.includes('sonarcloud');
+	const hasCircleCI = context.capabilities.includes('circleci');
+	const hasDoppler = context.capabilities.includes('doppler');
+	const hasXcode = context.capabilities.includes('xcode-development');
+
+	let sonarQubeGooseConfig = '';
+	if (hasSonarQube) {
+		sonarQubeGooseConfig = `
+  sonarqube:
+    type: stdio
+    name: sonarqube
+    enabled: true
+    cmd: doppler
+    args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
+    timeout: 300`;
+	}
+
+	let circleCiGooseConfig = '';
+	if (hasCircleCI) {
+		circleCiGooseConfig = `
+  circleci:
+    type: stdio
+    name: circleci
+    enabled: true
+    cmd: doppler
+    args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
+    timeout: 300`;
+	}
+
+	let xcodeNativeGooseConfig = '';
+	if (hasXcode) {
+		xcodeNativeGooseConfig = `
+  xcode-native:
+    type: stdio
+    name: xcode-native
+    enabled: true
+    cmd: node
+    args: [".agents/mcp-sse-proxy.cjs", "http://mac-studio:9876/sse"]
+    timeout: 300`;
+	}
+
+	return {
+		sonarQubeGooseConfig,
+		circleCiGooseConfig,
+		xcodeNativeGooseConfig
+	};
+}
+
 function getSonarCloudTemplateData(context) {
 	const config = context.configuration?.sonarcloud || {};
 	const language = config.language || 'JavaScript';
@@ -493,6 +548,8 @@ function getDependabotTemplateData(context) {
 		dependabotUpdates: updates.join('')
 	};
 }
+
+export { getGooseMcpConfig };
 
 export function getCapabilityTemplateData(capabilityId, context) {
 	const dataGenerators = {

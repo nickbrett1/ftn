@@ -2,3 +2,5 @@
 # global shell config that applies to all interactive zsh shells.
 # For example:
 # export PATH="$PATH:/usr/local/go/bin"
+
+{{gooseDevAlias}}

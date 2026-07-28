@@ -15,9 +15,11 @@ import {
 import {
 	TemplateEngine,
 	AGY_DEV_ALIAS,
+	GOOSE_DEV_ALIAS,
 	SHELL_SETUP_SCRIPT,
 	GIT_SAFE_DIR_SCRIPT,
 	AGY_SETUP_SCRIPT,
+	generateGooseSetupScript,
 	PLAYWRIGHT_SETUP_SCRIPT,
 	PYTHON_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
@@ -220,7 +222,8 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		...projectConfig,
 		agyDevAlias: allCapabilities.includes('doppler')
 			? AGY_DEV_ALIAS.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
-			: ''
+			: '',
+		gooseDevAlias: allCapabilities.includes('doppler') ? GOOSE_DEV_ALIAS : ''
 	});
 
 	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);
@@ -241,6 +244,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			projectConfig.name || 'my-project'
 		),
 		agySetup: allCapabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
+		gooseSetup: allCapabilities.includes('coding-agents') ? generateGooseSetupScript(projectConfig) : '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
 

@@ -71,6 +71,7 @@ fi
 {{playwrightSetup}}
 
 {{agySetup}}
+{{gooseSetup}}
 
 echo "INFO: Installing specdag globally..."
 npm install -g @japorto100/specdag

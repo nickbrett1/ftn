@@ -42,6 +42,7 @@ RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zs
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \
     && curl https://cursor.com/install -fsS | bash \
     && curl -fsSL https://antigravity.google/cli/install.sh | bash \
+    && curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash \
     && mkdir -p "$HOME/.wrangler"
 
 

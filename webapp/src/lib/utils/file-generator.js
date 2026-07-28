@@ -44,7 +44,7 @@ import docsifyIndex from '../templates/docsify-index.template?raw';
 import docsifyReadme from '../templates/docsify-readme.template?raw';
 import devcontainerServeDocsCjs from '../templates/devcontainer-serve-docs-cjs.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
+import { getCapabilityTemplateData, applyDefaults, getGooseMcpConfig } from '$lib/utils/capability-template-utils.js';
 
 export const AGY_DEV_ALIAS = `# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
 # Secrets are loaded from the 'common' project first, then the current project's secrets layer on
@@ -83,6 +83,91 @@ curl https://cursor.com/install -fsS | bash
 export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
+
+export const GOOSE_DEV_ALIAS = `# A robust function to run goose with Doppler, ensuring all secrets are available.
+# Secrets are loaded from the 'common' project first, then the 'goose' project's secrets layer on
+# top (project-specific secrets take precedence over common ones).
+goose-dev() {
+  echo "Starting goose with Doppler (common + goose)..."
+  # Load common secrets first, then layer goose project secrets on top.
+  # Uses 'prd' config for the goose project to pick up LITELLM endpoint env vars.
+  # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to goose.
+  doppler run --project common --config dev -- doppler run --forward-signals --project goose --config prd -- goose "$@"
+}`;
+
+/**
+ * Generates the goose setup script for post-create-setup.sh
+ * Includes conditional MCP server configs based on project capabilities.
+ * @param {object} context - The project generation context with capabilities
+ * @returns {string} The setup script content
+ */
+export function generateGooseSetupScript(context) {
+	const hasDoppler = context.capabilities?.includes('doppler');
+	const gooseMcpConfig = hasDoppler ? getGooseMcpConfig(context) : {};
+
+	return `
+echo "INFO: Setting up goose configuration and MCP servers..."
+
+# Create goose config directory
+mkdir -p "$HOME/.config/goose"
+
+# Write goose config with MCP server extensions
+cat > "$HOME/.config/goose/config.yaml" << 'GOOSECFGEOF'
+extensions:
+  # Built-in goose extensions
+  developer:
+    type: builtin
+    name: developer
+    enabled: true
+    bundled: true
+    timeout: 300
+  # Svelte MCP - Streamable HTTP
+  svelte:
+    type: streamable_http
+    name: svelte
+    enabled: true
+    uri: "https://mcp.svelte.dev/mcp"
+    timeout: 300
+  # Chrome DevTools MCP
+  chrome-devtools:
+    type: stdio
+    name: chrome-devtools
+    enabled: true
+    cmd: npx
+    args: ["-y", "chrome-devtools-mcp"]
+    timeout: 300
+  # Fintechnick MCP
+  fintechnick:
+    type: stdio
+    name: fintechnick
+    enabled: true
+    cmd: sh
+    args: ["-c", "npx -y mcp-remote https://www.fintechnick.com/api/mcp --header \\\"Authorization: Bearer \$FINTECHNICK_MCP\\\""]
+    envs:
+      FINTECHNICK_MCP: \$FINTECHNICK_MCP
+    timeout: 300
+  # GitHub MCP Server (via doppler for token)
+  github:
+    type: stdio
+    name: github
+    enabled: true
+    cmd: doppler
+    args: ["run", "--", "npx", "-y", "@modelcontextprotocol/server-github"]
+    timeout: 300
+  # Doppler MCP Server
+  doppler:
+    type: stdio
+    name: doppler
+    enabled: true
+    cmd: sh
+    args: ["-c", "DOPPLER_TOKEN=\\\$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"]
+    timeout: 300
+  # Optional MCP servers${gooseMcpConfig.sonarQubeGooseConfig || ''}${gooseMcpConfig.circleCiGooseConfig || ''}${gooseMcpConfig.xcodeNativeGooseConfig || ''}
+GOOSECFGEOF
+
+echo "INFO: goose configuration complete."
+`;
+}
 
 export const AGY_SETUP_SCRIPT = String.raw`
 echo "INFO: Installing Antigravity CLI and Specify CLI..."
@@ -572,7 +657,8 @@ export function generateMergedDevelopmentContainerFiles(
 							'{{projectName}}',
 							context.projectName || context.name || 'my-project'
 						)
-					: ''
+					: '',
+				gooseDevAlias: context.capabilities.includes('doppler') ? GOOSE_DEV_ALIAS : ''
 			})
 		},
 		{
@@ -611,6 +697,7 @@ export function generateMergedDevelopmentContainerFiles(
 					context.projectName || context.name || 'my-project'
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
+				gooseSetup: context.capabilities.includes('coding-agents') ? generateGooseSetupScript(context) : '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 				cloudLoginSetup:
 					context.capabilities.includes('doppler') ||
