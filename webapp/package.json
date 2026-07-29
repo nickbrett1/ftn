@@ -98,7 +98,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.29.0",
+		"@modelcontextprotocol/sdk": "^1.30.0",
 		"@stripe/stripe-js": "^9.12.1",
 		"@threlte/core": "^8.5.16",
 		"@threlte/extras": "^9.21.0",
