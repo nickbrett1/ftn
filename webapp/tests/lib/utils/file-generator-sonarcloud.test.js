@@ -24,6 +24,7 @@ describe('file-generator sonarcloud capabilities', () => {
 
 		expect(sonarFile).toBeDefined();
 		expect(sonarFile.content).toContain('sonar.projectKey');
+		expect(sonarFile.content).toContain('sonar.qualitygate.wait=true');
 	});
 
 	it('should include lcov paths in sonar-project.properties for devcontainer-node', async () => {

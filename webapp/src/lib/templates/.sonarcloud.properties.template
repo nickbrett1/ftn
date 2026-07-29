@@ -5,6 +5,9 @@ sonar.organization={{organization}}
 sonar.projectName={{projectName}}
 #sonar.projectVersion=1.0
 
+# Force scanner to wait for Quality Gate computation
+sonar.qualitygate.wait=true
+
 # Path is relative to the .sonarcloud.properties file. Replace "\" by "/" on Windows.
 sonar.sources={{sonarSources}}
 
