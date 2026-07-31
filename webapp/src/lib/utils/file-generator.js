@@ -22,6 +22,7 @@ import circleCiConfig from '../templates/circleci-config.template?raw';
 import sonarProjectProperties from '../templates/.sonarcloud.properties.template?raw';
 import mcpConfigJson from '../templates/mcp-config-json.template?raw';
 import mcpSseProxyJs from '../templates/mcp-sse-proxy-js.template?raw';
+import mcpStreamableHttpProxyJs from '../templates/mcp-streamable-http-proxy-js.template?raw';
 import packageJsonTemplate from '../templates/package-json.template?raw';
 import wranglerJsonc from '../templates/wrangler.jsonc.template?raw';
 import wranglerTemplateJsonc from '../templates/wrangler.template.jsonc.template?raw';
@@ -44,7 +45,11 @@ import docsifyIndex from '../templates/docsify-index.template?raw';
 import docsifyReadme from '../templates/docsify-readme.template?raw';
 import devcontainerServeDocsCjs from '../templates/devcontainer-serve-docs-cjs.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
-import { getCapabilityTemplateData, applyDefaults, getGooseMcpConfig } from '$lib/utils/capability-template-utils.js';
+import {
+	getCapabilityTemplateData,
+	applyDefaults,
+	getGooseMcpConfig
+} from '$lib/utils/capability-template-utils.js';
 
 export const AGY_DEV_ALIAS = `# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
 # Secrets are loaded from the 'common' project first, then the current project's secrets layer on
@@ -128,12 +133,15 @@ extensions:
     enabled: true
     uri: "https://mcp.svelte.dev/mcp"
     timeout: 300
-  # Memos MCP - Streamable HTTP
+  # Memos MCP
   memos:
-    type: streamable_http
+    type: stdio
     name: memos
     enabled: true
-    uri: "http://nas:5230/mcp"
+    cmd: node
+    args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:5230/mcp"]
+    envs:
+      MEMOS_TOKEN: \$MEMOS_TOKEN
     timeout: 300
   # Chrome DevTools MCP
   chrome-devtools:
@@ -315,6 +323,7 @@ const templateImports = {
 	'doppler-yaml': dopplerYaml,
 	'mcp-config-json': mcpConfigJson,
 	'mcp-sse-proxy-js': mcpSseProxyJs,
+	'mcp-streamable-http-proxy-js': mcpStreamableHttpProxyJs,
 	'package-json': packageJsonTemplate,
 	'wrangler-jsonc': wranglerJsonc,
 	'wrangler-template-jsonc': wranglerTemplateJsonc,
@@ -698,13 +707,17 @@ export function generateMergedDevelopmentContainerFiles(
 							context.projectName || context.name || 'my-project'
 						)
 					: '',
-				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python')) ? PYTHON_SETUP_SCRIPT : '',
+				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python'))
+					? PYTHON_SETUP_SCRIPT
+					: '',
 				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 					'{{projectName}}',
 					context.projectName || context.name || 'my-project'
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
-				gooseSetup: context.capabilities.includes('coding-agents') ? generateGooseSetupScript(context) : '',
+				gooseSetup: context.capabilities.includes('coding-agents')
+					? generateGooseSetupScript(context)
+					: '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 				cloudLoginSetup:
 					context.capabilities.includes('doppler') ||
@@ -990,7 +1003,9 @@ export function generateGitignoreFile(templateEngine, context) {
 	const isRustWorker = hasWrangler && wranglerConfig.workerType === 'rust';
 	const hasRust =
 		context.capabilities.some((c) => c.startsWith('devcontainer-rust')) || isRustWorker;
-	const rustIgnore = hasRust ? '\n# Rust\ntarget/\n**/target/\nCargo.lock\n.rustc_info.json\n**/.rustc_info.json' : '';
+	const rustIgnore = hasRust
+		? '\n# Rust\ntarget/\n**/target/\nCargo.lock\n.rustc_info.json\n**/.rustc_info.json'
+		: '';
 
 	return {
 		filePath: '.gitignore',
@@ -1038,10 +1053,7 @@ export function generateVscodeExtensionsFile(context) {
 		filePath: '.vscode/extensions.json',
 		content: JSON.stringify(
 			{
-				recommendations: [
-					'pcassidy75.tmux-integrated',
-					'vsc-mermaid.mermaid-preview'
-				]
+				recommendations: ['pcassidy75.tmux-integrated', 'vsc-mermaid.mermaid-preview']
 			},
 			undefined,
 			2

@@ -13,19 +13,35 @@ describe('File Generator - Coding Agents', () => {
 
 		const mcpConfig = files.find((f) => f.filePath === '.agents/mcp_config.json');
 		const mcpProxy = files.find((f) => f.filePath === '.agents/mcp-sse-proxy.cjs');
+		const mcpStreamableProxy = files.find(
+			(f) => f.filePath === '.agents/mcp-streamable-http-proxy.cjs'
+		);
 
 		expect(mcpConfig).toBeDefined();
 		expect(mcpProxy).toBeDefined();
+		expect(mcpStreamableProxy).toBeDefined();
 
 		const configJson = JSON.parse(mcpConfig.content);
 		expect(configJson.mcpServers['memos']).toEqual({
-			serverUrl: 'http://nas:5230/mcp'
+			command: 'doppler',
+			args: [
+				'run',
+				'--project',
+				'common',
+				'--config',
+				'dev',
+				'--',
+				'node',
+				'.agents/mcp-streamable-http-proxy.cjs',
+				'http://nas:5230/mcp'
+			]
 		});
 		// xcode-native should NOT be present when xcode-development capability is not selected
 		expect(configJson.mcpServers['xcode-native']).toBeUndefined();
 
 		expect(mcpProxy.content).toContain('connectSSE');
 		expect(mcpProxy.content).toContain('sendPost');
+		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
 	it('should include memos MCP in Goose config within post-create-setup.sh when devcontainer and coding-agents capabilities are selected', async () => {

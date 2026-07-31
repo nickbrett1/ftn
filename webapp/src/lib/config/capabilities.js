@@ -135,13 +135,18 @@ export const capabilities = [
 				id: 'mcp-sse-proxy',
 				filePath: '.agents/mcp-sse-proxy.cjs',
 				templateId: 'mcp-sse-proxy-js'
+			},
+			{
+				id: 'mcp-streamable-http-proxy',
+				filePath: '.agents/mcp-streamable-http-proxy.cjs',
+				templateId: 'mcp-streamable-http-proxy-js'
 			}
 		],
 		links: [
 			{ label: 'Antigravity', url: 'https://antigravity.google/product/antigravity-cli' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },
 			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' },
-			{ label: 'Memos MCP', url: 'http://nas:5230/mcp' }
+			{ label: 'Memos MCP', url: 'http://nas:5230/mcp' } // NOSONAR
 		]
 	},
 	{

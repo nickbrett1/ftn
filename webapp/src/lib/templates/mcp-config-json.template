@@ -4,7 +4,18 @@
       "serverUrl": "https://mcp.svelte.dev/mcp"
     },
     "memos": {
-      "serverUrl": "http://nas:5230/mcp"
+      "command": "doppler",
+      "args": [
+        "run",
+        "--project",
+        "common",
+        "--config",
+        "dev",
+        "--",
+        "node",
+        ".agents/mcp-streamable-http-proxy.cjs",
+        "http://nas:5230/mcp"
+      ]
     },
     "chrome-devtools": {
       "command": "npx",
