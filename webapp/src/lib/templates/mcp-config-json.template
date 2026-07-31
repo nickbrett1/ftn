@@ -3,6 +3,9 @@
     "svelte": {
       "serverUrl": "https://mcp.svelte.dev/mcp"
     },
+    "memos": {
+      "serverUrl": "http://nas:5230/mcp"
+    },
     "chrome-devtools": {
       "command": "npx",
       "args": [

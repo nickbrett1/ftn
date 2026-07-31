@@ -128,6 +128,13 @@ extensions:
     enabled: true
     uri: "https://mcp.svelte.dev/mcp"
     timeout: 300
+  # Memos MCP - Streamable HTTP
+  memos:
+    type: streamable_http
+    name: memos
+    enabled: true
+    uri: "http://nas:5230/mcp"
+    timeout: 300
   # Chrome DevTools MCP
   chrome-devtools:
     type: stdio

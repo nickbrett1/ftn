@@ -112,7 +112,7 @@ export const capabilities = [
 	{
 		id: 'coding-agents',
 		name: 'AI Coding Agents (Antigravity)',
-		description: 'Antigravity CLI, Cursor CLI, and Svelte MCP integration.',
+		description: 'Antigravity CLI, Cursor CLI, Svelte MCP, and Memos MCP integration.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -122,7 +122,8 @@ export const capabilities = [
 		benefits: [
 			'Antigravity CLI pre-installed',
 			'Cursor CLI pre-installed',
-			'Svelte MCP for context-aware AI'
+			'Svelte MCP for context-aware AI',
+			'Memos MCP integration'
 		],
 		templates: [
 			{
@@ -139,7 +140,8 @@ export const capabilities = [
 		links: [
 			{ label: 'Antigravity', url: 'https://antigravity.google/product/antigravity-cli' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },
-			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' }
+			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' },
+			{ label: 'Memos MCP', url: 'http://nas:5230/mcp' }
 		]
 	},
 	{
