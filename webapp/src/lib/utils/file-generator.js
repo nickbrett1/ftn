@@ -140,8 +140,6 @@ extensions:
     enabled: true
     cmd: node
     args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:5230/mcp"]
-    envs:
-      MEMOS_TOKEN: \$MEMOS_TOKEN
     timeout: 300
   # Chrome DevTools MCP
   chrome-devtools:

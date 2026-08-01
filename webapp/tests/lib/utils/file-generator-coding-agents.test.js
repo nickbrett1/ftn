@@ -23,16 +23,9 @@ describe('File Generator - Coding Agents', () => {
 
 		const configJson = JSON.parse(mcpConfig.content);
 		expect(configJson.mcpServers['memos']).toEqual({
-			command: 'doppler',
+			command: 'node',
 			args: [
-				'run',
-				'--project',
-				'common',
-				'--config',
-				'dev',
-				'--',
-				'node',
-				'.agents/mcp-streamable-http-proxy.cjs',
+				'/home/node/.local/bin/mcp-streamable-http-proxy.cjs',
 				'http://nas:5230/mcp'
 			]
 		});
