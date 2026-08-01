@@ -12,7 +12,16 @@
 		"esbuild": "^0.28.1",
 		"@hono/node-server": "^2.0.12",
 		"sharp": "^0.35.3",
-		"brace-expansion": "^5.0.8"
+		"brace-expansion": "^5.0.8",
+		"@lhci/cli": {
+			"tmp": "^0.2.7"
+		},
+		"external-editor@3.1.0": {
+			"tmp": "^0.2.7"
+		},
+		"@sentry/node@6.19.7": {
+			"cookie": "^0.7.0"
+		}
 	},
 	"scripts": {
 		"postinstall": "node scripts/copy-pdf-worker.js",
