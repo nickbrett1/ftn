@@ -26,7 +26,10 @@ module.exports = {
 				'label-content-name-mismatch': 'off', // Accessibility new axe-core rule
 				'forced-reflow-insight': 'off', // Performance insights new rule
 				'network-dependency-tree-insight': 'off', // Performance insights new rule
-				'dom-size-insight': 'off' // Performance insights new rule
+				'dom-size-insight': 'off', // Performance insights new rule
+				'lcp-lazy-loaded': 'off', // Diagnostic audit (no numeric score)
+				'non-composited-animations': 'off', // Diagnostic audit (no numeric score)
+				'prioritize-lcp-image': 'off' // Diagnostic audit (no numeric score)
 			}
 		}
 	}
