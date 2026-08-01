@@ -3,7 +3,6 @@ version: 2.1
 orbs:
   ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.5.3
-  sonarcloud: sonarsource/sonarcloud@4.0.0
 
 commands:
   install_doppler:

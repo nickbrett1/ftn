@@ -1,7 +1,6 @@
 # Financial Technology Portfolio
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/nickbrett1/ftn/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/nickbrett1/ftn/tree/main)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nickbrett1_bem&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nickbrett1_bem)
 
 **Live Site:** [www.fintechnick.com](https://www.fintechnick.com)
 
@@ -20,7 +19,7 @@ A developer portfolio website with demos using modern web development practices.
 ### **Production DevOps Pipeline**
 
 - **CI/CD**: CircleCI with automated testing, security scanning, and deployment
-- **Code Quality**: SonarCloud integration with comprehensive coverage reporting
+- **Code Quality**: ESLint + SonarJS static analysis with coverage-gated unit tests
 - **Security**: GitGuardian secret scanning and dependency vulnerability checks
 - **Performance**: Lighthouse CI for automated performance monitoring
 - **Testing**: Vitest unit testing, Storybook component testing
