@@ -107,9 +107,12 @@ export default defineConfig(({ command, mode }) => {
 			testTimeout: 30_000,
 			hookTimeout: 30_000,
 			// Pool options for test execution
-			pool: 'threads', // Change to threads
-			threads: {
-				// Can add thread-specific options here if needed
+			pool: 'threads', // Use threads worker pool
+			poolOptions: {
+				threads: {
+					maxThreads: 4,
+					minThreads: 2
+				}
 			},
 			// Configure for Svelte 5 runes
 			define: {

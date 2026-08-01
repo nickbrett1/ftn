@@ -135,10 +135,6 @@ jobs:
     docker:
       - image: cimg/node:22.23.1-browsers
     steps:
-      - run: sudo apt-get update
-      - browser-tools/install-chrome:
-          replace-existing: true
-      - browser-tools/install-chromedriver
       - checkout:
           method: blobless
       - restore_cache:
