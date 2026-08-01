@@ -126,11 +126,6 @@ jobs:
       - browser-tools/install-chrome:
           replace-existing: true
       - browser-tools/install-chromedriver
-      - restore_cache:
-          name: Restore Lighthouse CLI cache
-          keys:
-            - lighthouse-cli-{{ .Branch }}-
-            - lighthouse-cli-
       - checkout:
           method: blobless
       - restore_cache:
@@ -148,15 +143,6 @@ jobs:
           command: |
             cd webapp && ./scripts/setup-wrangler-config.sh stg
 
-      - run:
-          name: Install Lighthouse CLI (if not cached)
-          command: |
-            sudo npm install -g @lhci/cli@0.9.x
-      - save_cache:
-          name: Cache Lighthouse CLI
-          paths:
-            - /usr/local/lib/node_modules/@lhci
-          key: lighthouse-cli-{{ .Branch }}-
       - run:
           name: Run Lighthouse checks
           command: |
