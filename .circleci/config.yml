@@ -80,8 +80,9 @@ jobs:
     environment:
       SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"
     steps:
+      # Note: SonarScanner JGit requires method: full (missing historical blobs cause MissingObjectException with blobless)
       - checkout:
-          method: blobless
+          method: full
       - restore_cache:
           name: Restore node_modules
           keys:
