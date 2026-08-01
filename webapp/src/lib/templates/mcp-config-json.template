@@ -10,6 +10,13 @@
         "http://nas:5230/mcp"
       ]
     },
+    "vikunja": {
+      "command": "node",
+      "args": [
+        "/home/node/.local/bin/mcp-streamable-http-proxy.cjs",
+        "http://nas:8086/"
+      ]
+    },
     "chrome-devtools": {
       "command": "npx",
       "args": [

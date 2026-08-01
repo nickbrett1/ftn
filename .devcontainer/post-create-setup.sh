@@ -106,6 +106,13 @@ elif [ -f "scripts/install-nanobanana.sh" ]; then
     bash scripts/install-nanobanana.sh
 fi
 
+echo "INFO: Bootstrapping goose MCP configuration..."
+if [ -f "/workspaces/ftn/.devcontainer/goose-config-bootstrap.sh" ]; then
+    bash "/workspaces/ftn/.devcontainer/goose-config-bootstrap.sh"
+else
+    echo "WARN: goose-config-bootstrap.sh not found, skipping."
+fi
+
 echo "INFO: Custom container setup script finished."
 echo "\n⚠️  To complete cloud login, run:"
 echo "    cd /workspaces/ftn/webapp && bash scripts/cloud-login.sh"

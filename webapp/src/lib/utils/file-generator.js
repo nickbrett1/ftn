@@ -142,6 +142,14 @@ extensions:
     cmd: node
     args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:5230/mcp"]
     timeout: 300
+  # Vikunja MCP
+  vikunja:
+    type: stdio
+    name: vikunja
+    enabled: true
+    cmd: node
+    args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:8086/"]
+    timeout: 300
   # Chrome DevTools MCP
   chrome-devtools:
     type: stdio

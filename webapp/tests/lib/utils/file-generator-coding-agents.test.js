@@ -26,6 +26,10 @@ describe('File Generator - Coding Agents', () => {
 			command: 'node',
 			args: ['/home/node/.local/bin/mcp-streamable-http-proxy.cjs', 'http://nas:5230/mcp']
 		});
+		expect(configJson.mcpServers['vikunja']).toEqual({
+			command: 'node',
+			args: ['/home/node/.local/bin/mcp-streamable-http-proxy.cjs', 'http://nas:8086/']
+		});
 		// xcode-native should NOT be present when xcode-development capability is not selected
 		expect(configJson.mcpServers['xcode-native']).toBeUndefined();
 
@@ -34,7 +38,7 @@ describe('File Generator - Coding Agents', () => {
 		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
-	it('should include memos MCP in Goose config within post-create-setup.sh when devcontainer and coding-agents capabilities are selected', async () => {
+	it('should include memos and vikunja MCP in Goose config within post-create-setup.sh when devcontainer and coding-agents capabilities are selected', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['coding-agents', 'devcontainer-node'],
@@ -46,6 +50,8 @@ describe('File Generator - Coding Agents', () => {
 		expect(postCreateSetup).toBeDefined();
 		expect(postCreateSetup.content).toContain('http://nas:5230/mcp');
 		expect(postCreateSetup.content).toContain('name: memos');
+		expect(postCreateSetup.content).toContain('http://nas:8086/');
+		expect(postCreateSetup.content).toContain('name: vikunja');
 	});
 
 	it('should include xcode-native in mcp_config.json when xcode-development capability is selected', async () => {
