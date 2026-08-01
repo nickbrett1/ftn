@@ -30,26 +30,11 @@ jobs:
             - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v7-fresh-{{ .Branch }}-
             - node-v7-fresh-
-      - restore_cache:
-          name: Restore Playwright cache
-          keys:
-            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
-            - playwright-{{ .Branch }}-
-            - playwright-
       - run:
           name: Install modules
           command: |
             cd webapp
             npm ci
-      - run:
-          name: Install Playwright Chromium (if not cached)
-          command: |
-            cd webapp && npx playwright install chromium
-      - save_cache:
-          name: Cache Playwright
-          paths:
-            - ~/.cache/ms-playwright
-          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - install_doppler
       - run:
           name: Setup Wrangler configuration
