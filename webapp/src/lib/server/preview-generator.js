@@ -238,13 +238,17 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		shellSetup: allCapabilities.includes('shell-tools')
 			? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
-		pythonSetup: allCapabilities.some((c) => c.startsWith('devcontainer-python')) ? PYTHON_SETUP_SCRIPT : '',
+		pythonSetup: allCapabilities.some((c) => c.startsWith('devcontainer-python'))
+			? PYTHON_SETUP_SCRIPT
+			: '',
 		gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 			'{{projectName}}',
 			projectConfig.name || 'my-project'
 		),
 		agySetup: allCapabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
-		gooseSetup: allCapabilities.includes('coding-agents') ? generateGooseSetupScript(projectConfig) : '',
+		gooseSetup: allCapabilities.includes('coding-agents')
+			? generateGooseSetupScript(projectConfig)
+			: '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
 	});
 

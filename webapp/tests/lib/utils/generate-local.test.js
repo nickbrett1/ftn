@@ -6,26 +6,26 @@ import path from 'path';
 describe('Local Generation', () => {
 	it('should write files locally', async () => {
 		if (process.env.CI || process.env.CIRCLECI) {
-			console.log("Skipping local file writing in CI environment.");
+			console.log('Skipping local file writing in CI environment.');
 			return;
 		}
 		const context = {
-			projectName: "stripe-toddler",
+			projectName: 'stripe-toddler',
 			capabilities: [
-				"coding-agents",
-				"devcontainer-rust",
-				"circleci",
-				"doppler",
-				"cloudflare-wrangler",
-				"dependabot",
-				"editor-tools",
-				"gitguardian",
-				"sonarcloud"
+				'coding-agents',
+				'devcontainer-rust',
+				'circleci',
+				'doppler',
+				'cloudflare-wrangler',
+				'dependabot',
+				'editor-tools',
+				'gitguardian',
+				'sonarcloud'
 			],
 			configuration: {}
 		};
 
-		console.log("Generating files...");
+		console.log('Generating files...');
 		const files = await generateAllFiles(context);
 		console.log(`Generated ${files.length} files.`);
 
@@ -39,6 +39,6 @@ describe('Local Generation', () => {
 			}
 			console.log(`Wrote: ${file.filePath}`);
 		}
-		console.log("All files written successfully!");
+		console.log('All files written successfully!');
 	});
 });

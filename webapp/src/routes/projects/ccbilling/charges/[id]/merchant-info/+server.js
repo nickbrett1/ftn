@@ -57,8 +57,7 @@ function extractFromChoices(choices) {
 	if (!Array.isArray(choices) || choices.length === 0) return null;
 
 	const firstChoice = choices[0];
-	const choiceText =
-		extractFromMessage(firstChoice?.message) || extractFromMessage(firstChoice);
+	const choiceText = extractFromMessage(firstChoice?.message) || extractFromMessage(firstChoice);
 	if (choiceText) return choiceText;
 
 	const joined = choices
@@ -91,10 +90,16 @@ function _resolveLlamaCredentials(event) {
 	const environment = event.platform?.env ?? {};
 	const aiBinding = environment.AI;
 
-	const cfToken = env.CLOUDFLARE_API_TOKEN || env.CF_API_TOKEN ||
-	                environment.CLOUDFLARE_API_TOKEN || environment.CF_API_TOKEN;
-	const cfAccountId = env.CLOUDFLARE_ACCOUNT_ID || env.CF_ACCOUNT_ID ||
-	                    environment.CLOUDFLARE_ACCOUNT_ID || environment.CF_ACCOUNT_ID;
+	const cfToken =
+		env.CLOUDFLARE_API_TOKEN ||
+		env.CF_API_TOKEN ||
+		environment.CLOUDFLARE_API_TOKEN ||
+		environment.CF_API_TOKEN;
+	const cfAccountId =
+		env.CLOUDFLARE_ACCOUNT_ID ||
+		env.CF_ACCOUNT_ID ||
+		environment.CLOUDFLARE_ACCOUNT_ID ||
+		environment.CF_ACCOUNT_ID;
 
 	const llamaKey = env.LLAMA_API_KEY || environment.LLAMA_API_KEY || cfToken;
 	const model = env.LLAMA_API_MODEL || environment.LLAMA_API_MODEL || 'llama3.1-8b-instruct';
@@ -117,7 +122,8 @@ function _resolveLlamaCredentials(event) {
 }
 
 async function runLlamaClient(event, prompt) {
-	const { aiBinding, cfToken, cfAccountId, llamaKey, baseURL, resolvedModel } = _resolveLlamaCredentials(event);
+	const { aiBinding, cfToken, cfAccountId, llamaKey, baseURL, resolvedModel } =
+		_resolveLlamaCredentials(event);
 
 	const messages = [
 		{
@@ -141,7 +147,10 @@ async function runLlamaClient(event, prompt) {
 					return { ok: true, text };
 				}
 			} catch (bindingError) {
-				console.warn('[AI] Native Cloudflare Workers AI binding failed, falling back...', bindingError.message);
+				console.warn(
+					'[AI] Native Cloudflare Workers AI binding failed, falling back...',
+					bindingError.message
+				);
 			}
 		}
 
@@ -153,7 +162,7 @@ async function runLlamaClient(event, prompt) {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${cfToken}`
+					Authorization: `Bearer ${cfToken}`
 				},
 				body: JSON.stringify({ messages })
 			});
@@ -173,12 +182,15 @@ async function runLlamaClient(event, prompt) {
 		// 3. Generic OpenAI-compatible API Fallback (Together, Groq, Llama API, etc.)
 		if (llamaKey) {
 			const cleanBaseURL = (baseURL || 'https://api.llama-api.com').replace(/\/$/, '');
-			console.log('[AI] Using generic OpenAI-compatible API', { baseURL: cleanBaseURL, model: resolvedModel });
+			console.log('[AI] Using generic OpenAI-compatible API', {
+				baseURL: cleanBaseURL,
+				model: resolvedModel
+			});
 			const response = await fetch(`${cleanBaseURL}/chat/completions`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${llamaKey}`
+					Authorization: `Bearer ${llamaKey}`
 				},
 				body: JSON.stringify({
 					model: resolvedModel,
@@ -210,7 +222,8 @@ async function runLlamaClient(event, prompt) {
 			ok: false,
 			status: 501,
 			error: 'LLAMA API not configured',
-			details: 'Set LLAMA_API_KEY (or CLOUDFLARE_API_TOKEN & CLOUDFLARE_ACCOUNT_ID) in the environment.'
+			details:
+				'Set LLAMA_API_KEY (or CLOUDFLARE_API_TOKEN & CLOUDFLARE_ACCOUNT_ID) in the environment.'
 		};
 	} catch (error) {
 		console.error('Llama client call failed:', error);

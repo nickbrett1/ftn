@@ -9,7 +9,7 @@ describe('file-generator devcontainer merging', () => {
 		};
 
 		const files = await generateAllFiles(context);
-		const devcontainerJson = files.find(f => f.filePath === '.devcontainer/devcontainer.json');
+		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
 
 		expect(devcontainerJson).toBeDefined();
 		const parsed = JSON.parse(devcontainerJson.content);

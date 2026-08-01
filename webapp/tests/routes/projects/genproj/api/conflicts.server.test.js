@@ -81,7 +81,12 @@ describe('POST /projects/genproj/api/conflicts', () => {
 
 		await POST({ request, platform, cookies });
 
-		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'cookie-gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined });
+		expect(ProjectGeneratorService).toHaveBeenCalledWith({
+			github: 'cookie-gh-token',
+			circleci: undefined,
+			doppler: undefined,
+			sonarcloud: undefined
+		});
 		env.GITHUB_TOKEN = oldGitHubToken;
 	});
 
@@ -94,12 +99,22 @@ describe('POST /projects/genproj/api/conflicts', () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual({ conflicts: expectedConflicts });
-		expect(ProjectGeneratorService).toHaveBeenCalledWith({ github: 'gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined });
+		expect(ProjectGeneratorService).toHaveBeenCalledWith({
+			github: 'gh-token',
+			circleci: undefined,
+			doppler: undefined,
+			sonarcloud: undefined
+		});
 		expect(ProjectGeneratorService.prototype.checkConflicts).toHaveBeenCalledWith({
 			projectName: 'test-project',
 			capabilities: ['cap1'],
 			configuration: {},
-			authTokens: { github: 'gh-token', circleci: undefined, doppler: undefined, sonarcloud: undefined },
+			authTokens: {
+				github: 'gh-token',
+				circleci: undefined,
+				doppler: undefined,
+				sonarcloud: undefined
+			},
 			userId: 'user-123'
 		});
 	});

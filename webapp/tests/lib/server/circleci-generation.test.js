@@ -78,9 +78,11 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile).toBeDefined();
 
 		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@4.0.0');
-				expect(circleCiFile.content).toContain('sonarcloud/scan');
+		expect(circleCiFile.content).toContain('sonarcloud/scan');
 		expect(circleCiFile.content).toContain('Export SonarCloud Token');
-		expect(circleCiFile.content).toContain('echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV');
+		expect(circleCiFile.content).toContain(
+			'echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV'
+		);
 	});
 
 	it('should not contain jobEnvironment if sonarcloud is not selected', async () => {
@@ -104,7 +106,7 @@ describe('CircleCI Capability Generation', () => {
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
 
 		expect(circleCiFile.content).not.toContain('environment:');
-			});
+	});
 
 	it('should use ENV_VAL shell variable (not CLOUDFLARE_ENV env var) in the Wrangler deploy step', async () => {
 		const projectConfig = {

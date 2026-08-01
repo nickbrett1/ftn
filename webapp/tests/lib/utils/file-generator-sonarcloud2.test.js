@@ -23,7 +23,7 @@ describe('file-generator package-json coverage', () => {
 		expect(result.content).toContain('@vitest/coverage-v8');
 	});
 
-    it('should add vitest coverage when wrangler, devcontainer-node, and sonarcloud are selected', () => {
+	it('should add vitest coverage when wrangler, devcontainer-node, and sonarcloud are selected', () => {
 		const context = {
 			capabilities: ['cloudflare-wrangler', 'devcontainer-node', 'sonarcloud'],
 			projectName: 'test-project'

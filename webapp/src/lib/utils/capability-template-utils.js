@@ -368,7 +368,9 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 			requiresList = `\n            - build\n            - test-rust`;
 		}
 
-		data.deployJobDefinition = rustJobDefinition + `
+		data.deployJobDefinition =
+			rustJobDefinition +
+			`
   deploy-to-cloudflare:
     executor: node/default
     parameters:
@@ -411,7 +413,9 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
               npx wrangler deploy --env "$ENV_VAL"
             fi${syncSecretsStep}`;
 
-		data.deployWorkflowJob = rustWorkflowJob + `
+		data.deployWorkflowJob =
+			rustWorkflowJob +
+			`
       - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
           environment: "default"
           doppler_config: "stg"
@@ -529,7 +533,7 @@ function getDependabotTemplateData(context) {
 		context.capabilities.includes('cloudflare-wrangler') &&
 		context.configuration?.['cloudflare-wrangler']?.workerType === 'rust';
 	if (hasRustDevcontainer || hasRustWorker) {
-		const directory = hasRustWorker ? "/worker" : "/";
+		const directory = hasRustWorker ? '/worker' : '/';
 		updates.push(`
   - package-ecosystem: "cargo"
     directory: "${directory}"

@@ -23,10 +23,16 @@ export function handleGenprojErrorResult(result) {
 
 export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 	const authTokens = {
-		github: storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken || env.GITHUB_TOKEN || env.GITHUB_ACCESS_TOKEN,
-		circleci: storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken || env.CIRCLECI_TOKEN,
-		doppler: storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken || env.DOPPLER_TOKEN,
-		sonarcloud: storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken || env.SONARQUBE_TOKEN
+		github:
+			storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken ||
+			env.GITHUB_TOKEN ||
+			env.GITHUB_ACCESS_TOKEN,
+		circleci:
+			storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken || env.CIRCLECI_TOKEN,
+		doppler:
+			storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken || env.DOPPLER_TOKEN,
+		sonarcloud:
+			storedTokens.find((t) => t.serviceName === 'SonarCloud')?.accessToken || env.SONARQUBE_TOKEN
 	};
 
 	if (!authTokens.github && cookies) {

@@ -266,8 +266,14 @@ export function createMcpServer(context = {}) {
 				}
 				case 'list_ccbilling_transactions': {
 					const db = getCcbillingDb(context);
-					const { limit = 50, startDate, endDate, allocatedTo, unallocatedOnly, merchant } =
-						toolArguments || {};
+					const {
+						limit = 50,
+						startDate,
+						endDate,
+						allocatedTo,
+						unallocatedOnly,
+						merchant
+					} = toolArguments || {};
 					const maxLimit = Math.min(Math.max(1, limit), 200);
 
 					let query = `
@@ -323,7 +329,10 @@ export function createMcpServer(context = {}) {
 						content: [
 							{
 								type: 'text',
-								text: JSON.stringify({ count: results ? results.length : 0, transactions: results || [] })
+								text: JSON.stringify({
+									count: results ? results.length : 0,
+									transactions: results || []
+								})
 							}
 						]
 					};
@@ -354,7 +363,9 @@ export function createMcpServer(context = {}) {
 						ORDER BY total_amount DESC
 					`;
 					const budgetStmt =
-						bindings.length > 0 ? db.prepare(budgetQuery).bind(...bindings) : db.prepare(budgetQuery);
+						bindings.length > 0
+							? db.prepare(budgetQuery).bind(...bindings)
+							: db.prepare(budgetQuery);
 					const { results: budgetSummary } = await budgetStmt.all();
 
 					const merchantQuery = `
@@ -395,9 +406,13 @@ export function createMcpServer(context = {}) {
 				}
 				case 'list_ccbilling_budgets': {
 					const db = getCcbillingDb(context);
-					const { results: budgets } = await db.prepare('SELECT * FROM budget ORDER BY name ASC').all();
+					const { results: budgets } = await db
+						.prepare('SELECT * FROM budget ORDER BY name ASC')
+						.all();
 					const { results: budgetMerchants } = await db
-						.prepare('SELECT * FROM budget_merchant ORDER BY budget_id ASC, merchant_normalized ASC')
+						.prepare(
+							'SELECT * FROM budget_merchant ORDER BY budget_id ASC, merchant_normalized ASC'
+						)
 						.all();
 
 					const merchantsByBudget = {};

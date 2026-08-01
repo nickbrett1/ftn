@@ -262,11 +262,16 @@ describe('mcpServer', () => {
 							if (query.includes('merchant_normalized as merchant')) {
 								return {
 									results: [
-										{ merchant: 'Amazon', budget: 'Shopping', transaction_count: 4, total_amount: 200.0 }
+										{
+											merchant: 'Amazon',
+											budget: 'Shopping',
+											transaction_count: 4,
+											total_amount: 200.0
+										}
 									]
 								};
 							}
-							if (query.includes("FROM payment p")) {
+							if (query.includes('FROM payment p')) {
 								return {
 									results: [
 										{

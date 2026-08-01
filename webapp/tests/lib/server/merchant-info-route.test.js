@@ -216,7 +216,8 @@ describe('merchant info route', () => {
 
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({ result: { response: 'ACME Corp from external Cloudflare API' } })
+			json: () =>
+				Promise.resolve({ result: { response: 'ACME Corp from external Cloudflare API' } })
 		});
 
 		const event = buildEvent({
@@ -235,7 +236,9 @@ describe('merchant info route', () => {
 
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		const fetchArgs = fetchMock.mock.calls[0];
-		expect(fetchArgs[0]).toBe('https://api.cloudflare.com/client/v4/accounts/cf-account-id/ai/run/@cf/meta/llama-3.1-8b-instruct-fast');
+		expect(fetchArgs[0]).toBe(
+			'https://api.cloudflare.com/client/v4/accounts/cf-account-id/ai/run/@cf/meta/llama-3.1-8b-instruct-fast'
+		);
 		expect(fetchArgs[1].headers['Authorization']).toBe('Bearer cf-token');
 	});
 });

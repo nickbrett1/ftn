@@ -30,7 +30,8 @@
 					<FileInvoiceDollarSolid class="size-10" aria-label="Runaway AI Agents Project" />
 				</div>
 				<p class="grow pt-5">
-					5 lessons learned when an autonomous assistant silently ran up a $44 API bill in minutes, and how to prevent it.
+					5 lessons learned when an autonomous assistant silently ran up a $44 API bill in minutes,
+					and how to prevent it.
 				</p>
 			</div>
 		</Card>

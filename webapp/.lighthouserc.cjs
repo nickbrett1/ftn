@@ -5,7 +5,8 @@ module.exports = {
 			numberOfRuns: 1,
 			extends: 'lighthouse:default',
 			settings: {
-				chromeFlags: '--no-sandbox --disable-dev-shm-usage --disable-gpu --ignore-certificate-errors'
+				chromeFlags:
+					'--no-sandbox --disable-dev-shm-usage --disable-gpu --ignore-certificate-errors'
 			}
 		},
 		upload: {

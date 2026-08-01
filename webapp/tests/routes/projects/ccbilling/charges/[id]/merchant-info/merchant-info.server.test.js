@@ -100,9 +100,10 @@ describe('/projects/ccbilling/charges/[id]/merchant-info API', () => {
 	it('returns 200 with raw text when model output is not JSON', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				choices: [{ message: { content: 'not json' } }]
-			})
+			json: () =>
+				Promise.resolve({
+					choices: [{ message: { content: 'not json' } }]
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -143,9 +144,10 @@ describe('fallback methods', () => {
 	it('extracts from choices array of parts', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				choices: [{ message: { content: [{ text: 'part1 ' }, { text: 'part2' }] } }]
-			})
+			json: () =>
+				Promise.resolve({
+					choices: [{ message: { content: [{ text: 'part1 ' }, { text: 'part2' }] } }]
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -156,9 +158,10 @@ describe('fallback methods', () => {
 	it('extracts from root message directly', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				message: { content: 'root message' }
-			})
+			json: () =>
+				Promise.resolve({
+					message: { content: 'root message' }
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -169,9 +172,10 @@ describe('fallback methods', () => {
 	it('extracts from root message object', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				message: { content: { text: 'root message object' } }
-			})
+			json: () =>
+				Promise.resolve({
+					message: { content: { text: 'root message object' } }
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -182,9 +186,10 @@ describe('fallback methods', () => {
 	it('extracts from completion_message', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				completion_message: 'completion'
-			})
+			json: () =>
+				Promise.resolve({
+					completion_message: 'completion'
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -195,9 +200,10 @@ describe('fallback methods', () => {
 	it('extracts from completion_message object', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				completion_message: { content: 'completion obj' }
-			})
+			json: () =>
+				Promise.resolve({
+					completion_message: { content: 'completion obj' }
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -208,9 +214,10 @@ describe('fallback methods', () => {
 	it('extracts from direct content', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				content: 'direct text'
-			})
+			json: () =>
+				Promise.resolve({
+					content: 'direct text'
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -221,9 +228,10 @@ describe('fallback methods', () => {
 	it('extracts from direct output_text', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				output_text: 'direct output_text'
-			})
+			json: () =>
+				Promise.resolve({
+					output_text: 'direct output_text'
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();
@@ -234,9 +242,10 @@ describe('fallback methods', () => {
 	it('extracts from completion_message.content.text', async () => {
 		fetchMock.mockResolvedValue({
 			ok: true,
-			json: () => Promise.resolve({
-				completion_message: { content: { text: 'nested completion text' } }
-			})
+			json: () =>
+				Promise.resolve({
+					completion_message: { content: { text: 'nested completion text' } }
+				})
 		});
 		const response = await GET(mockEvent);
 		const body = await response.json();

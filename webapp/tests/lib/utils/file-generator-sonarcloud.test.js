@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { generatePackageJson, generateViteConfigFile, generateAllFiles } from '$lib/utils/file-generator.js';
+import {
+	generatePackageJson,
+	generateViteConfigFile,
+	generateAllFiles
+} from '$lib/utils/file-generator.js';
 
 describe('file-generator sonarcloud capabilities', () => {
 	const mockTemplateEngine = {
@@ -20,7 +24,7 @@ describe('file-generator sonarcloud capabilities', () => {
 		};
 
 		const files = await generateAllFiles(context);
-		const sonarFile = files.find(f => f.filePath === 'sonar-project.properties');
+		const sonarFile = files.find((f) => f.filePath === 'sonar-project.properties');
 
 		expect(sonarFile).toBeDefined();
 		expect(sonarFile.content).toContain('sonar.projectKey');
@@ -34,7 +38,7 @@ describe('file-generator sonarcloud capabilities', () => {
 		};
 
 		const files = await generateAllFiles(context);
-		const sonarFile = files.find(f => f.filePath === 'sonar-project.properties');
+		const sonarFile = files.find((f) => f.filePath === 'sonar-project.properties');
 
 		expect(sonarFile).toBeDefined();
 		expect(sonarFile.content).toContain('sonar.javascript.lcov.reportPaths=coverage/lcov.info');

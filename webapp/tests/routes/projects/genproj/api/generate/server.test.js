@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 1. Define Hoisted Mocks
-const { mockGenerateProject, mockGetCurrentUser, mockLoggerError } =
-	vi.hoisted(() => ({
-		mockGenerateProject: vi.fn(),
-		mockGetCurrentUser: vi.fn(),
-		mockLoggerError: vi.fn()
-	}));
+const { mockGenerateProject, mockGetCurrentUser, mockLoggerError } = vi.hoisted(() => ({
+	mockGenerateProject: vi.fn(),
+	mockGetCurrentUser: vi.fn(),
+	mockLoggerError: vi.fn()
+}));
 
 // 2. Mock Modules using the hoisted variables
 vi.mock('$lib/server/auth', () => ({
