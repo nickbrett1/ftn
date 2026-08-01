@@ -12,9 +12,13 @@ RUN apt-get update \
 				gnupg \
 				openssh-server \
 				mosh \
-				tmux \
 				micro \
 				xclip \
+        libevent-dev \
+        libncurses-dev \
+        pkg-config \
+        bison \
+        build-essential \
         --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -28,6 +32,20 @@ RUN apt-get update \
     fi \
     && (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh \
     && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+
+# Build a current tmux from source (Debian bookworm's apt tmux is old).
+# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.
+ARG TMUX_VERSION=3.7b
+ARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96
+RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \
+    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \
+    && mkdir -p /tmp/tmux-src \
+    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \
+    && cd /tmp/tmux-src \
+    && ./configure --prefix=/usr/local \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src
 
 # Install Oh My Zsh plugins and themes, specify-cli, and Cursor CLI as node user
 USER node
