@@ -787,9 +787,37 @@ function _addNodeDevcontainerConfig(context, config) {
 	}
 }
 
+const CODE_QUALITY_DEV_DEPS = [
+	'"@eslint/js": "^10.0.1"',
+	'"eslint": "^10.8.0"',
+	'"eslint-config-prettier": "^10.1.8"',
+	'"eslint-plugin-sonarjs": "^4.2.0"',
+	'"eslint-plugin-security": "^4.0.1"',
+	'"globals": "^17.0.0"',
+	'"prettier": "^3.9.6"',
+	'"simple-git-hooks": "^2.13.1"',
+	'"lint-staged": "^16.4.0"'
+];
+
+function _addCodeQualityConfig(context, config) {
+	if (!context.capabilities.includes('code-quality')) {
+		return;
+	}
+	const missing = CODE_QUALITY_DEV_DEPS.filter(
+		(dep) => !config.devDependencies.includes(dep.split(':')[0])
+	);
+	if (missing.length > 0) {
+		config.devDependencies += (config.devDependencies ? ',\n    ' : '') + missing.join(',\n    ');
+	}
+	if (!config.scripts.includes('"lint"')) {
+		config.scripts += ',\n    "lint": "prettier --check . && eslint ."';
+	}
+}
+
 export function generatePackageJson(templateEngine, context) {
 	const config = _getFrameworkConfig(context);
 	_addNodeDevcontainerConfig(context, config);
+	_addCodeQualityConfig(context, config);
 
 	if (
 		context.capabilities.includes('devcontainer-node') ||

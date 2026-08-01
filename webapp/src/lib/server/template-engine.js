@@ -164,11 +164,15 @@ export class TemplateEngineService {
 						'@playwright/test': '^1.40.0'
 					},
 					'code-quality': {
-						eslint: '^9.0.0',
+						'@eslint/js': '^10.0.1',
+						eslint: '^10.8.0',
+						'eslint-config-prettier': '^10.1.8',
 						'eslint-plugin-sonarjs': '^4.2.0',
-						'eslint-plugin-security': '^4.0.0',
-						'simple-git-hooks': '^2.13.0',
-						'lint-staged': '^16.1.2'
+						'eslint-plugin-security': '^4.0.1',
+						globals: '^17.0.0',
+						prettier: '^3.9.6',
+						'simple-git-hooks': '^2.13.1',
+						'lint-staged': '^16.4.0'
 					}
 				};
 

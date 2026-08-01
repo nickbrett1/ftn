@@ -462,6 +462,29 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	}
 	scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
 
+	if (allCapabilities.includes('code-quality')) {
+		const codeQualityDevDeps = [
+			'"@eslint/js": "^10.0.1"',
+			'"eslint": "^10.8.0"',
+			'"eslint-config-prettier": "^10.1.8"',
+			'"eslint-plugin-sonarjs": "^4.2.0"',
+			'"eslint-plugin-security": "^4.0.1"',
+			'"globals": "^17.0.0"',
+			'"prettier": "^3.9.6"',
+			'"simple-git-hooks": "^2.13.1"',
+			'"lint-staged": "^16.4.0"'
+		];
+		const missing = codeQualityDevDeps.filter(
+			(dep) => !devDependencies.includes(dep.split(':')[0])
+		);
+		if (missing.length > 0) {
+			devDependencies += (devDependencies ? ',\n    ' : '') + missing.join(',\n    ');
+		}
+		if (!scripts.includes('"lint"')) {
+			scripts += ',\n    "lint": "prettier --check . && eslint ."';
+		}
+	}
+
 	const content = templateEngine.generateFile('package-json', {
 		...projectConfig,
 		scripts,

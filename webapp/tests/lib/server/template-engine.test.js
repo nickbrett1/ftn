@@ -57,6 +57,18 @@ describe('TemplateEngineService', () => {
 			typescript: expect.any(String),
 			vitest: expect.any(String)
 		});
+		const codeQualityDeps = JSON.parse(helpers.generateDevDependencies(['code-quality']));
+		expect(codeQualityDeps).toMatchObject({
+			eslint: expect.any(String),
+			'@eslint/js': expect.any(String),
+			'eslint-config-prettier': expect.any(String),
+			'eslint-plugin-sonarjs': expect.any(String),
+			'eslint-plugin-security': expect.any(String),
+			globals: expect.any(String),
+			prettier: expect.any(String),
+			'simple-git-hooks': expect.any(String),
+			'lint-staged': expect.any(String)
+		});
 		expect(helpers.join(['x', 'y'], ' / ')).toBe('x / y');
 		expect(helpers.capitalize('example')).toBe('Example');
 	});
