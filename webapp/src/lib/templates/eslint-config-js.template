@@ -1,0 +1,20 @@
+import js from '@eslint/js';
+import sonarjs from 'eslint-plugin-sonarjs';
+import security from 'eslint-plugin-security';
+
+export default [
+	js.configs.recommended,
+	sonarjs.configs.recommended,
+	security.configs.recommended,
+	{
+		rules: {
+			// Customize rules here
+			'sonarjs/cognitive-complexity': ['warn', 15],
+			'sonarjs/no-duplicate-string': 'warn',
+			'security/detect-object-injection': 'warn'
+		}
+	},
+	{
+		ignores: ['node_modules/**', 'dist/**', 'build/**', '.svelte-kit/**', 'coverage/**']
+	}
+];

@@ -430,15 +430,14 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 	}
 }
 
-function _applySonarCloudConfig(data, context) {
-	if (context.capabilities.includes('sonarcloud')) {
-		data.orbs += `  sonarcloud: sonarsource/sonarcloud@4.0.0\n`;
-		data.preBuildSteps += String.raw`
-      - run:
-          name: Export SonarCloud Token
-          command: echo "export SONAR_TOKEN=\$SONARQUBE_TOKEN" >> $BASH_ENV`;
-
-		data.testSteps += `      - sonarcloud/scan\n`;
+function _applyEslintSonarjsConfig(data, context) {
+	if (
+		context.capabilities.includes('code-quality') ||
+		context.capabilities.includes('devcontainer-node')
+	) {
+		data.testSteps += `      - run:
+          name: Lint (ESLint + SonarJS)
+          command: npm run lint\n`;
 	}
 }
 function getCircleCiTemplateData(context) {
@@ -472,18 +471,12 @@ function getCircleCiTemplateData(context) {
 		context.capabilities.includes('devcontainer-node') &&
 		context.capabilities.includes('circleci')
 	) {
-		if (context.capabilities.includes('sonarcloud')) {
-			data.testSteps += `      - run:
+		data.testSteps += `      - run:
           name: Test with Coverage
           command: npx vitest --coverage\n`;
-		} else {
-			data.testSteps += `      - run:
-          name: Test
-          command: npm run test\n`;
-		}
 	}
 
-	_applySonarCloudConfig(data, context);
+	_applyEslintSonarjsConfig(data, context);
 
 	if (data.commands) {
 		data.commands = `commands:\n${data.commands}`;

@@ -87,12 +87,9 @@ jobs:
     docker:
       - image: cimg/node:22.23.1-browsers
     resource_class: large # Increase to large for more memory and CPU resources
-    environment:
-      SONAR_SCANNER_OPTS: "-Dproject.settings=.sonarcloud.properties"
     steps:
-      # Note: SonarScanner JGit requires method: full (missing historical blobs cause MissingObjectException with blobless)
       - checkout:
-          method: full
+          method: blobless
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -107,6 +104,10 @@ jobs:
           name: Setup Wrangler configuration
           command: |
             cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - run:
+          name: Run linting (ESLint + SonarJS)
+          command: |
+            cd webapp && npm run lint
       - run:
           name: Run tests
           command: |
@@ -123,7 +124,6 @@ jobs:
           when: always
       - store_test_results:
           path: ./webapp/reports/
-      - sonarcloud/scan
 
   browser_test:
     environment:
@@ -264,7 +264,6 @@ workflows:
       - code_test:
           requires:
             - build
-          context: SonarCloud
       - browser_test:
           requires:
             - build

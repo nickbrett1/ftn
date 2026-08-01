@@ -162,6 +162,11 @@ export class TemplateEngineService {
 					},
 					playwright: {
 						'@playwright/test': '^1.40.0'
+					},
+					'code-quality': {
+						eslint: '^9.0.0',
+						'eslint-plugin-sonarjs': '^4.2.0',
+						'eslint-plugin-security': '^4.0.0'
 					}
 				};
 

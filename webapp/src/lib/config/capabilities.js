@@ -501,6 +501,32 @@ export const capabilities = [
 		website: 'https://sonarcloud.io/'
 	},
 	{
+		id: 'code-quality',
+		name: 'ESLint + SonarJS',
+		description:
+			'Adds fast, zero-configuration code quality linting using eslint-plugin-sonarjs and eslint-plugin-security. Runs in ~5–10s vs 1–2 minutes for SonarCloud.',
+		category: CATEGORY_CODE_QUALITY,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['dbaeumer.vscode-eslint'],
+		benefits: [
+			'Catches bugs, code smells, and security issues in CI in under 10 seconds',
+			'No external service or API token required',
+			'Runs the same Sonar rules as SonarCloud via eslint-plugin-sonarjs',
+			'Works offline and in any CI environment'
+		],
+		templates: [
+			{
+				id: 'eslint-config-js',
+				filePath: 'eslint.config.js',
+				templateId: 'eslint-config-js'
+			}
+		],
+		website: 'https://github.com/SonarSource/SonarJS'
+	},
+	{
 		id: 'sonarlint',
 		name: 'SonarLint',
 		description: 'Configures SonarLint for local code quality analysis.',

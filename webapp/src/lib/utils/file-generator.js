@@ -30,6 +30,7 @@ import scriptsCloudLoginSh from '../templates/scripts-cloud-login.sh.template?ra
 import scriptsRunWranglerDevelopmentSh from '../templates/scripts-run-wrangler-dev-sh.template?raw';
 import scriptsSetupWranglerConfigSh from '../templates/scripts-setup-wrangler-config.sh.template?raw';
 import scriptsSyncDopplerSecretsSh from '../templates/scripts-sync-doppler-secrets-sh.template?raw';
+import eslintConfigJs from '../templates/eslint-config-js.template?raw';
 
 import gitignoreTemplate from '../templates/gitignore.template?raw';
 import dependabotConfig from '../templates/dependabot.yml.template?raw';
@@ -318,6 +319,7 @@ const templateImports = {
 	'lighthouse-ci-config': lighthouseCiConfig,
 	'circleci-config': circleCiConfig,
 	'.sonarcloud.properties': sonarProjectProperties,
+	'eslint-config-js': eslintConfigJs,
 	'doppler-yaml': dopplerYaml,
 	'mcp-config-json': mcpConfigJson,
 	'mcp-sse-proxy-js': mcpSseProxyJs,
