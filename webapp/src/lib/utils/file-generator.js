@@ -44,7 +44,7 @@ import svelteConfigJs from '../templates/svelte-config-js.template?raw';
 import svelteViteConfigJs from '../templates/svelte-vite-config-js.template?raw';
 import docsifyIndex from '../templates/docsify-index.template?raw';
 import docsifyReadme from '../templates/docsify-readme.template?raw';
-import devcontainerServeDocsCjs from '../templates/devcontainer-serve-docs-cjs.template?raw';
+import devcontainerServeDocumentsCjs from '../templates/devcontainer-serve-docs-cjs.template?raw';
 import { capabilities } from '$lib/config/capabilities.js';
 import {
 	getCapabilityTemplateData,
@@ -156,9 +156,9 @@ extensions:
     name: fintechnick
     enabled: true
     cmd: sh
-    args: ["-c", "npx -y mcp-remote https://www.fintechnick.com/api/mcp --header \\\"Authorization: Bearer \$FINTECHNICK_MCP\\\""]
+    args: ["-c", "npx -y mcp-remote https://www.fintechnick.com/api/mcp --header "Authorization: Bearer $FINTECHNICK_MCP""]
     envs:
-      FINTECHNICK_MCP: \$FINTECHNICK_MCP
+      FINTECHNICK_MCP: $FINTECHNICK_MCP
     timeout: 300
   # GitHub MCP Server (via doppler for token)
   github:
@@ -174,7 +174,7 @@ extensions:
     name: doppler
     enabled: true
     cmd: sh
-    args: ["-c", "DOPPLER_TOKEN=\\\$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"]
+    args: ["-c", "DOPPLER_TOKEN=$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"]
     timeout: 300
   # Optional MCP servers${gooseMcpConfig.sonarQubeGooseConfig || ''}${gooseMcpConfig.circleCiGooseConfig || ''}${gooseMcpConfig.xcodeNativeGooseConfig || ''}
 GOOSECFGEOF
@@ -344,7 +344,7 @@ const templateImports = {
 	'svelte-vite-config-js': svelteViteConfigJs,
 	'docsify-index': docsifyIndex,
 	'docsify-readme': docsifyReadme,
-	'devcontainer-serve-docs-cjs': devcontainerServeDocsCjs
+	'devcontainer-serve-docs-cjs': devcontainerServeDocumentsCjs
 };
 
 export class TemplateEngine {
@@ -373,7 +373,6 @@ export class TemplateEngine {
 
 	getTemplate(name) {
 		const template = this.templates.get(name);
-		// eslint-disable-next-line unicorn/no-null
 		return template || null;
 	}
 
@@ -391,7 +390,7 @@ export class TemplateEngine {
 			const keys = trimmedKey.split('.');
 			let value = data;
 			for (const k of keys) {
-				if (value && typeof value === 'object' && k in value) {
+				if (value && typeof value === 'object' && Object.hasOwn(value, k)) {
 					// eslint-disable-next-line security/detect-object-injection
 					value = value[k];
 				} else {
@@ -419,9 +418,7 @@ export class TemplateEngine {
 				// If content is already pre-generated, use it directly
 				// This is for merged devcontainer files
 				const content =
-					request.content == undefined
-						? this.generateFile(request.templateId, { ...request.data, index })
-						: request.content;
+					request.content ?? this.generateFile(request.templateId, { ...request.data, index });
 				results.push({ ...request, success: true, content });
 			} catch (error) {
 				results.push({ ...request, success: false, error: error.message });
@@ -671,7 +668,7 @@ export function generateMergedDevelopmentContainerFiles(
 				agyDevAlias: context.capabilities.includes('doppler')
 					? AGY_DEV_ALIAS.replaceAll(
 							'{{projectName}}',
-							context.projectName || context.name || 'my-project'
+							() => context.projectName || context.name || 'my-project'
 						)
 					: '',
 				gooseDevAlias: context.capabilities.includes('doppler') ? GOOSE_DEV_ALIAS : ''
@@ -704,7 +701,7 @@ export function generateMergedDevelopmentContainerFiles(
 				shellSetup: context.capabilities.includes('shell-tools')
 					? SHELL_SETUP_SCRIPT.replaceAll(
 							'{{projectName}}',
-							context.projectName || context.name || 'my-project'
+							() => context.projectName || context.name || 'my-project'
 						)
 					: '',
 				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python'))
@@ -712,13 +709,18 @@ export function generateMergedDevelopmentContainerFiles(
 					: '',
 				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 					'{{projectName}}',
-					context.projectName || context.name || 'my-project'
+					() => context.projectName || context.name || 'my-project'
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 				gooseSetup: context.capabilities.includes('coding-agents')
 					? generateGooseSetupScript(context)
 					: '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
+				gitHooksSetup:
+					context.capabilities.includes('code-quality') ||
+					context.capabilities.includes('devcontainer-node')
+						? `echo "INFO: Installing git pre-commit hooks (lint-staged)..."\n(cd /workspaces/${context.projectName || context.name || 'my-project'} && npx simple-git-hooks) || echo "WARN: Run 'npx simple-git-hooks' to install hooks manually."`
+						: '',
 				cloudLoginSetup:
 					context.capabilities.includes('doppler') ||
 					context.capabilities.includes('cloudflare-wrangler') ||
@@ -924,16 +926,16 @@ export function generateCloudLoginFiles(templateEngine, context) {
 
 	// cloud_login.sh
 	const dopplerLogin = hasDoppler
-		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', () => projectName)
 		: '';
 
 	const wranglerLogin = hasWrangler
-		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', projectName)
+		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', () => projectName)
 		: '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler
-			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', projectName)
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', () => projectName)
 			: '';
 
 	const googleCloudLogin = hasGoogleCloud
@@ -1048,7 +1050,7 @@ export function generateVscodeSettingsFile(templateEngine, context) {
 	}
 }
 
-export function generateVscodeExtensionsFile(context) {
+export function generateVscodeExtensionsFile() {
 	return {
 		filePath: '.vscode/extensions.json',
 		content: JSON.stringify(
@@ -1192,7 +1194,7 @@ export async function generateAllFiles(context) {
 		generateRustWorkerLibrary(context),
 		generateGitignoreFile(templateEngine, context),
 		generateVscodeSettingsFile(templateEngine, context),
-		generateVscodeExtensionsFile(context)
+		generateVscodeExtensionsFile()
 	].filter(Boolean);
 
 	let allGeneratedFiles = [
@@ -1225,7 +1227,7 @@ export async function generateAllFiles(context) {
 export function generateViteConfigFile(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 
-	let content = '';
+	let content;
 	const hasSonarcloud = context.capabilities.includes('sonarcloud');
 	const testConfigSvelte = hasSonarcloud
 		? `	test: {

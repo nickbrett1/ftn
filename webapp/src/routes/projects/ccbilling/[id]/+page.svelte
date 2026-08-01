@@ -11,7 +11,6 @@
 	import { onMount, untrack } from 'svelte';
 	import { onDestroy } from 'svelte';
 
-	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 

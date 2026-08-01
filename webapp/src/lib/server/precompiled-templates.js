@@ -424,6 +424,23 @@
 					alias4(
 						((helper =
 							(helper =
+								lookupProperty(helpers, 'gitHooksSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'gitHooksSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'gitHooksSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 17 } }
+								})
+							: helper)
+					) +
+					'\n\n' +
+					alias4(
+						((helper =
+							(helper =
 								lookupProperty(helpers, 'playwrightSetup') ||
 								(depth0 != null ? lookupProperty(depth0, 'playwrightSetup') : depth0)) != null
 								? helper
@@ -433,7 +450,7 @@
 									name: 'playwrightSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 19 } }
+									loc: { start: { line: 73, column: 0 }, end: { line: 73, column: 19 } }
 								})
 							: helper)
 					) +
@@ -450,7 +467,7 @@
 									name: 'agySetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 73, column: 0 }, end: { line: 73, column: 12 } }
+									loc: { start: { line: 75, column: 0 }, end: { line: 75, column: 12 } }
 								})
 							: helper)
 					) +
@@ -467,7 +484,7 @@
 									name: 'gooseSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 74, column: 0 }, end: { line: 74, column: 14 } }
+									loc: { start: { line: 76, column: 0 }, end: { line: 76, column: 14 } }
 								})
 							: helper)
 					) +
@@ -484,7 +501,7 @@
 									name: 'cloudLoginSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 102, column: 0 }, end: { line: 102, column: 19 } }
+									loc: { start: { line: 104, column: 0 }, end: { line: 104, column: 19 } }
 								})
 							: helper)
 					) +

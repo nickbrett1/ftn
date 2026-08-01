@@ -5,7 +5,15 @@
   "main": "index.js",
   "type": "{{typeField}}",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"{{scripts}}
+    "test": "echo \"Error: no test specified\" && exit 1"{{scripts}},
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,svelte,json,css,html,md}": "prettier --write --ignore-unknown",
+    "**/*.{js,ts,svelte}": "eslint --fix"
   },
   "keywords": [],
   "author": "",

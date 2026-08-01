@@ -3,7 +3,6 @@
 	import { loadFull } from 'tsparticles';
 	import { tsParticles } from '@tsparticles/engine';
 
-	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {boolean} */
 	let { show = false } = $props();
 

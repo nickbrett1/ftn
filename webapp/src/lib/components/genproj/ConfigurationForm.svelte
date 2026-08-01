@@ -7,7 +7,6 @@
 
 	const dispatch = createEventDispatcher();
 
-	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {ProjectConfig} */
 	export let projectConfig;
 

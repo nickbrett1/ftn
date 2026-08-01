@@ -166,7 +166,9 @@ export class TemplateEngineService {
 					'code-quality': {
 						eslint: '^9.0.0',
 						'eslint-plugin-sonarjs': '^4.2.0',
-						'eslint-plugin-security': '^4.0.0'
+						'eslint-plugin-security': '^4.0.0',
+						'simple-git-hooks': '^2.13.0',
+						'lint-staged': '^16.1.2'
 					}
 				};
 

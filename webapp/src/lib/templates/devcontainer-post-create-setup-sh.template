@@ -68,6 +68,8 @@ fi
 
 {{gitSafeDirectory}}
 
+{{gitHooksSetup}}
+
 {{playwrightSetup}}
 
 {{agySetup}}

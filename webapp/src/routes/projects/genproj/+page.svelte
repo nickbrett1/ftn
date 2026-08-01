@@ -663,6 +663,7 @@
 								isAuthenticated={data.isAuthenticated}
 								on:continue={handleContinueGeneration}
 								on:configure={() => switchTab('capabilities')}
+								on:refresh={fetchPreview}
 							/>
 						</div>
 					{/if}

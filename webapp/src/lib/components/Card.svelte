@@ -11,7 +11,6 @@
 	 * @property {string} [class='']
 	 */
 
-	// eslint-disable-next-line sonarjs/no-commented-code
 	/** @type {Props} */
 	let { children, onclick, disableHoverGlow = false, class: extraClasses = '' } = $props();
 	let rect = null;

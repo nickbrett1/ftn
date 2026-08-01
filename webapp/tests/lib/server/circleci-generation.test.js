@@ -47,10 +47,10 @@ describe('CircleCI Capability Generation', () => {
 		);
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
 
-		expect(circleCiFile.content).toContain('npm run test');
+		expect(circleCiFile.content).toContain('npx vitest --coverage');
 	});
 
-	it('should generate Export SonarCloud Token step in circleci config and sonarcloud scanner orbs/steps when sonarcloud is selected', async () => {
+	it('should generate ESLint + SonarJS lint step in circleci config when devcontainer-node or code-quality is selected', async () => {
 		const projectConfig = {
 			name: 'test-project',
 			description: 'A test project',
@@ -65,7 +65,7 @@ describe('CircleCI Capability Generation', () => {
 			}
 		};
 
-		const selectedCapabilities = ['circleci', 'sonarcloud'];
+		const selectedCapabilities = ['circleci', 'devcontainer-node'];
 
 		const previewData = await generatePreview(projectConfig, selectedCapabilities);
 
@@ -77,12 +77,8 @@ describe('CircleCI Capability Generation', () => {
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
 		expect(circleCiFile).toBeDefined();
 
-		expect(circleCiFile.content).toContain('sonarcloud: sonarsource/sonarcloud@4.0.0');
-		expect(circleCiFile.content).toContain('sonarcloud/scan');
-		expect(circleCiFile.content).toContain('Export SonarCloud Token');
-		expect(circleCiFile.content).toContain(
-			'echo "export SONAR_TOKEN=\\$SONARQUBE_TOKEN" >> $BASH_ENV'
-		);
+		expect(circleCiFile.content).toContain('Lint (ESLint + SonarJS)');
+		expect(circleCiFile.content).toContain('npm run lint');
 	});
 
 	it('should not contain jobEnvironment if sonarcloud is not selected', async () => {

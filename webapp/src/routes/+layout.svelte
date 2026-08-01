@@ -1,5 +1,4 @@
 <script>
-	/* eslint-disable sonarjs/no-commented-code */
 	import '../app.css';
 	import { onMount } from 'svelte';
 	/**

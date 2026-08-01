@@ -80,6 +80,9 @@ echo "INFO: Playwright Chromium installation complete."
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
+echo "INFO: Installing git pre-commit hooks (simple-git-hooks + lint-staged)..."
+(cd /workspaces/ftn/webapp && npx simple-git-hooks) || echo "WARN: Could not install git hooks, run 'cd webapp && npx simple-git-hooks' manually."
+
 if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then
     echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
     sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid node:node --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222

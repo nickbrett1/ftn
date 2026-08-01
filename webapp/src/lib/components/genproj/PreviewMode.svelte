@@ -241,6 +241,13 @@
 	}
 
 	/**
+	 * Handles refresh preview
+	 */
+	function refreshPreview() {
+		dispatch('refresh');
+	}
+
+	/**
 	 * Handles continue to generation
 	 */
 	function continueToGeneration() {
