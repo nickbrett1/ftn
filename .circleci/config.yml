@@ -9,12 +9,21 @@ commands:
   install_doppler:
     description: "Install Doppler CLI"
     steps:
+      - restore_cache:
+          name: Restore Doppler CLI
+          keys:
+            - doppler-cli-v1
       - run:
-          name: Install Doppler CLI
+          name: Install Doppler CLI (if not cached)
           command: |
             if ! command -v doppler &> /dev/null; then
               (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
             fi
+      - save_cache:
+          name: Cache Doppler CLI
+          paths:
+            - /usr/local/bin/doppler
+          key: doppler-cli-v1
 
 jobs:
   build:
@@ -63,9 +72,10 @@ jobs:
           command: |
             cd webapp && npm run build
       - save_cache:
-          name: Update node_modules cache
+          name: Update node_modules and SvelteKit build cache
           paths:
             - webapp/node_modules
+            - webapp/.svelte-kit/cache
           key: node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
       - persist_to_workspace:
           root: webapp
