@@ -40,7 +40,7 @@ jobs:
           name: Install modules
           command: |
             cd webapp
-            npm install
+            npm ci
       - run:
           name: Install Playwright Chromium (if not cached)
           command: |
