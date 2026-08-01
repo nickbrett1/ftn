@@ -1,6 +1,6 @@
 // Regenerate the hardcoded dockerfile-template fixtures in file-generator.test.js
 // from the actual .template files, with proper JS template-literal escaping.
-const fs = require('fs');
+import fs from 'node:fs';
 
 const testPath = 'tests/lib/utils/file-generator.test.js';
 let src = fs.readFileSync(testPath, 'utf8');
