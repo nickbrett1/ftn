@@ -91,7 +91,7 @@ describe('mcpServer', () => {
 
 		const result = await listToolsHandler({ method: 'tools/list', jsonrpc: '2.0', id: 1 });
 		expect(result.tools).toBeInstanceOf(Array);
-		expect(result.tools.length).toBe(6);
+		expect(result.tools.length).toBe(9);
 		expect(result.tools[0].name).toBe('list_products');
 	});
 
@@ -246,5 +246,143 @@ describe('mcpServer', () => {
 		});
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('Missing authentication context');
+	});
+
+	describe('ccbilling tools', () => {
+		let mockDb;
+		let ccbillingServer;
+		let ccbillingCallHandler;
+
+		beforeEach(() => {
+			mockDb = {
+				prepare: vi.fn((query) => {
+					return {
+						bind: vi.fn().mockReturnThis(),
+						all: vi.fn().mockImplementation(async () => {
+							if (query.includes('merchant_normalized as merchant')) {
+								return {
+									results: [
+										{ merchant: 'Amazon', budget: 'Shopping', transaction_count: 4, total_amount: 200.0 }
+									]
+								};
+							}
+							if (query.includes("FROM payment p")) {
+								return {
+									results: [
+										{
+											id: 1,
+											transaction_date: '2026-07-15',
+											merchant: 'Amazon',
+											merchant_normalized: 'Amazon',
+											amount: 45.99,
+											allocated_to: 'Shopping',
+											statement_filename: 'statement.pdf',
+											credit_card_name: 'Chase Sapphire',
+											credit_card_last4: '1234'
+										}
+									]
+								};
+							}
+							if (query.includes("COALESCE(NULLIF(allocated_to, ''), 'Unallocated') as budget")) {
+								return {
+									results: [
+										{ budget: 'Shopping', transaction_count: 5, total_amount: 250.0 },
+										{ budget: 'Unallocated', transaction_count: 2, total_amount: 49.99 }
+									]
+								};
+							}
+							if (query.includes('FROM budget ORDER BY name ASC')) {
+								return {
+									results: [{ id: 10, name: 'Shopping', icon: 'shopping-cart' }]
+								};
+							}
+							if (query.includes('FROM budget_merchant ORDER BY')) {
+								return {
+									results: [{ budget_id: 10, merchant_normalized: 'Amazon' }]
+								};
+							}
+							return { results: [] };
+						})
+					};
+				})
+			};
+
+			ccbillingServer = createMcpServer({
+				userEmail: 'test@example.com',
+				platform: { env: { CCBILLING_DB: mockDb } }
+			});
+
+			for (const [key, value] of ccbillingServer._requestHandlers.entries()) {
+				if (key === 'tools/call') ccbillingCallHandler = value;
+			}
+		});
+
+		it('should list ccbilling transactions with filters', async () => {
+			const result = await ccbillingCallHandler({
+				method: 'tools/call',
+				jsonrpc: '2.0',
+				id: 20,
+				params: {
+					name: 'list_ccbilling_transactions',
+					arguments: { limit: 10, allocatedTo: 'Shopping', merchant: 'Amazon' }
+				}
+			});
+			expect(result.content[0].type).toBe('text');
+			const parsed = JSON.parse(result.content[0].text);
+			expect(parsed.count).toBe(1);
+			expect(parsed.transactions[0].merchant).toBe('Amazon');
+			expect(parsed.transactions[0].allocated_to).toBe('Shopping');
+		});
+
+		it('should return ccbilling spending summary', async () => {
+			const result = await ccbillingCallHandler({
+				method: 'tools/call',
+				jsonrpc: '2.0',
+				id: 21,
+				params: {
+					name: 'get_ccbilling_spending_summary',
+					arguments: { startDate: '2026-07-01', endDate: '2026-07-31' }
+				}
+			});
+			expect(result.content[0].type).toBe('text');
+			const parsed = JSON.parse(result.content[0].text);
+			expect(parsed.total_spent).toBe(299.99);
+			expect(parsed.total_transactions).toBe(7);
+			expect(parsed.by_budget.length).toBe(2);
+			expect(parsed.top_merchants.length).toBe(1);
+		});
+
+		it('should list ccbilling budgets', async () => {
+			const result = await ccbillingCallHandler({
+				method: 'tools/call',
+				jsonrpc: '2.0',
+				id: 22,
+				params: {
+					name: 'list_ccbilling_budgets',
+					arguments: {}
+				}
+			});
+			expect(result.content[0].type).toBe('text');
+			const parsed = JSON.parse(result.content[0].text);
+			expect(parsed.budgets.length).toBe(1);
+			expect(parsed.budgets[0].name).toBe('Shopping');
+			expect(parsed.budgets[0].merchants).toEqual(['Amazon']);
+		});
+
+		it('should error when CCBILLING_DB binding is missing', async () => {
+			const serverNoDb = createMcpServer({ userEmail: 'test@example.com', platform: { env: {} } });
+			let handler;
+			for (const [key, value] of serverNoDb._requestHandlers.entries()) {
+				if (key === 'tools/call') handler = value;
+			}
+			const result = await handler({
+				method: 'tools/call',
+				jsonrpc: '2.0',
+				id: 23,
+				params: { name: 'list_ccbilling_transactions', arguments: {} }
+			});
+			expect(result.isError).toBe(true);
+			expect(result.content[0].text).toContain('CCBILLING_DB binding not available');
+		});
 	});
 });

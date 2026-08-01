@@ -6,6 +6,14 @@ import { capabilities } from '$lib/config/capabilities.js';
 import { ProjectGeneratorService } from '$lib/server/project-generator.js';
 import { buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils.js';
 
+function getCcbillingDb(context) {
+	const db = context.platform?.env?.CCBILLING_DB || context.platform?.env?.DB;
+	if (!db) {
+		throw new Error('CCBILLING_DB binding not available in platform environment.');
+	}
+	return db;
+}
+
 export function createMcpServer(context = {}) {
 	const mcpServer = new Server(
 		{ name: 'fintechnick-mcp', version: '1.0.0' },
@@ -85,6 +93,63 @@ export function createMcpServer(context = {}) {
 						},
 						required: ['name', 'selectedCapabilities']
 					}
+				},
+				{
+					name: 'list_ccbilling_transactions',
+					description:
+						'Returns credit card statement transactions including date, merchant, amount, and budget allocation to help identify cost-saving opportunities.',
+					inputSchema: {
+						type: 'object',
+						properties: {
+							limit: {
+								type: 'number',
+								description: 'Maximum number of transactions to return (default 50, max 200)'
+							},
+							startDate: {
+								type: 'string',
+								description: 'Filter transactions on or after this date (YYYY-MM-DD)'
+							},
+							endDate: {
+								type: 'string',
+								description: 'Filter transactions on or before this date (YYYY-MM-DD)'
+							},
+							allocatedTo: {
+								type: 'string',
+								description: 'Filter by budget name allocated to'
+							},
+							unallocatedOnly: {
+								type: 'boolean',
+								description: 'Only return transactions that are unallocated to any budget'
+							},
+							merchant: {
+								type: 'string',
+								description: 'Filter by merchant name (case-insensitive substring match)'
+							}
+						}
+					}
+				},
+				{
+					name: 'get_ccbilling_spending_summary',
+					description:
+						'Returns spending totals grouped by budget allocation and top merchants for cost optimization analysis.',
+					inputSchema: {
+						type: 'object',
+						properties: {
+							startDate: {
+								type: 'string',
+								description: 'Filter starting from date (YYYY-MM-DD)'
+							},
+							endDate: {
+								type: 'string',
+								description: 'Filter ending at date (YYYY-MM-DD)'
+							}
+						}
+					}
+				},
+				{
+					name: 'list_ccbilling_budgets',
+					description: 'Lists all configured budget categories and their associated merchants.',
+					inputSchema: { type: 'object', properties: {} }
 				}
 			]
 		};
@@ -197,6 +262,161 @@ export function createMcpServer(context = {}) {
 								})
 							}
 						]
+					};
+				}
+				case 'list_ccbilling_transactions': {
+					const db = getCcbillingDb(context);
+					const { limit = 50, startDate, endDate, allocatedTo, unallocatedOnly, merchant } =
+						toolArguments || {};
+					const maxLimit = Math.min(Math.max(1, limit), 200);
+
+					let query = `
+						SELECT 
+							p.id, 
+							p.transaction_date, 
+							p.merchant, 
+							p.merchant_normalized, 
+							p.merchant_details, 
+							p.amount, 
+							p.allocated_to, 
+							p.is_foreign_currency, 
+							p.foreign_currency_amount, 
+							p.foreign_currency_type, 
+							s.filename as statement_filename, 
+							cc.name as credit_card_name, 
+							cc.last4 as credit_card_last4
+						FROM payment p
+						LEFT JOIN statement s ON p.statement_id = s.id
+						LEFT JOIN credit_card cc ON s.credit_card_id = cc.id
+						WHERE 1=1
+					`;
+					const bindings = [];
+
+					if (startDate) {
+						query += ` AND p.transaction_date >= ?`;
+						bindings.push(startDate);
+					}
+					if (endDate) {
+						query += ` AND p.transaction_date <= ?`;
+						bindings.push(endDate);
+					}
+					if (allocatedTo) {
+						query += ` AND p.allocated_to = ?`;
+						bindings.push(allocatedTo);
+					}
+					if (unallocatedOnly) {
+						query += ` AND (p.allocated_to IS NULL OR p.allocated_to = '')`;
+					}
+					if (merchant) {
+						query += ` AND (p.merchant LIKE ? OR p.merchant_normalized LIKE ?)`;
+						bindings.push(`%${merchant}%`, `%${merchant}%`);
+					}
+
+					query += ` ORDER BY p.transaction_date DESC, p.id DESC LIMIT ?`;
+					bindings.push(maxLimit);
+
+					const stmt = db.prepare(query);
+					const bound = bindings.length > 0 ? stmt.bind(...bindings) : stmt;
+					const { results } = await bound.all();
+
+					return {
+						content: [
+							{
+								type: 'text',
+								text: JSON.stringify({ count: results ? results.length : 0, transactions: results || [] })
+							}
+						]
+					};
+				}
+				case 'get_ccbilling_spending_summary': {
+					const db = getCcbillingDb(context);
+					const { startDate, endDate } = toolArguments || {};
+
+					let dateFilter = '';
+					const bindings = [];
+					if (startDate) {
+						dateFilter += ` AND transaction_date >= ?`;
+						bindings.push(startDate);
+					}
+					if (endDate) {
+						dateFilter += ` AND transaction_date <= ?`;
+						bindings.push(endDate);
+					}
+
+					const budgetQuery = `
+						SELECT 
+							COALESCE(NULLIF(allocated_to, ''), 'Unallocated') as budget,
+							COUNT(*) as transaction_count,
+							ROUND(SUM(amount), 2) as total_amount
+						FROM payment
+						WHERE 1=1 ${dateFilter}
+						GROUP BY COALESCE(NULLIF(allocated_to, ''), 'Unallocated')
+						ORDER BY total_amount DESC
+					`;
+					const budgetStmt =
+						bindings.length > 0 ? db.prepare(budgetQuery).bind(...bindings) : db.prepare(budgetQuery);
+					const { results: budgetSummary } = await budgetStmt.all();
+
+					const merchantQuery = `
+						SELECT 
+							merchant_normalized as merchant,
+							COALESCE(NULLIF(allocated_to, ''), 'Unallocated') as budget,
+							COUNT(*) as transaction_count,
+							ROUND(SUM(amount), 2) as total_amount
+						FROM payment
+						WHERE 1=1 ${dateFilter}
+						GROUP BY merchant_normalized, COALESCE(NULLIF(allocated_to, ''), 'Unallocated')
+						ORDER BY total_amount DESC
+						LIMIT 20
+					`;
+					const merchantStmt =
+						bindings.length > 0
+							? db.prepare(merchantQuery).bind(...bindings)
+							: db.prepare(merchantQuery);
+					const { results: topMerchants } = await merchantStmt.all();
+
+					const rows = budgetSummary || [];
+					const totalSpent = rows.reduce((acc, row) => acc + (row.total_amount || 0), 0);
+					const totalCount = rows.reduce((acc, row) => acc + (row.transaction_count || 0), 0);
+
+					return {
+						content: [
+							{
+								type: 'text',
+								text: JSON.stringify({
+									total_spent: Math.round(totalSpent * 100) / 100,
+									total_transactions: totalCount,
+									by_budget: rows,
+									top_merchants: topMerchants || []
+								})
+							}
+						]
+					};
+				}
+				case 'list_ccbilling_budgets': {
+					const db = getCcbillingDb(context);
+					const { results: budgets } = await db.prepare('SELECT * FROM budget ORDER BY name ASC').all();
+					const { results: budgetMerchants } = await db
+						.prepare('SELECT * FROM budget_merchant ORDER BY budget_id ASC, merchant_normalized ASC')
+						.all();
+
+					const merchantsByBudget = {};
+					if (budgetMerchants) {
+						for (const bm of budgetMerchants) {
+							if (!merchantsByBudget[bm.budget_id]) merchantsByBudget[bm.budget_id] = [];
+							merchantsByBudget[bm.budget_id].push(bm.merchant_normalized);
+						}
+					}
+
+					const budgetList = (budgets || []).map((b) => ({
+						id: b.id,
+						name: b.name,
+						icon: b.icon,
+						merchants: merchantsByBudget[b.id] || []
+					}));
+
+					return {
+						content: [{ type: 'text', text: JSON.stringify({ budgets: budgetList }) }]
 					};
 				}
 				default: {
