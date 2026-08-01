@@ -30,6 +30,8 @@ jobs:
             - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - node-v7-fresh-{{ .Branch }}-
             - node-v7-fresh-
+      # Note: Playwright Chromium is required during `npm run build` because mdsvex / rehype-mermaid
+      # uses mermaid-isomorphic (which launches headless Chromium via Playwright) to compile SVGs for .svx files.
       - restore_cache:
           name: Restore Playwright cache
           keys:
