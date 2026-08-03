@@ -36,5 +36,20 @@ if ! pgrep -f 'serve-docs.cjs' >/dev/null; then
     fi
 fi
 
+echo "INFO: Syncing goose recipes..."
+if [ -d "$HOME/.config/goose/recipes/.git" ]; then
+    (cd "$HOME/.config/goose/recipes" && git pull --ff-only --quiet) \
+        || echo "WARN: goose recipes update failed (offline?), keeping existing copy"
+else
+    echo "WARN: goose recipes not cloned yet; run goose-config-bootstrap.sh to install."
+fi
+
+echo "INFO: Checking goose version..."
+if command -v goose >/dev/null 2>&1; then
+    goose update || echo "WARN: goose update failed, keeping current version"
+else
+    echo "WARN: goose not found, skipping update"
+fi
+
 echo "INFO: Services check/startup complete."
 

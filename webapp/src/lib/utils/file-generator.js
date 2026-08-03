@@ -185,7 +185,23 @@ extensions:
     args: ["-c", "DOPPLER_TOKEN=$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"]
     timeout: 300
   # Optional MCP servers${gooseMcpConfig.sonarQubeGooseConfig || ''}${gooseMcpConfig.circleCiGooseConfig || ''}${gooseMcpConfig.xcodeNativeGooseConfig || ''}
+
+# Recipe Configuration: spec-first development process recipes
+# (design -> validate -> plan -> scaffold -> execute). Requires gh CLI for
+# GitHub-repo discovery; recipes are also cloned below as the primary mechanism.
+GOOSE_RECIPE_GITHUB_REPO: "nickbrett1/goose-recipes"
 GOOSECFGEOF
+
+echo "INFO: Ensuring goose recipes are available (spec-first development process)..."
+RECIPES_DIR="$HOME/.config/goose/recipes"
+if [ -d "$RECIPES_DIR/.git" ]; then
+    (cd "$RECIPES_DIR" && git pull --ff-only --quiet) \
+        || echo "WARN: Could not update goose-recipes (offline or conflict); keeping existing copy."
+else
+    mkdir -p "$HOME/.config/goose"
+    git clone --quiet https://github.com/nickbrett1/goose-recipes.git "$RECIPES_DIR" \
+        || echo "WARN: Could not clone goose-recipes; recipes will be unavailable."
+fi
 
 echo "INFO: goose configuration complete."
 `;

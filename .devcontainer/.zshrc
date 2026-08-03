@@ -160,6 +160,14 @@ agy-dev() {
 # top (project-specific secrets take precedence over common ones).
 goose-dev() {
   echo "Starting goose with Doppler (common + goose)..."
+  # Pull latest goose recipes (nickbrett1/goose-recipes) so recipe updates are
+  # picked up on every launch without waiting for a container restart.
+  if [ -d "$HOME/.config/goose/recipes/.git" ]; then
+    (cd "$HOME/.config/goose/recipes" && git pull --ff-only --quiet) \
+      || echo "WARN: Could not update goose-recipes (offline?); using existing copy."
+  else
+    echo "WARN: goose recipes not installed; run goose-config-bootstrap.sh to install."
+  fi
   # Load common secrets first, then layer goose project secrets on top.
   # Uses 'prd' config for the goose project to pick up LITELLM endpoint env vars.
   # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to goose.

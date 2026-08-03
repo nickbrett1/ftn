@@ -140,4 +140,27 @@ if (missing.length === 0) {
 }
 NODE
 
+# ---------------------------------------------------------------------------
+# Goose recipes (nickbrett1/goose-recipes) - spec-first development process.
+# Recipes are cloned into the global recipes dir (~/.config/goose/recipes/) so
+# goose discovers them automatically (no env var needed at runtime).
+# ---------------------------------------------------------------------------
+RECIPES_DIR="$GOOSE_CONFIG_DIR/recipes"
+echo "INFO: Ensuring goose recipes are available at $RECIPES_DIR ..."
+if [ -d "$RECIPES_DIR/.git" ]; then
+    (cd "$RECIPES_DIR" && git pull --ff-only --quiet) \
+        || echo "WARN: Could not update goose-recipes (offline or conflict); keeping existing copy."
+else
+    mkdir -p "$GOOSE_CONFIG_DIR"
+    git clone --quiet https://github.com/nickbrett1/goose-recipes.git "$RECIPES_DIR" \
+        || echo "WARN: Could not clone goose-recipes; recipes will be unavailable."
+fi
+
+# Also record the repo for environments where `gh` CLI is available (goose
+# discovers recipes from this repo directly; requires gh installed + authed).
+if ! grep -q '^GOOSE_RECIPE_GITHUB_REPO:' "$GOOSE_CONFIG"; then
+    printf '\n# Recipe Configuration\nGOOSE_RECIPE_GITHUB_REPO: "nickbrett1/goose-recipes"\n' >> "$GOOSE_CONFIG"
+    echo "INFO: Added GOOSE_RECIPE_GITHUB_REPO to goose config."
+fi
+
 echo "INFO: goose config bootstrap complete."
