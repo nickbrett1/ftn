@@ -1,6 +1,27 @@
 import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { ApiKeyService } from '$lib/server/api-key-service';
+import { capabilities } from '$lib/config/capabilities.js';
+
+/**
+ * Detects mutually exclusive capability selections (symmetric conflicts).
+ * @param {string[]} selectedCapabilities - Selected capability IDs
+ * @returns {string[]} Human-readable conflict descriptions
+ */
+export function findCapabilityConflicts(selectedCapabilities) {
+	const selected = new Set(selectedCapabilities);
+	const conflicting = [];
+	for (const id of selectedCapabilities) {
+		const capability = capabilities.find((c) => c.id === id);
+		if (!capability) continue;
+		for (const conflictId of capability.conflicts) {
+			if (selected.has(conflictId)) {
+				conflicting.push(`${id} conflicts with ${conflictId}`);
+			}
+		}
+	}
+	return conflicting;
+}
 
 export function handleGenprojErrorResult(result) {
 	if (
@@ -44,6 +65,14 @@ export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 
 export function buildProjectContext(payload, userId, authTokens) {
 	const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions } = payload;
+
+	// Mutual exclusion guard: deployment systems (and any other declared
+	// conflicts) may not be selected together.
+	const conflicts = findCapabilityConflicts(selectedCapabilities);
+	if (conflicts.length > 0) {
+		throw new Error(`Conflicting capabilities selected: ${conflicts.join('; ')}`);
+	}
+
 	return {
 		projectName: name,
 		repositoryUrl: repositoryUrl || '',

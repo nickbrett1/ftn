@@ -552,7 +552,7 @@ export const capabilities = [
 		description: 'Configures project for deployment to Cloudflare Workers.',
 		category: CATEGORY_DEPLOYMENT,
 		dependencies: EMPTY_ARRAY,
-		conflicts: EMPTY_ARRAY,
+		conflicts: ['docker-container'],
 		requiresAuth: EMPTY_ARRAY,
 		configurationSchema: {
 			type: 'object',
@@ -578,7 +578,7 @@ export const capabilities = [
 		description: 'Configures project for deployment to Google Cloud.',
 		category: CATEGORY_DEPLOYMENT,
 		dependencies: [],
-		conflicts: [],
+		conflicts: ['docker-container'],
 		requiresAuth: [],
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		benefits: [
@@ -588,6 +588,95 @@ export const capabilities = [
 		],
 		templates: [],
 		website: 'https://cloud.google.com/'
+	},
+	{
+		id: 'docker-container',
+		name: 'Docker Container',
+		description:
+			'Containerize the project and publish to a container registry (GHCR, Docker Hub, or Quay) for deployment to a NAS or self-hosted host via Docker Compose. Mutually exclusive with other deployment systems.',
+		category: CATEGORY_DEPLOYMENT,
+		dependencies: ['docker'],
+		conflicts: ['cloudflare-wrangler', 'google-cloud'],
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				registry: {
+					type: 'string',
+					enum: ['ghcr', 'dockerhub', 'quay'],
+					default: 'ghcr'
+				},
+				imageVisibility: {
+					type: 'string',
+					enum: ['public', 'private'],
+					default: 'public'
+				},
+				tagStrategy: {
+					type: 'string',
+					enum: ['commit-sha', 'semver', 'latest'],
+					default: 'commit-sha'
+				},
+				networkMode: {
+					type: 'string',
+					enum: ['bridge', 'host'],
+					default: 'bridge'
+				},
+				exposePort: {
+					type: 'integer',
+					minimum: 1,
+					maximum: 65535,
+					default: 3000
+				},
+				watchtower: {
+					type: 'boolean',
+					default: true
+				},
+				homepage: {
+					type: 'boolean',
+					default: true
+				}
+			}
+		},
+		benefits: [
+			'Deploy to any Docker host (Synology, Unraid, TrueNAS, VPS) — not tied to a cloud vendor',
+			'Auto-updates via Watchtower polling the registry',
+			'Surfaced in Homepage dashboard with a health widget',
+			'Full local/private control of the container'
+		],
+		templates: [
+			{
+				id: 'dockerfile',
+				filePath: 'Dockerfile',
+				templateId: 'dockerfile'
+			},
+			{
+				id: 'dockerignore',
+				filePath: '.dockerignore',
+				templateId: 'dockerignore'
+			},
+			{
+				id: 'docker-compose',
+				filePath: 'docker-compose.yml',
+				templateId: 'docker-compose'
+			},
+			{
+				id: 'deploy-readme',
+				filePath: 'deploy/README.md',
+				templateId: 'deploy-readme'
+			},
+			{
+				id: 'homepage-snippet',
+				filePath: 'deploy/homepage-services.yaml',
+				templateId: 'homepage-services'
+			}
+		],
+		externalServices: createExternalServiceConfig(
+			'registry',
+			'GHCR',
+			'GHCR package is created on first push from CircleCI',
+			'Create a fine-grained PAT with Packages: read & write; add GHCR_USERNAME and GHCR_TOKEN to the CircleCI context'
+		),
+		website: 'https://www.docker.com/'
 	},
 	{
 		id: 'dependabot',

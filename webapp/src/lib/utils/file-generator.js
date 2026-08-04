@@ -19,6 +19,11 @@ import dopplerYaml from '../templates/doppler-yaml.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
+import dockerfileTemplate from '../templates/dockerfile.template?raw';
+import dockerignoreTemplate from '../templates/dockerignore.template?raw';
+import dockerComposeTemplate from '../templates/docker-compose.template?raw';
+import deployReadmeTemplate from '../templates/deploy-readme.template?raw';
+import homepageServicesTemplate from '../templates/homepage-services.template?raw';
 import sonarProjectProperties from '../templates/.sonarcloud.properties.template?raw';
 import mcpConfigJson from '../templates/mcp-config-json.template?raw';
 import mcpSseProxyJs from '../templates/mcp-sse-proxy-js.template?raw';
@@ -342,6 +347,11 @@ const templateImports = {
 	'playwright-config': playwrightConfig,
 	'lighthouse-ci-config': lighthouseCiConfig,
 	'circleci-config': circleCiConfig,
+	'dockerfile': dockerfileTemplate,
+	'dockerignore': dockerignoreTemplate,
+	'docker-compose': dockerComposeTemplate,
+	'deploy-readme': deployReadmeTemplate,
+	'homepage-services': homepageServicesTemplate,
 	'.sonarcloud.properties': sonarProjectProperties,
 	'eslint-config-js': eslintConfigJs,
 	'doppler-yaml': dopplerYaml,
@@ -456,7 +466,8 @@ function collectSingleTemplateFile(templateEngine, context, capabilityId, capabi
 	try {
 		const extraData = getCapabilityTemplateData(capabilityId, {
 			capabilities: context.capabilities,
-			configuration: context.configuration
+			configuration: context.configuration,
+			projectName: context.projectName || context.name || 'my-project'
 		});
 
 		// Special handling for SvelteKit config adapter

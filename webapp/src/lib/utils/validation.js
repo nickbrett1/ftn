@@ -209,6 +209,30 @@ const capabilityValidators = {
 		return [];
 	},
 
+	'docker-container': (config) => {
+		const errors = [];
+		const enumFields = {
+			registry: ['ghcr', 'dockerhub', 'quay'],
+			imageVisibility: ['public', 'private'],
+			tagStrategy: ['commit-sha', 'semver', 'latest'],
+			networkMode: ['bridge', 'host']
+		};
+		for (const [field, allowed] of Object.entries(enumFields)) {
+			if (config[field] && !allowed.includes(config[field])) {
+				errors.push(`Invalid ${field}: ${config[field]}`);
+			}
+		}
+		if (
+			config.exposePort !== undefined &&
+			(typeof config.exposePort !== 'number' ||
+				config.exposePort < 1 ||
+				config.exposePort > 65535)
+		) {
+			errors.push('exposePort must be a number between 1 and 65535');
+		}
+		return errors;
+	},
+
 	dependabot: (config) => {
 		if (
 			config.ecosystems &&

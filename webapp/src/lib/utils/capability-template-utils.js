@@ -444,6 +444,141 @@ function _applyEslintSonarjsConfig(data, context) {
           command: npm run lint\n`;
 	}
 }
+
+const DOCKER_REGISTRY_PREFIXES = {
+	ghcr: 'ghcr.io',
+	dockerhub: 'docker.io',
+	quay: 'quay.io'
+};
+
+const DOCKER_REGISTRY_CREDENTIAL_VARS = {
+	ghcr: { user: 'GHCR_USERNAME', token: 'GHCR_TOKEN' },
+	dockerhub: { user: 'DOCKERHUB_USERNAME', token: 'DOCKERHUB_TOKEN' },
+	quay: { user: 'QUAY_ROBOT_USERNAME', token: 'QUAY_ROBOT_TOKEN' }
+};
+
+function getDockerRegistryPrefix(registry) {
+	return DOCKER_REGISTRY_PREFIXES[registry] || DOCKER_REGISTRY_PREFIXES.ghcr;
+}
+
+/**
+ * Builds template data for the docker-container deployment capability.
+ * Provides language-aware Dockerfile fragments, compose fragments, and
+ * registry metadata for generated deploy artifacts.
+ * @param {Object} context - Generation context (capabilities, configuration, projectName)
+ * @returns {Object} Data consumed by the docker-container templates
+ */
+function getDockerContainerTemplateData(context) {
+	const config = context.configuration?.['docker-container'] || {};
+	const registry = config.registry || 'ghcr';
+	const networkMode = config.networkMode || 'bridge';
+	const exposePort = config.exposePort ?? 3000;
+	const watchtower = config.watchtower !== false;
+	const homepage = config.homepage !== false;
+	const projectName = context.projectName || 'my-project';
+	const registryPrefix = getDockerRegistryPrefix(registry);
+
+	const isPython = (context.capabilities || []).some((c) => c.startsWith('devcontainer-python'));
+	const isNode = (context.capabilities || []).some(
+		(c) => c === 'devcontainer-node' || c === 'sveltekit'
+	);
+	const dockerBaseImage = isPython ? 'python:3.12-slim' : 'node:22-alpine';
+
+	const dockerSetupCommands = isPython
+		? `RUN python -m venv /opt/venv\nENV PATH="/opt/venv/bin:$PATH"\nCOPY requirements.txt* ./\nRUN pip install --no-cache-dir -r requirements.txt`
+		: `COPY package.json package-lock.json* ./\nRUN npm ci || npm install\nRUN npm run build`;
+
+	const dockerHealthcheck = isPython
+		? '# HEALTHCHECK skipped for python images by default (install curl/wget first)'
+		: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD wget -qO- http://127.0.0.1:${exposePort}/health || exit 1`;
+
+	const dockerRunCommand = isPython
+		? '# TODO: set your entrypoint, e.g.: CMD ["python", "main.py"]\nCMD ["python", "main.py"]'
+		: '# TODO: adjust for your framework output, e.g. SvelteKit adapter-node: CMD ["node", "build/index.js"]\nCMD ["node", "build/index.js"]';
+
+	const networkModeLine = networkMode === 'host' ? '    network_mode: host' : '';
+	const portsConfig =
+		networkMode === 'host'
+			? ''
+			: `    ports:\n      - "${exposePort}:${exposePort}"`;
+
+	const labels = [];
+	if (watchtower || homepage) labels.push('    labels:');
+	if (watchtower) labels.push('      - "com.centurylinklabs.watchtower.enable=true"');
+	if (homepage) {
+		labels.push(
+			'      - "homepage.group=Services"',
+			`      - "homepage.name=${projectName}"`,
+			`      - "homepage.href=http://YOUR_NAS_HOST:${exposePort}/"`,
+			'      - "homepage.widget.type=customapi"',
+			`      - "homepage.widget.url=http://localhost:${exposePort}/health"`
+		);
+	}
+
+	return {
+		registryPrefix,
+		dockerBaseImage,
+		dockerSetupCommands,
+		dockerHealthcheck,
+		dockerRunCommand,
+		exposePort: String(exposePort),
+		networkMode,
+		networkModeLine,
+		portsConfig,
+		composeLabels: labels.join('\n'),
+		watchtower: String(watchtower),
+		homepage: String(homepage)
+	};
+}
+
+/**
+ * Adds a docker-publish job to the CircleCI config data when the
+ * docker-container deployment capability is selected.
+ * @param {Object} data - CircleCI template data (mutated)
+ * @param {Object} context - Generation context
+ * @param {boolean} contextEnabled - Whether the CircleCI context is enabled
+ * @param {string} contextName - CircleCI context name
+ */
+function _applyDockerContainerConfig(data, context, contextEnabled, contextName) {
+	if (!context.capabilities.includes('docker-container')) {
+		return;
+	}
+
+	const config = context.configuration?.['docker-container'] || {};
+	const registry = config.registry || 'ghcr';
+	const registryPrefix = getDockerRegistryPrefix(registry);
+	const projectName = context.projectName || 'my-project';
+	const imageRef = `${registryPrefix}/OWNER/${projectName}`;
+	const credentialVars =
+		DOCKER_REGISTRY_CREDENTIAL_VARS[registry] || DOCKER_REGISTRY_CREDENTIAL_VARS.ghcr;
+
+	data.deployJobDefinition = `
+  docker-publish:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Login to Container Registry
+          command: |
+            echo "$${credentialVars.token}" | docker login ${registryPrefix} -u "$${credentialVars.user}" --password-stdin
+      - run:
+          name: Build and Push Docker Image
+          command: |
+            docker build -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest .
+            docker push ${imageRef}:$CIRCLE_SHA1
+            docker push ${imageRef}:latest`;
+
+	data.deployWorkflowJob = `
+      - docker-publish:${contextEnabled ? `\n          context: ${contextName}` : ''}
+          requires:
+            - build
+          filters:
+            branches:
+              only: main`;
+}
+
 function getCircleCiTemplateData(context) {
 	const data = {
 		preBuildSteps: '',
@@ -470,6 +605,7 @@ function getCircleCiTemplateData(context) {
 	_applyDopplerConfig(data, context);
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName);
+	_applyDockerContainerConfig(data, context, contextEnabled, contextName);
 
 	if (
 		context.capabilities.includes('devcontainer-node') &&
@@ -553,7 +689,8 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		'coding-agents': getCodingAgentsTemplateData,
 		sonarcloud: getSonarCloudTemplateData,
 		circleci: getCircleCiTemplateData,
-		dependabot: getDependabotTemplateData
+		dependabot: getDependabotTemplateData,
+		'docker-container': getDockerContainerTemplateData
 	};
 
 	const generator = dataGenerators[capabilityId];

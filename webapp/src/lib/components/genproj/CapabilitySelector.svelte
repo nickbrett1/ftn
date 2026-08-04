@@ -146,7 +146,14 @@
 		let updatedSelection;
 
 		if (shouldSelect) {
-			updatedSelection = [...selectedCapabilities, capabilityId];
+			// Mutual exclusion: deselect any capability this one conflicts with
+			// (e.g. deployment systems are mutually exclusive).
+			const capability = capabilities.find((c) => c.id === capabilityId);
+			const conflictingIds = capability?.conflicts || [];
+			updatedSelection = [
+				...selectedCapabilities.filter((id) => !conflictingIds.includes(id)),
+				capabilityId
+			];
 		} else {
 			// If unchecking, ensure it's not required by another selected capability
 			const capability = capabilities.find((c) => c.id === capabilityId);
@@ -279,6 +286,7 @@
 			docker: DockerBrands,
 			circleci: CircleNotchSolid,
 			'cloudflare-wrangler': CloudflareBrands,
+			'docker-container': DockerBrands,
 			sonarcloud: CloudSolid,
 			sonarlint: CodeSolid,
 			playwright: PlayCircleSolid,
@@ -306,6 +314,7 @@
 			docker: 'text-blue-500',
 			circleci: 'text-green-400',
 			'cloudflare-wrangler': 'text-orange-500',
+			'docker-container': 'text-cyan-400',
 			sonarcloud: 'text-orange-400',
 			sonarlint: 'text-red-400',
 			playwright: 'text-green-500',
@@ -569,6 +578,23 @@
 																	)}
 															/>
 														{/if}
+													</div>
+												{:else if property.type === 'number' || property.type === 'integer'}
+													<div>
+														<input
+															type="number"
+															id="{capability.id}-{field}"
+															class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+															min={property.minimum}
+															max={property.maximum}
+															value={configuration[capability.id]?.[field] ?? property.default ?? ''}
+															onchange={(e) =>
+																handleConfigurationChange(
+																	capability.id,
+																	field,
+																	Number(e.target.value)
+																)}
+														/>
 													</div>
 												{:else}
 													<input

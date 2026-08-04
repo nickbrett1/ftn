@@ -349,7 +349,8 @@ function generateSingleTemplateFile(
 	try {
 		const extraData = getCapabilityTemplateData(capabilityId, {
 			capabilities: allCapabilities,
-			configuration: projectConfig.configuration
+			configuration: projectConfig.configuration,
+			projectName: projectConfig.name || 'my-project'
 		});
 
 		// Special handling for SvelteKit config adapter
