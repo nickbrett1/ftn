@@ -26,7 +26,11 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates docsify-cli
+# docsify-cli pulls in docsify@4, whose postinstall (`opencollective-postinstall && npx husky install`)
+# exits with 127 under npm 10 ("husky: not found"), which breaks `docker build`.
+# Install it with --ignore-scripts; the docsify CLI works fine without those scripts.
+RUN npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates \
+    && npm install -g --ignore-scripts docsify-cli
 
 RUN if command -v sentry-cli >/dev/null 2>&1; then \
         echo "sentry-cli is already installed. Updating..."; \
