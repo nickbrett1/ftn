@@ -61,6 +61,11 @@ RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/downlo
 # Oh My Zsh plugins and themes as node user
 USER node
 ENV USER_HOME_DIR=/home/node
+# The goose installer downloads the release tarball to the current working
+# directory (curl --output <name>), which is '/' by default and not writable by
+# the non-root 'node' user -> "Failed to download" (curl exit 23). Run node-user
+# steps from a writable home directory.
+WORKDIR /home/node
 RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins" \
     && rm -rf "$USER_HOME_DIR/.oh-my-zsh/custom/themes/powerlevel10k" \
     && rm -rf "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" \
