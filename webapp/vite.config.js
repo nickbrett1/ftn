@@ -106,14 +106,9 @@ export default defineConfig(({ command, mode }) => {
 			// Add timeout and memory optimizations
 			testTimeout: 30_000,
 			hookTimeout: 30_000,
-			// Pool options for test execution
+			// Pool options for test execution (Vitest 4: poolOptions removed, options are now top-level)
 			pool: 'threads', // Use threads worker pool
-			poolOptions: {
-				threads: {
-					maxThreads: 4,
-					minThreads: 2
-				}
-			},
+			maxWorkers: 4,
 			// Configure for Svelte 5 runes
 			define: {
 				'import.meta.vitest': 'undefined'

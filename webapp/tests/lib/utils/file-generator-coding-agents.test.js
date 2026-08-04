@@ -23,12 +23,10 @@ describe('File Generator - Coding Agents', () => {
 
 		const configJson = JSON.parse(mcpConfig.content);
 		expect(configJson.mcpServers['memos']).toEqual({
-			command: 'node',
-			args: ['/home/node/.local/bin/mcp-streamable-http-proxy.cjs', 'http://nas:5230/mcp']
+			serverUrl: 'http://nas:5230/mcp'
 		});
 		expect(configJson.mcpServers['vikunja']).toEqual({
-			command: 'node',
-			args: ['/home/node/.local/bin/mcp-streamable-http-proxy.cjs', 'http://nas:8086/']
+			serverUrl: 'http://nas:8086/'
 		});
 		// xcode-native should NOT be present when xcode-development capability is not selected
 		expect(configJson.mcpServers['xcode-native']).toBeUndefined();

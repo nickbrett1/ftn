@@ -4,18 +4,10 @@
       "serverUrl": "https://mcp.svelte.dev/mcp"
     },
     "memos": {
-      "command": "node",
-      "args": [
-        "/home/node/.local/bin/mcp-streamable-http-proxy.cjs",
-        "http://nas:5230/mcp"
-      ]
+      "serverUrl": "http://nas:5230/mcp"
     },
     "vikunja": {
-      "command": "node",
-      "args": [
-        "/home/node/.local/bin/mcp-streamable-http-proxy.cjs",
-        "http://nas:8086/"
-      ]
+      "serverUrl": "http://nas:8086/"
     },
     "chrome-devtools": {
       "command": "npx",

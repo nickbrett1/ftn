@@ -29,6 +29,7 @@
     "projectKey": "nickbrett1_bem"
   },
   "terminal.integrated.defaultProfile.linux": "tmux-integrated",
+  "tmux-integrated.shell": "/bin/zsh",
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode",
     "javascript.validate.enable": false,

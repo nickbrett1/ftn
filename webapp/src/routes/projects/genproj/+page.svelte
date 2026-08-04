@@ -187,8 +187,16 @@
 			return;
 		}
 		if (selected) {
-			// Add the selected capability
-			selectedCapabilities = [...selectedCapabilities, capabilityId];
+			// Add the selected capability, deselecting any capability it conflicts
+			// with (mutual exclusion, e.g. deployment systems are radio-like).
+			// Note: the component also computes this and dispatches it via
+			// `update:selectedCapabilities`, but the page owns the state, so the
+			// filtering must happen here too.
+			const conflictingIds = capability.conflicts || [];
+			selectedCapabilities = [
+				...selectedCapabilities.filter((id) => !conflictingIds.includes(id)),
+				capabilityId
+			];
 
 			// Initialize configuration with default values
 			if (capability.configurationSchema) {

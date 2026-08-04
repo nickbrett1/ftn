@@ -165,6 +165,7 @@ describe('File Generator - Extensions', () => {
 		expect(content['terminal.integrated.defaultProfile.linux']).toBe('tmux-integrated');
 		expect(content['terminal.integrated.defaultProfile.osx']).toBe('tmux-integrated');
 		expect(content['terminal.integrated.defaultProfile.windows']).toBe('tmux-integrated');
+		expect(content['tmux-integrated.shell']).toBe('/bin/zsh');
 		expect(content['python.defaultInterpreterPath']).toBeUndefined();
 	});
 });

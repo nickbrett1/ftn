@@ -139,21 +139,19 @@ extensions:
     enabled: true
     uri: "https://mcp.svelte.dev/mcp"
     timeout: 300
-  # Memos MCP
+  # Memos MCP - Streamable HTTP (direct, no proxy)
   memos:
-    type: stdio
+    type: streamable_http
     name: memos
     enabled: true
-    cmd: node
-    args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:5230/mcp"]
+    uri: "http://nas:5230/mcp"
     timeout: 300
-  # Vikunja MCP
+  # Vikunja MCP - Streamable HTTP (direct, no proxy)
   vikunja:
-    type: stdio
+    type: streamable_http
     name: vikunja
     enabled: true
-    cmd: node
-    args: [".agents/mcp-streamable-http-proxy.cjs", "http://nas:8086/"]
+    uri: "http://nas:8086/"
     timeout: 300
   # Chrome DevTools MCP
   chrome-devtools:

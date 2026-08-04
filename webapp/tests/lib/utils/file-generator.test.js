@@ -32,7 +32,7 @@ const nodeJsonTemplateContent = `{
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8"
   },
-  "postCreateCommand": ".devcontainer/post-create-setup.sh",
+  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",
   "postStartCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-start-setup.sh"
 }
 `;
@@ -58,6 +58,12 @@ RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/downlo
     && make install \\
     && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src
 USER vscode
+ENV USER_HOME_DIR=/home/vscode
+# The goose installer downloads the release tarball to the current working
+# directory (curl --output <name>), which is '/' by default and not writable by
+# the non-root 'vscode' user -> "Failed to download" (curl exit 23). Run
+# vscode-user steps from a writable home directory.
+WORKDIR /home/vscode
 
 RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
@@ -67,7 +73,21 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
     && curl -fsSL https://antigravity.google/cli/install.sh | bash \\
-    && curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash
+    && mkdir -p "$HOME/.local/bin" \\
+    && GOOSE_ARCH="$(uname -m | sed 's/arm64/aarch64/')" \\
+    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n 's/.*"tag_name": "\\([^"]*\\)".*/\\1/p')" \\
+    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to 'stable' release"; GOOSE_TAG=stable; fi \\
+    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/\${GOOSE_TAG}/goose-\${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\
+    && echo "Downloading goose \${GOOSE_TAG} (\${GOOSE_ARCH})..." \\
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\
+    && mkdir -p /tmp/goose-extract \\
+    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\
+    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\
+    && "$HOME/.local/bin/goose" --version \\
+    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract
+
+# Add uv tools and goose to PATH for the non-root user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
 
 RUN mkdir -p $HOME/.wrangler
 
@@ -107,6 +127,12 @@ RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/downlo
     && make install \\
     && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src
 USER vscode
+ENV USER_HOME_DIR=/home/vscode
+# The goose installer downloads the release tarball to the current working
+# directory (curl --output <name>), which is '/' by default and not writable by
+# the non-root 'vscode' user -> "Failed to download" (curl exit 23). Run
+# vscode-user steps from a writable home directory.
+WORKDIR /home/vscode
 
 RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
@@ -116,7 +142,21 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
     && curl -fsSL https://antigravity.google/cli/install.sh | bash \\
-    && curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash
+    && mkdir -p "$HOME/.local/bin" \\
+    && GOOSE_ARCH="$(uname -m | sed 's/arm64/aarch64/')" \\
+    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n 's/.*"tag_name": "\\([^"]*\\)".*/\\1/p')" \\
+    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to 'stable' release"; GOOSE_TAG=stable; fi \\
+    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/\${GOOSE_TAG}/goose-\${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\
+    && echo "Downloading goose \${GOOSE_TAG} (\${GOOSE_ARCH})..." \\
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\
+    && mkdir -p /tmp/goose-extract \\
+    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\
+    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\
+    && "$HOME/.local/bin/goose" --version \\
+    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract
+
+# Add uv tools and goose to PATH for the non-root user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
 
 RUN mkdir -p $HOME/.wrangler
 
@@ -156,6 +196,12 @@ RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/downlo
     && make install \\
     && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src
 USER node
+ENV USER_HOME_DIR=/home/node
+# The goose installer downloads the release tarball to the current working
+# directory (curl --output <name>), which is '/' by default and not writable by
+# the non-root 'node' user -> "Failed to download" (curl exit 23). Run node-user
+# steps from a writable home directory.
+WORKDIR /home/node
 
 RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\
@@ -165,7 +211,21 @@ RUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\
     && curl https://cursor.com/install -fsS | bash \\
     && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\
     && curl -fsSL https://antigravity.google/cli/install.sh | bash \\
-    && curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash
+    && mkdir -p "$HOME/.local/bin" \\
+    && GOOSE_ARCH="$(uname -m | sed 's/arm64/aarch64/')" \\
+    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n 's/.*"tag_name": "\\([^"]*\\)".*/\\1/p')" \\
+    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to 'stable' release"; GOOSE_TAG=stable; fi \\
+    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/\${GOOSE_TAG}/goose-\${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\
+    && echo "Downloading goose \${GOOSE_TAG} (\${GOOSE_ARCH})..." \\
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\
+    && mkdir -p /tmp/goose-extract \\
+    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\
+    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\
+    && "$HOME/.local/bin/goose" --version \\
+    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract
+
+# Add uv tools and goose to PATH for the non-root user
+ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
 
 RUN mkdir -p $HOME/.wrangler
 

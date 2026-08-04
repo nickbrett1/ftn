@@ -33,12 +33,10 @@ const MCP_SERVERS = {
     enabled: true
     uri: http://nas:8086/
     timeout: 300`,
-  memos: `    type: stdio
+  memos: `    type: streamable_http
     name: memos
     enabled: true
-    cmd: /home/node/.local/bin/mcp-streamable-http-proxy.cjs
-    args:
-    - http://nas:5230/mcp
+    uri: http://nas:5230/mcp
     timeout: 300`,
   'chrome-devtools': `    type: stdio
     name: chrome-devtools

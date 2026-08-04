@@ -83,8 +83,24 @@ RUN curl https://cursor.com/install -fsS | bash
 # Antigravity CLI
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 
-# goose CLI
-RUN curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash
+# goose CLI - install the latest stable release directly from GitHub releases,
+# instead of the unversioned "stable" download script (no retry logic - it failed
+# on a transient GitHub CDN error during the 2026-08-03 build). The latest
+# release tag is resolved via the GitHub API, with a fallback to the floating
+# "stable" release tag if the API lookup fails. curl --retry-all-errors absorbs
+# transient 403/429/5xx/connection errors.
+RUN mkdir -p "$HOME/.local/bin" \
+    && GOOSE_ARCH="$(uname -m | sed 's/arm64/aarch64/')" \
+    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')" \
+    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to 'stable' release"; GOOSE_TAG=stable; fi \
+    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \
+    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \
+    && mkdir -p /tmp/goose-extract \
+    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \
+    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \
+    && "$HOME/.local/bin/goose" --version \
+    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract
 
 # Wrangler config volume mount point
 RUN mkdir -p "$HOME/.wrangler"
