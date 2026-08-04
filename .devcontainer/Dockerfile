@@ -58,7 +58,7 @@ RUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/downlo
     && make install \
     && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src
 
-# Install Oh My Zsh plugins and themes, specify-cli, and Cursor CLI as node user
+# Oh My Zsh plugins and themes as node user
 USER node
 ENV USER_HOME_DIR=/home/node
 RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins" \
@@ -67,12 +67,22 @@ RUN mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zs
     && rm -rf "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-autosuggestions" \
     && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$USER_HOME_DIR/.oh-my-zsh/custom/themes/powerlevel10k" \
     && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" \
-    && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-autosuggestions" \
-    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \
-    && curl https://cursor.com/install -fsS | bash \
-    && curl -fsSL https://antigravity.google/cli/install.sh | bash \
-    && curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash \
-    && mkdir -p "$HOME/.wrangler"
+    && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "$USER_HOME_DIR/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+
+# specify-cli (spec-kit) via uv
+RUN uv tool install --python 3.11 git+https://github.com/github/spec-kit.git
+
+# Cursor agent CLI
+RUN curl https://cursor.com/install -fsS | bash
+
+# Antigravity CLI
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+# goose CLI
+RUN curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash
+
+# Wrangler config volume mount point
+RUN mkdir -p "$HOME/.wrangler"
 
 
 # Add uv tools to PATH for node user
