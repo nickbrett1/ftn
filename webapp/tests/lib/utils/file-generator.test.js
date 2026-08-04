@@ -11,6 +11,7 @@ const nodeJsonTemplateContent = `{
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
+      "configureZshAsDefaultShell": true,
       "installOhMyZsh": true,
       "upgradePackages": true,
       "username": "node"
@@ -93,6 +94,11 @@ RUN mkdir -p $HOME/.wrangler
 
 USER root
 
+# Ensure zsh is the default shell for the vscode user
+RUN chsh -s /usr/bin/zsh vscode
+
+COPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/
+
 # Create the .ssh directory
 RUN mkdir -p /home/vscode/.ssh
 
@@ -161,6 +167,11 @@ ENV PATH="$USER_HOME_DIR/.local/bin:$PATH"
 RUN mkdir -p $HOME/.wrangler
 
 USER root
+
+# Ensure zsh is the default shell for the vscode user
+RUN chsh -s /usr/bin/zsh vscode
+
+COPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/
 
 # Create the .ssh directory
 RUN mkdir -p /home/vscode/.ssh

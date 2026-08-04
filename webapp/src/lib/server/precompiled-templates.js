@@ -32,7 +32,7 @@
 							})
 						: helper)
 				) +
-				'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
+				'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Ensure zsh is the default shell for the vscode user\nRUN chsh -s /usr/bin/zsh vscode\n\nCOPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
 			);
 		},
 		useData: true
@@ -111,24 +111,7 @@
 						};
 
 				return (
-					'{\n  "name": "Node.js",\n  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],\n  "build": { "dockerfile": "Dockerfile" },\n  "remoteUser": "node",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "node"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {}\n  },\n  "mounts": [\n    "source=' +
-					alias4(
-						((helper =
-							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'projectName',
-									hash: {},
-									data: data,
-									loc: { start: { line: 20, column: 12 }, end: { line: 20, column: 27 } }
-								})
-							: helper)
-					) +
-					'-wrangler-config,target=/home/node/.wrangler,type=volume",\n    "source=' +
+					'{\n  "name": "Node.js",\n  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],\n  "build": { "dockerfile": "Dockerfile" },\n  "remoteUser": "node",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "node"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {}\n  },\n  "mounts": [\n    "source=' +
 					alias4(
 						((helper =
 							(helper =
@@ -145,6 +128,23 @@
 								})
 							: helper)
 					) +
+					'-wrangler-config,target=/home/node/.wrangler,type=volume",\n    "source=' +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'projectName') ||
+								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'projectName',
+									hash: {},
+									data: data,
+									loc: { start: { line: 22, column: 12 }, end: { line: 22, column: 27 } }
+								})
+							: helper)
+					) +
 					'-doppler-config,target=/home/node/.doppler,type=volume",\n    "source=gemini-cli-settings,target=/home/node/.gemini,type=volume",\n    "source=' +
 					alias4(
 						((helper =
@@ -158,7 +158,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 23, column: 12 }, end: { line: 23, column: 27 } }
+									loc: { start: { line: 24, column: 12 }, end: { line: 24, column: 27 } }
 								})
 							: helper)
 					) +
@@ -175,7 +175,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 31, column: 40 }, end: { line: 31, column: 55 } }
+									loc: { start: { line: 32, column: 40 }, end: { line: 32, column: 55 } }
 								})
 							: helper)
 					) +
@@ -577,7 +577,7 @@
 								})
 							: helper)
 					) +
-					'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
+					'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Ensure zsh is the default shell for the vscode user\nRUN chsh -s /usr/bin/zsh vscode\n\nCOPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
 				);
 			},
 			useData: true
@@ -613,7 +613,7 @@
 								})
 							: helper)
 					) +
-					'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
+					'\n\n\n# Build a current tmux from source (Debian bookworm\'s apt tmux is old).\n# Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.\nARG TMUX_VERSION=3.7b\nARG TMUX_SHA256=87f2e99e3b685973f2ca002ffd6ed7e51a5744f7009daae5a15670b6d532db96\nRUN curl -fsSL -o /tmp/tmux.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz" \\\n    && echo "${TMUX_SHA256}  /tmp/tmux.tar.gz" | sha256sum -c - \\\n    && mkdir -p /tmp/tmux-src \\\n    && tar -xzf /tmp/tmux.tar.gz -C /tmp/tmux-src --strip-components=1 \\\n    && cd /tmp/tmux-src \\\n    && ./configure --prefix=/usr/local \\\n    && make -j"$(nproc)" \\\n    && make install \\\n    && rm -rf /tmp/tmux.tar.gz /tmp/tmux-src\nUSER vscode\nENV USER_HOME_DIR=/home/vscode\n# The goose installer downloads the release tarball to the current working\n# directory (curl --output <name>), which is \'/\' by default and not writable by\n# the non-root \'vscode\' user -> "Failed to download" (curl exit 23). Run\n# vscode-user steps from a writable home directory.\nWORKDIR /home/vscode\n\nRUN if [ -d "$HOME/.oh-my-zsh" ]; then rm -rf "$HOME/.oh-my-zsh"; fi \\\n    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \\\n    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \\\n    && git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions \\\n    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k \\\n    && curl https://cursor.com/install -fsS | bash \\\n    && uv tool install --python 3.11 git+https://github.com/github/spec-kit.git \\\n    && curl -fsSL https://antigravity.google/cli/install.sh | bash \\\n    && mkdir -p "$HOME/.local/bin" \\\n    && GOOSE_ARCH="$(uname -m | sed \'s/arm64/aarch64/\')" \\\n    && GOOSE_TAG="$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 https://api.github.com/repos/aaif-goose/goose/releases/latest | sed -n \'s/.*"tag_name": "\\([^"]*\\)".*/\\1/p\')" \\\n    && if [ -z "$GOOSE_TAG" ]; then echo "WARN: could not resolve latest goose tag; falling back to \'stable\' release"; GOOSE_TAG=stable; fi \\\n    && GOOSE_URL="https://github.com/aaif-goose/goose/releases/download/${GOOSE_TAG}/goose-${GOOSE_ARCH}-unknown-linux-gnu.tar.bz2" \\\n    && echo "Downloading goose ${GOOSE_TAG} (${GOOSE_ARCH})..." \\\n    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/goose.tar.bz2 "$GOOSE_URL" \\\n    && mkdir -p /tmp/goose-extract \\\n    && tar -xjf /tmp/goose.tar.bz2 -C /tmp/goose-extract \\\n    && install -m 0755 /tmp/goose-extract/goose "$HOME/.local/bin/goose" \\\n    && "$HOME/.local/bin/goose" --version \\\n    && rm -rf /tmp/goose.tar.bz2 /tmp/goose-extract\n\n# Add uv tools and goose to PATH for the non-root user\nENV PATH="$USER_HOME_DIR/.local/bin:$PATH"\n\nRUN mkdir -p $HOME/.wrangler\n\nUSER root\n\n# Ensure zsh is the default shell for the vscode user\nRUN chsh -s /usr/bin/zsh vscode\n\nCOPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/\n\n# Create the .ssh directory\nRUN mkdir -p /home/vscode/.ssh\n\n# Dynamically pull all your public keys from GitHub\nRUN curl -fsSL https://github.com/nickbrett1.keys > /home/vscode/.ssh/authorized_keys\n\n# Set permissions\nRUN chown -R vscode:vscode /home/vscode/.ssh \\\n    && chmod 700 /home/vscode/.ssh \\\n    && chmod 600 /home/vscode/.ssh/authorized_keys\n\nUSER vscode\n'
 				);
 			},
 			useData: true
@@ -636,24 +636,7 @@
 						};
 
 				return (
-					'{\n  "name": "Rust",\n  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],\n  "build": { "dockerfile": "Dockerfile" },\n  "remoteUser": "vscode",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "vscode"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {\n      "version": "lts"\n    }\n  },\n  "mounts": [\n    "source=' +
-					alias4(
-						((helper =
-							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'projectName',
-									hash: {},
-									data: data,
-									loc: { start: { line: 22, column: 12 }, end: { line: 22, column: 27 } }
-								})
-							: helper)
-					) +
-					'-wrangler-config,target=/home/vscode/.wrangler,type=volume",\n    "source=' +
+					'{\n  "name": "Rust",\n  "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],\n  "build": { "dockerfile": "Dockerfile" },\n  "remoteUser": "vscode",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "vscode"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {\n      "version": "lts"\n    }\n  },\n  "mounts": [\n    "source=' +
 					alias4(
 						((helper =
 							(helper =
@@ -670,6 +653,23 @@
 								})
 							: helper)
 					) +
+					'-wrangler-config,target=/home/vscode/.wrangler,type=volume",\n    "source=' +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'projectName') ||
+								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'projectName',
+									hash: {},
+									data: data,
+									loc: { start: { line: 24, column: 12 }, end: { line: 24, column: 27 } }
+								})
+							: helper)
+					) +
 					'-doppler-config,target=/home/vscode/.doppler,type=volume",\n    "source=gemini-cli-settings,target=/home/vscode/.gemini,type=volume",\n    "source=' +
 					alias4(
 						((helper =
@@ -683,7 +683,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 25, column: 12 }, end: { line: 25, column: 27 } }
+									loc: { start: { line: 26, column: 12 }, end: { line: 26, column: 27 } }
 								})
 							: helper)
 					) +
@@ -700,7 +700,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 33, column: 40 }, end: { line: 33, column: 55 } }
+									loc: { start: { line: 34, column: 40 }, end: { line: 34, column: 55 } }
 								})
 							: helper)
 					) +

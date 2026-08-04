@@ -53,6 +53,11 @@ RUN mkdir -p $HOME/.wrangler
 
 USER root
 
+# Ensure zsh is the default shell for the vscode user
+RUN chsh -s /usr/bin/zsh vscode
+
+COPY --chown=vscode:vscode .zshrc .p10k.zsh /home/vscode/
+
 # Create the .ssh directory
 RUN mkdir -p /home/vscode/.ssh
 
