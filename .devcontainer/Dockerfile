@@ -19,19 +19,26 @@ RUN apt-get update \
         pkg-config \
         bison \
         build-essential \
+        wget \
+        unzip \
+        sudo \
         --no-install-recommends \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates docsify-cli \
-    && if command -v sentry-cli >/dev/null 2>&1; then \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g obj2gltf gltf-pipeline gltfjsx source-map @lhci/cli npm-check-updates docsify-cli
+
+RUN if command -v sentry-cli >/dev/null 2>&1; then \
         echo "sentry-cli is already installed. Updating..."; \
         sentry-cli update; \
     else \
         echo "sentry-cli not found. Installing..."; \
         curl -sL https://sentry.io/get-cli/ | sh; \
-    fi \
-    && (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh \
-    && curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
+    fi
+
+RUN (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | env CARGO_HOME=/usr/local UV_INSTALL_DIR=/usr/local/bin sh
 
 # Build a current tmux from source (Debian bookworm's apt tmux is old).
 # Bump TMUX_VERSION (and TMUX_SHA256) to keep tmux up to date.
