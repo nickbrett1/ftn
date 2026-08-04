@@ -129,4 +129,29 @@ describe('DevContainer Generation Tests', () => {
 		expect(tmuxConfFile).toBeDefined();
 		expect(tmuxConfFile.content).toContain('set -g status-right "my-project"');
 	});
+
+	it('includes the multi-session worktree workflow in the generated .zshrc by default', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+
+		const zshrcFile = files.find((f) => f.filePath === '.devcontainer/.zshrc');
+		expect(zshrcFile).toBeDefined();
+
+		const zshrc = zshrcFile.content;
+		// Core wrapper, post-exit check, audit/remove helpers, and entry point.
+		expect(zshrc).toContain('Goose Multi-Session Worktree Workflow');
+		expect(zshrc).toContain('_wt_ensure()');
+		expect(zshrc).toContain('_wt_check()');
+		expect(zshrc).toContain('_wt_merge()');
+		expect(zshrc).toContain('_wt_audit()');
+		expect(zshrc).toContain('_wt_remove()');
+		expect(zshrc).toContain('goose() { _wt_ensure command goose "$@"; }');
+	});
 });
