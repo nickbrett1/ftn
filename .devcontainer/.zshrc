@@ -275,7 +275,7 @@ fi
 # One worktree per shell:  tmux window = shell = worktree = branch = feature
 # ----------------------------------------------------------------------------
 # Commands:
-#   goose            → run goose in this shell's feature worktree (create/reuse)
+#   goose            → run goose in this shell's feature worktree; Enter = main tree
 #   wt audit         → list all worktrees, flag dirty/unmerged ones
 #   wt remove <name> → remove a finished worktree and its branch
 # Knobs:
@@ -307,13 +307,19 @@ _wt_ensure() {
     return $?
   fi
 
-  # 3) At project root, no binding → ask for a name, create (or reuse) a worktree.
+  # 3) At project root, no binding → ask for a feature name and create/reuse a
+  #    worktree, OR press Enter to run in the main tree (no worktree).
   local WT_ROOT="${WT_ROOT:-$(dirname "$PWD")/$(basename "$PWD")-wt}"
   local feat
-  print -n "Feature name (new worktree): "
+  print -n "Feature name (Enter for main tree, no worktree): "
   read -r feat || return 1
   feat="${feat:l}"; feat="${feat// /-}"          # lowercase, spaces → dashes
-  [[ -z "$feat" ]] && { echo "goose: no name given, aborting"; return 1; }
+  if [[ -z "$feat" ]]; then
+    unset GOOSE_WT
+    echo "→ running in the main tree (no worktree)"
+    "$@"
+    return $?
+  fi
 
   wt="$WT_ROOT/$feat"
   if [[ ! -d "$wt" ]]; then

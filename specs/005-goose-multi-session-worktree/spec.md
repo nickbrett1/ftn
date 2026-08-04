@@ -279,3 +279,12 @@ selectable capability). Covered by
 `local x y mark=" "` inside a `for` loop re-prints prior values on subsequent
 iterations (zsh `local` re-declaration behavior). All loop-local variables are
 now declared once before the loop in `_wt_audit`.
+
+### 11.3 Main-tree escape hatch (added 2026-08-04)
+
+For quick tasks (reading specs, small chores) where a worktree is overkill, the
+"Feature name" prompt now accepts **Enter** (empty name): the wrapper skips
+worktree creation, runs goose in the current (main) tree, leaves `GOOSE_WT`
+unset, and applies no post-exit `_wt_check`/`cd`. The prompt reads
+"Feature name (Enter for main tree, no worktree): ". The worktree path is
+unchanged for any non-empty name.
