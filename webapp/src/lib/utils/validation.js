@@ -224,9 +224,7 @@ const capabilityValidators = {
 		}
 		if (
 			config.exposePort !== undefined &&
-			(typeof config.exposePort !== 'number' ||
-				config.exposePort < 1 ||
-				config.exposePort > 65535)
+			(typeof config.exposePort !== 'number' || config.exposePort < 1 || config.exposePort > 65535)
 		) {
 			errors.push('exposePort must be a number between 1 and 65535');
 		}

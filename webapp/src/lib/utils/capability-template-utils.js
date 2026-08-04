@@ -498,9 +498,7 @@ function getDockerContainerTemplateData(context) {
 
 	const networkModeLine = networkMode === 'host' ? '    network_mode: host' : '';
 	const portsConfig =
-		networkMode === 'host'
-			? ''
-			: `    ports:\n      - "${exposePort}:${exposePort}"`;
+		networkMode === 'host' ? '' : `    ports:\n      - "${exposePort}:${exposePort}"`;
 
 	const labels = [];
 	if (watchtower || homepage) labels.push('    labels:');
