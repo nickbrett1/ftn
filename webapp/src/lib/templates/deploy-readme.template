@@ -32,12 +32,28 @@ image digest changes — no inbound ports from CI are required.
 - **Private packages**: `docker login {{registryPrefix}}` on the NAS host once
   (Watchtower uses the Docker daemon's credentials).
 
-## 4. Homepage dashboard
+## 4. Rolling back a bad update
+
+Watchtower recreates the container on every push to `main`, so a broken build
+can reach the NAS. Every image is also tagged with its commit SHA, so you can
+pin the compose file to a known-good build while you fix the repo:
+
+1. Find the SHA of the last good commit (e.g. the GHCR package page, or
+   `git log` on your machine).
+2. In `docker-compose.yml`, change the image to the pinned SHA:
+   `image: {{registryPrefix}}/OWNER/{{projectName}}:<commit-sha>`
+3. Restart the project (`docker compose up -d`, or restart it in Container
+   Manager).
+
+Watchtower watches the tag referenced by the compose file, so a pinned SHA tag
+will not be overwritten until you move the image back to `latest`.
+
+## 5. Homepage dashboard
 
 Append `deploy/homepage-services.yaml` to your Homepage `services.yaml` (and
 enable the `homepage` Docker provider) to show a health widget for the service.
 
-## 5. Networking notes
+## 6. Networking notes
 
 - Network mode is `{{networkMode}}`.
 - If your container needs fixed UDP ports or multicast (e.g. LAN protocols like

@@ -150,6 +150,7 @@ NAS deploy runbook for the target host class (Synology Container Manager as the 
 3. Watchtower poll flow: `docker login` only needed if `imageVisibility=private`; for public GHCR packages no credentials are required.
 4. Homepage: append `deploy/homepage-services.yaml` snippet to `services.yaml` and enable the `homepage` docker provider.
 5. Note for host-networking apps: bind the container to the NAS IP; only one Govee-LAN client per IP (fixed UDP ports 4001–4003).
+6. Rollback: if a Watchtower update breaks the service, pin the compose `image:` to a commit-SHA tag from the GHCR package page (images are tagged with the commit SHA + `latest`).
 
 ### 3.5 `deploy/homepage-services.yaml`
 
