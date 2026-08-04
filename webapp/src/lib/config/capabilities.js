@@ -593,7 +593,7 @@ export const capabilities = [
 		id: 'docker-container',
 		name: 'Docker Container',
 		description:
-			'Containerize the project and publish to a container registry (GHCR, Docker Hub, or Quay) for deployment to a NAS or self-hosted host via Docker Compose. Mutually exclusive with other deployment systems.',
+			'Containerize the project and publish to the GitHub Container Registry (GHCR) for deployment to a NAS or self-hosted host via Docker Compose. Mutually exclusive with other deployment systems.',
 		category: CATEGORY_DEPLOYMENT,
 		dependencies: ['docker'],
 		conflicts: ['cloudflare-wrangler', 'google-cloud'],
@@ -603,7 +603,7 @@ export const capabilities = [
 			properties: {
 				registry: {
 					type: 'string',
-					enum: ['ghcr', 'dockerhub', 'quay'],
+					enum: ['ghcr'],
 					default: 'ghcr'
 				},
 				imageVisibility: {

@@ -10,9 +10,7 @@ image and pushes it to `{{registryPrefix}}/OWNER/{{projectName}}` on every push 
 
 - Replace `OWNER` with your registry namespace (e.g. your GitHub username/org for GHCR).
 - Registry credentials are read from the CircleCI context (`{{registryPrefix}}`):
-  - GHCR: `GHCR_USERNAME` + `GHCR_TOKEN` (fine-grained PAT with Packages: read & write)
-  - Docker Hub: `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN`
-  - Quay: `QUAY_ROBOT_USERNAME` + `QUAY_ROBOT_TOKEN`
+  - `GHCR_USERNAME` + `GHCR_TOKEN` (fine-grained PAT with Packages: read & write)
 
 ## 2. Deploy on the NAS (Synology Container Manager)
 

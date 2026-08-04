@@ -445,20 +445,13 @@ function _applyEslintSonarjsConfig(data, context) {
 	}
 }
 
-const DOCKER_REGISTRY_PREFIXES = {
-	ghcr: 'ghcr.io',
-	dockerhub: 'docker.io',
-	quay: 'quay.io'
-};
+// GHCR is the only supported registry (matches the GitHub + CircleCI stack, and
+// public packages need no NAS-side credentials).
+const DOCKER_REGISTRY_PREFIX = 'ghcr.io';
+const DOCKER_CREDENTIAL_VARS = { user: 'GHCR_USERNAME', token: 'GHCR_TOKEN' };
 
-const DOCKER_REGISTRY_CREDENTIAL_VARS = {
-	ghcr: { user: 'GHCR_USERNAME', token: 'GHCR_TOKEN' },
-	dockerhub: { user: 'DOCKERHUB_USERNAME', token: 'DOCKERHUB_TOKEN' },
-	quay: { user: 'QUAY_ROBOT_USERNAME', token: 'QUAY_ROBOT_TOKEN' }
-};
-
-function getDockerRegistryPrefix(registry) {
-	return DOCKER_REGISTRY_PREFIXES[registry] || DOCKER_REGISTRY_PREFIXES.ghcr;
+function getDockerRegistryPrefix() {
+	return DOCKER_REGISTRY_PREFIX;
 }
 
 /**
@@ -470,13 +463,12 @@ function getDockerRegistryPrefix(registry) {
  */
 function getDockerContainerTemplateData(context) {
 	const config = context.configuration?.['docker-container'] || {};
-	const registry = config.registry || 'ghcr';
 	const networkMode = config.networkMode || 'bridge';
 	const exposePort = config.exposePort ?? 3000;
 	const watchtower = config.watchtower !== false;
 	const homepage = config.homepage !== false;
 	const projectName = context.projectName || 'my-project';
-	const registryPrefix = getDockerRegistryPrefix(registry);
+	const registryPrefix = getDockerRegistryPrefix();
 
 	const isPython = (context.capabilities || []).some((c) => c.startsWith('devcontainer-python'));
 	const isNode = (context.capabilities || []).some(
@@ -542,13 +534,10 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
 		return;
 	}
 
-	const config = context.configuration?.['docker-container'] || {};
-	const registry = config.registry || 'ghcr';
-	const registryPrefix = getDockerRegistryPrefix(registry);
+	const registryPrefix = getDockerRegistryPrefix();
 	const projectName = context.projectName || 'my-project';
 	const imageRef = `${registryPrefix}/OWNER/${projectName}`;
-	const credentialVars =
-		DOCKER_REGISTRY_CREDENTIAL_VARS[registry] || DOCKER_REGISTRY_CREDENTIAL_VARS.ghcr;
+	const credentialVars = DOCKER_CREDENTIAL_VARS;
 
 	data.deployJobDefinition = `
   docker-publish:

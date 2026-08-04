@@ -20,7 +20,7 @@ Requirements that fall out:
 - **Mutually exclusive deployment systems.** A project targets exactly one deployment mechanism. Selecting `docker-container` must deselect `cloudflare-wrangler` / `google-cloud` and vice-versa. (None of the current deployment capabilities declare `conflicts`, so this must be introduced.)
 - **CircleCI-aware.** The generated `.circleci/config.yml` must contain the build + registry-publish job when `docker-container` is selected (instead of a wrangler/GCP deploy job).
 - **NAS-ready artifacts.** Generated repo includes a runtime `Dockerfile`, `.dockerignore`, `docker-compose.yml` (with `network_mode: host` option — required for UDP/multicast workloads), Watchtower deploy notes, and a Homepage services snippet.
-- **Registry choice.** Default GHCR (matches GitHub + CircleCI stack, free, public packages for public repos → no credentials needed on the NAS). `dockerhub` and `quay` as alternatives.
+- **Registry choice.** GHCR only (matches GitHub + CircleCI stack, free, public packages for public repos → no credentials needed on the NAS).
 
 **Non-goals (v1)**
 
@@ -39,7 +39,7 @@ Source of truth: the **fintechnick MCP capability catalog** (the catalog served 
 {
   "id": "docker-container",
   "name": "Docker Container",
-  "description": "Containerize the project and publish to a container registry (GHCR, Docker Hub, or Quay) for deployment to a NAS or self-hosted host via Docker Compose. Mutually exclusive with other deployment systems.",
+  "description": "Containerize the project and publish to the GitHub Container Registry (GHCR) for deployment to a NAS or self-hosted host via Docker Compose. Mutually exclusive with other deployment systems.",
   "category": "deployment",
   "dependencies": ["docker"],
   "conflicts": ["cloudflare-wrangler", "google-cloud"],
@@ -47,7 +47,7 @@ Source of truth: the **fintechnick MCP capability catalog** (the catalog served 
   "configurationSchema": {
     "type": "object",
     "properties": {
-      "registry":        { "type": "string", "enum": ["ghcr", "dockerhub", "quay"], "default": "ghcr" },
+      "registry":        { "type": "string", "enum": ["ghcr"], "default": "ghcr" },
       "imageVisibility": { "type": "string", "enum": ["public", "private"], "default": "public" },
       "tagStrategy":     { "type": "string", "enum": ["commit-sha", "semver", "latest"], "default": "commit-sha" },
       "networkMode":     { "type": "string", "enum": ["bridge", "host"], "default": "bridge" },
@@ -184,7 +184,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     environment:
-      IMAGE: ghcr.io/<< parameters.owner >>/<< project >>   # registry per config
+      IMAGE: ghcr.io/<< parameters.owner >>/<< project >>   # GHCR is the only registry
     steps:
       - checkout
       - setup_remote_docker
@@ -207,7 +207,7 @@ workflows:
           filters: { branches: { only: [main] } }
 ```
 
-- Secrets live in the CircleCI context named by the `circleci` capability config (`context.name`, default `common`): `GHCR_USERNAME`, `GHCR_TOKEN` (PAT, `packages:write`). For `dockerhub` registry: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`. For `quay`: `QUAY_ROBOT_USERNAME`, `QUAY_ROBOT_TOKEN`.
+- Secrets live in the CircleCI context named by the `circleci` capability config (`context.name`, default `common`): `GHCR_USERNAME`, `GHCR_TOKEN` (PAT, `packages:write`).
 - `tagStrategy=commit-sha` → tag with `$CIRCLE_SHA1` + `latest`; `semver` → tag from `$CIRCLE_TAG` on tag pushes; `latest` → `latest` only.
 - RequiresAuth note: `GHCR_TOKEN` push auth is a CircleCI env-var concern; genproj should surface it as an external-service action, not a user OAuth flow.
 
@@ -217,9 +217,7 @@ workflows:
 
 | Registry | Image ref | NAS pull | CircleCI push | Notes |
 |---|---|---|---|---|
-| `ghcr` (default) | `ghcr.io/<owner>/<project>` | Free for **public** packages (no auth); private needs `docker login` on NAS | PAT `packages:write` | Matches GitHub + CircleCI stack; public repo → public package |
-| `dockerhub` | `<owner>/<project>` | `docker login` or public image | `DOCKERHUB_TOKEN` | 1 free private repo |
-| `quay` | `quay.io/<owner>/<project>` | Robot account token | Robot token | No pull rate limits |
+| `ghcr` (only) | `ghcr.io/<owner>/<project>` | Free for **public** packages (no auth); private needs `docker login` on NAS | PAT `packages:write` | Matches GitHub + CircleCI stack; public repo → public package |
 
 **Default flow (GHCR + public repo + public package)**: zero credentials on the NAS — Watchtower polls `ghcr.io/<owner>/<project>:latest` anonymously. If `imageVisibility=private`, `deploy/README.md` instructs `docker login ghcr.io` on the NAS host (Watchtower uses the Docker daemon's credentials).
 

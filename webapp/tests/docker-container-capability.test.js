@@ -28,6 +28,8 @@ describe('docker-container capability', () => {
 			watchtower: { default: true },
 			homepage: { default: true }
 		});
+		// GHCR is the only supported registry.
+		expect(capability.configurationSchema.properties.registry.enum).toEqual(['ghcr']);
 		expect(capability.templates.map((t) => t.templateId)).toEqual([
 			'dockerfile',
 			'dockerignore',
@@ -139,17 +141,18 @@ describe('CircleCI integration for docker-container', () => {
 		expect(data.deployWorkflowJob).toContain('context: common');
 	});
 
-	it('uses dockerhub credentials for the dockerhub registry', () => {
+	it('uses GHCR credentials and image ref regardless of registry config', () => {
 		const data = getCapabilityTemplateData('circleci', {
 			capabilities: ['circleci', 'docker-container'],
 			configuration: {
-				'docker-container': { registry: 'dockerhub' },
+				'docker-container': { registry: 'ghcr' },
 				circleci: { context: { enabled: false } }
 			},
 			projectName: 'demo-app'
 		});
-		expect(data.deployJobDefinition).toContain('docker.io/OWNER/demo-app');
-		expect(data.deployJobDefinition).toContain('DOCKERHUB_TOKEN');
+		expect(data.deployJobDefinition).toContain('ghcr.io/OWNER/demo-app');
+		expect(data.deployJobDefinition).toContain('GHCR_TOKEN');
+		expect(data.deployJobDefinition).toContain('GHCR_USERNAME');
 		expect(data.deployWorkflowJob).not.toContain('context:');
 	});
 

@@ -212,7 +212,7 @@ const capabilityValidators = {
 	'docker-container': (config) => {
 		const errors = [];
 		const enumFields = {
-			registry: ['ghcr', 'dockerhub', 'quay'],
+			registry: ['ghcr'],
 			imageVisibility: ['public', 'private'],
 			tagStrategy: ['commit-sha', 'semver', 'latest'],
 			networkMode: ['bridge', 'host']
