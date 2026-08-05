@@ -49,7 +49,7 @@ Source of truth: the **fintechnick MCP capability catalog** (the catalog served 
     "properties": {
       "registry":        { "type": "string", "enum": ["ghcr"], "default": "ghcr" },
       "imageVisibility": { "type": "string", "enum": ["public", "private"], "default": "public" },
-      "tagStrategy":     { "type": "string", "enum": ["commit-sha", "semver", "latest"], "default": "commit-sha" },
+      "tagStrategy":     { "type": "string", "enum": ["commit-sha"], "default": "commit-sha" },
       "networkMode":     { "type": "string", "enum": ["bridge", "host"], "default": "bridge" },
       "exposePort":      { "type": "integer", "minimum": 1, "maximum": 65535, "default": 3000 },
       "watchtower":      { "type": "boolean", "default": true },
@@ -209,7 +209,7 @@ workflows:
 ```
 
 - Secrets live in the CircleCI context named by the `circleci` capability config (`context.name`, default `common`): `GHCR_USERNAME`, `GHCR_TOKEN` (PAT, `packages:write`).
-- `tagStrategy=commit-sha` → tag with `$CIRCLE_SHA1` + `latest`; `semver` → tag from `$CIRCLE_TAG` on tag pushes; `latest` → `latest` only.
+- Only `tagStrategy=commit-sha` is supported → tag with `$CIRCLE_SHA1` + `latest`. (`semver`/`latest`-only strategies were deliberately removed — commit SHA is reproducible and immutable, and `latest` is always maintained as a convenience alias.)
 - RequiresAuth note: `GHCR_TOKEN` push auth is a CircleCI env-var concern; genproj should surface it as an external-service action, not a user OAuth flow.
 
 ---
@@ -238,7 +238,7 @@ Touchpoints found in this repo (`webapp/src/`):
 
 - Deployment capabilities (`cloudflare-wrangler`, `google-cloud`, `docker-container`) render as mutually exclusive: selecting one unchecks the others (radio-like behavior within the category), with a tooltip explaining why ("A project targets exactly one deployment system").
 - Selecting `docker-container` auto-selects its dependency `docker` (devcontainer `docker` capability) — standard dependency auto-select behavior.
-- Config form renders only relevant fields: registry, image visibility, tag strategy, network mode, exposed port, watchtower, homepage.
+- Config form renders only relevant fields: registry, image visibility, network mode, exposed port, watchtower, homepage. Tag strategy is fixed to `commit-sha` (single-option enums like `registry`/`tagStrategy` are not rendered).
 - Preview tab lists the 5 new files + the CircleCI publish job.
 
 **Acceptance criteria:**

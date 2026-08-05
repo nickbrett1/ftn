@@ -11,7 +11,7 @@
 		"properties": {
 			"registry": { "type": "string", "enum": ["ghcr"], "default": "ghcr" },
 			"imageVisibility": { "type": "string", "enum": ["public", "private"], "default": "public" },
-			"tagStrategy": { "type": "string", "enum": ["commit-sha", "semver", "latest"], "default": "commit-sha" },
+			"tagStrategy": { "type": "string", "enum": ["commit-sha"], "default": "commit-sha" },
 			"networkMode": { "type": "string", "enum": ["bridge", "host"], "default": "bridge" },
 			"exposePort": { "type": "integer", "minimum": 1, "maximum": 65535, "default": 3000 },
 			"watchtower": { "type": "boolean", "default": true },

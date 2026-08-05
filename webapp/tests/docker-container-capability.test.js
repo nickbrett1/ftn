@@ -30,6 +30,9 @@ describe('docker-container capability', () => {
 		});
 		// GHCR is the only supported registry.
 		expect(capability.configurationSchema.properties.registry.enum).toEqual(['ghcr']);
+		// commit-sha is the only supported tag strategy.
+		expect(capability.configurationSchema.properties.tagStrategy.enum).toEqual(['commit-sha']);
+		expect(capability.configurationSchema.properties.tagStrategy.default).toBe('commit-sha');
 		expect(capability.templates.map((t) => t.templateId)).toEqual([
 			'dockerfile',
 			'dockerignore',

@@ -613,7 +613,7 @@ export const capabilities = [
 				},
 				tagStrategy: {
 					type: 'string',
-					enum: ['commit-sha', 'semver', 'latest'],
+					enum: ['commit-sha'],
 					default: 'commit-sha'
 				},
 				networkMode: {

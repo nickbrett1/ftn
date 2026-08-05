@@ -214,7 +214,7 @@ const capabilityValidators = {
 		const enumFields = {
 			registry: ['ghcr'],
 			imageVisibility: ['public', 'private'],
-			tagStrategy: ['commit-sha', 'semver', 'latest'],
+			tagStrategy: ['commit-sha'],
 			networkMode: ['bridge', 'host']
 		};
 		for (const [field, allowed] of Object.entries(enumFields)) {
