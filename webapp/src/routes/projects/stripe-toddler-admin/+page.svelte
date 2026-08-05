@@ -444,69 +444,80 @@
 >
 	<!-- Top Navigation Header -->
 	<header
-		class="no-print border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md sticky top-0 z-40"
+		class="no-print border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-md sticky top-0 z-40"
 	>
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex items-center justify-between h-20">
+		<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+			<div
+				class="flex flex-col md:flex-row md:items-center justify-between py-3 md:py-0 md:h-20 gap-3 md:gap-4"
+			>
 				<!-- Brand / Logo -->
-				<div class="flex items-center gap-4">
-					<a
-						href="/projects"
-						class="text-zinc-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-zinc-800"
-					>
-						<ArrowLeftSolid class="size-5" />
-					</a>
-					<div class="flex items-center gap-3">
-						<div
-							class="size-12 rounded-2xl bg-gradient-to-tr from-green-500 to-blue-600 flex items-center justify-center shadow-lg shadow-green-500/20"
+				<div
+					class="flex items-center justify-between md:justify-start gap-2 sm:gap-4 w-full md:w-auto"
+				>
+					<div class="flex items-center gap-2 sm:gap-3 min-w-0">
+						<a
+							href="/projects"
+							class="text-zinc-400 hover:text-white transition-colors p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 shrink-0"
+							aria-label="Back to projects"
 						>
-							<BabySolid class="size-7 text-white" />
+							<ArrowLeftSolid class="size-4 sm:size-5" />
+						</a>
+						<div
+							class="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-green-500 to-blue-600 flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0"
+						>
+							<BabySolid class="size-5 sm:size-6 text-white" />
 						</div>
-						<div>
-							<h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-								Stripe Toddler Admin
+						<div class="min-w-0">
+							<h1
+								class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5 truncate"
+							>
+								<span class="truncate">Stripe Toddler Admin</span>
 								<span
-									class="text-xs px-2.5 py-0.5 rounded-full font-mono bg-green-500/10 text-green-400 border border-green-500/20"
+									class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-mono bg-green-500/10 text-green-400 border border-green-500/20 shrink-0"
 									>v1.0</span
 								>
 							</h1>
-							<p class="text-xs text-zinc-400">Inventory Management & Barcode Label Generator</p>
+							<p class="text-[11px] sm:text-xs text-zinc-400 truncate">
+								Inventory & Barcode Dashboard
+							</p>
 						</div>
 					</div>
 				</div>
 
 				<!-- Navigation Tabs -->
-				<nav class="flex items-center gap-1 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800">
+				<nav
+					class="flex items-center justify-around sm:justify-start gap-1 bg-zinc-950 p-1 sm:p-1.5 rounded-xl border border-zinc-800 w-full md:w-auto overflow-x-auto"
+				>
 					<button
 						onclick={() => (activeTab = 'inventory')}
-						class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
+						class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex-1 md:flex-initial text-center whitespace-nowrap {activeTab ===
 						'inventory'
 							? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
 							: 'text-zinc-400 hover:text-white hover:bg-zinc-900'}"
 					>
-						<BoxSolid class="size-4 text-green-400" />
+						<BoxSolid class="size-3.5 sm:size-4 text-green-400 shrink-0" />
 						<span>Inventory</span>
 					</button>
 
 					<button
 						onclick={() => (activeTab = 'analytics')}
-						class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
+						class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex-1 md:flex-initial text-center whitespace-nowrap {activeTab ===
 						'analytics'
 							? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
 							: 'text-zinc-400 hover:text-white hover:bg-zinc-900'}"
 					>
-						<ChartLineSolid class="size-4 text-blue-400" />
+						<ChartLineSolid class="size-3.5 sm:size-4 text-blue-400 shrink-0" />
 						<span>Sales History</span>
 					</button>
 
 					<button
 						onclick={() => (activeTab = 'settings')}
-						class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
+						class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex-1 md:flex-initial text-center whitespace-nowrap {activeTab ===
 						'settings'
 							? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
 							: 'text-zinc-400 hover:text-white hover:bg-zinc-900'}"
 					>
-						<GearSolid class="size-4 text-yellow-400" />
+						<GearSolid class="size-3.5 sm:size-4 text-yellow-400 shrink-0" />
 						<span>Settings</span>
 					</button>
 				</nav>
