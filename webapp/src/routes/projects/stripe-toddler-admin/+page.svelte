@@ -30,7 +30,7 @@
 	let workerUrl = $state(data?.workerUrl || 'https://stripe-toddler.nick-brett1.workers.dev');
 
 	// Inventory state
-	let inventoryItems = $state([]);
+	let inventoryItems = $state(data?.initialInventory || []);
 	let sessionAddedBarcodes = $state(new Set());
 	let selectedBarcodesForPrint = $state(new Set());
 	let printSelectionMode = $state('all'); // 'session' | 'all' | 'custom'
@@ -47,10 +47,10 @@
 	let imagePreviewUrl = $state('');
 
 	// Analytics & Server Status state
-	let transactions = $state([]);
+	let transactions = $state(data?.initialTransactions || []);
 	let isLoadingAnalytics = $state(false);
 	let isLoadingInventory = $state(false);
-	let serverError = $state('');
+	let serverError = $state(data?.serverError || '');
 
 	onMount(() => {
 		fetchInventory();

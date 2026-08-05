@@ -27,9 +27,19 @@ describe('/projects/stripe-toddler-admin/+page.server.js load', () => {
 	it('returns workerUrl when user is authenticated', async () => {
 		requireUser.requireUser.mockResolvedValue({ user: { id: 1 } });
 
-		const result = await load({ url: { pathname: '/projects/stripe-toddler-admin' } });
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => []
+		});
+
+		const result = await load({
+			url: { pathname: '/projects/stripe-toddler-admin' },
+			fetch: mockFetch
+		});
 
 		expect(result).toHaveProperty('workerUrl');
 		expect(typeof result.workerUrl).toBe('string');
+		expect(result).toHaveProperty('initialInventory');
+		expect(result).toHaveProperty('initialTransactions');
 	});
 });
