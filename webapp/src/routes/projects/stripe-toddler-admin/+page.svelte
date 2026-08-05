@@ -1,5 +1,4 @@
 <script>
-	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import BarcodeSvg from '$lib/components/stripe-toddler/BarcodeSvg.svelte';
@@ -52,15 +51,10 @@
 	let isLoadingInventory = $state(false);
 	let serverError = $state(data?.serverError || '');
 
-	onMount(() => {
-		fetchInventory();
-		fetchAnalytics();
-	});
-
 	async function fetchInventory() {
 		isLoadingInventory = true;
 		try {
-			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`);
+			const res = await fetch('/projects/stripe-toddler-admin/api/inventory');
 			if (res.ok) {
 				const data = await res.json();
 				if (Array.isArray(data)) {
@@ -72,11 +66,10 @@
 				}
 				serverError = '';
 			} else {
-				serverError = `Worker API returned HTTP ${res.status} ${res.statusText} on GET /api/admin/inventory`;
+				console.warn(`Server proxy returned HTTP ${res.status}`);
 			}
 		} catch (err) {
-			console.error('Failed to fetch inventory:', err);
-			serverError = `Unable to connect to Worker API at ${workerUrl}: ${err.message}`;
+			console.warn('Failed to refresh inventory:', err);
 		} finally {
 			isLoadingInventory = false;
 		}
@@ -181,7 +174,7 @@
 
 			let apiSaveSuccess = false;
 			try {
-				const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
+				const res = await fetch('/projects/stripe-toddler-admin/api/inventory', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(payload)
