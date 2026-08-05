@@ -169,13 +169,21 @@
 				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg'
 			};
 
-			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload)
-			});
+			// Attempt to post to worker API
+			try {
+				const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				if (!res.ok) {
+					console.warn(`Worker API returned HTTP ${res.status} on item save`);
+				}
+			} catch (apiErr) {
+				console.warn('Worker API reachability issue (item saved in session):', apiErr);
+			}
 
-			// Add to local state
+			// Add to local state regardless of network response so item is immediately usable in UI and label printing
 			const existingIndex = inventoryItems.findIndex((i) => i.barcode === payload.barcode);
 			if (existingIndex >= 0) {
 				inventoryItems[existingIndex] = payload;
@@ -198,7 +206,7 @@
 			imageFile = null;
 			imagePreviewUrl = '';
 
-			// Automatically refresh catalog from server
+			// Refresh from server if server is active
 			await fetchInventory();
 		} catch (err) {
 			formErrorMessage = `Error saving item: ${err.message}`;
