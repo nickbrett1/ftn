@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import BarcodeSvg from '$lib/components/stripe-toddler/BarcodeSvg.svelte';
 	import {
@@ -442,6 +443,11 @@
 <div
 	class="min-h-screen bg-zinc-950 text-white font-sans selection:bg-green-500 selection:text-black"
 >
+	<!-- Standard Site Header -->
+	<div class="no-print max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2">
+		<Header />
+	</div>
+
 	<!-- Top Navigation Header -->
 	<header
 		class="no-print border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-md sticky top-0 z-40"

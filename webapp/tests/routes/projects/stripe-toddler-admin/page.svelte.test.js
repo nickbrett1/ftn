@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 import Page from '../../../../src/routes/projects/stripe-toddler-admin/+page.svelte';
 
+vi.mock('$lib/components/Header.svelte', () => ({ default: vi.fn() }));
 vi.mock('$lib/components/Footer.svelte', () => ({ default: vi.fn() }));
 
 describe('Stripe Toddler Admin Page Component', () => {
