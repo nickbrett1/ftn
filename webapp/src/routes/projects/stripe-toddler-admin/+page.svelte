@@ -41,10 +41,10 @@
 	let printSelectionMode = $state('all'); // 'session' | 'all' | 'custom'
 
 	// Form state
-	let newItemName = $state('Red Fire Engine Truck');
+	let newItemName = $state('');
 	let newItemPriceUsd = $state(5);
-	let newItemBarcode = $state('TOY-FIRE-ENGINE-001');
-	let newItemImageUrl = $state('/images/toddler/toy_fire_truck.jpg');
+	let newItemBarcode = $state('');
+	let newItemImageUrl = $state('');
 	let isUploadingImage = $state(false);
 	let isSavingItem = $state(false);
 	let formSuccessMessage = $state('');
@@ -60,101 +60,6 @@
 	// Status connection state
 	let connectionStatus = $state('checking'); // 'online' | 'offline' | 'unauthorized' | 'checking'
 	let connectionMessage = $state('');
-
-	// Default fallback demo data if worker is empty or offline
-	const demoInventoryItems = [
-		{
-			barcode: 'TOY-FIRE-ENGINE-001',
-			name: 'Red Fire Engine Truck',
-			price_cents: 500,
-			image_url: '/images/toddler/toy_fire_truck.jpg'
-		},
-		{
-			barcode: 'TOY-YELLOW-DIGGER-002',
-			name: 'Yellow Construction Digger',
-			price_cents: 800,
-			image_url: '/images/toddler/toy_yellow_digger.jpg'
-		},
-		{
-			barcode: 'TOY-WOODEN-BLOCKS-003',
-			name: 'Wooden Building Blocks Set',
-			price_cents: 1200,
-			image_url: '/images/toddler/toy_wooden_blocks.jpg'
-		},
-		{
-			barcode: 'TOY-PLUSH-BEAR-004',
-			name: 'Cuddle Teddy Bear',
-			price_cents: 600,
-			image_url: '/images/toddler/toy_teddy_bear.jpg'
-		},
-		{
-			barcode: 'TOY-RACE-CAR-005',
-			name: 'Blue Speed Racing Car',
-			price_cents: 400,
-			image_url: '/images/toddler/toy_race_car.jpg'
-		},
-		{
-			barcode: 'TOY-STACKING-RINGS-006',
-			name: 'Rainbow Stacking Rings',
-			price_cents: 700,
-			image_url: '/images/toddler/toy_stacking_rings.jpg'
-		}
-	];
-
-	const demoTransactions = [
-		{
-			transaction_id: '8f7a1c9e-4b2d-4e9f-9a1b-3c5d7e9f1a2b',
-			payment_intent_id: 'pi_3Pxl92Lkd901KsaL0001a1a1',
-			amount_cents: 1300,
-			status: 'captured',
-			created_at: Math.floor(Date.now() / 1000) - 3600,
-			items: [
-				{
-					barcode: 'TOY-FIRE-ENGINE-001',
-					name: 'Red Fire Engine Truck',
-					price_cents: 500,
-					quantity: 1
-				},
-				{
-					barcode: 'TOY-YELLOW-DIGGER-002',
-					name: 'Yellow Construction Digger',
-					price_cents: 800,
-					quantity: 1
-				}
-			]
-		},
-		{
-			transaction_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
-			payment_intent_id: 'pi_3Pxl92Lkd901KsaL0002b2b2',
-			amount_cents: 1200,
-			status: 'captured',
-			created_at: Math.floor(Date.now() / 1000) - 14400,
-			items: [
-				{
-					barcode: 'TOY-WOODEN-BLOCKS-003',
-					name: 'Wooden Building Blocks Set',
-					price_cents: 1200,
-					quantity: 1
-				}
-			]
-		},
-		{
-			transaction_id: '5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b',
-			payment_intent_id: 'pi_3Pxl92Lkd901KsaL0003c3c3',
-			amount_cents: 1000,
-			status: 'captured',
-			created_at: Math.floor(Date.now() / 1000) - 86400,
-			items: [
-				{ barcode: 'TOY-PLUSH-BEAR-004', name: 'Cuddle Teddy Bear', price_cents: 600, quantity: 1 },
-				{
-					barcode: 'TOY-RACE-CAR-005',
-					name: 'Blue Speed Racing Car',
-					price_cents: 400,
-					quantity: 1
-				}
-			]
-		}
-	];
 
 	onMount(() => {
 		// Load persisted settings
@@ -211,19 +116,15 @@
 			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, { headers });
 			if (res.ok) {
 				const data = await res.json();
-				if (Array.isArray(data) && data.length > 0) {
-					inventoryItems = data;
-				} else {
-					inventoryItems = demoInventoryItems;
-				}
+				inventoryItems = Array.isArray(data) ? data : [];
 				connectionStatus = 'online';
 			} else {
-				inventoryItems = demoInventoryItems;
+				inventoryItems = [];
 				if (res.status === 401) connectionStatus = 'unauthorized';
 			}
 		} catch (err) {
-			console.warn('Using demo inventory items due to connection error:', err);
-			inventoryItems = demoInventoryItems;
+			console.error('Failed to fetch inventory:', err);
+			inventoryItems = [];
 			connectionStatus = 'offline';
 		} finally {
 			isLoadingInventory = false;
@@ -242,17 +143,13 @@
 			);
 			if (res.ok) {
 				const data = await res.json();
-				if (Array.isArray(data) && data.length > 0) {
-					transactions = data;
-				} else {
-					transactions = demoTransactions;
-				}
+				transactions = Array.isArray(data) ? data : [];
 			} else {
-				transactions = demoTransactions;
+				transactions = [];
 			}
 		} catch (err) {
-			console.warn('Using demo analytics due to fetch error:', err);
-			transactions = demoTransactions;
+			console.error('Failed to fetch analytics:', err);
+			transactions = [];
 		} finally {
 			isLoadingAnalytics = false;
 		}
@@ -847,49 +744,62 @@
 					</div>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-						{#each inventoryItems as item}
+						{#if inventoryItems.length === 0}
 							<div
-								class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-between hover:border-zinc-700 transition-colors"
+								class="col-span-full py-12 text-center bg-zinc-950/50 border border-dashed border-zinc-800 rounded-2xl p-6"
 							>
-								<div>
-									<div
-										class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-3 border border-zinc-800 flex items-center justify-center"
-									>
-										{#if item.image_url}
-											<img
-												src={item.image_url}
-												alt={item.name}
-												class="w-full h-full object-cover"
-											/>
-										{:else}
-											<TagSolid class="size-8 text-zinc-600" />
-										{/if}
+								<TagSolid class="size-10 text-zinc-600 mx-auto mb-3" />
+								<h4 class="text-base font-bold text-white mb-1">No Inventory Items Found</h4>
+								<p class="text-xs text-zinc-400 max-w-md mx-auto">
+									No items in database. Add an item using the form above, or check your API key in
+									Settings.
+								</p>
+							</div>
+						{:else}
+							{#each inventoryItems as item}
+								<div
+									class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-between hover:border-zinc-700 transition-colors"
+								>
+									<div>
+										<div
+											class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-3 border border-zinc-800 flex items-center justify-center"
+										>
+											{#if item.image_url}
+												<img
+													src={item.image_url}
+													alt={item.name}
+													class="w-full h-full object-cover"
+												/>
+											{:else}
+												<TagSolid class="size-8 text-zinc-600" />
+											{/if}
+										</div>
+
+										<h4 class="font-bold text-white text-sm line-clamp-1">{item.name}</h4>
+										<p class="text-xs font-mono text-green-400 font-bold mt-0.5">
+											${(item.price_cents / 100).toFixed(2)} USD
+										</p>
+										<p class="text-[10px] font-mono text-zinc-500 mt-1 truncate">{item.barcode}</p>
 									</div>
 
-									<h4 class="font-bold text-white text-sm line-clamp-1">{item.name}</h4>
-									<p class="text-xs font-mono text-green-400 font-bold mt-0.5">
-										${(item.price_cents / 100).toFixed(2)} USD
-									</p>
-									<p class="text-[10px] font-mono text-zinc-500 mt-1 truncate">{item.barcode}</p>
+									<div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
+										<BarcodeSvg code={item.barcode} height={24} showText={false} />
+										<button
+											onclick={() => {
+												newItemName = item.name;
+												newItemPriceUsd = item.price_cents / 100;
+												newItemBarcode = item.barcode;
+												newItemImageUrl = item.image_url;
+												imagePreviewUrl = item.image_url;
+											}}
+											class="text-xs text-blue-400 hover:text-blue-300 font-bold"
+										>
+											Edit
+										</button>
+									</div>
 								</div>
-
-								<div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
-									<BarcodeSvg code={item.barcode} height={24} showText={false} />
-									<button
-										onclick={() => {
-											newItemName = item.name;
-											newItemPriceUsd = item.price_cents / 100;
-											newItemBarcode = item.barcode;
-											newItemImageUrl = item.image_url;
-											imagePreviewUrl = item.image_url;
-										}}
-										class="text-xs text-blue-400 hover:text-blue-300 font-bold"
-									>
-										Edit
-									</button>
-								</div>
-							</div>
-						{/each}
+							{/each}
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -968,37 +878,52 @@
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-zinc-800 text-zinc-300">
-								{#each transactions as t}
-									<tr class="hover:bg-zinc-950/50">
-										<td class="p-3 font-mono text-zinc-400"
-											>{new Date(t.created_at * 1000).toLocaleString()}</td
-										>
-										<td class="p-3 font-mono text-zinc-300 font-semibold"
-											>{t.transaction_id.substring(0, 8)}...</td
-										>
-										<td class="p-3 font-mono text-blue-400">{t.payment_intent_id}</td>
-										<td class="p-3">
-											<span
-												class="px-2 py-0.5 rounded-full font-mono text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 uppercase font-bold"
-											>
-												{t.status}
-											</span>
+								{#if transactions.length === 0}
+									<tr>
+										<td colspan="6" class="py-12 text-center text-zinc-500">
+											<ChartLineSolid class="size-8 text-zinc-600 mx-auto mb-2" />
+											<p class="text-sm font-semibold text-zinc-400">
+												No Sales Transactions Recorded Yet
+											</p>
+											<p class="text-xs text-zinc-500 mt-1">
+												Transactions processed on the Toddler POS iPad app will appear here in real
+												time.
+											</p>
 										</td>
-										<td class="p-3">
-											<div class="space-y-1">
-												{#each t.items || [] as item}
-													<div class="text-[11px] text-zinc-300">
-														<span class="font-bold text-white">{item.quantity}x</span>
-														{item.name} (${(item.price_cents / 100).toFixed(2)})
-													</div>
-												{/each}
-											</div>
-										</td>
-										<td class="p-3 text-right font-bold text-green-400 font-mono text-sm"
-											>${(t.amount_cents / 100).toFixed(2)}</td
-										>
 									</tr>
-								{/each}
+								{:else}
+									{#each transactions as t}
+										<tr class="hover:bg-zinc-950/50">
+											<td class="p-3 font-mono text-zinc-400"
+												>{new Date(t.created_at * 1000).toLocaleString()}</td
+											>
+											<td class="p-3 font-mono text-zinc-300 font-semibold"
+												>{t.transaction_id.substring(0, 8)}...</td
+											>
+											<td class="p-3 font-mono text-blue-400">{t.payment_intent_id}</td>
+											<td class="p-3">
+												<span
+													class="px-2 py-0.5 rounded-full font-mono text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 uppercase font-bold"
+												>
+													{t.status}
+												</span>
+											</td>
+											<td class="p-3">
+												<div class="space-y-1">
+													{#each t.items || [] as item}
+														<div class="text-[11px] text-zinc-300">
+															<span class="font-bold text-white">{item.quantity}x</span>
+															{item.name} (${(item.price_cents / 100).toFixed(2)})
+														</div>
+													{/each}
+												</div>
+											</td>
+											<td class="p-3 text-right font-bold text-green-400 font-mono text-sm"
+												>${(t.amount_cents / 100).toFixed(2)}</td
+											>
+										</tr>
+									{/each}
+								{/if}
 							</tbody>
 						</table>
 					</div>
