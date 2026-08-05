@@ -6,7 +6,7 @@
 		BoxSolid,
 		ChartLineSolid,
 		GearSolid,
-		PrinterSolid,
+		FileLinesSolid,
 		PlusSolid,
 		RotateSolid,
 		CheckSolid,
@@ -29,10 +29,7 @@
 
 	// State variables
 	let activeTab = $state('inventory'); // 'inventory' | 'analytics' | 'settings'
-	let initialWorkerUrl = $derived(
-		data?.workerUrl || 'https://stripe-toddler.nick-brett1.workers.dev'
-	);
-	let workerUrl = $state(initialWorkerUrl);
+	let workerUrl = $state(data?.workerUrl || 'https://stripe-toddler.nick-brett1.workers.dev');
 	let adminApiKey = $state('');
 	let showApiKey = $state(false);
 
@@ -715,7 +712,7 @@
 							>
 								<div>
 									<h2 class="text-lg font-bold text-white flex items-center gap-2">
-										<PrinterSolid class="size-5 text-blue-400" />
+										<FileLinesSolid class="size-5 text-blue-400" />
 										Print Preview (Avery 1" x 2-5/8" Labels)
 									</h2>
 									<p class="text-xs text-zinc-400">
@@ -727,7 +724,7 @@
 									onclick={triggerPrint}
 									class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2 justify-center shrink-0"
 								>
-									<PrinterSolid class="size-4" />
+									<FileLinesSolid class="size-4" />
 									<span>PRINT SHEET</span>
 								</button>
 							</div>
