@@ -46,10 +46,11 @@
 	let imageFile = $state(null);
 	let imagePreviewUrl = $state('');
 
-	// Analytics state
+	// Analytics & Server Status state
 	let transactions = $state([]);
 	let isLoadingAnalytics = $state(false);
 	let isLoadingInventory = $state(false);
+	let serverError = $state('');
 
 	onMount(() => {
 		fetchInventory();
@@ -69,9 +70,13 @@
 					);
 					inventoryItems = [...sessionOnlyItems, ...data];
 				}
+				serverError = '';
+			} else {
+				serverError = `Worker API returned HTTP ${res.status} ${res.statusText} on GET /api/admin/inventory`;
 			}
 		} catch (err) {
 			console.error('Failed to fetch inventory:', err);
+			serverError = `Unable to connect to Worker API at ${workerUrl}: ${err.message}`;
 		} finally {
 			isLoadingInventory = false;
 		}
@@ -86,12 +91,14 @@
 			if (res.ok) {
 				const data = await res.json();
 				transactions = Array.isArray(data) ? data : [];
-			} else {
-				transactions = [];
+			} else if (!serverError) {
+				serverError = `Worker API returned HTTP ${res.status} ${res.statusText} on GET /api/admin/analytics`;
 			}
 		} catch (err) {
 			console.error('Failed to fetch analytics:', err);
-			transactions = [];
+			if (!serverError) {
+				serverError = `Unable to connect to Worker API at ${workerUrl}: ${err.message}`;
+			}
 		} finally {
 			isLoadingAnalytics = false;
 		}
@@ -172,18 +179,22 @@
 				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg'
 			};
 
-			// Attempt to post to worker API
+			let apiSaveSuccess = false;
 			try {
 				const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(payload)
 				});
-				if (!res.ok) {
-					console.warn(`Worker API returned HTTP ${res.status} on item save`);
+				if (res.ok) {
+					apiSaveSuccess = true;
+				} else {
+					serverError = `Worker API error (HTTP ${res.status} ${res.statusText}) on POST /api/admin/inventory`;
+					formErrorMessage = `Saved item locally in session, but Worker API returned HTTP ${res.status} ${res.statusText}`;
 				}
 			} catch (apiErr) {
-				console.warn('Worker API reachability issue (item saved in session):', apiErr);
+				serverError = `Unable to reach Worker API at ${workerUrl}: ${apiErr.message}`;
+				formErrorMessage = `Saved item locally in session, but Worker API is unreachable (${apiErr.message})`;
 			}
 
 			// Add to local state regardless of network response so item is immediately usable in UI and label printing
@@ -200,7 +211,11 @@
 			selectedBarcodesForPrint.add(payload.barcode);
 			selectedBarcodesForPrint = new Set(selectedBarcodesForPrint);
 
-			formSuccessMessage = `Successfully saved ${payload.name} (${payload.barcode})!`;
+			if (apiSaveSuccess) {
+				formSuccessMessage = `Successfully saved ${payload.name} (${payload.barcode}) to Cloudflare Worker!`;
+			} else {
+				formSuccessMessage = `Saved ${payload.name} (${payload.barcode}) to session print sheet.`;
+			}
 
 			// Reset form for next item
 			newItemName = '';
@@ -343,6 +358,26 @@
 
 	<!-- Main Container -->
 	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
+		<!-- Server API Error Alert Banner -->
+		{#if serverError}
+			<div
+				class="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 flex items-center justify-between shadow-lg"
+			>
+				<div class="flex items-center gap-3">
+					<div class="size-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>
+					<div>
+						<h4 class="font-bold text-sm text-red-400">Worker Server Notice</h4>
+						<p class="text-xs text-red-300/90">{serverError}</p>
+					</div>
+				</div>
+				<button
+					onclick={() => (serverError = '')}
+					class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold rounded-lg transition-colors shrink-0"
+				>
+					Dismiss
+				</button>
+			</div>
+		{/if}
 		<!-- TAB 1: INVENTORY MANAGEMENT & BARCODE GENERATOR -->
 		{#if activeTab === 'inventory'}
 			<div class="space-y-8">
