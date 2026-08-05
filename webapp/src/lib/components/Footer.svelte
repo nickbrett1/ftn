@@ -7,7 +7,8 @@
 		RocketSolid,
 		CartShoppingSolid,
 		UsersSolid,
-		KeySolid
+		KeySolid,
+		BabySolid
 	} from 'svelte-awesome-icons';
 
 	import tippy from 'tippy.js';
@@ -60,6 +61,10 @@
 			content: 'API Keys'
 		});
 
+		const toddlerAdminTooltips = tippy('#stripe-toddler-admin', {
+			content: 'Toddler Stripe Admin'
+		});
+
 		// Clean up tooltips when component unmounts
 		return () => {
 			clearInterval(authCheckInterval);
@@ -97,6 +102,12 @@
 			} else {
 				apiKeysTooltips.destroy();
 			}
+
+			if (Array.isArray(toddlerAdminTooltips)) {
+				for (const tooltip of toddlerAdminTooltips) tooltip.destroy();
+			} else {
+				toddlerAdminTooltips?.destroy?.();
+			}
 		};
 	});
 
@@ -111,6 +122,13 @@
 		if (isLoggedIn) {
 			// User is already logged in, go directly to api-keys page
 			goto('/api-keys');
+		}
+	}
+
+	function handleToddlerAdminClick() {
+		if (isLoggedIn) {
+			// User is already logged in, go directly to toddler admin page
+			goto('/projects/stripe-toddler-admin');
 		}
 	}
 </script>
@@ -198,6 +216,28 @@
 							id="api-keys"
 							class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
 							ariaLabel="API Keys"
+							focusable="true"
+						/>
+					</Login>
+				{/if}
+
+				<!-- Toddler Stripe Admin icon -->
+				{#if isLoggedIn}
+					<BabySolid
+						id="stripe-toddler-admin"
+						onclick={handleToddlerAdminClick}
+						class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+						title="Toddler Stripe Admin"
+						ariaLabel="Toddler Stripe Admin"
+						focusable="true"
+					/>
+				{:else}
+					<!-- User is not logged in, show login modal -->
+					<Login redirectOnSuccess="/projects/stripe-toddler-admin">
+						<BabySolid
+							id="stripe-toddler-admin"
+							class="hover:text-green-400 cursor-pointer text-white size-8 md:size-12"
+							ariaLabel="Toddler Stripe Admin"
 							focusable="true"
 						/>
 					</Login>

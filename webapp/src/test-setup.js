@@ -31,49 +31,12 @@ vi.mock('svelte-awesome-icons', () => {
 			};
 		};
 
-	return {
-		LinkedinInBrands: createMockIcon(),
-		GithubBrands: createMockIcon(),
-		EnvelopeRegular: createMockIcon(),
-		EnvelopeOpenRegular: createMockIcon(),
-		CreditCardRegular: createMockIcon(),
-		CreditCardSolid: createMockIcon(),
-		BuildingSolid: createMockIcon(),
-		CalendarSolid: createMockIcon(),
-		CheckCircleSolid: createMockIcon(),
-		ChartLineSolid: createMockIcon(),
-		FileInvoiceDollarSolid: createMockIcon(),
-		UserSecretSolid: createMockIcon(),
-		RobotSolid: createMockIcon(),
-		NetworkWiredSolid: createMockIcon(),
-		DatabaseSolid: createMockIcon(),
-		PenToSquareRegular: createMockIcon(),
-		ToolboxSolid: createMockIcon(),
-		PlaneDepartureSolid: createMockIcon(),
-		ToolsSolid: createMockIcon(),
-		RocketSolid: createMockIcon(),
-		HandshakeSolid: createMockIcon(),
-		CartShoppingSolid: createMockIcon(),
-		PythonBrands: createMockIcon(),
-		NodeJsBrands: createMockIcon(),
-		JavaBrands: createMockIcon(),
-		RustBrands: createMockIcon(),
-		DockerBrands: createMockIcon(),
-		CloudflareBrands: createMockIcon(),
-		CircleNotchSolid: createMockIcon(),
-		CloudSolid: createMockIcon(),
-		CodeSolid: createMockIcon(),
-		PlayCircleSolid: createMockIcon(),
-		FileAltSolid: createMockIcon(),
-		GlobeSolid: createMockIcon(),
-		ChevronDownSolid: createMockIcon(),
-		ChevronUpSolid: createMockIcon(),
-		InfoCircleSolid: createMockIcon(),
-		ClipboardCheckSolid: createMockIcon(),
-		ProjectDiagramSolid: createMockIcon(),
-		UsersSolid: createMockIcon(),
-		KeySolid: createMockIcon()
-	};
+	return new Proxy(
+		{},
+		{
+			get: () => createMockIcon()
+		}
+	);
 });
 
 // Mock SvelteKit modules
