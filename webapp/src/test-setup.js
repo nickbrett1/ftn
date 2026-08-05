@@ -31,12 +31,61 @@ vi.mock('svelte-awesome-icons', () => {
 			};
 		};
 
-	return new Proxy(
-		{},
-		{
-			get: () => createMockIcon()
-		}
-	);
+	return {
+		LinkedinInBrands: createMockIcon(),
+		GithubBrands: createMockIcon(),
+		EnvelopeRegular: createMockIcon(),
+		EnvelopeOpenRegular: createMockIcon(),
+		CreditCardRegular: createMockIcon(),
+		CreditCardSolid: createMockIcon(),
+		BuildingSolid: createMockIcon(),
+		CalendarSolid: createMockIcon(),
+		CheckCircleSolid: createMockIcon(),
+		ChartLineSolid: createMockIcon(),
+		FileInvoiceDollarSolid: createMockIcon(),
+		UserSecretSolid: createMockIcon(),
+		RobotSolid: createMockIcon(),
+		NetworkWiredSolid: createMockIcon(),
+		DatabaseSolid: createMockIcon(),
+		PenToSquareRegular: createMockIcon(),
+		ToolboxSolid: createMockIcon(),
+		PlaneDepartureSolid: createMockIcon(),
+		ToolsSolid: createMockIcon(),
+		RocketSolid: createMockIcon(),
+		HandshakeSolid: createMockIcon(),
+		CartShoppingSolid: createMockIcon(),
+		PythonBrands: createMockIcon(),
+		NodeJsBrands: createMockIcon(),
+		JavaBrands: createMockIcon(),
+		RustBrands: createMockIcon(),
+		DockerBrands: createMockIcon(),
+		CloudflareBrands: createMockIcon(),
+		CircleNotchSolid: createMockIcon(),
+		CloudSolid: createMockIcon(),
+		CodeSolid: createMockIcon(),
+		PlayCircleSolid: createMockIcon(),
+		FileAltSolid: createMockIcon(),
+		GlobeSolid: createMockIcon(),
+		ChevronDownSolid: createMockIcon(),
+		ChevronUpSolid: createMockIcon(),
+		InfoCircleSolid: createMockIcon(),
+		ClipboardCheckSolid: createMockIcon(),
+		ProjectDiagramSolid: createMockIcon(),
+		UsersSolid: createMockIcon(),
+		KeySolid: createMockIcon(),
+		BabySolid: createMockIcon(),
+		BoxSolid: createMockIcon(),
+		GearSolid: createMockIcon(),
+		FileLinesSolid: createMockIcon(),
+		PlusSolid: createMockIcon(),
+		RotateSolid: createMockIcon(),
+		CheckSolid: createMockIcon(),
+		TriangleExclamationSolid: createMockIcon(),
+		UploadSolid: createMockIcon(),
+		BarcodeSolid: createMockIcon(),
+		TagSolid: createMockIcon(),
+		ArrowLeftSolid: createMockIcon()
+	};
 });
 
 // Mock SvelteKit modules

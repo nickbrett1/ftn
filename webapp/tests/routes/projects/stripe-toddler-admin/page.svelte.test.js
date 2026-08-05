@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment jsdom
+import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 import Page from '../../../../src/routes/projects/stripe-toddler-admin/+page.svelte';
+
+vi.mock('$lib/components/Footer.svelte', () => ({ default: vi.fn() }));
 
 describe('Stripe Toddler Admin Page Component', () => {
 	it('renders page header and navigation tabs', () => {
