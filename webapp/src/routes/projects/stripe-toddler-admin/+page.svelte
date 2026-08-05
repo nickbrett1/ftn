@@ -267,6 +267,9 @@
 			newItemBarcode = 'TOY-NEW-ITEM-' + Date.now().toString().slice(-3);
 			imageFile = null;
 			imagePreviewUrl = '';
+
+			// Automatically refresh catalog from server
+			await fetchInventory();
 		} catch (err) {
 			formErrorMessage = `Error saving item: ${err.message}`;
 		} finally {
@@ -359,10 +362,6 @@
 								class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5 truncate"
 							>
 								<span class="truncate">Stripe Toddler Admin</span>
-								<span
-									class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-mono bg-green-500/10 text-green-400 border border-green-500/20 shrink-0"
-									>v1.0</span
-								>
 							</h1>
 							<p class="text-[11px] sm:text-xs text-zinc-400 truncate">
 								Inventory & Barcode Dashboard
@@ -715,24 +714,14 @@
 
 				<!-- Existing Catalog Section -->
 				<div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl">
-					<div class="flex items-center justify-between mb-6">
-						<div>
-							<h3 class="text-lg font-bold text-white flex items-center gap-2">
-								<BarcodeSolid class="size-5 text-green-400" />
-								Current Inventory Catalog
-							</h3>
-							<p class="text-xs text-zinc-400">
-								Items stored in KV database powering the toddler POS iPad app.
-							</p>
-						</div>
-						<button
-							onclick={fetchInventory}
-							disabled={isLoadingInventory}
-							class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 flex items-center gap-2"
-						>
-							<RotateSolid class="size-3.5 {isLoadingInventory ? 'animate-spin' : ''}" />
-							<span>Refresh</span>
-						</button>
+					<div class="mb-6">
+						<h3 class="text-lg font-bold text-white flex items-center gap-2">
+							<BarcodeSolid class="size-5 text-green-400" />
+							Current Inventory Catalog
+						</h3>
+						<p class="text-xs text-zinc-400">
+							Items stored in KV database powering the toddler POS iPad app.
+						</p>
 					</div>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
