@@ -44,9 +44,7 @@
 	let newItemName = $state('Red Fire Engine Truck');
 	let newItemPriceUsd = $state(5);
 	let newItemBarcode = $state('TOY-FIRE-ENGINE-001');
-	let newItemImageUrl = $state(
-		'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-FIRE-ENGINE-001.jpg'
-	);
+	let newItemImageUrl = $state('/images/toddler/toy_fire_truck.jpg');
 	let isUploadingImage = $state(false);
 	let isSavingItem = $state(false);
 	let formSuccessMessage = $state('');
@@ -69,41 +67,37 @@
 			barcode: 'TOY-FIRE-ENGINE-001',
 			name: 'Red Fire Engine Truck',
 			price_cents: 500,
-			image_url:
-				'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-FIRE-ENGINE-001.jpg'
+			image_url: '/images/toddler/toy_fire_truck.jpg'
 		},
 		{
 			barcode: 'TOY-YELLOW-DIGGER-002',
 			name: 'Yellow Construction Digger',
 			price_cents: 800,
-			image_url:
-				'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-YELLOW-DIGGER-002.jpg'
+			image_url: '/images/toddler/toy_yellow_digger.jpg'
 		},
 		{
 			barcode: 'TOY-WOODEN-BLOCKS-003',
 			name: 'Wooden Building Blocks Set',
 			price_cents: 1200,
-			image_url:
-				'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-WOODEN-BLOCKS-003.jpg'
+			image_url: '/images/toddler/toy_wooden_blocks.jpg'
 		},
 		{
 			barcode: 'TOY-PLUSH-BEAR-004',
 			name: 'Cuddle Teddy Bear',
 			price_cents: 600,
-			image_url: 'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-PLUSH-BEAR-004.jpg'
+			image_url: '/images/toddler/toy_teddy_bear.jpg'
 		},
 		{
 			barcode: 'TOY-RACE-CAR-005',
 			name: 'Blue Speed Racing Car',
 			price_cents: 400,
-			image_url: 'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-RACE-CAR-005.jpg'
+			image_url: '/images/toddler/toy_race_car.jpg'
 		},
 		{
 			barcode: 'TOY-STACKING-RINGS-006',
 			name: 'Rainbow Stacking Rings',
 			price_cents: 700,
-			image_url:
-				'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-STACKING-RINGS-006.jpg'
+			image_url: '/images/toddler/toy_stacking_rings.jpg'
 		}
 	];
 
@@ -343,9 +337,7 @@
 				barcode: newItemBarcode,
 				name: newItemName,
 				price_cents: Math.round(newItemPriceUsd * 100),
-				image_url:
-					newItemImageUrl ||
-					'https://pub-2e92c6ee185341cf98f79f403be4fbc8.r2.dev/images/TOY-FIRE-ENGINE-001.jpg'
+				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg'
 			};
 
 			const headers = { 'Content-Type': 'application/json' };
