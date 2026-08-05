@@ -15,8 +15,7 @@
 		UploadSolid,
 		BarcodeSolid,
 		TagSolid,
-		BabySolid,
-		ArrowLeftSolid
+		BabySolid
 	} from 'svelte-awesome-icons';
 
 	/**
@@ -350,13 +349,6 @@
 					class="flex items-center justify-between md:justify-start gap-2 sm:gap-4 w-full md:w-auto"
 				>
 					<div class="flex items-center gap-2 sm:gap-3 min-w-0">
-						<a
-							href="/projects"
-							class="text-zinc-400 hover:text-white transition-colors p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 shrink-0"
-							aria-label="Back to projects"
-						>
-							<ArrowLeftSolid class="size-4 sm:size-5" />
-						</a>
 						<div
 							class="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-green-500 to-blue-600 flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0"
 						>
