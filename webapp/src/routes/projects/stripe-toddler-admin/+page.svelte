@@ -62,13 +62,16 @@
 			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`);
 			if (res.ok) {
 				const data = await res.json();
-				inventoryItems = Array.isArray(data) ? data : [];
-			} else {
-				inventoryItems = [];
+				if (Array.isArray(data)) {
+					const serverBarcodes = new Set(data.map((i) => i.barcode));
+					const sessionOnlyItems = inventoryItems.filter(
+						(i) => sessionAddedBarcodes.has(i.barcode) && !serverBarcodes.has(i.barcode)
+					);
+					inventoryItems = [...sessionOnlyItems, ...data];
+				}
 			}
 		} catch (err) {
 			console.error('Failed to fetch inventory:', err);
-			inventoryItems = [];
 		} finally {
 			isLoadingInventory = false;
 		}
