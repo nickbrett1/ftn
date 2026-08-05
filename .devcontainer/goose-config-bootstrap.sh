@@ -108,10 +108,41 @@ if (start === -1) {
 }
 
 // End of the block = first line after `start` that is non-blank and starts at column 0.
-let end = start + 1;
-while (end < lines.length && (lines[end].trim() === '' || lines[end].startsWith(' '))) {
-  end++;
+const blockEnd = () => {
+  let e = start + 1;
+  while (e < lines.length && (lines[e].trim() === '' || lines[e].startsWith(' '))) e++;
+  return e;
+};
+
+// ---------------------------------------------------------------------------
+// Migration: upgrade stale stdio (mcp-remote) entries for servers that now use
+// streamable_http directly (memos, vikunja). Older versions of this bootstrap
+// emitted `type: stdio` + `npx mcp-remote http://nas:PORT/...`; mcp-remote
+// rejects non-HTTPS, non-localhost URLs unless `--allow-http` is passed, which
+// makes the extension fail to start ("process quit before initialization").
+// Existing stale entries are upgraded in place; fresh configs are born correct.
+// ---------------------------------------------------------------------------
+const UPGRADABLE = ['memos', 'vikunja'];
+const migrated = [];
+for (const key of UPGRADABLE) {
+  let end = blockEnd();
+  const keyRe = new RegExp(`^  ${key}:$`);
+  for (let i = start + 1; i < end; i++) {
+    if (!keyRe.test(lines[i])) continue;
+    let j = i + 1;
+    while (j < end && !/^  [A-Za-z0-9_-]+:/.test(lines[j])) j++;
+    const bodyLines = lines.slice(i + 1, j);
+    if (/mcp-remote/.test(bodyLines.join('\n')) || /type: stdio/.test(bodyLines.join('\n'))) {
+      const replacement = [`  ${key}:`, ...MCP_SERVERS[key].split('\n')];
+      // Preserve the blank-line separator after the entry, if one existed.
+      if (bodyLines[bodyLines.length - 1] === '') replacement.push('');
+      lines.splice(i, j - i, ...replacement);
+      migrated.push(key);
+    }
+    break;
+  }
 }
+let end = blockEnd();
 
 // Collect existing extension keys inside the block (2-space indented `key:`).
 const existing = new Set();
@@ -121,9 +152,8 @@ for (let i = start + 1; i < end; i++) {
 }
 
 const missing = Object.keys(MCP_SERVERS).filter((k) => !existing.has(k));
-if (missing.length === 0) {
-  console.log('INFO: goose config already up to date.');
-} else {
+let changed = migrated.length > 0;
+if (missing.length > 0) {
   const insert = [];
   for (const key of Object.keys(MCP_SERVERS)) {
     if (!existing.has(key)) {
@@ -131,10 +161,20 @@ if (missing.length === 0) {
     }
   }
   lines.splice(end, 0, ...insert.join('\n\n').split('\n'));
+  changed = true;
+}
+if (!changed) {
+  console.log('INFO: goose config already up to date.');
+} else {
   // Ensure a single trailing newline
   const out = lines.join('\n').replace(/\n+$/, '\n');
   fs.writeFileSync(path, out);
-  console.log(`INFO: Added missing MCP servers to goose config: ${missing.join(', ')}`);
+  if (migrated.length > 0) {
+    console.log(`INFO: Migrated stale stdio MCP entries to streamable_http: ${migrated.join(', ')}`);
+  }
+  if (missing.length > 0) {
+    console.log(`INFO: Added missing MCP servers to goose config: ${missing.join(', ')}`);
+  }
 }
 NODE
 
