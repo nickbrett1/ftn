@@ -6,12 +6,10 @@
 	import {
 		BoxSolid,
 		ChartLineSolid,
-		GearSolid,
 		FileLinesSolid,
 		PlusSolid,
 		RotateSolid,
 		CheckSolid,
-		TriangleExclamationSolid,
 		UploadSolid,
 		BarcodeSolid,
 		TagSolid,
@@ -28,10 +26,8 @@
 	let { data } = $props();
 
 	// State variables
-	let activeTab = $state('inventory'); // 'inventory' | 'analytics' | 'settings'
+	let activeTab = $state('inventory'); // 'inventory' | 'analytics'
 	let workerUrl = $state(data?.workerUrl || 'https://stripe-toddler.nick-brett1.workers.dev');
-	let adminApiKey = $state('');
-	let showApiKey = $state(false);
 
 	// Inventory state
 	let inventoryItems = $state([]);
@@ -44,7 +40,6 @@
 	let newItemPriceUsd = $state(5);
 	let newItemBarcode = $state('');
 	let newItemImageUrl = $state('');
-	let isUploadingImage = $state(false);
 	let isSavingItem = $state(false);
 	let formSuccessMessage = $state('');
 	let formErrorMessage = $state('');
@@ -56,75 +51,24 @@
 	let isLoadingAnalytics = $state(false);
 	let isLoadingInventory = $state(false);
 
-	// Status connection state
-	let connectionStatus = $state('checking'); // 'online' | 'offline' | 'unauthorized' | 'checking'
-	let connectionMessage = $state('');
-
 	onMount(() => {
-		// Load persisted settings
-		if (typeof window !== 'undefined') {
-			const savedApiKey = localStorage.getItem('toddler_admin_api_key');
-			if (savedApiKey) adminApiKey = savedApiKey;
-
-			const savedWorkerUrl = localStorage.getItem('toddler_worker_url');
-			if (savedWorkerUrl) workerUrl = savedWorkerUrl;
-		}
-
 		fetchInventory();
 		fetchAnalytics();
 	});
 
-	function saveSettings() {
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('toddler_admin_api_key', adminApiKey);
-			localStorage.setItem('toddler_worker_url', workerUrl);
-		}
-		testConnection();
-	}
-
-	async function testConnection() {
-		connectionStatus = 'checking';
-		connectionMessage = 'Connecting to worker...';
-		try {
-			const headers = {};
-			if (adminApiKey) headers['X-Admin-API-Key'] = adminApiKey;
-
-			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, { headers });
-			if (res.ok) {
-				connectionStatus = 'online';
-				connectionMessage = 'Connected successfully to Stripe Toddler Worker!';
-			} else if (res.status === 401) {
-				connectionStatus = 'unauthorized';
-				connectionMessage = 'Worker responded 401: Invalid or missing X-Admin-API-Key.';
-			} else {
-				connectionStatus = 'offline';
-				connectionMessage = `Worker returned status ${res.status}`;
-			}
-		} catch (err) {
-			connectionStatus = 'offline';
-			connectionMessage = `Failed to reach worker: ${err.message}`;
-		}
-	}
-
 	async function fetchInventory() {
 		isLoadingInventory = true;
 		try {
-			const headers = {};
-			if (adminApiKey) headers['X-Admin-API-Key'] = adminApiKey;
-
-			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, { headers });
+			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`);
 			if (res.ok) {
 				const data = await res.json();
 				inventoryItems = Array.isArray(data) ? data : [];
-				connectionStatus = 'online';
 			} else {
 				inventoryItems = [];
-				if (res.status === 401) connectionStatus = 'unauthorized';
 			}
 		} catch (err) {
 			console.error('Failed to fetch inventory:', err);
 			inventoryItems = [];
-			connectionStatus = 'offline';
 		} finally {
 			isLoadingInventory = false;
 		}
@@ -133,12 +77,8 @@
 	async function fetchAnalytics() {
 		isLoadingAnalytics = true;
 		try {
-			const headers = {};
-			if (adminApiKey) headers['X-Admin-API-Key'] = adminApiKey;
-
 			const res = await fetch(
-				`${workerUrl.replace(/\/$/, '')}/api/admin/analytics?limit=100&offset=0`,
-				{ headers }
+				`${workerUrl.replace(/\/$/, '')}/api/admin/analytics?limit=100&offset=0`
 			);
 			if (res.ok) {
 				const data = await res.json();
@@ -180,18 +120,13 @@
 
 	async function handleUploadImage() {
 		if (!imageFile) return newItemImageUrl;
-		isUploadingImage = true;
 		try {
 			const formData = new FormData();
 			formData.append('barcode', newItemBarcode);
 			formData.append('image', imageFile);
 
-			const headers = {};
-			if (adminApiKey) headers['X-Admin-API-Key'] = adminApiKey;
-
 			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory/upload`, {
 				method: 'POST',
-				headers,
 				body: formData
 			});
 
@@ -204,8 +139,6 @@
 			}
 		} catch (err) {
 			console.warn('Image upload error:', err);
-		} finally {
-			isUploadingImage = false;
 		}
 
 		// Fallback preview URL if upload fails or is dev mode
@@ -236,12 +169,9 @@
 				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg'
 			};
 
-			const headers = { 'Content-Type': 'application/json' };
-			if (adminApiKey) headers['X-Admin-API-Key'] = adminApiKey;
-
 			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
 				method: 'POST',
-				headers,
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload)
 			});
 
@@ -395,17 +325,6 @@
 						<ChartLineSolid class="size-3.5 sm:size-4 text-blue-400 shrink-0" />
 						<span>Sales History</span>
 					</button>
-
-					<button
-						onclick={() => (activeTab = 'settings')}
-						class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex-1 md:flex-initial text-center whitespace-nowrap {activeTab ===
-						'settings'
-							? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
-							: 'text-zinc-400 hover:text-white hover:bg-zinc-900'}"
-					>
-						<GearSolid class="size-3.5 sm:size-4 text-yellow-400 shrink-0" />
-						<span>Settings</span>
-					</button>
 				</nav>
 			</div>
 		</div>
@@ -413,30 +332,6 @@
 
 	<!-- Main Container -->
 	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
-		<!-- Connection Warning Banner if offline -->
-		{#if connectionStatus === 'unauthorized'}
-			<div
-				class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-between"
-			>
-				<div class="flex items-center gap-3">
-					<TriangleExclamationSolid class="size-6 text-amber-400 shrink-0" />
-					<div>
-						<h4 class="font-bold">Authentication Required for Worker</h4>
-						<p class="text-xs text-amber-300/80">
-							Please enter your valid X-Admin-API-Key in the Settings tab to communicate with the
-							worker at {workerUrl}.
-						</p>
-					</div>
-				</div>
-				<button
-					onclick={() => (activeTab = 'settings')}
-					class="px-3 py-1.5 bg-amber-500 text-black text-xs font-bold rounded-lg hover:bg-amber-400"
-				>
-					Configure API Key
-				</button>
-			</div>
-		{/if}
-
 		<!-- TAB 1: INVENTORY MANAGEMENT & BARCODE GENERATOR -->
 		{#if activeTab === 'inventory'}
 			<div class="space-y-8">
@@ -469,7 +364,6 @@
 								<div
 									class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium flex items-center gap-2"
 								>
-									<TriangleExclamationSolid class="size-4 shrink-0" />
 									<span>{formErrorMessage}</span>
 								</div>
 							{/if}
@@ -907,94 +801,6 @@
 								{/if}
 							</tbody>
 						</table>
-					</div>
-				</div>
-			</div>
-		{/if}
-
-		<!-- TAB 3: SETTINGS -->
-		{#if activeTab === 'settings'}
-			<div class="max-w-2xl mx-auto space-y-8">
-				<div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl space-y-6">
-					<div class="border-b border-zinc-800 pb-4">
-						<h2 class="text-lg font-bold text-white flex items-center gap-2">
-							<GearSolid class="size-5 text-yellow-400" />
-							Worker API & Auth Settings
-						</h2>
-						<p class="text-xs text-zinc-400">
-							Configure Cloudflare Worker endpoint URL and X-Admin-API-Key credentials.
-						</p>
-					</div>
-
-					<!-- Worker URL -->
-					<div>
-						<label
-							for="worker-url-input"
-							class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2"
-							>Worker API Endpoint URL</label
-						>
-						<input
-							id="worker-url-input"
-							type="text"
-							bind:value={workerUrl}
-							placeholder="https://stripe-toddler.nick-brett1.workers.dev"
-							class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-xs font-mono focus:outline-none focus:border-yellow-400"
-						/>
-					</div>
-
-					<!-- Admin API Key -->
-					<div>
-						<label
-							for="api-key-input"
-							class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2"
-							>X-Admin-API-Key Header</label
-						>
-						<div class="relative">
-							<input
-								id="api-key-input"
-								type={showApiKey ? 'text' : 'password'}
-								bind:value={adminApiKey}
-								placeholder="Enter your secret 64-char hex admin key"
-								class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-xs font-mono focus:outline-none focus:border-yellow-400 pr-24"
-							/>
-							<button
-								onclick={() => (showApiKey = !showApiKey)}
-								class="absolute right-3 top-2.5 text-xs text-zinc-400 hover:text-white font-semibold px-2 py-1 bg-zinc-800 rounded-lg"
-							>
-								{showApiKey ? 'Hide' : 'Show'}
-							</button>
-						</div>
-					</div>
-
-					<!-- Connection Status & Ping Test -->
-					<div
-						class="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center justify-between"
-					>
-						<div>
-							<h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1">
-								Worker Connection Status
-							</h4>
-							<p class="text-xs text-zinc-400">
-								{connectionMessage || 'Click test to verify connection.'}
-							</p>
-						</div>
-
-						<button
-							onclick={testConnection}
-							class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white shrink-0"
-						>
-							Test Connection
-						</button>
-					</div>
-
-					<!-- Save Button -->
-					<div class="pt-4 border-t border-zinc-800">
-						<button
-							onclick={saveSettings}
-							class="w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm transition-all shadow-md"
-						>
-							Save Configuration
-						</button>
 					</div>
 				</div>
 			</div>

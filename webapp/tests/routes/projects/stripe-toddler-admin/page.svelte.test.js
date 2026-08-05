@@ -15,7 +15,6 @@ describe('Stripe Toddler Admin Page Component', () => {
 		expect(getByText('Stripe Toddler Admin')).toBeDefined();
 		expect(getByText('Inventory')).toBeDefined();
 		expect(getByText('Sales History')).toBeDefined();
-		expect(getByText('Settings')).toBeDefined();
 	});
 
 	it('renders add new item form and print preview section by default', () => {
