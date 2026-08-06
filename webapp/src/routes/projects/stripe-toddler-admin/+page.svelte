@@ -113,10 +113,19 @@
 		return `TOY-${slug || 'ITEM'}-001`;
 	}
 
+	function getDefaultPrompt(name) {
+		const toyName = (name || '').trim() || 'Toddler Toy';
+		return `High quality 3D studio product image of a toddler toy: ${toyName}, clean white background, vibrant colors, photorealistic product lighting`;
+	}
+
 	function handleNameChange(e) {
+		const oldDefault = getDefaultPrompt(newItemName);
 		newItemName = e.target.value;
 		if (!isEditing) {
 			newItemBarcode = generateBarcodeFromName(newItemName);
+		}
+		if (!customAiPrompt || customAiPrompt === oldDefault) {
+			customAiPrompt = getDefaultPrompt(newItemName);
 		}
 	}
 
@@ -127,6 +136,9 @@
 		newItemImageUrl = item.image_url || '';
 		imagePreviewUrl = item.image_url || '';
 		isEditing = true;
+		if (!customAiPrompt || customAiPrompt.includes('High quality 3D studio product image')) {
+			customAiPrompt = getDefaultPrompt(item.name);
+		}
 		formSuccessMessage = `Editing item ${item.name} (${item.barcode}). Update fields below and click Save.`;
 		formErrorMessage = '';
 
@@ -144,6 +156,7 @@
 		imageFile = null;
 		imagePreviewUrl = '';
 		isEditing = false;
+		customAiPrompt = getDefaultPrompt('');
 		formSuccessMessage = '';
 		formErrorMessage = '';
 	}
@@ -191,8 +204,7 @@
 
 	function getEffectivePrompt() {
 		if (customAiPrompt.trim()) return customAiPrompt.trim();
-		const name = newItemName.trim() || 'Toddler Toy';
-		return `High quality 3D studio product image of a toddler toy: ${name}, clean white background, vibrant colors, photorealistic product lighting`;
+		return getDefaultPrompt(newItemName);
 	}
 
 	async function handleGenerateAiImage() {
@@ -604,41 +616,48 @@
 								</div>
 
 								<!-- Custom Cloudflare AI Prompt Box -->
-								<div class="mb-3 p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800 space-y-2">
+								<div
+									class="mb-3 p-3 bg-zinc-950/90 rounded-2xl border border-purple-500/20 space-y-2.5 shadow-inner"
+								>
 									<div class="flex items-center justify-between">
 										<label
 											for="custom-prompt"
-											class="text-[10px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1"
+											class="text-[11px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5"
 										>
-											<WandMagicSparklesSolid class="size-3 text-purple-400" />
-											Custom AI Prompt
+											<WandMagicSparklesSolid class="size-3.5 text-purple-400" />
+											Cloudflare AI Image Prompt (Editable)
 										</label>
-										{#if customAiPrompt}
-											<button
-												type="button"
-												onclick={() => (customAiPrompt = '')}
-												class="text-[10px] text-zinc-500 hover:text-zinc-300 font-mono underline"
-											>
-												Reset to Default
-											</button>
-										{/if}
+										<button
+											type="button"
+											onclick={() => (customAiPrompt = getDefaultPrompt(newItemName))}
+											class="text-[10px] text-zinc-400 hover:text-purple-300 font-mono underline transition-colors"
+										>
+											Reset to Default
+										</button>
 									</div>
 
 									<textarea
 										id="custom-prompt"
-										rows="2"
+										rows="4"
 										bind:value={customAiPrompt}
-										placeholder={getEffectivePrompt()}
-										class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs text-purple-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono"
+										placeholder={getDefaultPrompt(newItemName)}
+										class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-purple-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono leading-relaxed min-h-[110px] resize-y shadow-inner"
 									></textarea>
 
-									<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+									<div
+										class="flex items-center justify-between text-[10px] text-zinc-500 font-mono px-0.5"
+									>
+										<span>Edit words directly above to tweak lighting, style, or background.</span>
+										<span>{customAiPrompt.length} chars</span>
+									</div>
+
+									<div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-800/80">
 										<span class="text-[10px] text-zinc-500 font-bold mr-1">Style Presets:</span>
 										<button
 											type="button"
 											onclick={() =>
 												(customAiPrompt = `High quality 3D studio product image of a toddler toy: ${newItemName || 'Toy'}, clean white background, vibrant colors, photorealistic product lighting`)}
-											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🎨 Studio 3D
 										</button>
@@ -646,7 +665,7 @@
 											type="button"
 											onclick={() =>
 												(customAiPrompt = `Vintage handcrafted wooden toddler toy: ${newItemName || 'Toy'}, smooth natural wood grain, soft studio lighting, white background`)}
-											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🪵 Wooden
 										</button>
@@ -654,7 +673,7 @@
 											type="button"
 											onclick={() =>
 												(customAiPrompt = `Adorable soft plush fabric toddler toy: ${newItemName || 'Toy'}, cozy lighting, isolated clean studio background, high detail`)}
-											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🧸 Soft Plush
 										</button>
@@ -662,7 +681,7 @@
 											type="button"
 											onclick={() =>
 												(customAiPrompt = `Minimalist clay render of a toddler toy: ${newItemName || 'Toy'}, smooth pastel colors, soft shadows, studio background`)}
-											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🎨 Pastel Clay
 										</button>
