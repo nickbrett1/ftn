@@ -114,8 +114,8 @@
 	}
 
 	function getDefaultPrompt(name) {
-		const toyName = (name || '').trim() || 'Toddler Toy';
-		return `High quality 3D studio product image of a toddler toy: ${toyName}, clean white background, vibrant colors, photorealistic product lighting`;
+		const itemName = (name || '').trim() || 'item';
+		return `High quality studio product image of ${itemName}, clean white background, vibrant colors, crisp detail, professional studio product lighting`;
 	}
 
 	function handleNameChange(e) {
@@ -656,23 +656,23 @@
 										<button
 											type="button"
 											onclick={() =>
-												(customAiPrompt = `High quality 3D studio product image of a toddler toy: ${newItemName || 'Toy'}, clean white background, vibrant colors, photorealistic product lighting`)}
+												(customAiPrompt = `High quality studio product image of ${newItemName || 'item'}, clean white background, vibrant colors, crisp detail, professional studio product lighting`)}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
-											🎨 Studio 3D
+											📸 Studio Product
 										</button>
 										<button
 											type="button"
 											onclick={() =>
-												(customAiPrompt = `Vintage handcrafted wooden toddler toy: ${newItemName || 'Toy'}, smooth natural wood grain, soft studio lighting, white background`)}
+												(customAiPrompt = `Authentic handcrafted wooden ${newItemName || 'item'}, natural wood grain texture, soft studio lighting, clean background`)}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
-											🪵 Wooden
+											🪵 Handcrafted Wood
 										</button>
 										<button
 											type="button"
 											onclick={() =>
-												(customAiPrompt = `Adorable soft plush fabric toddler toy: ${newItemName || 'Toy'}, cozy lighting, isolated clean studio background, high detail`)}
+												(customAiPrompt = `Real soft plush fabric ${newItemName || 'item'}, cozy warm studio lighting, clean isolated background, high detail`)}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🧸 Soft Plush
@@ -680,10 +680,10 @@
 										<button
 											type="button"
 											onclick={() =>
-												(customAiPrompt = `Minimalist clay render of a toddler toy: ${newItemName || 'Toy'}, smooth pastel colors, soft shadows, studio background`)}
+												(customAiPrompt = `Sleek minimalist render of ${newItemName || 'item'}, smooth pastel colors, soft studio shadows, white background`)}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
-											🎨 Pastel Clay
+											🎨 Minimalist
 										</button>
 									</div>
 								</div>

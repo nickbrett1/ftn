@@ -6,7 +6,7 @@ export async function POST(event) {
 		const { prompt, itemName } = await event.request.json();
 		const finalPrompt =
 			prompt ||
-			`High quality 3D studio product image of a toddler toy: ${itemName || 'Toy'}, clean white background, vibrant colors, photorealistic product lighting`;
+			`High quality studio product image of ${itemName || 'item'}, clean white background, vibrant colors, crisp detail, professional studio product lighting`;
 
 		// 1. Try Cloudflare Workers AI binding if available
 		const ai = event.platform?.env?.AI;
