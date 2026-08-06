@@ -38,7 +38,13 @@ export async function load(event) {
 		});
 		if (res.ok) {
 			const data = await res.json();
-			if (Array.isArray(data)) initialInventory = data;
+			if (Array.isArray(data)) {
+				initialInventory = data.filter(
+					(i) =>
+						!['TOY001', 'TOY002', 'TOY003'].includes(i?.barcode) &&
+						!i?.image_url?.includes('placehold.co')
+				);
+			}
 		} else if (res.status === 401) {
 			serverError =
 				'Worker API returned 401 Unauthorized. Verify TODDLER_ADMIN_API_KEY environment secret in Doppler / Cloudflare.';
