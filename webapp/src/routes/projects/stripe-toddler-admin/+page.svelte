@@ -150,9 +150,7 @@
 		newItemImageUrl = item.image_url || '';
 		imagePreviewUrl = item.image_url || '';
 		isEditing = true;
-		if (!customAiPrompt || customAiPrompt.includes('High quality 3D studio product image')) {
-			customAiPrompt = getDefaultPrompt(item.name);
-		}
+		customAiPrompt = getDefaultPrompt(item.name);
 		formSuccessMessage = `Editing item ${item.name} (${item.barcode}). Update fields below and click Save.`;
 		formErrorMessage = '';
 
