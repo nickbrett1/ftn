@@ -34,11 +34,15 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-	// ignore POST requests etc
+	// ignore non-GET requests
 	if (event.request.method !== 'GET') return;
 
+	const url = new URL(event.request.url);
+
+	// Do not intercept third-party cross-origin requests (e.g. Cloudflare Insights analytics)
+	if (url.origin !== self.location.origin) return;
+
 	async function respond() {
-		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE);
 
 		// `build`/`files` can always be served from the cache
