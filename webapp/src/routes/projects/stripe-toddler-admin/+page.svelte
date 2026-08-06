@@ -47,6 +47,7 @@
 	let isEditing = $state(false);
 	let isGeneratingAiImage = $state(false);
 	let customAiPrompt = $state('');
+	let isUserPromptCustomized = $state(false);
 	let formSuccessMessage = $state('');
 	let formErrorMessage = $state('');
 	let imageFile = $state(null);
@@ -129,16 +130,15 @@
 
 	function getDefaultPrompt(name) {
 		const itemName = (name || '').trim() || 'item';
-		return `High quality studio product image of ${itemName}, clean white background, vibrant colors, crisp detail, professional studio product lighting`;
+		return `Professional retail product photograph of ${itemName}, as seen in a shop, clean white background, sharp focus, commercial product photography lighting, photorealistic`;
 	}
 
 	function handleNameChange(e) {
-		const oldDefault = getDefaultPrompt(newItemName);
 		newItemName = e.target.value;
 		if (!isEditing) {
 			newItemBarcode = generateBarcodeFromName(newItemName);
 		}
-		if (!customAiPrompt || customAiPrompt === oldDefault) {
+		if (!isUserPromptCustomized) {
 			customAiPrompt = getDefaultPrompt(newItemName);
 		}
 	}
@@ -150,6 +150,7 @@
 		newItemImageUrl = item.image_url || '';
 		imagePreviewUrl = item.image_url || '';
 		isEditing = true;
+		isUserPromptCustomized = false;
 		customAiPrompt = getDefaultPrompt(item.name);
 		formSuccessMessage = `Editing item ${item.name} (${item.barcode}). Update fields below and click Save.`;
 		formErrorMessage = '';
@@ -168,6 +169,7 @@
 		imageFile = null;
 		imagePreviewUrl = '';
 		isEditing = false;
+		isUserPromptCustomized = false;
 		customAiPrompt = getDefaultPrompt('');
 		formSuccessMessage = '';
 		formErrorMessage = '';
@@ -358,6 +360,8 @@
 			imageFile = null;
 			imagePreviewUrl = '';
 			isEditing = false;
+			isUserPromptCustomized = false;
+			customAiPrompt = getDefaultPrompt('');
 
 			// Refresh from server if server is active
 			await fetchInventory();
@@ -641,7 +645,10 @@
 										</label>
 										<button
 											type="button"
-											onclick={() => (customAiPrompt = getDefaultPrompt(newItemName))}
+											onclick={() => {
+												isUserPromptCustomized = false;
+												customAiPrompt = getDefaultPrompt(newItemName);
+											}}
 											class="text-[10px] text-zinc-400 hover:text-purple-300 font-mono underline transition-colors"
 										>
 											Reset to Default
@@ -652,6 +659,7 @@
 										id="custom-prompt"
 										rows="4"
 										bind:value={customAiPrompt}
+										oninput={() => (isUserPromptCustomized = true)}
 										placeholder={getDefaultPrompt(newItemName)}
 										class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-purple-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono leading-relaxed min-h-[110px] resize-y shadow-inner"
 									></textarea>
@@ -667,32 +675,40 @@
 										<span class="text-[10px] text-zinc-500 font-bold mr-1">Style Presets:</span>
 										<button
 											type="button"
-											onclick={() =>
-												(customAiPrompt = `High quality studio product image of ${newItemName || 'item'}, clean white background, vibrant colors, crisp detail, professional studio product lighting`)}
+											onclick={() => {
+												isUserPromptCustomized = true;
+												customAiPrompt = `Professional retail product photograph of ${newItemName || 'item'}, as seen in a shop, clean white background, sharp focus, commercial product photography lighting, photorealistic`;
+											}}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											📸 Studio Product
 										</button>
 										<button
 											type="button"
-											onclick={() =>
-												(customAiPrompt = `Authentic handcrafted wooden ${newItemName || 'item'}, natural wood grain texture, soft studio lighting, clean background`)}
+											onclick={() => {
+												isUserPromptCustomized = true;
+												customAiPrompt = `Authentic handcrafted wooden ${newItemName || 'item'}, natural wood grain texture, soft studio lighting, clean background`;
+											}}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🪵 Handcrafted Wood
 										</button>
 										<button
 											type="button"
-											onclick={() =>
-												(customAiPrompt = `Real soft plush fabric ${newItemName || 'item'}, cozy warm studio lighting, clean isolated background, high detail`)}
+											onclick={() => {
+												isUserPromptCustomized = true;
+												customAiPrompt = `Real soft plush fabric ${newItemName || 'item'}, cozy warm studio lighting, clean isolated background, high detail`;
+											}}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🧸 Soft Plush
 										</button>
 										<button
 											type="button"
-											onclick={() =>
-												(customAiPrompt = `Sleek minimalist render of ${newItemName || 'item'}, smooth pastel colors, soft studio shadows, white background`)}
+											onclick={() => {
+												isUserPromptCustomized = true;
+												customAiPrompt = `Sleek minimalist render of ${newItemName || 'item'}, smooth pastel colors, soft studio shadows, white background`;
+											}}
 											class="px-2.5 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
 										>
 											🎨 Minimalist
