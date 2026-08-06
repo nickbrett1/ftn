@@ -1,11 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { requireUser } from '$lib/server/require-user.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST(event) {
-	const authResult = await requireUser(event);
-	if (authResult instanceof Response) return authResult;
-
 	try {
 		const { prompt, itemName } = await event.request.json();
 		const finalPrompt =
@@ -16,14 +12,35 @@ export async function POST(event) {
 		const ai = event.platform?.env?.AI;
 		if (ai) {
 			try {
-				const stream = await ai.run('@cf/black-forest-labs/flux-1-schnell', {
+				const result = await ai.run('@cf/black-forest-labs/flux-1-schnell', {
 					prompt: finalPrompt,
 					num_steps: 4
 				});
-				const buffer = await new Response(stream).arrayBuffer();
-				const base64 = Buffer.from(buffer).toString('base64');
-				const dataUrl = `data:image/jpeg;base64,${base64}`;
-				return json({ image_url: dataUrl, provider: 'cloudflare-workers-ai' });
+
+				let base64 = '';
+				if (typeof result === 'string') {
+					base64 = result;
+				} else if (result?.image) {
+					base64 = result.image;
+				} else if (
+					result &&
+					(result instanceof ReadableStream ||
+						result instanceof ArrayBuffer ||
+						typeof result === 'object')
+				) {
+					try {
+						const buffer =
+							result instanceof ArrayBuffer ? result : await new Response(result).arrayBuffer();
+						base64 = Buffer.from(buffer).toString('base64');
+					} catch (e) {
+						console.warn('Could not parse Workers AI response stream:', e);
+					}
+				}
+
+				if (base64 && base64 !== 'W29iamVjdCBPYmplY3Rd') {
+					const dataUrl = base64.startsWith('data:') ? base64 : `data:image/jpeg;base64,${base64}`;
+					return json({ image_url: dataUrl, provider: 'cloudflare-workers-ai' });
+				}
 			} catch (cfErr) {
 				console.warn('Cloudflare Workers AI binding error, falling back:', cfErr);
 			}

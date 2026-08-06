@@ -66,16 +66,15 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			return response;
-		} catch (error) {
+		} catch (_error) {
+			console.warn('Service worker fetch fallback:', _error);
 			const response = await cache.match(event.request);
 
 			if (response) {
 				return response;
 			}
 
-			// if there's no cache, then just error out
-			// as there is nothing we can do to respond to this request
-			throw error;
+			return new Response(null, { status: 504, statusText: 'Network Error' });
 		}
 	}
 
