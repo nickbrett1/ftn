@@ -16,8 +16,9 @@ export async function POST(event) {
 		const ai = event.platform?.env?.AI;
 		if (ai) {
 			try {
-				const stream = await ai.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-					prompt: finalPrompt
+				const stream = await ai.run('@cf/black-forest-labs/flux-1-schnell', {
+					prompt: finalPrompt,
+					num_steps: 4
 				});
 				const buffer = await new Response(stream).arrayBuffer();
 				const base64 = Buffer.from(buffer).toString('base64');
