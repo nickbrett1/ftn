@@ -12,7 +12,8 @@
 		UploadSolid,
 		BarcodeSolid,
 		TagSolid,
-		BabySolid
+		BabySolid,
+		WandMagicSparklesSolid
 	} from 'svelte-awesome-icons';
 
 	/**
@@ -41,6 +42,7 @@
 	let newItemImageUrl = $state('');
 	let isSavingItem = $state(false);
 	let isEditing = $state(false);
+	let isGeneratingAiImage = $state(false);
 	let formSuccessMessage = $state('');
 	let formErrorMessage = $state('');
 	let imageFile = $state(null);
@@ -149,6 +151,46 @@
 		if (files && files[0]) {
 			imageFile = files[0];
 			imagePreviewUrl = URL.createObjectURL(imageFile);
+		}
+	}
+
+	async function handleGenerateAiImage() {
+		if (!newItemName) {
+			formErrorMessage = 'Please enter an Item Name first to generate an AI image.';
+			return;
+		}
+
+		isGeneratingAiImage = true;
+		formErrorMessage = '';
+		formSuccessMessage = `Generating AI image for "${newItemName}" with Cloudflare AI...`;
+
+		try {
+			const res = await fetch('/projects/stripe-toddler-admin/api/generate-image', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					itemName: newItemName,
+					prompt: `High quality 3D studio product image of a toddler toy: ${newItemName}, clean white background, vibrant colors, photorealistic product lighting`
+				})
+			});
+
+			if (res.ok) {
+				const data = await res.json();
+				if (data.image_url) {
+					newItemImageUrl = data.image_url;
+					imagePreviewUrl = data.image_url;
+					formSuccessMessage = `Successfully generated AI image for "${newItemName}"!`;
+				} else {
+					formErrorMessage = 'Failed to generate AI image: No URL returned.';
+				}
+			} else {
+				formErrorMessage = `AI image generation failed (HTTP ${res.status}).`;
+			}
+		} catch (err) {
+			console.error('Error generating AI image:', err);
+			formErrorMessage = `AI image generation error: ${err.message}`;
+		} finally {
+			isGeneratingAiImage = false;
 		}
 	}
 
@@ -433,7 +475,7 @@
 											>{newItemBarcode}</span
 										>.
 									{:else}
-										Associate an item photo, price, and auto-generate a barcode string.
+										Associate an item image, price, and auto-generate a barcode string.
 									{/if}
 								</p>
 							</div>
@@ -493,13 +535,31 @@
 								</div>
 							</div>
 
-							<!-- Item Photo Upload -->
+							<!-- Item Image Upload & AI Generation -->
 							<div>
-								<label
-									for="photo-file"
-									class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2"
-									>Item Photo</label
-								>
+								<div class="flex items-center justify-between mb-2">
+									<label
+										for="image-file"
+										class="block text-xs font-bold text-zinc-300 uppercase tracking-wider"
+										>Item Image</label
+									>
+
+									<button
+										type="button"
+										onclick={handleGenerateAiImage}
+										disabled={isGeneratingAiImage || !newItemName}
+										class="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 font-bold text-xs rounded-xl border border-purple-500/30 transition-all flex items-center gap-1.5 disabled:opacity-40"
+									>
+										{#if isGeneratingAiImage}
+											<RotateSolid class="size-3.5 animate-spin text-purple-400" />
+											<span>Generating AI Image...</span>
+										{:else}
+											<WandMagicSparklesSolid class="size-3.5 text-purple-400" />
+											<span>Generate Image with Cloudflare AI</span>
+										{/if}
+									</button>
+								</div>
+
 								<div
 									class="border-2 border-dashed border-zinc-800 rounded-2xl p-4 text-center bg-zinc-950/50 hover:border-zinc-700 transition-colors"
 								>
@@ -512,21 +572,22 @@
 												onclick={() => {
 													imageFile = null;
 													imagePreviewUrl = '';
+													newItemImageUrl = '';
 												}}
 												class="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold transition-opacity"
 											>
-												Remove
+												Remove Image
 											</button>
 										</div>
 									{:else}
 										<UploadSolid class="size-8 text-zinc-500 mx-auto mb-2" />
 										<p class="text-xs text-zinc-400 font-medium mb-1">
-											Click to select photo asset
+											Click to select image asset or generate with Cloudflare AI
 										</p>
-										<p class="text-[10px] text-zinc-600">JPEG or PNG, max 5 MB</p>
+										<p class="text-[10px] text-zinc-600">JPEG, PNG, or AI-generated data URL</p>
 									{/if}
 									<input
-										id="photo-file"
+										id="image-file"
 										type="file"
 										accept="image/*"
 										onchange={handleFileSelect}
