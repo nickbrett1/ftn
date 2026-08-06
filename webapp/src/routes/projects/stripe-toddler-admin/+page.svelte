@@ -149,6 +149,39 @@
 		return newItemImageUrl;
 	}
 
+	function getDisplayImageUrl(item) {
+		if (!item) return '/images/toddler/toy_fire_truck.jpg';
+		const url = item.image_url || '';
+		if (!url || url.includes('placehold.co') || url.includes('placeholder')) {
+			const nameLower = (item.name || '').toLowerCase();
+			const barcodeLower = (item.barcode || '').toLowerCase();
+			if (nameLower.includes('fire') || barcodeLower.includes('toy001')) {
+				return '/images/toddler/toy_fire_truck.jpg';
+			}
+			if (nameLower.includes('block') || barcodeLower.includes('toy002')) {
+				return '/images/toddler/toy_wooden_blocks.jpg';
+			}
+			if (
+				nameLower.includes('bear') ||
+				nameLower.includes('plush') ||
+				barcodeLower.includes('toy003')
+			) {
+				return '/images/toddler/toy_teddy_bear.jpg';
+			}
+			if (nameLower.includes('digger') || nameLower.includes('yellow')) {
+				return '/images/toddler/toy_yellow_digger.jpg';
+			}
+			if (nameLower.includes('car') || nameLower.includes('race')) {
+				return '/images/toddler/toy_race_car.jpg';
+			}
+			if (nameLower.includes('ring') || nameLower.includes('stack')) {
+				return '/images/toddler/toy_stacking_rings.jpg';
+			}
+			return '/images/toddler/toy_fire_truck.jpg';
+		}
+		return url;
+	}
+
 	async function handleSaveItem() {
 		formSuccessMessage = '';
 		formErrorMessage = '';
@@ -169,7 +202,8 @@
 				barcode: newItemBarcode,
 				name: newItemName,
 				price_cents: Math.round(newItemPriceUsd * 100),
-				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg'
+				image_url: newItemImageUrl || '/images/toddler/toy_fire_truck.jpg',
+				created_at: Math.floor(Date.now() / 1000)
 			};
 
 			let apiSaveSuccess = false;
@@ -678,15 +712,13 @@
 										<div
 											class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-3 border border-zinc-800 flex items-center justify-center"
 										>
-											{#if item.image_url}
-												<img
-													src={item.image_url}
-													alt={item.name}
-													class="w-full h-full object-cover"
-												/>
-											{:else}
-												<TagSolid class="size-8 text-zinc-600" />
-											{/if}
+											<img
+												src={getDisplayImageUrl(item)}
+												alt={item.name}
+												class="w-full h-full object-cover"
+												onerror={(e) =>
+													(e.currentTarget.src = '/images/toddler/toy_fire_truck.jpg')}
+											/>
 										</div>
 
 										<h4 class="font-bold text-white text-sm line-clamp-1">{item.name}</h4>
