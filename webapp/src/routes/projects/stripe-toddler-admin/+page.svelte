@@ -13,7 +13,8 @@
 		BarcodeSolid,
 		TagSolid,
 		BabySolid,
-		WandMagicSparklesSolid
+		WandMagicSparklesSolid,
+		TrashCanSolid
 	} from 'svelte-awesome-icons';
 
 	/**
@@ -145,6 +146,39 @@
 		isEditing = false;
 		formSuccessMessage = '';
 		formErrorMessage = '';
+	}
+
+	async function handleDeleteItem(barcode, name) {
+		if (
+			typeof window !== 'undefined' &&
+			!confirm(`Are you sure you want to delete "${name}" (${barcode}) from inventory?`)
+		) {
+			return;
+		}
+
+		try {
+			// Optimistically remove from local state
+			inventoryItems = inventoryItems.filter((i) => i.barcode !== barcode);
+			sessionAddedBarcodes.delete(barcode);
+			sessionAddedBarcodes = new Set(sessionAddedBarcodes);
+			selectedBarcodesForPrint.delete(barcode);
+			selectedBarcodesForPrint = new Set(selectedBarcodesForPrint);
+
+			const res = await fetch(
+				`/projects/stripe-toddler-admin/api/inventory?barcode=${encodeURIComponent(barcode)}`,
+				{ method: 'DELETE' }
+			);
+
+			if (res.ok) {
+				formSuccessMessage = `Successfully deleted "${name}" (${barcode}) from inventory.`;
+				formErrorMessage = '';
+			} else {
+				formErrorMessage = `Failed to delete item from server (HTTP ${res.status}).`;
+			}
+		} catch (err) {
+			console.error('Error deleting item:', err);
+			formErrorMessage = `Error deleting item: ${err.message}`;
+		}
 	}
 
 	function handleFileSelect(e) {
@@ -894,12 +928,22 @@
 
 									<div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
 										<BarcodeSvg code={item.barcode} height={24} showText={false} />
-										<button
-											onclick={() => handleEditItem(item)}
-											class="text-xs text-blue-400 hover:text-blue-300 font-bold px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
-										>
-											Edit
-										</button>
+										<div class="flex items-center gap-1.5">
+											<button
+												onclick={() => handleEditItem(item)}
+												class="text-xs text-blue-400 hover:text-blue-300 font-bold px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+											>
+												Edit
+											</button>
+											<button
+												onclick={() => handleDeleteItem(item.barcode, item.name)}
+												class="text-xs text-red-400 hover:text-red-300 font-bold px-2 py-1 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors flex items-center gap-1"
+												title="Delete Item"
+											>
+												<TrashCanSolid class="size-3 text-red-400" />
+												<span>Delete</span>
+											</button>
+										</div>
 									</div>
 								</div>
 							{/each}
