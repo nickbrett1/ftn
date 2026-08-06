@@ -40,6 +40,7 @@
 	let newItemBarcode = $state('');
 	let newItemImageUrl = $state('');
 	let isSavingItem = $state(false);
+	let isEditing = $state(false);
 	let formSuccessMessage = $state('');
 	let formErrorMessage = $state('');
 	let imageFile = $state(null);
@@ -110,7 +111,37 @@
 
 	function handleNameChange(e) {
 		newItemName = e.target.value;
-		newItemBarcode = generateBarcodeFromName(newItemName);
+		if (!isEditing) {
+			newItemBarcode = generateBarcodeFromName(newItemName);
+		}
+	}
+
+	function handleEditItem(item) {
+		newItemName = item.name;
+		newItemPriceUsd = item.price_cents ? item.price_cents / 100 : 5;
+		newItemBarcode = item.barcode;
+		newItemImageUrl = item.image_url || '';
+		imagePreviewUrl = item.image_url || '';
+		isEditing = true;
+		formSuccessMessage = `Editing item ${item.name} (${item.barcode}). Update fields below and click Save.`;
+		formErrorMessage = '';
+
+		if (typeof window !== 'undefined') {
+			const el = document.getElementById('inventory-item-form');
+			if (el) el.scrollIntoView({ behavior: 'smooth' });
+		}
+	}
+
+	function handleCancelEdit() {
+		newItemName = '';
+		newItemPriceUsd = 5;
+		newItemBarcode = '';
+		newItemImageUrl = '';
+		imageFile = null;
+		imagePreviewUrl = '';
+		isEditing = false;
+		formSuccessMessage = '';
+		formErrorMessage = '';
 	}
 
 	function handleFileSelect(e) {
@@ -217,6 +248,7 @@
 			newItemBarcode = 'TOY-NEW-ITEM-' + Date.now().toString().slice(-3);
 			imageFile = null;
 			imagePreviewUrl = '';
+			isEditing = false;
 
 			// Refresh from server if server is active
 			await fetchInventory();
@@ -376,18 +408,33 @@
 		{#if activeTab === 'inventory'}
 			<div class="space-y-8">
 				<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-					<!-- Left Column: Add New Item Form -->
+					<!-- Left Column: Add / Edit Item Form -->
 					<div
-						class="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between"
+						id="inventory-item-form"
+						class="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between scroll-mt-24"
 					>
 						<div class="space-y-6">
 							<div class="border-b border-zinc-800 pb-4">
 								<h2 class="text-lg font-bold text-white flex items-center gap-2">
 									<PlusSolid class="size-5 text-green-400" />
-									Add New Inventory Item
+									{#if isEditing}
+										<span>Edit Inventory Item</span>
+										<span
+											class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono"
+											>{newItemBarcode}</span
+										>
+									{:else}
+										<span>Add New Inventory Item</span>
+									{/if}
 								</h2>
 								<p class="text-xs text-zinc-400">
-									Associate an item photo, price, and auto-generate a barcode string.
+									{#if isEditing}
+										Updating existing item record for barcode <span class="font-mono text-white"
+											>{newItemBarcode}</span
+										>.
+									{:else}
+										Associate an item photo, price, and auto-generate a barcode string.
+									{/if}
 								</p>
 							</div>
 
@@ -516,7 +563,7 @@
 						</div>
 
 						<!-- Action Button -->
-						<div class="pt-6 border-t border-zinc-800">
+						<div class="pt-6 border-t border-zinc-800 space-y-2">
 							<button
 								onclick={handleSaveItem}
 								disabled={isSavingItem}
@@ -525,11 +572,23 @@
 								{#if isSavingItem}
 									<RotateSolid class="size-5 animate-spin" />
 									<span>Saving to Worker KV...</span>
+								{:else if isEditing}
+									<CheckSolid class="size-5" />
+									<span>Update Item ({newItemBarcode})</span>
 								{:else}
 									<CheckSolid class="size-5" />
 									<span>Save & Generate Item</span>
 								{/if}
 							</button>
+
+							{#if isEditing}
+								<button
+									onclick={handleCancelEdit}
+									class="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs transition-all text-center"
+								>
+									Cancel Edit / Add New Item
+								</button>
+							{/if}
 						</div>
 					</div>
 
@@ -700,14 +759,8 @@
 									<div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
 										<BarcodeSvg code={item.barcode} height={24} showText={false} />
 										<button
-											onclick={() => {
-												newItemName = item.name;
-												newItemPriceUsd = item.price_cents / 100;
-												newItemBarcode = item.barcode;
-												newItemImageUrl = item.image_url;
-												imagePreviewUrl = item.image_url;
-											}}
-											class="text-xs text-blue-400 hover:text-blue-300 font-bold"
+											onclick={() => handleEditItem(item)}
+											class="text-xs text-blue-400 hover:text-blue-300 font-bold px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
 										>
 											Edit
 										</button>
