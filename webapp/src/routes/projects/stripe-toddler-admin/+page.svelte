@@ -14,7 +14,9 @@
 		TagSolid,
 		BabySolid,
 		WandMagicSparklesSolid,
-		TrashCanSolid
+		TrashCanSolid,
+		MagnifyingGlassPlusSolid,
+		XmarkSolid
 	} from 'svelte-awesome-icons';
 
 	/**
@@ -49,6 +51,18 @@
 	let formErrorMessage = $state('');
 	let imageFile = $state(null);
 	let imagePreviewUrl = $state('');
+
+	// Image Zoom Lightbox state
+	let zoomedImage = $state(null); // { url: string, title: string, subtitle?: string } | null
+
+	function handleZoomImage(url, title = '', subtitle = '') {
+		if (!url) return;
+		zoomedImage = { url, title, subtitle };
+	}
+
+	function handleCloseZoom() {
+		zoomedImage = null;
+	}
 
 	// Analytics & Server Status state
 	let transactions = $state(data?.initialTransactions || []);
@@ -693,19 +707,55 @@
 								>
 									{#if imagePreviewUrl}
 										<div
-											class="relative group mx-auto w-32 h-32 rounded-xl overflow-hidden mb-3 border border-zinc-700"
+											class="relative group mx-auto w-36 h-36 rounded-2xl overflow-hidden mb-3 border border-zinc-700 bg-zinc-900 shadow-lg cursor-zoom-in"
+											onclick={() =>
+												handleZoomImage(
+													imagePreviewUrl,
+													newItemName || 'Preview Image',
+													`$${newItemPriceUsd} USD`
+												)}
+											role="button"
+											tabindex="0"
+											onkeydown={(e) =>
+												e.key === 'Enter' &&
+												handleZoomImage(imagePreviewUrl, newItemName || 'Preview Image')}
 										>
-											<img src={imagePreviewUrl} alt="Preview" class="w-full h-full object-cover" />
-											<button
-												onclick={() => {
-													imageFile = null;
-													imagePreviewUrl = '';
-													newItemImageUrl = '';
-												}}
-												class="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold transition-opacity"
+											<img
+												src={imagePreviewUrl}
+												alt="Preview"
+												class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+											/>
+											<div
+												class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity p-2"
 											>
-												Remove Image
-											</button>
+												<button
+													type="button"
+													onclick={(e) => {
+														e.stopPropagation();
+														handleZoomImage(
+															imagePreviewUrl,
+															newItemName || 'Preview Image',
+															`$${newItemPriceUsd} USD`
+														);
+													}}
+													class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow"
+												>
+													<MagnifyingGlassPlusSolid class="size-3 text-white" />
+													<span>Zoom Image</span>
+												</button>
+												<button
+													type="button"
+													onclick={(e) => {
+														e.stopPropagation();
+														imageFile = null;
+														imagePreviewUrl = '';
+														newItemImageUrl = '';
+													}}
+													class="px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition-colors shadow"
+												>
+													Remove
+												</button>
+											</div>
 										</div>
 									{:else}
 										<UploadSolid class="size-8 text-zinc-500 mx-auto mb-2" />
@@ -925,14 +975,41 @@
 								>
 									<div>
 										<div
-											class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-3 border border-zinc-800 flex items-center justify-center"
+											class="relative group h-36 bg-zinc-900 rounded-xl overflow-hidden mb-3 border border-zinc-800 flex items-center justify-center {item.image_url
+												? 'cursor-zoom-in'
+												: ''}"
+											onclick={() => {
+												if (item.image_url) {
+													handleZoomImage(
+														item.image_url,
+														item.name,
+														`$${(item.price_cents / 100).toFixed(2)} USD • ${item.barcode}`
+													);
+												}
+											}}
+											role="button"
+											tabindex="0"
+											onkeydown={(e) =>
+												e.key === 'Enter' &&
+												item.image_url &&
+												handleZoomImage(item.image_url, item.name)}
 										>
 											{#if item.image_url}
 												<img
 													src={item.image_url}
 													alt={item.name}
-													class="w-full h-full object-cover"
+													class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 												/>
+												<div
+													class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+												>
+													<span
+														class="px-2.5 py-1 bg-black/80 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 border border-zinc-700 shadow"
+													>
+														<MagnifyingGlassPlusSolid class="size-3 text-purple-400" />
+														<span>Zoom Image</span>
+													</span>
+												</div>
 											{:else}
 												<TagSolid class="size-8 text-zinc-600" />
 											{/if}
@@ -1123,6 +1200,52 @@
 			{/each}
 		</div>
 	</div>
+
+	<!-- Image Zoom Lightbox Modal -->
+	{#if zoomedImage}
+		<div
+			class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 no-print"
+			onclick={handleCloseZoom}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => e.key === 'Escape' && handleCloseZoom()}
+		>
+			<div
+				class="relative max-w-4xl w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col items-center overflow-hidden"
+				onclick={(e) => e.stopPropagation()}
+				role="document"
+			>
+				<button
+					onclick={handleCloseZoom}
+					class="absolute top-4 right-4 z-10 p-2.5 bg-zinc-800/90 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-full transition-colors border border-zinc-700/50 shadow-lg cursor-pointer"
+					title="Close Zoom (Esc)"
+				>
+					<XmarkSolid class="size-5" />
+				</button>
+
+				<div
+					class="relative w-full max-h-[75vh] flex items-center justify-center overflow-hidden rounded-2xl bg-zinc-950 border border-zinc-800 p-3 mb-4 shadow-inner"
+				>
+					<img
+						src={zoomedImage.url}
+						alt={zoomedImage.title || 'Zoomed Item Image'}
+						class="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105"
+					/>
+				</div>
+
+				{#if zoomedImage.title || zoomedImage.subtitle}
+					<div class="w-full text-center space-y-1">
+						{#if zoomedImage.title}
+							<h3 class="text-lg font-extrabold text-white">{zoomedImage.title}</h3>
+						{/if}
+						{#if zoomedImage.subtitle}
+							<p class="text-xs font-mono text-green-400 font-bold">{zoomedImage.subtitle}</p>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Footer -->
 	<div class="no-print">

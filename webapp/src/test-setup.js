@@ -86,6 +86,9 @@ vi.mock('svelte-awesome-icons', () => {
 		TagSolid: createMockIcon(),
 		WandMagicSparklesSolid: createMockIcon(),
 		TrashCanSolid: createMockIcon(),
+		MagnifyingGlassPlusSolid: createMockIcon(),
+		XmarkSolid: createMockIcon(),
+		EyeSolid: createMockIcon(),
 		ArrowLeftSolid: createMockIcon()
 	};
 });
