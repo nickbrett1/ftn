@@ -43,6 +43,7 @@
 	let isSavingItem = $state(false);
 	let isEditing = $state(false);
 	let isGeneratingAiImage = $state(false);
+	let customAiPrompt = $state('');
 	let formSuccessMessage = $state('');
 	let formErrorMessage = $state('');
 	let imageFile = $state(null);
@@ -154,15 +155,23 @@
 		}
 	}
 
+	function getEffectivePrompt() {
+		if (customAiPrompt.trim()) return customAiPrompt.trim();
+		const name = newItemName.trim() || 'Toddler Toy';
+		return `High quality 3D studio product image of a toddler toy: ${name}, clean white background, vibrant colors, photorealistic product lighting`;
+	}
+
 	async function handleGenerateAiImage() {
-		if (!newItemName) {
-			formErrorMessage = 'Please enter an Item Name first to generate an AI image.';
+		if (!newItemName && !customAiPrompt) {
+			formErrorMessage =
+				'Please enter an Item Name or Custom Prompt first to generate an AI image.';
 			return;
 		}
 
+		const promptToSend = getEffectivePrompt();
 		isGeneratingAiImage = true;
 		formErrorMessage = '';
-		formSuccessMessage = `Generating AI image for "${newItemName}" with Cloudflare AI...`;
+		formSuccessMessage = `Generating AI image with Cloudflare AI...`;
 
 		try {
 			const res = await fetch('/projects/stripe-toddler-admin/api/generate-image', {
@@ -170,7 +179,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					itemName: newItemName,
-					prompt: `High quality 3D studio product image of a toddler toy: ${newItemName}, clean white background, vibrant colors, photorealistic product lighting`
+					prompt: promptToSend
 				})
 			});
 
@@ -179,7 +188,7 @@
 				if (data.image_url) {
 					newItemImageUrl = data.image_url;
 					imagePreviewUrl = data.image_url;
-					formSuccessMessage = `Successfully generated AI image for "${newItemName}"!`;
+					formSuccessMessage = `Successfully generated AI image!`;
 				} else {
 					formErrorMessage = 'Failed to generate AI image: No URL returned.';
 				}
@@ -547,7 +556,7 @@
 									<button
 										type="button"
 										onclick={handleGenerateAiImage}
-										disabled={isGeneratingAiImage || !newItemName}
+										disabled={isGeneratingAiImage || (!newItemName && !customAiPrompt)}
 										class="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 font-bold text-xs rounded-xl border border-purple-500/30 transition-all flex items-center gap-1.5 disabled:opacity-40"
 									>
 										{#if isGeneratingAiImage}
@@ -558,6 +567,72 @@
 											<span>Generate Image with Cloudflare AI</span>
 										{/if}
 									</button>
+								</div>
+
+								<!-- Custom Cloudflare AI Prompt Box -->
+								<div class="mb-3 p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800 space-y-2">
+									<div class="flex items-center justify-between">
+										<label
+											for="custom-prompt"
+											class="text-[10px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1"
+										>
+											<WandMagicSparklesSolid class="size-3 text-purple-400" />
+											Custom AI Prompt
+										</label>
+										{#if customAiPrompt}
+											<button
+												type="button"
+												onclick={() => (customAiPrompt = '')}
+												class="text-[10px] text-zinc-500 hover:text-zinc-300 font-mono underline"
+											>
+												Reset to Default
+											</button>
+										{/if}
+									</div>
+
+									<textarea
+										id="custom-prompt"
+										rows="2"
+										bind:value={customAiPrompt}
+										placeholder={getEffectivePrompt()}
+										class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs text-purple-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono"
+									></textarea>
+
+									<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+										<span class="text-[10px] text-zinc-500 font-bold mr-1">Style Presets:</span>
+										<button
+											type="button"
+											onclick={() =>
+												(customAiPrompt = `High quality 3D studio product image of a toddler toy: ${newItemName || 'Toy'}, clean white background, vibrant colors, photorealistic product lighting`)}
+											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+										>
+											🎨 Studio 3D
+										</button>
+										<button
+											type="button"
+											onclick={() =>
+												(customAiPrompt = `Vintage handcrafted wooden toddler toy: ${newItemName || 'Toy'}, smooth natural wood grain, soft studio lighting, white background`)}
+											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+										>
+											🪵 Wooden
+										</button>
+										<button
+											type="button"
+											onclick={() =>
+												(customAiPrompt = `Adorable soft plush fabric toddler toy: ${newItemName || 'Toy'}, cozy lighting, isolated clean studio background, high detail`)}
+											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+										>
+											🧸 Soft Plush
+										</button>
+										<button
+											type="button"
+											onclick={() =>
+												(customAiPrompt = `Minimalist clay render of a toddler toy: ${newItemName || 'Toy'}, smooth pastel colors, soft shadows, studio background`)}
+											class="px-2 py-1 bg-zinc-900 hover:bg-purple-900/40 text-[10px] text-zinc-300 hover:text-purple-200 rounded-lg border border-zinc-800 transition-colors"
+										>
+											🎨 Pastel Clay
+										</button>
+									</div>
 								</div>
 
 								<div
