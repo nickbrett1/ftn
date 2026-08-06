@@ -32,14 +32,7 @@ export async function GET(event) {
 		});
 		if (res.ok) {
 			const data = await res.json();
-			const filtered = Array.isArray(data)
-				? data.filter(
-						(i) =>
-							!['TOY001', 'TOY002', 'TOY003'].includes(i?.barcode) &&
-							!i?.image_url?.includes('placehold.co')
-					)
-				: [];
-			return json(filtered);
+			return json(data);
 		}
 		return json({ error: `Worker returned HTTP ${res.status}` }, { status: res.status });
 	} catch (err) {
