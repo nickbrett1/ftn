@@ -283,9 +283,6 @@ jobs:
           command: |
             cd webapp
             npm run deploy-preview
-      - notify_deployment:
-          environment_name: "Preview"
-          doppler_config: "stg"
 
 workflows:
   build_test_deploy:
