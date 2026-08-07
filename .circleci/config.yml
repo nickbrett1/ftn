@@ -41,10 +41,10 @@ commands:
             if [ -n "$DOPPLER_TOKEN" ]; then
               DOPPLER_ARGS="--token $DOPPLER_TOKEN"
               if [[ ! "$DOPPLER_TOKEN" =~ ^dp\.st\. ]]; then
-                DOPPLER_ARGS="$DOPPLER_ARGS --project webapp --config << parameters.doppler_config >>"
+                DOPPLER_ARGS="$DOPPLER_ARGS --project common --config << parameters.doppler_config >>"
               fi
             else
-              DOPPLER_ARGS="--project webapp --config << parameters.doppler_config >>"
+              DOPPLER_ARGS="--project common --config << parameters.doppler_config >>"
             fi
             NTFY_URL=$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain $DOPPLER_ARGS 2>/dev/null || true)
             if [ -n "$NTFY_URL" ]; then
