@@ -2,6 +2,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import BarcodeSvg from '$lib/components/stripe-toddler/BarcodeSvg.svelte';
+	import QrCodeSvg from '$lib/components/stripe-toddler/QrCodeSvg.svelte';
 	import {
 		BoxSolid,
 		ChartLineSolid,
@@ -37,6 +38,7 @@
 	let sessionAddedBarcodes = $state(new Set());
 	let selectedBarcodesForPrint = $state(new Set());
 	let printSelectionMode = $state('all'); // 'session' | 'all' | 'custom'
+	let barcodeFormat = $state('qr'); // 'qr' | '1d'
 
 	// Form state
 	let newItemName = $state('');
@@ -823,14 +825,18 @@
 									class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-green-400 font-mono text-xs font-bold tracking-wider mb-3 focus:outline-none focus:border-green-500"
 								/>
 
-								<!-- Live SVG Barcode Preview -->
+								<!-- Live Scannable Code Preview -->
 								<div
 									class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 flex flex-col items-center"
 								>
 									<p class="text-[10px] uppercase font-bold text-zinc-500 mb-2">
-										Live Scannable Barcode Preview
+										Live Scannable Preview ({barcodeFormat === 'qr' ? '2D QR Code' : '1D Barcode'})
 									</p>
-									<BarcodeSvg code={newItemBarcode || 'TOY-001'} height={40} showText={true} />
+									{#if barcodeFormat === 'qr'}
+										<QrCodeSvg code={newItemBarcode || 'TOY-001'} size={56} showText={true} />
+									{:else}
+										<BarcodeSvg code={newItemBarcode || 'TOY-001'} height={40} showText={true} />
+									{/if}
 								</div>
 							</div>
 						</div>
@@ -892,14 +898,36 @@
 								</button>
 							</div>
 
-							<!-- Print Selection Controls -->
+							<!-- Code Format & Print Selection Controls -->
 							<div
 								class="my-4 p-3 bg-zinc-950 border border-zinc-800 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs"
 							>
-								<span class="font-bold text-zinc-400 uppercase tracking-wider"
-									>Print selection:</span
-								>
 								<div class="flex items-center gap-2">
+									<span class="font-bold text-zinc-400 uppercase tracking-wider">Format:</span>
+									<button
+										onclick={() => (barcodeFormat = 'qr')}
+										class="px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 {barcodeFormat ===
+										'qr'
+											? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+											: 'text-zinc-400 hover:text-white'}"
+									>
+										<span>📱 2D QR Code</span>
+									</button>
+									<button
+										onclick={() => (barcodeFormat = '1d')}
+										class="px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 {barcodeFormat ===
+										'1d'
+											? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+											: 'text-zinc-400 hover:text-white'}"
+									>
+										<span>📊 1D Barcode</span>
+									</button>
+								</div>
+
+								<div class="flex items-center gap-2">
+									<span class="font-bold text-zinc-400 uppercase tracking-wider"
+										>Print selection:</span
+									>
 									<button
 										onclick={() => (printSelectionMode = 'session')}
 										class="px-3 py-1.5 rounded-lg font-semibold transition-all {printSelectionMode ===
@@ -963,7 +991,11 @@
 												</div>
 
 												<div class="w-full my-1 flex justify-center">
-													<BarcodeSvg code={item.barcode} height={32} showText={false} />
+													{#if barcodeFormat === 'qr'}
+														<QrCodeSvg code={item.barcode} size={42} showText={false} />
+													{:else}
+														<BarcodeSvg code={item.barcode} height={32} showText={false} />
+													{/if}
 												</div>
 
 												<span class="text-[9px] font-mono font-bold tracking-tight text-gray-700"
@@ -1057,7 +1089,11 @@
 									</div>
 
 									<div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
-										<BarcodeSvg code={item.barcode} height={24} showText={false} />
+										{#if barcodeFormat === 'qr'}
+											<QrCodeSvg code={item.barcode} size={32} showText={false} />
+										{:else}
+											<BarcodeSvg code={item.barcode} height={24} showText={false} />
+										{/if}
 										<div class="flex items-center gap-1.5">
 											<button
 												onclick={() => handleEditItem(item)}
@@ -1224,10 +1260,12 @@
 						>
 						<span>${(item.price_cents / 100).toFixed(0)}</span>
 					</div>
-					<div
-						style="width: 80%; max-width: 2in; margin: 2px auto; display: flex; justify-content: center;"
-					>
-						<BarcodeSvg code={item.barcode} height={28} showText={false} />
+					<div style="width: 100%; margin: 2px 0; display: flex; justify-content: center;">
+						{#if barcodeFormat === 'qr'}
+							<QrCodeSvg code={item.barcode} size={44} showText={false} />
+						{:else}
+							<BarcodeSvg code={item.barcode} height={28} showText={false} />
+						{/if}
 					</div>
 					<div style="font-family: monospace; font-size: 8pt; font-weight: bold;">
 						{item.barcode}
