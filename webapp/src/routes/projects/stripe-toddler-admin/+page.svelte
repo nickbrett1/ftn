@@ -1224,7 +1224,9 @@
 						>
 						<span>${(item.price_cents / 100).toFixed(0)}</span>
 					</div>
-					<div style="width: 100%; margin: 2px 0; display: flex; justify-content: center;">
+					<div
+						style="width: 80%; max-width: 2in; margin: 2px auto; display: flex; justify-content: center;"
+					>
 						<BarcodeSvg code={item.barcode} height={28} showText={false} />
 					</div>
 					<div style="font-family: monospace; font-size: 8pt; font-weight: bold;">

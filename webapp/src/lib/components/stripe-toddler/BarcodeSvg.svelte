@@ -142,7 +142,7 @@
 		const patternString = indices.map((i) => CODE128_PATTERNS[i] || '212222').join('');
 
 		const result = [];
-		let currentX = 10; // Quiet zone
+		let currentX = 15; // Quiet zone
 		let isBar = true;
 
 		for (let i = 0; i < patternString.length; i++) {
@@ -156,7 +156,7 @@
 
 		return {
 			rects: result,
-			totalWidth: currentX + 10 // Right quiet zone
+			totalWidth: currentX + 15 // Right quiet zone
 		};
 	});
 </script>
