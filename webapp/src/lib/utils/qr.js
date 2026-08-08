@@ -57,10 +57,10 @@ function calculateEcc(data, numEccBytes) {
 
 // QR Code Versions specs: [version, size, dataCapacity, eccBytes]
 const QR_VERSIONS = [
-	{ ver: 1, size: 21, dataCap: 17, ecc: 7 },
-	{ ver: 2, size: 25, dataCap: 32, ecc: 10 },
-	{ ver: 3, size: 29, dataCap: 53, ecc: 15 },
-	{ ver: 4, size: 33, dataCap: 78, ecc: 20 }
+	{ ver: 1, size: 21, dataCap: 19, ecc: 7 },
+	{ ver: 2, size: 25, dataCap: 34, ecc: 10 },
+	{ ver: 3, size: 29, dataCap: 55, ecc: 15 },
+	{ ver: 4, size: 33, dataCap: 80, ecc: 20 }
 ];
 
 /**
@@ -80,6 +80,14 @@ export function generateQrMatrix(text) {
 			break;
 		}
 		spec = v;
+	}
+
+	// Byte-mode payload occupies len + 2 data codewords (4-bit mode + 8-bit count + terminator).
+	// Beyond that the code would be silently truncated into an undecodable QR.
+	if (utf8Bytes.length + 2 > spec.dataCap) {
+		throw new Error(
+			`QR payload too long (${utf8Bytes.length} bytes); max is ${spec.dataCap - 2} bytes for version ${spec.ver}`
+		);
 	}
 
 	const { size, dataCap, ecc } = spec;
@@ -180,13 +188,20 @@ export function generateQrMatrix(text) {
 		}
 	}
 
-	// Format info area reservation
+	// Format info copy 1: row 8 cols 0-8 and col 8 rows 0-8 (timing overlaps skipped)
 	for (let i = 0; i < 9; i++) {
 		if (matrix[8][i] === null) matrix[8][i] = false;
 		if (matrix[i][8] === null) matrix[i][8] = false;
+	}
+	// Format info copy 2: (8, size-8..size-1) + (size-7..size-1, 8) — 15 modules total.
+	// Must not reserve (8, size-9) or (size-8, 8) beyond the dark module: those are data.
+	for (let i = 0; i < 8; i++) {
 		if (matrix[8][size - 1 - i] === null) matrix[8][size - 1 - i] = false;
+	}
+	for (let i = 0; i < 7; i++) {
 		if (matrix[size - 1 - i][8] === null) matrix[size - 1 - i][8] = false;
 	}
+	// Dark module (row size-8, col 8)
 	matrix[size - 8][8] = true;
 
 	// Place codewords in zigzag
@@ -223,8 +238,8 @@ export function generateQrMatrix(text) {
 		col -= 2;
 	}
 
-	// Standard Format Info bits for Mask 0, ECC L (0x77c4 pattern)
-	const formatBits = [1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+	// Format Info bits for Mask 0, ECC L (0x77c4, MSB first)
+	const formatBits = [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0];
 	const fCoords1 = [
 		[8, 0],
 		[8, 1],
