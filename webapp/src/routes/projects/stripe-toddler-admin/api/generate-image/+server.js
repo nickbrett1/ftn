@@ -14,7 +14,7 @@ export async function POST(event) {
 			try {
 				const result = await ai.run('@cf/black-forest-labs/flux-1-schnell', {
 					prompt: finalPrompt,
-					num_steps: 4
+					steps: 4
 				});
 
 				let base64 = '';
