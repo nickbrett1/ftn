@@ -113,7 +113,8 @@
 		"vite": "^8.2.0",
 		"vite-imagetools": "^11.0.0",
 		"vitest": "^4.1.10",
-		"wrangler": "^4.118.0"
+		"wrangler": "^4.118.0",
+		"jsqr": "^1.4.0"
 	},
 	"type": "module",
 	"simple-git-hooks": {

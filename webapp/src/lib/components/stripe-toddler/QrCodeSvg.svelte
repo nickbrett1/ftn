@@ -18,7 +18,7 @@
 
 	const qr = $derived.by(() => {
 		const { matrix, size: gridCount } = generateQrMatrix(code);
-		const padding = 3; // Quiet zone modules
+		const padding = 4; // Quiet zone modules — ISO/IEC 18004 mandates 4
 		const totalSize = gridCount + padding * 2;
 
 		const modules = [];
