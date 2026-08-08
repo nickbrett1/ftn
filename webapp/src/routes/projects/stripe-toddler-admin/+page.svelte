@@ -13,7 +13,6 @@
 		UploadSolid,
 		BarcodeSolid,
 		TagSolid,
-		BabySolid,
 		WandMagicSparklesSolid,
 		TrashCanSolid,
 		MagnifyingGlassPlusSolid,
@@ -464,27 +463,15 @@
 			<div
 				class="flex flex-col md:flex-row md:items-center justify-between py-3 md:py-0 md:h-20 gap-3 md:gap-4"
 			>
-				<!-- Brand / Logo -->
+				<!-- Brand / Title -->
 				<div
 					class="flex items-center justify-between md:justify-start gap-2 sm:gap-4 w-full md:w-auto"
 				>
-					<div class="flex items-center gap-2 sm:gap-3 min-w-0">
-						<div
-							class="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-green-500 to-blue-600 flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0"
-						>
-							<BabySolid class="size-5 sm:size-6 text-white" />
-						</div>
-						<div class="min-w-0">
-							<h1
-								class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5 truncate"
-							>
-								<span class="truncate">Stripe Toddler Admin</span>
-							</h1>
-							<p class="text-[11px] sm:text-xs text-zinc-400 truncate">
-								Inventory & Barcode Dashboard
-							</p>
-						</div>
-					</div>
+					<h1
+						class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5 truncate py-1"
+					>
+						<span class="truncate">Stripe Toddler Admin</span>
+					</h1>
 				</div>
 
 				<!-- Navigation Tabs -->
