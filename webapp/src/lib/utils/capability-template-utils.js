@@ -655,7 +655,8 @@ function _applyNtfyNotificationConfig(data, context) {
             fi
             NTFY_URL=$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain $DOPPLER_ARGS 2>/dev/null || true)
             if [ -n "$NTFY_URL" ]; then
-              curl -s -d "🚀 [\${CIRCLE_PROJECT_REPONAME}] << parameters.environment_name >> deployment successful! Branch: \${CIRCLE_BRANCH}, Commit: \${CIRCLE_SHA1:0:7}" "$NTFY_URL"
+              COMMIT_MSG=$(git log -1 --pretty=format:"%s" "\${CIRCLE_SHA1}" 2>/dev/null || echo "")
+              curl -s -d "🚀 [\${CIRCLE_PROJECT_REPONAME}] << parameters.environment_name >> deployment successful! Branch: \${CIRCLE_BRANCH}, Commit: \${CIRCLE_SHA1:0:7} \${COMMIT_MSG}" "$NTFY_URL"
               echo "Notification sent successfully to ntfy."
             else
               echo "⚠️ NTFY_URL_CIRCLECI_BUILD secret not found in Doppler or empty."
