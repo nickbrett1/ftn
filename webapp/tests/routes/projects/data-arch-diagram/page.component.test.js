@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/svelte';
-import Page from '../../../../src/routes/projects/data-arch-diagram/+page.svelte';
+import Page from '../../../../src/routes/home/data-arch-diagram/+page.svelte';
 import { vi, describe, it, expect } from 'vitest';
 
 // Mock child components to avoid deep rendering issues
-vi.mock('../../../../src/routes/projects/data-arch-diagram/DataArchitectureHTML.svelte', () => ({
+vi.mock('../../../../src/routes/home/data-arch-diagram/DataArchitectureHTML.svelte', () => ({
 	default: vi.fn()
 }));
 
