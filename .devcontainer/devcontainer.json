@@ -5,6 +5,7 @@
   // Updated to Node.js 22
   // Using Debian Bookworm (GLIBC 2.36) via custom Dockerfile
   "build": { "dockerfile": "Dockerfile", "context": ".." },
+  "workspaceFolder": "/workspaces/ftn",
 
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
