@@ -183,6 +183,10 @@
 			return;
 		}
 
+		// Save a snapshot before optimistic removal so we can restore on failure
+		const itemToDelete = inventoryItems.find((i) => i.barcode === barcode);
+		const itemIndex = inventoryItems.findIndex((i) => i.barcode === barcode);
+
 		try {
 			// Optimistically remove from local state
 			inventoryItems = inventoryItems.filter((i) => i.barcode !== barcode);
@@ -200,9 +204,25 @@
 				formSuccessMessage = `Successfully deleted "${name}" (${barcode}) from inventory.`;
 				formErrorMessage = '';
 			} else {
+				// Restore the item if the server rejected the delete
+				if (itemToDelete !== undefined) {
+					inventoryItems = [
+						...inventoryItems.slice(0, itemIndex),
+						itemToDelete,
+						...inventoryItems.slice(itemIndex)
+					];
+				}
 				formErrorMessage = `Failed to delete item from server (HTTP ${res.status}).`;
 			}
 		} catch (err) {
+			// Restore the item on network errors too
+			if (itemToDelete !== undefined) {
+				inventoryItems = [
+					...inventoryItems.slice(0, itemIndex),
+					itemToDelete,
+					...inventoryItems.slice(itemIndex)
+				];
+			}
 			console.error('Error deleting item:', err);
 			formErrorMessage = `Error deleting item: ${err.message}`;
 		}

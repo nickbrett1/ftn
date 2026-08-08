@@ -80,7 +80,6 @@ export async function DELETE(event) {
 		process.env.STRIPE_TODDLER_WORKER_URL || 'https://stripe-toddler.nick-brett1.workers.dev';
 
 	try {
-		// 1. Try sending DELETE to Worker API if supported
 		const res = await event.fetch(
 			`${workerUrl.replace(/\/$/, '')}/api/admin/inventory?barcode=${encodeURIComponent(barcode)}`,
 			{
@@ -89,20 +88,8 @@ export async function DELETE(event) {
 			}
 		);
 
-		if (res.ok) {
-			const data = await res.json();
-			return json(data);
-		}
-
-		// 2. If Worker KV binding is available in platform env, delete directly
-		const kv = event.platform?.env?.STRIPE_TODDLER_INVENTORY || event.platform?.env?.INVENTORY_KV;
-		if (kv) {
-			await kv.delete(`item:${barcode}`);
-			return json({ status: 'success', barcode, deleted: true });
-		}
-
-		// 3. Fallback success response for client optimistic state update
-		return json({ status: 'success', barcode, deleted: true });
+		const data = await res.json();
+		return json(data, { status: res.status });
 	} catch (err) {
 		return json({ error: err.message }, { status: 500 });
 	}
