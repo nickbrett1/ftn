@@ -2,6 +2,7 @@
   "name": "Python",
   "runArgs": ["--sysctl", "net.ipv6.conf.all.disable_ipv6=1", "--cap-add=NET_ADMIN", "--device=/dev/net/tun"],
   "build": { "dockerfile": "Dockerfile" },
+  "workspaceFolder": "/workspaces/{{projectName}}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,

@@ -142,10 +142,22 @@ fi
 
 # Automatically start or attach to a tmux session for interactive shells
 if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- == *i* && -t 0 && -t 1 ]]; then
-  # Determine a session name. If we are in /workspaces/something, use that folder name. Else default to "main".
+  # Determine a session name from the workspace folder name, falling back to 'main'.
+  # Also scan existing /workspaces/* dirs so that new VS Code terminals which start
+  # in $HOME (before workspaceFolder kicks in) still find and join the right session.
   session_name="main"
   if [[ "$PWD" =~ ^/workspaces/([^/]+) ]]; then
     session_name="${match[1]}"
+  elif [[ -d /workspaces ]]; then
+    # PWD is not inside /workspaces (e.g. $HOME). Find the first /workspaces/* dir
+    # whose name matches an existing tmux session and prefer that.
+    for ws_dir in /workspaces/*(N/); do
+      candidate="${ws_dir:t}"
+      if tmux has-session -t "$candidate" 2>/dev/null; then
+        session_name="$candidate"
+        break
+      fi
+    done
   fi
 
   if [[ -n "$SSH_CONNECTION" || -n "$MOSH_CLIENT" ]]; then
@@ -159,7 +171,7 @@ if command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- 
     tmux new-window -t "$session_name"
     exit
   else
-    # First terminal: start the main session
+    # First terminal: start the named session
     exec tmux new-session -s "$session_name"
   fi
 fi

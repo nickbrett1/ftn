@@ -27,6 +27,9 @@ describe('DevContainer Generation Tests', () => {
 		expect(devcontainerJson.runArgs).toContain('--sysctl');
 		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
 
+		// Check that the workspace folder is set so terminals start in the project dir
+		expect(devcontainerJson.workspaceFolder).toBe('/workspaces/my-project');
+
 		// Check for unresolved variables in features
 		const javaFeature = devcontainerJson.features['ghcr.io/devcontainers/features/java:1'];
 		expect(javaFeature).toBeDefined();
@@ -68,6 +71,9 @@ describe('DevContainer Generation Tests', () => {
 		expect(devcontainerJson.runArgs).toContain('--sysctl');
 		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
 
+		// Check that the workspace folder is set so terminals start in the project dir
+		expect(devcontainerJson.workspaceFolder).toBe('/workspaces/my-project');
+
 		// Check for unresolved variables in features
 		const pythonFeature = devcontainerJson.features['ghcr.io/devcontainers/features/python:1'];
 		expect(pythonFeature).toBeDefined();
@@ -108,6 +114,9 @@ describe('DevContainer Generation Tests', () => {
 		// Check for runArgs
 		expect(devcontainerJson.runArgs).toContain('--sysctl');
 		expect(devcontainerJson.runArgs).toContain('net.ipv6.conf.all.disable_ipv6=1');
+
+		// Check that the workspace folder is set so terminals start in the project dir
+		expect(devcontainerJson.workspaceFolder).toBe('/workspaces/my-project');
 
 		// Check for correct username in features
 		expect(
@@ -153,5 +162,37 @@ describe('DevContainer Generation Tests', () => {
 		expect(zshrc).toContain('_wt_audit()');
 		expect(zshrc).toContain('_wt_remove()');
 		expect(zshrc).toContain('goose() { _wt_ensure command goose "$@"; }');
+	});
+
+	it('joins an existing tmux session for terminals starting outside the workspace', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			capabilities: ['devcontainer-rust'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-rust']);
+
+		// devcontainer.json sets workspaceFolder so VS Code terminals start in the project
+		const devcontainerJsonFile = files.find(
+			(f) => f.filePath === '.devcontainer/devcontainer.json'
+		);
+		expect(devcontainerJsonFile).toBeDefined();
+		const devcontainerJson = JSON.parse(devcontainerJsonFile.content);
+		expect(devcontainerJson.workspaceFolder).toBe('/workspaces/my-project');
+
+		// .zshrc falls back to scanning /workspaces/* for an existing session so
+		// terminals that start in $HOME (before workspaceFolder kicks in) still join.
+		const zshrcFile = files.find((f) => f.filePath === '.devcontainer/.zshrc');
+		expect(zshrcFile).toBeDefined();
+
+		const zshrc = zshrcFile.content;
+		expect(zshrc).toContain('Determine a session name from the workspace folder name');
+		expect(zshrc).toContain('for ws_dir in /workspaces/*(N/); do');
+		expect(zshrc).toContain('candidate="${ws_dir:t}"');
+		expect(zshrc).toContain('tmux has-session -t "$candidate" 2>/dev/null');
+		expect(zshrc).toContain('start the named session');
 	});
 });
