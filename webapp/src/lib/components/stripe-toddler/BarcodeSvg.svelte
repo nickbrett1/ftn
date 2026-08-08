@@ -166,6 +166,7 @@
 		viewBox="0 0 {bars.totalWidth} {height + (showText ? 18 : 0)}"
 		class="w-full h-auto max-h-full block"
 		xmlns="http://www.w3.org/2000/svg"
+		shape-rendering="crispEdges"
 	>
 		<!-- Quiet zone background -->
 		<rect

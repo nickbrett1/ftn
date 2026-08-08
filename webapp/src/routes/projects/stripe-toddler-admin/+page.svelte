@@ -1249,9 +1249,9 @@
 					</div>
 					<div style="width: 100%; margin: 2px 0; display: flex; justify-content: center;">
 						{#if barcodeFormat === 'qr'}
-							<QrCodeSvg code={item.barcode} size={44} showText={false} />
+							<QrCodeSvg code={item.barcode} size={56} showText={false} />
 						{:else}
-							<BarcodeSvg code={item.barcode} height={28} showText={false} />
+							<BarcodeSvg code={item.barcode} height={40} showText={false} />
 						{/if}
 					</div>
 					<div style="font-family: monospace; font-size: 8pt; font-weight: bold;">
