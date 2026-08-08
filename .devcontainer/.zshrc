@@ -158,7 +158,8 @@ agy-dev() {
 # A robust function to run goose with Doppler, ensuring all secrets are available.
 # Secrets are loaded from the 'common' project first, then the 'goose' project's secrets layer on
 # top (project-specific secrets take precedence over common ones).
-goose-dev() {
+# Overrides the bare `goose` binary (which can't work standalone here: it needs Doppler secrets).
+goose() {
   echo "Starting goose with Doppler (common + goose)..."
   # Pull latest goose recipes (nickbrett1/goose-recipes) so recipe updates are
   # picked up on every launch without waiting for a container restart.
@@ -440,5 +441,6 @@ _wt_remove() {
   fi
 }
 
-# --- Entry point: run goose inside this shell's worktree ---
-goose() { _wt_ensure command goose "$@"; }
+# --- Entry point ---
+# goose() is defined above (Doppler wrapper) and already routes through _wt_ensure,
+# so the bare-binary worktree wrapper is no longer needed.

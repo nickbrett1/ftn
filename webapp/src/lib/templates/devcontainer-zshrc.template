@@ -3,4 +3,4 @@
 # For example:
 # export PATH="$PATH:/usr/local/go/bin"
 
-{{gooseDevAlias}}
+{{gooseAlias}}

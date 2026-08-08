@@ -161,7 +161,31 @@ describe('DevContainer Generation Tests', () => {
 		expect(zshrc).toContain('_wt_merge()');
 		expect(zshrc).toContain('_wt_audit()');
 		expect(zshrc).toContain('_wt_remove()');
+		// Without the doppler capability the plain-binary wrapper is installed behind a guard
+		expect(zshrc).toContain('typeset -f goose');
 		expect(zshrc).toContain('goose() { _wt_ensure command goose "$@"; }');
+	});
+
+	it('overrides goose() with the Doppler wrapper when the doppler capability is selected', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+
+		const zshrcFile = files.find((f) => f.filePath === '.devcontainer/.zshrc');
+		expect(zshrcFile).toBeDefined();
+
+		const zshrc = zshrcFile.content;
+		// goose() itself is the Doppler wrapper (no separate goose-dev entry point)
+		expect(zshrc).toContain('goose() {');
+		expect(zshrc).toContain('_wt_ensure doppler run --project common --config dev');
+		expect(zshrc).toContain('--project goose --config prd -- goose "$@"');
+		expect(zshrc).not.toContain('goose-dev()');
 	});
 
 	it('joins an existing tmux session for terminals starting outside the workspace', async () => {

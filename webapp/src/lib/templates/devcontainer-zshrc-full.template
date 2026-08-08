@@ -133,7 +133,7 @@ DISABLE_AUTO_UPDATE=true
 DISABLE_UPDATE_PROMPT=true
 
 {{agyDevAlias}}
-{{gooseDevAlias}}
+{{gooseAlias}}
 
 # Change directory to the workspace if starting in the home directory
 if [[ "$PWD" == "$HOME" ]]; then
@@ -408,4 +408,8 @@ _wt_remove() {
 }
 
 # --- Entry point: run goose inside this shell's worktree ---
-goose() { _wt_ensure command goose "$@"; }
+# If a Doppler wrapper ({{gooseAlias}}) already defined goose(), it already routes
+# through _wt_ensure; otherwise bind the plain binary so worktree routing still applies.
+if ! typeset -f goose >/dev/null 2>&1; then
+  goose() { _wt_ensure command goose "$@"; }
+fi

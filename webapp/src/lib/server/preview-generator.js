@@ -15,7 +15,7 @@ import {
 import {
 	TemplateEngine,
 	AGY_DEV_ALIAS,
-	GOOSE_DEV_ALIAS,
+	GOOSE_ALIAS,
 	SHELL_SETUP_SCRIPT,
 	GIT_SAFE_DIR_SCRIPT,
 	AGY_SETUP_SCRIPT,
@@ -223,7 +223,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		agyDevAlias: allCapabilities.includes('doppler')
 			? AGY_DEV_ALIAS.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
-		gooseDevAlias: allCapabilities.includes('doppler') ? GOOSE_DEV_ALIAS : ''
+		gooseAlias: allCapabilities.includes('doppler') ? GOOSE_ALIAS : ''
 	});
 
 	const p10kContent = templateEngine.generateFile('devcontainer-p10k-zsh-full', projectConfig);

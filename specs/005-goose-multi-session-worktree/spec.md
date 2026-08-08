@@ -263,7 +263,7 @@ Resolved the §9 open decisions. All wrappers are zsh and live in the shell rc
 | 5 | Naming scheme | **Plain feature name** | `feat-a`, `fix-login-bug` — no `feat/` prefix; branch == dir == feature. |
 | 6 | `node_modules` | **Each worktree builds its own** | Isolation wins over disk savings; `node_modules` is gitignored so the dirty-count stays clean. |
 | 7 | Coordination server | **Deferred — not built** | Revisit only if same-file conflicts become a real recurring annoyance. |
-| 8 | (addition) Existing launcher | **Wrap `goose-dev` too** | ftn's `goose-dev` (Doppler + recipe pull) now routes through `_wt_ensure`; the generic `goose()` wrapper wraps `command goose` so both entry points share the same worktree logic. |
+| 8 | (addition) Existing launcher | **`goose()` is the single entry point** | The Doppler wrapper (common + goose secrets, recipe pull on ftn) *is* `goose()` and routes through `_wt_ensure`; the template only installs the plain `command goose` wrapper behind a `typeset -f` guard when no Doppler wrapper was injected. The old `goose-dev` entry point is gone. |
 
 ### 11.1 genproj enhancement (default, not opt-in)
 

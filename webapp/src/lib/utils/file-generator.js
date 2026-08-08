@@ -95,15 +95,17 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
-export const GOOSE_DEV_ALIAS = `# A robust function to run goose with Doppler, ensuring all secrets are available.
+export const GOOSE_ALIAS = `# A robust function to run goose with Doppler, ensuring all secrets are available.
 # Secrets are loaded from the 'common' project first, then the 'goose' project's secrets layer on
 # top (project-specific secrets take precedence over common ones).
-goose-dev() {
+# Overrides the bare \`goose\` binary (which can't work standalone: it needs Doppler secrets).
+goose() {
   echo "Starting goose with Doppler (common + goose)..."
   # Load common secrets first, then layer goose project secrets on top.
   # Uses 'prd' config for the goose project to pick up LITELLM endpoint env vars.
   # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to goose.
-  doppler run --project common --config dev -- doppler run --forward-signals --project goose --config prd -- goose "$@"
+  # Routes through _wt_ensure so goose runs in this shell's feature worktree.
+  _wt_ensure doppler run --project common --config dev -- doppler run --forward-signals --project goose --config prd -- goose "$@"
 }`;
 
 /**
@@ -704,7 +706,7 @@ export function generateMergedDevelopmentContainerFiles(
 							() => context.projectName || context.name || 'my-project'
 						)
 					: '',
-				gooseDevAlias: context.capabilities.includes('doppler') ? GOOSE_DEV_ALIAS : ''
+				gooseAlias: context.capabilities.includes('doppler') ? GOOSE_ALIAS : ''
 			})
 		},
 		{
