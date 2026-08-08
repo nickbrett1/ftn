@@ -593,6 +593,7 @@ function getCircleCiTemplateData(context) {
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName);
 	_applyDockerContainerConfig(data, context, contextEnabled, contextName);
+	_applyNtfyNotificationConfig(data, context);
 
 	if (
 		context.capabilities.includes('devcontainer-node') &&
@@ -610,6 +611,67 @@ function getCircleCiTemplateData(context) {
 	}
 
 	return data;
+}
+
+function _applyNtfyNotificationConfig(data, context) {
+	const circleciConfig = context.configuration?.circleci || {};
+	if (!circleciConfig.ntfyNotifications) {
+		return;
+	}
+
+	if (!data.commands.includes('install_doppler:')) {
+		data.commands += `  install_doppler:
+    description: "Install Doppler CLI"
+    steps:
+      - run:
+          name: Install Doppler CLI
+          command: |
+            if ! command -v doppler &> /dev/null; then
+              (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
+            fi\n`;
+	}
+
+	data.commands += `  notify_deployment:
+    description: "Send ntfy notification upon deployment completion"
+    parameters:
+      environment_name:
+        type: string
+        default: "Production"
+      doppler_config:
+        type: string
+        default: "prd"
+    steps:
+      - run:
+          name: Send deployment completion notification
+          command: |
+            DOPPLER_ARGS=""
+            if [ -n "$DOPPLER_TOKEN" ]; then
+              DOPPLER_ARGS="--token $DOPPLER_TOKEN"
+              if [[ ! "$DOPPLER_TOKEN" =~ ^dp\\.st\\. ]]; then
+                DOPPLER_ARGS="$DOPPLER_ARGS --project common --config << parameters.doppler_config >>"
+              fi
+            else
+              DOPPLER_ARGS="--project common --config << parameters.doppler_config >>"
+            fi
+            NTFY_URL=$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain $DOPPLER_ARGS 2>/dev/null || true)
+            if [ -n "$NTFY_URL" ]; then
+              curl -s -d "🚀 [\${CIRCLE_PROJECT_REPONAME}] << parameters.environment_name >> deployment successful! Branch: \${CIRCLE_BRANCH}, Commit: \${CIRCLE_SHA1:0:7}" "$NTFY_URL"
+              echo "Notification sent successfully to ntfy."
+            else
+              echo "⚠️ NTFY_URL_CIRCLECI_BUILD secret not found in Doppler or empty."
+            fi\n`;
+
+	if (data.deployJobDefinition) {
+		data.deployJobDefinition += `
+      - when:
+          condition:
+            equal: [ main, << pipeline.git.branch >> ]
+          steps:
+            - install_doppler
+            - notify_deployment:
+                environment_name: "Production"
+                doppler_config: "prd"`;
+	}
 }
 
 function getDependabotTemplateData(context) {

@@ -136,4 +136,52 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).toContain('ENV_VAL=');
 		expect(circleCiFile.content).toContain('npx wrangler deploy --env "$ENV_VAL"');
 	});
+
+	it('should not include notify_deployment by default when ntfyNotifications is false', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: {
+					deployTarget: 'cloudflare-workers'
+				}
+			}
+		};
+
+		const selectedCapabilities = ['circleci', 'cloudflare-wrangler'];
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+
+		expect(circleCiFile.content).not.toContain('notify_deployment');
+	});
+
+	it('should include notify_deployment pulling from Doppler common project with project name when ntfyNotifications is true', async () => {
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: {
+					deployTarget: 'cloudflare-workers',
+					ntfyNotifications: true
+				}
+			}
+		};
+
+		const selectedCapabilities = ['circleci', 'cloudflare-wrangler'];
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+
+		expect(circleCiFile.content).toContain('notify_deployment:');
+		expect(circleCiFile.content).toContain('--project common');
+		expect(circleCiFile.content).toContain('🚀 [${CIRCLE_PROJECT_REPONAME}]');
+		expect(circleCiFile.content).toContain('equal: [ main, << pipeline.git.branch >> ]');
+	});
 });

@@ -386,6 +386,10 @@ export const capabilities = [
 							default: 'common'
 						}
 					}
+				},
+				ntfyNotifications: {
+					type: 'boolean',
+					default: false
 				}
 			}
 		},
