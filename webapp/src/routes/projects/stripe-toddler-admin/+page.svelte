@@ -99,9 +99,10 @@
 	async function fetchAnalytics() {
 		isLoadingAnalytics = true;
 		try {
-			const res = await fetch(
-				`${workerUrl.replace(/\/$/, '')}/api/admin/analytics?limit=100&offset=0`
-			);
+			// Go through the SvelteKit server proxy: /api/admin/analytics requires the
+			// X-Admin-API-Key header (a server secret) and the Worker does not allow
+			// cross-origin browser calls, so a direct browser fetch always fails.
+			const res = await fetch('/projects/stripe-toddler-admin/api/analytics?limit=100&offset=0');
 			if (res.ok) {
 				const data = await res.json();
 				transactions = Array.isArray(data) ? data : [];
@@ -111,7 +112,7 @@
 		} catch (err) {
 			console.error('Failed to fetch analytics:', err);
 			if (!serverError) {
-				serverError = `Unable to connect to Worker API at ${workerUrl}: ${err.message}`;
+				serverError = `Unable to load sales history from Worker API: ${err.message}`;
 			}
 		} finally {
 			isLoadingAnalytics = false;
