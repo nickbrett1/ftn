@@ -22,7 +22,6 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {Object} data
-	 * @property {string} [data.workerUrl]
 	 */
 
 	/** @type {Props} */
@@ -30,7 +29,6 @@
 
 	// State variables
 	let activeTab = $state('inventory'); // 'inventory' | 'analytics'
-	let workerUrl = $state(data?.workerUrl || 'https://stripe-toddler.nick-brett1.workers.dev');
 
 	// Inventory state
 	let inventoryItems = $state(data?.initialInventory || []);
@@ -292,7 +290,11 @@
 			formData.append('barcode', newItemBarcode);
 			formData.append('image', imageFile);
 
-			const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory/upload`, {
+			// Go through the SvelteKit server proxy: /api/admin/inventory/upload
+			// requires the X-Admin-API-Key header (a server secret) and the Worker
+			// does not allow cross-origin browser calls, so a direct browser fetch
+			// always fails and silently falls back to the local preview.
+			const res = await fetch('/projects/stripe-toddler-admin/api/inventory/upload', {
 				method: 'POST',
 				body: formData
 			});
@@ -303,6 +305,8 @@
 					newItemImageUrl = result.image_url;
 					return result.image_url;
 				}
+			} else {
+				console.warn(`Image upload failed with HTTP ${res.status}`);
 			}
 		} catch (err) {
 			console.warn('Image upload error:', err);
@@ -351,7 +355,7 @@
 					formErrorMessage = `Saved item locally in session, but Worker API returned HTTP ${res.status} ${res.statusText}`;
 				}
 			} catch (apiErr) {
-				serverError = `Unable to reach Worker API at ${workerUrl}: ${apiErr.message}`;
+				serverError = `Unable to save item to Worker API: ${apiErr.message}`;
 				formErrorMessage = `Saved item locally in session, but Worker API is unreachable (${apiErr.message})`;
 			}
 

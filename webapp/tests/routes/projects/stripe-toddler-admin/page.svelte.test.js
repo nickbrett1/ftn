@@ -6,13 +6,9 @@ import Page from '../../../../src/routes/projects/stripe-toddler-admin/+page.sve
 vi.mock('$lib/components/Header.svelte', () => ({ default: vi.fn() }));
 vi.mock('$lib/components/Footer.svelte', () => ({ default: vi.fn() }));
 
-const WORKER_URL = 'https://stripe-toddler.nick-brett1.workers.dev';
-
 describe('Stripe Toddler Admin Page Component', () => {
 	it('renders page header and navigation tabs', () => {
-		const { getByText } = render(Page, {
-			data: { workerUrl: WORKER_URL }
-		});
+		const { getByText } = render(Page, { data: {} });
 
 		expect(getByText('Stripe Toddler Admin')).toBeDefined();
 		expect(getByText('Inventory')).toBeDefined();
@@ -36,9 +32,7 @@ describe('Stripe Toddler Admin Page Component', () => {
 		});
 		vi.stubGlobal('fetch', fetchMock);
 
-		const { getByText, getAllByText } = render(Page, {
-			data: { workerUrl: WORKER_URL }
-		});
+		const { getByText, getAllByText } = render(Page, { data: {} });
 
 		await fireEvent.click(getByText('Sales History'));
 		await fireEvent.click(getByText('Reload Data'));
@@ -60,12 +54,63 @@ describe('Stripe Toddler Admin Page Component', () => {
 	});
 
 	it('renders add new item form and print preview section by default', () => {
-		const { getByText, getByPlaceholderText } = render(Page, {
-			data: { workerUrl: WORKER_URL }
-		});
+		const { getByText, getByPlaceholderText } = render(Page, { data: {} });
 
 		expect(getByText('Add New Inventory Item')).toBeDefined();
 		expect(getByText('Print Preview (Avery 1" x 2-5/8" Labels)')).toBeDefined();
 		expect(getByPlaceholderText('e.g. Red Fire Engine Truck')).toBeDefined();
+	});
+
+	it('uploads images through the server proxy, not the worker URL directly', async () => {
+		const fetchMock = vi.fn().mockImplementation(async (url) => {
+			const path = String(url);
+			if (path.includes('/api/inventory/upload')) {
+				return {
+					ok: true,
+					json: async () => ({
+						image_url:
+							'https://stripe-toddler-images.example.r2.dev/images/TOY-RED-FIRE-ENGINE-TRUCK-001.jpg',
+						barcode: 'TOY-RED-FIRE-ENGINE-TRUCK-001'
+					})
+				};
+			}
+			return { ok: true, json: async () => [] };
+		});
+		vi.stubGlobal('fetch', fetchMock);
+
+		// jsdom does not implement URL.createObjectURL
+		URL.createObjectURL = vi.fn(() => 'blob:preview');
+
+		const { getByPlaceholderText, getByText, container } = render(Page, { data: {} });
+
+		await fireEvent.input(getByPlaceholderText('e.g. Red Fire Engine Truck'), {
+			target: { value: 'Red Fire Engine Truck' }
+		});
+
+		const fileInput = container.querySelector('#image-file');
+		const file = new File(['fake-image-bytes'], 'toy.jpg', { type: 'image/jpeg' });
+		await fireEvent.change(fileInput, { target: { files: [file] } });
+
+		await fireEvent.click(getByText('Save & Generate Item'));
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith(
+				'/projects/stripe-toddler-admin/api/inventory/upload',
+				expect.objectContaining({ method: 'POST' })
+			);
+		});
+		expect(
+			fetchMock.mock.calls.some(([url]) =>
+				String(url).includes('stripe-toddler.nick-brett1.workers.dev/api/admin/inventory/upload')
+			)
+		).toBe(false);
+		// The inventory save should also go through the local proxy.
+		expect(
+			fetchMock.mock.calls.some(
+				([url]) => String(url) === '/projects/stripe-toddler-admin/api/inventory'
+			)
+		).toBe(true);
+
+		vi.unstubAllGlobals();
 	});
 });
