@@ -36,6 +36,9 @@
 	let selectedBarcodesForPrint = $state(new Set());
 	let printSelectionMode = $state('all'); // 'session' | 'all' | 'custom'
 	let barcodeFormat = $state('qr'); // 'qr' | '1d'
+	// Avery 5160 sticker number to start printing at (1-30), so partially used
+	// sheets can be reused. Labels flow left-to-right, top-to-bottom.
+	let printStartPosition = $state(1);
 
 	// Form state
 	let newItemName = $state('');
@@ -412,6 +415,14 @@
 			window.print();
 		}
 	}
+
+	function handleStartPositionInput(e) {
+		const val = parseInt(e.currentTarget.value, 10);
+		printStartPosition = Number.isNaN(val) ? 1 : Math.min(30, Math.max(1, val));
+	}
+
+	// Number of empty sticker cells to skip before the first printed label
+	const startOffset = $derived(Math.max(0, Math.min(30, printStartPosition) - 1));
 
 	// Filter printable items
 	const printableItems = $derived.by(() => {
@@ -948,6 +959,22 @@
 										Custom selection ({selectedBarcodesForPrint.size})
 									</button>
 								</div>
+
+								<div class="flex items-center gap-2" title="Reuse partially used Avery sheets">
+									<span class="font-bold text-zinc-400 uppercase tracking-wider"
+										>Start at sticker:</span
+									>
+									<input
+										id="print-start-position"
+										type="number"
+										min="1"
+										max="30"
+										value={printStartPosition}
+										oninput={handleStartPositionInput}
+										class="w-16 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-center text-xs font-bold text-white focus:outline-none focus:border-blue-500"
+									/>
+									<span class="text-zinc-500 text-[10px]">of 30 (left→right, top→bottom)</span>
+								</div>
 							</div>
 
 							<!-- Label Grid Preview (Avery 3-column format) -->
@@ -960,6 +987,14 @@
 									</div>
 								{:else}
 									<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+										{#each Array.from({ length: startOffset }, (_, i) => i) as i}
+											<div
+												class="print-start-placeholder relative rounded-xl border border-dashed border-zinc-700 bg-zinc-900/40 flex items-center justify-center h-28 text-zinc-600 text-[10px] font-bold"
+												title="Sticker already used — printing starts after this"
+											>
+												Sticker {i + 1}
+											</div>
+										{/each}
 										{#each printableItems as item}
 											<div
 												class="relative bg-white text-black p-2.5 rounded-xl border border-zinc-300 shadow-sm flex flex-col justify-between items-center h-28 text-center group"
@@ -1241,6 +1276,15 @@
 	<!-- Printable Avery 1" x 2-5/8" Labels Sheet (ONLY Visible in Browser Print Dialog) -->
 	<div class="print-only-sheet hidden">
 		<div class="avery-grid">
+			<!-- Skip already-used stickers so partially used sheets can be reused.
+			     Empty cells keep the grid alignment without printing anything. -->
+			{#each Array.from({ length: startOffset }, (_, i) => i) as i}
+				<div
+					class="avery-label avery-empty"
+					aria-hidden="true"
+					title="Sticker {i + 1} already used"
+				></div>
+			{/each}
 			{#each printableItems as item}
 				<div class="avery-label">
 					<div
@@ -1359,6 +1403,12 @@
 			align-items: center !important;
 			border: 1px dashed #ccc !important;
 			page-break-inside: avoid !important;
+		}
+		/* Skip cells for already-used stickers: same size for alignment, but
+		   invisible so nothing prints over the stickers that are already filled */
+		.avery-empty {
+			border: none !important;
+			background: none !important;
 		}
 	}
 </style>

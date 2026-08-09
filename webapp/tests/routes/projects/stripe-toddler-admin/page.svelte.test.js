@@ -6,6 +6,9 @@ import Page from '../../../../src/routes/projects/stripe-toddler-admin/+page.sve
 vi.mock('$lib/components/Header.svelte', () => ({ default: vi.fn() }));
 vi.mock('$lib/components/Footer.svelte', () => ({ default: vi.fn() }));
 
+const EMPTY_CELL_SELECTOR = '.avery-empty';
+const START_PLACEHOLDER_SELECTOR = '.print-start-placeholder';
+
 describe('Stripe Toddler Admin Page Component', () => {
 	it('renders page header and navigation tabs', () => {
 		const { getByText } = render(Page, { data: {} });
@@ -112,5 +115,71 @@ describe('Stripe Toddler Admin Page Component', () => {
 		).toBe(true);
 
 		vi.unstubAllGlobals();
+	});
+
+	it('starts the print sheet at sticker 1 by default (no offset)', () => {
+		const { container } = render(Page, {
+			data: {
+				initialInventory: [
+					{
+						barcode: 'TOY-001',
+						name: 'Green Dinosaur',
+						price_cents: 500,
+						image_url: '',
+						created_at: 1
+					},
+					{
+						barcode: 'TOY-002',
+						name: 'Purple Unicorn',
+						price_cents: 300,
+						image_url: '',
+						created_at: 2
+					}
+				]
+			}
+		});
+
+		expect(container.querySelectorAll(EMPTY_CELL_SELECTOR)).toHaveLength(0);
+		expect(container.querySelectorAll(START_PLACEHOLDER_SELECTOR)).toHaveLength(0);
+	});
+
+	it('offsets labels to start at a chosen sticker position to reuse partial sheets', async () => {
+		const { getByText, getAllByText, container } = render(Page, {
+			data: {
+				initialInventory: [
+					{
+						barcode: 'TOY-001',
+						name: 'Blue Rocket',
+						price_cents: 500,
+						image_url: '',
+						created_at: 1
+					}
+				]
+			}
+		});
+
+		const input = container.querySelector('#print-start-position');
+		await fireEvent.input(input, { target: { value: '4' } });
+
+		// Print sheet skips stickers 1-3 before the first real label
+		expect(container.querySelectorAll(EMPTY_CELL_SELECTOR)).toHaveLength(3);
+		// On-screen preview mirrors the offset with dashed "used" cells
+		expect(container.querySelectorAll(START_PLACEHOLDER_SELECTOR)).toHaveLength(3);
+		expect(getByText('Sticker 1')).toBeDefined();
+		expect(getByText('Sticker 3')).toBeDefined();
+		// The item is still rendered (appears in preview + catalog + print sheet)
+		expect(getAllByText('Blue Rocket').length).toBeGreaterThan(0);
+	});
+
+	it('clamps the start sticker position to the 1-30 sheet range', async () => {
+		const { container } = render(Page, { data: {} });
+
+		const input = container.querySelector('#print-start-position');
+
+		await fireEvent.input(input, { target: { value: '35' } });
+		expect(container.querySelectorAll(EMPTY_CELL_SELECTOR)).toHaveLength(29);
+
+		await fireEvent.input(input, { target: { value: '0' } });
+		expect(container.querySelectorAll(EMPTY_CELL_SELECTOR)).toHaveLength(0);
 	});
 });
