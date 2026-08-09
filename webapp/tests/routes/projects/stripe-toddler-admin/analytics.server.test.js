@@ -1,10 +1,37 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET } from '../../../../src/routes/projects/stripe-toddler-admin/api/analytics/+server.js';
 import * as requireUser from '$lib/server/require-user.js';
 
 vi.mock('$lib/server/require-user.js', () => ({
 	requireUser: vi.fn()
 }));
+
+// CI injects real admin API keys via Doppler, which would shadow the test
+// values set below and make the header assertions non-deterministic (and
+// potentially leak a real key prefix in failure output). Sandbox every key
+// the proxy reads and restore the originals after each test.
+/* eslint-disable security/detect-object-injection -- env sandbox deliberately uses dynamic keys */
+const ADMIN_ENV_KEYS = ['TODDLER_ADMIN_API_KEY', 'ADMIN_API_KEY', 'STRIPE_TODDLER_ADMIN_API_KEY'];
+
+const originalAdminEnv = new Map();
+
+beforeEach(() => {
+	originalAdminEnv.clear();
+	for (const key of ADMIN_ENV_KEYS) {
+		originalAdminEnv.set(key, process.env[key]);
+		delete process.env[key];
+	}
+});
+
+afterEach(() => {
+	for (const key of ADMIN_ENV_KEYS) {
+		if (originalAdminEnv.get(key) === undefined) {
+			delete process.env[key];
+		} else {
+			process.env[key] = originalAdminEnv.get(key);
+		}
+	}
+});
 
 function makeEvent({ fetchImpl, searchParams = new URLSearchParams() } = {}) {
 	return {
@@ -56,8 +83,6 @@ describe('/projects/stripe-toddler-admin/api/analytics/+server.js GET', () => {
 			'https://stripe-toddler.nick-brett1.workers.dev/api/admin/analytics?limit=25&offset=50'
 		);
 		expect(init.headers['X-Admin-API-Key']).toBe('test-admin-key-123');
-
-		delete process.env.STRIPE_TODDLER_ADMIN_API_KEY;
 	});
 
 	it('defaults limit to 100 and offset to 0 when not provided', async () => {
