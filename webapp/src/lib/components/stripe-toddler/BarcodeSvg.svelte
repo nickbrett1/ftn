@@ -4,6 +4,8 @@
 	 * @property {string} code - Barcode string e.g. "TOY-FIRE-ENGINE-001"
 	 * @property {number} [height] - Height of the barcode in px (default 50)
 	 * @property {boolean} [showText] - Whether to show text label below (default true)
+	 * @property {boolean} [bare] - Omit the decorative padding/border/shadow wrapper
+	 *   (the SVG already carries its own quiet zone, so this is safe for print)
 	 * @property {string} [class] - Extra CSS classes
 	 */
 
@@ -11,6 +13,7 @@
 		code = 'TOY-FIRE-ENGINE-001',
 		height = 50,
 		showText = true,
+		bare = false,
 		class: className = ''
 	} = $props();
 
@@ -161,7 +164,11 @@
 	});
 </script>
 
-<div class="inline-block bg-white p-1 rounded-sm shadow-sm border border-gray-200 {className}">
+<div
+	class="inline-block bg-white {bare
+		? ''
+		: 'p-1 rounded-sm shadow-sm border border-gray-200'} {className}"
+>
 	<svg
 		viewBox="0 0 {bars.totalWidth} {height + (showText ? 18 : 0)}"
 		class="w-full h-auto max-h-full block"

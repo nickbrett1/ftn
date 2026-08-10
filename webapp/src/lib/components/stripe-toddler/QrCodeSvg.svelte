@@ -6,6 +6,8 @@
 	 * @property {string} code - Barcode string e.g. "TOY-FIRE-ENGINE-001"
 	 * @property {number} [size] - Height/width of the QR code in px (default 48)
 	 * @property {boolean} [showText] - Whether to show text label below (default false)
+	 * @property {boolean} [bare] - Omit the decorative padding/border/shadow wrapper
+	 *   (the SVG already carries its own quiet zone, so this is safe for print)
 	 * @property {string} [class] - Extra CSS classes
 	 */
 
@@ -13,6 +15,7 @@
 		code = 'TOY-FIRE-ENGINE-001',
 		size = 48,
 		showText = false,
+		bare = false,
 		class: className = ''
 	} = $props();
 
@@ -35,7 +38,9 @@
 </script>
 
 <div
-	class="inline-flex flex-col items-center bg-white p-1 rounded-sm shadow-sm border border-gray-200 {className}"
+	class="inline-flex flex-col items-center bg-white {bare
+		? ''
+		: 'p-1 rounded-sm shadow-sm border border-gray-200'} {className}"
 >
 	<svg
 		viewBox="0 0 {qr.totalSize} {qr.totalSize}"

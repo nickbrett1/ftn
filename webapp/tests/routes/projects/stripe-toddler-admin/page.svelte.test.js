@@ -182,4 +182,58 @@ describe('Stripe Toddler Admin Page Component', () => {
 		await fireEvent.input(input, { target: { value: '0' } });
 		expect(container.querySelectorAll(EMPTY_CELL_SELECTOR)).toHaveLength(0);
 	});
+
+	it('prints QR labels with the code filling the label height', () => {
+		const { container } = render(Page, {
+			data: {
+				initialInventory: [
+					{
+						barcode: 'TOY-001',
+						name: 'Blue Rocket',
+						price_cents: 500,
+						image_url: '',
+						created_at: 1
+					}
+				]
+			}
+		});
+
+		const sheet = container.querySelector('.print-only-sheet');
+		expect(sheet.querySelector('.avery-label-qr')).toBeTruthy();
+		expect(sheet.querySelector('.avery-label-1d')).toBeFalsy();
+
+		const qrSvg = sheet.querySelector('.avery-qr-cell svg');
+		expect(qrSvg.getAttribute('width')).toBe('80');
+		expect(qrSvg.getAttribute('height')).toBe('80');
+
+		// Item meta (name / price / barcode text) still prints beside the QR
+		expect(sheet.querySelector('.avery-meta .avery-name').textContent).toBe('Blue Rocket');
+		expect(sheet.querySelector('.avery-meta .avery-barcode-text').textContent).toBe('TOY-001');
+	});
+
+	it('switches the print sheet to the stacked 1D layout', async () => {
+		const { getByText, container } = render(Page, {
+			data: {
+				initialInventory: [
+					{
+						barcode: 'TOY-001',
+						name: 'Blue Rocket',
+						price_cents: 500,
+						image_url: '',
+						created_at: 1
+					}
+				]
+			}
+		});
+
+		await fireEvent.click(getByText('📊 1D Barcode'));
+
+		const sheet = container.querySelector('.print-only-sheet');
+		expect(sheet.querySelector('.avery-label-1d')).toBeTruthy();
+		expect(sheet.querySelector('.avery-label-qr')).toBeFalsy();
+
+		// Barcode SVG is taller than before (56px vs 40px) and uses full width
+		const barcodeSvg = sheet.querySelector('.avery-barcode-cell svg');
+		expect(barcodeSvg.getAttribute('viewBox').split(' ').pop()).toBe('56');
+	});
 });

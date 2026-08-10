@@ -996,39 +996,72 @@
 											</div>
 										{/each}
 										{#each printableItems as item}
-											<div
-												class="relative bg-white text-black p-2.5 rounded-xl border border-zinc-300 shadow-sm flex flex-col justify-between items-center h-28 text-center group"
-											>
-												{#if printSelectionMode === 'custom'}
-													<input
-														type="checkbox"
-														checked={selectedBarcodesForPrint.has(item.barcode)}
-														onchange={() => togglePrintSelection(item.barcode)}
-														class="absolute top-1.5 right-1.5 size-4 accent-blue-600 rounded cursor-pointer"
-													/>
-												{/if}
-
+											{#if barcodeFormat === 'qr'}
+												<!-- Mirror the print layout: QR fills the card height on the left -->
 												<div
-													class="w-full flex items-center justify-between text-[11px] font-extrabold border-b border-gray-200 pb-1"
+													class="relative bg-white text-black p-2.5 rounded-xl border border-zinc-300 shadow-sm flex items-center justify-between gap-2 h-28 group"
 												>
-													<span class="truncate pr-1 text-black font-rounded">{item.name}</span>
-													<span class="text-green-700 font-bold shrink-0"
-														>${(item.price_cents / 100).toFixed(0)}</span
+													{#if printSelectionMode === 'custom'}
+														<input
+															type="checkbox"
+															checked={selectedBarcodesForPrint.has(item.barcode)}
+															onchange={() => togglePrintSelection(item.barcode)}
+															class="absolute top-1.5 right-1.5 size-4 accent-blue-600 rounded cursor-pointer"
+														/>
+													{/if}
+
+													<QrCodeSvg code={item.barcode} size={80} showText={false} bare />
+
+													<div
+														class="flex flex-col items-start justify-center gap-1 min-w-0 flex-1 text-left {printSelectionMode ===
+														'custom'
+															? 'pr-6'
+															: ''}"
+													>
+														<span
+															class="text-[11px] font-extrabold leading-tight line-clamp-2 break-words text-black"
+															>{item.name}</span
+														>
+														<span class="text-green-700 font-bold text-[11px] shrink-0"
+															>${(item.price_cents / 100).toFixed(0)}</span
+														>
+														<span
+															class="text-[8px] font-mono font-bold tracking-tight text-gray-700 truncate w-full"
+															>{item.barcode}</span
+														>
+													</div>
+												</div>
+											{:else}
+												<div
+													class="relative bg-white text-black p-2.5 rounded-xl border border-zinc-300 shadow-sm flex flex-col justify-between items-center h-28 text-center group"
+												>
+													{#if printSelectionMode === 'custom'}
+														<input
+															type="checkbox"
+															checked={selectedBarcodesForPrint.has(item.barcode)}
+															onchange={() => togglePrintSelection(item.barcode)}
+															class="absolute top-1.5 right-1.5 size-4 accent-blue-600 rounded cursor-pointer"
+														/>
+													{/if}
+
+													<div
+														class="w-full flex items-center justify-between text-[11px] font-extrabold border-b border-gray-200 pb-1"
+													>
+														<span class="truncate pr-1 text-black font-rounded">{item.name}</span>
+														<span class="text-green-700 font-bold shrink-0"
+															>${(item.price_cents / 100).toFixed(0)}</span
+														>
+													</div>
+
+													<div class="w-full my-1 flex justify-center">
+														<BarcodeSvg code={item.barcode} height={40} showText={false} bare />
+													</div>
+
+													<span class="text-[9px] font-mono font-bold tracking-tight text-gray-700"
+														>{item.barcode}</span
 													>
 												</div>
-
-												<div class="w-full my-1 flex justify-center">
-													{#if barcodeFormat === 'qr'}
-														<QrCodeSvg code={item.barcode} size={42} showText={false} />
-													{:else}
-														<BarcodeSvg code={item.barcode} height={32} showText={false} />
-													{/if}
-												</div>
-
-												<span class="text-[9px] font-mono font-bold tracking-tight text-gray-700"
-													>{item.barcode}</span
-												>
-											</div>
+											{/if}
 										{/each}
 									</div>
 								{/if}
@@ -1286,27 +1319,31 @@
 				></div>
 			{/each}
 			{#each printableItems as item}
-				<div class="avery-label">
-					<div
-						style="width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 10pt; font-weight: bold;"
-					>
-						<span
-							style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;"
-							>{item.name}</span
-						>
-						<span>${(item.price_cents / 100).toFixed(0)}</span>
+				{#if barcodeFormat === 'qr'}
+					<!-- QR fills the label height; item meta sits in the remaining width -->
+					<div class="avery-label avery-label-qr">
+						<div class="avery-qr-cell">
+							<QrCodeSvg code={item.barcode} size={80} showText={false} bare />
+						</div>
+						<div class="avery-meta">
+							<span class="avery-name">{item.name}</span>
+							<span class="avery-price">${(item.price_cents / 100).toFixed(0)}</span>
+							<span class="avery-barcode-text">{item.barcode}</span>
+						</div>
 					</div>
-					<div style="width: 100%; margin: 2px 0; display: flex; justify-content: center;">
-						{#if barcodeFormat === 'qr'}
-							<QrCodeSvg code={item.barcode} size={56} showText={false} />
-						{:else}
-							<BarcodeSvg code={item.barcode} height={40} showText={false} />
-						{/if}
+				{:else}
+					<!-- 1D barcode needs full width, so keep the stacked layout -->
+					<div class="avery-label avery-label-1d">
+						<div class="avery-name-row">
+							<span class="avery-name">{item.name}</span>
+							<span class="avery-price">${(item.price_cents / 100).toFixed(0)}</span>
+						</div>
+						<div class="avery-barcode-cell">
+							<BarcodeSvg code={item.barcode} height={56} showText={false} bare />
+						</div>
+						<div class="avery-barcode-text">{item.barcode}</div>
 					</div>
-					<div style="font-family: monospace; font-size: 8pt; font-weight: bold;">
-						{item.barcode}
-					</div>
-				</div>
+				{/if}
 			{/each}
 		</div>
 	</div>
@@ -1398,11 +1435,78 @@
 			box-sizing: border-box !important;
 			overflow: hidden !important;
 			display: flex !important;
-			flex-direction: column !important;
 			justify-content: space-between !important;
 			align-items: center !important;
 			border: 1px dashed #ccc !important;
 			page-break-inside: avoid !important;
+		}
+		/* QR format: QR fills the label height on the left, meta on the right */
+		.avery-label-qr {
+			flex-direction: row !important;
+			justify-content: flex-start !important;
+			gap: 0.08in !important;
+		}
+		.avery-qr-cell {
+			flex: 0 0 auto !important;
+			height: 100% !important;
+			display: flex !important;
+			align-items: center !important;
+		}
+		.avery-meta {
+			flex: 1 1 auto !important;
+			min-width: 0 !important;
+			display: flex !important;
+			flex-direction: column !important;
+			justify-content: center !important;
+			align-items: flex-start !important;
+			gap: 0.02in !important;
+		}
+		/* 1D format: stacked rows, barcode uses full width */
+		.avery-label-1d {
+			flex-direction: column !important;
+			justify-content: space-between !important;
+		}
+		.avery-name-row {
+			width: 100% !important;
+			display: flex !important;
+			justify-content: space-between !important;
+			align-items: center !important;
+			gap: 0.05in !important;
+			font-size: 8pt !important;
+		}
+		.avery-name-row .avery-name {
+			max-width: 70% !important;
+			white-space: nowrap !important;
+			-webkit-line-clamp: unset !important;
+		}
+		.avery-barcode-cell {
+			width: 100% !important;
+			display: flex !important;
+			justify-content: center !important;
+		}
+		.avery-name {
+			font-size: 8.5pt !important;
+			font-weight: bold !important;
+			line-height: 1.1 !important;
+			overflow: hidden !important;
+			display: -webkit-box !important;
+			-webkit-line-clamp: 2 !important;
+			-webkit-box-orient: vertical !important;
+			word-break: break-word !important;
+		}
+		.avery-price {
+			font-size: 8.5pt !important;
+			font-weight: bold !important;
+			white-space: nowrap !important;
+		}
+		.avery-barcode-text {
+			font-family: monospace !important;
+			font-size: 6.5pt !important;
+			font-weight: bold !important;
+			overflow: hidden !important;
+			text-overflow: ellipsis !important;
+			white-space: nowrap !important;
+			max-width: 100% !important;
 		}
 		/* Skip cells for already-used stickers: same size for alignment, but
 		   invisible so nothing prints over the stickers that are already filled */
