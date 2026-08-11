@@ -18,4 +18,5 @@ services:
     environment:
       # Set your environment variables here or in a NAS-side .env file
       # (genproj never commits secrets). See .env.example.
+{{composeEnvVars}}
 {{composeLabels}}

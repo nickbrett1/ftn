@@ -4,11 +4,13 @@
 # the homepage Docker provider. The href defaults to localhost (the browser
 # resolves it from your device); override `hostname` in the genproj
 # configuration to point at your NAS hostname/IP.
+#
+# The widget block is only emitted when a health mechanism is declared
+# (docker-container `healthcheck` config); without one there is no endpoint to
+# query, so the widget is omitted to avoid a perpetually-red status.
 
 - {{projectName}}:
     icon: sh-docker
     href: http://{{hostname}}:{{exposePort}}/
     description: {{projectName}} container
-    widget:
-      type: customapi
-      url: http://{{hostname}}:{{exposePort}}/health
+{{homepageWidget}}

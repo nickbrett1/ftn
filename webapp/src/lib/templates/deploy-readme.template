@@ -70,3 +70,21 @@ enable the `homepage` Docker provider) to show a health widget for the service.
 Configure `dataMounts` in the genproj configuration to mount host directories
 into the container, e.g. `[{ "hostPath": "/volume1/marketdata", "containerPath": "/data", "readOnly": true }]`.
 They are emitted into the compose `volumes:` section (read-only by default).
+
+## 8. Healthchecks, env vars and system packages
+
+All three are config-driven on the `docker-container` capability — the
+generated Dockerfile, compose file and Homepage widget stay consistent:
+
+- `healthcheck`: `none` (default for Python), `http:<path>` (e.g.
+  `http:/healthz`; installs `curl` on Python images), or `command:<cmd>`.
+  The Homepage widget is only emitted when a real health endpoint exists.
+- `envVars`: emitted into the compose `environment:` and `.env.example`
+  (e.g. `["MCP_PORT=3001"]`).
+- `aptPackages`: Debian packages installed in the runtime image via apt
+  (e.g. `["iproute2", "curl"]`).
+- `command` / `entrypoint`: override the container CMD/ENTRYPOINT (exec form,
+  e.g. `"command": ["/usr/local/bin/entrypoint.sh"]`).
+
+Regenerate with `overwrite: true` to apply these to an existing repo — existing
+app code is preserved; only generated infra files are updated.

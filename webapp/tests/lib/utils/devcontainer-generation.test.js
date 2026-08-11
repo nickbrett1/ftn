@@ -220,3 +220,36 @@ describe('DevContainer Generation Tests', () => {
 		expect(zshrc).toContain('start the named session');
 	});
 });
+
+describe('DevContainer kitchen-sink gating (memo §2.9 / audit §4.5)', () => {
+	it('only mounts volumes and forwardPorts for SELECTED capabilities', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'ports',
+			capabilities: ['devcontainer-python', 'doppler', 'coding-agents'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-python']);
+		const jsonFile = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		const json = JSON.parse(jsonFile.content);
+
+		// Selected: doppler + coding-agents (+ always-on tailscale state volume).
+		expect(json.mounts.some((m) => m.includes('tailscale-state'))).toBe(true);
+		expect(json.mounts.some((m) => m.includes('doppler-config'))).toBe(true);
+		expect(json.mounts.some((m) => m.includes('gemini-cli-settings'))).toBe(true);
+		// NOT selected: wrangler mount and the kitchen-sink forwardPorts are gone.
+		expect(json.mounts.some((m) => m.includes('wrangler-config'))).toBe(false);
+		expect(json.forwardPorts).toEqual([]);
+
+		// post-create-setup.sh contains only selected-capability tooling.
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup.content).toContain('.doppler');
+		expect(setup.content).toContain('.gemini');
+		expect(setup.content).not.toContain('.wrangler');
+		expect(setup.content).not.toContain('specdag');
+		expect(setup.content).not.toContain('nanobanana');
+	});
+});

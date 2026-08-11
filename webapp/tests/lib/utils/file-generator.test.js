@@ -24,12 +24,9 @@ const nodeJsonTemplateContent = `{
     "ghcr.io/devcontainers/features/node:1": {}
   },
   "mounts": [
-    "source={{projectName}}-wrangler-config,target=/home/node/.wrangler,type=volume",
-    "source={{projectName}}-doppler-config,target=/home/node/.doppler,type=volume",
-    "source=gemini-cli-settings,target=/home/node/.gemini,type=volume",
-    "source={{projectName}}-tailscale-state,target=/var/lib/tailscale,type=volume"
+    {{devcontainerMounts}}
   ],
-  "forwardPorts": [8788, 8976, 36079, 33301, 37677],
+  "forwardPorts": {{devcontainerForwardPorts}},
   "containerEnv": {
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8"

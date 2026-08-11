@@ -33,7 +33,8 @@ export function handleGenprojErrorResult(result) {
 	if (result.errorCode === 'REPOSITORY_EXISTS') {
 		return json(
 			{
-				message: 'Repository already exists',
+				message:
+					'Repository already exists. Pass `overwrite: true` to regenerate into the existing repository (existing app code is preserved; generated infra files are updated).',
 				code: 'REPOSITORY_EXISTS'
 			},
 			{ status: 409 }

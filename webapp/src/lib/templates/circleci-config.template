@@ -1,32 +1,20 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.0.2
-{{orbs}}
-{{commands}}jobs:
+{{ciOrbs}}{{orbs}}{{commands}}jobs:
   build:
-    executor: node/default{{jobEnvironment}}
+{{buildExecutor}}{{jobEnvironment}}
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - v1-deps-{{ checksum "package.json" }}
-            - v1-deps-
+{{ciCacheRestore}}
       - run:
           name: Install Packages
           command: |
-            if [ -f package-lock.json ]; then
-              npm ci
-            else
-              npm install
-            fi
+{{ciInstallCommand}}
       - save_cache:
-          paths:
-            - node_modules
-          key: v1-deps-{{ checksum "package.json" }}
+{{ciCacheSave}}
 {{preBuildSteps}}
-      - run:
-          name: Build
-          command: npm run build
+{{ciBuildStep}}
 {{testSteps}}
 {{lighthouseJobDefinition}}
 {{deployJobDefinition}}

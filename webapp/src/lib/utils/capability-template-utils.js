@@ -434,8 +434,23 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
 	}
 }
 
-function _applyEslintSonarjsConfig(data, context) {
-	if (
+/**
+ * Language-aware lint step for CircleCI.
+ * - Python: `ruff check src tests` (ruff ships in the `[dev]` extra).
+ * - Node: ESLint + SonarJS via `npm run lint` (existing behavior).
+ */
+function _applyCodeQualityConfig(data, context) {
+	const language = resolveLanguage(context);
+	if (language === 'python') {
+		if (
+			context.capabilities.includes('code-quality-python') ||
+			context.capabilities.some((c) => c.startsWith('devcontainer-python'))
+		) {
+			data.testSteps += `      - run:
+          name: Lint (Ruff)
+          command: ruff check src tests\n`;
+		}
+	} else if (
 		context.capabilities.includes('code-quality') ||
 		context.capabilities.includes('devcontainer-node')
 	) {
@@ -443,6 +458,61 @@ function _applyEslintSonarjsConfig(data, context) {
           name: Lint (ESLint + SonarJS)
           command: npm run lint\n`;
 	}
+}
+
+/**
+ * Resolves the project language from the selected capabilities.
+ * The selected `devcontainer-*` capability is the source of truth; an explicit
+ * top-level `language` configuration option (`python | node | java | rust`)
+ * overrides it. Defaults to `node` for backward compatibility.
+ * @param {Object} context - Generation context (capabilities, configuration)
+ * @returns {'python'|'node'|'java'|'rust'} The resolved language
+ */
+export function resolveLanguage(context) {
+	const explicit =
+		context.configuration?.language ?? context.configuration?.['docker-container']?.language;
+	if (typeof explicit === 'string') {
+		const normalized = explicit.toLowerCase().trim();
+		if (['python', 'node', 'java', 'rust'].includes(normalized)) {
+			return normalized;
+		}
+	}
+	const caps = context.capabilities || [];
+	if (caps.some((c) => c.startsWith('devcontainer-python'))) return 'python';
+	if (caps.some((c) => c.startsWith('devcontainer-java'))) return 'java';
+	if (caps.some((c) => c.startsWith('devcontainer-rust'))) return 'rust';
+	return 'node';
+}
+
+/**
+ * Converts a project/repo name into a valid Python import package name.
+ * e.g. "nas-port-mcp" -> "nas_port_mcp"
+ * @param {string} projectName
+ * @returns {string}
+ */
+export function toPythonPackageName(projectName) {
+	let pkg = (projectName || 'my-project')
+		.toLowerCase()
+		.replace(/[^a-z0-9_.-]/g, '')
+		.replace(/[-.]+/g, '_')
+		.replace(/_+/g, '_')
+		.replace(/^_+|_+$/g, '');
+	if (!/^[a-z]/.test(pkg)) pkg = `pkg_${pkg}`;
+	return pkg || 'app';
+}
+
+/**
+ * Converts a project name into a valid PEP 508 distribution name.
+ * @param {string} projectName
+ * @returns {string}
+ */
+export function toDistributionName(projectName) {
+	return (
+		(projectName || 'my-project')
+			.toLowerCase()
+			.replace(/[^a-z0-9._-]/g, '-')
+			.replace(/^[-.]+|[-.]+$/g, '') || 'my-project'
+	);
 }
 
 // GHCR is the only supported registry (matches the GitHub + CircleCI stack, and
@@ -458,11 +528,26 @@ function getDockerRegistryPrefix() {
  * Builds template data for the docker-container deployment capability.
  * Provides language-aware Dockerfile fragments, compose fragments, and
  * registry metadata for generated deploy artifacts.
+ *
+ * Language resolution (memo §1): the selected `devcontainer-*` capability (or
+ * an explicit `language` config option) drives the base image, install
+ * commands, healthcheck, entry point and lint/test tooling.
+ *
+ * Health mechanism (memo §2.8): config option `healthcheck` on
+ * docker-container (`none | http:<path> | command:<cmd>`). The Dockerfile
+ * HEALTHCHECK, the Homepage widget and the health route are only emitted when
+ * a mechanism is declared; Node web apps default to `http:/health` (the
+ * sveltekit capability emits the route). Python containers default to `none`
+ * because the framework is unknown — declare one to opt in.
+ *
  * @param {Object} context - Generation context (capabilities, configuration, projectName)
  * @returns {Object} Data consumed by the docker-container templates
  */
 function getDockerContainerTemplateData(context) {
 	const config = context.configuration?.['docker-container'] || {};
+	const language = resolveLanguage(context);
+	const isPython = language === 'python';
+	const isNode = language === 'node';
 	const networkMode = config.networkMode || 'bridge';
 	const exposePort = config.exposePort ?? 3000;
 	const watchtower = config.watchtower !== false;
@@ -472,43 +557,83 @@ function getDockerContainerTemplateData(context) {
 	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
 	const hostname = config.hostname || 'localhost';
 
-	const isPython = (context.capabilities || []).some((c) => c.startsWith('devcontainer-python'));
-	const isNode = (context.capabilities || []).some(
-		(c) => c === 'devcontainer-node' || c === 'sveltekit'
-	);
-
 	// glibc base by default: Alpine (musl) breaks native npm/python modules
 	// (duckdb, better-sqlite3, sharp, ...) which ship glibc prebuilds.
 	// Alpine only via explicit opt-in (safe for pure-JS apps).
 	const dockerBaseImage = config.baseImage || (isPython ? 'python:3.12-slim' : 'node:22-slim');
 
-	// Stage 1 (build): full source tree -> install -> build. Lockfile-aware
-	// install, matching the idiom genproj already emits in its CircleCI config:
-	// strict `npm ci` when a package-lock.json exists, `npm install` fallback
-	// otherwise. genproj is a pure text generator and cannot emit a lockfile,
-	// so a hard `npm ci` would fail every fresh-clone build (and the generated
-	// Dockerfile would contradict the generated CircleCI/test configs).
-	// Self-upgrading: once a lockfile is committed (first local `npm install`),
-	// all builds become reproducible `npm ci` with zero edits.
+	// ---- Health mechanism (config-driven; see jsdoc above).
+	let healthcheckSetting = typeof config.healthcheck === 'string' ? config.healthcheck.trim() : '';
+	let healthcheckPath = '';
+	if (healthcheckSetting === 'none') healthcheckSetting = '';
+	if (healthcheckSetting.startsWith('http:')) {
+		healthcheckPath = healthcheckSetting.slice('http:'.length) || '/health';
+	}
+	// Node web apps default to a /health route (mirrors the Node fix: the
+	// sveltekit capability emits src/routes/health/+server.js).
+	if (!healthcheckSetting && isNode) {
+		healthcheckSetting = 'http:/health';
+		healthcheckPath = '/health';
+	}
+
+	// ---- apt packages (memo §3.2): aptPackages config emitted into the
+	// runtime stage. curl is auto-added for Python http healthchecks because
+	// python:*-slim images do not ship curl.
+	const aptPackages = Array.isArray(config.aptPackages) ? [...config.aptPackages] : [];
+	if (healthcheckSetting.startsWith('http:') && isPython && !aptPackages.includes('curl')) {
+		aptPackages.push('curl');
+	}
+	const dockerAptInstall =
+		aptPackages.length > 0
+			? `RUN apt-get update && apt-get install -y --no-install-recommends ${aptPackages.join(' ')} \\\n    && rm -rf /var/lib/apt/lists/*`
+			: '';
+
+	// Stage 1 (build). Python mirrors the Node "Option A" lockfile idiom
+	// (memo §2.2/§4): prefer requirements.txt (installed before the source
+	// copy for layer caching), otherwise install the project itself from
+	// pyproject.toml — which requires the source tree to be present first.
+	// A pyproject-only repo therefore builds with zero extra files.
 	const dockerBuildCommands = isPython
-		? `COPY requirements.txt* ./\nRUN python -m venv /opt/venv\nRUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt\nCOPY . .`
+		? `COPY requirements.txt* pyproject.toml* ./\nRUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip \\\n    && if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; fi\nCOPY . .\nRUN if [ ! -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir .; fi`
 		: `COPY . .\nRUN if [ -f package-lock.json ]; then npm ci; else npm install; fi\nRUN npm run build`;
 
-	// Stage 2 (runtime): only the build output + production deps. `package*.json`
-	// matches package.json (always present) plus the lockfile when one exists;
-	// the install command then picks strict `npm ci --omit=dev` vs the fallback.
+	// Stage 2 (runtime): only the build output + production deps. Node keeps
+	// `package*.json` (package.json always present + lockfile when one exists)
+	// with the strict `npm ci --omit=dev` vs fallback.
 	const dockerRuntimeCommands = isPython
 		? `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`
 		: `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package*.json ./\nRUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi`;
 
-	// Healthcheck uses node's built-in fetch: no wget/curl dependency on slim images.
-	const dockerHealthcheck = isPython
-		? '# HEALTHCHECK skipped for python images by default (install curl/wget first)'
-		: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD node -e "fetch('http://127.0.0.1:${exposePort}/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"`;
+	// ---- HEALTHCHECK: emitted only when a mechanism is declared (memo §2.8).
+	let dockerHealthcheck = '';
+	if (healthcheckSetting.startsWith('http:')) {
+		dockerHealthcheck = isPython
+			? `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD curl -fsS http://127.0.0.1:${exposePort}${healthcheckPath} || exit 1`
+			: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD node -e "fetch('http://127.0.0.1:${exposePort}${healthcheckPath}').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"`;
+	} else if (healthcheckSetting.startsWith('command:')) {
+		dockerHealthcheck = `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD ${healthcheckSetting
+			.slice('command:'.length)
+			.trim()}`;
+	}
 
-	const dockerRunCommand = isPython
-		? '# TODO: set your entrypoint, e.g.: CMD ["python", "main.py"]\nCMD ["python", "main.py"]'
-		: 'CMD ["node", "build/index.js"]';
+	// ---- Entry point (memo §3.1): config-driven ENTRYPOINT/CMD, never a
+	// placeholder comment. `command` overrides the default CMD; `entrypoint`
+	// prepends an ENTRYPOINT. The Python default runs the scaffolded package
+	// module (`python -m <pkg>`), installed into the venv by the build stage.
+	const pkgName = toPythonPackageName(projectName);
+	let dockerEntrypoint = '';
+	let dockerCommand = '';
+	if (Array.isArray(config.entrypoint) && config.entrypoint.length > 0) {
+		dockerEntrypoint = `ENTRYPOINT ${JSON.stringify(config.entrypoint)}`;
+	}
+	if (Array.isArray(config.command) && config.command.length > 0) {
+		dockerCommand = `CMD ${JSON.stringify(config.command)}`;
+	} else if (!dockerEntrypoint) {
+		dockerCommand = isPython
+			? `CMD ["python", "-m", "${pkgName}"]`
+			: 'CMD ["node", "build/index.js"]';
+	}
+	const dockerRunCommand = [dockerEntrypoint, dockerCommand].filter(Boolean).join('\n');
 
 	const networkModeLine = networkMode === 'host' ? '    network_mode: host' : '';
 
@@ -531,6 +656,19 @@ function getDockerContainerTemplateData(context) {
 					.join('\n')
 			: '';
 
+	// ---- envVars (memo §3.3): emitted into compose `environment:` and as
+	// .env.example keys. Never invent key names (memo §2.6).
+	const envVars = Array.isArray(config.envVars) ? config.envVars : [];
+	const composeEnvVars = envVars
+		.map((entry) => {
+			const trimmed = entry.replace(/^=\s*/, '');
+			return `      ${trimmed}`;
+		})
+		.join('\n');
+	const envExampleEntries = envVars
+		.map((entry) => (entry.includes('=') ? entry : `${entry}=`))
+		.join('\n');
+
 	const labels = [];
 	if (watchtower || homepage) labels.push('    labels:');
 	if (watchtower) labels.push('      - "com.centurylinklabs.watchtower.enable=true"');
@@ -538,16 +676,26 @@ function getDockerContainerTemplateData(context) {
 		labels.push(
 			'      - "homepage.group=Services"',
 			`      - "homepage.name=${projectName}"`,
-			`      - "homepage.href=http://${hostname}:${exposePort}/"`,
-			'      - "homepage.widget.type=customapi"',
-			`      - "homepage.widget.url=http://localhost:${exposePort}/health"`
+			`      - "homepage.href=http://${hostname}:${exposePort}/"`
 		);
+		// Widget only when a real health endpoint exists (memo §2.8).
+		if (healthcheckPath) {
+			labels.push(
+				'      - "homepage.widget.type=customapi"',
+				`      - "homepage.widget.url=http://localhost:${exposePort}${healthcheckPath}"`
+			);
+		}
 	}
+
+	const homepageWidget = healthcheckPath
+		? `    widget:\n      type: customapi\n      url: http://${hostname}:${exposePort}${healthcheckPath}`
+		: '';
 
 	return {
 		registryPrefix,
 		registryNamespace,
 		dockerBaseImage,
+		dockerAptInstall,
 		dockerBuildCommands,
 		dockerRuntimeCommands,
 		dockerHealthcheck,
@@ -557,7 +705,10 @@ function getDockerContainerTemplateData(context) {
 		networkModeLine,
 		portsConfig,
 		volumesConfig,
+		composeEnvVars,
+		envExampleEntries,
 		composeLabels: labels.join('\n'),
+		homepageWidget,
 		hostname,
 		watchtower: String(watchtower),
 		homepage: String(homepage)
@@ -623,7 +774,20 @@ function getCircleCiTemplateData(context) {
 		commands: '',
 		additionalWorkflowJobs: '',
 		buildWorkflowJob: '      - build',
-		jobEnvironment: ''
+		jobEnvironment: '',
+		// Language-aware build job fragments (memo §2.1). Python gets a
+		// cimg/python executor + venv/pip install/ruff/pytest; Node keeps the
+		// node orb + npm ci/build/test. docker-publish is unchanged (multi-arch
+		// buildx -> GHCR) and shared by both languages.
+		ciOrbs: '  node: circleci/node@5.0.2\n',
+		buildExecutor: '    executor: node/default',
+		ciCacheRestore:
+			'          keys:\n            - v1-deps-{{ checksum "package.json" }}\n            - v1-deps-',
+		ciCacheSave:
+			'          paths:\n            - node_modules\n          key: v1-deps-{{ checksum "package.json" }}',
+		ciInstallCommand:
+			'            if [ -f package-lock.json ]; then\n              npm ci\n            else\n              npm install\n            fi',
+		ciBuildStep: '      - run:\n          name: Build\n          command: npm run build'
 	};
 
 	const contextConfig = context.configuration?.circleci?.context;
@@ -633,6 +797,19 @@ function getCircleCiTemplateData(context) {
 
 	const buildJobContext = contextEnabled ? `\n          context: ${contextName}` : '';
 
+	const language = resolveLanguage(context);
+	if (language === 'python') {
+		data.ciOrbs = '';
+		data.buildExecutor = '    docker:\n      - image: cimg/python:3.12\n';
+		data.ciCacheRestore =
+			'          keys:\n            - v1-venv-{{ checksum "pyproject.toml" }}\n            - v1-venv-';
+		data.ciCacheSave =
+			'          paths:\n            - .venv\n          key: v1-venv-{{ checksum "pyproject.toml" }}';
+		data.ciInstallCommand =
+			'            python3 -m venv .venv\n            echo \'. .venv/bin/activate\' >> "$BASH_ENV"\n            pip install --upgrade pip\n            pip install -e ".[dev]"';
+		data.ciBuildStep = '';
+	}
+
 	_applyGitGuardianConfig(data, context, contextEnabled, contextName, buildJobContext);
 	_applyDopplerConfig(data, context);
 	_applyLighthouseConfig(data, context, contextEnabled, contextName);
@@ -640,7 +817,16 @@ function getCircleCiTemplateData(context) {
 	_applyDockerContainerConfig(data, context, contextEnabled, contextName);
 	_applyNtfyNotificationConfig(data, context);
 
-	if (
+	// Lint step first (ruff/ESLint), then the test step.
+	_applyCodeQualityConfig(data, context);
+
+	if (language === 'python') {
+		if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
+			data.testSteps += `      - run:
+          name: Test (pytest)
+          command: pytest -v\n`;
+		}
+	} else if (
 		context.capabilities.includes('devcontainer-node') &&
 		context.capabilities.includes('circleci')
 	) {
@@ -648,8 +834,6 @@ function getCircleCiTemplateData(context) {
           name: Test with Coverage
           command: npx vitest --coverage\n`;
 	}
-
-	_applyEslintSonarjsConfig(data, context);
 
 	if (data.commands) {
 		data.commands = `commands:\n${data.commands}`;

@@ -55,7 +55,10 @@ import { capabilities } from '$lib/config/capabilities.js';
 import {
 	getCapabilityTemplateData,
 	applyDefaults,
-	getGooseMcpConfig
+	getGooseMcpConfig,
+	resolveLanguage,
+	toPythonPackageName,
+	toDistributionName
 } from '$lib/utils/capability-template-utils.js';
 
 // 2.2: health endpoint emitted for docker-container SvelteKit projects.
@@ -567,6 +570,37 @@ function addExtensionsFromCapabilities(allExtensions, capabilityIds) {
 	}
 }
 
+/**
+ * Computes the devcontainer.json mounts + forwardPorts from the SELECTED
+ * capabilities only (memo §2.9 / audit §4.5): the tailscale state volume is
+ * always kept (dev-network bootstrap, do-not-regress), wrangler/doppler/gemini
+ * volumes only when those capabilities are selected, and the kitchen-sink
+ * forwardPorts are dropped (docsify adds its own below).
+ * @param {Object} context - Generation context
+ * @returns {{devcontainerMounts: string, devcontainerForwardPorts: string}} Template data
+ */
+export function getDevcontainerJsonExtras(context) {
+	const isNode = context.capabilities.includes('devcontainer-node');
+	const home = isNode ? '/home/node' : '/home/vscode';
+	const projectName = context.projectName || context.name || 'my-project';
+
+	const mounts = [`source=${projectName}-tailscale-state,target=/var/lib/tailscale,type=volume`];
+	if (context.capabilities.includes('cloudflare-wrangler')) {
+		mounts.push(`source=${projectName}-wrangler-config,target=${home}/.wrangler,type=volume`);
+	}
+	if (context.capabilities.includes('doppler')) {
+		mounts.push(`source=${projectName}-doppler-config,target=${home}/.doppler,type=volume`);
+	}
+	if (context.capabilities.includes('coding-agents')) {
+		mounts.push(`source=gemini-cli-settings,target=${home}/.gemini,type=volume`);
+	}
+
+	return {
+		devcontainerMounts: mounts.map((m) => `"${m}"`).join(',\n    '),
+		devcontainerForwardPorts: '[]'
+	};
+}
+
 function processAdditionalDevelopmentContainer(
 	capabilityId,
 	context,
@@ -584,7 +618,8 @@ function processAdditionalDevelopmentContainer(
 			...context,
 			projectName: context.projectName || context.name || 'my-project',
 			capabilityConfig: capabilityConfig,
-			capability: capability
+			capability: capability,
+			...getDevcontainerJsonExtras(context)
 		}
 	);
 	const otherJson = JSON.parse(otherJsonContent);
@@ -620,7 +655,8 @@ function generateAndMergeDevcontainerJson(
 			...context,
 			projectName: context.projectName || context.name || 'my-project',
 			capabilityConfig: baseCapabilityConfig,
-			capability: baseCapability
+			capability: baseCapability,
+			...getDevcontainerJsonExtras(context)
 		}
 	);
 	let mergedDevelopmentContainerJson = JSON.parse(baseJsonContent);
@@ -753,6 +789,17 @@ export function generateMergedDevelopmentContainerFiles(
 			filePath: '.devcontainer/post-create-setup.sh',
 			content: templateEngine.generateFile('devcontainer-post-create-setup-sh', {
 				...context,
+				// 2.9: the devcontainer setup script only contains tooling for
+				// SELECTED capabilities — no kitchen-sink leftovers.
+				wranglerSetup: context.capabilities.includes('cloudflare-wrangler')
+					? `echo "INFO: Ensuring wrangler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n`
+					: '',
+				dopplerSetup: context.capabilities.includes('doppler')
+					? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n`
+					: '',
+				geminiSetup: context.capabilities.includes('coding-agents')
+					? `echo "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n`
+					: '',
 				shellSetup: context.capabilities.includes('shell-tools')
 					? SHELL_SETUP_SCRIPT.replaceAll(
 							'{{projectName}}',
@@ -773,9 +820,16 @@ export function generateMergedDevelopmentContainerFiles(
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 				gitHooksSetup:
 					context.capabilities.includes('code-quality') ||
+					context.capabilities.includes('code-quality-python') ||
 					context.capabilities.includes('devcontainer-node')
 						? `echo "INFO: Installing git pre-commit hooks (lint-staged)..."\n(cd /workspaces/${context.projectName || context.name || 'my-project'} && npx --yes simple-git-hooks) || echo "WARN: Run 'npx simple-git-hooks' to install hooks manually."`
 						: '',
+				specdagSetup: context.capabilities.includes('spec-kit')
+					? `echo "INFO: Installing specdag globally..."\nnpm install -g @japorto100/specdag\n`
+					: '',
+				socatSetup: context.capabilities.includes('coding-agents')
+					? `if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then\n    echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."\n    sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid $(id -un):$(id -gn) --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222\nfi\n`
+					: '',
 				cloudLoginSetup:
 					context.capabilities.includes('doppler') ||
 					context.capabilities.includes('cloudflare-wrangler') ||
@@ -897,42 +951,196 @@ export function generatePackageJson(templateEngine, context) {
 	}
 }
 
+/**
+ * Generates the Python project scaffold for a devcontainer-python project:
+ * a standard src-layout pyproject.toml plus minimal src/<pkg>/ and tests/
+ * skeletons (memo §2.3). Returns an array of file objects; an empty array when
+ * no Python devcontainer is selected.
+ *
+ * Fixes over the previous scaffold:
+ * - real description (no "Generated by Project Generation Tool").
+ * - pytest/ruff move to `[project.optional-dependencies] dev` (dev extras,
+ *   not runtime deps) -> `pip install -e ".[dev]"` works in CI + devcontainer.
+ * - `[tool.setuptools.packages.find] where = ["src"]` (src layout).
+ * - standard `testpaths = ["tests"]` with `test_*.py` (no nonstandard
+ *   `python_files = "*.test.py"`).
+ * - scaffolds src/<pkg>/__init__.py + __main__.py and tests/test_smoke.py so
+ *   `python -m <pkg>`, ruff and pytest all work with zero hand edits.
+ */
 export function generatePyProjectToml(context) {
 	const hasPython = context.capabilities.some((c) => c.startsWith('devcontainer-python'));
-	if (!hasPython) return;
+	if (!hasPython) return [];
 
 	const hasDagster = context.capabilities.includes('dagster');
 	const projectName = context.projectName || context.name || 'my-project';
+	const distName = toDistributionName(projectName);
+	const pkgName = toPythonPackageName(projectName);
+	const description = (
+		context.description || `A ${projectName} project generated with genproj`
+	).replace(/"/g, '\\"');
 
-	let dependencies = '[\n    "pytest>=7.0.0"';
+	let dependencies = '[]';
 	if (hasDagster) {
-		dependencies += ',\n    "dagster",\n    "dagster-webserver"';
+		dependencies = '[\n    "dagster",\n    "dagster-webserver"\n]';
 	}
-	dependencies += '\n]';
 
-	const content = `[project]
-name = "${projectName}"
+	const pyproject = `[project]
+name = "${distName}"
 version = "0.1.0"
-description = "Generated by Project Generation Tool"
+description = "${description}"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ${dependencies}
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4"
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = "*.test.py"
+
+[tool.ruff]
+src = ["src", "tests"]
 `;
 
+	const initPy = `"""${projectName} package."""
+
+__version__ = "0.1.0"
+`;
+
+	const mainPy = `"""Default module entry point (python -m ${pkgName}).
+
+Override the container command via the genproj docker-container "command"
+configuration option (or "entrypoint") when your application needs a custom
+entry point.
+"""
+
+import sys
+
+
+def main() -> int:
+    print(f"{__package__} is installed and importable.", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+`;
+
+	const smokeTest = `"""Smoke test: the src-layout package installs and imports cleanly."""
+
+
+def test_package_imports():
+    import ${pkgName}  # noqa: F401
+
+    assert ${pkgName}.__version__
+`;
+
+	return [
+		{ filePath: 'pyproject.toml', content: pyproject },
+		{ filePath: `src/${pkgName}/__init__.py`, content: initPy },
+		{ filePath: `src/${pkgName}/__main__.py`, content: mainPy },
+		{ filePath: 'tests/test_smoke.py', content: smokeTest }
+	];
+}
+
+/**
+ * Generates the root README.md (memo §2.5). Language-aware quickstart: pip
+ * install -e ".[dev]" + pytest/ruff for Python, npm install + dev for Node.
+ * Points to deploy/README.md when docker-container is selected.
+ * @param {Object} context - Generation context
+ * @returns {Object} README file object
+ */
+export function generateReadmeFile(context) {
+	const projectName = context.projectName || context.name || 'my-project';
+	const description = context.description || `A ${projectName} project generated with genproj`;
+	const hasDocker = context.capabilities.includes('docker-container');
+	const language = resolveLanguage(context);
+
+	const capabilitiesSection =
+		context.capabilities && context.capabilities.length > 0
+			? `## Capabilities
+
+This project includes the following capabilities:
+
+${context.capabilities
+	.map((id) => {
+		const cap = capabilities.find((c) => c.id === id);
+		return cap ? `- **${cap.name}**: ${cap.description}` : `- ${id}`;
+	})
+	.join('\n')}
+`
+			: '';
+
+	const quickstart =
+		language === 'python'
+			? `## Setup
+
+1. Clone the repository
+2. Create a virtualenv and install the package with dev extras:
+
+   \`\`\`bash
+   python3 -m venv .venv
+   . .venv/bin/activate
+   pip install -e ".[dev]"
+   \`\`\`
+
+3. Run the checks:
+
+   \`\`\`bash
+   ruff check src tests
+   pytest -v
+   \`\`\`
+`
+			: `## Setup
+
+1. Clone the repository
+2. Install dependencies:
+
+   \`\`\`bash
+   npm install
+   \`\`\`
+
+3. Run the dev server:
+
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+`;
+
+	const deploySection = hasDocker
+		? `## Deployment
+
+See \`deploy/README.md\` for the deployment runbook (CircleCI -> GHCR ->
+Watchtower -> Docker host). Deploy with:
+
+\`\`\`bash
+docker compose up -d
+\`\`\`
+`
+		: '';
+
 	return {
-		filePath: 'pyproject.toml',
-		content
+		filePath: 'README.md',
+		content: `# ${projectName}
+
+${description}
+${capabilitiesSection}
+${quickstart}
+${deploySection}
+## Generated by genproj
+
+This project was generated using the genproj tool.
+`
 	};
 }
 
@@ -1275,12 +1483,14 @@ export async function generateAllFiles(context) {
 
 	const otherFiles = [
 		generatePackageJson(templateEngine, context),
-		generatePyProjectToml(context),
+		...generatePyProjectToml(context),
 		generateCargoToml(context),
 		generateRustWorkerLibrary(context),
 		generateGitignoreFile(templateEngine, context),
 		generateVscodeSettingsFile(templateEngine, context),
-		generateVscodeExtensionsFile()
+		generateVscodeExtensionsFile(),
+		// 2.5: root README (language-aware quickstart).
+		generateReadmeFile(context)
 	].filter(Boolean);
 
 	let allGeneratedFiles = [

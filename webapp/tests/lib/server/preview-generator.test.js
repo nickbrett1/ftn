@@ -52,6 +52,15 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		generateViteConfigFile: vi.fn((context) => ({
 			filePath: 'vite.config.js',
 			content: 'mock vite config'
+		})),
+		generatePyProjectToml: vi.fn(() => []),
+		generateReadmeFile: vi.fn((context) => ({
+			filePath: 'README.md',
+			content: `# ${context.name || context.projectName || 'project'}`
+		})),
+		getDevcontainerJsonExtras: vi.fn(() => ({
+			devcontainerMounts: '"source=tailscale,target=/var/lib/tailscale,type=volume"',
+			devcontainerForwardPorts: '[]'
 		}))
 	};
 });

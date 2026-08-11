@@ -27,6 +27,9 @@ import {
 	SETUP_WRANGLER_SCRIPT,
 	DOPPLER_INSTALL_SCRIPT,
 	generateViteConfigFile,
+	generatePyProjectToml,
+	generateReadmeFile,
+	getDevcontainerJsonExtras,
 	HEALTH_ROUTE_SOURCE
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
@@ -117,7 +120,8 @@ function createMergedDevelopmentContainerJson(
 		...projectConfig,
 		projectName: projectConfig.name || 'my-project',
 		capabilityConfig: baseConfig,
-		capability: baseCap
+		capability: baseCap,
+		...getDevcontainerJsonExtras({ ...projectConfig, capabilities: allCapabilities })
 	});
 	const mergedJson = JSON.parse(baseJsonContent);
 	const allExtensions = new Set(mergedJson.customizations?.vscode?.extensions);
@@ -145,7 +149,8 @@ function createMergedDevelopmentContainerJson(
 				...projectConfig,
 				projectName: projectConfig.name || 'my-project',
 				capabilityConfig: capConfig,
-				capability: cap
+				capability: cap,
+				...getDevcontainerJsonExtras({ ...projectConfig, capabilities: allCapabilities })
 			}
 		);
 		const otherJson = JSON.parse(otherJsonContent);
@@ -236,6 +241,15 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 
 	const postCreateContent = templateEngine.generateFile('devcontainer-post-create-setup-sh', {
 		...projectConfig,
+		wranglerSetup: allCapabilities.includes('cloudflare-wrangler')
+			? `echo "INFO: Ensuring wrangler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n`
+			: '',
+		dopplerSetup: allCapabilities.includes('doppler')
+			? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n`
+			: '',
+		geminiSetup: allCapabilities.includes('coding-agents')
+			? `echo "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n`
+			: '',
 		shellSetup: allCapabilities.includes('shell-tools')
 			? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
@@ -250,7 +264,25 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 		gooseSetup: allCapabilities.includes('coding-agents')
 			? generateGooseSetupScript(projectConfig)
 			: '',
-		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : ''
+		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
+		gitHooksSetup:
+			allCapabilities.includes('code-quality') ||
+			allCapabilities.includes('code-quality-python') ||
+			allCapabilities.includes('devcontainer-node')
+				? `echo "INFO: Installing git pre-commit hooks (lint-staged)..."\n(cd /workspaces/${projectConfig.name || 'my-project'} && npx --yes simple-git-hooks) || echo "WARN: Run 'npx simple-git-hooks' to install hooks manually."`
+				: '',
+		specdagSetup: allCapabilities.includes('spec-kit')
+			? `echo "INFO: Installing specdag globally..."\nnpm install -g @japorto100/specdag\n`
+			: '',
+		socatSetup: allCapabilities.includes('coding-agents')
+			? `if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then\n    echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."\n    sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid $(id -un):$(id -gn) --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222\nfi\n`
+			: '',
+		cloudLoginSetup:
+			allCapabilities.includes('doppler') ||
+			allCapabilities.includes('cloudflare-wrangler') ||
+			allCapabilities.includes('google-cloud')
+				? `echo -e "\\nINFO: Custom container setup script finished."\necho -e "\\n⚠️  To complete cloud login, run:"\necho "    cd /workspaces/${projectConfig.name || 'my-project'} && bash scripts/cloud_login.sh"`
+				: 'echo "INFO: Custom container setup script finished."'
 	});
 
 	const postStartContent = templateEngine.generateFile(
@@ -854,6 +886,19 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		files.push(rustWorkerLibraryFile);
 	}
 
+	// Python scaffold: pyproject.toml + src/<pkg>/ + tests/ (memo §2.3).
+	// Mirrors the real generator so previews match what genproj emits.
+	const context = { capabilities: executionOrder, ...projectConfig };
+	for (const pyFile of generatePyProjectToml(context)) {
+		files.push({
+			path: pyFile.filePath,
+			name: pyFile.filePath.split('/').pop(),
+			content: pyFile.content,
+			size: pyFile.content.length,
+			type: 'file'
+		});
+	}
+
 	// 2.2: docker-container SvelteKit apps need a /health route for the
 	// container HEALTHCHECK and the Homepage widget.
 	if (
@@ -871,11 +916,15 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		});
 	}
 
-	// Generate .gitignore and README.md
-	files.push(
-		generateGitignoreFile(templateEngine, projectConfig, executionOrder),
-		generateReadmeFile(projectConfig, executionOrder)
-	);
+	// Generate .gitignore and README.md (language-aware)
+	const readmeFile = generateReadmeFile(context);
+	files.push(generateGitignoreFile(templateEngine, projectConfig, executionOrder), {
+		path: readmeFile.filePath,
+		name: readmeFile.filePath.split('/').pop(),
+		content: readmeFile.content,
+		size: readmeFile.content.length,
+		type: 'file'
+	});
 
 	const vscodeSettingsFile = generateVscodeSettingsPreview(
 		templateEngine,
@@ -889,56 +938,6 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);
-}
-
-/**
- * Generates README.md file
- * @param {Object} projectConfig - Project configuration
- * @param {string[]} executionOrder - Capability execution order
- * @returns {FileObject} README file object
- */
-function generateReadmeFile(projectConfig, executionOrder) {
-	const selectedCapabilities = executionOrder
-		.map((id) => capabilities.find((c) => c.id === id))
-		.filter(Boolean);
-
-	let capabilitiesSection = '';
-	if (selectedCapabilities.length > 0) {
-		capabilitiesSection = `
-## Capabilities
-
-This project includes the following capabilities:
-
-${selectedCapabilities.map((cap) => `- **${cap.name}**: ${cap.description}`).join('\n')}
-`;
-	}
-
-	const readmeContent = `# ${projectConfig.name}
-
-${projectConfig.description || 'A project generated with genproj'}
-${capabilitiesSection}
-## Setup
-
-1. Clone the repository
-2. Install dependencies
-3. Follow the setup instructions for each capability
-
-## Usage
-
-See individual capability documentation for usage instructions.
-
-## Generated by genproj
-
-This project was generated using the genproj tool on ${new Date().toLocaleDateString()}.
-`;
-
-	return {
-		path: 'README.md',
-		name: 'README.md',
-		content: readmeContent,
-		size: readmeContent.length,
-		type: 'file'
-	};
 }
 
 /**

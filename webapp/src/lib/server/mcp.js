@@ -87,13 +87,14 @@ export function createMcpServer(context = {}) {
 							},
 							overwrite: {
 								type: 'boolean',
-								description: 'Whether to overwrite existing files (optional)'
+								description:
+									'Set true to generate into an existing repository (repo must exist / be pre-created for private repos). Without it, generation fails with REPOSITORY_EXISTS.'
 							},
 							resolutions: { type: 'object', description: 'Conflict resolutions (optional)' },
 							configuration: {
 								type: 'object',
 								description:
-									'Capability-specific configuration, e.g. { "docker-container": { "publishPort": "127.0.0.1:3000:3000", "dataMounts": [{ "hostPath": "/volume1/data", "containerPath": "/data", "readOnly": true }], "hostname": "nas.local" } } (optional)'
+									'Capability-specific configuration, e.g. { "docker-container": { "publishPort": "127.0.0.1:3000:3000", "dataMounts": [{ "hostPath": "/volume1/data", "containerPath": "/data", "readOnly": true }], "hostname": "nas.local", "aptPackages": ["iproute2", "curl"], "envVars": ["MCP_PORT=3001"], "command": ["/usr/local/bin/entrypoint.sh"], "healthcheck": "http:/healthz" }, "language": "python" } — language is normally derived from the devcontainer-* capability (optional)'
 							}
 						},
 						required: ['name', 'selectedCapabilities']

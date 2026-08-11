@@ -22,7 +22,16 @@ vi.mock('$lib/utils/file-generator', () => ({
 	DOPPLER_LOGIN_SCRIPT: 'doppler-login-script',
 	WRANGLER_LOGIN_SCRIPT: 'wrangler-login-script',
 	SETUP_WRANGLER_SCRIPT: 'setup-wrangler-script',
-	DOPPLER_INSTALL_SCRIPT: 'doppler-install-script'
+	DOPPLER_INSTALL_SCRIPT: 'doppler-install-script',
+	generatePyProjectToml: () => [],
+	generateReadmeFile: (context) => ({
+		filePath: 'README.md',
+		content: `# ${context.name || context.projectName || 'project'}`
+	}),
+	getDevcontainerJsonExtras: () => ({
+		devcontainerMounts: '"source=tailscale,target=/var/lib/tailscale,type=volume"',
+		devcontainerForwardPorts: '[]'
+	})
 }));
 
 describe('Preview Generator - External Services', () => {

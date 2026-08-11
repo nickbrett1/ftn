@@ -58,7 +58,8 @@ function createDevelopmentContainerCapability(
 	name,
 	description,
 	configurationSchema,
-	vscodeExtensions = []
+	vscodeExtensions = [],
+	extraTemplates = []
 ) {
 	const lang = id.split('-')[1]; // e.g., 'node', 'python', 'java'
 	const capName = lang.charAt(0).toUpperCase() + lang.slice(1);
@@ -102,7 +103,8 @@ function createDevelopmentContainerCapability(
 				filePath: '.devcontainer/post-start-setup.sh',
 				templateId: 'devcontainer-post-start-setup-sh',
 				isExecutable: true
-			}
+			},
+			...extraTemplates
 		],
 		website: 'https://code.visualstudio.com/docs/devcontainers/containers'
 	};
@@ -341,7 +343,17 @@ export const capabilities = [
 		'Python DevContainer',
 		'Sets up a VS Code DevContainer with Python environment.',
 		CONFIG_SCHEMA_EMPTY,
-		['ms-python.python', 'ms-python.vscode-pylance']
+		['ms-python.python', 'ms-python.vscode-pylance'],
+		[
+			// pyproject.toml is emitted by the project scaffold (not a static
+			// template file), but it gets a templateId so tooling can locate it
+			// via capability metadata (memo §7).
+			{
+				id: 'pyproject-toml',
+				filePath: 'pyproject.toml',
+				templateId: 'pyproject-toml'
+			}
+		]
 	),
 	createDevelopmentContainerCapability(
 		'devcontainer-java',
@@ -533,6 +545,26 @@ export const capabilities = [
 		website: 'https://github.com/SonarSource/SonarJS'
 	},
 	{
+		id: 'code-quality-python',
+		name: 'Ruff (Python code quality)',
+		description:
+			'Adds fast, zero-configuration Python linting with Ruff (rules live in pyproject.toml [tool.ruff] and the CI test job runs `ruff check src tests`). Requires a Python devcontainer.',
+		category: CATEGORY_CODE_QUALITY,
+		dependencies: ['devcontainer-python'],
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		configurationSchema: CONFIG_SCHEMA_EMPTY,
+		vscodeExtensions: ['charliermarsh.ruff'],
+		benefits: [
+			'Catches bugs, code smells, and security issues in CI in milliseconds',
+			'No external service or API token required',
+			'Ruff ships as a dev dependency in the generated pyproject.toml',
+			'Works offline and in any CI environment'
+		],
+		templates: EMPTY_ARRAY,
+		website: 'https://docs.astral.sh/ruff/'
+	},
+	{
 		id: 'sonarlint',
 		name: 'SonarLint',
 		description: 'Configures SonarLint for local code quality analysis.',
@@ -668,6 +700,44 @@ export const capabilities = [
 						}
 					},
 					default: []
+				},
+				aptPackages: {
+					type: 'array',
+					description:
+						'Debian packages installed in the runtime image via apt, e.g. ["iproute2", "curl"]. curl is added automatically for Python http healthchecks.',
+					items: { type: 'string' },
+					default: []
+				},
+				envVars: {
+					type: 'array',
+					description:
+						'Environment variables emitted into the compose environment and .env.example, e.g. ["MCP_PORT=3001"] (a bare key like "MCP_PORT" is filled from .env).',
+					items: { type: 'string' },
+					default: []
+				},
+				command: {
+					type: 'array',
+					description:
+						'Container CMD override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"]. Defaults to a language-appropriate command.',
+					items: { type: 'string' }
+				},
+				entrypoint: {
+					type: 'array',
+					description:
+						'Container ENTRYPOINT override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"].',
+					items: { type: 'string' }
+				},
+				healthcheck: {
+					type: 'string',
+					description:
+						'Health mechanism: "none", "http:<path>" (e.g. "http:/healthz"; installs curl on Python images), or "command:<cmd>". The Dockerfile HEALTHCHECK and Homepage widget are only emitted when declared. Node web apps default to "http:/health".',
+					default: ''
+				},
+				language: {
+					type: 'string',
+					enum: ['python', 'node', 'java', 'rust'],
+					description:
+						'Project language override. Normally derived from the selected devcontainer-* capability; set this only to override it.'
 				},
 				watchtower: {
 					type: 'boolean',

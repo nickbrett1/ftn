@@ -1,0 +1,321 @@
+import { describe, it, expect } from 'vitest';
+import { generateAllFiles } from '$lib/utils/file-generator.js';
+import {
+	getCapabilityTemplateData,
+	resolveLanguage
+} from '$lib/utils/capability-template-utils.js';
+import { capabilities } from '$lib/config/capabilities.js';
+
+/**
+ * Language-aware templates (memo: genproj-language-aware-fixes).
+ * Acceptance criteria §5: regenerate nas-port-mcp with ZERO infra edits.
+ */
+
+// The memo §5 regenerate config for nas-port-mcp.
+const NAS_PORT_MCP_CONFIG = {
+	'docker-container': {
+		networkMode: 'host',
+		publishPort: '127.0.0.1:3001:3001',
+		exposePort: 3001,
+		registryNamespace: 'nickbrett1',
+		dataMounts: [
+			{
+				hostPath: '/var/run/docker.sock',
+				containerPath: '/var/run/docker.sock',
+				readOnly: true
+			}
+		],
+		aptPackages: ['iproute2', 'curl'],
+		command: ['/usr/local/bin/entrypoint.sh'],
+		envVars: ['MCP_PORT=3001']
+	}
+};
+
+async function generateNasPortMcp(config = NAS_PORT_MCP_CONFIG, extraCaps = []) {
+	const context = {
+		projectName: 'nas-port-mcp',
+		description: 'MCP server that answers "what host port can I use?" on the NAS.',
+		capabilities: [
+			'devcontainer-python',
+			'docker-container',
+			'circleci',
+			'dependabot',
+			...extraCaps
+		],
+		configuration: config,
+		registryNamespace: 'nickbrett1'
+	};
+	const files = await generateAllFiles(context);
+	return { context, files };
+}
+
+describe('resolveLanguage', () => {
+	it('derives python from devcontainer-python', () => {
+		expect(resolveLanguage({ capabilities: ['devcontainer-python', 'docker-container'] })).toBe(
+			'python'
+		);
+	});
+
+	it('derives node by default (backward compatible)', () => {
+		expect(resolveLanguage({ capabilities: ['circleci'] })).toBe('node');
+		expect(resolveLanguage({ capabilities: ['devcontainer-node', 'sveltekit'] })).toBe('node');
+	});
+
+	it('honours an explicit language config override', () => {
+		expect(
+			resolveLanguage({
+				capabilities: ['devcontainer-node'],
+				configuration: { language: 'python' }
+			})
+		).toBe('python');
+	});
+});
+
+describe('Python CircleCI job (memo §2.1)', () => {
+	it('emits a Python job (cimg/python, venv, pip install -e ".[dev]", ruff, pytest) and keeps docker-publish', async () => {
+		const { files } = await generateNasPortMcp();
+		const ci = files.find((f) => f.filePath === '.circleci/config.yml');
+		expect(ci).toBeDefined();
+
+		const content = ci.content;
+		// No node orb for Python projects.
+		expect(content).not.toContain('circleci/node');
+		expect(content).not.toContain('npm ci');
+		expect(content).not.toContain('npm run build');
+		// Python executor + install + checks.
+		expect(content).toContain('cimg/python:3.12');
+		expect(content).toContain('python3 -m venv .venv');
+		expect(content).toContain('pip install -e ".[dev]"');
+		expect(content).toContain('ruff check src tests');
+		expect(content).toContain('pytest -v');
+		// Multi-arch docker-publish job is retained for Python too.
+		expect(content).toContain('docker-publish');
+		expect(content).toContain('linux/amd64,linux/arm64');
+		expect(content).toContain('ghcr.io/nickbrett1/nas-port-mcp');
+	});
+});
+
+describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
+	it('builds a pyproject-only repo (no requirements.txt) and honours command/aptPackages', async () => {
+		const { files } = await generateNasPortMcp();
+		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
+		expect(dockerfile).toBeDefined();
+
+		const content = dockerfile.content;
+		expect(content).toContain('FROM python:3.12-slim AS build');
+		// pyproject-first install with requirements.txt fallback (Node Option-A idiom).
+		expect(content).toContain('COPY requirements.txt* pyproject.toml* ./');
+		expect(content).toContain(
+			'if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; fi'
+		);
+		expect(content).toContain(
+			'RUN if [ ! -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir .; fi'
+		);
+		// No placeholder comment; CMD comes from configuration.
+		expect(content).not.toContain('TODO');
+		expect(content).toContain('CMD ["/usr/local/bin/entrypoint.sh"]');
+		// aptPackages installed in the runtime stage.
+		expect(content).toContain(
+			'RUN apt-get update && apt-get install -y --no-install-recommends iproute2 curl'
+		);
+		expect(content).toContain('EXPOSE 3001');
+	});
+
+	it('emits HEALTHCHECK + installs curl when an http health mechanism is declared', async () => {
+		const config = {
+			...NAS_PORT_MCP_CONFIG,
+			'docker-container': {
+				...NAS_PORT_MCP_CONFIG['docker-container'],
+				healthcheck: 'http:/healthz'
+			}
+		};
+		const { files } = await generateNasPortMcp(config);
+		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
+		expect(dockerfile.content).toContain('HEALTHCHECK');
+		expect(dockerfile.content).toContain('curl -fsS http://127.0.0.1:3001/healthz');
+
+		// Widget URL must match the declared health path (memo §2.8).
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		expect(compose.content).toContain('homepage.widget.url=http://localhost:3001/healthz');
+		const homepage = files.find((f) => f.filePath === 'deploy/homepage-services.yaml');
+		expect(homepage.content).toContain('url: http://localhost:3001/healthz');
+	});
+
+	it('omits HEALTHCHECK and the widget when no health mechanism is declared (Python default)', async () => {
+		const { files } = await generateNasPortMcp();
+		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
+		expect(dockerfile.content).not.toContain('HEALTHCHECK');
+
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		expect(compose.content).not.toContain('homepage.widget');
+		const homepage = files.find((f) => f.filePath === 'deploy/homepage-services.yaml');
+		expect(homepage.content).not.toContain('widget:');
+	});
+});
+
+describe('Compose + env (memo §2.6, §3.3, do-not-regress)', () => {
+	it('keeps host network, docker.sock ro, watchtower/homepage labels, GHCR owner and emits envVars', async () => {
+		const { files } = await generateNasPortMcp();
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		const content = compose.content;
+
+		expect(content).toContain('network_mode: host');
+		expect(content).not.toContain('ports:');
+		expect(content).toContain('/var/run/docker.sock:/var/run/docker.sock:ro');
+		expect(content).toContain('ghcr.io/nickbrett1/nas-port-mcp:latest');
+		expect(content).not.toContain('OWNER');
+		expect(content).toContain('com.centurylinklabs.watchtower.enable=true');
+		expect(content).toContain('homepage.group=Services');
+		expect(content).toContain('MCP_PORT=3001');
+	});
+
+	it('derives .env.example keys from envVars and never invents MY_APP_PORT', async () => {
+		const { files } = await generateNasPortMcp();
+		const envExample = files.find((f) => f.filePath === '.env.example');
+		expect(envExample).toBeDefined();
+		expect(envExample.content).toContain('MCP_PORT=3001');
+		expect(envExample.content).not.toContain('MY_APP_PORT');
+	});
+});
+
+describe('Python scaffold (memo §2.3, §2.5, §2.4)', () => {
+	it('emits a standard src-layout pyproject with dev extras and real description', async () => {
+		const { files } = await generateNasPortMcp();
+		const pyproject = files.find((f) => f.filePath === 'pyproject.toml');
+		expect(pyproject).toBeDefined();
+
+		const content = pyproject.content;
+		expect(content).not.toContain('Generated by Project Generation Tool');
+		expect(content).toContain('MCP server that answers');
+		expect(content).toContain('[project.optional-dependencies]');
+		expect(content).toContain('"pytest>=8.0"');
+		expect(content).toContain('"ruff>=0.4"');
+		// pytest must NOT be a runtime dependency (the [project] dependencies
+		// list stays empty; pytest/ruff live in the dev extra).
+		expect(content).toMatch(/^dependencies = \[\]/m);
+		expect(content).toContain('[tool.setuptools.packages.find]');
+		expect(content).toContain('where = ["src"]');
+		expect(content).toContain('testpaths = ["tests"]');
+		expect(content).not.toContain('python_files');
+	});
+
+	it('scaffolds src/<pkg>/ and tests/ so ruff and pytest pass with zero edits', async () => {
+		const { files } = await generateNasPortMcp();
+		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__init__.py')).toBe(true);
+		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__main__.py')).toBe(true);
+		const smoke = files.find((f) => f.filePath === 'tests/test_smoke.py');
+		expect(smoke).toBeDefined();
+		expect(smoke.content).toContain('test_package_imports');
+	});
+
+	it('emits a root README with a Python quickstart and deploy pointer, and no requirements.txt (pyproject-first)', async () => {
+		const { files } = await generateNasPortMcp();
+		const readme = files.find((f) => f.filePath === 'README.md');
+		expect(readme).toBeDefined();
+		expect(readme.content).toContain('pip install -e ".[dev]"');
+		expect(readme.content).toContain('ruff check src tests');
+		expect(readme.content).toContain('deploy/README.md');
+
+		// 2.4: pick one — Dockerfile is pyproject-first, so no requirements.txt.
+		expect(files.some((f) => f.filePath === 'requirements.txt')).toBe(false);
+	});
+});
+
+describe('code-quality Python variant (memo §2.7)', () => {
+	it('is a selectable capability requiring devcontainer-python', () => {
+		const cap = capabilities.find((c) => c.id === 'code-quality-python');
+		expect(cap).toBeDefined();
+		expect(cap.name).toContain('Ruff');
+		expect(cap.dependencies).toContain('devcontainer-python');
+	});
+
+	it('adds a ruff lint step to the CircleCI config when selected', async () => {
+		const { files } = await generateNasPortMcp(NAS_PORT_MCP_CONFIG, ['code-quality-python']);
+		const ci = files.find((f) => f.filePath === '.circleci/config.yml');
+		expect(ci.content).toContain('Lint (Ruff)');
+		expect(ci.content).toContain('ruff check src tests');
+	});
+});
+
+describe('Devcontainer kitchen sink (memo §2.9)', () => {
+	it('does not leak unselected tooling into post-create-setup.sh', async () => {
+		const { files } = await generateNasPortMcp();
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+		// None of these are selected: wrangler, doppler, gemini, specdag, socat, nanobanana.
+		expect(setup.content).not.toContain('.wrangler');
+		expect(setup.content).not.toContain('.doppler');
+		expect(setup.content).not.toContain('.gemini');
+		expect(setup.content).not.toContain('specdag');
+		expect(setup.content).not.toContain('socat');
+		expect(setup.content).not.toContain('nanobanana');
+		// Python venv setup retained (do-not-regress).
+		expect(setup.content).toContain('pyproject.toml');
+	});
+});
+
+describe('Node regression (memo §6)', () => {
+	it('keeps the Node docker-container path: /health route, HEALTHCHECK, widget, adapter-node', async () => {
+		const context = {
+			projectName: 'parquet-peek',
+			capabilities: ['sveltekit', 'devcontainer-node', 'docker-container', 'circleci'],
+			configuration: {
+				'docker-container': {
+					publishPort: '127.0.0.1:3000:3000',
+					dataMounts: [
+						{
+							hostPath: '/volume1/marketdata',
+							containerPath: '/data',
+							readOnly: true
+						}
+					]
+				}
+			},
+			registryNamespace: 'nickbrett1'
+		};
+		const files = await generateAllFiles(context);
+
+		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
+		expect(dockerfile.content).toContain('FROM node:22-slim AS build');
+		expect(dockerfile.content).toContain('HEALTHCHECK');
+		expect(dockerfile.content).toContain("fetch('http://127.0.0.1:3000/health')");
+		expect(dockerfile.content).toContain('CMD ["node", "build/index.js"]');
+
+		expect(files.some((f) => f.filePath === 'src/routes/health/+server.js')).toBe(true);
+
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		expect(compose.content).toContain('127.0.0.1:3000:3000');
+		expect(compose.content).toContain('/volume1/marketdata:/data:ro');
+		expect(compose.content).toContain('homepage.widget.url=http://localhost:3000/health');
+		expect(compose.content).toContain('ghcr.io/nickbrett1/parquet-peek:latest');
+		expect(compose.content).not.toContain('OWNER');
+
+		const ci = files.find((f) => f.filePath === '.circleci/config.yml');
+		expect(ci.content).toContain('circleci/node@5.0.2');
+		expect(ci.content).toContain('executor: node/default');
+		expect(ci.content).toContain('npm run build');
+		expect(ci.content).toContain('docker-publish');
+	});
+});
+
+describe('docker-container template data (config plumbing)', () => {
+	it('exposes envVars/aptPackages/healthcheck fragments to templates', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			projectName: 'demo',
+			capabilities: ['devcontainer-python', 'docker-container'],
+			configuration: {
+				'docker-container': {
+					aptPackages: ['iproute2'],
+					envVars: ['PORT=3001'],
+					healthcheck: 'http:/healthz'
+				}
+			}
+		});
+		expect(data.dockerAptInstall).toContain('iproute2');
+		expect(data.dockerAptInstall).toContain('curl'); // auto-added for python http healthcheck
+		expect(data.composeEnvVars).toContain('PORT=3001');
+		expect(data.envExampleEntries).toContain('PORT=3001');
+		expect(data.dockerHealthcheck).toContain('/healthz');
+		expect(data.homepageWidget).toContain('/healthz');
+	});
+});
