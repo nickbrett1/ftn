@@ -754,7 +754,7 @@ export function generateMergedDevelopmentContainerFiles(
 				gitHooksSetup:
 					context.capabilities.includes('code-quality') ||
 					context.capabilities.includes('devcontainer-node')
-						? `echo "INFO: Installing git pre-commit hooks (lint-staged)..."\n(cd /workspaces/${context.projectName || context.name || 'my-project'} && npx simple-git-hooks) || echo "WARN: Run 'npx simple-git-hooks' to install hooks manually."`
+						? `echo "INFO: Installing git pre-commit hooks (lint-staged)..."\n(cd /workspaces/${context.projectName || context.name || 'my-project'} && npx --yes simple-git-hooks) || echo "WARN: Run 'npx simple-git-hooks' to install hooks manually."`
 						: '',
 				cloudLoginSetup:
 					context.capabilities.includes('doppler') ||

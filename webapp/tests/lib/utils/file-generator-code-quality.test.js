@@ -56,6 +56,24 @@ describe('file-generator code-quality capability', () => {
 		expect(pkg.scripts).not.toContain('"lint"');
 	});
 
+	it('should auto-accept the npx install when installing git hooks in the devcontainer', async () => {
+		const files = await generateAllFiles({
+			projectName: 'test-project',
+			repositoryUrl: '',
+			capabilities: ['code-quality', 'devcontainer-node'],
+			configuration: {},
+			authTokens: {},
+			userId: 'test'
+		});
+
+		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(postCreateSetup).toBeDefined();
+		// Plain `npx simple-git-hooks` blocks the (non-interactive) container
+		// build with "Ok to proceed? (y)" — it must auto-accept with --yes.
+		expect(postCreateSetup.content).toContain('&& npx --yes simple-git-hooks) || echo "WARN:');
+		expect(postCreateSetup.content).not.toContain('&& npx simple-git-hooks)');
+	});
+
 	it('should generate eslint.config.js when code-quality is selected', async () => {
 		const files = await generateAllFiles({
 			projectName: 'test-project',
