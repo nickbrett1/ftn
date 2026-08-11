@@ -887,15 +887,16 @@ function _addNodeDevcontainerConfig(context, config) {
 				? ',\n    "vitest": "^2.1.8"'
 				: '"vitest": "^2.1.8"';
 		}
-		if (
-			context.capabilities.includes('sonarcloud') &&
-			!config.devDependencies.includes('"@vitest/coverage-v8"')
-		) {
+		// Coverage provider is required whenever vitest is present: generated
+		// projects get the same coverage gate as the FTN webapp
+		// (thresholds in vite.config.js, enforced by `vitest --coverage` in CI).
+		if (!config.devDependencies.includes('"@vitest/coverage-v8"')) {
 			config.devDependencies += config.devDependencies
 				? ',\n    "@vitest/coverage-v8": "^2.1.8"'
 				: '"@vitest/coverage-v8": "^2.1.8"';
 		}
-		config.scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
+		config.scripts +=
+			',\n    "test": "vitest --coverage",\n    "test:once": "npx vitest run --changed"';
 	}
 }
 
@@ -1535,31 +1536,34 @@ export async function generateAllFiles(context) {
 export function generateViteConfigFile(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 
-	let content;
-	const hasSonarcloud = context.capabilities.includes('sonarcloud');
-	const testConfigSvelte = hasSonarcloud
-		? `	test: {
+	// Every generated Node project gets the same coverage gate as the FTN
+	// webapp: vitest thresholds are enforced whenever coverage runs
+	// (`npm test` and the CircleCI "Test with Coverage" step both use
+	// `vitest --coverage`).
+	const coverageConfig = `		coverage: {
+			reporter: ['lcov', 'text'],
+			thresholds: {
+				statements: 80,
+				branches: 75,
+				functions: 80,
+				lines: 80
+			}
+		}`;
+
+	const testConfigSvelte = `	test: {
 		reporter: ['default', 'junit'],
 		outputFile: {
 			junit: './reports/junit.xml'
 		},
-		coverage: { reporter: ['lcov', 'text'] }
-	}`
-		: `	test: {
-		reporter: ['default', 'junit'],
-		outputFile: {
-			junit: './reports/junit.xml'
-		}
+${coverageConfig}
 	}`;
 
-	const testConfigVanilla = hasSonarcloud
-		? `	test: {
+	const testConfigVanilla = `	test: {
 		reporter: ['default'],
-		coverage: { reporter: ['lcov', 'text'] }
-	}`
-		: `	test: {
-		reporter: ['default']
+${coverageConfig}
 	}`;
+
+	let content;
 
 	if (hasSvelteKit) {
 		content = `import { sveltekit } from '@sveltejs/kit/vite';

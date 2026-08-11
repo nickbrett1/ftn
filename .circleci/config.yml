@@ -139,7 +139,7 @@ jobs:
           command: |
             cd webapp && npm run lint
       - run:
-          name: Run tests
+          name: Run tests (enforces app-wide coverage >= 80%)
           command: |
             cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
           environment:
