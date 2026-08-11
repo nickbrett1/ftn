@@ -281,26 +281,16 @@ export class ProjectGeneratorService {
 	}
 
 	async #configureDependabot(context, owner, repo, results) {
-		if (context.capabilities.includes('dependabot') && this.services.github) {
-			try {
-				console.log('🔄 Configuring Dependabot...');
-				await this.services.github.createRepositorySecret(
-					owner,
-					repo,
-					'MYTOKEN',
-					this.authTokens.github
-				);
-				results.dependabot = {
-					success: true
-				};
-				console.log('✅ Dependabot secret configured successfully');
-			} catch (error) {
-				console.error(`❌ Dependabot configuration failed: ${error.message}`);
-				results.dependabot = {
-					success: false,
-					error: error.message
-				};
-			}
+		// Dependabot is fully configured by the generated files:
+		// - .github/dependabot.yml (update schedule)
+		// - .github/workflows/dependabot-auto-merge.yml (auto-merge via the
+		//   default GITHUB_TOKEN with write permissions — no PAT secret needed)
+		if (context.capabilities.includes('dependabot')) {
+			console.log('🔄 Configuring Dependabot...');
+			results.dependabot = {
+				success: true
+			};
+			console.log('✅ Dependabot configured successfully');
 		}
 	}
 

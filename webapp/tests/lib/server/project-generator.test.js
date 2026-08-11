@@ -306,26 +306,27 @@ describe('ProjectGeneratorService', () => {
 			);
 			expect(service.services.doppler.createProject).toHaveBeenCalled();
 			expect(service.services.sonarcloud.createProject).toHaveBeenCalled();
-			expect(service.services.github.createRepositorySecret).toHaveBeenCalledWith(
-				'owner',
-				'repo',
-				'MYTOKEN',
-				'gh-token'
-			);
+			// Dependabot is configured purely by generated files; it must not
+			// create a PAT secret (the workflow uses the default GITHUB_TOKEN).
+			expect(service.services.github.createRepositorySecret).not.toHaveBeenCalled();
 		});
 
-		it('should handle dependabot failures gracefully', async () => {
+		it('should not require the GitHub service for dependabot configuration', async () => {
 			const contextWithDependabot = {
 				...context,
 				capabilities: ['dependabot']
 			};
-			const error = new Error('GitHub API Error');
-			service.services.github.createRepositorySecret = vi.fn().mockRejectedValue(error);
+
+			// Even if the GitHub service would reject a call, dependabot config
+			// still succeeds because it is file-based only.
+			service.services.github.createRepositorySecret = vi
+				.fn()
+				.mockRejectedValue(new Error('GitHub API Error'));
 
 			const results = await service.configureExternalServices(contextWithDependabot, repository);
 
-			expect(results.dependabot.success).toBe(false);
-			expect(results.dependabot.error).toBe(error.message);
+			expect(results.dependabot.success).toBe(true);
+			expect(service.services.github.createRepositorySecret).not.toHaveBeenCalled();
 		});
 
 		it('should handle failures gracefully', async () => {

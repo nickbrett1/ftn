@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { generateAllFiles } from '$lib/utils/file-generator.js';
 
 describe('Dependabot File Generation', () => {
@@ -22,6 +22,11 @@ describe('Dependabot File Generation', () => {
 		expect(autoMergeFile.content).toContain('permissions:');
 		expect(autoMergeFile.content).toContain('contents: write');
 		expect(autoMergeFile.content).toContain('pull-requests: write');
+
+		// Auto-merge must use the default GITHUB_TOKEN (with the write
+		// permissions declared above), not a custom PAT secret.
+		expect(autoMergeFile.content).toContain('GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}');
+		expect(autoMergeFile.content).not.toContain('MYTOKEN');
 
 		expect(dependabotConfigFile).toBeDefined();
 	});
