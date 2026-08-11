@@ -80,7 +80,11 @@ generated Dockerfile, compose file and Homepage widget stay consistent:
   `http:/healthz`; installs `curl` on Python images), or `command:<cmd>`.
   The Homepage widget is only emitted when a real health endpoint exists.
 - `envVars`: emitted into the compose `environment:` and `.env.example`
-  (e.g. `["MCP_PORT=3001"]`).
+  (e.g. `["MCP_PORT=3001"]`). Compose entries use `${KEY:-default}`
+  interpolation so a NAS-side `.env` can override them.
+- `pythonDependencies`: runtime Python deps emitted into `[project]`
+  dependencies of `pyproject.toml` (e.g. `["mcp>=1.2.0", "mcpo>=0.1.0",
+  "httpx>=0.27.0"]`).
 - `aptPackages`: Debian packages installed in the runtime image via apt
   (e.g. `["iproute2", "curl"]`).
 - `command` / `entrypoint`: override the container CMD/ENTRYPOINT (exec form,

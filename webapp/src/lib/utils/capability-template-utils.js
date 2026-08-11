@@ -656,13 +656,19 @@ function getDockerContainerTemplateData(context) {
 					.join('\n')
 			: '';
 
-	// ---- envVars (memo §3.3): emitted into compose `environment:` and as
-	// .env.example keys. Never invent key names (memo §2.6).
+	// ---- envVars (memo §3.3 / round-2 fix 1): emitted into compose
+	// `environment:` as VALID YAML map entries with `${KEY:-default}`
+	// interpolation (preserves the .env override) — never a bare `KEY=value`
+	// line under the mapping, which parses as an invalid mapping key and breaks
+	// `docker compose config`. .env.example keeps the plain derived keys.
 	const envVars = Array.isArray(config.envVars) ? config.envVars : [];
 	const composeEnvVars = envVars
 		.map((entry) => {
-			const trimmed = entry.replace(/^=\s*/, '');
-			return `      ${trimmed}`;
+			const eq = entry.indexOf('=');
+			const key = eq === -1 ? entry : entry.slice(0, eq);
+			const def = eq === -1 ? '' : entry.slice(eq + 1);
+			// Map form: `KEY: ${KEY:-default}` (or `${KEY}` for a bare key).
+			return def ? `      ${key}: ${'$'}{${key}:-${def}}` : `      ${key}: ${'$'}{${key}}`;
 		})
 		.join('\n');
 	const envExampleEntries = envVars

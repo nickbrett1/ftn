@@ -980,10 +980,24 @@ export function generatePyProjectToml(context) {
 		context.description || `A ${projectName} project generated with genproj`
 	).replace(/"/g, '\\"');
 
-	let dependencies = '[]';
+	// Round-2 fix 2: `pythonDependencies` (docker-container config) are the
+	// app's runtime deps — the generator can't guess them, so they are
+	// config-driven like aptPackages/envVars. Emitted into [project]
+	// dependencies; dev tools (pytest, ruff) stay in the dev extra.
+	const pythonDependencies = Array.isArray(
+		context.configuration?.['docker-container']?.pythonDependencies
+	)
+		? context.configuration['docker-container'].pythonDependencies
+		: [];
+
+	const deps = [...pythonDependencies];
 	if (hasDagster) {
-		dependencies = '[\n    "dagster",\n    "dagster-webserver"\n]';
+		deps.push('dagster', 'dagster-webserver');
 	}
+	const dependencies =
+		deps.length > 0
+			? '[\n' + deps.map((d) => `    "${String(d).replace(/"/g, '\\"')}"`).join(',\n') + '\n]'
+			: '[]';
 
 	const pyproject = `[project]
 name = "${distName}"

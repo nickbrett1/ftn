@@ -715,6 +715,13 @@ export const capabilities = [
 					items: { type: 'string' },
 					default: []
 				},
+				pythonDependencies: {
+					type: 'array',
+					description:
+						'Runtime Python dependencies (PEP 508 specifiers) emitted into [project] dependencies of the generated pyproject.toml, e.g. ["mcp>=1.2.0", "mcpo>=0.1.0", "httpx>=0.27.0"]. Empty by default; dev tools (pytest, ruff) live in the dev extra.',
+					items: { type: 'string' },
+					default: []
+				},
 				command: {
 					type: 'array',
 					description:
