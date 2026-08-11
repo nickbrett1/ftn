@@ -100,7 +100,15 @@ export default defineConfig(({ command, mode }) => {
 					'src/lib/templates/**'
 				],
 				// Include all source files
-				include: ['src/**/*.{js,ts}']
+				include: ['src/**/*.{js,ts}'],
+				// Enforce a minimum coverage gate in CI (matches the old SonarCloud >80% rule).
+				// `npm run test` / `npm run test-ci` will fail when coverage drops below these.
+				thresholds: {
+					statements: 80,
+					branches: 75,
+					functions: 80,
+					lines: 80
+				}
 			},
 			server: {},
 			// Add timeout and memory optimizations

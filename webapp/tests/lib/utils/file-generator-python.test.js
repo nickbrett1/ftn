@@ -7,11 +7,13 @@ import {
 import { capabilities } from '$lib/config/capabilities.js';
 
 /**
- * Language-aware templates (memo: genproj-language-aware-fixes).
- * Acceptance criteria §5: regenerate nas-port-mcp with ZERO infra edits.
+ * Language-aware templates (memo: genproj-language-aware-fixes + round 2).
+ * Acceptance criteria (round-2 memo §5): regenerate nas-port-mcp with ZERO
+ * infra edits — valid compose environment YAML, pyproject runtime deps from
+ * config, and the 8/8 prior items still green.
  */
 
-// The memo §5 regenerate config for nas-port-mcp.
+// The round-2 memo §5 regenerate config for nas-port-mcp.
 const NAS_PORT_MCP_CONFIG = {
 	'docker-container': {
 		networkMode: 'host',
@@ -25,9 +27,20 @@ const NAS_PORT_MCP_CONFIG = {
 				readOnly: true
 			}
 		],
-		aptPackages: ['iproute2', 'curl'],
-		command: ['/usr/local/bin/entrypoint.sh'],
-		envVars: ['MCP_PORT=3001']
+		aptPackages: ['iproute2'],
+		healthcheck: 'http:/healthz',
+		entrypoint: ['/usr/local/bin/entrypoint.sh'],
+		envVars: ['MCP_PORT=3001'],
+		pythonDependencies: ['mcp>=1.2.0', 'mcpo>=0.1.0', 'httpx>=0.27.0']
+	}
+};
+
+// Same config minus the health mechanism, for the "no healthcheck declared"
+// test (Python default must omit HEALTHCHECK + widget).
+const NAS_PORT_MCP_NO_HEALTH_CONFIG = {
+	'docker-container': {
+		...NAS_PORT_MCP_CONFIG['docker-container'],
+		healthcheck: undefined
 	}
 };
 
@@ -96,7 +109,7 @@ describe('Python CircleCI job (memo §2.1)', () => {
 });
 
 describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
-	it('builds a pyproject-only repo (no requirements.txt) and honours command/aptPackages', async () => {
+	it('builds a pyproject-only repo (no requirements.txt) and honours entrypoint/aptPackages', async () => {
 		const { files } = await generateNasPortMcp();
 		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
 		expect(dockerfile).toBeDefined();
@@ -111,10 +124,11 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 		expect(content).toContain(
 			'RUN if [ ! -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir .; fi'
 		);
-		// No placeholder comment; CMD comes from configuration.
+		// No placeholder comment; ENTRYPOINT comes from configuration.
 		expect(content).not.toContain('TODO');
-		expect(content).toContain('CMD ["/usr/local/bin/entrypoint.sh"]');
-		// aptPackages installed in the runtime stage.
+		expect(content).toContain('ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]');
+		// aptPackages installed in the runtime stage (curl auto-added for the
+		// http healthcheck).
 		expect(content).toContain(
 			'RUN apt-get update && apt-get install -y --no-install-recommends iproute2 curl'
 		);
@@ -122,14 +136,7 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 	});
 
 	it('emits HEALTHCHECK + installs curl when an http health mechanism is declared', async () => {
-		const config = {
-			...NAS_PORT_MCP_CONFIG,
-			'docker-container': {
-				...NAS_PORT_MCP_CONFIG['docker-container'],
-				healthcheck: 'http:/healthz'
-			}
-		};
-		const { files } = await generateNasPortMcp(config);
+		const { files } = await generateNasPortMcp();
 		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
 		expect(dockerfile.content).toContain('HEALTHCHECK');
 		expect(dockerfile.content).toContain('curl -fsS http://127.0.0.1:3001/healthz');
@@ -142,7 +149,7 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 	});
 
 	it('omits HEALTHCHECK and the widget when no health mechanism is declared (Python default)', async () => {
-		const { files } = await generateNasPortMcp();
+		const { files } = await generateNasPortMcp(NAS_PORT_MCP_NO_HEALTH_CONFIG);
 		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
 		expect(dockerfile.content).not.toContain('HEALTHCHECK');
 
@@ -166,7 +173,10 @@ describe('Compose + env (memo §2.6, §3.3, do-not-regress)', () => {
 		expect(content).not.toContain('OWNER');
 		expect(content).toContain('com.centurylinklabs.watchtower.enable=true');
 		expect(content).toContain('homepage.group=Services');
-		expect(content).toContain('MCP_PORT=3001');
+		// envVars emitted as VALID YAML map entries (round-2 fix 1) — never a
+		// bare `KEY=value` line under the mapping.
+		expect(content).toContain('MCP_PORT: ${MCP_PORT:-3001}');
+		expect(content).not.toMatch(/^\s+MCP_PORT=3001$/m);
 	});
 
 	it('derives .env.example keys from envVars and never invents MY_APP_PORT', async () => {
@@ -175,6 +185,19 @@ describe('Compose + env (memo §2.6, §3.3, do-not-regress)', () => {
 		expect(envExample).toBeDefined();
 		expect(envExample.content).toContain('MCP_PORT=3001');
 		expect(envExample.content).not.toContain('MY_APP_PORT');
+	});
+
+	it('emits a docker-compose.yml whose environment: block parses as valid YAML', async () => {
+		const YAML = await import('yaml');
+		const { files } = await generateNasPortMcp();
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+
+		// Equivalent of `docker compose config` parse step: the whole file must
+		// be valid YAML and environment must be a mapping of KEY -> value.
+		const doc = YAML.parse(compose.content);
+		expect(doc.services.app.image).toBe('ghcr.io/nickbrett1/nas-port-mcp:latest');
+		expect(doc.services.app.network_mode).toBe('host');
+		expect(doc.services.app.environment).toEqual({ MCP_PORT: '${MCP_PORT:-3001}' });
 	});
 });
 
@@ -190,13 +213,26 @@ describe('Python scaffold (memo §2.3, §2.5, §2.4)', () => {
 		expect(content).toContain('[project.optional-dependencies]');
 		expect(content).toContain('"pytest>=8.0"');
 		expect(content).toContain('"ruff>=0.4"');
-		// pytest must NOT be a runtime dependency (the [project] dependencies
-		// list stays empty; pytest/ruff live in the dev extra).
-		expect(content).toMatch(/^dependencies = \[\]/m);
+		// Round-2 fix 2: pythonDependencies config lands in [project] dependencies.
+		expect(content).toMatch(
+			/dependencies = \[\n {4}"mcp>=1\.2\.0",\n {4}"mcpo>=0\.1\.0",\n {4}"httpx>=0\.27\.0"\n\]/
+		);
 		expect(content).toContain('[tool.setuptools.packages.find]');
 		expect(content).toContain('where = ["src"]');
 		expect(content).toContain('testpaths = ["tests"]');
 		expect(content).not.toContain('python_files');
+	});
+
+	it('keeps [project] dependencies empty when pythonDependencies is not configured', async () => {
+		const { files } = await generateNasPortMcp({
+			'docker-container': {
+				registryNamespace: 'nickbrett1'
+			}
+		});
+		const pyproject = files.find((f) => f.filePath === 'pyproject.toml');
+		expect(pyproject.content).toMatch(/^dependencies = \[\]/m);
+		// pytest/ruff stay in the dev extra either way.
+		expect(pyproject.content).toContain('"pytest>=8.0"');
 	});
 
 	it('scaffolds src/<pkg>/ and tests/ so ruff and pytest pass with zero edits', async () => {
@@ -299,23 +335,33 @@ describe('Node regression (memo §6)', () => {
 });
 
 describe('docker-container template data (config plumbing)', () => {
-	it('exposes envVars/aptPackages/healthcheck fragments to templates', () => {
+	it('exposes envVars/aptPackages/healthcheck/pythonDependencies fragments to templates', () => {
 		const data = getCapabilityTemplateData('docker-container', {
 			projectName: 'demo',
 			capabilities: ['devcontainer-python', 'docker-container'],
 			configuration: {
 				'docker-container': {
 					aptPackages: ['iproute2'],
-					envVars: ['PORT=3001'],
+					envVars: ['PORT=3001', 'BARE_KEY'],
 					healthcheck: 'http:/healthz'
 				}
 			}
 		});
 		expect(data.dockerAptInstall).toContain('iproute2');
 		expect(data.dockerAptInstall).toContain('curl'); // auto-added for python http healthcheck
-		expect(data.composeEnvVars).toContain('PORT=3001');
+		// compose environment is valid YAML map form with ${KEY:-default} interpolation.
+		expect(data.composeEnvVars).toContain('PORT: ${PORT:-3001}');
+		expect(data.composeEnvVars).toContain('BARE_KEY: ${BARE_KEY}');
+		expect(data.composeEnvVars).not.toMatch(/^\s+PORT=3001$/m);
 		expect(data.envExampleEntries).toContain('PORT=3001');
+		expect(data.envExampleEntries).toContain('BARE_KEY=');
 		expect(data.dockerHealthcheck).toContain('/healthz');
 		expect(data.homepageWidget).toContain('/healthz');
+	});
+
+	it('exposes pythonDependencies from the docker-container config schema', () => {
+		const cap = capabilities.find((c) => c.id === 'docker-container');
+		expect(cap.configurationSchema.properties.pythonDependencies).toBeDefined();
+		expect(cap.configurationSchema.properties.pythonDependencies.type).toBe('array');
 	});
 });

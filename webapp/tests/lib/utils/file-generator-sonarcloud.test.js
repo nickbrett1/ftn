@@ -10,7 +10,8 @@ describe('file-generator sonarcloud capabilities', () => {
 		generateFile: (templateName, context) => {
 			if (templateName === 'package-json') {
 				return JSON.stringify({
-					devDependencies: context.devDependencies
+					devDependencies: context.devDependencies,
+					scripts: context.scripts
 				});
 			}
 			return '';
@@ -54,15 +55,38 @@ describe('file-generator sonarcloud capabilities', () => {
 		expect(result.content).toContain('@vitest/coverage-v8');
 	});
 
-	it('should output coverage in vite.config.js for sonarcloud', () => {
-		const context = { capabilities: ['sonarcloud'] };
-		const result = generateViteConfigFile(context);
-		expect(result.content).toContain("coverage: { reporter: ['lcov', 'text'] }");
+	it('should add vitest coverage to package.json for devcontainer-node without sonarcloud', () => {
+		const context = {
+			capabilities: ['devcontainer-node'],
+			projectName: 'test-project'
+		};
+
+		const result = generatePackageJson(mockTemplateEngine, context);
+		expect(result.content).toContain('@vitest/coverage-v8');
+		expect(result.content).toContain('vitest --coverage');
 	});
 
-	it('should output coverage in sveltekit vite.config.js for sonarcloud', () => {
+	it('should output coverage with thresholds in vite.config.js for sonarcloud', () => {
+		const context = { capabilities: ['sonarcloud'] };
+		const result = generateViteConfigFile(context);
+		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
+	});
+
+	it('should output coverage with thresholds in sveltekit vite.config.js for sonarcloud', () => {
 		const context = { capabilities: ['sonarcloud', 'sveltekit'] };
 		const result = generateViteConfigFile(context);
-		expect(result.content).toContain("coverage: { reporter: ['lcov', 'text'] }");
+		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
+	});
+
+	it('should output coverage with thresholds in vite.config.js without sonarcloud', () => {
+		const context = { capabilities: ['devcontainer-node'] };
+		const result = generateViteConfigFile(context);
+		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
 	});
 });

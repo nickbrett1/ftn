@@ -503,7 +503,14 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 	if (!devDependencies.includes('"vitest"')) {
 		devDependencies += devDependencies ? ',\n    "vitest": "^2.1.8"' : '"vitest": "^2.1.8"';
 	}
-	scripts += ',\n    "test": "vitest",\n    "test:once": "npx vitest run --changed"';
+	// Coverage provider + coverage-enabled test script so generated projects
+	// enforce the same coverage gate as the FTN webapp.
+	if (!devDependencies.includes('"@vitest/coverage-v8"')) {
+		devDependencies += devDependencies
+			? ',\n    "@vitest/coverage-v8": "^2.1.8"'
+			: '"@vitest/coverage-v8": "^2.1.8"';
+	}
+	scripts += ',\n    "test": "vitest --coverage",\n    "test:once": "npx vitest run --changed"';
 
 	if (allCapabilities.includes('code-quality')) {
 		const codeQualityDevDeps = [
