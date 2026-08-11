@@ -482,16 +482,24 @@ function getDockerContainerTemplateData(context) {
 	// Alpine only via explicit opt-in (safe for pure-JS apps).
 	const dockerBaseImage = config.baseImage || (isPython ? 'python:3.12-slim' : 'node:22-slim');
 
-	// Stage 1 (build): full source tree -> install -> build. Strict `npm ci`
-	// fails loudly if package-lock.json is missing (no silent npm install fallback).
+	// Stage 1 (build): full source tree -> install -> build. Lockfile-aware
+	// install, matching the idiom genproj already emits in its CircleCI config:
+	// strict `npm ci` when a package-lock.json exists, `npm install` fallback
+	// otherwise. genproj is a pure text generator and cannot emit a lockfile,
+	// so a hard `npm ci` would fail every fresh-clone build (and the generated
+	// Dockerfile would contradict the generated CircleCI/test configs).
+	// Self-upgrading: once a lockfile is committed (first local `npm install`),
+	// all builds become reproducible `npm ci` with zero edits.
 	const dockerBuildCommands = isPython
 		? `COPY requirements.txt* ./\nRUN python -m venv /opt/venv\nRUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt\nCOPY . .`
-		: `COPY . .\nRUN npm ci\nRUN npm run build`;
+		: `COPY . .\nRUN if [ -f package-lock.json ]; then npm ci; else npm install; fi\nRUN npm run build`;
 
-	// Stage 2 (runtime): only the build output + production deps.
+	// Stage 2 (runtime): only the build output + production deps. `package*.json`
+	// matches package.json (always present) plus the lockfile when one exists;
+	// the install command then picks strict `npm ci --omit=dev` vs the fallback.
 	const dockerRuntimeCommands = isPython
 		? `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`
-		: `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package.json ./package.json\nCOPY --from=build /app/package-lock.json ./package-lock.json\nRUN npm ci --omit=dev`;
+		: `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package*.json ./\nRUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi`;
 
 	// Healthcheck uses node's built-in fetch: no wget/curl dependency on slim images.
 	const dockerHealthcheck = isPython

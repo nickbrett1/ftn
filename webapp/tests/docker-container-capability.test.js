@@ -108,7 +108,7 @@ describe('docker-container template data', () => {
 		expect(data.registryNamespace).toBe('nickbrett1');
 	});
 
-	it('emits a glibc base image with a multi-stage, strict-npm-ci Dockerfile for node', () => {
+	it('emits a glibc base image with a multi-stage, lockfile-aware Dockerfile for node', () => {
 		const data = getCapabilityTemplateData('docker-container', {
 			capabilities: ['docker-container', 'devcontainer-node'],
 			configuration: {},
@@ -116,16 +116,22 @@ describe('docker-container template data', () => {
 		});
 		// 2.1: glibc default, not alpine (musl breaks native modules).
 		expect(data.dockerBaseImage).toBe('node:22-slim');
-		// 1.1/4.3: full source copy BEFORE build; strict npm ci, no fallback.
+		// 1.1/4.3: full source copy BEFORE build; lockfile-aware install —
+		// strict `npm ci` when a package-lock.json exists, `npm install`
+		// fallback otherwise (genproj emits no lockfile, so a hard `npm ci`
+		// would break every fresh-clone build).
 		expect(data.dockerBuildCommands).toContain('COPY . .');
 		expect(data.dockerBuildCommands.indexOf('COPY . .')).toBeLessThan(
 			data.dockerBuildCommands.indexOf('npm run build')
 		);
-		expect(data.dockerBuildCommands).toContain('RUN npm ci');
-		expect(data.dockerBuildCommands).not.toContain('npm install');
+		expect(data.dockerBuildCommands).toContain(
+			'RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+		);
 		// 4.2: runtime stage carries only the build output + prod deps.
 		expect(data.dockerRuntimeCommands).toContain('COPY --from=build /app/build ./build');
-		expect(data.dockerRuntimeCommands).toContain('npm ci --omit=dev');
+		expect(data.dockerRuntimeCommands).toContain(
+			'RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi'
+		);
 		// 2.2: healthcheck uses node fetch, no wget.
 		expect(data.dockerHealthcheck).toContain('node -e');
 		expect(data.dockerHealthcheck).not.toContain('wget');
