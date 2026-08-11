@@ -24,6 +24,7 @@ import dockerignoreTemplate from '../templates/dockerignore.template?raw';
 import dockerComposeTemplate from '../templates/docker-compose.template?raw';
 import deployReadmeTemplate from '../templates/deploy-readme.template?raw';
 import homepageServicesTemplate from '../templates/homepage-services.template?raw';
+import envExampleTemplate from '../templates/env-example.template?raw';
 import sonarProjectProperties from '../templates/.sonarcloud.properties.template?raw';
 import mcpConfigJson from '../templates/mcp-config-json.template?raw';
 import mcpSseProxyJs from '../templates/mcp-sse-proxy-js.template?raw';
@@ -56,6 +57,18 @@ import {
 	applyDefaults,
 	getGooseMcpConfig
 } from '$lib/utils/capability-template-utils.js';
+
+// 2.2: health endpoint emitted for docker-container SvelteKit projects.
+// Returns 200 {ok:true} so the container HEALTHCHECK and Homepage widget work
+// without any additional tooling.
+export const HEALTH_ROUTE_SOURCE = `// Health check endpoint used by the container HEALTHCHECK and Homepage widget.
+export function GET() {
+	return new Response(JSON.stringify({ ok: true }), {
+		status: 200,
+		headers: { 'content-type': 'application/json' }
+	});
+}
+`;
 
 export const AGY_DEV_ALIAS = `# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
 # Secrets are loaded from the 'common' project first, then the current project's secrets layer on
@@ -352,6 +365,7 @@ const templateImports = {
 	'docker-compose': dockerComposeTemplate,
 	'deploy-readme': deployReadmeTemplate,
 	'homepage-services': homepageServicesTemplate,
+	'env-example': envExampleTemplate,
 	'.sonarcloud.properties': sonarProjectProperties,
 	'eslint-config-js': eslintConfigJs,
 	'doppler-yaml': dopplerYaml,
@@ -467,7 +481,8 @@ function collectSingleTemplateFile(templateEngine, context, capabilityId, capabi
 		const extraData = getCapabilityTemplateData(capabilityId, {
 			capabilities: context.capabilities,
 			configuration: context.configuration,
-			projectName: context.projectName || context.name || 'my-project'
+			projectName: context.projectName || context.name || 'my-project',
+			registryNamespace: context.registryNamespace
 		});
 
 		// Special handling for SvelteKit config adapter
@@ -482,6 +497,11 @@ function collectSingleTemplateFile(templateEngine, context, capabilityId, capabi
 			adapterComment =
 				'// adapter-cloudflare is configured for Wrangler deployment\n' +
 				'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+		} else if (capabilityId === 'sveltekit' && context.capabilities.includes('docker-container')) {
+			adapterPackage = '@sveltejs/adapter-node';
+			adapterComment =
+				'// adapter-node outputs a standalone Node server (build/index.js) for the Docker container\n' +
+				'\t\t// See https://kit.svelte.dev/docs/adapter-node for more information.';
 		}
 
 		// eslint-disable-next-line security/detect-object-injection
@@ -772,6 +792,7 @@ export function generateMergedDevelopmentContainerFiles(
 function _getFrameworkConfig(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 	const hasWrangler = context.capabilities.includes('cloudflare-wrangler');
+	const hasDocker = context.capabilities.includes('docker-container');
 	let scripts = ',\n    "build": "echo \'No build step required\'"';
 	let devDependencies = '';
 	let typeField = 'commonjs';
@@ -790,6 +811,8 @@ function _getFrameworkConfig(context) {
 			scripts += ',\n    "deploy": "wrangler deploy"';
 			devDependencies +=
 				',\n    "@sveltejs/adapter-cloudflare": "^7.2.4",\n    "wrangler": "^4.56.0"';
+		} else if (hasDocker) {
+			devDependencies += ',\n    "@sveltejs/adapter-node": "^5.4.2"';
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}
@@ -1282,6 +1305,18 @@ export async function generateAllFiles(context) {
 		const sonarCloudFile = allGeneratedFiles.find((f) => f.filePath === '.sonarcloud.properties');
 		const sonarContent = sonarCloudFile ? sonarCloudFile.content : '';
 		allGeneratedFiles.push({ filePath: 'sonar-project.properties', content: sonarContent });
+	}
+
+	// 2.2: docker-container SvelteKit apps need a /health route for the
+	// container HEALTHCHECK and the Homepage widget.
+	if (
+		context.capabilities.includes('sveltekit') &&
+		context.capabilities.includes('docker-container')
+	) {
+		allGeneratedFiles.push({
+			filePath: 'src/routes/health/+server.js',
+			content: HEALTH_ROUTE_SOURCE
+		});
 	}
 
 	return allGeneratedFiles;

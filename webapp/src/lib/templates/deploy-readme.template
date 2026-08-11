@@ -4,11 +4,13 @@
 
 ## 1. Build & publish the image
 
-The repository's CircleCI config contains a `docker-publish` job that builds the
-image and pushes it to `{{registryPrefix}}/OWNER/{{projectName}}` on every push to
+The repository's CircleCI config contains a `docker-publish` job that builds a
+multi-arch image (linux/amd64 + linux/arm64) and pushes it to
+`{{registryPrefix}}/{{registryNamespace}}/{{projectName}}` on every push to
 `main` (tagged with the commit SHA and `latest`).
 
-- Replace `OWNER` with your registry namespace (e.g. your GitHub username/org for GHCR).
+- The registry namespace (`{{registryNamespace}}`) is derived from the
+  authenticated GitHub identity at generation time.
 - Registry credentials are read from the CircleCI context (`{{registryPrefix}}`):
   - `GHCR_USERNAME` + `GHCR_TOKEN` (fine-grained PAT with Packages: read & write)
 
@@ -16,7 +18,7 @@ image and pushes it to `{{registryPrefix}}/OWNER/{{projectName}}` on every push 
 
 1. Open Container Manager -> Project -> Create.
 2. Point it at this repository (or copy `docker-compose.yml` + `.env` to the NAS).
-3. Set environment variables in a `.env` next to the compose file.
+3. Set environment variables in a `.env` next to the compose file (see `.env.example`).
 4. Start the project.
 
 For non-Synology hosts: `docker compose up -d`.
@@ -41,7 +43,7 @@ pin the compose file to a known-good build while you fix the repo:
 1. Find the SHA of the last good commit (e.g. the GHCR package page, or
    `git log` on your machine).
 2. In `docker-compose.yml`, change the image to the pinned SHA:
-   `image: {{registryPrefix}}/OWNER/{{projectName}}:<commit-sha>`
+   `image: {{registryPrefix}}/{{registryNamespace}}/{{projectName}}:<commit-sha>`
 3. Restart the project (`docker compose up -d`, or restart it in Container
    Manager).
 
@@ -60,3 +62,11 @@ enable the `homepage` Docker provider) to show a health widget for the service.
   Govee), set `networkMode: host` in the genproj configuration — bridge mode
   cannot pass multicast and fixed low ports reliably.
 - Only one LAN-protocol client may bind the fixed ports per host IP.
+- For private services (Tailscale-only), set `publishPort` to
+  `127.0.0.1:<port>:<port>` so the port is not exposed on the LAN.
+
+## 7. Data mounts
+
+Configure `dataMounts` in the genproj configuration to mount host directories
+into the container, e.g. `[{ "hostPath": "/volume1/marketdata", "containerPath": "/data", "readOnly": true }]`.
+They are emitted into the compose `volumes:` section (read-only by default).

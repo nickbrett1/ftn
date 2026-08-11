@@ -4,18 +4,18 @@
 # Deploy with: docker compose up -d
 # (On Synology, import this file as a Container Manager "Project".)
 #
-# Note: replace OWNER in the image reference with your registry namespace
-# (e.g. GitHub username/org for GHCR). For public packages no registry
-# credentials are required on the host.
+# The image reference uses your registry namespace (GitHub username/org for
+# GHCR). For public packages no registry credentials are required on the host.
 
 services:
   app:
-    image: {{registryPrefix}}/OWNER/{{projectName}}:latest
+    image: {{registryPrefix}}/{{registryNamespace}}/{{projectName}}:latest
     container_name: {{projectName}}
     restart: unless-stopped
 {{networkModeLine}}
 {{portsConfig}}
+{{volumesConfig}}
     environment:
       # Set your environment variables here or in a NAS-side .env file
-      # (genproj never commits secrets).
+      # (genproj never commits secrets). See .env.example.
 {{composeLabels}}

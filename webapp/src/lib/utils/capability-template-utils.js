@@ -469,28 +469,59 @@ function getDockerContainerTemplateData(context) {
 	const homepage = config.homepage !== false;
 	const projectName = context.projectName || 'my-project';
 	const registryPrefix = getDockerRegistryPrefix();
+	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
+	const hostname = config.hostname || 'localhost';
 
 	const isPython = (context.capabilities || []).some((c) => c.startsWith('devcontainer-python'));
 	const isNode = (context.capabilities || []).some(
 		(c) => c === 'devcontainer-node' || c === 'sveltekit'
 	);
-	const dockerBaseImage = isPython ? 'python:3.12-slim' : 'node:22-alpine';
 
-	const dockerSetupCommands = isPython
-		? `RUN python -m venv /opt/venv\nENV PATH="/opt/venv/bin:$PATH"\nCOPY requirements.txt* ./\nRUN pip install --no-cache-dir -r requirements.txt`
-		: `COPY package.json package-lock.json* ./\nRUN npm ci || npm install\nRUN npm run build`;
+	// glibc base by default: Alpine (musl) breaks native npm/python modules
+	// (duckdb, better-sqlite3, sharp, ...) which ship glibc prebuilds.
+	// Alpine only via explicit opt-in (safe for pure-JS apps).
+	const dockerBaseImage = config.baseImage || (isPython ? 'python:3.12-slim' : 'node:22-slim');
 
+	// Stage 1 (build): full source tree -> install -> build. Strict `npm ci`
+	// fails loudly if package-lock.json is missing (no silent npm install fallback).
+	const dockerBuildCommands = isPython
+		? `COPY requirements.txt* ./\nRUN python -m venv /opt/venv\nRUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt\nCOPY . .`
+		: `COPY . .\nRUN npm ci\nRUN npm run build`;
+
+	// Stage 2 (runtime): only the build output + production deps.
+	const dockerRuntimeCommands = isPython
+		? `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`
+		: `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package.json ./package.json\nCOPY --from=build /app/package-lock.json ./package-lock.json\nRUN npm ci --omit=dev`;
+
+	// Healthcheck uses node's built-in fetch: no wget/curl dependency on slim images.
 	const dockerHealthcheck = isPython
 		? '# HEALTHCHECK skipped for python images by default (install curl/wget first)'
-		: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD wget -qO- http://127.0.0.1:${exposePort}/health || exit 1`;
+		: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD node -e "fetch('http://127.0.0.1:${exposePort}/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"`;
 
 	const dockerRunCommand = isPython
 		? '# TODO: set your entrypoint, e.g.: CMD ["python", "main.py"]\nCMD ["python", "main.py"]'
-		: '# TODO: adjust for your framework output, e.g. SvelteKit adapter-node: CMD ["node", "build/index.js"]\nCMD ["node", "build/index.js"]';
+		: 'CMD ["node", "build/index.js"]';
 
 	const networkModeLine = networkMode === 'host' ? '    network_mode: host' : '';
-	const portsConfig =
-		networkMode === 'host' ? '' : `    ports:\n      - "${exposePort}:${exposePort}"`;
+
+	// 3.4: publishPort controls the compose port binding. Default is
+	// "<exposePort>:<exposePort>" (all interfaces). Bind to 127.0.0.1 (or a
+	// specific interface) to keep the service private (e.g. Tailscale-only).
+	const publishPort = config.publishPort || `${exposePort}:${exposePort}`;
+	const portsConfig = networkMode === 'host' ? '' : `    ports:\n      - "${publishPort}"`;
+
+	// 3.3: dataMounts config -> compose volumes (read-only by default).
+	const dataMounts = Array.isArray(config.dataMounts) ? config.dataMounts : [];
+	const volumesConfig =
+		dataMounts.length > 0
+			? '    volumes:\n' +
+				dataMounts
+					.map(
+						(mount) =>
+							`      - ${mount.hostPath}:${mount.containerPath}${mount.readOnly === false ? '' : ':ro'}`
+					)
+					.join('\n')
+			: '';
 
 	const labels = [];
 	if (watchtower || homepage) labels.push('    labels:');
@@ -499,7 +530,7 @@ function getDockerContainerTemplateData(context) {
 		labels.push(
 			'      - "homepage.group=Services"',
 			`      - "homepage.name=${projectName}"`,
-			`      - "homepage.href=http://YOUR_NAS_HOST:${exposePort}/"`,
+			`      - "homepage.href=http://${hostname}:${exposePort}/"`,
 			'      - "homepage.widget.type=customapi"',
 			`      - "homepage.widget.url=http://localhost:${exposePort}/health"`
 		);
@@ -507,15 +538,19 @@ function getDockerContainerTemplateData(context) {
 
 	return {
 		registryPrefix,
+		registryNamespace,
 		dockerBaseImage,
-		dockerSetupCommands,
+		dockerBuildCommands,
+		dockerRuntimeCommands,
 		dockerHealthcheck,
 		dockerRunCommand,
 		exposePort: String(exposePort),
 		networkMode,
 		networkModeLine,
 		portsConfig,
+		volumesConfig,
 		composeLabels: labels.join('\n'),
+		hostname,
 		watchtower: String(watchtower),
 		homepage: String(homepage)
 	};
@@ -536,7 +571,9 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
 
 	const registryPrefix = getDockerRegistryPrefix();
 	const projectName = context.projectName || 'my-project';
-	const imageRef = `${registryPrefix}/OWNER/${projectName}`;
+	const config = context.configuration?.['docker-container'] || {};
+	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
+	const imageRef = `${registryPrefix}/${registryNamespace}/${projectName}`;
 	const credentialVars = DOCKER_CREDENTIAL_VARS;
 
 	data.deployJobDefinition = `
@@ -551,11 +588,11 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
           command: |
             echo "$${credentialVars.token}" | docker login ${registryPrefix} -u "$${credentialVars.user}" --password-stdin
       - run:
-          name: Build and Push Docker Image
+          name: Build and Push Multi-Arch Image
           command: |
-            docker build -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest .
-            docker push ${imageRef}:$CIRCLE_SHA1
-            docker push ${imageRef}:latest`;
+            docker buildx create --use || true
+            docker buildx build --platform linux/amd64,linux/arm64 --provenance=false \\
+              -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest --push .`;
 
 	data.deployWorkflowJob = `
       - docker-publish:${contextEnabled ? `\n          context: ${contextName}` : ''}

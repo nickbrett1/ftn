@@ -70,6 +70,20 @@ export class ProjectGeneratorService {
 		console.log(`🔄 Starting project generation: ${context.projectName}`);
 
 		try {
+			// Step 0: Resolve the registry namespace from the authenticated
+			// GitHub identity so generated artifacts reference a real image
+			// (e.g. ghcr.io/<login>/<project>) instead of an OWNER placeholder.
+			if (this.services.github && !context.registryNamespace) {
+				try {
+					const githubUser = await this.services.github.getUserInfo();
+					if (githubUser?.login) {
+						context.registryNamespace = githubUser.login;
+					}
+				} catch (error) {
+					console.warn('⚠️ Could not resolve GitHub login for registry namespace:', error);
+				}
+			}
+
 			// Step 1: Generate project files
 			console.log('📝 Generating project files...');
 			const generatedFiles = await generateAllFiles(context);

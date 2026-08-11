@@ -26,7 +26,8 @@ import {
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
 	DOPPLER_INSTALL_SCRIPT,
-	generateViteConfigFile
+	generateViteConfigFile,
+	HEALTH_ROUTE_SOURCE
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
 
@@ -350,7 +351,8 @@ function generateSingleTemplateFile(
 		const extraData = getCapabilityTemplateData(capabilityId, {
 			capabilities: allCapabilities,
 			configuration: projectConfig.configuration,
-			projectName: projectConfig.name || 'my-project'
+			projectName: projectConfig.name || 'my-project',
+			registryNamespace: projectConfig.registryNamespace
 		});
 
 		// Special handling for SvelteKit config adapter
@@ -365,6 +367,11 @@ function generateSingleTemplateFile(
 			adapterComment =
 				'// adapter-cloudflare is configured for Wrangler deployment\n' +
 				'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+		} else if (capabilityId === 'sveltekit' && otherCapabilities.includes('docker-container')) {
+			adapterPackage = '@sveltejs/adapter-node';
+			adapterComment =
+				'// adapter-node outputs a standalone Node server (build/index.js) for the Docker container\n' +
+				'\t\t// See https://kit.svelte.dev/docs/adapter-node for more information.';
 		}
 
 		// eslint-disable-next-line security/detect-object-injection
@@ -436,6 +443,7 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 
 	const hasSvelteKit = allCapabilities.includes('sveltekit');
 	const hasWrangler = allCapabilities.includes('cloudflare-wrangler');
+	const hasDocker = allCapabilities.includes('docker-container');
 
 	if (hasSvelteKit) {
 		overrides = ',\n  "overrides": {\n    "cookie": "^1.0.2"\n  }';
@@ -449,6 +457,8 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 			devDependencies += ',\n    "@sveltejs/adapter-cloudflare": "^7.2.4"';
 			// Wrangler is also needed as dev dep
 			devDependencies += ',\n    "wrangler": "^4.56.0"';
+		} else if (hasDocker) {
+			devDependencies += ',\n    "@sveltejs/adapter-node": "^5.4.2"';
 		} else {
 			devDependencies += ',\n    "@sveltejs/adapter-auto": "^3.0.0"';
 		}
@@ -842,6 +852,23 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 	const rustWorkerLibraryFile = generateRustWorkerLibraryFile(projectConfig, executionOrder);
 	if (rustWorkerLibraryFile) {
 		files.push(rustWorkerLibraryFile);
+	}
+
+	// 2.2: docker-container SvelteKit apps need a /health route for the
+	// container HEALTHCHECK and the Homepage widget.
+	if (
+		executionOrder.includes('sveltekit') &&
+		executionOrder.includes('docker-container') &&
+		!files.some((f) => f.path === 'src/routes/health/+server.js')
+	) {
+		const healthSource = HEALTH_ROUTE_SOURCE;
+		files.push({
+			path: 'src/routes/health/+server.js',
+			name: '+server.js',
+			content: healthSource,
+			size: healthSource.length,
+			type: 'file'
+		});
 	}
 
 	// Generate .gitignore and README.md

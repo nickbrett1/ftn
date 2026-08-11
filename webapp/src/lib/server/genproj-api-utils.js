@@ -64,7 +64,8 @@ export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 }
 
 export function buildProjectContext(payload, userId, authTokens) {
-	const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions } = payload;
+	const { name, repositoryUrl, selectedCapabilities, overwrite, resolutions, configuration } =
+		payload;
 
 	// Mutual exclusion guard: deployment systems (and any other declared
 	// conflicts) may not be selected together.
@@ -77,7 +78,9 @@ export function buildProjectContext(payload, userId, authTokens) {
 		projectName: name,
 		repositoryUrl: repositoryUrl || '',
 		capabilities: selectedCapabilities,
-		configuration: {}, // Defaults will be applied by generators
+		// Capability-specific configuration (e.g. docker-container publishPort,
+		// dataMounts, hostname). Defaults are applied by the generators.
+		configuration: configuration || {},
 		authTokens, // Passed down for specific needs
 		userId: userId,
 		overwrite: overwrite || false,

@@ -79,4 +79,48 @@ describe('SvelteKit File Generation', () => {
 		// Ensure default src/index.js is NOT generated for SvelteKit
 		expect(files.find((f) => f.filePath === 'src/index.js')).toBeUndefined();
 	});
+
+	it('should generate SvelteKit + docker-container with adapter-node and a health route', async () => {
+		const context = {
+			name: 'parquet-peek',
+			capabilities: ['sveltekit', 'devcontainer-node', 'docker-container', 'circleci'],
+			configuration: {
+				'devcontainer-node': { nodeVersion: '20' },
+				'docker-container': {
+					publishPort: '127.0.0.1:3000:3000',
+					dataMounts: [{ hostPath: '/volume1/marketdata', containerPath: '/data', readOnly: true }]
+				}
+			},
+			registryNamespace: 'nickbrett1'
+		};
+
+		const files = await generateAllFiles(context);
+
+		// 1.2: adapter-node replaces adapter-auto for docker deployments.
+		const packageJson = files.find((f) => f.filePath === 'package.json');
+		const content = JSON.parse(packageJson.content);
+		expect(content.devDependencies).toHaveProperty('@sveltejs/adapter-node');
+		expect(content.devDependencies).not.toHaveProperty('@sveltejs/adapter-auto');
+
+		const svelteConfig = files.find((f) => f.filePath === 'svelte.config.js');
+		expect(svelteConfig.content).toContain('@sveltejs/adapter-node');
+		expect(svelteConfig.content).not.toContain('@sveltejs/adapter-auto');
+
+		// 2.2: /health route is emitted for the container HEALTHCHECK.
+		const healthRoute = files.find((f) => f.filePath === 'src/routes/health/+server.js');
+		expect(healthRoute).toBeDefined();
+		expect(healthRoute.content).toContain('ok: true');
+
+		// 3.1: no OWNER placeholder in compose; real namespace substituted.
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		expect(compose.content).toContain('ghcr.io/nickbrett1/parquet-peek:latest');
+		expect(compose.content).not.toContain('OWNER');
+		expect(compose.content).toContain('127.0.0.1:3000:3000');
+
+		// 3.3: data mount present in compose volumes.
+		expect(compose.content).toContain('/volume1/marketdata:/data:ro');
+
+		// 4.4: .env.example is emitted.
+		expect(files.find((f) => f.filePath === '.env.example')).toBeDefined();
+	});
 });

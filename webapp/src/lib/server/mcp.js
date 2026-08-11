@@ -89,7 +89,12 @@ export function createMcpServer(context = {}) {
 								type: 'boolean',
 								description: 'Whether to overwrite existing files (optional)'
 							},
-							resolutions: { type: 'object', description: 'Conflict resolutions (optional)' }
+							resolutions: { type: 'object', description: 'Conflict resolutions (optional)' },
+							configuration: {
+								type: 'object',
+								description:
+									'Capability-specific configuration, e.g. { "docker-container": { "publishPort": "127.0.0.1:3000:3000", "dataMounts": [{ "hostPath": "/volume1/data", "containerPath": "/data", "readOnly": true }], "hostname": "nas.local" } } (optional)'
+							}
 						},
 						required: ['name', 'selectedCapabilities']
 					}
@@ -235,14 +240,22 @@ export function createMcpServer(context = {}) {
 						selectedCapabilities,
 						repositoryUrl,
 						overwrite,
-						resolutions
+						resolutions,
+						configuration
 					} = toolArguments;
 
 					const authTokens = buildAuthTokensFromStored();
 
 					const service = new ProjectGeneratorService(authTokens);
 					const projectContext = buildProjectContext(
-						{ name: projectName, selectedCapabilities, repositoryUrl, overwrite, resolutions },
+						{
+							name: projectName,
+							selectedCapabilities,
+							repositoryUrl,
+							overwrite,
+							resolutions,
+							configuration
+						},
 						context.userEmail,
 						authTokens
 					);

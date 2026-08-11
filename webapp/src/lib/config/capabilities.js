@@ -631,6 +631,44 @@ export const capabilities = [
 					maximum: 65535,
 					default: 3000
 				},
+				publishPort: {
+					type: 'string',
+					description:
+						'Compose port binding, e.g. "3000:3000" or "127.0.0.1:3000:3000" for a private (Tailscale-only) service.',
+					default: '3000:3000'
+				},
+				baseImage: {
+					type: 'string',
+					description:
+						'Runtime base image. Defaults to a glibc image (node:22-slim / python:3.12-slim); Alpine only for pure-JS apps.',
+					default: 'node:22-slim'
+				},
+				hostname: {
+					type: 'string',
+					description:
+						'Hostname used in the Homepage href (defaults to localhost; set to your NAS hostname/IP for browser access).',
+					default: 'localhost'
+				},
+				registryNamespace: {
+					type: 'string',
+					description:
+						'GHCR registry namespace (GitHub user/org). Defaults to the authenticated GitHub login at generation time.',
+					default: ''
+				},
+				dataMounts: {
+					type: 'array',
+					description:
+						'Host data mounts emitted into compose volumes, e.g. [{ "hostPath": "/volume1/data", "containerPath": "/data", "readOnly": true }]. Read-only by default.',
+					items: {
+						type: 'object',
+						properties: {
+							hostPath: { type: 'string' },
+							containerPath: { type: 'string' },
+							readOnly: { type: 'boolean', default: true }
+						}
+					},
+					default: []
+				},
 				watchtower: {
 					type: 'boolean',
 					default: true
@@ -672,6 +710,11 @@ export const capabilities = [
 				id: 'homepage-snippet',
 				filePath: 'deploy/homepage-services.yaml',
 				templateId: 'homepage-services'
+			},
+			{
+				id: 'env-example',
+				filePath: '.env.example',
+				templateId: 'env-example'
 			}
 		],
 		externalServices: createExternalServiceConfig(
