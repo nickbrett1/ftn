@@ -693,17 +693,6 @@ function generateAndMergeDevcontainerJson(
 		}
 	}
 
-	// Round-5 (memo genproj-fixes-round5): the doppler capability must install
-	// the CLI in the devcontainer. Preferred mechanism: a devcontainer feature
-	// (flows through the devcontainer.json merge on regen, unlike the
-	// one-shot Dockerfile install which a diverged Dockerfile would skip).
-	if (context.capabilities.includes('doppler')) {
-		mergedDevelopmentContainerJson.features = {
-			...(mergedDevelopmentContainerJson.features || {}),
-			'ghcr.io/devcontainers-contrib/features/doppler-cli:1': {}
-		};
-	}
-
 	return {
 		filePath: '.devcontainer/devcontainer.json',
 		content: JSON.stringify(mergedDevelopmentContainerJson, undefined, 2)
@@ -795,7 +784,7 @@ export function generateMergedDevelopmentContainerFiles(
 					? `echo "INFO: Ensuring wrangler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n`
 					: '',
 				dopplerSetup: context.capabilities.includes('doppler')
-					? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n`
+					? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n# Round-5 (memo genproj-fixes-round5): guarantee the CLI is on PATH. The\n# Dockerfile installs it for fresh projects, but a regenerated project whose\n# Dockerfile was preserved (round-3 idempotent overwrite) needs the fallback.\n# (A devcontainer feature was tried first but ghcr.io/devcontainers-contrib\n# features are no longer reliably pullable — 'denied'.)\nif ! command -v doppler &> /dev/null; then\n    echo "INFO: Installing Doppler CLI (fallback)..."\n    (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh\nfi\n`
 					: '',
 				geminiSetup: context.capabilities.includes('coding-agents')
 					? `echo "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n`

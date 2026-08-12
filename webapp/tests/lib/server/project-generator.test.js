@@ -618,7 +618,7 @@ describe('ProjectGeneratorService', () => {
 				workspaceFolder: '/workspaces/ports',
 				features: {
 					'ghcr.io/devcontainers/features/python:1': { version: '3.12' },
-					'ghcr.io/devcontainers-contrib/features/doppler-cli:1': {}
+					'ghcr.io/devcontainers/features/node:1': {}
 				},
 				mounts: [
 					'source=ports-tailscale-state,target=/var/lib/tailscale,type=volume',
@@ -666,7 +666,8 @@ describe('ProjectGeneratorService', () => {
 				'source=${localEnv:HOME}/.config/goose,target=/home/vscode/.config/goose,type=bind'
 			);
 			// feature merged in
-			expect(merged.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeDefined();
+			expect(merged.features['ghcr.io/devcontainers/features/node:1']).toBeDefined();
+			expect(merged.features['ghcr.io/devcontainers/features/python:1'].version).toBe('3.12');
 			// project-owned keys untouched
 			expect(merged.postCreateCommand).toBe('bash .devcontainer/post-create-setup.sh');
 		});

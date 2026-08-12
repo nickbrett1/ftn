@@ -254,10 +254,12 @@ describe('DevContainer kitchen-sink gating (memo §2.9 / audit §4.5)', () => {
 		// Selected: doppler + coding-agents (+ always-on tailscale state volume).
 		expect(json.mounts.some((m) => m.includes('tailscale-state'))).toBe(true);
 		// Round-5: doppler mounts the host ~/.doppler as a BIND (auth persists
-		// across rebuilds) and installs the CLI via a devcontainer feature.
+		// across rebuilds). No devcontainer feature — the contrib registry is
+		// not reliably pullable; the CLI is installed via Dockerfile +
+		// post-create fallback instead.
 		expect(json.mounts.some((m) => m.includes('.doppler') && m.includes('type=bind'))).toBe(true);
 		expect(json.mounts.some((m) => m.includes('doppler-config'))).toBe(false);
-		expect(json.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeDefined();
+		expect(json.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeUndefined();
 		expect(json.mounts.some((m) => m.includes('gemini-cli-settings'))).toBe(true);
 		// NOT selected: wrangler mount and the kitchen-sink forwardPorts are gone.
 		expect(json.mounts.some((m) => m.includes('wrangler-config'))).toBe(false);
@@ -266,6 +268,7 @@ describe('DevContainer kitchen-sink gating (memo §2.9 / audit §4.5)', () => {
 		// post-create-setup.sh contains only selected-capability tooling.
 		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(setup.content).toContain('.doppler');
+		expect(setup.content).toContain('Installing Doppler CLI (fallback)');
 		expect(setup.content).toContain('.gemini');
 		expect(setup.content).not.toContain('.wrangler');
 		expect(setup.content).not.toContain('specdag');

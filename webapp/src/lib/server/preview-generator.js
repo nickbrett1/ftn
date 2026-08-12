@@ -172,15 +172,6 @@ function createMergedDevelopmentContainerJson(
 		mergedJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
-	// Round-5 (memo genproj-fixes-round5): doppler capability installs the CLI
-	// via a devcontainer feature (kept in sync with file-generator.js).
-	if (allCapabilities.includes('doppler')) {
-		mergedJson.features = {
-			...(mergedJson.features || {}),
-			'ghcr.io/devcontainers-contrib/features/doppler-cli:1': {}
-		};
-	}
-
 	const content = JSON.stringify(mergedJson, undefined, 2);
 	return {
 		path: '.devcontainer/devcontainer.json',
