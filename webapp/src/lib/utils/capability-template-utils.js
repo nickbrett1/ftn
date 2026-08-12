@@ -620,9 +620,24 @@ function getDockerContainerTemplateData(context) {
 	// placeholder comment. `command` overrides the default CMD; `entrypoint`
 	// prepends an ENTRYPOINT. The Python default runs the scaffolded package
 	// module (`python -m <pkg>`), installed into the venv by the build stage.
+	//
+	// Script contract: when command/entrypoint references a script at
+	// /usr/local/bin/<name>, the repo copy is expected at scripts/<name> and is
+	// copied into the runtime image (chmod +x). Regression: the ENTRYPOINT used
+	// to reference a file that never existed in the image, so containers with a
+	// custom entrypoint failed to start ("exec: ... no such file").
 	const pkgName = toPythonPackageName(projectName);
 	let dockerEntrypoint = '';
 	let dockerCommand = '';
+	let dockerScriptCopy = '';
+	for (const argv of [config.entrypoint, config.command]) {
+		const script = Array.isArray(argv) ? argv[0] : '';
+		const match = typeof script === 'string' ? script.match(/^\/usr\/local\/bin\/([^/]+)$/) : null;
+		if (match) {
+			dockerScriptCopy = `COPY scripts/${match[1]} /usr/local/bin/${match[1]}\nRUN chmod +x /usr/local/bin/${match[1]}`;
+			break;
+		}
+	}
 	if (Array.isArray(config.entrypoint) && config.entrypoint.length > 0) {
 		dockerEntrypoint = `ENTRYPOINT ${JSON.stringify(config.entrypoint)}`;
 	}
@@ -633,7 +648,9 @@ function getDockerContainerTemplateData(context) {
 			? `CMD ["python", "-m", "${pkgName}"]`
 			: 'CMD ["node", "build/index.js"]';
 	}
-	const dockerRunCommand = [dockerEntrypoint, dockerCommand].filter(Boolean).join('\n');
+	const dockerRunCommand = [dockerScriptCopy, dockerEntrypoint, dockerCommand]
+		.filter(Boolean)
+		.join('\n');
 
 	const networkModeLine = networkMode === 'host' ? '    network_mode: host' : '';
 

@@ -725,13 +725,13 @@ export const capabilities = [
 				command: {
 					type: 'array',
 					description:
-						'Container CMD override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"]. Defaults to a language-appropriate command.',
+						'Container CMD override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"]. Defaults to a language-appropriate command. A /usr/local/bin/<script> reference is copied from scripts/<script> in the repo (see deploy/README.md).',
 					items: { type: 'string' }
 				},
 				entrypoint: {
 					type: 'array',
 					description:
-						'Container ENTRYPOINT override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"].',
+						'Container ENTRYPOINT override (exec form), e.g. ["/usr/local/bin/entrypoint.sh"]. A /usr/local/bin/<script> reference is copied from scripts/<script> in the repo (see deploy/README.md).',
 					items: { type: 'string' }
 				},
 				healthcheck: {

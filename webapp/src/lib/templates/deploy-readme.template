@@ -88,7 +88,9 @@ generated Dockerfile, compose file and Homepage widget stay consistent:
 - `aptPackages`: Debian packages installed in the runtime image via apt
   (e.g. `["iproute2", "curl"]`).
 - `command` / `entrypoint`: override the container CMD/ENTRYPOINT (exec form,
-  e.g. `"command": ["/usr/local/bin/entrypoint.sh"]`).
+  e.g. `"command": ["/usr/local/bin/entrypoint.sh"]`). When the value points at
+  `/usr/local/bin/<script>`, genproj copies `scripts/<script>` from your repo
+  into the image (chmod +x) — keep the script in `scripts/`.
 
 Regenerate with `overwrite: true` to apply these to an existing repo — existing
 app code is preserved; only generated infra files are updated.

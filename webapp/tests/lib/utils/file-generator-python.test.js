@@ -127,6 +127,13 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 		// No placeholder comment; ENTRYPOINT comes from configuration.
 		expect(content).not.toContain('TODO');
 		expect(content).toContain('ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]');
+		// The referenced script must actually exist in the image: genproj copies
+		// scripts/entrypoint.sh -> /usr/local/bin/entrypoint.sh (memo §3.1 —
+		// regression: the ENTRYPOINT used to point at a file that never existed,
+		// so the container failed to start).
+		expect(content).toContain(
+			'COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh\nRUN chmod +x /usr/local/bin/entrypoint.sh'
+		);
 		// aptPackages installed in the runtime stage (curl auto-added for the
 		// http healthcheck).
 		expect(content).toContain(
@@ -157,6 +164,20 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 		expect(compose.content).not.toContain('homepage.widget');
 		const homepage = files.find((f) => f.filePath === 'deploy/homepage-services.yaml');
 		expect(homepage.content).not.toContain('widget:');
+	});
+
+	it('emits no script COPY for the default language command (no entrypoint/command config)', async () => {
+		const config = {
+			'docker-container': {
+				...NAS_PORT_MCP_CONFIG['docker-container'],
+				entrypoint: undefined,
+				command: undefined
+			}
+		};
+		const { files } = await generateNasPortMcp(config);
+		const dockerfile = files.find((f) => f.filePath === 'Dockerfile');
+		expect(dockerfile.content).not.toContain('COPY scripts/');
+		expect(dockerfile.content).toContain('CMD ["python", "-m", "nas_port_mcp"]');
 	});
 });
 
