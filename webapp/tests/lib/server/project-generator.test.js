@@ -10,6 +10,7 @@ vi.mock('$lib/server/circleci-api.js');
 vi.mock('$lib/server/doppler-api.js');
 vi.mock('$lib/server/sonarcloud-api.js');
 import { generateAllFiles } from '$lib/utils/file-generator.js';
+import { mergeDevcontainerJson } from '$lib/server/project-generator.js';
 
 vi.mock('$lib/utils/file-generator.js', () => ({
 	generateAllFiles: vi.fn()
@@ -562,6 +563,140 @@ describe('ProjectGeneratorService', () => {
 			const conflicts = await service.checkConflicts(context);
 
 			expect(conflicts).toEqual([]);
+		});
+
+		it('does not report merge-target files (devcontainer.json) as conflicts', async () => {
+			const generatedFiles = [
+				{ filePath: '.devcontainer/devcontainer.json', content: '{"new":true}' },
+				{ filePath: 'file1.txt', content: 'new-content' }
+			];
+			generateAllFiles.mockResolvedValue(generatedFiles);
+
+			service.services.github.getUserInfo.mockResolvedValue({ login: 'user' });
+			service.services.github.repositoryExists.mockResolvedValue(true);
+			service.services.github.getFileContent = vi
+				.fn()
+				.mockResolvedValue('diverged-existing-content');
+
+			const conflicts = await service.checkConflicts(context);
+
+			// devcontainer.json is auto-merged on overwrite → not a conflict;
+			// file1.txt diverges → reported.
+			expect(conflicts).toHaveLength(1);
+			expect(conflicts[0].path).toBe('file1.txt');
+		});
+	});
+
+	describe('commitFilesToRepository merge semantics (round-4)', () => {
+		const repository = { fullName: 'owner/repo', defaultBranch: 'main' };
+
+		const existingDevcontainer = JSON.stringify(
+			{
+				name: 'Python',
+				build: { dockerfile: 'Dockerfile' },
+				workspaceFolder: '/workspaces/ports',
+				features: { 'ghcr.io/devcontainers/features/python:1': { version: '3.12' } },
+				mounts: [
+					'source=ports-tailscale-state,target=/var/lib/tailscale,type=volume',
+					'source=${localEnv:HOME}/.config/goose,target=/home/vscode/.config/goose,type=bind'
+				],
+				customizations: {
+					vscode: {
+						extensions: ['ms-python.python', 'manual.extension']
+					}
+				},
+				postCreateCommand: 'bash .devcontainer/post-create-setup.sh'
+			},
+			undefined,
+			2
+		);
+
+		const generatedDevcontainer = JSON.stringify(
+			{
+				name: 'Python',
+				build: { dockerfile: 'Dockerfile' },
+				workspaceFolder: '/workspaces/ports',
+				features: {
+					'ghcr.io/devcontainers/features/python:1': { version: '3.12' },
+					'ghcr.io/devcontainers-contrib/features/doppler-cli:1': {}
+				},
+				mounts: [
+					'source=ports-tailscale-state,target=/var/lib/tailscale,type=volume',
+					'source=${localEnv:HOME}/.config/goose,target=/home/vscode/.config/goose,type=bind',
+					'source=${localEnv:HOME}/.doppler,target=/home/vscode/.doppler,type=bind'
+				],
+				customizations: {
+					vscode: {
+						extensions: ['ms-python.python', 'doppler.doppler-vscode']
+					}
+				},
+				postCreateCommand: 'bash .devcontainer/post-create-setup.sh'
+			},
+			undefined,
+			2
+		);
+
+		const generatedFiles = [
+			{ filePath: '.devcontainer/devcontainer.json', content: generatedDevcontainer }
+		];
+
+		it('merges capability contributions into a diverged devcontainer.json without clobbering manual edits', async () => {
+			service.services.github.getFileContent.mockResolvedValueOnce(existingDevcontainer);
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				capabilities: ['doppler'],
+				overwrite: true
+			});
+
+			const committed = service.services.github.createMultipleFiles.mock.calls[0][2][0];
+			expect(committed.path).toBe('.devcontainer/devcontainer.json');
+			const merged = JSON.parse(committed.content);
+
+			// union of extensions: existing (incl. manual) first, then new
+			expect(merged.customizations.vscode.extensions).toEqual([
+				'ms-python.python',
+				'manual.extension',
+				'doppler.doppler-vscode'
+			]);
+			// new capability mount appended; existing mounts untouched
+			expect(merged.mounts).toContain(
+				'source=${localEnv:HOME}/.doppler,target=/home/vscode/.doppler,type=bind'
+			);
+			expect(merged.mounts).toContain(
+				'source=${localEnv:HOME}/.config/goose,target=/home/vscode/.config/goose,type=bind'
+			);
+			// feature merged in
+			expect(merged.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeDefined();
+			// project-owned keys untouched
+			expect(merged.postCreateCommand).toBe('bash .devcontainer/post-create-setup.sh');
+		});
+
+		it('replaces devcontainer.json entirely when explicitly resolved to overwrite', async () => {
+			service.services.github.getFileContent.mockResolvedValueOnce(existingDevcontainer);
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				capabilities: ['doppler'],
+				overwrite: true,
+				resolutions: { '.devcontainer/devcontainer.json': 'overwrite' }
+			});
+
+			expect(service.services.github.createMultipleFiles.mock.calls[0][2][0].content).toBe(
+				generatedDevcontainer
+			);
+		});
+
+		it('is a no-op when the merged result matches the existing file (monotonic)', async () => {
+			// Existing file already contains every generated contribution →
+			// merging produces identical content → nothing committed.
+			const alreadyMerged = mergeDevcontainerJson(existingDevcontainer, generatedDevcontainer);
+			service.services.github.getFileContent.mockResolvedValueOnce(alreadyMerged);
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				capabilities: ['doppler'],
+				overwrite: true
+			});
+
+			expect(service.services.github.createMultipleFiles).not.toHaveBeenCalled();
 		});
 	});
 });

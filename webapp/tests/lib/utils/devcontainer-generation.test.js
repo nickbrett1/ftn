@@ -253,7 +253,11 @@ describe('DevContainer kitchen-sink gating (memo §2.9 / audit §4.5)', () => {
 
 		// Selected: doppler + coding-agents (+ always-on tailscale state volume).
 		expect(json.mounts.some((m) => m.includes('tailscale-state'))).toBe(true);
-		expect(json.mounts.some((m) => m.includes('doppler-config'))).toBe(true);
+		// Round-5: doppler mounts the host ~/.doppler as a BIND (auth persists
+		// across rebuilds) and installs the CLI via a devcontainer feature.
+		expect(json.mounts.some((m) => m.includes('.doppler') && m.includes('type=bind'))).toBe(true);
+		expect(json.mounts.some((m) => m.includes('doppler-config'))).toBe(false);
+		expect(json.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeDefined();
 		expect(json.mounts.some((m) => m.includes('gemini-cli-settings'))).toBe(true);
 		// NOT selected: wrangler mount and the kitchen-sink forwardPorts are gone.
 		expect(json.mounts.some((m) => m.includes('wrangler-config'))).toBe(false);

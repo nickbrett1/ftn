@@ -14,6 +14,93 @@ import { SonarCloudAPIService } from './sonarcloud-api.js';
 import { generateAllFiles } from '$lib/utils/file-generator.js';
 
 /**
+ * Files that accumulate capability contributions across regenerations and must
+ * be MERGED (not skipped, not clobbered) when they diverge. Round-4
+ * (memo genproj-fixes-round4): devcontainer.json is the single known case —
+ * its final state is the union of (capability contributions) + (manual edits).
+ * @param {string} filePath - Generated file path
+ * @returns {boolean} True when the file is a merge-target
+ */
+export function isMergeTargetFile(filePath) {
+	return filePath === '.devcontainer/devcontainer.json';
+}
+
+/**
+ * Merges the freshly-generated devcontainer.json into the existing one,
+ * monotonically (round-4 semantics):
+ * - customizations.vscode.extensions: union (existing first, then additions)
+ * - mounts: append entries whose target path is not already present
+ * - features / containerEnv: merge maps (existing keys win, generated-only added)
+ * - all other keys (workspaceFolder, postCreateCommand, runArgs, ...): keep
+ *   existing values — never clobber project/user-owned settings
+ * Nothing is ever removed, so re-merging the same inputs is a no-op.
+ * @param {string} existingContent - Current file content in the repo
+ * @param {string} generatedContent - Freshly generated file content
+ * @returns {string} Merged JSON (2-space indent, matching generated style)
+ */
+export function mergeDevcontainerJson(existingContent, generatedContent) {
+	const existing = JSON.parse(existingContent);
+	const generated = JSON.parse(generatedContent);
+
+	// --- extensions: union, existing first, additions appended ---
+	const existingExtensions =
+		existing?.customizations?.vscode?.extensions &&
+		Array.isArray(existing.customizations.vscode.extensions)
+			? [...existing.customizations.vscode.extensions]
+			: [];
+	const generatedExtensions =
+		generated?.customizations?.vscode?.extensions &&
+		Array.isArray(generated.customizations.vscode.extensions)
+			? generated.customizations.vscode.extensions
+			: [];
+	const extensionSet = new Set(existingExtensions);
+	for (const extension of generatedExtensions) {
+		if (!extensionSet.has(extension)) {
+			extensionSet.add(extension);
+			existingExtensions.push(extension);
+		}
+	}
+
+	// --- mounts: union keyed by container target path ---
+	const mountTarget = (mount) => {
+		const match = typeof mount === 'string' ? mount.match(/target=([^,]+)/) : null;
+		return match ? match[1] : mount;
+	};
+	const existingMounts = Array.isArray(existing.mounts) ? [...existing.mounts] : [];
+	const generatedMounts = Array.isArray(generated.mounts) ? generated.mounts : [];
+	const mountTargets = new Set(existingMounts.map(mountTarget));
+	for (const mount of generatedMounts) {
+		if (!mountTargets.has(mountTarget(mount))) {
+			mountTargets.add(mountTarget(mount));
+			existingMounts.push(mount);
+		}
+	}
+
+	// --- features / containerEnv: merge maps (existing keys win) ---
+	const mergedFeatures = { ...(generated.features || {}), ...(existing.features || {}) };
+	const mergedEnv = { ...(generated.containerEnv || {}), ...(existing.containerEnv || {}) };
+
+	// --- result: start from existing, apply merged sections ---
+	const merged = JSON.parse(JSON.stringify(existing));
+	if (existingExtensions.length > 0) {
+		merged.customizations = merged.customizations || {};
+		merged.customizations.vscode = merged.customizations.vscode || {};
+		merged.customizations.vscode.extensions = existingExtensions;
+	}
+	if (existingMounts.length > 0) {
+		merged.mounts = existingMounts;
+	}
+	if (Object.keys(mergedFeatures).length > 0) {
+		merged.features = mergedFeatures;
+	}
+	if (Object.keys(mergedEnv).length > 0) {
+		merged.containerEnv = mergedEnv;
+	}
+
+	return JSON.stringify(merged, undefined, 2);
+}
+
+/**
  * @typedef {Object} ProjectGenerationContext
  * @property {string} projectName - Name of the project
  * @property {string} [repositoryUrl] - Repository URL if provided
@@ -217,32 +304,46 @@ export class ProjectGeneratorService {
 			}
 		}
 
-		// Filter files based on resolutions + idempotent overwrite policy
-		const filesToCommit = generatedFiles.filter((file) => {
+		// Filter files based on resolutions + idempotent overwrite policy.
+		// Round-4 (memo genproj-fixes-round4): merge-target files
+		// (.devcontainer/devcontainer.json) get MERGED rather than skipped when
+		// they diverge — capability contributions (extensions, mounts,
+		// features) must land on regen without clobbering manual edits.
+		const filesToCommit = [];
+		for (const file of generatedFiles) {
 			const resolution = resolutions[file.filePath];
 			if (resolution === 'keep') {
-				return false;
+				continue;
 			}
 			if (!overwrite) {
 				// Fresh repository: generated files do not exist yet — write all.
-				return true;
+				filesToCommit.push(file);
+				continue;
 			}
 			const existing = existingContentByPath.get(file.filePath);
 			if (existing === null || existing === undefined) {
-				return true; // file absent → create it
+				filesToCommit.push(file); // file absent → create it
+				continue;
 			}
 			if (existing === file.content) {
-				return false; // byte-identical → nothing to do (idempotent)
+				continue; // byte-identical → nothing to do (idempotent)
 			}
-			// Diverged file: only replace when explicitly resolved to overwrite.
 			if (resolution === 'overwrite') {
-				return true;
+				filesToCommit.push(file); // explicitly resolved → full replace
+				continue;
+			}
+			if (isMergeTargetFile(file.filePath)) {
+				const merged = mergeDevcontainerJson(existing, file.content);
+				if (merged === existing) {
+					continue; // merge is a no-op (monotonic across regens)
+				}
+				filesToCommit.push({ ...file, content: merged });
+				continue;
 			}
 			console.log(
 				`⚠️ Preserving diverged file ${file.filePath} (differs from generated content; pass resolution 'overwrite' to replace it)`
 			);
-			return false;
-		});
+		}
 
 		// Convert generated files to GitHub file format
 		const githubFiles = filesToCommit.map((file) => ({
@@ -449,6 +550,11 @@ export class ProjectGeneratorService {
 		// In a real scenario, we might want to optimize this by fetching the git tree
 		// For now, we'll check each file individually as the number of generated files is usually small
 		for (const file of generatedFiles) {
+			// Round-4: merge-target files (devcontainer.json) are auto-merged on
+			// overwrite — they are never a user-resolvable conflict.
+			if (isMergeTargetFile(file.filePath)) {
+				continue;
+			}
 			const existingContent = await this.services.github.getFileContent(
 				user.login,
 				projectName,
