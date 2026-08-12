@@ -200,6 +200,45 @@ describe('docker-container template data', () => {
 		expect(data.dockerBuildCommands).toContain('pip install');
 		expect(data.dockerRuntimeCommands).toContain('COPY --from=build /opt/venv /opt/venv');
 	});
+
+	it('copies the source tree before installing Python requirements (editable-install fix)', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'devcontainer-python'],
+			configuration: {},
+			projectName: 'py-app'
+		});
+		const commands = data.dockerBuildCommands;
+		// nas-port-mcp bug 2: a generated requirements.txt may be `-e .[dev]`,
+		// which needs src/ + README.md present — the source copy must happen
+		// before any pip install of requirements.
+		expect(commands.indexOf('COPY . .')).toBeLessThan(
+			commands.indexOf('pip install --no-cache-dir -r requirements.txt')
+		);
+		// pyproject-only repos still install the package itself.
+		expect(commands).toContain('else /opt/venv/bin/pip install --no-cache-dir .; fi');
+		// venv creation stays cached ahead of the source copy.
+		expect(commands.indexOf('python -m venv /opt/venv')).toBeLessThan(commands.indexOf('COPY . .'));
+	});
+
+	it('exposes the CircleCI context name for the deploy runbook', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'circleci'],
+			configuration: {
+				circleci: { context: { enabled: true, name: 'deploy' } }
+			},
+			projectName: 'py-app'
+		});
+		expect(data.circleciContext).toBe('deploy');
+	});
+
+	it('defaults the CircleCI context name to common', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'circleci'],
+			configuration: {},
+			projectName: 'py-app'
+		});
+		expect(data.circleciContext).toBe('common');
+	});
 });
 
 describe('CircleCI integration for docker-container', () => {
@@ -217,10 +256,12 @@ describe('CircleCI integration for docker-container', () => {
 		expect(data.deployJobDefinition).toContain('ghcr.io/OWNER/govee-mcp');
 		expect(data.deployJobDefinition).toContain('GHCR_TOKEN');
 		expect(data.deployJobDefinition).toContain('GHCR_USERNAME');
-		// 4.1: multi-arch buildx push with provenance disabled.
+		// 4.1: multi-arch buildx push. No --provenance flag: the buildx
+		// bundled with cimg/base:stable rejects it ("unknown flag:
+		// --provenance") — nas-port-mcp bug 1.
 		expect(data.deployJobDefinition).toContain('docker buildx create --use');
 		expect(data.deployJobDefinition).toContain('--platform linux/amd64,linux/arm64');
-		expect(data.deployJobDefinition).toContain('--provenance=false');
+		expect(data.deployJobDefinition).not.toContain('--provenance');
 		expect(data.deployJobDefinition).toContain('--push');
 		expect(data.deployWorkflowJob).toContain('docker-publish');
 		expect(data.deployWorkflowJob).toContain('context: common');

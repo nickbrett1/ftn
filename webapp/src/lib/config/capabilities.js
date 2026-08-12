@@ -800,7 +800,7 @@ export const capabilities = [
 			'registry',
 			'GHCR',
 			'GHCR package is created on first push from CircleCI',
-			'Create a fine-grained PAT with Packages: read & write; add GHCR_USERNAME and GHCR_TOKEN to the CircleCI context'
+			'Create a classic PAT with the write:packages scope (fine-grained PATs cannot access GHCR); add GHCR_USERNAME and GHCR_TOKEN to the CircleCI context'
 		),
 		website: 'https://www.docker.com/'
 	},

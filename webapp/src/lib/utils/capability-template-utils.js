@@ -260,8 +260,14 @@ function _applyGitGuardianConfig(data, context, contextEnabled, contextName, bui
 	}
 }
 
-function _applyDopplerConfig(data, context) {
-	if (context.capabilities.includes('doppler')) {
+/**
+ * Adds the `install_doppler` command definition to the CircleCI config only
+ * when a job actually invokes it (avoids dead code — nas-port-mcp bug 5:
+ * defining the command with no consumer in the generated config).
+ * @param {Object} data - CircleCI template data (mutated)
+ */
+function _ensureInstallDopplerCommand(data) {
+	if (!data.commands.includes('install_doppler:')) {
 		data.commands += `  install_doppler:
     description: "Install Doppler CLI"
     steps:
@@ -272,11 +278,17 @@ function _applyDopplerConfig(data, context) {
               (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
             fi\n`;
 	}
+}
 
+function _applyDopplerConfig(data, context) {
+	// The only consumer of `install_doppler` for the doppler capability is the
+	// Cloudflare secrets sync; emit the command only then. (ntfy notifications
+	// add their own consumer via _applyNtfyNotificationConfig.)
 	if (
 		context.capabilities.includes('cloudflare-wrangler') &&
 		context.capabilities.includes('doppler')
 	) {
+		_ensureInstallDopplerCommand(data);
 		data.preBuildSteps = `
       - install_doppler
       - run:
@@ -584,6 +596,9 @@ function getDockerContainerTemplateData(context) {
 	const registryPrefix = getDockerRegistryPrefix();
 	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
 	const hostname = config.hostname || 'localhost';
+	// CircleCI context that holds the registry credentials (deploy runbook
+	// guidance). Defaults to `common`, matching the circleci capability.
+	const circleciContext = context.configuration?.circleci?.context?.name || 'common';
 
 	// glibc base by default: Alpine (musl) breaks native npm/python modules
 	// (duckdb, better-sqlite3, sharp, ...) which ship glibc prebuilds.
@@ -616,13 +631,17 @@ function getDockerContainerTemplateData(context) {
 			? `RUN apt-get update && apt-get install -y --no-install-recommends ${aptPackages.join(' ')} \\\n    && rm -rf /var/lib/apt/lists/*`
 			: '';
 
-	// Stage 1 (build). Python mirrors the Node "Option A" lockfile idiom
-	// (memo §2.2/§4): prefer requirements.txt (installed before the source
-	// copy for layer caching), otherwise install the project itself from
-	// pyproject.toml — which requires the source tree to be present first.
-	// A pyproject-only repo therefore builds with zero extra files.
+	// Stage 1 (build). Python mirrors the Node copy-everything-first idiom.
+	// The source tree is copied BEFORE any pip install: genproj projects may
+	// carry a `requirements.txt` whose contents are user-controlled and often
+	// an editable self-install (`-e .[dev]`) — installing requirements before
+	// `COPY . .` fails with "error in 'egg_base' option: 'src' does not exist
+	// or is not a directory" (nas-port-mcp bug). The venv + pip upgrade layer
+	// stays cached; requirements (or the pyproject package) install after the
+	// copy, which works for both editable and plain requirements files, and
+	// for pyproject-only repos (zero extra files).
 	const dockerBuildCommands = isPython
-		? `COPY requirements.txt* pyproject.toml* ./\nRUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip \\\n    && if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; fi\nCOPY . .\nRUN if [ ! -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir .; fi`
+		? `COPY requirements.txt* pyproject.toml* ./\nRUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip\nCOPY . .\nRUN if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; else /opt/venv/bin/pip install --no-cache-dir .; fi`
 		: `COPY . .\nRUN if [ -f package-lock.json ]; then npm ci; else npm install; fi\nRUN npm run build`;
 
 	// Stage 2 (runtime): only the build output + production deps. Node keeps
@@ -745,6 +764,7 @@ function getDockerContainerTemplateData(context) {
 	return {
 		registryPrefix,
 		registryNamespace,
+		circleciContext,
 		dockerBaseImage,
 		dockerAptInstall,
 		dockerBuildCommands,
@@ -801,7 +821,7 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
           name: Build and Push Multi-Arch Image
           command: |
             docker buildx create --use || true
-            docker buildx build --platform linux/amd64,linux/arm64 --provenance=false \\
+            docker buildx build --platform linux/amd64,linux/arm64 \\
               -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest --push .`;
 
 	data.deployWorkflowJob = `
@@ -899,17 +919,7 @@ function _applyNtfyNotificationConfig(data, context) {
 		return;
 	}
 
-	if (!data.commands.includes('install_doppler:')) {
-		data.commands += `  install_doppler:
-    description: "Install Doppler CLI"
-    steps:
-      - run:
-          name: Install Doppler CLI
-          command: |
-            if ! command -v doppler &> /dev/null; then
-              (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
-            fi\n`;
-	}
+	_ensureInstallDopplerCommand(data);
 
 	data.commands += `  notify_deployment:
     description: "Send ntfy notification upon deployment completion"

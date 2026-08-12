@@ -11,8 +11,26 @@ multi-arch image (linux/amd64 + linux/arm64) and pushes it to
 
 - The registry namespace (`{{registryNamespace}}`) is derived from the
   authenticated GitHub identity at generation time.
-- Registry credentials are read from the CircleCI context (`{{registryPrefix}}`):
-  - `GHCR_USERNAME` + `GHCR_TOKEN` (fine-grained PAT with Packages: read & write)
+- Registry credentials are read from the CircleCI context (`{{circleciContext}}`):
+  - `GHCR_USERNAME` — the GitHub account name
+  - `GHCR_TOKEN` — a **classic** PAT with the `write:packages` scope
+
+### One-time CI setup (CircleCI context)
+
+Before the first push can publish an image, the CircleCI context must exist
+with the registry credentials:
+
+1. CircleCI -> Organization Settings -> Contexts -> Create Context, and name
+   it `{{circleciContext}}` (this is what the generated pipeline reads).
+2. Add two environment variables to the context:
+   - `GHCR_USERNAME` = your GitHub username
+   - `GHCR_TOKEN` = a **classic** personal access token with the
+     `write:packages` scope — create one at
+     https://github.com/settings/tokens/new?scopes=write:packages (the UI
+     auto-selects the `repo` scope alongside it)
+
+> GitHub **fine-grained** PATs cannot access the Container registry (GHCR)
+> yet, and offer no "Packages: read & write" permission — do not use one here.
 
 ## 2. Deploy on the NAS (Synology Container Manager)
 

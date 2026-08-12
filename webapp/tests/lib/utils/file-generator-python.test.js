@@ -116,13 +116,15 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 
 		const content = dockerfile.content;
 		expect(content).toContain('FROM python:3.12-slim AS build');
-		// pyproject-first install with requirements.txt fallback (Node Option-A idiom).
+		// Source tree is copied BEFORE any pip install: a requirements.txt that
+		// is an editable self-install (`-e .[dev]`) needs src/ + README.md
+		// present (nas-port-mcp bug 2). pyproject-only repos still work.
 		expect(content).toContain('COPY requirements.txt* pyproject.toml* ./');
-		expect(content).toContain(
-			'if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; fi'
+		expect(content.indexOf('COPY . .')).toBeLessThan(
+			content.indexOf('pip install --no-cache-dir -r requirements.txt')
 		);
 		expect(content).toContain(
-			'RUN if [ ! -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir .; fi'
+			'RUN if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; else /opt/venv/bin/pip install --no-cache-dir .; fi'
 		);
 		// No placeholder comment; ENTRYPOINT comes from configuration.
 		expect(content).not.toContain('TODO');
@@ -305,6 +307,26 @@ describe('Python scaffold (memo §2.3, §2.5, §2.4)', () => {
 
 		// 2.4: pick one — Dockerfile is pyproject-first, so no requirements.txt.
 		expect(files.some((f) => f.filePath === 'requirements.txt')).toBe(false);
+	});
+
+	it('emits deploy/README.md with classic-PAT GHCR guidance and CircleCI context setup', async () => {
+		const { files } = await generateNasPortMcp();
+		const readme = files.find((f) => f.filePath === 'deploy/README.md');
+		expect(readme).toBeDefined();
+
+		// nas-port-mcp bug 3: fine-grained PATs cannot access GHCR — instruct a
+		// classic PAT with write:packages.
+		expect(readme.content).toContain('classic** PAT with the `write:packages` scope');
+		expect(readme.content).toContain(
+			'https://github.com/settings/tokens/new?scopes=write:packages'
+		);
+		expect(readme.content).not.toContain('fine-grained PAT with Packages');
+		// nas-port-mcp bug 4: one-time CircleCI context setup step, naming the
+		// actual context (default `common`), not the registry prefix.
+		expect(readme.content).toContain('CircleCI context (`common`)');
+		expect(readme.content).toContain('One-time CI setup (CircleCI context)');
+		expect(readme.content).toContain('GHCR_USERNAME` = your GitHub username');
+		expect(readme.content).toContain('GHCR_TOKEN` = a **classic** personal access token');
 	});
 });
 

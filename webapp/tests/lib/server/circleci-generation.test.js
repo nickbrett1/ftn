@@ -161,6 +161,31 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).toContain('CLOUDFLARE_ENV: << parameters.environment >>');
 	});
 
+	it('does not emit a dead install_doppler command for docker-container without cloudflare/ntfy', async () => {
+		// nas-port-mcp bug 5: `install_doppler` used to be defined whenever
+		// doppler was selected (circleci auto-resolves it), but no job invoked
+		// it for docker-container deploys — dead code in the generated config.
+		const projectConfig = {
+			name: 'test-project',
+			description: 'A test project',
+			configuration: {
+				circleci: { deployTarget: 'none' }
+			}
+		};
+
+		const selectedCapabilities = ['circleci', 'docker-container', 'doppler'];
+		const previewData = await generatePreview(projectConfig, selectedCapabilities);
+
+		const circleCiFolder = previewData.files.find(
+			(f) => f.name === '.circleci' && f.type === 'folder'
+		);
+		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
+
+		expect(circleCiFile.content).toContain('docker-publish');
+		expect(circleCiFile.content).not.toContain('install_doppler');
+		expect(circleCiFile.content).not.toContain('notify_deployment');
+	});
+
 	it('should not include notify_deployment by default when ntfyNotifications is false', async () => {
 		const projectConfig = {
 			name: 'test-project',
