@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generatePreview } from '$lib/server/preview-generator.js';
 import { capabilities } from '$lib/config/capabilities.js';
+import { getCapabilityTemplateData } from '$lib/utils/capability-template-utils.js';
 
 describe('CircleCI Capability Generation', () => {
 	it('should generate .circleci/config.yml when circleci capability is selected', async () => {
@@ -104,7 +105,33 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).not.toContain('environment:');
 	});
 
-	it('should use ENV_VAL shell variable (not CLOUDFLARE_ENV env var) in the Wrangler deploy step', async () => {
+	it('keeps the non-doppler ENV_VAL Wrangler deploy step when doppler is absent', () => {
+		// circleci now requires doppler, so via the preview path a circleci +
+		// cloudflare-wrangler project always resolves doppler (CLOUDFLARE_ENV
+		// sync variant). The ENV_VAL branch (Wrangler must never see a
+		// CLOUDFLARE_ENV env var — it would deploy to env "default") is pinned
+		// here at the template-data level by calling the circleci data generator
+		// directly without the doppler capability.
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['cloudflare-wrangler'],
+			configuration: {
+				circleci: {
+					deployTarget: 'cloudflare-workers',
+					context: {
+						enabled: true,
+						name: 'common'
+					}
+				}
+			},
+			projectName: 'test-project'
+		});
+
+		expect(data.deployJobDefinition).not.toContain('CLOUDFLARE_ENV:');
+		expect(data.deployJobDefinition).toContain('ENV_VAL=');
+		expect(data.deployJobDefinition).toContain('npx wrangler deploy --env "$ENV_VAL"');
+	});
+
+	it('uses the doppler-based Cloudflare sync step when circleci pulls in doppler', async () => {
 		const projectConfig = {
 			name: 'test-project',
 			description: 'A test project',
@@ -127,14 +154,11 @@ describe('CircleCI Capability Generation', () => {
 			(f) => f.name === '.circleci' && f.type === 'folder'
 		);
 		const circleCiFile = circleCiFolder.children.find((f) => f.name === 'config.yml');
-		expect(circleCiFile).toBeDefined();
 
-		// CLOUDFLARE_ENV must NOT appear as a step-level environment variable
-		// because Wrangler intercepts it and would attempt to deploy to env "default"
-		expect(circleCiFile.content).not.toContain('CLOUDFLARE_ENV:');
-		// ENV_VAL local shell variable MUST be used instead
-		expect(circleCiFile.content).toContain('ENV_VAL=');
-		expect(circleCiFile.content).toContain('npx wrangler deploy --env "$ENV_VAL"');
+		// circleci requires doppler → doppler is auto-resolved → the deploy job
+		// uses the Doppler-backed secrets sync (CLOUDFLARE_ENV on the sync step).
+		expect(circleCiFile.content).toContain('install_doppler');
+		expect(circleCiFile.content).toContain('CLOUDFLARE_ENV: << parameters.environment >>');
 	});
 
 	it('should not include notify_deployment by default when ntfyNotifications is false', async () => {

@@ -23,6 +23,39 @@ export function findCapabilityConflicts(selectedCapabilities) {
 	return conflicting;
 }
 
+/**
+ * Expands a capability selection with its declared dependencies (recursively,
+ * depth-first, dependencies before dependents). Unknown IDs pass through
+ * unchanged. This makes e.g. `circleci` pull in its required `doppler`
+ * capability so generated projects actually receive the dependency (goose MCP
+ * extension, doppler install, secrets config) instead of just warning about it.
+ * @param {string[]} selectedCapabilities - Selected capability IDs
+ * @returns {string[]} Selection including all required dependencies
+ */
+export function resolveCapabilityDependencies(selectedCapabilities) {
+	const resolved = [];
+	const seen = new Set();
+
+	const visit = (id) => {
+		if (seen.has(id)) {
+			return;
+		}
+		seen.add(id);
+		const capability = capabilities.find((c) => c.id === id);
+		if (capability?.dependencies?.length) {
+			for (const dependency of capability.dependencies) {
+				visit(dependency);
+			}
+		}
+		resolved.push(id);
+	};
+
+	for (const id of selectedCapabilities) {
+		visit(id);
+	}
+	return resolved;
+}
+
 export function handleGenprojErrorResult(result) {
 	if (
 		result.error &&
@@ -78,7 +111,9 @@ export function buildProjectContext(payload, userId, authTokens) {
 	return {
 		projectName: name,
 		repositoryUrl: repositoryUrl || '',
-		capabilities: selectedCapabilities,
+		// Expand the selection with declared dependencies (e.g. circleci
+		// requires doppler so the goose CircleCI MCP extension gets its tokens).
+		capabilities: resolveCapabilityDependencies(selectedCapabilities),
 		// Capability-specific configuration (e.g. docker-container publishPort,
 		// dataMounts, hostname). Defaults are applied by the generators.
 		configuration: configuration || {},

@@ -111,6 +111,36 @@ describe('genproj-api-utils', () => {
 			expect(ctx.overwrite).toBe(false);
 			expect(ctx.resolutions).toBeNull();
 		});
+
+		it('auto-adds declared dependencies (circleci requires doppler)', () => {
+			const payload = {
+				name: 'my-proj',
+				selectedCapabilities: ['circleci']
+			};
+			const ctx = utils.buildProjectContext(payload, 'u1', { token: 't' });
+			expect(ctx.capabilities).toContain('circleci');
+			expect(ctx.capabilities).toContain('doppler');
+		});
+
+		it('resolves transitive dependencies (gitguardian -> circleci -> doppler)', () => {
+			const payload = {
+				name: 'my-proj',
+				selectedCapabilities: ['gitguardian']
+			};
+			const ctx = utils.buildProjectContext(payload, 'u1', { token: 't' });
+			expect(ctx.capabilities).toContain('gitguardian');
+			expect(ctx.capabilities).toContain('circleci');
+			expect(ctx.capabilities).toContain('doppler');
+		});
+
+		it('keeps unknown capability ids unchanged', () => {
+			const payload = {
+				name: 'my-proj',
+				selectedCapabilities: ['a', 'b']
+			};
+			const ctx = utils.buildProjectContext(payload, 'u1', { token: 't' });
+			expect(ctx.capabilities).toEqual(['a', 'b']);
+		});
 	});
 
 	describe('validatePatAuth', () => {

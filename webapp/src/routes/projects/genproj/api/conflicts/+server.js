@@ -1,6 +1,9 @@
 import { json } from '@sveltejs/kit';
 import { ProjectGeneratorService } from '$lib/server/project-generator';
-import { buildAuthTokensFromStored } from '$lib/server/genproj-api-utils';
+import {
+	buildAuthTokensFromStored,
+	resolveCapabilityDependencies
+} from '$lib/server/genproj-api-utils';
 import { getCurrentUser } from '$lib/server/auth';
 import { logger } from '$lib/utils/logging';
 
@@ -25,10 +28,11 @@ export async function POST({ request, platform, cookies }) {
 		// Instantiate the robust service
 		const service = new ProjectGeneratorService(authTokens);
 
-		// Prepare context for conflict check
+		// Prepare context for conflict check (dependencies resolved so the
+		// generated file set matches what generation will actually produce).
 		const projectContext = {
 			projectName: name,
-			capabilities: selectedCapabilities,
+			capabilities: resolveCapabilityDependencies(selectedCapabilities),
 			configuration: {},
 			authTokens,
 			userId: user.id

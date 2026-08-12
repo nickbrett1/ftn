@@ -37,6 +37,13 @@ describe('capability resolver', () => {
 			expect(result.isValid).toBe(true);
 		});
 
+		it('auto-adds doppler when circleci is selected', () => {
+			const result = resolveDependencies(['circleci']);
+			expect(result.resolvedCapabilities).toEqual(expect.arrayContaining(['circleci', 'doppler']));
+			expect(result.addedDependencies).toContain('doppler');
+			expect(result.isValid).toBe(true);
+		});
+
 		it('records conflicts when present', () => {
 			addCapability('conflict-cap', {
 				id: 'conflict-cap',

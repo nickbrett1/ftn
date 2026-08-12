@@ -210,9 +210,10 @@ export const CAPABILITIES = {
 	circleci: {
 		id: 'circleci',
 		name: 'CircleCI',
-		description: 'Continuous integration and deployment with CircleCI pipelines',
+		description:
+			'Continuous integration and deployment with CircleCI pipelines. Requires Doppler: the CircleCI MCP server needs CircleCI tokens that are only available through Doppler.',
 		category: 'cicd',
-		dependencies: [],
+		dependencies: ['doppler'],
 		conflicts: [],
 		configuration: {
 			nodeVersion: '20',
@@ -230,7 +231,8 @@ export const CAPABILITIES = {
 	doppler: {
 		id: 'doppler',
 		name: 'Doppler',
-		description: 'Secrets management and environment variable management with encryption',
+		description:
+			'Secrets management and environment variable management with encryption. Enables the various MCP servers that rely on privileged tokens to access their services (e.g. CircleCI, GitHub, SonarQube).',
 		category: 'secrets',
 		dependencies: [],
 		conflicts: [],

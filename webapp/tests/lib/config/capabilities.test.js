@@ -40,10 +40,18 @@ describe('Capabilities Config', () => {
 
 	describe('validateCapabilityDependencies', () => {
 		it('should validate selection with no dependencies', () => {
-			const result = validateCapabilityDependencies(['circleci']);
+			const result = validateCapabilityDependencies(['doppler']);
 			expect(result.valid).toBe(true);
 			expect(result.missing).toEqual([]);
 			expect(result.conflicts).toEqual([]);
+		});
+
+		it('should require doppler when circleci is selected', () => {
+			const result = validateCapabilityDependencies(['circleci']);
+			expect(result.valid).toBe(false);
+			expect(result.missing).toHaveLength(1);
+			expect(result.missing[0].capability).toBe('circleci');
+			expect(result.missing[0].dependency).toBe('doppler');
 		});
 
 		it('should detect missing dependencies', () => {

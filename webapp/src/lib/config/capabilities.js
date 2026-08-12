@@ -372,9 +372,10 @@ export const capabilities = [
 	{
 		id: 'circleci',
 		name: 'CircleCI Integration',
-		description: 'Configures CircleCI for continuous integration and deployment.',
+		description:
+			'Configures CircleCI for continuous integration and deployment. Requires Doppler: the CircleCI MCP server needs CircleCI tokens that are only available through Doppler.',
 		category: CATEGORY_CI_CD,
-		dependencies: EMPTY_ARRAY,
+		dependencies: ['doppler'],
 		conflicts: EMPTY_ARRAY,
 		requiresAuth: EMPTY_ARRAY,
 		externalServices: createExternalServiceConfig(
@@ -422,7 +423,8 @@ export const capabilities = [
 	{
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
-		description: 'Integrates Doppler for secure secrets management.',
+		description:
+			'Integrates Doppler for secure secrets management. Enables the various MCP servers that rely on privileged tokens to access their services (e.g. CircleCI, GitHub, SonarQube).',
 		category: CATEGORY_SECRETS,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
