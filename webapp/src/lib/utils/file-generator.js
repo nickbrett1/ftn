@@ -1007,10 +1007,23 @@ def test_package_imports():
     assert ${pkgName}.__version__
 `;
 
+	// Round-3 fix (memo genproj-fixes-round3): when docker-container is
+	// configured with a custom `command` or `entrypoint`, the app provides its
+	// own entry point — do NOT emit the scaffold `__main__.py`. Regenerating a
+	// project whose app had taken over `__main__.py` previously clobbered the
+	// real entrypoint with this placeholder (silent breakage: `python -m <pkg>`
+	// printed "installed and importable" and exited, killing the MCP stdio
+	// server behind mcpo). Fresh projects without a custom command/entrypoint
+	// keep the placeholder.
+	const dockerConfig = context.configuration?.['docker-container'] || {};
+	const hasCustomEntrypoint =
+		(Array.isArray(dockerConfig.command) && dockerConfig.command.length > 0) ||
+		(Array.isArray(dockerConfig.entrypoint) && dockerConfig.entrypoint.length > 0);
+
 	return [
 		{ filePath: 'pyproject.toml', content: pyproject },
 		{ filePath: `src/${pkgName}/__init__.py`, content: initPy },
-		{ filePath: `src/${pkgName}/__main__.py`, content: mainPy },
+		...(hasCustomEntrypoint ? [] : [{ filePath: `src/${pkgName}/__main__.py`, content: mainPy }]),
 		{ filePath: 'tests/test_smoke.py', content: smokeTest }
 	];
 }

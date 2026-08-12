@@ -259,10 +259,40 @@ describe('Python scaffold (memo §2.3, §2.5, §2.4)', () => {
 	it('scaffolds src/<pkg>/ and tests/ so ruff and pytest pass with zero edits', async () => {
 		const { files } = await generateNasPortMcp();
 		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__init__.py')).toBe(true);
-		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__main__.py')).toBe(true);
 		const smoke = files.find((f) => f.filePath === 'tests/test_smoke.py');
 		expect(smoke).toBeDefined();
 		expect(smoke.content).toContain('test_package_imports');
+	});
+
+	// Round-3 fix (memo genproj-fixes-round3, Option A): with a custom
+	// docker-container command/entrypoint the app provides its own entry point,
+	// so the scaffold __main__.py must NOT be emitted (regeneration used to
+	// clobber the app's real __main__.py with this placeholder).
+	it('does not emit src/<pkg>/__main__.py when docker-container has a custom entrypoint', async () => {
+		const { files } = await generateNasPortMcp();
+		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__main__.py')).toBe(false);
+	});
+
+	it('does not emit src/<pkg>/__main__.py when docker-container has a custom command', async () => {
+		const { files } = await generateNasPortMcp({
+			'docker-container': {
+				...NAS_PORT_MCP_CONFIG['docker-container'],
+				entrypoint: undefined,
+				command: ['/usr/local/bin/entrypoint.sh']
+			}
+		});
+		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__main__.py')).toBe(false);
+	});
+
+	// Fresh-project behavior must be unchanged: no custom command/entrypoint →
+	// the placeholder __main__.py is still scaffolded.
+	it('still scaffolds src/<pkg>/__main__.py for fresh projects without a custom command/entrypoint', async () => {
+		const { files } = await generateNasPortMcp({
+			'docker-container': {
+				registryNamespace: 'nickbrett1'
+			}
+		});
+		expect(files.some((f) => f.filePath === 'src/nas_port_mcp/__main__.py')).toBe(true);
 	});
 
 	it('emits a root README with a Python quickstart and deploy pointer, and no requirements.txt (pyproject-first)', async () => {

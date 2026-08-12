@@ -199,12 +199,49 @@ export class ProjectGeneratorService {
 
 		const [owner, repo] = repository.fullName.split('/');
 		const resolutions = context.resolutions || {};
+		const overwrite = context.overwrite || false;
 
-		// Filter files based on resolutions
-		// If resolution is 'keep', we skip generating this file
+		// Round-3 fix (memo genproj-fixes-round3): make overwrite IDEMPOTENT.
+		// On regeneration, only write a file when it is absent OR its current
+		// content is byte-identical to the generated content OR the user
+		// explicitly resolved that path to 'overwrite'. A diverged file is
+		// NEVER silently replaced — this protects app code that has taken over
+		// a template-owned path (e.g. src/<pkg>/__main__.py) from being
+		// clobbered by a scaffold placeholder.
+		let existingContentByPath = null;
+		if (overwrite) {
+			existingContentByPath = new Map();
+			for (const file of generatedFiles) {
+				const existing = await this.services.github.getFileContent(owner, repo, file.filePath);
+				existingContentByPath.set(file.filePath, existing);
+			}
+		}
+
+		// Filter files based on resolutions + idempotent overwrite policy
 		const filesToCommit = generatedFiles.filter((file) => {
 			const resolution = resolutions[file.filePath];
-			return resolution !== 'keep';
+			if (resolution === 'keep') {
+				return false;
+			}
+			if (!overwrite) {
+				// Fresh repository: generated files do not exist yet — write all.
+				return true;
+			}
+			const existing = existingContentByPath.get(file.filePath);
+			if (existing === null || existing === undefined) {
+				return true; // file absent → create it
+			}
+			if (existing === file.content) {
+				return false; // byte-identical → nothing to do (idempotent)
+			}
+			// Diverged file: only replace when explicitly resolved to overwrite.
+			if (resolution === 'overwrite') {
+				return true;
+			}
+			console.log(
+				`⚠️ Preserving diverged file ${file.filePath} (differs from generated content; pass resolution 'overwrite' to replace it)`
+			);
+			return false;
 		});
 
 		// Convert generated files to GitHub file format

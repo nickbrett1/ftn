@@ -263,6 +263,106 @@ describe('ProjectGeneratorService', () => {
 			expect(service.services.github.createMultipleFiles).not.toHaveBeenCalled();
 		});
 
+		// Round-3 fix (memo genproj-fixes-round3, Option B): overwrite is
+		// idempotent — a diverged file is never silently replaced.
+		it('preserves diverged files on overwrite unless explicitly resolved to overwrite', async () => {
+			service.services.github.getFileContent.mockResolvedValueOnce('old-diverged-content');
+			service.services.github.getFileContent.mockResolvedValueOnce(null); // file2 absent
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				...context,
+				overwrite: true
+			});
+
+			// file1.txt diverged + no resolution → preserved; file2.js absent → written
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'file2.js',
+						content: 'content2',
+						message: 'Add file2.js'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
+		it('overwrites a diverged file when explicitly resolved to overwrite', async () => {
+			service.services.github.getFileContent.mockResolvedValue('old-diverged-content');
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				...context,
+				overwrite: true,
+				resolutions: {
+					'file1.txt': 'overwrite'
+				}
+			});
+
+			// file1.txt explicitly overwritten; file2.js diverged but unresolved → preserved
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'file1.txt',
+						content: 'content1',
+						message: 'Add file1.txt'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
+		it('skips byte-identical files on overwrite (no-op regeneration)', async () => {
+			service.services.github.getFileContent.mockResolvedValueOnce('content1'); // identical
+			service.services.github.getFileContent.mockResolvedValueOnce(null); // file2 absent
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				...context,
+				overwrite: true
+			});
+
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'file2.js',
+						content: 'content2',
+						message: 'Add file2.js'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
+		it('creates absent files on overwrite', async () => {
+			service.services.github.getFileContent.mockResolvedValue(null);
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				...context,
+				overwrite: true
+			});
+
+			const expected = generatedFiles.map((file) => ({
+				path: file.filePath,
+				content: file.content,
+				message: `Add ${file.filePath}`
+			}));
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				expected,
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
 		it('should throw an error if GitHub service is not available', async () => {
 			service.services.github = null;
 			await expect(

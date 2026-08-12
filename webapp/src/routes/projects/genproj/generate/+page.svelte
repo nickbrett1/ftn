@@ -116,10 +116,13 @@
 
 			if (result.conflicts && result.conflicts.length > 0) {
 				conflicts = result.conflicts;
-				// Initialize resolutions to 'overwrite' (or 'keep' if preferred default)
+				// Initialize resolutions to 'keep' — the safe default (memo
+				// genproj-fixes-round3): never overwrite a diverged file unless
+				// the user explicitly chooses to. Flip individual files to
+				// 'overwrite' to pull in template updates.
 				conflictResolutions = {};
 				for (const c of conflicts) {
-					conflictResolutions[c.path] = 'overwrite';
+					conflictResolutions[c.path] = 'keep';
 				}
 				showConflictModal = true;
 				showRepoExistsModal = false;
