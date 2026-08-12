@@ -164,6 +164,13 @@ describe('DevContainer Generation Tests', () => {
 		// Without the doppler capability the plain-binary wrapper is installed behind a guard
 		expect(zshrc).toContain('typeset -f goose');
 		expect(zshrc).toContain('goose() { _wt_ensure command goose "$@"; }');
+		// Socket handling: hoisted locals + nullglob (N) qualifiers (no
+		// 'sockets=(  )' noise, no 'no matches found' glob errors at startup).
+		expect(zshrc).toContain('local current_user sockets socket');
+		expect(zshrc).toContain('vscode-remote-containers-ipc-*.sock(N)');
+		expect(zshrc).toContain('vscode-ssh-auth-*.sock(N)');
+		expect(zshrc).not.toMatch(/\n\s+local sockets\b/);
+		expect(zshrc).not.toMatch(/\n\s+local socket\b/);
 	});
 
 	it('overrides goose() with the Doppler wrapper when the doppler capability is selected', async () => {
