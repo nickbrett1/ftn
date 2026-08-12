@@ -266,7 +266,9 @@ describe('ProjectGeneratorService', () => {
 
 		// Round-3 fix (memo genproj-fixes-round3, Option B): overwrite is
 		// idempotent — a diverged file is never silently replaced.
-		it('preserves diverged files on overwrite unless explicitly resolved to overwrite', async () => {
+		it('applies fresh template content to diverged generated infra on overwrite (template wins)', async () => {
+			// file1.txt is generated infra (not under src/, tests/, ...) →
+			// on regen the fresh template content replaces the diverged file.
 			service.services.github.getFileContent.mockResolvedValueOnce('old-diverged-content');
 			service.services.github.getFileContent.mockResolvedValueOnce(null); // file2 absent
 
@@ -275,15 +277,49 @@ describe('ProjectGeneratorService', () => {
 				overwrite: true
 			});
 
-			// file1.txt diverged + no resolution → preserved; file2.js absent → written
 			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
 				'owner',
 				'repo',
 				[
 					{
+						path: 'file1.txt',
+						content: 'content1',
+						message: 'Add file1.txt'
+					},
+					{
 						path: 'file2.js',
 						content: 'content2',
 						message: 'Add file2.js'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
+		it('preserves diverged app-owned files unless explicitly resolved to overwrite', async () => {
+			const appFiles = [
+				{ filePath: 'src/app/__main__.py', content: 'app-entry' },
+				{ filePath: 'Dockerfile', content: 'new-dockerfile' }
+			];
+			service.services.github.getFileContent
+				.mockResolvedValueOnce('old-app-code') // src/app/__main__.py diverged
+				.mockResolvedValueOnce('old-dockerfile'); // Dockerfile diverged
+
+			await service.commitFilesToRepository(repository, appFiles, {
+				...context,
+				overwrite: true
+			});
+
+			// src/app/__main__.py (app code) preserved; Dockerfile (infra) updated
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'Dockerfile',
+						content: 'new-dockerfile',
+						message: 'Add Dockerfile'
 					}
 				],
 				'Initial commit: Generated project with 1 capabilities',
@@ -302,7 +338,8 @@ describe('ProjectGeneratorService', () => {
 				}
 			});
 
-			// file1.txt explicitly overwritten; file2.js diverged but unresolved → preserved
+			// file1.txt explicitly overwritten; file2.js diverged infra without a
+			// resolution → template wins too (both committed).
 			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
 				'owner',
 				'repo',
@@ -311,6 +348,39 @@ describe('ProjectGeneratorService', () => {
 						path: 'file1.txt',
 						content: 'content1',
 						message: 'Add file1.txt'
+					},
+					{
+						path: 'file2.js',
+						content: 'content2',
+						message: 'Add file2.js'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
+		it('keeps diverged infra when explicitly resolved to keep', async () => {
+			service.services.github.getFileContent.mockResolvedValueOnce('old-diverged-content');
+			service.services.github.getFileContent.mockResolvedValueOnce(null); // file2 absent
+
+			await service.commitFilesToRepository(repository, generatedFiles, {
+				...context,
+				overwrite: true,
+				resolutions: {
+					'file1.txt': 'keep'
+				}
+			});
+
+			// file1.txt explicitly kept → preserved; file2.js absent → written
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'file2.js',
+						content: 'content2',
+						message: 'Add file2.js'
 					}
 				],
 				'Initial commit: Generated project with 1 capabilities',

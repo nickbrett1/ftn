@@ -6,6 +6,7 @@
 	import { logger } from '$lib/utils/logging.js';
 	import { initiateGitHubAuth } from '$lib/client/github-auth.js';
 	import { untrack } from 'svelte';
+	import { isAppOwnedPath } from '$lib/utils/genproj-overwrite.js';
 
 	let { data } = $props();
 	let loading = $state(false);
@@ -116,13 +117,14 @@
 
 			if (result.conflicts && result.conflicts.length > 0) {
 				conflicts = result.conflicts;
-				// Initialize resolutions to 'keep' — the safe default (memo
-				// genproj-fixes-round3): never overwrite a diverged file unless
-				// the user explicitly chooses to. Flip individual files to
-				// 'overwrite' to pull in template updates.
+				// Per-file defaults matching the server overwrite policy:
+				// app-owned paths (src/, tests/, scripts/, ...) default to
+				// 'keep' (never silently clobber user code — round 3);
+				// generated infra (Dockerfile, .circleci/, ...) defaults to
+				// 'overwrite' so template improvements propagate on regen.
 				conflictResolutions = {};
 				for (const c of conflicts) {
-					conflictResolutions[c.path] = 'keep';
+					conflictResolutions[c.path] = isAppOwnedPath(c.path) ? 'keep' : 'overwrite';
 				}
 				showConflictModal = true;
 				showRepoExistsModal = false;

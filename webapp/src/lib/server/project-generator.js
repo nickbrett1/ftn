@@ -12,18 +12,7 @@ import { CircleCIAPIService } from './circleci-api.js';
 import { DopplerAPIService } from './doppler-api.js';
 import { SonarCloudAPIService } from './sonarcloud-api.js';
 import { generateAllFiles } from '$lib/utils/file-generator.js';
-
-/**
- * Files that accumulate capability contributions across regenerations and must
- * be MERGED (not skipped, not clobbered) when they diverge. Round-4
- * (memo genproj-fixes-round4): devcontainer.json is the single known case —
- * its final state is the union of (capability contributions) + (manual edits).
- * @param {string} filePath - Generated file path
- * @returns {boolean} True when the file is a merge-target
- */
-export function isMergeTargetFile(filePath) {
-	return filePath === '.devcontainer/devcontainer.json';
-}
+import { isAppOwnedPath, isMergeTargetFile } from '$lib/utils/genproj-overwrite.js';
 
 /**
  * Merges the freshly-generated devcontainer.json into the existing one,
@@ -340,9 +329,19 @@ export class ProjectGeneratorService {
 				filesToCommit.push({ ...file, content: merged });
 				continue;
 			}
-			console.log(
-				`⚠️ Preserving diverged file ${file.filePath} (differs from generated content; pass resolution 'overwrite' to replace it)`
-			);
+			if (isAppOwnedPath(file.filePath)) {
+				// App code (src/, tests/, scripts/, ...): never silently replace.
+				console.log(
+					`⚠️ Preserving diverged app file ${file.filePath} (differs from generated content; pass resolution 'overwrite' to replace it)`
+				);
+				continue;
+			}
+			// Generated infra (Dockerfile, .circleci/, .devcontainer/, pyproject,
+			// compose, README, ...): genproj-owned — fresh template content wins
+			// on regen so template improvements propagate (e.g. the doppler CLI
+			// install added to the Dockerfile in round 5), unless the user
+			// explicitly resolved the path to 'keep' (handled above).
+			filesToCommit.push(file);
 		}
 
 		// Convert generated files to GitHub file format
