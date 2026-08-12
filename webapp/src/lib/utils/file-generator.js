@@ -57,7 +57,8 @@ import {
 	applyDefaults,
 	resolveLanguage,
 	toPythonPackageName,
-	toDistributionName
+	toDistributionName,
+	getGooseMcpConfig
 } from '$lib/utils/capability-template-utils.js';
 
 // 2.2: health endpoint emitted for docker-container SvelteKit projects.
@@ -135,7 +136,44 @@ goose() {
  *
  * @returns {string} The setup script content
  */
-export function generateGooseSetupScript() {
+export function generateGooseSetupScript(context = {}) {
+	const gooseMcp = getGooseMcpConfig(context);
+	const fragments = [
+		{ key: 'sonarqube', block: gooseMcp.sonarQubeGooseConfig },
+		{ key: 'circleci', block: gooseMcp.circleCiGooseConfig },
+		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig }
+	].filter((f) => f.block);
+
+	// Round-4 fix (memo genproj-goose-extensions): wire the previously-dead
+	// getGooseMcpConfig() into generation. Selected capabilities (circleci,
+	// sonarcloud, xcode-development) now register their goose MCP extension in
+	// the container's config.yaml — idempotently: keys already present (e.g.
+	// from the bind-mounted host ~/.config/goose) are skipped, and a missing
+	// top-level `extensions:` map is created. Never clobbers anything.
+	let extensionMerge = '';
+	if (fragments.length > 0) {
+		const ensureFn = `
+# Idempotently register a project-selected goose MCP extension. Never clobbers:
+# skips keys already present, only appends the missing block under extensions:.
+ensure_goose_extension() {
+  local key="$1" block="$2" config="$HOME/.config/goose/config.yaml"
+  [ -f "$config" ] || { echo "WARN: no goose config yet - project extensions apply after 'goose configure'"; return 0; }
+  grep -qE "^  \${key}:" "$config" && { echo "INFO: goose extension '\${key}' already registered."; return 0; }
+  grep -q '^extensions:' "$config" || echo "extensions:" >> "$config"
+  awk -v frag="$block" '/^extensions:/ { print; printf "%s", frag; next } { print }' "$config" > "\${config}.tmp" && mv "\${config}.tmp" "$config"
+  echo "INFO: Registered goose extension '\${key}'."
+}
+`;
+		const calls = fragments
+			.map((f) => `ensure_goose_extension "${f.key}" '${f.block.replace(/^\n/, '')}\n'`)
+			.join('\n');
+		extensionMerge = `
+echo "INFO: Registering project-selected goose MCP extensions..."
+${ensureFn}
+${calls}
+`;
+	}
+
 	return `
 echo "INFO: Setting up goose configuration and MCP servers..."
 
@@ -151,7 +189,7 @@ if [ -f "$HOME/.config/goose/config.yaml" ]; then
 else
     echo "INFO: No goose config found yet - run 'goose configure' inside the container to set up your provider."
 fi
-
+${extensionMerge}
 echo "INFO: Ensuring goose recipes are available (spec-first development process)..."
 RECIPES_DIR="$HOME/.config/goose/recipes"
 if [ -d "$RECIPES_DIR/.git" ]; then
@@ -761,9 +799,17 @@ export function generateMergedDevelopmentContainerFiles(
 					() => context.projectName || context.name || 'my-project'
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
-				gooseSetup: context.capabilities.includes('coding-agents')
-					? generateGooseSetupScript()
-					: '',
+				// goose setup (recipes + project-selected MCP extensions) runs for
+				// coding-agents AND for any capability that registers a goose
+				// extension (circleci, sonarcloud, xcode-development) — otherwise a
+				// project selecting e.g. circleci would get no circleci extension.
+				gooseSetup:
+					context.capabilities.includes('coding-agents') ||
+					['circleci', 'sonarcloud', 'xcode-development'].some((c) =>
+						context.capabilities.includes(c)
+					)
+						? generateGooseSetupScript(context)
+						: '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 				gitHooksSetup:
 					context.capabilities.includes('code-quality') ||

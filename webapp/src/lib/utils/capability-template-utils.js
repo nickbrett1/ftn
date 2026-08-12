@@ -138,7 +138,8 @@ function getGooseMcpConfig(context) {
 
 	let sonarQubeGooseConfig = '';
 	if (hasSonarQube) {
-		sonarQubeGooseConfig = `
+		if (hasDoppler) {
+			sonarQubeGooseConfig = `
   sonarqube:
     type: stdio
     name: sonarqube
@@ -146,11 +147,25 @@ function getGooseMcpConfig(context) {
     cmd: doppler
     args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
     timeout: 300`;
+		} else {
+			sonarQubeGooseConfig = `
+  sonarqube:
+    type: stdio
+    name: sonarqube
+    enabled: true
+    cmd: npx
+    args: ["-y", "sonarqube-mcp-server"]
+    env:
+      SONAR_TOKEN: "\${SONAR_TOKEN}"
+      SONAR_HOST_URL: "\${SONAR_HOST_URL}"
+    timeout: 300`;
+		}
 	}
 
 	let circleCiGooseConfig = '';
 	if (hasCircleCI) {
-		circleCiGooseConfig = `
+		if (hasDoppler) {
+			circleCiGooseConfig = `
   circleci:
     type: stdio
     name: circleci
@@ -158,6 +173,19 @@ function getGooseMcpConfig(context) {
     cmd: doppler
     args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
     timeout: 300`;
+		} else {
+			circleCiGooseConfig = `
+  circleci:
+    type: stdio
+    name: circleci
+    enabled: true
+    cmd: npx
+    args: ["-y", "@circleci/mcp-server-circleci"]
+    env:
+      CIRCLECI_TOKEN: "\${CIRCLECI_TOKEN}"
+      CIRCLE_API_TOKEN: "\${CIRCLE_API_TOKEN}"
+    timeout: 300`;
+		}
 	}
 
 	let xcodeNativeGooseConfig = '';

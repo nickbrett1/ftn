@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { generateGooseSetupScript } from '$lib/utils/file-generator';
+import {
+	generateGooseSetupScript,
+	generateAllFiles,
+	TemplateEngine
+} from '$lib/utils/file-generator';
 
 describe('goose recipes bootstrap in generated projects', () => {
 	const ctx = { capabilities: ['coding-agents', 'doppler'], configuration: {} };
@@ -28,5 +32,63 @@ describe('goose recipes bootstrap in generated projects', () => {
 		expect(script).not.toContain('fintechnick:');
 		expect(script).not.toContain('extensions:');
 		expect(script).not.toContain('GOOSE_RECIPE_GITHUB_REPO:');
+	});
+});
+
+describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xcode)', () => {
+	it('registers the circleci extension with npx + token env when doppler is not selected', () => {
+		const script = generateGooseSetupScript({ capabilities: ['circleci'], configuration: {} });
+		expect(script).toContain('ensure_goose_extension "circleci"');
+		expect(script).toContain('"@circleci/mcp-server-circleci"');
+		expect(script).toContain('CIRCLECI_TOKEN: "${CIRCLECI_TOKEN}"');
+		expect(script).toContain('cmd: npx');
+		expect(script).not.toContain('cmd: doppler');
+	});
+
+	it('registers the circleci extension via doppler when the doppler capability is selected', () => {
+		const script = generateGooseSetupScript({
+			capabilities: ['circleci', 'doppler'],
+			configuration: {}
+		});
+		expect(script).toContain('ensure_goose_extension "circleci"');
+		expect(script).toContain('cmd: doppler');
+		expect(script).toContain('"@circleci/mcp-server-circleci"');
+	});
+
+	it('registers sonarqube and xcode-native extensions when their capabilities are selected', () => {
+		const script = generateGooseSetupScript({
+			capabilities: ['sonarcloud', 'xcode-development'],
+			configuration: {}
+		});
+		expect(script).toContain('ensure_goose_extension "sonarqube"');
+		expect(script).toContain('ensure_goose_extension "xcode-native"');
+		expect(script).toContain('SONAR_TOKEN: "${SONAR_TOKEN}"');
+		expect(script).toContain('mac-studio:9876/sse');
+	});
+
+	it('emits no extension merge when no MCP-relevant capability is selected', () => {
+		const script = generateGooseSetupScript({
+			capabilities: ['devcontainer-python'],
+			configuration: {}
+		});
+		expect(script).not.toContain('ensure_goose_extension');
+		expect(script).not.toContain('extensions:');
+	});
+
+	it('wires the circleci extension into post-create-setup.sh for a nas-port-mcp-like project (no coding-agents)', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+		const files = await generateAllFiles({
+			projectName: 'nas-port-mcp',
+			capabilities: ['devcontainer-python', 'docker-container', 'circleci'],
+			configuration: {
+				'docker-container': { entrypoint: ['/usr/local/bin/entrypoint.sh'] }
+			}
+		});
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+		expect(setup.content).toContain('ensure_goose_extension "circleci"');
+		expect(setup.content).toContain('"@circleci/mcp-server-circleci"');
+		expect(setup.content).toContain('CIRCLECI_TOKEN: "${CIRCLECI_TOKEN}"');
 	});
 });
