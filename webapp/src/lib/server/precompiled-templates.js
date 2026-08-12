@@ -128,41 +128,42 @@
 								})
 							: helper)
 					) +
-					'",\n  "remoteUser": "node",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "node"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {}\n  },\n  "mounts": [\n    "source=' +
+					'",\n  "remoteUser": "node",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "node"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {}\n  },\n  "mounts": [\n    ' +
 					alias4(
 						((helper =
 							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								lookupProperty(helpers, 'devcontainerMounts') ||
+								(depth0 != null ? lookupProperty(depth0, 'devcontainerMounts') : depth0)) != null
 								? helper
 								: alias2),
 						typeof helper === alias3
 							? helper.call(alias1, {
-									name: 'projectName',
+									name: 'devcontainerMounts',
 									hash: {},
 									data: data,
-									loc: { start: { line: 22, column: 12 }, end: { line: 22, column: 27 } }
+									loc: { start: { line: 22, column: 4 }, end: { line: 22, column: 26 } }
 								})
 							: helper)
 					) +
-					'-wrangler-config,target=/home/node/.wrangler,type=volume",\n    "source=' +
+					'\n  ],\n  "forwardPorts": ' +
 					alias4(
 						((helper =
 							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								lookupProperty(helpers, 'devcontainerForwardPorts') ||
+								(depth0 != null ? lookupProperty(depth0, 'devcontainerForwardPorts') : depth0)) !=
+							null
 								? helper
 								: alias2),
 						typeof helper === alias3
 							? helper.call(alias1, {
-									name: 'projectName',
+									name: 'devcontainerForwardPorts',
 									hash: {},
 									data: data,
-									loc: { start: { line: 23, column: 12 }, end: { line: 23, column: 27 } }
+									loc: { start: { line: 24, column: 18 }, end: { line: 24, column: 46 } }
 								})
 							: helper)
 					) +
-					'-doppler-config,target=/home/node/.doppler,type=volume",\n    "source=gemini-cli-settings,target=/home/node/.gemini,type=volume",\n    "source=' +
+					',\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
 					alias4(
 						((helper =
 							(helper =
@@ -175,24 +176,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 25, column: 12 }, end: { line: 25, column: 27 } }
-								})
-							: helper)
-					) +
-					'-tailscale-state,target=/var/lib/tailscale,type=volume"\n  ],\n  "forwardPorts": [8788, 8976, 36079, 33301, 37677],\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
-					alias4(
-						((helper =
-							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'projectName',
-									hash: {},
-									data: data,
-									loc: { start: { line: 33, column: 40 }, end: { line: 33, column: 55 } }
+									loc: { start: { line: 30, column: 40 }, end: { line: 30, column: 55 } }
 								})
 							: helper)
 					) +
@@ -233,7 +217,56 @@
 						};
 
 				return (
-					'#!/bin/bash\n# This file is executed once per session to set up the devcontainer.\n# For example:\n# echo "Running devcontainer setup script..."\n# npm install\n\nCURRENT_USER=$(whoami)\nUSER_HOME_DIR="$HOME"\n\necho "INFO: Ensuring wrangler directory permissions..."\n\necho "INFO: Restoring or backing up SSH host keys..."\nsudo mkdir -p /var/lib/tailscale/ssh\nif [ -n "$(ls -A /var/lib/tailscale/ssh/ssh_host_* 2>/dev/null)" ]; then\n    echo "INFO: Restoring SSH host keys from /var/lib/tailscale/ssh..."\n    sudo cp -f /var/lib/tailscale/ssh/ssh_host_* /etc/ssh/\n    sudo chmod 600 /etc/ssh/ssh_host_*_key\n    sudo chmod 644 /etc/ssh/ssh_host_*_key.pub 2>/dev/null || true\nelse\n    echo "INFO: Backing up SSH host keys to /var/lib/tailscale/ssh..."\n    sudo ssh-keygen -A || true\n    sudo cp -f /etc/ssh/ssh_host_* /var/lib/tailscale/ssh/\nfi\n\necho "INFO: Ensuring SSH service is running..."\nsudo service ssh restart\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n\necho "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n\necho "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n\necho "INFO: Creating Oh My Zsh custom directories..."\nmkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"\n\nif [ -f "/workspaces/' +
+					'#!/bin/bash\n# This file is executed once per session to set up the devcontainer.\n# For example:\n# echo "Running devcontainer setup script..."\n# npm install\n\nCURRENT_USER=$(whoami)\nUSER_HOME_DIR="$HOME"\n\necho "INFO: Restoring or backing up SSH host keys..."\nsudo mkdir -p /var/lib/tailscale/ssh\nif [ -n "$(ls -A /var/lib/tailscale/ssh/ssh_host_* 2>/dev/null)" ]; then\n    echo "INFO: Restoring SSH host keys from /var/lib/tailscale/ssh..."\n    sudo cp -f /var/lib/tailscale/ssh/ssh_host_* /etc/ssh/\n    sudo chmod 600 /etc/ssh/ssh_host_*_key\n    sudo chmod 644 /etc/ssh/ssh_host_*_key.pub 2>/dev/null || true\nelse\n    echo "INFO: Backing up SSH host keys to /var/lib/tailscale/ssh..."\n    sudo ssh-keygen -A || true\n    sudo cp -f /etc/ssh/ssh_host_* /var/lib/tailscale/ssh/\nfi\n\necho "INFO: Ensuring SSH service is running..."\nsudo service ssh restart\n\n' +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'wranglerSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'wranglerSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'wranglerSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 26, column: 0 }, end: { line: 26, column: 17 } }
+								})
+							: helper)
+					) +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'dopplerSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'dopplerSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'dopplerSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 26, column: 17 }, end: { line: 26, column: 33 } }
+								})
+							: helper)
+					) +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'geminiSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'geminiSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'geminiSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 26, column: 33 }, end: { line: 26, column: 48 } }
+								})
+							: helper)
+					) +
+					'\n\necho "INFO: Creating Oh My Zsh custom directories..."\nmkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"\n\nif [ -f "/workspaces/' +
 					alias4(
 						((helper =
 							(helper =
@@ -246,7 +279,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 41, column: 21 }, end: { line: 41, column: 36 } }
+									loc: { start: { line: 31, column: 21 }, end: { line: 31, column: 36 } }
 								})
 							: helper)
 					) +
@@ -263,7 +296,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 43, column: 20 }, end: { line: 43, column: 35 } }
+									loc: { start: { line: 33, column: 20 }, end: { line: 33, column: 35 } }
 								})
 							: helper)
 					) +
@@ -280,7 +313,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 46, column: 28 }, end: { line: 46, column: 43 } }
+									loc: { start: { line: 36, column: 28 }, end: { line: 36, column: 43 } }
 								})
 							: helper)
 					) +
@@ -297,7 +330,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 49, column: 21 }, end: { line: 49, column: 36 } }
+									loc: { start: { line: 39, column: 21 }, end: { line: 39, column: 36 } }
 								})
 							: helper)
 					) +
@@ -314,7 +347,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 51, column: 20 }, end: { line: 51, column: 35 } }
+									loc: { start: { line: 41, column: 20 }, end: { line: 41, column: 35 } }
 								})
 							: helper)
 					) +
@@ -331,7 +364,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 54, column: 28 }, end: { line: 54, column: 43 } }
+									loc: { start: { line: 44, column: 28 }, end: { line: 44, column: 43 } }
 								})
 							: helper)
 					) +
@@ -348,7 +381,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 57, column: 21 }, end: { line: 57, column: 36 } }
+									loc: { start: { line: 47, column: 21 }, end: { line: 47, column: 36 } }
 								})
 							: helper)
 					) +
@@ -365,7 +398,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 59, column: 20 }, end: { line: 59, column: 35 } }
+									loc: { start: { line: 49, column: 20 }, end: { line: 49, column: 35 } }
 								})
 							: helper)
 					) +
@@ -382,7 +415,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 62, column: 28 }, end: { line: 62, column: 43 } }
+									loc: { start: { line: 52, column: 28 }, end: { line: 52, column: 43 } }
 								})
 							: helper)
 					) +
@@ -399,7 +432,7 @@
 									name: 'shellSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 14 } }
+									loc: { start: { line: 55, column: 0 }, end: { line: 55, column: 14 } }
 								})
 							: helper)
 					) +
@@ -416,7 +449,7 @@
 									name: 'pythonSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 15 } }
+									loc: { start: { line: 57, column: 0 }, end: { line: 57, column: 15 } }
 								})
 							: helper)
 					) +
@@ -433,7 +466,7 @@
 									name: 'gitSafeDirectory',
 									hash: {},
 									data: data,
-									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 20 } }
+									loc: { start: { line: 59, column: 0 }, end: { line: 59, column: 20 } }
 								})
 							: helper)
 					) +
@@ -450,7 +483,7 @@
 									name: 'gitHooksSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 17 } }
+									loc: { start: { line: 61, column: 0 }, end: { line: 61, column: 17 } }
 								})
 							: helper)
 					) +
@@ -467,7 +500,7 @@
 									name: 'playwrightSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 73, column: 0 }, end: { line: 73, column: 19 } }
+									loc: { start: { line: 63, column: 0 }, end: { line: 63, column: 19 } }
 								})
 							: helper)
 					) +
@@ -484,7 +517,7 @@
 									name: 'agySetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 75, column: 0 }, end: { line: 75, column: 12 } }
+									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 12 } }
 								})
 							: helper)
 					) +
@@ -501,11 +534,45 @@
 									name: 'gooseSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 76, column: 0 }, end: { line: 76, column: 14 } }
+									loc: { start: { line: 66, column: 0 }, end: { line: 66, column: 14 } }
 								})
 							: helper)
 					) +
-					'\n\necho "INFO: Installing specdag globally..."\nnpm install -g @japorto100/specdag\n\nif ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then\n    echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."\n    sudo start-stop-daemon --start --background --pidfile /var/run/socat-9222.pid --make-pidfile --chuid $(id -un):$(id -gn) --exec /usr/bin/socat -- TCP-LISTEN:9222,fork,bind=127.0.0.1 TCP:host.docker.internal:9222\nfi\n\necho "INFO: Checking Tailscale status..."\nif ! command -v tailscale &> /dev/null; then\n    echo "INFO: Installing Tailscale..."\n    curl -fsSL https://tailscale.com/install.sh | sh\nfi\n\nif ! pgrep -x tailscaled > /dev/null; then\n    echo "INFO: Starting Tailscale daemon..."\n    sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/tailscaled.pid --make-pidfile --exec /usr/sbin/tailscaled -- --state=/var/lib/tailscale/tailscaled.state\nfi\n\necho "INFO: Checking Nanobanana MCP installation..."\nif [ -f "webapp/scripts/install-nanobanana.sh" ]; then\n    bash webapp/scripts/install-nanobanana.sh\nelif [ -f "scripts/install-nanobanana.sh" ]; then\n    bash scripts/install-nanobanana.sh\nfi\n\n' +
+					'\n\n' +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'specdagSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'specdagSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'specdagSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 68, column: 0 }, end: { line: 68, column: 16 } }
+								})
+							: helper)
+					) +
+					'\n' +
+					alias4(
+						((helper =
+							(helper =
+								lookupProperty(helpers, 'socatSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'socatSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'socatSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 14 } }
+								})
+							: helper)
+					) +
+					'\n\necho "INFO: Checking Tailscale status..."\nif ! command -v tailscale &> /dev/null; then\n    echo "INFO: Installing Tailscale..."\n    curl -fsSL https://tailscale.com/install.sh | sh\nfi\n\nif ! pgrep -x tailscaled > /dev/null; then\n    echo "INFO: Starting Tailscale daemon..."\n    sudo start-stop-daemon --start --background --oknodo --pidfile /var/run/tailscaled.pid --make-pidfile --exec /usr/sbin/tailscaled -- --state=/var/lib/tailscale/tailscaled.state\nfi\n\n' +
 					alias4(
 						((helper =
 							(helper =
@@ -518,7 +585,7 @@
 									name: 'cloudLoginSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 104, column: 0 }, end: { line: 104, column: 19 } }
+									loc: { start: { line: 82, column: 0 }, end: { line: 82, column: 19 } }
 								})
 							: helper)
 					) +
@@ -670,41 +737,42 @@
 								})
 							: helper)
 					) +
-					'",\n  "remoteUser": "vscode",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "vscode"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {\n      "version": "lts"\n    }\n  },\n  "mounts": [\n    "source=' +
+					'",\n  "remoteUser": "vscode",\n  "features": {\n    "ghcr.io/devcontainers/features/common-utils:2": {\n      "installZsh": true,\n      "configureZshAsDefaultShell": true,\n      "installOhMyZsh": true,\n      "upgradePackages": true,\n      "username": "vscode"\n    },\n    "ghcr.io/devcontainers-extra/features/apt-packages:1": {\n      "packages": "socat"\n    },\n    "ghcr.io/devcontainers/features/python:1": {},\n    "ghcr.io/devcontainers/features/node:1": {\n      "version": "lts"\n    }\n  },\n  "mounts": [\n    ' +
 					alias4(
 						((helper =
 							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								lookupProperty(helpers, 'devcontainerMounts') ||
+								(depth0 != null ? lookupProperty(depth0, 'devcontainerMounts') : depth0)) != null
 								? helper
 								: alias2),
 						typeof helper === alias3
 							? helper.call(alias1, {
-									name: 'projectName',
+									name: 'devcontainerMounts',
 									hash: {},
 									data: data,
-									loc: { start: { line: 24, column: 12 }, end: { line: 24, column: 27 } }
+									loc: { start: { line: 24, column: 4 }, end: { line: 24, column: 26 } }
 								})
 							: helper)
 					) +
-					'-wrangler-config,target=/home/vscode/.wrangler,type=volume",\n    "source=' +
+					'\n  ],\n  "forwardPorts": ' +
 					alias4(
 						((helper =
 							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
+								lookupProperty(helpers, 'devcontainerForwardPorts') ||
+								(depth0 != null ? lookupProperty(depth0, 'devcontainerForwardPorts') : depth0)) !=
+							null
 								? helper
 								: alias2),
 						typeof helper === alias3
 							? helper.call(alias1, {
-									name: 'projectName',
+									name: 'devcontainerForwardPorts',
 									hash: {},
 									data: data,
-									loc: { start: { line: 25, column: 12 }, end: { line: 25, column: 27 } }
+									loc: { start: { line: 26, column: 18 }, end: { line: 26, column: 46 } }
 								})
 							: helper)
 					) +
-					'-doppler-config,target=/home/vscode/.doppler,type=volume",\n    "source=gemini-cli-settings,target=/home/vscode/.gemini,type=volume",\n    "source=' +
+					',\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
 					alias4(
 						((helper =
 							(helper =
@@ -717,24 +785,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 27, column: 12 }, end: { line: 27, column: 27 } }
-								})
-							: helper)
-					) +
-					'-tailscale-state,target=/var/lib/tailscale,type=volume"\n  ],\n  "forwardPorts": [8788, 8976, 36079, 33301, 37677],\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
-					alias4(
-						((helper =
-							(helper =
-								lookupProperty(helpers, 'projectName') ||
-								(depth0 != null ? lookupProperty(depth0, 'projectName') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'projectName',
-									hash: {},
-									data: data,
-									loc: { start: { line: 35, column: 40 }, end: { line: 35, column: 55 } }
+									loc: { start: { line: 32, column: 40 }, end: { line: 32, column: 55 } }
 								})
 							: helper)
 					) +
@@ -812,24 +863,7 @@
 								})
 							: helper)
 					) +
-					' 2>/dev/null\nfi\n\n# Automatically start or attach to a tmux session for interactive shells\nif command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- == *i* && -t 0 && -t 1 ]]; then\n  # Determine a session name from the workspace folder name, falling back to \'main\'.\n  # Also scan existing /workspaces/* dirs so that new VS Code terminals which start\n  # in $HOME (before workspaceFolder kicks in) still find and join the right session.\n  session_name="main"\n  if [[ "$PWD" =~ ^/workspaces/([^/]+) ]]; then\n    session_name="${match[1]}"\n  elif [[ -d /workspaces ]]; then\n    # PWD is not inside /workspaces (e.g. $HOME). Find the first /workspaces/* dir\n    # whose name matches an existing tmux session and prefer that.\n    for ws_dir in /workspaces/*(N/); do\n      candidate="${ws_dir:t}"\n      if tmux has-session -t "$candidate" 2>/dev/null; then\n        session_name="$candidate"\n        break\n      fi\n    done\n  fi\n\n  if [[ -n "$SSH_CONNECTION" || -n "$MOSH_CLIENT" ]]; then\n    if tmux has-session -t "$session_name" 2>/dev/null; then\n      exec tmux attach-session -t "$session_name"\n    else\n      exec tmux new-session -s "$session_name"\n    fi\n  elif tmux has-session -t "$session_name" 2>/dev/null; then\n    # Add a new window (tab) to the existing session\n    tmux new-window -t "$session_name"\n    exit\n  else\n    # First terminal: start the named session\n    exec tmux new-session -s "$session_name"\n  fi\nfi\n\n# Automatically restore VS Code sockets from /tmp if missing or stale\nrestore_vscode_sockets() {\n  local current_user\n  current_user=$(whoami)\n\n  # 1. REMOTE_CONTAINERS_IPC (Git credential helper socket)\n  if [[ -z "$REMOTE_CONTAINERS_IPC" || ! -S "$REMOTE_CONTAINERS_IPC" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-remote-containers-ipc-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export REMOTE_CONTAINERS_IPC="$socket"\n      fi\n    fi\n  fi\n\n  # 2. SSH_AUTH_SOCK (SSH Agent forwarding socket)\n  if [[ -z "$SSH_AUTH_SOCK" || ! -S "$SSH_AUTH_SOCK" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ssh-auth-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export SSH_AUTH_SOCK="$socket"\n      fi\n    fi\n  fi\n\n  # 3. VSCODE_IPC_HOOK_CLI (VS Code CLI communication socket)\n  if [[ -z "$VSCODE_IPC_HOOK_CLI" || ! -S "$VSCODE_IPC_HOOK_CLI" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ipc-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export VSCODE_IPC_HOOK_CLI="$socket"\n      fi\n    fi\n  fi\n}\n\n# Run once on shell startup\nrestore_vscode_sockets\n\n# Set default UTF-8 locale\nexport LANG=en_US.UTF-8\nexport LC_ALL=en_US.UTF-8\n\n# Automatically update environment variables from tmux session inside tmux\ntmux_update_environment() {\n  if [ -n "$TMUX" ]; then\n    eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH|LANG|LC_")\n    # Also verify and restore sockets if they became stale/missing after tmux update\n    restore_vscode_sockets\n  fi\n}\nif [ -n "$TMUX" ]; then\n  # Run once on startup\n  tmux_update_environment\n  # Run before every command\n  autoload -Uz add-zsh-hook\n  add-zsh-hook preexec tmux_update_environment\nfi\n\n\n\n# ============================================================================\n\n# ============================================================================\n# Goose Multi-Session Worktree Workflow\n# spec: specs/005-goose-multi-session-worktree/spec.md\n# One worktree per shell:  tmux window = shell = worktree = branch = feature\n# ----------------------------------------------------------------------------\n# Commands:\n#   goose            → run goose in this shell\'s feature worktree; Enter = main tree\n#   wt audit         → list all worktrees, flag dirty/unmerged ones\n#   wt remove <name> → remove a finished worktree and its branch\n# Knobs:\n#   MAIN_BRANCH  (default: main)\n#   WT_ROOT      (default: <parent-of-project>/<project>-wt)\n#   GOOSE_WT     (runtime binding, set per shell — do not edit)\n# ============================================================================\n\n: "${MAIN_BRANCH:=main}"   # default branch name (override with export MAIN_BRANCH)\n\n# --- Core worktree logic: ensure a worktree is bound to this shell, then run ---\n_wt_ensure() {\n  local wt="${GOOSE_WT:-}"\n\n  # 1) This shell already has a bound worktree → reuse it.\n  if [[ -n "$wt" && -d "$wt" ]]; then\n    _wt_run "$wt" "$@"\n    return $?\n  fi\n\n  # 2) Already INSIDE a linked worktree (cd\'d there manually) → bind & use it.\n  local top\n  top="$(git rev-parse --show-toplevel 2>/dev/null)" || {\n    echo "goose: not inside a git repository"; return 1\n  }\n  if [[ -f "$top/.git" ]]; then\n    export GOOSE_WT="$top"\n    _wt_run "$top" "$@"\n    return $?\n  fi\n\n  # 3) At project root, no binding → ask for a feature name and create/reuse a\n  #    worktree, OR press Enter to run in the main tree (no worktree).\n  local WT_ROOT="${WT_ROOT:-$(dirname "$PWD")/$(basename "$PWD")-wt}"\n  local feat\n  print -n "Feature name (Enter for main tree, no worktree): "\n  read -r feat || return 1\n  feat="${feat:l}"; feat="${feat// /-}"          # lowercase, spaces → dashes\n  if [[ -z "$feat" ]]; then\n    unset GOOSE_WT\n    echo "→ running in the main tree (no worktree)"\n    "$@"\n    return $?\n  fi\n\n  wt="$WT_ROOT/$feat"\n  if [[ ! -d "$wt" ]]; then\n    mkdir -p "$WT_ROOT"\n    git worktree add "$wt" -b "$feat" || return 1\n    echo "→ created worktree $wt (branch $feat)"\n  else\n    echo "→ reusing existing worktree $wt"\n  fi\n\n  export GOOSE_WT="$wt"\n  _wt_run "$wt" "$@"\n  local rc=$?\n  _wt_check "$wt"\n  cd "$wt" || return $rc                       # post-exit: land on the feature branch\n  echo "Tip: now in $wt (branch $feat) — \'wt audit\' lists all worktrees."\n  return $rc\n}\n\n_wt_run() {\n  local wt="$1"; shift\n  ( cd "$wt" && "$@" )                         # subshell: goose runs in the worktree\n}\n\n# --- Post-exit WIP check: commit / merge / skip (never auto-merge) ---\n_wt_check() {\n  local wt="$1"\n  local branch dirty ahead\n  branch="$(git -C "$wt" branch --show-current)"\n  dirty="$(git -C "$wt" status --porcelain | wc -l | tr -d \' \')"\n  ahead="$(git -C "$wt" rev-list --count "$MAIN_BRANCH..$branch" 2>/dev/null | tr -d \' \')"\n  ahead="${ahead:-0}"\n\n  if (( dirty == 0 && ahead == 0 )); then\n    echo "✓ $branch: clean, merged to $MAIN_BRANCH"; return\n  fi\n\n  echo "⚠  $branch still has work:"\n  (( dirty > 0 )) && echo "   • $dirty uncommitted file(s)"\n  (( ahead  > 0 )) && echo "   • $ahead commit(s) not on $MAIN_BRANCH"\n  [[ -t 0 ]] || { echo "   (non-interactive — left as-is)"; return; }\n\n  print -n "   [c]ommit WIP  [m]erge to main  [s]kip: "; read -r ans\n  case "${ans:l}" in\n    c) git -C "$wt" add -A && git -C "$wt" commit -m "wip($branch): auto-save" \\\n         && echo "   ✓ WIP committed on $branch" ;;\n    m) (( dirty > 0 )) && git -C "$wt" add -A && git -C "$wt" commit -m "wip($branch): auto-save"\n       _wt_merge "$wt" "$branch" ;;\n    *) echo "   ✓ left as-is — run \'wt audit\' later" ;;\n  esac\n}\n\n# Merge must run from the main worktree (main is only checked out there).\n_wt_merge() {\n  local wt="$1" branch="$2"\n  local main\n  main="$(git -C "$wt" worktree list --porcelain | awk \'/^worktree /{print $2; exit}\')"\n  [[ -n "$(git -C "$main" status --porcelain)" ]] && { echo "✗ main worktree dirty — stash there first"; return 1; }\n  [[ "$(git -C "$main" branch --show-current)" != "$MAIN_BRANCH" ]] && { echo "✗ main not on $MAIN_BRANCH"; return 1; }\n  git -C "$wt" merge "$MAIN_BRANCH" --no-edit && {\n    git -C "$main" merge "$branch" --no-ff -m "Merge $branch"\n  } || echo "✗ conflicts merging $MAIN_BRANCH into $branch — resolve in $wt, then re-run"\n}\n\n# --- wt audit / wt remove: catch orphans (hard-killed shells, forgotten branches) ---\nwt() {\n  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "wt: not inside a git repository"; return 1; }\n  case "${1:-audit}" in\n    audit)  _wt_audit ;;\n    remove) _wt_remove "$2" ;;\n    *) echo "usage: wt [audit|remove <name>]" ;;\n  esac\n}\n\n_wt_audit() {\n  local w branch dirty ahead last mark\n  local -a wts\n  wts=("${(@f)$(git worktree list --porcelain | awk \'/^worktree /{print $2}\')}")\n  echo "ALL WORKTREES  (dirty=uncommitted files, ahead=commits not on $MAIN_BRANCH)"\n  printf \'%-4s %-28s %-9s %-8s %s\\n\' \'\' WORKTREE DIRTY AHEAD LAST-COMMIT\n  for w in $wts; do\n    mark=" "\n    branch="$(git -C "$w" branch --show-current 2>/dev/null)"\n    dirty="$(git -C "$w" status --porcelain | wc -l | tr -d \' \')"\n    ahead="$(git -C "$w" rev-list --count "$MAIN_BRANCH..$branch" 2>/dev/null | tr -d \' \')"\n    last="$(git -C "$w" log -1 --format=\'%cr\' "$branch" 2>/dev/null)"\n    (( dirty > 0 || ahead > 0 )) && mark="⚠"\n    printf \'%-4s %-28s %-9s %-8s %s\\n\' "$mark" "${w##*/}" "${dirty:-0}" "${ahead:-0}" "$last"\n  done\n}\n\n_wt_remove() {\n  local name="$1"\n  [[ -z "$name" ]] && { echo "usage: wt remove <name>"; return 1; }\n  local WT_ROOT="${WT_ROOT:-$(dirname "$PWD")/$(basename "$PWD")-wt}"\n  local wt="$WT_ROOT/$name"\n  [[ -d "$wt" ]] || { echo "✗ no worktree at $wt"; return 1; }\n  if ! git -C "$wt" worktree remove "$wt"; then\n    echo "✗ remove refused (dirty?) — commit or discard changes first"\n    return 1\n  fi\n  if git branch -d "$name" 2>/dev/null; then\n    echo "✓ removed worktree $wt and deleted branch $name"\n  else\n    echo "✓ worktree removed; branch $name kept (unmerged?)"\n  fi\n}\n\n# --- Entry point: run goose inside this shell\'s worktree ---\n# If a Doppler wrapper (' +
-					alias4(
-						((helper =
-							(helper =
-								lookupProperty(helpers, 'gooseAlias') ||
-								(depth0 != null ? lookupProperty(depth0, 'gooseAlias') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'gooseAlias',
-									hash: {},
-									data: data,
-									loc: { start: { line: 411, column: 24 }, end: { line: 411, column: 38 } }
-								})
-							: helper)
-					) +
-					') already defined goose(), it already routes\n# through _wt_ensure; otherwise bind the plain binary so worktree routing still applies.\nif ! typeset -f goose >/dev/null 2>&1; then\n  goose() { _wt_ensure command goose "$@"; }\nfi\n'
+					' 2>/dev/null\nfi\n\n# Automatically start or attach to a tmux session for interactive shells\nif command -v tmux &> /dev/null && [[ -z "$TMUX" && -z "$CURSOR_TRACE_ID" && $- == *i* && -t 0 && -t 1 ]]; then\n  # Determine a session name from the workspace folder name, falling back to \'main\'.\n  # Also scan existing /workspaces/* dirs so that new VS Code terminals which start\n  # in $HOME (before workspaceFolder kicks in) still find and join the right session.\n  session_name="main"\n  if [[ "$PWD" =~ ^/workspaces/([^/]+) ]]; then\n    session_name="${match[1]}"\n  elif [[ -d /workspaces ]]; then\n    # PWD is not inside /workspaces (e.g. $HOME). Find the first /workspaces/* dir\n    # whose name matches an existing tmux session and prefer that.\n    for ws_dir in /workspaces/*(N/); do\n      candidate="${ws_dir:t}"\n      if tmux has-session -t "$candidate" 2>/dev/null; then\n        session_name="$candidate"\n        break\n      fi\n    done\n  fi\n\n  if [[ -n "$SSH_CONNECTION" || -n "$MOSH_CLIENT" ]]; then\n    if tmux has-session -t "$session_name" 2>/dev/null; then\n      exec tmux attach-session -t "$session_name"\n    else\n      exec tmux new-session -s "$session_name"\n    fi\n  elif tmux has-session -t "$session_name" 2>/dev/null; then\n    # Add a new window (tab) to the existing session\n    tmux new-window -t "$session_name"\n    exit\n  else\n    # First terminal: start the named session\n    exec tmux new-session -s "$session_name"\n  fi\nfi\n\n# Automatically restore VS Code sockets from /tmp if missing or stale\nrestore_vscode_sockets() {\n  local current_user\n  current_user=$(whoami)\n\n  # 1. REMOTE_CONTAINERS_IPC (Git credential helper socket)\n  if [[ -z "$REMOTE_CONTAINERS_IPC" || ! -S "$REMOTE_CONTAINERS_IPC" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-remote-containers-ipc-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export REMOTE_CONTAINERS_IPC="$socket"\n      fi\n    fi\n  fi\n\n  # 2. SSH_AUTH_SOCK (SSH Agent forwarding socket)\n  if [[ -z "$SSH_AUTH_SOCK" || ! -S "$SSH_AUTH_SOCK" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ssh-auth-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export SSH_AUTH_SOCK="$socket"\n      fi\n    fi\n  fi\n\n  # 3. VSCODE_IPC_HOOK_CLI (VS Code CLI communication socket)\n  if [[ -z "$VSCODE_IPC_HOOK_CLI" || ! -S "$VSCODE_IPC_HOOK_CLI" ]]; then\n    local sockets\n    sockets=($(find /tmp -maxdepth 1 -user "$current_user" -type s -name "vscode-ipc-*.sock" 2>/dev/null))\n    if [ ${#sockets[@]} -gt 0 ]; then\n      local socket\n      socket=$(ls -t "${sockets[@]}" 2>/dev/null | head -n 1)\n      if [[ -n "$socket" ]]; then\n        export VSCODE_IPC_HOOK_CLI="$socket"\n      fi\n    fi\n  fi\n}\n\n# Run once on shell startup\nrestore_vscode_sockets\n\n# Set default UTF-8 locale\nexport LANG=en_US.UTF-8\nexport LC_ALL=en_US.UTF-8\n\n# Automatically update environment variables from tmux session inside tmux\ntmux_update_environment() {\n  if [ -n "$TMUX" ]; then\n    eval $(tmux show-environment -s 2>/dev/null | grep -E "VSCODE|GIT|SSH|LANG|LC_")\n    # Also verify and restore sockets if they became stale/missing after tmux update\n    restore_vscode_sockets\n  fi\n}\nif [ -n "$TMUX" ]; then\n  # Run once on startup\n  tmux_update_environment\n  # Run before every command\n  autoload -Uz add-zsh-hook\n  add-zsh-hook preexec tmux_update_environment\nfi\n\n\n\n# ============================================================================\n\n# ============================================================================\n# Goose Multi-Session Worktree Workflow\n# spec: specs/005-goose-multi-session-worktree/spec.md\n# One worktree per shell:  tmux window = shell = worktree = branch = feature\n# ----------------------------------------------------------------------------\n# Commands:\n#   goose            → run goose in this shell\'s feature worktree; Enter = main tree\n#   wt audit         → list all worktrees, flag dirty/unmerged ones\n#   wt remove <name> → remove a finished worktree and its branch\n# Knobs:\n#   MAIN_BRANCH  (default: main)\n#   WT_ROOT      (default: <parent-of-project>/<project>-wt)\n#   GOOSE_WT     (runtime binding, set per shell — do not edit)\n# ============================================================================\n\n: "${MAIN_BRANCH:=main}"   # default branch name (override with export MAIN_BRANCH)\n\n# --- Core worktree logic: ensure a worktree is bound to this shell, then run ---\n_wt_ensure() {\n  local wt="${GOOSE_WT:-}"\n\n  # 1) This shell already has a bound worktree → reuse it.\n  if [[ -n "$wt" && -d "$wt" ]]; then\n    _wt_run "$wt" "$@"\n    return $?\n  fi\n\n  # 2) Already INSIDE a linked worktree (cd\'d there manually) → bind & use it.\n  local top\n  top="$(git rev-parse --show-toplevel 2>/dev/null)" || {\n    echo "goose: not inside a git repository"; return 1\n  }\n  if [[ -f "$top/.git" ]]; then\n    export GOOSE_WT="$top"\n    _wt_run "$top" "$@"\n    return $?\n  fi\n\n  # 3) At project root, no binding → ask for a feature name and create/reuse a\n  #    worktree, OR press Enter to run in the main tree (no worktree).\n  local WT_ROOT="${WT_ROOT:-$(dirname "$PWD")/$(basename "$PWD")-wt}"\n  local feat\n  print -n "Feature name (Enter for main tree, no worktree): "\n  read -r feat || return 1\n  feat="${feat:l}"; feat="${feat// /-}"          # lowercase, spaces → dashes\n  if [[ -z "$feat" ]]; then\n    unset GOOSE_WT\n    echo "→ running in the main tree (no worktree)"\n    "$@"\n    return $?\n  fi\n\n  wt="$WT_ROOT/$feat"\n  if [[ ! -d "$wt" ]]; then\n    mkdir -p "$WT_ROOT"\n    git worktree add "$wt" -b "$feat" || return 1\n    echo "→ created worktree $wt (branch $feat)"\n  else\n    echo "→ reusing existing worktree $wt"\n  fi\n\n  export GOOSE_WT="$wt"\n  _wt_run "$wt" "$@"\n  local rc=$?\n  _wt_check "$wt"\n  cd "$wt" || return $rc                       # post-exit: land on the feature branch\n  echo "Tip: now in $wt (branch $feat) — \'wt audit\' lists all worktrees."\n  return $rc\n}\n\n_wt_run() {\n  local wt="$1"; shift\n  ( cd "$wt" && "$@" )                         # subshell: goose runs in the worktree\n}\n\n# --- Post-exit WIP check: commit / merge / skip (never auto-merge) ---\n_wt_check() {\n  local wt="$1"\n  local branch dirty ahead\n  branch="$(git -C "$wt" branch --show-current)"\n  dirty="$(git -C "$wt" status --porcelain | wc -l | tr -d \' \')"\n  ahead="$(git -C "$wt" rev-list --count "$MAIN_BRANCH..$branch" 2>/dev/null | tr -d \' \')"\n  ahead="${ahead:-0}"\n\n  if (( dirty == 0 && ahead == 0 )); then\n    echo "✓ $branch: clean, merged to $MAIN_BRANCH"; return\n  fi\n\n  echo "⚠  $branch still has work:"\n  (( dirty > 0 )) && echo "   • $dirty uncommitted file(s)"\n  (( ahead  > 0 )) && echo "   • $ahead commit(s) not on $MAIN_BRANCH"\n  [[ -t 0 ]] || { echo "   (non-interactive — left as-is)"; return; }\n\n  print -n "   [c]ommit WIP  [m]erge to main  [s]kip: "; read -r ans\n  case "${ans:l}" in\n    c) git -C "$wt" add -A && git -C "$wt" commit -m "wip($branch): auto-save" \\\n         && echo "   ✓ WIP committed on $branch" ;;\n    m) (( dirty > 0 )) && git -C "$wt" add -A && git -C "$wt" commit -m "wip($branch): auto-save"\n       _wt_merge "$wt" "$branch" ;;\n    *) echo "   ✓ left as-is — run \'wt audit\' later" ;;\n  esac\n}\n\n# Merge must run from the main worktree (main is only checked out there).\n_wt_merge() {\n  local wt="$1" branch="$2"\n  local main\n  main="$(git -C "$wt" worktree list --porcelain | awk \'/^worktree /{print $2; exit}\')"\n  [[ -n "$(git -C "$main" status --porcelain)" ]] && { echo "✗ main worktree dirty — stash there first"; return 1; }\n  [[ "$(git -C "$main" branch --show-current)" != "$MAIN_BRANCH" ]] && { echo "✗ main not on $MAIN_BRANCH"; return 1; }\n  git -C "$wt" merge "$MAIN_BRANCH" --no-edit && {\n    git -C "$main" merge "$branch" --no-ff -m "Merge $branch"\n  } || echo "✗ conflicts merging $MAIN_BRANCH into $branch — resolve in $wt, then re-run"\n}\n\n# --- wt audit / wt remove: catch orphans (hard-killed shells, forgotten branches) ---\nwt() {\n  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "wt: not inside a git repository"; return 1; }\n  case "${1:-audit}" in\n    audit)  _wt_audit ;;\n    remove) _wt_remove "$2" ;;\n    *) echo "usage: wt [audit|remove <name>]" ;;\n  esac\n}\n\n_wt_audit() {\n  local w branch dirty ahead last mark\n  local -a wts\n  wts=("${(@f)$(git worktree list --porcelain | awk \'/^worktree /{print $2}\')}")\n  echo "ALL WORKTREES  (dirty=uncommitted files, ahead=commits not on $MAIN_BRANCH)"\n  printf \'%-4s %-28s %-9s %-8s %s\\n\' \'\' WORKTREE DIRTY AHEAD LAST-COMMIT\n  for w in $wts; do\n    mark=" "\n    branch="$(git -C "$w" branch --show-current 2>/dev/null)"\n    dirty="$(git -C "$w" status --porcelain | wc -l | tr -d \' \')"\n    ahead="$(git -C "$w" rev-list --count "$MAIN_BRANCH..$branch" 2>/dev/null | tr -d \' \')"\n    last="$(git -C "$w" log -1 --format=\'%cr\' "$branch" 2>/dev/null)"\n    (( dirty > 0 || ahead > 0 )) && mark="⚠"\n    printf \'%-4s %-28s %-9s %-8s %s\\n\' "$mark" "${w##*/}" "${dirty:-0}" "${ahead:-0}" "$last"\n  done\n}\n\n_wt_remove() {\n  local name="$1"\n  [[ -z "$name" ]] && { echo "usage: wt remove <name>"; return 1; }\n  local WT_ROOT="${WT_ROOT:-$(dirname "$PWD")/$(basename "$PWD")-wt}"\n  local wt="$WT_ROOT/$name"\n  [[ -d "$wt" ]] || { echo "✗ no worktree at $wt"; return 1; }\n  if ! git -C "$wt" worktree remove "$wt"; then\n    echo "✗ remove refused (dirty?) — commit or discard changes first"\n    return 1\n  fi\n  if git branch -d "$name" 2>/dev/null; then\n    echo "✓ removed worktree $wt and deleted branch $name"\n  else\n    echo "✓ worktree removed; branch $name kept (unmerged?)"\n  fi\n}\n\n# --- Entry point: run goose inside this shell\'s worktree ---\n# If a Doppler wrapper already defined goose() above, it already routes through\n# _wt_ensure; otherwise bind the plain binary so worktree routing still applies.\nif ! typeset -f goose >/dev/null 2>&1; then\n  goose() { _wt_ensure command goose "$@"; }\nfi\n'
 				);
 			},
 			useData: true

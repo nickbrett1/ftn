@@ -408,8 +408,8 @@ _wt_remove() {
 }
 
 # --- Entry point: run goose inside this shell's worktree ---
-# If a Doppler wrapper ({{gooseAlias}}) already defined goose(), it already routes
-# through _wt_ensure; otherwise bind the plain binary so worktree routing still applies.
+# If a Doppler wrapper already defined goose() above, it already routes through
+# _wt_ensure; otherwise bind the plain binary so worktree routing still applies.
 if ! typeset -f goose >/dev/null 2>&1; then
   goose() { _wt_ensure command goose "$@"; }
 fi
