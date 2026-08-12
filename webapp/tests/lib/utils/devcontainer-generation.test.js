@@ -186,6 +186,14 @@ describe('DevContainer Generation Tests', () => {
 		expect(zshrc).toContain('_wt_ensure doppler run --project common --config dev');
 		expect(zshrc).toContain('--project goose --config prd -- goose "$@"');
 		expect(zshrc).not.toContain('goose-dev()');
+		// Regression: the entry-point comment must NOT embed the multi-line
+		// GOOSE_ALIAS. It previously rendered as '}) already defined goose(), it
+		// already routes', producing a zsh parse error in every generated
+		// devcontainer that selects the doppler capability.
+		expect(zshrc).not.toContain('}) already defined');
+		expect(zshrc).toContain(
+			'# If a Doppler wrapper already defined goose() above, it already routes through'
+		);
 	});
 
 	it('joins an existing tmux session for terminals starting outside the workspace', async () => {

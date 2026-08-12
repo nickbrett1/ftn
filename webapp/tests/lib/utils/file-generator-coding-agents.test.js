@@ -36,7 +36,7 @@ describe('File Generator - Coding Agents', () => {
 		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
-	it('should include memos and vikunja MCP in Goose config within post-create-setup.sh when devcontainer and coding-agents capabilities are selected', async () => {
+	it('should not clobber goose config in post-create-setup.sh and should bind-mount the host goose config when devcontainer and coding-agents capabilities are selected', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['coding-agents', 'devcontainer-node'],
@@ -46,10 +46,22 @@ describe('File Generator - Coding Agents', () => {
 		const files = await generateAllFiles(context);
 		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(postCreateSetup).toBeDefined();
-		expect(postCreateSetup.content).toContain('http://nas:5230/mcp');
-		expect(postCreateSetup.content).toContain('name: memos');
-		expect(postCreateSetup.content).toContain('http://nas:8086/');
-		expect(postCreateSetup.content).toContain('name: vikunja');
+		// Regression: genproj used to `cat > $HOME/.config/goose/config.yaml` with
+		// a hardcoded provider-less config, breaking goose in generated projects
+		// ("No provider configured. Run 'goose configure' first."). The setup
+		// script must never write or overwrite the user's goose config.
+		expect(postCreateSetup.content).not.toContain('cat > "$HOME/.config/goose/config.yaml"');
+		expect(postCreateSetup.content).not.toContain('GOOSECFGEOF');
+		expect(postCreateSetup.content).toContain('if [ -f "$HOME/.config/goose/config.yaml" ]');
+
+		// The user's real config (provider + extensions) comes from the host via
+		// a devcontainer bind mount (still valid JSON after template expansion).
+		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
+		expect(devcontainerJson).toBeDefined();
+		const parsed = JSON.parse(devcontainerJson.content);
+		expect(parsed.mounts).toContain(
+			'source=${localEnv:HOME}/.config/goose,target=/home/node/.config/goose,type=bind'
+		);
 	});
 
 	it('should include xcode-native in mcp_config.json when xcode-development capability is selected', async () => {
