@@ -261,9 +261,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			projectConfig.name || 'my-project'
 		),
 		agySetup: allCapabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
-		gooseSetup: allCapabilities.includes('coding-agents')
-			? generateGooseSetupScript(projectConfig)
-			: '',
+		gooseSetup: allCapabilities.includes('coding-agents') ? generateGooseSetupScript() : '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 		gitHooksSetup:
 			allCapabilities.includes('code-quality') ||

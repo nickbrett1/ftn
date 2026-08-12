@@ -55,7 +55,6 @@ import { capabilities } from '$lib/config/capabilities.js';
 import {
 	getCapabilityTemplateData,
 	applyDefaults,
-	getGooseMcpConfig,
 	resolveLanguage,
 	toPythonPackageName,
 	toDistributionName
@@ -126,92 +125,32 @@ goose() {
 
 /**
  * Generates the goose setup script for post-create-setup.sh
- * Includes conditional MCP server configs based on project capabilities.
- * @param {object} context - The project generation context with capabilities
+ *
+ * Non-destructive by design: it NEVER overwrites an existing
+ * $HOME/.config/goose/config.yaml. The user's real config (active provider +
+ * extensions) is bind-mounted into the devcontainer (see
+ * getDevcontainerJsonExtras), so writing a fresh config here would clobber it
+ * and surface as "error: No provider configured. Run 'goose configure' first."
+ * when goose starts. Only recipes are bootstrapped (recipes/ dir is additive).
+ *
  * @returns {string} The setup script content
  */
-export function generateGooseSetupScript(context) {
-	const hasDoppler = context.capabilities?.includes('doppler');
-	const gooseMcpConfig = hasDoppler ? getGooseMcpConfig(context) : {};
-
+export function generateGooseSetupScript() {
 	return `
 echo "INFO: Setting up goose configuration and MCP servers..."
 
 # Create goose config directory
 mkdir -p "$HOME/.config/goose"
 
-# Write goose config with MCP server extensions
-cat > "$HOME/.config/goose/config.yaml" << 'GOOSECFGEOF'
-extensions:
-  # Built-in goose extensions
-  developer:
-    type: builtin
-    name: developer
-    enabled: true
-    bundled: true
-    timeout: 300
-  # Svelte MCP - Streamable HTTP
-  svelte:
-    type: streamable_http
-    name: svelte
-    enabled: true
-    uri: "https://mcp.svelte.dev/mcp"
-    timeout: 300
-  # Memos MCP - Streamable HTTP (direct, no proxy)
-  memos:
-    type: streamable_http
-    name: memos
-    enabled: true
-    uri: "http://nas:5230/mcp"
-    timeout: 300
-  # Vikunja MCP - Streamable HTTP (direct, no proxy)
-  vikunja:
-    type: streamable_http
-    name: vikunja
-    enabled: true
-    uri: "http://nas:8086/"
-    timeout: 300
-  # Chrome DevTools MCP
-  chrome-devtools:
-    type: stdio
-    name: chrome-devtools
-    enabled: true
-    cmd: npx
-    args: ["-y", "chrome-devtools-mcp"]
-    timeout: 300
-  # Fintechnick MCP
-  fintechnick:
-    type: stdio
-    name: fintechnick
-    enabled: true
-    cmd: sh
-    args: ["-c", "npx -y mcp-remote https://www.fintechnick.com/api/mcp --header "Authorization: Bearer $FINTECHNICK_MCP""]
-    envs:
-      FINTECHNICK_MCP: $FINTECHNICK_MCP
-    timeout: 300
-  # GitHub MCP Server (via doppler for token)
-  github:
-    type: stdio
-    name: github
-    enabled: true
-    cmd: doppler
-    args: ["run", "--", "npx", "-y", "@modelcontextprotocol/server-github"]
-    timeout: 300
-  # Doppler MCP Server
-  doppler:
-    type: stdio
-    name: doppler
-    enabled: true
-    cmd: sh
-    args: ["-c", "DOPPLER_TOKEN=$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server"]
-    timeout: 300
-  # Optional MCP servers${gooseMcpConfig.sonarQubeGooseConfig || ''}${gooseMcpConfig.circleCiGooseConfig || ''}${gooseMcpConfig.xcodeNativeGooseConfig || ''}
-
-# Recipe Configuration: spec-first development process recipes
-# (design -> validate -> plan -> scaffold -> execute). Requires gh CLI for
-# GitHub-repo discovery; recipes are also cloned below as the primary mechanism.
-GOOSE_RECIPE_GITHUB_REPO: "nickbrett1/goose-recipes"
-GOOSECFGEOF
+# Never overwrite an existing goose config: the user's real config.yaml
+# (provider + extensions) is bind-mounted into the devcontainer. Clobbering it
+# drops the configured provider and surfaces as:
+#   error: No provider configured. Run 'goose configure' first.
+if [ -f "$HOME/.config/goose/config.yaml" ]; then
+    echo "INFO: Keeping existing $HOME/.config/goose/config.yaml (provider + extensions preserved)."
+else
+    echo "INFO: No goose config found yet - run 'goose configure' inside the container to set up your provider."
+fi
 
 echo "INFO: Ensuring goose recipes are available (spec-first development process)..."
 RECIPES_DIR="$HOME/.config/goose/recipes"
@@ -594,6 +533,14 @@ export function getDevcontainerJsonExtras(context) {
 	if (context.capabilities.includes('coding-agents')) {
 		mounts.push(`source=gemini-cli-settings,target=${home}/.gemini,type=volume`);
 	}
+	// goose is installed in every generated devcontainer Dockerfile, so bind the
+	// host ~/.config/goose into the container: the user's real config.yaml
+	// (active provider + extensions) must be visible or goose fails with
+	// "No provider configured. Run 'goose configure' first." and loses all
+	// user extensions. The setup script (generateGooseSetupScript) never
+	// overwrites this config. ${localEnv:HOME} is expanded by the devcontainer
+	// tooling on the host at container start.
+	mounts.push(`source=\${localEnv:HOME}/.config/goose,target=${home}/.config/goose,type=bind`);
 
 	return {
 		devcontainerMounts: mounts.map((m) => `"${m}"`).join(',\n    '),
@@ -815,7 +762,7 @@ export function generateMergedDevelopmentContainerFiles(
 				),
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 				gooseSetup: context.capabilities.includes('coding-agents')
-					? generateGooseSetupScript(context)
+					? generateGooseSetupScript()
 					: '',
 				playwrightSetup: context.capabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
 				gitHooksSetup:
