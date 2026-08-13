@@ -102,7 +102,7 @@
 		"resize-observer-polyfill": "^1.5.1",
 		"safe-regex2": "^5.1.1",
 		"sharp": "^0.35.3",
-		"shiki": "^4.4.2",
+		"shiki": "^4.4.3",
 		"simple-git-hooks": "^2.13.1",
 		"svelte": "^5.53.8",
 		"svelte-awesome-icons": "^3.0.1",
