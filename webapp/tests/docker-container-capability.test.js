@@ -190,6 +190,43 @@ describe('docker-container template data', () => {
 		expect(data.volumesConfig).not.toContain('/volume1/writable:/writable:ro');
 	});
 
+	it('derives the Homepage host port from the left-hand side of publishPort (genproj-homepage-port-wart)', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container'],
+			configuration: {
+				'docker-container': {
+					publishPort: '127.0.0.1:3002:3000',
+					hostname: 'nas',
+					healthcheck: 'http:/health'
+				}
+			},
+			projectName: 'parquet-peek'
+		});
+		// hostPort = left-hand side of the mapping, never the container port.
+		expect(data.hostPort).toBe('3002');
+		expect(data.exposePort).toBe('3000');
+		// Compose labels: href uses hostname + hostPort; widget uses
+		// localhost + hostPort (Homepage queries the daemon).
+		expect(data.composeLabels).toContain('homepage.href=http://nas:3002/');
+		expect(data.composeLabels).toContain('homepage.widget.url=http://localhost:3002/health');
+		// Snippet agrees with the labels (single source of truth for the port).
+		expect(data.homepageWidget).toContain('url: http://localhost:3002/health');
+		// The compose port binding itself is untouched.
+		expect(data.portsConfig).toContain('127.0.0.1:3002:3000');
+	});
+
+	it('keeps default Homepage URLs when publishPort is unset (no regression)', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'devcontainer-node'],
+			configuration: {},
+			projectName: 'demo-app'
+		});
+		expect(data.hostPort).toBe('3000');
+		expect(data.composeLabels).toContain('homepage.href=http://localhost:3000/');
+		expect(data.composeLabels).toContain('homepage.widget.url=http://localhost:3000/health');
+		expect(data.homepageWidget).toContain('url: http://localhost:3000/health');
+	});
+
 	it('uses a python base image for python projects', () => {
 		const data = getCapabilityTemplateData('docker-container', {
 			capabilities: ['docker-container', 'devcontainer-python'],

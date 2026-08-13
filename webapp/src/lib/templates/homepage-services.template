@@ -3,7 +3,8 @@
 # Append to your Homepage services.yaml (under the "Services" group) and enable
 # the homepage Docker provider. The href defaults to localhost (the browser
 # resolves it from your device); override `hostname` in the genproj
-# configuration to point at your NAS hostname/IP.
+# configuration to point at your NAS hostname/IP. The URL uses the PUBLISHED
+# HOST port (left-hand side of publishPort), not the container port.
 #
 # The widget block is only emitted when a health mechanism is declared
 # (docker-container `healthcheck` config); without one there is no endpoint to
@@ -11,6 +12,6 @@
 
 - {{projectName}}:
     icon: sh-docker
-    href: http://{{hostname}}:{{exposePort}}/
+    href: http://{{hostname}}:{{hostPort}}/
     description: {{projectName}} container
 {{homepageWidget}}

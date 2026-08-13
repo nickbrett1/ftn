@@ -407,6 +407,56 @@ describe('Node regression (memo §6)', () => {
 	});
 });
 
+describe('Homepage URLs use the published host port (genproj-homepage-port-wart)', () => {
+	it('emits href/widget with the HOST port when publishPort maps a different host port', async () => {
+		const context = {
+			projectName: 'parquet-peek',
+			description: 'Peek at Databento parquet files from the phone.',
+			capabilities: ['sveltekit', 'devcontainer-node', 'docker-container', 'circleci'],
+			configuration: {
+				'docker-container': {
+					publishPort: '127.0.0.1:3002:3000',
+					hostname: 'nas',
+					healthcheck: 'http:/health'
+				}
+			},
+			registryNamespace: 'nickbrett1'
+		};
+		const files = await generateAllFiles(context);
+
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		// href: browser-facing -> configured hostname + host port 3002.
+		expect(compose.content).toContain('homepage.href=http://nas:3002/');
+		expect(compose.content).not.toContain('homepage.href=http://nas:3000/');
+		// widget: Homepage queries the daemon -> localhost, but still host port 3002.
+		expect(compose.content).toContain('homepage.widget.url=http://localhost:3002/health');
+		expect(compose.content).not.toContain('homepage.widget.url=http://localhost:3000/health');
+
+		// Snippet agrees with the compose labels (single source of truth).
+		const homepage = files.find((f) => f.filePath === 'deploy/homepage-services.yaml');
+		expect(homepage.content).toContain('href: http://nas:3002/');
+		expect(homepage.content).toContain('url: http://localhost:3002/health');
+		expect(homepage.content).not.toContain(':3000/');
+	});
+
+	it('keeps default ports in compose labels and snippet when publishPort is unset', async () => {
+		const context = {
+			projectName: 'demo-app',
+			capabilities: ['sveltekit', 'devcontainer-node', 'docker-container'],
+			configuration: {},
+			registryNamespace: 'nickbrett1'
+		};
+		const files = await generateAllFiles(context);
+
+		const compose = files.find((f) => f.filePath === 'docker-compose.yml');
+		expect(compose.content).toContain('homepage.href=http://localhost:3000/');
+		expect(compose.content).toContain('homepage.widget.url=http://localhost:3000/health');
+		const homepage = files.find((f) => f.filePath === 'deploy/homepage-services.yaml');
+		expect(homepage.content).toContain('href: http://localhost:3000/');
+		expect(homepage.content).toContain('url: http://localhost:3000/health');
+	});
+});
+
 describe('docker-container template data (config plumbing)', () => {
 	it('exposes envVars/aptPackages/healthcheck/pythonDependencies fragments to templates', () => {
 		const data = getCapabilityTemplateData('docker-container', {
