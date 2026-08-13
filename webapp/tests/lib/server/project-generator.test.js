@@ -327,6 +327,41 @@ describe('ProjectGeneratorService', () => {
 			);
 		});
 
+		// Round-6 (memo genproj-doppler-login): genproj-generated helper
+		// scripts under scripts/ are INFRA — a diverged cloud_login.sh must be
+		// replaced by the fresh template content on overwrite (otherwise it
+		// keeps its pre-doppler form and the cloud login flow is broken).
+		it('updates diverged genproj-owned scripts (cloud_login.sh) on overwrite but preserves user scripts', async () => {
+			const scriptFiles = [
+				{ filePath: 'scripts/cloud_login.sh', content: 'new-cloud-login' },
+				{ filePath: 'scripts/entrypoint.sh', content: 'new-entrypoint' }
+			];
+			service.services.github.getFileContent
+				.mockResolvedValueOnce('old-cloud-login-no-doppler') // scripts/cloud_login.sh diverged
+				.mockResolvedValueOnce('old-user-entrypoint'); // scripts/entrypoint.sh diverged
+
+			await service.commitFilesToRepository(repository, scriptFiles, {
+				...context,
+				overwrite: true
+			});
+
+			// cloud_login.sh is genproj infra → updated; entrypoint.sh is user
+			// code → preserved.
+			expect(service.services.github.createMultipleFiles).toHaveBeenCalledWith(
+				'owner',
+				'repo',
+				[
+					{
+						path: 'scripts/cloud_login.sh',
+						content: 'new-cloud-login',
+						message: 'Add scripts/cloud_login.sh'
+					}
+				],
+				'Initial commit: Generated project with 1 capabilities',
+				'main'
+			);
+		});
+
 		it('overwrites a diverged file when explicitly resolved to overwrite', async () => {
 			service.services.github.getFileContent.mockResolvedValue('old-diverged-content');
 
