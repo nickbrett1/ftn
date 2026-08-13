@@ -117,6 +117,20 @@ export const GOOSE_ALIAS = `# A robust function to run goose with Doppler, ensur
 # Overrides the bare \`goose\` binary (which can't work standalone: it needs Doppler secrets).
 goose() {
   echo "Starting goose with Doppler (common + goose)..."
+  # Doppler auth pre-flight: fail with actionable guidance instead of the cryptic
+  # "Doppler Error: you must provide a token" that 'doppler run' emits when the
+  # container has no Doppler auth (fresh devcontainer / codespace).
+  if ! command -v doppler &> /dev/null; then
+    echo "❌ Doppler CLI not found - goose needs Doppler secrets to start."
+    echo "   Finish the devcontainer post-create setup (it installs the CLI), then try again."
+    return 127
+  fi
+  if ! doppler whoami &> /dev/null 2>&1; then
+    echo "❌ Not authenticated with Doppler - goose needs Doppler secrets to start."
+    echo "   Run: bash scripts/cloud_login.sh   (interactive browser login)"
+    echo "   Or set a service token:  export DOPPLER_TOKEN=dp.st.<token>"
+    return 1
+  fi
   # Load common secrets first, then layer goose project secrets on top.
   # Uses 'prd' config for the goose project to pick up LITELLM endpoint env vars.
   # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to goose.
@@ -248,16 +262,29 @@ fi
 export const DOPPLER_LOGIN_SCRIPT = `
 # Doppler login/setup
 if command -v doppler &> /dev/null; then
-  if doppler whoami &> /dev/null; then
-    echo "Already logged in to Doppler."
+  if doppler whoami &> /dev/null 2>&1; then
+    echo "✅ Already logged in to Doppler."
   else
-    echo "INFO: Logging into Doppler..."
-    doppler login --no-check-version --no-timeout --yes
-    echo "INFO: Setting up Doppler..."
-    doppler setup --no-interactive --project {{projectName}} --config dev
+    echo "INFO: Logging into Doppler (browser flow)..."
+    echo "      If a browser does not open, copy the URL and auth code printed above into"
+    echo "      your browser to complete the login, then return here."
+    if doppler login --no-check-version --yes; then
+      echo "✅ Doppler login successful."
+      if doppler setup --no-interactive --project {{projectName}} --config dev; then
+        echo "✅ Doppler project {{projectName}}/dev configured."
+      else
+        echo "WARN: doppler setup failed for {{projectName}}/dev - the project may not"
+        echo "      exist yet. Create it at https://dashboard.doppler.com, then run:"
+        echo "      doppler setup --no-interactive --project {{projectName}} --config dev"
+      fi
+    else
+      echo "❌ Doppler login did not complete. Re-run this script (or 'doppler login'),"
+      echo "   or authenticate with a service token:  export DOPPLER_TOKEN=dp.st.<token>"
+    fi
   fi
 else
-  echo "Doppler CLI not found. Skipping Doppler login."
+  echo "⚠️  Doppler CLI not found. Skipping Doppler login - run 'goose' after the"
+  echo "    devcontainer post-create setup finishes, or install the CLI manually."
 fi`;
 
 export const WRANGLER_LOGIN_SCRIPT = String.raw`

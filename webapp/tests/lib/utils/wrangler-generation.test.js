@@ -83,6 +83,25 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(wranglerTemplate).toBeUndefined();
 	});
 
+	it('runs the doppler block before the tailscale block in cloud_login.sh', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['doppler', 'devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(context);
+		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
+		expect(cloudLogin).toBeDefined();
+		// Doppler auth is the critical path for goose; an interactive 'tailscale
+		// up' prompt must not starve it in a fresh devcontainer.
+		expect(cloudLogin.content.indexOf('# Doppler login/setup')).toBeGreaterThan(-1);
+		expect(cloudLogin.content.indexOf('# Tailscale login')).toBeGreaterThan(-1);
+		expect(cloudLogin.content.indexOf('# Doppler login/setup')).toBeLessThan(
+			cloudLogin.content.indexOf('# Tailscale login')
+		);
+	});
+
 	it('generates wrangler.template.jsonc and setup scripts when Cloudflare and Doppler are selected', async () => {
 		const context = {
 			name: 'test-project',
@@ -111,6 +130,11 @@ describe('Cloudflare Wrangler File Generation', () => {
 		expect(cloudLogin.content).toContain('doppler login');
 		expect(cloudLogin.content).toContain('doppler setup --no-interactive --project test-project');
 		expect(cloudLogin.content).toContain('./scripts/setup-wrangler-config.sh');
+		// Login is verified afterwards and failure prints actionable guidance
+		// (instead of silently finishing without Doppler auth).
+		expect(cloudLogin.content).toContain('Doppler login successful');
+		expect(cloudLogin.content).toContain('export DOPPLER_TOKEN=dp.st.<token>');
+		expect(cloudLogin.content).toContain('Already logged in to Doppler');
 
 		const wranglerJsonc = files.find((f) => f.filePath === 'wrangler.jsonc');
 		expect(wranglerJsonc).toBeUndefined(); // Should not generate wrangler.jsonc directly
