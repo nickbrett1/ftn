@@ -668,7 +668,7 @@ export const capabilities = [
 				publishPort: {
 					type: 'string',
 					description:
-						'Compose port binding, e.g. "3000:3000" or "127.0.0.1:3000:3000" for a private (Tailscale-only) service.',
+						'Compose port binding, e.g. "3000:3000" or "127.0.0.1:3000:3000" for a private (Tailscale-only) service. The left-hand side is the published HOST port — Homepage href/widget URLs use it, so "127.0.0.1:3002:3000" yields http://<hostname>:3002/.',
 					default: '3000:3000'
 				},
 				baseImage: {

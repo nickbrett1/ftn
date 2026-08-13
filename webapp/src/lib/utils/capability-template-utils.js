@@ -565,6 +565,33 @@ function getDockerRegistryPrefix() {
 }
 
 /**
+ * Derives the host port from a compose publishPort binding.
+ *
+ * Format: `[hostIp:]hostPort:containerPort[/proto]` — e.g. `"3000:3000"`,
+ * `"127.0.0.1:3002:3000"`, `"0.0.0.0:8080:80/tcp"`. The host port is the
+ * left-hand side of the mapping: the port actually bound on the host, which
+ * is what browser-facing URLs (Homepage href/widget) must use. When the
+ * container port is also the host port this is invisible; when they differ
+ * (loopback-bound services, ports allocated by nas-port-mcp) using the
+ * container port produces a URL nothing listens on.
+ *
+ * Falls back to `exposePort` when publishPort is unset or unparseable, so
+ * the default (`3000:3000` -> hostPort 3000) is unchanged. Indexing from the
+ * end also tolerates bracketed IPv6 host IPs (`[::1]:3002:3000`).
+ *
+ * @param {string|undefined} publishPort - Compose port binding from config
+ * @param {number|string} exposePort - Container port (fallback host port)
+ * @returns {number|string} The published host port
+ */
+function getHostPort(publishPort, exposePort) {
+	if (typeof publishPort !== 'string' || !publishPort.includes(':')) return exposePort;
+	const parts = publishPort.split(':');
+	if (parts.length < 2) return exposePort;
+	const hostPort = parts[parts.length - 2];
+	return /^\d+$/.test(hostPort) ? hostPort : exposePort;
+}
+
+/**
  * Builds template data for the docker-container deployment capability.
  * Provides language-aware Dockerfile fragments, compose fragments, and
  * registry metadata for generated deploy artifacts.
@@ -704,7 +731,13 @@ function getDockerContainerTemplateData(context) {
 	// 3.4: publishPort controls the compose port binding. Default is
 	// "<exposePort>:<exposePort>" (all interfaces). Bind to 127.0.0.1 (or a
 	// specific interface) to keep the service private (e.g. Tailscale-only).
+	// hostPort is the left-hand side of the binding — the port actually bound
+	// on the host — and is what browser-facing URLs (Homepage href/widget)
+	// must use: when publishPort maps a different host port than the container
+	// port (e.g. "127.0.0.1:3002:3000"), the container port is wrong for URLs
+	// (memo: genproj-homepage-port-wart).
 	const publishPort = config.publishPort || `${exposePort}:${exposePort}`;
+	const hostPort = getHostPort(publishPort, exposePort);
 	const portsConfig = networkMode === 'host' ? '' : `    ports:\n      - "${publishPort}"`;
 
 	// 3.3: dataMounts config -> compose volumes (read-only by default).
@@ -746,19 +779,23 @@ function getDockerContainerTemplateData(context) {
 		labels.push(
 			'      - "homepage.group=Services"',
 			`      - "homepage.name=${projectName}"`,
-			`      - "homepage.href=http://${hostname}:${exposePort}/"`
+			`      - "homepage.href=http://${hostname}:${hostPort}/"`
 		);
 		// Widget only when a real health endpoint exists (memo §2.8).
 		if (healthcheckPath) {
 			labels.push(
 				'      - "homepage.widget.type=customapi"',
-				`      - "homepage.widget.url=http://localhost:${exposePort}${healthcheckPath}"`
+				`      - "homepage.widget.url=http://localhost:${hostPort}${healthcheckPath}"`
 			);
 		}
 	}
 
+	// Homepage's Docker provider queries the daemon, so the widget URL
+	// legitimately uses localhost (even for a loopback-bound service) — but it
+	// must still point at the published HOST port, never the container port
+	// (memo: genproj-homepage-port-wart).
 	const homepageWidget = healthcheckPath
-		? `    widget:\n      type: customapi\n      url: http://${hostname}:${exposePort}${healthcheckPath}`
+		? `    widget:\n      type: customapi\n      url: http://localhost:${hostPort}${healthcheckPath}`
 		: '';
 
 	return {
@@ -772,6 +809,7 @@ function getDockerContainerTemplateData(context) {
 		dockerHealthcheck,
 		dockerRunCommand,
 		exposePort: String(exposePort),
+		hostPort: String(hostPort),
 		networkMode,
 		networkModeLine,
 		portsConfig,

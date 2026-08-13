@@ -82,6 +82,9 @@ enable the `homepage` Docker provider) to show a health widget for the service.
 - Only one LAN-protocol client may bind the fixed ports per host IP.
 - For private services (Tailscale-only), set `publishPort` to
   `127.0.0.1:<port>:<port>` so the port is not exposed on the LAN.
+- Homepage href/widget URLs use the **published host port** (the left-hand
+  side of `publishPort`), so `127.0.0.1:3002:3000` produces
+  `http://<hostname>:3002/` — never the container port.
 
 ## 7. Data mounts
 
