@@ -9,9 +9,12 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Change to the project root directory so that relative paths work correctly
 cd "$PROJECT_ROOT"
 
-{{tailscaleLogin}}
-
+# Doppler login first: it is the critical path for goose (and the wrangler /
+# google-cloud sections below depend on it). Tailscale is optional SSH access
+# and its interactive 'tailscale up' prompt must not block the rest.
 {{dopplerLogin}}
+
+{{tailscaleLogin}}
 
 {{wranglerLogin}}
 

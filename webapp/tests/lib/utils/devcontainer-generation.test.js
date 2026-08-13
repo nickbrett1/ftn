@@ -201,6 +201,14 @@ describe('DevContainer Generation Tests', () => {
 		expect(zshrc).toContain(
 			'# If a Doppler wrapper already defined goose() above, it already routes through'
 		);
+		// Doppler auth pre-flight: a fresh devcontainer/codespace has no Doppler
+		// auth, and 'doppler run' would otherwise die with the cryptic "Doppler
+		// Error: you must provide a token". The wrapper must fail with guidance
+		// instead of a bare doppler error.
+		expect(zshrc).toContain('if ! doppler whoami &> /dev/null 2>&1; then');
+		expect(zshrc).toContain('bash scripts/cloud_login.sh');
+		expect(zshrc).toContain('export DOPPLER_TOKEN=dp.st.<token>');
+		expect(zshrc).toContain('Not authenticated with Doppler');
 	});
 
 	it('joins an existing tmux session for terminals starting outside the workspace', async () => {
