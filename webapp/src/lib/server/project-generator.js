@@ -375,8 +375,9 @@ export class ProjectGeneratorService {
 	async configureExternalServices(context, repository) {
 		const results = {};
 		const [owner, repo] = repository.fullName.split('/');
+		const defaultBranch = repository.defaultBranch || 'main';
 
-		await this.#configureCircleCI(context, owner, repo, results);
+		await this.#configureCircleCI(context, owner, repo, results, defaultBranch);
 		await this.#configureDoppler(context, results);
 		await this.#configureDependabot(context, owner, repo, results);
 		await this.#configureSonarCloud(context, owner, repo, results);
@@ -384,14 +385,49 @@ export class ProjectGeneratorService {
 		return results;
 	}
 
-	async #configureCircleCI(context, owner, repo, results) {
+	async #configureCircleCI(context, owner, repo, results, defaultBranch = 'main') {
 		if (context.capabilities.includes('circleci') && this.services.circleci) {
 			try {
 				console.log('🔄 Configuring CircleCI...');
 				const circleciProject = await this.services.circleci.followProject('github', owner, repo);
+
+				// Tell CircleCI which branch is the default so config detection and
+				// push-triggered pipelines use the right branch — the web "Set Up
+				// Project" wizard step the user would otherwise have to do manually.
+				// Best-effort: a failure here must not fail generation.
+				try {
+					await this.services.circleci.updateProjectSettings('github', owner, repo, {
+						vcs: { default_branch: defaultBranch }
+					});
+					console.log(`✅ CircleCI default branch set to ${defaultBranch}`);
+				} catch (settingsError) {
+					console.warn(
+						`⚠️ Could not set CircleCI default branch (${settingsError.message}); builds will still trigger on push`
+					);
+				}
+
+				// Kick off the first pipeline on the default branch so CI starts
+				// immediately and validates the committed config. Best-effort.
+				let pipeline = null;
+				try {
+					pipeline = await this.services.circleci.triggerPipeline(
+						'github',
+						owner,
+						repo,
+						defaultBranch
+					);
+					console.log(`✅ CircleCI first pipeline triggered on ${defaultBranch}`);
+				} catch (pipelineError) {
+					console.warn(
+						`⚠️ Could not trigger first CircleCI pipeline (${pipelineError.message}); it will run on the next push`
+					);
+				}
+
 				results.circleci = {
 					success: true,
-					project: circleciProject
+					defaultBranch,
+					project: circleciProject,
+					pipeline: pipeline ? { id: pipeline.id, number: pipeline.number } : undefined
 				};
 				console.log('✅ CircleCI configured successfully');
 			} catch (error) {

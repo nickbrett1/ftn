@@ -272,7 +272,8 @@ export function createMcpServer(context = {}) {
 								type: 'text',
 								text: JSON.stringify({
 									message: 'Project generated successfully',
-									repositoryUrl: result.repository?.htmlUrl || ''
+									repositoryUrl: result.repository?.htmlUrl || '',
+									externalServices: result.externalServices || {}
 								})
 							}
 						]

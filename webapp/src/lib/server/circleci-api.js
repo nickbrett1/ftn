@@ -98,6 +98,34 @@ export class CircleCIAPIService extends BaseAPIService {
 	}
 
 	/**
+	 * Updates the project's settings (e.g. the default branch used for config
+	 * detection and push-triggered pipelines). This is the API equivalent of
+	 * picking the branch in the CircleCI "Set Up Project" wizard.
+	 * @param {string} vcsType - VCS type (github, bitbucket)
+	 * @param {string} organizationSlug - Organization slug
+	 * @param {string} projectSlug - Project slug
+	 * @param {Object} settings - Settings to update, e.g. { vcs: { default_branch: 'main' } }
+	 * @returns {Promise<Object>} Updated project settings
+	 */
+	async updateProjectSettings(vcsType, organizationSlug, projectSlug, settings) {
+		console.log(`🔄 Updating CircleCI project settings: ${organizationSlug}/${projectSlug}`);
+
+		const response = await this.makeRequest(
+			`/project/${vcsType}/${organizationSlug}/${projectSlug}/settings`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(settings)
+			}
+		);
+
+		const updated = await response.json();
+
+		console.log(`✅ CircleCI project settings updated: ${organizationSlug}/${projectSlug}`);
+
+		return updated;
+	}
+
+	/**
 	 * Unfollows a project (disables CircleCI for a repository)
 	 * @param {string} vcsType - VCS type (github, bitbucket)
 	 * @param {string} organizationSlug - Organization slug

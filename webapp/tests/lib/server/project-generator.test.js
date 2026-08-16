@@ -490,6 +490,13 @@ describe('ProjectGeneratorService', () => {
 				capabilities: ['circleci', 'doppler', 'sonarcloud', 'dependabot']
 			};
 			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'main' }
+			});
+			service.services.circleci.triggerPipeline.mockResolvedValue({
+				id: 'pipeline-1',
+				number: 1
+			});
 			service.services.doppler.createProject.mockResolvedValue({ slug: 'test-project' });
 			service.services.doppler.createEnvironment.mockResolvedValue({ success: true });
 			service.services.sonarcloud.createProject.mockResolvedValue({ success: true });
@@ -502,6 +509,8 @@ describe('ProjectGeneratorService', () => {
 			const results = await service.configureExternalServices(contextWithDependabot, repository);
 
 			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.defaultBranch).toBe('main');
+			expect(results.circleci.pipeline).toEqual({ id: 'pipeline-1', number: 1 });
 			expect(results.doppler.success).toBe(true);
 			expect(results.sonarcloud.success).toBe(true);
 			expect(results.dependabot.success).toBe(true);
@@ -510,11 +519,68 @@ describe('ProjectGeneratorService', () => {
 				'owner',
 				'repo'
 			);
+			expect(service.services.circleci.updateProjectSettings).toHaveBeenCalledWith(
+				'github',
+				'owner',
+				'repo',
+				{ vcs: { default_branch: 'main' } }
+			);
+			expect(service.services.circleci.triggerPipeline).toHaveBeenCalledWith(
+				'github',
+				'owner',
+				'repo',
+				'main'
+			);
 			expect(service.services.doppler.createProject).toHaveBeenCalled();
 			expect(service.services.sonarcloud.createProject).toHaveBeenCalled();
 			// Dependabot is configured purely by generated files; it must not
 			// create a PAT secret (the workflow uses the default GITHUB_TOKEN).
 			expect(service.services.github.createRepositorySecret).not.toHaveBeenCalled();
+		});
+
+		it('should use the repository default branch when configuring CircleCI', async () => {
+			const repoWithBranch = { fullName: 'owner/repo', defaultBranch: 'develop' };
+			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'develop' }
+			});
+			service.services.circleci.triggerPipeline.mockResolvedValue({ id: 'pipeline-2' });
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['circleci'] },
+				repoWithBranch
+			);
+
+			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.defaultBranch).toBe('develop');
+			expect(service.services.circleci.updateProjectSettings).toHaveBeenCalledWith(
+				'github',
+				'owner',
+				'repo',
+				{ vcs: { default_branch: 'develop' } }
+			);
+			expect(service.services.circleci.triggerPipeline).toHaveBeenCalledWith(
+				'github',
+				'owner',
+				'repo',
+				'develop'
+			);
+		});
+
+		it('should not fail CircleCI integration when the first pipeline cannot be triggered', async () => {
+			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'main' }
+			});
+			service.services.circleci.triggerPipeline.mockRejectedValue(new Error('pipeline error'));
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['circleci'] },
+				repository
+			);
+
+			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.pipeline).toBeUndefined();
 		});
 
 		it('should not require the GitHub service for dependabot configuration', async () => {
@@ -545,6 +611,8 @@ describe('ProjectGeneratorService', () => {
 
 			expect(results.circleci.success).toBe(false);
 			expect(results.circleci.error).toBe(error.message);
+			expect(service.services.circleci.updateProjectSettings).not.toHaveBeenCalled();
+			expect(service.services.circleci.triggerPipeline).not.toHaveBeenCalled();
 			expect(results.doppler.success).toBe(false);
 			expect(results.doppler.error).toBe(error.message);
 			expect(results.sonarcloud.success).toBe(false);

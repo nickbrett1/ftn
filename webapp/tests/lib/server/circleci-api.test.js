@@ -74,6 +74,25 @@ describe('CircleCIAPIService', () => {
 		);
 	});
 
+	it('updates project settings (e.g. the default branch)', async () => {
+		const settingsJson = vi.fn().mockResolvedValue({ vcs: { default_branch: 'main' } });
+		const makeRequestSpy = vi.spyOn(service, 'makeRequest').mockResolvedValue({
+			json: settingsJson
+		});
+
+		const result = await service.updateProjectSettings('github', 'org', 'repo', {
+			vcs: { default_branch: 'main' }
+		});
+		expect(result).toEqual({ vcs: { default_branch: 'main' } });
+		expect(makeRequestSpy).toHaveBeenCalledWith(
+			'/project/github/org/repo/settings',
+			expect.objectContaining({
+				method: 'PATCH',
+				body: JSON.stringify({ vcs: { default_branch: 'main' } })
+			})
+		);
+	});
+
 	it('supports pipeline operations', async () => {
 		const listJson = vi.fn().mockResolvedValue({ items: [] });
 		const triggerJson = vi.fn().mockResolvedValue({ id: 'pipeline-1' });
