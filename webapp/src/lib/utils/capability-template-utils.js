@@ -1,3 +1,14 @@
+/**
+ * Emits the `.agents/mcp_config.json` block — Cursor / Antigravity target.
+ *
+ * Target env contract (genproj-goose-env-refs): Cursor and Antigravity DO
+ * expand unbraced `$VAR` references in the `env` map of an MCP server entry,
+ * so `"CIRCLECI_TOKEN": "$CIRCLECI_TOKEN"` is valid HERE. This is NOT
+ * interchangeable with goose's ~/.config/goose/config.yaml extension map,
+ * which expands NOTHING (see assertNoGooseEnvVarReferences / getGooseMcpConfig).
+ * Doppler is preferred when available; bare `$VAR` env refs are only a
+ * fallback for tools that expand them.
+ */
 function getCodingAgentsTemplateData(context) {
 	const hasSonarQube = context.capabilities.includes('sonarcloud');
 	const hasCircleCI = context.capabilities.includes('circleci');
@@ -125,8 +136,47 @@ function getCodingAgentsTemplateData(context) {
 }
 
 /**
+ * Regression guard for goose extension YAML (memo genproj-goose-env-refs).
+ *
+ * Goose does NOT expand `${VAR}` or `$VAR` in a stdio extension's env map —
+ * the value is passed VERBATIM to the child process. A token entry like
+ * `CIRCLECI_TOKEN: "${CIRCLECI_TOKEN}"` makes the MCP server authenticate with
+ * the 17-char literal `${CIRCLECI_TOKEN}` → `401 Unauthorized` on every call.
+ *
+ * Generated goose config must therefore NEVER reference env vars in extension
+ * blocks. The canonical pattern is the Doppler wrapper:
+ *   cmd: doppler
+ *   args: ["run", "--", "npx", "-y", "<mcp-package>"]
+ * If env must be inline (no Doppler), use `envs:` with literal values resolved
+ * at generation time — never `${VAR}`/`$VAR` text.
+ *
+ * @param {string} yamlFragment - Goose extension YAML block (may be empty)
+ * @param {string} key - Extension key, used in the error message
+ * @throws {Error} When the fragment contains an env var reference
+ */
+function assertNoGooseEnvVarReferences(yamlFragment, key) {
+	if (!yamlFragment) return;
+	const refs = yamlFragment.match(/\$\{?[A-Za-z_][A-Za-z0-9_]*\}?/g) || [];
+	if (refs.length > 0) {
+		throw new Error(
+			`goose extension '${key}' emits env var reference(s): ${refs.join(', ')}. ` +
+				`Goose does not expand env refs in stdio extension env maps (the literal text would be used as the token → MCP 401). ` +
+				`Use the doppler wrapper (cmd: doppler, args: ["run", "--", "npx", ...]) or literal envs: values resolved at generation time.`
+		);
+	}
+}
+
+/**
  * Generates goose MCP server configuration YAML entries based on project capabilities.
  * Similar to the agy MCP config but for goose's ~/.config/goose/config.yaml format.
+ *
+ * Goose env contract (genproj-goose-env-refs): stdio extensions that need
+ * secrets are emitted with the Doppler wrapper (`cmd: doppler`). Both
+ * `circleci` and `sonarcloud` declare `dependencies: ['doppler']`, so the
+ * dependency resolver always expands them with Doppler — the no-Doppler
+ * branch below must never emit `${VAR}`/`$VAR` env refs (goose passes them
+ * verbatim → MCP 401); it emits nothing instead.
+ *
  * @param {object} context - The project generation context with capabilities
  * @returns {object} Object with goose YAML config parts for each optional MCP server
  */
@@ -137,9 +187,8 @@ function getGooseMcpConfig(context) {
 	const hasXcode = context.capabilities.includes('xcode-development');
 
 	let sonarQubeGooseConfig = '';
-	if (hasSonarQube) {
-		if (hasDoppler) {
-			sonarQubeGooseConfig = `
+	if (hasSonarQube && hasDoppler) {
+		sonarQubeGooseConfig = `
   sonarqube:
     type: stdio
     name: sonarqube
@@ -147,25 +196,11 @@ function getGooseMcpConfig(context) {
     cmd: doppler
     args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
     timeout: 300`;
-		} else {
-			sonarQubeGooseConfig = `
-  sonarqube:
-    type: stdio
-    name: sonarqube
-    enabled: true
-    cmd: npx
-    args: ["-y", "sonarqube-mcp-server"]
-    env:
-      SONAR_TOKEN: "\${SONAR_TOKEN}"
-      SONAR_HOST_URL: "\${SONAR_HOST_URL}"
-    timeout: 300`;
-		}
 	}
 
 	let circleCiGooseConfig = '';
-	if (hasCircleCI) {
-		if (hasDoppler) {
-			circleCiGooseConfig = `
+	if (hasCircleCI && hasDoppler) {
+		circleCiGooseConfig = `
   circleci:
     type: stdio
     name: circleci
@@ -173,19 +208,6 @@ function getGooseMcpConfig(context) {
     cmd: doppler
     args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
     timeout: 300`;
-		} else {
-			circleCiGooseConfig = `
-  circleci:
-    type: stdio
-    name: circleci
-    enabled: true
-    cmd: npx
-    args: ["-y", "@circleci/mcp-server-circleci"]
-    env:
-      CIRCLECI_TOKEN: "\${CIRCLECI_TOKEN}"
-      CIRCLE_API_TOKEN: "\${CIRCLE_API_TOKEN}"
-    timeout: 300`;
-		}
 	}
 
 	let xcodeNativeGooseConfig = '';
@@ -1060,7 +1082,7 @@ function getDependabotTemplateData(context) {
 	};
 }
 
-export { getGooseMcpConfig };
+export { getGooseMcpConfig, assertNoGooseEnvVarReferences };
 
 export function getCapabilityTemplateData(capabilityId, context) {
 	const dataGenerators = {

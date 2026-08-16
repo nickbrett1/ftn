@@ -36,13 +36,17 @@ describe('goose recipes bootstrap in generated projects', () => {
 });
 
 describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xcode)', () => {
-	it('registers the circleci extension with npx + token env when doppler is not selected', () => {
+	// genproj-goose-env-refs regression: goose does NOT expand ${VAR}/$VAR in a
+	// stdio extension's env map — the literal text is used as the token → MCP
+	// 401 on every call. circleci/sonarcloud declare dependencies: ['doppler'],
+	// so without doppler the extension is simply NOT registered (the old
+	// bare-npx + ${VAR} env block is the anti-pattern this suite must never see).
+	it('does not register the circleci extension when doppler is absent (no ${VAR} env block)', () => {
 		const script = generateGooseSetupScript({ capabilities: ['circleci'], configuration: {} });
-		expect(script).toContain('ensure_goose_extension "circleci"');
-		expect(script).toContain('"@circleci/mcp-server-circleci"');
-		expect(script).toContain('CIRCLECI_TOKEN: "${CIRCLECI_TOKEN}"');
-		expect(script).toContain('cmd: npx');
-		expect(script).not.toContain('cmd: doppler');
+		expect(script).not.toContain('ensure_goose_extension "circleci"');
+		expect(script).not.toContain('CIRCLECI_TOKEN');
+		expect(script).not.toContain('$CIRCLECI_TOKEN');
+		expect(script).not.toContain('cmd: npx');
 	});
 
 	it('registers the circleci extension via doppler when the doppler capability is selected', () => {
@@ -53,16 +57,17 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		expect(script).toContain('ensure_goose_extension "circleci"');
 		expect(script).toContain('cmd: doppler');
 		expect(script).toContain('"@circleci/mcp-server-circleci"');
+		expect(script).not.toContain('CIRCLECI_TOKEN');
 	});
 
-	it('registers sonarqube and xcode-native extensions when their capabilities are selected', () => {
+	it('registers xcode-native (no secrets) and skips sonarqube without doppler', () => {
 		const script = generateGooseSetupScript({
 			capabilities: ['sonarcloud', 'xcode-development'],
 			configuration: {}
 		});
-		expect(script).toContain('ensure_goose_extension "sonarqube"');
+		expect(script).not.toContain('ensure_goose_extension "sonarqube"');
+		expect(script).not.toContain('SONAR_TOKEN');
 		expect(script).toContain('ensure_goose_extension "xcode-native"');
-		expect(script).toContain('SONAR_TOKEN: "${SONAR_TOKEN}"');
 		expect(script).toContain('mac-studio:9876/sse');
 	});
 
@@ -75,12 +80,14 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		expect(script).not.toContain('extensions:');
 	});
 
-	it('wires the circleci extension into post-create-setup.sh for a nas-port-mcp-like project (no coding-agents)', async () => {
+	it('wires the doppler-wrapped circleci extension into post-create-setup.sh for a nas-port-mcp-like project (no coding-agents)', async () => {
+		// circleci requires doppler (dependency resolver auto-adds it), so the
+		// generated goose block is the doppler wrapper — never a ${VAR} env ref.
 		const engine = new TemplateEngine();
 		await engine.initialize();
 		const files = await generateAllFiles({
 			projectName: 'nas-port-mcp',
-			capabilities: ['devcontainer-python', 'docker-container', 'circleci'],
+			capabilities: ['devcontainer-python', 'docker-container', 'circleci', 'doppler'],
 			configuration: {
 				'docker-container': { entrypoint: ['/usr/local/bin/entrypoint.sh'] }
 			}
@@ -88,7 +95,8 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(setup).toBeDefined();
 		expect(setup.content).toContain('ensure_goose_extension "circleci"');
+		expect(setup.content).toContain('cmd: doppler');
 		expect(setup.content).toContain('"@circleci/mcp-server-circleci"');
-		expect(setup.content).toContain('CIRCLECI_TOKEN: "${CIRCLECI_TOKEN}"');
+		expect(setup.content).not.toContain('CIRCLECI_TOKEN');
 	});
 });

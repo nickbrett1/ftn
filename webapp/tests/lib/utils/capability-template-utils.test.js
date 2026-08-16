@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
 	getCapabilityTemplateData,
-	applyDefaults
+	applyDefaults,
+	getGooseMcpConfig,
+	assertNoGooseEnvVarReferences
 } from '../../../src/lib/utils/capability-template-utils';
 
 describe('capability-template-utils', () => {
@@ -42,6 +44,97 @@ describe('capability-template-utils', () => {
 			const data = getCapabilityTemplateData('coding-agents', context);
 			expect(data.sonarQubeMcpConfig).toBe('');
 			expect(data.circleCiMcpConfig).toBe('');
+		});
+	});
+
+	describe('getGooseMcpConfig', () => {
+		// Regression (genproj-goose-env-refs): goose does not expand ${VAR}/$VAR
+		// in a stdio extension's env map — the literal text becomes the token and
+		// every MCP call 401s. Goose blocks must therefore use the doppler
+		// wrapper and must NEVER contain env var references.
+		it('should emit doppler-wrapped goose blocks (no env refs) when doppler is present', () => {
+			const data = getGooseMcpConfig({
+				capabilities: ['sonarcloud', 'circleci', 'doppler', 'xcode-development']
+			});
+			expect(data.sonarQubeGooseConfig).toContain('cmd: doppler');
+			expect(data.sonarQubeGooseConfig).toContain(
+				'args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]'
+			);
+			expect(data.circleCiGooseConfig).toContain('cmd: doppler');
+			expect(data.circleCiGooseConfig).toContain(
+				'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
+			);
+			// No env map at all in either block.
+			expect(data.sonarQubeGooseConfig).not.toMatch(/\benv:\s*$/m);
+			expect(data.circleCiGooseConfig).not.toMatch(/\benv:\s*$/m);
+			// And no $ anywhere in the emitted YAML.
+			expect(data.sonarQubeGooseConfig).not.toContain('$');
+			expect(data.circleCiGooseConfig).not.toContain('$');
+		});
+
+		it('should never emit env var references in goose blocks (without doppler)', () => {
+			// circleci/sonarcloud declare dependencies: ['doppler'] and the
+			// dependency resolver always expands them, so this path is normally
+			// unreachable — but if it is hit, emit NOTHING rather than a broken
+			// ${VAR} env block (the pre-fix anti-pattern → MCP 401).
+			const data = getGooseMcpConfig({
+				capabilities: ['sonarcloud', 'circleci']
+			});
+			expect(data.sonarQubeGooseConfig).toBe('');
+			expect(data.circleCiGooseConfig).toBe('');
+		});
+
+		it('should emit xcode-native block without env refs', () => {
+			const data = getGooseMcpConfig({ capabilities: ['xcode-development'] });
+			expect(data.xcodeNativeGooseConfig).toContain('xcode-native');
+			expect(data.xcodeNativeGooseConfig).toContain('.agents/mcp-sse-proxy.cjs');
+			expect(data.xcodeNativeGooseConfig).not.toContain('$');
+		});
+	});
+
+	describe('assertNoGooseEnvVarReferences', () => {
+		it('should throw on braced ${VAR} env refs (the genproj-goose-env-refs regression)', () => {
+			const block = `
+  circleci:
+    type: stdio
+    name: circleci
+    enabled: true
+    cmd: npx
+    args: ["-y", "@circleci/mcp-server-circleci"]
+    env:
+      CIRCLECI_TOKEN: "\${CIRCLECI_TOKEN}"
+      CIRCLE_API_TOKEN: "\${CIRCLE_API_TOKEN}"
+    timeout: 300`;
+			expect(() => assertNoGooseEnvVarReferences(block, 'circleci')).toThrow(/env var reference/);
+		});
+
+		it('should throw on unbraced $VAR env refs too', () => {
+			const block = `
+  sonarqube:
+    type: stdio
+    name: sonarqube
+    enabled: true
+    cmd: npx
+    args: ["-y", "sonarqube-mcp-server"]
+    env:
+      SONAR_TOKEN: "$SONAR_TOKEN"
+      SONAR_HOST_URL: "$SONAR_HOST_URL"
+    timeout: 300`;
+			expect(() => assertNoGooseEnvVarReferences(block, 'sonarqube')).toThrow(/env var reference/);
+		});
+
+		it('should pass clean doppler-wrapped blocks and empty strings', () => {
+			const clean = `
+  circleci:
+    type: stdio
+    name: circleci
+    enabled: true
+    cmd: doppler
+    args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
+    timeout: 300`;
+			expect(() => assertNoGooseEnvVarReferences(clean, 'circleci')).not.toThrow();
+			expect(() => assertNoGooseEnvVarReferences('', 'circleci')).not.toThrow();
+			expect(() => assertNoGooseEnvVarReferences(undefined, 'circleci')).not.toThrow();
 		});
 	});
 

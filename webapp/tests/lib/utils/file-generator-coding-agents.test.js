@@ -36,6 +36,36 @@ describe('File Generator - Coding Agents', () => {
 		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
+	it('should register the circleci goose extension via the doppler wrapper with no env var references (genproj-goose-env-refs regression)', async () => {
+		// circleci declares dependencies: ['doppler'], so the generated goose
+		// config block must use `cmd: doppler` and must NEVER contain a
+		// ${VAR}/$VAR env ref (goose passes those verbatim → MCP 401).
+		const context = {
+			name: 'test-project',
+			capabilities: ['circleci', 'doppler', 'devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = await generateAllFiles(context);
+		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(postCreateSetup).toBeDefined();
+
+		// The doppler-wrapped goose block is registered for the circleci extension.
+		expect(postCreateSetup.content).toContain('ensure_goose_extension "circleci"');
+		expect(postCreateSetup.content).toContain('cmd: doppler');
+		expect(postCreateSetup.content).toContain(
+			'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
+		);
+
+		// Regression: the pre-fix generator emitted a bare-npx block with an env
+		// map referencing ${CIRCLECI_TOKEN} — goose passed the literal string as
+		// the token, so every MCP call returned 401. Neither the braced nor the
+		// unbraced form may appear in the emitted goose YAML.
+		expect(postCreateSetup.content).not.toContain('${CIRCLECI_TOKEN}');
+		expect(postCreateSetup.content).not.toContain('$CIRCLECI_TOKEN');
+		expect(postCreateSetup.content).not.toContain('CIRCLECI_TOKEN:');
+	});
+
 	it('should not clobber goose config in post-create-setup.sh and should bind-mount the host goose config when devcontainer and coding-agents capabilities are selected', async () => {
 		const context = {
 			name: 'test-project',

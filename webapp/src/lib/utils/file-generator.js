@@ -58,7 +58,8 @@ import {
 	resolveLanguage,
 	toPythonPackageName,
 	toDistributionName,
-	getGooseMcpConfig
+	getGooseMcpConfig,
+	assertNoGooseEnvVarReferences
 } from '$lib/utils/capability-template-utils.js';
 
 // 2.2: health endpoint emitted for docker-container SvelteKit projects.
@@ -157,6 +158,15 @@ export function generateGooseSetupScript(context = {}) {
 		{ key: 'circleci', block: gooseMcp.circleCiGooseConfig },
 		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig }
 	].filter((f) => f.block);
+
+	// Regression guard (genproj-goose-env-refs): goose does not expand
+	// ${VAR}/$VAR in stdio extension env maps — the literal text would be used
+	// as the token (→ MCP 401). Fail generation loudly rather than shipping a
+	// broken config. Only the YAML blocks are scanned; the shell scaffolding
+	// below legitimately uses $HOME/${key} etc.
+	for (const f of fragments) {
+		assertNoGooseEnvVarReferences(f.block, f.key);
+	}
 
 	// Round-4 fix (memo genproj-goose-extensions): wire the previously-dead
 	// getGooseMcpConfig() into generation. Selected capabilities (circleci,
