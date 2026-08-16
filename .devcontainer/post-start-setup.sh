@@ -36,6 +36,15 @@ if ! pgrep -f 'serve-docs.cjs' >/dev/null; then
     fi
 fi
 
+# Re-sync shell config from the repo on every start/resume so changes to
+# .devcontainer/.zshrc (e.g. the goose() Doppler wrapper) reach the live
+# container even when it was created before the change was committed.
+if [ -f "/workspaces/ftn/.devcontainer/.zshrc" ]; then
+    echo "INFO: Re-syncing .zshrc from repo to $HOME/.zshrc"
+    cp -f "/workspaces/ftn/.devcontainer/.zshrc" "$HOME/.zshrc"
+    chown "$(id -u):$(id -g)" "$HOME/.zshrc" 2>/dev/null || true
+fi
+
 echo "INFO: Syncing goose recipes..."
 if [ -d "$HOME/.config/goose/recipes/.git" ]; then
     (cd "$HOME/.config/goose/recipes" && git pull --ff-only --quiet) \

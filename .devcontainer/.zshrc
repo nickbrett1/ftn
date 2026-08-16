@@ -176,6 +176,10 @@ goose() {
   _wt_ensure doppler run --project common --config dev -- doppler run --forward-signals --project goose --config prd -- goose "$@"
 }
 
+# Backward-compat shim: the Doppler wrapper used to be called goose-dev; keep the
+# old name working so muscle memory (and docs that predate the rename) still works.
+goose-dev() { goose "$@"; }
+
 # Change directory to the workspace if starting in the home directory
 if [[ "$PWD" == "$HOME" ]]; then
   cd /workspaces/ftn 2>/dev/null
