@@ -298,6 +298,43 @@ EOF
 fi
 `;
 
+export const NODE_SETUP_SCRIPT = `
+# Setup node dependencies and expose node_modules/.bin on PATH
+# (memo: genproj node devcontainer .venv PATH — same class of bug as python
+# .venv). postCreate runs with the workspace as CWD, but cd explicitly so
+# this also works when invoked from elsewhere.
+cd "/workspaces/{{projectName}}" 2>/dev/null || true
+
+if [ -f "package.json" ]; then
+    echo "INFO: Installing dependencies with npm install..."
+    npm install
+fi
+
+# genproj-node-bin-path: expose node_modules/.bin on PATH for shells that do
+# NOT inherit devcontainer.json remoteEnv (VS Code terminals get PATH from
+# remoteEnv; ssh / 'bash -lc' / tmux panes started outside VS Code do not).
+# The marker comment keeps this idempotent across post-create re-runs.
+NODE_BIN_MARKER='# genproj-node-bin-path'
+if ! grep -qF "$NODE_BIN_MARKER" "$HOME/.bashrc" 2>/dev/null; then
+    cat >> "$HOME/.bashrc" <<'EOF'
+# genproj-node-bin-path: prefer project node_modules/.bin
+if [ -d "/workspaces/{{projectName}}/node_modules/.bin" ]; then
+    export PATH="/workspaces/{{projectName}}/node_modules/.bin:$PATH"
+fi
+EOF
+    echo "INFO: Added node_modules/.bin PATH hook to ~/.bashrc"
+fi
+if ! grep -qF "$NODE_BIN_MARKER" "$HOME/.zshrc" 2>/dev/null; then
+    cat >> "$HOME/.zshrc" <<'EOF'
+# genproj-node-bin-path: prefer project node_modules/.bin
+if [ -d "/workspaces/{{projectName}}/node_modules/.bin" ]; then
+    export PATH="/workspaces/{{projectName}}/node_modules/.bin:$PATH"
+fi
+EOF
+    echo "INFO: Added node_modules/.bin PATH hook to ~/.zshrc"
+fi
+`;
+
 export const DOPPLER_LOGIN_SCRIPT = `
 # Doppler login/setup
 if command -v doppler &> /dev/null; then
@@ -863,6 +900,12 @@ export function generateMergedDevelopmentContainerFiles(
 					: '',
 				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python'))
 					? PYTHON_SETUP_SCRIPT.replaceAll(
+							'{{projectName}}',
+							() => context.projectName || context.name || 'my-project'
+						)
+					: '',
+				nodeSetup: context.capabilities.some((c) => c.startsWith('devcontainer-node'))
+					? NODE_SETUP_SCRIPT.replaceAll(
 							'{{projectName}}',
 							() => context.projectName || context.name || 'my-project'
 						)

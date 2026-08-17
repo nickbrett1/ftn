@@ -22,6 +22,7 @@ import {
 	generateGooseSetupScript,
 	PLAYWRIGHT_SETUP_SCRIPT,
 	PYTHON_SETUP_SCRIPT,
+	NODE_SETUP_SCRIPT,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
@@ -255,6 +256,9 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			: '',
 		pythonSetup: allCapabilities.some((c) => c.startsWith('devcontainer-python'))
 			? PYTHON_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
+			: '',
+		nodeSetup: allCapabilities.some((c) => c.startsWith('devcontainer-node'))
+			? NODE_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
 		gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 			'{{projectName}}',

@@ -163,7 +163,7 @@
 								})
 							: helper)
 					) +
-					',\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
+					',\n  "containerEnv": {\n    "LANG": "en_US.UTF-8",\n    "LC_ALL": "en_US.UTF-8"\n  },\n  "remoteEnv": {\n    "PATH": "${containerWorkspaceFolder}/node_modules/.bin:${containerEnv:PATH}"\n  },\n  "postCreateCommand": "bash .devcontainer/post-create-setup.sh",\n  "postStartCommand": "bash /workspaces/' +
 					alias4(
 						((helper =
 							(helper =
@@ -176,7 +176,7 @@
 									name: 'projectName',
 									hash: {},
 									data: data,
-									loc: { start: { line: 30, column: 40 }, end: { line: 30, column: 55 } }
+									loc: { start: { line: 33, column: 40 }, end: { line: 33, column: 55 } }
 								})
 							: helper)
 					) +
@@ -457,6 +457,23 @@
 					alias4(
 						((helper =
 							(helper =
+								lookupProperty(helpers, 'nodeSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'nodeSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'nodeSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 59, column: 0 }, end: { line: 59, column: 13 } }
+								})
+							: helper)
+					) +
+					'\n\n' +
+					alias4(
+						((helper =
+							(helper =
 								lookupProperty(helpers, 'gitSafeDirectory') ||
 								(depth0 != null ? lookupProperty(depth0, 'gitSafeDirectory') : depth0)) != null
 								? helper
@@ -466,7 +483,7 @@
 									name: 'gitSafeDirectory',
 									hash: {},
 									data: data,
-									loc: { start: { line: 59, column: 0 }, end: { line: 59, column: 20 } }
+									loc: { start: { line: 61, column: 0 }, end: { line: 61, column: 20 } }
 								})
 							: helper)
 					) +
@@ -483,7 +500,7 @@
 									name: 'gitHooksSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 61, column: 0 }, end: { line: 61, column: 17 } }
+									loc: { start: { line: 63, column: 0 }, end: { line: 63, column: 17 } }
 								})
 							: helper)
 					) +
@@ -500,7 +517,7 @@
 									name: 'playwrightSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 63, column: 0 }, end: { line: 63, column: 19 } }
+									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 19 } }
 								})
 							: helper)
 					) +
@@ -517,7 +534,7 @@
 									name: 'agySetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 12 } }
+									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 12 } }
 								})
 							: helper)
 					) +
@@ -534,7 +551,7 @@
 									name: 'gooseSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 66, column: 0 }, end: { line: 66, column: 14 } }
+									loc: { start: { line: 68, column: 0 }, end: { line: 68, column: 14 } }
 								})
 							: helper)
 					) +
@@ -551,7 +568,7 @@
 									name: 'specdagSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 68, column: 0 }, end: { line: 68, column: 16 } }
+									loc: { start: { line: 70, column: 0 }, end: { line: 70, column: 16 } }
 								})
 							: helper)
 					) +
@@ -568,7 +585,7 @@
 									name: 'socatSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 14 } }
+									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 14 } }
 								})
 							: helper)
 					) +
@@ -585,7 +602,7 @@
 									name: 'cloudLoginSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 82, column: 0 }, end: { line: 82, column: 19 } }
+									loc: { start: { line: 84, column: 0 }, end: { line: 84, column: 19 } }
 								})
 							: helper)
 					) +

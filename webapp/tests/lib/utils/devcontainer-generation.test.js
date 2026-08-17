@@ -167,6 +167,14 @@ describe('DevContainer Generation Tests', () => {
 		// Check for remoteUser
 		expect(devcontainerJson.remoteUser).toBe('node');
 
+		// memo: node devcontainer .venv PATH (same class as python) — remoteEnv
+		// prepends the project node_modules/.bin to PATH for VS Code
+		// terminals/tasks (spec: updating PATH is the documented remoteEnv use
+		// case; containerEnv cannot reference container variables).
+		expect(devcontainerJson.remoteEnv.PATH).toBe(
+			'${containerWorkspaceFolder}/node_modules/.bin:${containerEnv:PATH}'
+		);
+
 		// Check Dockerfile copy and shell configuration
 		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
 		expect(dockerfileFile).toBeDefined();
@@ -178,6 +186,40 @@ describe('DevContainer Generation Tests', () => {
 		const tmuxConfFile = files.find((f) => f.filePath === '.devcontainer/.tmux.conf');
 		expect(tmuxConfFile).toBeDefined();
 		expect(tmuxConfFile.content).toContain('set -g status-right "my-project"');
+	});
+
+	it('wires the project node_modules/.bin into post-create setup so tooling works in any shell', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'sveltekit-demo',
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+
+		// Runs from the workspace and installs project deps (node_modules must
+		// exist before the PATH hook can resolve .bin entries).
+		expect(setup.content).toContain('cd "/workspaces/sveltekit-demo"');
+		expect(setup.content).toContain('npm install');
+
+		// Idempotent rc hook: prefer the project node_modules/.bin in every
+		// interactive shell that does not inherit remoteEnv (bash -lc / ssh).
+		expect(setup.content).toContain('genproj-node-bin-path');
+		expect(setup.content).toContain('$HOME/.bashrc');
+		expect(setup.content).toContain('$HOME/.zshrc');
+		expect(setup.content).toContain('/workspaces/sveltekit-demo/node_modules/.bin:$PATH');
+
+		// The generator must substitute the project name — no literal
+		// {{projectName}} may leak into the rendered script.
+		expect(setup.content).not.toContain('{{projectName}}');
+
+		// Node setup is gated on the node devcontainer: no python venv block.
+		expect(setup.content).not.toContain('genproj-python-venv-path');
 	});
 
 	it('includes the multi-session worktree workflow in the generated .zshrc by default', async () => {
