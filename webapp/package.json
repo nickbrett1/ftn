@@ -89,7 +89,7 @@
 		"kolorist": "^1.8.0",
 		"lint-staged": "^17.3.0",
 		"lodash-es": "^4.18.1",
-		"magic-string": "^1.1.0",
+		"magic-string": "^1.2.0",
 		"mdsvex": "^0.12.8",
 		"mermaid": "^11.16.1",
 		"miragejs": "^0.1.48",
