@@ -20,6 +20,7 @@ vi.mock('$lib/utils/file-generator', () => ({
 	PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script',
 	PYTHON_SETUP_SCRIPT: 'python-setup-script',
 	NODE_SETUP_SCRIPT: 'node-setup-script',
+	generateDopplerSetupScript: () => 'doppler-setup-script',
 	DOPPLER_LOGIN_SCRIPT: 'doppler-login-script',
 	WRANGLER_LOGIN_SCRIPT: 'wrangler-login-script',
 	SETUP_WRANGLER_SCRIPT: 'setup-wrangler-script',

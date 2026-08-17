@@ -45,6 +45,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script-mock',
 		PYTHON_SETUP_SCRIPT: 'python-setup-script-mock',
 		NODE_SETUP_SCRIPT: 'node-setup-script-mock',
+		generateDopplerSetupScript: vi.fn(() => 'doppler-setup-script-mock'),
 		DOPPLER_LOGIN_SCRIPT: 'doppler-login-mock',
 		WRANGLER_LOGIN_SCRIPT: 'wrangler-login-mock',
 		SETUP_WRANGLER_SCRIPT: 'setup-wrangler-mock',

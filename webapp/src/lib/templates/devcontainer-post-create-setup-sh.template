@@ -23,7 +23,7 @@ fi
 echo "INFO: Ensuring SSH service is running..."
 sudo service ssh restart
 
-{{wranglerSetup}}{{dopplerSetup}}{{geminiSetup}}
+{{wranglerSetup}}{{geminiSetup}}
 
 echo "INFO: Creating Oh My Zsh custom directories..."
 mkdir -p "$USER_HOME_DIR/.oh-my-zsh/custom/themes" "$USER_HOME_DIR/.oh-my-zsh/custom/plugins"
@@ -51,6 +51,8 @@ if [ -f "/workspaces/{{projectName}}/.devcontainer/.tmux.conf" ]; then
 else
     echo "INFO: /workspaces/{{projectName}}/.devcontainer/.tmux.conf not found, skipping copy."
 fi
+
+{{dopplerSetup}}
 
 {{shellSetup}}
 

@@ -222,6 +222,68 @@ describe('DevContainer Generation Tests', () => {
 		expect(setup.content).not.toContain('genproj-python-venv-path');
 	});
 
+	it('pins the doppler.yaml context in post-create setup so ambient DOPPLER_* env cannot redirect doppler run', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'mailroom',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+
+		// Doppler precedence is env > doppler.yaml > ~/.doppler. The generated
+		// setup must pin the repo context (mailroom/dev) so ambient
+		// DOPPLER_PROJECT/DOPPLER_CONFIG/DOPPLER_ENVIRONMENT (e.g. from the
+		// agent session that launches the container) cannot silently redirect
+		// every `doppler` command at the wrong project.
+		expect(setup.content).toContain('genproj-doppler-context-pin');
+		expect(setup.content).toContain('export DOPPLER_PROJECT=mailroom');
+		expect(setup.content).toContain('export DOPPLER_CONFIG=dev');
+		expect(setup.content).toContain('unset DOPPLER_ENVIRONMENT');
+		// Written to both rc files so agent-spawned shells (bash -lc / ssh /
+		// tmux) that never re-run post-create still inherit the right context.
+		expect(setup.content).toContain('$HOME/.bashrc');
+		expect(setup.content).toContain('$HOME/.zshrc');
+		// Applied to the current shell too, and verified loudly (never silent).
+		expect(setup.content).toContain('doppler run -- printenv DOPPLER_PROJECT');
+		expect(setup.content).toContain("resolves project '$RESOLVED_PROJECT'");
+		// The pin must run AFTER the repo .zshrc copy, otherwise the cp
+		// clobbers the appended block.
+		expect(setup.content.indexOf('cp "/workspaces/mailroom/.devcontainer/.zshrc"')).toBeGreaterThan(
+			-1
+		);
+		expect(setup.content.indexOf('genproj-doppler-context-pin')).toBeGreaterThan(
+			setup.content.indexOf('cp "/workspaces/mailroom/.devcontainer/.zshrc"')
+		);
+		// Existing doppler tooling is preserved (perms + CLI fallback).
+		expect(setup.content).toContain('Installing Doppler CLI (fallback)');
+		// The generator must substitute the project name — no literal
+		// {{projectName}} may leak into the rendered script.
+		expect(setup.content).not.toContain('{{projectName}}');
+	});
+
+	it('does not pin doppler context when the doppler capability is not selected', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'plain',
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+		expect(setup.content).not.toContain('genproj-doppler-context-pin');
+		expect(setup.content).not.toContain('DOPPLER_PROJECT');
+	});
+
 	it('includes the multi-session worktree workflow in the generated .zshrc by default', async () => {
 		const engine = new TemplateEngine();
 		await engine.initialize();

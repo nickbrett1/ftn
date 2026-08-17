@@ -551,6 +551,30 @@ describe('TemplateEngine', () => {
 		);
 	});
 
+	it('README documents doppler env-var precedence and provisioning when the doppler capability is selected', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {
+				'devcontainer-node': {}
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const readme = files.find((f) => f.filePath === 'README.md');
+
+		expect(readme).toBeDefined();
+		expect(readme.content).toContain('## Doppler');
+		expect(readme.content).toContain('doppler setup --project test-project --config dev');
+		// Env-var precedence documented (env > doppler.yaml > ~/.doppler).
+		expect(readme.content).toContain('environment variables >');
+		expect(readme.content).toContain('DOPPLER_PROJECT');
+		expect(readme.content).toContain('DOPPLER_ENVIRONMENT');
+		// Manual provisioning documented for the token-less generation flow.
+		expect(readme.content).toContain('doppler projects create test-project');
+		expect(readme.content).toContain('doppler configs create dev --project test-project');
+	});
+
 	it('should include .antigravitycli in generated .gitignore file', async () => {
 		const context = {
 			name: 'test-project',

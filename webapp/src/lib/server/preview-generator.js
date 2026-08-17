@@ -23,6 +23,7 @@ import {
 	PLAYWRIGHT_SETUP_SCRIPT,
 	PYTHON_SETUP_SCRIPT,
 	NODE_SETUP_SCRIPT,
+	generateDopplerSetupScript,
 	DOPPLER_LOGIN_SCRIPT,
 	WRANGLER_LOGIN_SCRIPT,
 	SETUP_WRANGLER_SCRIPT,
@@ -246,7 +247,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			? `echo "INFO: Ensuring wrangler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n`
 			: '',
 		dopplerSetup: allCapabilities.includes('doppler')
-			? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n`
+			? generateDopplerSetupScript(projectConfig)
 			: '',
 		geminiSetup: allCapabilities.includes('coding-agents')
 			? `echo "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n`

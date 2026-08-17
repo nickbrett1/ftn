@@ -140,6 +140,84 @@ goose() {
 }`;
 
 /**
+ * Doppler setup block for .devcontainer/post-create-setup.sh
+ *
+ * - ensures ~/.doppler perms and the CLI is on PATH (round-5 fallback install)
+ * - genproj-doppler-context-pin (memo Gi8CN7XqpH6CxFAc2YUJsK): Doppler's
+ *   precedence is env > doppler.yaml > ~/.doppler. Ambient
+ *   DOPPLER_PROJECT/DOPPLER_CONFIG/DOPPLER_ENVIRONMENT from the session that
+ *   launches the devcontainer (e.g. an agent runtime) leak in and silently
+ *   redirect every `doppler` command at the wrong project. Pin this repo's
+ *   doppler.yaml context in ~/.bashrc + ~/.zshrc so EVERY shell — including
+ *   agent-spawned ones that never re-run post-create — resolves the right
+ *   project. Must run AFTER the repo .zshrc copy in the template, otherwise
+ *   the cp clobbers the appended block.
+ * - verifies the resolved project loudly at setup time (never silent).
+ */
+export function generateDopplerSetupScript(context = {}) {
+	const projectName = context.projectName || context.name || 'my-project';
+	const config = context.dopplerConfig || 'dev';
+
+	const rcBlock = `# genproj-doppler-context-pin: this repo's doppler.yaml context wins over ambient env
+export DOPPLER_PROJECT=${projectName}
+export DOPPLER_CONFIG=${config}
+unset DOPPLER_ENVIRONMENT 2>/dev/null || true
+`;
+
+	return `echo "INFO: Ensuring doppler directory permissions..."
+mkdir -p "$USER_HOME_DIR/.doppler"
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"
+# Round-5 (memo genproj-fixes-round5): guarantee the CLI is on PATH. The
+# Dockerfile installs it for fresh projects, but a regenerated project whose
+# Dockerfile was preserved (round-3 idempotent overwrite) needs the fallback.
+# (A devcontainer feature was tried first but ghcr.io/devcontainers-contrib
+# features are no longer reliably pullable — 'denied'.)
+if ! command -v doppler &> /dev/null; then
+    echo "INFO: Installing Doppler CLI (fallback)..."
+    (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
+fi
+# genproj-doppler-context-pin (memo Gi8CN7XqpH6CxFAc2YUJsK): ambient
+# DOPPLER_PROJECT/DOPPLER_CONFIG/DOPPLER_ENVIRONMENT from the launching session
+# override doppler.yaml (env > yaml) and silently point every 'doppler' command
+# at the wrong project. Pin the repo context in ~/.bashrc + ~/.zshrc so new
+# shells (including agent-spawned ones) inherit it. The marker keeps the
+# append idempotent across post-create re-runs.
+DOPPLER_RC_MARKER='# genproj-doppler-context-pin'
+if ! grep -qF "$DOPPLER_RC_MARKER" "$HOME/.bashrc" 2>/dev/null; then
+    cat >> "$HOME/.bashrc" <<'EOF'
+${rcBlock}
+EOF
+    echo "INFO: Pinned doppler context (${projectName}/${config}) in ~/.bashrc"
+fi
+if ! grep -qF "$DOPPLER_RC_MARKER" "$HOME/.zshrc" 2>/dev/null; then
+    cat >> "$HOME/.zshrc" <<'EOF'
+${rcBlock}
+EOF
+    echo "INFO: Pinned doppler context (${projectName}/${config}) in ~/.zshrc"
+fi
+# Apply to this shell too, then verify resolution is never silently wrong.
+export DOPPLER_PROJECT=${projectName}
+export DOPPLER_CONFIG=${config}
+unset DOPPLER_ENVIRONMENT 2>/dev/null || true
+if command -v doppler &> /dev/null && doppler whoami &> /dev/null 2>&1; then
+    RESOLVED_PROJECT="$(doppler run -- printenv DOPPLER_PROJECT 2>/dev/null | tail -n 1)"
+    if [ -n "$RESOLVED_PROJECT" ] && [ "$RESOLVED_PROJECT" != "${projectName}" ]; then
+        echo "WARNING: 'doppler run' resolves project '$RESOLVED_PROJECT', but doppler.yaml"
+        echo "         declares '${projectName}'. An ambient DOPPLER_* export is overriding"
+        echo "         the repo context. Run: unset DOPPLER_PROJECT DOPPLER_CONFIG DOPPLER_ENVIRONMENT"
+        echo "         then 'doppler setup --no-interactive --project ${projectName} --config ${config}'."
+    elif [ -z "$RESOLVED_PROJECT" ]; then
+        echo "WARNING: could not resolve the doppler project via 'doppler run'. If"
+        echo "         'doppler projects get ${projectName}' 404s, create it and run"
+        echo "         'doppler setup --no-interactive --project ${projectName} --config ${config}'."
+    else
+        echo "INFO: doppler context verified: ${projectName}/${config}"
+    fi
+fi
+`;
+}
+
+/**
  * Generates the goose setup script for post-create-setup.sh
  *
  * Non-destructive by design: it NEVER overwrites an existing
@@ -887,7 +965,7 @@ export function generateMergedDevelopmentContainerFiles(
 					? `echo "INFO: Ensuring wrangler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.wrangler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.wrangler"\n`
 					: '',
 				dopplerSetup: context.capabilities.includes('doppler')
-					? `echo "INFO: Ensuring doppler directory permissions..."\nmkdir -p "$USER_HOME_DIR/.doppler"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.doppler"\n# Round-5 (memo genproj-fixes-round5): guarantee the CLI is on PATH. The\n# Dockerfile installs it for fresh projects, but a regenerated project whose\n# Dockerfile was preserved (round-3 idempotent overwrite) needs the fallback.\n# (A devcontainer feature was tried first but ghcr.io/devcontainers-contrib\n# features are no longer reliably pullable — 'denied'.)\nif ! command -v doppler &> /dev/null; then\n    echo "INFO: Installing Doppler CLI (fallback)..."\n    (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh\nfi\n`
+					? generateDopplerSetupScript(context)
 					: '',
 				geminiSetup: context.capabilities.includes('coding-agents')
 					? `echo "INFO: Ensuring gemini directory permissions..."\nmkdir -p "$USER_HOME_DIR/.gemini"\nsudo chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME_DIR/.gemini"\n`
@@ -1268,6 +1346,8 @@ docker compose up -d
 
 	// Round-5 (memo genproj-fixes-round5): document the one-time doppler setup
 	// (the CLI is installed in the devcontainer; first use must link it).
+	// Round-7 (memo Gi8CN7XqpH6CxFAc2YUJsK): document env>yaml precedence and
+	// manual provisioning so a wrong-project resolution is never a mystery.
 	const dopplerSection = context.capabilities.includes('doppler')
 		? `## Doppler
 
@@ -1280,6 +1360,29 @@ doppler setup --project ${projectName} --config dev
 The Doppler CLI is installed in the devcontainer — it must be on PATH for the
 VS Code extension and \`doppler run\` to work. Auth is persisted via the host
 \`~/.doppler\` bind-mount.
+
+### Env-var precedence (read this if \`doppler run\` hits the wrong project)
+
+Doppler resolves its target as **environment variables > \`doppler.yaml\` >
+\`~/.doppler\` scoped config**. If your shell — or the session that launched
+the devcontainer (e.g. an agent runtime) — exports \`DOPPLER_PROJECT\` /
+\`DOPPLER_CONFIG\` / \`DOPPLER_ENVIRONMENT\`, those silently override this
+repo's \`doppler.yaml\` and every \`doppler\` command targets the wrong
+project. The devcontainer's post-create setup pins this repo's context
+(\`${projectName}\`/\`dev\`) in \`~/.bashrc\` and \`~/.zshrc\` and warns at
+setup if resolution still mismatches. To force the correct context manually:
+
+\`\`\`bash
+unset DOPPLER_PROJECT DOPPLER_CONFIG DOPPLER_ENVIRONMENT
+doppler setup --no-interactive --project ${projectName} --config dev
+\`\`\`
+
+If the project does not exist in your Doppler workplace yet, create it first:
+
+\`\`\`bash
+doppler projects create ${projectName}
+doppler configs create dev --project ${projectName}
+\`\`\`
 `
 		: '';
 
