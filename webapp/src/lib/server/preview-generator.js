@@ -254,7 +254,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			? SHELL_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
 		pythonSetup: allCapabilities.some((c) => c.startsWith('devcontainer-python'))
-			? PYTHON_SETUP_SCRIPT
+			? PYTHON_SETUP_SCRIPT.replaceAll('{{projectName}}', projectConfig.name || 'my-project')
 			: '',
 		gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 			'{{projectName}}',

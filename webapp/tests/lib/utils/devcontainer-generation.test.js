@@ -88,6 +88,47 @@ describe('DevContainer Generation Tests', () => {
 		const dockerfileFile = files.find((f) => f.filePath === '.devcontainer/Dockerfile');
 		expect(dockerfileFile).toBeDefined();
 		expect(dockerfileFile.content).toContain('USER vscode');
+
+		// memo: python devcontainer .venv PATH — remoteEnv prepends the project
+		// venv to PATH for VS Code terminals/tasks (spec: updating PATH is the
+		// documented remoteEnv use case; containerEnv cannot reference container
+		// variables like ${containerEnv:PATH}).
+		expect(devcontainerJson.remoteEnv.PATH).toBe(
+			'${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}'
+		);
+	});
+
+	it('wires the project .venv into post-create setup so python3 works in any shell', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'mailroom',
+			capabilities: ['devcontainer-python'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-python']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+
+		// The setup script must run from the workspace (venv + editable install
+		// are project-relative) and create the venv if missing.
+		expect(setup.content).toContain('cd "/workspaces/mailroom"');
+		expect(setup.content).toContain('python3 -m venv .venv');
+		// pyproject-first projects install dev extras (matches README + CI).
+		expect(setup.content).toContain('.venv/bin/pip install -e ".[dev]"');
+
+		// Idempotent rc hook: prefer the project .venv in every interactive
+		// shell that does not inherit remoteEnv (bash -lc / ssh / tmux).
+		expect(setup.content).toContain('genproj-python-venv-path');
+		expect(setup.content).toContain('$HOME/.bashrc');
+		expect(setup.content).toContain('$HOME/.zshrc');
+		expect(setup.content).toContain('/workspaces/mailroom/.venv/bin:$PATH');
+
+		// The generator must substitute the project name — no literal
+		// {{projectName}} may leak into the rendered script.
+		expect(setup.content).not.toContain('{{projectName}}');
 	});
 
 	it('should generate valid Node devcontainer.json with node username and remoteUser', async () => {

@@ -29,6 +29,9 @@
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8"
   },
+  "remoteEnv": {
+    "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}"
+  },
   "postCreateCommand": "bash .devcontainer/post-create-setup.sh",
   "postStartCommand": "bash /workspaces/{{projectName}}/.devcontainer/post-start-setup.sh"
 }

@@ -255,6 +255,11 @@ echo "INFO: Playwright Chromium installation complete."`;
 
 export const PYTHON_SETUP_SCRIPT = `
 # Setup python virtual environment and install dependencies
+# (memo: genproj python devcontainer .venv PATH). postCreate runs with the
+# workspace as CWD, but cd explicitly so this also works when invoked from
+# elsewhere (e.g. a manual re-run after the container restarted in $HOME).
+cd "/workspaces/{{projectName}}" 2>/dev/null || true
+
 if [ ! -d ".venv" ]; then
     echo "INFO: Creating Python virtual environment (.venv)..."
     python3 -m venv .venv
@@ -264,8 +269,32 @@ if [ -f "requirements.txt" ]; then
     echo "INFO: Installing dependencies from requirements.txt..."
     .venv/bin/pip install -r requirements.txt
 elif [ -f "pyproject.toml" ]; then
-    echo "INFO: Installing dependencies from pyproject.toml..."
-    .venv/bin/pip install -e .
+    echo "INFO: Installing dependencies from pyproject.toml (dev extras)..."
+    .venv/bin/pip install -e ".[dev]"
+fi
+
+# genproj-python-venv-path: expose .venv/bin on PATH for shells that do NOT
+# inherit devcontainer.json remoteEnv (VS Code terminals get PATH from
+# remoteEnv; ssh / 'bash -lc' / tmux panes started outside VS Code do not).
+# The marker comment keeps this idempotent across post-create re-runs.
+VENV_RC_MARKER='# genproj-python-venv-path'
+if ! grep -qF "$VENV_RC_MARKER" "$HOME/.bashrc" 2>/dev/null; then
+    cat >> "$HOME/.bashrc" <<'EOF'
+# genproj-python-venv-path: prefer project .venv
+if [ -d "/workspaces/{{projectName}}/.venv/bin" ]; then
+    export PATH="/workspaces/{{projectName}}/.venv/bin:$PATH"
+fi
+EOF
+    echo "INFO: Added .venv PATH hook to ~/.bashrc"
+fi
+if ! grep -qF "$VENV_RC_MARKER" "$HOME/.zshrc" 2>/dev/null; then
+    cat >> "$HOME/.zshrc" <<'EOF'
+# genproj-python-venv-path: prefer project .venv
+if [ -d "/workspaces/{{projectName}}/.venv/bin" ]; then
+    export PATH="/workspaces/{{projectName}}/.venv/bin:$PATH"
+fi
+EOF
+    echo "INFO: Added .venv PATH hook to ~/.zshrc"
 fi
 `;
 
@@ -833,7 +862,10 @@ export function generateMergedDevelopmentContainerFiles(
 						)
 					: '',
 				pythonSetup: context.capabilities.some((c) => c.startsWith('devcontainer-python'))
-					? PYTHON_SETUP_SCRIPT
+					? PYTHON_SETUP_SCRIPT.replaceAll(
+							'{{projectName}}',
+							() => context.projectName || context.name || 'my-project'
+						)
 					: '',
 				gitSafeDirectory: GIT_SAFE_DIR_SCRIPT.replaceAll(
 					'{{projectName}}',
