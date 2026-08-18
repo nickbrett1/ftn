@@ -1,0 +1,351 @@
+<script>
+	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+
+	const { data } = $props();
+
+	const projectUrl = "https://github.com/nickbrett1/stripe-toddler";
+</script>
+
+<style>
+	.mermaid-container {
+		display: flex;
+		justify-content: center;
+		overflow-x: auto;
+	}
+</style>
+
+<!--
+	FIRST DRAFT — image placeholders (see Blog Article Memo §5 for the full table).
+	Locations are marked in the body with HTML comments named IMAGE PLACEHOLDER H1 / H2 / H3-H7 / H8 / H9 / M1.
+	Drop in photos via Img imports from $lib/images when available, with caption + alt text.
+-->
+
+<h1 class="!mb-0 no-underline">My toddler has a store. Stripe runs the payments. The process beat the model.</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">Spec-driven development, round two — the cheap model was the proof, not the cause</p>
+August 2026
+<ProjectLinkButton href={projectUrl} />
+
+<!-- IMAGE PLACEHOLDER H1: Hero shot — full setup: iPad on stand + Tera Mini scanner + Stripe Reader M2 + toys with barcodes -->
+
+## Introduction
+
+A toddler selling toys with real payment hardware — that's the fun part. The engineering story is the process behind it: the direct follow-up to my [Spec Kit article](/projects/speckit-dev), and the place where spec-driven development finally worked. Crucially, it worked *without* a cleverer model. This project ran on a cheaper, less sophisticated one than last time, at roughly a thirtieth of the price per token — and the work came out straighter. Better process, cheaper model, better result. Process beat model.
+
+Two workflow changes did the work, and both are transferable. The first: my specs now feed **validated, structured artifacts** — state diagrams, message flows, UI mocks — instead of jumping straight to a plan. The second: the whole stack, a Rust backend and a Swift iPad app, lived in **one devcontainer I could drive from my phone**, with a feedback loop measured in minutes and run on live toddler feedback. That's what this post is about.
+
+Here's the setup, because it's worth setting the scene: an iPad on a stand, a wireless barcode scanner, and a [Stripe Reader M2](https://stripe.com/terminal) on our kitchen table. My three-year-old scans a toy, taps a card, and the app throws a celebration. Underneath is a real payments stack — Stripe's Terminal SDK, a Rust worker on Cloudflare, KV for inventory, D1 for the transaction log — and a build process that finally held the line.
+
+## The Toy Store, Meet Stripe
+
+<!-- IMAGE PLACEHOLDER H2: Hardware spread — the "meet Stripe" table: scanner, M2, test cards, iPad stand -->
+
+The scene: an iPad on a stand, a Tera Mini barcode scanner, a Stripe Reader M2, a small stack of test cards, and a shelf of toys wearing printed barcode labels. The product owner is three years old. The QA lead is three years old. The most demanding user is three years old.
+
+Here's the flow. She picks up the scanner, points it at a toy, and pulls the trigger. The iPad beeps, and the item appears on screen: a big photo, its name, and a price. Prices are deliberately integer — $1, $5, no cents, no tax, no shipping, no surprises. Each scan adds to a running total with a satisfying chime. When she's ready, she taps a card on the M2, the reader flashes green, and then the app lets loose: fireworks, bouncing images of everything she just sold, sound, and on a good day a little video of a guitar band playing. Then "Go Again" and the cart resets.
+
+<!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
+<!-- IMAGE PLACEHOLDER H8: Toys + barcodes — close-up of printed Avery barcode labels on toys -->
+<!-- IMAGE PLACEHOLDER H9: M2 + test cards — close-up of the Reader M2 and Stripe test cards -->
+
+One design principle guided all of it: **transactions should always succeed.** This is a toy, not a fraud engine. If the capture fails for a boring reason, the sale still happens — the toddler never sees a "payment declined" screen. That single decision kept the whole product honest about what it is, and it quietly shaped the architecture: the celebration is the source of truth for the toddler, and the ledger is there to keep me honest, not to police her.
+
+## The System
+
+Three pieces, and each one is deliberately conventional:
+
+**The iPad app (Swift).** Minimal text, big buttons, bright colors, celebratory animations. The scanner connects over Bluetooth in keyboard-wedge mode — the app just sees keystrokes ending in a carriage return and parses the barcode from them. The M2 connects through the [Stripe Terminal iOS SDK](https://docs.stripe.com/terminal). Every request to the backend is signed with Apple App Attest and an API key generated from [fintechnick.com/api-keys](/api-keys), so only my iPad can talk to the worker at all.
+
+**The backend (Rust on Cloudflare Workers).** One monolithic worker. It issues Terminal connection tokens, creates `PaymentIntent`s with the `card_present` payment method type, and captures payments once the card is authorized. Inventory lives in [KV](https://developers.cloudflare.com/kv/) keyed by barcode for edge-speed lookups; every completed sale is logged to [D1](https://developers.cloudflare.com/d1/) for analytics. I'd never written Rust before this project — a big part of the fun was discovering that Workers' Rust support is genuinely pleasant.
+
+**The admin side.** Inventory management: photo upload, pricing, barcode generation, and printing onto [Avery 1" × 2-5/8" address labels](https://www.avery.com/) using nothing more exotic than CSS `@media print` rules. Plus a transaction log for analytics. The backend does the heavy lifting; the admin frontend lives on this site at [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin).
+
+Here's the component graph straight out of the specs:
+
+<div class="mermaid-container">
+
+```mermaid
+graph TD
+    subgraph ClientDevices [Client Devices and Peripherals]
+        iPadApp["iPad POS App&#10;Swift / iOS"]
+        BarcodeScanner["Tera Mini Barcode Scanner&#10;Bluetooth HID Mode"]
+        StripeReader["Stripe Reader M2&#10;Bluetooth BLE Mode"]
+        AveryPrinter["Avery Label Printer&#10;AirPrint / Browser Print"]
+    end
+
+    subgraph ExternalServices [External Integrations]
+        StripeAPI["Stripe API&#10;Terminal and Payments"]
+        AppAttest["Apple App Attest Service&#10;Device Verification"]
+    end
+
+    subgraph EdgeBackend [Cloudflare Workers Edge Platform]
+        RustWorker["Payments and Admin API Worker&#10;Rust / Wasm"]
+        subgraph CloudflareStorage [Cloudflare Storage]
+            D1Db["D1 Relational DB&#10;SQLite Transactions"]
+            KVStore["KV Namespace&#10;Inventory Data"]
+        end
+    end
+
+    subgraph AdminControl [Admin Portal]
+        AdminUI["Admin Web App&#10;www.fintechnick.com"]
+    end
+
+    BarcodeScanner -->|Bluetooth HID / Keystrokes| iPadApp
+    StripeReader <-->|Bluetooth BLE / Stripe Terminal SDK| iPadApp
+    iPadApp <-->|HTTPS REST / App Attest Signed| RustWorker
+    AdminUI <-->|HTTPS REST / Auth API Key| RustWorker
+
+    RustWorker <-->|Cloudflare Binding| D1Db
+    RustWorker <-->|Cloudflare Binding| KVStore
+
+    RustWorker <-->|HTTPS / REST API| StripeAPI
+    RustWorker -->|HTTPS / Validation Requests| AppAttest
+    AdminUI -->|Browser Render / CSS @media print| AveryPrinter
+```
+
+</div>
+
+The worker's [OpenAPI spec](https://github.com/nickbrett1/stripe-toddler/blob/main/specs/spec/api/worker-openapi.yaml) was one of the artifacts we validated up front. Here's the entire POS surface — nine endpoints, three of them the whole payments flow:
+
+```yaml
+# worker-openapi.yaml (excerpt) — the POS endpoints
+paths:
+  /api/pos/inventory/{barcode}:
+    get:
+      summary: Look up an item by barcode
+      description: Used by the iPad POS app. Secured by App Attest assertion headers.
+  /api/terminal/connection-token:
+    post:
+      summary: Get Stripe Terminal connection token
+      description: Contacts Stripe to generate a short-lived connection token
+        so the iPad can authorize a session with the Reader M2.
+  /api/terminal/payment-intent:
+    post:
+      summary: Create PaymentIntent
+      description: Creates a card_present PaymentIntent for the cart total.
+  /api/terminal/capture:
+    post:
+      summary: Capture PaymentIntent
+      description: Captures the authorized PaymentIntent and logs the transaction to D1.
+```
+
+The data split is boring in the best possible way — each store answers the one question it's good at:
+
+```json
+// KV — inventory, keyed by barcode, read at the edge on every scan
+{
+  "pattern": "item:<barcode>",
+  "example_key": "item:071234567890",
+  "schema": {
+    "required": ["barcode", "name", "price_cents", "image_url", "created_at"]
+  }
+}
+```
+
+```sql
+-- D1 — the transaction log, relational, for analytics
+CREATE TABLE IF NOT EXISTS transactions (
+    transaction_id TEXT PRIMARY KEY NOT NULL,
+    payment_intent_id TEXT NOT NULL UNIQUE,
+    amount_cents INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS transaction_items (
+    item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transaction_id TEXT NOT NULL,
+    barcode TEXT NOT NULL,
+    name TEXT NOT NULL,
+    price_cents INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (transaction_id) REFERENCES transactions (transaction_id) ON DELETE CASCADE
+);
+```
+
+## The Process: Spec-Driven Development, Round Two
+
+This is the section that matters, so let me be honest about where I started. In the [Spec Kit article](/projects/speckit-dev) I described what failed: cost blowups from forward-only iteration, specs that were hard to update once code existed, and giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. Two changes fixed that, and they're the real subject of this article.
+
+### Change #1 — a structured artifact pipeline
+
+The pipeline is now **spec → artifacts → validation → plan**, not spec → plan. And it's codified as public [goose recipes](https://github.com/nickbrett1/goose-recipes) in `github.com/nickbrett1/goose-recipes`, so it's reproducible and improvable:
+
+1. **design-project** — a clarifying-questions interview that produces `description.md`, the prose spec. The governing principle: this is a *design doc, not a full coding spec*. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.
+2. **Artifact generation** — recipes per artifact type produce structured artifacts: state diagrams, message flows, UI mocks, plus topology, API, data, and capacity models.
+3. **validate-spec** — artifacts are cross-checked for consistency against a dependency map (**spec-dag**) *before anything is built*. This is the step that kills the tangents: the agent implements a consistent, validated artifact set instead of improvising from prose.
+4. **generate-plan** — the plan is generated *off the validated artifacts*. It's a translation of agreed structure, not a first draft.
+5. **scaffold-project + execute-plan** — once validated, the repo itself is scaffolded via genproj (devcontainers, CircleCI, Doppler, Sonar, the lot), then implementation runs phase-by-phase in-repo.
+
+Here's the artifact tree this produced for stripe-toddler — every file cross-checked against the others:
+
+```text
+spec/
+├── topology/
+│   ├── component-graph.mmd        # system nodes and DAG
+│   └── deployment-targets.md      # infrastructure mapping
+├── api/
+│   ├── worker-openapi.yaml        # the Rust worker's API
+│   └── swift-protocols.md         # iOS interface contracts
+├── data-architecture/
+│   ├── d1-schema.sql              # SQLite analytics schema
+│   ├── kv-layout.json             # inventory access patterns
+│   └── domain-models.rs           # core structs
+├── flows/
+│   ├── checkout-sequence.md       # step-by-step transaction walkthrough
+│   └── payment-state-machine.md   # intent and hardware lifecycle
+├── ui/
+│   └── wireframes/                # low-fidelity Excalidraw mocks
+└── capacity/
+    └── load-model.md              # sizing, retention, IOPS
+```
+
+The payoff was visible immediately. Here's the payment state machine — a validated artifact that both I and the agent could hold in our heads while building:
+
+<div class="mermaid-container">
+
+```mermaid
+stateDiagram-v2
+    [*] --> WaitingForScan : App launch and initialization
+
+    WaitingForScan --> CartActive : Barcode scanned and verified in KV
+    WaitingForScan --> ErrorScreen : Network error or barcode not in KV
+
+    CartActive --> CartActive : Additional items scanned
+    CartActive --> WaitingForScan : All items removed from cart
+    CartActive --> ReaderSyncing : Tap the Pay button
+
+    ReaderSyncing --> AwaitingCardTap : Terminal token retrieved and intent created
+    ReaderSyncing --> ErrorScreen : Stripe API error or backend timeout
+
+    AwaitingCardTap --> ProcessingPayment : Card tapped successfully
+    AwaitingCardTap --> ErrorScreen : Card read timeout or card rejected
+
+    ProcessingPayment --> Celebrating : Capture endpoint returns HTTP 200
+    ProcessingPayment --> ErrorScreen : Capture fails on Stripe or database write error
+
+    Celebrating --> WaitingForScan : Tap the Go Again button
+    ErrorScreen --> WaitingForScan : Tap the Dismiss button
+```
+
+</div>
+
+And here's the checkout flow as a message sequence, again from the specs — this is the diagram that made the whole system feel tractable before a line of Swift or Rust existed:
+
+<div class="mermaid-container">
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Toddler as Toddler
+    participant iPad as iPad App (Swift)
+    participant Scanner as Barcode Scanner (HID)
+    participant Reader as Stripe Reader M2 (BLE)
+    participant Backend as Rust Worker (Cloudflare)
+    participant KV as Cloudflare KV
+    participant D1 as D1 SQLite DB
+    participant Stripe as Stripe API
+
+    Note over Toddler, Scanner: Scan phase
+    Toddler->>Scanner: Scans toy barcode
+    Scanner->>iPad: Keystrokes and carriage return
+    iPad->>Backend: GET inventory by barcode (attested)
+    Backend->>KV: Fetch item details
+    KV-->>Backend: Name, price, photo URL
+    Backend-->>iPad: Item details
+
+    Note over Toddler, Reader: Payment phase
+    Toddler->>iPad: Taps the Pay button
+    iPad->>Backend: POST payment-intent
+    Backend->>Stripe: POST /v1/payment_intents (card_present)
+    Stripe-->>Backend: client_secret and intent ID
+    Backend-->>iPad: client_secret and intent ID
+    iPad->>Reader: collectPaymentMethod(client_secret)
+    Toddler->>Reader: Taps test card
+    Reader-->>iPad: Authorized intent
+
+    Note over iPad, D1: Capture phase
+    iPad->>Backend: POST capture
+    Backend->>Stripe: POST /v1/payment_intents/pi_xxx/capture
+    Stripe-->>Backend: Capture succeeded
+    Backend->>D1: INSERT INTO transactions
+    D1-->>Backend: Confirmed
+    Backend-->>iPad: Transaction ID
+
+    Note over Toddler, iPad: Celebration phase
+    iPad->>iPad: Fireworks, guitar band, sound
+    Toddler->>iPad: Taps Go Again
+```
+
+</div>
+
+The point isn't the diagrams themselves — it's that they existed *before* the code, agreed and cross-checked. When something did need to change, it rippled through small, cheap artifacts instead of through a mountain of generated code. That was the exact failure mode from last time, addressed at the root.
+
+### Change #2 — iteration infrastructure
+
+The second change is the tooling that made iteration cheap enough to do constantly:
+
+- **One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer. Xcode is driven through its MCP server, bridged from inside the container by a small proxy ([`mcp-sse-proxy.cjs`](https://github.com/nickbrett1/stripe-toddler/blob/main/.agents/mcp-sse-proxy.cjs) → `xcode-native` MCP), so the agent can edit, rebuild, and run the iOS tests without ever leaving the container. No context-switching between an IDE and a backend toolchain.
+
+```json
+// .agents/mcp_config.json (excerpt) — the bridge that makes the magic chain possible
+{
+  "mcpServers": {
+    "xcode-native": {
+      "command": "node",
+      "args": [
+        "/workspaces/stripe-toddler/.agents/mcp-sse-proxy.cjs",
+        "http://mac-studio:9876/sse"
+      ]
+    }
+  }
+}
+```
+
+- **Phone access.** [Blink Shell](https://blink.sh/) + mosh into the devcontainer from my phone over Tailscale — each devcontainer runs Tailscale itself, so the phone connects *directly* to the container, no host hop. Iteration happens anywhere, including standing next to the toddler.
+- **LiteLLM.** A single switch to route to cheaper models. This project ran on **DeepSeek-v4-flash** at published rates of **$0.14/$0.28 per M tokens** (input/output), instead of the Gemini Pro that was current when I wrote the December 2025 article — **Gemini 3 Pro at $2.50/$10.00 per M tokens**. That's roughly 18× cheaper on input and 36× cheaper on output. Agentic work skews output-heavy, so the real-world delta landed around **30×**. Cheap had its own compounding benefit too: no rate-limit anxiety on a subscription, which made me willing to iterate more aggressively.
+
+The guardrails carried over from last time: `.agents/.rules` with [git and testing guidelines](https://github.com/nickbrett1/stripe-toddler/tree/main/.agents/.rules), plus SonarCloud, GitGuardian, and Dependabot in CI.
+
+The pitch, in one line: this is the iteration story the Spec Kit article said was missing — validate artifacts *before* generating code, so changes ripple cheaply, and the model becomes almost an implementation detail.
+
+## The Magical Moment
+
+<!-- IMAGE PLACEHOLDER M1: Phone screenshot — live Blink + mosh session into the devcontainer -->
+
+First real session. The toddler is the user, the demo is happening live, and the post-purchase celebration — the part I was most proud of — isn't exciting enough for her. She watches the fireworks with the flat, professional disappointment only a three-year-old can deliver.
+
+Here's the chain, blow by blow:
+
+1. **Phone** — [Blink Shell](https://blink.sh/), mosh straight into the VSCode devcontainer over Tailscale. Each container runs its own Tailscale, so it's a direct connection; mosh keeps the session alive while I walk around the room.
+2. **Agent** — I ask the agent to make the celebration more exciting.
+3. **One workspace** — the devcontainer holds the whole stack: the Rust backend and the Swift iPad app. No toolchain switch, no new terminal, no context loss.
+4. **MCP bridge** — the agent reaches the custom MCP wrapper on the Mac host (`mcp-sse-proxy.cjs` → `xcode-native` MCP at `mac-studio:9876/sse`).
+5. **Xcode** — the wrapper drives Xcode end-to-end: edit → rebuild → run tests, all automated, no step-by-step approval.
+6. **The iPad, 10 meters away** — reloads with the new celebration, mid-demo, in response to observed user feedback.
+
+In a pre-agentic world, that's a "note it down and fix it tonight" moment — a task that goes on a list, gets picked up later, and ships tomorrow at the earliest. Now it's a **2-minute loop**: observation → instruction → shipped → verified, all while the user is watching. That loop, more than any single feature, was the product.
+
+This was also the first real end-to-end use of the iPhone → devcontainer agent pipeline — a share-to-agent idea I'd sketched a while back, finally exercised for real. Worth one line because it stopped being a sketch.
+
+## Takeaways
+
+Three things, and I'll keep them to three:
+
+1. **Artifacts before code.** The missing step from the first spec-kit project: typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan. Spec-dag validation is what stopped the wandering. Show a little to explain it, but the full [artifact set is public](https://github.com/nickbrett1/stripe-toddler/tree/main/specs/spec), as are the [recipes](https://github.com/nickbrett1/goose-recipes) that produce it.
+2. **Process beats model.** The process got good enough that a cheaper, less capable model was plenty: DeepSeek-v4-flash at ~$0.14/$0.28 per M tokens produced straighter work than last time's flagship at ~$2.50/$10.00. Roughly 30× cheaper and visibly better behaved — and without the subscription rate-limit anxiety, iterating got more ambitious, not less.
+3. **Make iteration a phone-speed loop.** Devcontainer + MCP + mosh turned "note it down and fix it tonight" into a 2-minute loop. The loop was the real product — it's why a three-year-old's feedback could drive the build in real time.
+
+## Links, Shoutouts, and the Fine Print
+
+- **The project:** [github.com/nickbrett1/stripe-toddler](https://github.com/nickbrett1/stripe-toddler) — specs, Rust worker, iOS app, and the guardrails that kept it honest.
+- **The process:** [github.com/nickbrett1/goose-recipes](https://github.com/nickbrett1/goose-recipes) — the recipes behind the artifact pipeline, public and reusable.
+- **The prior article:** [Vibe Coding with Spec Kit](/projects/speckit-dev), where this journey started.
+- **The admin side:** [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin), live on this site.
+
+A shoutout to Matthew Warshauer, a friend at Stripe who also has a son — proof that Stripe's hardware and APIs are approachable enough for a dad-and-toddler project. <!-- TODO at publish: give Matthew a heads-up before the article goes out; add his LinkedIn link then -->
+
+And, of course, to the small human who was product owner, QA lead, and most demanding user. The store is hers; I just ran the ledger.
+
+One piece of fine print, in the spirit of honesty: all payments shown here ran in Stripe **test mode** — the sales are real to a three-year-old, but they're not real money. The M2 and the test cards behave exactly like the production ones, which is the point: Stripe's stack doesn't care whether the customer is a toddler or a multinational.
+
+If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it. The hardware is a Saturday project; the process is the part worth stealing.
