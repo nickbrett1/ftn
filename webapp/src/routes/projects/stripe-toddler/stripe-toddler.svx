@@ -106,6 +106,8 @@ graph TD
 
 The worker's [OpenAPI spec](https://github.com/nickbrett1/stripe-toddler/blob/main/specs/spec/api/worker-openapi.yaml) was one of the artifacts we validated up front. Here's the entire POS surface — nine endpoints, three of them the whole payments flow:
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
 ```yaml
 # worker-openapi.yaml (excerpt) — the POS endpoints
 paths:
@@ -130,6 +132,8 @@ paths:
 
 The data split is boring in the best possible way — each store answers the one question it's good at:
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
 ```json
 // KV — inventory, keyed by barcode, read at the edge on every scan
 {
@@ -140,6 +144,8 @@ The data split is boring in the best possible way — each store answers the one
   }
 }
 ```
+
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```sql
 -- D1 — the transaction log, relational, for analytics
@@ -177,6 +183,8 @@ The pipeline is now **spec → artifacts → validation → plan**, not spec →
 5. **scaffold-project + execute-plan** — once validated, the repo itself is scaffolded via genproj (devcontainers, CircleCI, Doppler, Sonar, the lot), then implementation runs phase-by-phase in-repo.
 
 Here's the artifact tree this produced for stripe-toddler — every file cross-checked against the others:
+
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```text
 spec/
@@ -285,6 +293,8 @@ The point isn't the diagrams themselves — it's that they existed *before* the 
 The second change is the tooling that made iteration cheap enough to do constantly:
 
 - **One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer. Xcode is driven through its MCP server, bridged from inside the container by a small proxy ([`mcp-sse-proxy.cjs`](https://github.com/nickbrett1/stripe-toddler/blob/main/.agents/mcp-sse-proxy.cjs) → `xcode-native` MCP), so the agent can edit, rebuild, and run the iOS tests without ever leaving the container. No context-switching between an IDE and a backend toolchain.
+
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 
 ```json
 // .agents/mcp_config.json (excerpt) — the bridge that makes the magic chain possible
