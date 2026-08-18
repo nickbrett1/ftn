@@ -237,22 +237,6 @@
 					alias4(
 						((helper =
 							(helper =
-								lookupProperty(helpers, 'dopplerSetup') ||
-								(depth0 != null ? lookupProperty(depth0, 'dopplerSetup') : depth0)) != null
-								? helper
-								: alias2),
-						typeof helper === alias3
-							? helper.call(alias1, {
-									name: 'dopplerSetup',
-									hash: {},
-									data: data,
-									loc: { start: { line: 26, column: 17 }, end: { line: 26, column: 33 } }
-								})
-							: helper)
-					) +
-					alias4(
-						((helper =
-							(helper =
 								lookupProperty(helpers, 'geminiSetup') ||
 								(depth0 != null ? lookupProperty(depth0, 'geminiSetup') : depth0)) != null
 								? helper
@@ -262,7 +246,7 @@
 									name: 'geminiSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 26, column: 33 }, end: { line: 26, column: 48 } }
+									loc: { start: { line: 26, column: 17 }, end: { line: 26, column: 32 } }
 								})
 							: helper)
 					) +
@@ -423,6 +407,23 @@
 					alias4(
 						((helper =
 							(helper =
+								lookupProperty(helpers, 'dopplerSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'dopplerSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'dopplerSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 55, column: 0 }, end: { line: 55, column: 16 } }
+								})
+							: helper)
+					) +
+					'\n\n' +
+					alias4(
+						((helper =
+							(helper =
 								lookupProperty(helpers, 'shellSetup') ||
 								(depth0 != null ? lookupProperty(depth0, 'shellSetup') : depth0)) != null
 								? helper
@@ -432,7 +433,7 @@
 									name: 'shellSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 55, column: 0 }, end: { line: 55, column: 14 } }
+									loc: { start: { line: 57, column: 0 }, end: { line: 57, column: 14 } }
 								})
 							: helper)
 					) +
@@ -449,7 +450,7 @@
 									name: 'pythonSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 57, column: 0 }, end: { line: 57, column: 15 } }
+									loc: { start: { line: 59, column: 0 }, end: { line: 59, column: 15 } }
 								})
 							: helper)
 					) +
@@ -466,7 +467,7 @@
 									name: 'nodeSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 59, column: 0 }, end: { line: 59, column: 13 } }
+									loc: { start: { line: 61, column: 0 }, end: { line: 61, column: 13 } }
 								})
 							: helper)
 					) +
@@ -483,7 +484,7 @@
 									name: 'gitSafeDirectory',
 									hash: {},
 									data: data,
-									loc: { start: { line: 61, column: 0 }, end: { line: 61, column: 20 } }
+									loc: { start: { line: 63, column: 0 }, end: { line: 63, column: 20 } }
 								})
 							: helper)
 					) +
@@ -500,7 +501,7 @@
 									name: 'gitHooksSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 63, column: 0 }, end: { line: 63, column: 17 } }
+									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 17 } }
 								})
 							: helper)
 					) +
@@ -517,7 +518,7 @@
 									name: 'playwrightSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 19 } }
+									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 19 } }
 								})
 							: helper)
 					) +
@@ -534,7 +535,7 @@
 									name: 'agySetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 12 } }
+									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 12 } }
 								})
 							: helper)
 					) +
@@ -551,7 +552,7 @@
 									name: 'gooseSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 68, column: 0 }, end: { line: 68, column: 14 } }
+									loc: { start: { line: 70, column: 0 }, end: { line: 70, column: 14 } }
 								})
 							: helper)
 					) +
@@ -568,7 +569,7 @@
 									name: 'specdagSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 70, column: 0 }, end: { line: 70, column: 16 } }
+									loc: { start: { line: 72, column: 0 }, end: { line: 72, column: 16 } }
 								})
 							: helper)
 					) +
@@ -585,7 +586,7 @@
 									name: 'socatSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 14 } }
+									loc: { start: { line: 73, column: 0 }, end: { line: 73, column: 14 } }
 								})
 							: helper)
 					) +
@@ -602,7 +603,7 @@
 									name: 'cloudLoginSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 84, column: 0 }, end: { line: 84, column: 19 } }
+									loc: { start: { line: 86, column: 0 }, end: { line: 86, column: 19 } }
 								})
 							: helper)
 					) +
