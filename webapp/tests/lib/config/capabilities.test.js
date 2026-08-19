@@ -38,6 +38,16 @@ describe('Capabilities Config', () => {
 		});
 	});
 
+	describe('doppler capability projectStrategy', () => {
+		it('defaults to the shared common project (doppler-scaling memo)', () => {
+			const capability = getCapabilityById('doppler');
+			const property = capability.configurationSchema.properties.projectStrategy;
+			expect(property).toBeDefined();
+			expect(property.enum).toEqual(['common', 'new']);
+			expect(property.default).toBe('common');
+		});
+	});
+
 	describe('validateCapabilityDependencies', () => {
 		it('should validate selection with no dependencies', () => {
 			const result = validateCapabilityDependencies(['doppler']);

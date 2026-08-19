@@ -444,18 +444,38 @@ export class ProjectGeneratorService {
 		if (context.capabilities.includes('doppler') && this.services.doppler) {
 			try {
 				console.log('🔄 Configuring Doppler...');
-				const dopplerProject = await this.services.doppler.createProject(
-					context.projectName,
-					`Secrets management for ${context.projectName}`
-				);
 
-				// Create development environment
-				await this.services.doppler.createEnvironment(dopplerProject.slug, 'Development', 'dev');
+				// Doppler scaling memo (memos/doppler-scaling): the scaffolder
+				// burned one Doppler project per generated repo (10-project
+				// Developer-plan wall). Default to the SHARED `common` project —
+				// no createProject, no API calls at all. Only create a dedicated
+				// per-app project when the doppler capability is configured with
+				// projectStrategy: 'new' (repos with app-specific secrets).
+				const strategy = context.configuration?.doppler?.projectStrategy || 'common';
 
-				results.doppler = {
-					success: true,
-					project: dopplerProject
-				};
+				if (strategy === 'new') {
+					const dopplerProject = await this.services.doppler.createProject(
+						context.projectName,
+						`Secrets management for ${context.projectName}`
+					);
+
+					// Create development environment
+					await this.services.doppler.createEnvironment(dopplerProject.slug, 'Development', 'dev');
+
+					results.doppler = {
+						success: true,
+						project: dopplerProject,
+						strategy: 'new'
+					};
+				} else {
+					results.doppler = {
+						success: true,
+						project: { slug: 'common', name: 'common' },
+						config: 'dev',
+						strategy: 'common',
+						note: 'Using the shared common project; no new Doppler project created. Set projectStrategy=new to create a dedicated project.'
+					};
+				}
 				console.log('✅ Doppler configured successfully');
 			} catch (error) {
 				console.error(`❌ Doppler configuration failed: ${error.message}`);

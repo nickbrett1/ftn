@@ -3,7 +3,8 @@ import {
 	getCapabilityTemplateData,
 	applyDefaults,
 	getGooseMcpConfig,
-	assertNoGooseEnvVarReferences
+	assertNoGooseEnvVarReferences,
+	resolveDopplerTarget
 } from '../../../src/lib/utils/capability-template-utils';
 
 describe('capability-template-utils', () => {
@@ -343,6 +344,62 @@ describe('capability-template-utils', () => {
 			};
 			const data = getCapabilityTemplateData('dependabot', context);
 			expect(data.dependabotUpdates).toContain('package-ecosystem: "cargo"');
+		});
+	});
+
+	describe('resolveDopplerTarget', () => {
+		it('defaults to the shared common project', () => {
+			expect(resolveDopplerTarget({ projectName: 'mailroom', configuration: {} })).toEqual({
+				project: 'common',
+				config: 'dev',
+				strategy: 'common'
+			});
+		});
+
+		it('defaults to common when configuration is missing entirely', () => {
+			expect(resolveDopplerTarget({ name: 'mailroom' })).toEqual({
+				project: 'common',
+				config: 'dev',
+				strategy: 'common'
+			});
+		});
+
+		it('uses the repo name for a dedicated project when projectStrategy=new', () => {
+			expect(
+				resolveDopplerTarget({
+					projectName: 'mailroom',
+					configuration: { doppler: { projectStrategy: 'new' } }
+				})
+			).toEqual({
+				project: 'mailroom',
+				config: 'dev',
+				strategy: 'new'
+			});
+		});
+
+		it('honors an explicit dopplerConfig override', () => {
+			expect(
+				resolveDopplerTarget({ projectName: 'mailroom', dopplerConfig: 'prd', configuration: {} })
+			).toEqual({
+				project: 'common',
+				config: 'prd',
+				strategy: 'common'
+			});
+		});
+
+		it('feeds the doppler template data through getCapabilityTemplateData', () => {
+			const data = getCapabilityTemplateData('doppler', {
+				projectName: 'mailroom',
+				configuration: {}
+			});
+			expect(data.dopplerProject).toBe('common');
+			expect(data.dopplerConfig).toBe('dev');
+
+			const newProjectData = getCapabilityTemplateData('doppler', {
+				projectName: 'mailroom',
+				configuration: { doppler: { projectStrategy: 'new' } }
+			});
+			expect(newProjectData.dopplerProject).toBe('mailroom');
 		});
 	});
 

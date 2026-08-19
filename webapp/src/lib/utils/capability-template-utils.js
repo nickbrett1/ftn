@@ -523,6 +523,35 @@ function _applyCodeQualityConfig(data, context) {
 }
 
 /**
+ * Resolves the Doppler target (project + config) for a generated repo.
+ *
+ * Doppler scaling memo (memos/doppler-scaling): the Developer plan caps the
+ * workplace at 10 projects, and the scaffolder used to burn one project per
+ * generated repo via `createProject()`. The genproj fix defaults every repo
+ * to the SHARED `common` project — no new project is created — unless the
+ * doppler capability is configured with `projectStrategy: "new"` (dedicated
+ * per-app project for repos with app-specific secrets).
+ *
+ * The config stays `dev` (matching doppler.yaml and the devcontainer context
+ * pin); only the PROJECT is decided here.
+ *
+ * @param {Object} context - Generation context (capabilities, configuration, projectName)
+ * @returns {{project: string, config: string, strategy: 'common'|'new'}} Resolved target
+ */
+export function resolveDopplerTarget(context) {
+	const configuration = context?.configuration || {};
+	const strategy = configuration.doppler?.projectStrategy === 'new' ? 'new' : 'common';
+	const projectName = context?.projectName || context?.name || 'my-project';
+	const config = context?.dopplerConfig || 'dev';
+
+	return {
+		project: strategy === 'new' ? projectName : 'common',
+		config,
+		strategy
+	};
+}
+
+/**
  * Resolves the project language from the selected capabilities.
  * The selected `devcontainer-*` capability is the source of truth; an explicit
  * top-level `language` configuration option (`python | node | java | rust`)
@@ -1090,7 +1119,11 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		sonarcloud: getSonarCloudTemplateData,
 		circleci: getCircleCiTemplateData,
 		dependabot: getDependabotTemplateData,
-		'docker-container': getDockerContainerTemplateData
+		'docker-container': getDockerContainerTemplateData,
+		doppler: (ctx) => {
+			const target = resolveDopplerTarget(ctx);
+			return { dopplerProject: target.project, dopplerConfig: target.config };
+		}
 	};
 
 	const generator = dataGenerators[capabilityId];

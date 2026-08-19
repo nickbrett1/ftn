@@ -56,6 +56,7 @@ import {
 	getCapabilityTemplateData,
 	applyDefaults,
 	resolveLanguage,
+	resolveDopplerTarget,
 	toPythonPackageName,
 	toDistributionName,
 	getGooseMcpConfig,
@@ -94,10 +95,10 @@ agy-dev() {
     fi
   fi
 
-  echo "Starting Antigravity with Doppler (common + {{projectName}})..."
+  echo "Starting Antigravity with Doppler (common + {{dopplerProject}})..."
   # Load common secrets first, then layer project-specific secrets on top.
   # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to agy.
-  doppler run --project common --config dev -- doppler run --forward-signals --project {{projectName}} --config dev -- agy "$@"
+  doppler run --project common --config dev -- doppler run --forward-signals --project {{dopplerProject}} --config dev -- agy "$@"
 }`;
 
 export const SHELL_SETUP_SCRIPT = `
@@ -155,8 +156,11 @@ goose() {
  * - verifies the resolved project loudly at setup time (never silent).
  */
 export function generateDopplerSetupScript(context = {}) {
-	const projectName = context.projectName || context.name || 'my-project';
-	const config = context.dopplerConfig || 'dev';
+	// Doppler scaling memo (memos/doppler-scaling): repos default to the
+	// shared `common` project (no new project created); projectStrategy: 'new'
+	// opts into a dedicated per-app project. The context pin must match the
+	// repo's doppler.yaml, so it follows the resolved target.
+	const { project: projectName, config } = resolveDopplerTarget(context);
 
 	const rcBlock = `# genproj-doppler-context-pin: this repo's doppler.yaml context wins over ambient env
 export DOPPLER_PROJECT=${projectName}
@@ -424,12 +428,12 @@ if command -v doppler &> /dev/null; then
     echo "      your browser to complete the login, then return here."
     if doppler login --no-check-version --yes; then
       echo "✅ Doppler login successful."
-      if doppler setup --no-interactive --project {{projectName}} --config dev; then
-        echo "✅ Doppler project {{projectName}}/dev configured."
+      if doppler setup --no-interactive --project {{dopplerProject}} --config dev; then
+        echo "✅ Doppler project {{dopplerProject}}/dev configured."
       else
-        echo "WARN: doppler setup failed for {{projectName}}/dev - the project may not"
+        echo "WARN: doppler setup failed for {{dopplerProject}}/dev - the project may not"
         echo "      exist yet. Create it at https://dashboard.doppler.com, then run:"
-        echo "      doppler setup --no-interactive --project {{projectName}} --config dev"
+        echo "      doppler setup --no-interactive --project {{dopplerProject}} --config dev"
       fi
     else
       echo "❌ Doppler login did not complete. Re-run this script (or 'doppler login'),"
@@ -451,10 +455,10 @@ if ! command -v wrangler &> /dev/null; then
 fi
 
 # 1. Check if already logged in via Doppler API Token (Highly recommended for multi-container)
-if doppler run --project {{projectName}} --config dev -- env | grep -q "CLOUDFLARE_API_TOKEN"; then
+if doppler run --project {{dopplerProject}} --config dev -- env | grep -q "CLOUDFLARE_API_TOKEN"; then
   echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Using token for authentication."
   # Verify connectivity
-  if ! doppler run --project {{projectName}} --config dev -- npx wrangler whoami 2>&1 | grep -q "You are not authenticated"; then
+  if ! doppler run --project {{dopplerProject}} --config dev -- npx wrangler whoami 2>&1 | grep -q "You are not authenticated"; then
     echo "✅ Successfully authenticated via Doppler token. Skipping interactive login."
     exit 0
   else
@@ -497,7 +501,7 @@ export const SETUP_WRANGLER_SCRIPT = `
 echo
 # Setup Wrangler configuration with environment variables
 echo "Setting up Wrangler configuration..."
-doppler run --project {{projectName}} --config dev -- ./scripts/setup-wrangler-config.sh dev`;
+doppler run --project {{dopplerProject}} --config dev -- ./scripts/setup-wrangler-config.sh dev`;
 
 export const DOPPLER_INSTALL_SCRIPT = String.raw`curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list`;
@@ -928,8 +932,8 @@ export function generateMergedDevelopmentContainerFiles(
 				projectName: context.projectName || context.name || 'my-project',
 				agyDevAlias: context.capabilities.includes('doppler')
 					? AGY_DEV_ALIAS.replaceAll(
-							'{{projectName}}',
-							() => context.projectName || context.name || 'my-project'
+							'{{dopplerProject}}',
+							() => resolveDopplerTarget(context).project
 						)
 					: '',
 				gooseAlias: context.capabilities.includes('doppler') ? GOOSE_ALIAS : ''
@@ -1348,14 +1352,40 @@ docker compose up -d
 	// (the CLI is installed in the devcontainer; first use must link it).
 	// Round-7 (memo Gi8CN7XqpH6CxFAc2YUJsK): document env>yaml precedence and
 	// manual provisioning so a wrong-project resolution is never a mystery.
+	// Doppler scaling memo (memos/doppler-scaling): repos default to the shared
+	// `common` project; projectStrategy: 'new' opts into a dedicated project.
 	const dopplerSection = context.capabilities.includes('doppler')
-		? `## Doppler
-
-This project uses Doppler for secrets. First use (links the project and \`dev\` config):
+		? (() => {
+				const { project: dopplerProject, strategy } = resolveDopplerTarget(context);
+				const provisioning =
+					strategy === 'new'
+						? `This project uses Doppler for secrets in its own \`${dopplerProject}\` project.
+First use (links the project and \`dev\` config):
 
 \`\`\`bash
-doppler setup --project ${projectName} --config dev
+doppler setup --project ${dopplerProject} --config dev
 \`\`\`
+
+If the project does not exist in your Doppler workplace yet, create it first:
+
+\`\`\`bash
+doppler projects create ${dopplerProject}
+doppler configs create dev --project ${dopplerProject}
+\`\`\``
+						: `This project uses Doppler for secrets from the shared \`common\` project
+(config \`dev\`) — no per-repo Doppler project is created. First use (links
+the shared project and \`dev\` config):
+
+\`\`\`bash
+doppler setup --project common --config dev
+\`\`\`
+
+If your repo needs app-specific secrets that shouldn't live in the shared
+\`common\` project, regenerate it with the doppler capability set to
+\`projectStrategy: "new"\` to get a dedicated project.`;
+				return `## Doppler
+
+${provisioning}
 
 The Doppler CLI is installed in the devcontainer — it must be on PATH for the
 VS Code extension and \`doppler run\` to work. Auth is persisted via the host
@@ -1369,21 +1399,15 @@ the devcontainer (e.g. an agent runtime) — exports \`DOPPLER_PROJECT\` /
 \`DOPPLER_CONFIG\` / \`DOPPLER_ENVIRONMENT\`, those silently override this
 repo's \`doppler.yaml\` and every \`doppler\` command targets the wrong
 project. The devcontainer's post-create setup pins this repo's context
-(\`${projectName}\`/\`dev\`) in \`~/.bashrc\` and \`~/.zshrc\` and warns at
+(\`${dopplerProject}\`/\`dev\`) in \`~/.bashrc\` and \`~/.zshrc\` and warns at
 setup if resolution still mismatches. To force the correct context manually:
 
 \`\`\`bash
 unset DOPPLER_PROJECT DOPPLER_CONFIG DOPPLER_ENVIRONMENT
-doppler setup --no-interactive --project ${projectName} --config dev
+doppler setup --no-interactive --project ${dopplerProject} --config dev
 \`\`\`
-
-If the project does not exist in your Doppler workplace yet, create it first:
-
-\`\`\`bash
-doppler projects create ${projectName}
-doppler configs create dev --project ${projectName}
-\`\`\`
-`
+`;
+			})()
 		: '';
 
 	return {
@@ -1405,6 +1429,8 @@ This project was generated using the genproj tool.
 function pushWranglerFiles(templateEngine, context, files, projectName, compatibilityDate) {
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
+	// Doppler scaling memo: the doppler project is `common` by default.
+	const dopplerProject = resolveDopplerTarget(context).project;
 	const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
 	const isRustWorker = wranglerConfig.workerType === 'rust';
 
@@ -1427,7 +1453,8 @@ function pushWranglerFiles(templateEngine, context, files, projectName, compatib
 		filePath: 'scripts/run-wrangler-dev.sh',
 		content: templateEngine.generateFile('scripts-run-wrangler-dev-sh', {
 			...context,
-			projectName
+			projectName,
+			dopplerProject
 		})
 	});
 
@@ -1476,18 +1503,24 @@ export function generateCloudLoginFiles(templateEngine, context) {
 	const projectName = context.projectName || context.name || 'my-project';
 	const compatibilityDate = new Date().toISOString().split('T')[0];
 
+	// Doppler scaling memo (memos/doppler-scaling): the doppler project a
+	// repo points at is `common` by default (projectStrategy: 'new' opts into
+	// a dedicated project). All doppler CLI references in the login/setup
+	// scripts must use the RESOLVED project, not the repo name.
+	const dopplerProject = resolveDopplerTarget(context).project;
+
 	// cloud_login.sh
 	const dopplerLogin = hasDoppler
-		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', () => projectName)
+		? DOPPLER_LOGIN_SCRIPT.replaceAll('{{dopplerProject}}', () => dopplerProject)
 		: '';
 
 	const wranglerLogin = hasWrangler
-		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{projectName}}', () => projectName)
+		? WRANGLER_LOGIN_SCRIPT.replaceAll('{{dopplerProject}}', () => dopplerProject)
 		: '';
 
 	const setupWrangler =
 		hasDoppler && hasWrangler
-			? SETUP_WRANGLER_SCRIPT.replaceAll('{{projectName}}', () => projectName)
+			? SETUP_WRANGLER_SCRIPT.replaceAll('{{dopplerProject}}', () => dopplerProject)
 			: '';
 
 	const googleCloudLogin = hasGoogleCloud
@@ -1519,7 +1552,8 @@ export function generateCloudLoginFiles(templateEngine, context) {
 			filePath: 'scripts/sync-doppler-secrets.sh',
 			content: templateEngine.generateFile('scripts-sync-doppler-secrets-sh', {
 				...context,
-				projectName
+				projectName,
+				dopplerProject
 			})
 		});
 	}

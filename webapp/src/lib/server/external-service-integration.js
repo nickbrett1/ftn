@@ -10,6 +10,7 @@
 import { CircleCIAPIService } from './circleci-api.js';
 import { DopplerAPIService } from './doppler-api.js';
 import { SonarCloudAPIService } from './sonarcloud-api.js';
+import { resolveDopplerTarget } from '$lib/utils/capability-template-utils.js';
 
 /**
  * @typedef {Object} IntegrationResult
@@ -131,26 +132,37 @@ export class ExternalServiceIntegrationService {
 		}
 
 		try {
-			// Create Doppler project
-			const project = await this.services.doppler.createProject(
-				context.projectName,
-				`Secrets management for ${context.projectName}`
-			);
+			// Doppler scaling memo (memos/doppler-scaling): default to the
+			// SHARED `common` project — no new project, no environments. Only
+			// create a dedicated per-app project when the doppler capability is
+			// configured with projectStrategy: 'new'.
+			const strategy = context.configuration?.doppler?.projectStrategy || 'common';
+			let project;
+			let createdEnvironments = [];
 
-			// Create environments
-			const environments = ['dev', 'staging', 'prod'];
-			const createdEnvironments = [];
-
-			for (const environmentName of environments) {
-				const environment = await this.services.doppler.createEnvironment(
-					project.slug,
-					environmentName.charAt(0).toUpperCase() + environmentName.slice(1),
-					environmentName
+			if (strategy === 'new') {
+				// Create Doppler project
+				project = await this.services.doppler.createProject(
+					context.projectName,
+					`Secrets management for ${context.projectName}`
 				);
-				createdEnvironments.push(environment);
+
+				// Create environments
+				const environments = ['dev', 'staging', 'prod'];
+
+				for (const environmentName of environments) {
+					const environment = await this.services.doppler.createEnvironment(
+						project.slug,
+						environmentName.charAt(0).toUpperCase() + environmentName.slice(1),
+						environmentName
+					);
+					createdEnvironments.push(environment);
+				}
+			} else {
+				project = { slug: 'common', name: 'common' };
 			}
 
-			// Set up initial secrets if configured
+			// Set up initial secrets if configured (against the resolved project)
 			if (context.configuration.doppler?.secrets) {
 				for (const [environmentName, secrets] of Object.entries(
 					context.configuration.doppler.secrets
@@ -172,9 +184,10 @@ export class ExternalServiceIntegrationService {
 			return {
 				success: true,
 				serviceData: {
-					projectId: project.id,
+					projectId: project.id || project.slug,
 					projectSlug: project.slug,
-					environments: createdEnvironments
+					environments: createdEnvironments,
+					strategy
 				}
 			};
 		} catch (error) {
@@ -303,16 +316,29 @@ export class ExternalServiceIntegrationService {
 	 * @returns {string[]} Fallback instructions
 	 */
 	getDopplerFallbackInstructions(context) {
+		// Doppler scaling memo: repos default to the shared `common` project;
+		// only repos with app-specific secrets need a dedicated project.
+		const { project, strategy } = resolveDopplerTarget(context);
+		const projectStep =
+			strategy === 'new'
+				? [
+						'2. Click "Create Project"',
+						`3. Enter project name: ${project}`,
+						'4. Add description: "Secrets management for ' + context.projectName + '"',
+						'5. Create environments: dev, staging, prod'
+					]
+				: [
+						'2. Select the shared "common" project (do NOT create a new project)',
+						`3. Use the \`dev\` config (or add a \`${context.projectName}\` config there)`,
+						'4. Add shared infra secrets to that config'
+					];
 		return [
 			'1. Go to https://dashboard.doppler.com',
-			'2. Click "Create Project"',
-			`3. Enter project name: ${context.projectName}`,
-			'4. Add description: "Secrets management for ' + context.projectName + '"',
-			'5. Create environments: dev, staging, prod',
-			'6. Add secrets to each environment as needed',
+			...projectStep,
+			'6. Add secrets as needed',
 			'7. Install Doppler CLI: npm install -g @doppler/cli',
 			'8. Run: doppler login',
-			'9. Run: doppler setup --project ' + context.projectName + ' --config dev'
+			'9. Run: doppler setup --project ' + project + ' --config dev'
 		];
 	}
 

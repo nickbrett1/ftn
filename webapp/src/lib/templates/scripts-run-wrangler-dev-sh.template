@@ -21,9 +21,9 @@ fi
 # 2. Check if CLOUDFLARE_API_TOKEN is available via Doppler
 if command -v doppler &> /dev/null && doppler whoami &> /dev/null; then
   # Check if secret exists in Doppler config
-  if doppler secrets --project {{projectName}} --config dev --json 2>/dev/null | grep -q '"CLOUDFLARE_API_TOKEN"'; then
+  if doppler secrets --project {{dopplerProject}} --config dev --json 2>/dev/null | grep -q '"CLOUDFLARE_API_TOKEN"'; then
     echo "✅ Found CLOUDFLARE_API_TOKEN in Doppler. Running wrangler dev via Doppler..."
-    exec doppler run --project {{projectName}} --config dev -- npx wrangler dev "$@"
+    exec doppler run --project {{dopplerProject}} --config dev -- npx wrangler dev "$@"
   fi
 fi
 

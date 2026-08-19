@@ -128,7 +128,12 @@ describe('Cloudflare Wrangler File Generation', () => {
 		const cloudLogin = files.find((f) => f.filePath === 'scripts/cloud_login.sh');
 		expect(cloudLogin).toBeDefined();
 		expect(cloudLogin.content).toContain('doppler login');
-		expect(cloudLogin.content).toContain('doppler setup --no-interactive --project test-project');
+		// Doppler scaling memo: default projectStrategy is 'common' — cloud
+		// login/setup targets the shared project, not a per-repo one.
+		expect(cloudLogin.content).toContain('doppler setup --no-interactive --project common');
+		expect(cloudLogin.content).not.toContain(
+			'doppler setup --no-interactive --project test-project'
+		);
 		expect(cloudLogin.content).toContain('./scripts/setup-wrangler-config.sh');
 		// Login is verified afterwards and failure prints actionable guidance
 		// (instead of silently finishing without Doppler auth).

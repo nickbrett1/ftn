@@ -263,7 +263,7 @@ USER node
 `;
 
 const dopplerYamlTemplateContent = `setup:
-  project: {{projectName}}
+  project: {{dopplerProject}}
   config: dev
 `;
 
@@ -413,9 +413,20 @@ describe('TemplateEngine', () => {
 		expect(() => engine.generateFile('missing', {})).toThrow('Template not found');
 	});
 
-	it('generates doppler.yaml correctly', () => {
-		const content = engine.generateFile('doppler-yaml', { projectName: 'test-project' });
-		expect(content).toBe(dopplerYamlTemplateContent.replace('{{projectName}}', 'test-project'));
+	it('generates doppler.yaml pointing at the shared common project by default', () => {
+		const content = engine.generateFile('doppler-yaml', {
+			projectName: 'test-project',
+			dopplerProject: 'common'
+		});
+		expect(content).toBe(dopplerYamlTemplateContent.replace('{{dopplerProject}}', 'common'));
+	});
+
+	it('generates doppler.yaml pointing at a dedicated project when projectStrategy=new', () => {
+		const content = engine.generateFile('doppler-yaml', {
+			projectName: 'test-project',
+			dopplerProject: 'test-project'
+		});
+		expect(content).toBe(dopplerYamlTemplateContent.replace('{{dopplerProject}}', 'test-project'));
 	});
 
 	it('generates vscode-tasks.json correctly', () => {
@@ -521,9 +532,31 @@ describe('TemplateEngine', () => {
 		expect(zshrc).toBeDefined();
 		expect(zshrc.content).toContain('agy-dev()');
 		expect(zshrc.content).toContain('doppler run');
+		// Doppler scaling memo: the default projectStrategy is 'common', so the
+		// agy alias layers common on common (no per-repo project).
+		expect(zshrc.content).toContain('--project common');
+		expect(zshrc.content).not.toContain('--project test-project');
+		expect(zshrc.content).not.toContain('{{projectName}}');
+		expect(zshrc.content).not.toContain('{{dopplerProject}}');
+	});
+
+	it('should point the agy-dev alias at a dedicated project when projectStrategy=new', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {
+				'devcontainer-node': {},
+				doppler: { projectStrategy: 'new' }
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const zshrc = files.find((f) => f.filePath.endsWith('.zshrc'));
+
+		expect(zshrc).toBeDefined();
+		expect(zshrc.content).toContain('agy-dev()');
 		expect(zshrc.content).toContain('--project common');
 		expect(zshrc.content).toContain('--project test-project');
-		expect(zshrc.content).not.toContain('{{projectName}}');
 	});
 
 	it('should NOT include agy-dev alias in .zshrc when Doppler capability is NOT present in generateAllFiles', async () => {
@@ -546,12 +579,14 @@ describe('TemplateEngine', () => {
 	it('agy-dev alias content should match expected constant', () => {
 		expect(AGY_DEV_ALIAS).toContain('agy-dev()');
 		expect(AGY_DEV_ALIAS).toContain('--project common --config dev');
+		// The inner layer is the RESOLVED doppler project ({{dopplerProject}}),
+		// which is `common` by default and the repo name with projectStrategy=new.
 		expect(AGY_DEV_ALIAS).toContain(
-			'doppler run --forward-signals --project {{projectName}} --config dev -- agy "$@"'
+			'doppler run --forward-signals --project {{dopplerProject}} --config dev -- agy "$@"'
 		);
 	});
 
-	it('README documents doppler env-var precedence and provisioning when the doppler capability is selected', async () => {
+	it('README documents doppler env-var precedence and shared common project by default', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['devcontainer-node', 'doppler'],
@@ -565,11 +600,32 @@ describe('TemplateEngine', () => {
 
 		expect(readme).toBeDefined();
 		expect(readme.content).toContain('## Doppler');
-		expect(readme.content).toContain('doppler setup --project test-project --config dev');
+		// Doppler scaling memo: default strategy is 'common' — no dedicated
+		// project, so no `doppler projects create` instructions.
+		expect(readme.content).toContain('doppler setup --project common --config dev');
+		expect(readme.content).toContain('no per-repo Doppler project is created');
+		expect(readme.content).not.toContain('doppler projects create test-project');
 		// Env-var precedence documented (env > doppler.yaml > ~/.doppler).
 		expect(readme.content).toContain('environment variables >');
 		expect(readme.content).toContain('DOPPLER_PROJECT');
 		expect(readme.content).toContain('DOPPLER_ENVIRONMENT');
+	});
+
+	it('README documents dedicated project provisioning when projectStrategy=new', async () => {
+		const context = {
+			name: 'test-project',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {
+				'devcontainer-node': {},
+				doppler: { projectStrategy: 'new' }
+			}
+		};
+
+		const files = await generateAllFiles(context);
+		const readme = files.find((f) => f.filePath === 'README.md');
+
+		expect(readme).toBeDefined();
+		expect(readme.content).toContain('doppler setup --project test-project --config dev');
 		// Manual provisioning documented for the token-less generation flow.
 		expect(readme.content).toContain('doppler projects create test-project');
 		expect(readme.content).toContain('doppler configs create dev --project test-project');

@@ -531,11 +531,51 @@ describe('ProjectGeneratorService', () => {
 				'repo',
 				'main'
 			);
-			expect(service.services.doppler.createProject).toHaveBeenCalled();
+			// Doppler scaling memo: default projectStrategy is 'common' — the
+			// shared project is reused and NO new Doppler project is created.
+			expect(service.services.doppler.createProject).not.toHaveBeenCalled();
+			expect(service.services.doppler.createEnvironment).not.toHaveBeenCalled();
+			expect(results.doppler.strategy).toBe('common');
+			expect(results.doppler.project.slug).toBe('common');
 			expect(service.services.sonarcloud.createProject).toHaveBeenCalled();
 			// Dependabot is configured purely by generated files; it must not
 			// create a PAT secret (the workflow uses the default GITHUB_TOKEN).
 			expect(service.services.github.createRepositorySecret).not.toHaveBeenCalled();
+		});
+
+		it('should create a dedicated Doppler project when projectStrategy=new', async () => {
+			const contextWithNewProject = {
+				...context,
+				configuration: { doppler: { projectStrategy: 'new' } }
+			};
+			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'main' }
+			});
+			service.services.circleci.triggerPipeline.mockResolvedValue({
+				id: 'pipeline-1',
+				number: 1
+			});
+			service.services.doppler.createProject.mockResolvedValue({
+				slug: 'test-project',
+				name: 'test-project'
+			});
+			service.services.doppler.createEnvironment.mockResolvedValue({ success: true });
+			service.services.sonarcloud.createProject.mockResolvedValue({ success: true });
+
+			const results = await service.configureExternalServices(contextWithNewProject, repository);
+
+			expect(results.doppler.success).toBe(true);
+			expect(results.doppler.strategy).toBe('new');
+			expect(service.services.doppler.createProject).toHaveBeenCalledWith(
+				'test-project',
+				expect.stringContaining('test-project')
+			);
+			expect(service.services.doppler.createEnvironment).toHaveBeenCalledWith(
+				'test-project',
+				'Development',
+				'dev'
+			);
 		});
 
 		it('should use the repository default branch when configuring CircleCI', async () => {
@@ -607,7 +647,13 @@ describe('ProjectGeneratorService', () => {
 			service.services.doppler.createProject.mockRejectedValue(error);
 			service.services.sonarcloud.createProject.mockRejectedValue(error);
 
-			const results = await service.configureExternalServices(context, repository);
+			// Doppler only hits the API for the dedicated-project strategy; the
+			// default 'common' strategy performs no calls, so it cannot fail.
+			const failingContext = {
+				...context,
+				configuration: { doppler: { projectStrategy: 'new' } }
+			};
+			const results = await service.configureExternalServices(failingContext, repository);
 
 			expect(results.circleci.success).toBe(false);
 			expect(results.circleci.error).toBe(error.message);

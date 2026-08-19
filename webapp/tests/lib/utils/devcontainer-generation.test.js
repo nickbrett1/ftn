@@ -237,12 +237,14 @@ describe('DevContainer Generation Tests', () => {
 		expect(setup).toBeDefined();
 
 		// Doppler precedence is env > doppler.yaml > ~/.doppler. The generated
-		// setup must pin the repo context (mailroom/dev) so ambient
-		// DOPPLER_PROJECT/DOPPLER_CONFIG/DOPPLER_ENVIRONMENT (e.g. from the
-		// agent session that launches the container) cannot silently redirect
-		// every `doppler` command at the wrong project.
+		// setup must pin the repo context so ambient DOPPLER_PROJECT /
+		// DOPPLER_CONFIG / DOPPLER_ENVIRONMENT (e.g. from the agent session
+		// that launches the container) cannot silently redirect every
+		// `doppler` command at the wrong project. Doppler scaling memo: the
+		// default projectStrategy is 'common', so the pin is common/dev (the
+		// same target doppler.yaml resolves to).
 		expect(setup.content).toContain('genproj-doppler-context-pin');
-		expect(setup.content).toContain('export DOPPLER_PROJECT=mailroom');
+		expect(setup.content).toContain('export DOPPLER_PROJECT=common');
 		expect(setup.content).toContain('export DOPPLER_CONFIG=dev');
 		expect(setup.content).toContain('unset DOPPLER_ENVIRONMENT');
 		// Written to both rc files so agent-spawned shells (bash -lc / ssh /
@@ -265,6 +267,26 @@ describe('DevContainer Generation Tests', () => {
 		// The generator must substitute the project name — no literal
 		// {{projectName}} may leak into the rendered script.
 		expect(setup.content).not.toContain('{{projectName}}');
+	});
+
+	it('pins a dedicated project context when the doppler capability is configured with projectStrategy=new', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'mailroom',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {
+				doppler: { projectStrategy: 'new' }
+			}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+		expect(setup.content).toContain('genproj-doppler-context-pin');
+		expect(setup.content).toContain('export DOPPLER_PROJECT=mailroom');
+		expect(setup.content).toContain('export DOPPLER_CONFIG=dev');
 	});
 
 	it('does not pin doppler context when the doppler capability is not selected', async () => {

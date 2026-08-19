@@ -432,7 +432,7 @@ export const capabilities = [
 		externalServices: createExternalServiceConfig(
 			'doppler',
 			'Doppler',
-			'Create new project in Doppler',
+			'Add config to shared common project',
 			'Configure service tokens'
 		),
 		configurationSchema: {
@@ -442,6 +442,13 @@ export const capabilities = [
 					type: 'string',
 					enum: ['web'],
 					default: 'web'
+				},
+				projectStrategy: {
+					type: 'string',
+					enum: ['common', 'new'],
+					default: 'common',
+					description:
+						'Where this repo\'s secrets live: "common" reuses the shared common project (default — no new Doppler project is created); "new" creates a dedicated Doppler project for this repo.'
 				}
 			}
 		},

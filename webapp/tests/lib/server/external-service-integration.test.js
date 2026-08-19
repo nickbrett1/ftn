@@ -100,8 +100,37 @@ describe('ExternalServiceIntegrationService', () => {
 			'value'
 		);
 
+		// Doppler scaling memo: default projectStrategy is 'common' — the
+		// shared project is reused, no createProject/createEnvironment calls.
 		const doppler = await service.integrateDoppler(context);
 		expect(doppler.success).toBe(true);
+		expect(doppler.serviceData.projectSlug).toBe('common');
+		expect(doppler.serviceData.strategy).toBe('common');
+		expect(mockDoppler.createProject).not.toHaveBeenCalled();
+		expect(mockDoppler.createEnvironment).not.toHaveBeenCalled();
+		// Configured secrets are still written into the shared common project.
+		expect(mockDoppler.setSecret).toHaveBeenCalledWith(
+			'common',
+			'dev',
+			'KEY',
+			'value',
+			expect.stringContaining('genproj')
+		);
+	});
+
+	it('creates a dedicated Doppler project when projectStrategy=new', async () => {
+		const service = new ExternalServiceIntegrationService({ circleci: 'token', doppler: 'token' });
+		const doppler = await service.integrateDoppler({
+			...context,
+			configuration: {
+				doppler: { projectStrategy: 'new', secrets: context.configuration.doppler.secrets }
+			}
+		});
+		expect(doppler.success).toBe(true);
+		expect(doppler.serviceData.projectSlug).toBe('proj');
+		expect(doppler.serviceData.strategy).toBe('new');
+		expect(mockDoppler.createProject).toHaveBeenCalledWith('Demo', expect.stringContaining('Demo'));
+		expect(mockDoppler.createEnvironment).toHaveBeenCalled();
 		expect(mockDoppler.setSecret).toHaveBeenCalledWith(
 			'proj',
 			'dev',
