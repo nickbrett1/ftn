@@ -116,15 +116,22 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 
 		const content = dockerfile.content;
 		expect(content).toContain('FROM python:3.12-slim AS build');
-		// Source tree is copied BEFORE any pip install: a requirements.txt that
-		// is an editable self-install (`-e .[dev]`) needs src/ + README.md
-		// present (nas-port-mcp bug 2). pyproject-only repos still work.
-		expect(content).toContain('COPY requirements.txt* pyproject.toml* ./');
+		// genproj-docker-build-speedup: manifest-first ordering — manifests +
+		// README copied first, deps installed pre-copy via a placeholder
+		// package, then the source copy and a cheap --no-deps reinstall.
+		// requirements.txt with an editable self-install (`-e .[dev]`) still
+		// works: local refs are filtered out of the pre-copy install and the
+		// full requirements install happens after the copy (nas-port-mcp bug 2).
+		expect(content).toContain('COPY README.md pyproject.toml* requirements.txt* ./');
+		expect(content).toContain('mkdir -p src/nas_port_mcp && touch src/nas_port_mcp/__init__.py');
+		expect(content.indexOf('pip install --no-cache-dir .')).toBeLessThan(
+			content.indexOf('COPY . .')
+		);
 		expect(content.indexOf('COPY . .')).toBeLessThan(
-			content.indexOf('pip install --no-cache-dir -r requirements.txt')
+			content.indexOf('pip install --no-cache-dir --no-deps .')
 		);
 		expect(content).toContain(
-			'RUN if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; else /opt/venv/bin/pip install --no-cache-dir .; fi'
+			'RUN if [ -f requirements.txt ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; \\\n    elif [ -f pyproject.toml ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir --no-deps .; \\\n    fi'
 		);
 		// No placeholder comment; ENTRYPOINT comes from configuration.
 		expect(content).not.toContain('TODO');

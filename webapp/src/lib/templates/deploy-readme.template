@@ -9,6 +9,14 @@ multi-arch image (linux/amd64 + linux/arm64) and pushes it to
 `{{registryPrefix}}/{{registryNamespace}}/{{projectName}}` on every push to
 `main` (tagged with the commit SHA and `latest`).
 
+Builds use a **registry-backed BuildKit cache**: each `docker-publish` run
+pulls the previous layer cache from the `:buildcache` tag
+(`{{registryPrefix}}/{{registryNamespace}}/{{projectName}}:buildcache`) and
+pushes it back with `mode=max`, so only changed layers rebuild. The first run
+after enabling seeds the cache (still cold — same duration as before); the
+speedup shows from the **second** run. The `:buildcache` tag is a cache-only
+artifact and is never used as a deployable image.
+
 - The registry namespace (`{{registryNamespace}}`) is derived from the
   authenticated GitHub identity at generation time.
 - Registry credentials are read from the CircleCI context (`{{circleciContext}}`):

@@ -681,7 +681,26 @@ function getDockerContainerTemplateData(context) {
 	// glibc base by default: Alpine (musl) breaks native npm/python modules
 	// (duckdb, better-sqlite3, sharp, ...) which ship glibc prebuilds.
 	// Alpine only via explicit opt-in (safe for pure-JS apps).
-	const dockerBaseImage = config.baseImage || (isPython ? 'python:3.12-slim' : 'node:22-slim');
+	// Java/Rust get their own toolchain images (maven/temurin, rust) instead of
+	// falling back to the node image (memo: genproj-docker-build-speedup).
+	const isJava = language === 'java';
+	const isRust = language === 'rust';
+	const dockerBaseImage =
+		config.baseImage ||
+		(isPython
+			? 'python:3.12-slim'
+			: isNode
+				? 'node:22-slim'
+				: isJava
+					? 'maven:3.9-eclipse-temurin-21'
+					: isRust
+						? 'rust:1-slim'
+						: 'node:22-slim');
+
+	// Python package name (src-layout) and Rust binary name (package name)
+	// used by the manifest-first build and the runtime stage below.
+	const pkgName = toPythonPackageName(projectName);
+	const rustBinName = (projectName || 'my-project').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
 	// ---- Health mechanism (config-driven; see jsdoc above).
 	let healthcheckSetting = typeof config.healthcheck === 'string' ? config.healthcheck.trim() : '';
@@ -698,10 +717,11 @@ function getDockerContainerTemplateData(context) {
 	}
 
 	// ---- apt packages (memo §3.2): aptPackages config emitted into the
-	// runtime stage. curl is auto-added for Python http healthchecks because
-	// python:*-slim images do not ship curl.
+	// runtime stage. curl is auto-added for http healthchecks on non-Node
+	// images (python/java/rust) because they do not ship curl — Node uses
+	// `node -e fetch` and needs nothing.
 	const aptPackages = Array.isArray(config.aptPackages) ? [...config.aptPackages] : [];
-	if (healthcheckSetting.startsWith('http:') && isPython && !aptPackages.includes('curl')) {
+	if (healthcheckSetting.startsWith('http:') && !isNode && !aptPackages.includes('curl')) {
 		aptPackages.push('curl');
 	}
 	const dockerAptInstall =
@@ -709,32 +729,70 @@ function getDockerContainerTemplateData(context) {
 			? `RUN apt-get update && apt-get install -y --no-install-recommends ${aptPackages.join(' ')} \\\n    && rm -rf /var/lib/apt/lists/*`
 			: '';
 
-	// Stage 1 (build). Python mirrors the Node copy-everything-first idiom.
-	// The source tree is copied BEFORE any pip install: genproj projects may
-	// carry a `requirements.txt` whose contents are user-controlled and often
-	// an editable self-install (`-e .[dev]`) — installing requirements before
-	// `COPY . .` fails with "error in 'egg_base' option: 'src' does not exist
-	// or is not a directory" (nas-port-mcp bug). The venv + pip upgrade layer
-	// stays cached; requirements (or the pyproject package) install after the
-	// copy, which works for both editable and plain requirements files, and
-	// for pyproject-only repos (zero extra files).
-	const dockerBuildCommands = isPython
-		? `COPY requirements.txt* pyproject.toml* ./\nRUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip\nCOPY . .\nRUN if [ -f requirements.txt ]; then /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; else /opt/venv/bin/pip install --no-cache-dir .; fi`
-		: `COPY . .\nRUN if [ -f package-lock.json ]; then npm ci; else npm install; fi\nRUN npm run build`;
+	// Stage 1 (build) — manifest-first layer ordering (memo:
+	// genproj-docker-build-speedup, proven in mailroom 4f8d9a4): copy the
+	// dependency manifests, install dependencies, THEN copy the source and
+	// build. The expensive dependency layer only rebuilds when the manifest
+	// changes, so every source-only commit reuses it (via docker_layer_caching
+	// and the buildx registry cache in the docker-publish job).
+	//
+	// Python: deps install before `COPY . .` via a minimal placeholder package
+	// (`pip install .` resolves pyproject deps with no source present; the
+	// real package is reinstalled `--no-deps` after the copy). README.md must
+	// be copied too — pyproject's `readme = "README.md"` fails the metadata
+	// build without it. A requirements.txt is pre-installed with local
+	// references (`-e .[dev]`) filtered out, then fully installed after the
+	// copy (nas-port-mcp bug 2: editable self-installs need the real source).
+	let dockerBuildCommands;
+	if (isPython) {
+		dockerBuildCommands = `COPY README.md pyproject.toml* requirements.txt* ./
+RUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip \\\n    && mkdir -p src/${pkgName} && touch src/${pkgName}/__init__.py \\\n    && if [ -f requirements.txt ]; then \\\n         grep -vE '^\\s*(-e|--editable)\\s+\\.' requirements.txt > /tmp/reqs.txt || true; \\\n         [ -s /tmp/reqs.txt ] && /opt/venv/bin/pip install --no-cache-dir -r /tmp/reqs.txt; \\\n       fi \\\n    && if [ -f pyproject.toml ]; then \\\n         /opt/venv/bin/pip install --no-cache-dir .; \\\n       fi
+COPY . .
+RUN if [ -f requirements.txt ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; \\\n    elif [ -f pyproject.toml ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir --no-deps .; \\\n    fi`;
+	} else if (isNode) {
+		dockerBuildCommands = `COPY package.json package-lock.json* .npmrc* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY . .
+RUN npm run build`;
+	} else if (isJava) {
+		dockerBuildCommands = `COPY pom.xml ./
+RUN mvn -B dependency:go-offline
+COPY src ./src
+RUN mvn -B package`;
+	} else {
+		// Rust: `cargo fetch` downloads crate sources from the lockfile before
+		// the source copy, so the fetch layer is cached unless Cargo.toml or
+		// Cargo.lock changes.
+		dockerBuildCommands = `COPY Cargo.toml Cargo.lock* ./
+RUN cargo fetch
+COPY src ./src
+RUN cargo build --release`;
+	}
 
 	// Stage 2 (runtime): only the build output + production deps. Node keeps
 	// `package*.json` (package.json always present + lockfile when one exists)
-	// with the strict `npm ci --omit=dev` vs fallback.
-	const dockerRuntimeCommands = isPython
-		? `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`
-		: `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package*.json ./\nRUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi`;
+	// with the strict `npm ci --omit=dev` vs fallback. Java runs the packaged
+	// jar (single-jar assumption, e.g. a Spring Boot fat jar); Rust runs the
+	// release binary from PATH.
+	let dockerRuntimeCommands;
+	if (isPython) {
+		dockerRuntimeCommands = `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`;
+	} else if (isNode) {
+		dockerRuntimeCommands = `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package*.json ./\nRUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi`;
+	} else if (isJava) {
+		dockerRuntimeCommands = `COPY --from=build /app/target/*.jar /app/app.jar`;
+	} else {
+		dockerRuntimeCommands = `COPY --from=build /app/target/release/${rustBinName} /usr/local/bin/${rustBinName}`;
+	}
 
 	// ---- HEALTHCHECK: emitted only when a mechanism is declared (memo §2.8).
+	// Node images have node built in (`node -e fetch`); every other language
+	// uses curl (auto-added to aptPackages above).
 	let dockerHealthcheck = '';
 	if (healthcheckSetting.startsWith('http:')) {
-		dockerHealthcheck = isPython
-			? `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD curl -fsS http://127.0.0.1:${exposePort}${healthcheckPath} || exit 1`
-			: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD node -e "fetch('http://127.0.0.1:${exposePort}${healthcheckPath}').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"`;
+		dockerHealthcheck = isNode
+			? `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD node -e "fetch('http://127.0.0.1:${exposePort}${healthcheckPath}').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"`
+			: `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD curl -fsS http://127.0.0.1:${exposePort}${healthcheckPath} || exit 1`;
 	} else if (healthcheckSetting.startsWith('command:')) {
 		dockerHealthcheck = `HEALTHCHECK --interval=30s --timeout=3s --start-period=10s CMD ${healthcheckSetting
 			.slice('command:'.length)
@@ -751,7 +809,6 @@ function getDockerContainerTemplateData(context) {
 	// copied into the runtime image (chmod +x). Regression: the ENTRYPOINT used
 	// to reference a file that never existed in the image, so containers with a
 	// custom entrypoint failed to start ("exec: ... no such file").
-	const pkgName = toPythonPackageName(projectName);
 	let dockerEntrypoint = '';
 	let dockerCommand = '';
 	let dockerScriptCopy = '';
@@ -769,9 +826,10 @@ function getDockerContainerTemplateData(context) {
 	if (Array.isArray(config.command) && config.command.length > 0) {
 		dockerCommand = `CMD ${JSON.stringify(config.command)}`;
 	} else if (!dockerEntrypoint) {
-		dockerCommand = isPython
-			? `CMD ["python", "-m", "${pkgName}"]`
-			: 'CMD ["node", "build/index.js"]';
+		if (isPython) dockerCommand = `CMD ["python", "-m", "${pkgName}"]`;
+		else if (isNode) dockerCommand = 'CMD ["node", "build/index.js"]';
+		else if (isJava) dockerCommand = 'CMD ["java", "-jar", "/app/app.jar"]';
+		else dockerCommand = `CMD ["${rustBinName}"]`;
 	}
 	const dockerRunCommand = [dockerScriptCopy, dockerEntrypoint, dockerCommand]
 		.filter(Boolean)
@@ -893,15 +951,26 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
 	const config = context.configuration?.['docker-container'] || {};
 	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
 	const imageRef = `${registryPrefix}/${registryNamespace}/${projectName}`;
+	// Registry-backed BuildKit cache (memo: genproj-docker-build-speedup,
+	// proven in mailroom 4f8d9a4). Every buildx push pulls the previous layer
+	// cache from the dedicated `:buildcache` tag and pushes it back with
+	// mode=max, so only changed layers rebuild. The first run after enabling
+	// is still cold (it seeds the tag); the speedup shows from run #2.
+	const cacheRef = `${imageRef}:buildcache`;
 	const credentialVars = DOCKER_CREDENTIAL_VARS;
 
 	data.deployJobDefinition = `
   docker-publish:
     docker:
       - image: cimg/base:stable
+    environment:
+      # BuildKit layer cache ref (ghcr.io registry cache, mode=max). Cache-only
+      # tag — never used as a deployable image.
+      CACHE_REF: ${cacheRef}
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Login to Container Registry
           command: |
@@ -909,8 +978,10 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
       - run:
           name: Build and Push Multi-Arch Image
           command: |
-            docker buildx create --use || true
+            docker buildx create --use --bootstrap || true
             docker buildx build --platform linux/amd64,linux/arm64 \\
+              --cache-from type=registry,ref=$CACHE_REF \\
+              --cache-to type=registry,ref=$CACHE_REF,mode=max \\
               -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest --push .`;
 
 	data.deployWorkflowJob = `

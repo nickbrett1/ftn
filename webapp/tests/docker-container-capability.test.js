@@ -116,11 +116,19 @@ describe('docker-container template data', () => {
 		});
 		// 2.1: glibc default, not alpine (musl breaks native modules).
 		expect(data.dockerBaseImage).toBe('node:22-slim');
-		// 1.1/4.3: full source copy BEFORE build; lockfile-aware install —
-		// strict `npm ci` when a package-lock.json exists, `npm install`
-		// fallback otherwise (genproj emits no lockfile, so a hard `npm ci`
-		// would break every fresh-clone build).
-		expect(data.dockerBuildCommands).toContain('COPY . .');
+		// genproj-docker-build-speedup: manifest-first ordering — manifests
+		// (package.json + lockfile) are copied and installed BEFORE the source
+		// copy, so the npm ci layer is cached unless the manifest changes.
+		// Lockfile-aware install: strict `npm ci` when a package-lock.json
+		// exists, `npm install` fallback otherwise (genproj emits no lockfile,
+		// so a hard `npm ci` would break every fresh-clone build).
+		expect(data.dockerBuildCommands).toContain('COPY package.json package-lock.json* .npmrc* ./');
+		expect(
+			data.dockerBuildCommands.indexOf('COPY package.json package-lock.json* .npmrc* ./')
+		).toBeLessThan(data.dockerBuildCommands.indexOf('npm ci'));
+		expect(data.dockerBuildCommands.indexOf('npm ci')).toBeLessThan(
+			data.dockerBuildCommands.indexOf('COPY . .')
+		);
 		expect(data.dockerBuildCommands.indexOf('COPY . .')).toBeLessThan(
 			data.dockerBuildCommands.indexOf('npm run build')
 		);
@@ -238,23 +246,75 @@ describe('docker-container template data', () => {
 		expect(data.dockerRuntimeCommands).toContain('COPY --from=build /opt/venv /opt/venv');
 	});
 
-	it('copies the source tree before installing Python requirements (editable-install fix)', () => {
+	it('installs Python deps before the source copy via a placeholder package (manifest-first)', () => {
 		const data = getCapabilityTemplateData('docker-container', {
 			capabilities: ['docker-container', 'devcontainer-python'],
 			configuration: {},
 			projectName: 'py-app'
 		});
 		const commands = data.dockerBuildCommands;
-		// nas-port-mcp bug 2: a generated requirements.txt may be `-e .[dev]`,
-		// which needs src/ + README.md present — the source copy must happen
-		// before any pip install of requirements.
-		expect(commands.indexOf('COPY . .')).toBeLessThan(
-			commands.indexOf('pip install --no-cache-dir -r requirements.txt')
+		// genproj-docker-build-speedup (mailroom-proven): manifests + README
+		// copied first, then a placeholder package lets `pip install .` resolve
+		// pyproject deps with no source present.
+		expect(commands).toContain('COPY README.md pyproject.toml* requirements.txt* ./');
+		expect(commands).toContain('mkdir -p src/py_app && touch src/py_app/__init__.py');
+		expect(commands.indexOf('pip install --no-cache-dir .')).toBeLessThan(
+			commands.indexOf('COPY . .')
 		);
-		// pyproject-only repos still install the package itself.
-		expect(commands).toContain('else /opt/venv/bin/pip install --no-cache-dir .; fi');
-		// venv creation stays cached ahead of the source copy.
-		expect(commands.indexOf('python -m venv /opt/venv')).toBeLessThan(commands.indexOf('COPY . .'));
+		// After the source copy the real package is reinstalled cheaply
+		// (deps already in the venv).
+		expect(commands.indexOf('COPY . .')).toBeLessThan(
+			commands.indexOf('pip install --no-cache-dir --no-deps .')
+		);
+		// venv creation stays cached ahead of the dependency install.
+		expect(commands.indexOf('python -m venv /opt/venv')).toBeLessThan(
+			commands.indexOf('pip install --no-cache-dir .')
+		);
+		// requirements.txt still supported: local refs (`-e .[dev]`) filtered
+		// out of the pre-copy install, full install after the copy
+		// (nas-port-mcp bug 2 regression guard).
+		expect(commands).toContain("grep -vE '^\\s*(-e|--editable)\\s+\\.' requirements.txt");
+		expect(commands).toContain(
+			'RUN if [ -f requirements.txt ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; \\\n    elif [ -f pyproject.toml ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir --no-deps .; \\\n    fi'
+		);
+	});
+
+	it('uses a maven base image and go-offline manifest-first build for java', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'devcontainer-java'],
+			configuration: {},
+			projectName: 'java-app'
+		});
+		expect(data.dockerBaseImage).toBe('maven:3.9-eclipse-temurin-21');
+		const commands = data.dockerBuildCommands;
+		expect(commands).toContain('COPY pom.xml ./');
+		expect(commands).toContain('RUN mvn -B dependency:go-offline');
+		expect(commands.indexOf('RUN mvn -B dependency:go-offline')).toBeLessThan(
+			commands.indexOf('COPY src ./src')
+		);
+		expect(commands).toContain('RUN mvn -B package');
+		expect(data.dockerRuntimeCommands).toContain(
+			'COPY --from=build /app/target/*.jar /app/app.jar'
+		);
+		expect(data.dockerRunCommand).toContain('CMD ["java", "-jar", "/app/app.jar"]');
+	});
+
+	it('uses a rust base image and cargo fetch manifest-first build for rust', () => {
+		const data = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container', 'devcontainer-rust'],
+			configuration: {},
+			projectName: 'rust-app'
+		});
+		expect(data.dockerBaseImage).toBe('rust:1-slim');
+		const commands = data.dockerBuildCommands;
+		expect(commands).toContain('COPY Cargo.toml Cargo.lock* ./');
+		expect(commands).toContain('RUN cargo fetch');
+		expect(commands.indexOf('RUN cargo fetch')).toBeLessThan(commands.indexOf('COPY src ./src'));
+		expect(commands).toContain('RUN cargo build --release');
+		expect(data.dockerRuntimeCommands).toContain(
+			'COPY --from=build /app/target/release/rust-app /usr/local/bin/rust-app'
+		);
+		expect(data.dockerRunCommand).toContain('CMD ["rust-app"]');
 	});
 
 	it('exposes the CircleCI context name for the deploy runbook', () => {
