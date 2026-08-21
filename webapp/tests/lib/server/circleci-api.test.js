@@ -42,6 +42,65 @@ describe('CircleCIAPIService', () => {
 		expect(json).toHaveBeenCalledTimes(2);
 	});
 
+	it('retries followProject with backoff when CircleCI 404s a freshly-created repo', async () => {
+		// CircleCI indexes new GitHub repos asynchronously; a 404 right after
+		// repo creation is transient and must be retried, not surfaced to the
+		// user as a failed integration.
+		const fastRetry = { baseDelayMs: 1, maxDelayMs: 2, attempts: 3, backoffFactor: 2 };
+		const retryingService = new CircleCIAPIService('token', { followRetry: fastRetry });
+
+		const projectPayload = {
+			id: '1',
+			name: 'Example',
+			slug: 'org/example',
+			organization_slug: 'org',
+			vcs_url: 'https://github.com/org/example',
+			vcs_type: 'github'
+		};
+		const json = vi.fn().mockResolvedValue(projectPayload);
+
+		vi.useFakeTimers();
+		try {
+			const makeRequest = vi
+				.spyOn(retryingService, 'makeRequest')
+				.mockRejectedValueOnce(new Error('CircleCI API error: 404 Not Found'))
+				.mockRejectedValueOnce(new Error('CircleCI API error: 404 Not Found'))
+				.mockResolvedValueOnce({ json });
+
+			const followPromise = retryingService.followProject('github', 'org', 'example');
+			// Let the first attempt reject and begin its backoff sleep.
+			await vi.advanceTimersByTimeAsync(1);
+			await vi.advanceTimersByTimeAsync(2);
+			const project = await followPromise;
+
+			expect(project).toEqual({
+				id: '1',
+				name: 'Example',
+				slug: 'org/example',
+				organizationSlug: 'org',
+				vcsUrl: 'https://github.com/org/example',
+				vcsType: 'github'
+			});
+			expect(makeRequest).toHaveBeenCalledTimes(3);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('does not retry followProject on non-404 errors', async () => {
+		const retryingService = new CircleCIAPIService('token', {
+			followRetry: { baseDelayMs: 1, maxDelayMs: 2, attempts: 3 }
+		});
+		vi.spyOn(retryingService, 'makeRequest').mockRejectedValue(
+			new Error('CircleCI API error: 401 Unauthorized')
+		);
+
+		await expect(retryingService.followProject('github', 'org', 'example')).rejects.toThrow(
+			'CircleCI API error: 401 Unauthorized'
+		);
+		expect(retryingService.makeRequest).toHaveBeenCalledTimes(1);
+	});
+
 	it('follows and unfollows projects and maps response', async () => {
 		const projectPayload = {
 			id: '1',
