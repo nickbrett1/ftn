@@ -135,11 +135,16 @@ describe('docker-container template data', () => {
 		expect(data.dockerBuildCommands).toContain(
 			'RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi'
 		);
-		// 4.2: runtime stage carries only the build output + prod deps.
+		// 4.2: runtime stage carries only the build output + prod deps. It must
+		// NOT run `npm ci --omit=dev`: npm runs lifecycle scripts (incl.
+		// `prepare`, which genproj emits via simple-git-hooks) even with
+		// `--omit=dev`, and those scripts shell out to an omitted devDependency
+		// -> image build fails (memo: genproj Node Dockerfile). adapter-node's
+		// `build/` is self-contained, so copying it alone is sufficient.
 		expect(data.dockerRuntimeCommands).toContain('COPY --from=build /app/build ./build');
-		expect(data.dockerRuntimeCommands).toContain(
-			'RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi'
-		);
+		expect(data.dockerRuntimeCommands).not.toContain('npm ci');
+		expect(data.dockerRuntimeCommands).not.toContain('npm install');
+		expect(data.dockerRuntimeCommands).not.toContain('--omit=dev');
 		// 2.2: healthcheck uses node fetch, no wget.
 		expect(data.dockerHealthcheck).toContain('node -e');
 		expect(data.dockerHealthcheck).not.toContain('wget');

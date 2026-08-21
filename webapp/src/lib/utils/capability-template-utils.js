@@ -783,7 +783,18 @@ RUN cargo build --release`;
 	if (isPython) {
 		dockerRuntimeCommands = `ENV PATH="/opt/venv/bin:$PATH"\nCOPY --from=build /opt/venv /opt/venv\nCOPY . .`;
 	} else if (isNode) {
-		dockerRuntimeCommands = `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build\nCOPY --from=build /app/package*.json ./\nRUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi`;
+		// Runtime stage copies only the build output — no `npm ci --omit=dev`.
+		// genproj's Node target is SvelteKit, and `adapter-node`'s build output
+		// is self-contained (app deps are bundled; only `node:*` builtins
+		// remain), so `build/` alone is enough to run `node build/index.js`.
+		// A runtime `npm ci --omit=dev` is not just redundant — it actively
+		// breaks the build: `npm ci`/`npm install` always run lifecycle scripts
+		// (incl. `prepare`) regardless of `--omit=dev`, and genproj emits a
+		// `prepare` script (`simple-git-hooks`) that shells out to a
+		// devDependency, which is omitted in the runtime stage -> "command not
+		// found" (exit 127). ENV NODE_ENV=production keeps npm/Node in
+		// production mode for the runtime (memo: genproj Node Dockerfile).
+		dockerRuntimeCommands = `ENV NODE_ENV=production\nCOPY --from=build /app/build ./build`;
 	} else if (isJava) {
 		dockerRuntimeCommands = `COPY --from=build /app/target/*.jar /app/app.jar`;
 	} else {
