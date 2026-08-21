@@ -762,6 +762,12 @@ export const capabilities = [
 				homepage: {
 					type: 'boolean',
 					default: true
+				},
+				armBuilds: {
+					type: 'boolean',
+					default: false,
+					description:
+						'Also build and publish linux/arm64 images. Defaults to false (x86_64 / linux/amd64 only) — set true when a deploy host (e.g. an ARM NAS or Raspberry Pi) needs arm64 images.'
 				}
 			}
 		},

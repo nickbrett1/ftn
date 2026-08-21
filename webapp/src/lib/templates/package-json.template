@@ -18,7 +18,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-	"devDependencies": {
-		{{devDependencies}}
-	}{{overrides}}
+  "devDependencies": {
+    {{devDependencies}}
+  }{{overrides}}
 }

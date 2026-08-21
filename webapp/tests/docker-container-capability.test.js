@@ -353,15 +353,44 @@ describe('CircleCI integration for docker-container', () => {
 		expect(data.deployJobDefinition).toContain('ghcr.io/OWNER/govee-mcp');
 		expect(data.deployJobDefinition).toContain('GHCR_TOKEN');
 		expect(data.deployJobDefinition).toContain('GHCR_USERNAME');
-		// 4.1: multi-arch buildx push. No --provenance flag: the buildx
-		// bundled with cimg/base:stable rejects it ("unknown flag:
-		// --provenance") — nas-port-mcp bug 1.
+		// 4.1: buildx push defaults to x86_64 (linux/amd64); arm64 is opt-in.
+		// No --provenance flag: the buildx bundled with cimg/base:stable
+		// rejects it ("unknown flag: --provenance") — nas-port-mcp bug 1.
 		expect(data.deployJobDefinition).toContain('docker buildx create --use');
-		expect(data.deployJobDefinition).toContain('--platform linux/amd64,linux/arm64');
+		expect(data.deployJobDefinition).toContain('--platform linux/amd64');
 		expect(data.deployJobDefinition).not.toContain('--provenance');
 		expect(data.deployJobDefinition).toContain('--push');
 		expect(data.deployWorkflowJob).toContain('docker-publish');
 		expect(data.deployWorkflowJob).toContain('context: common');
+	});
+
+	it('builds arm64 images additionally when armBuilds is enabled', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['circleci', 'docker-container'],
+			configuration: {
+				'docker-container': { registry: 'ghcr', armBuilds: true },
+				circleci: { context: { enabled: true, name: 'common' } }
+			},
+			projectName: 'arm-app'
+		});
+
+		expect(data.deployJobDefinition).toContain('--platform linux/amd64,linux/arm64');
+		// Template data also surfaces the resolved platforms.
+		const dockerData = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container'],
+			configuration: { 'docker-container': { armBuilds: true } },
+			projectName: 'arm-app'
+		});
+		expect(dockerData.buildPlatforms).toBe('linux/amd64,linux/arm64');
+		expect(dockerData.armBuilds).toBe(true);
+
+		const dockerDataDefault = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container'],
+			configuration: {},
+			projectName: 'arm-app'
+		});
+		expect(dockerDataDefault.buildPlatforms).toBe('linux/amd64');
+		expect(dockerDataDefault.armBuilds).toBe(false);
 	});
 
 	it('uses the authenticated registry namespace in the image ref', () => {

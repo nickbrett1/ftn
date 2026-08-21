@@ -32,6 +32,8 @@ import {
 	generatePyProjectToml,
 	generateReadmeFile,
 	getDevcontainerJsonExtras,
+	normalizeYamlBlankLines,
+	generatePrettierIgnoreFile,
 	HEALTH_ROUTE_SOURCE
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
@@ -174,7 +176,7 @@ function createMergedDevelopmentContainerJson(
 		mergedJson.customizations.vscode.extensions = [...allExtensions];
 	}
 
-	const content = JSON.stringify(mergedJson, undefined, 2);
+	const content = `${JSON.stringify(mergedJson, undefined, 2)}\n`;
 	return {
 		path: '.devcontainer/devcontainer.json',
 		name: 'devcontainer.json',
@@ -394,19 +396,19 @@ function generateSingleTemplateFile(
 		let adapterPackage = '@sveltejs/adapter-auto';
 		let adapterComment =
 			'// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.\n' +
-			'\t\t// If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
-			'\t\t// See https://kit.svelte.dev/docs/adapters for more information about adapters.';
+			'    // If your environment is not supported or you settled on a specific environment, switch out the adapter.\n' +
+			'    // See https://kit.svelte.dev/docs/adapters for more information about adapters.';
 
 		if (capabilityId === 'sveltekit' && otherCapabilities.includes('cloudflare-wrangler')) {
 			adapterPackage = '@sveltejs/adapter-cloudflare';
 			adapterComment =
 				'// adapter-cloudflare is configured for Wrangler deployment\n' +
-				'\t\t// See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
+				'    // See https://kit.svelte.dev/docs/adapter-cloudflare for more information.';
 		} else if (capabilityId === 'sveltekit' && otherCapabilities.includes('docker-container')) {
 			adapterPackage = '@sveltejs/adapter-node';
 			adapterComment =
 				'// adapter-node outputs a standalone Node server (build/index.js) for the Docker container\n' +
-				'\t\t// See https://kit.svelte.dev/docs/adapter-node for more information.';
+				'    // See https://kit.svelte.dev/docs/adapter-node for more information.';
 		}
 
 		// eslint-disable-next-line security/detect-object-injection
@@ -421,11 +423,14 @@ function generateSingleTemplateFile(
 			adapterPackage,
 			adapterComment
 		});
+		const normalizedContent = /\.ya?ml$/i.test(template.filePath)
+			? normalizeYamlBlankLines(content)
+			: content;
 		return {
 			path: template.filePath,
 			name: template.filePath.split('/').pop(),
-			content,
-			size: content.length,
+			content: normalizedContent,
+			size: normalizedContent.length,
 			type: 'file'
 		};
 	} catch (error) {
@@ -785,7 +790,7 @@ function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabil
 		if (!hasPython) {
 			delete settings['python.defaultInterpreterPath'];
 		}
-		const serializedContent = JSON.stringify(settings, undefined, 2);
+		const serializedContent = `${JSON.stringify(settings, undefined, 2)}\n`;
 		return {
 			path: '.vscode/settings.json',
 			name: 'settings.json',
@@ -806,13 +811,11 @@ function generateVscodeSettingsPreview(templateEngine, projectConfig, allCapabil
 }
 
 function generateVscodeExtensionsPreview() {
-	const content = JSON.stringify(
-		{
-			recommendations: ['pcassidy75.tmux-integrated']
-		},
-		undefined,
-		2
-	);
+	const recommendations = ['pcassidy75.tmux-integrated'];
+	const content =
+		recommendations.length === 1
+			? `{\n  "recommendations": ["${recommendations[0]}"]\n}\n`
+			: `${JSON.stringify({ recommendations }, undefined, 2)}\n`;
 
 	return {
 		path: '.vscode/extensions.json',
@@ -945,6 +948,16 @@ async function generatePreviewFiles(projectConfig, executionOrder) {
 		files.push(vscodeSettingsFile);
 	}
 	files.push(generateVscodeExtensionsPreview());
+
+	// .prettierignore excludes generated infra files from prettier --check.
+	const prettierIgnoreFile = generatePrettierIgnoreFile();
+	files.push({
+		path: prettierIgnoreFile.filePath,
+		name: prettierIgnoreFile.filePath.split('/').pop(),
+		content: prettierIgnoreFile.content,
+		size: prettierIgnoreFile.content.length,
+		type: 'file'
+	});
 
 	// Organize files into folder structure
 	return organizeFilesIntoFolders(files);

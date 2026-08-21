@@ -51,6 +51,10 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		SETUP_WRANGLER_SCRIPT: 'setup-wrangler-mock',
 		DOPPLER_INSTALL_SCRIPT: 'doppler-install-mock',
 		generateVscodeSettingsFile: vi.fn(),
+		generatePrettierIgnoreFile: vi.fn(() => ({
+			filePath: '.prettierignore',
+			content: '# mocked\n'
+		})),
 		generateViteConfigFile: vi.fn((context) => ({
 			filePath: 'vite.config.js',
 			content: 'mock vite config'

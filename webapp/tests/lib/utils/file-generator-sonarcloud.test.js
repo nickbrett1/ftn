@@ -69,7 +69,7 @@ describe('file-generator sonarcloud capabilities', () => {
 	it('should output coverage with thresholds in vite.config.js for sonarcloud', () => {
 		const context = { capabilities: ['sonarcloud'] };
 		const result = generateViteConfigFile(context);
-		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('reporter: ["lcov", "text"]');
 		expect(result.content).toContain('thresholds:');
 		expect(result.content).toContain('lines: 80');
 	});
@@ -77,7 +77,7 @@ describe('file-generator sonarcloud capabilities', () => {
 	it('should output coverage with thresholds in sveltekit vite.config.js for sonarcloud', () => {
 		const context = { capabilities: ['sonarcloud', 'sveltekit'] };
 		const result = generateViteConfigFile(context);
-		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('reporter: ["lcov", "text"]');
 		expect(result.content).toContain('thresholds:');
 		expect(result.content).toContain('lines: 80');
 	});
@@ -85,7 +85,7 @@ describe('file-generator sonarcloud capabilities', () => {
 	it('should output coverage with thresholds in vite.config.js without sonarcloud', () => {
 		const context = { capabilities: ['devcontainer-node'] };
 		const result = generateViteConfigFile(context);
-		expect(result.content).toContain("reporter: ['lcov', 'text']");
+		expect(result.content).toContain('reporter: ["lcov", "text"]');
 		expect(result.content).toContain('thresholds:');
 		expect(result.content).toContain('lines: 80');
 	});

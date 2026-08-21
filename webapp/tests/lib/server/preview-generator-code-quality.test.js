@@ -33,10 +33,10 @@ describe('preview-generator code-quality capability', () => {
 		const previewData = await generatePreview(projectConfig, ['code-quality', 'devcontainer-node']);
 		const eslintConfig = previewData.files.find((f) => f.name === 'eslint.config.js');
 		expect(eslintConfig).toBeDefined();
-		expect(eslintConfig.content).toContain("import prettier from 'eslint-config-prettier';");
-		expect(eslintConfig.content).toContain("import globals from 'globals';");
-		expect(eslintConfig.content).toContain("'sonarjs/no-duplicate-string': 'warn'");
-		expect(eslintConfig.content).toContain("'sonarjs/cognitive-complexity': ['warn', 20]");
-		expect(eslintConfig.content).toContain("'security/detect-object-injection': 'warn'");
+		expect(eslintConfig.content).toContain('import prettier from "eslint-config-prettier";');
+		expect(eslintConfig.content).toContain('import globals from "globals";');
+		expect(eslintConfig.content).toContain('"sonarjs/no-duplicate-string": "warn"');
+		expect(eslintConfig.content).toContain('"sonarjs/cognitive-complexity": ["warn", 20]');
+		expect(eslintConfig.content).toContain('"security/detect-object-injection": "warn"');
 	});
 });

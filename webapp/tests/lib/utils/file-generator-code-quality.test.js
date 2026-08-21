@@ -86,11 +86,11 @@ describe('file-generator code-quality capability', () => {
 
 		const eslintConfig = files.find((f) => f.filePath === 'eslint.config.js');
 		expect(eslintConfig).toBeDefined();
-		expect(eslintConfig.content).toContain("import sonarjs from 'eslint-plugin-sonarjs';");
-		expect(eslintConfig.content).toContain("import prettier from 'eslint-config-prettier';");
-		expect(eslintConfig.content).toContain("import globals from 'globals';");
-		expect(eslintConfig.content).toContain("'sonarjs/cognitive-complexity': ['warn', 20]");
-		expect(eslintConfig.content).toContain("'security/detect-object-injection': 'warn'");
+		expect(eslintConfig.content).toContain('import sonarjs from "eslint-plugin-sonarjs";');
+		expect(eslintConfig.content).toContain('import prettier from "eslint-config-prettier";');
+		expect(eslintConfig.content).toContain('import globals from "globals";');
+		expect(eslintConfig.content).toContain('"sonarjs/cognitive-complexity": ["warn", 20]');
+		expect(eslintConfig.content).toContain('"security/detect-object-injection": "warn"');
 		expect(eslintConfig.content).toContain('...globals.vitest');
 	});
 });

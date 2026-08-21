@@ -670,6 +670,11 @@ function getDockerContainerTemplateData(context) {
 	const exposePort = config.exposePort ?? 3000;
 	const watchtower = config.watchtower !== false;
 	const homepage = config.homepage !== false;
+	// Build platforms for the CircleCI docker-publish job. Default to x86_64
+	// (linux/amd64) only; arm64 is built additionally only when `armBuilds` is
+	// explicitly enabled (most NAS deploy targets are x86_64).
+	const armBuilds = config.armBuilds === true;
+	const buildPlatforms = armBuilds ? 'linux/amd64,linux/arm64' : 'linux/amd64';
 	const projectName = context.projectName || 'my-project';
 	const registryPrefix = getDockerRegistryPrefix();
 	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
@@ -929,7 +934,9 @@ RUN cargo build --release`;
 		homepageWidget,
 		hostname,
 		watchtower: String(watchtower),
-		homepage: String(homepage)
+		homepage: String(homepage),
+		armBuilds,
+		buildPlatforms
 	};
 }
 
@@ -958,6 +965,10 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
 	// is still cold (it seeds the tag); the speedup shows from run #2.
 	const cacheRef = `${imageRef}:buildcache`;
 	const credentialVars = DOCKER_CREDENTIAL_VARS;
+	// Default to x86_64 (linux/amd64) only; build arm64 too when armBuilds is
+	// enabled (most NAS deploy targets are x86_64).
+	const armBuilds = config.armBuilds === true;
+	const buildPlatforms = armBuilds ? 'linux/amd64,linux/arm64' : 'linux/amd64';
 
 	data.deployJobDefinition = `
   docker-publish:
@@ -976,10 +987,10 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
           command: |
             echo "$${credentialVars.token}" | docker login ${registryPrefix} -u "$${credentialVars.user}" --password-stdin
       - run:
-          name: Build and Push Multi-Arch Image
+          name: Build and Push Image
           command: |
             docker buildx create --use --bootstrap || true
-            docker buildx build --platform linux/amd64,linux/arm64 \\
+            docker buildx build --platform ${buildPlatforms} \\
               --cache-from type=registry,ref=$CACHE_REF \\
               --cache-to type=registry,ref=$CACHE_REF,mode=max \\
               -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest --push .`;

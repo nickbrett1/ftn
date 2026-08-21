@@ -30,7 +30,7 @@ describe('File Generator - Lighthouse Integration', () => {
 
 		expect(lighthouseFile).toBeDefined();
 		expect(lighthouseFile.content).toContain('module.exports = {');
-		expect(lighthouseFile.content).toContain("staticDistDir: './build'");
+		expect(lighthouseFile.content).toContain('staticDistDir: "./build"');
 	});
 
 	it('generates .circleci/config.yml without lighthouse when only circleci is selected', async () => {

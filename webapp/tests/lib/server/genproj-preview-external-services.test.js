@@ -30,6 +30,11 @@ vi.mock('$lib/utils/file-generator', () => ({
 		filePath: 'README.md',
 		content: `# ${context.name || context.projectName || 'project'}`
 	}),
+	generatePrettierIgnoreFile: () => ({
+		filePath: '.prettierignore',
+		content: '# mocked\n'
+	}),
+	normalizeYamlBlankLines: (content) => content,
 	getDevcontainerJsonExtras: () => ({
 		devcontainerMounts: '"source=tailscale,target=/var/lib/tailscale,type=volume"',
 		devcontainerForwardPorts: '[]'

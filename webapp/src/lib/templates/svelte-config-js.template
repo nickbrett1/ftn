@@ -1,11 +1,11 @@
-import adapter from '{{adapterPackage}}';
+import adapter from "{{adapterPackage}}";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		{{adapterComment}}
-		adapter: adapter()
-	}
+  kit: {
+    {{adapterComment}}
+    adapter: adapter(),
+  },
 };
 
 export default config;

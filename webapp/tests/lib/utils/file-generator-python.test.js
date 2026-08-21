@@ -101,9 +101,9 @@ describe('Python CircleCI job (memo §2.1)', () => {
 		expect(content).toContain('pip install -e ".[dev]"');
 		expect(content).toContain('ruff check src tests');
 		expect(content).toContain('pytest -v');
-		// Multi-arch docker-publish job is retained for Python too.
+		// docker-publish job defaults to x86_64 (linux/amd64); arm64 is opt-in.
 		expect(content).toContain('docker-publish');
-		expect(content).toContain('linux/amd64,linux/arm64');
+		expect(content).toContain('linux/amd64');
 		expect(content).toContain('ghcr.io/nickbrett1/nas-port-mcp');
 	});
 });
