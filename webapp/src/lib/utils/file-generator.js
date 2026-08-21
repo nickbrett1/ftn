@@ -238,7 +238,8 @@ export function generateGooseSetupScript(context = {}) {
 	const fragments = [
 		{ key: 'sonarqube', block: gooseMcp.sonarQubeGooseConfig },
 		{ key: 'circleci', block: gooseMcp.circleCiGooseConfig },
-		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig }
+		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig },
+		{ key: 'svelte', block: gooseMcp.svelteGooseConfig }
 	].filter((f) => f.block);
 
 	// Regression guard (genproj-goose-env-refs): goose does not expand
@@ -999,11 +1000,12 @@ export function generateMergedDevelopmentContainerFiles(
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 				// goose setup (recipes + project-selected MCP extensions) runs for
 				// coding-agents AND for any capability that registers a goose
-				// extension (circleci, sonarcloud, xcode-development) — otherwise a
-				// project selecting e.g. circleci would get no circleci extension.
+				// extension (circleci, sonarcloud, xcode-development, sveltekit) —
+				// otherwise a project selecting e.g. circleci would get no circleci
+				// extension.
 				gooseSetup:
 					context.capabilities.includes('coding-agents') ||
-					['circleci', 'sonarcloud', 'xcode-development'].some((c) =>
+					['circleci', 'sonarcloud', 'xcode-development', 'sveltekit'].some((c) =>
 						context.capabilities.includes(c)
 					)
 						? generateGooseSetupScript(context)

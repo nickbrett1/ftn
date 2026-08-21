@@ -91,6 +91,19 @@ describe('capability-template-utils', () => {
 			expect(data.xcodeNativeGooseConfig).toContain('.agents/mcp-sse-proxy.cjs');
 			expect(data.xcodeNativeGooseConfig).not.toContain('$');
 		});
+
+		it('should emit the remote svelte MCP block when the sveltekit capability is selected', () => {
+			const data = getGooseMcpConfig({ capabilities: ['sveltekit'] });
+			expect(data.svelteGooseConfig).toContain('svelte:');
+			expect(data.svelteGooseConfig).toContain('type: streamable_http');
+			expect(data.svelteGooseConfig).toContain('uri: https://mcp.svelte.dev/mcp');
+			expect(data.svelteGooseConfig).not.toContain('$');
+		});
+
+		it('should emit no svelte block when sveltekit is not selected', () => {
+			const data = getGooseMcpConfig({ capabilities: ['devcontainer-python'] });
+			expect(data.svelteGooseConfig).toBe('');
+		});
 	});
 
 	describe('assertNoGooseEnvVarReferences', () => {

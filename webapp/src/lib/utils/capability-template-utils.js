@@ -185,6 +185,7 @@ function getGooseMcpConfig(context) {
 	const hasCircleCI = context.capabilities.includes('circleci');
 	const hasDoppler = context.capabilities.includes('doppler');
 	const hasXcode = context.capabilities.includes('xcode-development');
+	const hasSvelte = context.capabilities.includes('sveltekit');
 
 	let sonarQubeGooseConfig = '';
 	if (hasSonarQube && hasDoppler) {
@@ -222,10 +223,25 @@ function getGooseMcpConfig(context) {
     timeout: 300`;
 	}
 
+	// Svelte MCP is a remote (streamable HTTP) server, no secrets — see
+	// https://svelte.dev/docs/ai/remote-setup
+	let svelteGooseConfig = '';
+	if (hasSvelte) {
+		svelteGooseConfig = `
+  svelte:
+    type: streamable_http
+    name: svelte
+    enabled: true
+    uri: https://mcp.svelte.dev/mcp
+    description: Svelte MCP server (remote)
+    timeout: 300`;
+	}
+
 	return {
 		sonarQubeGooseConfig,
 		circleCiGooseConfig,
-		xcodeNativeGooseConfig
+		xcodeNativeGooseConfig,
+		svelteGooseConfig
 	};
 }
 

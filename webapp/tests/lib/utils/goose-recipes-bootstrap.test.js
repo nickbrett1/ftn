@@ -71,6 +71,16 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		expect(script).toContain('mac-studio:9876/sse');
 	});
 
+	it('registers the remote svelte MCP extension when the sveltekit capability is selected', () => {
+		const script = generateGooseSetupScript({
+			capabilities: ['sveltekit'],
+			configuration: {}
+		});
+		expect(script).toContain('ensure_goose_extension "svelte"');
+		expect(script).toContain('type: streamable_http');
+		expect(script).toContain('uri: https://mcp.svelte.dev/mcp');
+	});
+
 	it('emits no extension merge when no MCP-relevant capability is selected', () => {
 		const script = generateGooseSetupScript({
 			capabilities: ['devcontainer-python'],
