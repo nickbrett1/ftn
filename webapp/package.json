@@ -134,7 +134,7 @@
 		"@tsparticles/interaction-external-trail": "^4.1.0",
 		"@tsparticles/shape-text": "^4.1.0",
 		"@tsparticles/slim": "^4.3.2",
-		"agents": "^0.20.1",
+		"agents": "^0.21.0",
 		"apexcharts": "^6.9.0",
 		"arctic": "^3.7.0",
 		"cookie": "^2.0.1",
