@@ -34,8 +34,18 @@ export class CircleCIAPIService extends BaseAPIService {
 	/**
 	 * Creates a new CircleCI API service instance
 	 * @param {string} token - CircleCI API token
+	 * @param {Object} [options] - Optional configuration
+	 * @param {Object} [options.followRetry] - Retry policy for following a
+	 *   freshly-created project. CircleCI indexes new GitHub repos
+	 *   asynchronously, so the follow call can 404 for a short window right
+	 *   after repo creation; retrying with backoff lets eventual consistency
+	 *   catch up instead of forcing a manual "Set Up Project".
+	 * @param {number} [options.followRetry.attempts=6] - Max attempts (incl. first)
+	 * @param {number} [options.followRetry.baseDelayMs=5000] - First retry delay
+	 * @param {number} [options.followRetry.maxDelayMs=30000] - Max retry delay
+	 * @param {number} [options.followRetry.backoffFactor=2] - Exponential factor
 	 */
-	constructor(token) {
+	constructor(token, options = {}) {
 		super(
 			token,
 			'https://circleci.com/api/v2',
@@ -46,6 +56,13 @@ export class CircleCIAPIService extends BaseAPIService {
 			},
 			'CircleCI'
 		);
+		this.followRetry = {
+			attempts: 6,
+			baseDelayMs: 5000,
+			maxDelayMs: 30000,
+			backoffFactor: 2,
+			...options.followRetry
+		};
 	}
 
 	/**
@@ -76,25 +93,68 @@ export class CircleCIAPIService extends BaseAPIService {
 	async followProject(vcsType, organizationSlug, projectSlug) {
 		console.log(`🔄 Following CircleCI project: ${organizationSlug}/${projectSlug}`);
 
-		const response = await this.makeRequest(
-			`/project/${vcsType}/${organizationSlug}/${projectSlug}/follow`,
-			{
-				method: 'POST'
+		const { attempts, baseDelayMs, maxDelayMs, backoffFactor } = this.followRetry;
+		let lastError;
+
+		for (let attempt = 1; attempt <= attempts; attempt++) {
+			try {
+				const response = await this.makeRequest(
+					`/project/${vcsType}/${organizationSlug}/${projectSlug}/follow`,
+					{
+						method: 'POST'
+					}
+				);
+
+				const project = await response.json();
+
+				console.log(`✅ CircleCI project followed: ${project.slug}`);
+
+				return {
+					id: project.id,
+					name: project.name,
+					slug: project.slug,
+					organizationSlug: project.organization_slug,
+					vcsUrl: project.vcs_url,
+					vcsType: project.vcs_type
+				};
+			} catch (error) {
+				lastError = error;
+
+				// Only 404s (repo not yet indexed by CircleCI) and transient
+				// network/5xx failures warrant a retry. Auth/validation errors
+				// are fatal and must surface immediately.
+				if (!this.#isRetryableFollowError(error) || attempt === attempts) {
+					throw error;
+				}
+
+				const delay = Math.min(baseDelayMs * backoffFactor ** (attempt - 1), maxDelayMs);
+				console.warn(
+					`⏳ CircleCI project not ready (attempt ${attempt}/${attempts}): ${error.message}. Retrying in ${delay}ms...`
+				);
+				await new Promise((resolve) => setTimeout(resolve, delay));
 			}
-		);
+		}
 
-		const project = await response.json();
+		throw lastError;
+	}
 
-		console.log(`✅ CircleCI project followed: ${project.slug}`);
-
-		return {
-			id: project.id,
-			name: project.name,
-			slug: project.slug,
-			organizationSlug: project.organization_slug,
-			vcsUrl: project.vcs_url,
-			vcsType: project.vcs_type
-		};
+	/**
+	 * Determines whether a follow error is worth retrying. CircleCI returns a
+	 * 404 while it is still indexing a freshly-created GitHub repo — that is
+	 * the exact race genproj hits right after creating the repo + first commit.
+	 * @param {Error} error - Error thrown by makeRequest
+	 * @returns {boolean} Whether the error is transient/retryable
+	 */
+	#isRetryableFollowError(error) {
+		if (!error?.message) {
+			return false;
+		}
+		// CircleCI API errors surface as "CircleCI API error: 404 Not Found ..."
+		if (/CircleCI API error: 404/.test(error.message)) {
+			return true;
+		}
+		// Transient server/network errors (fetch throws a TypeError).
+		return /CircleCI API error: (5\d\d|0 )/.test(error.message);
 	}
 
 	/**
