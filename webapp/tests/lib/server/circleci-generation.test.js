@@ -233,4 +233,44 @@ describe('CircleCI Capability Generation', () => {
 		expect(circleCiFile.content).toContain('🚀 [${CIRCLE_PROJECT_REPONAME}]');
 		expect(circleCiFile.content).toContain('equal: [ main, << pipeline.git.branch >> ]');
 	});
+
+	it('gates Lighthouse to main only by default (branch gating)', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['lighthouse-ci'],
+			configuration: { circleci: {} },
+			projectName: 'test-project'
+		});
+		expect(data.lighthouseWorkflowJob).toContain('only: main');
+	});
+
+	it('runs Lighthouse on all branches when branchGating is false', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['lighthouse-ci'],
+			configuration: { circleci: { branchGating: false } },
+			projectName: 'test-project'
+		});
+		expect(data.lighthouseWorkflowJob).not.toContain('only: main');
+	});
+
+	it('does not emit a preview deploy job by default (branch gating)', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['cloudflare-wrangler'],
+			configuration: { circleci: { deployTarget: 'cloudflare-workers' } },
+			projectName: 'test-project'
+		});
+		expect(data.deployWorkflowJob).not.toContain('deploy-to-cloudflare-preview');
+		expect(data.deployWorkflowJob).toContain('only: main');
+	});
+
+	it('emits a preview deploy job when branchGating is false', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['cloudflare-wrangler'],
+			configuration: {
+				circleci: { deployTarget: 'cloudflare-workers', branchGating: false }
+			},
+			projectName: 'test-project'
+		});
+		expect(data.deployWorkflowJob).toContain('deploy-to-cloudflare-preview');
+		expect(data.deployWorkflowJob).toContain('ignore: main');
+	});
 });

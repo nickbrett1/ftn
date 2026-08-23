@@ -337,7 +337,7 @@ function _applyDopplerConfig(data, context) {
 	}
 }
 
-function _applyLighthouseConfig(data, context, contextEnabled, contextName) {
+function _applyLighthouseConfig(data, context, contextEnabled, contextName, branchGating) {
 	const hasLighthouse = context.capabilities.includes('lighthouse-ci');
 	if (hasLighthouse) {
 		data.lighthouseJobDefinition = `
@@ -359,14 +359,23 @@ function _applyLighthouseConfig(data, context, contextEnabled, contextName) {
       - run:
           name: Run Lighthouse CI
           command: npm install -g @lhci/cli && lhci autorun`;
+		// Branch gating: Lighthouse is a release-quality gate, so run it on
+		// main only by default (also skips dependabot/** branches, which are
+		// never `main`). Opt out with circleci.branchGating = false.
+		const filters = branchGating
+			? `
+          filters:
+            branches:
+              only: main`
+			: '';
 		data.lighthouseWorkflowJob = `
       - lighthouse:${contextEnabled ? `\n          context: ${contextName}` : ''}
           requires:
-            - build`;
+            - build${filters}`;
 	}
 }
 
-function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
+function _applyCloudflareConfig(data, context, contextEnabled, contextName, branchGating) {
 	if (context.capabilities.includes('cloudflare-wrangler')) {
 		let setupWranglerStep = '';
 		let syncSecretsStep = '';
@@ -491,6 +500,22 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
               npx wrangler deploy --env "$ENV_VAL"
             fi${syncSecretsStep}`;
 
+		// Branch gating: preview deploys are wasteful on every branch push and a
+		// main-only preview is redundant with the production deploy on main, so
+		// don't emit a preview job by default. Opt out with
+		// circleci.branchGating = false to restore a per-branch preview.
+		const previewJob = branchGating
+			? ''
+			: `
+      - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
+          name: deploy-to-cloudflare-preview
+          environment: "preview"
+          doppler_config: "stg"
+          requires:${requiresList}
+          filters:
+            branches:
+              ignore: main`;
+
 		data.deployWorkflowJob =
 			rustWorkflowJob +
 			`
@@ -500,15 +525,7 @@ function _applyCloudflareConfig(data, context, contextEnabled, contextName) {
           requires:${requiresList}
           filters:
             branches:
-              only: main
-      - deploy-to-cloudflare:${contextEnabled ? `\n          context: ${contextName}` : ''}
-          name: deploy-to-cloudflare-preview
-          environment: "preview"
-          doppler_config: "stg"
-          requires:${requiresList}
-          filters:
-            branches:
-              ignore: main`;
+              only: main${previewJob}`;
 	}
 }
 
@@ -1064,6 +1081,10 @@ function getCircleCiTemplateData(context) {
 	const contextEnabled = contextConfig?.enabled ?? true;
 	const contextName = contextConfig?.name || 'common';
 
+	// Branch gating is ON by default: Lighthouse and preview deploys run on
+	// main only. Opt out with circleci.branchGating = false.
+	const branchGating = context.configuration?.circleci?.branchGating !== false;
+
 	const buildJobContext = contextEnabled ? `\n          context: ${contextName}` : '';
 
 	const language = resolveLanguage(context);
@@ -1081,8 +1102,8 @@ function getCircleCiTemplateData(context) {
 
 	_applyGitGuardianConfig(data, context, contextEnabled, contextName, buildJobContext);
 	_applyDopplerConfig(data, context);
-	_applyLighthouseConfig(data, context, contextEnabled, contextName);
-	_applyCloudflareConfig(data, context, contextEnabled, contextName);
+	_applyLighthouseConfig(data, context, contextEnabled, contextName, branchGating);
+	_applyCloudflareConfig(data, context, contextEnabled, contextName, branchGating);
 	_applyDockerContainerConfig(data, context, contextEnabled, contextName);
 	_applyNtfyNotificationConfig(data, context);
 

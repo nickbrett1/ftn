@@ -403,6 +403,12 @@ export const capabilities = [
 				ntfyNotifications: {
 					type: 'boolean',
 					default: false
+				},
+				branchGating: {
+					type: 'boolean',
+					default: true,
+					description:
+						'Run the heavy pipeline (Lighthouse, preview deploys) on main only by default. Set to false to run them on every branch.'
 				}
 			}
 		},
