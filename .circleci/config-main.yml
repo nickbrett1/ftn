@@ -194,13 +194,17 @@ jobs:
 
       # The Lighthouse audit is the expensive part; run it only when the diff
       # touches landing-page files (run-lighthouse is set true by the setup
-      # workflow). Step-level `when` is used because job-level `when` is not a
-      # valid workflow-job key in CircleCI.
+      # workflow). Gate it with a shell conditional, because job-level `when` is
+      # not a valid workflow-job key and step-level `when` only accepts the
+      # always/on_success/on_fail enum (not a pipeline parameter).
       - run:
           name: Run Lighthouse checks
-          when: << pipeline.parameters.run-lighthouse >>
           command: |
-            cd webapp && npm run lighthouse-staging
+            if [ "<< pipeline.parameters.run-lighthouse >>" = "true" ]; then
+              cd webapp && npm run lighthouse-staging
+            else
+              echo "Skipping Lighthouse (run-lighthouse false)"
+            fi
 
   deploy:
     environment:
