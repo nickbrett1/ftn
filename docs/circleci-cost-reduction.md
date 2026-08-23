@@ -216,6 +216,19 @@ Repo visibility + 30-day credits (2026-07-24 → 2026-08-23):
 - **Verify** the OSS setting is enabled on the other public projects (agent-swarm, stripe-toddler, dbt-duckdb, parquet-peek) to capture the full ~216k benefit.
 - OSS credits apply to **Linux** builds only (ftn's builds are all Linux).
 
+## 10. Private projects — public-eligibility assessment (2026-08-23)
+
+To capture OSS credits for mailroom/pshelf/nas-port-mcp (the ~29.5k/mo standard-plan drain), assessed each for blockers to making public:
+
+**Findings:**
+- **No committed secrets** — scanned all three for `ghp_`/`github_pat_`/private keys/`password|secret|api_key` → **0 hits**. Credentials are injected via Doppler ("never hardcoded").
+- **mailroom** — `inputs/psn_dump.txt` & `psn_unmatched_games.txt` are **unused** (0 code references; pipeline sources from msgvault email receipts + PSN API). Personal data is NOT in the repo (SQLite on NAS). Biggest blocker removable.
+- **pshelf** — public-facing web app (game catalog viewer); mild personal/infra exposure.
+- **nas-port-mcp** — NAS portmap/DSM/Docker monitoring internals; infra exposure.
+- **All three** — `deploy/` runbooks + `homepage-services.yaml` expose internal home-lab topology: NAS hostname `nas`, ports (3003/8080/8082), Synology DSM, Watchtower, GHCR image names, internal services (msgvault, netdata).
+
+**Assessment:** all three are viable to make public **after sanitization** (remove `inputs/` from mailroom; redact internal hostnames/ports in `deploy/`). No secret-in-repo blocker. See `docs/make-private-projects-public.md` for the sanitization plan.
+
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.
 - `webapp/.lighthouserc.cjs`: Lighthouse CI runs 1 collect, uploads to temporary public storage, disables many assertions.
