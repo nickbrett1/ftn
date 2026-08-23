@@ -122,16 +122,17 @@ Achieving ~30k credits/mo from ~246k is an ~88% cut. Even executing all of P0/P1
 
 ## 6. Status / implemented changes (2026-08-23)
 
-P0 changes implemented in `.circleci/config.yml`:
+**Important correction:** CircleCI does **not** support a native `paths:` filter on workflow jobs (earlier versions of this memo and an early implementation assumed it did). This caused a config-validation error that broke builds (fixed in `5f9194bb`). Path-based skipping is instead implemented with the **CircleCI path-filtering orb + dynamic config** (`a69e700a`) — see §8.
 
-- **Dependabot:** `browser_test` (Lighthouse) now ignores `dependabot/**` branches.
-- **Path filtering:** added a shared `webapp-paths` anchor (`webapp/**`, `**/package.json`, `**/package-lock.json`) applied to `build`, `code_test`, `browser_test`, `deploy`, and `deploy-preview`. Docs/specs/CI-only changes now skip the expensive pipeline.
-- **`code_test`:** removed `resource_class: large` → back to default `medium` (halves that job's credit burn).
-- **`deploy` / `deploy-preview`:** gated on the same webapp path filter.
+What is actually in place (all in `.circleci/`):
 
-`ggshield/scan` intentionally left unfiltered (cheap security scan on every run).
+- **`code_test`:** on default `medium` (was `large`) — halves that job's credit burn.
+- **Lighthouse (`browser_test`):** runs on `main` only, and only when the diff touches landing-page files (path-filtering orb sets `run-lighthouse`).
+- **`deploy`:** `main` only; **`deploy-preview`:** not `main` and not `dependabot/**`.
+- **Dependabot / trivial changes:** `dependabot/**` skips preview; docs/specs/markdown/`.circleci`-only changes skip the whole pipeline via the orb (`run-build-test-deploy`).
+- **`ggshield/scan`:** security scan still runs within the main workflow (skipped only when the whole pipeline is skipped for trivial changes).
 
-**Next step:** let ~1 week of runs accumulate, then re-run `circleciOrgUsageSummary`/`circleciProjectWorkflows` to measure the reduction and decide whether to proceed with the genproj extraction (P1 item 6).
+**Next step:** verify the path-filtering setup on the next webapp-touching commit (this bootstrap commit does not run the pipeline), then let ~1 week of runs accumulate before re-measuring.
 
 ---
 
@@ -175,6 +176,18 @@ Estimated by classifying the 20 most recent ftn runs and applying the P0 behavio
 2. Apply the same treatment to other heavy projects — `mailroom` (~155 credits/run) and `pshelf` (~178 credits/run) are as expensive per run as ftn; their ~71k total alone exceeds free tier.
 3. Branch-level gating (full suite only on `main`; lighter `build + lint` on branches).
 4. Reduce deploy runs / concurrency (free tier also caps concurrency, a natural fit).
+
+## 8. Path filtering via the CircleCI orb (implemented `a69e700a`)
+
+CircleCI has no native `paths:` workflow filter, so path-based skipping is done with **dynamic configuration**:
+
+- **`.circleci/config.yml`** — `setup: true`, runs the `circleci/path-filtering` orb job `path-filtering/filter`. It diffs the changed files and injects pipeline parameters into the main config.
+- **`.circleci/config-main.yml`** — the real pipeline, gated by two boolean parameters:
+  - `run-build-test-deploy` (default **true** — safety net): set **false** for `docs/**, specs/**, *.md, .circleci/**`-only changes so the whole heavy pipeline is skipped.
+  - `run-lighthouse` (default **false**): set **true** only for landing-page file changes (root routes, landing components, `app.css`, `static/icons/images`, `package*.json`), so Lighthouse runs on `main` for landing changes only.
+- The `webapp/.* → true` mapping lines are ordered **after** the trivial `false` lines so a commit touching both webapp code and docs still runs the pipeline (last matching line wins).
+
+**Caveats:** the commit that introduced this touches only `.circleci/**`, so it is expected not to run the pipeline (bootstrap) — verification happens on the next webapp-touching commit. If the setup misbehaves, revert to `5f9194bb` (last known-good single config).
 
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.

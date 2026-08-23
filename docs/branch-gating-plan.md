@@ -56,11 +56,12 @@ Credit data = trailing 30 days (Insights). "Branch behavior" = from each repo's 
 ## 3. Plan per project
 
 ### 3.1 ftn (primary)
-Already has P0 (dependabot + path filtering + medium test class). Add branch gating:
-- `browser_test` (Lighthouse): run on **`main` only**, and only when the diff touches **landing-page files** (`landing-paths`). Lighthouse already audits only the root landing page, so subpage-only changes (e.g. `webapp/src/routes/projects/...`) skip it entirely.
+Already has `code_test` on medium + Lighthouse on `main` only. Branch gating implemented via the **path-filtering orb** (`a69e700a`):
+- `browser_test` (Lighthouse): runs on **`main` only**, and only when the diff touches **landing-page files** (path-filtering orb sets `run-lighthouse`). Lighthouse already audits only the root landing page, so subpage-only changes (e.g. `webapp/src/routes/projects/...`) skip it entirely.
   - `landing-paths` ≈ `webapp/src/routes/+page.svelte`, `+layout.svelte`, `+error.svelte`, `webapp/src/lib/components/{About,Contact,Experience,Footer,Header,Landing,Navbar,Projects}.svelte`, `webapp/src/app.css`, `webapp/static/**`, `webapp/src/lib/icons/**`, `webapp/src/lib/images/**`, `webapp/package*.json`.
   - Caveat: root `+layout.svelte` + `Footer/Header/Navbar` are shared across all pages, so a subpage change that also touches those still triggers Lighthouse (correct — the layout is part of the landing page).
-- `deploy-preview`: gate to webapp-path changes (already path-filtered) and confirm it's not needed on docs-only branches.
+- **Docs/specs/CI-only changes skip the whole pipeline** (path-filtering orb sets `run-build-test-deploy` false). Note: this is via the orb — CircleCI has no native `paths:` workflow filter.
+- `deploy-preview`: not `main` and not `dependabot/**`.
 
 ### 3.2 agent-swarm
 - **Remove** the `deploy-to-cloudflare-preview` job entirely (currently `branches: ignore: main`, runs on every non-main branch). Decision: previews are not used for QA, and production deploys already happen on `main`. Removing it eliminates the build+preview cost on every branch push.
