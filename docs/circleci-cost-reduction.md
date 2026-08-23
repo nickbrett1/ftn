@@ -129,10 +129,11 @@ What is actually in place (all in `.circleci/`):
 - **`code_test`:** on default `medium` (was `large`) — halves that job's credit burn.
 - **Lighthouse (`browser_test`):** runs on `main` only, and only when the diff touches landing-page files (path-filtering orb sets `run-lighthouse`).
 - **`deploy`:** `main` only; **`deploy-preview`:** not `main` and not `dependabot/**`.
-- **Dependabot / trivial changes:** `dependabot/**` skips preview; docs/specs/markdown/`.circleci`-only changes skip the whole pipeline via the orb (`run-build-test-deploy`).
-- **`ggshield/scan`:** security scan still runs within the main workflow (skipped only when the whole pipeline is skipped for trivial changes).
+- **Dependabot / preview:** `deploy-preview` skips `main` and `dependabot/**`.
+- **`ggshield/scan`:** security scan runs in the main workflow on every code build.
+- **Path-based skip (docs/specs/CI-only):** NOT active — the path-filtering orb attempt errored and was reverted (`491de945`). See §8.
 
-**Next step:** verify the path-filtering setup on the next webapp-touching commit (this bootstrap commit does not run the pipeline), then let ~1 week of runs accumulate before re-measuring.
+**Next step:** let ~1 week of runs accumulate and re-measure; optionally investigate the path-filtering orb error if path-based skip is desired later.
 
 ---
 
@@ -177,17 +178,15 @@ Estimated by classifying the 20 most recent ftn runs and applying the P0 behavio
 3. Branch-level gating (full suite only on `main`; lighter `build + lint` on branches).
 4. Reduce deploy runs / concurrency (free tier also caps concurrency, a natural fit).
 
-## 8. Path filtering via the CircleCI orb (implemented `a69e700a`)
+## 8. Path filtering via the CircleCI orb (attempted `a69e700a`, REVERTED `491de945`)
 
-CircleCI has no native `paths:` workflow filter, so path-based skipping is done with **dynamic configuration**:
+CircleCI has no native `paths:` workflow filter, so path-based skipping requires **dynamic configuration** (a `setup: true` config running the `circleci/path-filtering` orb, injecting params into a continuation config).
 
-- **`.circleci/config.yml`** — `setup: true`, runs the `circleci/path-filtering` orb job `path-filtering/filter`. It diffs the changed files and injects pipeline parameters into the main config.
-- **`.circleci/config-main.yml`** — the real pipeline, gated by two boolean parameters:
-  - `run-build-test-deploy` (default **true** — safety net): set **false** for `docs/**, specs/**, *.md, .circleci/**`-only changes so the whole heavy pipeline is skipped.
-  - `run-lighthouse` (default **false**): set **true** only for landing-page file changes (root routes, landing components, `app.css`, `static/icons/images`, `package*.json`), so Lighthouse runs on `main` for landing changes only.
-- The `webapp/.* → true` mapping lines are ordered **after** the trivial `false` lines so a commit touching both webapp code and docs still runs the pipeline (last matching line wins).
+**Outcome:** the setup config **errored instantly** on CircleCI (runs 12212/12213/12214 failed in ~150ms — a config-validation error, not a job failure), breaking builds. It was **reverted to `5f9194bb`'s known-good single config** (`491de945`); run 12215 was accepted. The likely cause is the orb reference/version or the dynamic-config handoff, which needs investigation on the CircleCI side (I can't validate the orb locally).
 
-**Caveats:** the commit that introduced this touches only `.circleci/**`, so it is expected not to run the pipeline (bootstrap) — verification happens on the next webapp-touching commit. If the setup misbehaves, revert to `5f9194bb` (last known-good single config).
+**Net status:**
+- Branch gating is in place and working: `code_test` on `medium`, Lighthouse on `main` only, `deploy` main-only, `deploy-preview` not-main/not-dependabot.
+- **Path-based skipping of docs/specs/CI-only changes is NOT currently active** — it requires the orb setup to be fixed. This was never the biggest saving (the projection's ~5% estimate), so losing it is minor; the branch-gating wins remain.
 
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.
