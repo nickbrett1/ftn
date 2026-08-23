@@ -1,5 +1,5 @@
-// Non-landing webapp change used to verify the path-filtering setup runs the
-// build/test/deploy pipeline but skips the Lighthouse step (run-lighthouse false).
+// Non-landing webapp change (verify path-filtering): runs build/test/deploy,
+// skips Lighthouse (run-lighthouse false).
 import { ChaseParser } from './chase-parser.js';
 import { WellsFargoParser } from './wells-fargo-parser.js';
 import { BiltCardlessParser } from './bilt-cardless-parser.js';
