@@ -7,6 +7,21 @@ x-webapp-paths: &webapp-paths
   - "**/package.json"
   - "**/package-lock.json"
 
+# Lighthouse audits only the root landing page, so only run it when the diff
+# touches landing-page-relevant files (root routes, landing components, global
+# CSS, shared assets, deps). Subpage-only changes skip it.
+x-landing-paths: &landing-paths
+  - "webapp/src/routes/+page.svelte"
+  - "webapp/src/routes/+layout.svelte"
+  - "webapp/src/routes/+error.svelte"
+  - "webapp/src/lib/components/*"
+  - "webapp/src/app.css"
+  - "webapp/static/**"
+  - "webapp/src/lib/icons/**"
+  - "webapp/src/lib/images/**"
+  - "webapp/package.json"
+  - "webapp/package-lock.json"
+
 orbs:
   ggshield: gitguardian/ggshield@volatile
   browser-tools: circleci/browser-tools@1.5.3
@@ -312,11 +327,10 @@ workflows:
             - build
           filters:
             branches:
-              ignore: dependabot/**
-            paths: *webapp-paths
+              only: main
+            paths: *landing-paths
       - deploy:
           requires:
-            - browser_test
             - code_test
           filters:
             branches:
@@ -325,7 +339,6 @@ workflows:
           context: common
       - deploy-preview:
           requires:
-            - browser_test
             - code_test
           filters:
             branches:
