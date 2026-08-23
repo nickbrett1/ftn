@@ -1,5 +1,3 @@
-// CI path-filtering verification #3 (non-landing webapp change): should trigger
-// the build/test/deploy pipeline but NOT Lighthouse (run-lighthouse stays false).
 import { ChaseParser } from './chase-parser.js';
 import { WellsFargoParser } from './wells-fargo-parser.js';
 import { BiltCardlessParser } from './bilt-cardless-parser.js';

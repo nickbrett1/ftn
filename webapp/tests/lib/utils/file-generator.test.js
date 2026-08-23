@@ -495,9 +495,11 @@ describe('TemplateEngine', () => {
 			'./scripts/sync-doppler-secrets.sh --config "$DOPPLER_CONFIG" --env "$CLOUDFLARE_ENV"'
 		);
 		expect(content).toContain('npx wrangler deploy --env "$ENV_VAL"');
+		// Branch gating is the default: the production deploy is main-only and no
+		// preview deploy job is emitted (previews removed by default).
 		expect(content).toContain('only: main');
-		expect(content).toContain('ignore: main');
-		expect(content).toContain('name: deploy-to-cloudflare-preview');
+		expect(content).not.toContain('ignore: main');
+		expect(content).not.toContain('name: deploy-to-cloudflare-preview');
 	});
 
 	it('should NOT generate CircleCI config with Cloudflare deployment steps when cloudflare-wrangler capability is NOT present', () => {
