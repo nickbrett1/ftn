@@ -1,3 +1,5 @@
+// Test commit (CI path-filtering verification): this is a non-landing webapp
+// change, so it should trigger the build/test/deploy pipeline but NOT Lighthouse.
 import { ChaseParser } from './chase-parser.js';
 import { WellsFargoParser } from './wells-fargo-parser.js';
 import { BiltCardlessParser } from './bilt-cardless-parser.js';
