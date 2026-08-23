@@ -182,11 +182,13 @@ Estimated by classifying the 20 most recent ftn runs and applying the P0 behavio
 
 CircleCI has no native `paths:` workflow filter, so path-based skipping requires **dynamic configuration** (a `setup: true` config running the `circleci/path-filtering` orb, injecting params into a continuation config).
 
-**Outcome:** both attempts errored **instantly** on CircleCI (a config-level rejection, ~150ms, not a job failure), breaking builds each time:
-- attempt 1 (`a69e700a`) with `path-filtering@1.0.0` → reverted `491de945`
-- attempt 2 (`475f1da4`) with the current `path-filtering@3.0.0` + `base-revision: main` → reverted `cce6da35`
+**Outcome (three attempts):**
+- attempt 1 (`a69e700a`) `path-filtering@1.0.0` → instant config error → reverted `491de945`
+- attempt 2 (`475f1da4`) `path-filtering@3.0.0` → instant config error → reverted `cce6da35`
+- **Root cause of instant errors:** "Dynamic config using setup workflows" was NOT enabled in Project settings → the config-level rejection. Once enabled (`8297cedd`), the setup config was accepted (no more config-load error).
+- attempt 3 (`d8873ddb`) after enabling + fixing the genproj file-generator test: setup accepted, but the run **errored within ~9s (setup-level, not a test failure)** — all 1863 tests pass locally. Reverted `85685e75`. The CircleCI MCP server returns an internal error, so the exact failure is not visible from here.
 
-Since even the correct orb version errors at pipeline-creation, the cause is almost certainly that **dynamic configuration / setup workflows are not enabled for this project** (or an error only visible in the CircleCI UI/API, which the cost extension does not surface). To pursue this, one would need to enable setup workflows for the project and read the exact error from the CircleCI dashboard.
+**To retry path-based skip**, the exact error from run `12224`'s `path-filtering/filter` job (or the continuation) in the CircleCI dashboard is needed. The likely runtime suspects are `base-revision: main` (diffing on a `main` push) or a mapping-regex issue in the orb job.
 
 **Net status (current, working):**
 - Branch gating is in place and working: `code_test` on `medium`, Lighthouse on `main` only, `deploy` main-only, `deploy-preview` not-main/not-dependabot.
