@@ -135,6 +135,47 @@ P0 changes implemented in `.circleci/config.yml`:
 
 ---
 
+## 7. Projected impact of P0 (based on last month's activity)
+
+Estimated by classifying the 20 most recent ftn runs and applying the P0 behavior changes. Per-job credit splits are estimates (the Insights API exposes workflow-level, not job-level, credits), so the Lighthouse share is ranged 30–40%.
+
+**Run mix in the sample (ftn):**
+
+| Run type | Share | P0 effect |
+|---|---|---|
+| Dependabot branch | 40% | skips Lighthouse only (still builds/tests — lockfiles change) |
+| Dependabot merge → main | 35% | **no change** (runs full pipeline on `main`) |
+| genproj | 20% | **no change** (webapp change, path-filter passes; only extraction helps) |
+| Other main | 5% | — |
+
+~55% of runs (dependabot merges + genproj) are **not** helped by P0.
+
+**Projected monthly ftn spend (repeating last month):**
+
+| Item | Credits/mo |
+|---|---|
+| Baseline ftn | 174,139 |
+| − `code_test` large→medium | −24,379 |
+| − Dependabot-branch Lighthouse | −20,897 to −27,862 |
+| − Path filtering (est. ~5% docs/CI-only) | −8,707 |
+| **Projected ftn** | **~113k–120k** |
+| **Reduction** | **~31–35%** |
+
+**Comparison vs target:**
+
+| | Credits/mo |
+|---|---|
+| Last month (actual) | 245,758 |
+| Projected ftn after P0 | ~113–120k |
+| Projected **org** after P0 (ftn + ~71k other projects unchanged) | ~185–192k |
+| **Free tier target** | ~30k |
+
+**Bottom line:** P0 delivers a solid ~31–35% cut for ftn but leaves the org ~6× over the free-tier ceiling (~30k/mo). Reaching free tier requires additional, combination work:
+1. genproj extraction (removes ~20% of ftn runs).
+2. Apply the same treatment to other heavy projects — `mailroom` (~155 credits/run) and `pshelf` (~178 credits/run) are as expensive per run as ftn; their ~71k total alone exceeds free tier.
+3. Branch-level gating (full suite only on `main`; lighter `build + lint` on branches).
+4. Reduce deploy runs / concurrency (free tier also caps concurrency, a natural fit).
+
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.
 - `webapp/.lighthouserc.cjs`: Lighthouse CI runs 1 collect, uploads to temporary public storage, disables many assertions.
