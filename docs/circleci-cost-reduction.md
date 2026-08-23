@@ -178,15 +178,19 @@ Estimated by classifying the 20 most recent ftn runs and applying the P0 behavio
 3. Branch-level gating (full suite only on `main`; lighter `build + lint` on branches).
 4. Reduce deploy runs / concurrency (free tier also caps concurrency, a natural fit).
 
-## 8. Path filtering via the CircleCI orb (attempted `a69e700a`, REVERTED `491de945`)
+## 8. Path filtering via the CircleCI orb (attempted, REVERTED — not active)
 
 CircleCI has no native `paths:` workflow filter, so path-based skipping requires **dynamic configuration** (a `setup: true` config running the `circleci/path-filtering` orb, injecting params into a continuation config).
 
-**Outcome:** the setup config **errored instantly** on CircleCI (runs 12212/12213/12214 failed in ~150ms — a config-validation error, not a job failure), breaking builds. It was **reverted to `5f9194bb`'s known-good single config** (`491de945`); run 12215 was accepted. The likely cause is the orb reference/version or the dynamic-config handoff, which needs investigation on the CircleCI side (I can't validate the orb locally).
+**Outcome:** both attempts errored **instantly** on CircleCI (a config-level rejection, ~150ms, not a job failure), breaking builds each time:
+- attempt 1 (`a69e700a`) with `path-filtering@1.0.0` → reverted `491de945`
+- attempt 2 (`475f1da4`) with the current `path-filtering@3.0.0` + `base-revision: main` → reverted `cce6da35`
 
-**Net status:**
+Since even the correct orb version errors at pipeline-creation, the cause is almost certainly that **dynamic configuration / setup workflows are not enabled for this project** (or an error only visible in the CircleCI UI/API, which the cost extension does not surface). To pursue this, one would need to enable setup workflows for the project and read the exact error from the CircleCI dashboard.
+
+**Net status (current, working):**
 - Branch gating is in place and working: `code_test` on `medium`, Lighthouse on `main` only, `deploy` main-only, `deploy-preview` not-main/not-dependabot.
-- **Path-based skipping of docs/specs/CI-only changes is NOT currently active** — it requires the orb setup to be fixed. This was never the biggest saving (the projection's ~5% estimate), so losing it is minor; the branch-gating wins remain.
+- **Path-based skipping of docs/specs/CI-only changes is NOT active.** This was never the biggest saving (the projection's ~5% estimate), so the branch-gating wins carry the day. Recommend parking path-based skip unless dynamic config is enabled and the exact error is surfaced.
 
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.
