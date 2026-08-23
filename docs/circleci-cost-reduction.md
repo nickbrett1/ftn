@@ -201,6 +201,21 @@ CircleCI has no native `paths:` workflow filter, so path-based skipping uses **d
 - **Path-based skipping of docs/specs/CI-only changes is ACTIVE** (whole pipeline skipped).
 - genproj generates branch-gating defaults (`branchGating` config, default true).
 
+## 9. OSS credits reframe (biggest headroom finding)
+
+CircleCI's **"Free and Open Source"** project setting lets a **public** project's **Linux** builds draw from a separate pool of **400,000 free credits/month** (per org), instead of the standard paid/free plan. Confirmed enabled on **ftn**.
+
+Repo visibility + 30-day credits (2026-07-24 → 2026-08-23):
+
+**Public → OSS-eligible (free 400k pool):** ftn 174,139 · agent-swarm 19,898 · dbt-duckdb 14,029 · stripe-toddler 7,658 · parquet-peek 545 → **~216,269/mo (~88% of org)**
+**Private → standard paid plan:** mailroom 16,590 · pshelf 11,723 · nas-port-mcp 1,176 → **~29,489/mo (~12%)**
+
+**Implications:**
+- ftn's ~174k burn is almost certainly **free** (OSS pool, under the 400k cap) — the heavy ftn cost-reduction work saves OSS credits, not paid-plan credits.
+- The **real paid-plan drain is the private projects (~29.5k/mo)**. To move back to the free plan, focus there: reduce their usage, or make them OSS-eligible if they can be public.
+- **Verify** the OSS setting is enabled on the other public projects (agent-swarm, stripe-toddler, dbt-duckdb, parquet-peek) to capture the full ~216k benefit.
+- OSS credits apply to **Linux** builds only (ftn's builds are all Linux).
+
 ## Appendix — reference data
 - `.circleci/config.yml`: single `build_test_deploy` workflow; `code_test` uses `resource_class: large`; `browser_test` runs Lighthouse against staging (`LIGHTHOUSE_ENABLED=true`, `npm run lighthouse-staging`); `deploy-preview` runs on all non-`main` branches.
 - `webapp/.lighthouserc.cjs`: Lighthouse CI runs 1 collect, uploads to temporary public storage, disables many assertions.
