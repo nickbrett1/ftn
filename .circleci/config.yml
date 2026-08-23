@@ -1,38 +1,320 @@
 version: 2.1
 
-# SETUP / dynamic config. Runs a cheap path-filtering job that diffs the
-# changed files and injects pipeline parameters into the real pipeline
-# (.circleci/config-main.yml), so the heavy build/test/deploy pipeline is
-# skipped for docs/specs/markdown/CI-only changes, and Lighthouse runs on
-# main only for landing-page changes.
-#
-# Requires: Project settings > Advanced > "Dynamic config using setup workflows"
-# must be enabled (now enabled).
-
-setup: true
-
 orbs:
-  path-filtering: circleci/path-filtering@3.0.0
+  ggshield: gitguardian/ggshield@volatile
+  browser-tools: circleci/browser-tools@1.5.3
+
+commands:
+  install_doppler:
+    description: "Install Doppler CLI"
+    steps:
+      - restore_cache:
+          name: Restore Doppler CLI
+          keys:
+            - doppler-cli-v1
+      - run:
+          name: Install Doppler CLI (if not cached)
+          command: |
+            if ! command -v doppler &> /dev/null; then
+              (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sudo sh
+            fi
+      - save_cache:
+          name: Cache Doppler CLI
+          paths:
+            - /usr/local/bin/doppler
+          key: doppler-cli-v1
+
+  notify_deployment:
+    description: "Send ntfy notification upon deployment completion"
+    parameters:
+      environment_name:
+        type: string
+        default: "Production"
+      doppler_config:
+        type: string
+        default: "prd"
+    steps:
+      - run:
+          name: Send deployment completion notification
+          command: |
+            DOPPLER_ARGS=""
+            if [ -n "$DOPPLER_TOKEN" ]; then
+              DOPPLER_ARGS="--token $DOPPLER_TOKEN"
+              if [[ ! "$DOPPLER_TOKEN" =~ ^dp\.st\. ]]; then
+                DOPPLER_ARGS="$DOPPLER_ARGS --project common --config << parameters.doppler_config >>"
+              fi
+            else
+              DOPPLER_ARGS="--project common --config << parameters.doppler_config >>"
+            fi
+            NTFY_URL=$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain $DOPPLER_ARGS 2>/dev/null || true)
+            if [ -n "$NTFY_URL" ]; then
+              COMMIT_MSG=$(git log -1 --pretty=format:"%s" "$CIRCLE_SHA1" 2>/dev/null || echo "")
+              curl -s -d "🚀 [${CIRCLE_PROJECT_REPONAME}] << parameters.environment_name >> deployment successful! Branch: ${CIRCLE_BRANCH}, Commit: ${CIRCLE_SHA1:0:7} ${COMMIT_MSG}" "$NTFY_URL"
+              echo "Notification sent successfully to ntfy."
+            else
+              echo "⚠️ NTFY_URL_CIRCLECI_BUILD secret not found in Doppler or empty."
+            fi
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:22.23.1-browsers
+    steps:
+      - checkout:
+          method: blobless
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
+      # Note: Playwright Chromium is required during `npm run build` because mdsvex / rehype-mermaid
+      # uses mermaid-isomorphic (which launches headless Chromium via Playwright) to compile SVGs for .svx files.
+      - restore_cache:
+          name: Restore Playwright cache
+          keys:
+            - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - playwright-{{ .Branch }}-
+            - playwright-
+      - run:
+          name: Install modules
+          command: |
+            cd webapp
+            npm ci
+      - run:
+          name: Install Playwright Chromium (if not cached)
+          command: |
+            cd webapp && npx playwright install chromium
+      - save_cache:
+          name: Cache Playwright
+          paths:
+            - ~/.cache/ms-playwright
+          key: playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - install_doppler
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
+ 
+      - run:
+          name: Build app
+          command: |
+            cd webapp && npm run build
+      - save_cache:
+          name: Update node_modules and SvelteKit build cache
+          paths:
+            - webapp/node_modules
+            - webapp/.svelte-kit/cache
+          key: node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+      - persist_to_workspace:
+          root: webapp
+          paths:
+            - .svelte-kit
+            - static/pdf.worker.min.mjs
+
+  code_test:
+    docker:
+      - image: cimg/node:22.23.1-browsers
+    steps:
+      - checkout:
+          method: blobless
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
+      - attach_workspace:
+          at: webapp
+      - install_doppler
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - run:
+          name: Run linting (ESLint + SonarJS)
+          command: |
+            cd webapp && npm run lint
+      - run:
+          name: Run tests (enforces app-wide coverage >= 80%)
+          command: |
+            cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+      - run:
+          name: Check memory usage
+          command: |
+            echo "Memory usage after tests:"
+            free -h
+            echo "Disk usage:"
+            df -h
+          when: always
+      - store_test_results:
+          path: ./webapp/reports/
+
+  browser_test:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+      SENTRY_RELEASE: << pipeline.git.revision >>
+      LIGHTHOUSE_ENABLED: "true"
+    docker:
+      - image: cimg/node:22.23.1-browsers
+    steps:
+      # Note: browser-tools/install-chrome is required because Lighthouse CI (lhci)
+      # requires the browser-tools symlinks and PATH setups to pass its Chrome detection healthcheck.
+      - browser-tools/install-chrome:
+          replace-existing: true
+      - checkout:
+          method: blobless
+      - restore_cache:
+          name: Restore node_modules and next cache
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
+      - attach_workspace:
+          at: webapp
+      - install_doppler
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
+
+      - run:
+          name: Run Lighthouse checks
+          command: |
+            cd webapp && npm run lighthouse-staging
+
+  deploy:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:22.23.1
+    steps:
+      - checkout:
+          method: blobless
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
+      - attach_workspace:
+          at: webapp
+      - install_doppler
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
+
+      - run:
+          name: Install jq (if not present)
+          command: |
+            if ! command -v jq &> /dev/null; then
+              sudo apt-get update && sudo apt-get install -y jq
+            fi
+      - run:
+          name: Sync Doppler secrets to Cloudflare (production)
+          command: |
+            chmod +x webapp/scripts/sync-doppler-secrets.sh
+            ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
+
+      - run:
+          name: Deploying to Cloudflare
+          command: |
+            cd webapp
+            npm run deploy
+      - notify_deployment:
+          environment_name: "Production"
+          doppler_config: "prd"
+
+  deploy-preview:
+    environment:
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: preview
+      SENTRY_RELEASE: << pipeline.git.revision >>
+    docker:
+      - image: cimg/node:22.23.1
+    steps:
+      - checkout:
+          method: blobless
+      - restore_cache:
+          name: Restore node_modules
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v7-fresh-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
+            - node-v7-fresh-{{ .Branch }}-
+            - node-v7-fresh-
+      - attach_workspace:
+          at: webapp
+      - install_doppler
+      - run:
+          name: Setup Wrangler configuration
+          command: |
+            cd webapp && ./scripts/setup-wrangler-config.sh stg
+
+      - run:
+          name: Install jq (if not present)
+          command: |
+            if ! command -v jq &> /dev/null; then
+              sudo apt-get update && sudo apt-get install -y jq
+            fi
+      - run:
+          name: Sync Doppler secrets to Cloudflare (preview)
+          command: |
+            chmod +x webapp/scripts/sync-doppler-secrets.sh
+            if ! ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview; then
+              echo "⚠️  Warning: Failed to sync secrets to Cloudflare preview. This may be due to script settings conflicts."
+              echo "Continuing with deployment as this is not critical for preview environments..."
+            fi
+
+      - run:
+          name: Deploying preview to Cloudflare
+          command: |
+            cd webapp
+            npm run deploy-preview
 
 workflows:
-  generate-config:
+  build_test_deploy:
     jobs:
-      - path-filtering/filter:
-          base-revision: main
-          config-path: .circleci/config-main.yml
-          mapping: |
-            docs/.* run-build-test-deploy false
-            specs/.* run-build-test-deploy false
-            .*\.md run-build-test-deploy false
-            .circleci/.* run-build-test-deploy false
-            webapp/.* run-build-test-deploy true
-            package.json run-build-test-deploy true
-            package-lock.json run-build-test-deploy true
-            webapp/src/routes/\+page\.svelte run-lighthouse true
-            webapp/src/routes/\+layout\.svelte run-lighthouse true
-            webapp/src/routes/\+error\.svelte run-lighthouse true
-            webapp/src/lib/components/(About|Contact|Experience|Footer|Header|Landing|Navbar|Projects)\.svelte run-lighthouse true
-            webapp/src/app\.css run-lighthouse true
-            webapp/static/.* run-lighthouse true
-            webapp/src/lib/icons/.* run-lighthouse true
-            webapp/src/lib/images/.* run-lighthouse true
+      - ggshield/scan:
+          name: ggshield-scan
+          base_revision: << pipeline.git.base_revision >>
+          revision: <<pipeline.git.revision>>
+          context: common
+      - build
+      - code_test:
+          requires:
+            - build
+      - browser_test:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+      - deploy:
+          requires:
+            - code_test
+          filters:
+            branches:
+              only: main
+          context: common
+      - deploy-preview:
+          requires:
+            - code_test
+          filters:
+            branches:
+              ignore:
+                - main
+                - dependabot/**
+          context: common
