@@ -20,8 +20,8 @@
 	Drop in photos via Img imports from $lib/images when available, with caption + alt text.
 -->
 
-<h1 class="!mb-0 no-underline">My toddler has a store. Stripe runs the payments. The process beat the model.</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">Spec-driven development, round two — the cheap model was the proof, not the cause</p>
+<h1 class="!mb-0 no-underline">Toddler e-commerce with Stripe: How a better agent harness beat a better model</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">DeepSeek V4 with a mobile-first agentic workflow succeeded where Gemini Pro alone struggled</p>
 August 2026
 <ProjectLinkButton href={projectUrl} />
 
@@ -29,11 +29,20 @@ August 2026
 
 ## Introduction
 
-A toddler selling toys with real payment hardware — that's the fun part. The engineering story is the process behind it: the direct follow-up to my [Spec Kit article](/projects/speckit-dev), and the place where spec-driven development finally worked. Crucially, it worked *without* a cleverer model. This project ran on a cheaper, less sophisticated one than last time, at roughly a thirtieth of the price per token — and the work came out straighter. Better process, cheaper model, better result. Process beat model.
+Well I can say that building a functional iPad e-commerce payments app with hardware integration for a barcode scanner and a Stripe credit card reader was not on my 2026 todo list. But in this new world of agentic software development I'm rapidly churning out ever more ambitious side projects and this was up next on the ideas list.
 
-Two workflow changes did the work, and both are transferable. The first: my specs now feed **validated, structured artifacts** — state diagrams, message flows, UI mocks — instead of jumping straight to a plan. The second: the whole stack, a Rust backend and a Swift iPad app, lived in **one devcontainer I could drive from my phone**, with a feedback loop measured in minutes and run on live toddler feedback. That's what this post is about.
+The goal of this project was to create a fun toy, while also learning more about e-commerce and in particular the Stripe Payments APIs. It was to be an iPad app, with a linked barcode scanner and Stripe card reader that showed a checkout screen. With QR code stickers on kids toys, each could be scanned and then payment made with a special Stripe test credit card.
 
-Here's the setup, because it's worth setting the scene: an iPad on a stand, a wireless barcode scanner, and a [Stripe Reader M2](https://stripe.com/terminal) on our kitchen table. My three-year-old scans a toy, taps a card, and the app throws a celebration. Underneath is a real payments stack — Stripe's Terminal SDK, a Rust worker on Cloudflare, KV for inventory, D1 for the transaction log — and a build process that finally held the line.
+This was my most ambitious agentic project yet, for a few reasons:
+
+1. **It involved hardware.** Hardware is fun but historically so time consuming to utilise with long iteration and debug cycles. Agents let me cut through that and it was a lot of fun.
+2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode, a tool I had never used.
+3. **I wanted to achieve end to end spec-driven development.** In my prior attempt at using SpecKit I couldn't quite get a workflow working where I could get a functional application just from my specs — my agent kept getting confused and lost in fruitless iteration. I wanted to do better this time.
+4. **Mobile first workflow.** Sitting down at a computer outside of work is something of a rarity for me, but having spare pockets of time while I'm on the go is more common. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous so generally wouldn't stop to ask clarifying questions. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
+
+So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me ever more clearly what the future of agentic software engineering is likely to look like.
+
+Let's build a store. Target customer: a three-year-old.
 
 ## The Toy Store, Meet Stripe
 
@@ -42,6 +51,8 @@ Here's the setup, because it's worth setting the scene: an iPad on a stand, a wi
 The scene: an iPad on a stand, a Tera Mini barcode scanner, a Stripe Reader M2, a small stack of test cards, and a shelf of toys wearing printed barcode labels. The product owner is three years old. The QA lead is three years old. The most demanding user is three years old.
 
 Here's the flow. She picks up the scanner, points it at a toy, and pulls the trigger. The iPad beeps, and the item appears on screen: a big photo, its name, and a price. Prices are deliberately integer — $1, $5, no cents, no tax, no shipping, no surprises. Each scan adds to a running total with a satisfying chime. When she's ready, she taps a card on the M2, the reader flashes green, and then the app lets loose: fireworks, bouncing images of everything she just sold, sound, and on a good day a little video of a guitar band playing. Then "Go Again" and the cart resets.
+
+One early lesson worth sharing, because it's exactly the kind of detail that bites you in a hardware project: I started with plain 1D barcodes on the toy labels, and they read terribly. The scanner had to be held at just the right angle or it simply wouldn't catch the code — a non-starter when your user is three. The Tera Mini also reads 2D codes, so I switched the labels over to QR stickers and scanning became near-instant and forgiving, no careful angling required. Same scanner, same flow, just better stickers — and the whole system quietly shifted from "barcode" to "code".
 
 <!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
 <!-- IMAGE PLACEHOLDER H8: Toys + barcodes — close-up of printed Avery barcode labels on toys -->
@@ -53,9 +64,9 @@ One design principle guided all of it: **transactions should always succeed.** T
 
 Three pieces, and each one is deliberately conventional:
 
-**The iPad app (Swift).** Minimal text, big buttons, bright colors, celebratory animations. The scanner connects over Bluetooth in keyboard-wedge mode — the app just sees keystrokes ending in a carriage return and parses the barcode from them. The M2 connects through the [Stripe Terminal iOS SDK](https://docs.stripe.com/terminal). Every request to the backend is signed with Apple App Attest and an API key generated from [fintechnick.com/api-keys](/api-keys), so only my iPad can talk to the worker at all.
+**The iPad app (Swift).** Minimal text, big buttons, bright colors, celebratory animations. The Tera Mini is a 1D/2D wireless scanner, and it connects over Bluetooth in keyboard-wedge mode — the app just sees keystrokes ending in a carriage return and parses whatever code (barcode or QR) from them. The M2 connects through the [Stripe Terminal iOS SDK](https://docs.stripe.com/terminal). Every request to the backend is signed with Apple App Attest and an API key generated from [fintechnick.com/api-keys](/api-keys), so only my iPad can talk to the worker at all. I'd never written Swift before this; the fact that I could ship an iPad app anyway is the whole point of this article.
 
-**The backend (Rust on Cloudflare Workers).** One monolithic worker. It issues Terminal connection tokens, creates `PaymentIntent`s with the `card_present` payment method type, and captures payments once the card is authorized. Inventory lives in [KV](https://developers.cloudflare.com/kv/) keyed by barcode for edge-speed lookups; every completed sale is logged to [D1](https://developers.cloudflare.com/d1/) for analytics. I'd never written Rust before this project — a big part of the fun was discovering that Workers' Rust support is genuinely pleasant.
+**The backend (Rust on Cloudflare Workers).** One monolithic worker. It issues Terminal connection tokens, creates `PaymentIntent`s with the `card_present` payment method type, and captures payments once the card is authorized. Inventory lives in [KV](https://developers.cloudflare.com/kv/) keyed by barcode for edge-speed lookups; every completed sale is logged to [D1](https://developers.cloudflare.com/d1/) for analytics. I'd never written Rust before this project either — a big part of the fun was discovering that Workers' Rust support is genuinely pleasant.
 
 **The admin side.** Inventory management: photo upload, pricing, barcode generation, and printing onto [Avery 1" × 2-5/8" address labels](https://www.avery.com/) using nothing more exotic than CSS `@media print` rules. Plus a transaction log for analytics. The backend does the heavy lifting; the admin frontend lives on this site at [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin).
 
@@ -168,9 +179,9 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 );
 ```
 
-## The Process: Spec-Driven Development, Round Two
+## The Harness: Spec-Driven Development, Round Two
 
-This is the section that matters, so let me be honest about where I started. In the [Spec Kit article](/projects/speckit-dev) I described what failed: cost blowups from forward-only iteration, specs that were hard to update once code existed, and giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. Two changes fixed that, and they're the real subject of this article.
+Here's the bit I actually want to talk about, because it's the part that generalises. The headline of this post is that a *better harness* beat a *better model* — and this is where that harness is built. Let me be honest about where I started. In the [Spec Kit article](/projects/speckit-dev) I described what failed: cost blowups from forward-only iteration, specs that were hard to update once code existed, and giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. The model wasn't really the problem; the environment it was working in was. Two changes fixed that, and together they *are* the harness.
 
 ### Change #1 — a structured artifact pipeline
 
@@ -286,11 +297,11 @@ sequenceDiagram
 
 </div>
 
-The point isn't the diagrams themselves — it's that they existed *before* the code, agreed and cross-checked. When something did need to change, it rippled through small, cheap artifacts instead of through a mountain of generated code. That was the exact failure mode from last time, addressed at the root.
+The point isn't the diagrams themselves — it's that they existed *before* the code, agreed and cross-checked. When something did need to change, it rippled through small, cheap artifacts instead of through a mountain of generated code. That was the exact failure mode from last time, addressed at the root. And it mattered doubly here, because the model doing the implementing was a cheap one: with the structure pinned down in advance, the model didn't need to be clever, just obedient.
 
-### Change #2 — iteration infrastructure
+### Change #2 — a phone-first iteration harness
 
-The second change is the tooling that made iteration cheap enough to do constantly:
+The second change is the tooling that made iteration cheap enough to do constantly — and, crucially, cheap enough to do *from my phone*:
 
 - **One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer. Xcode is driven through its MCP server, bridged from inside the container by a small proxy ([`mcp-sse-proxy.cjs`](https://github.com/nickbrett1/stripe-toddler/blob/main/.agents/mcp-sse-proxy.cjs) → `xcode-native` MCP), so the agent can edit, rebuild, and run the iOS tests without ever leaving the container. No context-switching between an IDE and a backend toolchain.
 
@@ -311,12 +322,12 @@ The second change is the tooling that made iteration cheap enough to do constant
 }
 ```
 
-- **Phone access.** [Blink Shell](https://blink.sh/) + mosh into the devcontainer from my phone over Tailscale — each devcontainer runs Tailscale itself, so the phone connects *directly* to the container, no host hop. Iteration happens anywhere, including standing next to the toddler.
+- **Phone access, not async-only.** This is where I finally closed the gap I kept running into with [Google Jules](https://jules.google.com/). Jules proved the phone-first idea to me, but it ran on Google's cloud: no access to all my desktop tools, occasionally hours per request, and by design asynchronous — it never stopped to ask a clarifying question. This time I wanted my *own* setup, as close to sitting at the desktop as possible. [Blink Shell](https://blink.sh/) + mosh into the devcontainer from my phone over Tailscale — each devcontainer runs Tailscale itself, so the phone connects *directly* to the container, no host hop. Same tools, same performance, just on the go, and it can stop and ask me things mid-build.
 - **LiteLLM.** A single switch to route to cheaper models. This project ran on **DeepSeek-v4-flash** at published rates of **$0.14/$0.28 per M tokens** (input/output), instead of the Gemini Pro that was current when I wrote the December 2025 article — **Gemini 3 Pro at $2.50/$10.00 per M tokens**. That's roughly 18× cheaper on input and 36× cheaper on output. Agentic work skews output-heavy, so the real-world delta landed around **30×**. Cheap had its own compounding benefit too: no rate-limit anxiety on a subscription, which made me willing to iterate more aggressively.
 
 The guardrails carried over from last time: `.agents/.rules` with [git and testing guidelines](https://github.com/nickbrett1/stripe-toddler/tree/main/.agents/.rules), plus SonarCloud, GitGuardian, and Dependabot in CI.
 
-The pitch, in one line: this is the iteration story the Spec Kit article said was missing — validate artifacts *before* generating code, so changes ripple cheaply, and the model becomes almost an implementation detail.
+The pitch, in one line: this is the iteration story the Spec Kit article said was missing — validate artifacts *before* generating code, so changes ripple cheaply, and keep a desktop-grade harness reachable from a phone, and the model becomes almost an implementation detail.
 
 ## The Magical Moment
 
@@ -335,21 +346,22 @@ Here's the chain, blow by blow:
 
 In a pre-agentic world, that's a "note it down and fix it tonight" moment — a task that goes on a list, gets picked up later, and ships tomorrow at the earliest. Now it's a **2-minute loop**: observation → instruction → shipped → verified, all while the user is watching. That loop, more than any single feature, was the product.
 
-This was also the first real end-to-end use of the iPhone → devcontainer agent pipeline — a share-to-agent idea I'd sketched a while back, finally exercised for real. Worth one line because it stopped being a sketch.
+This was also the first real end-to-end run of the iPhone → devcontainer agent pipeline — the "desktop, in my pocket" idea that [Google Jules](https://jules.google.com/) had pointed me toward but couldn't quite deliver. Worth one line because it stopped being a sketch and became the default way I build.
 
 ## Takeaways
 
 Three things, and I'll keep them to three:
 
-1. **Artifacts before code.** The missing step from the first spec-kit project: typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan. Spec-dag validation is what stopped the wandering. Show a little to explain it, but the full [artifact set is public](https://github.com/nickbrett1/stripe-toddler/tree/main/specs/spec), as are the [recipes](https://github.com/nickbrett1/goose-recipes) that produce it.
-2. **Process beats model.** The process got good enough that a cheaper, less capable model was plenty: DeepSeek-v4-flash at ~$0.14/$0.28 per M tokens produced straighter work than last time's flagship at ~$2.50/$10.00. Roughly 30× cheaper and visibly better behaved — and without the subscription rate-limit anxiety, iterating got more ambitious, not less.
-3. **Make iteration a phone-speed loop.** Devcontainer + MCP + mosh turned "note it down and fix it tonight" into a 2-minute loop. The loop was the real product — it's why a three-year-old's feedback could drive the build in real time.
+1. **Artifacts before code.** The missing step from the first spec-kit project: typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan. Spec-dag validation is what stopped the wandering, and it's exactly the kind of scaffolding that lets a cheap model do expensive-sounding work. Show a little to explain it, but the full [artifact set is public](https://github.com/nickbrett1/stripe-toddler/tree/main/specs/spec), as are the [recipes](https://github.com/nickbrett1/goose-recipes) that produce it.
+2. **A better harness beat a better model.** I went into this expecting the lesson to be about which model to pick. It wasn't. The harness — validated artifacts, one devcontainer, phone-first access, an MCP bridge into Xcode — got good enough that a cheaper, less capable model was plenty: DeepSeek-v4-flash at ~$0.14/$0.28 per M tokens produced straighter work than last time's flagship at ~$2.50/$10.00. Roughly 30× cheaper and visibly better behaved — and without the subscription rate-limit anxiety, iterating got more ambitious, not less.
+3. **Make iteration a phone-speed loop.** Devcontainer + MCP + mosh turned "note it down and fix it tonight" into a 2-minute loop, reachable from my pocket. The loop was the real product — it's why a three-year-old's feedback could drive the build in real time, and why the whole project could run while I was away from my desk.
 
 ## Links, Shoutouts, and the Fine Print
 
 - **The project:** [github.com/nickbrett1/stripe-toddler](https://github.com/nickbrett1/stripe-toddler) — specs, Rust worker, iOS app, and the guardrails that kept it honest.
 - **The process:** [github.com/nickbrett1/goose-recipes](https://github.com/nickbrett1/goose-recipes) — the recipes behind the artifact pipeline, public and reusable.
-- **The prior article:** [Vibe Coding with Spec Kit](/projects/speckit-dev), where this journey started.
+- **The prior article:** [Vibe Coding with Spec Kit](/projects/speckit-dev), where this journey started — and where the harness that worked here was still missing.
+- **The phone-first idea:** [Google Jules](https://jules.google.com/), which convinced me the mobile workflow was worth chasing.
 - **The admin side:** [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin), live on this site.
 
 A shoutout to Matthew Warshauer, a friend at Stripe who also has a son — proof that Stripe's hardware and APIs are approachable enough for a dad-and-toddler project. <!-- TODO at publish: give Matthew a heads-up before the article goes out; add his LinkedIn link then -->
@@ -358,4 +370,4 @@ And, of course, to the small human who was product owner, QA lead, and most dema
 
 One piece of fine print, in the spirit of honesty: all payments shown here ran in Stripe **test mode** — the sales are real to a three-year-old, but they're not real money. The M2 and the test cards behave exactly like the production ones, which is the point: Stripe's stack doesn't care whether the customer is a toddler or a multinational.
 
-If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it. The hardware is a Saturday project; the process is the part worth stealing.
+If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it. The hardware is a Saturday project; the harness is the part worth stealing.
