@@ -48,29 +48,17 @@ Let's build a store. Target customer: a three-year-old.
 
 <!-- IMAGE PLACEHOLDER H2: Hardware spread — the "meet Stripe" table: scanner, M2, test cards, iPad stand -->
 
-The scene: an iPad on a stand, a Tera Mini barcode scanner, a Stripe Reader M2, a small stack of test cards, and a shelf of toys wearing printed barcode labels. The product owner is three years old. The QA lead is three years old. The most demanding user is three years old.
+A store on the kitchen table. An iPad on a stand, a Tera Mini wireless scanner, a Stripe Reader M2, a stack of test cards, and a shelf of toys wearing printed QR stickers. The product owner is three years old. So is the QA lead. So is the most demanding user.
 
-Here's the flow. She picks up the scanner, points it at a toy, and pulls the trigger. The iPad beeps, and the item appears on screen: a big photo, its name, and a price. Prices are deliberately integer — $1, $5, no cents, no tax, no shipping, no surprises. Each scan adds to a running total with a satisfying chime. When she's ready, she taps a card on the M2, the reader flashes green, and then the app lets loose: fireworks, bouncing images of everything she just sold, sound, and on a good day a little video of a guitar band playing. Then "Go Again" and the cart resets.
-
-One early lesson worth sharing, because it's exactly the kind of detail that bites you in a hardware project: I started with plain 1D barcodes on the toy labels, and they read terribly. The scanner had to be held at just the right angle or it simply wouldn't catch the code — a non-starter when your user is three. The Tera Mini also reads 2D codes, so I switched the labels over to QR stickers and scanning became near-instant and forgiving, no careful angling required. Same scanner, same flow, just better stickers — and the whole system quietly shifted from "barcode" to "code".
+The flow is simple: she scans a toy, it pops up on the iPad with a photo and a deliberately integer price — $1, $5, no cents, no tax, no surprises — and a chime adds it to a running total. Tap the card on the M2, the reader flashes green, and the app lets loose: fireworks, bouncing images of everything she just sold, and on a good day a guitar band. Then "Go Again".
 
 <!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
-<!-- IMAGE PLACEHOLDER H8: Toys + barcodes — close-up of printed Avery barcode labels on toys -->
+<!-- IMAGE PLACEHOLDER H8: Toys + QR stickers — close-up of printed Avery QR labels on toys -->
 <!-- IMAGE PLACEHOLDER H9: M2 + test cards — close-up of the Reader M2 and Stripe test cards -->
 
-One design principle guided all of it: **transactions should always succeed.** This is a toy, not a fraud engine. If the capture fails for a boring reason, the sale still happens — the toddler never sees a "payment declined" screen. That single decision kept the whole product honest about what it is, and it quietly shaped the architecture: the celebration is the source of truth for the toddler, and the ledger is there to keep me honest, not to police her.
+Two details shaped everything else. First, **transactions should always succeed** — this is a toy, not a fraud engine, so a boring capture failure still completes the sale and the toddler never sees a "payment declined" screen. Second, a hardware gotcha: I started with 1D barcodes and they read badly unless the scanner was held at exactly the right angle — hopeless when your user is three. The Tera Mini also reads 2D codes, so the labels became QR stickers and scanning got forgiving overnight.
 
-## The System
-
-Three pieces, and each one is deliberately conventional:
-
-**The iPad app (Swift).** Minimal text, big buttons, bright colors, celebratory animations. The Tera Mini is a 1D/2D wireless scanner, and it connects over Bluetooth in keyboard-wedge mode — the app just sees keystrokes ending in a carriage return and parses whatever code (barcode or QR) from them. The M2 connects through the [Stripe Terminal iOS SDK](https://docs.stripe.com/terminal). Every request to the backend is signed with Apple App Attest and an API key generated from [fintechnick.com/api-keys](/api-keys), so only my iPad can talk to the worker at all. I'd never written Swift before this; the fact that I could ship an iPad app anyway is the whole point of this article.
-
-**The backend (Rust on Cloudflare Workers).** One monolithic worker. It issues Terminal connection tokens, creates `PaymentIntent`s with the `card_present` payment method type, and captures payments once the card is authorized. Inventory lives in [KV](https://developers.cloudflare.com/kv/) keyed by barcode for edge-speed lookups; every completed sale is logged to [D1](https://developers.cloudflare.com/d1/) for analytics. I'd never written Rust before this project either — a big part of the fun was discovering that Workers' Rust support is genuinely pleasant.
-
-**The admin side.** Inventory management: photo upload, pricing, barcode generation, and printing onto [Avery 1" × 2-5/8" address labels](https://www.avery.com/) using nothing more exotic than CSS `@media print` rules. Plus a transaction log for analytics. The backend does the heavy lifting; the admin frontend lives on this site at [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin).
-
-Here's the component graph straight out of the specs:
+Underneath it's a small, deliberately conventional stack:
 
 <div class="mermaid-container">
 
@@ -115,69 +103,9 @@ graph TD
 
 </div>
 
-The worker's [OpenAPI spec](https://github.com/nickbrett1/stripe-toddler/blob/main/specs/spec/api/worker-openapi.yaml) was one of the artifacts we validated up front. Here's the entire POS surface — nine endpoints, three of them the whole payments flow:
+Three pieces: a **Swift iPad app** (big buttons, bright colors; the scanner connects in Bluetooth keyboard-wedge mode, the M2 through the [Stripe Terminal SDK](https://docs.stripe.com/terminal), and every request is signed with Apple App Attest so only my iPad can talk to the backend); a **Rust worker on Cloudflare** that issues Terminal tokens, creates and captures `card_present` PaymentIntents, and keeps inventory in [KV](https://developers.cloudflare.com/kv/) with a transaction log in [D1](https://developers.cloudflare.com/d1/); and an **admin side** on this site ([stripe-toddler-admin](/projects/stripe-toddler-admin)) for photo upload, pricing, QR generation, label printing, and a bit of analytics.
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-
-```yaml
-# worker-openapi.yaml (excerpt) — the POS endpoints
-paths:
-  /api/pos/inventory/{barcode}:
-    get:
-      summary: Look up an item by barcode
-      description: Used by the iPad POS app. Secured by App Attest assertion headers.
-  /api/terminal/connection-token:
-    post:
-      summary: Get Stripe Terminal connection token
-      description: Contacts Stripe to generate a short-lived connection token
-        so the iPad can authorize a session with the Reader M2.
-  /api/terminal/payment-intent:
-    post:
-      summary: Create PaymentIntent
-      description: Creates a card_present PaymentIntent for the cart total.
-  /api/terminal/capture:
-    post:
-      summary: Capture PaymentIntent
-      description: Captures the authorized PaymentIntent and logs the transaction to D1.
-```
-
-The data split is boring in the best possible way — each store answers the one question it's good at:
-
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-
-```json
-// KV — inventory, keyed by barcode, read at the edge on every scan
-{
-  "pattern": "item:<barcode>",
-  "example_key": "item:071234567890",
-  "schema": {
-    "required": ["barcode", "name", "price_cents", "image_url", "created_at"]
-  }
-}
-```
-
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-
-```sql
--- D1 — the transaction log, relational, for analytics
-CREATE TABLE IF NOT EXISTS transactions (
-    transaction_id TEXT PRIMARY KEY NOT NULL,
-    payment_intent_id TEXT NOT NULL UNIQUE,
-    amount_cents INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS transaction_items (
-    item_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    transaction_id TEXT NOT NULL,
-    barcode TEXT NOT NULL,
-    name TEXT NOT NULL,
-    price_cents INTEGER NOT NULL,
-    quantity INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (transaction_id) REFERENCES transactions (transaction_id) ON DELETE CASCADE
-);
-```
+I'm not going to inline the schemas or the API surface here — the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout if you want that detail. This post isn't about the plumbing; it's about the two things that made building it possible — the spec-driven process and the phone-first workflow. Now the part that generalises.
 
 ## The Harness: Spec-Driven Development, Round Two
 
