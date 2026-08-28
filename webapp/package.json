@@ -53,7 +53,7 @@
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.53.1",
+		"@cloudflare/vite-plugin": "^1.54.0",
 		"@dimforge/rapier3d-compat": "^0.20.0",
 		"@eslint/js": "^10.0.1",
 		"@lhci/cli": "^0.15.1",
