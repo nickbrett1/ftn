@@ -113,6 +113,41 @@ export const GIT_SAFE_DIR_SCRIPT = `
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
+export const GIT_GITHUB_AUTH_SETUP_SCRIPT = `
+echo "INFO: Wiring GitHub auth from Doppler into git..."
+# genproj-github-auth: fetch a GitHub PAT from the repo's Doppler project and
+# configure git so https github.com remotes authenticate automatically
+# (push/pull, submodules, fsck). Runs when Doppler is authenticated; degrades
+# gracefully when it is not (fresh container before cloud_login.sh, or no
+# token present in the Doppler project). Which variable is used: genproj's
+# server-side GitHub auth prefers GITHUB_TOKEN; we probe GITHUB_TOKEN first,
+# then GITHUB_ACCESS_TOKEN, then GITHUB_PERSONAL_ACCESS_TOKEN (in the shared
+# common project these all resolve to the same PAT).
+GH_TOKEN_VALUE=""
+if command -v doppler &> /dev/null && doppler whoami &> /dev/null 2>&1; then
+    for GH_VAR in GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN; do
+        GH_TOKEN_VALUE="$(doppler run -- printenv "$GH_VAR" 2>/dev/null | tail -n 1)"
+        if [ -n "$GH_TOKEN_VALUE" ]; then
+            echo "INFO: Found GitHub token in Doppler variable $GH_VAR"
+            break
+        fi
+    done
+fi
+
+if [ -n "$GH_TOKEN_VALUE" ]; then
+    # Rewrite https github.com URLs to embed the token. x-access-token is the
+    # conventional username for PAT auth over https; no separate credential
+    # helper is needed. Token stays in ~/.gitconfig (rotated/re-run by
+    # re-running this setup after cloud_login).
+    git config --global url."https://x-access-token:$GH_TOKEN_VALUE@github.com/".insteadOf "https://github.com/"
+    echo "INFO: GitHub auth wired into git (https github.com remotes now authenticate via Doppler)."
+    unset GH_TOKEN_VALUE
+else
+    echo "WARN: No GitHub token found in Doppler (tried GITHUB_TOKEN, GITHUB_ACCESS_TOKEN, GITHUB_PERSONAL_ACCESS_TOKEN)."
+    echo "      git push/pull to github.com will fall back to the VS Code credential helper / manual auth."
+fi
+`;
+
 export const GOOSE_ALIAS = `# A robust function to run goose with Doppler, ensuring all secrets are available.
 # Secrets are loaded from the 'common' project first, then the 'goose' project's secrets layer on
 # top (project-specific secrets take precedence over common ones).
@@ -997,6 +1032,9 @@ export function generateMergedDevelopmentContainerFiles(
 					'{{projectName}}',
 					() => context.projectName || context.name || 'my-project'
 				),
+				gitGithubAuthSetup: context.capabilities.includes('doppler')
+					? GIT_GITHUB_AUTH_SETUP_SCRIPT
+					: '',
 				agySetup: context.capabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 				// goose setup (recipes + project-selected MCP extensions) runs for
 				// coding-agents AND for any capability that registers a goose
@@ -1706,10 +1744,10 @@ export function generateVscodeExtensionsFile() {
 export function generateAgentRulesFiles() {
 	const gitGuidelines = `# Git, Code Review, and Deployment Rules
 
-- **No Git Commits**: Never run \`git commit\` to package changes. Always leave files modified in the working directory (unstaged or staged).
-- **No Git Pushes**: Never run \`git push\` to push local branch commits to any remote repository.
+- **Commit Changes**: You may run \`git commit\` to package your work. Use clear, descriptive commit messages and keep commits atomic (logical groups of related changes).
+- **Push Changes**: You may run \`git push\` to push commits to the remote. Follow the repository's branch workflow (a \`fix/\`/\`feature/\` branch + PR, or pushing directly where that is the convention).
+- **Checks are your safety net**: This repo runs CI/code checks, so prefer to run the relevant local checks/tests before pushing; CI validates the rest.
 - **No Deployments**: Never run \`wrangler deploy\`, \`npm run deploy\`, or any other deployment command to push code to the production/default environment.
-- **Goal**: Keep all modifications fully visible in the local git working directory so the user can easily review the side-by-side diffs in the VS Code Source Control view before staging, committing, pushing, or deploying them manually.
 `;
 
 	const testingGuidelines = `# Testing Guidelines

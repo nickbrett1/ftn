@@ -80,6 +80,33 @@ echo "INFO: Playwright Chromium installation complete."
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
+echo "INFO: Wiring GitHub auth from Doppler into git..."
+# Fetch a GitHub PAT from the repo's Doppler project (common/dev here) and
+# configure git so https github.com remotes authenticate automatically
+# (push/pull, submodules, fsck). Degrades gracefully when Doppler is not
+# authenticated yet (fresh container before cloud_login.sh). In the shared
+# common project GITHUB_TOKEN / GITHUB_ACCESS_TOKEN / GITHUB_PERSONAL_ACCESS_TOKEN
+# all resolve to the same PAT; probe them in order.
+GH_TOKEN_VALUE=""
+if command -v doppler &> /dev/null && doppler whoami &> /dev/null 2>&1; then
+    for GH_VAR in GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN; do
+        GH_TOKEN_VALUE="$(doppler run -- printenv "$GH_VAR" 2>/dev/null | tail -n 1)"
+        if [ -n "$GH_TOKEN_VALUE" ]; then
+            echo "INFO: Found GitHub token in Doppler variable $GH_VAR"
+            break
+        fi
+    done
+fi
+
+if [ -n "$GH_TOKEN_VALUE" ]; then
+    git config --global url."https://x-access-token:$GH_TOKEN_VALUE@github.com/".insteadOf "https://github.com/"
+    echo "INFO: GitHub auth wired into git (https github.com remotes now authenticate via Doppler)."
+    unset GH_TOKEN_VALUE
+else
+    echo "WARN: No GitHub token found in Doppler (tried GITHUB_TOKEN, GITHUB_ACCESS_TOKEN, GITHUB_PERSONAL_ACCESS_TOKEN)."
+    echo "      git push/pull to github.com will fall back to the VS Code credential helper / manual auth."
+fi
+
 echo "INFO: Installing git pre-commit hooks (simple-git-hooks + lint-staged)..."
 (cd /workspaces/ftn/webapp && npx simple-git-hooks) || echo "WARN: Could not install git hooks, run 'cd webapp && npx simple-git-hooks' manually."
 

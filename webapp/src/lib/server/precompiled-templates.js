@@ -492,6 +492,23 @@
 					alias4(
 						((helper =
 							(helper =
+								lookupProperty(helpers, 'gitGithubAuthSetup') ||
+								(depth0 != null ? lookupProperty(depth0, 'gitGithubAuthSetup') : depth0)) != null
+								? helper
+								: alias2),
+						typeof helper === alias3
+							? helper.call(alias1, {
+									name: 'gitGithubAuthSetup',
+									hash: {},
+									data: data,
+									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 24 } }
+								})
+							: helper)
+					) +
+					'\n\n' +
+					alias4(
+						((helper =
+							(helper =
 								lookupProperty(helpers, 'gitHooksSetup') ||
 								(depth0 != null ? lookupProperty(depth0, 'gitHooksSetup') : depth0)) != null
 								? helper
@@ -501,7 +518,7 @@
 									name: 'gitHooksSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 17 } }
+									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 17 } }
 								})
 							: helper)
 					) +

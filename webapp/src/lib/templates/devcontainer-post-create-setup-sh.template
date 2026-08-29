@@ -62,6 +62,8 @@ fi
 
 {{gitSafeDirectory}}
 
+{{gitGithubAuthSetup}}
+
 {{gitHooksSetup}}
 
 {{playwrightSetup}}

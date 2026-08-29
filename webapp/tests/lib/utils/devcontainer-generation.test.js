@@ -306,6 +306,51 @@ describe('DevContainer Generation Tests', () => {
 		expect(setup.content).not.toContain('DOPPLER_PROJECT');
 	});
 
+	it('wires GitHub auth from Doppler into git in post-create setup when the doppler capability is selected', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'gaggle',
+			capabilities: ['devcontainer-node', 'doppler'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+
+		// The wiring marker + the token-probe loop must be present.
+		expect(setup.content).toContain('genproj-github-auth');
+		expect(setup.content).toContain(
+			'GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN'
+		);
+		// It must fetch the token from the repo's Doppler project.
+		expect(setup.content).toContain('doppler run -- printenv');
+		// And configure git via the https github.com insteadOf rewrite.
+		expect(setup.content).toContain('insteadOf "https://github.com/"');
+		// No unresolved template placeholders may leak into the rendered script.
+		expect(setup.content).not.toContain('{{gitGithubAuthSetup}}');
+		expect(setup.content).not.toContain('{{projectName}}');
+	});
+
+	it('omits the GitHub auth wiring when the doppler capability is not selected', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		const context = {
+			projectName: 'plain',
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		expect(setup).toBeDefined();
+		expect(setup.content).not.toContain('genproj-github-auth');
+		expect(setup.content).not.toContain('insteadOf "https://github.com/"');
+	});
+
 	it('includes the multi-session worktree workflow in the generated .zshrc by default', async () => {
 		const engine = new TemplateEngine();
 		await engine.initialize();

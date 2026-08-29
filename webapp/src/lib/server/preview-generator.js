@@ -18,6 +18,7 @@ import {
 	GOOSE_ALIAS,
 	SHELL_SETUP_SCRIPT,
 	GIT_SAFE_DIR_SCRIPT,
+	GIT_GITHUB_AUTH_SETUP_SCRIPT,
 	AGY_SETUP_SCRIPT,
 	generateGooseSetupScript,
 	PLAYWRIGHT_SETUP_SCRIPT,
@@ -267,6 +268,7 @@ function createDevelopmentContainerShellFiles(templateEngine, projectConfig, all
 			'{{projectName}}',
 			projectConfig.name || 'my-project'
 		),
+		gitGithubAuthSetup: allCapabilities.includes('doppler') ? GIT_GITHUB_AUTH_SETUP_SCRIPT : '',
 		agySetup: allCapabilities.includes('coding-agents') ? AGY_SETUP_SCRIPT : '',
 		gooseSetup: allCapabilities.includes('coding-agents') ? generateGooseSetupScript() : '',
 		playwrightSetup: allCapabilities.includes('playwright') ? PLAYWRIGHT_SETUP_SCRIPT : '',
