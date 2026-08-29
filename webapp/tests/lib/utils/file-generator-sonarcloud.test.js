@@ -66,29 +66,29 @@ describe('file-generator sonarcloud capabilities', () => {
 		expect(result.content).toContain('vitest --coverage');
 	});
 
-	it('outputs lcov coverage reporter without enforced thresholds (scaffold-safe) for sonarcloud', () => {
+	it('outputs an enforced coverage gate (lcov + thresholds) for sonarcloud', () => {
 		const context = { capabilities: ['sonarcloud'] };
 		const result = generateViteConfigFile(context);
 		expect(result.content).toContain('reporter: ["lcov", "text"]');
-		// Thresholds are intentionally NOT enforced on fresh generated projects
-		// (a bare scaffold would fail an 80% gate). lcov still feeds SonarCloud.
-		expect(result.content).not.toContain('thresholds:');
-		expect(result.content).not.toContain('lines: 80');
+		// The gate is kept on: generated projects ship a smoke test that
+		// satisfies these thresholds, so users don't have to re-enable them.
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
 	});
 
-	it('outputs lcov coverage reporter without enforced thresholds in sveltekit vite.config.js for sonarcloud', () => {
+	it('outputs lcov coverage reporter with thresholds in sveltekit vite.config.js for sonarcloud', () => {
 		const context = { capabilities: ['sonarcloud', 'sveltekit'] };
 		const result = generateViteConfigFile(context);
 		expect(result.content).toContain('reporter: ["lcov", "text"]');
-		expect(result.content).not.toContain('thresholds:');
-		expect(result.content).not.toContain('lines: 80');
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
 	});
 
-	it('outputs lcov coverage reporter without enforced thresholds without sonarcloud', () => {
+	it('outputs lcov coverage reporter with thresholds without sonarcloud', () => {
 		const context = { capabilities: ['devcontainer-node'] };
 		const result = generateViteConfigFile(context);
 		expect(result.content).toContain('reporter: ["lcov", "text"]');
-		expect(result.content).not.toContain('thresholds:');
-		expect(result.content).not.toContain('lines: 80');
+		expect(result.content).toContain('thresholds:');
+		expect(result.content).toContain('lines: 80');
 	});
 });

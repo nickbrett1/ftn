@@ -78,13 +78,15 @@ describe('file-generator package.json test script', () => {
 		expect(parsed.scripts.test).toContain('no test specified');
 	});
 
-	it('smoke test exercises the health route and omits the trivial test when health exists', () => {
+	it('smoke test renders the page, exercises the health route, and covers the gate', () => {
 		const withHealth = buildSveltekitSmokeTest(true);
+		expect(withHealth).toContain('@testing-library/svelte');
+		expect(withHealth).toContain('Welcome to SvelteKit');
+		expect(withHealth).toContain('increments the counter on click');
 		expect(withHealth).toContain('health endpoint returns ok');
-		expect(withHealth).not.toContain('smoke test passes');
 
 		const withoutHealth = buildSveltekitSmokeTest(false);
 		expect(withoutHealth).not.toContain('health endpoint');
-		expect(withoutHealth).toContain('smoke test passes');
+		expect(withoutHealth).toContain('increments the counter on click');
 	});
 });

@@ -1100,6 +1100,24 @@ function _addNodeDevcontainerConfig(context, config) {
 			',\n    "test": "echo \\"Error: no test specified\\" && exit 1"',
 			',\n    "test": "vitest --coverage",\n    "test:once": "npx vitest run --changed"'
 		);
+
+		// SvelteKit projects ship a component smoke test (renders the home page
+		// + exercises the health route) so the enforced coverage gate is
+		// satisfiable on a fresh project. Component tests need a DOM environment
+		// and jest-dom matchers, so pull in @testing-library/svelte (plus its
+		// vite plugin), jsdom and jest-dom.
+		if (context.capabilities.includes('sveltekit')) {
+			const svelteTestDeps = [
+				'"@testing-library/svelte": "^5.2.0"',
+				'"@testing-library/jest-dom": "^6.6.0"',
+				'"jsdom": "^25.0.1"'
+			];
+			for (const dep of svelteTestDeps) {
+				if (!config.devDependencies.includes(dep.split(':')[0])) {
+					config.devDependencies += config.devDependencies ? ',\n    ' + dep : dep;
+				}
+			}
+		}
 	}
 }
 
@@ -1870,6 +1888,10 @@ export async function generateAllFiles(context) {
 			context.capabilities.includes('docker-container') &&
 			context.capabilities.includes('sveltekit');
 		allGeneratedFiles.push({
+			filePath: 'src/test-setup.js',
+			content: 'import "@testing-library/jest-dom/vitest";\n'
+		});
+		allGeneratedFiles.push({
 			filePath: 'tests/smoke.test.js',
 			content: buildSveltekitSmokeTest(hasHealth)
 		});
@@ -1907,11 +1929,10 @@ export function buildSveltekitSmokeTest(hasHealth) {
 	// Must be Prettier-clean on generation (double quotes, 2-space indent), since
 	// the CircleCI lint step runs `prettier --check .`.
 	//
-	// Deliberately does NOT import a .svelte component: unit-testing Svelte 5
-	// components in vitest's SSR mode is fragile/version-dependent, so the
-	// smoke test only exercises plain modules (the /health route when present)
-	// plus a trivial assertion. This keeps a fresh generated project's CI green
-	// without depending on a DOM/Svelte test setup.
+	// Renders the generated home page (covers its component code so the
+	// enforced coverage gate passes) and, when present, exercises the /health
+	// route. Requires the jsdom environment + svelteTesting() plugin from
+	// vite.config.js and the jest-dom matchers in src/test-setup.js.
 	const healthImport = hasHealth ? 'import { GET } from "../src/routes/health/+server.js";\n' : '';
 	const healthTest = hasHealth
 		? `
@@ -1921,17 +1942,22 @@ export function buildSveltekitSmokeTest(hasHealth) {
     expect(await res.json()).toEqual({ ok: true });
   });`
 		: '';
-	// A bare project (no /health route) still gets a trivial passing test so
-	// vitest has something to run (avoids "no test files found").
-	const bareTest = hasHealth
-		? ''
-		: `
-  it("smoke test passes", () => {
-    expect(true).toBe(true);
-  });`;
 	return `import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/svelte";
+import Page from "../src/routes/+page.svelte";
 ${healthImport}
-describe("generated app smoke test", () => {${bareTest}${healthTest}
+describe("generated app smoke test", () => {
+  it("renders the home page with the initial counter", () => {
+    render(Page);
+    expect(screen.getByText("Welcome to SvelteKit")).toBeInTheDocument();
+    expect(screen.getByRole("button").textContent).toContain("0");
+  });
+  it("increments the counter on click", () => {
+    render(Page);
+    const btn = screen.getByRole("button");
+    fireEvent.click(btn);
+    expect(btn.textContent).toContain("1");
+  });${healthTest}
 });
 `;
 }
@@ -1939,16 +1965,25 @@ describe("generated app smoke test", () => {${bareTest}${healthTest}
 export function generateViteConfigFile(context) {
 	const hasSvelteKit = context.capabilities.includes('sveltekit');
 
-	// Coverage is reported (lcov feeds SonarCloud) but thresholds are NOT
-	// enforced on a fresh generated project: a bare scaffold ships only
-	// placeholder pages + a health route, so an 80% gate would fail every
-	// first build ("no test files found" / 0% coverage). Users can re-add
-	// thresholds once they write real code and tests.
+	// Coverage is reported (lcov feeds SonarCloud) and thresholds ARE enforced:
+	// generated SvelteKit projects ship a smoke test that satisfies them (see
+	// buildSveltekitSmokeTest). Branches stays at 50 because a placeholder
+	// counter page inherently caps there; statements/functions/lines are gated
+	// at 80. Users don't have to remember to re-enable the gate.
 	const coverageConfig = `    coverage: {
       reporter: ["lcov", "text"],
+      thresholds: {
+        statements: 80,
+        branches: 50,
+        functions: 80,
+        lines: 80,
+      },
     },`;
 
 	const testConfigSvelte = `  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["src/test-setup.js"],
     reporter: ["default", "junit"],
     outputFile: {
       junit: "./reports/junit.xml",
@@ -1965,10 +2000,11 @@ ${coverageConfig}
 
 	if (hasSvelteKit) {
 		content = `import { sveltekit } from "@sveltejs/kit/vite";
+import { svelteTesting } from "@testing-library/svelte/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [sveltekit()],
+  plugins: [sveltekit(), svelteTesting()],
 ${testConfigSvelte}
 });
 `;
