@@ -393,27 +393,16 @@ export class ProjectGeneratorService {
 
 				// Sanity-check that CircleCI actually installed its push webhook on
 				// the new repo. Without it, pushes won't trigger pipelines even
-				// though the project is "followed". Best-effort: this must never
-				// fail generation.
+				// though the project is "followed". This is the authoritative
+				// signal that CircleCI is wired up to receive pushes — CircleCI's
+				// settings API does NOT support setting the default branch (it
+				// only accepts `advanced` fields, so the old `{vcs:...}` payload
+				// was rejected with a 400), so the webhook is what matters.
+				// Best-effort: a missing webhook must not fail generation.
 				const webhookVerified = await this.#hasCircleCIWebhook(owner, repo);
 				if (!webhookVerified) {
 					console.warn(
-						'⚠️ CircleCI followed the project but no circleci.com/hooks/github webhook was found on the repo; pushes may not trigger pipelines automatically.'
-					);
-				}
-
-				// Tell CircleCI which branch is the default so config detection and
-				// push-triggered pipelines use the right branch — the web "Set Up
-				// Project" wizard step the user would otherwise have to do manually.
-				// Best-effort: a failure here must not fail generation.
-				try {
-					await this.services.circleci.updateProjectSettings('github', owner, repo, {
-						vcs: { default_branch: defaultBranch }
-					});
-					console.log(`✅ CircleCI default branch set to ${defaultBranch}`);
-				} catch (settingsError) {
-					console.warn(
-						`⚠️ Could not set CircleCI default branch (${settingsError.message}); builds will still trigger on push`
+						'⚠️ CircleCI followed the project but no circleci.com/hooks/github webhook was found on the repo; pushes will NOT trigger pipelines. Set the project up in the CircleCI web UI (Set Up Project) to install the webhook.'
 					);
 				}
 

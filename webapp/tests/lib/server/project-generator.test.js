@@ -519,12 +519,6 @@ describe('ProjectGeneratorService', () => {
 				'owner',
 				'repo'
 			);
-			expect(service.services.circleci.updateProjectSettings).toHaveBeenCalledWith(
-				'github',
-				'owner',
-				'repo',
-				{ vcs: { default_branch: 'main' } }
-			);
 			expect(service.services.circleci.triggerPipeline).toHaveBeenCalledWith(
 				'github',
 				'owner',
@@ -593,12 +587,6 @@ describe('ProjectGeneratorService', () => {
 
 			expect(results.circleci.success).toBe(true);
 			expect(results.circleci.defaultBranch).toBe('develop');
-			expect(service.services.circleci.updateProjectSettings).toHaveBeenCalledWith(
-				'github',
-				'owner',
-				'repo',
-				{ vcs: { default_branch: 'develop' } }
-			);
 			expect(service.services.circleci.triggerPipeline).toHaveBeenCalledWith(
 				'github',
 				'owner',
