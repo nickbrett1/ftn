@@ -664,6 +664,71 @@ describe('ProjectGeneratorService', () => {
 			expect(results.sonarcloud.success).toBe(false);
 			expect(results.sonarcloud.error).toBe(error.message);
 		});
+		it('records webhookVerified true when CircleCI installed its push webhook', async () => {
+			const circleciContext = {
+				projectName: 'test-project',
+				capabilities: ['circleci']
+			};
+			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'main' }
+			});
+			service.services.circleci.triggerPipeline.mockResolvedValue({
+				id: 'pipeline-1',
+				number: 1
+			});
+			service.services.github.listWebhooks = vi
+				.fn()
+				.mockResolvedValue([{ config: { url: 'https://circleci.com/hooks/github' } }]);
+
+			const results = await service.configureExternalServices(circleciContext, repository);
+
+			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.webhookVerified).toBe(true);
+			expect(service.services.github.listWebhooks).toHaveBeenCalledWith('owner', 'repo');
+		});
+
+		it('flags webhookVerified false when follow succeeds but no CircleCI webhook is present', async () => {
+			const circleciContext = {
+				projectName: 'test-project',
+				capabilities: ['circleci']
+			};
+			service.services.circleci.followProject.mockResolvedValue({ success: true });
+			service.services.circleci.updateProjectSettings.mockResolvedValue({
+				vcs: { default_branch: 'main' }
+			});
+			service.services.circleci.triggerPipeline.mockResolvedValue({
+				id: 'pipeline-1',
+				number: 1
+			});
+			service.services.github.listWebhooks = vi.fn().mockResolvedValue([]);
+
+			const results = await service.configureExternalServices(circleciContext, repository);
+
+			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.webhookVerified).toBe(false);
+		});
+
+		it('surfaces a clear, actionable error when follow 404s after retries', async () => {
+			const circleciContext = {
+				projectName: 'test-project',
+				capabilities: ['circleci']
+			};
+			const notFound = new Error(
+				'CircleCI API error: 404 Not Found - {"message":"Project not found"}'
+			);
+			service.services.circleci.followProject.mockRejectedValue(notFound);
+			service.services.github.listWebhooks = vi.fn().mockResolvedValue([]);
+
+			const results = await service.configureExternalServices(circleciContext, repository);
+
+			expect(results.circleci.success).toBe(false);
+			expect(results.circleci.error).toContain('CircleCI could not access the new repository');
+			expect(results.circleci.error).toContain('No CircleCI push webhook is installed');
+			expect(results.circleci.error).toContain('Set Up Project');
+			expect(service.services.circleci.updateProjectSettings).not.toHaveBeenCalled();
+			expect(service.services.circleci.triggerPipeline).not.toHaveBeenCalled();
+		});
 		it('should not configure any services if none are selected', async () => {
 			const context = {
 				projectName: 'test-project',

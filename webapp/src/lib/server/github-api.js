@@ -303,6 +303,22 @@ export class GitHubAPIService extends BaseAPIService {
 	}
 
 	/**
+	 * Lists the webhooks configured on a repository.
+	 *
+	 * Used by genproj to verify that CircleCI has actually installed its push
+	 * webhook (`https://circleci.com/hooks/github`) on a freshly-created repo.
+	 * CircleCI installs this webhook when it indexes a repo, so its absence is a
+	 * reliable signal that CircleCI cannot see the new repository yet.
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @returns {Promise<Object[]>} Array of webhook objects
+	 */
+	async listWebhooks(owner, repo) {
+		const response = await this.makeRequest(`/repos/${owner}/${repo}/hooks`);
+		return response.json();
+	}
+
+	/**
 	 * Gets repository information
 	 * @param {string} owner - Repository owner
 	 * @param {string} repo - Repository name

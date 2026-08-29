@@ -391,6 +391,17 @@ export class ProjectGeneratorService {
 				console.log('🔄 Configuring CircleCI...');
 				const circleciProject = await this.services.circleci.followProject('github', owner, repo);
 
+				// Sanity-check that CircleCI actually installed its push webhook on
+				// the new repo. Without it, pushes won't trigger pipelines even
+				// though the project is "followed". Best-effort: this must never
+				// fail generation.
+				const webhookVerified = await this.#hasCircleCIWebhook(owner, repo);
+				if (!webhookVerified) {
+					console.warn(
+						'⚠️ CircleCI followed the project but no circleci.com/hooks/github webhook was found on the repo; pushes may not trigger pipelines automatically.'
+					);
+				}
+
 				// Tell CircleCI which branch is the default so config detection and
 				// push-triggered pipelines use the right branch — the web "Set Up
 				// Project" wizard step the user would otherwise have to do manually.
@@ -427,17 +438,71 @@ export class ProjectGeneratorService {
 					success: true,
 					defaultBranch,
 					project: circleciProject,
-					pipeline: pipeline ? { id: pipeline.id, number: pipeline.number } : undefined
+					pipeline: pipeline ? { id: pipeline.id, number: pipeline.number } : undefined,
+					webhookVerified
 				};
 				console.log('✅ CircleCI configured successfully');
 			} catch (error) {
-				console.error(`❌ CircleCI configuration failed: ${error.message}`);
+				const clearError = await this.#describeCircleCISetupError(error, owner, repo);
+				console.error(`❌ CircleCI configuration failed: ${clearError}`);
 				results.circleci = {
 					success: false,
-					error: error.message
+					error: clearError
 				};
 			}
 		}
+	}
+
+	/**
+	 * Checks whether CircleCI has installed its push webhook on the repository.
+	 * CircleCI's GitHub integration creates a webhook pointing at
+	 * https://circleci.com/hooks/github when it indexes a repo; without it,
+	 * CircleCI cannot receive push events (or follow the repo in the first
+	 * place, which is why a freshly-created repo 404s on the follow API).
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @returns {Promise<boolean>} Whether a CircleCI webhook exists
+	 */
+	async #hasCircleCIWebhook(owner, repo) {
+		if (!this.services.github) {
+			return false;
+		}
+		try {
+			const hooks = await this.services.github.listWebhooks(owner, repo);
+			return (
+				Array.isArray(hooks) &&
+				hooks.some((hook) => (hook.config?.url || '').includes('circleci.com/hooks/github'))
+			);
+		} catch (error) {
+			console.warn(`⚠️ Could not check CircleCI webhook on ${owner}/${repo}: ${error.message}`);
+			return false;
+		}
+	}
+
+	/**
+	 * Turns a raw external-service error into a clear, actionable message. The
+	 * common failure is the `follow` call returning 404 even after the retry
+	 * window: CircleCI never indexed the brand-new repo (no push webhook was
+	 * ever installed), so no amount of waiting will help. Explain what's wrong
+	 * and how to fix it instead of surfacing a bare "404 Not Found".
+	 * @param {Error} error - Error thrown while configuring CircleCI
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @returns {Promise<string>} A clear error message
+	 */
+	async #describeCircleCISetupError(error, owner, repo) {
+		if (error?.message && /CircleCI API error: 404/.test(error.message)) {
+			const hasWebhook = await this.#hasCircleCIWebhook(owner, repo);
+			const webhookHint = hasWebhook
+				? 'A CircleCI webhook exists on the repo but CircleCI still returned 404.'
+				: 'No CircleCI push webhook is installed on the repo, so CircleCI cannot see it.';
+			return (
+				`CircleCI could not access the new repository (follow returned 404 after retries). ` +
+				`${webhookHint} Install the CircleCI GitHub App for the org, or set the project up ` +
+				`manually in the CircleCI web UI (Set Up Project) and it will pick up the committed config.yml.`
+			);
+		}
+		return error?.message || String(error);
 	}
 
 	async #configureDoppler(context, results) {

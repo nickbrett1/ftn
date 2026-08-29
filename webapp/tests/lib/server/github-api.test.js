@@ -179,6 +179,20 @@ describe('GitHubAPIService', () => {
 		await service.deleteRepository('user', 'repo');
 	});
 
+	it('lists webhooks for a repository', async () => {
+		const hooksJson = vi
+			.fn()
+			.mockResolvedValue([{ id: 1, config: { url: 'https://circleci.com/hooks/github' } }]);
+		const makeRequest = vi.spyOn(service, 'makeRequest').mockResolvedValue({
+			json: hooksJson
+		});
+
+		const hooks = await service.listWebhooks('user', 'repo');
+
+		expect(makeRequest).toHaveBeenCalledWith('/repos/user/repo/hooks');
+		expect(hooks).toEqual([{ id: 1, config: { url: 'https://circleci.com/hooks/github' } }]);
+	});
+
 	it('retrieves repositories and validates token', async () => {
 		const repoPayload = {
 			name: 'repo',
