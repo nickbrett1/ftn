@@ -89,6 +89,9 @@ export default [
       "!.env.example",
       "package-lock.json",
       "coverage/**",
+      // Vendored agent/MCP tooling (mcp-* proxies) is intentionally not part of
+      // the app's lint surface; linting it fails generated projects on CI.
+      ".agents/**",
     ],
   },
 ];

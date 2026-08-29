@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "{{typeField}}",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"{{scripts}},
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks"{{scripts}}
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

@@ -92,5 +92,7 @@ describe('file-generator code-quality capability', () => {
 		expect(eslintConfig.content).toContain('"sonarjs/cognitive-complexity": ["warn", 20]');
 		expect(eslintConfig.content).toContain('"security/detect-object-injection": "warn"');
 		expect(eslintConfig.content).toContain('...globals.vitest');
+		// Vendored .agents tooling is ignored so generated projects lint cleanly
+		expect(eslintConfig.content).toContain('".agents/**"');
 	});
 });
