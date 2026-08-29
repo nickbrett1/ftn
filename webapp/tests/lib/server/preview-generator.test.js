@@ -41,6 +41,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		GOOSE_ALIAS: 'goose-{{projectName}}-mock',
 		SHELL_SETUP_SCRIPT: 'shell-setup-script-mock',
 		GIT_SAFE_DIR_SCRIPT: 'git-safe-dir-script-mock',
+		GIT_GITHUB_AUTH_SETUP_SCRIPT: 'git-github-auth-setup-script-mock',
 		AGY_SETUP_SCRIPT: 'agy-setup-script-mock',
 		PLAYWRIGHT_SETUP_SCRIPT: 'playwright-setup-script-mock',
 		PYTHON_SETUP_SCRIPT: 'python-setup-script-mock',
