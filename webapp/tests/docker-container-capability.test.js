@@ -368,6 +368,9 @@ describe('CircleCI integration for docker-container', () => {
 		// GHCR package visibility is enforced after push, public by default.
 		expect(data.deployJobDefinition).toContain('Set GHCR Package Visibility');
 		expect(data.deployJobDefinition).toContain('VISIBILITY: public');
+		// The visibility step uses GCHR_TOKEN (write:packages), not GHCR_TOKEN.
+		expect(data.deployJobDefinition).toContain('Authorization: Bearer $GCHR_TOKEN');
+		expect(data.deployJobDefinition).not.toContain('Authorization: Bearer $GHCR_TOKEN');
 		expect(data.deployJobDefinition).toContain(
 			'https://api.github.com/user/packages/container/$PKG_NAME/visibility'
 		);

@@ -1058,16 +1058,18 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
             # package inherits the repo's visibility until changed here. Enforce
             # the configured value (public by default; private opt-in) via the
             # GitHub API. package_name is the image name (last path segment).
+            # Uses GCHR_TOKEN (a classic PAT with write:packages, provided in the
+            # CircleCI context) — GHCR_TOKEN alone cannot read/manage packages.
             PKG_NAME="$(basename "$IMAGE" | tr '[:upper:]' '[:lower:]')"
             echo "Setting GHCR package '$PKG_NAME' visibility to '$VISIBILITY'..."
             if ! curl -fsS -X PATCH \\
-                -H "Authorization: Bearer $GHCR_TOKEN" \\
+                -H "Authorization: Bearer $GCHR_TOKEN" \\
                 -H "Accept: application/vnd.github+json" \\
                 "https://api.github.com/user/packages/container/$PKG_NAME/visibility" \\
                 -d "{\\"visibility\\":\\"$VISIBILITY\\"}" >/dev/null; then
               echo "User-scope visibility call failed; retrying with org scope '$REGISTRY_NAMESPACE'..."
               curl -fsS -X PATCH \\
-                -H "Authorization: Bearer $GHCR_TOKEN" \\
+                -H "Authorization: Bearer $GCHR_TOKEN" \\
                 -H "Accept: application/vnd.github+json" \\
                 "https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility" \\
                 -d "{\\"visibility\\":\\"$VISIBILITY\\"}" >/dev/null
