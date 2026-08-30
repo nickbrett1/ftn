@@ -365,39 +365,36 @@ describe('CircleCI integration for docker-container', () => {
 		expect(data.deployJobDefinition).toContain('--platform linux/amd64');
 		expect(data.deployJobDefinition).not.toContain('--provenance');
 		expect(data.deployJobDefinition).toContain('--push');
-		// GHCR package visibility is enforced after push, public by default.
-		expect(data.deployJobDefinition).toContain('Set GHCR Package Visibility');
-		expect(data.deployJobDefinition).toContain('VISIBILITY: public');
-		// The visibility step uses GHCR_UPDATE_TOKEN (write:packages), not GHCR_TOKEN.
-		expect(data.deployJobDefinition).toContain('Authorization: Bearer $GHCR_UPDATE_TOKEN');
-		expect(data.deployJobDefinition).not.toContain('Authorization: Bearer $GHCR_TOKEN');
-		expect(data.deployJobDefinition).toContain(
-			'https://api.github.com/user/packages/container/$PKG_NAME/visibility'
-		);
-		expect(data.deployJobDefinition).toContain(
-			'https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility'
-		);
+		// GHCR visibility is handled by repo linkage, not a per-run step: the
+		// generated Dockerfile's org.opencontainers.image.source label links the
+		// package to the repo on first push (public repo -> public package).
+		expect(data.deployJobDefinition).not.toContain('Set GHCR Package Visibility');
+		expect(data.deployJobDefinition).not.toContain('VISIBILITY:');
+		expect(data.deployJobDefinition).not.toContain('GHCR_UPDATE_TOKEN');
+		expect(data.deployJobDefinition).toContain('IMAGE: ghcr.io/OWNER/govee-mcp');
 		expect(data.deployWorkflowJob).toContain('docker-publish');
 		expect(data.deployWorkflowJob).toContain('context: common');
 	});
 
-	it('sets GHCR package visibility to private when imageVisibility is private', () => {
-		const data = getCapabilityTemplateData('circleci', {
+	it('keeps imageVisibility config but does not emit a per-run visibility step', () => {
+		const context = {
 			capabilities: ['circleci', 'docker-container'],
 			configuration: {
 				'docker-container': { registry: 'ghcr', imageVisibility: 'private' },
 				circleci: { context: { enabled: true, name: 'common' } }
 			},
 			projectName: 'private-app'
-		});
+		};
+		const dockerData = getCapabilityTemplateData('docker-container', context);
+		const ciData = getCapabilityTemplateData('circleci', context);
 
-		expect(data.deployJobDefinition).toContain('VISIBILITY: private');
-		expect(data.deployJobDefinition).toContain(
-			'https://api.github.com/user/packages/container/$PKG_NAME/visibility'
-		);
-		expect(data.deployJobDefinition).toContain(
-			'https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility'
-		);
+		// imageVisibility is surfaced as docker-container template data (UI)…
+		expect(dockerData.imageVisibility).toBe('private');
+		// …but visibility itself is enforced by repo linkage, so the publish
+		// job has no VISIBILITY env var or GitHub API visibility step.
+		expect(ciData.deployJobDefinition).not.toContain('VISIBILITY:');
+		expect(ciData.deployJobDefinition).not.toContain('Set GHCR Package Visibility');
+		expect(ciData.deployJobDefinition).not.toContain('api.github.com/user/packages/container');
 	});
 
 	it('builds arm64 images additionally when armBuilds is enabled', () => {

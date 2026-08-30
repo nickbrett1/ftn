@@ -25,14 +25,13 @@ artifact and is never used as a deployable image.
   - `GHCR_USERNAME` — the GitHub account name
   - `GHCR_TOKEN` — a **classic** PAT with the `write:packages` scope, used to
     `docker login`/push to GHCR
-  - `GHCR_UPDATE_TOKEN` — a **classic** PAT with `write:packages`, used only to set
-    the GHCR package visibility (the visibility step reads/manages packages,
-    which `GHCR_TOKEN` cannot do)
 - **Package visibility** defaults to `public` (so the NAS/Watchtower can pull
-  with **no credentials**). The `docker-publish` job enforces this via the
-  GitHub API (using `GHCR_UPDATE_TOKEN`) after each push. To keep a package private,
-  set `imageVisibility: private` in the genproj configuration (then
-  `docker login` is required on the NAS — see section 3).
+  with **no credentials**). The generated Dockerfile carries
+  `org.opencontainers.image.source=https://github.com/{{registryNamespace}}/{{projectName}}`,
+  so GHCR links the published package to this repo on first push — a **public
+  repo yields a public package** automatically. To keep a package private, keep
+  the repo private (or set `imageVisibility: private` in the genproj config;
+  then `docker login` is required on the NAS — see section 3).
 
 ### One-time CI setup (CircleCI context)
 
@@ -47,10 +46,6 @@ with the registry credentials:
      `write:packages` scope — create one at
      https://github.com/settings/tokens/new?scopes=write:packages (the UI
      auto-selects the `repo` scope alongside it)
-   - `GHCR_UPDATE_TOKEN` = a **classic** personal access token with `write:packages`
-     (used to set GHCR package visibility public). You can reuse the same
-     token value as `GHCR_TOKEN`, but it must be a separate env var in the
-     context because the visibility step reads `GHCR_UPDATE_TOKEN` specifically.
 
 > GitHub **fine-grained** PATs cannot access the Container registry (GHCR)
 > yet, and offer no "Packages: read & write" permission — do not use one here.

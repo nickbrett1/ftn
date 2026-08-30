@@ -819,7 +819,7 @@ export const capabilities = [
 			'registry',
 			'GHCR',
 			'GHCR package is created on first push from CircleCI',
-			'Create a classic PAT with the write:packages scope (fine-grained PATs cannot access GHCR); add GHCR_USERNAME and GHCR_TOKEN (docker login) plus GHCR_UPDATE_TOKEN (package visibility) to the CircleCI context'
+			'Create a classic PAT with the write:packages scope (fine-grained PATs cannot access GHCR); add GHCR_USERNAME and GHCR_TOKEN to the CircleCI context. The generated Dockerfile labels the image with its GitHub repo so GHCR links the package to it (public repo -> public package)'
 		),
 		website: 'https://www.docker.com/'
 	},
