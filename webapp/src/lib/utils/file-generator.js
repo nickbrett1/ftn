@@ -1314,7 +1314,7 @@ if __name__ == "__main__":
 
 
 def test_package_imports():
-    import ${pkgName}  # noqa: F401
+    import ${pkgName}
 
     assert ${pkgName}.__version__
 `;

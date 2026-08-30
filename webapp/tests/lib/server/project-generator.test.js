@@ -697,7 +697,7 @@ describe('ProjectGeneratorService', () => {
 			expect(results.circleci.webhookVerified).toBe(false);
 		});
 
-		it('surfaces a clear, actionable error when follow 404s after retries', async () => {
+		it('does not fail generation when follow 404s on a fresh repo (GitHub App sync race)', async () => {
 			const circleciContext = {
 				projectName: 'test-project',
 				capabilities: ['circleci']
@@ -710,9 +710,12 @@ describe('ProjectGeneratorService', () => {
 
 			const results = await service.configureExternalServices(circleciContext, repository);
 
-			expect(results.circleci.success).toBe(false);
-			expect(results.circleci.error).toContain('CircleCI could not access the new repository');
-			expect(results.circleci.error).toContain('No CircleCI push webhook is installed');
+			// A 404 on a freshly-created repo is the transient GitHub App
+			// sync race, NOT a hard failure: the repo WILL sync and be
+			// followable shortly, so generation must not fail.
+			expect(results.circleci.success).toBe(true);
+			expect(results.circleci.pendingSync).toBe(true);
+			expect(results.circleci.error).toContain('has not indexed the brand-new repository');
 			expect(results.circleci.error).toContain('Set Up Project');
 			expect(service.services.circleci.updateProjectSettings).not.toHaveBeenCalled();
 			expect(service.services.circleci.triggerPipeline).not.toHaveBeenCalled();

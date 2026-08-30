@@ -433,6 +433,25 @@ export class ProjectGeneratorService {
 				console.log('✅ CircleCI configured successfully');
 			} catch (error) {
 				const clearError = await this.#describeCircleCISetupError(error, owner, repo);
+				const isSyncRace = /CircleCI API error: 404/.test(error?.message || '');
+				if (isSyncRace) {
+					// GitHub App repo-sync race: CircleCI indexes a brand-new repo
+					// asynchronously and can 404 for several minutes after creation.
+					// This is transient — the repo WILL sync and appear, at which
+					// point it can be followed (CircleCI "Set Up Project" or a later
+					// follow call) and picks up the committed config.yml. Do NOT fail
+					// generation: record it as pending so the project still lands.
+					console.warn(
+						`⚠️ CircleCI sync pending for ${owner}/${repo}: ${clearError}. ` +
+							`The project will become available once CircleCI finishes indexing the repo.`
+					);
+					results.circleci = {
+						success: true,
+						pendingSync: true,
+						error: clearError
+					};
+					return;
+				}
 				console.error(`❌ CircleCI configuration failed: ${clearError}`);
 				results.circleci = {
 					success: false,
@@ -470,10 +489,12 @@ export class ProjectGeneratorService {
 
 	/**
 	 * Turns a raw external-service error into a clear, actionable message. The
-	 * common failure is the `follow` call returning 404 even after the retry
-	 * window: CircleCI never indexed the brand-new repo (no push webhook was
-	 * ever installed), so no amount of waiting will help. Explain what's wrong
-	 * and how to fix it instead of surfacing a bare "404 Not Found".
+	 * common failure is the `follow` call returning 404: CircleCI indexes a
+	 * brand-new repo asynchronously after the GitHub App installs its push
+	 * webhook, so there is a short window right after repo creation where the
+	 * follow API 404s. This is transient — the repo WILL sync (usually within a
+	 * few minutes) and can then be followed. Explain that instead of surfacing
+	 * a bare "404 Not Found" or implying the setup is broken.
 	 * @param {Error} error - Error thrown while configuring CircleCI
 	 * @param {string} owner - Repository owner
 	 * @param {string} repo - Repository name
@@ -483,12 +504,12 @@ export class ProjectGeneratorService {
 		if (error?.message && /CircleCI API error: 404/.test(error.message)) {
 			const hasWebhook = await this.#hasCircleCIWebhook(owner, repo);
 			const webhookHint = hasWebhook
-				? 'A CircleCI webhook exists on the repo but CircleCI still returned 404.'
-				: 'No CircleCI push webhook is installed on the repo, so CircleCI cannot see it.';
+				? 'A CircleCI webhook already exists on the repo, so CircleCI is mid-sync and should be available imminently.'
+				: 'No CircleCI push webhook is installed on the repo yet, so CircleCI has not indexed it.';
 			return (
-				`CircleCI could not access the new repository (follow returned 404 after retries). ` +
-				`${webhookHint} Install the CircleCI GitHub App for the org, or set the project up ` +
-				`manually in the CircleCI web UI (Set Up Project) and it will pick up the committed config.yml.`
+				`CircleCI has not indexed the brand-new repository yet (follow returned 404). ` +
+				`${webhookHint} This resolves automatically once CircleCI syncs the repo; you can also ` +
+				`trigger it now in the CircleCI web UI (Set Up Project) and it will pick up the committed config.yml.`
 			);
 		}
 		return error?.message || String(error);

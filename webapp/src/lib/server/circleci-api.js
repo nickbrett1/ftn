@@ -40,9 +40,9 @@ export class CircleCIAPIService extends BaseAPIService {
 	 *   asynchronously, so the follow call can 404 for a short window right
 	 *   after repo creation; retrying with backoff lets eventual consistency
 	 *   catch up instead of forcing a manual "Set Up Project".
-	 * @param {number} [options.followRetry.attempts=6] - Max attempts (incl. first)
-	 * @param {number} [options.followRetry.baseDelayMs=5000] - First retry delay
-	 * @param {number} [options.followRetry.maxDelayMs=30000] - Max retry delay
+	 * @param {number} [options.followRetry.attempts=8] - Max attempts (incl. first)
+	 * @param {number} [options.followRetry.baseDelayMs=6000] - First retry delay
+	 * @param {number} [options.followRetry.maxDelayMs=45000] - Max retry delay
 	 * @param {number} [options.followRetry.backoffFactor=2] - Exponential factor
 	 */
 	constructor(token, options = {}) {
@@ -57,9 +57,9 @@ export class CircleCIAPIService extends BaseAPIService {
 			'CircleCI'
 		);
 		this.followRetry = {
-			attempts: 6,
-			baseDelayMs: 5000,
-			maxDelayMs: 30000,
+			attempts: 8,
+			baseDelayMs: 6000,
+			maxDelayMs: 45000,
 			backoffFactor: 2,
 			...options.followRetry
 		};
