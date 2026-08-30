@@ -12,6 +12,10 @@ WORKDIR /app
 
 FROM {{dockerBaseImage}}
 WORKDIR /app
+# Link the GHCR container package to its GitHub repo on push. GHCR auto-links
+# the package to {{registryNamespace}}/{{projectName}} so it inherits the
+# repo's access (public repo -> public package; no manual visibility step).
+LABEL org.opencontainers.image.source=https://github.com/{{registryNamespace}}/{{projectName}}
 {{dockerAptInstall}}
 {{dockerRuntimeCommands}}
 EXPOSE {{exposePort}}

@@ -149,6 +149,12 @@ describe('Python Dockerfile (memo §2.2, §3.1, §3.2, §2.8)', () => {
 			'RUN apt-get update && apt-get install -y --no-install-recommends iproute2 curl'
 		);
 		expect(content).toContain('EXPOSE 3001');
+		// GHCR package -> repo linkage: the generated Dockerfile declares its
+		// source repo so GHCR auto-links the package to nickbrett1/nas-port-mcp
+		// (public repo -> public package) on push.
+		expect(content).toContain(
+			'LABEL org.opencontainers.image.source=https://github.com/nickbrett1/nas-port-mcp'
+		);
 	});
 
 	it('emits HEALTHCHECK + installs curl when an http health mechanism is declared', async () => {
