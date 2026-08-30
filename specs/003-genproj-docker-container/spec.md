@@ -212,6 +212,15 @@ workflows:
 - Only `tagStrategy=commit-sha` is supported → tag with `$CIRCLE_SHA1` + `latest`. (`semver`/`latest`-only strategies were deliberately removed — commit SHA is reproducible and immutable, and `latest` is always maintained as a convenience alias.)
 - RequiresAuth note: `GHCR_TOKEN` push auth is a CircleCI env-var concern; genproj should surface it as an external-service action, not a user OAuth flow.
 
+**GHCR package visibility is enforced by the job, not just documented.** `docker push`
+does not control a package's visibility — a brand-new package inherits the repo's
+visibility unless changed. The `docker-publish` job therefore adds a post-push step that
+calls the GitHub API (`PATCH /user/packages/container/{package_name}/visibility`, with an
+org-scope fallback) to set the package to the configured `imageVisibility`, which
+**defaults to `public`** (private is an opt-in). Public is the default so a NAS/Watchtower
+can pull with no credentials; `imageVisibility: private` is the option for private packages
+(which then require `docker login` on the NAS — see section 5).
+
 ---
 
 ## 5. Registry Flows

@@ -24,6 +24,11 @@ artifact and is never used as a deployable image.
 - Registry credentials are read from the CircleCI context (`{{circleciContext}}`):
   - `GHCR_USERNAME` — the GitHub account name
   - `GHCR_TOKEN` — a **classic** PAT with the `write:packages` scope
+- **Package visibility** defaults to `public` (so the NAS/Watchtower can pull
+  with **no credentials**). The `docker-publish` job enforces this via the
+  GitHub API after each push. To keep a package private, set
+  `imageVisibility: private` in the genproj configuration (then
+  `docker login` is required on the NAS — see section 3).
 
 ### One-time CI setup (CircleCI context)
 

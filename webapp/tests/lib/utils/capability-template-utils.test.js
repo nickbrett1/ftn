@@ -325,11 +325,12 @@ describe('capability-template-utils', () => {
 			const job = data.deployJobDefinition;
 			// Layer cache pulled/pushed via a dedicated :buildcache tag.
 			expect(job).toContain('CACHE_REF: ghcr.io/nickbrett1/cache-app:buildcache');
+			expect(job).toContain('IMAGE: ghcr.io/nickbrett1/cache-app');
 			expect(job).toContain('docker_layer_caching: true');
 			expect(job).toContain('--cache-from type=registry,ref=$CACHE_REF');
 			expect(job).toContain('--cache-to type=registry,ref=$CACHE_REF,mode=max');
-			// Normal tags and --push retained.
-			expect(job).toContain('-t ghcr.io/nickbrett1/cache-app:$CIRCLE_SHA1');
+			// Normal tags (via $IMAGE) and --push retained.
+			expect(job).toContain('-t $IMAGE:$CIRCLE_SHA1');
 			expect(job).toContain('--push .');
 		});
 	});

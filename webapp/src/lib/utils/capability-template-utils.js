@@ -708,6 +708,7 @@ function getDockerContainerTemplateData(context) {
 	// explicitly enabled (most NAS deploy targets are x86_64).
 	const armBuilds = config.armBuilds === true;
 	const buildPlatforms = armBuilds ? 'linux/amd64,linux/arm64' : 'linux/amd64';
+	const imageVisibility = config.imageVisibility || 'public';
 	const projectName = context.projectName || 'my-project';
 	const registryPrefix = getDockerRegistryPrefix();
 	const registryNamespace = context.registryNamespace || config.registryNamespace || 'OWNER';
@@ -979,6 +980,7 @@ RUN cargo build --release`;
 		hostname,
 		watchtower: String(watchtower),
 		homepage: String(homepage),
+		imageVisibility,
 		armBuilds,
 		buildPlatforms
 	};
@@ -1013,6 +1015,11 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
 	// enabled (most NAS deploy targets are x86_64).
 	const armBuilds = config.armBuilds === true;
 	const buildPlatforms = armBuilds ? 'linux/amd64,linux/arm64' : 'linux/amd64';
+	// GHCR package visibility. Docker push does NOT control this — a new
+	// package inherits the repo's visibility unless set explicitly. Default to
+	// `public` (no NAS-side credentials for Watchtower pulls); opt into
+	// `private` via config. Enforced after push through the GitHub API.
+	const imageVisibility = config.imageVisibility || 'public';
 
 	data.deployJobDefinition = `
   docker-publish:
@@ -1022,6 +1029,12 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
       # BuildKit layer cache ref (ghcr.io registry cache, mode=max). Cache-only
       # tag — never used as a deployable image.
       CACHE_REF: ${cacheRef}
+      # Image ref, registry namespace, and GHCR package visibility. Docker push
+      # does not control package visibility — it is enforced below via the
+      # GitHub API (public by default so NAS/Watchtower needs no credentials).
+      IMAGE: ${imageRef}
+      VISIBILITY: ${imageVisibility}
+      REGISTRY_NAMESPACE: ${registryNamespace}
     steps:
       - checkout
       - setup_remote_docker:
@@ -1037,7 +1050,28 @@ function _applyDockerContainerConfig(data, context, contextEnabled, contextName)
             docker buildx build --platform ${buildPlatforms} \\
               --cache-from type=registry,ref=$CACHE_REF \\
               --cache-to type=registry,ref=$CACHE_REF,mode=max \\
-              -t ${imageRef}:$CIRCLE_SHA1 -t ${imageRef}:latest --push .`;
+              -t $IMAGE:$CIRCLE_SHA1 -t $IMAGE:latest --push .
+      - run:
+          name: Set GHCR Package Visibility
+          command: |
+            # docker push never sets GHCR package visibility — a brand-new
+            # package inherits the repo's visibility until changed here. Enforce
+            # the configured value (public by default; private opt-in) via the
+            # GitHub API. package_name is the image name (last path segment).
+            PKG_NAME="$(basename "$IMAGE" | tr '[:upper:]' '[:lower:]')"
+            echo "Setting GHCR package '$PKG_NAME' visibility to '$VISIBILITY'..."
+            if ! curl -fsS -X PATCH \\
+                -H "Authorization: Bearer $GHCR_TOKEN" \\
+                -H "Accept: application/vnd.github+json" \\
+                "https://api.github.com/user/packages/container/$PKG_NAME/visibility" \\
+                -d "{\\"visibility\\":\\"$VISIBILITY\\"}" >/dev/null; then
+              echo "User-scope visibility call failed; retrying with org scope '$REGISTRY_NAMESPACE'..."
+              curl -fsS -X PATCH \\
+                -H "Authorization: Bearer $GHCR_TOKEN" \\
+                -H "Accept: application/vnd.github+json" \\
+                "https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility" \\
+                -d "{\\"visibility\\":\\"$VISIBILITY\\"}" >/dev/null
+            fi`;
 
 	data.deployWorkflowJob = `
       - docker-publish:${contextEnabled ? `\n          context: ${contextName}` : ''}

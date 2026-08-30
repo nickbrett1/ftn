@@ -365,8 +365,36 @@ describe('CircleCI integration for docker-container', () => {
 		expect(data.deployJobDefinition).toContain('--platform linux/amd64');
 		expect(data.deployJobDefinition).not.toContain('--provenance');
 		expect(data.deployJobDefinition).toContain('--push');
+		// GHCR package visibility is enforced after push, public by default.
+		expect(data.deployJobDefinition).toContain('Set GHCR Package Visibility');
+		expect(data.deployJobDefinition).toContain('VISIBILITY: public');
+		expect(data.deployJobDefinition).toContain(
+			'https://api.github.com/user/packages/container/$PKG_NAME/visibility'
+		);
+		expect(data.deployJobDefinition).toContain(
+			'https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility'
+		);
 		expect(data.deployWorkflowJob).toContain('docker-publish');
 		expect(data.deployWorkflowJob).toContain('context: common');
+	});
+
+	it('sets GHCR package visibility to private when imageVisibility is private', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['circleci', 'docker-container'],
+			configuration: {
+				'docker-container': { registry: 'ghcr', imageVisibility: 'private' },
+				circleci: { context: { enabled: true, name: 'common' } }
+			},
+			projectName: 'private-app'
+		});
+
+		expect(data.deployJobDefinition).toContain('VISIBILITY: private');
+		expect(data.deployJobDefinition).toContain(
+			'https://api.github.com/user/packages/container/$PKG_NAME/visibility'
+		);
+		expect(data.deployJobDefinition).toContain(
+			'https://api.github.com/orgs/$REGISTRY_NAMESPACE/packages/container/$PKG_NAME/visibility'
+		);
 	});
 
 	it('builds arm64 images additionally when armBuilds is enabled', () => {
@@ -396,6 +424,22 @@ describe('CircleCI integration for docker-container', () => {
 		});
 		expect(dockerDataDefault.buildPlatforms).toBe('linux/amd64');
 		expect(dockerDataDefault.armBuilds).toBe(false);
+	});
+
+	it('defaults imageVisibility to public and honors a private override', () => {
+		const pub = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container'],
+			configuration: {},
+			projectName: 'vis-app'
+		});
+		expect(pub.imageVisibility).toBe('public');
+
+		const priv = getCapabilityTemplateData('docker-container', {
+			capabilities: ['docker-container'],
+			configuration: { 'docker-container': { imageVisibility: 'private' } },
+			projectName: 'vis-app'
+		});
+		expect(priv.imageVisibility).toBe('private');
 	});
 
 	it('uses the authenticated registry namespace in the image ref', () => {
