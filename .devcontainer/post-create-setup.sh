@@ -105,7 +105,7 @@ if [ -n "$KEY_COPIED" ]; then
 fi
 if git config --global --get-regexp '^url\.git@github\.com:.*\.insteadof' >/dev/null 2>&1; then
     echo "INFO: GitHub SSH rewrite already configured; leaving in place."
-elif ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com >/dev/null 2>&1; then
+elif ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com 2>&1 | grep -qi "successfully authenticated"; then
     git config --global url."git@github.com:".insteadOf "https://github.com/"
     echo "INFO: GitHub remotes now use SSH (git@github.com:)."
 else
