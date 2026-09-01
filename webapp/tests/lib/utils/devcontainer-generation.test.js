@@ -337,6 +337,39 @@ describe('DevContainer Generation Tests', () => {
 		expect(setup.content).not.toContain('{{projectName}}');
 	});
 
+	it('node containers get SSH-first setup, .ssh bind, and npx --yes git hooks (no flaky java feature)', async () => {
+		const engine = new TemplateEngine();
+		await engine.initialize();
+
+		// ftn-style: a node project with sonarlint selected. The SDKMAN java
+		// feature (ghcr.io/devcontainers/features/java) is flaky at build time
+		// (unreachable SDKMAN API / Microsoft JDK host), so node containers must
+		// NOT scaffold it — sonarlint uses its own bundled JRE.
+		const context = {
+			projectName: 'gaggle',
+			capabilities: ['devcontainer-node', 'sonarlint', 'doppler'],
+			configuration: {}
+		};
+
+		const files = generateMergedDevelopmentContainerFiles(engine, context, ['devcontainer-node']);
+
+		const json = JSON.parse(
+			files.find((f) => f.filePath === '.devcontainer/devcontainer.json').content
+		);
+		// No flaky SDKMAN java feature in node containers.
+		expect(json.features['ghcr.io/devcontainers/features/java:1']).toBeUndefined();
+		// Host ~/.ssh is bind-mounted for SSH-first GitHub auth.
+		expect(json.mounts.some((m) => m.includes('.ssh') && m.includes('type=bind'))).toBe(true);
+
+		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
+		// SSH-first auth (no PAT), and git hooks installed non-interactively.
+		expect(setup.content).toContain('genproj-github-auth');
+		expect(setup.content).not.toContain('x-access-token');
+		// Non-interactive hooks install (the bare `npx simple-git-hooks` form
+		// hangs on the "Ok to proceed? (y)" prompt in a non-tty build).
+		expect(setup.content).toContain('npx --yes simple-git-hooks');
+	});
+
 	it('omits the GitHub auth wiring when the doppler capability is not selected', async () => {
 		const engine = new TemplateEngine();
 		await engine.initialize();
