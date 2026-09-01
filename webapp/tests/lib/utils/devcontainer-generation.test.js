@@ -306,7 +306,7 @@ describe('DevContainer Generation Tests', () => {
 		expect(setup.content).not.toContain('DOPPLER_PROJECT');
 	});
 
-	it('wires GitHub auth from Doppler into git in post-create setup when the doppler capability is selected', async () => {
+	it('wires SSH-first GitHub auth into git in post-create setup when the doppler capability is selected', async () => {
 		const engine = new TemplateEngine();
 		await engine.initialize();
 
@@ -320,15 +320,18 @@ describe('DevContainer Generation Tests', () => {
 		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(setup).toBeDefined();
 
-		// The wiring marker + the token-probe loop must be present.
+		// The SSH-first marker + idempotent guard must be present.
 		expect(setup.content).toContain('genproj-github-auth');
+		expect(setup.content).toContain('git@github.com:');
+		expect(setup.content).toContain('StrictHostKeyChecking=accept-new');
 		expect(setup.content).toContain(
-			'GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN'
+			"git config --global --get-regexp '^url\\.git@github\\.com:.*\\.insteadof'"
 		);
-		// It must fetch the token from the repo's Doppler project.
-		expect(setup.content).toContain('doppler run -- printenv');
-		// And configure git via the https github.com insteadOf rewrite.
+		// Configure git via the SSH insteadOf rewrite (NOT the PAT x-access-token form).
 		expect(setup.content).toContain('insteadOf "https://github.com/"');
+		// No PAT probing / embedding anywhere.
+		expect(setup.content).not.toContain('GITHUB_PERSONAL_ACCESS_TOKEN');
+		expect(setup.content).not.toContain('x-access-token');
 		// No unresolved template placeholders may leak into the rendered script.
 		expect(setup.content).not.toContain('{{gitGithubAuthSetup}}');
 		expect(setup.content).not.toContain('{{projectName}}');
@@ -479,6 +482,9 @@ describe('DevContainer kitchen-sink gating (memo §2.9 / audit §4.5)', () => {
 		// post-create fallback instead.
 		expect(json.mounts.some((m) => m.includes('.doppler') && m.includes('type=bind'))).toBe(true);
 		expect(json.mounts.some((m) => m.includes('doppler-config'))).toBe(false);
+		// genproj-ssh-auth: host ~/.ssh is always bind-mounted (SSH-first GitHub
+		// auth; no PAT in git config/remotes).
+		expect(json.mounts.some((m) => m.includes('.ssh') && m.includes('type=bind'))).toBe(true);
 		expect(json.features['ghcr.io/devcontainers-contrib/features/doppler-cli:1']).toBeUndefined();
 		expect(json.mounts.some((m) => m.includes('gemini-cli-settings'))).toBe(true);
 		// NOT selected: wrangler mount and the kitchen-sink forwardPorts are gone.

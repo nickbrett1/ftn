@@ -114,37 +114,54 @@ echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/{{projectName}}`;
 
 export const GIT_GITHUB_AUTH_SETUP_SCRIPT = `
-echo "INFO: Wiring GitHub auth from Doppler into git..."
-# genproj-github-auth: fetch a GitHub PAT from the repo's Doppler project and
-# configure git so https github.com remotes authenticate automatically
-# (push/pull, submodules, fsck). Runs when Doppler is authenticated; degrades
-# gracefully when it is not (fresh container before cloud_login.sh, or no
-# token present in the Doppler project). Which variable is used: genproj's
-# server-side GitHub auth prefers GITHUB_TOKEN; we probe GITHUB_TOKEN first,
-# then GITHUB_ACCESS_TOKEN, then GITHUB_PERSONAL_ACCESS_TOKEN (in the shared
-# common project these all resolve to the same PAT).
-GH_TOKEN_VALUE=""
-if command -v doppler &> /dev/null && doppler whoami &> /dev/null 2>&1; then
-    for GH_VAR in GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN; do
-        GH_TOKEN_VALUE="$(doppler run -- printenv "$GH_VAR" 2>/dev/null | tail -n 1)"
-        if [ -n "$GH_TOKEN_VALUE" ]; then
-            echo "INFO: Found GitHub token in Doppler variable $GH_VAR"
+echo "INFO: Configuring GitHub auth over SSH (no PAT)..."
+# genproj-github-auth (SSH-first): GitHub remotes authenticate via an SSH key
+# supplied by the host bind-mount (~/.ssh) or the forwarded SSH agent. No PAT
+# is ever written to ~/.gitconfig or remote URLs. Defaults to SSH; fails loud
+# with guidance if no working key/agent is found. Idempotent: re-runs must not
+# duplicate or clobber the existing rewrite.
+
+# --- 1. Make a usable key for the container user ---------------------------
+# The host ~/.ssh is bind-mounted at $HOME/.ssh. Those files keep the host uid
+# (macOS 501), which OpenSSH (running as the container uid, typically 1000)
+# refuses to use. We never chown the mount (that mutates the host file).
+# Preferred: forward the SSH agent (zero keys on disk). Fallback: copy the
+# mounted key into a container-owned dir with mode 600.
+KEY_COPIED=""
+if [ -n "\${SSH_AUTH_SOCK:-}" ] && command -v ssh-add &> /dev/null && ssh-add -l >/dev/null 2>&1; then
+    echo "INFO: GitHub auth via forwarded SSH agent (\${SSH_AUTH_SOCK})."
+else
+    mkdir -p "$HOME/.genproj-ssh" && chmod 700 "$HOME/.genproj-ssh"
+    for KEY in "$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_rsa"; do
+        if [ -r "$KEY" ]; then
+            DEST="$HOME/.genproj-ssh/$(basename "$KEY")"
+            cp "$KEY" "$DEST"
+            chmod 600 "$DEST"
+            KEY_COPIED="$DEST"
+            echo "INFO: Copied host-mounted key $KEY into $DEST."
             break
         fi
     done
 fi
 
-if [ -n "$GH_TOKEN_VALUE" ]; then
-    # Rewrite https github.com URLs to embed the token. x-access-token is the
-    # conventional username for PAT auth over https; no separate credential
-    # helper is needed. Token stays in ~/.gitconfig (rotated/re-run by
-    # re-running this setup after cloud_login).
-    git config --global url."https://x-access-token:$GH_TOKEN_VALUE@github.com/".insteadOf "https://github.com/"
-    echo "INFO: GitHub auth wired into git (https github.com remotes now authenticate via Doppler)."
-    unset GH_TOKEN_VALUE
+# --- 2. Point git's ssh at the copied key (if any) -------------------------
+# Persisted in ~/.gitconfig (no secret involved), so it survives re-runs.
+if [ -n "$KEY_COPIED" ]; then
+    git config --global core.sshCommand "ssh -i $KEY_COPIED -o IdentitiesOnly=yes"
+fi
+
+# --- 3. Idempotent SSH insteadOf rewrite for github.com ---------------------
+if git config --global --get-regexp '^url\\.git@github\\.com:.*\\.insteadof' >/dev/null 2>&1; then
+    echo "INFO: GitHub SSH rewrite already configured; leaving in place."
+elif ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com >/dev/null 2>&1; then
+    git config --global url."git@github.com:".insteadOf "https://github.com/"
+    echo "INFO: GitHub remotes now use SSH (git@github.com:)."
 else
-    echo "WARN: No GitHub token found in Doppler (tried GITHUB_TOKEN, GITHUB_ACCESS_TOKEN, GITHUB_PERSONAL_ACCESS_TOKEN)."
-    echo "      git push/pull to github.com will fall back to the VS Code credential helper / manual auth."
+    echo "WARN: No working SSH key/agent found for github.com."
+    echo "      Add an SSH public key at https://github.com/settings/keys,"
+    echo "      load it on the host (ssh-add --apple-use-keychain), and"
+    echo "      rebuild/re-run this setup. HTTPS push/pull will use the"
+    echo "      default credential helper until then."
 fi
 `;
 
@@ -796,6 +813,13 @@ export function getDevcontainerJsonExtras(context) {
 	if (context.capabilities.includes('coding-agents')) {
 		mounts.push(`source=gemini-cli-settings,target=${home}/.gemini,type=volume`);
 	}
+	// genproj-ssh-auth (memo "Fix genproj to scaffold SSH-based GitHub auth"):
+	// bind the host ~/.ssh into the container so GitHub auth works over SSH
+	// (git@github.com:) with no PAT embedded in git config / remote URLs. The
+	// post-create setup copies the key into a container-owned dir (never
+	// chowns the mount) or uses a forwarded SSH agent. Always present, like
+	// the goose config bind below.
+	mounts.push(`source=\${localEnv:HOME}/.ssh,target=${home}/.ssh,type=bind`);
 	// goose is installed in every generated devcontainer Dockerfile, so bind the
 	// host ~/.config/goose into the container: the user's real config.yaml
 	// (active provider + extensions) must be visible or goose fails with
