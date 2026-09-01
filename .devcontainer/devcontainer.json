@@ -17,12 +17,13 @@
       "uid": "1000",
       "gid": "1000"
     },
-    "ghcr.io/devcontainers/features/java:1": {
-      // For default-jre
-      "version": "21",
-      "installMaven": "false",
-      "installGradle": "false"
-    },
+    // NOTE: the ghcr.io/devcontainers/features/java (Java via SDKMAN) feature
+    // was removed (2026-09-01) because its build depends on SDKMAN's API and
+    // the Microsoft JDK download host, both intermittently unreachable on this
+    // network — it made `devcontainer up` fail ("Version 21 not found" / SDKMAN
+    // download timeouts). Sonarlint's Java language server uses its own bundled
+    // JRE, so no system JDK is required; the sonarlint.ls.javaHome and JDK_HOME
+    // settings that pointed at the SDKMAN install were removed with it.
     "ghcr.io/devcontainers/features/docker-from-docker:1": {
       "version": "latest"
     }
@@ -95,13 +96,7 @@
       ]
     },
     // Add VS Code settings for the container
-    "settings": {
-      "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current"
-    }
-  },
-
-  "containerEnv": {
-    "JDK_HOME": "/usr/local/sdkman/candidates/java/current"
+    "settings": {}
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
