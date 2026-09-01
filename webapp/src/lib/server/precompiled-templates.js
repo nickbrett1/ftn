@@ -501,7 +501,7 @@
 									name: 'gitGithubAuthSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 24 } }
+									loc: { start: { line: 65, column: 0 }, end: { line: 65, column: 22 } }
 								})
 							: helper)
 					) +
@@ -535,7 +535,7 @@
 									name: 'playwrightSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 67, column: 0 }, end: { line: 67, column: 19 } }
+									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 19 } }
 								})
 							: helper)
 					) +
@@ -552,7 +552,7 @@
 									name: 'agySetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 69, column: 0 }, end: { line: 69, column: 12 } }
+									loc: { start: { line: 71, column: 0 }, end: { line: 71, column: 12 } }
 								})
 							: helper)
 					) +
@@ -569,7 +569,7 @@
 									name: 'gooseSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 70, column: 0 }, end: { line: 70, column: 14 } }
+									loc: { start: { line: 72, column: 0 }, end: { line: 72, column: 14 } }
 								})
 							: helper)
 					) +
@@ -586,7 +586,7 @@
 									name: 'specdagSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 72, column: 0 }, end: { line: 72, column: 16 } }
+									loc: { start: { line: 74, column: 0 }, end: { line: 74, column: 16 } }
 								})
 							: helper)
 					) +
@@ -603,7 +603,7 @@
 									name: 'socatSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 73, column: 0 }, end: { line: 73, column: 14 } }
+									loc: { start: { line: 75, column: 0 }, end: { line: 75, column: 14 } }
 								})
 							: helper)
 					) +
@@ -620,7 +620,7 @@
 									name: 'cloudLoginSetup',
 									hash: {},
 									data: data,
-									loc: { start: { line: 86, column: 0 }, end: { line: 86, column: 19 } }
+									loc: { start: { line: 88, column: 0 }, end: { line: 88, column: 19 } }
 								})
 							: helper)
 					) +
