@@ -80,35 +80,42 @@ echo "INFO: Playwright Chromium installation complete."
 echo "INFO: Configuring git safe directory..."
 git config --global --add safe.directory /workspaces/ftn
 
-echo "INFO: Wiring GitHub auth from Doppler into git..."
-# Fetch a GitHub PAT from the repo's Doppler project (common/dev here) and
-# configure git so https github.com remotes authenticate automatically
-# (push/pull, submodules, fsck). Degrades gracefully when Doppler is not
-# authenticated yet (fresh container before cloud_login.sh). In the shared
-# common project GITHUB_TOKEN / GITHUB_ACCESS_TOKEN / GITHUB_PERSONAL_ACCESS_TOKEN
-# all resolve to the same PAT; probe them in order.
-GH_TOKEN_VALUE=""
-if command -v doppler &> /dev/null && doppler whoami &> /dev/null 2>&1; then
-    for GH_VAR in GITHUB_TOKEN GITHUB_ACCESS_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN; do
-        GH_TOKEN_VALUE="$(doppler run -- printenv "$GH_VAR" 2>/dev/null | tail -n 1)"
-        if [ -n "$GH_TOKEN_VALUE" ]; then
-            echo "INFO: Found GitHub token in Doppler variable $GH_VAR"
+echo "INFO: Configuring GitHub auth over SSH (no PAT)..."
+# genproj-github-auth (SSH-first): GitHub remotes authenticate via an SSH key
+# supplied by the host bind-mount (~/.ssh) or the forwarded SSH agent. No PAT
+# is ever written to ~/.gitconfig or remote URLs.
+KEY_COPIED=""
+if [ -n "${SSH_AUTH_SOCK:-}" ] && command -v ssh-add &> /dev/null && ssh-add -l >/dev/null 2>&1; then
+    echo "INFO: GitHub auth via forwarded SSH agent (${SSH_AUTH_SOCK})."
+else
+    mkdir -p "$HOME/.genproj-ssh" && chmod 700 "$HOME/.genproj-ssh"
+    for KEY in "$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_rsa"; do
+        if [ -r "$KEY" ]; then
+            DEST="$HOME/.genproj-ssh/$(basename "$KEY")"
+            cp "$KEY" "$DEST"
+            chmod 600 "$DEST"
+            KEY_COPIED="$DEST"
+            echo "INFO: Copied host-mounted key $KEY into $DEST."
             break
         fi
     done
 fi
-
-if [ -n "$GH_TOKEN_VALUE" ]; then
-    git config --global url."https://x-access-token:$GH_TOKEN_VALUE@github.com/".insteadOf "https://github.com/"
-    echo "INFO: GitHub auth wired into git (https github.com remotes now authenticate via Doppler)."
-    unset GH_TOKEN_VALUE
+if [ -n "$KEY_COPIED" ]; then
+    git config --global core.sshCommand "ssh -i $KEY_COPIED -o IdentitiesOnly=yes"
+fi
+if git config --global --get-regexp '^url\.git@github\.com:.*\.insteadof' >/dev/null 2>&1; then
+    echo "INFO: GitHub SSH rewrite already configured; leaving in place."
+elif ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com >/dev/null 2>&1; then
+    git config --global url."git@github.com:".insteadOf "https://github.com/"
+    echo "INFO: GitHub remotes now use SSH (git@github.com:)."
 else
-    echo "WARN: No GitHub token found in Doppler (tried GITHUB_TOKEN, GITHUB_ACCESS_TOKEN, GITHUB_PERSONAL_ACCESS_TOKEN)."
-    echo "      git push/pull to github.com will fall back to the VS Code credential helper / manual auth."
+    echo "WARN: No working SSH key/agent found for github.com."
+    echo "      Add an SSH public key at https://github.com/settings/keys,"
+    echo "      load it on the host (ssh-add --apple-use-keychain), and rebuild."
 fi
 
 echo "INFO: Installing git pre-commit hooks (simple-git-hooks + lint-staged)..."
-(cd /workspaces/ftn/webapp && npx simple-git-hooks) || echo "WARN: Could not install git hooks, run 'cd webapp && npx simple-git-hooks' manually."
+(cd /workspaces/ftn/webapp && npx --yes simple-git-hooks) || echo "WARN: Could not install git hooks, run 'cd webapp && npx --yes simple-git-hooks' manually."
 
 if ! pgrep -f "socat TCP-LISTEN:9222" > /dev/null; then
     echo "Setup bridget to access Chrome DevTools Protocol over a secure tunnel..."
