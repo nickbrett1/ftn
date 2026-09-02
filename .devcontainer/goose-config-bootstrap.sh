@@ -37,6 +37,11 @@ const MCP_SERVERS = {
     name: memos
     enabled: true
     uri: http://nas:5230/mcp
+    env_keys:
+    - MEMOS_TOKEN
+    envs: {}
+    headers:
+      Authorization: Bearer \${MEMOS_TOKEN}
     timeout: 300`,
   'chrome-devtools': `    type: stdio
     name: chrome-devtools
@@ -132,7 +137,12 @@ for (const key of UPGRADABLE) {
     let j = i + 1;
     while (j < end && !/^  [A-Za-z0-9_-]+:/.test(lines[j])) j++;
     const bodyLines = lines.slice(i + 1, j);
-    if (/mcp-remote/.test(bodyLines.join('\n')) || /type: stdio/.test(bodyLines.join('\n'))) {
+    const body = bodyLines.join('\n');
+    const needsReplacement =
+      /mcp-remote/.test(body) ||
+      /type: stdio/.test(body) ||
+      (key === 'memos' && !/Authorization/.test(body));
+    if (needsReplacement) {
       const replacement = [`  ${key}:`, ...MCP_SERVERS[key].split('\n')];
       // Preserve the blank-line separator after the entry, if one existed.
       if (bodyLines[bodyLines.length - 1] === '') replacement.push('');
