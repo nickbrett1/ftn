@@ -789,8 +789,18 @@ RUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip 
 COPY . .
 RUN if [ -f requirements.txt ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; \\\n    elif [ -f pyproject.toml ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir --no-deps .; \\\n    fi`;
 	} else if (isNode) {
+		// genproj-npm-pin: activate the npm pinned in package.json before
+		// installing. npm 10 bundled with node:22 crashes fresh-installing
+		// vitest-4 projects ('edgesOut'), and engine-strict .npmrc would reject
+		// npm ci/install outright; corepack can't switch npm, so install the
+		// pinned version globally in the build stage.
 		dockerBuildCommands = `COPY package.json package-lock.json* .npmrc* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN PINNED_NPM="$(node -p "try{require('./package.json').packageManager}catch(e){''}" 2>/dev/null || true)" \\
+    && if [ -n "$PINNED_NPM" ] && [ "$(npm --version)" != "\${PINNED_NPM#npm@}" ]; then \\
+         echo "Activating pinned \${PINNED_NPM}..."; \\
+         npm install -g "\${PINNED_NPM}" >/dev/null || true; \\
+       fi \\
+    && if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 RUN npm run build`;
 	} else if (isJava) {
