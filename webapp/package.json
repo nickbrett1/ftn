@@ -105,7 +105,7 @@
 		"safe-regex2": "^5.1.1",
 		"sharp": "^0.35.3",
 		"shiki": "^4.4.3",
-		"simple-git-hooks": "^2.13.1",
+		"simple-git-hooks": "^2.14.0",
 		"svelte": "^5.53.8",
 		"svelte-awesome-icons": "^3.1.1",
 		"svelte-preprocess": "6.0.5",
