@@ -77,6 +77,13 @@ export function handleGenprojErrorResult(result) {
 }
 
 export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
+	// GitHub token precedence for repo creation:
+	// 1. Per-user OAuth token stored in D1 (serviceName 'GitHub'); the goose
+	//    MCP path (generate_project) passes none, so this is usually skipped.
+	// 2. GITHUB_TOKEN env var on the Worker (synced from Doppler webapp/prd,
+	//    falling back to Doppler common when webapp doesn't override it).
+	// 3. GITHUB_ACCESS_TOKEN env var fallback.
+	// 4. Session cookie (browser-only; never used by the MCP).
 	const authTokens = {
 		github:
 			storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken ||
