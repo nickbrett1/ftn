@@ -441,6 +441,19 @@ export const NODE_SETUP_SCRIPT = `
 cd "/workspaces/{{projectName}}" 2>/dev/null || true
 
 if [ -f "package.json" ]; then
+    # genproj-npm-pin: activate the npm pinned in package.json. npm 10 bundled
+    # with Node <24 crashes installing vitest-4 projects ('edgesOut'), and
+    # packageManager/corepack alone does NOT switch npm (corepack only shims
+    # yarn/pnpm) - so install the pinned version globally, mirroring CI.
+    PINNED_NPM="$(node -p "try{require('./package.json').packageManager}catch(e){''}" 2>/dev/null || true)"
+    if [ -n "$PINNED_NPM" ]; then
+        VERSION="\${PINNED_NPM#npm@}"
+        CURRENT="$(npm --version 2>/dev/null || echo '')"
+        if [ "$VERSION" != "$CURRENT" ]; then
+            echo "INFO: Activating pinned \${PINNED_NPM} (image npm: \${CURRENT:-unknown})..."
+            (npm install -g "npm@\${VERSION}" 2>/dev/null || sudo npm install -g "npm@\${VERSION}") || echo "WARN: Could not activate pinned npm \${VERSION}; continuing with $(npm --version 2>/dev/null)"
+        fi
+    fi
     echo "INFO: Installing dependencies with npm install..."
     npm install
 fi
@@ -1226,6 +1239,15 @@ export function generatePackageJson(templateEngine, context) {
 			dependencies: '',
 			typeField: config.typeField,
 			overrides: config.overrides,
+			// Pin a working npm for projects that depend on vitest 4 (injected by
+			// devcontainer-node). npm 10's arborist crashes on a fresh install of
+			// those projects ('Cannot read properties of null reading edgesOut'),
+			// so lock to npm 11 and enforce it via engine-strict (see .npmrc).
+			// NOTE: packageManager alone does NOT switch a user's npm (corepack
+			// only shims yarn/pnpm) - the devcontainer/CI must ALSO install it.
+			npmPins: context.capabilities.includes('devcontainer-node')
+				? `  "packageManager": "npm@11.19.1",\n  "engines": {\n    "npm": ">=11 <12"\n  },\n`
+				: '',
 			projectName: context.projectName || context.name || 'my-project'
 		});
 		return {
@@ -1233,6 +1255,26 @@ export function generatePackageJson(templateEngine, context) {
 			content
 		};
 	}
+}
+
+/**
+ * Generates a project .npmrc enforcing the pinned npm version for Node
+ * projects that run a fresh install in a devcontainer (devcontainer-node).
+ * Combined with the packageManager/engines pin this prevents the npm 10
+ * arborist 'edgesOut' crash on vitest-4 projects. Returns null for projects
+ * that don't need it.
+ */
+export function generateNpmrcFile(context) {
+	if (!context.capabilities.includes('devcontainer-node')) {
+		return null;
+	}
+	return {
+		filePath: '.npmrc',
+		// engine-strict makes npm refuse to install under a mismatched npm
+		// (e.g. the npm 10 bundled with Node 22), failing fast with a clear
+		// EBADENGINE instead of silently crashing mid-resolution.
+		content: 'engine-strict=true\n'
+	};
 }
 
 /**
@@ -1914,6 +1956,7 @@ export async function generateAllFiles(context) {
 		generatePrettierIgnoreFile(),
 		generateVscodeSettingsFile(templateEngine, context),
 		generateVscodeExtensionsFile(),
+		generateNpmrcFile(context),
 		// 2.5: root README (language-aware quickstart).
 		generateReadmeFile(context)
 	].filter(Boolean);

@@ -24,6 +24,17 @@ describe('NPM Resolution Test', () => {
 
 		expect(packageJsonFile).toBeDefined();
 
+		// The devcontainer-node project must pin a working npm (11) and enforce
+		// it, because npm 10's arborist crashes fresh-installing vitest-4
+		// projects ('edgesOut'). packageManager + engines + engine-strict .npmrc
+		// together make npm refuse to run under the wrong version.
+		const packageJson = JSON.parse(packageJsonFile.content);
+		expect(packageJson.packageManager).toMatch(/^npm@11\./);
+		expect(packageJson.engines?.npm).toMatch(/^>=11 <12$/);
+		expect(packageJsonFile.content).toContain('"engines"');
+		const npmrcFile = files.find((f) => f.filePath === '.npmrc');
+		expect(npmrcFile?.content).toContain('engine-strict=true');
+
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'npm-test-'));
 		await fs.writeFile(path.join(tempDir, 'package.json'), packageJsonFile.content);
 
