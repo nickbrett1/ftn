@@ -97,6 +97,7 @@
 		"postcss": "^8.5.26",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
+		"proxy-agent": "^8.0.2",
 		"rehype-mermaid": "^3.0.0",
 		"remark-footnotes": "2.0",
 		"remark-gfm": "^4.0.1",
@@ -118,6 +119,11 @@
 		"jsqr": "^1.4.0"
 	},
 	"type": "module",
+	"engines": {
+		"node": ">=22.0.0",
+		"npm": ">=10 <11"
+	},
+	"packageManager": "npm@10.9.8",
 	"simple-git-hooks": {
 		"pre-commit": "cd webapp && npx lint-staged"
 	},
