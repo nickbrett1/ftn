@@ -38,27 +38,25 @@ This was my most ambitious agentic project yet, for a few reasons:
 1. **It involved hardware.** Hardware is fun but historically I've it so time consuming to utilize, with long iteration and debug cycles, that it's just gathered dust. Agents let me cut through that and it was a lot of fun.
 2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode, a tool I had never used.
 3. **I wanted to achieve end to end spec-driven development.** In my prior attempt at using SpecKit I couldn't quite get a workflow working where I could get a functional application just from my specs — my agent kept getting confused and lost in fruitless iteration. I wanted to do better this time.
-4. **Mobile first workflow.** Sitting down at a computer outside of work is something of a rarity for me, but having spare pockets of time while I'm on the go is more common. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous so generally wouldn't stop to ask clarifying questions. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
+4. **Mobile first workflow.** Sitting down at a computer outside of work is something of a rarity for me, but having spare pockets of time while I'm on the go is more common. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous, so didn't work well for workflows where I wanted to iterate with the agent. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
 
-So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me ever more clearly what the future of agentic software engineering is likely to look like.
+So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me even more what building software will look like in with agents.
 
-Let's build a store. Target customer: a three-year-old.
+Right. Let's build a store. Target customer: a three-year-old.
 
 ## The Toy Store, Meet Stripe
 
 <!-- IMAGE PLACEHOLDER H2: Hardware spread — the "meet Stripe" table: scanner, M2, test cards, iPad stand -->
 
-A store on the kitchen table. An iPad on a stand, a Tera Mini wireless scanner, a Stripe Reader M2, a stack of test cards, and a shelf of toys wearing printed QR stickers. The product owner is three years old. So is the QA lead. So is the most demanding user.
+A store. An iPad, a Tera Mini wireless scanner, a Stripe Reader M2, a test credit card, and toy food with printed QR* (footnote here about starting with bar codes and finding how difficult it is for little hands to line them up with the scanner) codes. The product owner is three years old. So is the QA lead. So is the most demanding user.
 
-The flow is simple: she scans a toy, it pops up on the iPad with a photo and a deliberately integer price — $1, $5, no cents, no tax, no surprises — and a chime adds it to a running total. Tap the card on the M2, the reader flashes green, and the app lets loose: fireworks, bouncing images of everything she just sold, and on a good day a guitar band. Then "Go Again".
+Here's the intended flow: user scans food items, each pops up on the iPad with a photo and a price — $1, $5, etc... Tap the card on the card reader, we run through the payments flow and boom: fireworks, a guitar solo, much excitement. Then "Go Again".
 
 <!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
 <!-- IMAGE PLACEHOLDER H8: Toys + QR stickers — close-up of printed Avery QR labels on toys -->
 <!-- IMAGE PLACEHOLDER H9: M2 + test cards — close-up of the Reader M2 and Stripe test cards -->
 
-Two details shaped everything else. First, **transactions should always succeed** — this is a toy, not a fraud engine, so a boring capture failure still completes the sale and the toddler never sees a "payment declined" screen. Second, a hardware gotcha: I started with 1D barcodes and they read badly unless the scanner was held at exactly the right angle — hopeless when your user is three. The Tera Mini also reads 2D codes, so the labels became QR stickers and scanning got forgiving overnight.
-
-Underneath it's a small, deliberately conventional stack:
+Underneath this workflow, we've got a standard e-commerce stack:
 
 <div class="mermaid-container">
 
@@ -103,23 +101,33 @@ graph TD
 
 </div>
 
-Three pieces: a **Swift iPad app** (big buttons, bright colors; the scanner connects in Bluetooth keyboard-wedge mode, the M2 through the [Stripe Terminal SDK](https://docs.stripe.com/terminal), and every request is signed with Apple App Attest so only my iPad can talk to the backend); a **Rust worker on Cloudflare** that issues Terminal tokens, creates and captures `card_present` PaymentIntents, and keeps inventory in [KV](https://developers.cloudflare.com/kv/) with a transaction log in [D1](https://developers.cloudflare.com/d1/); and an **admin side** on this site ([stripe-toddler-admin](/projects/stripe-toddler-admin)) for photo upload, pricing, QR generation, label printing, and a bit of analytics.
+There's three main pieces:
 
-I'm not going to inline the schemas or the API surface here — the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout if you want that detail. This post isn't about the plumbing; it's about the two things that made building it possible — the spec-driven process and the phone-first workflow. Now the part that generalises.
+1. **Swift iPad app** (the scanner connects in Bluetooth keyboard-wedge mode, meaning it mimics a keyboard, while the M2 scanner integrates through the [Stripe Terminal SDK](https://docs.stripe.com/terminal) rather than an iOS Bluetooth connection, and every request is signed with Apple App Attest so only my iPad can talk to the backend);
+
+2. **Rust worker on Cloudflare** that the iPad communicates with. This issues Stripe Terminal tokens that lets the Stripe Terminal SDK connect to the card reader, creates and captures `card_present` [PaymentIntents](https://docs.stripe.com/api/payment_intents) that represent the payment lifecycle, and keeps inventory in Cloudflare's key-value storage [KV](https://developers.cloudflare.com/kv/) with a transaction log in Cloudflare's Serverless SQL (SQLite) [D1](https://developers.cloudflare.com/d1/);
+
+3. **Admin website** for inventory photo upload, pricing, QR generation, label printing, and a bit of analytics.
+
+TODO: Show some screenshots here of the admin website
+
+If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. I want to talk about two things that made the whole project possible that for me, were new, powerful and I think applicable for future projects — the spec-driven process and the phone-first workflow.
 
 ## The Harness: Spec-Driven Development, Round Two
 
-Here's the bit I actually want to talk about, because it's the part that generalises. The headline of this post is that a _better harness_ beat a _better model_ — and this is where that harness is built. Let me be honest about where I started. In the [Spec Kit article](/projects/speckit-dev) I described what failed: cost blowups from forward-only iteration, specs that were hard to update once code existed, and giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. The model wasn't really the problem; the environment it was working in was. Two changes fixed that, and together they _are_ the harness.
+In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and a mess of giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. Though it wasn't the model that was the problem, the harness it was working in was. With a revisit to the concept, two changes fixed my problems:
 
 ### Change #1 — a structured artifact pipeline
 
-The pipeline is now **spec → artifacts → validation → plan**, not spec → plan. And it's codified as public [goose recipes](https://github.com/nickbrett1/goose-recipes) in `github.com/nickbrett1/goose-recipes`, so it's reproducible and improvable:
+Instead of running a workflow that went **spec → plan → code**, my pipeline was now **spec → artifacts → validation → plan → code**.
 
 1. **design-project** — a clarifying-questions interview that produces `description.md`, the prose spec. The governing principle: this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.
 2. **Artifact generation** — recipes per artifact type produce structured artifacts: state diagrams, message flows, UI mocks, plus topology, API, data, and capacity models.
 3. **validate-spec** — artifacts are cross-checked for consistency against a dependency map (**spec-dag**) _before anything is built_. This is the step that kills the tangents: the agent implements a consistent, validated artifact set instead of improvising from prose.
 4. **generate-plan** — the plan is generated _off the validated artifacts_. It's a translation of agreed structure, not a first draft.
 5. **scaffold-project + execute-plan** — once validated, the repo itself is scaffolded via genproj (devcontainers, CircleCI, Doppler, Sonar, the lot), then implementation runs phase-by-phase in-repo.
+
+For those interested in the details, the workflow is codified as a set of [goose recipes here](https://github.com/nickbrett1/goose-recipes).
 
 Here's the artifact tree this produced for stripe-toddler — every file cross-checked against the others:
 
