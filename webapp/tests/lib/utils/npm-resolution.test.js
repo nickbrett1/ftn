@@ -45,5 +45,7 @@ describe('NPM Resolution Test', () => {
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
-	}, 70_000); // 70 second timeout for npm install
+	}, 600_000); // Cold install of the generated project hits the live registry;
+	// give it the same 10min budget as the inner exec() call (previously 70s
+	// timed out once npm 11 stopped failing fast with the npm 10 arborist bug).
 });
