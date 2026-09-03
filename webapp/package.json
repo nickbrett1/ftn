@@ -121,9 +121,9 @@
 	"type": "module",
 	"engines": {
 		"node": ">=22.0.0",
-		"npm": ">=10 <11"
+		"npm": ">=11 <12"
 	},
-	"packageManager": "npm@10.9.8",
+	"packageManager": "npm@11.19.1",
 	"simple-git-hooks": {
 		"pre-commit": "cd webapp && npx lint-staged"
 	},
