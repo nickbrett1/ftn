@@ -38,6 +38,24 @@ commands:
             - /usr/local/bin/doppler
           key: doppler-cli-v1
 
+  activate_pinned_npm:
+    description: "Install the npm version pinned in webapp/package.json as the active global npm.
+Corepack does NOT provide an npm shim (it only shims yarn/pnpm), so 'corepack prepare' alone never
+switched the npm on PATH - CI silently kept running the image's bundled npm. Install the pinned
+version globally so every subsequent 'npm' invocation (ci, install, run) uses it."
+    steps:
+      - run:
+          name: Activate pinned npm version
+          command: |
+            PM="$(node -p "require('./webapp/package.json').packageManager || 'npm' ")"
+            echo "Pinned packageManager: $PM"
+            VERSION="${PM#npm@}"
+            # Global install replaces the npm on PATH. Run outside webapp so the
+            # project's engine-strict=true .npmrc can't reject the install step.
+            # Try without sudo first (nvm/user prefix), then fall back to root.
+            (npm install -g "npm@${VERSION}" 2>/dev/null || sudo npm install -g "npm@${VERSION}")
+            node -v && npm --version
+
   notify_deployment:
     description: "Send ntfy notification upon deployment completion"
     parameters:
@@ -88,17 +106,7 @@ jobs:
             - playwright-{{ .Branch }}-{{ checksum "webapp/package-lock.json" }}
             - playwright-{{ .Branch }}-
             - playwright-
-      - run:
-          name: Activate pinned npm via Corepack
-          command: |
-            cd webapp
-            PM="$(node -p "require('./package.json').packageManager || 'npm' ")"
-            echo "Pinned packageManager: $PM"
-            # Corepack shims 'npm' to the version pinned in package.json so CI,
-            # Dependabot and local devs all resolve identical lockfiles.
-            (corepack enable 2>/dev/null || sudo corepack enable) || true
-            (corepack prepare "$PM" --activate 2>/dev/null || sudo corepack prepare "$PM" --activate)
-            node -v && npm --version
+      - activate_pinned_npm
       - run:
           name: Install modules (pinned npm)
           command: |
@@ -157,6 +165,7 @@ jobs:
     steps:
       - checkout:
           method: blobless
+      - activate_pinned_npm
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -205,6 +214,7 @@ jobs:
           replace-existing: true
       - checkout:
           method: blobless
+      - activate_pinned_npm
       - restore_cache:
           name: Restore node_modules and next cache
           keys:
@@ -244,6 +254,7 @@ jobs:
     steps:
       - checkout:
           method: blobless
+      - activate_pinned_npm
       - restore_cache:
           name: Restore node_modules
           keys:
@@ -290,6 +301,7 @@ jobs:
     steps:
       - checkout:
           method: blobless
+      - activate_pinned_npm
       - restore_cache:
           name: Restore node_modules
           keys:

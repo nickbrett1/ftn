@@ -84,6 +84,10 @@ export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 	//    falling back to Doppler common when webapp doesn't override it).
 	// 3. GITHUB_ACCESS_TOKEN env var fallback.
 	// 4. Session cookie (browser-only; never used by the MCP).
+	//
+	// The Worker env var is provisioned by the deploy job's Doppler->Cloudflare
+	// secret sync (sync-doppler-secrets.sh), so a token rotation only goes live
+	// once that sync + redeploy has run.
 	const authTokens = {
 		github:
 			storedTokens.find((t) => t.serviceName === 'GitHub')?.accessToken ||
