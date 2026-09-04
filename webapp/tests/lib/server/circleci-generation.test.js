@@ -273,4 +273,40 @@ describe('CircleCI Capability Generation', () => {
 		expect(data.deployWorkflowJob).toContain('deploy-to-cloudflare-preview');
 		expect(data.deployWorkflowJob).toContain('ignore: main');
 	});
+
+	it('Node CI activates the pinned npm before installing', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['sveltekit', 'devcontainer-node', 'circleci'],
+			configuration: { circleci: { deployTarget: 'none' } },
+			projectName: 'test-project'
+		});
+		// npm 10 can't fresh-install vitest-4 projects (arborist 'edgesOut'), so
+		// the node CI globally installs the npm pinned in package.json first.
+		expect(data.ciNpmActivateStep).toContain('name: Activate pinned npm');
+		expect(data.ciNpmActivateStep).toContain('npm install -g "npm@${VERSION}"');
+		expect(data.ciNpmActivateStep).toContain('node -v && npm --version');
+	});
+
+	it('Node CI emits a lockfile drift check after install', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['devcontainer-node', 'circleci'],
+			configuration: { circleci: { deployTarget: 'none' } },
+			projectName: 'test-project'
+		});
+		expect(data.ciDriftCheckStep).toContain('name: Lockfile drift check');
+		expect(data.ciDriftCheckStep).toContain('npm install --package-lock-only --ignore-scripts');
+		expect(data.ciDriftCheckStep).toContain(
+			'ERROR: package-lock.json is out of sync with package.json.'
+		);
+	});
+
+	it('Python CI does not emit npm pin/drift steps', () => {
+		const data = getCapabilityTemplateData('circleci', {
+			capabilities: ['devcontainer-python', 'circleci'],
+			configuration: { circleci: { deployTarget: 'none' } },
+			projectName: 'test-project'
+		});
+		expect(data.ciNpmActivateStep).toBe('');
+		expect(data.ciDriftCheckStep).toBe('');
+	});
 });

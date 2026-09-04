@@ -789,8 +789,18 @@ RUN python -m venv /opt/venv \\\n    && /opt/venv/bin/pip install --upgrade pip 
 COPY . .
 RUN if [ -f requirements.txt ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir -r requirements.txt; \\\n    elif [ -f pyproject.toml ]; then \\\n      /opt/venv/bin/pip install --no-cache-dir --no-deps .; \\\n    fi`;
 	} else if (isNode) {
+		// genproj-npm-pin: activate the npm pinned in package.json before
+		// installing. npm 10 bundled with node:22 crashes fresh-installing
+		// vitest-4 projects ('edgesOut'), and engine-strict .npmrc would reject
+		// npm ci/install outright; corepack can't switch npm, so install the
+		// pinned version globally in the build stage.
 		dockerBuildCommands = `COPY package.json package-lock.json* .npmrc* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN PINNED_NPM="$(node -p "try{require('./package.json').packageManager}catch(e){''}" 2>/dev/null || true)" \\
+    && if [ -n "$PINNED_NPM" ] && [ "$(npm --version)" != "\${PINNED_NPM#npm@}" ]; then \\
+         echo "Activating pinned \${PINNED_NPM}..."; \\
+         npm install -g "\${PINNED_NPM}" >/dev/null || true; \\
+       fi \\
+    && if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 RUN npm run build`;
 	} else if (isJava) {
@@ -1089,7 +1099,9 @@ function getCircleCiTemplateData(context) {
 			'          paths:\n            - node_modules\n          key: v1-deps-{{ checksum "package.json" }}',
 		ciInstallCommand:
 			'            if [ -f package-lock.json ]; then\n              npm ci\n            else\n              npm install\n            fi',
-		ciBuildStep: '      - run:\n          name: Build\n          command: npm run build'
+		ciBuildStep: '      - run:\n          name: Build\n          command: npm run build',
+		ciNpmActivateStep: '',
+		ciDriftCheckStep: ''
 	};
 
 	const contextConfig = context.configuration?.circleci?.context;
@@ -1114,6 +1126,40 @@ function getCircleCiTemplateData(context) {
 		data.ciInstallCommand =
 			'            python3 -m venv .venv\n            echo \'. .venv/bin/activate\' >> "$BASH_ENV"\n            pip install --upgrade pip\n            pip install -e ".[dev]"';
 		data.ciBuildStep = '';
+	} else {
+		// Node CI: activate the npm pinned in package.json before installing and
+		// guard against package.json/package-lock.json drift. Mirrors the FTN
+		// webapp CI; prevents npm 10's arborist 'edgesOut' crash on fresh
+		// vitest-4 installs and the recurring 'npm ci' drift breakage.
+		data.ciNpmActivateStep = `      - run:
+          name: Activate pinned npm
+          command: |
+            PINNED_NPM="$(node -p "try{require('./package.json').packageManager}catch(e){''}" 2>/dev/null || true)"
+            if [ -n "$PINNED_NPM" ]; then
+              VERSION="\${PINNED_NPM#npm@}"
+              CURRENT="$(npm --version 2>/dev/null || echo '')"
+              if [ "$VERSION" != "$CURRENT" ]; then
+                echo "Activating pinned \${PINNED_NPM} (image npm: \${CURRENT:-unknown})..."
+                (npm install -g "npm@\${VERSION}" 2>/dev/null || sudo npm install -g "npm@\${VERSION}")
+              fi
+            fi
+            node -v && npm --version
+`;
+		data.ciDriftCheckStep = `      - run:
+          name: Lockfile drift check
+          command: |
+            if [ -f package-lock.json ]; then
+              cp package-lock.json /tmp/lock.orig
+              npm install --package-lock-only --ignore-scripts
+              if ! cmp -s package-lock.json /tmp/lock.orig; then
+                cp /tmp/lock.orig package-lock.json
+                echo "ERROR: package-lock.json is out of sync with package.json."
+                echo "Run 'npm install --package-lock-only' and commit the result."
+                exit 1
+              fi
+              echo "OK: package-lock.json is in sync with package.json."
+            fi
+`;
 	}
 
 	_applyGitGuardianConfig(data, context, contextEnabled, contextName, buildJobContext);

@@ -218,6 +218,13 @@ describe('DevContainer Generation Tests', () => {
 		// {{projectName}} may leak into the rendered script.
 		expect(setup.content).not.toContain('{{projectName}}');
 
+		// genproj-npm-pin: the devcontainer post-create must activate the npm
+		// pinned in package.json before npm install (npm 10 crashes fresh
+		// installing vitest-4 projects; corepack alone does not switch npm).
+		expect(setup.content).toContain('genproj-npm-pin');
+		expect(setup.content).toContain('PINNED_NPM=');
+		expect(setup.content).toContain('npm install -g "npm@${VERSION}"');
+
 		// Node setup is gated on the node devcontainer: no python venv block.
 		expect(setup.content).not.toContain('genproj-python-venv-path');
 	});

@@ -7,10 +7,12 @@ orbs:
       - checkout
       - restore_cache:
 {{ciCacheRestore}}
+{{ciNpmActivateStep}}
       - run:
           name: Install Packages
           command: |
 {{ciInstallCommand}}
+{{ciDriftCheckStep}}
       - save_cache:
 {{ciCacheSave}}
 {{preBuildSteps}}

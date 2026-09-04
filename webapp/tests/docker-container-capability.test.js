@@ -133,7 +133,16 @@ describe('docker-container template data', () => {
 			data.dockerBuildCommands.indexOf('npm run build')
 		);
 		expect(data.dockerBuildCommands).toContain(
-			'RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+			'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+		);
+		// genproj-npm-pin: the node build stage must activate the pinned npm
+		// before installing (npm 10 crashes fresh-installing vitest-4 projects;
+		// engine-strict .npmrc rejects npm 10 outright; corepack can't switch
+		// npm), and activation must precede the install.
+		expect(data.dockerBuildCommands).toContain('PINNED_NPM=');
+		expect(data.dockerBuildCommands).toContain('npm install -g "${PINNED_NPM}"');
+		expect(data.dockerBuildCommands.indexOf('PINNED_NPM=')).toBeLessThan(
+			data.dockerBuildCommands.indexOf('npm ci')
 		);
 		// 4.2: runtime stage carries only the build output + prod deps. It must
 		// NOT run `npm ci --omit=dev`: npm runs lifecycle scripts (incl.
