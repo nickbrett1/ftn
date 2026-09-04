@@ -552,6 +552,13 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 		dependencies,
 		typeField,
 		overrides,
+		// Keep preview package.json consistent with the real generator: pin npm 11
+		// for devcontainer-node projects (see file-generator.js generatePackageJson).
+		// packageManager alone won't switch a user's npm, but it + engines/engine-
+		// strict .npmrc make the wrong npm fail fast instead of crashing mid-install.
+		npmPins: allCapabilities.includes('devcontainer-node')
+			? `  "packageManager": "npm@11.19.1",\n  "engines": {\n    "npm": ">=11 <12"\n  },\n`
+			: '',
 		projectName: projectConfig.name || 'my-project'
 	});
 
