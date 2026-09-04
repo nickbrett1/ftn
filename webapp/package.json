@@ -152,7 +152,7 @@
 		"most-visible": "^2.0.0",
 		"nanoid": "^6.0.1",
 		"pdfjs-dist": "^6.3.289",
-		"stripe": "^22.6.0",
+		"stripe": "^22.6.1",
 		"three": "^0.185.1",
 		"tippy.js": "^6.3.7",
 		"tsparticles": "^4.4.0"
