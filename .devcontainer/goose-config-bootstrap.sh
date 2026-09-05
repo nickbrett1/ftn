@@ -99,6 +99,11 @@ const MCP_SERVERS = {
     - npx
     - -y
     - '@circleci/mcp-server-circleci'
+    timeout: 300`,
+  'circleci-lite': `    type: streamable_http
+    name: circleci-lite
+    enabled: true
+    uri: http://100.82.223.13:8092/circleci-lite/mcp
     timeout: 300`
 };
 

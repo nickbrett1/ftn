@@ -16,8 +16,9 @@ describe('capability-template-utils', () => {
 			const data = getCapabilityTemplateData('coding-agents', context);
 			expect(data.sonarQubeMcpConfig).toContain('sonarqube-mcp-server');
 			expect(data.sonarQubeMcpConfig).toContain('"command": "npx"');
-			expect(data.circleCiMcpConfig).toContain('@circleci/mcp-server-circleci');
-			expect(data.circleCiMcpConfig).toContain('"command": "npx"');
+			expect(data.circleCiMcpConfig).toContain('circleci-lite');
+			expect(data.circleCiMcpConfig).toContain('"serverUrl"');
+			expect(data.circleCiMcpConfig).not.toContain('mcp-server-circleci');
 			expect(data.githubMcpConfig).toContain('@modelcontextprotocol/server-github');
 			expect(data.githubMcpConfig).toContain('"command": "npx"');
 			expect(data.dopplerMcpConfig).toBe('');
@@ -30,8 +31,10 @@ describe('capability-template-utils', () => {
 			const data = getCapabilityTemplateData('coding-agents', context);
 			expect(data.sonarQubeMcpConfig).toContain('"command": "doppler"');
 			expect(data.sonarQubeMcpConfig).toContain('"run"');
-			expect(data.circleCiMcpConfig).toContain('"command": "doppler"');
-			expect(data.circleCiMcpConfig).toContain('"run"');
+			// circleci-lite is a remote server - no doppler wrapper regardless.
+			expect(data.circleCiMcpConfig).toContain('circleci-lite');
+			expect(data.circleCiMcpConfig).toContain('"serverUrl"');
+			expect(data.circleCiMcpConfig).not.toContain('"command"');
 			expect(data.githubMcpConfig).toContain('"command": "doppler"');
 			expect(data.githubMcpConfig).toContain('"run"');
 			expect(data.dopplerMcpConfig).toContain('@dopplerhq/mcp-server');
@@ -61,10 +64,14 @@ describe('capability-template-utils', () => {
 			expect(data.sonarQubeGooseConfig).toContain(
 				'args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]'
 			);
-			expect(data.circleCiGooseConfig).toContain('cmd: doppler');
+			// circleci-lite is a remote streamable_http server (default for
+			// generated projects) - no doppler wrapper, no local secrets.
+			expect(data.circleCiGooseConfig).toContain('circleci-lite');
+			expect(data.circleCiGooseConfig).toContain('type: streamable_http');
 			expect(data.circleCiGooseConfig).toContain(
-				'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
+				'uri: http://100.82.223.13:8092/circleci-lite/mcp'
 			);
+			expect(data.circleCiGooseConfig).not.toContain('cmd:');
 			// No env map at all in either block.
 			expect(data.sonarQubeGooseConfig).not.toMatch(/\benv:\s*$/m);
 			expect(data.circleCiGooseConfig).not.toMatch(/\benv:\s*$/m);
@@ -74,15 +81,18 @@ describe('capability-template-utils', () => {
 		});
 
 		it('should never emit env var references in goose blocks (without doppler)', () => {
-			// circleci/sonarcloud declare dependencies: ['doppler'] and the
-			// dependency resolver always expands them, so this path is normally
-			// unreachable — but if it is hit, emit NOTHING rather than a broken
-			// ${VAR} env block (the pre-fix anti-pattern → MCP 401).
+			// sonarcloud declares dependency: ['doppler']; without doppler it is
+			// unreachable and emits nothing. circleci now uses the remote
+			// circleci-lite server (no doppler needed), so it IS emitted and must
+			// never carry a ${VAR} env block (the pre-fix anti-pattern → MCP 401).
 			const data = getGooseMcpConfig({
 				capabilities: ['sonarcloud', 'circleci']
 			});
 			expect(data.sonarQubeGooseConfig).toBe('');
-			expect(data.circleCiGooseConfig).toBe('');
+			// circleci-lite is remote (no secrets), so it is still emitted even
+			// without doppler, and contains no env/var refs.
+			expect(data.circleCiGooseConfig).toContain('circleci-lite');
+			expect(data.circleCiGooseConfig).not.toContain('$');
 		});
 
 		it('should emit xcode-native block without env refs', () => {

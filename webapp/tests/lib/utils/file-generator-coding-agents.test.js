@@ -36,10 +36,11 @@ describe('File Generator - Coding Agents', () => {
 		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
-	it('should register the circleci goose extension via the doppler wrapper with no env var references (genproj-goose-env-refs regression)', async () => {
-		// circleci declares dependencies: ['doppler'], so the generated goose
-		// config block must use `cmd: doppler` and must NEVER contain a
-		// ${VAR}/$VAR env ref (goose passes those verbatim → MCP 401).
+	it('should register the circleci-lite remote goose extension (default) with no env var references', async () => {
+		// Generated projects default to the lightweight circleci-lite MCP (a
+		// remote streamable_http server, no secrets) instead of the full
+		// @circleci/mcp-server-circleci stdio server. The emitted goose YAML
+		// must NEVER contain a ${VAR}/$VAR env ref (goose passes verbatim → 401).
 		const context = {
 			name: 'test-project',
 			capabilities: ['circleci', 'doppler', 'devcontainer-node'],
@@ -50,17 +51,15 @@ describe('File Generator - Coding Agents', () => {
 		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(postCreateSetup).toBeDefined();
 
-		// The doppler-wrapped goose block is registered for the circleci extension.
-		expect(postCreateSetup.content).toContain('ensure_goose_extension "circleci"');
-		expect(postCreateSetup.content).toContain('cmd: doppler');
-		expect(postCreateSetup.content).toContain(
-			'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
-		);
+		// The remote streamable_http block is registered for circleci-lite.
+		expect(postCreateSetup.content).toContain('ensure_goose_extension "circleci-lite"');
+		expect(postCreateSetup.content).toContain('circleci-lite');
+		expect(postCreateSetup.content).toContain('type: streamable_http');
+		expect(postCreateSetup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite/mcp');
+		expect(postCreateSetup.content).not.toContain('@circleci/mcp-server-circleci');
+		expect(postCreateSetup.content).not.toContain('cmd: doppler');
 
-		// Regression: the pre-fix generator emitted a bare-npx block with an env
-		// map referencing ${CIRCLECI_TOKEN} — goose passed the literal string as
-		// the token, so every MCP call returned 401. Neither the braced nor the
-		// unbraced form may appear in the emitted goose YAML.
+		// No env/token references in the emitted goose YAML.
 		expect(postCreateSetup.content).not.toContain('${CIRCLECI_TOKEN}');
 		expect(postCreateSetup.content).not.toContain('$CIRCLECI_TOKEN');
 		expect(postCreateSetup.content).not.toContain('CIRCLECI_TOKEN:');
