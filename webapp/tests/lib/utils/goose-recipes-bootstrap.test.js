@@ -38,25 +38,30 @@ describe('goose recipes bootstrap in generated projects', () => {
 describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xcode)', () => {
 	// genproj-goose-env-refs regression: goose does NOT expand ${VAR}/$VAR in a
 	// stdio extension's env map — the literal text is used as the token → MCP
-	// 401 on every call. circleci/sonarcloud declare dependencies: ['doppler'],
-	// so without doppler the extension is simply NOT registered (the old
-	// bare-npx + ${VAR} env block is the anti-pattern this suite must never see).
-	it('does not register the circleci extension when doppler is absent (no ${VAR} env block)', () => {
+	// 401 on every call. Generated projects default to the remote circleci-lite
+	// server (streamable_http, no secrets), so no ${VAR} env block is ever
+	// emitted; sonarqube still uses doppler and is skipped without it.
+	it('registers the circleci-lite remote extension even without doppler (no ${VAR} env block)', () => {
+		// circleci-lite is a remote streamable_http server (no secrets), so it is
+		// registered regardless of doppler - and never as the full stdio server.
 		const script = generateGooseSetupScript({ capabilities: ['circleci'], configuration: {} });
+		expect(script).toContain('ensure_goose_extension "circleci-lite"');
 		expect(script).not.toContain('ensure_goose_extension "circleci"');
+		expect(script).not.toContain('@circleci/mcp-server-circleci');
 		expect(script).not.toContain('CIRCLECI_TOKEN');
-		expect(script).not.toContain('$CIRCLECI_TOKEN');
 		expect(script).not.toContain('cmd: npx');
 	});
 
-	it('registers the circleci extension via doppler when the doppler capability is selected', () => {
+	it('registers the circleci-lite remote extension (not the full doppler server) when the circleci capability is selected', () => {
 		const script = generateGooseSetupScript({
 			capabilities: ['circleci', 'doppler'],
 			configuration: {}
 		});
-		expect(script).toContain('ensure_goose_extension "circleci"');
-		expect(script).toContain('cmd: doppler');
-		expect(script).toContain('"@circleci/mcp-server-circleci"');
+		expect(script).toContain('ensure_goose_extension "circleci-lite"');
+		expect(script).toContain('type: streamable_http');
+		expect(script).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+		expect(script).not.toContain('@circleci/mcp-server-circleci');
+		expect(script).not.toContain('ensure_goose_extension "circleci"');
 		expect(script).not.toContain('CIRCLECI_TOKEN');
 	});
 
@@ -90,9 +95,9 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		expect(script).not.toContain('extensions:');
 	});
 
-	it('wires the doppler-wrapped circleci extension into post-create-setup.sh for a nas-port-mcp-like project (no coding-agents)', async () => {
-		// circleci requires doppler (dependency resolver auto-adds it), so the
-		// generated goose block is the doppler wrapper — never a ${VAR} env ref.
+	it('wires the circleci-lite remote extension into post-create-setup.sh for a nas-port-mcp-like project (no coding-agents)', async () => {
+		// Generated projects default to the remote circleci-lite server — never
+		// the full doppler-wrapped stdio server and never a ${VAR} env ref.
 		const engine = new TemplateEngine();
 		await engine.initialize();
 		const files = await generateAllFiles({
@@ -104,9 +109,11 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		});
 		const setup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(setup).toBeDefined();
-		expect(setup.content).toContain('ensure_goose_extension "circleci"');
-		expect(setup.content).toContain('cmd: doppler');
-		expect(setup.content).toContain('"@circleci/mcp-server-circleci"');
+		expect(setup.content).toContain('ensure_goose_extension "circleci-lite"');
+		expect(setup.content).toContain('type: streamable_http');
+		expect(setup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+		expect(setup.content).not.toContain('ensure_goose_extension "circleci"');
+		expect(setup.content).not.toContain('@circleci/mcp-server-circleci');
 		expect(setup.content).not.toContain('CIRCLECI_TOKEN');
 	});
 });

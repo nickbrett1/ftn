@@ -47,32 +47,12 @@ function getCodingAgentsTemplateData(context) {
 
 	let circleCiMcpConfig = '';
 	if (hasCircleCI) {
-		if (hasDoppler) {
-			circleCiMcpConfig = `,
-    "circleci": {
-      "command": "doppler",
-      "args": [
-        "run",
-        "--",
-        "npx",
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ]
+		// Generated projects use the lightweight circleci-lite remote server by
+		// default (no secrets); the full stdio CircleCI server is not emitted.
+		circleCiMcpConfig = `,
+    "circleci-lite": {
+      "serverUrl": "http://100.82.223.13:8092/circleci-lite"
     }`;
-		} else {
-			circleCiMcpConfig = `,
-    "circleci": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@circleci/mcp-server-circleci"
-      ],
-      "env": {
-        "CIRCLECI_TOKEN": "$CIRCLECI_TOKEN",
-        "CIRCLE_API_TOKEN": "$CIRCLE_API_TOKEN"
-      }
-    }`;
-		}
 	}
 
 	let githubMcpConfig = '';
@@ -200,14 +180,17 @@ function getGooseMcpConfig(context) {
 	}
 
 	let circleCiGooseConfig = '';
-	if (hasCircleCI && hasDoppler) {
+	if (hasCircleCI) {
+		// Generated projects default to the lightweight circleci-lite MCP (a
+		// remote streamable_http server, no secrets) rather than the full
+		// @circleci/mcp-server-circleci stdio server. Remote, so it needs no
+		// doppler-wrapped local token.
 		circleCiGooseConfig = `
-  circleci:
-    type: stdio
-    name: circleci
+  circleci-lite:
+    type: streamable_http
+    name: circleci-lite
     enabled: true
-    cmd: doppler
-    args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
+    uri: http://100.82.223.13:8092/circleci-lite
     timeout: 300`;
 	}
 

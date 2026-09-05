@@ -289,7 +289,7 @@ export function generateGooseSetupScript(context = {}) {
 	const gooseMcp = getGooseMcpConfig(context);
 	const fragments = [
 		{ key: 'sonarqube', block: gooseMcp.sonarQubeGooseConfig },
-		{ key: 'circleci', block: gooseMcp.circleCiGooseConfig },
+		{ key: 'circleci-lite', block: gooseMcp.circleCiGooseConfig },
 		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig },
 		{ key: 'svelte', block: gooseMcp.svelteGooseConfig }
 	].filter((f) => f.block);
