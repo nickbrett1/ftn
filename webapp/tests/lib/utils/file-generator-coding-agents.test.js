@@ -55,7 +55,7 @@ describe('File Generator - Coding Agents', () => {
 		expect(postCreateSetup.content).toContain('ensure_goose_extension "circleci-lite"');
 		expect(postCreateSetup.content).toContain('circleci-lite');
 		expect(postCreateSetup.content).toContain('type: streamable_http');
-		expect(postCreateSetup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+		expect(postCreateSetup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite/mcp');
 		expect(postCreateSetup.content).not.toContain('@circleci/mcp-server-circleci');
 		expect(postCreateSetup.content).not.toContain('cmd: doppler');
 

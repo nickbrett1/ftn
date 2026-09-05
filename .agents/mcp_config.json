@@ -33,7 +33,7 @@
       ]
     },
     "circleci-lite": {
-      "serverUrl": "http://100.82.223.13:8092/circleci-lite"
+      "serverUrl": "http://100.82.223.13:8092/circleci-lite/mcp"
     },
     "sonarqube": {
       "command": "doppler",

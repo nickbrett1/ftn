@@ -68,7 +68,9 @@ describe('capability-template-utils', () => {
 			// generated projects) - no doppler wrapper, no local secrets.
 			expect(data.circleCiGooseConfig).toContain('circleci-lite');
 			expect(data.circleCiGooseConfig).toContain('type: streamable_http');
-			expect(data.circleCiGooseConfig).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+			expect(data.circleCiGooseConfig).toContain(
+				'uri: http://100.82.223.13:8092/circleci-lite/mcp'
+			);
 			expect(data.circleCiGooseConfig).not.toContain('cmd:');
 			// No env map at all in either block.
 			expect(data.sonarQubeGooseConfig).not.toMatch(/\benv:\s*$/m);

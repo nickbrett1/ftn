@@ -59,7 +59,7 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		});
 		expect(script).toContain('ensure_goose_extension "circleci-lite"');
 		expect(script).toContain('type: streamable_http');
-		expect(script).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+		expect(script).toContain('uri: http://100.82.223.13:8092/circleci-lite/mcp');
 		expect(script).not.toContain('@circleci/mcp-server-circleci');
 		expect(script).not.toContain('ensure_goose_extension "circleci"');
 		expect(script).not.toContain('CIRCLECI_TOKEN');
@@ -111,7 +111,7 @@ describe('project-selected goose MCP extensions (round-4: circleci/sonarcloud/xc
 		expect(setup).toBeDefined();
 		expect(setup.content).toContain('ensure_goose_extension "circleci-lite"');
 		expect(setup.content).toContain('type: streamable_http');
-		expect(setup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite');
+		expect(setup.content).toContain('uri: http://100.82.223.13:8092/circleci-lite/mcp');
 		expect(setup.content).not.toContain('ensure_goose_extension "circleci"');
 		expect(setup.content).not.toContain('@circleci/mcp-server-circleci');
 		expect(setup.content).not.toContain('CIRCLECI_TOKEN');

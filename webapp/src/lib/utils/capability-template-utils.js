@@ -51,7 +51,7 @@ function getCodingAgentsTemplateData(context) {
 		// default (no secrets); the full stdio CircleCI server is not emitted.
 		circleCiMcpConfig = `,
     "circleci-lite": {
-      "serverUrl": "http://100.82.223.13:8092/circleci-lite"
+      "serverUrl": "http://100.82.223.13:8092/circleci-lite/mcp"
     }`;
 	}
 
@@ -190,7 +190,7 @@ function getGooseMcpConfig(context) {
     type: streamable_http
     name: circleci-lite
     enabled: true
-    uri: http://100.82.223.13:8092/circleci-lite
+    uri: http://100.82.223.13:8092/circleci-lite/mcp
     timeout: 300`;
 	}
 
