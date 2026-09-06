@@ -49,50 +49,65 @@ describe('capability-template-utils', () => {
 	});
 
 	describe('getGooseMcpConfig', () => {
-		// Regression (genproj-goose-env-refs): goose does not expand ${VAR}/$VAR
-		// in a stdio extension's env map — the literal text becomes the token and
-		// every MCP call 401s. Goose blocks must therefore use the doppler
-		// wrapper and must NEVER contain env var references.
-		it('should emit doppler-wrapped goose blocks (no env refs) when doppler is present', () => {
+		// Migration (memo goose-mcp-groups-migration §3/§5): per-capability
+		// hub-backed stdio goose blocks (github/circleci/sonarqube/memos/
+		// fintechnick) are DROPPED — they arrive via the MCPHub `dev` group,
+		// consumed as ONE auth-off `mcphub-dev` streamable_http extension.
+		// No block ever emits ${VAR}/$VAR (genproj-goose-env-refs regression).
+		it('should emit the auth-off mcphub-dev dev-group block as the default toolset', () => {
 			const data = getGooseMcpConfig({
 				capabilities: ['sonarcloud', 'circleci', 'doppler', 'xcode-development']
 			});
-			expect(data.sonarQubeGooseConfig).toContain('cmd: doppler');
-			expect(data.sonarQubeGooseConfig).toContain(
-				'args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]'
-			);
-			expect(data.circleCiGooseConfig).toContain('cmd: doppler');
-			expect(data.circleCiGooseConfig).toContain(
-				'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
-			);
-			// No env map at all in either block.
-			expect(data.sonarQubeGooseConfig).not.toMatch(/\benv:\s*$/m);
-			expect(data.circleCiGooseConfig).not.toMatch(/\benv:\s*$/m);
-			// And no $ anywhere in the emitted YAML.
-			expect(data.sonarQubeGooseConfig).not.toContain('$');
-			expect(data.circleCiGooseConfig).not.toContain('$');
+			expect(data.mcphubDevGooseConfig).toContain('mcphub-dev');
+			expect(data.mcphubDevGooseConfig).toContain('type: streamable_http');
+			expect(data.mcphubDevGooseConfig).toContain('uri: http://nas:8781/mcp/dev');
+			// AUTH-OFF end state: no headers / env_keys / envs / doppler wrapper.
+			expect(data.mcphubDevGooseConfig).not.toContain('cmd:');
+			expect(data.mcphubDevGooseConfig).not.toContain('doppler');
+			expect(data.mcphubDevGooseConfig).not.toContain('headers');
+			expect(data.mcphubDevGooseConfig).not.toContain('env_keys');
+			expect(data.mcphubDevGooseConfig).not.toContain('$');
 		});
 
-		it('should never emit env var references in goose blocks (without doppler)', () => {
-			// circleci/sonarcloud declare dependencies: ['doppler'] and the
-			// dependency resolver always expands them, so this path is normally
-			// unreachable — but if it is hit, emit NOTHING rather than a broken
-			// ${VAR} env block (the pre-fix anti-pattern → MCP 401).
+		it('should emit mcphub-dev even with no MCP-relevant capability selected', () => {
+			// mcphub-dev is the project default toolset — not capability-gated.
+			const data = getGooseMcpConfig({ capabilities: ['devcontainer-python'] });
+			expect(data.mcphubDevGooseConfig).toContain('mcphub-dev');
+			expect(data.mcphubDevGooseConfig).toContain('http://nas:8781/mcp/dev');
+		});
+
+		it('should NOT emit the per-capability circleci stdio block (circleci arrives via dev / circleci-lite)', () => {
 			const data = getGooseMcpConfig({
-				capabilities: ['sonarcloud', 'circleci']
+				capabilities: ['sonarcloud', 'circleci', 'doppler']
 			});
-			expect(data.sonarQubeGooseConfig).toBe('');
-			expect(data.circleCiGooseConfig).toBe('');
+			expect(data.circleCiGooseConfig).toBeUndefined();
+			expect(JSON.stringify(data)).not.toContain('@circleci/mcp-server-circleci');
 		});
 
-		it('should emit xcode-native block without env refs', () => {
+		it('should KEEP sonarqube as a doppler-wrapped exception (the dev group does NOT carry sonarqube)', () => {
+			const data = getGooseMcpConfig({
+				capabilities: ['sonarcloud', 'doppler']
+			});
+			expect(data.sonarQubeGooseConfig).toContain('sonarqube:');
+			expect(data.sonarQubeGooseConfig).toContain('cmd: doppler');
+			expect(data.sonarQubeGooseConfig).toContain('sonarqube-mcp-server');
+			// Never a ${VAR}/$VAR env ref (goose passes those verbatim → MCP 401).
+			expect(data.sonarQubeGooseConfig).not.toContain('$');
+		});
+
+		it('should NOT emit sonarqube without the doppler capability (no ${VAR} env block)', () => {
+			const data = getGooseMcpConfig({ capabilities: ['sonarcloud'] });
+			expect(data.sonarQubeGooseConfig).toBe('');
+		});
+
+		it('should keep the xcode-native local exception block without env refs', () => {
 			const data = getGooseMcpConfig({ capabilities: ['xcode-development'] });
 			expect(data.xcodeNativeGooseConfig).toContain('xcode-native');
 			expect(data.xcodeNativeGooseConfig).toContain('.agents/mcp-sse-proxy.cjs');
 			expect(data.xcodeNativeGooseConfig).not.toContain('$');
 		});
 
-		it('should emit the remote svelte MCP block when the sveltekit capability is selected', () => {
+		it('should keep the remote svelte MCP block when the sveltekit capability is selected', () => {
 			const data = getGooseMcpConfig({ capabilities: ['sveltekit'] });
 			expect(data.svelteGooseConfig).toContain('svelte:');
 			expect(data.svelteGooseConfig).toContain('type: streamable_http');
@@ -103,6 +118,11 @@ describe('capability-template-utils', () => {
 		it('should emit no svelte block when sveltekit is not selected', () => {
 			const data = getGooseMcpConfig({ capabilities: ['devcontainer-python'] });
 			expect(data.svelteGooseConfig).toBe('');
+		});
+
+		it('should not emit xcode-native when xcode-development is not selected', () => {
+			const data = getGooseMcpConfig({ capabilities: ['devcontainer-python'] });
+			expect(data.xcodeNativeGooseConfig).toBe('');
 		});
 	});
 

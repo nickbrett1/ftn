@@ -36,10 +36,11 @@ describe('File Generator - Coding Agents', () => {
 		expect(mcpStreamableProxy.content).toContain('Content-Type');
 	});
 
-	it('should register the circleci goose extension via the doppler wrapper with no env var references (genproj-goose-env-refs regression)', async () => {
-		// circleci declares dependencies: ['doppler'], so the generated goose
-		// config block must use `cmd: doppler` and must NEVER contain a
-		// ${VAR}/$VAR env ref (goose passes those verbatim → MCP 401).
+	it('should emit the auth-off mcphub-dev dev-group extension instead of per-capability circleci stdio', async () => {
+		// Migration (goose-mcp-groups-migration §3/§5): the circleci capability no
+		// longer wires a per-capability stdio goose block — circleci arrives via
+		// the MCPHub `dev` group. Only the single auth-off `mcphub-dev`
+		// streamable_http extension is emitted, with no ${VAR}/$VAR anywhere.
 		const context = {
 			name: 'test-project',
 			capabilities: ['circleci', 'doppler', 'devcontainer-node'],
@@ -50,23 +51,18 @@ describe('File Generator - Coding Agents', () => {
 		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(postCreateSetup).toBeDefined();
 
-		// The doppler-wrapped goose block is registered for the circleci extension.
-		expect(postCreateSetup.content).toContain('ensure_goose_extension "circleci"');
-		expect(postCreateSetup.content).toContain('cmd: doppler');
-		expect(postCreateSetup.content).toContain(
+		expect(postCreateSetup.content).toContain('mcphub-dev:');
+		expect(postCreateSetup.content).toContain('uri: http://nas:8781/mcp/dev');
+		expect(postCreateSetup.content).not.toContain('ensure_goose_extension');
+		expect(postCreateSetup.content).not.toContain(
 			'args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]'
 		);
-
-		// Regression: the pre-fix generator emitted a bare-npx block with an env
-		// map referencing ${CIRCLECI_TOKEN} — goose passed the literal string as
-		// the token, so every MCP call returned 401. Neither the braced nor the
-		// unbraced form may appear in the emitted goose YAML.
 		expect(postCreateSetup.content).not.toContain('${CIRCLECI_TOKEN}');
 		expect(postCreateSetup.content).not.toContain('$CIRCLECI_TOKEN');
 		expect(postCreateSetup.content).not.toContain('CIRCLECI_TOKEN:');
 	});
 
-	it('should not clobber goose config in post-create-setup.sh and should bind-mount the host goose config when devcontainer and coding-agents capabilities are selected', async () => {
+	it('should write an extensions-only goose config.yaml and NOT bind-mount the host goose config', async () => {
 		const context = {
 			name: 'test-project',
 			capabilities: ['coding-agents', 'devcontainer-node'],
@@ -76,22 +72,23 @@ describe('File Generator - Coding Agents', () => {
 		const files = await generateAllFiles(context);
 		const postCreateSetup = files.find((f) => f.filePath === '.devcontainer/post-create-setup.sh');
 		expect(postCreateSetup).toBeDefined();
-		// Regression: genproj used to `cat > $HOME/.config/goose/config.yaml` with
-		// a hardcoded provider-less config, breaking goose in generated projects
-		// ("No provider configured. Run 'goose configure' first."). The setup
-		// script must never write or overwrite the user's goose config.
-		expect(postCreateSetup.content).not.toContain('cat > "$HOME/.config/goose/config.yaml"');
-		expect(postCreateSetup.content).not.toContain('GOOSECFGEOF');
-		expect(postCreateSetup.content).toContain('if [ -f "$HOME/.config/goose/config.yaml" ]');
+		// Migration (goose-mcp-groups-migration §2/§4): with no host ~/.config/goose
+		// bind-mount, genproj now WRITES an extensions-only config.yaml when none
+		// exists (mcphub-dev default toolset). No provider block is emitted.
+		expect(postCreateSetup.content).toContain('GOOSECFGEOF');
+		expect(postCreateSetup.content).toContain('mcphub-dev:');
+		expect(postCreateSetup.content).toContain('uri: http://nas:8781/mcp/dev');
+		expect(postCreateSetup.content).not.toContain('provider:');
 
-		// The user's real config (provider + extensions) comes from the host via
-		// a devcontainer bind mount (still valid JSON after template expansion).
+		// The host goose config must no longer be bind-mounted into the container.
 		const devcontainerJson = files.find((f) => f.filePath === '.devcontainer/devcontainer.json');
 		expect(devcontainerJson).toBeDefined();
 		const parsed = JSON.parse(devcontainerJson.content);
-		expect(parsed.mounts).toContain(
+		expect(parsed.mounts).not.toContain(
 			'source=${localEnv:HOME}/.config/goose,target=/home/node/.config/goose,type=bind'
 		);
+		// Sanity: doppler/ssh mounts still present, goose recipe bootstrap intact.
+		expect(parsed.mounts.some((m) => m.includes('/.ssh,'))).toBe(true);
 	});
 
 	it('should include xcode-native in mcp_config.json when xcode-development capability is selected', async () => {

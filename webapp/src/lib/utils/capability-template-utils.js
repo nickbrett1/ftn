@@ -167,26 +167,51 @@ function assertNoGooseEnvVarReferences(yamlFragment, key) {
 }
 
 /**
- * Generates goose MCP server configuration YAML entries based on project capabilities.
- * Similar to the agy MCP config but for goose's ~/.config/goose/config.yaml format.
+ * Generates goose MCP server configuration YAML entries for a project's
+ * generated `~/.config/goose/config.yaml` (extensions only).
  *
- * Goose env contract (genproj-goose-env-refs): stdio extensions that need
- * secrets are emitted with the Doppler wrapper (`cmd: doppler`). Both
- * `circleci` and `sonarcloud` declare `dependencies: ['doppler']`, so the
- * dependency resolver always expands them with Doppler — the no-Doppler
- * branch below must never emit `${VAR}`/`$VAR` env refs (goose passes them
- * verbatim → MCP 401); it emits nothing instead.
+ * Migration (memo goose-mcp-groups-migration §3/§5 + handoff-goose-devcontainer-genproj):
+ * MCPHub is now goose's single data plane. genproj no longer wires individual
+ * per-capability hub-backed stdio servers — those arrive via the MCPHub `dev`
+ * group, consumed as ONE auth-off `streamable_http` extension: `mcphub-dev`
+ * (http://nas:8781/mcp/dev). `mcphub-dev` is ALWAYS emitted (default toolset).
+ *
+ * EXCEPTIONS — capabilities whose tooling is NOT carried by the `dev` group
+ * (live membership confirmed on the hub) must stay as per-capability blocks so
+ * nothing is silently dropped:
+ *   - `sonarqube` (doppler-wrapped stdio) — sonarqube is NOT in `dev`; only
+ *     emitted when the `sonarqube` + `doppler` capabilities are selected.
+ *   - `xcode-native` (stdio proxy to mac-studio:9876/sse) — when xcode-development.
+ *   - `svelte` (remote mcp.svelte.dev) — when sveltekit (dev has no svelte;
+ *     it lives in the separate `dev-ui` group).
+ *
+ * Provider is intentionally NOT emitted (it resolves from the Doppler
+ * environment at runtime — GOOSE_ALIAS runs goose under `doppler run`).
  *
  * @param {object} context - The project generation context with capabilities
- * @returns {object} Object with goose YAML config parts for each optional MCP server
+ * @returns {object} Object with goose YAML config parts (mcphub-dev always present)
  */
 function getGooseMcpConfig(context) {
-	const hasSonarQube = context.capabilities.includes('sonarcloud');
-	const hasCircleCI = context.capabilities.includes('circleci');
-	const hasDoppler = context.capabilities.includes('doppler');
-	const hasXcode = context.capabilities.includes('xcode-development');
-	const hasSvelte = context.capabilities.includes('sveltekit');
+	const caps = context?.capabilities || [];
+	const hasSonarQube = caps.includes('sonarcloud');
+	const hasDoppler = caps.includes('doppler');
+	const hasXcode = caps.includes('xcode-development');
+	const hasSvelte = caps.includes('sveltekit');
 
+	// MCPHub `dev` group — the default project toolset (auth-off end state).
+	// No headers / env keys / envs: safe on a now auth-free trusted tailnet.
+	let mcphubDevGooseConfig = `
+  mcphub-dev:
+    type: streamable_http
+    name: mcphub-dev
+    enabled: true
+    uri: http://nas:8781/mcp/dev
+    timeout: 300`;
+
+	// sonarqube is NOT in the `dev` group, so a sonarcloud project still gets
+	// its own doppler-wrapped stdio extension (kept as an exception — see the
+	// doc comment above). Never emit a ${VAR}/$VAR env ref (goose passes those
+	// verbatim → MCP 401); the doppler wrapper supplies secrets at runtime.
 	let sonarQubeGooseConfig = '';
 	if (hasSonarQube && hasDoppler) {
 		sonarQubeGooseConfig = `
@@ -196,18 +221,6 @@ function getGooseMcpConfig(context) {
     enabled: true
     cmd: doppler
     args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
-    timeout: 300`;
-	}
-
-	let circleCiGooseConfig = '';
-	if (hasCircleCI && hasDoppler) {
-		circleCiGooseConfig = `
-  circleci:
-    type: stdio
-    name: circleci
-    enabled: true
-    cmd: doppler
-    args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
     timeout: 300`;
 	}
 
@@ -238,8 +251,8 @@ function getGooseMcpConfig(context) {
 	}
 
 	return {
+		mcphubDevGooseConfig,
 		sonarQubeGooseConfig,
-		circleCiGooseConfig,
 		xcodeNativeGooseConfig,
 		svelteGooseConfig
 	};

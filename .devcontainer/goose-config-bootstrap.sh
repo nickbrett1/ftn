@@ -1,9 +1,21 @@
 #!/bin/bash
-# Idempotently ensures the goose config (~/.config/goose/config.yaml) contains
-# this project's MCP server extensions (including Vikunja MCP).
+# ftn devcontainer goose config bootstrap.
 #
-# It only ADDS missing entries - any existing configuration (provider settings,
-# built-in extensions, manual edits) is preserved untouched.
+# Migration (memo goose-mcp-groups-migration §C / handoff-goose-devcontainer-genproj):
+# MCPHub is now the goose data plane on the trusted tailnet. This devcontainer
+# consumes the MCPHub `dev` (and `dev-ui`) groups as AUTH-OFF streamable_http
+# extensions (no headers / keys / doppler wrapper) instead of wiring ~10
+# individual per-capability MCP servers (svelte, vikunja, memos, github,
+# circleci, sonarqube, fintechnick, doppler…). Those hub-backed tools now
+# arrive via the `dev` group. Only genuinely machine-local tools are kept as
+# local extensions (chrome-devtools, a stdio server).
+#
+# No `provider:` block is written here: goose resolves its provider from the
+# Doppler environment at runtime (GOOSE_ALIAS runs goose under `doppler run`).
+#
+# The config is (re)written only when it is absent or is a legacy pre-migration
+# config (i.e. it does not already declare `mcphub-dev`). Already-migrated
+# configs are left untouched.
 set -euo pipefail
 
 GOOSE_CONFIG_DIR="$HOME/.config/goose"
@@ -11,182 +23,42 @@ GOOSE_CONFIG="$GOOSE_CONFIG_DIR/config.yaml"
 
 mkdir -p "$GOOSE_CONFIG_DIR"
 
-if [ ! -f "$GOOSE_CONFIG" ]; then
-    echo "INFO: Creating minimal goose config at $GOOSE_CONFIG"
-    printf 'extensions:\n' > "$GOOSE_CONFIG"
-fi
-
-GOOSE_CONFIG="$GOOSE_CONFIG" node << 'NODE'
-const fs = require('fs');
-const path = process.env.GOOSE_CONFIG;
-
-// MCP server entries to ensure are present under the top-level `extensions:` key.
-// Key = extension name, value = YAML body (4-space indented).
-const MCP_SERVERS = {
-  svelte: `    type: streamable_http
-    name: svelte
+if [ -f "$GOOSE_CONFIG" ] && grep -q '^  mcphub-dev:' "$GOOSE_CONFIG"; then
+    echo "INFO: goose config already on MCPHub groups; leaving $GOOSE_CONFIG untouched."
+else
+    if [ -f "$GOOSE_CONFIG" ]; then
+        echo "INFO: Replacing legacy goose config (pre-MCPHub per-tool entries) at $GOOSE_CONFIG"
+    else
+        echo "INFO: Writing project goose config at $GOOSE_CONFIG (extensions only; provider resolves from Doppler env)"
+    fi
+    cat > "$GOOSE_CONFIG" <<'GOOSECFGEOF'
+# ftn goose config — MCPHub groups (memo goose-mcp-groups-migration §C)
+# Extensions only. Provider resolves from the Doppler env at runtime.
+extensions:
+  mcphub-dev:
+    type: streamable_http
+    name: mcphub-dev
     enabled: true
-    uri: https://mcp.svelte.dev/mcp
-    timeout: 300`,
-  vikunja: `    type: streamable_http
-    name: vikunja
+    uri: http://nas:8781/mcp/dev
+    timeout: 300
+  mcphub-dev-ui:
+    type: streamable_http
+    name: mcphub-dev-ui
     enabled: true
-    uri: http://nas:8086/
-    timeout: 300`,
-  memos: `    type: streamable_http
-    name: memos
-    enabled: true
-    uri: http://nas:5230/mcp
-    env_keys:
-    - MEMOS_TOKEN
-    envs: {}
-    headers:
-      Authorization: Bearer \${MEMOS_TOKEN}
-    timeout: 300`,
-  'chrome-devtools': `    type: stdio
+    uri: http://nas:8781/mcp/dev-ui
+    timeout: 300
+  chrome-devtools:
+    type: stdio
     name: chrome-devtools
     enabled: true
     cmd: npx
     args:
     - -y
     - chrome-devtools-mcp
-    timeout: 300`,
-  fintechnick: `    type: stdio
-    name: fintechnick
-    enabled: true
-    cmd: sh
-    args:
-    - -c
-    - 'npx -y mcp-remote https://www.fintechnick.com/api/mcp --header "Authorization: Bearer $FINTECHNICK_MCP"'
-    timeout: 300`,
-  github: `    type: stdio
-    name: github
-    enabled: true
-    cmd: doppler
-    args:
-    - run
-    - --
-    - npx
-    - -y
-    - '@modelcontextprotocol/server-github'
-    timeout: 300`,
-  doppler: `    type: stdio
-    name: doppler
-    enabled: true
-    cmd: sh
-    args:
-    - -c
-    - DOPPLER_TOKEN=$(doppler configure get token --plain) npx -y @dopplerhq/mcp-server
-    timeout: 300`,
-  sonarqube: `    type: stdio
-    name: sonarqube
-    enabled: true
-    cmd: doppler
-    args:
-    - run
-    - --
-    - npx
-    - -y
-    - sonarqube-mcp-server
-    timeout: 300`,
-  circleci: `    type: stdio
-    name: circleci
-    enabled: true
-    cmd: doppler
-    args:
-    - run
-    - --
-    - npx
-    - -y
-    - '@circleci/mcp-server-circleci'
-    timeout: 300`
-};
-
-let content = fs.readFileSync(path, 'utf8');
-let lines = content.split('\n');
-
-// Locate the top-level `extensions:` block (line with no leading whitespace).
-let start = lines.findIndex((l) => /^extensions:/.test(l));
-if (start === -1) {
-  lines.push('extensions:');
-  start = lines.length - 1;
-}
-
-// End of the block = first line after `start` that is non-blank and starts at column 0.
-const blockEnd = () => {
-  let e = start + 1;
-  while (e < lines.length && (lines[e].trim() === '' || lines[e].startsWith(' '))) e++;
-  return e;
-};
-
-// ---------------------------------------------------------------------------
-// Migration: upgrade stale stdio (mcp-remote) entries for servers that now use
-// streamable_http directly (memos, vikunja). Older versions of this bootstrap
-// emitted `type: stdio` + `npx mcp-remote http://nas:PORT/...`; mcp-remote
-// rejects non-HTTPS, non-localhost URLs unless `--allow-http` is passed, which
-// makes the extension fail to start ("process quit before initialization").
-// Existing stale entries are upgraded in place; fresh configs are born correct.
-// ---------------------------------------------------------------------------
-const UPGRADABLE = ['memos', 'vikunja'];
-const migrated = [];
-for (const key of UPGRADABLE) {
-  let end = blockEnd();
-  const keyRe = new RegExp(`^  ${key}:$`);
-  for (let i = start + 1; i < end; i++) {
-    if (!keyRe.test(lines[i])) continue;
-    let j = i + 1;
-    while (j < end && !/^  [A-Za-z0-9_-]+:/.test(lines[j])) j++;
-    const bodyLines = lines.slice(i + 1, j);
-    const body = bodyLines.join('\n');
-    const needsReplacement =
-      /mcp-remote/.test(body) ||
-      /type: stdio/.test(body) ||
-      (key === 'memos' && !/Authorization/.test(body));
-    if (needsReplacement) {
-      const replacement = [`  ${key}:`, ...MCP_SERVERS[key].split('\n')];
-      // Preserve the blank-line separator after the entry, if one existed.
-      if (bodyLines[bodyLines.length - 1] === '') replacement.push('');
-      lines.splice(i, j - i, ...replacement);
-      migrated.push(key);
-    }
-    break;
-  }
-}
-let end = blockEnd();
-
-// Collect existing extension keys inside the block (2-space indented `key:`).
-const existing = new Set();
-for (let i = start + 1; i < end; i++) {
-  const m = lines[i].match(/^  ([A-Za-z0-9_-]+):/);
-  if (m) existing.add(m[1]);
-}
-
-const missing = Object.keys(MCP_SERVERS).filter((k) => !existing.has(k));
-let changed = migrated.length > 0;
-if (missing.length > 0) {
-  const insert = [];
-  for (const key of Object.keys(MCP_SERVERS)) {
-    if (!existing.has(key)) {
-      insert.push(`  ${key}:\n${MCP_SERVERS[key]}`);
-    }
-  }
-  lines.splice(end, 0, ...insert.join('\n\n').split('\n'));
-  changed = true;
-}
-if (!changed) {
-  console.log('INFO: goose config already up to date.');
-} else {
-  // Ensure a single trailing newline
-  const out = lines.join('\n').replace(/\n+$/, '\n');
-  fs.writeFileSync(path, out);
-  if (migrated.length > 0) {
-    console.log(`INFO: Migrated stale stdio MCP entries to streamable_http: ${migrated.join(', ')}`);
-  }
-  if (missing.length > 0) {
-    console.log(`INFO: Added missing MCP servers to goose config: ${missing.join(', ')}`);
-  }
-}
-NODE
+    timeout: 300
+GOOSECFGEOF
+    echo "INFO: Wrote MCPHub groups config (mcphub-dev, mcphub-dev-ui) + local chrome-devtools."
+fi
 
 # ---------------------------------------------------------------------------
 # Goose recipes (nickbrett1/goose-recipes) - spec-first development process.
