@@ -274,22 +274,26 @@ fi
 }
 
 /**
- * Generates the goose setup script for post-create-setup.sh
+ * Generates the goose setup script for post-create-setup.sh.
  *
- * Non-destructive by design: it NEVER overwrites an existing
- * $HOME/.config/goose/config.yaml. The user's real config (active provider +
- * extensions) is bind-mounted into the devcontainer (see
- * getDevcontainerJsonExtras), so writing a fresh config here would clobber it
- * and surface as "error: No provider configured. Run 'goose configure' first."
- * when goose starts. Only recipes are bootstrapped (recipes/ dir is additive).
+ * Migration (memo goose-mcp-groups-migration §2/§4/§5 + handoff-goose-devcontainer-genproj):
+ * generated devcontainers NO LONGER bind-mount the host ~/.config/goose (see
+ * getDevcontainerJsonExtras). Instead genproj WRITES an **extensions-only**
+ * `$HOME/.config/goose/config.yaml` when none exists: a single auth-off
+ * `mcphub-dev` streamable_http extension (MCPHub `dev` group) plus only the
+ * genuinely-local/remote non-hub exceptions (xcode-native, svelte). No
+ * `provider:` block is emitted — the provider resolves from the Doppler env at
+ * runtime (GOOSE_ALIAS runs goose under `doppler run`). Recipes are still
+ * bootstrapped (recipes/ dir is additive).
+ *
+ * An existing config.yaml is preserved untouched (never clobbered).
  *
  * @returns {string} The setup script content
  */
 export function generateGooseSetupScript(context = {}) {
 	const gooseMcp = getGooseMcpConfig(context);
 	const fragments = [
-		{ key: 'sonarqube', block: gooseMcp.sonarQubeGooseConfig },
-		{ key: 'circleci', block: gooseMcp.circleCiGooseConfig },
+		{ key: 'mcphub-dev', block: gooseMcp.mcphubDevGooseConfig },
 		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig },
 		{ key: 'svelte', block: gooseMcp.svelteGooseConfig }
 	].filter((f) => f.block);
@@ -303,52 +307,34 @@ export function generateGooseSetupScript(context = {}) {
 		assertNoGooseEnvVarReferences(f.block, f.key);
 	}
 
-	// Round-4 fix (memo genproj-goose-extensions): wire the previously-dead
-	// getGooseMcpConfig() into generation. Selected capabilities (circleci,
-	// sonarcloud, xcode-development) now register their goose MCP extension in
-	// the container's config.yaml — idempotently: keys already present (e.g.
-	// from the bind-mounted host ~/.config/goose) are skipped, and a missing
-	// top-level `extensions:` map is created. Never clobbers anything.
-	let extensionMerge = '';
-	if (fragments.length > 0) {
-		const ensureFn = `
-# Idempotently register a project-selected goose MCP extension. Never clobbers:
-# skips keys already present, only appends the missing block under extensions:.
-ensure_goose_extension() {
-  local key="$1" block="$2" config="$HOME/.config/goose/config.yaml"
-  [ -f "$config" ] || { echo "WARN: no goose config yet - project extensions apply after 'goose configure'"; return 0; }
-  grep -qE "^  \${key}:" "$config" && { echo "INFO: goose extension '\${key}' already registered."; return 0; }
-  grep -q '^extensions:' "$config" || echo "extensions:" >> "$config"
-  awk -v frag="$block" '/^extensions:/ { print; printf "%s", frag; next } { print }' "$config" > "\${config}.tmp" && mv "\${config}.tmp" "$config"
-  echo "INFO: Registered goose extension '\${key}'."
-}
+	// Full extensions-only config body (indented under top-level `extensions:`).
+	// mcphub-dev is the default project toolset; exceptions keep their own key.
+	const extensionBody = fragments
+		.map((f) => f.block)
+		.join('\n')
+		.replace(/^\n/, '');
+	const configYaml = `extensions:
+${extensionBody}\n`;
+
+	// Write-if-absent. The heredoc is quoted (`'GOOSECFGEOF'`) so nothing is
+	// shell-expanded; the whole config is produced here in JS so the YAML is
+	// flush-left and byte-exact. Provider intentionally omitted (Doppler env).
+	const gooseConfigWrite = `
+CONFIG="$HOME/.config/goose/config.yaml"
+if [ -f "$CONFIG" ]; then
+    echo "INFO: Keeping existing $CONFIG (provider + extensions preserved)."
+else
+    echo "INFO: No goose config found - writing project goose config (extensions only; provider resolves from Doppler env at runtime)."
+    mkdir -p "$HOME/.config/goose"
+    cat > "$CONFIG" <<'GOOSECFGEOF'
+${configYaml}GOOSECFGEOF
+    echo "INFO: Wrote project goose config (MCPHub dev group + local/remote exceptions)."
+fi
 `;
-		const calls = fragments
-			.map((f) => `ensure_goose_extension "${f.key}" '${f.block.replace(/^\n/, '')}\n'`)
-			.join('\n');
-		extensionMerge = `
-echo "INFO: Registering project-selected goose MCP extensions..."
-${ensureFn}
-${calls}
-`;
-	}
 
 	return `
 echo "INFO: Setting up goose configuration and MCP servers..."
-
-# Create goose config directory
-mkdir -p "$HOME/.config/goose"
-
-# Never overwrite an existing goose config: the user's real config.yaml
-# (provider + extensions) is bind-mounted into the devcontainer. Clobbering it
-# drops the configured provider and surfaces as:
-#   error: No provider configured. Run 'goose configure' first.
-if [ -f "$HOME/.config/goose/config.yaml" ]; then
-    echo "INFO: Keeping existing $HOME/.config/goose/config.yaml (provider + extensions preserved)."
-else
-    echo "INFO: No goose config found yet - run 'goose configure' inside the container to set up your provider."
-fi
-${extensionMerge}
+${gooseConfigWrite}
 echo "INFO: Ensuring goose recipes are available (spec-first development process)..."
 RECIPES_DIR="$HOME/.config/goose/recipes"
 if [ -d "$RECIPES_DIR/.git" ]; then
@@ -830,17 +816,14 @@ export function getDevcontainerJsonExtras(context) {
 	// bind the host ~/.ssh into the container so GitHub auth works over SSH
 	// (git@github.com:) with no PAT embedded in git config / remote URLs. The
 	// post-create setup copies the key into a container-owned dir (never
-	// chowns the mount) or uses a forwarded SSH agent. Always present, like
-	// the goose config bind below.
+	// chowns the mount) or uses a forwarded SSH agent.
 	mounts.push(`source=\${localEnv:HOME}/.ssh,target=${home}/.ssh,type=bind`);
-	// goose is installed in every generated devcontainer Dockerfile, so bind the
-	// host ~/.config/goose into the container: the user's real config.yaml
-	// (active provider + extensions) must be visible or goose fails with
-	// "No provider configured. Run 'goose configure' first." and loses all
-	// user extensions. The setup script (generateGooseSetupScript) never
-	// overwrites this config. ${localEnv:HOME} is expanded by the devcontainer
-	// tooling on the host at container start.
-	mounts.push(`source=\${localEnv:HOME}/.config/goose,target=${home}/.config/goose,type=bind`);
+	// Migration (goose-mcp-groups-migration §2 / handoff-goose-devcontainer-genproj):
+	// MCPHub is now the goose data plane, so the host ~/.config/goose is NO
+	// LONGER bind-mounted into generated devcontainers. genproj instead WRITES
+	// an extensions-only config.yaml (MCPHub `dev` group + local/remote
+	// exceptions) in generateGooseSetupScript(); the provider resolves from the
+	// Doppler env at runtime. No bind mount for goose here.
 
 	return {
 		devcontainerMounts: mounts.map((m) => `"${m}"`).join(',\n    '),

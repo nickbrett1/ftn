@@ -167,49 +167,42 @@ function assertNoGooseEnvVarReferences(yamlFragment, key) {
 }
 
 /**
- * Generates goose MCP server configuration YAML entries based on project capabilities.
- * Similar to the agy MCP config but for goose's ~/.config/goose/config.yaml format.
+ * Generates goose MCP server configuration YAML entries for a project's
+ * generated `~/.config/goose/config.yaml` (extensions only).
  *
- * Goose env contract (genproj-goose-env-refs): stdio extensions that need
- * secrets are emitted with the Doppler wrapper (`cmd: doppler`). Both
- * `circleci` and `sonarcloud` declare `dependencies: ['doppler']`, so the
- * dependency resolver always expands them with Doppler — the no-Doppler
- * branch below must never emit `${VAR}`/`$VAR` env refs (goose passes them
- * verbatim → MCP 401); it emits nothing instead.
+ * Migration (memo goose-mcp-groups-migration §3/§5 + handoff-goose-devcontainer-genproj):
+ * MCPHub is now goose's single data plane. genproj no longer wires individual
+ * per-capability hub-backed stdio servers (github / circleci / sonarqube /
+ * memos / fintechnick) — those arrive via the MCPHub `dev` group, consumed as
+ * ONE auth-off `streamable_http` extension: `mcphub-dev`
+ * (http://nas:8781/mcp/dev). Only genuinely local/remote tools that are NOT
+ * hub-backed are kept as exceptions: `xcode-native` (stdio proxy to
+ * mac-studio:9876/sse, when xcode-development) and remote `svelte`
+ * (mcp.svelte.dev, when sveltekit).
+ *
+ * Provider is intentionally NOT emitted (it resolves from the Doppler
+ * environment at runtime — GOOSE_ALIAS runs goose under `doppler run`).
+ *
+ * No emitted block references `${VAR}`/`$VAR` (genproj-goose-env-refs): these
+ * are all auth-off / no-secret configs, so nothing here is stdio-with-secrets.
  *
  * @param {object} context - The project generation context with capabilities
- * @returns {object} Object with goose YAML config parts for each optional MCP server
+ * @returns {object} Object with goose YAML config parts (all optional except mcphub-dev)
  */
 function getGooseMcpConfig(context) {
-	const hasSonarQube = context.capabilities.includes('sonarcloud');
-	const hasCircleCI = context.capabilities.includes('circleci');
-	const hasDoppler = context.capabilities.includes('doppler');
-	const hasXcode = context.capabilities.includes('xcode-development');
-	const hasSvelte = context.capabilities.includes('sveltekit');
+	const caps = context?.capabilities || [];
+	const hasXcode = caps.includes('xcode-development');
+	const hasSvelte = caps.includes('sveltekit');
 
-	let sonarQubeGooseConfig = '';
-	if (hasSonarQube && hasDoppler) {
-		sonarQubeGooseConfig = `
-  sonarqube:
-    type: stdio
-    name: sonarqube
+	// MCPHub `dev` group — the default project toolset (auth-off end state).
+	// No headers / env keys / envs: safe on a now auth-free trusted tailnet.
+	let mcphubDevGooseConfig = `
+  mcphub-dev:
+    type: streamable_http
+    name: mcphub-dev
     enabled: true
-    cmd: doppler
-    args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
+    uri: http://nas:8781/mcp/dev
     timeout: 300`;
-	}
-
-	let circleCiGooseConfig = '';
-	if (hasCircleCI && hasDoppler) {
-		circleCiGooseConfig = `
-  circleci:
-    type: stdio
-    name: circleci
-    enabled: true
-    cmd: doppler
-    args: ["run", "--", "npx", "-y", "@circleci/mcp-server-circleci"]
-    timeout: 300`;
-	}
 
 	let xcodeNativeGooseConfig = '';
 	if (hasXcode) {
@@ -238,8 +231,7 @@ function getGooseMcpConfig(context) {
 	}
 
 	return {
-		sonarQubeGooseConfig,
-		circleCiGooseConfig,
+		mcphubDevGooseConfig,
 		xcodeNativeGooseConfig,
 		svelteGooseConfig
 	};
