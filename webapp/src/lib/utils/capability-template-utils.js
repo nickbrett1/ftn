@@ -172,25 +172,29 @@ function assertNoGooseEnvVarReferences(yamlFragment, key) {
  *
  * Migration (memo goose-mcp-groups-migration §3/§5 + handoff-goose-devcontainer-genproj):
  * MCPHub is now goose's single data plane. genproj no longer wires individual
- * per-capability hub-backed stdio servers (github / circleci / sonarqube /
- * memos / fintechnick) — those arrive via the MCPHub `dev` group, consumed as
- * ONE auth-off `streamable_http` extension: `mcphub-dev`
- * (http://nas:8781/mcp/dev). Only genuinely local/remote tools that are NOT
- * hub-backed are kept as exceptions: `xcode-native` (stdio proxy to
- * mac-studio:9876/sse, when xcode-development) and remote `svelte`
- * (mcp.svelte.dev, when sveltekit).
+ * per-capability hub-backed stdio servers — those arrive via the MCPHub `dev`
+ * group, consumed as ONE auth-off `streamable_http` extension: `mcphub-dev`
+ * (http://nas:8781/mcp/dev). `mcphub-dev` is ALWAYS emitted (default toolset).
+ *
+ * EXCEPTIONS — capabilities whose tooling is NOT carried by the `dev` group
+ * (live membership confirmed on the hub) must stay as per-capability blocks so
+ * nothing is silently dropped:
+ *   - `sonarqube` (doppler-wrapped stdio) — sonarqube is NOT in `dev`; only
+ *     emitted when the `sonarqube` + `doppler` capabilities are selected.
+ *   - `xcode-native` (stdio proxy to mac-studio:9876/sse) — when xcode-development.
+ *   - `svelte` (remote mcp.svelte.dev) — when sveltekit (dev has no svelte;
+ *     it lives in the separate `dev-ui` group).
  *
  * Provider is intentionally NOT emitted (it resolves from the Doppler
  * environment at runtime — GOOSE_ALIAS runs goose under `doppler run`).
  *
- * No emitted block references `${VAR}`/`$VAR` (genproj-goose-env-refs): these
- * are all auth-off / no-secret configs, so nothing here is stdio-with-secrets.
- *
  * @param {object} context - The project generation context with capabilities
- * @returns {object} Object with goose YAML config parts (all optional except mcphub-dev)
+ * @returns {object} Object with goose YAML config parts (mcphub-dev always present)
  */
 function getGooseMcpConfig(context) {
 	const caps = context?.capabilities || [];
+	const hasSonarQube = caps.includes('sonarcloud');
+	const hasDoppler = caps.includes('doppler');
 	const hasXcode = caps.includes('xcode-development');
 	const hasSvelte = caps.includes('sveltekit');
 
@@ -203,6 +207,22 @@ function getGooseMcpConfig(context) {
     enabled: true
     uri: http://nas:8781/mcp/dev
     timeout: 300`;
+
+	// sonarqube is NOT in the `dev` group, so a sonarcloud project still gets
+	// its own doppler-wrapped stdio extension (kept as an exception — see the
+	// doc comment above). Never emit a ${VAR}/$VAR env ref (goose passes those
+	// verbatim → MCP 401); the doppler wrapper supplies secrets at runtime.
+	let sonarQubeGooseConfig = '';
+	if (hasSonarQube && hasDoppler) {
+		sonarQubeGooseConfig = `
+  sonarqube:
+    type: stdio
+    name: sonarqube
+    enabled: true
+    cmd: doppler
+    args: ["run", "--", "npx", "-y", "sonarqube-mcp-server"]
+    timeout: 300`;
+	}
 
 	let xcodeNativeGooseConfig = '';
 	if (hasXcode) {
@@ -232,6 +252,7 @@ function getGooseMcpConfig(context) {
 
 	return {
 		mcphubDevGooseConfig,
+		sonarQubeGooseConfig,
 		xcodeNativeGooseConfig,
 		svelteGooseConfig
 	};

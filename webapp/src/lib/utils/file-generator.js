@@ -294,6 +294,10 @@ export function generateGooseSetupScript(context = {}) {
 	const gooseMcp = getGooseMcpConfig(context);
 	const fragments = [
 		{ key: 'mcphub-dev', block: gooseMcp.mcphubDevGooseConfig },
+		// sonarqube is kept as an exception (doppler-wrapped stdio): the MCPHub
+		// `dev` group does NOT carry sonarqube, so a sonarcloud project must still
+		// get its own extension or the tool would be silently lost.
+		{ key: 'sonarqube', block: gooseMcp.sonarQubeGooseConfig },
 		{ key: 'xcode-native', block: gooseMcp.xcodeNativeGooseConfig },
 		{ key: 'svelte', block: gooseMcp.svelteGooseConfig }
 	].filter((f) => f.block);

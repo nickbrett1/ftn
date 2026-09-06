@@ -76,16 +76,28 @@ describe('capability-template-utils', () => {
 			expect(data.mcphubDevGooseConfig).toContain('http://nas:8781/mcp/dev');
 		});
 
-		it('should NOT emit per-capability hub-backed stdio blocks (circleci/sonarqube)', () => {
+		it('should NOT emit the per-capability circleci stdio block (circleci arrives via dev / circleci-lite)', () => {
 			const data = getGooseMcpConfig({
 				capabilities: ['sonarcloud', 'circleci', 'doppler']
 			});
 			expect(data.circleCiGooseConfig).toBeUndefined();
-			expect(data.sonarQubeGooseConfig).toBeUndefined();
-			// And nothing anywhere references the old servers / a token.
 			expect(JSON.stringify(data)).not.toContain('@circleci/mcp-server-circleci');
-			expect(JSON.stringify(data)).not.toContain('sonarqube-mcp-server');
-			expect(JSON.stringify(data)).not.toContain('$');
+		});
+
+		it('should KEEP sonarqube as a doppler-wrapped exception (the dev group does NOT carry sonarqube)', () => {
+			const data = getGooseMcpConfig({
+				capabilities: ['sonarcloud', 'doppler']
+			});
+			expect(data.sonarQubeGooseConfig).toContain('sonarqube:');
+			expect(data.sonarQubeGooseConfig).toContain('cmd: doppler');
+			expect(data.sonarQubeGooseConfig).toContain('sonarqube-mcp-server');
+			// Never a ${VAR}/$VAR env ref (goose passes those verbatim → MCP 401).
+			expect(data.sonarQubeGooseConfig).not.toContain('$');
+		});
+
+		it('should NOT emit sonarqube without the doppler capability (no ${VAR} env block)', () => {
+			const data = getGooseMcpConfig({ capabilities: ['sonarcloud'] });
+			expect(data.sonarQubeGooseConfig).toBe('');
 		});
 
 		it('should keep the xcode-native local exception block without env refs', () => {

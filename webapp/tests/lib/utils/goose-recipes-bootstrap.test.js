@@ -28,21 +28,22 @@ describe('goose recipes bootstrap in generated projects', () => {
 		expect(script).toContain('Keeping existing $CONFIG');
 	});
 
-	it('does not emit per-capability hub-backed stdio servers or tokens', () => {
+	it('drops per-cap circleci (covered by dev) but keeps sonarqube as an exception (not in dev)', () => {
 		const script = generateGooseSetupScript({
 			capabilities: ['circleci', 'sonarcloud', 'doppler', 'coding-agents'],
 			configuration: {}
 		});
-		// Hub-backed servers (github/circleci/sonarqube/memos/fintechnick) arrive
-		// via the MCPHub `dev` group — never wired individually anymore.
-		expect(script).not.toContain('ensure_goose_extension');
-		expect(script).not.toContain('@circleci/mcp-server-circleci');
-		expect(script).not.toContain('sonarqube-mcp-server');
-		expect(script).not.toContain('fintechnick:');
-		expect(script).not.toContain('CIRCLECI_TOKEN');
-		expect(script).not.toContain('doppler');
-		// mcphub-dev still the default toolset regardless of capabilities.
+		// mcphub-dev is the default toolset regardless of capabilities.
 		expect(script).toContain('mcphub-dev:');
+		// circleci is carried by the dev group (circleci-lite) → no stdio block.
+		expect(script).not.toContain('@circleci/mcp-server-circleci');
+		expect(script).not.toContain('CIRCLECI_TOKEN');
+		// sonarqube is NOT in the dev group → kept as a doppler-wrapped exception.
+		expect(script).toContain('sonarqube:');
+		expect(script).toContain('cmd: doppler');
+		expect(script).toContain('sonarqube-mcp-server');
+		expect(script).not.toContain('ensure_goose_extension');
+		expect(script).not.toContain('fintechnick:');
 	});
 
 	it('clones/pulls the recipes repo into the global recipes dir', () => {
