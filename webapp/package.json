@@ -93,7 +93,7 @@
 		"mdsvex": "^0.12.8",
 		"mermaid": "^11.17.2",
 		"miragejs": "^0.1.48",
-		"playwright": "^1.62.1",
+		"playwright": "^1.63.0",
 		"postcss": "^8.5.26",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
