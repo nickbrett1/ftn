@@ -18,12 +18,9 @@
       "gid": "1000"
     },
     // NOTE: the ghcr.io/devcontainers/features/java (Java via SDKMAN) feature
-    // was removed (2026-09-01) because its build depends on SDKMAN's API and
-    // the Microsoft JDK download host, both intermittently unreachable on this
-    // network — it made `devcontainer up` fail ("Version 21 not found" / SDKMAN
-    // download timeouts). Sonarlint's Java language server uses its own bundled
-    // JRE, so no system JDK is required; the sonarlint.ls.javaHome and JDK_HOME
-    // settings that pointed at the SDKMAN install were removed with it.
+    // was removed (2026-09-01): its build depended on SDKMAN's API and the
+    // Microsoft JDK download host, both intermittently unreachable on this
+    // network and it made `devcontainer up` fail.
     "ghcr.io/devcontainers/features/docker-from-docker:1": {
       "version": "latest"
     }
@@ -71,7 +68,6 @@
         "marvinhagemeister.theme-afterglow-remastered",
         "naumovs.theme-oceanicnext",
         "eamodio.gitlens",
-        "SonarSource.sonarlint-vscode",
         "christian-kohler.npm-intellisense",
         "donjayamanne.githistory",
         "shyykoserhiy.git-autoconfig",

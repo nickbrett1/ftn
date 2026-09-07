@@ -32,20 +32,6 @@
         "@circleci/mcp-server-circleci"
       ]
     },
-    "sonarqube": {
-      "command": "doppler",
-      "args": [
-        "run",
-        "--project",
-        "webapp",
-        "--config",
-        "dev",
-        "--",
-        "npx",
-        "-y",
-        "sonarqube-mcp-server"
-      ]
-    },
     "nanobanana": {
       "command": "node",
       "args": [

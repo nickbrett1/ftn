@@ -24,10 +24,6 @@
     "svelte"
   ],
   "css.customData": [".vscode/tailwindcss.json"],
-  "sonarlint.connectedMode.project": {
-    "connectionId": "bem",
-    "projectKey": "nickbrett1_bem"
-  },
   "terminal.integrated.defaultProfile.linux": "tmux-integrated",
   "tmux-integrated.shell": "/bin/zsh",
   "[svelte]": {

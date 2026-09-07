@@ -132,23 +132,10 @@ fi
 DISABLE_AUTO_UPDATE=true
 DISABLE_UPDATE_PROMPT=true
 
-# A robust function to run Antigravity with Doppler, ensuring no stale SonarQube containers exist.
+# A robust function to run Antigravity with Doppler.
 # Secrets are loaded from the 'common' project first, then the current project's secrets layer on
 # top (project-specific secrets take precedence over common ones).
 agy-dev() {
-  # Define the name of the container to check for
-  local container_name="sonarqube-mcp-server"
-
-  # Find the container ID using Docker's filter. The -q flag means "quiet" (ID only).
-  local container_id=$(docker ps -a -q --filter "name=${container_name}")
-
-  # Check if the container_id variable is not empty
-  if [ -n "$container_id" ]; then
-    echo "Found stale container '${container_name}' ($container_id). Removing it..."
-    # Force remove the container. The -f flag stops it if it's running.
-    docker rm -f "$container_id"
-  fi
-
   echo "Starting Antigravity with Doppler (common + webapp)..."
   # Load common secrets first, then layer project-specific secrets on top.
   # --forward-signals ensures SIGINT/SIGTERM are correctly passed through to agy.
