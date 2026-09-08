@@ -72,7 +72,7 @@
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.4.2",
 		"@types/node": "^26.4.1",
-		"@vitest/coverage-v8": "^4.1.11",
+		"@vitest/coverage-v8": "^5.0.0",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^2.1.2",
 		"c8": "^12.0.0",
@@ -114,7 +114,7 @@
 		"typescript-eslint": "^8.69.0",
 		"vite": "^8.2.2",
 		"vite-imagetools": "^12.0.1",
-		"vitest": "^4.1.10",
+		"vitest": "^5.0.0",
 		"wrangler": "^4.129.0"
 	},
 	"type": "module",

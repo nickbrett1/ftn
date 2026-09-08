@@ -23,14 +23,14 @@ describe('project-config-store', () => {
 
 	beforeEach(() => {
 		localStorageMock = createLocalStorageMock();
-		globalThis.localStorage = localStorageMock;
+		vi.stubGlobal('localStorage', localStorageMock);
 		warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 		projectConfigActions.reset();
 	});
 
 	afterEach(() => {
-		delete globalThis.localStorage;
+		vi.unstubAllGlobals();
 		vi.restoreAllMocks();
 	});
 
@@ -144,17 +144,17 @@ describe('project-config-store', () => {
 	});
 
 	it('skips persistence when localStorage is unavailable', () => {
-		delete globalThis.localStorage;
+		vi.stubGlobal('localStorage', undefined);
 		expect(() => projectConfigActions.persistToStorage({ configuration: {} })).not.toThrow();
 	});
 
 	it('skips loading when localStorage is unavailable', () => {
-		delete globalThis.localStorage;
+		vi.stubGlobal('localStorage', undefined);
 		expect(() => projectConfigActions.loadFromStorage()).not.toThrow();
 	});
 
 	it('skips clearing stored configuration when localStorage is unavailable', () => {
-		delete globalThis.localStorage;
+		vi.stubGlobal('localStorage', undefined);
 		expect(() => projectConfigActions.clearStorage()).not.toThrow();
 	});
 
@@ -169,7 +169,7 @@ describe('project-config-store module bootstrap', () => {
 		const bootstrapStorage = createLocalStorageMock();
 		bootstrapStorage.getItem.mockReturnValueOnce(null);
 		globalThis.window = {};
-		globalThis.localStorage = bootstrapStorage;
+		vi.stubGlobal('localStorage', bootstrapStorage);
 		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 		// eslint-disable-next-line sonarjs/pseudo-random
@@ -179,6 +179,6 @@ describe('project-config-store module bootstrap', () => {
 		expect(bootstrapStorage.getItem).toHaveBeenCalledWith('genproj-project-config');
 		logSpy.mockRestore();
 		delete globalThis.window;
-		delete globalThis.localStorage;
+		vi.unstubAllGlobals();
 	});
 });
