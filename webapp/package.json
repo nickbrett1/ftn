@@ -94,7 +94,7 @@
 		"mermaid": "^11.17.2",
 		"miragejs": "^0.1.48",
 		"playwright": "^1.62.1",
-		"postcss": "^8.5.26",
+		"postcss": "^8.5.28",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
 		"proxy-agent": "^8.0.2",
