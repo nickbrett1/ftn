@@ -115,7 +115,7 @@
 		"vite": "^8.2.2",
 		"vite-imagetools": "^12.0.1",
 		"vitest": "^4.1.10",
-		"wrangler": "^4.128.0"
+		"wrangler": "^4.129.0"
 	},
 	"type": "module",
 	"engines": {
