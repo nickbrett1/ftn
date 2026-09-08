@@ -25,7 +25,8 @@
 		},
 		"miniflare": {
 			"undici": "^7.29.0"
-		}
+		},
+		"qs": "^6.16.0"
 	},
 	"scripts": {
 		"postinstall": "node scripts/copy-pdf-worker.js",
