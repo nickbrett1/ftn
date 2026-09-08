@@ -26,37 +26,41 @@ August 2026
 <ProjectLinkButton href={projectUrl} />
 
 <!-- IMAGE PLACEHOLDER H1: Hero shot — full setup: iPad on stand + Tera Mini scanner + Stripe Reader M2 + toys with barcodes -->
+<!-- use toddler-stripe-hero.jpg -->
 
-## Introduction
+## Introduction or Why building functional e-commerce platforms for toddlers can be a thing
 
-‘Toddler’ and ‘e-commerce’ are two words that I didn’t expect to be combining this year, but here we are in this new AI world, and I’m finding that with the latest agents and some thought on how to harness them, that I’m seeing plenty of unexpected, but really cool, things come together.
+‘Toddler’ and ‘e-commerce’ are two words that I didn’t expect to be combining this year, but here we are in this new AI world, and I’m finding that with the latest agents and a little thought on how to harness them, that I'm building plenty of unexpected, but really cool, projects.
 
-The goal of this project was to create a fun toy, while also learning more about e-commerce and in particular the Stripe Payments APIs. It was to be an iPad app, with a linked barcode scanner and Stripe card reader that showed a checkout screen. With QR code stickers on kids toys, each could be scanned and then payment made with a special Stripe test credit card.
+The goal of this project was to create a fun toy, while also learning more about e-commerce particularly the Stripe Payments APIs. I wanted an iPad app, with a linked barcode scanner and Stripe card reader. The app would show a checkout screen and there would be toys with QR code stickers. Each could be scanned and then payment made with a special Stripe test credit card.
 
-This was my most ambitious agentic project yet, for a few reasons:
+This was to be my most ambitious agentic side-project yet, for a few reasons:
 
 1. **It involved hardware.** Hardware is fun but historically I've it so time consuming to utilize, with long iteration and debug cycles, that it's just gathered dust. Agents let me cut through that and it was a lot of fun.
-2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode, a tool I had never used.
-3. **I wanted to achieve end to end spec-driven development.** In my prior attempt at using SpecKit I couldn't quite get a workflow working where I could get a functional application just from my specs — my agent kept getting confused and lost in fruitless iteration. I wanted to do better this time.
-4. **Mobile first workflow.** Sitting down at a computer outside of work is something of a rarity for me, but having spare pockets of time while I'm on the go is more common. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous, so didn't work well for workflows where I wanted to iterate with the agent. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
 
-So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me even more what building software will look like in with agents.
+<!-- IMAGE PLACEHOLDER HERE: Photo of scanner and another photo of credit card reader -->
 
-Right. Let's build a store. Target customer: a three-year-old.
+2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. Or more truthfully, not at all. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode independently.
 
-## The Toy Store, Meet Stripe
+<!-- IMAGE PLACEHOLDER HERE: Screenshot of iPad App -->
 
-<!-- IMAGE PLACEHOLDER H2: Hardware spread — the "meet Stripe" table: scanner, M2, test cards, iPad stand -->
+3. **I wanted to achieve end to end spec-driven development.** In my [prior attempt at using SpecKit](https://fintechnick.com/projects/speckit-dev) I couldn't quite get a workflow working that generated a functional application — my agent kept getting confused and lost in fruitless iteration. I wanted to do better this time.
+
+4. **Mobile first workflow.** Sitting down at a computer outside of work for an extended time isn't something I can do often, but I do have spare pockets of time while I'm on the go. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous, so didn't work well for workflows where I wanted to iterate with the agent. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
+
+So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me even more what building software will look like with agents.
+
+Right. Let's dig in and build a store. Target customer: a three-year-old.
+
+## Hey Toy Store; Meet Stripe
 
 A store. An iPad, a Tera Mini wireless scanner, a Stripe Reader M2, a test credit card, and toy food with printed QR* (footnote here about starting with bar codes and finding how difficult it is for little hands to line them up with the scanner) codes. The product owner is three years old. So is the QA lead. So is the most demanding user.
 
-Here's the intended flow: user scans food items, each pops up on the iPad with a photo and a price — $1, $5, etc... Tap the card on the card reader, we run through the payments flow and boom: fireworks, a guitar solo, much excitement. Then "Go Again".
+Here's the intended flow: user scans food items, each item then pops up on the iPad with a photo and a price — $1, $5, etc... Tap the card on the card reader and behind the scenes we run through the payments flow and boom: fireworks, music, much excitement. Then "Go Again".
 
 <!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
-<!-- IMAGE PLACEHOLDER H8: Toys + QR stickers — close-up of printed Avery QR labels on toys -->
-<!-- IMAGE PLACEHOLDER H9: M2 + test cards — close-up of the Reader M2 and Stripe test cards -->
 
-Underneath this workflow, we've got a standard e-commerce stack:
+Underneath this workflow, we've got an e-commerce stack:
 
 <div class="mermaid-container">
 
@@ -105,21 +109,21 @@ There's three main pieces:
 
 1. **Swift iPad app** (the scanner connects in Bluetooth keyboard-wedge mode, meaning it mimics a keyboard, while the M2 scanner integrates through the [Stripe Terminal SDK](https://docs.stripe.com/terminal) rather than an iOS Bluetooth connection, and every request is signed with Apple App Attest so only my iPad can talk to the backend);
 
-2. **Rust worker on Cloudflare** that the iPad communicates with. This issues Stripe Terminal tokens that lets the Stripe Terminal SDK connect to the card reader, creates and captures `card_present` [PaymentIntents](https://docs.stripe.com/api/payment_intents) that represent the payment lifecycle, and keeps inventory in Cloudflare's key-value storage [KV](https://developers.cloudflare.com/kv/) with a transaction log in Cloudflare's Serverless SQL (SQLite) [D1](https://developers.cloudflare.com/d1/);
+2. **Rust worker on Cloudflare** that the iPad communicates with (put footnote here that I was inspired to use Rust after Wes McKinney's good point that with agents (https://wesmckinney.com/blog/agent-ergonomics/) there's value in picking tools that work well with agents, if not humans. With Rust giving higher performance and better feedback on compile errors). The worker issues Stripe Terminal tokens that lets the Stripe Terminal SDK connect to the card reader, creates and captures `card_present` [PaymentIntents](https://docs.stripe.com/api/payment_intents) that represent the payment lifecycle, and keeps photos and prices of inventory in Cloudflare's key-value storage [KV](https://developers.cloudflare.com/kv/) with a transaction log in Cloudflare's Serverless SQL (SQLite) [D1](https://developers.cloudflare.com/d1/);
 
 3. **Admin website** for inventory photo upload, pricing, QR generation, label printing, and a bit of analytics.
 
-TODO: Show some screenshots here of the admin website
+<!-- Show Screenshot of admin screen here. See stripe-toddler-admin.png -->
 
-If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. I want to talk about two things that made the whole project possible that for me, were new, powerful and I think applicable for future projects — the spec-driven process and the phone-first workflow.
+If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. Here I want to talk about two things that made the whole project possible that for me, were new, powerful, and I think generally applicable; the spec-driven process and the phone-first workflow.
 
-## The Harness: Spec-Driven Development, Round Two
+## Spec-Driven Process: The Harness - aka Me vs Spec Kit, Round Two
 
-In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and a mess of giant single-branch merges at the end. Even on a flagship model — Gemini Pro at the time — the agent wandered. Though it wasn't the model that was the problem, the harness it was working in was. With a revisit to the concept, two changes fixed my problems:
+In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and created a mess of giant single-branch merges. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, the harness it was working in was. With a revisit to the concept, two changes fixed my problems:
 
 ### Change #1 — a structured artifact pipeline
 
-Instead of running a workflow that went **spec → plan → code**, my pipeline was now **spec → artifacts → validation → plan → code**.
+Instead of running a workflow that went **spec file → plan file → code**, my pipeline was now **spec → artifacts → validation → plan → code**.
 
 1. **design-project** — a clarifying-questions interview that produces `description.md`, the prose spec. The governing principle: this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.
 2. **Artifact generation** — recipes per artifact type produce structured artifacts: state diagrams, message flows, UI mocks, plus topology, API, data, and capacity models.
