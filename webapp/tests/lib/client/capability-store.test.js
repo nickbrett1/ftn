@@ -16,7 +16,7 @@ function createLocalStorageMock(initialValue = null) {
 	};
 
 	globalThis.window = {};
-	globalThis.localStorage = store;
+	vi.stubGlobal('localStorage', store);
 
 	return store;
 }
@@ -54,7 +54,7 @@ describe('capability-store', () => {
 		vi.useRealTimers();
 		vi.restoreAllMocks();
 		delete globalThis.window;
-		delete globalThis.localStorage;
+		vi.unstubAllGlobals();
 	});
 
 	it('updates selection and validation when setSelectedCapabilities is called', async () => {

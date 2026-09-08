@@ -53,13 +53,13 @@
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.54.3",
+		"@cloudflare/vite-plugin": "^1.54.4",
 		"@dimforge/rapier3d-compat": "^0.20.0",
 		"@eslint/js": "^10.0.1",
 		"@lhci/cli": "^0.15.1",
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.86.6",
-		"@playwright/test": "^1.62.1",
+		"@playwright/test": "^1.63.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/adapter-cloudflare": "^7.2.9",
 		"@sveltejs/adapter-static": "^3.0.10",
@@ -72,11 +72,11 @@
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.4.2",
 		"@types/node": "^26.4.1",
-		"@vitest/coverage-v8": "^4.1.11",
+		"@vitest/coverage-v8": "^5.0.0",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^2.1.2",
 		"c8": "^12.0.0",
-		"eslint": "^10.9.1",
+		"eslint": "^10.10.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-security": "^4.0.1",
 		"eslint-plugin-sonarjs": "^4.2.0",
@@ -94,7 +94,7 @@
 		"mermaid": "^11.17.2",
 		"miragejs": "^0.1.48",
 		"playwright": "^1.62.1",
-		"postcss": "^8.5.26",
+		"postcss": "^8.5.28",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
 		"proxy-agent": "^8.0.2",
@@ -115,7 +115,7 @@
 		"vite": "^8.2.2",
 		"vite-imagetools": "^12.0.1",
 		"vitest": "^5.0.0",
-		"wrangler": "^4.128.0"
+		"wrangler": "^4.129.0"
 	},
 	"type": "module",
 	"engines": {

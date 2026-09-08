@@ -17,11 +17,11 @@ vi.mock(
 async function setup({ savedMode = null } = {}) {
 	vi.resetModules();
 
-	globalThis.localStorage = {
+	vi.stubGlobal('localStorage', {
 		setItem: vi.fn(),
 		getItem: vi.fn().mockReturnValue(savedMode),
 		removeItem: vi.fn()
-	};
+	});
 	globalThis.window = {};
 
 	vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -43,7 +43,7 @@ async function setup({ savedMode = null } = {}) {
 
 afterEach(() => {
 	delete globalThis.window;
-	delete globalThis.localStorage;
+	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
 

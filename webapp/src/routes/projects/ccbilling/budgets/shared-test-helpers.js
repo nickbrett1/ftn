@@ -17,13 +17,6 @@ export const setupTest = () => {
 	return globalThis.fetch;
 };
 
-export const setupMocks = () => {
-	vi.mock('$app/navigation', () => ({
-		goto: vi.fn(),
-		invalidateAll: vi.fn()
-	}));
-};
-
 // ========== DATA FACTORIES ==========
 export const createBudget = (id = 1, name = 'Groceries') => ({
 	id,

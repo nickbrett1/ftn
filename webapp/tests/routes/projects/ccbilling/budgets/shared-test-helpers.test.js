@@ -223,10 +223,6 @@ describe('test CRUD wrapper', () => {
 		);
 	});
 
-	it('setupMocks is defined', () => {
-		expect(helpers.setupMocks).toBeDefined();
-	});
-
 	it('createBudget returns object', () => {
 		expect(helpers.createBudget(1, 'G')).toEqual({
 			id: 1,
