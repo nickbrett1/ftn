@@ -81,9 +81,6 @@ steps:
             - DOPPLER_ENVIRONMENT
           volumes:
             - "ftn-npm-cache:/root/.npm"
-      - junit-annotate#v2.7.0:
-          artifacts: "webapp/reports/*.xml"
-          context: ftn-code-test
     env:
       DOPPLER_PROJECT: webapp
       DOPPLER_ENVIRONMENT: stg
@@ -96,3 +93,20 @@ steps:
     artifact_paths:
       - "webapp/reports/**"
       - "webapp/coverage/**"
+
+  # junit-annotate is its own step on purpose: it reads the XML from the
+  # artifacts API, and in the producing step the upload has not happened yet
+  # (learned in build #8, where it died with "no artifacts found"). Running it
+  # after code_test also means it annotates results whether or not the tests
+  # passed.
+  - label: ":junit: Test results"
+    key: junit_annotate
+    agents: *agent-queue
+    depends_on:
+      - code_test
+    allow_dependency_failure: true
+    plugins:
+      - junit-annotate#v2.7.0:
+          artifacts: "webapp/reports/*.xml"
+          context: ftn-code-test
+    command: "echo 'annotating test results'"
