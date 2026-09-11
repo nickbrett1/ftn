@@ -6,6 +6,8 @@
 steps:
   - label: ":chrome: Browser test (Lighthouse)"
     key: browser_test
+    agents: &agent-queue
+      queue: mac-studio-linux
     depends_on:
       - build
     if: build.branch == "main"

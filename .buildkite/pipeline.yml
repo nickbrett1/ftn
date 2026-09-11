@@ -21,4 +21,8 @@ env:
 steps:
   - label: ":mag: Bootstrap"
     key: bootstrap
+    # Target the self-hosted Mac Studio queue explicitly — never let a job land
+    # on an arbitrary agent.
+    agents: &agent-queue
+      queue: mac-studio-linux
     command: .buildkite/bootstrap.sh

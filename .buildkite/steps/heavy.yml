@@ -20,12 +20,15 @@
 steps:
   - label: ":shield: ggshield secret scan"
     key: ggshield
+    agents: &agent-queue
+      queue: mac-studio-linux
     env:
       SCAN_BASE: "__BASE_REVISION__"
     command: bash .buildkite/scripts/ggshield-scan.sh
 
   - label: ":hammer: Build"
     key: build
+    agents: *agent-queue
     # The named npm-cache volume is shared across jobs; serialise the steps that
     # use shared volumes so two builds cannot collide (matches CircleCI's
     # effectively-serial jobs — S10).
@@ -55,6 +58,7 @@ steps:
 
   - label: ":test_tube: Code test"
     key: code_test
+    agents: *agent-queue
     depends_on:
       - build
     plugins:

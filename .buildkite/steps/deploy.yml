@@ -10,6 +10,8 @@
 steps:
   - label: ":rocket: Deploy (production)"
     key: deploy
+    agents: &agent-queue
+      queue: mac-studio-linux
     depends_on:
       - code_test
     if: build.branch == "main"
@@ -47,6 +49,7 @@ steps:
 
   - label: ":rocket: Deploy preview"
     key: deploy_preview
+    agents: *agent-queue
     depends_on:
       - code_test
     # CircleCI: branches ignore main and dependabot/**.
