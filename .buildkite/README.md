@@ -50,6 +50,17 @@ steps:
 > empty string makes Buildkite run the build with *zero steps* (`not_run`).
 > The wrapper is also Buildkite's own default bootstrap shape.
 
+**The GitHub webhook has to be registered explicitly.** A pipeline created through
+the REST API gets a `provider.webhook_url` but no actual GitHub webhook, so pushes
+produce **nothing** — even though the repository connection exists and
+`build_branches`/`build_pull_requests` are true. Fix (undocumented, returns 201):
+
+```bash
+POST /v2/organizations/{org}/pipelines/{slug}/webhook   # with write scope
+```
+
+After that, builds arrive with `"source": "webhook"` rather than `"api"`.
+
 ## Agent configuration required (Mac Studio)
 
 These live in `buildkite-agent.cfg` / the agent's `environment` hook, **not** in
@@ -196,10 +207,12 @@ revocation is the whole mitigation), then fix, then mint a new one.
 
 ## Open items
 
-* **S5 — push-triggered builds.** A push to a branch did **not** create a build; the
-  GitHub repository connection exists and `build_branches`/`build_pull_requests` are
-  true. Builds were triggered via the REST API (S9 path proven). Investigate the
-  GitHub App webhook before making Buildkite a required check.
+* **S5 — push-triggered builds: resolved.** See the webhook registration above. A
+  push now creates a build (`source: webhook`) with no manual trigger.
+* **Branches that predate this port fail** at the wrapper step: there is no
+  `.buildkite/pipeline.yml` to upload until `.buildkite/` lands on `main`. That is
+  the one thing still blocking the brief's exit criteria (`dependabot/**` and
+  `main` builds).
 * **Lighthouse (S8)** has not been exercised end-to-end — it needs a landing-page
   change on `main`. Watch `CHROME_PATH` against the pinned image.
 * **Pin maintenance:** if `webapp`'s `playwright` moves past chromium-1243, update

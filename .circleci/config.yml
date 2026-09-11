@@ -25,6 +25,7 @@ workflows:
             specs/.* run-build-test-deploy false
             .*\.md run-build-test-deploy false
             .circleci/.* run-build-test-deploy false
+            .buildkite/.* run-build-test-deploy false
             webapp/.* run-build-test-deploy true
             package.json run-build-test-deploy true
             package-lock.json run-build-test-deploy true
