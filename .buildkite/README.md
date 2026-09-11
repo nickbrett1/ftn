@@ -88,6 +88,11 @@ last-match-wins semantics as `circleci/path-filtering@3.0.0`:
 * `run-lighthouse` is opt-in; when true **and** the build is on `main`, the
   Lighthouse step is uploaded in addition to the heavy set.
 
+**A push to the base branch itself has an empty diff**, so it takes the safety
+net (heavy) — that is deliberate, `main` is where the heavy set should run. The
+ggshield step then scans the tip commit's own diff (`REV^..REV`) rather than an
+empty range, which ggshield rejects.
+
 Prove it locally (no agent needed):
 
 ```

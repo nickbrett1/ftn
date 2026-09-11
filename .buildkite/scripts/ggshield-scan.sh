@@ -19,7 +19,15 @@ BASE="${SCAN_BASE:-}"
 REV="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is not set}"
 
 if [[ -z "$BASE" || "$BASE" == "HEAD~1" ]]; then
+	# No base available at all — fall back to the tip commit.
 	RANGE="$REV~1..$REV"
+elif [[ "$BASE" == "$REV" ]]; then
+	# A push to the base branch itself (main): the diff against the base is
+	# EMPTY, and ggshield rejects an empty range with "invalid commit range".
+	# Scan the tip commit's own diff instead — for a merge commit that is
+	# everything the merge brought in, which is what CircleCI's
+	# base_revision = previous-commit-on-the-branch resolves to as well.
+	RANGE="$REV^..$REV"
 else
 	RANGE="$BASE..$REV"
 fi
