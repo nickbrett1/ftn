@@ -86,3 +86,4 @@ a[target='_blank'] {
 /* Buildkite pilot: exercises the main-only Lighthouse step (removed immediately after). */
 /* Buildkite pilot: second touch so the tip-commit diff includes a landing-page file. */
 /* Buildkite pilot: touch a landing-page file again for the Lighthouse retest. */
+/* Buildkite pilot: touch a landing-page file again for the CHROME_PATH retest. */

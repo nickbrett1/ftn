@@ -36,6 +36,12 @@ steps:
             - DOPPLER_TOKEN
             - DOPPLER_PROJECT
             - DOPPLER_ENVIRONMENT
+            # S8: the image ships Chromium, not Google Chrome Stable, and nothing
+            # on PATH. chrome-launcher honours CHROME_PATH. Like the Doppler vars,
+            # the NAME must be listed here for the value (set in the step env
+            # below) to reach the container — build #24 failed with
+            # "Chrome installation not found" because it was only in `env:`.
+            - CHROME_PATH
           volumes:
             - "ftn-npm-cache:/root/.npm"
           # Chromium is happier with a real IPC namespace (Phase 0: no OOM).
