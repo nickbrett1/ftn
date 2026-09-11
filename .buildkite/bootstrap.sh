@@ -105,11 +105,30 @@ if [[ "${BUILDKITE_BRANCH:-}" == "main" && "$RUN_LIGHTHOUSE" == "true" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Phase 1: deploys stay DISABLED (decision D6). The ported deploy/deploy-preview
-# steps live in .buildkite/steps/deploy.yml but are deliberately NOT uploaded.
-# Phase 2 enables them after the parity gate passes:
+# Deploy gating (D6 -> cutover).
 #
-#   if [[ "${BUILDKITE_ENABLE_DEPLOYS:-}" == "true" ]]; then
-#     buildkite-agent pipeline upload "$BUILDKITE_DIR/steps/deploy.yml"
-#   fi
+# CircleCI's deploy job is retired with the project, so this is now the ONLY
+# path to production. Preview is enabled first; production stays off until a
+# preview run has been verified from here.
+#
+#   BUILDKITE_DEPLOY_MODE=off      upload nothing (the pilot behaviour)
+#   BUILDKITE_DEPLOY_MODE=preview  upload deploy.yml only on non-main branches,
+#                                  where its `if:` selects deploy_preview
+#   BUILDKITE_DEPLOY_MODE=all      upload everywhere (deploy runs on main too)
+#
+# Set it as a pipeline environment variable in the Buildkite UI, or take the
+# default.
 # ---------------------------------------------------------------------------
+deploy_mode="${BUILDKITE_DEPLOY_MODE:-preview}"
+deploy_upload=false
+case "$deploy_mode" in
+	all) deploy_upload=true ;;
+	preview) [[ "${BUILDKITE_BRANCH:-}" != "main" ]] && deploy_upload=true ;;
+	off) ;;
+	*) echo "Unknown BUILDKITE_DEPLOY_MODE='${deploy_mode}' — not uploading deploy steps." ;;
+esac
+
+if [[ "$deploy_upload" == "true" ]]; then
+	echo "Uploading deploy steps (BUILDKITE_DEPLOY_MODE=${deploy_mode})."
+	buildkite-agent pipeline upload "$BUILDKITE_DIR/steps/deploy.yml"
+fi

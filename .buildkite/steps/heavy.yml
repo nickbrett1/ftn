@@ -34,11 +34,17 @@ steps:
   - label: ":hammer: Build"
     key: build
     agents: *agent-queue
-    # The named npm-cache volume is shared across jobs; serialise the steps that
-    # use shared volumes so two builds cannot collide (matches CircleCI's
-    # effectively-serial jobs — S10).
-    concurrency_group: "ftn/shared-volumes"
-    concurrency: 1
+    # Deliberately NO concurrency_group here.
+    #
+    # The named npm-cache volume IS shared, but a group never actually protected
+    # it: within a single build, `code_test` and the Lighthouse step already run
+    # concurrently against that same volume (npm's cache is content-addressed
+    # and safe for concurrent writers). All the group did was serialise Build
+    # steps across *different* builds — and, combined with a dependent step in
+    # the same group, it deadlocked build #23 (Buildkite takes the group slot
+    # when a step is created, before its dependencies are satisfied).
+    #
+    # The two agents (spawn=2) are therefore free to run builds concurrently.
     plugins:
       - docker#v5.13.0:
           image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
