@@ -47,9 +47,11 @@ echo "ggshield: materialising ${RANGE} on the host (blobless checkout + host cre
 git diff "$RANGE" >/dev/null
 
 echo "ggshield: scanning commit range ${RANGE}"
+# The published image declares no ENTRYPOINT (Cmd is `ggshield`), so the
+# command must be spelled out in full or Docker tries to exec "secret".
 docker run --rm \
 	--volume "$PWD:/data" \
 	--workdir /data \
 	--env GITGUARDIAN_API_KEY \
 	"$GGSHIELD_IMAGE" \
-	secret scan commit-range "$RANGE"
+	ggshield secret scan commit-range "$RANGE"

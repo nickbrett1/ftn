@@ -21,6 +21,8 @@ steps:
           workdir: /workdir
           environment:
             - DOPPLER_TOKEN
+            - DOPPLER_PROJECT
+            - DOPPLER_ENVIRONMENT
     env:
       DOPPLER_PROJECT: webapp
       DOPPLER_ENVIRONMENT: stg
@@ -60,6 +62,8 @@ steps:
           workdir: /workdir
           environment:
             - DOPPLER_TOKEN
+            - DOPPLER_PROJECT
+            - DOPPLER_ENVIRONMENT
     env:
       DOPPLER_PROJECT: webapp
       DOPPLER_ENVIRONMENT: stg

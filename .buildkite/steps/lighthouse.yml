@@ -30,6 +30,8 @@ steps:
           workdir: /workdir
           environment:
             - DOPPLER_TOKEN
+            - DOPPLER_PROJECT
+            - DOPPLER_ENVIRONMENT
           volumes:
             - "ftn-npm-cache:/root/.npm"
           # Chromium is happier with a real IPC namespace (Phase 0: no OOM).

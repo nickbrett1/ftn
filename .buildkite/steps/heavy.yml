@@ -16,6 +16,11 @@
 #     hard-fail `pipeline upload` on v4's secret scanner.
 # DOPPLER_TOKEN is delivered to the job env by the agent `environment` hook (D10)
 # and named `*_TOKEN` so the agent's default log redaction applies for free.
+#
+# DOPPLER_PROJECT / DOPPLER_ENVIRONMENT are also listed here — learned in build
+# #6: a step-level `env:` value does NOT reach the container on its own, only
+# entries in this list do. Without it `doppler run` fails with
+# "You must specify a project" and wrangler.jsonc is never generated.
 
 steps:
   - label: ":shield: ggshield secret scan"
@@ -40,6 +45,8 @@ steps:
           workdir: /workdir
           environment:
             - DOPPLER_TOKEN
+            - DOPPLER_PROJECT
+            - DOPPLER_ENVIRONMENT
           volumes:
             - "ftn-npm-cache:/root/.npm"
     env:
@@ -67,6 +74,8 @@ steps:
           workdir: /workdir
           environment:
             - DOPPLER_TOKEN
+            - DOPPLER_PROJECT
+            - DOPPLER_ENVIRONMENT
           volumes:
             - "ftn-npm-cache:/root/.npm"
       - junit-annotate#v2.7.0:
