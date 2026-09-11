@@ -109,8 +109,11 @@ steps:
       - junit-annotate#v2.7.0:
           artifacts: "webapp/reports/*.xml"
           context: ftn-code-test
-          # When code_test never ran (an upstream failure), there is no XML to
-          # annotate. Without this the step adds a second, misleading failure
-          # on top of the real one (seen in build #15).
-          fail-build-on-error: false
+          # When code_test never ran (an upstream failure) there is no XML to
+          # annotate, and the plugin's default is to exit 2 on a failed download
+          # - a second, misleading failure on top of the real one (builds #15,
+          # #18). Note this is NOT `fail-build-on-error`, which is about errors
+          # parsing the XML. Artifacts still upload when tests fail, so genuine
+          # test failures are still annotated.
+          failed-download-exit-code: 0
     command: "echo 'annotating test results'"
