@@ -1,0 +1,82 @@
+# Heavy step set — uploaded by .buildkite/bootstrap.sh when the diff is not
+# trivial (the port of CircleCI's `build_test_deploy` workflow).
+
+# Pinned by DIGEST (S1 / §3.1). The floating `:jammy` tag is stale (Node 20.16,
+# Playwright 1.47) and CANNOT build this vite 7 app; the `v1.63.0-jammy` tag is
+# what Phase 0 verified (Node 24.20.0, npm 11.19.0, chromium-1243, arm64).
+# `webapp`'s playwright resolves to 1.63.0, matching the baked browser, so no
+# browser download is needed.
+#   mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847
+
+# NOTE on `environment:` lists — they are NAME-ONLY, deliberately:
+#   * the value resolves from the JOB env at container start (`docker run --env NAME`);
+#   * v4's BUILDKITE_ENV_FILE omits environment-hook vars, so
+#     `propagate-environment: true` forwards nothing useful (proved in Phase 0.5);
+#   * an inline `NAME=value` would leak the secret into the uploaded YAML and
+#     hard-fail `pipeline upload` on v4's secret scanner.
+# DOPPLER_TOKEN is delivered to the job env by the agent `environment` hook (D10)
+# and named `*_TOKEN` so the agent's default log redaction applies for free.
+
+steps:
+  - label: ":shield: ggshield secret scan"
+    key: ggshield
+    env:
+      SCAN_BASE: "__BASE_REVISION__"
+    command: bash .buildkite/scripts/ggshield-scan.sh
+
+  - label: ":hammer: Build"
+    key: build
+    # The named npm-cache volume is shared across jobs; serialise the steps that
+    # use shared volumes so two builds cannot collide (matches CircleCI's
+    # effectively-serial jobs — S10).
+    concurrency_group: "ftn/shared-volumes"
+    concurrency: 1
+    plugins:
+      - docker#v5.13.0:
+          image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
+          workdir: /workdir
+          environment:
+            - DOPPLER_TOKEN
+          volumes:
+            - "ftn-npm-cache:/root/.npm"
+    env:
+      DOPPLER_PROJECT: webapp
+      DOPPLER_ENVIRONMENT: stg
+    commands:
+      - bash .buildkite/scripts/install-doppler-cli.sh
+      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - bash .buildkite/scripts/assert-wrangler-jsonc.sh
+      - cd webapp && npm ci
+      - bash .buildkite/scripts/lockfile-drift-check.sh
+      - cd webapp && npm run build
+    artifact_paths:
+      - "webapp/.svelte-kit/**"
+      - "webapp/static/pdf.worker.min.mjs"
+
+  - label: ":test_tube: Code test"
+    key: code_test
+    depends_on:
+      - build
+    plugins:
+      - docker#v5.13.0:
+          image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
+          workdir: /workdir
+          environment:
+            - DOPPLER_TOKEN
+          volumes:
+            - "ftn-npm-cache:/root/.npm"
+      - junit-annotate#v2.7.0:
+          artifacts: "webapp/reports/*.xml"
+          context: ftn-code-test
+    env:
+      DOPPLER_PROJECT: webapp
+      DOPPLER_ENVIRONMENT: stg
+    commands:
+      - bash .buildkite/scripts/install-doppler-cli.sh
+      - cd webapp && npm ci
+      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - cd webapp && npm run lint
+      - cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+    artifact_paths:
+      - "webapp/reports/**"
+      - "webapp/coverage/**"

@@ -1,0 +1,24 @@
+# Buildkite — ftn. Phase 1 port of .circleci/config.yml (dynamic config) +
+# .circleci/config-main.yml. The heavy steps are generated and uploaded by
+# .buildkite/bootstrap.sh, exactly like CircleCI's path-filtering setup workflow.
+#
+# Source of truth for the port: .buildkite/README.md.
+# Deploys are DISABLED for this phase (D6).
+
+# S3 — checkout cost. Build #1 pulled 64,900 objects / ~415 MiB with no filter;
+# CircleCI's `checkout: method: blobless` had not been carried over. Measured on
+# this repo: full 64,900 obj / 420 MiB / 21 s  ->  blobless 48,290 obj / 96 MiB / 2 s
+# (-77% bytes, -90% time).
+#
+# Pipeline-level env is applied to the jobs the bootstrap uploads. The bootstrap
+# step's own checkout happens before this file is read, so it uses the agent
+# defaults — set these two variables on the agent as well to tune that first
+# checkout (see README "Agent configuration").
+env:
+  BUILDKITE_GIT_CLONE_FLAGS: "--filter=blob:none --no-tags"
+  BUILDKITE_GIT_FETCH_FLAGS: "--filter=blob:none --no-tags"
+
+steps:
+  - label: ":mag: Bootstrap"
+    key: bootstrap
+    command: .buildkite/bootstrap.sh

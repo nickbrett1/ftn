@@ -1,0 +1,56 @@
+# Lighthouse step — the port of CircleCI's main-only `browser_test` job.
+# It is uploaded by .buildkite/bootstrap.sh ONLY when the diff touches
+# landing-page files (run-lighthouse=true) AND the build is on main — the same
+# outcome as CircleCI's job-level branch filter plus the in-job shell gate.
+
+steps:
+  - label: ":chrome: Browser test (Lighthouse)"
+    key: browser_test
+    depends_on:
+      - build
+    if: build.branch == "main"
+    concurrency_group: "ftn/shared-volumes"
+    concurrency: 1
+    plugins:
+      # CircleCI's workspace (persist_to_workspace / attach_workspace) is
+      # replaced by the artifacts API. The artifacts plugin downloads BEFORE any
+      # command hook, on the host, into the checkout — which the docker plugin
+      # then mounts at /workdir.
+      #
+      # S2: `webapp/.svelte-kit` measures ~138 MB, which is large for an artifact
+      # round-trip. If this proves slow, swap it for a docker volume shared with
+      # the build step (the brief's fallback) and drop this plugin.
+      - artifacts#v1.9.4:
+          download:
+            - "webapp/.svelte-kit/**"
+      - docker#v5.13.0:
+          image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
+          workdir: /workdir
+          environment:
+            - DOPPLER_TOKEN
+          volumes:
+            - "ftn-npm-cache:/root/.npm"
+          # Chromium is happier with a real IPC namespace (Phase 0: no OOM).
+          ipc: host
+    env:
+      DOPPLER_PROJECT: webapp
+      DOPPLER_ENVIRONMENT: stg
+      LIGHTHOUSE_ENABLED: "true"
+      # S8 — the pinned image ships Chromium only; there is no Google Chrome
+      # Stable and nothing browser-shaped on PATH (CircleCI's orb installed
+      # Chrome). Point Lighthouse at the Playwright-baked Chromium instead of
+      # porting `install-chrome`. `.lighthouserc.cjs` already passes --no-sandbox.
+      CHROME_PATH: /ms-playwright/chromium-1243/chrome-linux-arm64/chrome
+      SENTRY_ORG: nick-brett
+      SENTRY_PROJECT: bem-backend
+      SENTRY_ENVIRONMENT: staging
+    commands:
+      - bash .buildkite/scripts/install-doppler-cli.sh
+      - cd webapp && npm ci
+      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      # The image has no jq; webapp/scripts/run-lhci.sh uses it to strip the
+      # `ai` binding from wrangler.jsonc before the local preview.
+      - apt-get update && apt-get install -y --no-install-recommends jq
+      - cd webapp && npm run lighthouse-staging
+    artifact_paths:
+      - "webapp/.lighthouseci/**"
