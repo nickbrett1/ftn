@@ -82,3 +82,5 @@ a[target='_blank'] {
 	user-select: text;
 	touch-action: manipulation;
 }
+
+/* Buildkite pilot: exercises the main-only Lighthouse step (removed immediately after). */
