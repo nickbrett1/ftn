@@ -135,6 +135,13 @@ per-step install ever becomes flaky, build Lane 2b then — not speculatively.
   the command line.
 * Log redaction is a **log-stream transform only** — it does not protect `dist/`
   or artifacts. See the leak gate below.
+* **In a YAML `command:` block, shell references to hook vars must be `$$VAR`.**
+  Buildkite interpolates `$VAR` in the pipeline YAML and an unknown var becomes
+  *empty*, so `$$DOPPLER_TOKEN` is required for the shell to see it (proved the
+  hard way in the D10 canary — three failed builds). This only affects `command:`
+  blocks; the docker plugin's `environment:` name-only list is unaffected. The
+  uploaded steps keep all shell work in `.buildkite/scripts/*.sh` for exactly
+  this reason.
 
 ## Leak gate (run after the first green build)
 

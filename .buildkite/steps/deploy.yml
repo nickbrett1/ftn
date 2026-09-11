@@ -33,10 +33,14 @@ steps:
       - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
       - cd webapp && npm run deploy
       # ntfy notification (Doppler-provided URL), same as CircleCI's notify_deployment.
+      #
+      # `$$` here is deliberate: Buildkite interpolates `$VAR` in YAML `command:`
+      # blocks and an unknown var becomes EMPTY, so a shell reference to a hook var
+      # must be written `$$VAR` to survive to the shell.
       - |
-        NTFY_URL="$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd --token "$DOPPLER_TOKEN" || true)"
-        if [ -n "$NTFY_URL" ]; then
-          curl -s -d "🚀 [ftn] Production deployment successful! Branch: ${BUILDKITE_BRANCH}, Commit: ${BUILDKITE_COMMIT:0:7}" "$NTFY_URL"
+        NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd --token "$$DOPPLER_TOKEN" || true)"
+        if [ -n "$$NTFY_URL" ]; then
+          curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $${BUILDKITE_COMMIT:0:7}" "$$NTFY_URL"
         else
           echo "⚠️ NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
         fi
