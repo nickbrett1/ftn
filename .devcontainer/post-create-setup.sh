@@ -70,6 +70,32 @@ else
 fi
 
 
+echo "INFO: Activating the npm version pinned in webapp/package.json (genproj-npm-pin)..."
+# webapp pins npm >=11 <12 (packageManager npm@11.19.1) for the vitest-4
+# arborist fix, but the Node 22 base image ships npm 10. packageManager alone
+# does NOT switch npm (corepack only shims yarn/pnpm), so install the pinned
+# version globally here — mirroring genproj's generated NODE_SETUP_SCRIPT and
+# CI. Do this before any other npm usage below.
+PINNED_NPM="$(node -p "try{return require('/workspaces/ftn/webapp/package.json').packageManager||''}catch(e){return ''}" 2>/dev/null || true)"
+if [ -z "$PINNED_NPM" ]; then
+    # Fall back to the lower bound of engines.npm (e.g. ">=11 <12" -> 11).
+    PINNED_NPM="$(node -p "try{const m=(require('/workspaces/ftn/webapp/package.json').engines||{}).npm||'';const x=m.match(/>=\\s*([0-9]+)/);return x?('npm@'+x[1]):''}catch(e){return ''}" 2>/dev/null || true)"
+fi
+if [ -n "$PINNED_NPM" ]; then
+    VERSION="${PINNED_NPM#npm@}"
+    CURRENT="$(npm --version 2>/dev/null || echo '')"
+    if [ "$VERSION" != "$CURRENT" ]; then
+        echo "INFO: Activating pinned ${PINNED_NPM} (current npm: ${CURRENT:-unknown})..."
+        if ! npm install -g "npm@${VERSION}" 2>/dev/null && ! sudo npm install -g "npm@${VERSION}" 2>/dev/null; then
+            echo "WARN: Could not activate pinned npm ${VERSION}; continuing with $(npm --version 2>/dev/null)"
+        fi
+    else
+        echo "INFO: npm already at pinned ${PINNED_NPM}."
+    fi
+else
+    echo "INFO: No npm pin found in webapp/package.json; skipping."
+fi
+
 echo "INFO: Installing specdag globally..."
 npm install -g @japorto100/specdag
 

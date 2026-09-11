@@ -26,7 +26,7 @@ August 2026
 <ProjectLinkButton href={projectUrl} />
 
 <!-- IMAGE PLACEHOLDER H1: Hero shot — full setup: iPad on stand + Tera Mini scanner + Stripe Reader M2 + toys with barcodes -->
-<!-- use toddler-stripe-hero.jpg -->
+<!-- TODO use toddler-stripe-hero.jpg -->
 
 ## Introduction or Why building functional e-commerce platforms for toddlers can be a thing
 
@@ -38,11 +38,12 @@ This was to be my most ambitious agentic side-project yet, for a few reasons:
 
 1. **It involved hardware.** Hardware is fun but historically I've it so time consuming to utilize, with long iteration and debug cycles, that it's just gathered dust. Agents let me cut through that and it was a lot of fun.
 
-<!-- IMAGE PLACEHOLDER HERE: Photo of scanner and another photo of credit card reader -->
+<!-- TODO: IMAGE PLACEHOLDER HERE: see stripe-toddler-scanner.jpg and stripe-toddler-card-reader-and-card.jpg
+Photo of scanner and another photo of credit card reader -->
 
 2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. Or more truthfully, not at all. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode independently.
 
-<!-- IMAGE PLACEHOLDER HERE: Screenshot of iPad App -->
+<!-- TODO: available as stripe-toddler-ipad-screenshot IMAGE PLACEHOLDER HERE: Screenshot of iPad App -->
 
 3. **I wanted to achieve end to end spec-driven development.** In my [prior attempt at using SpecKit](https://fintechnick.com/projects/speckit-dev) I couldn't quite get a workflow working that generated a functional application — my agent kept getting confused and lost in fruitless iteration. I wanted to do better this time.
 
@@ -58,7 +59,17 @@ A store. An iPad, a Tera Mini wireless scanner, a Stripe Reader M2, a test credi
 
 Here's the intended flow: user scans food items, each item then pops up on the iPad with a photo and a price — $1, $5, etc... Tap the card on the card reader and behind the scenes we run through the payments flow and boom: fireworks, music, much excitement. Then "Go Again".
 
-<!-- IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel) -->
+<!-- TODO: add images. IMAGE PLACEHOLDER H3–H7: iPad POS states — idle → item added → card present → celebration → "Go Again" (grid or carousel)
+
+In lib/images:
+
+stripe-toddler-ready-scan (idle)
+stripe-toddler-corn (item to scan)
+stripe-toddler-item-added (item added)
+stripe-toddler-syncing-reader (syncing card reader)
+stripe-toddler-tap-card (tap card)
+stripe-toddler-celebration (celebration + go again)
+-->
 
 Underneath this workflow, we've got an e-commerce stack:
 
@@ -113,29 +124,31 @@ There's three main pieces:
 
 3. **Admin website** for inventory photo upload, pricing, QR generation, label printing, and a bit of analytics.
 
-<!-- Show Screenshot of admin screen here. See stripe-toddler-admin.png -->
+<!-- TOOD show Screenshot of admin screen here. See stripe-toddler-admin.png -->
 
 If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. Here I want to talk about two things that made the whole project possible that for me, were new, powerful, and I think generally applicable; the spec-driven process and the phone-first workflow.
 
-## Spec-Driven Process: The Harness - aka Me vs Spec Kit, Round Two
+## Spec-Driven Process: The Harness
 
-In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and created a mess of giant single-branch merges. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, the harness it was working in was. With a revisit to the concept, two changes fixed my problems:
+In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and I created a mess of branch conflicts. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, it was the structure I was using around it. With a revisit to the concept, a new process fixed my problems:
 
-### Change #1 — a structured artifact pipeline
+### A structured artifact pipeline
 
 Instead of running a workflow that went **spec file → plan file → code**, my pipeline was now **spec → artifacts → validation → plan → code**.
 
-1. **design-project** — a clarifying-questions interview that produces `description.md`, the prose spec. The governing principle: this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.
-2. **Artifact generation** — recipes per artifact type produce structured artifacts: state diagrams, message flows, UI mocks, plus topology, API, data, and capacity models.
-3. **validate-spec** — artifacts are cross-checked for consistency against a dependency map (**spec-dag**) _before anything is built_. This is the step that kills the tangents: the agent implements a consistent, validated artifact set instead of improvising from prose.
-4. **generate-plan** — the plan is generated _off the validated artifacts_. It's a translation of agreed structure, not a first draft.
-5. **scaffold-project + execute-plan** — once validated, the repo itself is scaffolded via genproj (devcontainers, CircleCI, Doppler, Sonar, the lot), then implementation runs phase-by-phase in-repo.
+1. **spec** — this remained nearly unchanged to my prior approach. I created a textual description of what my project needed to do, along with a `constitution.md` outlining various constraints that the project needed to uphold. The spec itself was generated with the guidance `this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.`
+2. **artifacts** — here's where things differed. We generated structured artifacts that described different aspects of the project, specifically: state diagrams, message flows, UI mocks, deployment topology, APIs, data models, and capacity models.
+3. **validation** — to validate we took the artifacts and cross-checked them against each other for consistency by generating a dependency map using the [specdag](https://github.com/japorto100/specdag) tool. This step ensured that there were no dangling dependencies such as a UI mock that wasn't referenced in any message flows, or any circular dependencies. Although we can't guarantee we didn't miss any requirements, it was a step that did give me confidence that the design was self-consistent.
+4. **plan** — them the implementation plan is generated _off the validated artifacts_. This ensures we have a higher quality result than if we just generate a plan from the spec.
+5. **scaffold-project + generate-code** — once validated my approach was similar to past efforts, but one change was that I first scaffolded the project using [genproj](https://fintechnick.com/projects/genproj), a personal code generation tool I built that creates all the config and setup for my favorite frameworks and tools. genproj creates templates for things like my CI/CD, secrets management, devcontainers, code quality checks and cloud deployment scripts. This scaffold meant that the implementation generation could focus on the core logic.
 
 For those interested in the details, the workflow is codified as a set of [goose recipes here](https://github.com/nickbrett1/goose-recipes).
 
-Here's the artifact tree this produced for stripe-toddler — every file cross-checked against the others:
+And here's the artifact tree this produced for stripe-toddler — every artifact cross-checked against the others:
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+
+<!-- TODO - can these be links to the files in github? -->
 
 ```text
 spec/
@@ -158,7 +171,9 @@ spec/
     └── load-model.md              # sizing, retention, IOPS
 ```
 
-The payoff was visible immediately. Here's the payment state machine — a validated artifact that both I and the agent could hold in our heads while building:
+And here's the payment state machine — a nice validated artifact that helped ensure the code would cover all the necessary cases:
+
+<!-- TODO The background is black and the lines on the diagram and text aren't readable -->
 
 <div class="mermaid-container">
 
@@ -188,7 +203,9 @@ stateDiagram-v2
 
 </div>
 
-And here's the checkout flow as a message sequence, again from the specs — this is the diagram that made the whole system feel tractable before a line of Swift or Rust existed:
+And here's the artifact for the checkout flow as a message sequence:
+
+<!-- TODO  The background is black and the lines on the diagram and text aren't readable -->
 
 <div class="mermaid-container">
 
@@ -237,74 +254,73 @@ sequenceDiagram
 
 </div>
 
-The point isn't the diagrams themselves — it's that they existed _before_ the code, agreed and cross-checked. When something did need to change, it rippled through small, cheap artifacts instead of through a mountain of generated code. That was the exact failure mode from last time, addressed at the root. And it mattered doubly here, because the model doing the implementing was a cheap one: with the structure pinned down in advance, the model didn't need to be clever, just obedient.
+Beyond having a clear definition of the expected behavior of the project, this also greatly decreased the cost and risk of making changes. Instead of the change rippling through a mountain of agent created code, it could be made first in these small, relatively cheap artifacts, then validated. After which it was a more straightforward translation step to change the code.
 
-### Change #2 — a phone-first iteration harness
+## Mobile first development
 
-The second change is the tooling that made iteration cheap enough to do constantly — and, crucially, cheap enough to do _from my phone_:
+Having a process for building the application was only part of the story, I simply didn't have enough concentrated time in front of my desktop computer to get it done. I needed to make development possible for when I was on the go. I'd previously been using [Google Jules](https://jules.google.com/), an asynchronous web-based tool for fixing bugs or making small enhancements with agents, but I needed something much more powerful, full access to my desktop toolchain from my phone. Here's what I built:
 
-- **One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer. Xcode is driven through its MCP server, bridged from inside the container by a small proxy ([`mcp-sse-proxy.cjs`](https://github.com/nickbrett1/stripe-toddler/blob/main/.agents/mcp-sse-proxy.cjs) → `xcode-native` MCP), so the agent can edit, rebuild, and run the iOS tests without ever leaving the container. No context-switching between an IDE and a backend toolchain.
+**One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer (stripe-toddler). However the admin screen is part of a different project (ftn), and so live in a different VSCode devcontainer.
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+This was relatively simple to expose, I could ensure each container was added to my [tailscale](https://tailscale.com/) VPN network when it started, and then using [blink](https://blink.sh/) I could use a mobile shell to remote in.
 
-```json
-// .agents/mcp_config.json (excerpt) — the bridge that makes the magic chain possible
-{
-	"mcpServers": {
-		"xcode-native": {
-			"command": "node",
-			"args": ["/workspaces/stripe-toddler/.agents/mcp-sse-proxy.cjs", "http://mac-studio:9876/sse"]
-		}
-	}
-}
-```
+One challenge was how to get access to Xcode, it can't run in a container and runs as a native application on my host (Mac) desktop.
 
-- **Phone access, not async-only.** This is where I finally closed the gap I kept running into with [Google Jules](https://jules.google.com/). Jules proved the phone-first idea to me, but it ran on Google's cloud: no access to all my desktop tools, occasionally hours per request, and by design asynchronous — it never stopped to ask a clarifying question. This time I wanted my _own_ setup, as close to sitting at the desktop as possible. [Blink Shell](https://blink.sh/) + mosh into the devcontainer from my phone over Tailscale — each devcontainer runs Tailscale itself, so the phone connects _directly_ to the container, no host hop. Same tools, same performance, just on the go, and it can stop and ask me things mid-build.
-- **LiteLLM.** A single switch to route to cheaper models. This project ran on **DeepSeek-v4-flash** at published rates of **$0.14/$0.28 per M tokens** (input/output), instead of the Gemini Pro that was current when I wrote the December 2025 article — **Gemini 3 Pro at $2.50/$10.00 per M tokens**. That's roughly 18× cheaper on input and 36× cheaper on output. Agentic work skews output-heavy, so the real-world delta landed around **30×**. Cheap had its own compounding benefit too: no rate-limit anxiety on a subscription, which made me willing to iterate more aggressively.
+For this I took advantage of the relatively new [MCP support in Xcode 26.3](https://www.apple.com/newsroom/2026/02/xcode-26-point-3-unlocks-the-power-of-agentic-coding/). However this wasn't enough, because I ran my development environment in my Linux dev container which didn't have direct access to my host Mac. To bridge from my dev container, there needed to be two additional pieces:
 
-The guardrails carried over from last time: `.agents/.rules` with [git and testing guidelines](https://github.com/nickbrett1/stripe-toddler/tree/main/.agents/.rules), plus SonarCloud, GitGuardian, and Dependabot in CI.
+1. A small proxy running in my dev container ([`mcp-sse-proxy.cjs`](https://github.com/nickbrett1/stripe-toddler/blob/main/.agents/mcp-sse-proxy.cjs) to connect over HTTP to the mac host.
 
-The pitch, in one line: this is the iteration story the Spec Kit article said was missing — validate artifacts _before_ generating code, so changes ripple cheaply, and keep a desktop-grade harness reachable from a phone, and the model becomes almost an implementation detail.
+2. Another small proxy running on my mac-studio ([`xcode-mcp-server.js`](https://github.com/nickbrett1/stripe-toddler/blob/main/mcp/xcode-mcp-server.js) maps HTTP requests back to stdio. This is then run using PM2, and can be easily monitored with [reeve](https://reeve.fredrivett.com/)
+
+<!-- TODO, mermaid diagram showing connectivity from phone (blink) over tailscale, to dev container, to mcp proxy over HTTP to second proxy to stdio into xcode -->
+
+With this my agent in my dev container I can edit all the xcode project files, build, run tests and even launch the iPad app itself all from my agent in my dev container. Of course from a phone I couldn't use the iPad app, but I could get a lot done before final acceptance testing at my desktop.
+
+The final benefit with this setup is that I can seamlessly move between my phone and my desktop. I have the same tmux session on my phone as my desktop, when I sit down at my desktop I see the last thing I typed on my mobile, and vice-versa.
+
+**Seamless setup**
+
+Having a setup that let me access a container seamlessly when it's up and running is useful, but I wanted to go further and ensure I could launch a vscode dev container from my phone. Not only is this useful for starting a new project, but it also protected me against machine reboots on my desktop.
+
+For this, I created a simple script ([`devopen`](https://github.com/nickbrett1/devopen)) which can clone code from any repo, build and start its respective devcontainer and open the VS Code window.
+
+And of course, I also made sure my Mac would auto-login if it rebooted, and as a final tool to use in an emergency I have the excellent [Jump Desktop](https://jumpdesktop.com/) remote desktop software.
 
 ## The Magical Moment
 
-<!-- IMAGE PLACEHOLDER M1: Phone screenshot — live Blink + mosh session into the devcontainer -->
+<!-- TODO: Stylized diagram showing the flow for this, phone -> blink -> vscode -> mac-studio -> xcode -> ipad -->
 
-First real session. The toddler is the user, the demo is happening live, and the post-purchase celebration — the part I was most proud of — isn't exciting enough for her. She watches the fireworks with the flat, professional disappointment only a three-year-old can deliver.
+This all came together in a quite magical moment as I was trying the app with my test user for the first time.
 
-Here's the chain, blow by blow:
+It became clear that the celebration screen was not up to the expected quality standards, with not enough fireworks and no sound.
 
-1. **Phone** — [Blink Shell](https://blink.sh/), mosh straight into the VSCode devcontainer over Tailscale. Each container runs its own Tailscale, so it's a direct connection; mosh keeps the session alive while I walk around the room.
-2. **Agent** — I ask the agent to make the celebration more exciting.
-3. **One workspace** — the devcontainer holds the whole stack: the Rust backend and the Swift iPad app. No toolchain switch, no new terminal, no context loss.
+In the moment here's what I did:
+
+1. **Phone** — [Blink Shell](https://blink.sh/), mosh into the VSCode devcontainer over Tailscale. Mosh keeps the session alive.
+2. **Agent** — I ask the agent in my vscode terminal to make the celebration more exciting.
+3. **One workspace** — the agent can understand the whole stack, with both the Rust backend and the Swift iPad app (mounted from the mac-studio host).
 4. **MCP bridge** — the agent reaches the custom MCP wrapper on the Mac host (`mcp-sse-proxy.cjs` → `xcode-native` MCP at `mac-studio:9876/sse`).
-5. **Xcode** — the wrapper drives Xcode end-to-end: edit → rebuild → run tests, all automated, no step-by-step approval.
-6. **The iPad, 10 meters away** — reloads with the new celebration, mid-demo, in response to observed user feedback.
+5. **Xcode** — the wrapper drives Xcode end-to-end: edit → rebuild → run tests, all automated
+6. **The iPad, at the other side of the house** — reloads with the new celebration, mid-demo, in response to the critical user feedback.
+7. **Updated Celebration** — all within about 30 seconds
 
-In a pre-agentic world, that's a "note it down and fix it tonight" moment — a task that goes on a list, gets picked up later, and ships tomorrow at the earliest. Now it's a **2-minute loop**: observation → instruction → shipped → verified, all while the user is watching. That loop, more than any single feature, was the product.
-
-This was also the first real end-to-end run of the iPhone → devcontainer agent pipeline — the "desktop, in my pocket" idea that [Google Jules](https://jules.google.com/) had pointed me toward but couldn't quite deliver. Worth one line because it stopped being a sketch and became the default way I build.
+In a pre-agentic world, when giving demos this is a "note it down and fix it tonight" moment — a task that goes on a list, gets reviewed and prioritized, and ships tomorrow at the earliest. We've now got a **30-second loop**: observation → instruction → shipped → verified, all while the user is watching. That was amazing to see in action.
 
 ## Takeaways
 
-Three things, and I'll keep them to three:
+Three things I learned from this:
 
-1. **Artifacts before code.** The missing step from the first spec-kit project: typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan. Spec-dag validation is what stopped the wandering, and it's exactly the kind of scaffolding that lets a cheap model do expensive-sounding work. Show a little to explain it, but the full [artifact set is public](https://github.com/nickbrett1/stripe-toddler/tree/main/specs/spec), as are the [recipes](https://github.com/nickbrett1/goose-recipes) that produce it.
-2. **A better harness beat a better model.** I went into this expecting the lesson to be about which model to pick. It wasn't. The harness — validated artifacts, one devcontainer, phone-first access, an MCP bridge into Xcode — got good enough that a cheaper, less capable model was plenty: DeepSeek-v4-flash at ~$0.14/$0.28 per M tokens produced straighter work than last time's flagship at ~$2.50/$10.00. Roughly 30× cheaper and visibly better behaved — and without the subscription rate-limit anxiety, iterating got more ambitious, not less.
-3. **Make iteration a phone-speed loop.** Devcontainer + MCP + mosh turned "note it down and fix it tonight" into a 2-minute loop, reachable from my pocket. The loop was the real product — it's why a three-year-old's feedback could drive the build in real time, and why the whole project could run while I was away from my desk.
+1. **Artifacts before code.** This was perhaps in hindsight obvious, a robust software design process has diagrams and review documents. But working out how to integrate that notion with agents took me some time. But with typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan, coupled with validation, I saw a significant improvement in the quality of the final output.
 
-## Links, Shoutouts, and the Fine Print
+2. **Phone access unlocked bandwidth** Getting the ability to do real development work from my phone turned this from a project that would probably never have even started to something that could be chipped away at in the free moments I had. Each step was small, but in the end, led to a complete project.
 
-- **The project:** [github.com/nickbrett1/stripe-toddler](https://github.com/nickbrett1/stripe-toddler) — specs, Rust worker, iOS app, and the guardrails that kept it honest.
-- **The process:** [github.com/nickbrett1/goose-recipes](https://github.com/nickbrett1/goose-recipes) — the recipes behind the artifact pipeline, public and reusable.
-- **The prior article:** [Vibe Coding with Spec Kit](/projects/speckit-dev), where this journey started — and where the harness that worked here was still missing.
-- **The phone-first idea:** [Google Jules](https://jules.google.com/), which convinced me the mobile workflow was worth chasing.
-- **The admin side:** [/projects/stripe-toddler-admin](/projects/stripe-toddler-admin), live on this site.
+3. **Make iteration a phone-speed loop.** Having a complete end-to-end loop from my phone, through my dev environment with automated deployment gave an insight into how fast we can now iterate on software. I wasn't expected this at all, but a "note it down and fix it tonight" process became a 30-second iteration, and possible from my phone.
 
-A shoutout to Matthew Warshauer, a friend at Stripe who also has a son — proof that Stripe's hardware and APIs are approachable enough for a dad-and-toddler project. <!-- TODO at publish: give Matthew a heads-up before the article goes out; add his LinkedIn link then -->
+## Links and Shout Outs
 
-And, of course, to the small human who was product owner, QA lead, and most demanding user. The store is hers; I just ran the ledger.
+- **The project:** [github.com/nickbrett1/stripe-toddler](https://github.com/nickbrett1/stripe-toddler) — specs, Rust worker and iOS app
+- **The process:** [github.com/nickbrett1/goose-recipes](https://github.com/nickbrett1/goose-recipes) — the recipes behind the spec artifact process
 
-One piece of fine print, in the spirit of honesty: all payments shown here ran in Stripe **test mode** — the sales are real to a three-year-old, but they're not real money. The M2 and the test cards behave exactly like the production ones, which is the point: Stripe's stack doesn't care whether the customer is a toddler or a multinational.
+And, of course, to the design reviewer, QA lead, and most demanding user. Thank you.
 
-If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it. The hardware is a Saturday project; the harness is the part worth stealing.
+If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it!
