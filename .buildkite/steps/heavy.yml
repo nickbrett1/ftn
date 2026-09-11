@@ -52,13 +52,16 @@ steps:
     env:
       DOPPLER_PROJECT: webapp
       DOPPLER_ENVIRONMENT: stg
+    # NOTE: unlike CircleCI's `run:` steps, the docker plugin runs all of these
+    # in ONE shell, so a bare `cd webapp` would persist. Subshells keep each
+    # command's working directory isolated.
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - bash .buildkite/scripts/assert-wrangler-jsonc.sh
-      - cd webapp && npm ci
+      - (cd webapp && npm ci)
       - bash .buildkite/scripts/lockfile-drift-check.sh
-      - cd webapp && npm run build
+      - (cd webapp && npm run build)
     artifact_paths:
       - "webapp/.svelte-kit/**"
       - "webapp/static/pdf.worker.min.mjs"
@@ -86,10 +89,10 @@ steps:
       DOPPLER_ENVIRONMENT: stg
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - cd webapp && npm ci
-      - cd webapp && ./scripts/setup-wrangler-config.sh stg
-      - cd webapp && npm run lint
-      - cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci
+      - (cd webapp && npm ci)
+      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
+      - (cd webapp && npm run lint)
+      - (cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci)
     artifact_paths:
       - "webapp/reports/**"
       - "webapp/coverage/**"

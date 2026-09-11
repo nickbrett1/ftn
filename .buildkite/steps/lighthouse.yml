@@ -48,13 +48,15 @@ steps:
       SENTRY_ORG: nick-brett
       SENTRY_PROJECT: bem-backend
       SENTRY_ENVIRONMENT: staging
+    # Subshells: the docker plugin runs all commands in one shell, so a bare
+    # `cd webapp` would persist into the next command.
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - cd webapp && npm ci
-      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - (cd webapp && npm ci)
+      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       # The image has no jq; webapp/scripts/run-lhci.sh uses it to strip the
       # `ai` binding from wrangler.jsonc before the local preview.
       - apt-get update && apt-get install -y --no-install-recommends jq
-      - cd webapp && npm run lighthouse-staging
+      - (cd webapp && npm run lighthouse-staging)
     artifact_paths:
       - "webapp/.lighthouseci/**"

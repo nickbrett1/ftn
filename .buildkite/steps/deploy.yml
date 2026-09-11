@@ -31,11 +31,11 @@ steps:
       SENTRY_ENVIRONMENT: production
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
       - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
-      - cd webapp && npm run deploy
+      - (cd webapp && npm run deploy)
       # ntfy notification (Doppler-provided URL), same as CircleCI's notify_deployment.
       #
       # `$$` here is deliberate: Buildkite interpolates `$VAR` in YAML `command:`
@@ -72,7 +72,7 @@ steps:
       SENTRY_ENVIRONMENT: preview
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - cd webapp && ./scripts/setup-wrangler-config.sh stg
+      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
       - |
