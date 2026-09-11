@@ -11,21 +11,60 @@ Source brief: the `buildkite-phase1-ftn` memo. Master plan: `DFSsNwAc8NXcKSQsA2S
 
 ```
 .buildkite/
-  pipeline.yml            # bootstrap only — the port of CircleCI's dynamic config
+  pipeline.yml            # the repo-side pipeline (bootstrap step)
   bootstrap.sh            # diff → decision → `pipeline upload` (path-filtering port)
   scripts/
     routing.sh            # the mapping table, ported verbatim (sourceable, testable)
     install-doppler-cli.sh
-    setup/assert helpers  # wrangler.jsonc assertion, lockfile drift
+    assert-wrangler-jsonc.sh, lockfile-drift-check.sh
     ggshield-scan.sh      # ggshield/scan orb equivalent
   steps/
-    heavy.yml             # ggshield + Build + Code test (uploaded when non-trivial)
-    lighthouse.yml        # main-only Lighthouse step (uploaded when the diff warrants)
+    heavy.yml             # ggshield + Build + Code test + Test results
+    lighthouse.yml        # main-only Lighthouse step (uploaded only when warranted)
     deploy.yml            # ported deploy steps — NOT uploaded during the pilot (D6)
   tests/test-routing.sh   # 28 cases over the mapping table
 ```
 
 `.circleci/` is untouched — it stays until Phase 3 (cutover).
+
+## Wiring the pipeline object
+
+Buildkite has no "commit the config and a pipeline appears" path: a Pipeline
+object must exist before a push means anything. The one for this repo is
+`nick-brett/ftn` (cluster `25e535fa-b23a-48bb-8588-1b1454fcfef8`, repo
+`https://github.com/nickbrett1/ftn.git`).
+
+Its own `configuration` is a single wrapper step that uploads the repo file, so
+`.buildkite/pipeline.yml` stays the source of truth:
+
+```yaml
+steps:
+  - label: ":pipeline: Upload repo pipeline"
+    key: repo-pipeline
+    agents: { queue: mac-studio-linux }
+    command: "buildkite-agent pipeline upload .buildkite/pipeline.yml"
+```
+
+> **Why a wrapper and not an empty config:** creating the pipeline via the REST
+> API requires a non-empty `configuration` (it rejects an omitted one), and an
+> empty string makes Buildkite run the build with *zero steps* (`not_run`).
+> The wrapper is also Buildkite's own default bootstrap shape.
+
+## Agent configuration required (Mac Studio)
+
+These live in `buildkite-agent.cfg` / the agent's `environment` hook, **not** in
+this repo. Phase 0.5 proved the first two are hard requirements:
+
+| Key | Value | Why |
+|---|---|---|
+| `plugins-path` | `/opt/homebrew/var/buildkite-agent/plugins` | v4 has no usable default; omission hard-fails plugin checkout |
+| `name` | `mac-studio-%spawn` | otherwise both workers share a name and race plugin checkout |
+| `git-commit-verification` | `strict` | keep it; a job fails if the commit isn't on a branch — expected |
+| `BUILDKITE_GIT_CLONE_FLAGS` | `--filter=blob:none --no-tags` | S3 — tunes the checkout *this file cannot reach* (bootstrap's own) |
+| `BUILDKITE_GIT_FETCH_FLAGS` | `--filter=blob:none --no-tags` | as above |
+
+`DOPPLER_TOKEN` (D10: dedicated, long-lived, account-wide) must be delivered to the
+**job environment** by the agent `environment` hook.
 
 ## Routing (the `path-filtering` port)
 
@@ -44,24 +83,23 @@ Prove it locally (no agent needed):
 bash .buildkite/tests/test-routing.sh
 ```
 
-## Agent configuration required (Mac Studio)
+## Verified on the agent
 
-These live in `buildkite-agent.cfg` / the agent's `environment` hook, **not** in
-this repo. Phase 0.5 proved the first two are hard requirements:
+* **Skip path** — a `.buildkite/`-only branch produced `run-build-test-deploy=false`
+  and the build ran the bootstrap step only ("Trivial change set … skipping the
+  heavy pipeline").
+* **Heavy path** — a `webapp/` change ran the full set, all green (build #9):
 
-| Key | Value | Why |
-|---|---|---|
-| `plugins-path` | e.g. `/Users/nick/.buildkite-agent/plugins` | v4 has no usable default; omission hard-fails plugin checkout |
-| `name` | `mac-studio-%spawn` | otherwise both workers share a name and race plugin checkout |
-| `git-commit-verification` | `strict` | keep it; a job fails if the commit isn't on a branch — expected |
-| `BUILDKITE_GIT_CLONE_FLAGS` | `--filter=blob:none --no-tags` | S3 — tunes the checkout *this file cannot reach* (bootstrap's own) |
-| `BUILDKITE_GIT_FETCH_FLAGS` | `--filter=blob:none --no-tags` | as above |
+  | Step | Result |
+  |---|---|
+  | `:pipeline: Upload repo pipeline` | passed |
+  | `:mag: Bootstrap` | passed (routing → heavy) |
+  | `:shield: ggshield secret scan` | passed |
+  | `:hammer: Build` | passed (Doppler CLI, wrangler.jsonc, `npm ci`, drift check, `vite build`) |
+  | `:test_tube: Code test` | passed (`npm ci`, `prettier`+`eslint`, `test-ci` with coverage) |
+  | `:junit: Test results` | passed (annotation) |
 
-`DOPPLER_TOKEN` (D10: dedicated, long-lived, account-wide) must be delivered to the
-**job environment** by the agent `environment` hook. Container steps receive it
-only through the docker plugin's **`environment:` list, name-only** — v4's
-`BUILDKITE_ENV_FILE` omits hook vars, so `propagate-environment: true` forwards
-nothing useful.
+Both Mac workers (`mac-studio-1`, `mac-studio-2`) took jobs in parallel.
 
 ## Decisions
 
@@ -77,9 +115,8 @@ Build #1 pulled 64,900 objects / ~415 MiB with no filter. Measured on this repo:
 
 Set as pipeline `env` (covers every uploaded job) **and** on the agent (covers the
 bootstrap's own checkout, which happens before `pipeline.yml` is read).
-`BUILDKITE_REPO_MIRROR` is the next lever if a per-build full-ish checkout still
-hurts. **Argument hygiene:** checkout tuning would help on *any* provider, so it is
-not evidence for self-hosting.
+`BUILDKITE_REPO_MIRROR` is the next lever. **Argument hygiene:** checkout tuning
+would help on *any* provider, so it is not evidence for self-hosting.
 
 ### S11 — native cache vs volumes (verdict: volumes via npm's own cache)
 
@@ -87,88 +124,83 @@ not evidence for self-hosting.
 on a **self-hosted queue you supply the store**. There is no object store — standing
 one up re-opens the MinIO question the plan closed (a stop-and-ask trigger). So we
 use a docker named volume holding **`/root/.npm`** (npm's content-addressable cache).
-It is *self-keying*: there is no checksum file to mis-manage and no "stuck key"
-failure mode, which is the specific risk called out for hand-rolled node_modules
-volumes. The measured upside of caching overall is only ~20% of the run, so this is
-an optimisation, not a gate.
+It is *self-keying*: no checksum file to mis-manage, no "stuck key" failure mode.
+The measured upside of caching overall is only ~20% of the run, so this is an
+optimisation, not a gate.
 
 ### Doppler CLI — install per-run (not Lane 2b)
 
 The pinned image ships no Doppler CLI. Measured: the release artifact
 (`doppler_*_linux_arm64.tar.gz`) is **~4.3 MB** (HTTP 200 from GitHub release
 assets) and the installer script is ~19 KB — a few seconds per step. Lane 2b (own a
-thin `FROM …playwright + curl` image) is therefore **not** justified for Phase 1. If
-per-step install ever becomes flaky, build Lane 2b then — not speculatively.
+thin `FROM …playwright + curl` image) is therefore **not** justified for Phase 1.
 
-### Caching / workspaces
+### Workspaces and annotations
 
-* npm cache: named volume `ftn-npm-cache` (`/root/.npm`).
 * Workspace: the artifacts API (build uploads `webapp/.svelte-kit/**`; the
   Lighthouse step downloads it via `artifacts#v1.9.4` **before** its command hook).
   **S2:** `.svelte-kit` is ~138 MB — if the round-trip is slow, switch to a docker
   volume shared with `build` and drop the plugin.
+* `junit-annotate` is a **separate step** that depends on `code_test`: it reads the
+  XML from the artifacts API, and in the producing step the upload has not
+  happened yet. `allow_dependency_failure: true` so it annotates failures too.
 * Steps that touch shared volumes carry `concurrency_group: ftn/shared-volumes`
   with `concurrency: 1` so two builds cannot collide.
+
+## Secrets
+
+* **Never inline `NAME=value`** in a pipeline `environment:` — it leaks the value
+  into the uploaded YAML *and* trips v4's `pipeline upload` secret scanner.
+* **A step-level `env:` value does not reach the container by itself.** Only entries
+  in the docker plugin's `environment:` list do. So `DOPPLER_TOKEN`,
+  `DOPPLER_PROJECT` and `DOPPLER_ENVIRONMENT` are all listed **name-only**:
+  the value resolves from the job env at container start. (Learned in build #6:
+  without `DOPPLER_PROJECT`, `doppler run` fails with "You must specify a project".)
+* In a YAML `command:` block, shell references to hook vars must be `$$VAR` —
+  Buildkite interpolates `$VAR` and an unknown var becomes *empty*. All uploaded
+  steps keep their shell work in `.buildkite/scripts/*.sh` for this reason.
+* The docker plugin runs every command in **one shell**, so `cd webapp && …` would
+  persist; commands use subshells, `(cd webapp && …)`.
+* ggshield's key is read at runtime from Doppler's REST API using `DOPPLER_TOKEN`
+  and passed to the container by env name (`--env GITGUARDIAN_API_KEY`), never on
+  the command line.
+* Log redaction is a **log-stream transform only** — it does not protect `dist/`
+  or artifacts. See the leak gate below.
+
+## Leak gate — PASSED (build #9)
+
+| Target | Method | Result |
+|---|---|---|
+| Job logs (bootstrap, ggshield, build, code_test) | searched for `RbImgu`, `dp.pt.`, `dp.st.`, `DOPPLER_TOKEN` | no token value. Only `--env DOPPLER_TOKEN` (name), the hook's `# DOPPLER_TOKEN added` line, the script's own length message, and the Doppler CLI's own masked preview `dp.pt…RbImgu` |
+| Client JS bundles (91 files, 2.5 MB) | downloaded from artifacts, grepped | 0 hits |
+| Client sourcemaps (87 files) | streamed + grepped | 0 hits |
+
+Default Vite posture keeps non-`VITE_` vars out of client code; verified rather
+than assumed. If a leak is ever found: **revoke the token first** (D10 —
+revocation is the whole mitigation), then fix, then mint a new one.
 
 ## Divergences from CircleCI (each deliberate)
 
 | Divergence | Reason |
 |---|---|
 | `.buildkite/.*` added to the mapping as trivial | A Buildkite-only CI change is trivial in exactly the way `.circleci/.*` is. The rest of the table is byte-identical. |
-| Lighthouse is a separate, conditionally-uploaded step, not a no-op job | Same outcome (Lighthouse runs iff the diff warrants, on main); CircleCI still paid for a job that did nothing when skipped. |
+| Lighthouse is a separate, conditionally-uploaded step, not a no-op job | Same outcome; CircleCI still paid for a job that did nothing when skipped. |
 | Chromium via `CHROME_PATH` instead of `install-chrome` | S8 — the pinned image has no Google Chrome Stable and nothing on PATH. `.lighthouserc.cjs` already passes `--no-sandbox`. |
 | `jq` installed in the Lighthouse step | The image has none and `webapp/scripts/run-lhci.sh` needs it. |
+| ggshield runs on the agent host against the official image | Same image as CircleCI's orb; the host is where the checkout credentials live, so a blobless clone can materialise the base revision for the range diff. |
 | No `npm install -g npm@11.19.x` | The pinned image already has npm 11.19.0. |
 | No `@rollup/rollup-linux-x64-gnu` | Wrong arch — this is arm64; the build works without it. |
 | `npm ci` in every job (not a restored node_modules cache) | Simpler and immune to a stale-cache class of bug; npm's own cache makes it cheap. |
 | `code_test` does not attach the build workspace | It never consumed the build output (`lint` + `test-ci` only). Avoids the 138 MB round-trip. |
 | Deploy steps ported but not uploaded | D6 — no deploys during the pilot. |
 
-## Secrets
+## Open items
 
-* **Never inline `NAME=value`** in a pipeline `environment:` — it leaks the value
-  into the uploaded YAML *and* trips v4's `pipeline upload` secret scanner.
-* **Names live in the pipeline; values never do.** Every container step forwards
-  `DOPPLER_TOKEN` by name only.
-* ggshield's key is read at runtime from Doppler's REST API using `DOPPLER_TOKEN`
-  and passed to the container by env name (`--env GITGUARDIAN_API_KEY`), never on
-  the command line.
-* Log redaction is a **log-stream transform only** — it does not protect `dist/`
-  or artifacts. See the leak gate below.
-* **In a YAML `command:` block, shell references to hook vars must be `$$VAR`.**
-  Buildkite interpolates `$VAR` in the pipeline YAML and an unknown var becomes
-  *empty*, so `$$DOPPLER_TOKEN` is required for the shell to see it (proved the
-  hard way in the D10 canary — three failed builds). This only affects `command:`
-  blocks; the docker plugin's `environment:` name-only list is unaffected. The
-  uploaded steps keep all shell work in `.buildkite/scripts/*.sh` for exactly
-  this reason.
-
-## Leak gate (run after the first green build)
-
-Log redaction covers the job log; it does **not** cover build output. Check both:
-
-```
-# 1. job log — the Doppler token should appear only as [REDACTED]
-#    (Buildkite MCP: tail_logs / search_logs for the value; or the web UI search)
-# 2. build output
-grep -rIl "$DOPPLER_TOKEN" webapp/.svelte-kit webapp/build webapp/dist 2>/dev/null
-```
-
-If it leaked: **revoke the token first** (D10 — revocation is the whole
-mitigation), then fix, then mint a new one.
-
-## Known risks to watch on the first real build
-
-* **ggshield + blobless clone** — the range diff needs the base revision's blobs.
-  `ggshield-scan.sh` materialises them on the *host* (where the agent's checkout
-  credentials live) before the container runs. If in-container git cannot reach
-  them, the fallback is `BUILDKITE_REPO_MIRROR`.
-* **Playwright browser revision vs the pinned image** — if `webapp`'s `playwright`
-  bump moves past chromium-1243, update the digest **and** `CHROME_PATH`.
-* **`DOPPLER_PROJECT` missing fails silently** — hence `assert-wrangler-jsonc.sh`.
-
-## Buildkite MCP
-
-Read-only inspection (builds/jobs/logs/tests) is available to the agent via the
-Buildkite MCP. Token scopes used: `read_pipelines`, `read_builds`, `read_build_logs`,
-`read_job_env`, `read_artifacts`, `read_agents`.
+* **S5 — push-triggered builds.** A push to a branch did **not** create a build; the
+  GitHub repository connection exists and `build_branches`/`build_pull_requests` are
+  true. Builds were triggered via the REST API (S9 path proven). Investigate the
+  GitHub App webhook before making Buildkite a required check.
+* **Lighthouse (S8)** has not been exercised end-to-end — it needs a landing-page
+  change on `main`. Watch `CHROME_PATH` against the pinned image.
+* **Pin maintenance:** if `webapp`'s `playwright` moves past chromium-1243, update
+  the image digest **and** `CHROME_PATH`.
