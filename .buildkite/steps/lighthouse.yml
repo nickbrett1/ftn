@@ -11,8 +11,12 @@ steps:
     depends_on:
       - build
     if: build.branch == "main"
-    concurrency_group: "ftn/shared-volumes"
-    concurrency: 1
+    # NOTE: deliberately NOT in the `ftn/shared-volumes` concurrency group.
+    # Buildkite grants the group slot when the step is created, before its
+    # dependencies are satisfied -- so a step that both `depends_on: [build]`
+    # and shares build's group takes the only slot and then waits for build,
+    # which is itself waiting for the slot. That deadlock cost build #23.
+    # `depends_on: [build]` already serialises this step behind the build.
     plugins:
       # CircleCI's workspace (persist_to_workspace / attach_workspace) is
       # replaced by the artifacts API. The artifacts plugin downloads BEFORE any
