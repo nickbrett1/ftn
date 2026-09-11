@@ -1,6 +1,6 @@
 # Financial Technology Portfolio
 
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/nickbrett1/ftn/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/nickbrett1/ftn/tree/main)
+[![Build status](https://badge.buildkite.com/8c5ff5d3ae505ef9c2f3608ee3062899d1421ca4b2d113ceca.svg?branch=main)](https://buildkite.com/nick-brett/ftn)
 
 **Live Site:** [www.fintechnick.com](https://www.fintechnick.com)
 
@@ -18,7 +18,7 @@ A developer portfolio website with demos using modern web development practices.
 
 ### **Production DevOps Pipeline**
 
-- **CI/CD**: CircleCI with automated testing, security scanning, and deployment
+- **CI/CD**: Buildkite on a self-hosted arm64 builder — path-filtered pipeline with automated testing, security scanning, and deployment ([why](.buildkite/README.md))
 - **Code Quality**: ESLint + SonarJS static analysis with coverage-gated unit tests
 - **Security**: GitGuardian secret scanning and dependency vulnerability checks
 - **Performance**: Lighthouse CI for automated performance monitoring

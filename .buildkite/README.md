@@ -210,6 +210,18 @@ revocation is the whole mitigation), then fix, then mint a new one.
 | `code_test` does not attach the build workspace | It never consumed the build output (`lint` + `test-ci` only). Avoids the 138 MB round-trip. |
 | Deploy steps ported but not uploaded | D6 — no deploys during the pilot. |
 
+## Cutover
+
+`.circleci/` was **removed** once CircleCI was unfollowed from the project and
+stopped receiving pushes — this is the only CI now. The CircleCI path-filtering
+mapping lives on inside `.buildkite/scripts/routing.sh` (with `circleci/...`'s
+last-match-wins semantics preserved and 28 tests over it), which is why the
+mapping still names `.circleci/.*` as a trivial path: it is the ported rule set,
+not a reference to a config file that still exists.
+
+Note that the `circleci` **capability** in genproj is a different thing — it
+generates `.circleci/config.yml` for *generated* projects, and is unaffected.
+
 ## Open items
 
 * **S5 — push-triggered builds: resolved.** See the webhook registration above. A
