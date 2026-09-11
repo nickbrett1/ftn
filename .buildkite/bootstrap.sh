@@ -41,6 +41,20 @@ if ! base_revision="$(git merge-base HEAD "$base_ref" 2>/dev/null)"; then
 	base_revision=""
 fi
 
+# A push to the base branch itself has an EMPTY merge-base diff (the merge base
+# is the commit being built), which silences every rule — including
+# `run-lighthouse`, so the Lighthouse step could never fire on main. Diff the tip
+# commit against its first parent instead, which is what a base-branch push
+# actually changed (and, for a merge commit, everything the merge brought in).
+if [[ -n "$base_revision" && "$base_revision" == "$(git rev-parse HEAD)" ]]; then
+	parent="$(git rev-parse --verify --quiet 'HEAD^' 2>/dev/null || true)"
+	if [[ -n "$parent" ]]; then
+		base_revision="$parent"
+	else
+		base_revision="" # root commit: fall through to the safety net
+	fi
+fi
+
 if [[ -n "$base_revision" ]]; then
 	changed_files="$(git diff --name-only "$base_revision" HEAD || true)"
 else
