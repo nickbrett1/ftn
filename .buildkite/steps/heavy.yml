@@ -109,4 +109,8 @@ steps:
       - junit-annotate#v2.7.0:
           artifacts: "webapp/reports/*.xml"
           context: ftn-code-test
+          # When code_test never ran (an upstream failure), there is no XML to
+          # annotate. Without this the step adds a second, misleading failure
+          # on top of the real one (seen in build #15).
+          fail-build-on-error: false
     command: "echo 'annotating test results'"
