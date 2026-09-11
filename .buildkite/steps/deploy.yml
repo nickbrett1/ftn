@@ -1,11 +1,17 @@
-# Deploy steps — ported, but NOT uploaded during the Phase 1 pilot.
+# Deploy steps — ported from CircleCI's `deploy` / `deploy-preview` jobs.
 #
-# Decision D6: deploys stay disabled until parity passes (Phase 2). Staging them
-# here keeps the port reviewable and lets Phase 2 flip them on by uncommenting the
-# upload in .buildkite/bootstrap.sh.
+# Uploaded by .buildkite/bootstrap.sh according to BUILDKITE_DEPLOY_MODE
+# (off | preview | all). The pilot kept these off (D6); once CircleCI was retired
+# this became the only path to production, so preview is enabled first.
 #
-# Divergence from CircleCI: the `deploy` job ran on cimg/node (no browsers); we
-# reuse the same pinned image as every other step so there is one image to pin.
+# Divergences from CircleCI, all forced by the platform move:
+#   * the `build` workspace (persist_to_workspace / attach_workspace) is the
+#     artifacts API — the build output is downloaded before the command hooks;
+#   * `context: common` has no Buildkite equivalent, so the Cloudflare
+#     credentials are resolved from Doppler at runtime by
+#     scripts/export-cloudflare-env.sh (sourced, so the exports persist);
+#   * one pinned image for every step instead of cimg/node, so there is a single
+#     digest to maintain.
 
 steps:
   - label: ":rocket: Deploy (production)"
@@ -16,6 +22,10 @@ steps:
       - code_test
     if: build.branch == "main"
     plugins:
+      - artifacts#v1.9.4:
+          download:
+            - "webapp/.svelte-kit/**"
+            - "webapp/static/pdf.worker.min.mjs"
       - docker#v5.13.0:
           image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
           workdir: /workdir
@@ -31,8 +41,10 @@ steps:
       SENTRY_ENVIRONMENT: production
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
+      - . .buildkite/scripts/export-cloudflare-env.sh prd
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
+      - (cd webapp && npm ci)
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
       - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
       - (cd webapp && npm run deploy)
@@ -42,8 +54,8 @@ steps:
       # blocks and an unknown var becomes EMPTY, so a shell reference to a hook var
       # must be written `$$VAR` to survive to the shell.
       - |
-        NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd --token "$$DOPPLER_TOKEN" || true)"
-        if [ -n "$$NTFY_URL" ]; then
+        NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd --token "$$DOPPLER_TOKEN" | jq -r .computed 2>/dev/null || true)"
+        if [ -n "$$NTFY_URL" ] && [ "$$NTFY_URL" != "null" ]; then
           curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $${BUILDKITE_COMMIT:0:7}" "$$NTFY_URL"
         else
           echo "⚠️ NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
@@ -57,6 +69,10 @@ steps:
     # CircleCI: branches ignore main and dependabot/**.
     if: build.branch != "main" && build.branch !~ /^dependabot\//
     plugins:
+      - artifacts#v1.9.4:
+          download:
+            - "webapp/.svelte-kit/**"
+            - "webapp/static/pdf.worker.min.mjs"
       - docker#v5.13.0:
           image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
           workdir: /workdir
@@ -72,10 +88,10 @@ steps:
       SENTRY_ENVIRONMENT: preview
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
+      - . .buildkite/scripts/export-cloudflare-env.sh stg
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
+      - (cd webapp && npm ci)
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
-      - |
-        ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview || \
-          echo "⚠️ Failed to sync secrets to Cloudflare preview — continuing (matches CircleCI)."
-      - cd webapp && npm run deploy-preview
+      - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview
+      - (cd webapp && npm run deploy-preview)
