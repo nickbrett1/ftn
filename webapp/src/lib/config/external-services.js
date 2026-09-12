@@ -47,6 +47,27 @@ export const serviceConfigs = {
 			instructions: 'Generate API token from CircleCI dashboard'
 		}
 	},
+	buildkite: {
+		name: 'Buildkite',
+		baseUrl: 'https://api.buildkite.com/v2',
+		requiredScopes: ['write_pipelines'],
+		rateLimits: {
+			requestsPerHour: 200,
+			burstLimit: 10
+		},
+		auth: {
+			type: 'api_token',
+			tokenHeader: 'Authorization',
+			instructions: 'Create an organisation API access token with write_pipelines'
+		},
+		// Deployment-level identifiers, not per-project preferences: a pipeline
+		// cannot be created without a cluster in this organisation, and every
+		// generated project belongs to the same organisation. The trigger for
+		// promoting these to capability configuration is a *second* Buildkite
+		// organisation, not a second project.
+		organization: 'nick-brett',
+		clusterId: '25e535fa-b23a-48bb-8588-1b1454fcfef8'
+	},
 	doppler: {
 		name: 'Doppler',
 		baseUrl: 'https://api.doppler.com',
@@ -134,6 +155,9 @@ export const envVarNames = {
 	circleci: {
 		apiToken: 'CIRCLECI_API_TOKEN'
 	},
+	buildkite: {
+		apiToken: 'BUILDKITE_TOKEN'
+	},
 	doppler: {
 		apiToken: 'DOPPLER_API_TOKEN'
 	},
@@ -209,6 +233,11 @@ export const rateLimitConfig = {
 		windowMs: 60 * 60 * 1000, // 1 hour
 		max: 200, // CircleCI allows 200 requests per hour
 		message: 'CircleCI API rate limit exceeded'
+	},
+	buildkite: {
+		windowMs: 60 * 60 * 1000, // 1 hour
+		max: 200, // Pipeline provisioning is a handful of calls per generation
+		message: 'Buildkite API rate limit exceeded'
 	},
 	doppler: {
 		windowMs: 60 * 60 * 1000, // 1 hour

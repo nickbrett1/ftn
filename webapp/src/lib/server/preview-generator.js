@@ -38,6 +38,7 @@ import {
 	HEALTH_ROUTE_SOURCE
 } from '$lib/utils/file-generator.js';
 import { getCapabilityTemplateData, applyDefaults } from '$lib/utils/capability-template-utils.js';
+import { buildScriptsBlock, buildGitHooksBlock } from '$lib/utils/file-generator.js';
 
 async function getTemplateEngine() {
 	const newInstance = new TemplateEngine();
@@ -545,9 +546,15 @@ function generatePackageJsonFile(templateEngine, projectConfig, allCapabilities)
 		}
 	}
 
+	// The package-json template takes the scripts body and the git-hook block as
+	// data, because both depend on whether the hook tooling is present (see
+	// buildScriptsBlock in file-generator.js). The preview must supply the same
+	// keys as the real generator, or the template's tags render literally.
+	const capabilityContext = { capabilities: allCapabilities };
 	const content = templateEngine.generateFile('package-json', {
 		...projectConfig,
-		scripts,
+		scriptsBlock: buildScriptsBlock(capabilityContext, scripts),
+		hooksBlock: buildGitHooksBlock(capabilityContext),
 		devDependencies,
 		dependencies,
 		typeField,

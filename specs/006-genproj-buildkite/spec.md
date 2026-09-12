@@ -34,16 +34,16 @@ Machine-readable contract: `contracts/buildkite.capability.json`. Summary:
 |---|---|
 | `id` | `buildkite` |
 | `category` | `CATEGORY_CI_CD` |
-| `dependencies` | `['doppler']` (mirrors `circleci` — the generated build runs `doppler run`) |
+| `dependencies` | `[]` — v1 does not run `doppler run` in the pipeline, so unlike `circleci` it needs nothing else selected |
 | `conflicts` | `[]` — coexistence with `circleci` is a *feature* during migration |
-| `configurationSchema` | `queue`, `branchGating`, `ntfyNotifications`, `provisionPipeline` |
-| `templates` | `.buildkite/pipeline.yml`, `.buildkite/bootstrap.sh`, `.buildkite/scripts/routing.sh`, `.buildkite/scripts/lockfile-drift-check.sh`, `.buildkite/scripts/install-doppler-cli.sh` |
+| `configurationSchema` | `queue`, `provisionPipeline` |
+| `templates` | `.buildkite/pipeline.yml`, `.buildkite/README.md` |
 
-Deliberately **not** in the v1 schema (each was proposed in the plan's §8 sketch, each has a reason to stay internal):
+Deliberately **not** in the v1 schema (each was proposed in the plan's §8 sketch, each has a reason to stay internal or to arrive with the step it configures):
 
-- `dockerImage` / `dockerImageDigest` — the pin is a proven-by-testing artifact, not a user preference. Letting users set a digest invites a broken browser revision. It stays a template constant; revisit only if a second fleet needs a different image.
-- `agentVersion`, `caching`, `propagatedEnvNames` — implementation detail of the pipeline, already fixed by the ftn port.
-- `requiresDopplerCli` — always true.
+- `dockerImage` / `dockerImageDigest` — the image is chosen from the language (§4), not by preference. Letting users set a digest invites a broken revision.
+- `agentVersion`, `caching`, `propagatedEnvNames`, `requiresDopplerCli` — implementation detail of the pipeline, already fixed by the ftn port.
+- `branchGating`, `ntfyNotifications` — these gate Lighthouse/deploy steps and deploy notifications. v1 emits neither step, so they would be dead configuration; they belong with those steps in a v2.
 
 ---
 
@@ -75,18 +75,114 @@ Every step is **best-effort with a recorded result**, exactly like CircleCI's: a
 
 ## 4. Templates
 
-Copied from the ftn port, then parameterised — the ftn files *are* the reference implementation. Divergences from the ftn originals:
+Two files, deliberately. `.buildkite/pipeline.yml` is the pipeline; `.buildkite/README.md` documents the part a generated repo cannot contain — the agent-side prerequisites (queue, `plugins-path`, and the rule that a step-level `env:` value never reaches a container). Both are required: without the README, the first failure looks like the project's fault.
 
-| Template | Divergence |
+| Template | Shape |
 |---|---|
-| `.buildkite/pipeline.yml` | target `queue` from config instead of the literal `mac-studio-linux` |
-| `.buildkite/steps/heavy.yml` | **Lighthouse step omitted** (unproven — §8); deploy step omitted (D6) |
-| `.buildkite/bootstrap.sh`, `scripts/routing.sh` | verbatim — the mapping table and its 28 test cases are the ported semantics |
-| `scripts/lockfile-drift-check.sh`, `scripts/install-doppler-cli.sh` | verbatim |
+| `.buildkite/pipeline.yml` | one job: install → build → lint → test, with `agents: queue:` from config |
+| `.buildkite/README.md` | the queue, the image, and the four agent prerequisites |
 
-Generated repos are Python/Node/etc., so the heavy steps must be **language-aware**, matching how CircleCI's template data already switches on language (`activate_pinned_npm`, the lint step). v1 supports the same languages the CircleCI template does; where a language has no proven Buildkite equivalent, the template emits the same commands CircleCI would (the image already contains Node; other languages use the same apt/curl shape).
+**Language-aware**, keyed off `resolveLanguage(context)` (the same helper the CircleCI template uses), with a per-language image:
 
-The **test file** (`.buildkite/tests/test-routing.sh`) ships too — it is the regression net for the mapping logic and costs nothing.
+| language | image | commands |
+|---|---|---|
+| `node` (default) | `node:22-bookworm` | `npm ci --no-audit --no-fund --prefer-offline`, then `npm run build/lint/test --if-present`; adds `npx playwright install --with-deps chromium` when the `playwright` capability is present |
+| `python` | `python:3.13-slim` | `pip install --no-cache-dir -e ".[dev]"`, `ruff check src tests`, `pytest -q` |
+| `rust` | `rust:1-slim` | `cargo build --locked`, `cargo test --locked` |
+| `java` | `eclipse-temurin:21-jdk` | explains that genproj generates a devcontainer but no build system, rather than failing on the first push |
+
+### Why this is smaller than ftn's pipeline
+
+ftn carries a bootstrap + `routing.sh` + `steps/heavy.yml` split whose entire purpose is **path filtering** (docs-only commits skip the heavy set). Two reasons it is not here:
+
+1. **Parity.** The generated CircleCI config does not path-filter either — ftn's dynamic config was a later, repo-specific addition. Shipping path filtering would make the Buildkite capability more capable than the one it replaces, which is scope creep, not parity.
+2. **It is the expensive part to get wrong.** The mapping is path-shape specific (`webapp/.*`), and a generated repo's layout differs. A wrong mapping silently skips CI.
+
+What ftn *did* prove is carried over: the install dominates the cost, so install/build/test run in **one job** rather than one per step — see `.buildkite/README.md` on ftn for the measurements.
+
+### Capability-driven steps (parity with CircleCI)
+
+A deploy step is not part of this capability: it is contributed by whichever
+**deployment capability** is selected, exactly as the CircleCI template works.
+The generated pipeline now honours every contribution the CircleCI config makes:
+
+| capability or flag | contributed step | CircleCI equivalent |
+|---|---|---|
+| `gitguardian` | `secret_scan` (ggshield, scanning a path) and `build` depends on it | `ggshield/scan` job, with `build` requiring it |
+| `lighthouse-ci` | `lighthouse`, main-only by default | `lighthouse` job with a main-only filter |
+| `cloudflare-wrangler` | `deploy` on main; `deploy_preview` on branches when `branchGating: false`; Doppler CLI install, `setup-wrangler-config.sh` and the secret sync when `doppler` is also selected | `deploy-to-cloudflare` job |
+| `docker-container` | `docker_publish` on main (GHCR, buildx registry cache) | `docker-publish` job |
+| `buildkite.ntfyNotifications` | a `Notify` step after the deploy | `notify_deployment` command |
+| `code-quality` | lint inside the build step (`npm run lint` / `ruff check`) | the language-aware lint step |
+
+A project that selects none of these gets build + test and nothing else.
+
+**Deliberate divergences from the CircleCI template**, each for a reason:
+
+1. **Doppler config.** CircleCI hardcodes `doppler_config: stg` for the wrangler
+   setup and the secret sync. This uses the project's own resolved Doppler
+   config (`resolveDopplerTarget`), because a project whose `doppler.yaml` points
+   at `dev` would otherwise sync a different environment's secrets from `stg`.
+   The CircleCI value looks like ftn-specific drift that leaked into the
+   template — worth checking there rather than copying.
+2. **lhci config.** The capability generates `.lighthouse.cjs`, which is *not*
+   one of lhci's discoverable filenames, so the step passes
+   `--config .lighthouse.cjs` explicitly. CircleCI's bare `lhci autorun` does not,
+   which is another thing worth checking on that side.
+3. **`docker_publish` runs on the agent**, not inside a container: building an
+   image needs a Docker daemon, and the agent already has one (it is what runs
+   every other step). CircleCI achieved the same with `setup_remote_docker` plus
+   `docker_layer_caching`.
+4. **Secrets come from the agent's environment hook** by name. Buildkite has no
+   equivalent of a CircleCI *context*, so the generated README lists exactly what
+   the hook must provide per step.
+
+### Platform differences the end-to-end run exposed
+
+Generating a real project and letting the fleet build it found four things that
+no amount of template unit-testing would have. Each is now fixed, and each is a
+*platform* difference rather than a design choice:
+
+1. **The docker plugin allocates a TTY.** With a TTY, vitest starts in **watch
+   mode** after a successful run and holds the step open until CI kills it. Tests
+   therefore run as `CI=true npm test`. CircleCI has no TTY, which is precisely
+   why `npx vitest --coverage` does not hang there — the same command is a
+   footgun on Buildkite only.
+2. **The pinned npm has to be activated first.** The generated `package.json`
+   declares `packageManager` and `.npmrc` sets `engine-strict=true`, so the
+   image's bundled npm refuses to install and fails with the opaque
+   `Cannot read properties of null (reading 'edgesOut')`. The step now installs
+   the pinned npm before anything else — CircleCI's `activate_pinned_npm`, which
+   the first port had skipped.
+3. **A multi-arch tag resolves to linux/amd64** on this arm64 fleet, so every
+   step ran emulated (with a docker platform warning, and native modules built
+   for the wrong architecture). Generated docker plugins pin
+   `platform: linux/arm64`.
+4. **A generated project has no lockfile**, so a bare `npm ci` fails outright.
+   The install is guarded exactly as CircleCI guards it.
+
+### End-to-end verification (2026-09-12)
+
+A real project was generated — real GitHub repo, real Buildkite pipeline, real
+fleet build — and the whole chain was observed:
+
+- pipeline created, **webhook registered**, `provider.webhook_url` present;
+- a push produced a build with `source: webhook` (no manual trigger);
+- the build ran green: install (303 packages, 13s), `vite build`,
+  `prettier --check` + `eslint`, 2 tests and coverage.
+
+**Known limitation, inherited rather than introduced:** the `lighthouse` and
+`deploy` steps are node-shaped (`npm ci`, `npm run build`) because the CircleCI
+jobs used `executor: node/default`. A python/rust/java project that selects one
+of those capabilities gets the same assumption CircleCI made, not a better one.
+
+### Other v2 items
+
+- **Path filtering** — still absent, by parity (the generated CircleCI config does
+  not path-filter either).
+- **Pinned image digests** — the build/lint/test image uses a public tag
+  (`node:22-bookworm`); the fleet owner can pin it per project. The Lighthouse
+  image is already pinned to the digest proven on this fleet.
 
 ---
 

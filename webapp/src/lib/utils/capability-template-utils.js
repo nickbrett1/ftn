@@ -1302,6 +1302,332 @@ ${minorAndPatch}`;
 ${minorAndPatch}`;
 }
 
+/**
+ * Queue declaration shared by every generated step.
+ * @param {string} queue - Agent queue
+ * @returns {string} YAML fragment
+ */
+function _bkAgents(queue) {
+	return `    agents:
+      queue: ${queue}
+`;
+}
+
+/**
+ * The docker plugin block every containerised step uses.
+ *
+ * `envNames` are NAME-ONLY on purpose: a step-level `env:` value does not enter
+ * the container, so anything the container needs must be listed here and take
+ * its value from the job environment.
+ *
+ * @param {string} image - Container image
+ * @param {string[]} [envNames] - Environment variable names to forward
+ * @param {string} [commandYaml] - Optional `command:` in exec form
+ * @returns {string} YAML fragment
+ */
+function _bkDockerPlugin(image, envNames = [], commandYaml = '') {
+	const envBlock = envNames.length
+		? `          environment:
+${envNames.map((name) => `            - ${name}`).join('\n')}
+`
+		: '';
+	return `      - docker#v5.13.0:
+          image: "${image}"
+          # The fleet is Apple silicon. Without this, docker resolves a
+          # multi-arch tag to linux/amd64 and runs the whole step emulated (with
+          # a warning, and native modules built for the wrong architecture).
+          platform: linux/arm64
+          workdir: /workdir
+${envBlock}${commandYaml}`;
+}
+
+/**
+ * Builds the generated project's `.buildkite/pipeline.yml`.
+ *
+ * The step set is **capability-driven**, mirroring the CircleCI template: the
+ * deployment capabilities contribute deploy steps, `gitguardian` contributes the
+ * secret scan, `lighthouse-ci` contributes the performance gate, and so on. A
+ * project that selects none of them gets build + test and nothing else.
+ *
+ * Deliberately smaller than ftn's pipeline in two ways. ftn's bootstrap +
+ * routing split exists to path-filter, and the generated CircleCI config does
+ * not path-filter either (parity). And install/build/test run in ONE job, since
+ * ftn measured the install as the dominant fixed cost.
+ *
+ * @param {Object} context - Template context (capabilities, configuration)
+ * @returns {Object} Buildkite template data
+ */
+function getBuildkiteTemplateData(context) {
+	const config = context.configuration?.buildkite || {};
+	const caps = context.capabilities || [];
+	const language = resolveLanguage(context);
+	const queue = config.queue || 'mac-studio-linux';
+	const branchGating = config.branchGating !== false;
+	const usesPlaywright = caps.includes('playwright');
+	const hasDoppler = caps.includes('doppler');
+	const hasGitGuardian = caps.includes('gitguardian');
+	const hasLighthouse = caps.includes('lighthouse-ci');
+	const hasWrangler = caps.includes('cloudflare-wrangler');
+	const hasDockerContainer = caps.includes('docker-container');
+
+	const images = {
+		node: 'node:22-bookworm',
+		python: 'python:3.13-slim',
+		rust: 'rust:1-slim',
+		java: 'eclipse-temurin:21-jdk'
+	};
+	const image = images[language];
+	// The pinned Playwright image is the one proven on this fleet; Lighthouse
+	// needs the Chromium it bakes in (there is no Google Chrome Stable).
+	const playwrightImage =
+		'mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847';
+	const chromiumPath = '/ms-playwright/chromium-1243/chrome-linux-arm64/chrome';
+
+	// A generated project has a package.json but NO package-lock.json, so a bare
+	// `npm ci` fails outright ("can only install with an existing
+	// package-lock.json"). CircleCI's template guards this the same way.
+	// The generated package.json pins npm (`packageManager`) and .npmrc sets
+	// engine-strict=true, so the image's bundled npm REFUSES to install and dies
+	// with the opaque "Cannot read properties of null (reading 'edgesOut')".
+	// Activate the pinned npm first - this is CircleCI's activate_pinned_npm
+	// step, and skipping it is why the first fleet build of a generated project
+	// failed.
+	// The command *value* (no leading `- `): used as an array element in the
+	// node command list and interpolated into the other step blocks.
+	const npmActivate = `|
+        PINNED="$$(node -p "require('./package.json').packageManager || ''" | sed -e 's/^npm@//')"
+        if [ -n "$$PINNED" ]; then npm install -g "npm@$$PINNED"; fi`;
+	const npmInstall =
+		'if [ -f package-lock.json ]; then npm ci --no-audit --no-fund --prefer-offline; else npm install --no-audit --no-fund; fi';
+
+	const commands = {
+		node: [
+			npmActivate,
+			npmInstall,
+			...(usesPlaywright ? ['npx --yes playwright install --with-deps chromium'] : []),
+			'npm run build --if-present',
+			'npm run lint --if-present',
+			// `CI=true` because the docker plugin allocates a TTY, and without
+			// it vitest starts in WATCH MODE and the step hangs until the job is
+			// killed (observed on the fleet). CircleCI never hit this - it has
+			// no TTY - which is exactly why the difference matters here.
+			'CI=true npm test --if-present'
+		],
+		python: [
+			'python -m pip install --no-cache-dir -e ".[dev]"',
+			'ruff check src tests',
+			'pytest -q'
+		],
+		rust: ['cargo build --locked', 'cargo test --locked'],
+		// genproj generates a Java devcontainer but no build system (no pom.xml
+		// or build.gradle), so there is genuinely nothing to build yet. Say that
+		// rather than emitting a step that fails on the first push.
+		java: [
+			'echo "genproj generates a Java devcontainer, not a build system."',
+			'echo "Add your build/test commands to .buildkite/pipeline.yml (for example: mvn -B -q verify)."'
+		]
+	};
+
+	const steps = [];
+
+	// --- secret scan (gitguardian) -------------------------------------------
+	// Runs first and gates the build, mirroring the CircleCI workflow where
+	// `build` requires `ggshield-scan`.
+	if (hasGitGuardian) {
+		steps.push(`
+  - label: ":shield: Secret scan (ggshield)"
+    key: secret_scan
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(
+	'gitguardian/ggshield:v1.54.0',
+	['GITGUARDIAN_API_KEY'],
+	`          # The image declares no ENTRYPOINT (Cmd is "ggshield"), so the full argv
+          # has to be spelled out - passing ["secret","scan","path","."] would
+          # exec a binary called "secret" and exit 127.
+          command: ["ggshield", "secret", "scan", "path", "."]
+`
+)}`);
+	}
+
+	// --- build + test --------------------------------------------------------
+	const buildCommands = commands[language].map((c) => `      - ${c}`).join('\n');
+	steps.push(`
+  - label: ":hammer: Build and test (${language})"
+    key: build
+${hasGitGuardian ? '    depends_on:\n      - secret_scan\n' : ''}${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image)}    commands:
+${buildCommands}
+`);
+
+	// --- Lighthouse (lighthouse-ci) ------------------------------------------
+	// A release-quality gate, so main-only by default - matching CircleCI's job
+	// filter, and incidentally skipping dependabot/** branches.
+	if (hasLighthouse) {
+		steps.push(`
+  - label: ":chrome: Lighthouse CI"
+    key: lighthouse
+    depends_on:
+      - build
+${branchGating ? '    if: build.branch == "main"\n' : ''}${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be listed as a NAME in the plugin's environment: above.
+    # A step-level env: value never enters the container.
+    env:
+      CHROME_PATH: ${chromiumPath}
+    commands:
+      - ${npmActivate}
+      - ${npmInstall}
+      - npm run build --if-present
+      # The generated config is .lighthouse.cjs, which is not one of lhci's
+      # default filenames, so it is passed explicitly.
+      - npm install -g @lhci/cli && lhci autorun --config .lighthouse.cjs
+`);
+	}
+
+	// --- Cloudflare deploy (cloudflare-wrangler) -----------------------------
+	if (hasWrangler) {
+		const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+		const isRustWorker = wranglerConfig.workerType === 'rust';
+		const dopplerTarget = resolveDopplerTarget(context);
+		const dopplerConfig = dopplerTarget.config || 'dev';
+
+		const installDoppler = hasDoppler
+			? `      - |
+        if ! command -v doppler >/dev/null 2>&1; then
+          apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+          curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh
+        fi
+`
+			: '';
+		const setupWrangler = hasDoppler
+			? `      - ./scripts/setup-wrangler-config.sh "${dopplerConfig}"
+`
+			: '';
+		const syncSecrets = (cloudflareEnv) =>
+			hasDoppler
+				? `      - ./scripts/sync-doppler-secrets.sh --project ${dopplerTarget.project} --config ${dopplerConfig} --env ${cloudflareEnv}
+`
+				: '';
+		const buildStep = isRustWorker
+			? `      - (cd worker && cargo build --release)
+`
+			: `      - npm run build --if-present
+`;
+		const deployCommand = (cloudflareEnv) =>
+			cloudflareEnv === 'default'
+				? '      - npx --yes wrangler deploy\n'
+				: `      - npx --yes wrangler deploy --env ${cloudflareEnv}\n`;
+
+		const deployPlugins = _bkDockerPlugin(image, [
+			'CLOUDFLARE_API_TOKEN',
+			'CLOUDFLARE_ACCOUNT_ID',
+			...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
+		]);
+
+		steps.push(`
+  - label: ":rocket: Deploy (production)"
+    key: deploy
+    depends_on:
+      - build
+    if: build.branch == "main"
+${_bkAgents(queue)}    plugins:
+${deployPlugins}    commands:
+      - ${npmActivate}
+      - ${npmInstall}
+${installDoppler}${setupWrangler}${buildStep}${deployCommand('default')}${syncSecrets('default')}`);
+
+		// Branch gating: a preview on every branch is wasteful, and a main-only
+		// preview is redundant with the production deploy. Opt out with
+		// buildkite.branchGating = false (same default as CircleCI).
+		if (!branchGating) {
+			steps.push(`
+  - label: ":rocket: Deploy preview"
+    key: deploy_preview
+    depends_on:
+      - build
+    if: build.branch != "main" && build.branch !~ /^dependabot\\//
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image, [
+	'CLOUDFLARE_API_TOKEN',
+	'CLOUDFLARE_ACCOUNT_ID',
+	...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
+])}    commands:
+      - ${npmActivate}
+      - ${npmInstall}
+${installDoppler}${setupWrangler}${buildStep}      - npx --yes wrangler deploy --env preview
+${syncSecrets('preview')}`);
+		}
+	}
+
+	// --- container image publish (docker-container) --------------------------
+	// Runs on the AGENT, not in a container: it needs a Docker daemon, and the
+	// agent already has one (it is what runs every other step). This mirrors
+	// CircleCI's setup_remote_docker + docker_layer_caching.
+	if (hasDockerContainer) {
+		const dcConfig = context.configuration?.['docker-container'] || {};
+		const registryNamespace = context.registryNamespace || dcConfig.registryNamespace || 'OWNER';
+		const projectName = context.projectName || context.name || 'my-project';
+		const imageRef = `ghcr.io/${registryNamespace}/${projectName}`;
+		const cacheRef = `${imageRef}:buildcache`;
+		const buildPlatforms = dcConfig.armBuilds === true ? 'linux/amd64,linux/arm64' : 'linux/amd64';
+
+		steps.push(`
+  - label: ":docker: Build and publish image (GHCR)"
+    key: docker_publish
+    depends_on:
+      - build
+    if: build.branch == "main"
+${_bkAgents(queue)}    env:
+      IMAGE: ${imageRef}
+      CACHE_REF: ${cacheRef}
+    commands:
+      # GHCR_USERNAME / GHCR_TOKEN come from the agent's environment hook.
+      - echo "$$GHCR_TOKEN" | docker login ghcr.io -u "$$GHCR_USERNAME" --password-stdin
+      - docker buildx create --use --bootstrap || true
+      - >
+        docker buildx build --platform ${buildPlatforms}
+        --cache-from type=registry,ref=$$CACHE_REF
+        --cache-to type=registry,ref=$$CACHE_REF,mode=max
+        -t $$IMAGE:$$BUILDKITE_COMMIT -t $$IMAGE:latest --push .
+`);
+	}
+
+	// --- deployment notification (buildkite.ntfyNotifications) ---------------
+	// Config flag rather than a capability, mirroring circleci.ntfyNotifications.
+	if (config.ntfyNotifications && hasWrangler) {
+		steps.push(`
+  - label: ":loudspeaker: Notify"
+    depends_on:
+      - deploy
+    allow_dependency_failure: true
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image, hasDoppler ? ['DOPPLER_TOKEN'] : [])}    commands:
+      - |
+        NTFY_URL=""
+        if command -v doppler >/dev/null 2>&1; then
+          NTFY_URL=$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd 2>/dev/null || true)
+        fi
+        if [ -z "$$NTFY_URL" ]; then
+          echo "NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
+        else
+          SHORT="$$(echo "$$BUILDKITE_COMMIT" | cut -c1-7)"
+          curl -s -d "🚀 [${context.projectName || context.name || 'my-project'}] deployment finished on $$BUILDKITE_BRANCH ($$SHORT)" "$$NTFY_URL"
+        fi
+`);
+	}
+
+	return {
+		buildkiteQueue: queue,
+		buildkiteImage: image,
+		buildkiteLanguage: language,
+		buildkiteCommands: buildCommands,
+		// Each block starts with a newline so they concatenate cleanly; the
+		// leading one is dropped because the template already ends its `steps:`
+		// line. (Prettier strips a blank line there, and the generated project
+		// lints itself with `prettier --check`.)
+		buildkiteSteps: steps.join('').replace(/^\n/, '')
+	};
+}
+
 function getDependabotTemplateData(context) {
 	const config = context.configuration?.dependabot || {};
 	const interval = config.updateSchedule || 'weekly';
@@ -1371,6 +1697,7 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		'coding-agents': getCodingAgentsTemplateData,
 		sonarcloud: getSonarCloudTemplateData,
 		circleci: getCircleCiTemplateData,
+		buildkite: getBuildkiteTemplateData,
 		dependabot: getDependabotTemplateData,
 		'docker-container': getDockerContainerTemplateData,
 		doppler: (ctx) => {

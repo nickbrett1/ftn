@@ -427,6 +427,82 @@ export const capabilities = [
 		website: 'https://circleci.com/'
 	},
 	{
+		id: 'buildkite',
+		name: 'Buildkite Integration',
+		description:
+			'Runs CI on a self-hosted Buildkite agent (Apple silicon) instead of a metered cloud fleet. The pipeline and its GitHub webhook are created during generation, so there is no manual "set up project" step. Can run alongside CircleCI, so a repository can migrate without a flag day.',
+		category: CATEGORY_CI_CD,
+		dependencies: EMPTY_ARRAY,
+		conflicts: EMPTY_ARRAY,
+		requiresAuth: EMPTY_ARRAY,
+		externalServices: [
+			{
+				type: 'buildkite',
+				name: 'Buildkite',
+				actions: [
+					{
+						type: 'create',
+						description: 'The pipeline is created in the Buildkite organisation during generation'
+					},
+					{
+						type: 'configure',
+						description:
+							'Registers the pipeline GitHub webhook and triggers the first build. Without the webhook, pushes trigger nothing'
+					}
+				],
+				// Provisioning uses the deployment's own Buildkite token, so the
+				// user has no OAuth step — which is exactly the manual step
+				// CircleCI's integration required.
+				requiresAuth: false
+			}
+		],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				queue: {
+					type: 'string',
+					default: 'mac-studio-linux',
+					description: 'Buildkite agent queue the generated pipeline targets.'
+				},
+				provisionPipeline: {
+					type: 'boolean',
+					default: true,
+					description:
+						'Create the pipeline and register its GitHub webhook during generation. Set to false to only emit the .buildkite/ config.'
+				},
+				branchGating: {
+					type: 'boolean',
+					default: true,
+					description:
+						'Run the heavy gates (Lighthouse, preview deploys) on main only by default. Set to false to run them on every branch.'
+				},
+				ntfyNotifications: {
+					type: 'boolean',
+					default: false,
+					description: 'Send an ntfy notification when a deployment completes.'
+				}
+			}
+		},
+		benefits: [
+			'Runs on your own hardware — no per-minute metering',
+			'No manual setup: the pipeline and its push webhook are provisioned for you',
+			'Installs dependencies once per build rather than once per step'
+		],
+		templates: [
+			{
+				id: 'buildkite-pipeline',
+				filePath: '.buildkite/pipeline.yml',
+				templateId: 'buildkite-pipeline'
+			},
+			{
+				id: 'buildkite-readme',
+				filePath: '.buildkite/README.md',
+				templateId: 'buildkite-readme'
+			}
+		],
+		website: 'https://buildkite.com/'
+	},
+	{
 		id: 'doppler',
 		name: 'Doppler Secrets Management',
 		description:
