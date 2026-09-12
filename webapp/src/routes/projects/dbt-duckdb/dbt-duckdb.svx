@@ -1,7 +1,8 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import TechnologyPills from '$lib/components/TechnologyPills.svelte';
-	import Img from '@zerodevx/svelte-img';
+	import ZoomableImage from '$lib/components/ZoomableImage.svelte';
+	import ZoomableMermaid from '$lib/components/ZoomableMermaid.svelte';
 	import twoButtonsMeme from "$lib/images/twobuttonsmeme.jpg?as=run";
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
@@ -86,12 +87,14 @@
 June 13, 2025
 <ProjectLinkButton href={projectUrl} />
 
+<ZoomableMermaid />
+
 ## Introduction
 
 Data transformation is a critical step in any data pipeline. For many use cases[^1], a full-scale cloud data warehouse offers rich tooling, provides scalability, and easy access to analytical tools. However, this power often comes with increased complexity, cost, and maintenance overhead. At the other end of the spectrum, a few simple scripts working on a data dump offers an easy starting point but lacks the scalability and robust structure needed for managing complex transformations as projects evolve.
 
 <!-- Use https://imgflip.com/ for memes -->
-<Img src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
+<ZoomableImage src={twoButtonsMeme} alt="Meme illustrating the choice between simple scripts and complex cloud data warehouses" class="mx-auto my-4 max-w-md" />
 
 This article describes a middle ground between these two approaches, aimed at scenarios where datasets are manageable in size, somewhat independent, for example if used by different consumers, and yet there's a strong need for well-defined, maintainable transformations without incurring the costs and complexities of a full-scale data warehouse.
 

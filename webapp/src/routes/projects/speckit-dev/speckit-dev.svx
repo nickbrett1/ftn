@@ -1,7 +1,8 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
 	import SpendChart from '$lib/components/SpendChart.svelte';
-	import Img from '@zerodevx/svelte-img';
+	import ZoomableImage from '$lib/components/ZoomableImage.svelte';
+	import ZoomableMermaid from '$lib/components/ZoomableMermaid.svelte';
 	import speckitMeme from '$lib/images/speckit-meme.jpg?as=run';
 	import genprojDecomposable from '$lib/images/genproj-decomposable.jpeg?as=run';
 
@@ -23,6 +24,8 @@
 December 2025
 <ProjectLinkButton href={projectUrl} />
 
+<ZoomableMermaid />
+
 ## Introduction
 
 [Spec Kit](https://github.com/github/spec-kit) is a framework that helps define specifications for projects that are then built with agents. Or perhaps more simply stated, it provides a structured approach for "vibe coding".
@@ -31,7 +34,7 @@ I wanted to try Spec Kit after my [past experience with agents](/projects/buildi
 
 <p class="mb-4">How did it go?</p>
 <figure class="my-8 mx-auto max-w-md">
-    <Img src={speckitMeme} alt="Drake Hotline Bling Meme about using SpecKit" class="rounded-lg shadow-lg w-full" />
+    <ZoomableImage src={speckitMeme} alt="Drake Hotline Bling Meme about using SpecKit" class="rounded-lg shadow-lg w-full" />
     <figcaption class="text-center text-sm text-gray-500 mt-2 italic">
         Although this captures my sentiment at times using Spec Kit, there was lots of promise and I could see it working better with practice and more support for iterative development.
     </figcaption>
@@ -48,7 +51,7 @@ Using an agent for this project seemed like a good match because:
 2.  **Decomposable:** The project could easily be decomposed. Every tool has a UI element, maybe some configuration for how it should be used, and then generates some code. Nice and repeatable for an agent.
 
     <figure class="my-4 mx-auto max-w-lg">
-        <Img src={genprojDecomposable} alt="GenProj capability cards" class="rounded-lg shadow-lg w-full" />
+        <ZoomableImage src={genprojDecomposable} alt="GenProj capability cards" class="rounded-lg shadow-lg w-full" />
         <figcaption class="text-center text-sm text-gray-500 mt-2 italic">
             Note the auto-configuration for these three capabilities, showing their similarity.
         </figcaption>

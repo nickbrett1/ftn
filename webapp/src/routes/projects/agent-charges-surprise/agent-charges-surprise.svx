@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
+	import ZoomableImage from '$lib/components/ZoomableImage.svelte';
 	import Img from '@zerodevx/svelte-img';
 	import shockedRobotBill from "$lib/images/shocked-robot-bill.jpg?as=run";
 	import smuggler from "$lib/images/smuggler.jpg?as=run";
@@ -56,7 +57,7 @@ July 2026
 <ProjectLinkButton href={projectUrl} />
 
 <div class="my-8">
-	<Img src={shockedRobotBill} alt="Meme showing shocked robot looking at a credit card bill with flying dollar bills" class="mx-auto rounded-2xl shadow-2xl border border-gray-800 w-full max-w-lg" />
+	<ZoomableImage src={shockedRobotBill} alt="Meme showing shocked robot looking at a credit card bill with flying dollar bills" class="mx-auto rounded-2xl shadow-2xl border border-gray-800 w-full max-w-lg" />
 </div>
 
 ## Introduction

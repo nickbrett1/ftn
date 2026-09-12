@@ -1,6 +1,6 @@
 <script>
 	import ProjectLinkButton from '$lib/components/ProjectLinkButton.svelte';
-	import Img from '@zerodevx/svelte-img';
+	import ZoomableImage from '$lib/components/ZoomableImage.svelte';
 	import distractedBoyfriendMeme from "$lib/images/distractedboyfriendmeme.jpg?as=run";
 	import mainDashboardScreenshot from "$lib/images/main-dashboard-screenshot.png?as=run";
 	import chargeListingScreenshot from "$lib/images/charge-listing-screenshot.png?as=run";
@@ -22,7 +22,7 @@ October 2025
 
 Over the past year, my relationship with AI coding assistants has evolved dramatically. What started as flirtations through simple tab completions with GitHub Copilot has transformed into something more like a marriage where I'm comfortable with AI agents handling entire components of my applications. I've been building software for more than 20 years, and so I wanted to draw out a few thoughts about the experience from a recent personal project that was built using [Cursor's agent mode](https://cursor.com/docs/agent/modes#agent).
 
-<Img src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
+<ZoomableImage src={distractedBoyfriendMeme} alt="Meme illustrating the appealing opportunity to use AI Agents instead of manual coding" class="mx-auto my-4 max-w-md" />
 
 To give a sense of the scale of the work, this project had the goal of developing a system to automate a piece of my own finance management by removing the tedious process of reviewing monthly credit card statements (yes I do this). The system parses PDF statements from various credit card providers, extracts charges, and helps categorize spending into budgets.
 
@@ -44,11 +44,11 @@ There are five main areas to the code:
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
 	<div class="text-center">
-		<Img src={mainDashboardScreenshot} alt="Main dashboard showing billing cycles and budgets" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
+		<ZoomableImage src={mainDashboardScreenshot} alt="Main dashboard showing billing cycles and budgets" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
 		<p class="text-sm text-gray-400 mt-2">Main dashboard showing different billing cycles; each contains statements for multiple credit cards</p>
 	</div>
 	<div class="text-center">
-		<Img src={chargeListingScreenshot} alt="Statement parsing interface with charge allocation" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
+		<ZoomableImage src={chargeListingScreenshot} alt="Statement parsing interface with charge allocation" class="mx-auto rounded-lg shadow-lg max-w-full h-auto" />
 		<p class="text-sm text-gray-400 mt-2">Charge listing view, where charges across multiple cards can be viewed and assigned to budgets</p>
 	</div>
 </div>
