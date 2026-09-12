@@ -9,10 +9,12 @@
 
 import { GitHubAPIService } from './github-api.js';
 import { CircleCIAPIService } from './circleci-api.js';
+import { BuildkiteAPIService } from './buildkite-api.js';
 import { DopplerAPIService } from './doppler-api.js';
 import { SonarCloudAPIService } from './sonarcloud-api.js';
 import { generateAllFiles } from '$lib/utils/file-generator.js';
 import { isAppOwnedPath, isMergeTargetFile } from '$lib/utils/genproj-overwrite.js';
+import { getServiceConfig } from '$lib/config/external-services.js';
 
 /**
  * Merges the freshly-generated devcontainer.json into the existing one,
@@ -128,6 +130,9 @@ export class ProjectGeneratorService {
 		if (authTokens.circleci) {
 			this.services.circleci = new CircleCIAPIService(authTokens.circleci);
 		}
+		if (authTokens.buildkite) {
+			this.services.buildkite = new BuildkiteAPIService(authTokens.buildkite);
+		}
 		if (authTokens.doppler) {
 			this.services.doppler = new DopplerAPIService(authTokens.doppler);
 		}
@@ -172,12 +177,12 @@ export class ProjectGeneratorService {
 
 			// Step 3: Commit files to repository
 			console.log('📤 Committing files to repository...');
-			await this.commitFilesToRepository(repo, generatedFiles, context);
+			const commit = await this.commitFilesToRepository(repo, generatedFiles, context);
 			console.log(`✅ Committed ${generatedFiles.length} files to repository`);
 
 			// Step 4: Configure external services
 			console.log('🔧 Configuring external services...');
-			const externalServices = await this.configureExternalServices(context, repo);
+			const externalServices = await this.configureExternalServices(context, repo, commit);
 			console.log(`✅ Configured ${Object.keys(externalServices).length} external services`);
 
 			const generationTimeMs = Date.now() - startTime;
@@ -372,12 +377,16 @@ export class ProjectGeneratorService {
 	 * @param {Object} repository - Repository information
 	 * @returns {Promise<Object>} External service results
 	 */
-	async configureExternalServices(context, repository) {
+	async configureExternalServices(context, repository, commit = null) {
 		const results = {};
 		const [owner, repo] = repository.fullName.split('/');
 		const defaultBranch = repository.defaultBranch || 'main';
+		// The sha of the initial commit, used to trigger a first build for
+		// providers whose create-build API needs a commit rather than a branch.
+		const commitSha = commit?.sha || null;
 
 		await this.#configureCircleCI(context, owner, repo, results, defaultBranch);
+		await this.#configureBuildkite(context, owner, repo, results, defaultBranch, commitSha);
 		await this.#configureDoppler(context, results);
 		await this.#configureDependabot(context, owner, repo, results);
 		await this.#configureSonarCloud(context, owner, repo, results);
@@ -458,6 +467,99 @@ export class ProjectGeneratorService {
 					error: clearError
 				};
 			}
+		}
+	}
+
+	/**
+	 * Provisions a Buildkite pipeline for the newly created repository.
+	 *
+	 * The pipeline and its GitHub webhook are two different things, and only the
+	 * second one makes pushes build. A pipeline created through the API carries a
+	 * `provider.webhook_url` and **no webhook behind it**, so every other signal
+	 * (the repository connection, `build_branches: true`) looks healthy while
+	 * pushes silently do nothing at all. Registering it is one extra call, and
+	 * skipping it is the expensive mistake this integration exists to avoid.
+	 *
+	 * Best-effort, exactly like the CircleCI integration below: a provisioning
+	 * failure must not fail generation, but it must be visible in the result.
+	 *
+	 * @param {Object} context - Generation context
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @param {Object} results - Accumulated results (mutated)
+	 * @param {string} [defaultBranch='main'] - Default branch
+	 * @param {string|null} [commitSha] - Initial commit sha, for the first build
+	 */
+	async #configureBuildkite(
+		context,
+		owner,
+		repo,
+		results,
+		defaultBranch = 'main',
+		commitSha = null
+	) {
+		if (!context.capabilities.includes('buildkite') || !this.services.buildkite) {
+			return;
+		}
+
+		const capabilityConfig = context.configuration?.buildkite || {};
+		if (capabilityConfig.provisionPipeline === false) {
+			console.log('ℹ️ Buildkite provisioning disabled for this project (provisionPipeline=false).');
+			results.buildkite = { success: true, skipped: true, reason: 'provisionPipeline=false' };
+			return;
+		}
+
+		// Deployment-level identifiers (organisation + cluster), not per-project
+		// preferences — see the buildkite entry in config/external-services.js.
+		const { organization, clusterId } = getServiceConfig('buildkite');
+
+		try {
+			console.log('🔄 Configuring Buildkite...');
+
+			const { pipeline, existed } = await this.services.buildkite.createPipeline(organization, {
+				name: repo,
+				repository: `https://github.com/${owner}/${repo}.git`,
+				clusterId,
+				defaultBranch
+			});
+			const slug = pipeline.slug || repo;
+
+			const webhookRegistered = await this.services.buildkite.registerWebhook(organization, slug);
+			if (!webhookRegistered) {
+				console.warn(
+					`⚠️ Buildkite pipeline "${slug}" exists but its webhook could not be registered; pushes will NOT trigger builds.`
+				);
+			}
+
+			// Best-effort, so CI has run before anyone touches the repository
+			// again. The webhook covers every later push.
+			let build = null;
+			if (commitSha) {
+				try {
+					build = await this.services.buildkite.triggerBuild(organization, slug, {
+						commit: commitSha,
+						branch: defaultBranch,
+						message: 'First build (genproj)'
+					});
+					console.log(`✅ Buildkite first build triggered on ${defaultBranch}`);
+				} catch (buildError) {
+					console.warn(
+						`⚠️ Could not trigger the first Buildkite build (${buildError.message}); it will run on the next push`
+					);
+				}
+			}
+
+			results.buildkite = {
+				success: true,
+				organization,
+				pipeline: { slug, webUrl: pipeline.web_url, existed },
+				webhookRegistered,
+				build: build ? { number: build.number, webUrl: build.web_url } : undefined
+			};
+			console.log('✅ Buildkite configured successfully');
+		} catch (error) {
+			console.error(`❌ Buildkite configuration failed: ${error.message}`);
+			results.buildkite = { success: false, error: error.message };
 		}
 	}
 

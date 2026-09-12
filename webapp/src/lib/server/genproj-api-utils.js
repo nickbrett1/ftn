@@ -95,6 +95,10 @@ export function buildAuthTokensFromStored(storedTokens = [], cookies = null) {
 			env.GITHUB_ACCESS_TOKEN,
 		circleci:
 			storedTokens.find((t) => t.serviceName === 'CircleCI')?.accessToken || env.CIRCLECI_TOKEN,
+		// Buildkite has no user OAuth flow: provisioning uses the *deployment's*
+		// own token (Doppler webapp/prd BUILDKITE_TOKEN, synced to the Worker by
+		// the deploy job), so nothing is looked up per user.
+		buildkite: env.BUILDKITE_TOKEN,
 		doppler:
 			storedTokens.find((t) => t.serviceName === 'Doppler')?.accessToken || env.DOPPLER_TOKEN,
 		sonarcloud:

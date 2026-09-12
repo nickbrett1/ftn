@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectGeneratorService } from '$lib/server/project-generator.js';
 import { GitHubAPIService } from '$lib/server/github-api.js';
 import { CircleCIAPIService } from '$lib/server/circleci-api.js';
+import { BuildkiteAPIService } from '$lib/server/buildkite-api.js';
 import { DopplerAPIService } from '$lib/server/doppler-api.js';
 import { SonarCloudAPIService } from '$lib/server/sonarcloud-api.js';
 
 vi.mock('$lib/server/github-api.js');
 vi.mock('$lib/server/circleci-api.js');
+vi.mock('$lib/server/buildkite-api.js');
 vi.mock('$lib/server/doppler-api.js');
 vi.mock('$lib/server/sonarcloud-api.js');
 import { generateAllFiles } from '$lib/utils/file-generator.js';
@@ -21,6 +23,7 @@ describe('ProjectGeneratorService', () => {
 	const authTokens = {
 		github: 'gh-token',
 		circleci: 'cc-token',
+		buildkite: 'bk-token',
 		doppler: 'dp-token',
 		sonarcloud: 'sc-token'
 	};
@@ -83,7 +86,7 @@ describe('ProjectGeneratorService', () => {
 
 			generateAllFiles.mockResolvedValue(generatedFiles);
 			service.createGitHubRepository = vi.fn().mockResolvedValue(repository);
-			service.commitFilesToRepository = vi.fn().mockResolvedValue();
+			service.commitFilesToRepository = vi.fn().mockResolvedValue({ sha: 'sha-123' });
 			service.configureExternalServices = vi.fn().mockResolvedValue(externalServices);
 
 			const result = await service.generateProject(context);
@@ -99,7 +102,11 @@ describe('ProjectGeneratorService', () => {
 				generatedFiles,
 				context
 			);
-			expect(service.configureExternalServices).toHaveBeenCalledWith(context, repository);
+			// The initial commit's sha is threaded through so a provider that
+			// needs a commit (not a branch) can trigger a first build.
+			expect(service.configureExternalServices).toHaveBeenCalledWith(context, repository, {
+				sha: 'sha-123'
+			});
 		});
 
 		it('should return a failure result if any step fails', async () => {
@@ -609,6 +616,119 @@ describe('ProjectGeneratorService', () => {
 
 			expect(results.circleci.success).toBe(true);
 			expect(results.circleci.pipeline).toBeUndefined();
+		});
+
+		it('should provision a Buildkite pipeline and register its webhook', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo', web_url: 'https://buildkite.com/nick-brett/repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			service.services.buildkite.triggerBuild.mockResolvedValue({ number: 1, web_url: 'u' });
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository,
+				{ sha: 'abc123' }
+			);
+
+			expect(results.buildkite.success).toBe(true);
+			expect(results.buildkite.webhookRegistered).toBe(true);
+			// The webhook is the whole point: without it pushes build nothing.
+			expect(service.services.buildkite.registerWebhook).toHaveBeenCalledWith('nick-brett', 'repo');
+
+			const [, options] = service.services.buildkite.createPipeline.mock.calls[0];
+			expect(options.repository).toBe('https://github.com/owner/repo.git');
+			expect(options.clusterId).toBeTruthy();
+
+			// The first build uses the initial commit sha, not just the branch.
+			expect(service.services.buildkite.triggerBuild).toHaveBeenCalledWith(
+				'nick-brett',
+				'repo',
+				expect.objectContaining({ commit: 'abc123', branch: 'main' })
+			);
+		});
+
+		it('should report an unregistered webhook without failing generation', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(false);
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.success).toBe(true);
+			expect(results.buildkite.webhookRegistered).toBe(false);
+		});
+
+		it('should not trigger a first build when there is no commit sha', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.build).toBeUndefined();
+			expect(service.services.buildkite.triggerBuild).not.toHaveBeenCalled();
+		});
+
+		it('should not fail generation when the first Buildkite build cannot be triggered', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			service.services.buildkite.triggerBuild.mockRejectedValue(new Error('build error'));
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository,
+				{ sha: 'abc123' }
+			);
+
+			expect(results.buildkite.success).toBe(true);
+			expect(results.buildkite.build).toBeUndefined();
+		});
+
+		it('should skip Buildkite provisioning when provisionPipeline is false', async () => {
+			const results = await service.configureExternalServices(
+				{
+					...context,
+					capabilities: ['buildkite'],
+					configuration: { buildkite: { provisionPipeline: false } }
+				},
+				repository
+			);
+
+			expect(results.buildkite).toEqual({
+				success: true,
+				skipped: true,
+				reason: 'provisionPipeline=false'
+			});
+			expect(service.services.buildkite.createPipeline).not.toHaveBeenCalled();
+		});
+
+		it('should record a Buildkite provisioning failure without throwing', async () => {
+			service.services.buildkite.createPipeline.mockRejectedValue(
+				new Error('Buildkite API error: 403 Forbidden')
+			);
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.success).toBe(false);
+			expect(results.buildkite.error).toContain('403');
 		});
 
 		it('should not require the GitHub service for dependabot configuration', async () => {
