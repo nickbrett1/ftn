@@ -6,10 +6,10 @@
 </script>
 
 <svelte:head>
-	<title>My toddler has a store. Stripe runs the payments. The process beat the model.</title>
+	<title>My toddler has a store. Stripe runs the payments. I built it from my phone.</title>
 	<meta
 		name="description"
-		content="I built my 3-year-old a real point-of-sale system on Stripe hardware — and spec-driven development finally worked. The proof: it ran on a model at roughly a thirtieth of the price of last time's."
+		content="Building my 3-year-old a real iPad point-of-sale on Stripe hardware — powered by validated spec artifacts and a phone-first agent workflow that turned iteration into a 30-second loop."
 	/>
 </svelte:head>
 

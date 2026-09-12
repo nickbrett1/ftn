@@ -27,8 +27,8 @@
 	}
 </style>
 
-<h1 class="!mb-0 no-underline">Toddler e-commerce with Stripe: How a better agent harness beat a better model</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">DeepSeek V4 with a mobile-first agentic workflow succeeded where Gemini Pro alone struggled</p>
+<h1 class="!mb-0 no-underline">Toddler E-commerce with Stripe: A Working Toy Store, Built From My Phone</h1>
+<p class="text-xl text-gray-300 !mt-2 !mb-6">How validated spec artifacts and a phone-first agent workflow turned a three-year-old’s toys into a real iPad point-of-sale</p>
 August 2026
 <ProjectLinkButton href={projectUrl} />
 
@@ -221,7 +221,7 @@ There's three main pieces:
 
 If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. Here I want to talk about two things that made the whole project possible that for me, were new, powerful, and I think generally applicable; the spec-driven process and the phone-first workflow.
 
-## Spec-Driven Process: The Harness
+## Spec-Driven Process: Artifacts Before Code
 
 In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and I created a mess of branch conflicts. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, it was the structure I was using around it. With a revisit to the concept, a new process fixed my problems:
 
