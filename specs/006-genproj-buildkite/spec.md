@@ -100,11 +100,33 @@ ftn carries a bootstrap + `routing.sh` + `steps/heavy.yml` split whose entire pu
 
 What ftn *did* prove is carried over: the install dominates the cost, so install/build/test run in **one job** rather than one per step — see `.buildkite/README.md` on ftn for the measurements.
 
-### Deferred to v2
+### Deploy steps come from the deployment capabilities, not from here
 
-- **Deploy steps.** The generated CircleCI config deploys; this v1 only builds and tests. A v2 would port ftn's proven `export-cloudflare-env.sh` + `sync-doppler-secrets.sh` + `wrangler deploy` recipe for `cloudflare-wrangler` projects. This is the most material gap and the first thing to add.
+A deploy step is not part of this capability and is not "missing" from it. It is
+contributed by whichever **deployment capability** is selected, exactly as the
+CircleCI template already works: `_applyCloudflareConfig` adds the wrangler
+deploy/preview jobs for `cloudflare-wrangler`, and the `docker-publish` job comes
+from `docker-container`.
+
+**So the gap is not a missing step — it is that the Buildkite template is not yet
+deployment-aware.** Today a project selecting `cloudflare-wrangler` + `buildkite`
+gets build and test but no deploy, where the same project with `circleci` would
+deploy. Closing it means teaching the Buildkite template the same contributions:
+
+| deployment capability | contribution |
+|---|---|
+| `cloudflare-wrangler` | preview + production deploy (ftn's proven recipe: Cloudflare credentials resolved from Doppler `common/<config>`, `sync-doppler-secrets.sh`, `wrangler deploy`) |
+| `docker-container` | build and publish the image to GHCR — the Buildkite equivalent of CircleCI's `docker-publish` job |
+
+Until then, a `buildkite` project with a deployment capability selected is
+incomplete in a way the catalog does not warn about, which is worth stating
+plainly rather than leaving to be discovered after a merge that does not ship.
+
+### Other v2 items
+
 - **Secret scanning**, path filtering, Lighthouse.
-- **Pinned image digests** — v1 uses public tags (`node:22-bookworm`); the fleet owner can pin them per project.
+- **Pinned image digests** — v1 uses public tags (`node:22-bookworm`); the fleet
+  owner can pin them per project.
 
 ---
 

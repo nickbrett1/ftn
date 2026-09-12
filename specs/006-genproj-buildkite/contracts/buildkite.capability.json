@@ -57,7 +57,7 @@
 	],
 	"links": [{ "label": "Buildkite", "url": "https://buildkite.com/" }],
 	"notInV1": [
-		"Deploy steps (port ftn's proven Cloudflare recipe) — the most material gap",
+		"Deployment-aware steps: deploy jobs are contributed by the deployment capabilities (cloudflare-wrangler, docker-container), as they are for CircleCI — the Buildkite template does not yet honour them",
 		"Secret scanning (ggshield needs an API key the project may not have)",
 		"Path filtering (parity: the generated CircleCI config does not path-filter either)",
 		"Lighthouse"

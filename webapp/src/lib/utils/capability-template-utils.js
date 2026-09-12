@@ -1330,7 +1330,6 @@ function getBuildkiteTemplateData(context) {
 	const caps = context.capabilities || [];
 	const language = resolveLanguage(context);
 	const queue = config.queue || 'mac-studio-linux';
-	const docker = caps.includes('docker-container');
 	const usesPlaywright = caps.includes('playwright');
 
 	const images = {
@@ -1369,10 +1368,7 @@ function getBuildkiteTemplateData(context) {
 		buildkiteQueue: queue,
 		buildkiteImage: images[language],
 		buildkiteLanguage: language,
-		buildkiteCommands: steps,
-		// docker-container projects build an image rather than run a language
-		// toolchain; flag it so the README can say so.
-		buildkiteIsContainer: docker
+		buildkiteCommands: steps
 	};
 }
 
