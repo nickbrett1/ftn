@@ -1534,14 +1534,35 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
 `
 				: '';
 		const buildStep = isRustWorker
-			? `      - (cd worker && cargo build --release)
+			? `      - |
+        # A Rust worker is built by cargo. Rust is installed into the container
+        # per run rather than baked into the image - rustup is about a gigabyte,
+        # and the image is shared with the build step, so the cost lands on
+        # deploy time instead of on every job.
+        if ! command -v cargo >/dev/null 2>&1; then
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          . "$$HOME/.cargo/env"
+        fi
+        (cd worker && cargo build --release)
 `
 			: `      - npm run build --if-present
 `;
-		const deployCommand = (cloudflareEnv) =>
-			cloudflareEnv === 'default'
-				? '      - npx --yes wrangler deploy\n'
-				: `      - npx --yes wrangler deploy --env ${cloudflareEnv}\n`;
+		// A Rust worker is deployed from inside worker/ - that is where its
+		// wrangler config lives, and CircleCI did the same (`cd worker` before
+		// wrangler). Running wrangler from the repo root makes it fall back to
+		// auto-detection and fail with "Could not detect a directory containing
+		// static files".
+		const deployCommand = (cloudflareEnv) => {
+			// A Rust worker is deployed from inside worker/, which is where its
+			// wrangler config lives - CircleCI did the same (`cd worker`). From the
+			// repo root wrangler falls back to auto-detection and fails with
+			// "Could not detect a directory containing static files", after a
+			// successful build, which reads as a build failure.
+			const envFlag = cloudflareEnv === 'default' ? '' : ` --env ${cloudflareEnv}`;
+			return isRustWorker
+				? `      - (cd worker && npx --yes wrangler deploy${envFlag})\n`
+				: `      - npx --yes wrangler deploy${envFlag}\n`;
+		};
 
 		// With doppler the credentials are resolved inside the container, so only
 		// DOPPLER_TOKEN needs forwarding; without it they have to come from the
