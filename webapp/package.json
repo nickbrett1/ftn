@@ -11,7 +11,7 @@
 		"typescript": "^6.0.3",
 		"esbuild": "^0.28.1",
 		"@hono/node-server": "^2.0.12",
-		"sharp": "^0.35.3",
+		"sharp": "^0.35.4",
 		"brace-expansion": "^5.0.9",
 		"@lhci/cli": {
 			"tmp": "^0.2.7"
@@ -104,7 +104,7 @@
 		"remark-gfm": "^4.0.1",
 		"resize-observer-polyfill": "^1.5.1",
 		"safe-regex2": "^5.1.1",
-		"sharp": "^0.35.3",
+		"sharp": "^0.35.4",
 		"shiki": "^4.4.3",
 		"simple-git-hooks": "^2.14.0",
 		"svelte": "^5.53.8",
