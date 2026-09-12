@@ -82,4 +82,3 @@ a[target='_blank'] {
 	user-select: text;
 	touch-action: manipulation;
 }
-/* Probe: arm and verify the Buildkite production deploy step. */
