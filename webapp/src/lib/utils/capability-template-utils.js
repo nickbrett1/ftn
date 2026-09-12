@@ -1496,6 +1496,14 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
           apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
           curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh
         fi
+      - |
+        # CircleCI supplied the Cloudflare credentials through its context; there
+        # is no context here, so resolve them from Doppler. Exporting at this
+        # point persists for the rest of the step (the docker plugin runs every
+        # command in one shell), so nothing has to be listed in the plugin's
+        # environment: and no per-repo credential sits in the agent hook.
+        export CLOUDFLARE_API_TOKEN="$$(doppler secrets get CLOUDFLARE_API_TOKEN --project common --config ${dopplerConfig} --plain)"
+        export CLOUDFLARE_ACCOUNT_ID="$$(doppler secrets get CLOUDFLARE_ACCOUNT_ID --project common --config ${dopplerConfig} --plain)"
 `
 			: '';
 		const setupWrangler = hasDoppler
@@ -1517,9 +1525,11 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
 				? '      - npx --yes wrangler deploy\n'
 				: `      - npx --yes wrangler deploy --env ${cloudflareEnv}\n`;
 
+		// With doppler the credentials are resolved inside the container, so only
+		// DOPPLER_TOKEN needs forwarding; without it they have to come from the
+		// agent environment, which the generated README spells out.
 		const deployPlugins = _bkDockerPlugin(image, [
-			'CLOUDFLARE_API_TOKEN',
-			'CLOUDFLARE_ACCOUNT_ID',
+			...(hasDoppler ? [] : ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID']),
 			...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
 		]);
 
@@ -1547,8 +1557,7 @@ ${installDoppler}${setupWrangler}${buildStep}${deployCommand('default')}${syncSe
     if: build.branch != "main" && build.branch !~ /^dependabot\\//
 ${_bkAgents(queue)}    plugins:
 ${_bkDockerPlugin(image, [
-	'CLOUDFLARE_API_TOKEN',
-	'CLOUDFLARE_ACCOUNT_ID',
+	...(hasDoppler ? [] : ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID']),
 	...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
 ])}    commands:
       - ${npmActivate}

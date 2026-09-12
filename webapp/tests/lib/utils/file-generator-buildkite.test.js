@@ -139,7 +139,11 @@ describe('Buildkite file generation', () => {
 
 		expect(content).toContain('key: deploy');
 		expect(content).toContain('if: build.branch == "main"');
-		expect(content).toContain('- CLOUDFLARE_API_TOKEN');
+		// With doppler selected the credentials are resolved from Doppler inside
+		// the step (CircleCI got them from its context), so they are not listed
+		// for forwarding from the agent environment.
+		expect(content).toContain('doppler secrets get CLOUDFLARE_API_TOKEN');
+		expect(content).not.toContain('            - CLOUDFLARE_API_TOKEN');
 		expect(content).toContain('setup-wrangler-config.sh');
 		expect(content).toContain('sync-doppler-secrets.sh');
 		expect(content).toContain('npx --yes wrangler deploy');
@@ -156,6 +160,10 @@ describe('Buildkite file generation', () => {
 		expect(content).toContain('key: deploy');
 		expect(content).not.toContain('DOPPLER_TOKEN');
 		expect(content).not.toContain('sync-doppler-secrets.sh');
+		// Without doppler there is nothing to resolve the credentials with, so
+		// they have to come from the agent environment.
+		expect(content).toContain('            - CLOUDFLARE_API_TOKEN');
+		expect(content).toContain('            - CLOUDFLARE_ACCOUNT_ID');
 	});
 
 	it('adds a preview deploy for branches when branch gating is off', async () => {
