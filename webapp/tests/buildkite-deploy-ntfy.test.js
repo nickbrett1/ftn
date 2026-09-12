@@ -1,14 +1,20 @@
 /**
- * @fileoverview Regression guard for the production ntfy notification in this
- * repo's own Buildkite deploy step (`.buildkite/steps/deploy.yml`).
+ * @fileoverview Regression guards for this repo's own Buildkite deploy step
+ * (`.buildkite/steps/deploy.yml`), which notifies ntfy on a successful
+ * production deploy.
  *
- * The CircleCI -> Buildkite port piped a `doppler secrets get --plain` result
- * through `jq -r .computed`. `--plain` emits the raw secret value, not the
- * `{ ..., "computed": ... }` shape jq expects, so jq failed to parse it; the
- * `2>/dev/null || true` then hid the failure, leaving NTFY_URL empty and
- * silently skipping the notification while the deploy still reported green.
+ * Two bugs surfaced after the CircleCI -> Buildkite port and are pinned here:
  *
- * `--plain` must therefore be read directly, with no jq in the pipeline.
+ *  1. The notification URL was resolved with `doppler secrets get --plain` but
+ *     then piped through `jq -r .computed`. `--plain` emits the raw secret, not
+ *     the `{ ..., "computed": ... }` shape jq expects, so jq failed, the
+ *     `2>/dev/null || true` hid it, and NTFY_URL came back empty - silently
+ *     skipping the notification while the deploy stayed green (builds 67-69).
+ *
+ *  2. The short commit was extracted with the bash-only substring expansion
+ *     (dollar-brace VAR : 0 : 7). The docker plugin runs commands via `sh -e -c`
+ *     and /bin/sh is dash, which rejects that form with "Bad substitution" and
+ *     exits 2, failing an otherwise-successful deploy (build 71).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -19,10 +25,17 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const deployYmlPath = path.resolve(__dirname, '..', '..', '.buildkite', 'steps', 'deploy.yml');
 
+const deployYml = fs.readFileSync(deployYmlPath, 'utf8');
+// Comments may legitimately discuss the forbidden forms, so only executable
+// lines are checked.
+const deployCode = deployYml
+	.split('\n')
+	.filter((line) => !line.trim().startsWith('#'))
+	.join('\n');
+
 function ntfyLookupLine() {
-	const yml = fs.readFileSync(deployYmlPath, 'utf8');
 	// The single command that resolves the notification URL from Doppler.
-	return yml
+	return deployYml
 		.split('\n')
 		.find((line) => line.includes('doppler secrets get NTFY_URL_CIRCLECI_BUILD'));
 }
@@ -41,5 +54,11 @@ describe('ftn deploy step - ntfy notification', () => {
 		// `--plain` prints the raw value; `jq -r .computed` expects `--json`
 		// output and fails on a bare URL, silently skipping the notification.
 		expect(line).not.toMatch(/\bjq\b/);
+	});
+
+	it('extracts the short commit POSIX-safely (no bash substring under dash)', () => {
+		// /bin/sh is dash in the deploy container, where the bash substring
+		// expansion is a fatal "Bad substitution"; cut/sed must be used instead.
+		expect(deployCode).not.toMatch(/\$\{[A-Za-z_]\w*:\d+:\d+\}/);
 	});
 });

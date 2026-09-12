@@ -62,7 +62,12 @@ steps:
       - |
         NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd 2>/dev/null || true)"
         if [ -n "$$NTFY_URL" ] && [ "$$NTFY_URL" != "null" ]; then
-          curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $${BUILDKITE_COMMIT:0:7}" "$$NTFY_URL"
+          # Short SHA via cut, NOT the bash substring form (${VAR:0:7}): the
+          # docker plugin runs this under `sh -e -c`, and /bin/sh is dash, which
+          # rejects that expansion with "Bad substitution" and exits 2 — failing
+          # an otherwise-successful deploy (build 71).
+          SHORT="$$(echo "$$BUILDKITE_COMMIT" | cut -c1-7)"
+          curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $$SHORT" "$$NTFY_URL"
         else
           echo "⚠️ NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
         fi
