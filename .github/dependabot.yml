@@ -14,12 +14,27 @@ updates:
       tsparticles:
         patterns:
           - "*tsparticles*"
+      # Group the long tail. Without these, `daily` + a limit of 10 opens up to
+      # ten separate PRs, and each one runs a full Buildkite pipeline (build +
+      # test suite) on the self-hosted agent. Grouping delivers the same
+      # information as one or two PRs, for a fraction of the compute.
+      # First match wins, so the specific `tsparticles` group above still holds.
+      dev-minor-and-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      prod-minor-and-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       - dependency-name: "remark-footnotes"
         # Keep at v2.x as later versions break footnote functionality
       - dependency-name: "svelte"
         # Pin to 5.50.3 to avoid mdsvex preprocessor crash in 5.53.0+
-      
+
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
     # default location of `.github/workflows`

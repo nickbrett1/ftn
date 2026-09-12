@@ -44,7 +44,7 @@ steps:
       - . .buildkite/scripts/export-cloudflare-env.sh prd
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
-      - (cd webapp && npm ci)
+      - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
       - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config prd --env production
       - (cd webapp && npm run deploy)
@@ -91,7 +91,7 @@ steps:
       - . .buildkite/scripts/export-cloudflare-env.sh stg
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
-      - (cd webapp && npm ci)
+      - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
       - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
       - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview
       - (cd webapp && npm run deploy-preview)

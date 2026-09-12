@@ -163,6 +163,40 @@ thin `FROM …playwright + curl` image) is therefore **not** justified for Phase
 * Steps that touch shared volumes carry `concurrency_group: ftn/shared-volumes`
   with `concurrency: 1` so two builds cannot collide.
 
+## Build cost: `npm ci` in every step, and dependabot
+
+**The npm cache is already shared.** The `ftn-npm-cache` volume holds `/root/.npm`
+across steps and builds, and npm's cache is content-addressed, so installs resolve
+from it. Measured: `npm ci` is **17-21s** (1207 packages), not minutes. Every
+install also passes `--no-audit --no-fund --prefer-offline` to drop the registry
+round-trips npm makes by default.
+
+The residual cost per step is npm **relinking** the tree — 1207 packages, 1.3 GB,
+73.5k files — into that step's own `node_modules`. A content cache cannot remove
+that.
+
+**Caching `node_modules` itself is not worth it (yet).** It would need a shared
+docker volume mounted at `webapp/node_modules`: 1.3 GB on a shared path, it must
+be invalidated whenever the lockfile changes (a stale tree fails in confusing
+ways), concurrent jobs would race on it without a `flock`, and because `main` and
+every `dependabot/**` PR carry *different* lockfiles the two would invalidate each
+other continuously. The prize is ~20-40s out of a ~380s pipeline.
+
+If that ever matters, the levers are: a `flock`-serialised volume keyed on a
+lockfile hash; or dropping the install from the deploy steps (which need only
+`wrangler` — measured at ~10s, since wrangler must be installed or fetched either
+way and an unpinned `npx` drifts off the locked version).
+
+**Dependabot runs do not include the browser test.** The Lighthouse step is
+main-only *and* only uploaded when the diff touches landing-page files, so a
+`dependabot/**` build runs Upload → Bootstrap → ggshield → Build → Code test →
+annotate, and nothing else (verified on #39 and #44). The deploy steps are
+excluded for `dependabot/**` too, matching CircleCI. The cost of a dependabot PR
+is therefore the build plus the test suite — which is exactly what a dependency
+bump needs verified. To cut the *number* of those runs, updates are now grouped in
+`.github/dependabot.yml`: previously `daily` with a limit of 10 opened up to ten
+separate PRs, each with a full pipeline.
+
 ## Secrets
 
 * **Never inline `NAME=value`** in a pipeline `environment:` — it leaks the value

@@ -61,11 +61,19 @@ steps:
     # NOTE: unlike CircleCI's `run:` steps, the docker plugin runs all of these
     # in ONE shell, so a bare `cd webapp` would persist. Subshells keep each
     # command's working directory isolated.
+    # `npm ci` flags, used by every install in this repo:
+    #   --no-audit / --no-fund remove a registry round-trip each (npm audits
+    #     the whole tree by default, which is pure overhead in CI);
+    #   --prefer-offline resolves from the warm ftn-npm-cache volume and only
+    #     hits the network for genuinely missing packages.
+    # The npm cache is already shared across steps and builds, so the residual
+    # ~17-21s is npm relinking 1.3 GB / 73.5k files into node_modules — which a
+    # content cache cannot avoid (see README: caching node_modules itself).
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - bash .buildkite/scripts/assert-wrangler-jsonc.sh
-      - (cd webapp && npm ci)
+      - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
       - bash .buildkite/scripts/lockfile-drift-check.sh
       - (cd webapp && npm run build)
     artifact_paths:
@@ -92,7 +100,7 @@ steps:
       DOPPLER_ENVIRONMENT: stg
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - (cd webapp && npm ci)
+      - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - (cd webapp && npm run lint)
       - (cd webapp && NODE_OPTIONS="--max-old-space-size=4096" npm run test-ci)
