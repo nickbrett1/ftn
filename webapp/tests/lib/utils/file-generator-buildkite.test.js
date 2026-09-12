@@ -19,7 +19,10 @@ describe('Buildkite file generation', () => {
 		expect(pipeline.content).toContain('node:22-bookworm');
 		expect(pipeline.content).toContain('npm ci --no-audit --no-fund --prefer-offline');
 		expect(pipeline.content).toContain('npm run build --if-present');
-		expect(pipeline.content).toContain('npm test --if-present');
+		// Tests run through a placeholder guard: a plain `npm init` project has
+		// "test": "echo \"Error: no test specified\" && exit 1", which fails by design.
+		expect(pipeline.content).toContain('CI=true npm test');
+		expect(pipeline.content).toContain('skipping tests');
 		// Installs once, in a single job — the ftn measurements showed the
 		// install dominates, so there is deliberately only one step.
 		expect((pipeline.content.match(/npm ci/g) || []).length).toBe(1);
