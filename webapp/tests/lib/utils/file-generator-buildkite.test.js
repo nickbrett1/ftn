@@ -216,4 +216,39 @@ describe('Buildkite file generation', () => {
 		}
 		expect(content).not.toContain(':loudspeaker:');
 	});
+
+	it('activates the npm version the project pins, before installing', async () => {
+		// The generated package.json declares `packageManager` and .npmrc sets
+		// engine-strict=true, so the image's bundled npm refuses to install and
+		// dies with "Cannot read properties of null (reading 'edgesOut')". This
+		// is CircleCI's activate_pinned_npm step, and leaving it out is why the
+		// first fleet build of a generated project failed.
+		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain("require('./package.json').packageManager");
+		expect(content).toContain('npm install -g "npm@$$PINNED"');
+	});
+
+	it('guards npm ci behind a lockfile check', async () => {
+		// A generated project ships a package.json but no package-lock.json, so
+		// a bare `npm ci` fails outright.
+		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
+		expect(pipelineFrom(files).content).toContain('if [ -f package-lock.json ]; then npm ci');
+	});
+
+	it('runs tests non-interactively so vitest cannot hang in watch mode', async () => {
+		// The docker plugin allocates a TTY, and with a TTY vitest starts in
+		// watch mode and holds the step open until the job is killed. CircleCI
+		// has no TTY, which is why this only bites on Buildkite.
+		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
+		expect(pipelineFrom(files).content).toContain('CI=true npm test');
+	});
+
+	it('pins the container platform to the fleet architecture', async () => {
+		// Without this, docker resolves a multi-arch tag to linux/amd64 and runs
+		// every step emulated on an Apple-silicon fleet.
+		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
+		expect(pipelineFrom(files).content).toContain('platform: linux/arm64');
+	});
 });

@@ -361,8 +361,10 @@ export class ProjectGeneratorService {
 			return;
 		}
 
-		// Create commit with all files
-		await this.services.github.createMultipleFiles(
+		// Create commit with all files. The commit is RETURNED because providers
+		// that need a commit (rather than a branch) to trigger a first build -
+		// Buildkite's create-build API is one - have nothing else to use.
+		return await this.services.github.createMultipleFiles(
 			owner,
 			repo,
 			githubFiles,

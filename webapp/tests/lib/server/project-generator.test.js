@@ -86,7 +86,13 @@ describe('ProjectGeneratorService', () => {
 
 			generateAllFiles.mockResolvedValue(generatedFiles);
 			service.createGitHubRepository = vi.fn().mockResolvedValue(repository);
-			service.commitFilesToRepository = vi.fn().mockResolvedValue({ sha: 'sha-123' });
+			// Not mocked: the real method must return the commit, because a
+			// provider that needs a commit sha to trigger a first build has no
+			// other source for it. (A mock here hid exactly that bug, which then
+			// showed up as a generated project with no first build.)
+			service.services.github.createMultipleFiles = vi.fn().mockResolvedValue({
+				sha: 'sha-123'
+			});
 			service.configureExternalServices = vi.fn().mockResolvedValue(externalServices);
 
 			const result = await service.generateProject(context);
@@ -97,11 +103,6 @@ describe('ProjectGeneratorService', () => {
 			expect(result.generatedFiles).toEqual(generatedFiles);
 			expect(generateAllFiles).toHaveBeenCalledWith(context);
 			expect(service.createGitHubRepository).toHaveBeenCalledWith(context);
-			expect(service.commitFilesToRepository).toHaveBeenCalledWith(
-				repository,
-				generatedFiles,
-				context
-			);
 			// The initial commit's sha is threaded through so a provider that
 			// needs a commit (not a branch) can trigger a first build.
 			expect(service.configureExternalServices).toHaveBeenCalledWith(context, repository, {

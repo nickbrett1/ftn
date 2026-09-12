@@ -1333,6 +1333,10 @@ ${envNames.map((name) => `            - ${name}`).join('\n')}
 		: '';
 	return `      - docker#v5.13.0:
           image: "${image}"
+          # The fleet is Apple silicon. Without this, docker resolves a
+          # multi-arch tag to linux/amd64 and runs the whole step emulated (with
+          # a warning, and native modules built for the wrong architecture).
+          platform: linux/arm64
           workdir: /workdir
 ${envBlock}${commandYaml}`;
 }
@@ -1382,16 +1386,32 @@ function getBuildkiteTemplateData(context) {
 	// A generated project has a package.json but NO package-lock.json, so a bare
 	// `npm ci` fails outright ("can only install with an existing
 	// package-lock.json"). CircleCI's template guards this the same way.
+	// The generated package.json pins npm (`packageManager`) and .npmrc sets
+	// engine-strict=true, so the image's bundled npm REFUSES to install and dies
+	// with the opaque "Cannot read properties of null (reading 'edgesOut')".
+	// Activate the pinned npm first - this is CircleCI's activate_pinned_npm
+	// step, and skipping it is why the first fleet build of a generated project
+	// failed.
+	// The command *value* (no leading `- `): used as an array element in the
+	// node command list and interpolated into the other step blocks.
+	const npmActivate = `|
+        PINNED="$$(node -p "require('./package.json').packageManager || ''" | sed -e 's/^npm@//')"
+        if [ -n "$$PINNED" ]; then npm install -g "npm@$$PINNED"; fi`;
 	const npmInstall =
 		'if [ -f package-lock.json ]; then npm ci --no-audit --no-fund --prefer-offline; else npm install --no-audit --no-fund; fi';
 
 	const commands = {
 		node: [
+			npmActivate,
 			npmInstall,
 			...(usesPlaywright ? ['npx --yes playwright install --with-deps chromium'] : []),
 			'npm run build --if-present',
 			'npm run lint --if-present',
-			'npm test --if-present'
+			// `CI=true` because the docker plugin allocates a TTY, and without
+			// it vitest starts in WATCH MODE and the step hangs until the job is
+			// killed (observed on the fleet). CircleCI never hit this - it has
+			// no TTY - which is exactly why the difference matters here.
+			'CI=true npm test --if-present'
 		],
 		python: [
 			'python -m pip install --no-cache-dir -e ".[dev]"',
@@ -1454,6 +1474,7 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
     env:
       CHROME_PATH: ${chromiumPath}
     commands:
+      - ${npmActivate}
       - ${npmInstall}
       - npm run build --if-present
       # The generated config is .lighthouse.cjs, which is not one of lhci's
@@ -1510,6 +1531,7 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
     if: build.branch == "main"
 ${_bkAgents(queue)}    plugins:
 ${deployPlugins}    commands:
+      - ${npmActivate}
       - ${npmInstall}
 ${installDoppler}${setupWrangler}${buildStep}${deployCommand('default')}${syncSecrets('default')}`);
 
@@ -1529,6 +1551,7 @@ ${_bkDockerPlugin(image, [
 	'CLOUDFLARE_ACCOUNT_ID',
 	...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
 ])}    commands:
+      - ${npmActivate}
       - ${npmInstall}
 ${installDoppler}${setupWrangler}${buildStep}      - npx --yes wrangler deploy --env preview
 ${syncSecrets('preview')}`);
