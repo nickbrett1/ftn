@@ -155,8 +155,8 @@ Afghanistan  | Population     | 1961 | 5050
 
 ```mermaid
 graph TD;
-		A["Raw Data Layer&#10(Original Format)"] --> B["Staging Layer&#10(Standardized & Cleaned)"];
-		B --> C["Marts Layer&#10(Aggregated & Reshaped)"];
+		A["Raw Data Layer<br/>(Original Format)"] --> B["Staging Layer<br/>(Standardized & Cleaned)"];
+		B --> C["Marts Layer<br/>(Aggregated & Reshaped)"];
 		C --> D["Analytics & Applications"];
 
 		click A "https://github.com/nickbrett1/dbt-duckdb/blob/main/wdi/models/staging/_wdi_sources.yml" "View Raw Data Layer dbt sources" _self
@@ -302,15 +302,15 @@ Here's a conceptual flow of how they interact in this project:
 graph TD;
     %%{init: {'themeVariables': { 'textColor': '#faf0e6', 'lineColor': '#cccccc', 'fontSize': '14px', 'edgeLabelBackground': '#222', 'clusterBkg': 'transparent', 'clusterBorder': '#cccccc'}}}%%
     subgraph step1Graph [Step 1: Data Ingestion Process]
-        A_ingest["Source Data&#10(e.g., WDI CSV, API extracts)"] --> B_ingest["Ingestion Scripts&#10(e.g., Python)"];
-        B_ingest -- "(writes to)" --> C_raw_storage["Raw Data Storage&#10(e.g., Local Filesystem,&#10Cloud Bucket - Parquet/CSV)"];
+        A_ingest["Source Data<br/>(e.g., WDI CSV, API extracts)"] --> B_ingest["Ingestion Scripts<br/>(e.g., Python)"];
+        B_ingest -- "(writes to)" --> C_raw_storage["Raw Data Storage<br/>(e.g., Local Filesystem,<br/>Cloud Bucket - Parquet/CSV)"];
     end
 
-    C_raw_storage -- "(raw data feeds into)" --> D_duckdb_engine["Step 2: DuckDB as Engine&#10(reads raw data, acts as dbt's 'warehouse')"];
-    D_duckdb_engine -- "(dbt-core runs SQL/Python transformations)" --> E_duckdb_transformed["Step 3: DuckDB with Transformed Data&#10(stores intermediate & final results)"];
-    E_duckdb_transformed --> X_extraction_script["Extraction Script&#10(e.g. Python)"];
-    X_extraction_script -- "(writes to)" --> F_processed_storage["Step 4: Processed Data Storage&#10(e.g., Local Filesystem,&#10Cloud Bucket - Parquet,&#10Relational DB like Cloudflare D1)"];
-    F_processed_storage --> G_consumption["(consumed by)&#10(Analysis / Visualization / Applications)"];
+    C_raw_storage -- "(raw data feeds into)" --> D_duckdb_engine["Step 2: DuckDB as Engine<br/>(reads raw data, acts as dbt's 'warehouse')"];
+    D_duckdb_engine -- "(dbt-core runs SQL/Python transformations)" --> E_duckdb_transformed["Step 3: DuckDB with Transformed Data<br/>(stores intermediate & final results)"];
+    E_duckdb_transformed --> X_extraction_script["Extraction Script<br/>(e.g. Python)"];
+    X_extraction_script -- "(writes to)" --> F_processed_storage["Step 4: Processed Data Storage<br/>(e.g., Local Filesystem,<br/>Cloud Bucket - Parquet,<br/>Relational DB like Cloudflare D1)"];
+    F_processed_storage --> G_consumption["(consumed by)<br/>(Analysis / Visualization / Applications)"];
 
     classDef mainNode fill:#222,stroke:#cccccc,stroke-width:2px;
 

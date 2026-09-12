@@ -32,6 +32,30 @@ export async function highlight(code, lang) {
 	return escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'github-dark' }));
 }
 
+/**
+ * Mermaid renders multi-line node labels with `<br>` tags inside the HTML of its
+ * `<foreignObject>` elements. Everything inside an `<svg>` is serialized in the SVG
+ * namespace, where `br` is not a void element, so the HTML serializer emits `<br></br>`.
+ * The Svelte compiler rejects that ("Void elements cannot have children or closing tags"),
+ * which breaks the build. Swap those elements for a raw `<br/>` node so the emitted markup
+ * is the valid void tag the label needs.
+ */
+function rehypeMermaidLineBreaks() {
+	const fix = (node, inSvg) => {
+		if (!node || !Array.isArray(node.children)) return node;
+		const svg = inSvg || (node.type === 'element' && node.tagName === 'svg');
+		return {
+			...node,
+			children: node.children.map((child) =>
+				svg && child.type === 'element' && child.tagName === 'br'
+					? { type: 'raw', value: '<br/>' }
+					: fix(child, svg)
+			)
+		};
+	};
+	return (tree) => fix(tree, false);
+}
+
 const isTest = process.env.VITEST === 'true';
 
 /** @type {import('@sveltejs/kit').Config}*/
@@ -101,7 +125,9 @@ const config = {
 		mdsvex({
 			extensions: ['.md', '.svx'],
 			remarkPlugins: [remarkFootnotes, remarkGfm],
-			rehypePlugins: isTest ? [] : [[rehypeMermaid, { strategy: 'inline-svg' }]],
+			rehypePlugins: isTest
+				? []
+				: [[rehypeMermaid, { strategy: 'inline-svg' }], rehypeMermaidLineBreaks],
 			highlight: {
 				highlighter: async (code, lang) => {
 					// Intercept the highlighter for mermaid blocks and return an AST node directly.

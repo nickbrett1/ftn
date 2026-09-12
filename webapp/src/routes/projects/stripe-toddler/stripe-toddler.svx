@@ -162,27 +162,27 @@ Underneath this workflow, we've got an e-commerce stack:
 %%{init: {'theme':'dark'}}%%
 graph TD
     subgraph ClientDevices [Client Devices and Peripherals]
-        iPadApp["iPad POS App&#10;Swift / iOS"]
-        BarcodeScanner["Tera Mini Barcode Scanner&#10;Bluetooth HID Mode"]
-        StripeReader["Stripe Reader M2&#10;Bluetooth BLE Mode"]
-        AveryPrinter["Avery Label Printer&#10;AirPrint / Browser Print"]
+        iPadApp["iPad POS App<br/>Swift / iOS"]
+        BarcodeScanner["Tera Mini Barcode Scanner<br/>Bluetooth HID Mode"]
+        StripeReader["Stripe Reader M2<br/>Bluetooth BLE Mode"]
+        AveryPrinter["Avery Label Printer<br/>AirPrint / Browser Print"]
     end
 
     subgraph ExternalServices [External Integrations]
-        StripeAPI["Stripe API&#10;Terminal and Payments"]
-        AppAttest["Apple App Attest Service&#10;Device Verification"]
+        StripeAPI["Stripe API<br/>Terminal and Payments"]
+        AppAttest["Apple App Attest Service<br/>Device Verification"]
     end
 
     subgraph EdgeBackend [Cloudflare Workers Edge Platform]
-        RustWorker["Payments and Admin API Worker&#10;Rust / Wasm"]
+        RustWorker["Payments and Admin API Worker<br/>Rust / Wasm"]
         subgraph CloudflareStorage [Cloudflare Storage]
-            D1Db["D1 Relational DB&#10;SQLite Transactions"]
-            KVStore["KV Namespace&#10;Inventory Data"]
+            D1Db["D1 Relational DB<br/>SQLite Transactions"]
+            KVStore["KV Namespace<br/>Inventory Data"]
         end
     end
 
     subgraph AdminControl [Admin Portal]
-        AdminUI["Admin Web App&#10;www.fintechnick.com"]
+        AdminUI["Admin Web App<br/>www.fintechnick.com"]
     end
 
     BarcodeScanner -->|Bluetooth HID / Keystrokes| iPadApp
@@ -362,10 +362,10 @@ For this I took advantage of the relatively new [MCP support in Xcode 26.3](http
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    Phone["Phone&#10;Blink Shell"] -->|"mosh over Tailscale"| DevContainer["Linux devcontainer&#10;VS Code + agent + tmux"]
-    DevContainer -->|HTTP| Proxy["mcp-sse-proxy.cjs&#10;(in the container)"]
-    Proxy -->|"HTTP over Tailscale"| Mac["mac-studio&#10;xcode-mcp-server.js (PM2)"]
-    Mac -->|stdio| Xcode["Xcode 26.3&#10;native MCP server"]
+    Phone["Phone<br/>Blink Shell"] -->|"mosh over Tailscale"| DevContainer["Linux devcontainer<br/>VS Code + agent + tmux"]
+    DevContainer -->|HTTP| Proxy["mcp-sse-proxy.cjs<br/>(in the container)"]
+    Proxy -->|"HTTP over Tailscale"| Mac["mac-studio<br/>xcode-mcp-server.js (PM2)"]
+    Mac -->|stdio| Xcode["Xcode 26.3<br/>native MCP server"]
     Xcode -->|"edit / build / test / launch"| iPad["iPad app"]
 ```
 
@@ -390,10 +390,10 @@ And of course, I also made sure my Mac would auto-login if it rebooted, and as a
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    Observe["1. Observe&#10;Phone: the celebration is weak"] --> Instruct["2. Instruct&#10;Ask the agent on the phone"]
-    Instruct --> Bridge["3. Bridge&#10;MCP proxy to mac-studio to Xcode"]
-    Bridge --> Build["4. Build&#10;edit to rebuild to tests"]
-    Build --> Verified["5. Verified&#10;iPad reloads, mid-demo"]
+    Observe["1. Observe<br/>Phone: the celebration is weak"] --> Instruct["2. Instruct<br/>Ask the agent on the phone"]
+    Instruct --> Bridge["3. Bridge<br/>MCP proxy to mac-studio to Xcode"]
+    Bridge --> Build["4. Build<br/>edit to rebuild to tests"]
+    Build --> Verified["5. Verified<br/>iPad reloads, mid-demo"]
 ```
 
 </div>
