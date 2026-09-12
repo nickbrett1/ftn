@@ -119,7 +119,11 @@ fi
 # Set it as a pipeline environment variable in the Buildkite UI, or take the
 # default.
 # ---------------------------------------------------------------------------
-deploy_mode="${BUILDKITE_DEPLOY_MODE:-preview}"
+# Defaults to `all`: CircleCI's deploy job is retired and this is the only path
+# to production, so a merge to main deploys. Set BUILDKITE_DEPLOY_MODE as a
+# pipeline environment variable in the Buildkite UI to dial it back to
+# `preview` (non-main only) or `off` without a commit.
+deploy_mode="${BUILDKITE_DEPLOY_MODE:-all}"
 deploy_upload=false
 case "$deploy_mode" in
 	all) deploy_upload=true ;;
