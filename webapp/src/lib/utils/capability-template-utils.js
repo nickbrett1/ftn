@@ -1580,8 +1580,19 @@ ${_bkAgents(queue)}    env:
       IMAGE: ${imageRef}
       CACHE_REF: ${cacheRef}
     commands:
-      # GHCR_USERNAME / GHCR_TOKEN come from the agent's environment hook.
-      - echo "$$GHCR_TOKEN" | docker login ghcr.io -u "$$GHCR_USERNAME" --password-stdin
+      # Credentials are resolved from Doppler at runtime with the agent's
+      # DOPPLER_TOKEN - the same channel ftn's secret scan uses. CircleCI supplied
+      # them through its "context: common"; Buildkite has no equivalent,
+      # and putting a registry token in the agent's environment hook would expose
+      # it to every job on the fleet. The value is only ever in the job's shell.
+      - |
+        GHCR_USERNAME=${registryNamespace}
+        GHCR_TOKEN="$$(curl -fsS -H "Authorization: Bearer $$DOPPLER_TOKEN" "https://api.doppler.com/v3/configs/config/secret?project=common&config=prd&name=GHCR_UPDATE_TOKEN" | sed -n 's/.*"raw"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p')"
+        if [ -z "$$GHCR_TOKEN" ]; then
+          echo "GHCR_UPDATE_TOKEN is missing from Doppler (common/prd) - cannot publish." >&2
+          exit 1
+        fi
+        echo "$$GHCR_TOKEN" | docker login ghcr.io -u "$$GHCR_USERNAME" --password-stdin
       - docker buildx create --use --bootstrap || true
       - >
         docker buildx build --platform ${buildPlatforms}
