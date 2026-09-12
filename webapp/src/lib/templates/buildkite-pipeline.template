@@ -2,17 +2,10 @@
 # together with its GitHub webhook — without that webhook a push triggers
 # nothing at all, which is the failure mode to watch for.
 #
-# The agent-side prerequisites (queue, plugins-path, secrets) are NOT in this
-# repo; see .buildkite/README.md before changing anything here.
+# Which steps appear here is decided by the capabilities the project selects:
+# the deployment capabilities contribute their deploy steps, gitguardian
+# contributes the secret scan, lighthouse-ci the performance gate. The
+# agent-side prerequisites for all of them are in .buildkite/README.md.
 
 steps:
-  - label: ":hammer: Build and test ({{buildkiteLanguage}})"
-    key: build
-    agents:
-      queue: {{buildkiteQueue}}
-    plugins:
-      - docker#v5.13.0:
-          image: "{{buildkiteImage}}"
-          workdir: /workdir
-    commands:
-{{buildkiteCommands}}
+{{buildkiteSteps}}

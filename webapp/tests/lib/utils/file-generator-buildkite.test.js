@@ -91,4 +91,129 @@ describe('Buildkite file generation', () => {
 		expect(pipelineFrom(files)).toBeUndefined();
 		expect(readmeFrom(files)).toBeUndefined();
 	});
+
+	it('adds a secret scan that gates the build when gitguardian is selected', async () => {
+		const files = await generate(['buildkite', 'devcontainer-node', 'gitguardian'], {
+			buildkite: {}
+		});
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: secret_scan');
+		expect(content).toContain('gitguardian/ggshield');
+		// NAME only: a step-level env: value never reaches the container.
+		expect(content).toContain('- GITGUARDIAN_API_KEY');
+		// The image has no ENTRYPOINT, so the full argv is spelled out.
+		expect(content).toContain('command: ["ggshield", "secret", "scan", "path", "."]');
+		// CircleCI made `build` require the scan; so does this.
+		expect(content).toMatch(/key: build[\s\S]*?depends_on:\n {6}- secret_scan/);
+	});
+
+	it('adds a main-only Lighthouse step when lighthouse-ci is selected', async () => {
+		const files = await generate(['buildkite', 'devcontainer-node', 'lighthouse-ci'], {
+			buildkite: {}
+		});
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: lighthouse');
+		expect(content).toContain('if: build.branch == "main"');
+		// The pinned Playwright image, because Lighthouse needs real Chromium.
+		expect(content).toContain('mcr.microsoft.com/playwright');
+		expect(content).toContain('- CHROME_PATH');
+		// .lighthouse.cjs is not a filename lhci discovers on its own.
+		expect(content).toContain('lhci autorun --config .lighthouse.cjs');
+	});
+
+	it('runs Lighthouse on every branch when branch gating is off', async () => {
+		const files = await generate(['buildkite', 'devcontainer-node', 'lighthouse-ci'], {
+			buildkite: { branchGating: false }
+		});
+		expect(pipelineFrom(files).content).not.toContain('if: build.branch == "main"');
+	});
+
+	it('adds a main-only Cloudflare deploy when cloudflare-wrangler is selected', async () => {
+		const files = await generate(
+			['buildkite', 'devcontainer-node', 'cloudflare-wrangler', 'doppler'],
+			{ buildkite: {} }
+		);
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: deploy');
+		expect(content).toContain('if: build.branch == "main"');
+		expect(content).toContain('- CLOUDFLARE_API_TOKEN');
+		expect(content).toContain('setup-wrangler-config.sh');
+		expect(content).toContain('sync-doppler-secrets.sh');
+		expect(content).toContain('npx --yes wrangler deploy');
+		// A preview on every branch is off by default, matching CircleCI.
+		expect(content).not.toContain('key: deploy_preview');
+	});
+
+	it('deploys without the Doppler steps when doppler is not selected', async () => {
+		const files = await generate(['buildkite', 'devcontainer-node', 'cloudflare-wrangler'], {
+			buildkite: {}
+		});
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: deploy');
+		expect(content).not.toContain('DOPPLER_TOKEN');
+		expect(content).not.toContain('sync-doppler-secrets.sh');
+	});
+
+	it('adds a preview deploy for branches when branch gating is off', async () => {
+		const files = await generate(
+			['buildkite', 'devcontainer-node', 'cloudflare-wrangler', 'doppler'],
+			{ buildkite: { branchGating: false } }
+		);
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: deploy_preview');
+		expect(content).toContain('wrangler deploy --env preview');
+		expect(content).toContain('build.branch != "main"');
+	});
+
+	it('publishes the container image on the agent when docker-container is selected', async () => {
+		const files = await generateAllFiles({
+			name: 'demo',
+			registryNamespace: 'nickbrett1',
+			capabilities: ['buildkite', 'devcontainer-node', 'docker-container', 'docker'],
+			configuration: { buildkite: {} }
+		});
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain('key: docker_publish');
+		expect(content).toContain('ghcr.io/nickbrett1/demo');
+		expect(content).toContain('type=registry,ref=$$CACHE_REF,mode=max');
+		// Needs a Docker daemon, so it runs on the agent rather than in a
+		// container - i.e. no docker plugin on this step.
+		expect(content).toMatch(/key: docker_publish[\s\S]*?commands:/);
+		expect(content).not.toMatch(/key: docker_publish[\s\S]*?docker#v5\.13\.0/);
+	});
+
+	it('adds a notification step when ntfy is configured', async () => {
+		const files = await generate(
+			['buildkite', 'devcontainer-node', 'cloudflare-wrangler', 'doppler'],
+			{ buildkite: { ntfyNotifications: true } }
+		);
+		const content = pipelineFrom(files).content;
+
+		expect(content).toContain(':loudspeaker: Notify');
+		expect(content).toContain('NTFY_URL_CIRCLECI_BUILD');
+		expect(content).toContain('allow_dependency_failure: true');
+	});
+
+	it('contributes no extra steps when no contributing capability is selected', async () => {
+		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
+		const content = pipelineFrom(files).content;
+
+		// Step keys, not raw substrings: the template's header comment names the
+		// contributing capabilities on purpose.
+		for (const key of [
+			'key: secret_scan',
+			'key: lighthouse',
+			'key: deploy',
+			'key: docker_publish'
+		]) {
+			expect(content).not.toContain(key);
+		}
+		expect(content).not.toContain(':loudspeaker:');
+	});
 });

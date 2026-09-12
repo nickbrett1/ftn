@@ -100,33 +100,55 @@ ftn carries a bootstrap + `routing.sh` + `steps/heavy.yml` split whose entire pu
 
 What ftn *did* prove is carried over: the install dominates the cost, so install/build/test run in **one job** rather than one per step — see `.buildkite/README.md` on ftn for the measurements.
 
-### Deploy steps come from the deployment capabilities, not from here
+### Capability-driven steps (parity with CircleCI)
 
-A deploy step is not part of this capability and is not "missing" from it. It is
-contributed by whichever **deployment capability** is selected, exactly as the
-CircleCI template already works: `_applyCloudflareConfig` adds the wrangler
-deploy/preview jobs for `cloudflare-wrangler`, and the `docker-publish` job comes
-from `docker-container`.
+A deploy step is not part of this capability: it is contributed by whichever
+**deployment capability** is selected, exactly as the CircleCI template works.
+The generated pipeline now honours every contribution the CircleCI config makes:
 
-**So the gap is not a missing step — it is that the Buildkite template is not yet
-deployment-aware.** Today a project selecting `cloudflare-wrangler` + `buildkite`
-gets build and test but no deploy, where the same project with `circleci` would
-deploy. Closing it means teaching the Buildkite template the same contributions:
+| capability or flag | contributed step | CircleCI equivalent |
+|---|---|---|
+| `gitguardian` | `secret_scan` (ggshield, scanning a path) and `build` depends on it | `ggshield/scan` job, with `build` requiring it |
+| `lighthouse-ci` | `lighthouse`, main-only by default | `lighthouse` job with a main-only filter |
+| `cloudflare-wrangler` | `deploy` on main; `deploy_preview` on branches when `branchGating: false`; Doppler CLI install, `setup-wrangler-config.sh` and the secret sync when `doppler` is also selected | `deploy-to-cloudflare` job |
+| `docker-container` | `docker_publish` on main (GHCR, buildx registry cache) | `docker-publish` job |
+| `buildkite.ntfyNotifications` | a `Notify` step after the deploy | `notify_deployment` command |
+| `code-quality` | lint inside the build step (`npm run lint` / `ruff check`) | the language-aware lint step |
 
-| deployment capability | contribution |
-|---|---|
-| `cloudflare-wrangler` | preview + production deploy (ftn's proven recipe: Cloudflare credentials resolved from Doppler `common/<config>`, `sync-doppler-secrets.sh`, `wrangler deploy`) |
-| `docker-container` | build and publish the image to GHCR — the Buildkite equivalent of CircleCI's `docker-publish` job |
+A project that selects none of these gets build + test and nothing else.
 
-Until then, a `buildkite` project with a deployment capability selected is
-incomplete in a way the catalog does not warn about, which is worth stating
-plainly rather than leaving to be discovered after a merge that does not ship.
+**Deliberate divergences from the CircleCI template**, each for a reason:
+
+1. **Doppler config.** CircleCI hardcodes `doppler_config: stg` for the wrangler
+   setup and the secret sync. This uses the project's own resolved Doppler
+   config (`resolveDopplerTarget`), because a project whose `doppler.yaml` points
+   at `dev` would otherwise sync a different environment's secrets from `stg`.
+   The CircleCI value looks like ftn-specific drift that leaked into the
+   template — worth checking there rather than copying.
+2. **lhci config.** The capability generates `.lighthouse.cjs`, which is *not*
+   one of lhci's discoverable filenames, so the step passes
+   `--config .lighthouse.cjs` explicitly. CircleCI's bare `lhci autorun` does not,
+   which is another thing worth checking on that side.
+3. **`docker_publish` runs on the agent**, not inside a container: building an
+   image needs a Docker daemon, and the agent already has one (it is what runs
+   every other step). CircleCI achieved the same with `setup_remote_docker` plus
+   `docker_layer_caching`.
+4. **Secrets come from the agent's environment hook** by name. Buildkite has no
+   equivalent of a CircleCI *context*, so the generated README lists exactly what
+   the hook must provide per step.
+
+**Known limitation, inherited rather than introduced:** the `lighthouse` and
+`deploy` steps are node-shaped (`npm ci`, `npm run build`) because the CircleCI
+jobs used `executor: node/default`. A python/rust/java project that selects one
+of those capabilities gets the same assumption CircleCI made, not a better one.
 
 ### Other v2 items
 
-- **Secret scanning**, path filtering, Lighthouse.
-- **Pinned image digests** — v1 uses public tags (`node:22-bookworm`); the fleet
-  owner can pin them per project.
+- **Path filtering** — still absent, by parity (the generated CircleCI config does
+  not path-filter either).
+- **Pinned image digests** — the build/lint/test image uses a public tag
+  (`node:22-bookworm`); the fleet owner can pin it per project. The Lighthouse
+  image is already pinned to the digest proven on this fleet.
 
 ---
 

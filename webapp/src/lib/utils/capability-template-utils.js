@@ -1303,24 +1303,52 @@ ${minorAndPatch}`;
 }
 
 /**
+ * Queue declaration shared by every generated step.
+ * @param {string} queue - Agent queue
+ * @returns {string} YAML fragment
+ */
+function _bkAgents(queue) {
+	return `    agents:
+      queue: ${queue}
+`;
+}
+
+/**
+ * The docker plugin block every containerised step uses.
+ *
+ * `envNames` are NAME-ONLY on purpose: a step-level `env:` value does not enter
+ * the container, so anything the container needs must be listed here and take
+ * its value from the job environment.
+ *
+ * @param {string} image - Container image
+ * @param {string[]} [envNames] - Environment variable names to forward
+ * @param {string} [commandYaml] - Optional `command:` in exec form
+ * @returns {string} YAML fragment
+ */
+function _bkDockerPlugin(image, envNames = [], commandYaml = '') {
+	const envBlock = envNames.length
+		? `          environment:
+${envNames.map((name) => `            - ${name}`).join('\n')}
+`
+		: '';
+	return `      - docker#v5.13.0:
+          image: "${image}"
+          workdir: /workdir
+${envBlock}${commandYaml}`;
+}
+
+/**
  * Builds the generated project's `.buildkite/pipeline.yml`.
  *
- * Deliberately smaller than ftn's pipeline, and for a reason. ftn carries a
- * bootstrap + routing + `steps/heavy.yml` split that exists to *path-filter*
- * (docs-only commits skip the heavy set) — and the generated CircleCI config
- * does not path-filter either, so this is parity, not a regression. What ftn
- * did prove is that the install is the dominant fixed cost, so install, build
- * and test run in ONE job rather than one per step.
+ * The step set is **capability-driven**, mirroring the CircleCI template: the
+ * deployment capabilities contribute deploy steps, `gitguardian` contributes the
+ * secret scan, `lighthouse-ci` contributes the performance gate, and so on. A
+ * project that selects none of them gets build + test and nothing else.
  *
- * Agent-side prerequisites (the queue, `plugins-path`, and any secret the
- * pipeline needs) live in the agent configuration, not the repo — the generated
- * `.buildkite/README.md` spells them out, because without them the pipeline
- * fails in ways that look like the project's fault.
- *
- * Not in v1, each for a concrete reason: secret scanning (ggshield needs an API
- * key the project may not have), path filtering, Lighthouse, and deploy steps
- * (each needs an agent-side prerequisite or provider credential a generated
- * project cannot assume). See `specs/006-genproj-buildkite/spec.md`.
+ * Deliberately smaller than ftn's pipeline in two ways. ftn's bootstrap +
+ * routing split exists to path-filter, and the generated CircleCI config does
+ * not path-filter either (parity). And install/build/test run in ONE job, since
+ * ftn measured the install as the dominant fixed cost.
  *
  * @param {Object} context - Template context (capabilities, configuration)
  * @returns {Object} Buildkite template data
@@ -1330,7 +1358,13 @@ function getBuildkiteTemplateData(context) {
 	const caps = context.capabilities || [];
 	const language = resolveLanguage(context);
 	const queue = config.queue || 'mac-studio-linux';
+	const branchGating = config.branchGating !== false;
 	const usesPlaywright = caps.includes('playwright');
+	const hasDoppler = caps.includes('doppler');
+	const hasGitGuardian = caps.includes('gitguardian');
+	const hasLighthouse = caps.includes('lighthouse-ci');
+	const hasWrangler = caps.includes('cloudflare-wrangler');
+	const hasDockerContainer = caps.includes('docker-container');
 
 	const images = {
 		node: 'node:22-bookworm',
@@ -1338,6 +1372,12 @@ function getBuildkiteTemplateData(context) {
 		rust: 'rust:1-slim',
 		java: 'eclipse-temurin:21-jdk'
 	};
+	const image = images[language];
+	// The pinned Playwright image is the one proven on this fleet; Lighthouse
+	// needs the Chromium it bakes in (there is no Google Chrome Stable).
+	const playwrightImage =
+		'mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847';
+	const chromiumPath = '/ms-playwright/chromium-1243/chrome-linux-arm64/chrome';
 
 	const commands = {
 		node: [
@@ -1362,13 +1402,196 @@ function getBuildkiteTemplateData(context) {
 		]
 	};
 
-	const steps = commands[language].map((c) => `      - ${c}`).join('\n');
+	const steps = [];
+
+	// --- secret scan (gitguardian) -------------------------------------------
+	// Runs first and gates the build, mirroring the CircleCI workflow where
+	// `build` requires `ggshield-scan`.
+	if (hasGitGuardian) {
+		steps.push(`
+  - label: ":shield: Secret scan (ggshield)"
+    key: secret_scan
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(
+	'gitguardian/ggshield:v1.54.0',
+	['GITGUARDIAN_API_KEY'],
+	`          # The image declares no ENTRYPOINT (Cmd is "ggshield"), so the full argv
+          # has to be spelled out - passing ["secret","scan","path","."] would
+          # exec a binary called "secret" and exit 127.
+          command: ["ggshield", "secret", "scan", "path", "."]
+`
+)}`);
+	}
+
+	// --- build + test --------------------------------------------------------
+	const buildCommands = commands[language].map((c) => `      - ${c}`).join('\n');
+	steps.push(`
+  - label: ":hammer: Build and test (${language})"
+    key: build
+${hasGitGuardian ? '    depends_on:\n      - secret_scan\n' : ''}${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image)}    commands:
+${buildCommands}
+`);
+
+	// --- Lighthouse (lighthouse-ci) ------------------------------------------
+	// A release-quality gate, so main-only by default - matching CircleCI's job
+	// filter, and incidentally skipping dependabot/** branches.
+	if (hasLighthouse) {
+		steps.push(`
+  - label: ":chrome: Lighthouse CI"
+    key: lighthouse
+    depends_on:
+      - build
+${branchGating ? '    if: build.branch == "main"\n' : ''}${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be listed as a NAME in the plugin's environment: above.
+    # A step-level env: value never enters the container.
+    env:
+      CHROME_PATH: ${chromiumPath}
+    commands:
+      - npm ci --no-audit --no-fund --prefer-offline
+      - npm run build --if-present
+      # The generated config is .lighthouse.cjs, which is not one of lhci's
+      # default filenames, so it is passed explicitly.
+      - npm install -g @lhci/cli && lhci autorun --config .lighthouse.cjs
+`);
+	}
+
+	// --- Cloudflare deploy (cloudflare-wrangler) -----------------------------
+	if (hasWrangler) {
+		const wranglerConfig = context.configuration?.['cloudflare-wrangler'] || {};
+		const isRustWorker = wranglerConfig.workerType === 'rust';
+		const dopplerTarget = resolveDopplerTarget(context);
+		const dopplerConfig = dopplerTarget.config || 'dev';
+
+		const installDoppler = hasDoppler
+			? `      - |
+        if ! command -v doppler >/dev/null 2>&1; then
+          apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+          curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh
+        fi
+`
+			: '';
+		const setupWrangler = hasDoppler
+			? `      - ./scripts/setup-wrangler-config.sh "${dopplerConfig}"
+`
+			: '';
+		const syncSecrets = (cloudflareEnv) =>
+			hasDoppler
+				? `      - ./scripts/sync-doppler-secrets.sh --project ${dopplerTarget.project} --config ${dopplerConfig} --env ${cloudflareEnv}
+`
+				: '';
+		const buildStep = isRustWorker
+			? `      - (cd worker && cargo build --release)
+`
+			: `      - npm run build --if-present
+`;
+		const deployCommand = (cloudflareEnv) =>
+			cloudflareEnv === 'default'
+				? '      - npx --yes wrangler deploy\n'
+				: `      - npx --yes wrangler deploy --env ${cloudflareEnv}\n`;
+
+		const deployPlugins = _bkDockerPlugin(image, [
+			'CLOUDFLARE_API_TOKEN',
+			'CLOUDFLARE_ACCOUNT_ID',
+			...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
+		]);
+
+		steps.push(`
+  - label: ":rocket: Deploy (production)"
+    key: deploy
+    depends_on:
+      - build
+    if: build.branch == "main"
+${_bkAgents(queue)}    plugins:
+${deployPlugins}    commands:
+      - npm ci --no-audit --no-fund --prefer-offline
+${installDoppler}${setupWrangler}${buildStep}${deployCommand('default')}${syncSecrets('default')}`);
+
+		// Branch gating: a preview on every branch is wasteful, and a main-only
+		// preview is redundant with the production deploy. Opt out with
+		// buildkite.branchGating = false (same default as CircleCI).
+		if (!branchGating) {
+			steps.push(`
+  - label: ":rocket: Deploy preview"
+    key: deploy_preview
+    depends_on:
+      - build
+    if: build.branch != "main" && build.branch !~ /^dependabot\\//
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image, [
+	'CLOUDFLARE_API_TOKEN',
+	'CLOUDFLARE_ACCOUNT_ID',
+	...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
+])}    commands:
+      - npm ci --no-audit --no-fund --prefer-offline
+${installDoppler}${setupWrangler}${buildStep}      - npx --yes wrangler deploy --env preview
+${syncSecrets('preview')}`);
+		}
+	}
+
+	// --- container image publish (docker-container) --------------------------
+	// Runs on the AGENT, not in a container: it needs a Docker daemon, and the
+	// agent already has one (it is what runs every other step). This mirrors
+	// CircleCI's setup_remote_docker + docker_layer_caching.
+	if (hasDockerContainer) {
+		const dcConfig = context.configuration?.['docker-container'] || {};
+		const registryNamespace = context.registryNamespace || dcConfig.registryNamespace || 'OWNER';
+		const projectName = context.projectName || context.name || 'my-project';
+		const imageRef = `ghcr.io/${registryNamespace}/${projectName}`;
+		const cacheRef = `${imageRef}:buildcache`;
+		const buildPlatforms = dcConfig.armBuilds === true ? 'linux/amd64,linux/arm64' : 'linux/amd64';
+
+		steps.push(`
+  - label: ":docker: Build and publish image (GHCR)"
+    key: docker_publish
+    depends_on:
+      - build
+    if: build.branch == "main"
+${_bkAgents(queue)}    env:
+      IMAGE: ${imageRef}
+      CACHE_REF: ${cacheRef}
+    commands:
+      # GHCR_USERNAME / GHCR_TOKEN come from the agent's environment hook.
+      - echo "$$GHCR_TOKEN" | docker login ghcr.io -u "$$GHCR_USERNAME" --password-stdin
+      - docker buildx create --use --bootstrap || true
+      - >
+        docker buildx build --platform ${buildPlatforms}
+        --cache-from type=registry,ref=$$CACHE_REF
+        --cache-to type=registry,ref=$$CACHE_REF,mode=max
+        -t $$IMAGE:$$BUILDKITE_COMMIT -t $$IMAGE:latest --push .
+`);
+	}
+
+	// --- deployment notification (buildkite.ntfyNotifications) ---------------
+	// Config flag rather than a capability, mirroring circleci.ntfyNotifications.
+	if (config.ntfyNotifications && hasWrangler) {
+		steps.push(`
+  - label: ":loudspeaker: Notify"
+    depends_on:
+      - deploy
+    allow_dependency_failure: true
+${_bkAgents(queue)}    plugins:
+${_bkDockerPlugin(image, hasDoppler ? ['DOPPLER_TOKEN'] : [])}    commands:
+      - |
+        NTFY_URL=""
+        if command -v doppler >/dev/null 2>&1; then
+          NTFY_URL=$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd 2>/dev/null || true)
+        fi
+        if [ -z "$$NTFY_URL" ]; then
+          echo "NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
+        else
+          SHORT="$$(echo "$$BUILDKITE_COMMIT" | cut -c1-7)"
+          curl -s -d "🚀 [${context.projectName || context.name || 'my-project'}] deployment finished on $$BUILDKITE_BRANCH ($$SHORT)" "$$NTFY_URL"
+        fi
+`);
+	}
 
 	return {
 		buildkiteQueue: queue,
-		buildkiteImage: images[language],
+		buildkiteImage: image,
 		buildkiteLanguage: language,
-		buildkiteCommands: steps
+		buildkiteCommands: buildCommands,
+		buildkiteSteps: steps.join('')
 	};
 }
 

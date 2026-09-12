@@ -9,11 +9,16 @@ Buildkite UI.
 
 - **Queue:** `{{buildkiteQueue}}` — the pipeline is dispatched to that
   self-hosted agent, not to a cloud fleet.
-- **Image:** `{{buildkiteImage}}` (public; pick an arm64 image, the fleet is
-  Apple silicon).
+- **Image:** `{{buildkiteImage}}` for the build, lint and test steps (public;
+  pick an arm64 image, the fleet is Apple silicon).
 - **Steps:** install, then build, lint and test — in a **single job on purpose**.
   The install is the dominant fixed cost, so it is paid once rather than once
   per step.
+
+The step set is *capability-driven*, exactly as the CircleCI config is: a
+deployment capability adds its deploy step, `gitguardian` adds the secret scan,
+`lighthouse-ci` adds the performance gate. A project that selects none of them
+gets build and test and nothing else.
 
 ## What the agent has to provide
 
@@ -24,11 +29,20 @@ without it:
    and *every* step here uses a plugin — omitting it fails the checkout.
 2. **A unique agent `name`** when a machine runs more than one agent
    (`name="<machine>-%spawn"`). Otherwise agents race over the plugin directory.
-3. **Secrets, delivered to the job environment** by the agent's `environment`
+3. **Docker**, since almost every step runs in a container.
+4. **Secrets, delivered to the job environment** by the agent's `environment`
    hook. A step-level `env:` value does **not** reach the container — only names
    listed in the docker plugin's `environment:` list do. This is the most common
    way a working step mysteriously loses its credentials.
-4. **Docker**, since every step runs in a container.
+
+## Secrets each contributed step needs
+
+| Step | Provided as | Notes |
+|---|---|---|
+| Secret scan (`gitguardian`) | `GITGUARDIAN_API_KEY` | Scans a path, so it needs no git history |
+| Deploy (`cloudflare-wrangler`) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Plus `DOPPLER_TOKEN` when the `doppler` capability is selected, for `scripts/setup-wrangler-config.sh` and the secret sync |
+| Image publish (`docker-container`) | `GHCR_USERNAME`, `GHCR_TOKEN` | Runs on the agent (it needs a Docker daemon), not in a container |
+| Notify (`buildkite.ntfyNotifications`) | `DOPPLER_TOKEN` | Reads `NTFY_URL_CIRCLECI_BUILD` from Doppler `common/prd` |
 
 ## Worth knowing
 
@@ -36,3 +50,6 @@ without it:
 - A pipeline can exist, look correctly connected, and receive **nothing** on
   push. That is a missing GitHub webhook, and it is worth checking before
   debugging anything else.
+- The Lighthouse step runs on `main` only by default, and passes its config
+  explicitly (`--config .lighthouse.cjs`) because that filename is not one lhci
+  discovers on its own.
