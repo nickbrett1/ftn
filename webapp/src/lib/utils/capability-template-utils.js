@@ -1411,7 +1411,17 @@ function getBuildkiteTemplateData(context) {
 			// it vitest starts in WATCH MODE and the step hangs until the job is
 			// killed (observed on the fleet). CircleCI never hit this - it has
 			// no TTY - which is exactly why the difference matters here.
-			'CI=true npm test --if-present'
+			//
+			// `--if-present` is not enough on its own: a plain `npm init` project
+			// carries `"test": "echo \"Error: no test specified\" && exit 1"`,
+			// which fails by design. Skip that placeholder (and say so) rather
+			// than reporting a red build for a repo that has no tests yet.
+			`|
+        if node -e "const s = require('./package.json').scripts || {}; process.exit(s.test && !s.test.includes('no test specified') ? 0 : 1)"; then
+          CI=true npm test
+        else
+          echo "No test script (or the npm placeholder) - skipping tests."
+        fi`
 		],
 		python: [
 			'python -m pip install --no-cache-dir -e ".[dev]"',
@@ -1495,6 +1505,14 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
         if ! command -v doppler >/dev/null 2>&1; then
           apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
           curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh
+        fi
+      - |
+        # sync-doppler-secrets.sh needs jq and exits without it ("jq is not
+        # installed or not in PATH"); CircleCI's deploy job installed it, and the
+        # failure lands AFTER a successful wrangler deploy, which reads as a
+        # deploy failure. Install it first, once, before anything else.
+        if ! command -v jq >/dev/null 2>&1; then
+          apt-get update && apt-get install -y --no-install-recommends jq
         fi
       - |
         # CircleCI supplied the Cloudflare credentials through its context; there
