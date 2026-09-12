@@ -15,7 +15,7 @@ Buildkite UI.
   The install is the dominant fixed cost, so it is paid once rather than once
   per step.
 
-The step set is *capability-driven*, exactly as the CircleCI config is: a
+The step set is _capability-driven_, exactly as the CircleCI config is: a
 deployment capability adds its deploy step, `gitguardian` adds the secret scan,
 `lighthouse-ci` adds the performance gate. A project that selects none of them
 gets build and test and nothing else.
@@ -26,7 +26,7 @@ None of this lives in the repository, and the pipeline fails in confusing ways
 without it:
 
 1. **`plugins-path`** in `buildkite-agent.cfg`. Agent v4 has no usable default,
-   and *every* step here uses a plugin — omitting it fails the checkout.
+   and _every_ step here uses a plugin — omitting it fails the checkout.
 2. **A unique agent `name`** when a machine runs more than one agent
    (`name="<machine>-%spawn"`). Otherwise agents race over the plugin directory.
 3. **Docker**, since almost every step runs in a container.
@@ -37,12 +37,21 @@ without it:
 
 ## Secrets each contributed step needs
 
-| Step | Provided as | Notes |
-|---|---|---|
-| Secret scan (`gitguardian`) | `GITGUARDIAN_API_KEY` | Scans a path, so it needs no git history |
-| Deploy (`cloudflare-wrangler`) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Plus `DOPPLER_TOKEN` when the `doppler` capability is selected, for `scripts/setup-wrangler-config.sh` and the secret sync |
-| Image publish (`docker-container`) | `GHCR_USERNAME`, `GHCR_TOKEN` | Runs on the agent (it needs a Docker daemon), not in a container |
-| Notify (`buildkite.ntfyNotifications`) | `DOPPLER_TOKEN` | Reads `NTFY_URL_CIRCLECI_BUILD` from Doppler `common/prd` |
+Provided by the agent's `environment` hook, by name:
+
+- **Secret scan** (`gitguardian`) — `GITGUARDIAN_API_KEY`. Scans a path, so it
+  needs no git history.
+- **Deploy** (`cloudflare-wrangler`) — `CLOUDFLARE_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID`, plus `DOPPLER_TOKEN` when the `doppler` capability is
+  selected (for `scripts/setup-wrangler-config.sh` and the secret sync).
+- **Image publish** (`docker-container`) — `GHCR_USERNAME` and `GHCR_TOKEN`.
+  Runs on the agent, which has the Docker daemon it needs.
+- **Notify** (`buildkite.ntfyNotifications`) — `DOPPLER_TOKEN`; reads
+  `NTFY_URL_CIRCLECI_BUILD` from Doppler `common/prd`.
+
+This list is a bullet list rather than a table on purpose: a generated file has
+to survive `prettier --check` in this project's own lint step, and prettier
+re-pads markdown tables to its own column widths.
 
 ## Worth knowing
 

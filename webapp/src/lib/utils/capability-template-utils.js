@@ -1379,9 +1379,15 @@ function getBuildkiteTemplateData(context) {
 		'mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847';
 	const chromiumPath = '/ms-playwright/chromium-1243/chrome-linux-arm64/chrome';
 
+	// A generated project has a package.json but NO package-lock.json, so a bare
+	// `npm ci` fails outright ("can only install with an existing
+	// package-lock.json"). CircleCI's template guards this the same way.
+	const npmInstall =
+		'if [ -f package-lock.json ]; then npm ci --no-audit --no-fund --prefer-offline; else npm install --no-audit --no-fund; fi';
+
 	const commands = {
 		node: [
-			'npm ci --no-audit --no-fund --prefer-offline',
+			npmInstall,
 			...(usesPlaywright ? ['npx --yes playwright install --with-deps chromium'] : []),
 			'npm run build --if-present',
 			'npm run lint --if-present',
@@ -1448,7 +1454,7 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
     env:
       CHROME_PATH: ${chromiumPath}
     commands:
-      - npm ci --no-audit --no-fund --prefer-offline
+      - ${npmInstall}
       - npm run build --if-present
       # The generated config is .lighthouse.cjs, which is not one of lhci's
       # default filenames, so it is passed explicitly.
@@ -1504,7 +1510,7 @@ ${_bkDockerPlugin(playwrightImage, ['CHROME_PATH'])}    # CHROME_PATH must be li
     if: build.branch == "main"
 ${_bkAgents(queue)}    plugins:
 ${deployPlugins}    commands:
-      - npm ci --no-audit --no-fund --prefer-offline
+      - ${npmInstall}
 ${installDoppler}${setupWrangler}${buildStep}${deployCommand('default')}${syncSecrets('default')}`);
 
 		// Branch gating: a preview on every branch is wasteful, and a main-only
@@ -1523,7 +1529,7 @@ ${_bkDockerPlugin(image, [
 	'CLOUDFLARE_ACCOUNT_ID',
 	...(hasDoppler ? ['DOPPLER_TOKEN'] : [])
 ])}    commands:
-      - npm ci --no-audit --no-fund --prefer-offline
+      - ${npmInstall}
 ${installDoppler}${setupWrangler}${buildStep}      - npx --yes wrangler deploy --env preview
 ${syncSecrets('preview')}`);
 		}
@@ -1591,7 +1597,11 @@ ${_bkDockerPlugin(image, hasDoppler ? ['DOPPLER_TOKEN'] : [])}    commands:
 		buildkiteImage: image,
 		buildkiteLanguage: language,
 		buildkiteCommands: buildCommands,
-		buildkiteSteps: steps.join('')
+		// Each block starts with a newline so they concatenate cleanly; the
+		// leading one is dropped because the template already ends its `steps:`
+		// line. (Prettier strips a blank line there, and the generated project
+		// lints itself with `prettier --check`.)
+		buildkiteSteps: steps.join('').replace(/^\n/, '')
 	};
 }
 
