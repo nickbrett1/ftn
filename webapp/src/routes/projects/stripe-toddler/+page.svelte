@@ -9,7 +9,7 @@
 	<title>My toddler has a store. Stripe runs the payments. I built it from my phone.</title>
 	<meta
 		name="description"
-		content="Building my 3-year-old a real iPad point-of-sale on Stripe hardware — powered by validated spec artifacts and a phone-first agent workflow that turned iteration into a 30-second loop."
+		content="Building a toddler focused iPad point-of-sale on Stripe hardware — powered by validated spec artifacts and a phone-first agent workflow that turned iteration into a 30-second loop."
 	/>
 </svelte:head>
 

@@ -9,7 +9,8 @@
 		ProjectDiagramSolid,
 		ClipboardCheckSolid,
 		RobotSolid,
-		FileInvoiceDollarSolid
+		FileInvoiceDollarSolid,
+		StoreSolid
 	} from 'svelte-awesome-icons';
 </script>
 
@@ -22,6 +23,21 @@
 		<div class="md:p-6 text-pretty md:text-right text-3xl leading-tight tracking-tight">
 			These are some of my personal projects, tools, code and writings.
 		</div>
+
+		<Card onclick={() => (globalThis.location.href = '/projects/stripe-toddler')}>
+			<div class="flex flex-col grow">
+				<div class="flex flex-row">
+					<span class="text-xl font-bold leading-none pt-2 grow"
+						>Toddler E-commerce with Stripe</span
+					>
+					<StoreSolid class="size-10" aria-label="Toddler E-commerce with Stripe Project" />
+				</div>
+				<p class="grow pt-5">
+					Building an iPad point-of-sale with a Stripe card reader and barcode scanner, driven by
+					validated spec artifacts and a phone-first agent workflow.
+				</p>
+			</div>
+		</Card>
 
 		<Card onclick={() => (globalThis.location.href = '/projects/agent-charges-surprise')}>
 			<div class="flex flex-col grow">
