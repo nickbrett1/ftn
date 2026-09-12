@@ -19,6 +19,8 @@ import dopplerYaml from '../templates/doppler-yaml.template?raw';
 import playwrightConfig from '../templates/playwright-config.template?raw';
 import lighthouseCiConfig from '../templates/lighthouse-ci-config.template?raw';
 import circleCiConfig from '../templates/circleci-config.template?raw';
+import buildkitePipeline from '../templates/buildkite-pipeline.template?raw';
+import buildkiteReadme from '../templates/buildkite-readme.template?raw';
 import dockerfileTemplate from '../templates/dockerfile.template?raw';
 import dockerignoreTemplate from '../templates/dockerignore.template?raw';
 import dockerComposeTemplate from '../templates/docker-compose.template?raw';
@@ -581,6 +583,8 @@ const templateImports = {
 	'playwright-config': playwrightConfig,
 	'lighthouse-ci-config': lighthouseCiConfig,
 	'circleci-config': circleCiConfig,
+	'buildkite-pipeline': buildkitePipeline,
+	'buildkite-readme': buildkiteReadme,
 	dockerfile: dockerfileTemplate,
 	dockerignore: dockerignoreTemplate,
 	'docker-compose': dockerComposeTemplate,

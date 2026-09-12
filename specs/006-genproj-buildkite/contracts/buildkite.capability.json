@@ -1,9 +1,9 @@
 {
 	"id": "buildkite",
 	"name": "Buildkite Integration",
-	"description": "Runs CI on a self-hosted Buildkite agent (native arm64) instead of a metered cloud fleet. genproj creates the pipeline, registers its GitHub webhook and triggers the first build — there is no manual \"set up project\" step. Requires Doppler: the build itself fetches secrets with doppler run.",
+	"description": "Runs CI on a self-hosted Buildkite agent (Apple silicon) instead of a metered cloud fleet. genproj creates the pipeline and registers its GitHub webhook — without the webhook, pushes trigger nothing — so there is no manual \"set up project\" step. Can run alongside CircleCI, so a repository can migrate without a flag day.",
 	"category": "ci-cd",
-	"dependencies": ["doppler"],
+	"dependencies": [],
 	"conflicts": [],
 	"requiresAuth": [],
 	"configurationSchema": {
@@ -17,33 +17,26 @@
 			"provisionPipeline": {
 				"type": "boolean",
 				"default": true,
-				"description": "Create the pipeline, register its GitHub webhook and trigger the first build. Turn off to emit .buildkite/ config only."
-			},
-			"branchGating": {
-				"type": "boolean",
-				"default": true,
-				"description": "Run the heavy pipeline on main only. Set to false to run it on every branch."
-			},
-			"ntfyNotifications": {
-				"type": "boolean",
-				"default": false,
-				"description": "Send a notification when a deploy completes."
+				"description": "Create the pipeline and register its GitHub webhook during generation. Set to false to only emit the .buildkite/ config."
 			}
 		}
 	},
 	"benefits": [
-		"Owns the compute: builds run on your own hardware, natively arm64, with no per-minute metering",
-		"No manual setup — the pipeline and its GitHub webhook are provisioned during generation",
-		"Reuses a pipeline proven on ftn: path filtering, secret scanning, lockfile drift and JUnit annotation",
-		"Coexists with CircleCI, so a repo can migrate without a flag day"
+		"Runs on your own hardware — no per-minute metering",
+		"No manual setup: the pipeline and its push webhook are provisioned for you",
+		"Installs dependencies once per build rather than once per step"
 	],
 	"templates": [
-		{ "id": "buildkite-pipeline", "filePath": ".buildkite/pipeline.yml", "templateId": "buildkite-pipeline" },
-		{ "id": "buildkite-bootstrap", "filePath": ".buildkite/bootstrap.sh", "templateId": "buildkite-bootstrap" },
-		{ "id": "buildkite-routing", "filePath": ".buildkite/scripts/routing.sh", "templateId": "buildkite-routing" },
-		{ "id": "buildkite-drift-check", "filePath": ".buildkite/scripts/lockfile-drift-check.sh", "templateId": "buildkite-drift-check" },
-		{ "id": "buildkite-doppler-cli", "filePath": ".buildkite/scripts/install-doppler-cli.sh", "templateId": "buildkite-doppler-cli" },
-		{ "id": "buildkite-routing-tests", "filePath": ".buildkite/tests/test-routing.sh", "templateId": "buildkite-routing-tests" }
+		{
+			"id": "buildkite-pipeline",
+			"filePath": ".buildkite/pipeline.yml",
+			"templateId": "buildkite-pipeline"
+		},
+		{
+			"id": "buildkite-readme",
+			"filePath": ".buildkite/README.md",
+			"templateId": "buildkite-readme"
+		}
 	],
 	"externalServices": [
 		{
@@ -52,15 +45,21 @@
 			"actions": [
 				{
 					"type": "create",
-					"description": "genproj creates the pipeline in the Buildkite organisation (Default cluster) during generation"
+					"description": "The pipeline is created in the Buildkite organisation during generation"
 				},
 				{
 					"type": "configure",
-					"description": "Registers the pipeline's GitHub webhook, without which pushes do not trigger builds, and triggers the first build"
+					"description": "Registers the pipeline GitHub webhook and triggers the first build. Without the webhook, pushes trigger nothing"
 				}
 			],
-			"requiresAuth": true
+			"requiresAuth": false
 		}
 	],
-	"links": [{ "label": "Buildkite", "url": "https://buildkite.com/" }]
+	"links": [{ "label": "Buildkite", "url": "https://buildkite.com/" }],
+	"notInV1": [
+		"Deploy steps (port ftn's proven Cloudflare recipe) — the most material gap",
+		"Secret scanning (ggshield needs an API key the project may not have)",
+		"Path filtering (parity: the generated CircleCI config does not path-filter either)",
+		"Lighthouse"
+	]
 }

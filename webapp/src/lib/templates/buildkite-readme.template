@@ -1,0 +1,38 @@
+# Buildkite
+
+`pipeline.yml` in this directory is the source of truth for this project's CI.
+The pipeline object in Buildkite carries a one-line wrapper that uploads this
+file, so edits take effect on the next push — there is nothing to change in the
+Buildkite UI.
+
+## How a build runs
+
+- **Queue:** `{{buildkiteQueue}}` — the pipeline is dispatched to that
+  self-hosted agent, not to a cloud fleet.
+- **Image:** `{{buildkiteImage}}` (public; pick an arm64 image, the fleet is
+  Apple silicon).
+- **Steps:** install, then build, lint and test — in a **single job on purpose**.
+  The install is the dominant fixed cost, so it is paid once rather than once
+  per step.
+
+## What the agent has to provide
+
+None of this lives in the repository, and the pipeline fails in confusing ways
+without it:
+
+1. **`plugins-path`** in `buildkite-agent.cfg`. Agent v4 has no usable default,
+   and *every* step here uses a plugin — omitting it fails the checkout.
+2. **A unique agent `name`** when a machine runs more than one agent
+   (`name="<machine>-%spawn"`). Otherwise agents race over the plugin directory.
+3. **Secrets, delivered to the job environment** by the agent's `environment`
+   hook. A step-level `env:` value does **not** reach the container — only names
+   listed in the docker plugin's `environment:` list do. This is the most common
+   way a working step mysteriously loses its credentials.
+4. **Docker**, since every step runs in a container.
+
+## Worth knowing
+
+- If a build is queued but never starts, the queue name is wrong (above).
+- A pipeline can exist, look correctly connected, and receive **nothing** on
+  push. That is a missing GitHub webhook, and it is worth checking before
+  debugging anything else.

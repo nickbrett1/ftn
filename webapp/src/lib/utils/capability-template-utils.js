@@ -1302,6 +1302,80 @@ ${minorAndPatch}`;
 ${minorAndPatch}`;
 }
 
+/**
+ * Builds the generated project's `.buildkite/pipeline.yml`.
+ *
+ * Deliberately smaller than ftn's pipeline, and for a reason. ftn carries a
+ * bootstrap + routing + `steps/heavy.yml` split that exists to *path-filter*
+ * (docs-only commits skip the heavy set) — and the generated CircleCI config
+ * does not path-filter either, so this is parity, not a regression. What ftn
+ * did prove is that the install is the dominant fixed cost, so install, build
+ * and test run in ONE job rather than one per step.
+ *
+ * Agent-side prerequisites (the queue, `plugins-path`, and any secret the
+ * pipeline needs) live in the agent configuration, not the repo — the generated
+ * `.buildkite/README.md` spells them out, because without them the pipeline
+ * fails in ways that look like the project's fault.
+ *
+ * Not in v1, each for a concrete reason: secret scanning (ggshield needs an API
+ * key the project may not have), path filtering, Lighthouse, and deploy steps
+ * (each needs an agent-side prerequisite or provider credential a generated
+ * project cannot assume). See `specs/006-genproj-buildkite/spec.md`.
+ *
+ * @param {Object} context - Template context (capabilities, configuration)
+ * @returns {Object} Buildkite template data
+ */
+function getBuildkiteTemplateData(context) {
+	const config = context.configuration?.buildkite || {};
+	const caps = context.capabilities || [];
+	const language = resolveLanguage(context);
+	const queue = config.queue || 'mac-studio-linux';
+	const docker = caps.includes('docker-container');
+	const usesPlaywright = caps.includes('playwright');
+
+	const images = {
+		node: 'node:22-bookworm',
+		python: 'python:3.13-slim',
+		rust: 'rust:1-slim',
+		java: 'eclipse-temurin:21-jdk'
+	};
+
+	const commands = {
+		node: [
+			'npm ci --no-audit --no-fund --prefer-offline',
+			...(usesPlaywright ? ['npx --yes playwright install --with-deps chromium'] : []),
+			'npm run build --if-present',
+			'npm run lint --if-present',
+			'npm test --if-present'
+		],
+		python: [
+			'python -m pip install --no-cache-dir -e ".[dev]"',
+			'ruff check src tests',
+			'pytest -q'
+		],
+		rust: ['cargo build --locked', 'cargo test --locked'],
+		// genproj generates a Java devcontainer but no build system (no pom.xml
+		// or build.gradle), so there is genuinely nothing to build yet. Say that
+		// rather than emitting a step that fails on the first push.
+		java: [
+			'echo "genproj generates a Java devcontainer, not a build system."',
+			'echo "Add your build/test commands to .buildkite/pipeline.yml (for example: mvn -B -q verify)."'
+		]
+	};
+
+	const steps = commands[language].map((c) => `      - ${c}`).join('\n');
+
+	return {
+		buildkiteQueue: queue,
+		buildkiteImage: images[language],
+		buildkiteLanguage: language,
+		buildkiteCommands: steps,
+		// docker-container projects build an image rather than run a language
+		// toolchain; flag it so the README can say so.
+		buildkiteIsContainer: docker
+	};
+}
+
 function getDependabotTemplateData(context) {
 	const config = context.configuration?.dependabot || {};
 	const interval = config.updateSchedule || 'weekly';
@@ -1371,6 +1445,7 @@ export function getCapabilityTemplateData(capabilityId, context) {
 		'coding-agents': getCodingAgentsTemplateData,
 		sonarcloud: getSonarCloudTemplateData,
 		circleci: getCircleCiTemplateData,
+		buildkite: getBuildkiteTemplateData,
 		dependabot: getDependabotTemplateData,
 		'docker-container': getDockerContainerTemplateData,
 		doppler: (ctx) => {
