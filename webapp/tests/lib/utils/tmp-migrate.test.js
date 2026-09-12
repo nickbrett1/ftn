@@ -16,9 +16,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 describe('tmp: migrate a repo to buildkite', () => {
-	it('writes the .buildkite/ files', async () => {
+	// Skipped unless a caller drives it explicitly with MIGRATE_REPO_PATH:
+	// it writes files into a local clone, so it must never run as part of the
+	// suite (there is no such path in CI).
+	it.skipIf(!process.env.MIGRATE_REPO_PATH)('writes the .buildkite/ files', async () => {
 		const repoPath = process.env.MIGRATE_REPO_PATH;
-		expect(repoPath, 'MIGRATE_REPO_PATH').toBeTruthy();
 
 		const capabilities = (process.env.MIGRATE_CAPABILITIES || '')
 			.split(',')
