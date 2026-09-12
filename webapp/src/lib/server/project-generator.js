@@ -492,6 +492,56 @@ export class ProjectGeneratorService {
 	 * @param {string} [defaultBranch='main'] - Default branch
 	 * @param {string|null} [commitSha] - Initial commit sha, for the first build
 	 */
+	/**
+	 * Makes the pipeline's check a *required* status check on the default branch.
+	 *
+	 * Without this, CI informs but does not gate: a red build is visible and
+	 * nothing stops the merge. That was the gap after migrating off CircleCI,
+	 * where the required checks had been CircleCI's own contexts.
+	 *
+	 * The check's name is the pipeline slug, because that is the context
+	 * Buildkite publishes (`buildkite/<pipeline>`). Existing required checks are
+	 * preserved rather than replaced - a repository that already gates on
+	 * something else must not silently lose it.
+	 *
+	 * @param {string} owner - Repository owner
+	 * @param {string} repo - Repository name
+	 * @param {string} branch - Default branch
+	 * @param {string} context - The status context to require
+	 * @returns {Promise<Object>} What happened, or an `error`
+	 */
+	async #ensureRequiredStatusCheck(owner, repo, branch, context) {
+		const protectionPath = `/repos/${owner}/${repo}/branches/${branch}/protection`;
+		try {
+			const existing = await this.services.github.makeRequest(protectionPath).catch(() => null);
+
+			if (existing) {
+				const payload = await existing.json().catch(() => ({}));
+				const required = payload?.required_status_checks || {};
+				const contexts = new Set((required.checks || []).map((check) => check.context));
+				contexts.add(context);
+				await this.services.github.makeRequest(`${protectionPath}/required_status_checks`, {
+					method: 'PATCH',
+					body: JSON.stringify({ strict: required.strict !== false, contexts: [...contexts] })
+				});
+				return { updated: true, contexts: [...contexts] };
+			}
+
+			await this.services.github.makeRequest(protectionPath, {
+				method: 'PUT',
+				body: JSON.stringify({
+					required_status_checks: { strict: true, contexts: [context] },
+					enforce_admins: false,
+					required_pull_request_reviews: null,
+					restrictions: null
+				})
+			});
+			return { created: true, contexts: [context] };
+		} catch (error) {
+			return { error: error.message };
+		}
+	}
+
 	async #configureBuildkite(
 		context,
 		owner,
@@ -533,6 +583,30 @@ export class ProjectGeneratorService {
 				);
 			}
 
+			// Gate merges on the pipeline by default. CircleCI's contexts used to
+			// do this job; migrating without carrying it over would quietly turn a
+			// gate into a notification. Opt out with
+			// buildkite.requireStatusCheck = false.
+			let statusCheck = null;
+			const checkContext = `buildkite/${slug}`;
+			if (capabilityConfig.requireStatusCheck !== false) {
+				statusCheck = await this.#ensureRequiredStatusCheck(
+					owner,
+					repo,
+					defaultBranch,
+					checkContext
+				);
+				if (statusCheck.error) {
+					console.warn(
+						`⚠️ Could not require ${checkContext} on ${defaultBranch}: ${statusCheck.error}`
+					);
+				} else {
+					console.log(
+						`✅ Required status check on ${defaultBranch}: ${statusCheck.contexts.join(', ')}`
+					);
+				}
+			}
+
 			// Best-effort, so CI has run before anyone touches the repository
 			// again. The webhook covers every later push.
 			let build = null;
@@ -556,6 +630,7 @@ export class ProjectGeneratorService {
 				organization,
 				pipeline: { slug, webUrl: pipeline.web_url, existed },
 				webhookRegistered,
+				statusCheck,
 				build: build ? { number: build.number, webUrl: build.web_url } : undefined
 			};
 			console.log('✅ Buildkite configured successfully');

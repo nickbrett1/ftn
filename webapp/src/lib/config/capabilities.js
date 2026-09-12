@@ -404,6 +404,12 @@ export const capabilities = [
 					type: 'boolean',
 					default: false
 				},
+				requireStatusCheck: {
+					type: 'boolean',
+					default: true,
+					description:
+						'Make the pipeline a required status check on the default branch, so a red build blocks the merge (the gate CircleCI contexts used to provide). Set to false to let CI inform without gating.'
+				},
 				branchGating: {
 					type: 'boolean',
 					default: true,

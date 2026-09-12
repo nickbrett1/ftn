@@ -19,6 +19,11 @@
 				"default": true,
 				"description": "Create the pipeline and register its GitHub webhook during generation. Set to false to only emit the .buildkite/ config."
 			},
+			"requireStatusCheck": {
+				"type": "boolean",
+				"default": true,
+				"description": "Make the pipeline a required status check on the default branch, so a red build blocks the merge. Set to false to let CI inform without gating."
+			},
 			"branchGating": {
 				"type": "boolean",
 				"default": true,

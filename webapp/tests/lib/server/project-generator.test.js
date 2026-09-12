@@ -849,6 +849,110 @@ describe('ProjectGeneratorService', () => {
 			const results = await service.configureExternalServices(context, repository);
 			expect(results).toEqual({});
 		});
+		it('requires the pipeline check on the default branch by default', async () => {
+			// CircleCI's contexts gated merges; migrating without carrying that
+			// over quietly turns a gate into a notification.
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			// No protection yet: the GET 404s (makeRequest throws), so a PUT creates it.
+			const makeRequest = vi
+				.fn()
+				.mockRejectedValueOnce(new Error('GitHub API error: 404 Not Found'))
+				.mockResolvedValueOnce({});
+			service.services.github.makeRequest = makeRequest;
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.statusCheck).toEqual({
+				created: true,
+				contexts: ['buildkite/repo']
+			});
+			const [path, options] = makeRequest.mock.calls[1];
+			expect(path).toBe('/repos/owner/repo/branches/main/protection');
+			expect(options.method).toBe('PUT');
+			expect(JSON.parse(options.body).required_status_checks).toEqual({
+				strict: true,
+				contexts: ['buildkite/repo']
+			});
+		});
+
+		it('adds the check to existing required checks rather than replacing them', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			const makeRequest = vi
+				.fn()
+				.mockResolvedValueOnce({
+					json: async () => ({
+						required_status_checks: { strict: true, checks: [{ context: 'some/other' }] }
+					})
+				})
+				.mockResolvedValueOnce({});
+			service.services.github.makeRequest = makeRequest;
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.statusCheck).toEqual({
+				updated: true,
+				contexts: ['some/other', 'buildkite/repo']
+			});
+			expect(JSON.parse(makeRequest.mock.calls[1][1].body).contexts).toEqual([
+				'some/other',
+				'buildkite/repo'
+			]);
+		});
+
+		it('leaves branch protection alone when requireStatusCheck is false', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			const makeRequest = vi.fn();
+			service.services.github.makeRequest = makeRequest;
+
+			const results = await service.configureExternalServices(
+				{
+					...context,
+					capabilities: ['buildkite'],
+					configuration: { buildkite: { requireStatusCheck: false } }
+				},
+				repository
+			);
+
+			expect(results.buildkite.statusCheck).toBeNull();
+			expect(makeRequest).not.toHaveBeenCalled();
+		});
+
+		it('never fails generation when branch protection cannot be set', async () => {
+			service.services.buildkite.createPipeline.mockResolvedValue({
+				pipeline: { slug: 'repo' },
+				existed: false
+			});
+			service.services.buildkite.registerWebhook.mockResolvedValue(true);
+			service.services.github.makeRequest = vi
+				.fn()
+				.mockRejectedValue(new Error('GitHub API error: 403 Forbidden'));
+
+			const results = await service.configureExternalServices(
+				{ ...context, capabilities: ['buildkite'] },
+				repository
+			);
+
+			expect(results.buildkite.success).toBe(true);
+			expect(results.buildkite.statusCheck.error).toContain('403');
+		});
 	});
 
 	describe('validateAuthentication', () => {
