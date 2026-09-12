@@ -113,8 +113,9 @@ function createDevelopmentContainerCapability(
 export const capabilities = [
 	{
 		id: 'coding-agents',
-		name: 'AI Coding Agents (Antigravity)',
-		description: 'Antigravity CLI, Cursor CLI, Svelte MCP, Memos MCP, and Vikunja MCP integration.',
+		name: 'AI Coding Agents',
+		description:
+			'Sets up the AI coding agents in the devcontainer: goose (config, MCP servers and spec-first recipes) plus the Cursor and Antigravity CLIs.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -122,11 +123,10 @@ export const capabilities = [
 		configurationSchema: CONFIG_SCHEMA_EMPTY,
 		vscodeExtensions: ['saoudrizwan.claude-dev', 'GitHub.copilot'],
 		benefits: [
-			'Antigravity CLI pre-installed',
-			'Cursor CLI pre-installed',
+			'goose pre-installed, with project MCP servers and recipes wired up',
+			'Cursor CLI and Antigravity CLI available',
 			'Svelte MCP for context-aware AI',
-			'Memos MCP integration',
-			'Vikunja MCP integration'
+			'Memos, Vikunja and Fintechnick MCP integrations'
 		],
 		templates: [
 			{
@@ -146,18 +146,19 @@ export const capabilities = [
 			}
 		],
 		links: [
-			{ label: 'Antigravity', url: 'https://antigravity.google/product/antigravity-cli' },
+			{ label: 'goose', url: 'https://github.com/aaif-goose/goose' },
 			{ label: 'Cursor', url: 'https://cursor.sh' },
 			{ label: 'Svelte MCP', url: 'https://mcp.svelte.dev/' },
 			{ label: 'Memos MCP', url: 'http://nas:5230/mcp' }, // NOSONAR
-			{ label: 'Vikunja MCP', url: 'http://nas:8086/' } // NOSONAR
+			{ label: 'Vikunja MCP', url: 'http://nas:8086/' }, // NOSONAR
+			{ label: 'Antigravity', url: 'https://antigravity.google/product/antigravity-cli' }
 		]
 	},
 	{
 		id: 'xcode-development',
 		name: 'Xcode Development',
 		description:
-			'Connects to a remote Xcode instance via SSE proxy for AI-assisted iOS/macOS development. Requires Xcode running on a Mac with the Antigravity Xcode plugin installed.',
+			'Connects an agent to a remote Xcode project over an SSE proxy for AI-assisted iOS/macOS development. Requires Xcode running on a Mac with the Xcode MCP bridge installed.',
 		category: CATEGORY_APPLE,
 		dependencies: ['coding-agents'],
 		conflicts: EMPTY_ARRAY,
@@ -174,7 +175,8 @@ export const capabilities = [
 	{
 		id: 'editor-tools',
 		name: 'Editor Configuration',
-		description: 'Standard VS Code extensions and settings.',
+		description:
+			'Shared VS Code extensions and workspace settings for consistent tooling across the team.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -222,7 +224,7 @@ export const capabilities = [
 	{
 		id: 'shell-tools',
 		name: 'Shell & Terminal',
-		description: 'Zsh with Powerlevel10k and productivity plugins.',
+		description: 'Zsh shell with the Powerlevel10k prompt and productivity plugins.',
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -235,7 +237,8 @@ export const capabilities = [
 	{
 		id: 'spec-kit',
 		name: 'SpecKit',
-		description: 'Project specification tools by GitHub.',
+		description:
+			"GitHub's spec-kit: a spec-driven development workflow (specify, plan, tasks, implement) for AI coding agents.",
 		category: CATEGORY_CORE,
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
@@ -252,7 +255,7 @@ export const capabilities = [
 	{
 		id: 'docker',
 		name: 'Docker',
-		description: 'Docker support for the project.',
+		description: 'Adds Docker support for containerised builds and tooling.',
 		category: 'internal',
 		dependencies: EMPTY_ARRAY,
 		conflicts: EMPTY_ARRAY,
