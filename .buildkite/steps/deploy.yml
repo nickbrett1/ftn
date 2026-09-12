@@ -53,8 +53,14 @@ steps:
       # `$$` here is deliberate: Buildkite interpolates `$VAR` in YAML `command:`
       # blocks and an unknown var becomes EMPTY, so a shell reference to a hook var
       # must be written `$$VAR` to survive to the shell.
+      #
+      # `--plain` prints the raw secret value, so it must NOT be piped through jq
+      # (`jq -r .computed` expects the `--json` shape `{..., "computed": "..."}` and
+      # fails on a bare URL). The failure was silently swallowed by `2>/dev/null ||
+      # true`, so NTFY_URL came back empty and the notification was skipped while the
+      # deploy stayed green. Mirrors CircleCI's working `--plain` invocation.
       - |
-        NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd --token "$$DOPPLER_TOKEN" | jq -r .computed 2>/dev/null || true)"
+        NTFY_URL="$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd 2>/dev/null || true)"
         if [ -n "$$NTFY_URL" ] && [ "$$NTFY_URL" != "null" ]; then
           curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $${BUILDKITE_COMMIT:0:7}" "$$NTFY_URL"
         else
