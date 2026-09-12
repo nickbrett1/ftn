@@ -30,11 +30,16 @@ export async function GET(event) {
 		const res = await event.fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
 			headers: getAdminHeaders(event)
 		});
-		if (res.ok) {
-			const data = await res.json();
-			return json(data);
-		}
-		return json({ error: `Worker returned HTTP ${res.status}` }, { status: res.status });
+		// Relay the body straight through instead of buffering and re-serialising it.
+		// Inventory items embed inline base64 image data URLs, so the payload is
+		// several megabytes; a JSON round-trip here would duplicate all of it in
+		// memory for no benefit.
+		return new Response(res.body, {
+			status: res.status,
+			headers: {
+				'content-type': res.headers.get('content-type') || 'application/json'
+			}
+		});
 	} catch (err) {
 		return json({ error: err.message }, { status: 500 });
 	}

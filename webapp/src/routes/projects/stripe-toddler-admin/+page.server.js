@@ -14,59 +14,23 @@ export async function load(event) {
 	const workerUrl =
 		process.env.STRIPE_TODDLER_WORKER_URL || 'https://stripe-toddler.nick-brett1.workers.dev';
 
-	const adminApiKey =
-		process.env.TODDLER_ADMIN_API_KEY ||
-		process.env.ADMIN_API_KEY ||
-		process.env.STRIPE_TODDLER_ADMIN_API_KEY ||
-		event.platform?.env?.TODDLER_ADMIN_API_KEY ||
-		event.platform?.env?.ADMIN_API_KEY ||
-		'';
-
-	/** @type {Record<string, string>} */
-	const headers = {};
-	if (adminApiKey) {
-		headers['X-Admin-API-Key'] = adminApiKey;
-	}
-
-	let initialInventory = [];
-	let initialTransactions = [];
-	let serverError = null;
-
-	try {
-		const res = await event.fetch(`${workerUrl.replace(/\/$/, '')}/api/admin/inventory`, {
-			headers
-		});
-		if (res.ok) {
-			const data = await res.json();
-			if (Array.isArray(data)) initialInventory = data;
-		} else if (res.status === 401) {
-			serverError =
-				'Worker API returned 401 Unauthorized. Verify TODDLER_ADMIN_API_KEY environment secret in Doppler / Cloudflare.';
-		} else {
-			serverError = `Worker API returned HTTP ${res.status} ${res.statusText}`;
-		}
-	} catch (err) {
-		console.warn('Server load fetch inventory error:', err.message);
-		serverError = `Worker API connection status (${err.message})`;
-	}
-
-	try {
-		const res = await event.fetch(
-			`${workerUrl.replace(/\/$/, '')}/api/admin/analytics?limit=100&offset=0`,
-			{ headers }
-		);
-		if (res.ok) {
-			const data = await res.json();
-			if (Array.isArray(data)) initialTransactions = data;
-		}
-	} catch (err) {
-		console.warn('Server load fetch analytics error:', err.message);
-	}
-
+	// Deliberately do NOT fetch the inventory (or analytics) here.
+	//
+	// Inventory items embed their image as an inline `data:image/jpeg;base64,...`
+	// URL (~0.3-0.65 MB each). Returning them from the server `load` makes
+	// SvelteKit serialise the whole inventory into the SSR HTML *and* into the
+	// hydration payload. For the current inventory that produced a ~25 MB
+	// response (>22 MB of base64), which pushed the Worker past its 128 MB
+	// memory ceiling and surfaced as Cloudflare Error 1102 "Worker exceeded
+	// resource limits" (status: exceededMemory).
+	//
+	// The page fetches inventory/analytics through its own proxy endpoints after
+	// mount instead (see `+page.svelte`), keeping the server-rendered response
+	// small while preserving the same data and UI.
 	return {
 		workerUrl,
-		initialInventory,
-		initialTransactions,
-		serverError
+		initialInventory: [],
+		initialTransactions: [],
+		serverError: null
 	};
 }

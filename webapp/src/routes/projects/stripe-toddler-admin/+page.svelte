@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import BarcodeSvg from '$lib/components/stripe-toddler/BarcodeSvg.svelte';
@@ -89,9 +90,15 @@
 				serverError = '';
 			} else {
 				console.warn(`Server proxy returned HTTP ${res.status}`);
+				if (!serverError) {
+					serverError = `Worker API returned HTTP ${res.status} ${res.statusText} on GET /api/admin/inventory`;
+				}
 			}
 		} catch (err) {
 			console.warn('Failed to refresh inventory:', err);
+			if (!serverError) {
+				serverError = `Unable to load inventory from Worker API: ${err.message}`;
+			}
 		} finally {
 			isLoadingInventory = false;
 		}
@@ -452,6 +459,15 @@
 		if (transactions.length === 0) return '0.00';
 		const totalCents = transactions.reduce((acc, t) => acc + (t.amount_cents || 0), 0);
 		return (totalCents / 100 / transactions.length).toFixed(2);
+	});
+
+	// Inventory items carry inline base64 images, so the full inventory is far
+	// too large to server-render (it blew the Worker's 128 MB memory limit —
+	// Cloudflare Error 1102). Load it through the proxy endpoints on the client
+	// instead; the data is auth-gated and not needed for first paint or SEO.
+	onMount(() => {
+		if (inventoryItems.length === 0) fetchInventory();
+		if (transactions.length === 0) fetchAnalytics();
 	});
 </script>
 

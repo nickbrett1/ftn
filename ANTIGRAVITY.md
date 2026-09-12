@@ -23,7 +23,7 @@ tests/
 [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]
 Note: A development server is always running. Please ask the user to test changes directly instead of starting a new server.
 **Important:** `npm run lint` should only be run when specifically requested by the user, not automatically after completing tasks.
-**Important:** Never commit code unless explicitly told to.
+**Important:** Commit only when explicitly told to. Committing directly to `main` is allowed — pushing to `main` auto-deploys to production via Buildkite.
 
 ## Code Style
 
@@ -73,4 +73,5 @@ After completing the code, ask the user if they want a playground link. Only cal
 
 # Git Repository
 
+- Committing directly to `main` is allowed. Pushing to `main` auto-deploys to production via Buildkite.
 - After each commit, there is no need to run `git status` to confirm it. Assume success unless an error is reported.
