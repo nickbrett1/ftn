@@ -137,6 +137,40 @@ A project that selects none of these gets build + test and nothing else.
    equivalent of a CircleCI *context*, so the generated README lists exactly what
    the hook must provide per step.
 
+### Platform differences the end-to-end run exposed
+
+Generating a real project and letting the fleet build it found four things that
+no amount of template unit-testing would have. Each is now fixed, and each is a
+*platform* difference rather than a design choice:
+
+1. **The docker plugin allocates a TTY.** With a TTY, vitest starts in **watch
+   mode** after a successful run and holds the step open until CI kills it. Tests
+   therefore run as `CI=true npm test`. CircleCI has no TTY, which is precisely
+   why `npx vitest --coverage` does not hang there — the same command is a
+   footgun on Buildkite only.
+2. **The pinned npm has to be activated first.** The generated `package.json`
+   declares `packageManager` and `.npmrc` sets `engine-strict=true`, so the
+   image's bundled npm refuses to install and fails with the opaque
+   `Cannot read properties of null (reading 'edgesOut')`. The step now installs
+   the pinned npm before anything else — CircleCI's `activate_pinned_npm`, which
+   the first port had skipped.
+3. **A multi-arch tag resolves to linux/amd64** on this arm64 fleet, so every
+   step ran emulated (with a docker platform warning, and native modules built
+   for the wrong architecture). Generated docker plugins pin
+   `platform: linux/arm64`.
+4. **A generated project has no lockfile**, so a bare `npm ci` fails outright.
+   The install is guarded exactly as CircleCI guards it.
+
+### End-to-end verification (2026-09-12)
+
+A real project was generated — real GitHub repo, real Buildkite pipeline, real
+fleet build — and the whole chain was observed:
+
+- pipeline created, **webhook registered**, `provider.webhook_url` present;
+- a push produced a build with `source: webhook` (no manual trigger);
+- the build ran green: install (303 packages, 13s), `vite build`,
+  `prettier --check` + `eslint`, 2 tests and coverage.
+
 **Known limitation, inherited rather than introduced:** the `lighthouse` and
 `deploy` steps are node-shaped (`npm ci`, `npm run build`) because the CircleCI
 jobs used `executor: node/default`. A python/rust/java project that selects one
