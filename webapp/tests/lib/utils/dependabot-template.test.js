@@ -63,5 +63,63 @@ describe('capability-template-utils', () => {
 			});
 			expect(data.dependabotUpdates).toContain('interval: "daily"');
 		});
+
+		it('should group minor/patch updates by default', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot']
+			});
+			expect(data.dependabotUpdates).toContain('groups:');
+			expect(data.dependabotUpdates).toContain('minor-and-patch:');
+			expect(data.dependabotUpdates).toContain('- "minor"');
+			expect(data.dependabotUpdates).toContain('- "patch"');
+		});
+
+		it('should split npm into development and production groups', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node']
+			});
+			expect(data.dependabotUpdates).toContain('dev-minor-and-patch:');
+			expect(data.dependabotUpdates).toContain('dependency-type: "development"');
+			expect(data.dependabotUpdates).toContain('prod-minor-and-patch:');
+			expect(data.dependabotUpdates).toContain('dependency-type: "production"');
+		});
+
+		it('should never group major updates', () => {
+			// Majors stay as individual PRs: a grouped PR is harder to attribute
+			// when it goes red, and that matters most for a major bump.
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node', 'devcontainer-python']
+			});
+			expect(data.dependabotUpdates).not.toContain('"major"');
+		});
+
+		it('should omit groups when groupUpdates is false', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node'],
+				configuration: {
+					dependabot: {
+						groupUpdates: false
+					}
+				}
+			});
+			expect(data.dependabotUpdates).not.toContain('groups:');
+			expect(data.dependabotUpdates).toContain('package-ecosystem: "npm"');
+		});
+
+		it('should emit a group block with parseable indentation', () => {
+			const data = getCapabilityTemplateData('dependabot', {
+				capabilities: ['dependabot', 'devcontainer-node']
+			});
+			expect(data.dependabotUpdates).toContain(
+				'    groups:\n' +
+					'      dev-minor-and-patch:\n' +
+					'        patterns:\n' +
+					'          - "*"\n' +
+					'        dependency-type: "development"\n' +
+					'        update-types:\n' +
+					'          - "minor"\n' +
+					'          - "patch"'
+			);
+		});
 	});
 });

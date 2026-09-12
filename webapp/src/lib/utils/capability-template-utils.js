@@ -1259,15 +1259,63 @@ function _applyNtfyNotificationConfig(data, context) {
 	}
 }
 
+/**
+ * Builds the Dependabot `groups:` block for an ecosystem.
+ *
+ * Grouping is a compute lever, not a cosmetic one. Without it Dependabot opens
+ * one PR per dependency, and on a self-hosted pipeline every PR is a full build
+ * (ftn measured ~290s of agent time each). Grouping minor/patch updates took
+ * ftn from a daily limit of ten PRs down to about two — see
+ * `.buildkite/README.md` for the measurements and the trade-off.
+ *
+ * `update-types` is deliberately minor+patch only: a major bump is the one you
+ * want to read on its own, and a grouped PR is harder to attribute when it goes
+ * red. `dependency-type` is npm-only — the one ecosystem where Dependabot
+ * distinguishes development from production dependencies.
+ *
+ * @param {boolean} isNpm - Split into development/production groups.
+ * @returns {string} YAML block, indented for an `updates:` list entry.
+ */
+function _dependabotGroups(isNpm) {
+	const minorAndPatch = `        update-types:
+          - "minor"
+          - "patch"`;
+	if (isNpm) {
+		return `
+    groups:
+      dev-minor-and-patch:
+        patterns:
+          - "*"
+        dependency-type: "development"
+${minorAndPatch}
+      prod-minor-and-patch:
+        patterns:
+          - "*"
+        dependency-type: "production"
+${minorAndPatch}`;
+	}
+	return `
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+${minorAndPatch}`;
+}
+
 function getDependabotTemplateData(context) {
 	const config = context.configuration?.dependabot || {};
 	const interval = config.updateSchedule || 'weekly';
+	// Grouped updates are the default (opt out with
+	// dependabot.groupUpdates = false): one pipeline per dependency is the
+	// expensive shape on self-hosted CI.
+	const groups = (isNpm = false) => (config.groupUpdates === false ? '' : _dependabotGroups(isNpm));
+
 	const updates = [
 		`
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "${interval}"`
+      interval: "${interval}"${groups()}`
 	];
 
 	// Always add GitHub Actions
@@ -1277,7 +1325,7 @@ function getDependabotTemplateData(context) {
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "${interval}"`);
+      interval: "${interval}"${groups(true)}`);
 	}
 
 	if (context.capabilities.some((c) => c.startsWith('devcontainer-python'))) {
@@ -1285,7 +1333,7 @@ function getDependabotTemplateData(context) {
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "${interval}"`);
+      interval: "${interval}"${groups()}`);
 	}
 
 	// Java support
@@ -1294,7 +1342,7 @@ function getDependabotTemplateData(context) {
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: "${interval}"`);
+      interval: "${interval}"${groups()}`);
 	}
 
 	// Rust support (devcontainer-rust or cloudflare-wrangler with workerType: rust)
@@ -1308,7 +1356,7 @@ function getDependabotTemplateData(context) {
   - package-ecosystem: "cargo"
     directory: "${directory}"
     schedule:
-      interval: "${interval}"`);
+      interval: "${interval}"${groups()}`);
 	}
 
 	return {

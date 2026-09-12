@@ -837,6 +837,13 @@ export const capabilities = [
 				updateSchedule: {
 					type: 'string',
 					enum: ['daily', 'weekly', 'monthly']
+				},
+				// Grouped minor/patch updates. Default on: without it Dependabot
+				// opens one PR per dependency, and every PR runs a full pipeline
+				// (see `_dependabotGroups` in capability-template-utils.js).
+				groupUpdates: {
+					type: 'boolean',
+					default: true
 				}
 			}
 		},
