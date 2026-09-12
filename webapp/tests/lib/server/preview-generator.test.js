@@ -5,7 +5,10 @@ import {
 } from '../../../src/lib/server/preview-generator.js';
 
 // Mock TemplateEngine to control its behavior in tests
-vi.mock('../../../src/lib/utils/file-generator.js', () => {
+vi.mock('../../../src/lib/utils/file-generator.js', async (importOriginal) => {
+	// The two helpers below are pure string builders the preview reuses, so take
+	// them from the real module rather than restating them here.
+	const actual = await importOriginal();
 	class MockTemplateEngine {
 		constructor() {
 			this.initialize = vi.fn().mockResolvedValue(true);
@@ -36,6 +39,7 @@ vi.mock('../../../src/lib/utils/file-generator.js', () => {
 		}
 	}
 	return {
+		...actual,
 		TemplateEngine: MockTemplateEngine,
 		AGY_DEV_ALIAS: 'agy-dev-{{projectName}}-mock',
 		GOOSE_ALIAS: 'goose-{{projectName}}-mock',

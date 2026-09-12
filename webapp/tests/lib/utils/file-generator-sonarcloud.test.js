@@ -11,7 +11,9 @@ describe('file-generator sonarcloud capabilities', () => {
 			if (templateName === 'package-json') {
 				return JSON.stringify({
 					devDependencies: context.devDependencies,
-					scripts: context.scripts
+					// scriptsBlock is the scripts body; the hook entries are
+					// conditional, so the template no longer owns them.
+					scripts: context.scriptsBlock
 				});
 			}
 			return '';

@@ -1214,6 +1214,46 @@ function _addCodeQualityConfig(context, config) {
 	}
 }
 
+/**
+ * The git-hook tooling (`simple-git-hooks` + `lint-staged`) arrives only with
+ * the `code-quality` capability, so the entries that reference it must not be
+ * emitted otherwise: a `prepare` script pointing at an uninstalled binary makes
+ * `npm install` fail outright, which took a generated project's CI down before
+ * anything else could run.
+ * @param {Object} context - Generation context
+ * @returns {string} JSON fragment with a trailing comma, or empty
+ */
+export function buildGitHooksBlock(context) {
+	if (!context.capabilities.includes('code-quality')) {
+		return '';
+	}
+	return (
+		'  "simple-git-hooks": {\n' +
+		'    "pre-commit": "npx lint-staged"\n' +
+		'  },\n' +
+		'  "lint-staged": {\n' +
+		'    "**/*.{js,ts,svelte,json,css,html,md}": "prettier --write --ignore-unknown",\n' +
+		'    "**/*.{js,ts,svelte}": "eslint --fix"\n' +
+		'  },\n'
+	);
+}
+
+/**
+ * Builds the `scripts` body. `config.scripts` is a fragment that *starts* with a
+ * comma, because the template used to hardcode `prepare` as the first entry;
+ * now the first entry depends on whether the hook tooling is present, so the
+ * separator is decided here.
+ * @param {Object} context - Generation context
+ * @param {string} scriptsFragment - Comma-led scripts fragment
+ * @returns {string} JSON body for the scripts object
+ */
+export function buildScriptsBlock(context, scriptsFragment) {
+	if (context.capabilities.includes('code-quality')) {
+		return `"prepare": "simple-git-hooks"${scriptsFragment}`;
+	}
+	return scriptsFragment.replace(/^\s*,\s*/, '');
+}
+
 export function generatePackageJson(templateEngine, context) {
 	const config = _getFrameworkConfig(context);
 	_addNodeDevcontainerConfig(context, config);
@@ -1225,7 +1265,8 @@ export function generatePackageJson(templateEngine, context) {
 	) {
 		const content = templateEngine.generateFile('package-json', {
 			...context,
-			scripts: config.scripts,
+			scriptsBlock: buildScriptsBlock(context, config.scripts),
+			hooksBlock: buildGitHooksBlock(context),
 			devDependencies: config.devDependencies,
 			dependencies: '',
 			typeField: config.typeField,
@@ -2087,7 +2128,13 @@ export function generateViteConfigFile(context) {
 ${coverageConfig}
   },`;
 
+	// `passWithNoTests` is set for the vanilla config only. A bare Node scaffold
+	// generates no test files at all (unlike SvelteKit, which ships a smoke test),
+	// and vitest exits 1 with "No test files found" - so a freshly generated
+	// project's first CI run was red for having nothing to test yet. The SvelteKit
+	// variant keeps the strict gate, because it does have a test.
 	const testConfigVanilla = `  test: {
+    passWithNoTests: true,
     reporter: ["default"],
 ${coverageConfig}
   },`;

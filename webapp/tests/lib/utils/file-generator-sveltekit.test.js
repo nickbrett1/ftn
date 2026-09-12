@@ -123,4 +123,30 @@ describe('SvelteKit File Generation', () => {
 		// 4.4: .env.example is emitted.
 		expect(files.find((f) => f.filePath === '.env.example')).toBeDefined();
 	});
+
+	it('lets a bare Node project pass with no test files', async () => {
+		// A bare scaffold generates no test files at all, and vitest exits 1 with
+		// "No test files found" - so the first CI run of a freshly generated
+		// project was red for having nothing to test yet.
+		const files = await generateAllFiles({
+			name: 'bare-node',
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		});
+		const viteConfig = files.find((f) => f.filePath === 'vite.config.js');
+
+		expect(viteConfig.content).toContain('passWithNoTests: true');
+	});
+
+	it('keeps the strict coverage gate for SvelteKit, which does have a test', async () => {
+		const files = await generateAllFiles({
+			name: 'sveltekit-project',
+			capabilities: ['devcontainer-node', 'sveltekit'],
+			configuration: {}
+		});
+		const viteConfig = files.find((f) => f.filePath === 'vite.config.js');
+
+		expect(viteConfig.content).not.toContain('passWithNoTests');
+		expect(viteConfig.content).toContain('thresholds');
+	});
 });

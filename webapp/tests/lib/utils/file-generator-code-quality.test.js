@@ -5,8 +5,10 @@ describe('file-generator code-quality capability', () => {
 	const mockTemplateEngine = {
 		generateFile: (templateName, context) => {
 			if (templateName === 'package-json') {
+				// `scriptsBlock` carries the scripts body (the hook entries are
+				// conditional on code-quality, so the template no longer owns them).
 				return JSON.stringify({
-					scripts: context.scripts,
+					scripts: context.scriptsBlock,
 					devDependencies: context.devDependencies
 				});
 			}
@@ -94,5 +96,37 @@ describe('file-generator code-quality capability', () => {
 		expect(eslintConfig.content).toContain('...globals.vitest');
 		// Vendored .agents tooling is ignored so generated projects lint cleanly
 		expect(eslintConfig.content).toContain('".agents/**"');
+	});
+
+	it('omits the git-hook entries when their tooling is absent', async () => {
+		// Regression: `prepare` (and the simple-git-hooks / lint-staged config)
+		// was hardcoded in the template, while simple-git-hooks only arrives with
+		// code-quality. A generated project WITHOUT code-quality therefore could
+		// not install at all: "sh: 1: simple-git-hooks: not found", exit 127.
+		const files = await generateAllFiles({
+			name: 'demo',
+			capabilities: ['devcontainer-node'],
+			configuration: {}
+		});
+		const pkg = JSON.parse(files.find((f) => f.filePath === 'package.json').content);
+
+		expect(pkg.scripts.prepare).toBeUndefined();
+		expect(pkg['simple-git-hooks']).toBeUndefined();
+		expect(pkg['lint-staged']).toBeUndefined();
+		// The rest of the scripts survive the first entry being dropped.
+		expect(pkg.scripts.test).toBeTruthy();
+	});
+
+	it('emits the git-hook entries when code-quality is selected', async () => {
+		const files = await generateAllFiles({
+			name: 'demo',
+			capabilities: ['devcontainer-node', 'code-quality'],
+			configuration: {}
+		});
+		const pkg = JSON.parse(files.find((f) => f.filePath === 'package.json').content);
+
+		expect(pkg.scripts.prepare).toBe('simple-git-hooks');
+		expect(pkg['simple-git-hooks']).toEqual({ 'pre-commit': 'npx lint-staged' });
+		expect(pkg['lint-staged']).toBeDefined();
 	});
 });
