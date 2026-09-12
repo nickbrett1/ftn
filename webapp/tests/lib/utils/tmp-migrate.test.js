@@ -31,7 +31,7 @@ describe('tmp: migrate a repo to buildkite', () => {
 						name: repo.name,
 						projectName: repo.name,
 						capabilities: repo.capabilities,
-						configuration: {},
+						configuration: repo.configuration || {},
 						registryNamespace: 'nickbrett1'
 					});
 					const buildkiteFiles = files.filter((f) => f.filePath.startsWith('.buildkite/'));
