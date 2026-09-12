@@ -28,8 +28,8 @@
 </style>
 
 <h1 class="!mb-0 no-underline">Toddler E-commerce with Stripe: A Working Toy Store, Built From My Phone</h1>
-<p class="text-xl text-gray-300 !mt-2 !mb-6">How validated spec artifacts and a phone-first agent workflow turned a three-year-old’s toys into a real iPad point-of-sale</p>
-August 2026
+<p class="text-xl text-gray-300 !mt-2 !mb-6">How validated spec artifacts and a phone-first agent workflow turned a toddler's toys into a real iPad point-of-sale</p>
+September 2026
 <ProjectLinkButton href={projectUrl} />
 
 <figure class="my-8 mx-auto max-w-3xl">
@@ -39,7 +39,7 @@ August 2026
 		class="rounded-lg shadow-lg w-full"
 	/>
 	<figcaption class="text-center text-sm text-gray-500 mt-2 italic">
-		The full setup: iPad on a stand, Tera Mini scanner, Stripe Reader M2, and toy food with printed barcodes.
+		The full setup: iPad on a stand, Tera Mini scanner, Stripe Reader M2, and toy food with printed QR codes.
 	</figcaption>
 </figure>
 
@@ -47,11 +47,11 @@ August 2026
 
 ‘Toddler’ and ‘e-commerce’ are two words that I didn’t expect to be combining this year, but here we are in this new AI world, and I’m finding that with the latest agents and a little thought on how to harness them, that I'm building plenty of unexpected, but really cool, projects.
 
-The goal of this project was to create a fun toy, while also learning more about e-commerce particularly the Stripe Payments APIs. I wanted an iPad app, with a linked barcode scanner and Stripe card reader. The app would show a checkout screen and there would be toys with QR code stickers. Each could be scanned and then payment made with a special Stripe test credit card.
+The goal for this one was to create a fun toy, while also learning more about e-commerce particularly the Stripe Payments APIs. I wanted to replicate a point of sale terminal, with an iPad app, a linked barcode scanner and Stripe card reader. The app would show a checkout screen and I would place QR code stickers on toys. Each toy could then be scanned and payment made with a special Stripe test credit card.
 
-This was to be my most ambitious agentic side-project yet, for a few reasons:
+This was to be my most ambitious side-project yet, for a few reasons:
 
-1. **It involved hardware.** Hardware is fun but historically I've it so time consuming to utilize, with long iteration and debug cycles, that it's just gathered dust. Agents let me cut through that and it was a lot of fun.
+1. **It involved hardware.** Hardware is fun but in the past I've found it so time consuming to utilize, with long iteration and debug cycles, that any new kit I've bought has just gathered dust. Agents let me cut through a lot of the frustration and it was a lot of fun. Here's what we had to play with:
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
 	<figure class="text-center">
@@ -61,7 +61,7 @@ This was to be my most ambitious agentic side-project yet, for a few reasons:
 			class="mx-auto rounded-lg shadow-lg w-full"
 		/>
 		<figcaption class="text-sm text-gray-500 mt-2 italic">
-			The Tera Mini barcode scanner, connected in Bluetooth keyboard-wedge mode.
+			The Tera Mini QR code scanner, connected in Bluetooth keyboard-wedge mode.
 		</figcaption>
 	</figure>
 	<figure class="text-center">
@@ -76,7 +76,7 @@ This was to be my most ambitious agentic side-project yet, for a few reasons:
 	</figure>
 </div>
 
-2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps I could comfortably understand myself. This time, not so much. Or more truthfully, not at all. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode independently.
+2. **A Swift iPad app, and I don't know Swift.** I'd previously used agents to build apps that I could comfortably understand myself. This time, not so much. So I really needed to ensure I had clear requirements and tests, and that my agents could drive Xcode independently.
 
 <figure class="my-8 mx-auto max-w-2xl">
 	<ZoomableImage
@@ -85,7 +85,7 @@ This was to be my most ambitious agentic side-project yet, for a few reasons:
 		class="rounded-lg shadow-lg w-full"
 	/>
 	<figcaption class="text-center text-sm text-gray-500 mt-2 italic">
-		The Swift iPad app — the checkout screen the toddler actually uses.
+		The Swift iPad app — checkout screen.
 	</figcaption>
 </figure>
 
@@ -93,64 +93,82 @@ This was to be my most ambitious agentic side-project yet, for a few reasons:
 
 4. **Mobile first workflow.** Sitting down at a computer outside of work for an extended time isn't something I can do often, but I do have spare pockets of time while I'm on the go. I'd already embraced asynchronous development with [Google Jules](https://jules.google.com/), but that didn't have access to all the tools on my desktop, was sometimes slow — taking hours to do a single request — and was designed to be asynchronous, so didn't work well for workflows where I wanted to iterate with the agent. I wanted a setup as similar as possible to my desktop: same tools, same performance, just accessible on the go.
 
-So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me even more what building software will look like with agents.
+So how did it go? Well, better than I expected. The hardware worked. After a bit of custom setup I wrangled Xcode into my Linux container agent workflow. I finally got a well structured and validated spec process that even worked well with the cheaper DeepSeek V4 model compared to my prior use of Gemini Pro. And I did most of it while away from my desktop. It was also a lot of fun, and I think it showed me more clearly what building software will look like with agents.
 
-Right. Let's dig in and build a store. Target customer: a three-year-old.
+Right. Let's dig in and build a store. Target customer: a demanding toddler.
 
 ## Hey Toy Store; Meet Stripe
 
-A store. An iPad, a Tera Mini wireless scanner, a Stripe Reader M2, a test credit card, and toy food with printed QR* (footnote here about starting with bar codes and finding how difficult it is for little hands to line them up with the scanner) codes. The product owner is three years old. So is the QA lead. So is the most demanding user.
+A store. An iPad, a Tera Mini wireless scanner, a Stripe Reader M2, a test credit card, and toy food with printed QR codes[^1].
 
-Here's the intended flow: user scans food items, each item then pops up on the iPad with a photo and a price — $1, $5, etc... Tap the card on the card reader and behind the scenes we run through the payments flow and boom: fireworks, music, much excitement. Then "Go Again".
+Here's the intended flow, step by step:
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
-	<figure class="text-center">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+	<figure class="text-left">
 		<ZoomableImage
 			src={readyToScan}
 			alt="iPad app idle screen, waiting for a barcode to be scanned"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">Idle — waiting for a scan.</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">1. Ready</p>
+			<p class="text-base text-gray-200">The iPad waits for the first scan.</p>
+		</figcaption>
 	</figure>
-	<figure class="text-center">
+	<figure class="text-left">
 		<ZoomableImage
 			src={cornItem}
 			alt="A toy corn with a printed barcode about to be scanned"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">An item to scan.</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">2. Scan an item</p>
+			<p class="text-base text-gray-200">The user scans a toy with the Tera Mini scanner.</p>
+		</figcaption>
 	</figure>
-	<figure class="text-center">
+	<figure class="text-left">
 		<ZoomableImage
 			src={itemAdded}
 			alt="iPad app showing the scanned item added to the cart with its photo and price"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">Item added to the cart.</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">3. Item added to cart</p>
+			<p class="text-base text-gray-200">It pops up with a photo and a price.</p>
+		</figcaption>
 	</figure>
-	<figure class="text-center">
+	<figure class="text-left">
 		<ZoomableImage
 			src={syncingReader}
 			alt="iPad app syncing with the Stripe card reader"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">Syncing the card reader.</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">4. Pay</p>
+			<p class="text-base text-gray-200">The iPad syncs with the Stripe Reader M2.</p>
+		</figcaption>
 	</figure>
-	<figure class="text-center">
+	<figure class="text-left">
 		<ZoomableImage
 			src={tapCard}
 			alt="iPad app prompting the user to tap the test card on the reader"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">Tap the test card.</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">5. Tap the card</p>
+			<p class="text-base text-gray-200">Behind the scenes we run through the payments flow.</p>
+		</figcaption>
 	</figure>
-	<figure class="text-center">
+	<figure class="text-left">
 		<ZoomableImage
 			src={celebration}
 			alt="iPad app celebration screen with fireworks and a Go Again button"
 			class="rounded-lg shadow-lg w-full"
 		/>
-		<figcaption class="text-sm text-gray-500 mt-2 italic">Celebration + "Go Again".</figcaption>
+		<figcaption class="mt-3">
+			<p class="font-semibold text-white">6. Fireworks, music, much excitement</p>
+			<p class="text-base text-gray-200">Then "Go Again".</p>
+		</figcaption>
 	</figure>
 </div>
 
@@ -161,11 +179,10 @@ Underneath this workflow, we've got an e-commerce stack:
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 graph TD
-    subgraph ClientDevices [Client Devices and Peripherals]
+    subgraph ClientDevices [Client Devices and Peripherals - Used In Store]
         iPadApp["iPad POS App<br/>Swift / iOS"]
         BarcodeScanner["Tera Mini Barcode Scanner<br/>Bluetooth HID Mode"]
         StripeReader["Stripe Reader M2<br/>Bluetooth BLE Mode"]
-        AveryPrinter["Avery Label Printer<br/>AirPrint / Browser Print"]
     end
 
     subgraph ExternalServices [External Integrations]
@@ -182,13 +199,14 @@ graph TD
     end
 
     subgraph AdminControl [Admin Portal]
-        AdminUI["Admin Web App<br/>www.fintechnick.com"]
+        AdminUI["Admin Website in Browser<br/>www.fintechnick.com"]
+        AveryPrinter["Avery Label Printer<br/>AirPrint from Browser"]
     end
 
     BarcodeScanner -->|Bluetooth HID / Keystrokes| iPadApp
     StripeReader <-->|Bluetooth BLE / Stripe Terminal SDK| iPadApp
     iPadApp <-->|HTTPS REST / App Attest Signed| RustWorker
-    AdminUI <-->|HTTPS REST / Auth API Key| RustWorker
+    AdminUI -->|Store inventory updates via HTTPS REST / X-Admin-API-Key| RustWorker
 
     RustWorker <-->|Cloudflare Binding| D1Db
     RustWorker <-->|Cloudflare Binding| KVStore
@@ -196,15 +214,16 @@ graph TD
     RustWorker <-->|HTTPS / REST API| StripeAPI
     RustWorker -->|HTTPS / Validation Requests| AppAttest
     AdminUI -->|Browser Render / CSS @media print| AveryPrinter
+    AveryPrinter -.->|Printed QR labels scanned in store| BarcodeScanner
 ```
 
 </div>
 
 There's three main pieces:
 
-1. **Swift iPad app** (the scanner connects in Bluetooth keyboard-wedge mode, meaning it mimics a keyboard, while the M2 scanner integrates through the [Stripe Terminal SDK](https://docs.stripe.com/terminal) rather than an iOS Bluetooth connection, and every request is signed with Apple App Attest so only my iPad can talk to the backend);
+1. **Swift iPad app** that the scanner connects to in Bluetooth keyboard-wedge mode, meaning it mimics a keyboard, while the M2 scanner integrates through the [Stripe Terminal SDK](https://docs.stripe.com/terminal) and every request is signed with Apple App Attest so only my iPad can talk to the backend.
 
-2. **Rust worker on Cloudflare** that the iPad communicates with (put footnote here that I was inspired to use Rust after Wes McKinney's good point that with agents (https://wesmckinney.com/blog/agent-ergonomics/) there's value in picking tools that work well with agents, if not humans. With Rust giving higher performance and better feedback on compile errors). The worker issues Stripe Terminal tokens that lets the Stripe Terminal SDK connect to the card reader, creates and captures `card_present` [PaymentIntents](https://docs.stripe.com/api/payment_intents) that represent the payment lifecycle, and keeps photos and prices of inventory in Cloudflare's key-value storage [KV](https://developers.cloudflare.com/kv/) with a transaction log in Cloudflare's Serverless SQL (SQLite) [D1](https://developers.cloudflare.com/d1/);
+2. **Rust worker on Cloudflare** that the iPad communicates with[^2]. The worker issues Stripe Terminal tokens that lets the Stripe Terminal SDK connect to the card reader, creates and captures `card_present` [PaymentIntents](https://docs.stripe.com/api/payment_intents) that represent the payment lifecycle, and keeps photos and prices of inventory in Cloudflare's key-value storage [KV](https://developers.cloudflare.com/kv/) with a transaction log in Cloudflare's Serverless SQL (SQLite) [D1](https://developers.cloudflare.com/d1/).
 
 3. **Admin website** for inventory photo upload, pricing, QR generation, label printing, and a bit of analytics.
 
@@ -219,20 +238,22 @@ There's three main pieces:
 	</figcaption>
 </figure>
 
-If you want all the details, the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs) have the full OpenAPI, D1 schema, and KV layout. Here I want to talk about two things that made the whole project possible that for me, were new, powerful, and I think generally applicable; the spec-driven process and the phone-first workflow.
+If you want more details a good place to start is the [repo's specs](https://github.com/nickbrett1/stripe-toddler/tree/main/specs). They have the full OpenAPI, D1 schema, and KV layout.
+
+Here I want to talk about two things that made the whole project possible that for me, were new, powerful, and I think generally applicable; the spec-driven process and the phone-first workflow.
 
 ## Spec-Driven Process: Artifacts Before Code
 
-In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace Spec-Driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and I created a mess of branch conflicts. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, it was the structure I was using around it. With a revisit to the concept, a new process fixed my problems:
+In my prior [Spec Kit article](/projects/speckit-dev) I tried to embrace spec-driven development and it all went a bit wrong. I struggled with specs that were hard to update once code existed, and I created a mess of branch conflicts. Even on a flagship model — Gemini Pro at the time — the agent couldn't manage the full scope of the project. But it wasn't the model that was the problem, it was the structure I was using around it. With a revisit to the concept, a new process fixed my problems.
 
-### A structured artifact pipeline
+### A Structured Artifact Pipeline
 
 Instead of running a workflow that went **spec file → plan file → code**, my pipeline was now **spec → artifacts → validation → plan → code**.
 
-1. **spec** — this remained nearly unchanged to my prior approach. I created a textual description of what my project needed to do, along with a `constitution.md` outlining various constraints that the project needed to uphold. The spec itself was generated with the guidance `this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.`
-2. **artifacts** — here's where things differed. We generated structured artifacts that described different aspects of the project, specifically: state diagrams, message flows, UI mocks, deployment topology, APIs, data models, and capacity models.
+1. [**spec**](https://github.com/nickbrett1/stripe-toddler/blob/main/specs/description.md) — this remained nearly unchanged to my prior approach. I created a textual description of what my project needed to do, along with a `constitution.md` outlining various constraints that the project needed to uphold (that's since become the shared, cross-project [development-conventions doc](https://github.com/nickbrett1/goose-recipes/blob/main/conventions/development-conventions.md)). The spec itself was generated with the guidance `this is a _design doc, not a full coding spec_. A senior engineer reading it should feel confident they could implement the whole thing, making judgment calls on the details.`
+2. [**artifacts**](https://github.com/nickbrett1/stripe-toddler/tree/main/specs/spec) — here's where things differed. We generated structured artifacts that described different aspects of the project, specifically: state diagrams, message flows, UI mocks, deployment topology, APIs, data models, and capacity models.
 3. **validation** — to validate we took the artifacts and cross-checked them against each other for consistency by generating a dependency map using the [specdag](https://github.com/japorto100/specdag) tool. This step ensured that there were no dangling dependencies such as a UI mock that wasn't referenced in any message flows, or any circular dependencies. Although we can't guarantee we didn't miss any requirements, it was a step that did give me confidence that the design was self-consistent.
-4. **plan** — them the implementation plan is generated _off the validated artifacts_. This ensures we have a higher quality result than if we just generate a plan from the spec.
+4. [**plan**](https://github.com/nickbrett1/stripe-toddler/blob/main/specs/plan.md) — then the implementation plan is generated _off the validated artifacts_. This ensures we have a higher quality result than if we just generate a plan from the spec.
 5. **scaffold-project + generate-code** — once validated my approach was similar to past efforts, but one change was that I first scaffolded the project using [genproj](https://fintechnick.com/projects/genproj), a personal code generation tool I built that creates all the config and setup for my favorite frameworks and tools. genproj creates templates for things like my CI/CD, secrets management, devcontainers, code quality checks and cloud deployment scripts. This scaffold meant that the implementation generation could focus on the core logic.
 
 For those interested in the details, the workflow is codified as a set of [goose recipes here](https://github.com/nickbrett1/goose-recipes).
@@ -341,15 +362,17 @@ sequenceDiagram
 
 Beyond having a clear definition of the expected behavior of the project, this also greatly decreased the cost and risk of making changes. Instead of the change rippling through a mountain of agent created code, it could be made first in these small, relatively cheap artifacts, then validated. After which it was a more straightforward translation step to change the code.
 
-## Mobile first development
+## Mobile First Development
 
 Having a process for building the application was only part of the story, I simply didn't have enough concentrated time in front of my desktop computer to get it done. I needed to make development possible for when I was on the go. I'd previously been using [Google Jules](https://jules.google.com/), an asynchronous web-based tool for fixing bugs or making small enhancements with agents, but I needed something much more powerful, full access to my desktop toolchain from my phone. Here's what I built:
 
-**One devcontainer, one view.** The Rust backend and the Swift iPad app both live in a single VSCode devcontainer (stripe-toddler). However the admin screen is part of a different project (ftn), and so live in a different VSCode devcontainer.
+### One Devcontainer, One View
+
+The Rust backend and the Swift iPad app both live in a single VSCode devcontainer [stripe-toddler](https://github.com/nickbrett1/stripe-toddler/blob/main/.devcontainer/devcontainer.json). However the [admin screen UI](https://github.com/nickbrett1/ftn/tree/main/webapp/src/routes/projects/stripe-toddler-admin) is part of a different project (ftn), and lives in a different VSCode devcontainer.
 
 This was relatively simple to expose, I could ensure each container was added to my [tailscale](https://tailscale.com/) VPN network when it started, and then using [blink](https://blink.sh/) I could use a mobile shell to remote in.
 
-One challenge was how to get access to Xcode, it can't run in a container and runs as a native application on my host (Mac) desktop.
+One challenge was how to get access to Xcode, it can't run in a container because it's a native application on my host (Mac) desktop.
 
 For this I took advantage of the relatively new [MCP support in Xcode 26.3](https://www.apple.com/newsroom/2026/02/xcode-26-point-3-unlocks-the-power-of-agentic-coding/). However this wasn't enough, because I ran my development environment in my Linux dev container which didn't have direct access to my host Mac. To bridge from my dev container, there needed to be two additional pieces:
 
@@ -371,13 +394,13 @@ flowchart LR
 
 </div>
 
-With this my agent in my dev container I can edit all the xcode project files, build, run tests and even launch the iPad app itself all from my agent in my dev container. Of course from a phone I couldn't use the iPad app, but I could get a lot done before final acceptance testing at my desktop.
+With this, my agent in my dev container can edit all the xcode project files, build, run tests and even launch the iPad app itself. Of course from a phone I couldn't use the iPad app, but I could get a lot done before final acceptance testing at my desktop.
 
 The final benefit with this setup is that I can seamlessly move between my phone and my desktop. I have the same tmux session on my phone as my desktop, when I sit down at my desktop I see the last thing I typed on my mobile, and vice-versa.
 
-**Seamless setup**
+### Seamless setup
 
-Having a setup that let me access a container seamlessly when it's up and running is useful, but I wanted to go further and ensure I could launch a vscode dev container from my phone. Not only is this useful for starting a new project, but it also protected me against machine reboots on my desktop.
+Having a setup that let me access a container seamlessly when it's up and running is useful, but I wanted to go further and ensure that I could launch a vscode dev container from my phone. Not only is this useful for starting a new project, but it also protected me against machine reboots on my desktop.
 
 For this, I created a simple script ([`devopen`](https://github.com/nickbrett1/devopen)) which can clone code from any repo, build and start its respective devcontainer and open the VS Code window.
 
@@ -385,52 +408,43 @@ And of course, I also made sure my Mac would auto-login if it rebooted, and as a
 
 ## The Magical Moment
 
-<div class="mermaid-container">
-
-```mermaid
-%%{init: {'theme':'dark'}}%%
-flowchart LR
-    Observe["1. Observe<br/>Phone: the celebration is weak"] --> Instruct["2. Instruct<br/>Ask the agent on the phone"]
-    Instruct --> Bridge["3. Bridge<br/>MCP proxy to mac-studio to Xcode"]
-    Bridge --> Build["4. Build<br/>edit to rebuild to tests"]
-    Build --> Verified["5. Verified<br/>iPad reloads, mid-demo"]
-```
-
-</div>
-
 This all came together in a quite magical moment as I was trying the app with my test user for the first time.
 
 It became clear that the celebration screen was not up to the expected quality standards, with not enough fireworks and no sound.
 
 In the moment here's what I did:
 
-1. **Phone** — [Blink Shell](https://blink.sh/), mosh into the VSCode devcontainer over Tailscale. Mosh keeps the session alive.
+1. **Phone** — Blink Shell, mosh into the VSCode devcontainer over Tailscale. Mosh keeps the session alive.
 2. **Agent** — I ask the agent in my vscode terminal to make the celebration more exciting.
 3. **One workspace** — the agent can understand the whole stack, with both the Rust backend and the Swift iPad app (mounted from the mac-studio host).
 4. **MCP bridge** — the agent reaches the custom MCP wrapper on the Mac host (`mcp-sse-proxy.cjs` → `xcode-native` MCP at `mac-studio:9876/sse`).
 5. **Xcode** — the wrapper drives Xcode end-to-end: edit → rebuild → run tests, all automated
-6. **The iPad, at the other side of the house** — reloads with the new celebration, mid-demo, in response to the critical user feedback.
+6. **The iPad, at the other side of the house** — reloads automatically with the new celebration, mid-demo, in response to the critical user feedback.
 7. **Updated Celebration** — all within about 30 seconds
 
 In a pre-agentic world, when giving demos this is a "note it down and fix it tonight" moment — a task that goes on a list, gets reviewed and prioritized, and ships tomorrow at the earliest. We've now got a **30-second loop**: observation → instruction → shipped → verified, all while the user is watching. That was amazing to see in action.
 
 ## Takeaways
 
-Three things I learned from this:
+Three things I learned from the project as a whole:
 
-1. **Artifacts before code.** This was perhaps in hindsight obvious, a robust software design process has diagrams and review documents. But working out how to integrate that notion with agents took me some time. But with typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan, coupled with validation, I saw a significant improvement in the quality of the final output.
+1. **Artifacts before code.** This was perhaps in hindsight rather obvious, a robust software design process has diagrams and review documents. But working out how to integrate that notion with agents took me some time. With typed, cross-validated artifacts — state diagrams, message flows, UI mocks — sitting between the spec and the plan, coupled with validation, I saw a significant improvement in the quality of the final output, with faster iteration, and at lower cost.
 
 2. **Phone access unlocked bandwidth** Getting the ability to do real development work from my phone turned this from a project that would probably never have even started to something that could be chipped away at in the free moments I had. Each step was small, but in the end, led to a complete project.
 
-3. **Make iteration a phone-speed loop.** Having a complete end-to-end loop from my phone, through my dev environment with automated deployment gave an insight into how fast we can now iterate on software. I wasn't expected this at all, but a "note it down and fix it tonight" process became a 30-second iteration, and possible from my phone.
+3. **Make iteration a phone-speed loop.** Having a complete end-to-end loop from my phone, through my dev environment with automated deployment gave an insight into how fast we can now iterate on software. I wasn't expecting this at all, but a "note it down and fix it tonight" process became a 30-second iteration, and all possible from my phone.
 
-## Links and Shout Outs
+## Project Links and a Shout Out
 
 - **The project:** [github.com/nickbrett1/stripe-toddler](https://github.com/nickbrett1/stripe-toddler) — specs, Rust worker and iOS app
 - **The process:** [github.com/nickbrett1/goose-recipes](https://github.com/nickbrett1/goose-recipes) — the agent recipes behind the spec artifact process
 
 And, of course, to the design reviewer, QA lead, and most demanding user. Thank you.
 
-If you build something like this — a toy store, a lemonade stand, a garage sale register — I'd love to hear about it!
+If you build something like this — a mini theme park, a lemonade stand, a tree house — I'd love to hear about it!
 
 <ZoomableMermaid />
+
+[^1]: I started out printing conventional one-dimensional barcodes, but lining up that narrow strip of stripes with the scanner proved to be a lot to ask of small, enthusiastic hands. QR codes are far more forgiving of angle and distance, so once I'd reprinted every label as a QR code the scanning — and the patience of the shopkeeper — improved dramatically.
+
+[^2]: I was inspired to use Rust after Wes McKinney's [good point](https://wesmckinney.com/blog/agent-ergonomics/) that, with agents, there's value in picking tools that work well with agents, if not humans. Rust gives higher performance and, in particular, better feedback on compile errors.
