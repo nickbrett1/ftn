@@ -1,54 +1,34 @@
 import { json } from '@sveltejs/kit';
-import { ProjectGeneratorService } from '$lib/server/project-generator';
-import {
-	buildAuthTokensFromStored,
-	resolveCapabilityDependencies
-} from '$lib/server/genproj-api-utils';
-import { getCurrentUser } from '$lib/server/auth';
+import { callGenproj } from '$lib/server/genproj-client';
 import { logger } from '$lib/utils/logging';
 
-export async function POST({ request, platform, cookies }) {
+/**
+ * Proxies to genproj's conflict-check endpoint.
+ *
+ * Authenticated for the same reason as generate: genproj checks conflicts
+ * against the user's own repositories.
+ */
+export async function POST(event) {
+	const { request } = event;
+
+	let body;
 	try {
-		const body = await request.json();
-		const { name, selectedCapabilities } = body;
+		body = await request.json();
+	} catch {
+		return json({ message: 'Missing required fields' }, { status: 400 });
+	}
 
-		if (!name || !selectedCapabilities) {
-			return json({ message: 'Missing required fields' }, { status: 400 });
-		}
+	const { name, selectedCapabilities } = body ?? {};
 
-		// Get user to fetch tokens
-		const user = await getCurrentUser({ request, platform });
-		if (!user) {
-			return json({ message: 'Unauthorized' }, { status: 401 });
-		}
+	if (!name || !selectedCapabilities) {
+		return json({ message: 'Missing required fields' }, { status: 400 });
+	}
 
-		// Construct authTokens object
-		const authTokens = buildAuthTokensFromStored([], cookies);
-
-		// Instantiate the robust service
-		const service = new ProjectGeneratorService(authTokens);
-
-		// Prepare context for conflict check (dependencies resolved so the
-		// generated file set matches what generation will actually produce).
-		const projectContext = {
-			projectName: name,
-			capabilities: resolveCapabilityDependencies(selectedCapabilities),
-			configuration: {},
-			authTokens,
-			userId: user.id
-		};
-
-		// Run conflict check
-		const conflicts = await service.checkConflicts(projectContext);
-
-		return json({
-			conflicts
-		});
+	try {
+		const result = await callGenproj(event, '/v1/conflicts', body, { auth: true });
+		return json(result.body, { status: result.status });
 	} catch (error) {
 		logger.error('Conflict check failed', error);
-		if (error.message.includes('GitHub authentication required')) {
-			return json({ message: error.message }, { status: 401 });
-		}
 		return json({ message: error.message || 'Internal Server Error' }, { status: 500 });
 	}
 }

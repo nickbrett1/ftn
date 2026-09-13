@@ -1,24 +1,34 @@
 // webapp/src/routes/projects/genproj/api/preview/+server.js
 import { json } from '@sveltejs/kit';
-import { generatePreview } from '$lib/server/preview-generator';
+import { callGenproj } from '$lib/server/genproj-client';
 import { logger } from '$lib/utils/logging';
-export async function POST({ request, platform, fetch }) {
+
+/**
+ * Proxies to genproj's preview endpoint.
+ *
+ * Deliberately unauthenticated, matching both this route's prior behaviour and
+ * genproj's `POST /v1/preview`. Generation and conflict checks are the
+ * authenticated ones.
+ */
+export async function POST(event) {
+	const { request, platform } = event;
+
+	let requestBody;
 	try {
-		const requestBody = await request.json();
-		const { selectedCapabilities } = requestBody;
-		const projectConfig = requestBody; // The entire request body is the projectConfig
+		requestBody = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, { status: 400 });
+	}
 
-		if (!projectConfig || !selectedCapabilities) {
-			return json({ error: 'Missing projectConfig or selectedCapabilities' }, { status: 400 });
-		}
+	const { selectedCapabilities } = requestBody;
 
-		const previewData = await generatePreview(
-			projectConfig,
-			selectedCapabilities,
-			platform?.env?.R2_GENPROJ_TEMPLATES
-		); // Pass r2Bucket
+	if (!requestBody || !selectedCapabilities) {
+		return json({ error: 'Missing projectConfig or selectedCapabilities' }, { status: 400 });
+	}
 
-		return json(previewData, { status: 200 });
+	try {
+		const { status, body } = await callGenproj(event, '/v1/preview', requestBody);
+		return json(body, { status });
 	} catch (error) {
 		logger.error('Error generating preview:', error);
 		return json({ error: 'Failed to generate preview', details: error.message }, { status: 500 });
