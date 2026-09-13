@@ -47,7 +47,9 @@ steps:
       SENTRY_ENVIRONMENT: production
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - . .buildkite/scripts/export-cloudflare-env.sh prd
+      # The config travels in an env var, not a `.` argument: dash ignores
+      # arguments to `.`, so `. ... prd` silently fell back to the stg default.
+      - CF_DOPPLER_CONFIG=prd . .buildkite/scripts/export-cloudflare-env.sh
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
       - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
@@ -108,7 +110,7 @@ steps:
       SENTRY_ENVIRONMENT: preview
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
-      - . .buildkite/scripts/export-cloudflare-env.sh stg
+      - CF_DOPPLER_CONFIG=stg . .buildkite/scripts/export-cloudflare-env.sh
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - apt-get update && apt-get install -y --no-install-recommends jq
       - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
