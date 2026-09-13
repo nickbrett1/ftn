@@ -1,243 +1,70 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// 1. Define Hoisted Mocks
-const { mockGenerateProject, mockGetCurrentUser, mockLoggerError } = vi.hoisted(() => ({
-	mockGenerateProject: vi.fn(),
-	mockGetCurrentUser: vi.fn(),
-	mockLoggerError: vi.fn()
-}));
-
-// 2. Mock Modules using the hoisted variables
-vi.mock('$lib/server/auth', () => ({
-	getCurrentUser: mockGetCurrentUser
-}));
-
-vi.mock('$lib/server/project-generator', () => {
-	// Return a default export or named export as needed by the consumer
-	// The consumer uses: import { ProjectGeneratorService } from ...
-	// and does new ProjectGeneratorService(authTokens)
-	const MockProjectGeneratorService = vi.fn();
-	MockProjectGeneratorService.prototype.generateProject = mockGenerateProject;
-	return {
-		ProjectGeneratorService: MockProjectGeneratorService
-	};
-});
-
-vi.mock('$env/dynamic/private', () => ({
-	env: {
-		GITHUB_TOKEN: 'env-gh-token',
-		CIRCLECI_TOKEN: 'env-circle-token',
-		DOPPLER_TOKEN: 'env-doppler-token',
-		SONARQUBE_TOKEN: 'env-sonar-token'
-	}
-}));
-
-vi.mock('$lib/utils/logging', () => ({
-	logger: {
-		error: mockLoggerError
-	}
-}));
-
-// Mock SvelteKit json helper
-vi.mock('@sveltejs/kit', () => ({
-	json: vi.fn((data, options) => ({ body: data, status: options?.status || 200 }))
-}));
-
-// Import the function under test
 import { POST } from '../../../../../../src/routes/projects/genproj/api/generate/+server.js';
-import { ProjectGeneratorService } from '$lib/server/project-generator';
+import { callGenproj } from '../../../../../../src/lib/server/genproj-client.js';
 
+vi.mock('../../../../../../src/lib/server/genproj-client.js', () => ({
+	callGenproj: vi.fn()
+}));
+
+// The route only forwards; everything about how the work is done now lives in
+// genproj, and how the user is identified lives in genproj-client.
 describe('POST /projects/genproj/api/generate', () => {
-	let request;
-	let platform;
-	let cookies;
-	let mockUser;
-	let mockTokens;
+	const event = (body) => ({
+		request: new Request('http://localhost/projects/genproj/api/generate', {
+			method: 'POST',
+			body: JSON.stringify(body)
+		}),
+		platform: { env: {} }
+	});
 
 	beforeEach(() => {
-		vi.clearAllMocks();
-
-		// Default data setup
-		mockUser = { id: 'user-123' };
-		mockTokens = [
-			{ serviceName: 'GitHub', accessToken: 'gh-token' },
-			{ serviceName: 'CircleCI', accessToken: 'circle-token' }
-		];
-
-		// Default Mock Implementations
-		mockGenerateProject.mockResolvedValue({
-			success: true,
-			repository: { htmlUrl: 'http://repo.url' }
-		});
-		mockGetCurrentUser.mockResolvedValue(mockUser);
-
-		// Ensure constructor mocks are reset
-		// Since we are mocking the class itself, we don't need to re-mock implementation here
-		// The prototype methods are already linked to the hoisted spies
-
-		// Default Request/Platform setup
-		request = {
-			json: vi.fn().mockResolvedValue({
-				name: 'test-project',
-				repositoryUrl: 'http://repo.url',
-				selectedCapabilities: ['cap1', 'cap2']
-			})
-		};
-
-		platform = {
-			env: {
-				API_KEYS_DB: {},
-				D1_DATABASE: {}
-			}
-		};
-
-		cookies = {
-			get: vi.fn()
-		};
+		vi.resetAllMocks();
 	});
 
-	it('should return 400 if name is missing', async () => {
-		request.json.mockResolvedValueOnce({
-			repositoryUrl: 'http://repo.url',
-			selectedCapabilities: []
-		});
-
-		const response = await POST({ request, platform, cookies });
+	it('rejects a request with no project name', async () => {
+		const response = await POST(event({ selectedCapabilities: ['docker'] }));
 
 		expect(response.status).toBe(400);
-		expect(response.body).toEqual({ message: 'Missing required fields' });
+		expect(callGenproj).not.toHaveBeenCalled();
 	});
 
-	it('should return 400 if selectedCapabilities is missing', async () => {
-		request.json.mockResolvedValueOnce({
-			name: 'test-project',
-			repositoryUrl: 'http://repo.url'
-		});
-
-		const response = await POST({ request, platform, cookies });
+	it('rejects a request with no capabilities', async () => {
+		const response = await POST(event({ name: 'demo' }));
 
 		expect(response.status).toBe(400);
-		expect(response.body).toEqual({ message: 'Missing required fields' });
+		expect(callGenproj).not.toHaveBeenCalled();
 	});
 
-	it('should return 401 if user is not authenticated', async () => {
-		mockGetCurrentUser.mockResolvedValueOnce(null);
+	it('forwards the body with auth required', async () => {
+		// `auth: true` is what makes genproj-client present the system
+		// credential; without it the call would be rejected by genproj.
+		const body = { name: 'demo', selectedCapabilities: ['docker'] };
+		callGenproj.mockResolvedValue({ status: 200, body: { repositoryUrl: 'https://x' } });
 
-		const response = await POST({ request, platform, cookies });
+		const response = await POST(event(body));
 
-		expect(response.status).toBe(401);
-		expect(response.body).toEqual({ message: 'Unauthorized' });
-	});
-
-	it('should use tokens from environment variables', async () => {
-		await POST({ request, platform, cookies });
-
-		expect(ProjectGeneratorService).toHaveBeenCalledWith(
-			expect.objectContaining({
-				github: 'env-gh-token',
-				circleci: 'env-circle-token',
-				doppler: 'env-doppler-token',
-				sonarcloud: 'env-sonar-token'
-			})
-		);
-	});
-
-	it('should fallback to cookie for GitHub token if not in environment', async () => {
-		const { env } = await import('$env/dynamic/private');
-		const oldGitHubToken = env.GITHUB_TOKEN;
-		const oldGitHubAccess = env.GITHUB_ACCESS_TOKEN;
-		env.GITHUB_TOKEN = undefined;
-		env.GITHUB_ACCESS_TOKEN = undefined;
-		cookies.get.mockReturnValue('cookie-gh-token');
-
-		await POST({ request, platform, cookies });
-
-		expect(ProjectGeneratorService).toHaveBeenCalledWith(
-			expect.objectContaining({
-				github: 'cookie-gh-token'
-			})
-		);
-
-		env.GITHUB_TOKEN = oldGitHubToken;
-		env.GITHUB_ACCESS_TOKEN = oldGitHubAccess;
-	});
-
-	it('should call generateProject with correct context', async () => {
-		await POST({ request, platform, cookies });
-
-		expect(mockGenerateProject).toHaveBeenCalledWith(
-			expect.objectContaining({
-				projectName: 'test-project',
-				repositoryUrl: 'http://repo.url',
-				capabilities: ['cap1', 'cap2'],
-				userId: 'user-123'
-			})
-		);
-	});
-
-	it('should return success response with repository URL', async () => {
-		const response = await POST({ request, platform, cookies });
-
+		expect(callGenproj).toHaveBeenCalledWith(expect.anything(), '/v1/generate', body, {
+			auth: true
+		});
 		expect(response.status).toBe(200);
-		expect(response.body).toEqual({
-			message: 'Project generated successfully',
-			repositoryUrl: 'http://repo.url'
-		});
 	});
 
-	it('should return 401 if generation fails with Unauthorized error', async () => {
-		mockGenerateProject.mockResolvedValueOnce({
-			success: false,
-			error: 'GitHub token not found'
-		});
+	it('passes genproj status and body through unchanged', async () => {
+		callGenproj.mockResolvedValue({ status: 401, body: { message: 'Unauthorized' } });
 
-		const response = await POST({ request, platform, cookies });
+		const response = await POST(event({ name: 'demo', selectedCapabilities: ['docker'] }));
 
 		expect(response.status).toBe(401);
-		expect(response.body).toEqual({ message: 'GitHub token not found' });
+		expect(await response.json()).toEqual({ message: 'Unauthorized' });
 	});
 
-	it('should return 500 if generation fails with generic error', async () => {
-		mockGenerateProject.mockResolvedValueOnce({
-			success: false,
-			error: 'Something went wrong'
-		});
+	it('returns 500 when the call itself throws', async () => {
+		callGenproj.mockRejectedValue(new Error('binding unavailable'));
 
-		const response = await POST({ request, platform, cookies });
+		const response = await POST(event({ name: 'demo', selectedCapabilities: ['docker'] }));
+		const data = await response.json();
 
 		expect(response.status).toBe(500);
-		expect(response.body).toEqual({ message: 'Something went wrong' });
-	});
-
-	it('should return 500 if generation fails with unknown error', async () => {
-		mockGenerateProject.mockResolvedValueOnce({
-			success: false
-		});
-
-		const response = await POST({ request, platform, cookies });
-
-		expect(response.status).toBe(500);
-		expect(response.body).toEqual({ message: 'Project generation failed' });
-	});
-
-	it('should handle exceptions and log error', async () => {
-		const error = new Error('Unexpected crash');
-		mockGenerateProject.mockRejectedValueOnce(error);
-
-		const response = await POST({ request, platform, cookies });
-
-		expect(mockLoggerError).toHaveBeenCalledWith('Project generation failed', error);
-		expect(response.status).toBe(500);
-		expect(response.body).toEqual({ message: 'Unexpected crash' });
-	});
-
-	it('should handle exceptions without message', async () => {
-		mockGenerateProject.mockRejectedValueOnce({});
-
-		const response = await POST({ request, platform, cookies });
-
-		expect(mockLoggerError).toHaveBeenCalled();
-		expect(response.status).toBe(500);
-		expect(response.body).toEqual({ message: 'Internal Server Error' });
+		expect(data.message).toBe('binding unavailable');
 	});
 });

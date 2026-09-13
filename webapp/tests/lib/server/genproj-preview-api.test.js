@@ -1,80 +1,64 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { POST } from '../../../src/routes/projects/genproj/api/preview/+server.js';
+import { callGenproj } from '../../../src/lib/server/genproj-client.js';
 
-const generatePreviewMock = vi.fn();
-const loggerErrorMock = vi.fn();
-
-vi.mock('$lib/server/preview-generator', () => ({
-	generatePreview: (...arguments_) => generatePreviewMock(...arguments_)
+vi.mock('../../../src/lib/server/genproj-client.js', () => ({
+	callGenproj: vi.fn()
 }));
 
-vi.mock('$lib/utils/logging', () => ({
-	logger: {
-		error: (...arguments_) => loggerErrorMock(...arguments_)
-	}
-}));
-
+// Preview is the one genproj endpoint that stays unauthenticated, so the route
+// forwards without asking who the caller is.
 describe('genproj preview api route', () => {
+	const buildEvent = (body) => ({
+		request: new Request('http://localhost/projects/genproj/api/preview', {
+			method: 'POST',
+			body: JSON.stringify(body)
+		}),
+		platform: { env: {} }
+	});
+
 	beforeEach(() => {
-		vi.resetModules();
-		generatePreviewMock.mockReset();
-		loggerErrorMock.mockReset();
+		vi.resetAllMocks();
 	});
 
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
+	it('forwards a valid request to genproj without requiring auth', async () => {
+		const body = { name: 'preview-demo', selectedCapabilities: ['docker'] };
+		callGenproj.mockResolvedValue({ status: 200, body: { files: [], summary: {} } });
 
-	const loadModule = () => import('../../../src/routes/projects/genproj/api/preview/+server.js');
+		const response = await POST(buildEvent(body));
 
-	const buildEvent = (body, platform) => {
-		const mockFetch = vi.fn();
-		return {
-			request: {
-				json: async () => body
-			},
-			platform: platform || { env: { R2_GENPROJ_TEMPLATES: 'mock-bucket' } },
-			fetch: mockFetch, // Add mock fetch function
-			mockFetch // Return the mock fetch function for assertions
-		};
-	};
-
-	it('generates preview successfully', async () => {
-		const { POST } = await loadModule();
-		const previewData = { files: { 'README.md': 'content' } };
-		generatePreviewMock.mockResolvedValue(previewData);
-
-		const projectConfig = { name: 'test', selectedCapabilities: ['cap1'] };
-		const event = buildEvent(projectConfig);
-		const { mockFetch } = event; // Destructure mockFetch
-		const response = await POST(event);
-
+		// No options argument at all: preview does not ask for auth.
+		expect(callGenproj).toHaveBeenCalledWith(expect.anything(), '/v1/preview', body);
 		expect(response.status).toBe(200);
-		const body = await response.json();
-		expect(body).toEqual(previewData);
-		expect(generatePreviewMock).toHaveBeenCalledWith(projectConfig, ['cap1'], 'mock-bucket');
 	});
 
-	it('returns 400 if selectedCapabilities is missing', async () => {
-		const { POST } = await loadModule();
-		const event = buildEvent({ name: 'test' }); // Missing selectedCapabilities
+	it('rejects a request with no capabilities before calling genproj', async () => {
+		const response = await POST(buildEvent({ name: 'preview-demo' }));
+
+		expect(response.status).toBe(400);
+		expect(callGenproj).not.toHaveBeenCalled();
+	});
+
+	it('rejects a body that is not JSON', async () => {
+		const event = {
+			request: new Request('http://localhost/projects/genproj/api/preview', {
+				method: 'POST',
+				body: 'not json'
+			}),
+			platform: { env: {} }
+		};
+
 		const response = await POST(event);
 
 		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toContain('Missing projectConfig or selectedCapabilities');
 	});
 
-	it('returns 500 if generatePreview throws', async () => {
-		const { POST } = await loadModule();
-		generatePreviewMock.mockRejectedValue(new Error('Generation failed'));
+	it('passes a genproj error through with its status', async () => {
+		callGenproj.mockResolvedValue({ status: 500, body: { error: 'boom' } });
 
-		const projectConfig = { name: 'test', selectedCapabilities: ['cap1'] };
-		const event = buildEvent(projectConfig);
-		const response = await POST(event);
+		const response = await POST(buildEvent({ name: 'x', selectedCapabilities: ['docker'] }));
 
 		expect(response.status).toBe(500);
-		const body = await response.json();
-		expect(body.error).toBe('Failed to generate preview');
-		expect(loggerErrorMock).toHaveBeenCalledWith('Error generating preview:', expect.any(Error));
+		expect((await response.json()).error).toBe('boom');
 	});
 });
