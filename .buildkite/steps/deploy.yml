@@ -29,10 +29,16 @@ steps:
       - docker#v5.13.0:
           image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
           workdir: /workdir
+          # BUILDKITE_BRANCH / BUILDKITE_COMMIT must be listed explicitly: the
+          # docker plugin only forwards the variables named here, so without
+          # them the notification's `${BUILDKITE_BRANCH}` / `$SHORT` expand to
+          # nothing inside the container (a blank "Branch: , Commit:" message).
           environment:
             - DOPPLER_TOKEN
             - DOPPLER_PROJECT
             - DOPPLER_ENVIRONMENT
+            - BUILDKITE_BRANCH
+            - BUILDKITE_COMMIT
     env:
       DOPPLER_PROJECT: webapp
       DOPPLER_ENVIRONMENT: stg

@@ -61,4 +61,11 @@ describe('ftn deploy step - ntfy notification', () => {
 		// expansion is a fatal "Bad substitution"; cut/sed must be used instead.
 		expect(deployCode).not.toMatch(/\$\{[A-Za-z_]\w*:\d+:\d+\}/);
 	});
+
+	it('forwards BUILDKITE_BRANCH and BUILDKITE_COMMIT into the container', () => {
+		// The docker plugin only passes the variables named in `environment`;
+		// otherwise the notification's branch/commit expand to empty strings.
+		expect(deployYml).toContain('- BUILDKITE_BRANCH');
+		expect(deployYml).toContain('- BUILDKITE_COMMIT');
+	});
 });
