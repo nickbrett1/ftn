@@ -403,10 +403,6 @@ export const capabilities = [
 						}
 					}
 				},
-				ntfyNotifications: {
-					type: 'boolean',
-					default: false
-				},
 				requireStatusCheck: {
 					type: 'boolean',
 					default: true,
@@ -484,11 +480,6 @@ export const capabilities = [
 					default: true,
 					description:
 						'Run the heavy gates (Lighthouse, preview deploys) on main only by default. Set to false to run them on every branch.'
-				},
-				ntfyNotifications: {
-					type: 'boolean',
-					default: false,
-					description: 'Send an ntfy notification when a deployment completes.'
 				}
 			}
 		},

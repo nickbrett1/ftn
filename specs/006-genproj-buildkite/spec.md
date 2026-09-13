@@ -43,7 +43,7 @@ Deliberately **not** in the v1 schema (each was proposed in the plan's §8 sketc
 
 - `dockerImage` / `dockerImageDigest` — the image is chosen from the language (§4), not by preference. Letting users set a digest invites a broken revision.
 - `agentVersion`, `caching`, `propagatedEnvNames`, `requiresDopplerCli` — implementation detail of the pipeline, already fixed by the ftn port.
-- `branchGating`, `ntfyNotifications` — these gate Lighthouse/deploy steps and deploy notifications. v1 emits neither step, so they would be dead configuration; they belong with those steps in a v2.
+- `branchGating` — gates the Lighthouse and preview-deploy steps to main. v1 emits neither step, so it would be dead configuration; it belongs with those steps in a v2.
 
 ---
 
@@ -112,7 +112,6 @@ The generated pipeline now honours every contribution the CircleCI config makes:
 | `lighthouse-ci` | `lighthouse`, main-only by default | `lighthouse` job with a main-only filter |
 | `cloudflare-wrangler` | `deploy` on main; `deploy_preview` on branches when `branchGating: false`; Doppler CLI install, `setup-wrangler-config.sh` and the secret sync when `doppler` is also selected | `deploy-to-cloudflare` job |
 | `docker-container` | `docker_publish` on main (GHCR, buildx registry cache) | `docker-publish` job |
-| `buildkite.ntfyNotifications` | a `Notify` step after the deploy | `notify_deployment` command |
 | `code-quality` | lint inside the build step (`npm run lint` / `ruff check`) | the language-aware lint step |
 
 A project that selects none of these gets build + test and nothing else.

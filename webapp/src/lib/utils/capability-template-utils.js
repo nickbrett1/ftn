@@ -333,8 +333,7 @@ function _ensureInstallDopplerCommand(data) {
 
 function _applyDopplerConfig(data, context) {
 	// The only consumer of `install_doppler` for the doppler capability is the
-	// Cloudflare secrets sync; emit the command only then. (ntfy notifications
-	// add their own consumer via _applyNtfyNotificationConfig.)
+	// Cloudflare secrets sync; emit the command only then.
 	if (
 		context.capabilities.includes('cloudflare-wrangler') &&
 		context.capabilities.includes('doppler')
@@ -1180,7 +1179,6 @@ function getCircleCiTemplateData(context) {
 	_applyLighthouseConfig(data, context, contextEnabled, contextName, branchGating);
 	_applyCloudflareConfig(data, context, contextEnabled, contextName, branchGating);
 	_applyDockerContainerConfig(data, context, contextEnabled, contextName);
-	_applyNtfyNotificationConfig(data, context);
 
 	// Lint step first (ruff/ESLint), then the test step.
 	_applyCodeQualityConfig(data, context);
@@ -1205,58 +1203,6 @@ function getCircleCiTemplateData(context) {
 	}
 
 	return data;
-}
-
-function _applyNtfyNotificationConfig(data, context) {
-	const circleciConfig = context.configuration?.circleci || {};
-	if (!circleciConfig.ntfyNotifications) {
-		return;
-	}
-
-	_ensureInstallDopplerCommand(data);
-
-	data.commands += `  notify_deployment:
-    description: "Send ntfy notification upon deployment completion"
-    parameters:
-      environment_name:
-        type: string
-        default: "Production"
-      doppler_config:
-        type: string
-        default: "prd"
-    steps:
-      - run:
-          name: Send deployment completion notification
-          command: |
-            DOPPLER_ARGS=""
-            if [ -n "$DOPPLER_TOKEN" ]; then
-              DOPPLER_ARGS="--token $DOPPLER_TOKEN"
-              if [[ ! "$DOPPLER_TOKEN" =~ ^dp\\.st\\. ]]; then
-                DOPPLER_ARGS="$DOPPLER_ARGS --project common --config << parameters.doppler_config >>"
-              fi
-            else
-              DOPPLER_ARGS="--project common --config << parameters.doppler_config >>"
-            fi
-            NTFY_URL=$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain $DOPPLER_ARGS 2>/dev/null || true)
-            if [ -n "$NTFY_URL" ]; then
-              COMMIT_MSG=$(git log -1 --pretty=format:"%s" "\${CIRCLE_SHA1}" 2>/dev/null || echo "")
-              curl -s -d "🚀 [\${CIRCLE_PROJECT_REPONAME}] << parameters.environment_name >> deployment successful! Branch: \${CIRCLE_BRANCH}, Commit: \${CIRCLE_SHA1:0:7} \${COMMIT_MSG}" "$NTFY_URL"
-              echo "Notification sent successfully to ntfy."
-            else
-              echo "⚠️ NTFY_URL_CIRCLECI_BUILD secret not found in Doppler or empty."
-            fi\n`;
-
-	if (data.deployJobDefinition) {
-		data.deployJobDefinition += `
-      - when:
-          condition:
-            equal: [ main, << pipeline.git.branch >> ]
-          steps:
-            - install_doppler
-            - notify_deployment:
-                environment_name: "Production"
-                doppler_config: "prd"`;
-	}
 }
 
 /**
@@ -1647,30 +1593,6 @@ ${_bkAgents(queue)}    env:
         --cache-from type=registry,ref=$$CACHE_REF
         --cache-to type=registry,ref=$$CACHE_REF,mode=max
         -t $$IMAGE:$$BUILDKITE_COMMIT -t $$IMAGE:latest --push .
-`);
-	}
-
-	// --- deployment notification (buildkite.ntfyNotifications) ---------------
-	// Config flag rather than a capability, mirroring circleci.ntfyNotifications.
-	if (config.ntfyNotifications && hasWrangler) {
-		steps.push(`
-  - label: ":loudspeaker: Notify"
-    depends_on:
-      - deploy
-    allow_dependency_failure: true
-${_bkAgents(queue)}    plugins:
-${_bkDockerPlugin(image, hasDoppler ? ['DOPPLER_TOKEN'] : [])}    commands:
-      - |
-        NTFY_URL=""
-        if command -v doppler >/dev/null 2>&1; then
-          NTFY_URL=$$(doppler secrets get NTFY_URL_CIRCLECI_BUILD --plain --project common --config prd 2>/dev/null || true)
-        fi
-        if [ -z "$$NTFY_URL" ]; then
-          echo "NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
-        else
-          SHORT="$$(echo "$$BUILDKITE_COMMIT" | cut -c1-7)"
-          curl -s -d "🚀 [${context.projectName || context.name || 'my-project'}] deployment finished on $$BUILDKITE_BRANCH ($$SHORT)" "$$NTFY_URL"
-        fi
 `);
 	}
 

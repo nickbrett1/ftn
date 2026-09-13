@@ -46,8 +46,6 @@ Provided by the agent's `environment` hook, by name:
   selected (for `scripts/setup-wrangler-config.sh` and the secret sync).
 - **Image publish** (`docker-container`) — `GHCR_USERNAME` and `GHCR_TOKEN`.
   Runs on the agent, which has the Docker daemon it needs.
-- **Notify** (`buildkite.ntfyNotifications`) — `DOPPLER_TOKEN`; reads
-  `NTFY_URL_CIRCLECI_BUILD` from Doppler `common/prd`.
 
 This list is a bullet list rather than a table on purpose: a generated file has
 to survive `prettier --check` in this project's own lint step, and prettier

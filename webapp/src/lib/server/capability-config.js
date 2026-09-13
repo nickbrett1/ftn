@@ -190,8 +190,7 @@ export class CapabilityConfigurationService {
 				configuration: {
 					nodeVersion: '20',
 					cache: true,
-					parallelism: 1,
-					ntfyNotifications: false
+					parallelism: 1
 				},
 				requiresAuth: true,
 				authService: 'circleci'

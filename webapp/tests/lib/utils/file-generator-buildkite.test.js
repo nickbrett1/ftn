@@ -199,18 +199,6 @@ describe('Buildkite file generation', () => {
 		expect(content).not.toMatch(/key: docker_publish[\s\S]*?docker#v5\.13\.0/);
 	});
 
-	it('adds a notification step when ntfy is configured', async () => {
-		const files = await generate(
-			['buildkite', 'devcontainer-node', 'cloudflare-wrangler', 'doppler'],
-			{ buildkite: { ntfyNotifications: true } }
-		);
-		const content = pipelineFrom(files).content;
-
-		expect(content).toContain(':loudspeaker: Notify');
-		expect(content).toContain('NTFY_URL_CIRCLECI_BUILD');
-		expect(content).toContain('allow_dependency_failure: true');
-	});
-
 	it('contributes no extra steps when no contributing capability is selected', async () => {
 		const files = await generate(['buildkite', 'devcontainer-node'], { buildkite: {} });
 		const content = pipelineFrom(files).content;

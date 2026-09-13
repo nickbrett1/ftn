@@ -52,7 +52,6 @@ describe('buildkite capability', () => {
 		// The same gates the circleci capability exposes, now that the template
 		// contributes Lighthouse and deploy steps.
 		expect(schema.branchGating.default).toBe(true);
-		expect(schema.ntfyNotifications.default).toBe(false);
 	});
 
 	it('carries the organisation and cluster the API needs', () => {
