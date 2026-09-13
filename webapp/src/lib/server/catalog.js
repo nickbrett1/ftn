@@ -16,7 +16,7 @@ export const CATALOG_ORIGIN = 'https://genproj.nick-brett1.workers.dev';
 /**
  * Fetches the catalog.
  * @param {{ env?: Record<string, any> }} [platform] SvelteKit platform, providing the bindings.
- * @returns {Promise<{ catalogVersion: string, capabilities: object[], count: number }>} The catalog.
+ * @returns {Promise<{ capabilities: object[], count: number }>} The catalog.
  * @throws {Error} If the catalog service is unavailable or returns a non-OK status.
  */
 export async function fetchCatalog(platform) {

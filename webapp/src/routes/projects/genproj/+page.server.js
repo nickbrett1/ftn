@@ -9,17 +9,17 @@ import { fetchCatalog } from '$lib/server/catalog.js';
  * and let the client-side fetch retry.
  *
  * @param {{ platform?: { env?: Record<string, any> } }} event SvelteKit event.
- * @returns {Promise<{ capabilities: object[], catalogVersion: string | null }>} The catalog.
+ * @returns {Promise<{ capabilities: object[] }>} The catalog.
  */
 async function loadCatalog(platform) {
 	try {
 		const catalog = await fetchCatalog(platform);
-		return { capabilities: catalog.capabilities, catalogVersion: catalog.catalogVersion };
+		return { capabilities: catalog.capabilities };
 	} catch (error) {
 		logger.error('Failed to load the capability catalog from genproj', {
 			error: error.message
 		});
-		return { capabilities: [], catalogVersion: null };
+		return { capabilities: [] };
 	}
 }
 

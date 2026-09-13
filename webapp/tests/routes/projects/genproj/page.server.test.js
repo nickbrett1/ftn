@@ -26,7 +26,6 @@ vi.mock('$lib/server/catalog.js', () => ({
 }));
 
 const CATALOG = {
-	catalogVersion: 'test-version',
 	count: 1,
 	capabilities: [{ id: 'shell-tools', selectedByDefault: true }]
 };
@@ -52,8 +51,7 @@ describe('genproj +page.server load', () => {
 			selectedCapabilities: [],
 			projectName: '',
 			repositoryUrl: '',
-			capabilities: CATALOG.capabilities,
-			catalogVersion: 'test-version'
+			capabilities: CATALOG.capabilities
 		});
 	});
 
@@ -66,8 +64,7 @@ describe('genproj +page.server load', () => {
 			selectedCapabilities: [],
 			projectName: '',
 			repositoryUrl: '',
-			capabilities: CATALOG.capabilities,
-			catalogVersion: 'test-version'
+			capabilities: CATALOG.capabilities
 		});
 	});
 
@@ -83,7 +80,6 @@ describe('genproj +page.server load', () => {
 		const result = await load({ locals: mockLocals, url: mockUrl });
 
 		expect(result.capabilities).toEqual([]);
-		expect(result.catalogVersion).toBeNull();
 		expect(result.isAuthenticated).toBe(false);
 	});
 

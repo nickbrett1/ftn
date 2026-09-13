@@ -8,7 +8,6 @@ import {
 } from '../../../src/lib/server/catalog.js';
 
 const CATALOG = {
-	catalogVersion: 'bf736d10a27a',
 	count: 1,
 	capabilities: [{ id: 'shell-tools' }]
 };
