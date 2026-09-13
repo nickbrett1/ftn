@@ -60,4 +60,22 @@ describe('/api/api-keys/[id] DELETE', () => {
 		expect(response.status).toBe(500);
 		expect(data.error).toBe('Failed to revoke API key');
 	});
+
+	it('reports a system key as a bad request, not a server fault', async () => {
+		// The UI offers Rotate instead of Delete for these, so reaching here
+		// means something called the wrong endpoint.
+		mockService.revokeKey.mockRejectedValue(
+			new Error('System-managed keys cannot be deleted — rotate them instead')
+		);
+
+		const event = {
+			platform: { env: mockEnv },
+			params: { id: 'sys-1' }
+		};
+		const response = await DELETE(event);
+		const data = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(data.error).toContain('System-managed keys cannot be deleted');
+	});
 });

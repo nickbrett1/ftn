@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ApiKeyService } from '../../../src/lib/server/api-key-service.js';
+import { ApiKeyService, SYSTEM_KEY_NAME } from '../../../src/lib/server/api-key-service.js';
 import * as db from '../../../src/lib/server/db.js';
 
 vi.mock('../../../src/lib/server/db.js', () => ({
@@ -85,6 +85,7 @@ describe('ApiKeyService', () => {
 			{
 				id: '1',
 				name: 'Key 1',
+				kind: 'user',
 				createdAt: '2026-06-20T18:48:00.000Z',
 				lastUsedAt: '2026-06-20T19:48:00.000Z'
 			}
@@ -200,5 +201,104 @@ describe('Rate Limiting in ApiKeyService', () => {
 			expect.stringContaining('UPDATE ApiKeys'),
 			expect.arrayContaining([1, expect.any(String), '1'])
 		);
+	});
+
+	describe('system-managed keys', () => {
+		it('creates one on first call and reports that it created it', async () => {
+			db.getApiKeysFirstResult.mockResolvedValue(null);
+
+			const result = await service.ensureSystemKey('test@example.com');
+
+			expect(result.created).toBe(true);
+			expect(result.kind).toBe('system');
+			expect(result.name).toBe(SYSTEM_KEY_NAME);
+			expect(result.rawKey.startsWith('pat_')).toBe(true);
+			expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
+				expect.stringContaining('INSERT INTO ApiKeys'),
+				expect.arrayContaining([
+					expect.any(String),
+					'test@example.com',
+					expect.any(String),
+					SYSTEM_KEY_NAME,
+					'system'
+				])
+			);
+		});
+
+		it('is idempotent — an existing key is returned without a new value', async () => {
+			// Sign-in calls this every time, so it must not mint a key per visit.
+			db.getApiKeysFirstResult.mockResolvedValue({ id: 'existing-id' });
+
+			const result = await service.ensureSystemKey('test@example.com');
+
+			expect(result).toEqual({
+				id: 'existing-id',
+				name: SYSTEM_KEY_NAME,
+				kind: 'system',
+				created: false,
+				rawKey: null
+			});
+			expect(db.executeApiKeysQuery).not.toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
+				expect.stringContaining('INSERT INTO ApiKeys'),
+				expect.anything()
+			);
+		});
+
+		it('rotates a system key and bumps the rotation counter', async () => {
+			db.getApiKeysFirstResult.mockResolvedValue({
+				id: 'sys-1',
+				name: SYSTEM_KEY_NAME,
+				kind: 'system'
+			});
+
+			const result = await service.rotateSystemKey('sys-1', 'test@example.com');
+
+			expect(result.rawKey.startsWith('pat_')).toBe(true);
+			expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
+				expect.stringContaining('rotation = rotation + 1'),
+				[expect.any(String), 'sys-1', 'test@example.com']
+			);
+		});
+
+		it('refuses to rotate a key a human holds', async () => {
+			// Rotating a user's own PAT would break them silently; they can
+			// delete and recreate it instead.
+			db.getApiKeysFirstResult.mockResolvedValue({ id: 'u-1', name: 'My Key', kind: 'user' });
+
+			await expect(service.rotateSystemKey('u-1', 'test@example.com')).rejects.toThrow(
+				'Only system-managed keys can be rotated'
+			);
+		});
+
+		it('refuses to rotate an unknown key', async () => {
+			db.getApiKeysFirstResult.mockResolvedValue(null);
+
+			await expect(service.rotateSystemKey('nope', 'test@example.com')).rejects.toThrow(
+				'API key not found'
+			);
+		});
+
+		it('refuses to delete a system key', async () => {
+			db.getApiKeysFirstResult.mockResolvedValue({ kind: 'system' });
+
+			await expect(service.revokeKey('sys-1', 'test@example.com')).rejects.toThrow(
+				'System-managed keys cannot be deleted'
+			);
+		});
+
+		it('still deletes a user key', async () => {
+			db.getApiKeysFirstResult.mockResolvedValue({ kind: 'user' });
+
+			await service.revokeKey('u-1', 'test@example.com');
+
+			expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
+				expect.stringContaining('DELETE FROM ApiKeys'),
+				['u-1', 'test@example.com']
+			);
+		});
 	});
 });
