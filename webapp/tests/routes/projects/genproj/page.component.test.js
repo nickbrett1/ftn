@@ -31,20 +31,6 @@ vi.mock('$app/environment', () => ({
 	dev: true
 }));
 
-// Mock AuthFlow component
-vi.mock('$lib/components/genproj/AuthFlow.svelte', () => {
-	return {
-		default: class {
-			constructor({ target }) {
-				const div = document.createElement('div');
-				div.dataset.testid = 'auth-flow-mock';
-				target.append(div);
-			}
-			$destroy() {}
-		}
-	};
-});
-
 // Mock global constants used in Footer
 globalThis.__GIT_BRANCH__ = 'test-branch';
 globalThis.__GIT_COMMIT__ = 'test-commit';
@@ -126,8 +112,7 @@ describe('GenProj Page Component', () => {
 		expect(calledArgument).toContain('/projects/genproj');
 	});
 
-	it('should NOT automatically show AuthFlow on mount when authenticated and ready', async () => {
-		// Setup data that previously triggered auto-show
+	it('should enable Generate when authenticated and ready', async () => {
 		const data = {
 			isAuthenticated: true,
 			capabilities: mockCapabilities,
@@ -137,17 +122,12 @@ describe('GenProj Page Component', () => {
 
 		const { component } = render(Page, { data });
 
-		// Wait a bit because the previous logic had a setTimeout
+		// The page used to defer this behind a setTimeout while it waited on an
+		// auth-flow component. Both are gone, so readiness is now synchronous.
 		await new Promise((r) => setTimeout(r, 200));
 
-		// Verify that the Generate button is visible and enabled (meaning we are ready)
 		const generateButton = screen.getByTestId('generate-button');
 		expect(generateButton).toBeTruthy();
 		expect(generateButton.disabled).toBe(false);
-
-		// Verify that AuthFlow is NOT visible
-		// Since we mocked it to render 'data-testid="auth-flow-mock"', we look for that
-		const authFlow = screen.queryByTestId('auth-flow-mock');
-		expect(authFlow).toBeNull();
 	});
 });
