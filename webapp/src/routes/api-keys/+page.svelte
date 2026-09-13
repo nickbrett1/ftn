@@ -1,12 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import {
-		TrashCanSolid,
-		PlusSolid,
-		CheckCircleSolid,
-		CopyRegular,
-		ArrowRotateLeftSolid
-	} from 'svelte-awesome-icons';
+	import { TrashCanSolid, PlusSolid, CheckCircleSolid, CopyRegular } from 'svelte-awesome-icons';
 	import { formatDate } from '$lib/utils/date-utils.js';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
@@ -90,39 +84,6 @@
 			// Clear the generated key display if we just revoked the newly created key
 			if (generatedKey && generatedKey.id === id) {
 				generatedKey = null;
-			}
-		} catch (e) {
-			error = e.message;
-			console.error(e);
-		}
-	}
-
-	/**
-	 * System-managed keys back ftn's own calls as the signed-in user, so they
-	 * cannot be deleted — rotating is the remedy when one may have leaked.
-	 */
-	async function rotateKey(id) {
-		if (
-			!confirm(
-				'Rotate this key? The current value stops working immediately, so anything still using it will break until you update it.'
-			)
-		)
-			return;
-		try {
-			error = null;
-			const res = await fetch(`/api/api-keys/${id}/rotate`, { method: 'POST' });
-
-			if (!res.ok) {
-				throw new Error('Failed to rotate key');
-			}
-
-			const data = await res.json();
-			await fetchKeys();
-
-			// Same one-time display as creating a key: the store only keeps a
-			// hash, so this is the only chance to copy the new value.
-			if (data.rawKey) {
-				generatedKey = { id, rawKey: data.rawKey };
 			}
 		} catch (e) {
 			error = e.message;
@@ -245,12 +206,12 @@
 									<td class="px-6 py-4">
 										<div class="flex items-center gap-2">
 											<span class="font-medium text-white">{key.name}</span>
-											{#if key.kind === 'system'}
+											{#if key.kind === 'api'}
 												<span
 													class="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/10 text-white/50"
-													title="Created by ftn for your account. Rotate it instead of deleting it."
+													title="Issued to a machine caller, such as an MCP client, rather than to a person."
 												>
-													Managed by ftn
+													API token
 												</span>
 											{/if}
 										</div>
@@ -265,23 +226,13 @@
 										{key.lastUsedAt ? formatDate(key.lastUsedAt) : 'Never'}
 									</td>
 									<td class="px-6 py-4 text-right">
-										{#if key.kind === 'system'}
-											<button
-												onclick={() => rotateKey(key.id)}
-												class="text-white/60 hover:text-white p-2 rounded hover:bg-white/10 transition-colors"
-												title="Rotate Token"
-											>
-												<ArrowRotateLeftSolid class="size-4" />
-											</button>
-										{:else}
-											<button
-												onclick={() => revokeKey(key.id)}
-												class="text-red-400 hover:text-red-300 p-2 rounded hover:bg-red-400/10 transition-colors"
-												title="Revoke Token"
-											>
-												<TrashCanSolid class="size-4" />
-											</button>
-										{/if}
+										<button
+											onclick={() => revokeKey(key.id)}
+											class="text-red-400 hover:text-red-300 p-2 rounded hover:bg-red-400/10 transition-colors"
+											title="Revoke Token"
+										>
+											<TrashCanSolid class="size-4" />
+										</button>
 									</td>
 								</tr>
 							{/each}
