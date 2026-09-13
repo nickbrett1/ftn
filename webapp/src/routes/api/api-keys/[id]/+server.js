@@ -12,6 +12,11 @@ export async function DELETE(event) {
 		return json({ success: true });
 	} catch (error) {
 		console.error('Failed to revoke API key:', error);
+		// A system-managed key is refused by the service; that is a bad request,
+		// not a server fault, and the message is safe to surface.
+		if (error.message?.includes('System-managed keys cannot be deleted')) {
+			return json({ error: error.message }, { status: 400 });
+		}
 		return json({ error: 'Failed to revoke API key' }, { status: 500 });
 	}
 }
