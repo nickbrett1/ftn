@@ -3,9 +3,9 @@ import { ApiKeyService } from '../../../src/lib/server/api-key-service.js';
 import * as db from '../../../src/lib/server/db.js';
 
 vi.mock('../../../src/lib/server/db.js', () => ({
-	getGenprojDb: vi.fn(),
-	executeGenprojQuery: vi.fn(),
-	getGenprojFirstResult: vi.fn()
+	getApiKeysDb: vi.fn(),
+	executeApiKeysQuery: vi.fn(),
+	getApiKeysFirstResult: vi.fn()
 }));
 
 // Mock crypto module directly for testing
@@ -32,8 +32,8 @@ describe('ApiKeyService', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockEnv = { GENPROJ_DB: {} };
-		db.getGenprojDb.mockReturnValue(mockEnv.GENPROJ_DB);
+		mockEnv = { API_KEYS_DB: {} };
+		db.getApiKeysDb.mockReturnValue(mockEnv.API_KEYS_DB);
 		service = new ApiKeyService(mockEnv);
 		globalThis.crypto.randomUUID.mockReturnValue('1234-5678');
 		globalThis.crypto.subtle.digest.mockResolvedValue(new ArrayBuffer(32));
@@ -42,7 +42,7 @@ describe('ApiKeyService', () => {
 	it('creates a new key', async () => {
 		const userEmail = 'test@example.com';
 		const name = 'Test Key';
-		db.getGenprojFirstResult.mockResolvedValue(null);
+		db.getApiKeysFirstResult.mockResolvedValue(null);
 
 		const key = await service.createKey(userEmail, name);
 
@@ -51,8 +51,8 @@ describe('ApiKeyService', () => {
 		expect(key).toHaveProperty('rawKey');
 		expect(key.rawKey.startsWith('pat_')).toBe(true);
 
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
+		expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+			mockEnv.API_KEYS_DB,
 			expect.stringContaining('INSERT INTO ApiKeys'),
 			expect.arrayContaining([expect.any(String), userEmail, expect.any(String), name])
 		);
@@ -61,7 +61,7 @@ describe('ApiKeyService', () => {
 	it('throws error when creating a key with duplicate name', async () => {
 		const userEmail = 'test@example.com';
 		const name = 'Duplicate Key';
-		db.getGenprojFirstResult.mockResolvedValue({ id: '1' });
+		db.getApiKeysFirstResult.mockResolvedValue({ id: '1' });
 
 		await expect(service.createKey(userEmail, name)).rejects.toThrow(
 			'An API key with this name already exists'
@@ -77,7 +77,7 @@ describe('ApiKeyService', () => {
 				lastUsedAt: '2026-06-20 19:48:00'
 			}
 		];
-		db.executeGenprojQuery.mockResolvedValue(mockKeys);
+		db.executeApiKeysQuery.mockResolvedValue(mockKeys);
 
 		const result = await service.getKeysForUser('test@example.com');
 
@@ -89,8 +89,8 @@ describe('ApiKeyService', () => {
 				lastUsedAt: '2026-06-20T19:48:00.000Z'
 			}
 		]);
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
+		expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+			mockEnv.API_KEYS_DB,
 			expect.stringContaining('SELECT id, name'),
 			['test@example.com']
 		);
@@ -99,8 +99,8 @@ describe('ApiKeyService', () => {
 	it('revokes a key', async () => {
 		await service.revokeKey('key-1', 'test@example.com');
 
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
+		expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+			mockEnv.API_KEYS_DB,
 			expect.stringContaining('DELETE FROM ApiKeys'),
 			['key-1', 'test@example.com']
 		);
@@ -110,44 +110,44 @@ describe('ApiKeyService', () => {
 		it('returns undefined for invalid prefix', async () => {
 			const result = await service.validateKey('invalid_key');
 			expect(result).toBeUndefined();
-			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
+			expect(db.getApiKeysFirstResult).not.toHaveBeenCalled();
 		});
 
 		it('returns undefined for empty key', async () => {
 			const result = await service.validateKey('');
 			expect(result).toBeUndefined();
-			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
+			expect(db.getApiKeysFirstResult).not.toHaveBeenCalled();
 		});
 
 		it('returns undefined for null key', async () => {
 			const result = await service.validateKey(null);
 			expect(result).toBeUndefined();
-			expect(db.getGenprojFirstResult).not.toHaveBeenCalled();
+			expect(db.getApiKeysFirstResult).not.toHaveBeenCalled();
 		});
 
 		it('returns user_email for valid key', async () => {
-			db.getGenprojFirstResult.mockResolvedValue({ id: '1', user_email: 'test@example.com' });
+			db.getApiKeysFirstResult.mockResolvedValue({ id: '1', user_email: 'test@example.com' });
 
 			const result = await service.validateKey('pat_123456');
 
 			expect(result).toBe('test@example.com');
-			expect(db.getGenprojFirstResult).toHaveBeenCalled();
-			expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-				mockEnv.GENPROJ_DB,
+			expect(db.getApiKeysFirstResult).toHaveBeenCalled();
+			expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
 				expect.stringContaining('UPDATE ApiKeys'),
 				expect.any(Array)
 			);
 		});
 
 		it('returns undefined when key not found in db', async () => {
-			db.getGenprojFirstResult.mockResolvedValue(null);
+			db.getApiKeysFirstResult.mockResolvedValue(null);
 
 			const result = await service.validateKey('pat_123456');
 
 			expect(result).toBeUndefined();
-			expect(db.getGenprojFirstResult).toHaveBeenCalled();
-			expect(db.executeGenprojQuery).not.toHaveBeenCalledWith(
-				mockEnv.GENPROJ_DB,
+			expect(db.getApiKeysFirstResult).toHaveBeenCalled();
+			expect(db.executeApiKeysQuery).not.toHaveBeenCalledWith(
+				mockEnv.API_KEYS_DB,
 				expect.stringContaining('UPDATE ApiKeys'),
 				expect.any(Array)
 			);
@@ -161,8 +161,8 @@ describe('Rate Limiting in ApiKeyService', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockEnv = { GENPROJ_DB: {} };
-		db.getGenprojDb.mockReturnValue(mockEnv.GENPROJ_DB);
+		mockEnv = { API_KEYS_DB: {} };
+		db.getApiKeysDb.mockReturnValue(mockEnv.API_KEYS_DB);
 		service = new ApiKeyService(mockEnv);
 	});
 
@@ -170,7 +170,7 @@ describe('Rate Limiting in ApiKeyService', () => {
 		const futureDate = new Date();
 		futureDate.setMinutes(futureDate.getMinutes() + 1);
 
-		db.getGenprojFirstResult.mockResolvedValue({
+		db.getApiKeysFirstResult.mockResolvedValue({
 			id: '1',
 			user_email: 'test@example.com',
 			rate_limit_count: 100,
@@ -184,7 +184,7 @@ describe('Rate Limiting in ApiKeyService', () => {
 		const pastDate = new Date();
 		pastDate.setMinutes(pastDate.getMinutes() - 1);
 
-		db.getGenprojFirstResult.mockResolvedValue({
+		db.getApiKeysFirstResult.mockResolvedValue({
 			id: '1',
 			user_email: 'test@example.com',
 			rate_limit_count: 100,
@@ -195,8 +195,8 @@ describe('Rate Limiting in ApiKeyService', () => {
 		expect(result).toBe('test@example.com');
 
 		// The update query should reset count to 1
-		expect(db.executeGenprojQuery).toHaveBeenCalledWith(
-			mockEnv.GENPROJ_DB,
+		expect(db.executeApiKeysQuery).toHaveBeenCalledWith(
+			mockEnv.API_KEYS_DB,
 			expect.stringContaining('UPDATE ApiKeys'),
 			expect.arrayContaining([1, expect.any(String), '1'])
 		);

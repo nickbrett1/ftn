@@ -33,7 +33,7 @@ describe('POST /projects/genproj/api/conflicts', () => {
 		};
 		platform = {
 			env: {
-				GENPROJ_DB: {},
+				API_KEYS_DB: {},
 				D1_DATABASE: {}
 			}
 		};

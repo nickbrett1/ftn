@@ -37,7 +37,8 @@
 			"preview_database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 		},
 		{
-			"binding": "GENPROJ_DB",
+			// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+			"binding": "API_KEYS_DB",
 			"database_name": "genproj",
 			"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
 			"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
@@ -81,7 +82,8 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					"binding": "GENPROJ_DB",
+					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					"binding": "API_KEYS_DB",
 					"database_name": "genproj",
 					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
 					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
@@ -125,7 +127,8 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					"binding": "GENPROJ_DB",
+					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					"binding": "API_KEYS_DB",
 					"database_name": "genproj",
 					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
 					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
@@ -169,7 +172,8 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					"binding": "GENPROJ_DB",
+					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					"binding": "API_KEYS_DB",
 					"database_name": "genproj",
 					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
 					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"

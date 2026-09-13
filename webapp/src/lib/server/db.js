@@ -1,30 +1,39 @@
 // webapp/src/lib/server/db.js
 
 /**
- * Initializes and provides access to the Cloudflare D1 database binding.
+ * Access to the API keys D1 database (binding `API_KEYS_DB`).
+ *
+ * It holds a single table, `ApiKeys`, which maps hashed personal access
+ * tokens (PATs, `pat_…`) to the user email that owns them. It backs the
+ * `/api-keys` UI and, critically, authentication of the MCP at `/api/mcp`.
+ *
+ * Note: the underlying Cloudflare D1 database is still named `genproj`
+ * (historical — the PAT feature was first built for genproj); only the
+ * binding was renamed. Cloudflare D1 has no database-rename operation.
+ *
  * This module is intended for server-side use only.
  */
 /**
- * Retrieves the D1 database binding from the environment.
+ * Retrieves the API keys D1 database binding from the environment.
  * @param {App.Platform['env']} env The Cloudflare Workers environment object.
- * @returns {D1Database} The D1 database binding for 'GENPROJ_DB'.
- * @throws {Error} If the GENPROJ_DB binding is not found in the environment.
+ * @returns {D1Database} The D1 database binding for 'API_KEYS_DB'.
+ * @throws {Error} If the API_KEYS_DB binding is not found in the environment.
  */
-export function getGenprojDb(environment) {
-	if (!environment?.GENPROJ_DB) {
-		throw new Error('GENPROJ_DB binding not found in environment.');
+export function getApiKeysDb(environment) {
+	if (!environment?.API_KEYS_DB) {
+		throw new Error('API_KEYS_DB binding not found in environment.');
 	}
-	return environment.GENPROJ_DB;
+	return environment.API_KEYS_DB;
 }
 
 /**
- * Executes a SQL query against the GENPROJ_DB.
+ * Executes a SQL query against the API_KEYS_DB.
  * @param {D1Database} db The D1 database binding.
  * @param {string} sql The SQL query string.
  * @param {any[]} params Optional array of parameters for the SQL query.
  * @returns {Promise<D1Result>} The result of the D1 query.
  */
-export async function executeGenprojQuery(database, sql, parameters = []) {
+export async function executeApiKeysQuery(database, sql, parameters = []) {
 	try {
 		const { results } = await database
 			.prepare(sql)
@@ -38,13 +47,13 @@ export async function executeGenprojQuery(database, sql, parameters = []) {
 }
 
 /**
- * Executes a SQL query against the GENPROJ_DB and returns the first result.
+ * Executes a SQL query against the API_KEYS_DB and returns the first result.
  * @param {D1Database} db The D1 database binding.
  * @param {string} sql The SQL query string.
  * @param {any[]} params Optional array of parameters for the SQL query.
  * @returns {Promise<any | null>} The first result of the D1 query, or null if no results.
  */
-export async function getGenprojFirstResult(database, sql, parameters = []) {
+export async function getApiKeysFirstResult(database, sql, parameters = []) {
 	try {
 		const { results } = await database
 			.prepare(sql)

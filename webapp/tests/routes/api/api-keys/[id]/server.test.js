@@ -26,7 +26,7 @@ describe('/api/api-keys/[id] DELETE', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		mockUser = { email: 'test@example.com' };
-		mockEnv = { GENPROJ_DB: {} };
+		mockEnv = { API_KEYS_DB: {} };
 
 		auth.requireUser.mockResolvedValue(mockUser);
 		mockService.revokeKey.mockReset();

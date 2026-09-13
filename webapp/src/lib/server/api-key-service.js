@@ -1,12 +1,12 @@
 import {
-	getGenprojDb as getGenprojDatabase,
-	executeGenprojQuery,
-	getGenprojFirstResult
+	getApiKeysDb as getApiKeysDatabase,
+	executeApiKeysQuery,
+	getApiKeysFirstResult
 } from './db.js';
 
 export class ApiKeyService {
 	constructor(environment) {
-		this.db = getGenprojDatabase(environment);
+		this.db = getApiKeysDatabase(environment);
 	}
 
 	async hashKey(key) {
@@ -26,7 +26,7 @@ export class ApiKeyService {
 		const checkSql = `
 			SELECT id FROM ApiKeys WHERE user_email = ? AND name = ?
 		`;
-		const existing = await getGenprojFirstResult(this.db, checkSql, [userEmail, name]);
+		const existing = await getApiKeysFirstResult(this.db, checkSql, [userEmail, name]);
 		if (existing) {
 			throw new Error('An API key with this name already exists');
 		}
@@ -39,7 +39,7 @@ export class ApiKeyService {
 			INSERT INTO ApiKeys (id, user_email, hashed_key, name)
 			VALUES (?, ?, ?, ?)
 		`;
-		await executeGenprojQuery(this.db, sql, [id, userEmail, hashedKey, name]);
+		await executeApiKeysQuery(this.db, sql, [id, userEmail, hashedKey, name]);
 
 		return {
 			id,
@@ -56,7 +56,7 @@ export class ApiKeyService {
 			WHERE user_email = ?
 			ORDER BY created_at DESC
 		`;
-		const results = await executeGenprojQuery(this.db, sql, [userEmail]);
+		const results = await executeApiKeysQuery(this.db, sql, [userEmail]);
 		return results.map((row) => ({
 			...row,
 			createdAt: row.createdAt
@@ -73,7 +73,7 @@ export class ApiKeyService {
 			DELETE FROM ApiKeys
 			WHERE id = ? AND user_email = ?
 		`;
-		await executeGenprojQuery(this.db, sql, [id, userEmail]);
+		await executeApiKeysQuery(this.db, sql, [id, userEmail]);
 	}
 
 	async validateKey(rawKey) {
@@ -88,7 +88,7 @@ export class ApiKeyService {
 			FROM ApiKeys
 			WHERE hashed_key = ?
 		`;
-		const keyRecord = await getGenprojFirstResult(this.db, sql, [hashedKey]);
+		const keyRecord = await getApiKeysFirstResult(this.db, sql, [hashedKey]);
 
 		if (keyRecord) {
 			const now = new Date();
@@ -116,7 +116,7 @@ export class ApiKeyService {
 					rate_limit_reset_at = ?
 				WHERE id = ?
 			`;
-			await executeGenprojQuery(this.db, updateSql, [
+			await executeApiKeysQuery(this.db, updateSql, [
 				count + 1,
 				resetAt.toISOString().replace('T', ' ').replace('Z', ''),
 				keyRecord.id
