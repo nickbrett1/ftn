@@ -53,11 +53,6 @@ export async function GET(event) {
 
 			break;
 		}
-		case 'genproj-templates': {
-			bucket = event.platform?.env?.R2_GENPROJ_TEMPLATES;
-
-			break;
-		}
 		default: {
 			return json({ error: `Unknown bucket: ${bucketName}` }, { status: 400 });
 		}
