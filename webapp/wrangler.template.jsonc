@@ -54,6 +54,14 @@
 			"bucket_name": "ccbilling"
 		}
 	],
+	"services": [
+		{
+			// The catalog service: capability metadata now; generation and the
+			// MCP server move here in later phases.
+			"binding": "GENPROJ",
+			"service": "genproj"
+		}
+	],
 	"ai": {
 		"binding": "AI"
 	},
@@ -97,6 +105,14 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
+				}
+			],
+			"services": [
+				{
+					// The catalog service: capability metadata now; generation and the
+					// MCP server move here in later phases.
+					"binding": "GENPROJ",
+					"service": "genproj"
 				}
 			],
 			"ai": {
@@ -144,6 +160,14 @@
 					"bucket_name": "ccbilling"
 				}
 			],
+			"services": [
+				{
+					// The catalog service: capability metadata now; generation and the
+					// MCP server move here in later phases.
+					"binding": "GENPROJ",
+					"service": "genproj"
+				}
+			],
 			"ai": {
 				"binding": "AI"
 			}
@@ -187,6 +211,14 @@
 				{
 					"binding": "R2_CCBILLING",
 					"bucket_name": "ccbilling"
+				}
+			],
+			"services": [
+				{
+					// The catalog service: capability metadata now; generation and the
+					// MCP server move here in later phases.
+					"binding": "GENPROJ",
+					"service": "genproj"
 				}
 			],
 			"ai": {

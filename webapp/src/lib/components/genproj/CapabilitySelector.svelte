@@ -157,8 +157,8 @@
 		} else {
 			// If unchecking, ensure it's not required by another selected capability
 			const capability = capabilities.find((c) => c.id === capabilityId);
-			if (capability && capability.category === 'core') {
-				// Core capabilities cannot be deselected
+			if (capability?.selectedByDefault) {
+				// Pre-selected (core) capabilities cannot be deselected
 				if (event.target.type === 'checkbox') {
 					event.target.checked = true;
 				}
@@ -345,8 +345,8 @@
 				<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each capabilityGroups[categoryId] as capability (capability.id)}
 						{@const isSelected =
-							selectedCapabilities.includes(capability.id) || capability.category === 'core'}
-						{@const isCore = capability.category === 'core'}
+							selectedCapabilities.includes(capability.id) || capability.selectedByDefault}
+						{@const isPreselected = capability.selectedByDefault}
 						{@const isRequired = isRequiredByOther(capability)}
 						{@const visibleProperties = Object.entries(
 							capability.configurationSchema?.properties || {}
@@ -359,20 +359,20 @@
                                 {isSelected
 								? 'border-green-500 shadow-lg shadow-green-900/20'
 								: 'border-gray-700 hover:border-gray-500 shadow-md'}
-								{isCore ? 'cursor-default' : ''}
+								{isPreselected ? 'cursor-default' : ''}
                             "
-							onclick={(e) => !isCore && handleCapabilityToggle(capability.id, e)}
+							onclick={(e) => !isPreselected && handleCapabilityToggle(capability.id, e)}
 						>
 							<!-- Selection Indicator (Top Right) -->
 							<div class="absolute top-4 right-4 z-10">
 								<input
 									id="capability-{capability.id}"
 									type="checkbox"
-									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 border-gray-600 bg-gray-900 {isCore
+									class="form-checkbox h-6 w-6 text-green-500 rounded focus:ring-green-400 border-gray-600 bg-gray-900 {isPreselected
 										? 'opacity-50 cursor-not-allowed'
 										: 'cursor-pointer'}"
 									checked={isSelected}
-									disabled={isRequired || isCore}
+									disabled={isRequired || isPreselected}
 									onclick={(e) => e.stopPropagation()}
 									onchange={(e) => handleCapabilityToggle(capability.id, e)}
 								/>
