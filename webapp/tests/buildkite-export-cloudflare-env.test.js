@@ -28,12 +28,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..');
 const scriptRef = '.buildkite/scripts/export-cloudflare-env.sh';
 const scriptPath = path.join(repoRoot, ...scriptRef.split('/'));
-const deployYmlPath = path.join(repoRoot, '.buildkite', 'steps', 'deploy.yml');
+// The deploy step is split by branch (production on main, preview elsewhere),
+// so the call sites live in two files now.
+const deployYmlPath = path.join(repoRoot, '.buildkite', 'steps', 'deploy-production.yml');
+const deployPreviewYmlPath = path.join(repoRoot, '.buildkite', 'steps', 'deploy-preview.yml');
 const PRD = 'common/prd';
 const STG = 'common/stg';
 
 const script = fs.readFileSync(scriptPath, 'utf8');
 const deployYml = fs.readFileSync(deployYmlPath, 'utf8');
+const deployPreviewYml = fs.readFileSync(deployPreviewYmlPath, 'utf8');
+// Both deploy fragments, for assertions that only care about the union.
+const deployYmls = `${deployYml}\n${deployPreviewYml}`;
 // Comments are allowed to name the forbidden forms in order to explain them.
 const scriptCode = script
 	.split('\n')
@@ -156,8 +162,8 @@ describe('export-cloudflare-env.sh - POSIX safety', () => {
 describe('export-cloudflare-env.sh - call sites', () => {
 	it('passes the Doppler config by env var, not as a `.` argument', () => {
 		// `. <script> prd` is silently downgraded to the stg default by dash.
-		expect(deployYml).not.toMatch(/\.\s+\.buildkite\/scripts\/export-cloudflare-env\.sh\s+\w+/);
-		expect(deployYml).toContain(`CF_DOPPLER_CONFIG=prd . ${scriptRef}`);
-		expect(deployYml).toContain(`CF_DOPPLER_CONFIG=stg . ${scriptRef}`);
+		expect(deployYmls).not.toMatch(/\.\s+\.buildkite\/scripts\/export-cloudflare-env\.sh\s+\w+/);
+		expect(deployYmls).toContain(`CF_DOPPLER_CONFIG=prd . ${scriptRef}`);
+		expect(deployYmls).toContain(`CF_DOPPLER_CONFIG=stg . ${scriptRef}`);
 	});
 });

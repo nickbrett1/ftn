@@ -21,7 +21,8 @@ Source brief: the `buildkite-phase1-ftn` memo. Master plan: `DFSsNwAc8NXcKSQsA2S
   steps/
     heavy.yml             # ggshield + Build + Code test + Test results
     lighthouse.yml        # main-only Lighthouse step (uploaded only when warranted)
-    deploy.yml            # ported deploy steps — NOT uploaded during the pilot (D6)
+    deploy-production.yml # production deploy — uploaded only on main
+    deploy-preview.yml    # preview deploy — uploaded on other branches
   tests/test-routing.sh   # 28 cases over the mapping table
 ```
 
@@ -243,6 +244,7 @@ revocation is the whole mitigation), then fix, then mint a new one.
 | `npm ci` in every job (not a restored node_modules cache) | Simpler and immune to a stale-cache class of bug; npm's own cache makes it cheap. |
 | `code_test` does not attach the build workspace | It never consumed the build output (`lint` + `test-ci` only). Avoids the 138 MB round-trip. |
 | Deploy steps ported but not uploaded | D6 — no deploys during the pilot. |
+| `deploy-production.yml` / `deploy-preview.yml` split, branch chosen in the upload | A false step-level `if:` still creates a job object — agentless, `exit_status` null, zero log rows, terminal state `broken` — so the shared `deploy.yml` reported a phantom "problem" job on every green build. Not uploading the inapplicable step is how the Lighthouse step already works. |
 
 ## Cutover
 

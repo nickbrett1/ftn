@@ -112,9 +112,20 @@ fi
 # preview run has been verified from here.
 #
 #   BUILDKITE_DEPLOY_MODE=off      upload nothing (the pilot behaviour)
-#   BUILDKITE_DEPLOY_MODE=preview  upload deploy.yml only on non-main branches,
-#                                  where its `if:` selects deploy_preview
-#   BUILDKITE_DEPLOY_MODE=all      upload everywhere (deploy runs on main too)
+#   BUILDKITE_DEPLOY_MODE=preview  upload deploy-preview.yml only on non-main
+#                                  branches
+#   BUILDKITE_DEPLOY_MODE=all      upload by branch (production on main, preview
+#                                  elsewhere)
+#
+# The branch policy (main -> production, other non-dependabot branches ->
+# preview) lives HERE, in the upload decision, not in a step-level `if:`.
+# Buildkite still creates a job object for a step whose `if:` is false; that
+# job gets no agent, has exit_status null and zero log rows, yet is reported
+# with the terminal state `broken`. The result is a phantom "problem" job on an
+# otherwise green build (get_build_failure_summary counts it), which is exactly
+# what the old single deploy.yml produced — a broken `Deploy preview` on every
+# main build. Uploading only the applicable fragment avoids the phantom
+# entirely; this is the same pattern the Lighthouse step already uses.
 #
 # Set it as a pipeline environment variable in the Buildkite UI, or take the
 # default.
@@ -133,6 +144,14 @@ case "$deploy_mode" in
 esac
 
 if [[ "$deploy_upload" == "true" ]]; then
-	echo "Uploading deploy steps (BUILDKITE_DEPLOY_MODE=${deploy_mode})."
-	buildkite-agent pipeline upload "$BUILDKITE_DIR/steps/deploy.yml"
+	if [[ "${BUILDKITE_BRANCH:-}" == "main" ]]; then
+		echo "Uploading the production deploy step (BUILDKITE_DEPLOY_MODE=${deploy_mode})."
+		buildkite-agent pipeline upload "$BUILDKITE_DIR/steps/deploy-production.yml"
+	elif [[ "${BUILDKITE_BRANCH:-}" =~ ^dependabot/ ]]; then
+		# CircleCI's deploy-preview ignored dependabot/**; so does this.
+		echo "dependabot branch — not uploading a deploy step."
+	else
+		echo "Uploading the preview deploy step (BUILDKITE_DEPLOY_MODE=${deploy_mode})."
+		buildkite-agent pipeline upload "$BUILDKITE_DIR/steps/deploy-preview.yml"
+	fi
 fi

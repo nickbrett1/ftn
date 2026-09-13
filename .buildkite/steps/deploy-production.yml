@@ -1,8 +1,12 @@
-# Deploy steps — ported from CircleCI's `deploy` / `deploy-preview` jobs.
+# Production deploy — ported from CircleCI's `deploy` job.
 #
-# Uploaded by .buildkite/bootstrap.sh according to BUILDKITE_DEPLOY_MODE
-# (off | preview | all). The pilot kept these off (D6); once CircleCI was retired
-# this became the only path to production, so preview is enabled first.
+# This file is uploaded by .buildkite/bootstrap.sh ONLY when the branch is
+# `main`. The branch policy lives there, in the upload logic, rather than in a
+# step-level `if:` here: Buildkite still creates a job object for a step whose
+# `if:` is false, and that job — agentless, exit_status null, zero log rows —
+# is reported with the terminal state `broken`, which makes a perfectly green
+# build look like it has a failed job (buildukite_get_build_failure_summary
+# lists it as a problem job). Not uploading the step at all avoids the phantom.
 #
 # Divergences from CircleCI, all forced by the platform move:
 #   * the `build` workspace (persist_to_workspace / attach_workspace) is the
@@ -16,11 +20,10 @@
 steps:
   - label: ":rocket: Deploy (production)"
     key: deploy
-    agents: &agent-queue
+    agents:
       queue: mac-studio-linux
     depends_on:
       - code_test
-    if: build.branch == "main"
     plugins:
       - artifacts#v1.9.4:
           download:
@@ -82,38 +85,3 @@ steps:
         else
           echo "⚠️ NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
         fi
-
-  - label: ":rocket: Deploy preview"
-    key: deploy_preview
-    agents: *agent-queue
-    depends_on:
-      - code_test
-    # CircleCI: branches ignore main and dependabot/**.
-    if: build.branch != "main" && build.branch !~ /^dependabot\//
-    plugins:
-      - artifacts#v1.9.4:
-          download:
-            - "webapp/.svelte-kit/**"
-            - "webapp/static/pdf.worker.min.mjs"
-      - docker#v5.13.0:
-          image: "mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847"
-          workdir: /workdir
-          environment:
-            - DOPPLER_TOKEN
-            - DOPPLER_PROJECT
-            - DOPPLER_ENVIRONMENT
-    env:
-      DOPPLER_PROJECT: webapp
-      DOPPLER_ENVIRONMENT: stg
-      SENTRY_ORG: nick-brett
-      SENTRY_PROJECT: bem-backend
-      SENTRY_ENVIRONMENT: preview
-    commands:
-      - bash .buildkite/scripts/install-doppler-cli.sh
-      - CF_DOPPLER_CONFIG=stg . .buildkite/scripts/export-cloudflare-env.sh
-      - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
-      - apt-get update && apt-get install -y --no-install-recommends jq
-      - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
-      - chmod +x ./webapp/scripts/sync-doppler-secrets.sh
-      - ./webapp/scripts/sync-doppler-secrets.sh --project webapp --config stg --env preview
-      - (cd webapp && npm run deploy-preview)

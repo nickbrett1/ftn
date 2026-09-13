@@ -1,7 +1,9 @@
 /**
  * @fileoverview Regression guards for this repo's own Buildkite deploy step
- * (`.buildkite/steps/deploy.yml`), which notifies ntfy on a successful
- * production deploy.
+ * (`.buildkite/steps/deploy-production.yml`), which notifies ntfy on a
+ * successful production deploy. The step used to live in a shared deploy.yml
+ * gated by a step-level `if:`; it is now uploaded only on main (see
+ * buildkite-deploy-steps.test.js for the split itself).
  *
  * Two bugs surfaced after the CircleCI -> Buildkite port and are pinned here:
  *
@@ -23,7 +25,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const deployYmlPath = path.resolve(__dirname, '..', '..', '.buildkite', 'steps', 'deploy.yml');
+const deployYmlPath = path.resolve(
+	__dirname,
+	'..',
+	'..',
+	'.buildkite',
+	'steps',
+	'deploy-production.yml'
+);
 
 const deployYml = fs.readFileSync(deployYmlPath, 'utf8');
 // Comments may legitimately discuss the forbidden forms, so only executable
