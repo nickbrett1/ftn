@@ -27,7 +27,7 @@ show_usage() {
     echo "Usage: $0 [DATABASE_NAME]"
     echo ""
     echo "Arguments:"
-    echo "  DATABASE_NAME    Database to sync (wdi, ccbilling, genproj, or 'all')"
+    echo "  DATABASE_NAME    Database to sync (wdi, ccbilling, api-keys, or 'all')"
     echo "                   Default: 'all' - syncs both databases"
     echo ""
     echo "Examples:"
@@ -35,7 +35,7 @@ show_usage() {
     echo "  $0 all               # Sync both wdi and ccbilling"
     echo "  $0 ccbilling         # Sync only ccbilling database and R2"
     echo "  $0 wdi               # Sync only wdi database and R2"
-		echo "  $0 genproj           # Sync only genproj database and R2"
+		echo "  $0 api-keys           # Sync only api-keys database and R2"
     echo ""
     echo "This script:"
     echo "  1. Syncs D1 database(s) from production to local"
@@ -147,9 +147,9 @@ if [ "$DB_TARGET" = "-h" ] || [ "$DB_TARGET" = "--help" ]; then
 fi
 
 # Validate database name
-if [[ "$DB_TARGET" != "all" && "$DB_TARGET" != "wdi" && "$DB_TARGET" != "ccbilling" && "$DB_TARGET" != "genproj" ]]; then
+if [[ "$DB_TARGET" != "all" && "$DB_TARGET" != "wdi" && "$DB_TARGET" != "ccbilling" && "$DB_TARGET" != "api-keys" ]]; then
     print_error "Invalid database name '$DB_TARGET'."
-    echo "Valid options are: all, wdi, ccbilling, genproj"
+    echo "Valid options are: all, wdi, ccbilling, api-keys"
     echo ""
     show_usage
     exit 1
@@ -177,7 +177,7 @@ if [[ "$DB_TARGET" == "all" ]]; then
     echo ""
     sync_database "ccbilling"
     echo ""
-    sync_database "genproj"
+    sync_database "api-keys"
     echo ""
 else
     sync_database "$DB_TARGET"
@@ -193,7 +193,7 @@ print_step "Verifying"
 if [[ "$DB_TARGET" == "all" ]]; then
     verify_sync "wdi"
     verify_sync "ccbilling"
-    verify_sync "genproj"
+    verify_sync "api-keys"
 else
     verify_sync "$DB_TARG
 ET"

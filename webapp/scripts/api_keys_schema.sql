@@ -1,7 +1,7 @@
 -- API Keys D1 Database Schema
 --
 -- Usage:
--- 1. Create a new D1 database in Cloudflare (e.g., named 'genproj') via the dashboard or Wrangler CLI.
+-- 1. Create a new D1 database in Cloudflare (e.g., named 'api-keys') via the dashboard or Wrangler CLI.
 -- 2. Run this SQL to initialize the schema (can use the Cloudflare dashboard, Wrangler, or D1 CLI).
 --
 -- This file is for initial setup, not for migration from production data.

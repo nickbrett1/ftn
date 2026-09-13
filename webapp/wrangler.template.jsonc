@@ -37,11 +37,11 @@
 			"preview_database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 		},
 		{
-			// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+			// PAT/API-key store (table ApiKeys).
 			"binding": "API_KEYS_DB",
-			"database_name": "genproj",
-			"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
-			"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
+			"database_name": "api-keys",
+			"database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER",
+			"preview_database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER"
 		}
 	],
 	"r2_buckets": [
@@ -82,11 +82,11 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					// PAT/API-key store (table ApiKeys).
 					"binding": "API_KEYS_DB",
-					"database_name": "genproj",
-					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
-					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
+					"database_name": "api-keys",
+					"database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
@@ -127,11 +127,11 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					// PAT/API-key store (table ApiKeys).
 					"binding": "API_KEYS_DB",
-					"database_name": "genproj",
-					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
-					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
+					"database_name": "api-keys",
+					"database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
@@ -172,11 +172,11 @@
 					"database_id": "D1_CCBILLING_DATABASE_ID_PLACEHOLDER"
 				},
 				{
-					// PAT/API-key store (table ApiKeys). The D1 database is still named "genproj" (historical).
+					// PAT/API-key store (table ApiKeys).
 					"binding": "API_KEYS_DB",
-					"database_name": "genproj",
-					"database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER",
-					"preview_database_id": "D1_GENPROJ_DATABASE_ID_PLACEHOLDER"
+					"database_name": "api-keys",
+					"database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER",
+					"preview_database_id": "D1_API_KEYS_DATABASE_ID_PLACEHOLDER"
 				}
 			],
 			"r2_buckets": [
