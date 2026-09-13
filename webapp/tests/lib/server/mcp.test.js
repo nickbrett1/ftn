@@ -51,20 +51,6 @@ vi.mock('$lib/server/token-service.js', () => {
 	};
 });
 
-vi.mock('$lib/server/project-generator.js', () => {
-	return {
-		ProjectGeneratorService: class {
-			constructor() {}
-			async generateProject(context) {
-				if (context.projectName === 'error_proj') {
-					return { success: false, error: 'Generation failed' };
-				}
-				return { success: true, repository: { htmlUrl: 'https://github.com/test/test-repo' } };
-			}
-		}
-	};
-});
-
 import { createMcpServer } from '../../../src/lib/server/mcp.js';
 import * as shop from '../../../src/lib/server/shop.js';
 
@@ -91,7 +77,7 @@ describe('mcpServer', () => {
 
 		const result = await listToolsHandler({ method: 'tools/list', jsonrpc: '2.0', id: 1 });
 		expect(result.tools).toBeInstanceOf(Array);
-		expect(result.tools.length).toBe(9);
+		expect(result.tools.length).toBe(7);
 		expect(result.tools[0].name).toBe('list_products');
 	});
 
@@ -184,68 +170,6 @@ describe('mcpServer', () => {
 		});
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('Purchase failed');
-	});
-
-	it('should call list_genproj_capabilities tool', async () => {
-		const result = await callToolHandler({
-			method: 'tools/call',
-			jsonrpc: '2.0',
-			id: 9,
-			params: { name: 'list_genproj_capabilities', arguments: {} }
-		});
-		expect(result.content[0].type).toBe('text');
-		const caps = JSON.parse(result.content[0].text);
-		expect(Array.isArray(caps)).toBe(true);
-	});
-
-	it('should call generate_project tool successfully', async () => {
-		const result = await callToolHandler({
-			method: 'tools/call',
-			jsonrpc: '2.0',
-			id: 10,
-			params: {
-				name: 'generate_project',
-				arguments: { name: 'test_proj', selectedCapabilities: [] }
-			}
-		});
-		expect(result.content[0].type).toBe('text');
-		const data = JSON.parse(result.content[0].text);
-		expect(data.message).toBe('Project generated successfully');
-		expect(data.repositoryUrl).toBe('https://github.com/test/test-repo');
-	});
-
-	it('should throw error when generate_project tool fails', async () => {
-		const result = await callToolHandler({
-			method: 'tools/call',
-			jsonrpc: '2.0',
-			id: 11,
-			params: {
-				name: 'generate_project',
-				arguments: { name: 'error_proj', selectedCapabilities: [] }
-			}
-		});
-		expect(result.isError).toBe(true);
-		expect(result.content[0].text).toContain('Generation failed');
-	});
-
-	it('should throw error when context is missing for generate_project', async () => {
-		const serverNoContext = createMcpServer({});
-		let handler;
-		for (const [key, value] of serverNoContext._requestHandlers.entries()) {
-			if (key === 'tools/call') handler = value;
-		}
-
-		const result = await handler({
-			method: 'tools/call',
-			jsonrpc: '2.0',
-			id: 12,
-			params: {
-				name: 'generate_project',
-				arguments: { name: 'test_proj', selectedCapabilities: [] }
-			}
-		});
-		expect(result.isError).toBe(true);
-		expect(result.content[0].text).toContain('Missing authentication context');
 	});
 
 	describe('ccbilling tools', () => {

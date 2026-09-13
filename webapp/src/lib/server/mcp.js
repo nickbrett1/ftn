@@ -2,9 +2,6 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { products } from '$lib/data/products.js';
 import { getProductById, processTestPurchase, createStripeSession } from './shop.js';
-import { capabilities } from '$lib/config/capabilities.js';
-import { ProjectGeneratorService } from '$lib/server/project-generator.js';
-import { buildAuthTokensFromStored, buildProjectContext } from '$lib/server/genproj-api-utils.js';
 
 function getCcbillingDb(context) {
 	const db = context.platform?.env?.CCBILLING_DB || context.platform?.env?.DB;
@@ -61,43 +58,6 @@ export function createMcpServer(context = {}) {
 							productId: { type: 'string', description: 'ID of the product' }
 						},
 						required: ['productId']
-					}
-				},
-				{
-					name: 'list_genproj_capabilities',
-					description:
-						'Returns the list of supported capabilities that can be injected into a generated project.',
-					inputSchema: { type: 'object', properties: {} }
-				},
-				{
-					name: 'generate_project',
-					description: 'Triggers the generation of a new repository with selected capabilities.',
-					inputSchema: {
-						type: 'object',
-						properties: {
-							name: { type: 'string', description: 'Name of the project' },
-							selectedCapabilities: {
-								type: 'array',
-								items: { type: 'string' },
-								description: 'List of capability IDs to include'
-							},
-							repositoryUrl: {
-								type: 'string',
-								description: 'Target GitHub repository URL (optional)'
-							},
-							overwrite: {
-								type: 'boolean',
-								description:
-									'Set true to generate into an existing repository (repo must exist / be pre-created for private repos). Without it, generation fails with REPOSITORY_EXISTS.'
-							},
-							resolutions: { type: 'object', description: 'Conflict resolutions (optional)' },
-							configuration: {
-								type: 'object',
-								description:
-									'Capability-specific configuration, e.g. { "docker-container": { "publishPort": "127.0.0.1:3000:3000", "dataMounts": [{ "hostPath": "/volume1/data", "containerPath": "/data", "readOnly": true }], "hostname": "nas.local", "aptPackages": ["iproute2", "curl"], "envVars": ["MCP_PORT=3001"], "command": ["/usr/local/bin/entrypoint.sh"], "healthcheck": "http:/healthz" }, "language": "python" } — language is normally derived from the devcontainer-* capability (optional)'
-							}
-						},
-						required: ['name', 'selectedCapabilities']
 					}
 				},
 				{
@@ -225,58 +185,6 @@ export function createMcpServer(context = {}) {
 					const result = await createStripeSession(toolArguments?.productId, origin);
 					return {
 						content: [{ type: 'text', text: JSON.stringify(result) }]
-					};
-				}
-				case 'list_genproj_capabilities': {
-					return {
-						content: [{ type: 'text', text: JSON.stringify(capabilities) }]
-					};
-				}
-				case 'generate_project': {
-					if (!context.userEmail) {
-						throw new Error('Missing authentication context for genproj tools.');
-					}
-					const {
-						name: projectName,
-						selectedCapabilities,
-						repositoryUrl,
-						overwrite,
-						resolutions,
-						configuration
-					} = toolArguments;
-
-					const authTokens = buildAuthTokensFromStored();
-
-					const service = new ProjectGeneratorService(authTokens);
-					const projectContext = buildProjectContext(
-						{
-							name: projectName,
-							selectedCapabilities,
-							repositoryUrl,
-							overwrite,
-							resolutions,
-							configuration
-						},
-						context.userEmail,
-						authTokens
-					);
-
-					const result = await service.generateProject(projectContext);
-					if (!result.success) {
-						throw new Error(result.error || 'Project generation failed');
-					}
-
-					return {
-						content: [
-							{
-								type: 'text',
-								text: JSON.stringify({
-									message: 'Project generated successfully',
-									repositoryUrl: result.repository?.htmlUrl || '',
-									externalServices: result.externalServices || {}
-								})
-							}
-						]
 					};
 				}
 				case 'list_ccbilling_transactions': {
