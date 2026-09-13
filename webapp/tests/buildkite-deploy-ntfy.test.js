@@ -68,4 +68,10 @@ describe('ftn deploy step - ntfy notification', () => {
 		expect(deployYml).toContain('- BUILDKITE_BRANCH');
 		expect(deployYml).toContain('- BUILDKITE_COMMIT');
 	});
+
+	it('includes the commit subject in the message', () => {
+		// CircleCI's notification carried the commit subject; the Buildkite
+		// message should too.
+		expect(deployYml).toContain('git log');
+	});
 });

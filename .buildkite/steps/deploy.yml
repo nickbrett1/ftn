@@ -73,7 +73,10 @@ steps:
           # rejects that expansion with "Bad substitution" and exits 2 — failing
           # an otherwise-successful deploy (build 71).
           SHORT="$$(echo "$$BUILDKITE_COMMIT" | cut -c1-7)"
-          curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $$SHORT" "$$NTFY_URL"
+          # Commit subject, like CircleCI's notification carried. The repo is
+          # checked out at /workdir; degrade to empty if git is unavailable.
+          COMMIT_MSG="$$(git log -1 --pretty=%s "$$BUILDKITE_COMMIT" 2>/dev/null || true)"
+          curl -s -d "🚀 [ftn] Production deployment successful! Branch: $${BUILDKITE_BRANCH}, Commit: $$SHORT $$COMMIT_MSG" "$$NTFY_URL"
         else
           echo "⚠️ NTFY_URL_CIRCLECI_BUILD not found — skipping notification."
         fi
