@@ -5,8 +5,9 @@ import { logger } from '$lib/utils/logging';
 /**
  * Proxies to genproj's conflict-check endpoint.
  *
- * Authenticated for the same reason as generate: genproj checks conflicts
- * against the user's own repositories.
+ * Authenticated for the same reason as generate: the shared service secret
+ * proves the call came from ftn. genproj checks conflicts using the GitHub
+ * credentials of the deployment, not of the signed-in user.
  */
 export async function POST(event) {
 	const { request } = event;
