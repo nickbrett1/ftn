@@ -1,6 +1,7 @@
 // webapp/tests/routes/projects/genproj/page.server.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { load } from '../../../../src/routes/projects/genproj/+page.server.js';
+import { fetchCatalog } from '$lib/server/catalog.js';
 
 // Mock redirect from @sveltejs/kit
 vi.mock('@sveltejs/kit', async () => {
@@ -18,6 +19,18 @@ vi.mock('@sveltejs/kit', async () => {
 	};
 });
 
+// The catalog lives in the genproj service; reaching out to it from a test
+// would make the suite depend on the network.
+vi.mock('$lib/server/catalog.js', () => ({
+	fetchCatalog: vi.fn()
+}));
+
+const CATALOG = {
+	catalogVersion: 'test-version',
+	count: 1,
+	capabilities: [{ id: 'shell-tools', selectedByDefault: true }]
+};
+
 describe('genproj +page.server load', () => {
 	let mockLocals;
 	let mockUrl;
@@ -28,6 +41,7 @@ describe('genproj +page.server load', () => {
 		};
 		mockUrl = new URL('http://localhost/projects/genproj');
 		vi.clearAllMocks();
+		fetchCatalog.mockResolvedValue(CATALOG);
 	});
 
 	it('returns unauthenticated state when user is not logged in', async () => {
@@ -37,7 +51,9 @@ describe('genproj +page.server load', () => {
 			authResult: null,
 			selectedCapabilities: [],
 			projectName: '',
-			repositoryUrl: ''
+			repositoryUrl: '',
+			capabilities: CATALOG.capabilities,
+			catalogVersion: 'test-version'
 		});
 	});
 
@@ -49,8 +65,26 @@ describe('genproj +page.server load', () => {
 			authResult: null,
 			selectedCapabilities: [],
 			projectName: '',
-			repositoryUrl: ''
+			repositoryUrl: '',
+			capabilities: CATALOG.capabilities,
+			catalogVersion: 'test-version'
 		});
+	});
+
+	it('passes the platform through to the catalog service', async () => {
+		const platform = { env: { GENPROJ: {} } };
+		await load({ locals: mockLocals, url: mockUrl, platform });
+		expect(fetchCatalog).toHaveBeenCalledWith(platform);
+	});
+
+	it('does not fail the page when the catalog service is down', async () => {
+		fetchCatalog.mockRejectedValue(new Error('genproj catalog request failed with status 503'));
+
+		const result = await load({ locals: mockLocals, url: mockUrl });
+
+		expect(result.capabilities).toEqual([]);
+		expect(result.catalogVersion).toBeNull();
+		expect(result.isAuthenticated).toBe(false);
 	});
 
 	it('parses authResult from URL search params', async () => {

@@ -124,14 +124,11 @@
 		logger.info('PreviewMode continue generation requested');
 	}
 
-	// Map devcontainer capabilities to SonarCloud languages
-	function getSonarCloudLanguageForDevcontainer(devcontainerId) {
-		const mapping = {
-			'devcontainer-node': 'javascript',
-			'devcontainer-python': 'python',
-			'devcontainer-java': 'java'
-		};
-		return mapping[devcontainerId];
+	// What a capability provides is declared by the catalog (`provides`); this
+	// used to be a hardcoded devcontainer → SonarCloud language map here.
+	function getSonarCloudLanguageForDevcontainer(capabilityId) {
+		const capability = capabilities.find((c) => c.id === capabilityId);
+		return capability?.provides?.find((entry) => entry.type === 'sonarcloud.language')?.value;
 	}
 
 	function isDependencyStillRequired(dependencyId) {
@@ -320,13 +317,13 @@
 			}
 		}
 
-		// Ensure core capabilities are selected by default
+		// Ensure the capabilities the catalog pre-selects are selected by default
 		if (capabilities && capabilities.length > 0) {
-			const coreCapabilities = capabilities.filter((c) => c.category === 'core').map((c) => c.id);
+			const defaultCapabilities = capabilities.filter((c) => c.selectedByDefault).map((c) => c.id);
 
-			for (const coreId of coreCapabilities) {
-				if (!selectedCapabilities.includes(coreId)) {
-					selectedCapabilities = [...selectedCapabilities, coreId];
+			for (const defaultId of defaultCapabilities) {
+				if (!selectedCapabilities.includes(defaultId)) {
+					selectedCapabilities = [...selectedCapabilities, defaultId];
 				}
 			}
 		}
