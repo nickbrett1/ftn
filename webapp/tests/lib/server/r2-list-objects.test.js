@@ -21,8 +21,7 @@ describe('r2 list objects route', () => {
 		platform: {
 			env: environment || {
 				R2_CCBILLING: { list: listMock },
-				R2_WDI: { list: listMock },
-				R2_GENPROJ_TEMPLATES: { list: listMock }
+				R2_WDI: { list: listMock }
 			}
 		}
 	});
@@ -61,18 +60,6 @@ describe('r2 list objects route', () => {
 			expect(response.status).toBe(200);
 			const body = await response.json();
 			expect(body.bucket).toBe('wdi');
-		});
-
-		it('lists objects from genproj-templates bucket', async () => {
-			const { GET } = await loadModule();
-			listMock.mockResolvedValue({ objects: [], truncated: false });
-
-			const event = buildEvent({ bucket: 'genproj-templates' });
-			const response = await GET(event);
-
-			expect(response.status).toBe(200);
-			const body = await response.json();
-			expect(body.bucket).toBe('genproj-templates');
 		});
 
 		it('handles query parameters (prefix, limit)', async () => {
