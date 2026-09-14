@@ -7,7 +7,9 @@
  * In deployed environments we reach it over the `GENPROJ` service binding:
  * no DNS lookup, no egress, and no dependency on the public route. Locally
  * (`vite dev`, and tests) there is no binding, so we fall back to the public
- * workers.dev origin, which serves the same catalog with the same ETag.
+ * workers.dev origin, which serves the same catalog. That route is cached for a
+ * short time and carries no validator, so a client that wants to know whether
+ * its copy is stale re-fetches it.
  */
 
 /** Public origin of the catalog service. Used when the binding is absent. */
