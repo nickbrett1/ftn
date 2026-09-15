@@ -650,6 +650,7 @@
 								{capabilities}
 								{selectedCapabilities}
 								{configuration}
+								{projectName}
 								on:capabilityToggle={handleCapabilityToggle}
 								on:configurationChange={handleConfigurationChange}
 							/>
