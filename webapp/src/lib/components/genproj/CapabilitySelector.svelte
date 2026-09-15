@@ -321,7 +321,6 @@
 	function getColorClassForCapability(capability) {
 		return colorRegistry[capability?.iconColor] || 'text-gray-400';
 	}
-
 </script>
 
 <div class="space-y-12">
