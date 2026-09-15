@@ -273,63 +273,55 @@
 			});
 	}
 
+	// Icon and colour are catalog data, not client hardcodes.
+	//
+	// The catalog names an `icon` / `iconColor` *token* per capability; these
+	// registries map token -> imported glyph and token -> Tailwind class. A new
+	// capability that reuses a token therefore needs no change here at all.
+	// Only a genuinely new glyph does, because Svelte icons are compiled-in
+	// components and cannot arrive over JSON. The `|| GlobeSolid` fallback keeps
+	// an older catalog (no tokens) rendering instead of crashing.
+	const iconRegistry = {
+		robot: RobotSolid,
+		code: CodeSolid,
+		pencil: PenToSquareRegular,
+		file: FileAltSolid,
+		python: PythonBrands,
+		node: NodeJsBrands,
+		java: JavaBrands,
+		rust: RustBrands,
+		docker: DockerBrands,
+		circle: CircleNotchSolid,
+		github: GithubBrands,
+		cloudflare: CloudflareBrands,
+		cloud: CloudSolid,
+		play: PlayCircleSolid,
+		secret: UserSecretSolid,
+		chart: ChartLineSolid,
+		globe: GlobeSolid
+	};
+	const colorRegistry = {
+		blue: 'text-blue-400',
+		gray: 'text-gray-300',
+		pink: 'text-pink-400',
+		yellow: 'text-yellow-400',
+		green: 'text-green-500',
+		red: 'text-red-500',
+		orange: 'text-orange-400',
+		cyan: 'text-cyan-400',
+		purple: 'text-purple-400'
+	};
+
 	// Helper function to get the icon component for a capability
-	function getIconForCapability(capabilityId) {
-		const iconMap = {
-			'coding-agents': RobotSolid,
-			'shell-tools': CodeSolid,
-			'editor-tools': PenToSquareRegular,
-			'spec-kit': FileAltSolid,
-			'devcontainer-python': PythonBrands,
-			'devcontainer-node': NodeJsBrands,
-			'devcontainer-java': JavaBrands,
-			'devcontainer-rust': RustBrands,
-			docker: DockerBrands,
-			circleci: CircleNotchSolid,
-			'github-release': GithubBrands,
-			'cloudflare-wrangler': CloudflareBrands,
-			'docker-container': DockerBrands,
-			sonarcloud: CloudSolid,
-			sonarlint: CodeSolid,
-			playwright: PlayCircleSolid,
-			doppler: UserSecretSolid,
-			'google-cloud': CloudSolid,
-			dependabot: RobotSolid,
-			'lighthouse-ci': ChartLineSolid,
-			dagster: GlobeSolid,
-			'xcode-development': CodeSolid
-		};
-		return iconMap[capabilityId] || GlobeSolid;
+	function getIconForCapability(capability) {
+		return iconRegistry[capability?.icon] || GlobeSolid;
 	}
 
 	// Helper function to get the color class for a capability
-	function getColorClassForCapability(capabilityId) {
-		const colorMap = {
-			'coding-agents': 'text-blue-400',
-			'shell-tools': 'text-gray-300',
-			'editor-tools': 'text-blue-300',
-			'spec-kit': 'text-pink-400',
-			'devcontainer-python': 'text-yellow-400',
-			'devcontainer-node': 'text-green-500',
-			'devcontainer-java': 'text-red-500',
-			'devcontainer-rust': 'text-orange-400',
-			docker: 'text-blue-500',
-			circleci: 'text-green-400',
-			'github-release': 'text-gray-300',
-			'cloudflare-wrangler': 'text-orange-500',
-			'docker-container': 'text-cyan-400',
-			sonarcloud: 'text-orange-400',
-			sonarlint: 'text-red-400',
-			playwright: 'text-green-500',
-			doppler: 'text-blue-400',
-			'google-cloud': 'text-blue-500',
-			dependabot: 'text-blue-500',
-			'lighthouse-ci': 'text-orange-500',
-			dagster: 'text-purple-400',
-			'xcode-development': 'text-gray-300'
-		};
-		return colorMap[capabilityId] || 'text-gray-400';
+	function getColorClassForCapability(capability) {
+		return colorRegistry[capability?.iconColor] || 'text-gray-400';
 	}
+
 </script>
 
 <div class="space-y-12">
@@ -386,8 +378,8 @@
 								<div class="flex items-start pr-10">
 									<div class="p-3 rounded-lg bg-gray-900 mr-4 shrink-0">
 										<svelte:component
-											this={getIconForCapability(capability.id)}
-											class="w-8 h-8 {getColorClassForCapability(capability.id)}"
+											this={getIconForCapability(capability)}
+											class="w-8 h-8 {getColorClassForCapability(capability)}"
 										/>
 									</div>
 									<div>
