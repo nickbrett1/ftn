@@ -69,6 +69,8 @@
 	export let capabilities = [];
 	export let selectedCapabilities = [];
 	export let configuration = {};
+	// Only used to show a default that depends on it (see displayDefault).
+	export let projectName = '';
 
 	// Local state for expanded cards (to show benefits)
 	let expandedCapabilities = {};
@@ -221,6 +223,39 @@
 		if (!camelCaseString) return '';
 		const spacedString = camelCaseString.replaceAll(/([A-Z])/g, ' $1');
 		return spacedString.charAt(0).toUpperCase() + spacedString.slice(1);
+	}
+
+	// A catalog `default` may carry the `{{projectName}}` token, because some
+	// defaults ARE the project's name - the launcher the payload provides and
+	// the directory it installs into. Resolved for display.
+	function displayDefault(property) {
+		const value = property?.default;
+		if (typeof value !== 'string') return '';
+		return value.replaceAll('{{projectName}}', projectName || 'your-project');
+	}
+
+	// A default that names the project is shown as a hint rather than put in the
+	// box, so an untouched field still means "whatever the project is called".
+	// Submitting it would freeze the name: rename the project afterwards and the
+	// launcher would look for a binary the release does not contain.
+	function isDerivedDefault(property) {
+		return typeof property?.default === 'string' && property.default.includes('{{');
+	}
+
+	// The label to print for an enum value. The catalog names its options
+	// (`enumLabels`) so a form can offer "macOS (Apple silicon)" while the value
+	// submitted stays `aarch64-apple-darwin` - the identifier the build takes.
+	// The map sits beside the `enum` it names, which for an array is on `items`.
+	function optionLabel(property, option) {
+		const labels = property?.enumLabels || property?.items?.enumLabels || {};
+		return labels[option] || option;
+	}
+
+	// Whether that name is worth printing *in addition to* the value. It is for
+	// a release target: a person picks "macOS (Apple silicon)", and the triple
+	// underneath is the part they have to paste into a bug report.
+	function hasOptionLabel(property, option) {
+		return optionLabel(property, option) !== option;
 	}
 
 	// Helper function to check if a capability is required by another selected capability
@@ -471,7 +506,7 @@
 															handleConfigurationChange(capability.id, field, e.target.value)}
 													>
 														{#each property.enum as option}
-															<option value={option}>{option}</option>
+															<option value={option}>{optionLabel(property, option)}</option>
 														{/each}
 													</select>
 												{:else if property.type === 'boolean'}
@@ -510,7 +545,14 @@
 																		handleConfigurationChange(capability.id, field, newArray);
 																	}}
 																/>
-																<span class="ml-1.5 text-gray-300 text-xs">{option}</span>
+																<span class="ml-1.5 text-gray-300 text-xs"
+																	>{optionLabel(property, option)}</span
+																>
+																{#if hasOptionLabel(property, option)}
+																	<span class="ml-1.5 text-gray-500 text-[10px] font-mono"
+																		>{option}</span
+																	>
+																{/if}
 															</label>
 														{/each}
 													</div>
@@ -597,7 +639,9 @@
 														type="text"
 														id="{capability.id}-{field}"
 														class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-														value={configuration[capability.id]?.[field] || property.default || ''}
+														value={configuration[capability.id]?.[field] ??
+															(isDerivedDefault(property) ? '' : displayDefault(property))}
+														placeholder={isDerivedDefault(property) ? displayDefault(property) : ''}
 														onchange={(e) =>
 															handleConfigurationChange(capability.id, field, e.target.value)}
 													/>
