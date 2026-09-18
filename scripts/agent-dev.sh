@@ -57,6 +57,12 @@ LAUNCHER_URL="https://github.com/${REPO_SLUG}/releases/latest/download/fetch-lau
 MANIFEST_URL="${MANIFEST_URL:-https://github.com/${REPO_SLUG}/releases/latest/download/manifest.json}"
 TIMEOUT="${TIMEOUT:-10}"
 
+# Where a secret the repo's own config does not define is looked for: the shared
+# Doppler project every container can read. Both are overridable so a host can
+# point at a different one without editing this file.
+COMMON_PROJECT="${A2A_GOOSE_COMMON_PROJECT:-common}"
+COMMON_CONFIG="${A2A_GOOSE_COMMON_CONFIG:-prd}"
+
 CARD_PORT=10001
 ACP_URL="http://127.0.0.1:3284/acp"
 LITELLM_BASE_URL="http://nas:4000"
@@ -133,8 +139,18 @@ resolve_tailnet_name() {
 # network, key absent) so a caller can tell "no value" from "not fetched".
 read_secret() {
   local key="$1" value=""
-  if command -v doppler >/dev/null 2>&1; then
-    value="$(doppler secrets get "${key}" --plain 2>/dev/null || true)"
+  command -v doppler >/dev/null 2>&1 || {
+    printf ''
+    return 0
+  }
+  # The repo's own config first, so a repo that wants its own token wins; then
+  # the shared `common` project, which is where a token every container needs
+  # lives. Without the fallback each repo would have to carry its own copy.
+  value="$(doppler secrets get "${key}" --plain 2>/dev/null || true)"
+  if [ -z "${value}" ]; then
+    value="$(
+      doppler secrets get "${key}" --project "${COMMON_PROJECT}" --config "${COMMON_CONFIG}" --plain 2>/dev/null || true
+    )"
   fi
   printf '%s' "${value}"
 }
@@ -152,24 +168,34 @@ write_env_file() {
       content="${content}${key}=${value}"$'\n'
     fi
   done
+  local written="${ENV_FILE}"
   if [ -z "${content}" ]; then
     if [ -f "${ENV_FILE}" ]; then
       log "Doppler returned no secrets - keeping the existing ${ENV_FILE}"
       chmod 600 "${ENV_FILE}" 2>/dev/null || true
-      return 0
+    else
+      umask 077
+      : >"${ENV_FILE}"
+      chmod 600 "${ENV_FILE}" 2>/dev/null || true
     fi
+  else
     umask 077
-    : >"${ENV_FILE}"
+    printf '%s' "${content}" >"${ENV_FILE}"
     chmod 600 "${ENV_FILE}" 2>/dev/null || true
-    loud "No secrets were available from Doppler, so ${ENV_FILE} is empty." \
-      "The agent will start without its bearer/registry tokens and will likely" \
-      "fail to register. Run 'doppler login' and retry when you can."
-    return 0
+    log "wrote ${ENV_FILE} (mode 0600)"
   fi
-  umask 077
-  printf '%s' "${content}" >"${ENV_FILE}"
-  chmod 600 "${ENV_FILE}" 2>/dev/null || true
-  log "wrote ${ENV_FILE} (mode 0600)"
+
+  # a2a-goose refuses to start without a bearer token, so a start that is certain
+  # to be refused is not attempted: the reason is the message, not a log line
+  # discovered afterwards.
+  if ! grep -q '^A2A_GOOSE_BEARER_TOKEN=' "${written}" 2>/dev/null; then
+    loud "The agent was NOT started: no A2A_GOOSE_BEARER_TOKEN is available." \
+      "It is looked for in this repo's Doppler config, then in ${COMMON_PROJECT}/${COMMON_CONFIG}." \
+      "The project is still usable without an agent - run 'doppler login', check that" \
+      "you can read ${COMMON_PROJECT}/${COMMON_CONFIG}, and retry when you can."
+    return 1
+  fi
+  return 0
 }
 
 # The agent's config, schema = a2a-goose config/config.example.yaml, written to
@@ -258,7 +284,7 @@ cmd_start() {
     return 0
   fi
 
-  write_env_file
+  write_env_file || return 0
   write_config_file
 
   if is_running; then
