@@ -110,6 +110,10 @@ Environment passthrough:
   A2A_GOOSE_CARD_ADDRESS  default: this container's tailnet IPv4 (the address the
                      card advertises; it must be one the LiteLLM proxy can
                      resolve, so an IP unless the proxy runs MagicDNS)
+  A2A_GOOSE_PROVIDER_PROJECT / _CONFIG
+                     default: goose/prd - where goose's own provider settings
+                     (GOOSE_PROVIDER, GOOSE_MODEL, the API key) are read from
+  GOOSE_DISABLE_KEYRING  default: 1 - there is no keyring in a container
 
 To start it automatically with the container, add this to
 .devcontainer/post-start-setup.sh:
@@ -176,6 +180,17 @@ resolve_card_address() {
   return 0
 }
 
+# goose does not only need the agent's secrets - it needs its OWN provider
+# settings, and this script is what starts its goose. The devcontainer's shell
+# reaches goose through a Doppler wrapper (`doppler run --project goose --config
+# prd -- goose`, see ~/.zshrc), which is where GOOSE_PROVIDER and the model come
+# from; the agent starts goose directly, so it reads the same project here rather
+# than inventing a second source. Without these the agent registers happily and
+# every turn fails with "Failed to resolve provider: Configuration value not
+# found: GOOSE_PROVIDER" - measured on genproj-dev, 2026-09-18.
+PROVIDER_PROJECT="${A2A_GOOSE_PROVIDER_PROJECT:-goose}"
+PROVIDER_CONFIG="${A2A_GOOSE_PROVIDER_CONFIG:-prd}"
+
 # One secret, straight out of Doppler. Empty on any failure (not logged in, no
 # network, key absent) so a caller can tell "no value" from "not fetched".
 read_secret() {
@@ -196,6 +211,24 @@ read_secret() {
   printf '%s' "${value}"
 }
 
+# One of goose's own settings: the provider project first (the wrapper's source
+# of truth), then the same place the agent's secrets come from, so a repo that
+# carries its own goose provider still wins over the shared one.
+read_provider_secret() {
+  local key="$1" value=""
+  command -v doppler >/dev/null 2>&1 || {
+    printf ''
+    return 0
+  }
+  value="$(
+    doppler secrets get "${key}" --project "${PROVIDER_PROJECT}" --config "${PROVIDER_CONFIG}" --plain 2>/dev/null || true
+  )"
+  if [ -z "${value}" ]; then
+    value="$(read_secret "${key}")"
+  fi
+  printf '%s' "${value}"
+}
+
 # $ENV_FILE holds ONLY secrets, mode 0600, and is sourced by the launcher with
 # `set -a`. It is never carried on a command line and never placed in
 # `containerEnv`. A failed fetch keeps whatever is already there - it must not
@@ -209,6 +242,17 @@ write_env_file() {
       content="${content}${key}=${value}"$'\n'
     fi
   done
+  # goose's own provider settings, for the goose this script starts.
+  for key in GOOSE_PROVIDER GOOSE_MODEL GOOSE_PROVIDER__API_KEY LITELLM_HOST LITELLM_API_KEY; do
+    value="$(read_provider_secret "${key}")"
+    if [ -n "${value}" ]; then
+      content="${content}${key}=${value}"$'\n'
+    fi
+  done
+  # There is no keyring in a container, so goose must not go looking for the
+  # provider key in one: the env file is the store. An explicit value in the
+  # environment wins, so an operator can turn it back on.
+  content="${content}GOOSE_DISABLE_KEYRING=${GOOSE_DISABLE_KEYRING:-1}"$'\n'
   local written="${ENV_FILE}"
   if [ -z "${content}" ]; then
     if [ -f "${ENV_FILE}" ]; then
@@ -235,6 +279,17 @@ write_env_file() {
       "The project is still usable without an agent - run 'doppler login', check that" \
       "you can read ${COMMON_PROJECT}/${COMMON_CONFIG}, and retry when you can."
     return 1
+  fi
+
+  # Not fatal - goose may still find a provider in its own config file - but it is
+  # the difference between an agent that answers and one that registers and then
+  # refuses every turn, which is worth saying out loud at start time.
+  if ! grep -q '^GOOSE_PROVIDER=' "${written}" 2>/dev/null; then
+    loud "The agent is starting with no goose provider configured." \
+      "No GOOSE_PROVIDER could be read from ${PROVIDER_PROJECT}/${PROVIDER_CONFIG}, and this devcontainer's own" \
+      "goose config is extensions-only." \
+      "It will register, and then fail every turn with 'Failed to resolve provider'." \
+      "Fix: run 'doppler login' (or point A2A_GOOSE_PROVIDER_PROJECT / _CONFIG at the right config) and restart."
   fi
   return 0
 }
@@ -425,6 +480,18 @@ cmd_status() {
     printf 'card: http://%s:%s/\n' "${CARD_ADDRESS}" "${CARD_PORT}"
   else
     printf 'card: unknown (no address resolved)\n'
+  fi
+
+  # A registered agent with no provider refuses every turn, so report it beside
+  # the card rather than leaving it for whoever makes the first call.
+  if [ -f "${ENV_FILE}" ]; then
+    local provider
+    provider="$(sed -n 's/^GOOSE_PROVIDER=//p' "${ENV_FILE}" | head -1)"
+    if [ -n "${provider}" ]; then
+      printf 'goose provider: %s\n' "${provider}"
+    else
+      printf 'goose provider: none in %s (turns will fail to resolve one)\n' "${ENV_FILE}"
+    fi
   fi
 
   if [ -f "${LOG_FILE}" ]; then
