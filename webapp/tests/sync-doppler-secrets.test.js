@@ -106,6 +106,8 @@ describe('worker secret exclusions', () => {
 describe('sync-doppler-secrets.sh', () => {
 	let workDir;
 	let recordsDir;
+	let deployedSecretsFile;
+	let commandLog;
 
 	/**
 	 * Wraps a key/value map the way `doppler secrets --json` reports it: each
@@ -124,13 +126,18 @@ describe('sync-doppler-secrets.sh', () => {
 	 * `npx` stubbed on PATH so nothing reaches the network.
 	 * @param {object} [options] Options.
 	 * @param {number} [options.limit] WORKER_VARIABLE_LIMIT to export.
+	 * @param {boolean} [options.brokenList] Make the deployed-secret list unreadable.
 	 * @returns {{status: number, stdout: string}} The exit status and output.
 	 */
-	function runScript({ limit } = {}) {
+	function runScript({ limit, brokenList } = {}) {
 		const env = {
 			...process.env,
 			PATH: `${path.join(workDir, 'bin')}:${process.env.PATH}`,
 			RECORDS_DIR: recordsDir,
+			DEPLOYED_SECRETS_FILE: brokenList
+				? path.join(workDir, 'does-not-exist.txt')
+				: deployedSecretsFile,
+			COMMAND_LOG: commandLog,
 			DOPPLER_TOKEN: ''
 		};
 		delete env.DOPPLER_PROJECT;
@@ -142,15 +149,47 @@ describe('sync-doppler-secrets.sh', () => {
 		}
 
 		try {
+			// The arguments the deploy step passes, so the environment handling is
+			// exercised too — a removal that targeted the wrong Worker would be a
+			// silent no-op otherwise.
 			const stdout = execFileSync(
 				'bash',
-				[path.join(workDir, 'webapp', 'scripts', 'sync-doppler-secrets.sh')],
+				[
+					path.join(workDir, 'webapp', 'scripts', 'sync-doppler-secrets.sh'),
+					'--project',
+					'webapp',
+					'--config',
+					'prd',
+					'--env',
+					'production'
+				],
 				{ env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
 			);
 			return { status: 0, stdout };
 		} catch (error) {
 			return { status: error.status ?? 1, stdout: `${error.stdout ?? ''}${error.stderr ?? ''}` };
 		}
+	}
+
+	/**
+	 * Declares what is already deployed on the Worker, as `versions secret list`
+	 * reports it: one "Secret Name: X" line per key.
+	 * @param {string[]} keys The deployed secret names.
+	 */
+	function setDeployed(keys) {
+		fs.writeFileSync(deployedSecretsFile, keys.map((key) => `Secret Name: ${key}\n`).join(''));
+	}
+
+	/**
+	 * The secrets the script asked wrangler to delete.
+	 * @returns {string[]} The deleted key names.
+	 */
+	function deletedSecrets() {
+		return fs
+			.readFileSync(commandLog, 'utf8')
+			.split('\n')
+			.map((line) => /^wrangler versions secret delete (\S+)/.exec(line)?.[1])
+			.filter(Boolean);
 	}
 
 	/**
@@ -168,6 +207,11 @@ describe('sync-doppler-secrets.sh', () => {
 		workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-doppler-'));
 		recordsDir = path.join(workDir, 'records');
 		fs.mkdirSync(recordsDir, { recursive: true });
+		deployedSecretsFile = path.join(workDir, 'deployed.txt');
+		commandLog = path.join(workDir, 'commands.log');
+		fs.writeFileSync(commandLog, '');
+		// Nothing deployed unless a test says otherwise.
+		setDeployed([]);
 
 		// The script resolves temp files from its own location, so run a copy and
 		// keep the repository working tree untouched.
@@ -192,11 +236,16 @@ case "$*" in
 esac
 `
 		);
-		// A stub npx that keeps each batch instead of uploading it.
+		// A stub npx: it records every call, reports the deployed secrets, and
+		// keeps each batch instead of uploading it.
 		fs.writeFileSync(
 			path.join(binDir, 'npx'),
 			`#!/bin/bash
-cp doppler_secrets_batch_temp.json "$RECORDS_DIR/$(ls "$RECORDS_DIR" | wc -l).json"
+echo "$*" >> "$COMMAND_LOG"
+case "$*" in
+	*"versions secret list"*) cat "$DEPLOYED_SECRETS_FILE" ;;
+	*"versions secret bulk"*) cp doppler_secrets_batch_temp.json "$RECORDS_DIR/$(ls "$RECORDS_DIR" | wc -l).json" ;;
+esac
 exit 0
 `
 		);
@@ -217,6 +266,7 @@ exit 0
 		}
 		fs.writeFileSync(path.join(workDir, 'common.json'), dopplerJson(fixture));
 		fs.writeFileSync(path.join(workDir, 'project.json'), dopplerJson({ PROJECT_ONLY: 'kept' }));
+		setDeployed(['KEEP_ONE', 'KEEP_TWO', 'PROJECT_ONLY']);
 
 		const result = runScript();
 
@@ -242,15 +292,19 @@ exit 0
 				project[key] = 'value';
 			}
 		});
+		const kept = [];
 		for (let index = 0; index < 40; index += 1) {
+			kept.push(`PROJECT_SECRET_${index}`);
 			project[`PROJECT_SECRET_${index}`] = 'value';
 		}
 		fs.writeFileSync(path.join(workDir, 'common.json'), dopplerJson(common));
 		fs.writeFileSync(path.join(workDir, 'project.json'), dopplerJson(project));
+		setDeployed(kept);
 
 		const result = runScript();
 
 		expect(result.status).toBe(0);
+		expect(deletedSecrets()).toEqual([]);
 		expect(Object.keys(uploadedSecrets())).toHaveLength(40);
 		expect(result.stdout).toContain('Syncing 40 secrets');
 	});
@@ -262,12 +316,52 @@ exit 0
 		}
 		fs.writeFileSync(path.join(workDir, 'common.json'), '{}');
 		fs.writeFileSync(path.join(workDir, 'project.json'), dopplerJson(project));
+		setDeployed(Object.keys(project));
 
 		const result = runScript({ limit: 20 });
 
 		expect(result.status).toBe(1);
-		expect(result.stdout).toContain('30 secrets plus an assumed 7 text variables');
+		expect(result.stdout).toContain('30 secrets plus 0 text variables');
 		expect(result.stdout).toContain('worker-secret-exclusions.txt');
 		expect(uploadedSecrets()).toEqual({});
+	});
+
+	it('takes superseded secrets off the Worker', () => {
+		// The half filtering cannot do: `versions secret bulk` only adds or
+		// updates, so a key synced once stays until it is deleted. The Worker was
+		// carrying 68 that way — and 7 of them were not on the bus at all any more.
+		fs.writeFileSync(path.join(workDir, 'common.json'), '{}');
+		fs.writeFileSync(
+			path.join(workDir, 'project.json'),
+			dopplerJson({ KEEP_ONE: 'kept', LITELLM_MASTER_KEY: 'dropped' })
+		);
+		// Deployed: what should stay, an excluded key, and a key no longer on the
+		// bus at all. The last two both have to go.
+		setDeployed(['KEEP_ONE', 'LITELLM_MASTER_KEY', 'STALE_ONE']);
+
+		const result = runScript();
+
+		expect(result.status).toBe(0);
+		expect(deletedSecrets()).toEqual(['LITELLM_MASTER_KEY', 'STALE_ONE']);
+		expect(uploadedSecrets()).toEqual({ KEEP_ONE: 'kept' });
+		expect(result.stdout).toContain('Removed 2 superseded secret(s)');
+		// The deletions must target the same Worker the upload does.
+		expect(fs.readFileSync(commandLog, 'utf8')).toContain(
+			'versions secret delete LITELLM_MASTER_KEY --env production'
+		);
+	});
+
+	it('leaves superseded secrets alone when the deployed list cannot be read', () => {
+		// Housekeeping must not fail a deploy: an unreadable list warns and the
+		// upload still goes ahead.
+		fs.writeFileSync(path.join(workDir, 'common.json'), '{}');
+		fs.writeFileSync(path.join(workDir, 'project.json'), dopplerJson({ KEEP_ONE: 'kept' }));
+
+		const result = runScript({ brokenList: true });
+
+		expect(result.status).toBe(0);
+		expect(deletedSecrets()).toEqual([]);
+		expect(uploadedSecrets()).toEqual({ KEEP_ONE: 'kept' });
+		expect(result.stdout).toContain('Could not list the deployed secrets');
 	});
 });

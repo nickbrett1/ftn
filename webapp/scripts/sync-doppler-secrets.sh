@@ -68,7 +68,7 @@ echo "🔄 Fetching secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
 
 # Fetch secrets, compute values, and format for Cloudflare
 cleanup() {
-    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_filtered.json doppler_secrets_batches.json doppler_secrets_batch_temp.json
+    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_filtered.json doppler_secrets_batches.json doppler_secrets_batch_temp.json desired_secret_keys.txt deployed_secret_keys.txt superseded_secret_keys.txt
 }
 trap cleanup EXIT
 
@@ -103,8 +103,9 @@ fi
 # container agents and to CI, and pushing it wholesale crossed Cloudflare's
 # Workers Free limit of 64 variables per Worker (secrets + text). That failure
 # is reported by the API only after the upload is rejected, as
-# "This deployment includes 68 variables" (code 10055) — so the count is
-# checked here instead, where the message can say what to do about it.
+# "This deployment includes 68 variables" (code 10055). What is dropped here is
+# also reconciled against the Worker below, and the count is checked before the
+# upload, so the message can say what to do about it.
 #
 # See `worker-secret-exclusions.txt` for what is dropped and why, and
 # `tests/sync-doppler-secrets.test.js` for the guard that keeps the list honest.
@@ -123,24 +124,6 @@ if [ -f "$EXCLUSIONS_FILE" ]; then
     mv doppler_secrets_filtered.json doppler_secrets.json
 fi
 
-# Workers Free allows 64 variables per Worker, secrets and text together, and
-# the text ones live on the Worker rather than in this repo. Count what is about
-# to be sent and stop with a readable message rather than the API's code 10055.
-# Both numbers are overridable so this does not have to be edited to match the
-# plan or the Worker.
-WORKER_VARIABLE_LIMIT="${WORKER_VARIABLE_LIMIT:-64}"
-WORKER_TEXT_VARIABLES="${WORKER_TEXT_VARIABLES:-7}"
-SECRETS_TO_SYNC="$(jq 'length' doppler_secrets.json)"
-if [ "$SECRETS_TO_SYNC" -gt "$((WORKER_VARIABLE_LIMIT - WORKER_TEXT_VARIABLES))" ]; then
-    echo "❌ Error: $SECRETS_TO_SYNC secrets plus an assumed $WORKER_TEXT_VARIABLES text variables exceeds the Workers limit of $WORKER_VARIABLE_LIMIT variables per Worker."
-    echo "   Either add keys this Worker does not read to $EXCLUSIONS_FILE, or set WORKER_VARIABLE_LIMIT/WORKER_TEXT_VARIABLES to match the plan and the Worker."
-    exit 1
-fi
-echo "🔄 Syncing $SECRETS_TO_SYNC secrets (Worker budget $WORKER_VARIABLE_LIMIT variables, $WORKER_TEXT_VARIABLES assumed as text)..."
-
-# Split into batches of 20 (Wrangler bulk upload limit)
-jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
-
 # Build wrangler environment arguments
 WRANGLER_ARGS=""
 ENV_DISPLAY_NAME="primary Worker"
@@ -148,6 +131,56 @@ if [ -n "$CLOUDFLARE_ENV" ] && [ "$CLOUDFLARE_ENV" != "default" ]; then
     WRANGLER_ARGS="--env $CLOUDFLARE_ENV"
     ENV_DISPLAY_NAME="environment: $CLOUDFLARE_ENV"
 fi
+
+# Removing a key from the set above stops it being sent, but `versions secret
+# bulk` only ever adds or updates: a key that has been synced once stays on the
+# Worker until it is deleted explicitly. So the deployed secrets are reconciled
+# against the set that should be there, and the difference is taken off. (When
+# this was written the Worker carried 68 — seven of them not on the bus at all
+# any more, which is exactly the drift the count check below is about.)
+#
+# This is housekeeping, so none of it fails the deploy: if the list cannot be
+# read, or a removal fails, it warns and carries on. The count check still
+# guards the total.
+if jq -r 'keys[]' doppler_secrets.json | sort > desired_secret_keys.txt \
+    && npx wrangler versions secret list $WRANGLER_ARGS 2>/dev/null \
+        | sed -n 's/^[[:space:]]*Secret Name:[[:space:]]*//p' | sort -u > deployed_secret_keys.txt \
+    && [ -s deployed_secret_keys.txt ]; then
+    comm -23 deployed_secret_keys.txt desired_secret_keys.txt > superseded_secret_keys.txt
+    if [ -s superseded_secret_keys.txt ]; then
+        REMOVED=0
+        while read -r key; do
+            if npx wrangler versions secret delete "$key" $WRANGLER_ARGS >/dev/null 2>&1; then
+                REMOVED=$((REMOVED + 1))
+            else
+                echo "⚠️ Warning: Could not remove superseded secret: $key"
+            fi
+        done < superseded_secret_keys.txt
+        echo "🗑️  Removed $REMOVED superseded secret(s) from the Worker."
+    else
+        echo "✅ No superseded secrets deployed."
+    fi
+else
+    echo "⚠️ Warning: Could not list the deployed secrets, so superseded ones are left in place."
+fi
+
+# Workers Free allows 64 variables per Worker, secrets and text together. The
+# generated wrangler config declares no `vars`, so the whole budget is available
+# for secrets and that is the default here; both numbers are overridable for the
+# day either changes. Counting here means an overflow is a readable message
+# rather than the API's code 10055, which arrives after four retries.
+WORKER_VARIABLE_LIMIT="${WORKER_VARIABLE_LIMIT:-64}"
+WORKER_TEXT_VARIABLES="${WORKER_TEXT_VARIABLES:-0}"
+SECRETS_TO_SYNC="$(jq 'length' doppler_secrets.json)"
+if [ "$SECRETS_TO_SYNC" -gt "$((WORKER_VARIABLE_LIMIT - WORKER_TEXT_VARIABLES))" ]; then
+    echo "❌ Error: $SECRETS_TO_SYNC secrets plus $WORKER_TEXT_VARIABLES text variables exceeds the Workers limit of $WORKER_VARIABLE_LIMIT variables per Worker."
+    echo "   Either add keys this Worker does not read to $EXCLUSIONS_FILE, or set WORKER_VARIABLE_LIMIT/WORKER_TEXT_VARIABLES to match the plan and the Worker."
+    exit 1
+fi
+echo "🔄 Syncing $SECRETS_TO_SYNC secrets (Worker budget $WORKER_VARIABLE_LIMIT variables, $WORKER_TEXT_VARIABLES as text)..."
+
+# Split into batches of 20 (Wrangler bulk upload limit)
+jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
 
 echo "🚀 Syncing secrets to Cloudflare ($ENV_DISPLAY_NAME)..."
 SUCCESS=true
