@@ -103,7 +103,26 @@ describe('worker secret exclusions', () => {
 	});
 });
 
-describe('sync-doppler-secrets.sh', () => {
+/**
+ * Whether a command is on PATH.
+ * @param {string} command The command name.
+ * @returns {boolean} True when it can be run.
+ */
+function commandExists(command) {
+	try {
+		execFileSync('sh', ['-c', `command -v ${command}`], { stdio: 'ignore' });
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+// The subject of these tests is a shell script whose merge step needs jq. CI
+// installs it for this step (see .buildkite/steps/heavy.yml) and so does the
+// deploy, so they run where it matters; a machine without jq skips them rather
+// than failing, and the checks above — which are the ones that keep the
+// exclusions honest — still run.
+describe.skipIf(!commandExists('jq'))('sync-doppler-secrets.sh', () => {
 	let workDir;
 	let recordsDir;
 	let deployedSecretsFile;

@@ -100,6 +100,10 @@ steps:
       DOPPLER_ENVIRONMENT: stg
     commands:
       - bash .buildkite/scripts/install-doppler-cli.sh
+      # tests/sync-doppler-secrets.test.js runs sync-doppler-secrets.sh, which
+      # needs jq; this image does not carry it, so without this the guard is
+      # skipped exactly where it matters. The deploy step installs jq the same way.
+      - apt-get update && apt-get install -y --no-install-recommends jq
       - (cd webapp && npm ci --no-audit --no-fund --prefer-offline)
       - (cd webapp && ./scripts/setup-wrangler-config.sh stg)
       - (cd webapp && npm run lint)
