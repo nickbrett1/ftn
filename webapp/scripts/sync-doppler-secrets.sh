@@ -68,7 +68,7 @@ echo "🔄 Fetching secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
 
 # Fetch secrets, compute values, and format for Cloudflare
 cleanup() {
-    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json doppler_secrets_batch_temp.json
+    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json doppler_secrets_batch_temp.json doppler_secrets_prune.txt
 }
 trap cleanup EXIT
 
@@ -90,8 +90,29 @@ if ! doppler secrets --json $DOPPLER_ARGS | jq -c 'with_entries(.value = .value.
     exit 1
 fi
 
-# Merge common and project secrets, project overrides common
-jq -s '.[0] * .[1]' doppler_secrets_common.json doppler_secrets_project.json > doppler_secrets.json
+# `common` is a shared project: it is the config store for every container and
+# app in the workspace, not just this Worker. Blindly pushing all of it is what
+# put unrelated secrets on the Worker (the goose/LiteLLM/A2A entries added to
+# common on 2026-09-18 pushed production from 64 to 68 variables and broke the
+# deploy). So take every secret from the app-owned `webapp` project — that part
+# is unambiguous — and from `common` take only the names this Worker actually
+# reads. CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are the only two common
+# secrets the app consumes at runtime (the R2 *bindings* are Worker config, not
+# these S3 keys); the rest are CI-only (SONAR_TOKEN, GHCR_UPDATE_TOKEN, ...) or
+# belong to other consumers (LITELLM_*, GOOSE_*, A2A_GOOSE_*).
+#
+# Override with COMMON_SECRETS_ALLOW="NAME_A NAME_B" if a new common secret is
+# genuinely read at runtime, otherwise it will be dropped from the Worker.
+COMMON_SECRETS_ALLOW="${COMMON_SECRETS_ALLOW:-CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN}"
+
+# Merge common and project secrets (project overrides common), then keep every
+# project secret plus only the allow-listed common secrets.
+jq -s --arg allow "$COMMON_SECRETS_ALLOW" '
+    (.[0] * .[1]) as $merged
+    | ($allow | split(" ") | map(select(length > 0))) as $allowlist
+    | ((.[1] | keys) + [.[0] | keys[] as $k | select($allowlist | index($k)) | $k]) as $keep
+    | $merged | with_entries(select(.key as $k | ($keep | index($k)) != null))
+' doppler_secrets_common.json doppler_secrets_project.json > doppler_secrets.json
 
 if [ ! -s doppler_secrets.json ] || [ "$(cat doppler_secrets.json)" = "{}" ]; then
     echo "⚠️ Warning: No secrets found to sync."
@@ -116,9 +137,56 @@ while read -r batch; do
     npx wrangler versions secret bulk doppler_secrets_batch_temp.json $WRANGLER_ARGS || SUCCESS=false
 done < doppler_secrets_batches.json
 
-if [ "$SUCCESS" = true ]; then
-    echo "✅ Secrets successfully synced to Cloudflare ($ENV_DISPLAY_NAME)"
-else
+if [ "$SUCCESS" != true ]; then
     echo "❌ Error: Failed to sync secrets to Cloudflare ($ENV_DISPLAY_NAME)"
     exit 1
 fi
+
+echo "✅ Secrets successfully synced to Cloudflare ($ENV_DISPLAY_NAME)"
+
+# Reconcile, don't just add. `wrangler versions secret bulk` only ever adds or
+# updates: a secret later removed from Doppler stays on the Worker forever and
+# keeps counting toward the Workers Free limit of 64 variables per Worker
+# (secrets + text) — the limit that failed the production deploy at "This
+# deployment includes 68 variables, which exceeds the Workers Free limit of 64"
+# (build 128). Removing a name from Doppler is therefore not enough on its own.
+#
+# So prune whatever is on the Worker but not in the set we just pushed. The
+# prune set is *derived* from the Worker's own listing rather than hand
+# maintained, so it stays correct as Doppler changes — a secret dropped from
+# Doppler disappears from the Worker on the next deploy, and nothing has to be
+# remembered here. This is idempotent: once the Worker matches Doppler there is
+# nothing left to delete.
+#
+# KEEP_SECRETS is the escape hatch for variables the app reads at runtime but
+# that intentionally are not in Doppler. Today that is the production GitHub
+# OAuth pair: webapp/prd has no GITHUB_CLIENT_ID/GITHUB_CLIENT_SECRET, they are
+# set on the Worker directly, and src/lib/server/auth.js reads them. Dereferencing
+# those would break GitHub sign-in, so they must survive the prune.
+KEEP_SECRETS="${KEEP_SECRETS:-GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET}"
+
+echo "🧹 Reconciling: pruning secrets the Worker has but Doppler no longer provides..."
+
+# `wrangler secret list` fails when the Worker does not exist yet (first deploy);
+# that is not an error, there is simply nothing to prune.
+WORKER_SECRETS="$(npx wrangler secret list $WRANGLER_ARGS --format json 2>/dev/null || echo '[]')"
+
+jq -r \
+    --argjson desired "$(jq -c 'keys' doppler_secrets.json)" \
+    --arg keep "$KEEP_SECRETS" \
+    '($keep | split(" ") | map(select(length > 0))) as $keep
+     | .[]
+     | .name as $n
+     | select(($desired | index($n)) == null)
+     | select(($keep | index($n)) == null)
+     | $n' <<< "$WORKER_SECRETS" > doppler_secrets_prune.txt 2>/dev/null || true
+
+while read -r name; do
+    [ -z "$name" ] && continue
+    # </dev/null so wrangler cannot swallow the loop's stdin and skip names.
+    if npx wrangler secret delete "$name" $WRANGLER_ARGS >/dev/null 2>&1 </dev/null; then
+        echo "🗑️  Pruned: $name"
+    else
+        echo "⚠️  Could not prune: $name"
+    fi
+done < doppler_secrets_prune.txt
