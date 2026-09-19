@@ -183,8 +183,15 @@ jq -r \
 
 while read -r name; do
     [ -z "$name" ] && continue
+    # `versions secret delete`, not `secret delete`: these Workers use the
+    # versions workflow, and the plain command fails with 10215 ("the latest
+    # version of your Worker isn't currently deployed") because the bulk upload
+    # above already created a newer, not-yet-deployed version. The versions API
+    # is the supported way to edit secrets in that state, and it is what the
+    # bulk upload already uses.
+    #
     # </dev/null so wrangler cannot swallow the loop's stdin and skip names.
-    if npx wrangler secret delete "$name" $WRANGLER_ARGS >/dev/null 2>&1 </dev/null; then
+    if npx wrangler versions secret delete "$name" $WRANGLER_ARGS >/dev/null 2>&1 </dev/null; then
         echo "🗑️  Pruned: $name"
     else
         echo "⚠️  Could not prune: $name"
