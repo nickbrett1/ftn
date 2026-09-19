@@ -68,7 +68,7 @@ echo "🔄 Fetching secrets from Doppler ($DOPPLER_PROJECT/$DOPPLER_CONFIG)..."
 
 # Fetch secrets, compute values, and format for Cloudflare
 cleanup() {
-    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_batches.json doppler_secrets_batch_temp.json
+    rm -f doppler_secrets_common.json doppler_secrets_project.json doppler_secrets.json doppler_secrets_filtered.json doppler_secrets_batches.json doppler_secrets_batch_temp.json
 }
 trap cleanup EXIT
 
@@ -97,6 +97,46 @@ if [ ! -s doppler_secrets.json ] || [ "$(cat doppler_secrets.json)" = "{}" ]; th
     echo "⚠️ Warning: No secrets found to sync."
     exit 0
 fi
+
+# Drop the keys this Worker does not read. The merged set is the whole shared
+# `common` bus plus this project's config; most of the bus belongs to the
+# container agents and to CI, and pushing it wholesale crossed Cloudflare's
+# Workers Free limit of 64 variables per Worker (secrets + text). That failure
+# is reported by the API only after the upload is rejected, as
+# "This deployment includes 68 variables" (code 10055) — so the count is
+# checked here instead, where the message can say what to do about it.
+#
+# See `worker-secret-exclusions.txt` for what is dropped and why, and
+# `tests/sync-doppler-secrets.test.js` for the guard that keeps the list honest.
+EXCLUSIONS_FILE="$SCRIPT_DIR/worker-secret-exclusions.txt"
+if [ -f "$EXCLUSIONS_FILE" ]; then
+    jq --rawfile exclusions "$EXCLUSIONS_FILE" '
+        ($exclusions
+            | split("\n")
+            | map(sub("\\s*#.*$"; "") | gsub("\\s"; ""))
+            | map(select(length > 0))) as $dropped
+        | with_entries(select(.key as $key | ($dropped | index($key)) == null))
+    ' doppler_secrets.json > doppler_secrets_filtered.json || {
+        echo "❌ Error: Failed to apply $EXCLUSIONS_FILE."
+        exit 1
+    }
+    mv doppler_secrets_filtered.json doppler_secrets.json
+fi
+
+# Workers Free allows 64 variables per Worker, secrets and text together, and
+# the text ones live on the Worker rather than in this repo. Count what is about
+# to be sent and stop with a readable message rather than the API's code 10055.
+# Both numbers are overridable so this does not have to be edited to match the
+# plan or the Worker.
+WORKER_VARIABLE_LIMIT="${WORKER_VARIABLE_LIMIT:-64}"
+WORKER_TEXT_VARIABLES="${WORKER_TEXT_VARIABLES:-7}"
+SECRETS_TO_SYNC="$(jq 'length' doppler_secrets.json)"
+if [ "$SECRETS_TO_SYNC" -gt "$((WORKER_VARIABLE_LIMIT - WORKER_TEXT_VARIABLES))" ]; then
+    echo "❌ Error: $SECRETS_TO_SYNC secrets plus an assumed $WORKER_TEXT_VARIABLES text variables exceeds the Workers limit of $WORKER_VARIABLE_LIMIT variables per Worker."
+    echo "   Either add keys this Worker does not read to $EXCLUSIONS_FILE, or set WORKER_VARIABLE_LIMIT/WORKER_TEXT_VARIABLES to match the plan and the Worker."
+    exit 1
+fi
+echo "🔄 Syncing $SECRETS_TO_SYNC secrets (Worker budget $WORKER_VARIABLE_LIMIT variables, $WORKER_TEXT_VARIABLES assumed as text)..."
 
 # Split into batches of 20 (Wrangler bulk upload limit)
 jq -c 'to_entries | _nwise(20) | from_entries' doppler_secrets.json > doppler_secrets_batches.json
