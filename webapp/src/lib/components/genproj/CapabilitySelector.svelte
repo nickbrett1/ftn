@@ -97,6 +97,7 @@
 	// Category display names
 	const categoryNames = {
 		core: 'Core Capabilities (Always Included)',
+		agents: 'Agents',
 		frameworks: 'Frameworks',
 		devcontainer: 'Development Containers',
 		embedded: 'Embedded / Microcontrollers',
@@ -113,6 +114,7 @@
 	// Order of categories for display
 	const categoryOrder = [
 		'core',
+		'agents',
 		'frameworks',
 		'devcontainer',
 		'embedded',

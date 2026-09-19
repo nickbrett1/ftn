@@ -39,6 +39,29 @@ describe('CapabilitySelector', () => {
 		expect(screen.getByText('Node.js DevContainer')).toBeTruthy();
 	});
 
+	it('renders the Agents section for agent capabilities', () => {
+		// Agents are their own UI section (genproj `category: 'agents'`), not part
+		// of "Core Capabilities". The category must be listed in categoryOrder or
+		// the group renders nothing.
+		render(CapabilitySelector, {
+			capabilities: [
+				{
+					id: 'coding-agents',
+					name: 'AI Coding Agents',
+					category: 'agents',
+					selectedByDefault: false,
+					benefits: [],
+					configurationSchema: { properties: {} }
+				}
+			],
+			selectedCapabilities: [],
+			configuration: {}
+		});
+
+		expect(screen.getByText('Agents')).toBeTruthy();
+		expect(screen.getByText('AI Coding Agents')).toBeTruthy();
+	});
+
 	it('shows benefits toggle button', async () => {
 		render(CapabilitySelector, {
 			capabilities: mockCapabilities,
