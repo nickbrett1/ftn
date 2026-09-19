@@ -1,15 +1,12 @@
 // webapp/tests/lib/server/catalog.test.js
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import {
-	CATALOG_ORIGIN,
-	fetchCatalog,
-	getCatalogCapabilities
-} from '../../../src/lib/server/catalog.js';
+import { CATALOG_ORIGIN, fetchCatalog } from '../../../src/lib/server/catalog.js';
 
 const CATALOG = {
 	count: 1,
-	capabilities: [{ id: 'shell-tools' }]
+	capabilities: [{ id: 'shell-tools' }],
+	categories: [{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 }]
 };
 
 describe('fetchCatalog', () => {
@@ -62,19 +59,5 @@ describe('fetchCatalog', () => {
 		await expect(fetchCatalog(undefined)).rejects.toThrow(
 			'genproj catalog request failed with status 503'
 		);
-	});
-});
-
-describe('getCatalogCapabilities', () => {
-	beforeEach(() => {
-		vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(CATALOG))));
-	});
-
-	afterEach(() => {
-		vi.unstubAllGlobals();
-	});
-
-	it('returns just the capability list', async () => {
-		await expect(getCatalogCapabilities(undefined)).resolves.toEqual(CATALOG.capabilities);
 	});
 });

@@ -18,7 +18,7 @@ export const CATALOG_ORIGIN = 'https://genproj.nick-brett1.workers.dev';
 /**
  * Fetches the catalog.
  * @param {{ env?: Record<string, any> }} [platform] SvelteKit platform, providing the bindings.
- * @returns {Promise<{ capabilities: object[], count: number }>} The catalog.
+ * @returns {Promise<{ capabilities: object[], categories: object[], count: number }>} The catalog.
  * @throws {Error} If the catalog service is unavailable or returns a non-OK status.
  */
 export async function fetchCatalog(platform) {
@@ -32,14 +32,4 @@ export async function fetchCatalog(platform) {
 	}
 
 	return response.json();
-}
-
-/**
- * Fetches just the capability list.
- * @param {{ env?: Record<string, any> }} [platform] SvelteKit platform, providing the bindings.
- * @returns {Promise<object[]>} The capabilities.
- */
-export async function getCatalogCapabilities(platform) {
-	const catalog = await fetchCatalog(platform);
-	return catalog.capabilities;
 }

@@ -67,6 +67,7 @@
 
 	// Props
 	export let capabilities = [];
+	export let categories = [];
 	export let selectedCapabilities = [];
 	export let configuration = {};
 	// Only used to show a default that depends on it (see displayDefault).
@@ -94,39 +95,28 @@
 		return groups;
 	}, {});
 
-	// Category display names
-	const categoryNames = {
-		core: 'Core Capabilities (Always Included)',
-		agents: 'Agents',
-		frameworks: 'Frameworks',
-		devcontainer: 'Development Containers',
-		embedded: 'Embedded / Microcontrollers',
-		'ci-cd': 'CI/CD',
-		'code-quality': 'Code Quality',
-		secrets: 'Secrets Management',
-		deployment: 'Deployment',
-		monitoring: 'Monitoring & Testing',
-		'project-structure': 'Dependency Management',
-		'apple-development': 'Apple Development',
-		Other: 'Other Capabilities'
-	};
+	// The catalog owns the sections: their ids, headings and order. The client
+	// renders what it is given rather than keeping its own list, so a new
+	// category needs no client redeploy. A category that arrives in the data but
+	// is missing from the catalog still renders — last, under its raw id — so a
+	// capability can never be silently invisible.
+	$: declaredCategories = new Map(categories.map((category) => [category.id, category]));
 
-	// Order of categories for display
-	const categoryOrder = [
-		'core',
-		'agents',
-		'frameworks',
-		'devcontainer',
-		'embedded',
-		'apple-development',
-		'ci-cd',
-		'code-quality',
-		'secrets',
-		'deployment',
-		'monitoring',
-		'project-structure',
-		'Other'
-	];
+	$: renderedCategories = categories
+		.filter((category) => category.visible !== false)
+		.sort((a, b) => a.order - b.order);
+
+	$: sectionIds = [
+		...renderedCategories.map((category) => category.id),
+		...Object.keys(capabilityGroups).filter((id) => !declaredCategories.has(id))
+	].filter((id, index, all) => all.indexOf(id) === index);
+
+	function getCategoryLabel(categoryId) {
+		return (
+			declaredCategories.get(categoryId)?.label ||
+			(categoryId === 'Other' ? 'Other Capabilities' : categoryId)
+		);
+	}
 
 	// Handlers
 	function handleCapabilityToggle(capabilityId, event) {
@@ -363,13 +353,13 @@
 </script>
 
 <div class="space-y-12">
-	{#each categoryOrder as categoryId}
+	{#each sectionIds as categoryId}
 		{#if capabilityGroups[categoryId] && capabilityGroups[categoryId].length > 0}
 			<div>
 				<h2
 					class="text-2xl font-bold text-white mb-6 flex items-center border-b border-gray-700 pb-2"
 				>
-					<span class="mr-2">{categoryNames[categoryId] || categoryId}</span>
+					<span class="mr-2">{getCategoryLabel(categoryId)}</span>
 					<span class="text-sm font-normal text-gray-500 ml-auto"
 						>{capabilityGroups[categoryId].length} options</span
 					>

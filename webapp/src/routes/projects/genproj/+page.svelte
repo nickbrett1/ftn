@@ -19,6 +19,7 @@
 	// Reactive state
 	let activeTab = $state('capabilities');
 	let capabilities = $state([]);
+	let categories = $state([]);
 	let selectedCapabilities = $state([]);
 	let projectName = $state('');
 	let repositoryUrl = $state('');
@@ -29,6 +30,7 @@
 
 	$effect(() => {
 		capabilities = data.capabilities || [];
+		categories = data.categories || [];
 		selectedCapabilities = data.selectedCapabilities || [];
 		projectName = data.projectName || '';
 		repositoryUrl = data.repositoryUrl || '';
@@ -308,7 +310,8 @@
 				}
 
 				const fetchData = await response.json();
-				capabilities = fetchData;
+				capabilities = fetchData.capabilities ?? [];
+				categories = fetchData.categories ?? [];
 			} catch (error_) {
 				initialError = error_.message;
 				logger.error('Failed to load capabilities', { error: error_.message });
@@ -648,6 +651,7 @@
 						<div data-testid="capability-selector">
 							<CapabilitySelector
 								{capabilities}
+								{categories}
 								{selectedCapabilities}
 								{configuration}
 								{projectName}

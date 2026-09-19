@@ -24,8 +24,56 @@ describe('CapabilitySelector', () => {
 		vi.clearAllMocks();
 	});
 
+	// The sections come from the catalog (genproj), not from the component:
+	// ids, headings and order all travel in the payload, so a new category needs
+	// no client redeploy. Mirrors the catalog's `categories` block.
+	const CATEGORIES = [
+		{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 },
+		{ id: 'agents', label: 'Agents', order: 20 },
+		{ id: 'frameworks', label: 'Frameworks', order: 30 },
+		{ id: 'devcontainer', label: 'Development Containers', order: 40 },
+		{ id: 'embedded', label: 'Embedded / Microcontrollers', order: 50 },
+		{ id: 'apple-development', label: 'Apple Development', order: 60 },
+		{ id: 'ci-cd', label: 'CI/CD', order: 70 },
+		{ id: 'code-quality', label: 'Code Quality', order: 80 },
+		{ id: 'secrets', label: 'Secrets Management', order: 90 },
+		{ id: 'deployment', label: 'Deployment', order: 100 },
+		{ id: 'monitoring', label: 'Monitoring & Testing', order: 110 },
+		{ id: 'project-structure', label: 'Dependency Management', order: 120 },
+		{ id: 'internal', label: 'Internal', order: 130, visible: false }
+	];
+
+	// A capability as the catalog describes one: every field the component reads
+	// is present, so a test only states what it is actually about.
+	function makeCapability(overrides) {
+		return {
+			id: 'capability',
+			name: 'Capability',
+			description: '',
+			category: 'core',
+			icon: 'code',
+			iconColor: 'blue',
+			selectedByDefault: false,
+			provides: [],
+			dependencies: [],
+			conflicts: [],
+			requiresAuth: [],
+			authServices: [],
+			externalServices: [],
+			vscodeExtensions: [],
+			benefits: [],
+			links: [],
+			configurationSchema: { properties: {} },
+			...overrides
+		};
+	}
+
+	function renderSelector(props) {
+		return render(CapabilitySelector, { categories: CATEGORIES, ...props });
+	}
+
 	it('renders capability categories and items', () => {
-		render(CapabilitySelector, {
+		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: [],
 			configuration: {}
@@ -41,18 +89,10 @@ describe('CapabilitySelector', () => {
 
 	it('renders the Agents section for agent capabilities', () => {
 		// Agents are their own UI section (genproj `category: 'agents'`), not part
-		// of "Core Capabilities". The category must be listed in categoryOrder or
-		// the group renders nothing.
-		render(CapabilitySelector, {
+		// of "Core Capabilities". Its heading and position come from the catalog.
+		renderSelector({
 			capabilities: [
-				{
-					id: 'coding-agents',
-					name: 'AI Coding Agents',
-					category: 'agents',
-					selectedByDefault: false,
-					benefits: [],
-					configurationSchema: { properties: {} }
-				}
+				makeCapability({ id: 'coding-agents', name: 'AI Coding Agents', category: 'agents' })
 			],
 			selectedCapabilities: [],
 			configuration: {}
@@ -62,8 +102,60 @@ describe('CapabilitySelector', () => {
 		expect(screen.getByText('AI Coding Agents')).toBeTruthy();
 	});
 
+	it('takes a section heading from the catalog, not from the component', () => {
+		// The heading is data. Renaming a section is a catalog change alone — the
+		// component must render whatever label it is handed.
+		renderSelector({
+			categories: [{ id: 'agents', label: 'Renamed In The Catalog', order: 10 }],
+			capabilities: [
+				makeCapability({ id: 'coding-agents', name: 'AI Coding Agents', category: 'agents' })
+			],
+			selectedCapabilities: [],
+			configuration: {}
+		});
+
+		expect(screen.getByText('Renamed In The Catalog')).toBeTruthy();
+	});
+
+	it('does not render a section the catalog marks invisible', () => {
+		// `internal` is a dependency-only category: docker is always applied as a
+		// dependency, so it needs no section of its own.
+		renderSelector({
+			capabilities: [
+				makeCapability({ id: 'docker', name: 'Docker Container', category: 'internal' })
+			],
+			selectedCapabilities: [],
+			configuration: {}
+		});
+
+		expect(screen.queryByText('Internal')).toBeNull();
+		expect(screen.queryByText('Docker Container')).toBeNull();
+	});
+
+	it('renders a category the catalog did not declare, rather than losing it', () => {
+		// The safety net: a capability whose category is missing from the catalog
+		// still shows, last and under its raw id. Silence would hide a capability
+		// the user is entitled to see — that was the original bug.
+		renderSelector({
+			categories: [{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 }],
+			capabilities: [
+				makeCapability({ id: 'editor-tools', name: 'Editor Tools', category: 'core' }),
+				makeCapability({
+					id: 'brand-new',
+					name: 'Brand New Thing',
+					category: 'a-category-nobody-declared'
+				})
+			],
+			selectedCapabilities: [],
+			configuration: {}
+		});
+
+		expect(screen.getByText('a-category-nobody-declared')).toBeTruthy();
+		expect(screen.getByText('Brand New Thing')).toBeTruthy();
+	});
+
 	it('shows benefits toggle button', async () => {
-		render(CapabilitySelector, {
+		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: [],
 			configuration: {}
@@ -75,7 +167,7 @@ describe('CapabilitySelector', () => {
 	});
 
 	it('shows configuration when selected', async () => {
-		render(CapabilitySelector, {
+		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: ['dependabot'],
 			configuration: {}
@@ -129,7 +221,7 @@ describe('CapabilitySelector', () => {
 	};
 
 	it('names an enum option for a person and keeps the value', () => {
-		render(CapabilitySelector, {
+		renderSelector({
 			capabilities: [targetCapability],
 			selectedCapabilities: ['github-release'],
 			// The value is the triple, as it always was: the name is a label.
@@ -151,7 +243,7 @@ describe('CapabilitySelector', () => {
 	});
 
 	it('shows a project-name default as a hint, not as a value', () => {
-		const { container } = render(CapabilitySelector, {
+		const { container } = renderSelector({
 			capabilities: [targetCapability],
 			selectedCapabilities: ['github-release'],
 			configuration: {},
@@ -167,7 +259,7 @@ describe('CapabilitySelector', () => {
 	});
 
 	it('shows missing dependencies warning for gitguardian', () => {
-		render(CapabilitySelector, {
+		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: [],
 			configuration: {}

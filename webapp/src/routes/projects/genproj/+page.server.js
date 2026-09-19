@@ -5,21 +5,21 @@ import { fetchCatalog } from '$lib/server/catalog.js';
 
 /**
  * Loads the capability catalog from the genproj service so the page renders
- * with it. A catalog failure must not take the page down: we pass an empty list
+ * with it. A catalog failure must not take the page down: we pass empty lists
  * and let the client-side fetch retry.
  *
  * @param {{ platform?: { env?: Record<string, any> } }} event SvelteKit event.
- * @returns {Promise<{ capabilities: object[] }>} The catalog.
+ * @returns {Promise<{ capabilities: object[], categories: object[] }>} The catalog.
  */
 async function loadCatalog(platform) {
 	try {
 		const catalog = await fetchCatalog(platform);
-		return { capabilities: catalog.capabilities };
+		return { capabilities: catalog.capabilities ?? [], categories: catalog.categories ?? [] };
 	} catch (error) {
 		logger.error('Failed to load the capability catalog from genproj', {
 			error: error.message
 		});
-		return { capabilities: [] };
+		return { capabilities: [], categories: [] };
 	}
 }
 
