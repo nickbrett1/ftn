@@ -150,11 +150,19 @@ if jq -r 'keys[]' doppler_secrets.json | sort > desired_secret_keys.txt \
     if [ -s superseded_secret_keys.txt ]; then
         REMOVED=0
         while read -r key; do
-            if npx wrangler versions secret delete "$key" $WRANGLER_ARGS >/dev/null 2>&1; then
-                REMOVED=$((REMOVED + 1))
-            else
-                echo "⚠️ Warning: Could not remove superseded secret: $key"
+            # `versions secret delete` is the versions-aware command and the one
+            # to prefer. It is also the one that refused every key on the first
+            # run of this (build 137) and, because the error was discarded, said
+            # nothing about why — so the older plain command is tried next and the
+            # reason is printed if that fails too. Neither may fail the deploy.
+            if ! DELETE_OUTPUT="$(npx wrangler versions secret delete "$key" $WRANGLER_ARGS 2>&1)"; then
+                if ! DELETE_OUTPUT="$(npx wrangler secret delete "$key" $WRANGLER_ARGS 2>&1)"; then
+                    echo "⚠️ Warning: Could not remove superseded secret: $key"
+                    printf '%s\n' "$DELETE_OUTPUT" | tail -4 | sed 's/^/      /'
+                    continue
+                fi
             fi
+            REMOVED=$((REMOVED + 1))
         done < superseded_secret_keys.txt
         echo "🗑️  Removed $REMOVED superseded secret(s) from the Worker."
     else

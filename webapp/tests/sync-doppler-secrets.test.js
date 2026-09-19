@@ -146,9 +146,10 @@ describe.skipIf(!commandExists('jq'))('sync-doppler-secrets.sh', () => {
 	 * @param {object} [options] Options.
 	 * @param {number} [options.limit] WORKER_VARIABLE_LIMIT to export.
 	 * @param {boolean} [options.brokenList] Make the deployed-secret list unreadable.
+	 * @param {boolean} [options.failingVersionsDelete] Make `versions secret delete` refuse.
 	 * @returns {{status: number, stdout: string}} The exit status and output.
 	 */
-	function runScript({ limit, brokenList } = {}) {
+	function runScript({ limit, brokenList, failingVersionsDelete } = {}) {
 		const env = {
 			...process.env,
 			PATH: `${path.join(workDir, 'bin')}:${process.env.PATH}`,
@@ -157,6 +158,7 @@ describe.skipIf(!commandExists('jq'))('sync-doppler-secrets.sh', () => {
 				? path.join(workDir, 'does-not-exist.txt')
 				: deployedSecretsFile,
 			COMMAND_LOG: commandLog,
+			FAIL_VERSIONS_DELETE: failingVersionsDelete ? '1' : '',
 			DOPPLER_TOKEN: ''
 		};
 		delete env.DOPPLER_PROJECT;
@@ -207,7 +209,7 @@ describe.skipIf(!commandExists('jq'))('sync-doppler-secrets.sh', () => {
 		return fs
 			.readFileSync(commandLog, 'utf8')
 			.split('\n')
-			.map((line) => /^wrangler versions secret delete (\S+)/.exec(line)?.[1])
+			.map((line) => /^wrangler (?:versions )?secret delete (\S+)/.exec(line)?.[1])
 			.filter(Boolean);
 	}
 
@@ -264,6 +266,7 @@ echo "$*" >> "$COMMAND_LOG"
 case "$*" in
 	*"versions secret list"*) cat "$DEPLOYED_SECRETS_FILE" ;;
 	*"versions secret bulk"*) cp doppler_secrets_batch_temp.json "$RECORDS_DIR/$(ls "$RECORDS_DIR" | wc -l).json" ;;
+	*"versions secret delete"*) [ -n "$FAIL_VERSIONS_DELETE" ] && exit 1 ;;
 esac
 exit 0
 `
@@ -368,6 +371,22 @@ exit 0
 		expect(fs.readFileSync(commandLog, 'utf8')).toContain(
 			'versions secret delete LITELLM_MASTER_KEY --env production'
 		);
+	});
+
+	it('falls back to the plain delete when the versions-aware one refuses', () => {
+		// Build 137: `versions secret delete` refused every key. The error is no
+		// longer discarded, and the older command is tried before giving up.
+		fs.writeFileSync(path.join(workDir, 'common.json'), '{}');
+		fs.writeFileSync(path.join(workDir, 'project.json'), dopplerJson({ KEEP_ONE: 'kept' }));
+		setDeployed(['KEEP_ONE', 'STALE_ONE']);
+
+		const result = runScript({ failingVersionsDelete: true });
+
+		expect(result.status).toBe(0);
+		// Both attempts are logged — the one that refused and the one that worked.
+		expect([...new Set(deletedSecrets())]).toEqual(['STALE_ONE']);
+		expect(fs.readFileSync(commandLog, 'utf8')).toContain('wrangler secret delete STALE_ONE');
+		expect(result.stdout).toContain('Removed 1 superseded secret(s)');
 	});
 
 	it('leaves superseded secrets alone when the deployed list cannot be read', () => {
