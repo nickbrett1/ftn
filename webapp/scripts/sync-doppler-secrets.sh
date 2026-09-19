@@ -130,11 +130,25 @@ if [ -n "$CLOUDFLARE_ENV" ] && [ "$CLOUDFLARE_ENV" != "default" ]; then
     ENV_DISPLAY_NAME="environment: $CLOUDFLARE_ENV"
 fi
 
+# Pick the API that can actually run against this Worker. These Workers use the
+# versions workflow, and `wrangler versions secret bulk` fails with 10007 ("This
+# Worker does not exist on your account") when the Worker has no versions yet —
+# i.e. on the very first deploy, before `wrangler deploy` has created it. Plain
+# `wrangler secret bulk` creates the Worker in that case, so probe with a call
+# only an existing Worker can answer and bootstrap with the plain API if needed.
+SECRET_BULK_CMD="versions secret bulk"
+SECRET_DELETE_CMD="versions secret delete"
+if ! npx wrangler secret list $WRANGLER_ARGS --format json >/dev/null 2>&1; then
+    echo "ℹ️  Worker does not exist yet — bootstrapping it via the plain secret API."
+    SECRET_BULK_CMD="secret bulk"
+    SECRET_DELETE_CMD="secret delete"
+fi
+
 echo "🚀 Syncing secrets to Cloudflare ($ENV_DISPLAY_NAME)..."
 SUCCESS=true
 while read -r batch; do
     echo "$batch" > doppler_secrets_batch_temp.json
-    npx wrangler versions secret bulk doppler_secrets_batch_temp.json $WRANGLER_ARGS || SUCCESS=false
+    npx wrangler $SECRET_BULK_CMD doppler_secrets_batch_temp.json $WRANGLER_ARGS || SUCCESS=false
 done < doppler_secrets_batches.json
 
 if [ "$SUCCESS" != true ]; then
@@ -188,10 +202,11 @@ while read -r name; do
     # version of your Worker isn't currently deployed") because the bulk upload
     # above already created a newer, not-yet-deployed version. The versions API
     # is the supported way to edit secrets in that state, and it is what the
-    # bulk upload already uses.
+    # bulk upload already uses. It is only swapped for the plain command on the
+    # first-deploy bootstrap path above, where the Worker is not versioned yet.
     #
     # </dev/null so wrangler cannot swallow the loop's stdin and skip names.
-    if npx wrangler versions secret delete "$name" $WRANGLER_ARGS >/dev/null 2>&1 </dev/null; then
+    if npx wrangler $SECRET_DELETE_CMD "$name" $WRANGLER_ARGS >/dev/null 2>&1 </dev/null; then
         echo "🗑️  Pruned: $name"
     else
         echo "⚠️  Could not prune: $name"
