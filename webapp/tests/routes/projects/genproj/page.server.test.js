@@ -28,7 +28,11 @@ vi.mock('$lib/server/catalog.js', () => ({
 const CATALOG = {
 	count: 1,
 	capabilities: [{ id: 'shell-tools', selectedByDefault: true }],
-	categories: [{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 }]
+	categories: [{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 }],
+	configurationSchema: {
+		type: 'object',
+		properties: { language: { type: 'string', enum: ['python', 'node', 'java', 'rust'] } }
+	}
 };
 
 describe('genproj +page.server load', () => {
@@ -53,7 +57,8 @@ describe('genproj +page.server load', () => {
 			projectName: '',
 			repositoryUrl: '',
 			capabilities: CATALOG.capabilities,
-			categories: CATALOG.categories
+			categories: CATALOG.categories,
+			configurationSchema: CATALOG.configurationSchema
 		});
 	});
 
@@ -67,7 +72,8 @@ describe('genproj +page.server load', () => {
 			projectName: '',
 			repositoryUrl: '',
 			capabilities: CATALOG.capabilities,
-			categories: CATALOG.categories
+			categories: CATALOG.categories,
+			configurationSchema: CATALOG.configurationSchema
 		});
 	});
 
@@ -84,6 +90,7 @@ describe('genproj +page.server load', () => {
 
 		expect(result.capabilities).toEqual([]);
 		expect(result.categories).toEqual([]);
+		expect(result.configurationSchema).toBeNull();
 		expect(result.isAuthenticated).toBe(false);
 	});
 

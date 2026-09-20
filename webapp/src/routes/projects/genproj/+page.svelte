@@ -20,6 +20,7 @@
 	let activeTab = $state('capabilities');
 	let capabilities = $state([]);
 	let categories = $state([]);
+	let configurationSchema = $state(null);
 	let selectedCapabilities = $state([]);
 	let projectName = $state('');
 	let repositoryUrl = $state('');
@@ -31,6 +32,7 @@
 	$effect(() => {
 		capabilities = data.capabilities || [];
 		categories = data.categories || [];
+		configurationSchema = data.configurationSchema || null;
 		selectedCapabilities = data.selectedCapabilities || [];
 		projectName = data.projectName || '';
 		repositoryUrl = data.repositoryUrl || '';
@@ -276,6 +278,22 @@
 		configuration[capabilityId] = config;
 	}
 
+	// Project-level fields (e.g. `language`) live at the top level of
+	// `configuration`, not under a capability id. An empty value means the user
+	// cleared the field back to its placeholder, i.e. "no explicit choice": drop
+	// the key so the POST omits it and the selection's implied value applies,
+	// rather than sending an empty string that would read as a declared blank.
+	function handleProjectConfigurationChange(event) {
+		const { field, value } = event.detail;
+		const next = { ...configuration };
+		if (value === '' || value === undefined || value === null) {
+			delete next[field];
+		} else {
+			next[field] = value;
+		}
+		configuration = next;
+	}
+
 	// Project configuration handlers
 	function handleProjectNameChange(event) {
 		projectName = event.target.value;
@@ -312,6 +330,7 @@
 				const fetchData = await response.json();
 				capabilities = fetchData.capabilities ?? [];
 				categories = fetchData.categories ?? [];
+				configurationSchema = fetchData.configurationSchema ?? null;
 			} catch (error_) {
 				initialError = error_.message;
 				logger.error('Failed to load capabilities', { error: error_.message });
@@ -377,6 +396,25 @@
 		logger.info('All authentication complete, ready to generate project');
 	}
 
+	// Project-level configuration (catalog `configurationSchema`, e.g. the
+	// primary `language`). genproj requires these to be declared once two or
+	// more devcontainer-* capabilities are selected, where selection order would
+	// otherwise decide the language; with 0 or 1 it is implied by the selection
+	// and may be left unset.
+	let selectedDevcontainerCount = $derived(
+		selectedCapabilities.filter((id) => id.startsWith('devcontainer-')).length
+	);
+	let projectConfigurationRequired = $derived(selectedDevcontainerCount >= 2);
+	let missingProjectConfiguration = $derived.by(() => {
+		if (!projectConfigurationRequired) {
+			return [];
+		}
+		return Object.keys(configurationSchema?.properties || {}).filter((field) => {
+			const value = configuration[field];
+			return value === undefined || value === null || value === '';
+		});
+	});
+
 	// Get disabled state message
 	function getDisabledMessage() {
 		if (!data.isAuthenticated) {
@@ -388,6 +426,9 @@
 		if (selectedCapabilities.length === 0) {
 			return 'Please select at least one capability';
 		}
+		if (missingProjectConfiguration.length > 0) {
+			return `Please choose: ${missingProjectConfiguration.join(', ')}`;
+		}
 		return '';
 	}
 
@@ -397,7 +438,8 @@
 			!data.isAuthenticated ||
 			!projectName ||
 			projectName.length < 3 ||
-			selectedCapabilities.length === 0
+			selectedCapabilities.length === 0 ||
+			missingProjectConfiguration.length > 0
 	);
 
 	// Demo mode banner - show only when user is not authenticated
@@ -655,8 +697,11 @@
 								{selectedCapabilities}
 								{configuration}
 								{projectName}
+								{configurationSchema}
+								{projectConfigurationRequired}
 								on:capabilityToggle={handleCapabilityToggle}
 								on:configurationChange={handleConfigurationChange}
+								on:projectConfigurationChange={handleProjectConfigurationChange}
 							/>
 						</div>
 					{:else if activeTab === 'preview'}

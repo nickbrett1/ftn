@@ -174,7 +174,11 @@
 					repositoryUrl: data.repositoryUrl,
 					selectedCapabilities: data.selected.split(','),
 					overwrite,
-					resolutions
+					resolutions,
+					// Project-level configuration (e.g. `language`) plus each
+					// capability's settings. Empty when nothing was declared, which
+					// leaves the language implied by the selected devcontainers.
+					configuration: data.configuration || {}
 				})
 			});
 

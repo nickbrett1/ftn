@@ -8,18 +8,26 @@ import { fetchCatalog } from '$lib/server/catalog.js';
  * with it. A catalog failure must not take the page down: we pass empty lists
  * and let the client-side fetch retry.
  *
+ * `configurationSchema` is the project-level field list (e.g. `language`); it
+ * is forwarded alongside the capabilities and categories, because discarding
+ * it is how the UI lost the ability to declare a project-level language at all.
+ *
  * @param {{ platform?: { env?: Record<string, any> } }} event SvelteKit event.
- * @returns {Promise<{ capabilities: object[], categories: object[] }>} The catalog.
+ * @returns {Promise<{ capabilities: object[], categories: object[], configurationSchema: object|null }>} The catalog.
  */
 async function loadCatalog(platform) {
 	try {
 		const catalog = await fetchCatalog(platform);
-		return { capabilities: catalog.capabilities ?? [], categories: catalog.categories ?? [] };
+		return {
+			capabilities: catalog.capabilities ?? [],
+			categories: catalog.categories ?? [],
+			configurationSchema: catalog.configurationSchema ?? null
+		};
 	} catch (error) {
 		logger.error('Failed to load the capability catalog from genproj', {
 			error: error.message
 		});
-		return { capabilities: [], categories: [] };
+		return { capabilities: [], categories: [], configurationSchema: null };
 	}
 }
 

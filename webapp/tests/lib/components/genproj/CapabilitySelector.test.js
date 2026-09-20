@@ -258,6 +258,83 @@ describe('CapabilitySelector', () => {
 		expect(input.value).toBe('');
 	});
 
+	// Project-level configuration (the catalog's top-level `configurationSchema`)
+	// is the only place a project-wide field like the primary `language` is
+	// declared. It belongs to no capability, so it renders in its own block above
+	// the sections. Both the field list and its option labels are catalog data.
+	const projectSchema = {
+		type: 'object',
+		properties: {
+			language: {
+				type: 'string',
+				enum: ['python', 'node', 'java', 'rust'],
+				enumLabels: { node: 'Node.js' },
+				description: 'Primary Language: the one the project builds and releases.'
+			}
+		}
+	};
+
+	it('renders the project-level configuration from the catalog schema', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: [],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		expect(screen.getByTestId('project-configuration')).toBeTruthy();
+		// The option carries its catalog label, and the description is shown.
+		expect(screen.getByText('Node.js')).toBeTruthy();
+		expect(
+			screen.getByText('Primary Language: the one the project builds and releases.')
+		).toBeTruthy();
+
+		// Nothing is implied yet, so the control sits on its placeholder.
+		expect(screen.getByTestId('project-config-language').value).toBe('');
+	});
+
+	it('marks the project configuration required when told to', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: ['devcontainer-node', 'devcontainer-python'],
+			configuration: {},
+			configurationSchema: projectSchema,
+			projectConfigurationRequired: true
+		});
+
+		expect(screen.getByTestId('project-config-required')).toBeTruthy();
+		// Required and unset: the placeholder asks for a choice rather than
+		// silently implying one.
+		expect(screen.getByTestId('project-config-language').value).toBe('');
+		expect(screen.getByText('Select…')).toBeTruthy();
+	});
+
+	it('pre-selects the language implied by a single devcontainer', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: ['devcontainer-python'],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		// One devcontainer implies the language; it is shown selected but not
+		// written into `configuration`, so an untouched field stays implied.
+		expect(screen.getByTestId('project-config-language').value).toBe('python');
+	});
+
+	it('leaves the implied value ambiguous with two devcontainer languages', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: ['devcontainer-python', 'devcontainer-rust'],
+			configuration: {},
+			configurationSchema: projectSchema,
+			projectConfigurationRequired: true
+		});
+
+		// Two distinct languages cannot imply one, so nothing is pre-selected.
+		expect(screen.getByTestId('project-config-language').value).toBe('');
+	});
+
 	it('shows missing dependencies warning for gitguardian', () => {
 		renderSelector({
 			capabilities: mockCapabilities,

@@ -9,16 +9,20 @@ vi.mock('$lib/server/catalog.js', () => ({
 }));
 
 describe('capabilities api', () => {
-	it('serves the catalog from the genproj service', async () => {
+	it('serves the catalog from the genproj service, including the project-level configurationSchema', async () => {
 		const capabilities = [{ id: 'shell-tools', name: 'Shell & Terminal' }];
 		const categories = [{ id: 'core', label: 'Core Capabilities (Always Included)', order: 10 }];
-		fetchCatalog.mockResolvedValue({ capabilities, categories });
+		const configurationSchema = {
+			type: 'object',
+			properties: { language: { type: 'string', enum: ['python', 'node'] } }
+		};
+		fetchCatalog.mockResolvedValue({ capabilities, categories, configurationSchema });
 		const platform = { env: { GENPROJ: {} } };
 
 		const response = await GET({ platform });
 
 		expect(fetchCatalog).toHaveBeenCalledWith(platform);
-		expect(await response.json()).toEqual({ capabilities, categories });
+		expect(await response.json()).toEqual({ capabilities, categories, configurationSchema });
 	});
 
 	it('falls back to empty lists when the catalog has no categories', async () => {
@@ -30,7 +34,8 @@ describe('capabilities api', () => {
 
 		expect(await response.json()).toEqual({
 			capabilities: [{ id: 'shell-tools' }],
-			categories: []
+			categories: [],
+			configurationSchema: null
 		});
 	});
 });

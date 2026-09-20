@@ -72,6 +72,16 @@
 	export let configuration = {};
 	// Only used to show a default that depends on it (see displayDefault).
 	export let projectName = '';
+	// The project-level field list from the catalog (not attached to any single
+	// capability) - today, `language`. Rendered as its own block above the
+	// capability sections. The catalog owns the fields, their types, options and
+	// labels; the component only renders what it is handed.
+	export let configurationSchema = null;
+	// Whether the project-level fields must be declared. genproj requires the
+	// primary language once two or more devcontainer-* capabilities are selected
+	// (with 0 or 1 it is implied); the page owns that rule and passes the verdict
+	// down, so the marker the user sees matches the gate that blocks generation.
+	export let projectConfigurationRequired = false;
 
 	// Local state for expanded cards (to show benefits)
 	let expandedCapabilities = {};
@@ -252,6 +262,50 @@
 		return optionLabel(property, option) !== option;
 	}
 
+	// Project-level fields (from the catalog's top-level `configurationSchema`),
+	// e.g. the primary `language`. They belong to no capability, so they render
+	// in their own block above the capability sections rather than inside a card.
+	$: projectProperties = Object.entries(configurationSchema?.properties || {}).filter(
+		([_, property]) => shouldDisplayRule(property)
+	);
+
+	// The value a project-level field is implied by the current selection. A
+	// single `devcontainer-<language>` capability implies its language; with
+	// more than one distinct language the implication is ambiguous, which is
+	// exactly the case genproj requires a declared value for. The schema's own
+	// `enum` is the vocabulary, so the derivation stays catalog-driven.
+	function deriveProjectValue(property) {
+		if (!property?.enum) return undefined;
+		const derived = new Set();
+		for (const id of selectedCapabilities) {
+			if (!id.startsWith('devcontainer-')) continue;
+			const suffix = id.slice('devcontainer-'.length);
+			if (property.enum.includes(suffix)) {
+				derived.add(suffix);
+			}
+		}
+		return derived.size === 1 ? [...derived][0] : undefined;
+	}
+
+	// What the project-level control shows: an explicit choice wins, then the
+	// catalog default, then whatever the current selection implies. An implied
+	// value is shown pre-selected but not written back to `configuration`, so an
+	// untouched field keeps meaning "whatever the selection implies".
+	function projectValue(field, property) {
+		const explicit = configuration[field];
+		if (explicit !== undefined && explicit !== null && explicit !== '') {
+			return explicit;
+		}
+		if (property?.default !== undefined) return property.default;
+		return deriveProjectValue(property) ?? '';
+	}
+
+	function handleProjectConfigurationChange(field, value) {
+		const updatedConfiguration = { ...configuration, [field]: value };
+		dispatch('projectConfigurationChange', { field, value });
+		dispatch('update:configuration', updatedConfiguration);
+	}
+
 	// Helper function to check if a capability is required by another selected capability
 	function isRequiredByOther(currentCapability) {
 		return capabilities.some(
@@ -353,6 +407,118 @@
 </script>
 
 <div class="space-y-12">
+	<!-- Project-level configuration (catalog `configurationSchema`): fields that
+	     belong to the project, not to a capability. Rendered above the sections,
+	     from catalog data alone. -->
+	{#if projectProperties.length > 0}
+		<div data-testid="project-configuration">
+			<h2
+				class="text-2xl font-bold text-white mb-6 flex items-center border-b border-gray-700 pb-2"
+			>
+				<span class="mr-2">Project Configuration</span>
+				{#if projectConfigurationRequired}
+					<span
+						class="text-xs font-normal text-yellow-400 ml-auto"
+						data-testid="project-config-required"
+					>
+						Required
+					</span>
+				{/if}
+			</h2>
+
+			<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+				{#each projectProperties as [field, property]}
+					<div class="bg-gray-800 rounded-xl border-2 border-gray-700 p-6">
+						<label for="project-{field}" class="block text-xs font-medium text-gray-300 mb-1.5">
+							{formatLabel(field)}
+							{#if projectConfigurationRequired}
+								<span class="text-red-400" aria-hidden="true">*</span>
+							{/if}
+						</label>
+						{#if property.description}
+							<p class="text-xs text-gray-400 mb-2">{property.description}</p>
+						{/if}
+
+						{#if property.enum}
+							<select
+								id="project-{field}"
+								data-testid="project-config-{field}"
+								class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
+								value={projectValue(field, property)}
+								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
+							>
+								<option value="">
+									{projectConfigurationRequired ? 'Select…' : '— implied —'}
+								</option>
+								{#each property.enum as option}
+									<option value={option}>{optionLabel(property, option)}</option>
+								{/each}
+							</select>
+						{:else if property.type === 'boolean'}
+							<div class="flex items-center">
+								<input
+									type="checkbox"
+									id="project-{field}"
+									data-testid="project-config-{field}"
+									class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
+									checked={projectValue(field, property) || false}
+									onchange={(e) => handleProjectConfigurationChange(field, e.target.checked)}
+								/>
+								<span class="ml-2 text-sm text-gray-300">Enabled</span>
+							</div>
+						{:else if property.type === 'array' && property.items && property.items.enum}
+							<div class="flex flex-wrap gap-2">
+								{#each property.items.enum as option}
+									<label
+										class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
+									>
+										<input
+											type="checkbox"
+											class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
+											checked={configuration[field]?.includes(option) || false}
+											onchange={(e) => {
+												const current = configuration[field] || [];
+												const next = e.target.checked
+													? [...current, option]
+													: current.filter((item) => item !== option);
+												handleProjectConfigurationChange(field, next);
+											}}
+										/>
+										<span class="ml-1.5 text-gray-300 text-xs">{optionLabel(property, option)}</span
+										>
+										{#if hasOptionLabel(property, option)}
+											<span class="ml-1.5 text-gray-500 text-[10px] font-mono">{option}</span>
+										{/if}
+									</label>
+								{/each}
+							</div>
+						{:else if property.type === 'number' || property.type === 'integer'}
+							<input
+								type="number"
+								id="project-{field}"
+								data-testid="project-config-{field}"
+								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+								min={property.minimum}
+								max={property.maximum}
+								value={projectValue(field, property)}
+								onchange={(e) => handleProjectConfigurationChange(field, Number(e.target.value))}
+							/>
+						{:else}
+							<input
+								type="text"
+								id="project-{field}"
+								data-testid="project-config-{field}"
+								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+								value={projectValue(field, property)}
+								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
+							/>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#each sectionIds as categoryId}
 		{#if capabilityGroups[categoryId] && capabilityGroups[categoryId].length > 0}
 			<div>

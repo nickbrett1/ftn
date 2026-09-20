@@ -128,4 +128,29 @@ describe('Generate Page Component', () => {
 			);
 		});
 	});
+
+	it('forwards the project configuration on the generate POST', async () => {
+		// The declared project-level language travels in `configuration`; without
+		// it genproj defaults the context to `{}` and cannot honour the choice.
+		globalThis.fetch.mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: async () => ({ repositoryUrl: 'https://github.com/user/test-project' })
+		});
+
+		const { getByRole } = render(Page, {
+			data: { ...data, configuration: { language: 'python' } }
+		});
+
+		await fireEvent.click(getByRole('button', { name: /generate project/i }));
+
+		await waitFor(() => {
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
+				'/projects/genproj/api/generate',
+				expect.objectContaining({
+					body: expect.stringContaining('"configuration":{"language":"python"}')
+				})
+			);
+		});
+	});
 });

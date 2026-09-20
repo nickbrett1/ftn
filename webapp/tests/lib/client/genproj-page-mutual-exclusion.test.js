@@ -83,4 +83,46 @@ describe('Genproj page — deployment mutual exclusion', () => {
 		expect(cloudflareCheckbox.checked).toBe(true);
 		expect(dockerCheckbox.checked).toBe(false);
 	});
+
+	it('renders and requires the project-level language once two devcontainers are selected', async () => {
+		// genproj requires a declared language when 2+ devcontainer-* are selected;
+		// the control comes from the catalog's top-level `configurationSchema`.
+		const props = {
+			data: {
+				isAuthenticated: true,
+				capabilities: deploymentCapabilities,
+				selectedCapabilities: ['devcontainer-python', 'devcontainer-rust'],
+				projectName: 'my-app',
+				repositoryUrl: '',
+				configuration: {},
+				configurationSchema: {
+					type: 'object',
+					properties: {
+						language: { type: 'string', enum: ['python', 'node', 'java', 'rust'] }
+					}
+				},
+				error: null,
+				authResult: null
+			}
+		};
+
+		const { container } = render(GenprojPage, { props });
+
+		const select = await waitFor(() => {
+			const element = container.querySelector('#project-language');
+			expect(element).toBeTruthy();
+			return element;
+		});
+
+		// Visible and marked required, and generation is gated until a choice is
+		// made (the ambiguous two-language selection does not pre-select one).
+		expect(container.querySelector('[data-testid="project-config-required"]')).toBeTruthy();
+		expect(select.value).toBe('');
+		const generateButton = container.querySelector('[data-testid="generate-button"]');
+		expect(generateButton.disabled).toBe(true);
+
+		await fireEvent.change(select, { target: { value: 'rust' } });
+
+		await waitFor(() => expect(generateButton.disabled).toBe(false));
+	});
 });
