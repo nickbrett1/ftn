@@ -323,6 +323,17 @@
 		dispatch('update:configuration', updatedConfiguration);
 	}
 
+	// Shared look for the `enum` combo boxes, matching the select styling the
+	// ccbilling filter page uses: a lighter, bordered control on the dark card
+	// so it reads as an input. `appearance-none` drops the browser's native
+	// arrow, which is near-invisible on a dark background; an explicit chevron
+	// is drawn over the control instead (see `enumSelectChevronClass`).
+	const enumSelectClass =
+		'block w-full appearance-none pl-3 pr-10 py-2 text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg bg-gray-700 text-white shadow-sm cursor-pointer';
+	// Positions the chevron over the right edge of a `relative` wrapper.
+	const enumSelectChevronClass =
+		'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3';
+
 	// Helper function to check if a capability is required by another selected capability
 	function isRequiredByOther(currentCapability) {
 		return capabilities.some(
@@ -457,20 +468,25 @@
 						{/if}
 
 						{#if property.enum}
-							<select
-								id="project-{field}"
-								data-testid="project-config-{field}"
-								class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
-								value={projectValues[field]}
-								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
-							>
-								<option value="">
-									{projectConfigurationRequired ? 'Select…' : '— implied —'}
-								</option>
-								{#each property.enum as option}
-									<option value={option}>{optionLabel(property, option)}</option>
-								{/each}
-							</select>
+							<div class="relative">
+								<select
+									id="project-{field}"
+									data-testid="project-config-{field}"
+									class={enumSelectClass}
+									value={projectValues[field]}
+									onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
+								>
+									<option value="">
+										{projectConfigurationRequired ? 'Select…' : '— implied —'}
+									</option>
+									{#each property.enum as option}
+										<option value={option}>{optionLabel(property, option)}</option>
+									{/each}
+								</select>
+								<div class={enumSelectChevronClass}>
+									<ChevronDownSolid class="w-4 h-4 text-gray-300" aria-hidden="true" />
+								</div>
+							</div>
 						{:else if property.type === 'boolean'}
 							<div class="flex items-center">
 								<input
@@ -675,17 +691,22 @@
 													{formatLabel(field)}
 												</label>
 												{#if property.enum}
-													<select
-														id="{capability.id}-{field}"
-														class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
-														value={configuration[capability.id]?.[field] || property.default}
-														onchange={(e) =>
-															handleConfigurationChange(capability.id, field, e.target.value)}
-													>
-														{#each property.enum as option}
-															<option value={option}>{optionLabel(property, option)}</option>
-														{/each}
-													</select>
+													<div class="relative">
+														<select
+															id="{capability.id}-{field}"
+															class={enumSelectClass}
+															value={configuration[capability.id]?.[field] || property.default}
+															onchange={(e) =>
+																handleConfigurationChange(capability.id, field, e.target.value)}
+														>
+															{#each property.enum as option}
+																<option value={option}>{optionLabel(property, option)}</option>
+															{/each}
+														</select>
+														<div class={enumSelectChevronClass}>
+															<ChevronDownSolid class="w-4 h-4 text-gray-300" aria-hidden="true" />
+														</div>
+													</div>
 												{:else if property.type === 'boolean'}
 													<div class="flex items-center">
 														<input
