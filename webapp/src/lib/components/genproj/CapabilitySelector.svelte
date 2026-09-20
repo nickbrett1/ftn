@@ -274,10 +274,10 @@
 	// more than one distinct language the implication is ambiguous, which is
 	// exactly the case genproj requires a declared value for. The schema's own
 	// `enum` is the vocabulary, so the derivation stays catalog-driven.
-	function deriveProjectValue(property) {
+	function deriveProjectValue(property, selected) {
 		if (!property?.enum) return undefined;
 		const derived = new Set();
-		for (const id of selectedCapabilities) {
+		for (const id of selected) {
 			if (!id.startsWith('devcontainer-')) continue;
 			const suffix = id.slice('devcontainer-'.length);
 			if (property.enum.includes(suffix)) {
@@ -287,17 +287,34 @@
 		return derived.size === 1 ? [...derived][0] : undefined;
 	}
 
-	// What the project-level control shows: an explicit choice wins, then the
+	// What a project-level control shows: an explicit choice wins, then the
 	// catalog default, then whatever the current selection implies. An implied
 	// value is shown pre-selected but not written back to `configuration`, so an
 	// untouched field keeps meaning "whatever the selection implies".
-	function projectValue(field, property) {
-		const explicit = configuration[field];
+	function projectValue(field, property, explicitConfiguration, selected) {
+		const explicit = explicitConfiguration[field];
 		if (explicit !== undefined && explicit !== null && explicit !== '') {
 			return explicit;
 		}
 		if (property?.default !== undefined) return property.default;
-		return deriveProjectValue(property) ?? '';
+		return deriveProjectValue(property, selected) ?? '';
+	}
+
+	// The value every project-level control shows, keyed by field. This is a
+	// reactive statement that names the schema, the configuration and the
+	// selection as *arguments*, so the legacy compiler records each of them as a
+	// dependency. Rendering `projectValue(...)` directly in the template did not
+	// work: the compiler cannot see through the call, `untrack`s it, and only
+	// re-evaluates it when the each-block items change - so a devcontainer
+	// selected after first render left the select on `— implied —`.
+	$: projectValues = buildProjectValues(projectProperties, configuration, selectedCapabilities);
+
+	function buildProjectValues(properties, explicitConfiguration, selected) {
+		const values = {};
+		for (const [field, property] of properties) {
+			values[field] = projectValue(field, property, explicitConfiguration, selected);
+		}
+		return values;
 	}
 
 	function handleProjectConfigurationChange(field, value) {
@@ -444,7 +461,7 @@
 								id="project-{field}"
 								data-testid="project-config-{field}"
 								class="block w-full pl-3 pr-10 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white shadow-sm"
-								value={projectValue(field, property)}
+								value={projectValues[field]}
 								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
 							>
 								<option value="">
@@ -461,7 +478,7 @@
 									id="project-{field}"
 									data-testid="project-config-{field}"
 									class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
-									checked={projectValue(field, property) || false}
+									checked={projectValues[field] || false}
 									onchange={(e) => handleProjectConfigurationChange(field, e.target.checked)}
 								/>
 								<span class="ml-2 text-sm text-gray-300">Enabled</span>
@@ -500,7 +517,7 @@
 								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
 								min={property.minimum}
 								max={property.maximum}
-								value={projectValue(field, property)}
+								value={projectValues[field]}
 								onchange={(e) => handleProjectConfigurationChange(field, Number(e.target.value))}
 							/>
 						{:else}
@@ -509,7 +526,7 @@
 								id="project-{field}"
 								data-testid="project-config-{field}"
 								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-								value={projectValue(field, property)}
+								value={projectValues[field]}
 								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
 							/>
 						{/if}

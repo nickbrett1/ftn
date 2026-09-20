@@ -79,6 +79,69 @@ describe('Genproj page — project-level configuration', () => {
 		expect(config?.language).toBeUndefined();
 	});
 
+	it('leaves the language optional on the implied placeholder with no devcontainer', async () => {
+		const { container } = render(GenprojPage, { props: props({}, []) });
+
+		const select = await waitFor(() => container.querySelector('#project-language'));
+		// 0 devcontainers: optional, nothing implied, no required marker.
+		expect(select.value).toBe('');
+		expect(select.textContent).toContain('— implied —');
+		expect(container.querySelector('[data-testid="project-config-required"]')).toBeNull();
+	});
+
+	it('pre-selects the implied language when a devcontainer is selected after first render', async () => {
+		const { container } = render(GenprojPage, { props: props({}, []) });
+
+		// Nothing is implied on first render.
+		const select = await waitFor(() => container.querySelector('#project-language'));
+		expect(select.value).toBe('');
+
+		// The common user path: the devcontainer is chosen *after* the block has
+		// rendered (a card click), not passed in at mount. The select must
+		// re-apply its value from the new selection, or it stays on the
+		// placeholder. Regression test for the untracked `projectValue(...)` call.
+		const checkbox = await waitFor(() =>
+			container.querySelector('#capability-devcontainer-python')
+		);
+		await fireEvent.click(checkbox);
+
+		await waitFor(() => expect(container.querySelector('#project-language').value).toBe('python'));
+		// Still one devcontainer: optional, so no required marker and generation
+		// is not gated on the language.
+		expect(container.querySelector('[data-testid="project-config-required"]')).toBeNull();
+		expect(container.querySelector('[data-testid="generate-button"]').disabled).toBe(false);
+	});
+
+	it('requires a declared language once a second devcontainer is selected interactively', async () => {
+		const { container } = render(GenprojPage, { props: props({}, []) });
+
+		const select = await waitFor(() => container.querySelector('#project-language'));
+		const generateButton = container.querySelector('[data-testid="generate-button"]');
+
+		// One devcontainer after mount: implied, still optional.
+		await fireEvent.click(
+			await waitFor(() => container.querySelector('#capability-devcontainer-python'))
+		);
+		await waitFor(() => expect(select.value).toBe('python'));
+		expect(generateButton.disabled).toBe(false);
+
+		// A second devcontainer language makes the implication ambiguous, so the
+		// field becomes required and generation is blocked on a choice.
+		await fireEvent.click(container.querySelector('#capability-devcontainer-rust'));
+		await waitFor(() =>
+			expect(container.querySelector('[data-testid="project-config-required"]')).toBeTruthy()
+		);
+		expect(container.querySelector('#project-language').value).toBe('');
+		await waitFor(() => expect(generateButton.disabled).toBe(true));
+
+		// A declared value wins over the implication and unblocks generation.
+		await fireEvent.change(container.querySelector('#project-language'), {
+			target: { value: 'rust' }
+		});
+		await waitFor(() => expect(generateButton.disabled).toBe(false));
+		expect(container.querySelector('#project-language').value).toBe('rust');
+	});
+
 	it('shows the implied language but does not declare it', async () => {
 		const { container } = render(GenprojPage, { props: props({}) });
 
