@@ -222,6 +222,28 @@
 		return !(property.enum && property.enum.length === 1);
 	}
 
+	// `visibleWhen` is a catalog presentation hint on a config property: an object
+	// mapping a configuration key to the value(s) for which the property applies.
+	// A condition is either an array (visible when the key's effective value is
+	// one of them) or `{ not: [...] }` (visible when it is none of them). It is a
+	// hint for the form only, never a validity rule: a hidden property remains
+	// legal for the generator. A key with no effective value hides the property,
+	// so an array condition and its `{ not }` counterpart can never both show.
+	function visibleWhenMatches(condition, value) {
+		if (value === undefined || value === null) return false;
+		if (Array.isArray(condition)) return condition.includes(value);
+		if (condition && Array.isArray(condition.not)) return !condition.not.includes(value);
+		return true;
+	}
+
+	function shouldDisplayByVisibleWhen(property, effectiveConfiguration) {
+		const visibleWhen = property?.visibleWhen;
+		if (!visibleWhen || typeof visibleWhen !== 'object') return true;
+		return Object.entries(visibleWhen).every(([key, condition]) =>
+			visibleWhenMatches(condition, effectiveConfiguration?.[key])
+		);
+	}
+
 	// Helper function to format camelCase strings into human-readable labels
 	function formatLabel(camelCaseString) {
 		if (!camelCaseString) return '';
@@ -262,11 +284,47 @@
 		return optionLabel(property, option) !== option;
 	}
 
+	// Single-select enum fields where "no choice" is itself a meaningful value,
+	// so the control needs an explicit empty option to return to. The singular
+	// release `target` is the one today: leaving it unset publishes the release
+	// under the universal `any` key. The catalog deliberately carries no default
+	// for it, because the empty option is a presentation choice, and the
+	// component owns that choice.
+	const OPTIONAL_ENUM_FIELDS = new Set(['target']);
+
+	function isOptionalEnumField(field) {
+		return OPTIONAL_ENUM_FIELDS.has(field);
+	}
+
+	// What a single-select enum shows: an optional field with no stored value
+	// shows the empty option, everything else keeps its historical
+	// "stored value, else catalog default" behaviour.
+	function enumSelectValue(capabilityId, field, property) {
+		const current = configuration[capabilityId]?.[field];
+		if (isOptionalEnumField(field)) return current ?? '';
+		return current || property.default;
+	}
+
+	// A single-select change. Clearing an optional field stores `undefined`
+	// rather than an empty string, so "no target" is absent from the payload
+	// (which the generator reads as the universal `any` release) rather than
+	// submitted as a value.
+	function handleEnumSelectChange(capabilityId, field, value) {
+		handleConfigurationChange(
+			capabilityId,
+			field,
+			isOptionalEnumField(field) && value === '' ? undefined : value
+		);
+	}
+
 	// Project-level fields (from the catalog's top-level `configurationSchema`),
 	// e.g. the primary `language`. They belong to no capability, so they render
 	// in their own block above the capability sections rather than inside a card.
+	// A field may itself carry `visibleWhen`; the effective values below are what
+	// every such hint - here and on capability properties - resolves against.
 	$: projectProperties = Object.entries(configurationSchema?.properties || {}).filter(
-		([_, property]) => shouldDisplayRule(property)
+		([_, property]) =>
+			shouldDisplayRule(property) && shouldDisplayByVisibleWhen(property, effectiveProjectValues)
 	);
 
 	// The label for a project-level field. The catalog may name it (`title`);
@@ -291,6 +349,54 @@
 			if (property.enum.includes(suffix)) derived.add(suffix);
 		}
 		return [...derived];
+	}
+
+	// The language genproj falls back to when nothing declares or implies one.
+	// The form resolves `language` the same way the server will, so a
+	// `visibleWhen` on `language` matches the build that is actually produced.
+	const FALLBACK_LANGUAGE = 'node';
+
+	// The value a configuration key effectively has, as genproj resolves it: an
+	// explicit choice wins, then the value a single selected devcontainer implies
+	// (two or more is ambiguous), then - for `language` - the server fallback. A
+	// key with no effective value is `undefined`, which `visibleWhen` treats as
+	// "hide".
+	function effectiveProjectValue(field, property, explicitConfiguration, selected) {
+		const explicit = explicitConfiguration?.[field];
+		if (explicit !== undefined && explicit !== null && explicit !== '') return explicit;
+		const derived = derivedProjectValues(property, selected);
+		if (derived.length === 1) return derived[0];
+		if (field === 'language') return FALLBACK_LANGUAGE;
+		return undefined;
+	}
+
+	// The effective value of every catalog field, keyed by field. Written as a
+	// reactive statement that names the configuration and the selection as
+	// arguments, so a hint re-resolves when either changes - picking a Rust
+	// devcontainer, or overriding the language, flips which release knob shows.
+	$: effectiveProjectValues = buildEffectiveProjectValues(
+		Object.entries(configurationSchema?.properties || {}),
+		configuration,
+		selectedCapabilities
+	);
+
+	function buildEffectiveProjectValues(properties, explicitConfiguration, selected) {
+		const values = {};
+		for (const [field, property] of properties) {
+			values[field] = effectiveProjectValue(field, property, explicitConfiguration, selected);
+		}
+		// `language` is resolved even when the schema does not declare it: the
+		// server always has a language, so a `visibleWhen` keyed on it must never
+		// hide every matching property merely because the field list is absent.
+		if (!('language' in values)) {
+			values.language = effectiveProjectValue(
+				'language',
+				undefined,
+				explicitConfiguration,
+				selected
+			);
+		}
+		return values;
 	}
 
 	// The name an override option offers: the catalog label where one exists,
@@ -656,7 +762,11 @@
 						{@const isRequired = isRequiredByOther(capability)}
 						{@const visibleProperties = Object.entries(
 							capability.configurationSchema?.properties || {}
-						).filter(([_, property]) => shouldDisplayRule(property))}
+						).filter(
+							([_, property]) =>
+								shouldDisplayRule(property) &&
+								shouldDisplayByVisibleWhen(property, effectiveProjectValues)
+						)}
 
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -779,10 +889,13 @@
 														<select
 															id="{capability.id}-{field}"
 															class={enumSelectClass}
-															value={configuration[capability.id]?.[field] || property.default}
+															value={enumSelectValue(capability.id, field, property)}
 															onchange={(e) =>
-																handleConfigurationChange(capability.id, field, e.target.value)}
+																handleEnumSelectChange(capability.id, field, e.target.value)}
 														>
+															{#if isOptionalEnumField(field)}
+																<option value="">Not architecture-specific (any)</option>
+															{/if}
 															{#each property.enum as option}
 																<option value={option}>{optionLabel(property, option)}</option>
 															{/each}

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelte';
+import CapabilitySelectorHarness from './CapabilitySelectorHarness.svelte';
 import { vi, describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { capabilities } from '$lib/config/capabilities.js';
 
@@ -390,5 +391,171 @@ describe('CapabilitySelector', () => {
 
 		// Find the GitGuardian card (or look for text within it)
 		expect(screen.getByText('Requires: CircleCI Integration')).toBeTruthy();
+	});
+
+	// The shipped catalog's release split: `targets` is the Rust build matrix
+	// (one build step per triple), `target` is a single platform-specific
+	// artifact for a non-Rust language. They are mutually exclusive and each
+	// carries a `visibleWhen` hint keyed on the effective language, so the form
+	// shows exactly the one the generator will accept. Both the hint and the
+	// enum labels are catalog data; the component only resolves who is visible.
+	const releaseCapability = {
+		id: 'github-release',
+		name: 'GitHub Release',
+		description: 'Releases',
+		category: 'deployment',
+		icon: 'github',
+		iconColor: 'green',
+		selectedByDefault: false,
+		provides: [],
+		dependencies: [],
+		conflicts: [],
+		requiresAuth: [],
+		authServices: [],
+		externalServices: [],
+		vscodeExtensions: [],
+		benefits: [],
+		links: [],
+		configurationSchema: {
+			type: 'object',
+			properties: {
+				targets: {
+					type: 'array',
+					visibleWhen: { language: ['rust'] },
+					items: {
+						type: 'string',
+						enum: ['aarch64-apple-darwin', 'x86_64-unknown-linux-musl'],
+						enumLabels: {
+							'aarch64-apple-darwin': 'macOS (Apple silicon)',
+							'x86_64-unknown-linux-musl': 'Linux x86-64 (musl)'
+						}
+					},
+					default: []
+				},
+				target: {
+					type: 'string',
+					visibleWhen: { language: { not: ['rust'] } },
+					enum: ['aarch64-apple-darwin', 'x86_64-unknown-linux-musl'],
+					enumLabels: {
+						'aarch64-apple-darwin': 'macOS (Apple silicon)',
+						'x86_64-unknown-linux-musl': 'Linux x86-64 (musl)'
+					}
+				}
+			}
+		}
+	};
+
+	it('shows Targets and hides Target when the effective language is rust', () => {
+		const { container } = renderSelector({
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release', 'devcontainer-rust'],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		// The array renders one checkbox per triple, with its triple spelled out.
+		expect(screen.getByText('macOS (Apple silicon)')).toBeTruthy();
+		expect(screen.getByText('aarch64-apple-darwin')).toBeTruthy();
+		// The singular, non-Rust knob is gone entirely.
+		expect(container.querySelector('#github-release-target')).toBeNull();
+	});
+
+	it('shows Target and hides Targets when the effective language is not rust', () => {
+		const { container } = renderSelector({
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release', 'devcontainer-python'],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		// The single-select is present, with the unset option first.
+		const target = container.querySelector('#github-release-target');
+		expect(target).toBeTruthy();
+		expect(target.querySelector('option').value).toBe('');
+		// The array is gone: its per-triple triple text would otherwise be here.
+		expect(screen.queryByText('aarch64-apple-darwin')).toBeNull();
+	});
+
+	it('flips which release knob shows when an explicit language override wins', () => {
+		const { container } = renderSelector({
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release', 'devcontainer-rust'],
+			// The override beats the Rust devcontainer's implied language.
+			configuration: { language: 'python' },
+			configurationSchema: projectSchema
+		});
+
+		expect(container.querySelector('#github-release-target')).toBeTruthy();
+		expect(screen.queryByText('aarch64-apple-darwin')).toBeNull();
+	});
+
+	it('re-resolves visibleWhen when the selection changes after first render', async () => {
+		// The common path: the devcontainer is chosen after the card has rendered,
+		// not passed in at mount. The hint must re-resolve from the new effective
+		// language, or the wrong release knob stays on screen.
+		const { container, rerender } = renderSelector({
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release'],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		// Fallback `node`: the singular target shows.
+		expect(container.querySelector('#github-release-target')).toBeTruthy();
+		expect(screen.queryByText('aarch64-apple-darwin')).toBeNull();
+
+		await rerender({
+			categories: CATEGORIES,
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release', 'devcontainer-rust'],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		// Rust now: the matrix shows and the singular target is gone.
+		expect(container.querySelector('#github-release-target')).toBeNull();
+		expect(screen.getByText('aarch64-apple-darwin')).toBeTruthy();
+	});
+
+	it('treats a visibleWhen key with no schema as its server fallback', () => {
+		// No project schema at all, nothing selected to imply a language: the
+		// server fallback `node` is what the generator uses, so `{ not: ['rust'] }`
+		// is satisfied and the singular target shows. A key with no effective value
+		// would instead hide the property.
+		const { container } = renderSelector({
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release'],
+			configuration: {},
+			configurationSchema: null
+		});
+
+		expect(container.querySelector('#github-release-target')).toBeTruthy();
+		expect(screen.queryByText('aarch64-apple-darwin')).toBeNull();
+	});
+
+	it('offers an unset option on the release target and clears back to unset', async () => {
+		const dispatched = [];
+		const { container } = render(CapabilitySelectorHarness, {
+			categories: CATEGORIES,
+			capabilities: [releaseCapability],
+			selectedCapabilities: ['github-release', 'devcontainer-python'],
+			configuration: { 'github-release': { target: 'aarch64-apple-darwin' } },
+			configurationSchema: projectSchema,
+			onConfigurationChange: (detail) => dispatched.push(detail)
+		});
+
+		const select = container.querySelector('#github-release-target');
+		expect(select.value).toBe('aarch64-apple-darwin');
+
+		const unset = select.querySelector('option');
+		expect(unset.value).toBe('');
+		expect(unset.textContent).toBe('Not architecture-specific (any)');
+
+		await fireEvent.change(select, { target: { value: '' } });
+
+		// Clearing returns to unset, and the payload carries `undefined` rather
+		// than an empty string: the universal `any` release, not a chosen value.
+		expect(dispatched).toHaveLength(1);
+		expect(dispatched[0].config.target).toBeUndefined();
 	});
 });
