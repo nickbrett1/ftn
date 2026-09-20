@@ -191,3 +191,15 @@ webapp/core
 .jules/verification
 .antigravitycli
 circleci-build-logs-*
+
+# --- Agent / IDE scratch artifacts: never commit these ---
+# Antigravity / Gemini CLI local state (the real brain lives in the tool's
+# own docker volume at /home/node/.gemini, outside the repo)
+.gemini/
+.antigravity/
+.antigravitycli/
+.system_generated/
+# Agent working directory (validation screenshots, probe scripts, reports)
+scratch/
+# Jules
+.jules/
