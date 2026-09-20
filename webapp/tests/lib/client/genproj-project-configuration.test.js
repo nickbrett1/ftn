@@ -22,6 +22,9 @@ const configurationSchema = {
 // Real catalog objects, so the selector renders faithfully.
 const devcontainerCapabilities = capabilities.filter((c) => c.id.startsWith('devcontainer-'));
 
+// The read-only "Implied" value the selector renders for the language field.
+const IMPLIED_TESTID = '[data-testid="project-config-language-implied"]';
+
 function props(configuration, selectedCapabilities = ['devcontainer-python']) {
 	return {
 		data: {
@@ -79,62 +82,67 @@ describe('Genproj page — project-level configuration', () => {
 		expect(config?.language).toBeUndefined();
 	});
 
-	it('leaves the language optional on the implied placeholder with no devcontainer', async () => {
+	it('leaves the language optional with nothing implied and no devcontainer', async () => {
 		const { container } = render(GenprojPage, { props: props({}, []) });
 
 		const select = await waitFor(() => container.querySelector('#project-language'));
 		// 0 devcontainers: optional, nothing implied, no required marker.
 		expect(select.value).toBe('');
-		expect(select.textContent).toContain('— implied —');
+		expect(container.querySelector(IMPLIED_TESTID).textContent.trim()).toBe('None');
 		expect(container.querySelector('[data-testid="project-config-required"]')).toBeNull();
 	});
 
-	it('pre-selects the implied language when a devcontainer is selected after first render', async () => {
+	it('shows the implied language when a devcontainer is selected after first render', async () => {
 		const { container } = render(GenprojPage, { props: props({}, []) });
 
 		// Nothing is implied on first render.
-		const select = await waitFor(() => container.querySelector('#project-language'));
-		expect(select.value).toBe('');
+		const implied = () => container.querySelector(IMPLIED_TESTID);
+		await waitFor(() => container.querySelector('#project-language'));
+		expect(implied().textContent.trim()).toBe('None');
 
 		// The common user path: the devcontainer is chosen *after* the block has
-		// rendered (a card click), not passed in at mount. The select must
-		// re-apply its value from the new selection, or it stays on the
-		// placeholder. Regression test for the untracked `projectValue(...)` call.
+		// rendered (a card click), not passed in at mount. The read-only implied
+		// text must re-apply from the new selection, or it stays on "None".
+		// Regression test for the untracked derivation call.
 		const checkbox = await waitFor(() =>
 			container.querySelector('#capability-devcontainer-python')
 		);
 		await fireEvent.click(checkbox);
 
-		await waitFor(() => expect(container.querySelector('#project-language').value).toBe('python'));
-		// Still one devcontainer: optional, so no required marker and generation
-		// is not gated on the language.
+		await waitFor(() => expect(implied().textContent.trim()).toBe('Python'));
+		// The override itself is untouched; still one devcontainer, so optional
+		// and generation is not gated on the language.
+		expect(container.querySelector('#project-language').value).toBe('');
 		expect(container.querySelector('[data-testid="project-config-required"]')).toBeNull();
 		expect(container.querySelector('[data-testid="generate-button"]').disabled).toBe(false);
 	});
 
-	it('requires a declared language once a second devcontainer is selected interactively', async () => {
+	it('requires an override once a second devcontainer is selected interactively', async () => {
 		const { container } = render(GenprojPage, { props: props({}, []) });
 
 		const select = await waitFor(() => container.querySelector('#project-language'));
+		const implied = () => container.querySelector(IMPLIED_TESTID);
 		const generateButton = container.querySelector('[data-testid="generate-button"]');
 
 		// One devcontainer after mount: implied, still optional.
 		await fireEvent.click(
 			await waitFor(() => container.querySelector('#capability-devcontainer-python'))
 		);
-		await waitFor(() => expect(select.value).toBe('python'));
+		await waitFor(() => expect(implied().textContent.trim()).toBe('Python'));
+		expect(select.value).toBe('');
 		expect(generateButton.disabled).toBe(false);
 
 		// A second devcontainer language makes the implication ambiguous, so the
-		// field becomes required and generation is blocked on a choice.
+		// override becomes required and generation is blocked on a choice.
 		await fireEvent.click(container.querySelector('#capability-devcontainer-rust'));
 		await waitFor(() =>
 			expect(container.querySelector('[data-testid="project-config-required"]')).toBeTruthy()
 		);
+		expect(implied().textContent.trim()).toBe('Multiple');
 		expect(container.querySelector('#project-language').value).toBe('');
 		await waitFor(() => expect(generateButton.disabled).toBe(true));
 
-		// A declared value wins over the implication and unblocks generation.
+		// An override wins over the implication and unblocks generation.
 		await fireEvent.change(container.querySelector('#project-language'), {
 			target: { value: 'rust' }
 		});
@@ -146,7 +154,9 @@ describe('Genproj page — project-level configuration', () => {
 		const { container } = render(GenprojPage, { props: props({}) });
 
 		const select = await waitFor(() => container.querySelector('#project-language'));
-		expect(select.value).toBe('python');
+		// The implied language is shown read-only; the override stays blank.
+		expect(container.querySelector(IMPLIED_TESTID).textContent.trim()).toBe('Python');
+		expect(select.value).toBe('');
 
 		// Untouched: nothing is written back, so no language is declared.
 		const config = await redirectConfig(container);

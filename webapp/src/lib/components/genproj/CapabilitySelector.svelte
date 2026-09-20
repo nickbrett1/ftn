@@ -269,50 +269,103 @@
 		([_, property]) => shouldDisplayRule(property)
 	);
 
-	// The value a project-level field is implied by the current selection. A
-	// single `devcontainer-<language>` capability implies its language; with
-	// more than one distinct language the implication is ambiguous, which is
-	// exactly the case genproj requires a declared value for. The schema's own
-	// `enum` is the vocabulary, so the derivation stays catalog-driven.
-	function deriveProjectValue(property, selected) {
-		if (!property?.enum) return undefined;
+	// The label for a project-level field. The catalog may name it (`title`);
+	// otherwise the primary language is spelled out as "Primary Language"
+	// rather than the bare "Language".
+	function projectFieldLabel(field, property) {
+		if (property?.title) return property.title;
+		if (field === 'language') return 'Primary Language';
+		return formatLabel(field);
+	}
+
+	// The languages the current selection implies: one per distinct
+	// `devcontainer-<language>` capability that names a value in the field's
+	// enum. The schema's own `enum` is the vocabulary, so the derivation stays
+	// catalog-driven. Empty means "nothing implied"; two or more is ambiguous.
+	function derivedProjectValues(property, selected) {
+		if (!property?.enum) return [];
 		const derived = new Set();
 		for (const id of selected) {
 			if (!id.startsWith('devcontainer-')) continue;
 			const suffix = id.slice('devcontainer-'.length);
-			if (property.enum.includes(suffix)) {
-				derived.add(suffix);
-			}
+			if (property.enum.includes(suffix)) derived.add(suffix);
 		}
-		return derived.size === 1 ? [...derived][0] : undefined;
+		return [...derived];
 	}
 
-	// What a project-level control shows: an explicit choice wins, then the
-	// catalog default, then whatever the current selection implies. An implied
-	// value is shown pre-selected but not written back to `configuration`, so an
-	// untouched field keeps meaning "whatever the selection implies".
-	function projectValue(field, property, explicitConfiguration, selected) {
-		const explicit = explicitConfiguration[field];
-		if (explicit !== undefined && explicit !== null && explicit !== '') {
-			return explicit;
-		}
-		if (property?.default !== undefined) return property.default;
-		return deriveProjectValue(property, selected) ?? '';
+	// The name an override option offers: the catalog label where one exists,
+	// else the raw value, with its first letter capitalised ("node" -> "Node").
+	function overrideOptionLabel(property, option) {
+		const label = optionLabel(property, option);
+		return label.charAt(0).toUpperCase() + label.slice(1);
 	}
 
-	// The value every project-level control shows, keyed by field. This is a
-	// reactive statement that names the schema, the configuration and the
-	// selection as *arguments*, so the legacy compiler records each of them as a
-	// dependency. Rendering `projectValue(...)` directly in the template did not
-	// work: the compiler cannot see through the call, `untrack`s it, and only
-	// re-evaluates it when the each-block items change - so a devcontainer
-	// selected after first render left the select on `— implied —`.
-	$: projectValues = buildProjectValues(projectProperties, configuration, selectedCapabilities);
+	// Override options in alphabetical order by their displayed name, so the
+	// list reads as a stable, scannable menu rather than in schema order.
+	function overrideOptions(property) {
+		return (property?.enum || [])
+			.map((option) => ({ value: option, label: overrideOptionLabel(property, option) }))
+			.sort((a, b) => a.label.localeCompare(b.label));
+	}
 
-	function buildProjectValues(properties, explicitConfiguration, selected) {
+	// What the selection currently implies, as read-only text: "None" when
+	// nothing is implied, the language when exactly one is, and "Multiple" when
+	// two or more distinct languages make it ambiguous (the override is then
+	// required).
+	function impliedProjectDisplay(property, selected) {
+		const derived = derivedProjectValues(property, selected);
+		if (derived.length === 0) return 'None';
+		if (derived.length > 1) return 'Multiple';
+		return overrideOptionLabel(property, derived[0]);
+	}
+
+	// The implied text for every project-level field, keyed by field. Written as
+	// a reactive statement that names the selection as an argument, so the legacy
+	// compiler records it as a dependency: a devcontainer picked after first
+	// render must update the read-only text.
+	$: impliedProjectValues = buildImpliedValues(projectProperties, selectedCapabilities);
+
+	function buildImpliedValues(properties, selected) {
 		const values = {};
 		for (const [field, property] of properties) {
-			values[field] = projectValue(field, property, explicitConfiguration, selected);
+			values[field] = impliedProjectDisplay(property, selected);
+		}
+		return values;
+	}
+
+	// The override is the *explicit* choice only - never the implied value and
+	// never the catalog default - so the combo starts blank ("no override") and
+	// an untouched field keeps meaning "whatever the selection implies".
+	function overrideValue(field, explicitConfiguration) {
+		const explicit = explicitConfiguration[field];
+		return explicit === undefined || explicit === null ? '' : explicit;
+	}
+
+	$: overrideValues = buildOverrideValues(projectProperties, configuration);
+
+	function buildOverrideValues(properties, explicitConfiguration) {
+		const values = {};
+		for (const [field] of properties) {
+			values[field] = overrideValue(field, explicitConfiguration);
+		}
+		return values;
+	}
+
+	// The value a plain (non-enum) project-level control shows: an explicit
+	// choice wins, then the catalog default.
+	function projectValue(field, property, explicitConfiguration) {
+		const explicit = explicitConfiguration[field];
+		if (explicit !== undefined && explicit !== null && explicit !== '') return explicit;
+		if (property?.default !== undefined) return property.default;
+		return '';
+	}
+
+	$: projectValues = buildProjectValues(projectProperties, configuration);
+
+	function buildProjectValues(properties, explicitConfiguration) {
+		const values = {};
+		for (const [field, property] of properties) {
+			values[field] = projectValue(field, property, explicitConfiguration);
 		}
 		return values;
 	}
@@ -457,94 +510,125 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 				{#each projectProperties as [field, property]}
 					<div class="bg-gray-800 rounded-xl border-2 border-gray-700 p-6">
-						<label for="project-{field}" class="block text-xs font-medium text-gray-300 mb-1.5">
-							{formatLabel(field)}
-							{#if projectConfigurationRequired}
-								<span class="text-red-400" aria-hidden="true">*</span>
-							{/if}
-						</label>
-						{#if property.description}
-							<p class="text-xs text-gray-400 mb-2">{property.description}</p>
-						{/if}
-
 						{#if property.enum}
-							<div class="relative">
-								<select
-									id="project-{field}"
-									data-testid="project-config-{field}"
-									class={enumSelectClass}
-									value={projectValues[field]}
-									onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
-								>
-									<option value="">
-										{projectConfigurationRequired ? 'Select…' : '— implied —'}
-									</option>
-									{#each property.enum as option}
-										<option value={option}>{optionLabel(property, option)}</option>
-									{/each}
-								</select>
-								<div class={enumSelectChevronClass}>
-									<ChevronDownSolid class="w-4 h-4 text-gray-300" aria-hidden="true" />
-								</div>
-							</div>
-						{:else if property.type === 'boolean'}
-							<div class="flex items-center">
-								<input
-									type="checkbox"
-									id="project-{field}"
-									data-testid="project-config-{field}"
-									class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
-									checked={projectValues[field] || false}
-									onchange={(e) => handleProjectConfigurationChange(field, e.target.checked)}
-								/>
-								<span class="ml-2 text-sm text-gray-300">Enabled</span>
-							</div>
-						{:else if property.type === 'array' && property.items && property.items.enum}
-							<div class="flex flex-wrap gap-2">
-								{#each property.items.enum as option}
-									<label
-										class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
+							<!-- The selection implies a value, shown read-only; only a
+							     deliberate override is submitted. -->
+							<h3 class="text-sm font-semibold text-white mb-3">
+								{projectFieldLabel(field, property)}
+								{#if projectConfigurationRequired}
+									<span class="text-red-400" aria-hidden="true">*</span>
+								{/if}
+							</h3>
+							<div class="space-y-3">
+								<div>
+									<span class="block text-xs font-medium text-gray-400 mb-1">Implied</span>
+									<div
+										data-testid="project-config-{field}-implied"
+										class="block w-full px-3 py-2 text-sm rounded-lg bg-gray-900 border border-gray-700 text-gray-200"
 									>
-										<input
-											type="checkbox"
-											class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
-											checked={configuration[field]?.includes(option) || false}
-											onchange={(e) => {
-												const current = configuration[field] || [];
-												const next = e.target.checked
-													? [...current, option]
-													: current.filter((item) => item !== option);
-												handleProjectConfigurationChange(field, next);
-											}}
-										/>
-										<span class="ml-1.5 text-gray-300 text-xs">{optionLabel(property, option)}</span
-										>
-										{#if hasOptionLabel(property, option)}
-											<span class="ml-1.5 text-gray-500 text-[10px] font-mono">{option}</span>
+										{impliedProjectValues[field]}
+									</div>
+								</div>
+								<div>
+									<label
+										for="project-{field}"
+										class="block text-xs font-medium text-gray-300 mb-1.5"
+									>
+										Override
+										{#if projectConfigurationRequired}
+											<span class="text-red-400" aria-hidden="true">*</span>
 										{/if}
 									</label>
-								{/each}
+									<div class="relative">
+										<select
+											id="project-{field}"
+											data-testid="project-config-{field}"
+											class={enumSelectClass}
+											value={overrideValues[field]}
+											onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
+										>
+											<option value=""></option>
+											{#each overrideOptions(property) as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+										<div class={enumSelectChevronClass}>
+											<ChevronDownSolid class="w-4 h-4 text-gray-300" aria-hidden="true" />
+										</div>
+									</div>
+								</div>
 							</div>
-						{:else if property.type === 'number' || property.type === 'integer'}
-							<input
-								type="number"
-								id="project-{field}"
-								data-testid="project-config-{field}"
-								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-								min={property.minimum}
-								max={property.maximum}
-								value={projectValues[field]}
-								onchange={(e) => handleProjectConfigurationChange(field, Number(e.target.value))}
-							/>
 						{:else}
-							<input
-								type="text"
-								id="project-{field}"
-								data-testid="project-config-{field}"
-								class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
-								value={projectValues[field]}
-								onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
-							/>
+							<label for="project-{field}" class="block text-xs font-medium text-gray-300 mb-1.5">
+								{formatLabel(field)}
+								{#if projectConfigurationRequired}
+									<span class="text-red-400" aria-hidden="true">*</span>
+								{/if}
+							</label>
+							{#if property.description}
+								<p class="text-xs text-gray-400 mb-2">{property.description}</p>
+							{/if}
+
+							{#if property.type === 'boolean'}
+								<div class="flex items-center">
+									<input
+										type="checkbox"
+										id="project-{field}"
+										data-testid="project-config-{field}"
+										class="form-checkbox h-4 w-4 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-600 bg-gray-800"
+										checked={projectValues[field] || false}
+										onchange={(e) => handleProjectConfigurationChange(field, e.target.checked)}
+									/>
+									<span class="ml-2 text-sm text-gray-300">Enabled</span>
+								</div>
+							{:else if property.type === 'array' && property.items && property.items.enum}
+								<div class="flex flex-wrap gap-2">
+									{#each property.items.enum as option}
+										<label
+											class="inline-flex items-center bg-gray-800 px-2 py-1 rounded border border-gray-600"
+										>
+											<input
+												type="checkbox"
+												class="form-checkbox h-3 w-3 text-green-500 rounded focus:ring-green-400 cursor-pointer border-gray-500 bg-gray-700"
+												checked={configuration[field]?.includes(option) || false}
+												onchange={(e) => {
+													const current = configuration[field] || [];
+													const next = e.target.checked
+														? [...current, option]
+														: current.filter((item) => item !== option);
+													handleProjectConfigurationChange(field, next);
+												}}
+											/>
+											<span class="ml-1.5 text-gray-300 text-xs"
+												>{optionLabel(property, option)}</span
+											>
+											{#if hasOptionLabel(property, option)}
+												<span class="ml-1.5 text-gray-500 text-[10px] font-mono">{option}</span>
+											{/if}
+										</label>
+									{/each}
+								</div>
+							{:else if property.type === 'number' || property.type === 'integer'}
+								<input
+									type="number"
+									id="project-{field}"
+									data-testid="project-config-{field}"
+									class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+									min={property.minimum}
+									max={property.maximum}
+									value={projectValues[field]}
+									onchange={(e) => handleProjectConfigurationChange(field, Number(e.target.value))}
+								/>
+							{:else}
+								<input
+									type="text"
+									id="project-{field}"
+									data-testid="project-config-{field}"
+									class="block w-full pl-3 pr-3 py-2 text-sm border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md bg-gray-800 text-white"
+									value={projectValues[field]}
+									onchange={(e) => handleProjectConfigurationChange(field, e.target.value)}
+								/>
+							{/if}
 						{/if}
 					</div>
 				{/each}

@@ -4,6 +4,11 @@ import CapabilitySelector from '$lib/components/genproj/CapabilitySelector.svelt
 import { vi, describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { capabilities } from '$lib/config/capabilities.js';
 
+// The project-level "Primary Language" controls, named once so the tests
+// read the same as the markup.
+const LANGUAGE_SELECT = 'project-config-language';
+const LANGUAGE_IMPLIED = 'project-config-language-implied';
+
 describe('CapabilitySelector', () => {
 	const mockCapabilities = capabilities;
 	const mockDispatch = vi.fn();
@@ -283,14 +288,37 @@ describe('CapabilitySelector', () => {
 		});
 
 		expect(screen.getByTestId('project-configuration')).toBeTruthy();
-		// The option carries its catalog label, and the description is shown.
-		expect(screen.getByText('Node.js')).toBeTruthy();
+		// The field is spelled out as "Primary Language"; the long catalog
+		// description is NOT shown as helper text.
+		expect(screen.getByText('Primary Language')).toBeTruthy();
 		expect(
-			screen.getByText('Primary Language: the one the project builds and releases.')
-		).toBeTruthy();
+			screen.queryByText('Primary Language: the one the project builds and releases.')
+		).toBeNull();
 
-		// Nothing is implied yet, so the control sits on its placeholder.
-		expect(screen.getByTestId('project-config-language').value).toBe('');
+		// Nothing is implied and no override is chosen yet.
+		expect(screen.getByTestId(LANGUAGE_IMPLIED).textContent.trim()).toBe('None');
+		expect(screen.getByTestId(LANGUAGE_SELECT).value).toBe('');
+	});
+
+	it('orders the override options alphabetically and capitalises them', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: [],
+			configuration: {},
+			configurationSchema: projectSchema
+		});
+
+		const options = [...screen.getByTestId(LANGUAGE_SELECT).querySelectorAll('option')].map(
+			(option) => ({ value: option.value, label: option.textContent })
+		);
+		// A blank "no override" first, then the languages alphabetically by name.
+		expect(options).toEqual([
+			{ value: '', label: '' },
+			{ value: 'java', label: 'Java' },
+			{ value: 'node', label: 'Node.js' },
+			{ value: 'python', label: 'Python' },
+			{ value: 'rust', label: 'Rust' }
+		]);
 	});
 
 	it('marks the project configuration required when told to', () => {
@@ -303,13 +331,13 @@ describe('CapabilitySelector', () => {
 		});
 
 		expect(screen.getByTestId('project-config-required')).toBeTruthy();
-		// Required and unset: the placeholder asks for a choice rather than
-		// silently implying one.
-		expect(screen.getByTestId('project-config-language').value).toBe('');
-		expect(screen.getByText('Select…')).toBeTruthy();
+		// Required and unset: two devcontainers make the implication ambiguous,
+		// so the override is blank and must be chosen.
+		expect(screen.getByTestId(LANGUAGE_SELECT).value).toBe('');
+		expect(screen.getByTestId(LANGUAGE_IMPLIED).textContent.trim()).toBe('Multiple');
 	});
 
-	it('pre-selects the language implied by a single devcontainer', () => {
+	it('shows the language implied by a single devcontainer as read-only text', () => {
 		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: ['devcontainer-python'],
@@ -317,12 +345,14 @@ describe('CapabilitySelector', () => {
 			configurationSchema: projectSchema
 		});
 
-		// One devcontainer implies the language; it is shown selected but not
-		// written into `configuration`, so an untouched field stays implied.
-		expect(screen.getByTestId('project-config-language').value).toBe('python');
+		// One devcontainer implies the language; it is shown in the read-only
+		// "Implied" text and is NOT written into `configuration`, so the override
+		// itself stays blank.
+		expect(screen.getByTestId(LANGUAGE_IMPLIED).textContent.trim()).toBe('Python');
+		expect(screen.getByTestId(LANGUAGE_SELECT).value).toBe('');
 	});
 
-	it('leaves the implied value ambiguous with two devcontainer languages', () => {
+	it('reports an ambiguous implication with two devcontainer languages', () => {
 		renderSelector({
 			capabilities: mockCapabilities,
 			selectedCapabilities: ['devcontainer-python', 'devcontainer-rust'],
@@ -331,8 +361,24 @@ describe('CapabilitySelector', () => {
 			projectConfigurationRequired: true
 		});
 
-		// Two distinct languages cannot imply one, so nothing is pre-selected.
-		expect(screen.getByTestId('project-config-language').value).toBe('');
+		// Two distinct languages cannot imply one, so the read-only text says so
+		// and nothing is pre-selected.
+		expect(screen.getByTestId(LANGUAGE_IMPLIED).textContent.trim()).toBe('Multiple');
+		expect(screen.getByTestId(LANGUAGE_SELECT).value).toBe('');
+	});
+
+	it('keeps an explicit override regardless of what the selection implies', () => {
+		renderSelector({
+			capabilities: mockCapabilities,
+			selectedCapabilities: ['devcontainer-python'],
+			configuration: { language: 'rust' },
+			configurationSchema: projectSchema
+		});
+
+		// The override sticks even though a single devcontainer would imply
+		// Python; the implied text still reports the implication.
+		expect(screen.getByTestId(LANGUAGE_SELECT).value).toBe('rust');
+		expect(screen.getByTestId(LANGUAGE_IMPLIED).textContent.trim()).toBe('Python');
 	});
 
 	it('shows missing dependencies warning for gitguardian', () => {
