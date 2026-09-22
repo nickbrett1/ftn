@@ -72,7 +72,7 @@
 		"@testing-library/dom": "^10.4.2",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.4.2",
-		"@types/node": "^26.6.1",
+		"@types/node": "^26.6.2",
 		"@vitest/coverage-v8": "^5.0.1",
 		"@yushijinhun/three-minifier-rollup": "^0.4.0",
 		"@zerodevx/svelte-img": "^2.1.2",
