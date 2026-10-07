@@ -123,7 +123,7 @@ export class BiltCardlessParser extends BaseParser {
 			const line = lines[index];
 			const lineUpper = line.toUpperCase();
 
-			if (lineUpper === 'TRANSACTIONS') {
+			if (this._isTransactionsSectionHeader(lineUpper)) {
 				inTransactions = true;
 				inPayments = false;
 				inFees = false;
@@ -228,10 +228,23 @@ export class BiltCardlessParser extends BaseParser {
 		return isNegative ? -Math.abs(amount) : amount;
 	}
 
+	/**
+	 * Returns true when a line is a "transactions" style section header.
+	 * The newer Bilt layout prefixes this with "Your "
+	 * (e.g. "Your transactions"), and authorised-user sections appear as
+	 * "Tasneem's transactions Authorized user". Both should open a
+	 * transactions section.
+	 * @param {string} lineUpper - Uppercased line
+	 * @returns {boolean}
+	 */
+	_isTransactionsSectionHeader(lineUpper) {
+		return /(?:^|\s)TRANSACTIONS(?:\s|$)/.test(lineUpper);
+	}
+
 	_isSectionHeaderOrTotal(line) {
 		const lineUpper = line.toUpperCase();
 		return (
-			lineUpper === 'TRANSACTIONS' ||
+			this._isTransactionsSectionHeader(lineUpper) ||
 			lineUpper === 'PAYMENTS AND CREDITS' ||
 			lineUpper === 'FEES' ||
 			lineUpper.startsWith('TOTAL NEW CHARGES') ||
@@ -240,6 +253,18 @@ export class BiltCardlessParser extends BaseParser {
 			lineUpper === 'INTEREST CHARGED' ||
 			lineUpper === 'DATE DESCRIPTION AMOUNT'
 		);
+	}
+
+	/**
+	 * Extract a trailing dollar amount from a line (e.g. the amount column at
+	 * the end of a wrapped description line: "1003C NEW YORK 10001 NY USA $213.40").
+	 * @param {string} line - Line to inspect
+	 * @returns {{amount: number}|null}
+	 */
+	_extractTrailingAmount(line) {
+		const match = /(-?)\$([\d,]+\.\d{2})\s*$/.exec(line);
+		if (!match) return null;
+		return { amount: this._parseAmountFromMatch(match) };
 	}
 
 	_scanLookahead(index, lines, initialAmount, initialFullStatementText) {
@@ -255,24 +280,26 @@ export class BiltCardlessParser extends BaseParser {
 			// If we hit another date, we went too far
 			if (datePattern.test(nextLine)) break;
 
-			// Try to match the amount if we haven't found it yet
-			if (amount === null && !amountFoundInLookahead) {
-				const amountMatch = /^(-?)\$([\d,]+\.\d{2})$/.exec(nextLine);
-				if (amountMatch) {
-					amount = this._parseAmountFromMatch(amountMatch);
-					fullStatementText += '\n' + nextLine;
-					amountFoundInLookahead = true;
-					lookAhead++;
-					continue;
-				}
-			}
-
-			// If this line is an amount that was already found, we should stop
-			if (amount !== null && /^(-?)\$([\d,]+\.\d{2})$/.test(nextLine)) {
+			if (this._isSectionHeaderOrTotal(nextLine)) {
 				break;
 			}
 
-			if (this._isSectionHeaderOrTotal(nextLine)) {
+			// The amount column can either be on its own line ("$3.00") or
+			// appended to the end of a wrapped description line
+			// ("1003C NEW YORK 10001 NY USA $213.40").
+			const trailing = this._extractTrailingAmount(nextLine);
+
+			// Try to match the amount if we haven't found it yet
+			if (amount === null && !amountFoundInLookahead && trailing) {
+				amount = trailing.amount;
+				fullStatementText += '\n' + nextLine;
+				amountFoundInLookahead = true;
+				lookAhead++;
+				continue;
+			}
+
+			// A second amount means we've moved past this transaction
+			if (amount !== null && trailing) {
 				break;
 			}
 

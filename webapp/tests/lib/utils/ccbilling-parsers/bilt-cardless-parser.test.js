@@ -132,6 +132,72 @@ Total payments and credits in this period -$20,585.12
 			});
 		});
 
+		it('should extract from the new "Your transactions" section header', () => {
+			const text = `
+Your transactions
+Date Description Amount
+Aug 4, 2026 MAID MARIN* MAIDMARINE121 West 27th Street Suit
+1003C NEW YORK 10001 NY USA $213.40
+Aug 5, 2026 FRESH DIRECT 2 Saint Anns Avenue BRONX 10454
+NY USA $166.10
+Total new charges in this period $379.50
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(2);
+			expect(charges[0]).toMatchObject({
+				merchant: expect.stringContaining('Maid Marin'),
+				amount: 213.4,
+				date: '2026-08-04'
+			});
+			expect(charges[1]).toMatchObject({
+				merchant: 'Fresh Direct',
+				amount: 166.1,
+				date: '2026-08-05'
+			});
+		});
+
+		it('should extract the authorised user "transactions" section', () => {
+			const text = `
+Your transactions
+Date Description Amount
+Aug 4, 2026 MAID MARIN* MAIDMARINE121 West 27th Street Suit
+1003C NEW YORK 10001 NY USA $213.40
+Total new charges in this period $213.40
+
+Tasneem's transactions Authorized user
+Date Description Amount
+Aug 6, 2026 PHR*PEDIATRICOPHTHALMI40 West 72nd Street
+Lobby NEW YORK 10023 NY USA $70.00
+Total new charges in this period $70.00
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(2);
+			expect(charges[1]).toMatchObject({
+				amount: 70,
+				date: '2026-08-06'
+			});
+		});
+
+		it('should extract amounts from their own line as well as wrapped lines', () => {
+			const text = `
+Your transactions
+Date Description Amount
+Aug 4, 2026 MAID MARIN* MAIDMARINE121 West 27th Street Suit
+1003C NEW YORK 10001 NY USA
+$213.40
+Aug 5, 2026 FRESH DIRECT 2 Saint Anns Avenue BRONX 10454
+NY USA $166.10
+Total new charges in this period $379.50
+			`;
+
+			const charges = parser.extractCharges(text);
+			expect(charges).toHaveLength(2);
+			expect(charges[0]).toMatchObject({ amount: 213.4, date: '2026-08-04' });
+			expect(charges[1]).toMatchObject({ amount: 166.1, date: '2026-08-05' });
+		});
+
 		it('should extract from fees section', () => {
 			const text = `
 Fees
@@ -181,7 +247,7 @@ Jan 18 – Mar 6, 2026
 New balance as of Mar 6, 2026
 $20,505.78
 
-Transactions
+Your transactions
 Date Description Amount
 Feb 7, 2026 MTA*NYCT PAYGO 2 BROADWAY NEW YORK 10004
 NY USA
