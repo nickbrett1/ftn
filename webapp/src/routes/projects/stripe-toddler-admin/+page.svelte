@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import BarcodeSvg from '$lib/components/stripe-toddler/BarcodeSvg.svelte';
@@ -32,7 +32,8 @@
 	let activeTab = $state('inventory'); // 'inventory' | 'analytics'
 
 	// Inventory state
-	let inventoryItems = $state(data?.initialInventory || []);
+	// Intentionally seeded once from server data; subsequent updates come from the API.
+	let inventoryItems = $state(untrack(() => data?.initialInventory) || []);
 	let sessionAddedBarcodes = $state(new Set());
 	let selectedBarcodesForPrint = $state(new Set());
 	let printSelectionMode = $state('all'); // 'session' | 'all' | 'custom'
@@ -69,10 +70,10 @@
 	}
 
 	// Analytics & Server Status state
-	let transactions = $state(data?.initialTransactions || []);
+	let transactions = $state(untrack(() => data?.initialTransactions) || []);
 	let isLoadingAnalytics = $state(false);
 	let isLoadingInventory = $state(false);
-	let serverError = $state(data?.serverError || '');
+	let serverError = $state(untrack(() => data?.serverError) || '');
 
 	async function fetchInventory() {
 		isLoadingInventory = true;
@@ -1368,15 +1369,13 @@
 	{#if zoomedImage}
 		<div
 			class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 no-print"
-			onclick={handleCloseZoom}
+			onclick={(e) => e.target === e.currentTarget && handleCloseZoom()}
 			role="button"
 			tabindex="0"
 			onkeydown={(e) => e.key === 'Escape' && handleCloseZoom()}
 		>
 			<div
 				class="relative max-w-4xl w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col items-center overflow-hidden"
-				onclick={(e) => e.stopPropagation()}
-				role="document"
 			>
 				<button
 					onclick={handleCloseZoom}
