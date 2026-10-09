@@ -55,7 +55,7 @@
 		"deploy-preview": "npx wrangler deploy --env preview"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.62.5",
+		"@cloudflare/vite-plugin": "^1.63.0",
 		"@dimforge/rapier3d-compat": "^0.21.0",
 		"@eslint/js": "^10.0.1",
 		"@lhci/cli": "^0.15.1",
@@ -114,7 +114,7 @@
 		"tailwindcss": "^4.3.3",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.71.1",
-		"vite": "^8.3.2",
+		"vite": "^8.3.3",
 		"vite-imagetools": "^12.0.1",
 		"vitest": "^5.0.0",
 		"wrangler": "^4.129.0"
