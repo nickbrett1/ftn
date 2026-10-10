@@ -56,6 +56,7 @@ describe('genproj +page.server load', () => {
 			selectedCapabilities: [],
 			projectName: '',
 			repositoryUrl: '',
+			isPrivate: false,
 			capabilities: CATALOG.capabilities,
 			categories: CATALOG.categories,
 			configurationSchema: CATALOG.configurationSchema
@@ -71,6 +72,7 @@ describe('genproj +page.server load', () => {
 			selectedCapabilities: [],
 			projectName: '',
 			repositoryUrl: '',
+			isPrivate: false,
 			capabilities: CATALOG.capabilities,
 			categories: CATALOG.categories,
 			configurationSchema: CATALOG.configurationSchema
@@ -108,6 +110,18 @@ describe('genproj +page.server load', () => {
 		expect(result.selectedCapabilities).toEqual(['cap1', 'cap2']);
 		expect(result.projectName).toBe('MyProject');
 		expect(result.repositoryUrl).toBe('http://github.com/user/repo');
+	});
+
+	it('parses the private-repository choice from the URL, defaulting to public', async () => {
+		mockUrl = new URL('http://localhost/projects/genproj?private=true');
+		const result = await load({ locals: mockLocals, url: mockUrl });
+		expect(result.isPrivate).toBe(true);
+
+		const defaulted = await load({
+			locals: mockLocals,
+			url: new URL('http://localhost/projects/genproj')
+		});
+		expect(defaulted.isPrivate).toBe(false);
 	});
 
 	it('redirects to /notauthorised if authError is present in URL', async () => {

@@ -175,6 +175,9 @@
 					selectedCapabilities: data.selected.split(','),
 					overwrite,
 					resolutions,
+					// Create the new repository privately when asked. genproj
+					// ignores this when `repositoryUrl` names an existing repo.
+					private: data.isPrivate || false,
 					// Project-level configuration (e.g. `language`) plus each
 					// capability's settings. Empty when nothing was declared, which
 					// leaves the language implied by the selected devcontainers.
@@ -567,6 +570,11 @@
 					<p class="text-white font-mono">
 						{data.repositoryUrl || `A new repository will be created`}
 					</p>
+					{#if !data.repositoryUrl}
+						<p class="text-xs text-gray-400 mt-1">
+							{data.isPrivate ? 'Private repository' : 'Public repository'}
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -588,9 +596,9 @@
 			<a
 				href="/projects/genproj?selected={data.selected}&projectName={encodeURIComponent(
 					data.projectName
-				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}&config={btoa(
-					JSON.stringify(data.configuration)
-				)}"
+				)}&repositoryUrl={encodeURIComponent(data.repositoryUrl)}{data.isPrivate
+					? '&private=true'
+					: ''}&config={btoa(JSON.stringify(data.configuration))}"
 				class="px-8 py-3 rounded-md font-medium transition-colors border bg-gray-700 text-white hover:bg-gray-600 border-gray-500 flex items-center justify-center"
 			>
 				Back to Configuration

@@ -43,6 +43,7 @@ export async function load({ locals, url = new URL('http://localhost/'), platfor
 	const selectedCapabilitiesParameter = url.searchParams.get('selected');
 	const projectNameParameter = url.searchParams.get('projectName');
 	const repositoryUrlParameter = url.searchParams.get('repositoryUrl');
+	const privateParameter = url.searchParams.get('private');
 
 	const selectedCapabilities = selectedCapabilitiesParameter
 		? selectedCapabilitiesParameter.split(',')
@@ -50,6 +51,9 @@ export async function load({ locals, url = new URL('http://localhost/'), platfor
 
 	const projectName = projectNameParameter || '';
 	const repositoryUrl = repositoryUrlParameter || '';
+	// Create the new repository privately. Only meaningful when no existing
+	// repository is named; the choice travels back to the form unchanged.
+	const isPrivate = privateParameter === 'true';
 
 	// If there's an error, redirect to /notauthorised after displaying a message
 	if (authError) {
@@ -63,6 +67,7 @@ export async function load({ locals, url = new URL('http://localhost/'), platfor
 		selectedCapabilities,
 		projectName,
 		repositoryUrl,
+		isPrivate,
 		...(await loadCatalog(platform))
 	};
 }

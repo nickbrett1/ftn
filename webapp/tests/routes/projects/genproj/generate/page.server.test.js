@@ -95,6 +95,7 @@ describe('/projects/genproj/generate load function', async () => {
 			projectName,
 			repositoryUrl,
 			selected,
+			isPrivate: false,
 			previewData: mockPreview,
 			configuration: {}
 		});

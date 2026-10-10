@@ -14,6 +14,9 @@ export async function load({ url, cookies, fetch }) {
 	const repositoryUrl = url.searchParams.get('repositoryUrl') || '';
 	const selected = url.searchParams.get('selected') || '';
 	const config = url.searchParams.get('config') || '';
+	// Whether the new repository should be created private. Carried through the
+	// URL so a reload of this review page keeps the choice.
+	const isPrivate = url.searchParams.get('private') === 'true';
 	let configuration = {};
 	if (config) {
 		try {
@@ -50,6 +53,7 @@ export async function load({ url, cookies, fetch }) {
 			projectName,
 			repositoryUrl,
 			selected,
+			isPrivate,
 			previewData,
 			configuration
 		};

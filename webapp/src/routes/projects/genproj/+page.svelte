@@ -24,6 +24,9 @@
 	let selectedCapabilities = $state([]);
 	let projectName = $state('');
 	let repositoryUrl = $state('');
+	// Create the new repository as private. Ignored when `repositoryUrl` names
+	// an existing repository, whose visibility was decided at its creation.
+	let isPrivate = $state(false);
 	let configuration = $state({});
 	let loading = $state(true);
 	let initialError = $state(null);
@@ -36,6 +39,7 @@
 		selectedCapabilities = data.selectedCapabilities || [];
 		projectName = data.projectName || '';
 		repositoryUrl = data.repositoryUrl || '';
+		isPrivate = data.isPrivate || false;
 		configuration = data.configuration || {};
 		loading = !data.capabilities || data.capabilities.length === 0;
 		initialError = data.error || null;
@@ -470,6 +474,12 @@
 			parameters.set('repositoryUrl', repositoryUrl);
 		}
 
+		// Preserve the private-repository choice, but only for a new repository:
+		// an existing one carries the visibility it was created with.
+		if (isPrivate && !repositoryUrl) {
+			parameters.set('private', 'true');
+		}
+
 		// Preserve configuration
 		if (Object.keys(configuration).length > 0) {
 			parameters.set('config', btoa(JSON.stringify(configuration)));
@@ -652,6 +662,32 @@
 								Repository URL must be a valid GitHub URL
 							</p>
 						{/if}
+
+						<!-- Visibility: decided when a new repo is created, so it is
+						     only editable while no existing repository is named. -->
+						<label
+							class="mt-4 flex items-start gap-2 {repositoryUrl
+								? 'cursor-not-allowed opacity-50'
+								: 'cursor-pointer'}"
+						>
+							<input
+								id="private-repository"
+								data-testid="private-repository-input"
+								type="checkbox"
+								bind:checked={isPrivate}
+								disabled={!!repositoryUrl}
+								class="mt-1 h-4 w-4 shrink-0 rounded border-gray-600 bg-gray-900 text-green-500 focus:ring-2 focus:ring-green-400 disabled:cursor-not-allowed"
+								aria-label="Create repository as private"
+							/>
+							<span class="text-sm text-gray-300">
+								Create as a private repository
+								<span class="block text-xs text-gray-400">
+									{repositoryUrl
+										? 'Visibility is set by the existing repository.'
+										: 'Off creates a public repository.'}
+								</span>
+							</span>
+						</label>
 					</div>
 				</div>
 			</div>
