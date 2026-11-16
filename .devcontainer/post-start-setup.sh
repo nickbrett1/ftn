@@ -55,7 +55,20 @@ fi
 
 echo "INFO: Checking goose version..."
 if command -v goose >/dev/null 2>&1; then
-    goose update || echo "WARN: goose update failed, keeping current version"
+    # `goose update` downloads the whole release even when the installed build
+    # is already current (~55MB, ~10s on every start). Ask GitHub for the
+    # latest stable tag and update only when it differs. Any failure here
+    # (offline, rate-limited, unparseable, no curl) leaves `latest` empty and
+    # falls back to updating, which is the old behaviour.
+    installed="$(goose --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
+    latest="$(curl -fsSL --max-time 10 https://api.github.com/repos/block/goose/releases/latest 2>/dev/null \
+        | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"
+    if [ -n "$installed" ] && [ "$installed" = "$latest" ]; then
+        echo "INFO: goose $installed is already the latest stable release - skipping update."
+    else
+        echo "INFO: goose ${installed:-unknown} -> ${latest:-latest} - updating..."
+        goose update || echo "WARN: goose update failed, keeping current version"
+    fi
 else
     echo "WARN: goose not found, skipping update"
 fi
